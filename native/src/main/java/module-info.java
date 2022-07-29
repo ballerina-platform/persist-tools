@@ -16,14 +16,10 @@
  * under the License.
  */
 
-module io.ballerina.protoc {
+module io.ballerina.persist {
     requires io.ballerina.runtime;
     requires io.ballerina.lang;
-    requires io.ballerina.tools.api;
-    requires io.ballerina.parser;
-    requires io.ballerina.formatter.core;
     requires io.ballerina.cli;
     requires info.picocli;
     requires org.slf4j;
-    requires org.apache.commons.lang3;
 }

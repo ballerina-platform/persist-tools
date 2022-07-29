@@ -18,7 +18,7 @@
 package io.ballerina.persist.cmd;
 
 import io.ballerina.cli.BLauncherCmd;
-import io.ballerina.protoc.protobuf.PersistToolsConstants;
+import io.ballerina.persist.PersistToolsConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
@@ -32,8 +32,7 @@ import java.io.PrintStream;
 @CommandLine.Command(
         name = "persist",
         description = "generate Ballerina gRPC client stub for gRPC service for a given gRPC protoc " +
-                "definition.",
-            subcommands = {Sub1.class})
+                "definition.")
 public class PersistCmd implements BLauncherCmd {
 
     private static final Logger LOG = LoggerFactory.getLogger(PersistCmd.class);
@@ -45,10 +44,6 @@ public class PersistCmd implements BLauncherCmd {
 
     @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
     private boolean helpFlag;
-
-    @CommandLine.Command(name = "sub1")
-
-    outStream.println("All good, executing Sub1");
 
     @Override
     public void execute() {
