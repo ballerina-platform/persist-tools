@@ -1,6 +1,6 @@
 [package]
 org = "ballerina"
-name = "persist"
+name = "persist_tools"
 version = "@toml.version@"
 authors = ["Ballerina"]
 keywords = ["wrappers"]
