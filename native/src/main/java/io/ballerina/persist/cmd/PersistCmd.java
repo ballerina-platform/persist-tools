@@ -31,8 +31,7 @@ import java.io.PrintStream;
  */
 @CommandLine.Command(
         name = "persist",
-        description = "generate Ballerina gRPC client stub for gRPC service for a given gRPC protoc " +
-                "definition.")
+        description = "generate database configurations.")
 public class PersistCmd implements BLauncherCmd {
 
     private static final Logger LOG = LoggerFactory.getLogger(PersistCmd.class);
