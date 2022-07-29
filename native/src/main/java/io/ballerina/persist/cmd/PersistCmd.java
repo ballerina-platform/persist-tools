@@ -18,7 +18,7 @@
 package io.ballerina.persist.cmd;
 
 import io.ballerina.cli.BLauncherCmd;
-import io.ballerina.protoc.protobuf.BalGenerationConstants;
+import io.ballerina.protoc.protobuf.PersistToolsConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
@@ -32,7 +32,8 @@ import java.io.PrintStream;
 @CommandLine.Command(
         name = "persist",
         description = "generate Ballerina gRPC client stub for gRPC service for a given gRPC protoc " +
-                "definition.")
+                "definition.",
+            subcommands = {Sub1.class})
 public class PersistCmd implements BLauncherCmd {
 
     private static final Logger LOG = LoggerFactory.getLogger(PersistCmd.class);
@@ -44,6 +45,10 @@ public class PersistCmd implements BLauncherCmd {
 
     @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
     private boolean helpFlag;
+
+    @CommandLine.Command(name = "sub1")
+
+    outStream.println("All good, executing Sub1");
 
     @Override
     public void execute() {
@@ -59,7 +64,7 @@ public class PersistCmd implements BLauncherCmd {
     }
     @Override
     public String getName() {
-        return BalGenerationConstants.COMPONENT_IDENTIFIER;
+        return PersistToolsConstants.COMPONENT_IDENTIFIER;
     }
     
     @Override
@@ -71,6 +76,8 @@ public class PersistCmd implements BLauncherCmd {
     
     @Override
     public void printUsage(StringBuilder stringBuilder) {
-        stringBuilder.append("  ballerina " + BalGenerationConstants.COMPONENT_IDENTIFIER + " --input chat.grpc\n");
+        stringBuilder.append("  ballerina " + PersistToolsConstants.COMPONENT_IDENTIFIER + " --input chat.grpc\n");
     }
 }
+
+
