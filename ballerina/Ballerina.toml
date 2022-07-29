@@ -7,7 +7,7 @@ keywords = ["persistent"]
 repository = "https://github.com/ballerina-platform/persist-tools"
 license = ["Apache-2.0"]
 distribution = "2201.0.4"
-export = ["persist"]
+export = ["persist_tools"]
 
 [[platform.java11.dependency]]
 path = "../native/build/libs/persist-tools-native-0.1.0-SNAPSHOT.jar"
