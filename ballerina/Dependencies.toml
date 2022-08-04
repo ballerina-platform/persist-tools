@@ -8,10 +8,10 @@ dependencies-toml-version = "2"
 
 [[package]]
 org = "ballerina"
-name = "persist"
+name = "persist_tools"
 version = "0.1.0"
 modules = [
-	{org = "ballerina", packageName = "persist", moduleName = "persist"}
+	{org = "ballerina", packageName = "persist_tools", moduleName = "persist_tools"}
 ]
 
 

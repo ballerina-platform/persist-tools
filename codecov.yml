@@ -1,8 +1,5 @@
-fixes:
-  - "ballerina/modules/types.duration/*::../ballerina/"
-  - "ballerina/modules/types.struct/*::../ballerina/"
-  - "ballerina/modules/types.timestamp/*::../ballerina/"
-  - "ballerina/modules/types.wrappers/*::../ballerina/"
+ignore:
+  - "tooling-tests"
 
 coverage:
   precision: 2
