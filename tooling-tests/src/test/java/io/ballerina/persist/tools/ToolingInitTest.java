@@ -35,13 +35,15 @@ public class ToolingInitTest {
     }
 
     @Test
-    @Description("When there is a Config.toml file inside the project root directory but there are no database configurations")
+    @Description("When there is a Config.toml file inside the project root directory but there are no database " +
+            "configurations")
     public void testInitUpdateConfigWithNewDbConfigurations() {
         assertGeneratedSources();
     }
 
     @Test
-    @Description("When there is a Config.toml file inside the project root directory and there are database configurations")
+    @Description("When there is a Config.toml file inside the project root directory and there are database " +
+            "configurations")
     public void testsInitUpdateConfigWithUpdatedDbConfigurations() {
         assertGeneratedSources();
     }
