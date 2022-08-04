@@ -20,6 +20,8 @@ package io.ballerina.persist.cmd;
 import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.nodegenerator.CreateSyntaxTree;
+import io.ballerina.projects.ProjectException;
+import io.ballerina.projects.directory.ProjectLoader;
 import io.ballerina.toml.syntax.tree.SyntaxTree;
 import org.ballerinalang.formatter.core.Formatter;
 import org.ballerinalang.formatter.core.FormatterException;
@@ -49,6 +51,7 @@ import java.nio.file.Paths;
 public class Init implements BLauncherCmd {
     private static final Logger LOG = LoggerFactory.getLogger(PersistCmd.class);
     private final PrintStream outStream = System.out;
+
     private CommandLine parentCmdParser;
 
     @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
@@ -56,7 +59,14 @@ public class Init implements BLauncherCmd {
 
     private void createBallerinaToml() throws Exception {
         SyntaxTree toml = CreateSyntaxTree.createToml();
-        writeOutputFile(toml, Paths.get("").toAbsolutePath().toString() + "/config.toml");
+
+        try  {
+            ProjectLoader.loadProject(Paths.get(""));
+            writeOutputFile(toml, Paths.get("").toAbsolutePath().toString() + "/config.toml");
+        } catch (ProjectException e) {
+            outStream.println("Current Directory is not a Ballerina Project!");
+        }
+
     }
 
     private void writeOutputFile(SyntaxTree syntaxTree, String outPath) throws Exception {
@@ -74,15 +84,13 @@ public class Init implements BLauncherCmd {
     }
     @Override
     public void execute() {
-        Path path = Paths.get("Ballerina.toml");
-        if (Files.exists(path)) {
+        Path configPath = Paths.get("Ballerina.toml");
+        if (!Files.exists(configPath)) {
             try {
                 createBallerinaToml();
             } catch (Exception e) {
                 outStream.println(e.getMessage());
             }
-        } else {
-            outStream.println("Current directory is not a valid Ballerina project");
         }
     }
     @Override
