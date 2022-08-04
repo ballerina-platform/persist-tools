@@ -25,22 +25,16 @@ import picocli.CommandLine;
 
 import java.io.PrintStream;
 
-
 /**
- * Class to implement "persist" command for ballerina.
+ * Class to implement "persist migrate" command for ballerina.
  */
 @CommandLine.Command(
-        name = "persist",
-        description = "generate database configurations.",
-        subcommands = {Init.class, Migrate.class, Generate.class}
-        )
-
-public class PersistCmd implements BLauncherCmd {
-
+        name = "migrate",
+        description = " Generate migration scripts.")
+public class Migrate implements BLauncherCmd {
     private static final Logger LOG = LoggerFactory.getLogger(PersistCmd.class);
 
     private static final PrintStream outStream = System.out;
-    private static final String PROTO_EXTENSION = "persist";
 
     private CommandLine parentCmdParser;
 
@@ -50,7 +44,7 @@ public class PersistCmd implements BLauncherCmd {
     @Override
     public void execute() {
         if (helpFlag) {
-            outStream.println("Hello persist");
+            outStream.println("Hello persist migrate");
             return;
         }
     }
@@ -72,6 +66,6 @@ public class PersistCmd implements BLauncherCmd {
     
     @Override
     public void printUsage(StringBuilder stringBuilder) {
-        stringBuilder.append("  ballerina " + PersistToolsConstants.COMPONENT_IDENTIFIER + " \n");
+        stringBuilder.append("  ballerina " + PersistToolsConstants.COMPONENT_IDENTIFIER + "\n");
     }
 }

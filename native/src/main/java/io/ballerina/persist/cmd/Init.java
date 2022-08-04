@@ -19,39 +19,70 @@ package io.ballerina.persist.cmd;
 
 import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.PersistToolsConstants;
+import io.ballerina.persist.nodegenerator.CreateSyntaxTree;
+import io.ballerina.toml.syntax.tree.SyntaxTree;
+import org.ballerinalang.formatter.core.Formatter;
+import org.ballerinalang.formatter.core.FormatterException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 
+import java.io.IOException;
 import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+
 
 
 /**
- * Class to implement "persist" command for ballerina.
+ * Class to implement "persist init" command for ballerina.
  */
+
 @CommandLine.Command(
-        name = "persist",
-        description = "generate database configurations.",
-        subcommands = {Init.class, Migrate.class, Generate.class}
-        )
+        name = "init",
+        description = "generate database configurations.")
 
-public class PersistCmd implements BLauncherCmd {
-
+public class Init implements BLauncherCmd {
     private static final Logger LOG = LoggerFactory.getLogger(PersistCmd.class);
-
-    private static final PrintStream outStream = System.out;
-    private static final String PROTO_EXTENSION = "persist";
-
+    private final PrintStream outStream = System.out;
     private CommandLine parentCmdParser;
 
     @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
     private boolean helpFlag;
 
+    private void createBallerinaToml() throws Exception {
+        SyntaxTree toml = CreateSyntaxTree.createToml();
+        writeOutputFile(toml, Paths.get("").toAbsolutePath().toString() + "/config.toml");
+    }
+
+    private void writeOutputFile(SyntaxTree syntaxTree, String outPath) throws Exception {
+        String content = "";
+        try {
+            content = Formatter.format(syntaxTree.toSourceCode());
+        } catch (FormatterException e) {
+            throw e;
+        }
+        try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8.name())) {
+            writer.println(content);
+        } catch (IOException e) {
+            throw e;
+        }
+    }
     @Override
     public void execute() {
-        if (helpFlag) {
-            outStream.println("Hello persist");
-            return;
+        Path path = Paths.get("Ballerina.toml");
+        if (Files.exists(path)) {
+            try {
+                createBallerinaToml();
+            } catch (Exception e) {
+                outStream.println(e.getMessage());
+            }
+        } else {
+            outStream.println("Current directory is not a valid Ballerina project");
         }
     }
     @Override
@@ -72,6 +103,6 @@ public class PersistCmd implements BLauncherCmd {
     
     @Override
     public void printUsage(StringBuilder stringBuilder) {
-        stringBuilder.append("  ballerina " + PersistToolsConstants.COMPONENT_IDENTIFIER + " \n");
+        stringBuilder.append("  ballerina " + PersistToolsConstants.COMPONENT_IDENTIFIER + " init\n");
     }
 }
