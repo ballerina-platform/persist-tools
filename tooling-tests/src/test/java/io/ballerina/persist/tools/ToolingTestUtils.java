@@ -42,12 +42,7 @@ public class ToolingTestUtils {
     private static final Path DISTRIBUTION_PATH = Paths.get("../", "target", "ballerina-runtime")
             .toAbsolutePath();
     private static final Path BALLERINA_TOML_PATH = Paths.get(RESOURCE_DIRECTORY.toString(), BALLERINA_TOML_FILE);
-
-    private static ProjectEnvironmentBuilder getEnvironmentBuilder() {
-        Environment environment = EnvironmentBuilder.getBuilder().setBallerinaHome(DISTRIBUTION_PATH).build();
-        return ProjectEnvironmentBuilder.getBuilder(environment);
-    }
-
+    
     public static void assertGeneratedSources() {
 
         generateSourceCode();
