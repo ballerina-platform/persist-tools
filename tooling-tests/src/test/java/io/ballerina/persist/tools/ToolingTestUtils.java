@@ -19,9 +19,6 @@
 package io.ballerina.persist.tools;
 
 import io.ballerina.persist.cmd.PersistCmd;
-import io.ballerina.projects.ProjectEnvironmentBuilder;
-import io.ballerina.projects.environment.Environment;
-import io.ballerina.projects.environment.EnvironmentBuilder;
 
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
@@ -42,7 +39,7 @@ public class ToolingTestUtils {
     private static final Path DISTRIBUTION_PATH = Paths.get("../", "target", "ballerina-runtime")
             .toAbsolutePath();
     private static final Path BALLERINA_TOML_PATH = Paths.get(RESOURCE_DIRECTORY.toString(), BALLERINA_TOML_FILE);
-    
+
     public static void assertGeneratedSources() {
 
         generateSourceCode();
