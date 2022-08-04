@@ -60,13 +60,13 @@ public class Generate implements BLauncherCmd {
     
     @Override
     public void printLongDesc(StringBuilder out) {
-        out.append("Generate database configurations file inside the Ballerina project").append(System.lineSeparator());
+        out.append("Generate Ballerina Client codes inside the Ballerina project").append(System.lineSeparator());
         out.append("for a given persistc definition").append(System.lineSeparator());
         out.append(System.lineSeparator());
     }
     
     @Override
     public void printUsage(StringBuilder stringBuilder) {
-        stringBuilder.append("  ballerina " + PersistToolsConstants.COMPONENT_IDENTIFIER + "\n");
+        stringBuilder.append("  ballerina " + PersistToolsConstants.COMPONENT_IDENTIFIER + "generate\n");
     }
 }

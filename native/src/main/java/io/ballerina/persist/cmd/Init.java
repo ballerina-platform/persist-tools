@@ -84,7 +84,7 @@ public class Init implements BLauncherCmd {
     }
     @Override
     public void execute() {
-        Path configPath = Paths.get("Ballerina.toml");
+        Path configPath = Paths.get("config.toml");
         if (!Files.exists(configPath)) {
             try {
                 createBallerinaToml();
