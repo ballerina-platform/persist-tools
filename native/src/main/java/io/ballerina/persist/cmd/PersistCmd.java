@@ -32,7 +32,7 @@ import java.io.PrintStream;
 @CommandLine.Command(
         name = "persist",
         description = "generate database configurations.",
-        subcommands = {Init.class, Migrate.class, Generate.class}
+        subcommands = {Init.class}
         )
 
 public class PersistCmd implements BLauncherCmd {
