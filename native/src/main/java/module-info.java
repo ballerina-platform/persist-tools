@@ -22,4 +22,8 @@ module io.ballerina.persist {
     requires io.ballerina.cli;
     requires info.picocli;
     requires org.slf4j;
+    requires io.ballerina.toml;
+    requires io.ballerina.tools.api;
+    requires io.ballerina.parser;
+    requires io.ballerina.formatter.core;
 }

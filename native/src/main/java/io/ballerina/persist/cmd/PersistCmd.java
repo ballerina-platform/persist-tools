@@ -31,7 +31,10 @@ import java.io.PrintStream;
  */
 @CommandLine.Command(
         name = "persist",
-        description = "generate database configurations.")
+        description = "generate database configurations.",
+        subcommands = {Init.class}
+        )
+
 public class PersistCmd implements BLauncherCmd {
 
     private static final Logger LOG = LoggerFactory.getLogger(PersistCmd.class);
@@ -46,7 +49,6 @@ public class PersistCmd implements BLauncherCmd {
 
     @Override
     public void execute() {
-        //Help flag check
         if (helpFlag) {
             outStream.println("Hello persist");
             return;
@@ -63,15 +65,12 @@ public class PersistCmd implements BLauncherCmd {
     
     @Override
     public void printLongDesc(StringBuilder out) {
-        out.append("Generates ballerina persist client stub for persist service").append(System.lineSeparator());
-        out.append("for a given persistc definition").append(System.lineSeparator());
+        out.append("Perform operations on Ballerina Persistent Layer").append(System.lineSeparator());
         out.append(System.lineSeparator());
     }
     
     @Override
     public void printUsage(StringBuilder stringBuilder) {
-        stringBuilder.append("  ballerina " + PersistToolsConstants.COMPONENT_IDENTIFIER + " init\n");
+        stringBuilder.append("  ballerina " + PersistToolsConstants.COMPONENT_IDENTIFIER + " \n");
     }
 }
-
-

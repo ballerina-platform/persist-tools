@@ -1,0 +1,117 @@
+/*
+ *  Copyright (c) 2022, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ *  WSO2 Inc. licenses this file to you under the Apache License,
+ *  Version 2.0 (the "License"); you may not use this file except
+ *  in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
+ */
+package io.ballerina.persist.cmd;
+
+import io.ballerina.cli.BLauncherCmd;
+import io.ballerina.persist.PersistToolsConstants;
+import io.ballerina.persist.nodegenerator.CreateSyntaxTree;
+import io.ballerina.projects.ProjectException;
+import io.ballerina.projects.directory.ProjectLoader;
+import io.ballerina.toml.syntax.tree.SyntaxTree;
+import org.ballerinalang.formatter.core.Formatter;
+import org.ballerinalang.formatter.core.FormatterException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import picocli.CommandLine;
+
+import java.io.IOException;
+import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+
+
+
+/**
+ * Class to implement "persist init" command for ballerina.
+ */
+
+@CommandLine.Command(
+        name = "init",
+        description = "generate database configurations.")
+
+public class Init implements BLauncherCmd {
+    private static final Logger LOG = LoggerFactory.getLogger(PersistCmd.class);
+    private final PrintStream outStream = System.out;
+    private final PrintStream errStream = System.err;
+
+    private CommandLine parentCmdParser;
+
+    @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
+    private boolean helpFlag;
+
+    @Override
+    public void execute() {
+        Path configPath = Paths.get("config.toml");
+        try  {
+            ProjectLoader.loadProject(Paths.get(""));
+        } catch (ProjectException e) {
+            errStream.println("Current Directory is not a Ballerina Project!");
+            return;
+        }
+        if (!Files.exists(configPath)) {
+            try {
+                createConfigToml();
+            } catch (Exception e) {
+                errStream.println(e.getMessage());
+            }
+        }
+    }
+
+    private void createConfigToml() throws Exception {
+        SyntaxTree toml = CreateSyntaxTree.createToml();
+        writeOutputFile(toml, Paths.get("").toAbsolutePath().toString() + "/config.toml");
+    }
+
+    private void writeOutputFile(SyntaxTree syntaxTree, String outPath) throws Exception {
+        String content = "";
+        try {
+            content = Formatter.format(syntaxTree.toSourceCode());
+        } catch (FormatterException e) {
+            throw e;
+        }
+        try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8.name())) {
+            writer.println(content);
+        } catch (IOException e) {
+            throw e;
+        }
+    }
+
+    @Override
+    public void setParentCmdParser(CommandLine parentCmdParser) {
+        this.parentCmdParser = parentCmdParser;
+    }
+    @Override
+    public String getName() {
+        return PersistToolsConstants.COMPONENT_IDENTIFIER;
+    }
+    
+    @Override
+    public void printLongDesc(StringBuilder out) {
+        out.append("Generate database configurations file inside the Ballerina project").append(System.lineSeparator());
+        out.append(System.lineSeparator());
+    }
+    
+    @Override
+    public void printUsage(StringBuilder stringBuilder) {
+        stringBuilder.append("  ballerina " + PersistToolsConstants.COMPONENT_IDENTIFIER + " init\n");
+    }
+}
