@@ -40,7 +40,6 @@ public class CreateSyntaxTree {
     public static SyntaxTree createToml() {
 
         NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
-        //moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray("ballerina.persist", null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("provider", "mysql", null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("host", "localhost", null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createNumericKV("port", "3306", null));
