@@ -65,8 +65,7 @@ public class PersistCmd implements BLauncherCmd {
     
     @Override
     public void printLongDesc(StringBuilder out) {
-        out.append("Generate database configurations file inside the Ballerina project").append(System.lineSeparator());
-        out.append("for a given persistc definition").append(System.lineSeparator());
+        out.append("Perform operations on Ballerina Persistent Layer").append(System.lineSeparator());
         out.append(System.lineSeparator());
     }
     

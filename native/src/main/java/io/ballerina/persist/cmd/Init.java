@@ -51,22 +51,34 @@ import java.nio.file.Paths;
 public class Init implements BLauncherCmd {
     private static final Logger LOG = LoggerFactory.getLogger(PersistCmd.class);
     private final PrintStream outStream = System.out;
+    private final PrintStream errStream = System.err;
 
     private CommandLine parentCmdParser;
 
     @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
     private boolean helpFlag;
 
-    private void createBallerinaToml() throws Exception {
-        SyntaxTree toml = CreateSyntaxTree.createToml();
-
+    @Override
+    public void execute() {
+        Path configPath = Paths.get("config.toml");
         try  {
             ProjectLoader.loadProject(Paths.get(""));
-            writeOutputFile(toml, Paths.get("").toAbsolutePath().toString() + "/config.toml");
         } catch (ProjectException e) {
-            outStream.println("Current Directory is not a Ballerina Project!");
+            errStream.println("Current Directory is not a Ballerina Project!");
+            return;
         }
+        if (!Files.exists(configPath)) {
+            try {
+                createConfigToml();
+            } catch (Exception e) {
+                errStream.println(e.getMessage());
+            }
+        }
+    }
 
+    private void createConfigToml() throws Exception {
+        SyntaxTree toml = CreateSyntaxTree.createToml();
+        writeOutputFile(toml, Paths.get("").toAbsolutePath().toString() + "/config.toml");
     }
 
     private void writeOutputFile(SyntaxTree syntaxTree, String outPath) throws Exception {
@@ -82,17 +94,7 @@ public class Init implements BLauncherCmd {
             throw e;
         }
     }
-    @Override
-    public void execute() {
-        Path configPath = Paths.get("config.toml");
-        if (!Files.exists(configPath)) {
-            try {
-                createBallerinaToml();
-            } catch (Exception e) {
-                outStream.println(e.getMessage());
-            }
-        }
-    }
+
     @Override
     public void setParentCmdParser(CommandLine parentCmdParser) {
         this.parentCmdParser = parentCmdParser;
@@ -105,7 +107,6 @@ public class Init implements BLauncherCmd {
     @Override
     public void printLongDesc(StringBuilder out) {
         out.append("Generate database configurations file inside the Ballerina project").append(System.lineSeparator());
-        out.append("for a given persistc definition").append(System.lineSeparator());
         out.append(System.lineSeparator());
     }
     
