@@ -37,9 +37,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-
-
-
 /**
  * Class to implement "persist init" command for ballerina.
  */
@@ -53,6 +50,8 @@ public class Init implements BLauncherCmd {
     private final PrintStream outStream = System.out;
     private final PrintStream errStream = System.err;
 
+    private static Path configPath = Paths.get("config.toml");
+
     private CommandLine parentCmdParser;
 
     @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
@@ -60,7 +59,6 @@ public class Init implements BLauncherCmd {
 
     @Override
     public void execute() {
-        Path configPath = Paths.get("config.toml");
         try  {
             ProjectLoader.loadProject(Paths.get(""));
         } catch (ProjectException e) {
@@ -73,11 +71,22 @@ public class Init implements BLauncherCmd {
             } catch (Exception e) {
                 errStream.println(e.getMessage());
             }
+        } else {
+            try {
+                updateConfigToml();
+            } catch (Exception e) {
+                outStream.println("File reading Error");
+            }
         }
     }
 
     private void createConfigToml() throws Exception {
         SyntaxTree toml = CreateSyntaxTree.createToml();
+        writeOutputFile(toml, Paths.get("").toAbsolutePath().toString() + "/config.toml");
+    }
+
+    private void updateConfigToml() throws Exception {
+        SyntaxTree toml = CreateSyntaxTree.updateToml(configPath);
         writeOutputFile(toml, Paths.get("").toAbsolutePath().toString() + "/config.toml");
     }
 
