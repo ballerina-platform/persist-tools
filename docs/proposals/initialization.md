@@ -19,12 +19,11 @@ To generate an entry in `Config.toml` file inside the Ballerina project with sam
 When users execute `bal persist init` inside a Ballerina project, the following entry will get added to the `Config.toml` file inside the project.
 
 ```ballerina
-[[ballerina.persist]]
 host = "localhost"
 port = 3306
 user = "root"
-password =
-database =
+password = ""
+database = ""
 ```
 
 - The `bal persist init` command should be executed inside a valid Ballerina project. If not, an error will be thrown.
