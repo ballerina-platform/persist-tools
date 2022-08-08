@@ -65,7 +65,7 @@ public class CreateSyntaxTree {
     }
 
     /**
-     * Method to update config.toml.
+     * Method to update the Config.toml with database configurations.
      */
     public static SyntaxTree updateToml(Path configPath) throws IOException {
         boolean withinTable = false;
