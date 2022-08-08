@@ -69,7 +69,7 @@ public class Init implements BLauncherCmd {
             try {
                 createConfigToml();
             } catch (Exception e) {
-                errStream.println(e.getMessage());
+                errStream.println("Failure when creating the Config.toml file: " + e.getMessage());
             }
         } else {
             try {
