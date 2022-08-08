@@ -34,7 +34,6 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
@@ -50,8 +49,6 @@ public class Init implements BLauncherCmd {
     private final PrintStream outStream = System.out;
     private final PrintStream errStream = System.err;
 
-    private static Path configPath = Paths.get("config.toml");
-
     private CommandLine parentCmdParser;
 
     @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
@@ -65,7 +62,7 @@ public class Init implements BLauncherCmd {
             errStream.println("Current Directory is not a Ballerina Project!");
             return;
         }
-        if (!Files.exists(configPath)) {
+        if (!Files.exists(PersistToolsConstants.CONFIG_PATH)) {
             try {
                 createConfigToml();
             } catch (Exception e) {
@@ -86,7 +83,7 @@ public class Init implements BLauncherCmd {
     }
 
     private void updateConfigToml() throws Exception {
-        SyntaxTree toml = CreateSyntaxTree.updateToml(configPath);
+        SyntaxTree toml = CreateSyntaxTree.updateToml(PersistToolsConstants.CONFIG_PATH);
         writeOutputFile(toml, Paths.get("").toAbsolutePath().toString() + "/Config.toml");
     }
 

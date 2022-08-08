@@ -68,7 +68,7 @@ public class CreateSyntaxTree {
      * Method to update the Config.toml with database configurations.
      */
     public static SyntaxTree updateToml(Path configPath) throws IOException {
-        boolean withinTable = false;
+        boolean isTableEntry = false;
         NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
         moduleMembers = populateNodeList(moduleMembers, false);
         Path fileNamePath = configPath.getFileName();
@@ -77,19 +77,19 @@ public class CreateSyntaxTree {
         DocumentNode rootNote = (DocumentNode) syntaxTree.rootNode();
         NodeList nodeList = rootNote.members();
 
-        for (Object i : nodeList) {
-            if (i instanceof KeyValueNode) {
-                KeyValueNode node = (KeyValueNode) i;
-                if (!withinTable) {
-                    if (!checkKey(node.identifier())) {
-                        moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) i);
+        for (Object member : nodeList) {
+            if (member instanceof KeyValueNode) {
+                KeyValueNode node = (KeyValueNode) member;
+                if (!isTableEntry) {
+                    if (!isDatabaseConfigurationEntry(node.identifier())) {
+                        moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) member);
                     }
                 } else {
-                    moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) i);
+                    moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) member);
                 }
-            } else if (i instanceof TableNode || i instanceof TableArrayNode) {
-                withinTable = true;
-                moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) i);
+            } else if (member instanceof TableNode || member instanceof TableArrayNode) {
+                isTableEntry = true;
+                moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) member);
             }
         }
         Token eofToken = AbstractNodeFactory.createIdentifierToken("");
@@ -99,7 +99,7 @@ public class CreateSyntaxTree {
         return syntaxTreeFinal;
     }
 
-    private static boolean checkKey(KeyNode key) {
+    private static boolean isDatabaseConfigurationEntry(KeyNode key) {
         switch (key.toString().trim()) {
             case "provider":
             case "user":
