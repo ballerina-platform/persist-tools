@@ -46,7 +46,7 @@ import static io.ballerina.persist.PersistToolsConstants.DEFAULT_PROVIDER;
 import static io.ballerina.persist.PersistToolsConstants.DEFAULT_USER;
 
 /**
- * Class to create syntax tree for config.toml.
+ * Class to create syntax tree for Config.toml.
  */
 public class CreateSyntaxTree {
     private static final PrintStream outStream = System.out;
