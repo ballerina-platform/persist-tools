@@ -75,7 +75,7 @@ public class Init implements BLauncherCmd {
             try {
                 updateConfigToml();
             } catch (Exception e) {
-                outStream.println("File reading Error");
+                errStream.println("Failure when updating the Config.toml file: " + e.getMessage());
             }
         }
     }
