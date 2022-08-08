@@ -87,7 +87,7 @@ public class Init implements BLauncherCmd {
 
     private void updateConfigToml() throws Exception {
         SyntaxTree toml = CreateSyntaxTree.updateToml(configPath);
-        writeOutputFile(toml, Paths.get("").toAbsolutePath().toString() + "/config.toml");
+        writeOutputFile(toml, Paths.get("").toAbsolutePath().toString() + "/Config.toml");
     }
 
     private void writeOutputFile(SyntaxTree syntaxTree, String outPath) throws Exception {
