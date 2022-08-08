@@ -52,7 +52,7 @@ public class CreateSyntaxTree {
     private static final PrintStream outStream = System.out;
 
     /**
-     * Method to create new config.toml.
+     * Method to create a new Config.toml file with database configurations.
      */
     public static SyntaxTree createToml() {
         NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
