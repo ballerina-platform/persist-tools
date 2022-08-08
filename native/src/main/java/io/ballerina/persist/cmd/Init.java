@@ -34,11 +34,7 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-
-
-
 
 /**
  * Class to implement "persist init" command for ballerina.
@@ -60,18 +56,23 @@ public class Init implements BLauncherCmd {
 
     @Override
     public void execute() {
-        Path configPath = Paths.get("config.toml");
         try  {
             ProjectLoader.loadProject(Paths.get(""));
         } catch (ProjectException e) {
             errStream.println("Current Directory is not a Ballerina Project!");
             return;
         }
-        if (!Files.exists(configPath)) {
+        if (!Files.exists(PersistToolsConstants.CONFIG_PATH)) {
             try {
                 createConfigToml();
             } catch (Exception e) {
-                errStream.println(e.getMessage());
+                errStream.println("Failure when creating the Config.toml file: " + e.getMessage());
+            }
+        } else {
+            try {
+                updateConfigToml();
+            } catch (Exception e) {
+                errStream.println("Failure when updating the Config.toml file: " + e.getMessage());
             }
         }
     }
@@ -79,6 +80,11 @@ public class Init implements BLauncherCmd {
     private void createConfigToml() throws Exception {
         SyntaxTree toml = CreateSyntaxTree.createToml();
         writeOutputFile(toml, Paths.get("").toAbsolutePath().toString() + "/config.toml");
+    }
+
+    private void updateConfigToml() throws Exception {
+        SyntaxTree toml = CreateSyntaxTree.updateToml(PersistToolsConstants.CONFIG_PATH);
+        writeOutputFile(toml, Paths.get("").toAbsolutePath().toString() + "/Config.toml");
     }
 
     private void writeOutputFile(SyntaxTree syntaxTree, String outPath) throws Exception {
