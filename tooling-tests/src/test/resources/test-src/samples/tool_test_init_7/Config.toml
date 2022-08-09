@@ -1,3 +1,4 @@
+[foo]
 host = "wso2.com"
 port = 6688
 user = "john"

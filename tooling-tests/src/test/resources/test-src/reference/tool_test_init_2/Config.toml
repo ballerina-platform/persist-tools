@@ -1,14 +1,7 @@
-provider = "mysql"
+foo1 = "bar1"
+
 host = "localhost"
 port = 3306
 user = "root"
-password = ""
 database = ""
-
-[foo]
-provider = "foo"
-host = "foo"
-port = 12345
-user = "foo"
-password = "foo"
-database = "foo"
+password = ""

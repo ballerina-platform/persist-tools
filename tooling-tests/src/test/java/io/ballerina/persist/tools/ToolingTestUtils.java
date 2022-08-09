@@ -57,11 +57,6 @@ public class ToolingTestUtils {
         generateSourceCode(sourceDirPath.toAbsolutePath(), outPath.toAbsolutePath());
         Assert.assertTrue(Files.exists(actualConfigFilePath));
         Assert.assertEquals(readContent(actualConfigFilePath), readContent(referenceConfigFilePath));
-        try {
-            Files.deleteIfExists(actualConfigFilePath);
-        } catch (IOException e) {
-            Assert.fail("Failed to delete Config.toml file", e);
-        }
     }
 
     public static void assertGeneratedSourcesNegative(String subDir, String configFile) {

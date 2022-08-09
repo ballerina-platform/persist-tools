@@ -1,7 +1,1 @@
-[foo]
-provider = "foo"
-host = "foo"
-port = 12345
-user = "foo"
-password = "foo"
-database = "foo"
+foo1 = "bar1"

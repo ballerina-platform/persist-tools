@@ -24,6 +24,8 @@ plugins {
 
 description = 'Ballerina - persist-tools Tooling Test'
 
+def buildDir = "build";
+
 dependencies {
     checkstyle project(':checkstyle')
     checkstyle "com.puppycrawl.tools:checkstyle:${checkstylePluginVersion}"
@@ -42,6 +44,13 @@ dependencies {
 
 tasks.withType(Checkstyle) {
     exclude '**/module-info.java'
+}
+
+task copyTestResources(type: Copy) {
+    into buildDir
+    into("generated-sources/") {
+        from "src/test/resources/test-src/samples"
+    }
 }
 
 checkstyle {
@@ -75,6 +84,7 @@ checkstyleMain {
 }
 
 test {
+    dependsOn(copyTestResources)
     systemProperty "ballerina.offline.flag", "true"
     useTestNG() {
         suites 'src/test/resources/testng.xml'
