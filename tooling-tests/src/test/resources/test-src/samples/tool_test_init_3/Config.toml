@@ -1,0 +1,14 @@
+provider = "foo"
+host = "foo"
+port = 12344
+user = "foo"
+password = "foo"
+database = "foo"
+
+[foo]
+provider = "foo"
+host = "foo"
+port = 12345
+user = "foo"
+password = "foo"
+database = "foo"

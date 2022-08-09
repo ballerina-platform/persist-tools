@@ -20,6 +20,7 @@ package io.ballerina.persist.cmd;
 import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.nodegenerator.CreateSyntaxTree;
+import io.ballerina.projects.ProjectEnvironmentBuilder;
 import io.ballerina.projects.ProjectException;
 import io.ballerina.projects.directory.ProjectLoader;
 import io.ballerina.toml.syntax.tree.SyntaxTree;
@@ -34,6 +35,7 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
@@ -48,6 +50,11 @@ public class Init implements BLauncherCmd {
     private static final Logger LOG = LoggerFactory.getLogger(PersistCmd.class);
     private final PrintStream outStream = System.out;
     private final PrintStream errStream = System.err;
+    private String sourcePath = "";
+    private ProjectEnvironmentBuilder projectEnvironmentBuilder;
+    private String configPath = PersistToolsConstants.CONFIG_PATH;
+
+    private String generationPath = "";
 
     private CommandLine parentCmdParser;
 
@@ -57,16 +64,20 @@ public class Init implements BLauncherCmd {
     @Override
     public void execute() {
         try  {
-            ProjectLoader.loadProject(Paths.get(""));
+            if (projectEnvironmentBuilder == null) {
+                ProjectLoader.loadProject(Paths.get(""));
+            } else {
+                ProjectLoader.loadProject(Paths.get(this.sourcePath), projectEnvironmentBuilder);
+            }
         } catch (ProjectException e) {
             errStream.println("Current Directory is not a Ballerina Project!");
             return;
         }
-        if (!Files.exists(PersistToolsConstants.CONFIG_PATH)) {
+        if (!Files.exists(Paths.get(sourcePath, configPath))) {
             try {
                 createConfigToml();
             } catch (Exception e) {
-                errStream.println("Failure when creating the Config.toml file: " + e.getMessage());
+                errStream.println("Failure when creating the Config.toml file: ");
             }
         } else {
             try {
@@ -79,16 +90,18 @@ public class Init implements BLauncherCmd {
 
     private void createConfigToml() throws Exception {
         SyntaxTree toml = CreateSyntaxTree.createToml();
-        writeOutputFile(toml, Paths.get("").toAbsolutePath().toString() + "/config.toml");
+        writeOutputFile(toml, Paths.get(this.generationPath).toAbsolutePath().toString() + "/Config.toml");
     }
 
     private void updateConfigToml() throws Exception {
-        SyntaxTree toml = CreateSyntaxTree.updateToml(PersistToolsConstants.CONFIG_PATH);
-        writeOutputFile(toml, Paths.get("").toAbsolutePath().toString() + "/Config.toml");
+        SyntaxTree toml = CreateSyntaxTree.updateToml(Paths.get(this.sourcePath, this.configPath));
+        writeOutputFile(toml, Paths.get(this.generationPath).toAbsolutePath().toString() + "/Config.toml");
     }
 
     private void writeOutputFile(SyntaxTree syntaxTree, String outPath) throws Exception {
         String content = "";
+        Path pathToFile = Paths.get(outPath);
+        Files.createDirectories(pathToFile.getParent());
         try {
             content = Formatter.format(syntaxTree.toSourceCode());
         } catch (FormatterException e) {
@@ -99,6 +112,18 @@ public class Init implements BLauncherCmd {
         } catch (IOException e) {
             throw e;
         }
+    }
+
+    public void setSourcePath(String sourceDir) {
+        this.sourcePath = sourceDir;
+    }
+
+    public void setEnviorenmentBuilder(ProjectEnvironmentBuilder projectEnvironmentBuilder) {
+        this.projectEnvironmentBuilder = projectEnvironmentBuilder;
+    }
+
+    public void setGenerationPath(String generationDir) {
+        this.generationPath = generationDir;
     }
 
     @Override

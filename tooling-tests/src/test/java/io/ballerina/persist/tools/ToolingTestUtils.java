@@ -18,9 +18,15 @@
 
 package io.ballerina.persist.tools;
 
-import io.ballerina.persist.cmd.PersistCmd;
+import io.ballerina.persist.cmd.Init;
+import io.ballerina.projects.ProjectEnvironmentBuilder;
+import io.ballerina.projects.environment.Environment;
+import io.ballerina.projects.environment.EnvironmentBuilder;
+import org.testng.Assert;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -30,30 +36,63 @@ import java.nio.file.Paths;
 public class ToolingTestUtils {
 
     public static final String SAMPLES_DIRECTORY = "samples/";
-    public static final String BAL_FILE_DIRECTORY = "generated-sources/";
-    public static final String GENERATED_SOURCES_DIRECTORY = "build/generated-sources/";
-    public static final String BALLERINA_TOML_FILE = "Ballerina.toml";
 
-    public static final Path RESOURCE_DIRECTORY = Paths.get("src", "test", "resources", "test-src")
+    public static final String REFERENCE_DIRECTORY = "reference/";
+    public static final String GENERATED_SOURCES_DIRECTORY = "build/generated-sources/";
+    public static final Path RESOURCE_PATH = Paths.get("src", "test", "resources", "test-src")
             .toAbsolutePath();
     private static final Path DISTRIBUTION_PATH = Paths.get("../", "target", "ballerina-runtime")
             .toAbsolutePath();
-    private static final Path BALLERINA_TOML_PATH = Paths.get(RESOURCE_DIRECTORY.toString(), BALLERINA_TOML_FILE);
-
-    public static void assertGeneratedSources() {
-
-        generateSourceCode();
+    private static ProjectEnvironmentBuilder getEnvironmentBuilder() {
+        Environment environment = EnvironmentBuilder.getBuilder().setBallerinaHome(DISTRIBUTION_PATH).build();
+        return ProjectEnvironmentBuilder.getBuilder(environment);
     }
 
-    public static void generateSourceCode() {
-        Class<?> persistCmdClass;
+    public static void assertGeneratedSources(String subDir, String configFile) {
+        Path sourceDirPath = Paths.get(RESOURCE_PATH.toString(), SAMPLES_DIRECTORY, subDir);
+        Path outPath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);
+        Path referenceFilePath = Paths.get(RESOURCE_PATH.toString(), REFERENCE_DIRECTORY, subDir);
+        Path actualConfigFilePath = outPath.resolve(configFile);
+        Path referenceConfigFilePath = referenceFilePath.resolve(configFile);
+        generateSourceCode(sourceDirPath.toAbsolutePath(), outPath.toAbsolutePath());
+        Assert.assertTrue(Files.exists(actualConfigFilePath));
+        Assert.assertEquals(readContent(actualConfigFilePath), readContent(referenceConfigFilePath));
         try {
-            persistCmdClass = Class.forName("io.ballerina.persist.cmd.PersistCmd");
-            PersistCmd persistCmd = (PersistCmd) persistCmdClass.getDeclaredConstructor().newInstance();
-            persistCmd.execute();
+            Files.deleteIfExists(actualConfigFilePath);
+        } catch (IOException e) {
+            Assert.fail("Failed to delete Config.toml file", e);
+        }
+    }
+
+    public static void assertGeneratedSourcesNegative(String subDir, String configFile) {
+        Path sourceDirPath = Paths.get(RESOURCE_PATH.toString(), SAMPLES_DIRECTORY, subDir);
+        Path outPath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);
+        Path actualConfigFilePath = outPath.resolve(configFile);
+        generateSourceCode(sourceDirPath, outPath);
+        Assert.assertFalse(Files.exists(actualConfigFilePath));
+    }
+
+    public static void generateSourceCode(Path sourcePath, Path generatePath) {
+        Class<?> persistInitClass;
+        try {
+            persistInitClass = Class.forName("io.ballerina.persist.cmd.Init");
+            Init persistCmdInit = (Init) persistInitClass.getDeclaredConstructor().newInstance();
+            persistCmdInit.setSourcePath(sourcePath.toAbsolutePath().toString());
+            persistCmdInit.setGenerationPath(generatePath.toAbsolutePath().toString());
+            persistCmdInit.setEnviorenmentBuilder(getEnvironmentBuilder());
+            persistCmdInit.execute();
         } catch (ClassNotFoundException | IllegalAccessException | InstantiationException |
                 NoSuchMethodException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
+    }
+    public static String readContent(Path filePath) {
+        String content;
+        try {
+            content = Files.readString(filePath);
+        } catch (IOException e) {
+            return "";
+        }
+        return content.replaceAll("\n", "");
     }
 }
