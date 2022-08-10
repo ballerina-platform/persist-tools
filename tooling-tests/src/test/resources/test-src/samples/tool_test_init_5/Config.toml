@@ -1,4 +1,4 @@
-oo1 = "bar1"
+foo1 = "bar1"
 host = "wso2.com"
 port = 6688
 user = "john"
