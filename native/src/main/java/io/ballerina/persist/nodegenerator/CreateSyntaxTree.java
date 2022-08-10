@@ -104,13 +104,16 @@ public class CreateSyntaxTree {
                     moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) member);
                 }
             } else if (member instanceof TableNode || member instanceof TableArrayNode) {
-                if (!moduleMembers.isEmpty()) {
+                if (!existingNodes.isEmpty() || !moduleMembers.isEmpty()) {
                     moduleMembers = addNewLine(moduleMembers, 2);
+                    moduleMembers = poulateRemaining(moduleMembers, existingNodes);
+                    moduleMembers = addNewLine(moduleMembers, 1);
+                    isTableEntry = true;
+                    moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) member);
+                } else {
+                    isTableEntry = true;
+                    moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) member);
                 }
-                moduleMembers = poulateRemaining(moduleMembers, existingNodes);
-                moduleMembers = addNewLine(moduleMembers, 1);
-                isTableEntry = true;
-                moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) member);
             }
         }
         if (existingNodes.size() != 5) {
