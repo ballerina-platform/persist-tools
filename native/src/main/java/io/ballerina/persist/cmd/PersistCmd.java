@@ -19,8 +19,6 @@ package io.ballerina.persist.cmd;
 
 import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.PersistToolsConstants;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 
 import java.io.PrintStream;
