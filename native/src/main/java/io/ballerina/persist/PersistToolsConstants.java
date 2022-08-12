@@ -29,7 +29,6 @@ public class PersistToolsConstants {
 
     public static final String DEFAULT_USER = "root";
     public static final String DEFAULT_PORT = "3306";
-    public static final String DEFAULT_PROVIDER = "mysql";
     public static final String DEFAULT_PASSWORD = "";
     public static final String DEFAULT_DATABASE = "";
     public static final String DEFAULT_HOST = "localhost";

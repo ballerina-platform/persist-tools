@@ -37,8 +37,6 @@ import java.io.PrintStream;
 
 public class PersistCmd implements BLauncherCmd {
 
-    private static final Logger LOG = LoggerFactory.getLogger(PersistCmd.class);
-
     private static final PrintStream outStream = System.out;
     private static final String PROTO_EXTENSION = "persist";
 

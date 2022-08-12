@@ -47,8 +47,7 @@ import java.nio.file.Paths;
         description = "generate database configurations.")
 
 public class Init implements BLauncherCmd {
-    private static final Logger LOG = LoggerFactory.getLogger(PersistCmd.class);
-    private final PrintStream outStream = System.out;
+
     private final PrintStream errStream = System.err;
     private String sourcePath = "";
     private ProjectEnvironmentBuilder projectEnvironmentBuilder;

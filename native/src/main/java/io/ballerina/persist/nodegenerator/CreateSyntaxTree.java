@@ -49,7 +49,7 @@ import static io.ballerina.persist.PersistToolsConstants.DEFAULT_USER;
  * Class to create syntax tree for Config.toml.
  */
 public class CreateSyntaxTree {
-    private static final PrintStream outStream = System.out;
+
     private static String[] nodeMap = {"host", "port", "user", "database", "password"};
     private static String[] defaultValues = {"localhost", "3306", "root", "", ""};
 
