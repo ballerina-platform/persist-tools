@@ -17,9 +17,6 @@
  */
 package io.ballerina.persist;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
 /**
  * Persist Tool contants class.
  */
@@ -37,6 +34,6 @@ public class PersistToolsConstants {
     public static final String DEFAULT_DATABASE = "";
     public static final String DEFAULT_HOST = "localhost";
 
-    public static final Path CONFIG_PATH = Paths.get("Config.toml");
+    public static final String CONFIG_PATH = "Config.toml";
 
 }

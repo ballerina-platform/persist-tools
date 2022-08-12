@@ -1,0 +1,13 @@
+[foo]
+host = "wso2.com"
+port = 6688
+user = "john"
+password = "john123"
+database = "mariadb"
+
+host = "localhost"
+port = 3306
+user = "root"
+database = ""
+password = ""
+
