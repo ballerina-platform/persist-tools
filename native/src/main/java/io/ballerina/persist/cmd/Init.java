@@ -64,17 +64,14 @@ public class Init implements BLauncherCmd {
     public void execute() {
         try  {
             if (projectEnvironmentBuilder == null) {
-                Project balProject = ProjectLoader.loadProject(Paths.get(""));
-                String orgName = balProject.currentPackage().descriptor().org().value();
-                String projectName = balProject.currentPackage().descriptor().name().value();
-                name = orgName + "." + projectName;
+                balProject = ProjectLoader.loadProject(Paths.get(""));
 
             } else {
-                Project balProject = ProjectLoader.loadProject(Paths.get(this.sourcePath), projectEnvironmentBuilder);
-                String orgName = balProject.currentPackage().descriptor().org().value();
-                String projectName = balProject.currentPackage().descriptor().name().value();
-                name = orgName + "." + projectName;
+                balProject = ProjectLoader.loadProject(Paths.get(this.sourcePath), projectEnvironmentBuilder);
             }
+            String orgName = balProject.currentPackage().descriptor().org().value();
+            String projectName = balProject.currentPackage().descriptor().name().value();
+            name = orgName + "." + projectName;
         } catch (ProjectException e) {
             errStream.println("The current directory is not a Ballerina project!");
             return;
