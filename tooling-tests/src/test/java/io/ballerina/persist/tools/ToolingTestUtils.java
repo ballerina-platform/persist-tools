@@ -90,6 +90,6 @@ public class ToolingTestUtils {
             errStream.println(e.getMessage());
             return "";
         }
-        return content.replaceAll("\n", "");
+        return content.replaceAll(System.lineSeparator(), "");
     }
 }

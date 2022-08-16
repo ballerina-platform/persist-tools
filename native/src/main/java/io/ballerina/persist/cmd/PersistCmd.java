@@ -36,7 +36,6 @@ import java.io.PrintStream;
 public class PersistCmd implements BLauncherCmd {
 
     private static final PrintStream outStream = System.out;
-    private static final String PROTO_EXTENSION = "persist"; //remove
 
     private CommandLine parentCmdParser;
 
@@ -67,6 +66,7 @@ public class PersistCmd implements BLauncherCmd {
     
     @Override
     public void printUsage(StringBuilder stringBuilder) {
-        stringBuilder.append("  ballerina " + PersistToolsConstants.COMPONENT_IDENTIFIER + " \n");
+        stringBuilder.append("  ballerina " + PersistToolsConstants.COMPONENT_IDENTIFIER
+                + System.lineSeparator());
     }
 }
