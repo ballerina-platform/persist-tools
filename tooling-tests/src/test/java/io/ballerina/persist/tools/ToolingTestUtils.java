@@ -25,6 +25,7 @@ import io.ballerina.projects.environment.EnvironmentBuilder;
 import org.testng.Assert;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,6 +35,8 @@ import java.nio.file.Paths;
  * persist tool test Utils.
  */
 public class ToolingTestUtils {
+
+    private static PrintStream errStream = System.err;
 
     public static final String SAMPLES_DIRECTORY = "samples/";
 
@@ -49,43 +52,41 @@ public class ToolingTestUtils {
     }
 
     public static void assertGeneratedSources(String subDir, String configFile) {
-        Path sourceDirPath = Paths.get(RESOURCE_PATH.toString(), SAMPLES_DIRECTORY, subDir);
-        Path outPath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);
+        Path sourceDirPath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);
         Path referenceFilePath = Paths.get(RESOURCE_PATH.toString(), REFERENCE_DIRECTORY, subDir);
-        Path actualConfigFilePath = outPath.resolve(configFile);
+        Path actualConfigFilePath = sourceDirPath.resolve(configFile);
         Path referenceConfigFilePath = referenceFilePath.resolve(configFile);
-        generateSourceCode(sourceDirPath.toAbsolutePath(), outPath.toAbsolutePath());
+        generateSourceCode(sourceDirPath.toAbsolutePath());
         Assert.assertTrue(Files.exists(actualConfigFilePath));
         Assert.assertEquals(readContent(actualConfigFilePath), readContent(referenceConfigFilePath));
     }
 
     public static void assertGeneratedSourcesNegative(String subDir, String configFile) {
-        Path sourceDirPath = Paths.get(RESOURCE_PATH.toString(), SAMPLES_DIRECTORY, subDir);
-        Path outPath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);
-        Path actualConfigFilePath = outPath.resolve(configFile);
-        generateSourceCode(sourceDirPath, outPath);
+        Path sourceDirPath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);
+        Path actualConfigFilePath = sourceDirPath.resolve(configFile);
+        generateSourceCode(sourceDirPath);
         Assert.assertFalse(Files.exists(actualConfigFilePath));
     }
 
-    public static void generateSourceCode(Path sourcePath, Path generatePath) {
+    private static void generateSourceCode(Path sourcePath) {
         Class<?> persistInitClass;
         try {
             persistInitClass = Class.forName("io.ballerina.persist.cmd.Init");
             Init persistCmdInit = (Init) persistInitClass.getDeclaredConstructor().newInstance();
             persistCmdInit.setSourcePath(sourcePath.toAbsolutePath().toString());
-            persistCmdInit.setGenerationPath(generatePath.toAbsolutePath().toString());
-            persistCmdInit.setEnviorenmentBuilder(getEnvironmentBuilder());
+            persistCmdInit.setEnvironmentBuilder(getEnvironmentBuilder());
             persistCmdInit.execute();
         } catch (ClassNotFoundException | IllegalAccessException | InstantiationException |
                 NoSuchMethodException | InvocationTargetException e) {
-            throw new RuntimeException(e);
+            errStream.println(e.getMessage());
         }
     }
-    public static String readContent(Path filePath) {
+    private static String readContent(Path filePath) {
         String content;
         try {
             content = Files.readString(filePath);
         } catch (IOException e) {
+            errStream.println(e.getMessage());
             return "";
         }
         return content.replaceAll("\n", "");

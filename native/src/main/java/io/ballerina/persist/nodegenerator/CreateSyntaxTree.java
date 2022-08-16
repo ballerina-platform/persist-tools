@@ -69,7 +69,8 @@ public class CreateSyntaxTree {
     /**
      * Method to update the Config.toml with database configurations.
      */
-    public static SyntaxTree updateToml(Path configPath) throws IOException {
+    public static SyntaxTree updateToml(Path configPath, String name) throws IOException {
+
         boolean isTableEntry = false;
         ArrayList<String> existingNodes = new ArrayList<String>();
         NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
@@ -116,7 +117,13 @@ public class CreateSyntaxTree {
                 }
             }
         }
-        if (existingNodes.size() != 5) {
+        if (existingNodes.isEmpty() && isTableEntry == true) {
+            moduleMembers = addNewLine(moduleMembers, 2);
+            moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(name, null));
+            moduleMembers = poulateRemaining(moduleMembers, existingNodes);
+            moduleMembers = addNewLine(moduleMembers, 1);
+            
+        } else if (existingNodes.size() != 5) {
             moduleMembers = addNewLine(moduleMembers, 2);
             moduleMembers = poulateRemaining(moduleMembers, existingNodes);
         }

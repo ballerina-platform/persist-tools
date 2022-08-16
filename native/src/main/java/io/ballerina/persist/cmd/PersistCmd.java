@@ -19,8 +19,6 @@ package io.ballerina.persist.cmd;
 
 import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.PersistToolsConstants;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 
 import java.io.PrintStream;
@@ -37,10 +35,8 @@ import java.io.PrintStream;
 
 public class PersistCmd implements BLauncherCmd {
 
-    private static final Logger LOG = LoggerFactory.getLogger(PersistCmd.class);
-
     private static final PrintStream outStream = System.out;
-    private static final String PROTO_EXTENSION = "persist";
+    private static final String PROTO_EXTENSION = "persist"; //remove
 
     private CommandLine parentCmdParser;
 

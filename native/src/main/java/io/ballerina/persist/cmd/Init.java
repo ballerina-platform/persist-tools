@@ -20,14 +20,13 @@ package io.ballerina.persist.cmd;
 import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.nodegenerator.CreateSyntaxTree;
+import io.ballerina.projects.Project;
 import io.ballerina.projects.ProjectEnvironmentBuilder;
 import io.ballerina.projects.ProjectException;
 import io.ballerina.projects.directory.ProjectLoader;
 import io.ballerina.toml.syntax.tree.SyntaxTree;
 import org.ballerinalang.formatter.core.Formatter;
 import org.ballerinalang.formatter.core.FormatterException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 
 import java.io.IOException;
@@ -47,16 +46,16 @@ import java.nio.file.Paths;
         description = "generate database configurations.")
 
 public class Init implements BLauncherCmd {
-    private static final Logger LOG = LoggerFactory.getLogger(PersistCmd.class);
     private final PrintStream outStream = System.out;
     private final PrintStream errStream = System.err;
     private String sourcePath = "";
     private ProjectEnvironmentBuilder projectEnvironmentBuilder;
     private String configPath = PersistToolsConstants.CONFIG_PATH;
 
-    private String generationPath = "";
-
     private CommandLine parentCmdParser;
+    private String name = "";
+
+    Project balProject;
 
     @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
     private boolean helpFlag;
@@ -65,19 +64,26 @@ public class Init implements BLauncherCmd {
     public void execute() {
         try  {
             if (projectEnvironmentBuilder == null) {
-                ProjectLoader.loadProject(Paths.get(""));
+                Project balProject = ProjectLoader.loadProject(Paths.get(""));
+                String orgName = balProject.currentPackage().descriptor().org().value();
+                String projectName = balProject.currentPackage().descriptor().name().value();
+                name = orgName + "." + projectName;
+
             } else {
-                ProjectLoader.loadProject(Paths.get(this.sourcePath), projectEnvironmentBuilder);
+                Project balProject = ProjectLoader.loadProject(Paths.get(this.sourcePath), projectEnvironmentBuilder);
+                String orgName = balProject.currentPackage().descriptor().org().value();
+                String projectName = balProject.currentPackage().descriptor().name().value();
+                name = orgName + "." + projectName;
             }
         } catch (ProjectException e) {
-            errStream.println("Current Directory is not a Ballerina Project!");
+            errStream.println("The current directory is not a Ballerina project!");
             return;
         }
         if (!Files.exists(Paths.get(sourcePath, configPath))) {
             try {
                 createConfigToml();
             } catch (Exception e) {
-                errStream.println("Failure when creating the Config.toml file: ");
+                errStream.println("Failure when creating the Config.toml file: " + e.getMessage());
             }
         } else {
             try {
@@ -87,15 +93,14 @@ public class Init implements BLauncherCmd {
             }
         }
     }
-
     private void createConfigToml() throws Exception {
         SyntaxTree toml = CreateSyntaxTree.createToml();
-        writeOutputFile(toml, Paths.get(this.generationPath).toAbsolutePath().toString() + "/Config.toml");
+        writeOutputFile(toml, Paths.get(this.sourcePath, "Config.toml").toAbsolutePath().toString());
     }
 
     private void updateConfigToml() throws Exception {
-        SyntaxTree toml = CreateSyntaxTree.updateToml(Paths.get(this.sourcePath, this.configPath));
-        writeOutputFile(toml, Paths.get(this.generationPath).toAbsolutePath().toString() + "/Config.toml");
+        SyntaxTree toml = CreateSyntaxTree.updateToml(Paths.get(this.sourcePath, this.configPath), this.name);
+        writeOutputFile(toml, Paths.get(this.sourcePath, "Config.toml").toAbsolutePath().toString());
     }
 
     private void writeOutputFile(SyntaxTree syntaxTree, String outPath) throws Exception {
@@ -105,7 +110,7 @@ public class Init implements BLauncherCmd {
         try {
             content = Formatter.format(syntaxTree.toSourceCode());
         } catch (FormatterException e) {
-            throw e;
+            throw e; //
         }
         try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8.name())) {
             writer.println(content);
@@ -118,12 +123,8 @@ public class Init implements BLauncherCmd {
         this.sourcePath = sourceDir;
     }
 
-    public void setEnviorenmentBuilder(ProjectEnvironmentBuilder projectEnvironmentBuilder) {
+    public void setEnvironmentBuilder(ProjectEnvironmentBuilder projectEnvironmentBuilder) { //to do corrections
         this.projectEnvironmentBuilder = projectEnvironmentBuilder;
-    }
-
-    public void setGenerationPath(String generationDir) {
-        this.generationPath = generationDir;
     }
 
     @Override
