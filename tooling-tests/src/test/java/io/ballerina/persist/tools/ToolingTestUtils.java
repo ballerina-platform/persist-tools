@@ -24,6 +24,7 @@ import io.ballerina.projects.environment.Environment;
 import io.ballerina.projects.environment.EnvironmentBuilder;
 import org.testng.Assert;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
@@ -38,13 +39,13 @@ public class ToolingTestUtils {
 
     private static PrintStream errStream = System.err;
 
-    public static final String SAMPLES_DIRECTORY = "samples/";
+    public static final String SAMPLES_DIRECTORY = "samples";
 
-    public static final String REFERENCE_DIRECTORY = "reference/";
+    public static final String REFERENCE_DIRECTORY = "reference";
     public static final String GENERATED_SOURCES_DIRECTORY = Paths.get("build", "generated-sources").toString();
     public static final Path RESOURCE_PATH = Paths.get("src", "test", "resources", "test-src")
             .toAbsolutePath();
-    private static final Path DISTRIBUTION_PATH = Paths.get("../", "target", "ballerina-runtime")
+    private static final Path DISTRIBUTION_PATH = Paths.get(".." + File.separator, "target", "ballerina-runtime")
             .toAbsolutePath();
     private static ProjectEnvironmentBuilder getEnvironmentBuilder() {
         Environment environment = EnvironmentBuilder.getBuilder().setBallerinaHome(DISTRIBUTION_PATH).build();
