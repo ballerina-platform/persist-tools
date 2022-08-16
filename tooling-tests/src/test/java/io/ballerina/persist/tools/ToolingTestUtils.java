@@ -41,7 +41,7 @@ public class ToolingTestUtils {
     public static final String SAMPLES_DIRECTORY = "samples/";
 
     public static final String REFERENCE_DIRECTORY = "reference/";
-    public static final String GENERATED_SOURCES_DIRECTORY = "build/generated-sources/";
+    public static final String GENERATED_SOURCES_DIRECTORY = Paths.get("build", "generated-sources").toString();
     public static final Path RESOURCE_PATH = Paths.get("src", "test", "resources", "test-src")
             .toAbsolutePath();
     private static final Path DISTRIBUTION_PATH = Paths.get("../", "target", "ballerina-runtime")
