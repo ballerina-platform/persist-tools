@@ -91,13 +91,13 @@ public class Init implements BLauncherCmd {
         }
     }
     private void createConfigToml() throws Exception {
-        SyntaxTree toml = CreateSyntaxTree.createToml();
-        writeOutputFile(toml, Paths.get(this.sourcePath, "Config.toml").toAbsolutePath().toString());
+        SyntaxTree syntaxTree = CreateSyntaxTree.createToml();
+        writeOutputFile(syntaxTree, Paths.get(this.sourcePath, "Config.toml").toAbsolutePath().toString());
     }
 
     private void updateConfigToml() throws Exception {
-        SyntaxTree toml = CreateSyntaxTree.updateToml(Paths.get(this.sourcePath, this.configPath), this.name);
-        writeOutputFile(toml, Paths.get(this.sourcePath, "Config.toml").toAbsolutePath().toString());
+        SyntaxTree syntaxTree = CreateSyntaxTree.updateToml(Paths.get(this.sourcePath, this.configPath), this.name);
+        writeOutputFile(syntaxTree, Paths.get(this.sourcePath, "Config.toml").toAbsolutePath().toString());
     }
 
     private void writeOutputFile(SyntaxTree syntaxTree, String outPath) throws Exception {
