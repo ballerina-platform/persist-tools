@@ -44,14 +44,21 @@ import static io.ballerina.persist.PersistToolsConstants.DEFAULT_HOST;
 import static io.ballerina.persist.PersistToolsConstants.DEFAULT_PASSWORD;
 import static io.ballerina.persist.PersistToolsConstants.DEFAULT_PORT;
 import static io.ballerina.persist.PersistToolsConstants.DEFAULT_USER;
+import static io.ballerina.persist.PersistToolsConstants.KEY_DATABASE;
+import static io.ballerina.persist.PersistToolsConstants.KEY_HOST;
+import static io.ballerina.persist.PersistToolsConstants.KEY_PASSWORD;
+import static io.ballerina.persist.PersistToolsConstants.KEY_PORT;
+import static io.ballerina.persist.PersistToolsConstants.KEY_USER;
+
 
 /**
  * Class to create syntax tree for Config.toml.
  */
 public class CreateSyntaxTree {
     private static final PrintStream outStream = System.out;
-    private static String[] nodeMap = {"host", "port", "user", "database", "password"};
-    private static String[] defaultValues = {"localhost", "3306", "root", "", ""};
+    private static String[] nodeMap = {KEY_HOST, KEY_PORT, KEY_USER, KEY_DATABASE, KEY_PASSWORD};
+    private static String[] defaultValues = {DEFAULT_HOST, DEFAULT_PORT, DEFAULT_USER, DEFAULT_DATABASE,
+            DEFAULT_DATABASE};
 
     /**
      * Method to create a new Config.toml file with database configurations.
@@ -87,7 +94,7 @@ public class CreateSyntaxTree {
                     if (!isDatabaseConfigurationEntry(node.identifier())) {
                         moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) member);
                     } else {
-                        if (node.identifier().toString().trim().equals("port")) {
+                        if (node.identifier().toString().trim().equals(KEY_PORT)) {
                             existingNodes.add(node.identifier().toString().trim());
                             moduleMembers = moduleMembers.add(SampleNodeGenerator.createNumericKV(
                                     node.identifier().toString().trim(),
@@ -138,11 +145,11 @@ public class CreateSyntaxTree {
 
     private static boolean isDatabaseConfigurationEntry(KeyNode key) {
         switch (key.toString().trim()) {
-            case "user":
-            case "database":
-            case "password":
-            case "host":
-            case "port":
+            case KEY_USER:
+            case KEY_DATABASE:
+            case KEY_PASSWORD:
+            case KEY_HOST:
+            case KEY_PORT:
                 return true;
             default:
                 return false;
@@ -160,11 +167,11 @@ public class CreateSyntaxTree {
     }
 
     private static NodeList populateNodeList(NodeList moduleMembers, boolean create) {
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("host", DEFAULT_HOST, null));
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createNumericKV("port", DEFAULT_PORT, null));
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("user", DEFAULT_USER, null));
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("password", DEFAULT_PASSWORD, null));
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("database", DEFAULT_DATABASE, null));
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_HOST, DEFAULT_HOST, null));
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createNumericKV(KEY_PORT, DEFAULT_PORT, null));
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_USER, DEFAULT_USER, null));
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_PASSWORD, DEFAULT_PASSWORD, null));
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_DATABASE, DEFAULT_DATABASE, null));
         if (!create) {
             moduleMembers = moduleMembers.add(AbstractNodeFactory.createIdentifierToken("\n"));
         }
@@ -181,7 +188,7 @@ public class CreateSyntaxTree {
     private static NodeList poulateRemaining(NodeList moduleMembers, ArrayList existingNodes) {
         for (Object key : nodeMap) {
             if (!existingNodes.contains((String) key)) {
-                if (((String) key).equals("port")) {
+                if (((String) key).equals(KEY_PORT)) {
                     moduleMembers = moduleMembers.add(SampleNodeGenerator.createNumericKV((String) key,
                             defaultValues[indexOf(nodeMap, (String) key)], null));
                     existingNodes.add((String) key);

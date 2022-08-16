@@ -29,10 +29,15 @@ public class PersistToolsConstants {
 
     public static final String DEFAULT_USER = "root";
     public static final String DEFAULT_PORT = "3306";
-    public static final String DEFAULT_PROVIDER = "mysql";
     public static final String DEFAULT_PASSWORD = "";
     public static final String DEFAULT_DATABASE = "";
     public static final String DEFAULT_HOST = "localhost";
+
+    public static final String KEY_USER = "user";
+    public static final String KEY_PORT = "port";
+    public static final String KEY_PASSWORD = "password";
+    public static final String KEY_DATABASE = "database";
+    public static final String KEY_HOST = "host";
 
     public static final String CONFIG_PATH = "Config.toml";
 

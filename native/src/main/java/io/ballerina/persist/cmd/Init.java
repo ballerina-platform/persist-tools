@@ -107,7 +107,7 @@ public class Init implements BLauncherCmd {
         try {
             content = Formatter.format(syntaxTree.toSourceCode());
         } catch (FormatterException e) {
-            throw e; //
+            throw e;
         }
         try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8.name())) {
             writer.println(content);
@@ -135,8 +135,7 @@ public class Init implements BLauncherCmd {
     
     @Override
     public void printLongDesc(StringBuilder out) {
-        out.append("Generate database configurations file inside the Ballerina project")
-                .append(System.lineSeparator());
+        out.append("Generate database configurations file inside the Ballerina project").append(System.lineSeparator());
         out.append(System.lineSeparator());
     }
     
