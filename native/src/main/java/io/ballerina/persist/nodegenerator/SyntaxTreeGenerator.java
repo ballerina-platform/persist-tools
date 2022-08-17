@@ -90,24 +90,23 @@ public class SyntaxTreeGenerator {
             } else if (member instanceof TableNode) {
                 TableNode node = (TableNode) member;
                 if (node.identifier().toString().trim().equals(name)) {
-                    NodeList subNodeList = node.fields();
+                    NodeList<KeyValueNode> subNodeList = node.fields();
                     moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(name, null));
-                    for (Object subMember : subNodeList) {
-                        KeyValueNode subNode = (KeyValueNode) subMember;
-                        if (!isDatabaseConfigurationEntry(subNode.identifier())) {
+                    for (KeyValueNode subMember : subNodeList) {
+                        if (!isDatabaseConfigurationEntry(subMember.identifier())) {
                             moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) subMember);
                         } else {
-                            existingNodes.add(subNode.identifier().toString().trim());
-                            if (subNode.identifier().toString().trim().equals(KEY_PORT)) {
+                            existingNodes.add(subMember.identifier().toString().trim());
+                            if (subMember.identifier().toString().trim().equals(KEY_PORT)) {
                                 moduleMembers = moduleMembers.add(SampleNodeGenerator.createNumericKV(
-                                        subNode.identifier().toString().trim(),
+                                        subMember.identifier().toString().trim(),
                                         defaultValues[indexOf(
-                                                subNode.identifier().toString().trim())], null));
+                                                subMember.identifier().toString().trim())], null));
                             } else {
                                 moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
-                                        subNode.identifier().toString().trim(),
+                                        subMember.identifier().toString().trim(),
                                         defaultValues[indexOf(
-                                                subNode.identifier().toString().trim())], null));
+                                                subMember.identifier().toString().trim())], null));
                             }
                         }
                     }
