@@ -56,8 +56,8 @@ import static io.ballerina.persist.PersistToolsConstants.KEY_USER;
  */
 public class SyntaxTreeGenerator {
     private static final PrintStream outStream = System.out;
-    private static String[] nodeMap = {KEY_HOST, KEY_PORT, KEY_USER, KEY_DATABASE, KEY_PASSWORD};
-    private static String[] defaultValues = {DEFAULT_HOST, DEFAULT_PORT, DEFAULT_USER, DEFAULT_DATABASE,
+    private static final String[] nodeMap = {KEY_HOST, KEY_PORT, KEY_USER, KEY_DATABASE, KEY_PASSWORD};
+    private static final String[] defaultValues = {DEFAULT_HOST, DEFAULT_PORT, DEFAULT_USER, DEFAULT_DATABASE,
             DEFAULT_DATABASE};
 
     /**
