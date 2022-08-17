@@ -155,9 +155,9 @@ public class SyntaxTreeGenerator {
                 return false;
         }
     }
-    private static int indexOf(String[] arr, String key) {
+        private static int indexOf(String key) {
         int index = 0;
-        for (String member : arr) {
+        for (String member : SyntaxTreeGenerator.nodeMap) {
             if (key.equals(member)) {
                 return index;
             }
