@@ -37,7 +37,6 @@ import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 
 public class PersistCmd implements BLauncherCmd {
 
-    private static final PrintStream outStream = System.out;
     private static final PrintStream errStream = System.err;
 
     private CommandLine parentCmdParser;
