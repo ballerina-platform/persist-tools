@@ -54,7 +54,7 @@ import static io.ballerina.persist.PersistToolsConstants.KEY_USER;
 /**
  * Class to create syntax tree for Config.toml.
  */
-public class CreateSyntaxTree {
+public class SyntaxTreeGenerator {
     private static final PrintStream outStream = System.out;
     private static String[] nodeMap = {KEY_HOST, KEY_PORT, KEY_USER, KEY_DATABASE, KEY_PASSWORD};
     private static String[] defaultValues = {DEFAULT_HOST, DEFAULT_PORT, DEFAULT_USER, DEFAULT_DATABASE,
@@ -64,7 +64,7 @@ public class CreateSyntaxTree {
      * Method to create a new Config.toml file with database configurations.
      */
     public static SyntaxTree createToml(String name) {
-        NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
+        NodeList moduleMembers = AbstractNodeFactory.createEmptyNodeList();
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(name, null));
         moduleMembers = populateNodeList(moduleMembers);
         Token eofToken = AbstractNodeFactory.createIdentifierToken("");

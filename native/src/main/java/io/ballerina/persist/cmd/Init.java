@@ -19,15 +19,14 @@ package io.ballerina.persist.cmd;
 
 import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.PersistToolsConstants;
-import io.ballerina.persist.nodegenerator.CreateSyntaxTree;
+import io.ballerina.persist.nodegenerator.SyntaxTreeGenerator;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.ProjectEnvironmentBuilder;
 import io.ballerina.projects.ProjectException;
 import io.ballerina.projects.directory.ProjectLoader;
-import io.ballerina.toml.syntax.tree.SyntaxTree; //import org.ballerinalang.formatter.core.Formatter;import org.ballerinalang.formatter.core.FormatterException;
+import io.ballerina.toml.syntax.tree.SyntaxTree;
 import picocli.CommandLine;
 
-import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
@@ -46,11 +45,10 @@ import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
         description = "generate database configurations.")
 
 public class Init implements BLauncherCmd {
-    private final PrintStream outStream = System.out;
     private final PrintStream errStream = System.err;
     private String sourcePath = "";
     private ProjectEnvironmentBuilder projectEnvironmentBuilder;
-    private String configPath = PersistToolsConstants.CONFIG_PATH;
+    private final String configPath = PersistToolsConstants.CONFIG_PATH;
 
     private CommandLine parentCmdParser;
     private String name = "";
@@ -97,17 +95,17 @@ public class Init implements BLauncherCmd {
         }
     }
     private void createConfigToml() throws Exception {
-        SyntaxTree syntaxTree = CreateSyntaxTree.createToml(this.name);
+        SyntaxTree syntaxTree = SyntaxTreeGenerator.createToml(this.name);
         writeOutputFile(syntaxTree, Paths.get(this.sourcePath, "Config.toml").toAbsolutePath().toString());
     }
 
     private void updateConfigToml() throws Exception {
-        SyntaxTree syntaxTree = CreateSyntaxTree.updateToml(Paths.get(this.sourcePath, this.configPath), this.name);
+        SyntaxTree syntaxTree = SyntaxTreeGenerator.updateToml(Paths.get(this.sourcePath, this.configPath), this.name);
         writeOutputFile(syntaxTree, Paths.get(this.sourcePath, "Config.toml").toAbsolutePath().toString());
     }
 
     private void writeOutputFile(SyntaxTree syntaxTree, String outPath) throws Exception {
-        String content = "";
+        String content;
         Path pathToFile = Paths.get(outPath);
         Files.createDirectories(pathToFile.getParent());
         try {
@@ -117,8 +115,6 @@ public class Init implements BLauncherCmd {
         }
         try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8.name())) {
             writer.println(content);
-        } catch (IOException e) {
-            throw e;
         }
     }
 
@@ -148,6 +144,6 @@ public class Init implements BLauncherCmd {
     @Override
     public void printUsage(StringBuilder stringBuilder) {
         stringBuilder.append("  ballerina " + COMPONENT_IDENTIFIER +
-                " init" + System.lineSeparator());
+                " init").append(System.lineSeparator());
     }
 }
