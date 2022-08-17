@@ -65,10 +65,8 @@ public class CreateSyntaxTree {
      */
     public static SyntaxTree createToml(String name) {
         NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
-        outStream.println(name);
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(name, null));
         moduleMembers = populateNodeList(moduleMembers);
-        outStream.println(SampleNodeGenerator.createTable(name, null).identifier());
         Token eofToken = AbstractNodeFactory.createIdentifierToken("");
         DocumentNode documentNode = NodeFactory.createDocumentNode(moduleMembers, eofToken);
         TextDocument textDocument = TextDocuments.from(documentNode.toSourceCode());

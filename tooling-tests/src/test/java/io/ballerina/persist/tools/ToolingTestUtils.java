@@ -39,9 +39,9 @@ public class ToolingTestUtils {
 
     private static PrintStream errStream = System.err;
 
-    public static final String SAMPLES_DIRECTORY = "samples";
+    public static final String SAMPLES_DIRECTORY = "input";
 
-    public static final String REFERENCE_DIRECTORY = "reference";
+    public static final String REFERENCE_DIRECTORY = "output";
     public static final String GENERATED_SOURCES_DIRECTORY = Paths.get("build", "generated-sources").toString();
     public static final Path RESOURCE_PATH = Paths.get("src", "test", "resources", "test-src")
             .toAbsolutePath();
