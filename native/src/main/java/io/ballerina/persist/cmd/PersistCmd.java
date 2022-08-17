@@ -67,7 +67,7 @@ public class PersistCmd implements BLauncherCmd {
     
     @Override
     public void printUsage(StringBuilder stringBuilder) {
-        stringBuilder.append("  ballerina " + PersistToolsConstants.COMPONENT_IDENTIFIER
-                + System.lineSeparator());
+        stringBuilder.append("  ballerina " + PersistToolsConstants.COMPONENT_IDENTIFIER).
+                append(System.lineSeparator());
     }
 }
