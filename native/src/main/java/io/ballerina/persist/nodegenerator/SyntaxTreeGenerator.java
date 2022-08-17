@@ -95,8 +95,7 @@ public class SyntaxTreeGenerator {
                     NodeList subNodeList = node.fields();
                     moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(name, null));
                     for (Object subMember : subNodeList) {
-                        KeyValueNode subNode = (KeyValueNode) subMember;
-                        if (!isDatabaseConfigurationEntry(subNode.identifier())) {
+                        if (!isDatabaseConfigurationEntry(subMember.identifier())) {
                             moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) subMember);
                         } else {
                             if (subNode.identifier().toString().trim().equals(KEY_PORT)) {
