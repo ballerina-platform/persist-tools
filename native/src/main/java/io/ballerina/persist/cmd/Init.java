@@ -107,11 +107,7 @@ public class Init implements BLauncherCmd {
         String content;
         Path pathToFile = Paths.get(outPath);
         Files.createDirectories(pathToFile.getParent());
-        try {
-            content = syntaxTree.toSourceCode();
-        } catch (Exception e) {
-            throw e;
-        }
+        content = syntaxTree.toSourceCode();
         try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8.name())) {
             writer.println(content);
         }
