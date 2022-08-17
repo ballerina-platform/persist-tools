@@ -112,11 +112,7 @@ public class Init implements BLauncherCmd {
         Path pathToFile = Paths.get(outPath);
         Files.createDirectories(pathToFile.getParent());
         try {
-//            outStream.println(syntaxTree.toSourceCode());
-//            content = Formatter.format(syntaxTree.toSourceCode());
-//            outStream.println(content);
             content = syntaxTree.toSourceCode();
-            //outStream.println(content);
         } catch (Exception e) {
             throw e;
         }

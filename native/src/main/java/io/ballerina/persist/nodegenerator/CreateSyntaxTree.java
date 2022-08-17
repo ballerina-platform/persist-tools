@@ -175,13 +175,13 @@ public class CreateSyntaxTree {
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_USER, DEFAULT_USER, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_PASSWORD, DEFAULT_PASSWORD, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_DATABASE, DEFAULT_DATABASE, null));
-        moduleMembers = moduleMembers.add(AbstractNodeFactory.createIdentifierToken("\n"));
+        moduleMembers = moduleMembers.add(AbstractNodeFactory.createIdentifierToken(System.lineSeparator()));
         return moduleMembers;
     }
 
     private static NodeList addNewLine(NodeList moduleMembers, int n) {
         for (int i = 0; i < n; i++) {
-            moduleMembers = moduleMembers.add(AbstractNodeFactory.createIdentifierToken("\n"));
+            moduleMembers = moduleMembers.add(AbstractNodeFactory.createIdentifierToken(System.lineSeparator()));
         }
         return moduleMembers;
     }
