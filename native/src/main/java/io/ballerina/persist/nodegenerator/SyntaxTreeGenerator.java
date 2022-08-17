@@ -34,7 +34,6 @@ import io.ballerina.tools.text.TextDocument;
 import io.ballerina.tools.text.TextDocuments;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -94,20 +93,20 @@ public class SyntaxTreeGenerator {
                     NodeList subNodeList = node.fields();
                     moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(name, null));
                     for (Object subMember : subNodeList) {
-                        if (!isDatabaseConfigurationEntry(subMember.identifier())) {
+                        KeyValueNode subNode = (KeyValueNode) subMember;
+                        if (!isDatabaseConfigurationEntry(subNode.identifier())) {
                             moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) subMember);
                         } else {
+                            existingNodes.add(subNode.identifier().toString().trim());
                             if (subNode.identifier().toString().trim().equals(KEY_PORT)) {
-                                existingNodes.add(subNode.identifier().toString().trim());
                                 moduleMembers = moduleMembers.add(SampleNodeGenerator.createNumericKV(
                                         subNode.identifier().toString().trim(),
-                                        defaultValues[indexOf(nodeMap,
+                                        defaultValues[indexOf(
                                                 subNode.identifier().toString().trim())], null));
                             } else {
-                                existingNodes.add(subNode.identifier().toString().trim());
                                 moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
                                         subNode.identifier().toString().trim(),
-                                        defaultValues[indexOf(nodeMap,
+                                        defaultValues[indexOf(
                                                 subNode.identifier().toString().trim())], null));
                             }
                         }
@@ -182,18 +181,18 @@ public class SyntaxTreeGenerator {
         return moduleMembers;
     }
 
-    private static NodeList populateRemaining(NodeList moduleMembers, ArrayList existingNodes) {
+    private static NodeList<DocumentMemberDeclarationNode> populateRemaining(
+            NodeList<DocumentMemberDeclarationNode> moduleMembers, ArrayList<String> existingNodes) {
         for (String key : nodeMap) {
             if (!existingNodes.contains(key)) {
                 if (key.equals(KEY_PORT)) {
                     moduleMembers = moduleMembers.add(SampleNodeGenerator.createNumericKV(key,
-                            defaultValues[indexOf(nodeMap, key)], null));
-                    existingNodes.add(key);
+                            defaultValues[indexOf(key)], null));
                 } else {
                     moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(key,
-                            defaultValues[indexOf(nodeMap, key)], null));
-                    existingNodes.add(key);
+                            defaultValues[indexOf(key)], null));
                 }
+                existingNodes.add(key);
             }
         }
         return moduleMembers;
