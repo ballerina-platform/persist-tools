@@ -19,7 +19,7 @@ The conforming implementation of the specification is released and included in t
 
 1. [Overview](#1-overview)
 2. [Generating Database Configurations](#2-generating-database-configurations)
-3. [Generating Client Object](#3-generating-client-object)
+3. [Generating Client Objects](#3-generating-client-objects)
 
 ## 1. Overview
 This specification elaborates on the operations available in the CLI Tool.
@@ -42,7 +42,7 @@ Users can then update the above entry with their database configurations.
 - If there already is a `Config.toml` file inside the project root directory and there is no entry as `ballerina.persist`, a new entry will be added to the existing `Config.toml` file.
 - If there already is a `Config.toml` file inside the project root directory and there already is an entry as `ballerina.persist`, it will be overridden with the above values.
 
-## 3. Generating Client Object
+## 3. Generating Client Objects
 Users can define database entities in their Ballerina projects. They can generate client objects corresponding to these entities by executing `bal persist generate` command. Users can then use these client objects to perform database operations programmatically without having to write SQL statements.
 
 Consider the following Ballerina project named `medical-center`.
