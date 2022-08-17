@@ -2,7 +2,11 @@
 level = "DEBUG"
 format = "json"
 
-[foo.perist_init_7]
+[[ballerina.log.modules]]
+name = "myorg/myproject.foo"
+level = "DEBUG"
+
+[foo.perist_init_8]
 host = "localhost"
 port = 3306
 user = "root"

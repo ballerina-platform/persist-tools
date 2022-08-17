@@ -1,0 +1,10 @@
+NAME
+       Generate database configurations file inside the Ballerina project
+
+SYNOPSIS
+       bal persist init
+
+OPTIONS
+       -h, --help
+           Print the usage details of a command.
+

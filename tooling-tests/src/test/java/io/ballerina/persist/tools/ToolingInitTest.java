@@ -75,4 +75,11 @@ public class ToolingInitTest {
     public void testInitUpdateConfigWithNewDbConfigurationsWithTable() {
         assertGeneratedSources("tool_test_init_7", "Config.toml");
     }
+
+    @Test
+    @Description("When there is a Config.toml file inside the project root directory but there are no database " +
+            "configurations but there is a table")
+    public void testInitUpdateConfigWithNewDbConfigurationsWithTableArray() {
+        assertGeneratedSources("tool_test_init_8", "Config.toml");
+    }
 }

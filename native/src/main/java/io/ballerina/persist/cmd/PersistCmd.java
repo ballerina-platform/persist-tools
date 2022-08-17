@@ -23,6 +23,8 @@ import picocli.CommandLine;
 
 import java.io.PrintStream;
 
+import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
+
 
 /**
  * Class to implement "persist" command for ballerina.
@@ -36,6 +38,7 @@ import java.io.PrintStream;
 public class PersistCmd implements BLauncherCmd {
 
     private static final PrintStream outStream = System.out;
+    private static final PrintStream errStream = System.err;
 
     private CommandLine parentCmdParser;
 
@@ -44,10 +47,9 @@ public class PersistCmd implements BLauncherCmd {
 
     @Override
     public void execute() {
-        if (helpFlag) {
-            outStream.println("Hello persist");
-            return;
-        }
+        String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMPONENT_IDENTIFIER);
+        errStream.println(commandUsageInfo);
+        return;
     }
     @Override
     public void setParentCmdParser(CommandLine parentCmdParser) {

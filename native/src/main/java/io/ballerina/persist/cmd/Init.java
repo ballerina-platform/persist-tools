@@ -24,9 +24,7 @@ import io.ballerina.projects.Project;
 import io.ballerina.projects.ProjectEnvironmentBuilder;
 import io.ballerina.projects.ProjectException;
 import io.ballerina.projects.directory.ProjectLoader;
-import io.ballerina.toml.syntax.tree.SyntaxTree;
-import org.ballerinalang.formatter.core.Formatter;
-import org.ballerinalang.formatter.core.FormatterException;
+import io.ballerina.toml.syntax.tree.SyntaxTree; //import org.ballerinalang.formatter.core.Formatter;import org.ballerinalang.formatter.core.FormatterException;
 import picocli.CommandLine;
 
 import java.io.IOException;
@@ -36,6 +34,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+//import java.util.regex.Pattern;
+
+import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 
 /**
  * Class to implement "persist init" command for ballerina.
@@ -54,6 +55,7 @@ public class Init implements BLauncherCmd {
 
     private CommandLine parentCmdParser;
     private String name = "";
+    private static final String COMMAND_IDENTIFIER = "persist-init";
 
     Project balProject;
 
@@ -62,6 +64,11 @@ public class Init implements BLauncherCmd {
 
     @Override
     public void execute() {
+        if (helpFlag) {
+            String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMMAND_IDENTIFIER);
+            errStream.println(commandUsageInfo);
+            return;
+        }
         try  {
             if (projectEnvironmentBuilder == null) {
                 balProject = ProjectLoader.loadProject(Paths.get(""));
@@ -71,7 +78,7 @@ public class Init implements BLauncherCmd {
             }
             String orgName = balProject.currentPackage().descriptor().org().value();
             String projectName = balProject.currentPackage().descriptor().name().value();
-            name = orgName + "." + projectName;
+            name = orgName.trim() + "." + projectName.trim();
         } catch (ProjectException e) {
             errStream.println("The current directory is not a Ballerina project!");
             return;
@@ -91,7 +98,7 @@ public class Init implements BLauncherCmd {
         }
     }
     private void createConfigToml() throws Exception {
-        SyntaxTree syntaxTree = CreateSyntaxTree.createToml();
+        SyntaxTree syntaxTree = CreateSyntaxTree.createToml(this.name);
         writeOutputFile(syntaxTree, Paths.get(this.sourcePath, "Config.toml").toAbsolutePath().toString());
     }
 
@@ -105,8 +112,12 @@ public class Init implements BLauncherCmd {
         Path pathToFile = Paths.get(outPath);
         Files.createDirectories(pathToFile.getParent());
         try {
-            content = Formatter.format(syntaxTree.toSourceCode());
-        } catch (FormatterException e) {
+//            outStream.println(syntaxTree.toSourceCode());
+//            content = Formatter.format(syntaxTree.toSourceCode());
+//            outStream.println(content);
+            content = syntaxTree.toSourceCode();
+            //outStream.println(content);
+        } catch (Exception e) {
             throw e;
         }
         try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8.name())) {
@@ -130,7 +141,7 @@ public class Init implements BLauncherCmd {
     }
     @Override
     public String getName() {
-        return PersistToolsConstants.COMPONENT_IDENTIFIER;
+        return COMPONENT_IDENTIFIER;
     }
     
     @Override
@@ -141,7 +152,7 @@ public class Init implements BLauncherCmd {
     
     @Override
     public void printUsage(StringBuilder stringBuilder) {
-        stringBuilder.append("  ballerina " + PersistToolsConstants.COMPONENT_IDENTIFIER +
+        stringBuilder.append("  ballerina " + COMPONENT_IDENTIFIER +
                 " init" + System.lineSeparator());
     }
 }

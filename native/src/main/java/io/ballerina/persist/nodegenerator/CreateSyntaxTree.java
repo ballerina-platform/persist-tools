@@ -63,14 +63,16 @@ public class CreateSyntaxTree {
     /**
      * Method to create a new Config.toml file with database configurations.
      */
-    public static SyntaxTree createToml() {
+    public static SyntaxTree createToml(String name) {
         NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
-        moduleMembers = populateNodeList(moduleMembers, true);
+        outStream.println(name);
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(name, null));
+        moduleMembers = populateNodeList(moduleMembers);
+        outStream.println(SampleNodeGenerator.createTable(name, null).identifier());
         Token eofToken = AbstractNodeFactory.createIdentifierToken("");
         DocumentNode documentNode = NodeFactory.createDocumentNode(moduleMembers, eofToken);
         TextDocument textDocument = TextDocuments.from(documentNode.toSourceCode());
-        SyntaxTree syntaxTree = SyntaxTree.from(textDocument);
-        return syntaxTree;
+        return SyntaxTree.from(textDocument);
     }
 
     /**
@@ -78,70 +80,71 @@ public class CreateSyntaxTree {
      */
     public static SyntaxTree updateToml(Path configPath, String name) throws IOException {
 
-        boolean isTableEntry = false;
-        ArrayList<String> existingNodes = new ArrayList<String>();
+        ArrayList<String> existingNodes = new ArrayList<>();
         NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
         Path fileNamePath = configPath.getFileName();
         TextDocument configDocument = TextDocuments.from(Files.readString(configPath));
         SyntaxTree syntaxTree = SyntaxTree.from(configDocument, fileNamePath.toString());
-        DocumentNode rootNote = (DocumentNode) syntaxTree.rootNode();
+        DocumentNode rootNote = syntaxTree.rootNode();
         NodeList nodeList = rootNote.members();
 
         for (Object member : nodeList) {
             if (member instanceof KeyValueNode) {
-                KeyValueNode node = (KeyValueNode) member;
-                if (!isTableEntry) {
-                    if (!isDatabaseConfigurationEntry(node.identifier())) {
-                        moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) member);
-                    } else {
-                        if (node.identifier().toString().trim().equals(KEY_PORT)) {
-                            existingNodes.add(node.identifier().toString().trim());
-                            moduleMembers = moduleMembers.add(SampleNodeGenerator.createNumericKV(
-                                    node.identifier().toString().trim(),
-                                    defaultValues[indexOf(nodeMap,
-                                            node.identifier().toString().trim())], null));
+                moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) member);
+            } else if (member instanceof TableNode) {
+                TableNode node = (TableNode) member;
+                if (node.identifier().toString().trim().equals(name)) {
+                    NodeList subNodeList = node.fields();
+                    moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(name, null));
+                    for (Object subMember : subNodeList) {
+                        KeyValueNode subNode = (KeyValueNode) subMember;
+                        if (!isDatabaseConfigurationEntry(subNode.identifier())) {
+                            moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) subMember);
                         } else {
-                            existingNodes.add(node.identifier().toString().trim());
-                            moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
-                                    node.identifier().toString().trim(),
-                                    defaultValues[indexOf(nodeMap,
-                                            node.identifier().toString().trim())], null));
+                            if (subNode.identifier().toString().trim().equals(KEY_PORT)) {
+                                existingNodes.add(subNode.identifier().toString().trim());
+                                moduleMembers = moduleMembers.add(SampleNodeGenerator.createNumericKV(
+                                        subNode.identifier().toString().trim(),
+                                        defaultValues[indexOf(nodeMap,
+                                                subNode.identifier().toString().trim())], null));
+                            } else {
+                                existingNodes.add(subNode.identifier().toString().trim());
+                                moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
+                                        subNode.identifier().toString().trim(),
+                                        defaultValues[indexOf(nodeMap,
+                                                subNode.identifier().toString().trim())], null));
+                            }
                         }
                     }
-                } else {
-                    moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) member);
-                }
-            } else if (member instanceof TableNode || member instanceof TableArrayNode) {
-                if (!existingNodes.isEmpty() || !moduleMembers.isEmpty()) {
+                    if (existingNodes.size() != 5) {
+                        moduleMembers = populateRemaining(moduleMembers, existingNodes);
+                    }
+
+                } else if (!existingNodes.isEmpty() || !moduleMembers.isEmpty()) {
                     moduleMembers = addNewLine(moduleMembers, 2);
-                    moduleMembers = poulateRemaining(moduleMembers, existingNodes);
+                    moduleMembers = populateRemaining(moduleMembers, existingNodes);
                     moduleMembers = addNewLine(moduleMembers, 1);
-                    isTableEntry = true;
                     moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) member);
                 } else {
-                    isTableEntry = true;
                     moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) member);
                 }
+            } else if (member instanceof TableArrayNode) {
+                moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) member);
+
             }
         }
-        if (existingNodes.isEmpty() && isTableEntry == true) {
-            moduleMembers = addNewLine(moduleMembers, 2);
-            moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(name, null));
-            moduleMembers = poulateRemaining(moduleMembers, existingNodes);
+        if (existingNodes.isEmpty()) {
             moduleMembers = addNewLine(moduleMembers, 1);
-            
-        } else if (existingNodes.size() != 5) {
-            moduleMembers = addNewLine(moduleMembers, 2);
-            moduleMembers = poulateRemaining(moduleMembers, existingNodes);
-        }
+            moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(name, null));
+            moduleMembers = populateRemaining(moduleMembers, existingNodes);
+            moduleMembers = addNewLine(moduleMembers, 1);
 
+        }
         Token eofToken = AbstractNodeFactory.createIdentifierToken("");
         DocumentNode documentNode = NodeFactory.createDocumentNode(moduleMembers, eofToken);
         TextDocument textDocument = TextDocuments.from(documentNode.toSourceCode());
-        SyntaxTree syntaxTreeFinal = SyntaxTree.from(textDocument);
-        return syntaxTreeFinal;
+        return SyntaxTree.from(textDocument);
     }
-
 
     private static boolean isDatabaseConfigurationEntry(KeyNode key) {
         switch (key.toString().trim()) {
@@ -157,8 +160,8 @@ public class CreateSyntaxTree {
     }
     private static int indexOf(String[] arr, String key) {
         int index = 0;
-        for (Object member : arr) {
-            if (key.equals((String) member)) {
+        for (String member : arr) {
+            if (key.equals(member)) {
                 return index;
             }
             index += 1;
@@ -166,15 +169,13 @@ public class CreateSyntaxTree {
         return -1;
     }
 
-    private static NodeList populateNodeList(NodeList moduleMembers, boolean create) {
+    private static NodeList populateNodeList(NodeList moduleMembers) {
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_HOST, DEFAULT_HOST, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createNumericKV(KEY_PORT, DEFAULT_PORT, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_USER, DEFAULT_USER, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_PASSWORD, DEFAULT_PASSWORD, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_DATABASE, DEFAULT_DATABASE, null));
-        if (!create) {
-            moduleMembers = moduleMembers.add(AbstractNodeFactory.createIdentifierToken("\n"));
-        }
+        moduleMembers = moduleMembers.add(AbstractNodeFactory.createIdentifierToken("\n"));
         return moduleMembers;
     }
 
@@ -185,17 +186,17 @@ public class CreateSyntaxTree {
         return moduleMembers;
     }
 
-    private static NodeList poulateRemaining(NodeList moduleMembers, ArrayList existingNodes) {
-        for (Object key : nodeMap) {
-            if (!existingNodes.contains((String) key)) {
-                if (((String) key).equals(KEY_PORT)) {
-                    moduleMembers = moduleMembers.add(SampleNodeGenerator.createNumericKV((String) key,
-                            defaultValues[indexOf(nodeMap, (String) key)], null));
-                    existingNodes.add((String) key);
+    private static NodeList populateRemaining(NodeList moduleMembers, ArrayList existingNodes) {
+        for (String key : nodeMap) {
+            if (!existingNodes.contains(key)) {
+                if (key.equals(KEY_PORT)) {
+                    moduleMembers = moduleMembers.add(SampleNodeGenerator.createNumericKV(key,
+                            defaultValues[indexOf(nodeMap, key)], null));
+                    existingNodes.add(key);
                 } else {
-                    moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV((String) key,
-                            defaultValues[indexOf(nodeMap, (String) key)], null));
-                    existingNodes.add((String) key);
+                    moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(key,
+                            defaultValues[indexOf(nodeMap, key)], null));
+                    existingNodes.add(key);
                 }
             }
         }
