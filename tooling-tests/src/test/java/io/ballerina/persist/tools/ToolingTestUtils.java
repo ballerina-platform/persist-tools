@@ -38,7 +38,7 @@ import java.nio.file.Paths;
  */
 public class ToolingTestUtils {
 
-    private static PrintStream errStream = System.err;
+    private static final PrintStream errStream = System.err;
 
     public static final String CONFIG_FILE = "Config.toml";
 
@@ -89,8 +89,6 @@ public class ToolingTestUtils {
                     "Generate database configurations file inside the Ballerina project  ballerina persist init");
             Assert.assertEquals(cmdLongDescription.trim().replaceAll(System.lineSeparator(), ""),
                     "Perform operations on Ballerina Persistent Layer  ballerina persist");
-
-
             persistCmdInit.execute();
         } catch (ClassNotFoundException | IllegalAccessException | InstantiationException |
                  NoSuchMethodException | InvocationTargetException e) {
