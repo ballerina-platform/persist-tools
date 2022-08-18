@@ -28,6 +28,7 @@ This specification elaborates on the operations available in the CLI Tool.
 The first step is to create database configurations. Users can do this by executing `bal persist init` command inside a Ballerina project. This will add the following entry to the `Config.toml` file inside the project.
 
 ```ballerina
+[orgname.modulename]
 host = "localhost"
 port = 3306
 user = "root"
