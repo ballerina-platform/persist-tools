@@ -1,0 +1,9 @@
+[foo.perist_init_5]
+foo1 = "bar1"
+host = "localhost"
+port = 3306
+user = "root"
+foo2 = "bar2"
+password = ""
+database = ""
+foo3 = "bar3"
