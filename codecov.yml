@@ -1,6 +1,9 @@
 ignore:
   - "tooling-tests"
 
+fixes:
+  "native/src/main/java/io/ballerina/persist/nodegenerator/"
+
 coverage:
   precision: 2
   round: down
