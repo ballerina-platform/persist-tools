@@ -3,13 +3,6 @@ NAME
 
 SYNOPSIS
        bal persist <command> [args]
-       bal persist [OPTIONS]
-
-
-OPTIONS
-       -h, --help
-           Print the usage details of a command.
-
 
 COMMANDS
         The available subcommands are:
