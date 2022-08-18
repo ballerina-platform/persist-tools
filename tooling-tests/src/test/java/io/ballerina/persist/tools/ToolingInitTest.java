@@ -32,54 +32,54 @@ public class ToolingInitTest {
     @Test
     @Description("When there isn't a Config.toml file inside the project root directory")
     public void testInitCreateConfig() {
-        assertGeneratedSources("tool_test_init_1", "Config.toml");
+        assertGeneratedSources("tool_test_init_1");
     }
 
     @Test
     @Description("When there is a Config.toml file inside the project root directory but there are no database " +
             "configurations")
     public void testInitUpdateConfigWithNewDbConfigurations() {
-        assertGeneratedSources("tool_test_init_2", "Config.toml");
+        assertGeneratedSources("tool_test_init_2");
     }
 
     @Test
     @Description("When there is a Config.toml file inside the project root directory and there are database " +
             "configurations")
     public void testsInitUpdateConfigWithUpdatedDbConfigurations() {
-        assertGeneratedSources("tool_test_init_3", "Config.toml");
+        assertGeneratedSources("tool_test_init_3");
     }
 
     @Test
     @Description("When the init command is executed outside a Ballerina project")
     public void testsInitOutsideBalProject() {
-        assertGeneratedSourcesNegative("tool_test_init_4", "Config.toml");
+        assertGeneratedSourcesNegative("tool_test_init_4");
     }
 
     @Test
     @Description("When there is a Config.toml file inside the project root directory and there are database " +
             "configurations mixed with other configurations")
     public void testsInitUpdateConfigWithUpdatedDbConfigurationsMixed() {
-        assertGeneratedSources("tool_test_init_5", "Config.toml");
+        assertGeneratedSources("tool_test_init_5");
     }
 
     @Test
     @Description("When there is a Config.toml file inside the project root directory and there are database " +
             "configurations mixed with other configurations")
     public void testsInitUpdateConfigWithUpdatedDbConfigurationsMixed2() {
-        assertGeneratedSources("tool_test_init_6", "Config.toml");
+        assertGeneratedSources("tool_test_init_6");
     }
 
     @Test 
     @Description("When there is a Config.toml file inside the project root directory but there are no database " +
             "configurations but there is a table")
     public void testInitUpdateConfigWithNewDbConfigurationsWithTable() {
-        assertGeneratedSources("tool_test_init_7", "Config.toml");
+        assertGeneratedSources("tool_test_init_7");
     }
 
     @Test
     @Description("When there is a Config.toml file inside the project root directory but there are no database " +
             "configurations but there is a table")
     public void testInitUpdateConfigWithNewDbConfigurationsWithTableArray() {
-        assertGeneratedSources("tool_test_init_8", "Config.toml");
+        assertGeneratedSources("tool_test_init_8");
     }
 }

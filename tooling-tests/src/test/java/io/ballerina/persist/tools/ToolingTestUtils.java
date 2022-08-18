@@ -39,7 +39,7 @@ public class ToolingTestUtils {
 
     private static PrintStream errStream = System.err;
 
-    public static final String SAMPLES_DIRECTORY = "input";
+    public static final String CONFIG_FILE = "Config.toml";
 
     public static final String REFERENCE_DIRECTORY = "output";
     public static final String GENERATED_SOURCES_DIRECTORY = Paths.get("build", "generated-sources").toString();
@@ -52,19 +52,19 @@ public class ToolingTestUtils {
         return ProjectEnvironmentBuilder.getBuilder(environment);
     }
 
-    public static void assertGeneratedSources(String subDir, String configFile) {
+    public static void assertGeneratedSources(String subDir) {
         Path sourceDirPath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);
         Path referenceFilePath = Paths.get(RESOURCE_PATH.toString(), REFERENCE_DIRECTORY, subDir);
-        Path actualConfigFilePath = sourceDirPath.resolve(configFile);
-        Path referenceConfigFilePath = referenceFilePath.resolve(configFile);
+        Path actualConfigFilePath = sourceDirPath.resolve(CONFIG_FILE);
+        Path referenceConfigFilePath = referenceFilePath.resolve(CONFIG_FILE);
         generateSourceCode(sourceDirPath.toAbsolutePath());
         Assert.assertTrue(Files.exists(actualConfigFilePath));
         Assert.assertEquals(readContent(actualConfigFilePath), readContent(referenceConfigFilePath));
     }
 
-    public static void assertGeneratedSourcesNegative(String subDir, String configFile) {
+    public static void assertGeneratedSourcesNegative(String subDir) {
         Path sourceDirPath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);
-        Path actualConfigFilePath = sourceDirPath.resolve(configFile);
+        Path actualConfigFilePath = sourceDirPath.resolve(CONFIG_FILE);
         generateSourceCode(sourceDirPath);
         Assert.assertFalse(Files.exists(actualConfigFilePath));
     }
