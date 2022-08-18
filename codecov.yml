@@ -2,7 +2,7 @@ ignore:
   - "tooling-tests"
 
 fixes:
-  - "native/src/main/java/io/ballerina/persist/*::../native/"
+  - "native/src/main/java/io/ballerina/persist/*::/native/"
 
 coverage:
   precision: 2
