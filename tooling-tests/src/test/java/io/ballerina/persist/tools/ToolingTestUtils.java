@@ -85,9 +85,9 @@ public class ToolingTestUtils {
             persistCmd.printLongDesc(cmdLongDesc);
             persistCmd.printUsage(cmdLongDesc);
             String cmdLongDescription = cmdLongDesc.toString();
-            Assert.assertEquals(initLongDescription.trim().replaceAll(System.lineSeparator()+"n", ""),
+            Assert.assertEquals(initLongDescription.trim().replaceAll(System.lineSeparator(), ""),
                     "Generate database configurations file inside the Ballerina project  ballerina persist init");
-            Assert.assertEquals(cmdLongDescription.trim().replaceAll(System.lineSeparator()+"n", ""),
+            Assert.assertEquals(cmdLongDescription.trim().replaceAll(System.lineSeparator(), ""),
                     "Perform operations on Ballerina Persistent Layer  ballerina persist");
 
 
