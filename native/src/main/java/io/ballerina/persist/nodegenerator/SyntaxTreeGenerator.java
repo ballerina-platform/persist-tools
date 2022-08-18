@@ -149,7 +149,7 @@ public class SyntaxTreeGenerator {
     }
         private static int indexOf(String key) {
         int index = 0;
-        for (String member : SyntaxTreeGenerator.nodeMap) {
+        for (String member : nodeMap) {
             if (key.equals(member)) {
                 return index;
             }
