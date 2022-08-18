@@ -19,6 +19,7 @@
 package io.ballerina.persist.tools;
 
 import io.ballerina.persist.cmd.Init;
+import io.ballerina.persist.cmd.PersistCmd;
 import io.ballerina.projects.ProjectEnvironmentBuilder;
 import io.ballerina.projects.environment.Environment;
 import io.ballerina.projects.environment.EnvironmentBuilder;
@@ -60,6 +61,41 @@ public class ToolingTestUtils {
         generateSourceCode(sourceDirPath.toAbsolutePath());
         Assert.assertTrue(Files.exists(actualConfigFilePath));
         Assert.assertEquals(readContent(actualConfigFilePath), readContent(referenceConfigFilePath));
+    }
+
+    public static void assertAuxiliaryFunctions() {
+        Class<?> persistInitClass;
+        Class<?> persistCmdClass;
+        try {
+            persistCmdClass = Class.forName("io.ballerina.persist.cmd.PersistCmd");
+            PersistCmd  persistCmd = (PersistCmd) persistCmdClass.getDeclaredConstructor().newInstance();
+            persistInitClass = Class.forName("io.ballerina.persist.cmd.Init");
+            Init persistCmdInit = (Init) persistInitClass.getDeclaredConstructor().newInstance();
+            Assert.assertEquals(persistCmdInit.getName(), "persist");
+            Assert.assertEquals(persistCmd.getName(), "persist");
+            persistCmdInit.setEnvironmentBuilder(getEnvironmentBuilder());
+
+            StringBuilder initLongDesc = new StringBuilder();
+            StringBuilder cmdLongDesc = new StringBuilder();
+
+            persistCmdInit.printLongDesc(initLongDesc);
+            persistCmdInit.printUsage(initLongDesc);
+            String initLongDescription = initLongDesc.toString();
+
+            persistCmd.printLongDesc(cmdLongDesc);
+            persistCmd.printUsage(cmdLongDesc);
+            String cmdLongDescription = cmdLongDesc.toString();
+            Assert.assertEquals(initLongDescription.trim().replaceAll("\n", ""),
+                    "Generate database configurations file inside the Ballerina project  ballerina persist init");
+            Assert.assertEquals(cmdLongDescription.trim().replaceAll("\n", ""),
+                    "Perform operations on Ballerina Persistent Layer  ballerina persist");
+
+
+            persistCmdInit.execute();
+        } catch (ClassNotFoundException | IllegalAccessException | InstantiationException |
+                 NoSuchMethodException | InvocationTargetException e) {
+            errStream.println(e.getMessage());
+        }
     }
 
     public static void assertGeneratedSourcesNegative(String subDir) {
