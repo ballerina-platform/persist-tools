@@ -82,4 +82,11 @@ public class ToolingInitTest {
     public void testInitUpdateConfigWithNewDbConfigurationsWithTableArray() {
         assertGeneratedSources("tool_test_init_8");
     }
+
+    @Test
+    @Description("When there is a Config.toml file inside the project root directory and there are database " +
+            "configurations and a table")
+    public void testInitUpdateConfigWithUpdateDbConfigurationsWithTableArray() {
+        assertGeneratedSources("tool_test_init_9");
+    }
 }

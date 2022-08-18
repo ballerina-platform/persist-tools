@@ -90,6 +90,9 @@ public class SyntaxTreeGenerator {
             } else if (member instanceof TableNode) {
                 TableNode node = (TableNode) member;
                 if (node.identifier().toString().trim().equals(name)) {
+                    if (!moduleMembers.isEmpty()) {
+                        moduleMembers = addNewLine(moduleMembers, 1);
+                    }
                     NodeList<KeyValueNode> subNodeList = node.fields();
                     moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(name, null));
                     for (KeyValueNode subMember : subNodeList) {
@@ -113,25 +116,17 @@ public class SyntaxTreeGenerator {
                     if (existingNodes.size() != 5) {
                         moduleMembers = populateRemaining(moduleMembers, existingNodes);
                     }
-
-                } else if (!existingNodes.isEmpty() || !moduleMembers.isEmpty()) {
-                    moduleMembers = addNewLine(moduleMembers, 2);
-                    moduleMembers = populateRemaining(moduleMembers, existingNodes);
-                    moduleMembers = addNewLine(moduleMembers, 1);
-                    moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) member);
                 } else {
                     moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) member);
                 }
             } else if (member instanceof TableArrayNode) {
                 moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) member);
-
             }
         }
         if (existingNodes.isEmpty()) {
             moduleMembers = addNewLine(moduleMembers, 1);
             moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(name, null));
             moduleMembers = populateRemaining(moduleMembers, existingNodes);
-            moduleMembers = addNewLine(moduleMembers, 1);
 
         }
         Token eofToken = AbstractNodeFactory.createIdentifierToken("");
