@@ -62,16 +62,6 @@ Execute the commands below to build from source.
     ./gradlew clean build -PbalJavaDebug=<port>
     ```
 
-7. Publish the generated artifacts to the local Ballerina central repository:
-    ```
-    ./gradlew clean build -PpublishToLocalCentral=true
-    ```
-
-8. Publish the generated artifacts to the Ballerina central repository:
-    ```
-    ./gradlew clean build -PpublishToCentral=true
-    ```
-
 ## Contribute to Ballerina
 
 As an open source project, Ballerina welcomes contributions from the community.
