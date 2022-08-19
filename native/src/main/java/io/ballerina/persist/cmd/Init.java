@@ -116,6 +116,9 @@ public class Init implements BLauncherCmd {
     public void setSourcePath(String sourceDir) {
         this.sourcePath = sourceDir;
     }
+    public void setHelpFlag() {
+        this.helpFlag = true;
+    }
 
     public void setEnvironmentBuilder(ProjectEnvironmentBuilder projectEnvironmentBuilder) {
         this.projectEnvironmentBuilder = projectEnvironmentBuilder;

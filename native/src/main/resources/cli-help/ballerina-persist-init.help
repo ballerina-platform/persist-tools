@@ -4,7 +4,4 @@ NAME
 SYNOPSIS
        bal persist init
 
-OPTIONS
-       -h, --help
-           Print the usage details of a command.
 

@@ -21,6 +21,7 @@ package io.ballerina.persist.tools;
 import jdk.jfr.Description;
 import org.testng.annotations.Test;
 
+import static io.ballerina.persist.tools.ToolingTestUtils.assertAuxiliaryFunctions;
 import static io.ballerina.persist.tools.ToolingTestUtils.assertGeneratedSources;
 import static io.ballerina.persist.tools.ToolingTestUtils.assertGeneratedSourcesNegative;
 
@@ -81,5 +82,18 @@ public class ToolingInitTest {
             "configurations but there is a table")
     public void testInitUpdateConfigWithNewDbConfigurationsWithTableArray() {
         assertGeneratedSources("tool_test_init_8");
+    }
+
+    @Test
+    @Description("When there is a Config.toml file inside the project root directory and there are database " +
+            "configurations and a table")
+    public void testInitUpdateConfigWithUpdateDbConfigurationsWithTableArray() {
+        assertGeneratedSources("tool_test_init_9");
+    }
+
+    @Test
+    @Description("Test the auxiliary functions of the class")
+    public void testAuxiliaryFunctions() {
+        assertAuxiliaryFunctions();
     }
 }
