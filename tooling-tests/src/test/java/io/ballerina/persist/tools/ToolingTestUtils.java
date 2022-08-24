@@ -44,6 +44,14 @@ import java.util.stream.Stream;
  */
 public class ToolingTestUtils {
 
+    /**
+     * Represents persist commands.
+     */
+    public enum Command {
+        INIT,
+        GENERATE
+    }
+
     private static final PrintStream errStream = System.err;
 
     public static final String CONFIG_FILE = "Config.toml";
@@ -58,8 +66,8 @@ public class ToolingTestUtils {
         return ProjectEnvironmentBuilder.getBuilder(environment);
     }
 
-    public static void assertGeneratedSources(String subDir) {
-        generateSourceCode(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir));
+    public static void assertGeneratedSources(String subDir, Command cmd) {
+        generateSourceCode(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir), cmd);
         Assert.assertTrue(directoryContentEquals(Paths.get(RESOURCES_EXPECTED_OUTPUT.toString()).resolve(subDir),
                 Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)));
 
@@ -72,10 +80,10 @@ public class ToolingTestUtils {
         }
     }
 
-    public static void assertGeneratedSourcesNegative(String subDir) {
+    public static void assertGeneratedSourcesNegative(String subDir, Command cmd) {
         Path sourceDirPath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);
         Path actualConfigFilePath = sourceDirPath.resolve(CONFIG_FILE);
-        generateSourceCode(sourceDirPath);
+        generateSourceCode(sourceDirPath, cmd);
         Assert.assertFalse(Files.exists(actualConfigFilePath));
     }
 
@@ -112,14 +120,19 @@ public class ToolingTestUtils {
         }
     }
 
-    private static void generateSourceCode(Path sourcePath) {
-        Class<?> persistInitClass;
+    private static void generateSourceCode(Path sourcePath, Command cmd) {
+        Class<?> persistClass;
+        PersistCmd persistCmd;
         try {
-            persistInitClass = Class.forName("io.ballerina.persist.cmd.Init");
-            Init persistCmdInit = (Init) persistInitClass.getDeclaredConstructor().newInstance();
-            persistCmdInit.setSourcePath(sourcePath.toAbsolutePath().toString());
-            persistCmdInit.setEnvironmentBuilder(getEnvironmentBuilder());
-            persistCmdInit.execute();
+            if (cmd == Command.INIT) {
+                persistClass = Class.forName("io.ballerina.persist.cmd.Init");
+            } else {
+                persistClass = Class.forName("io.ballerina.persist.cmd.Generate");
+            }
+            persistCmd = (Init) persistClass.getDeclaredConstructor().newInstance();
+            persistCmd.setSourcePath(sourcePath.toAbsolutePath().toString());
+            persistCmd.setEnvironmentBuilder(getEnvironmentBuilder());
+            persistCmd.execute();
         } catch (ClassNotFoundException | IllegalAccessException | InstantiationException |
                 NoSuchMethodException | InvocationTargetException e) {
             errStream.println(e.getMessage());
