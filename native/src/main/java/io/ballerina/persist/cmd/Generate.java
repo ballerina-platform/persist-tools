@@ -89,9 +89,12 @@ public class Generate implements BLauncherCmd {
         }
         try {
             ArrayList<Entity> entityArray = readBalFiles();
-            errStream.println(entityArray.get(0).fields.get(0));
-            for (Entity entity : entityArray) {
-                generateScripts(entity);
+            if (entityArray.size() == 0) {
+                errStream.println("Current directory doesn't contain any persist entities");
+            } else {
+                for (Entity entity : entityArray) {
+                    generateScripts(entity);
+                }
             }
         } catch (Exception e) {
             errStream.println(e.getMessage());
@@ -107,7 +110,6 @@ public class Generate implements BLauncherCmd {
         for (int i = 0; i < listOfFiles.length; i++) {
             File file = listOfFiles[i];
             if (file.isFile() && file.getName().endsWith(".bal")) {
-                errStream.println(file.getName());
                 Path filePath = Paths.get(this.sourcePath, file.getName());
                 ArrayList<Entity> retData = BalSyntaxTreeGenerator.readBalFiles(filePath);
                 if (retData.size() != 0) {

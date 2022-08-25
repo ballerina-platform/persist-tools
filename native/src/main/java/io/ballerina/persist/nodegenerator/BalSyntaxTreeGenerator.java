@@ -172,7 +172,6 @@ public class BalSyntaxTreeGenerator {
                     }
                 }
             }
-            return entityArray;
         }
         return entityArray;
     }
