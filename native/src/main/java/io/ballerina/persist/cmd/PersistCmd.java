@@ -42,20 +42,13 @@ public class PersistCmd implements BLauncherCmd {
     public String sourcePath = "";
     public ProjectEnvironmentBuilder projectEnvironmentBuilder;
 
-    private CommandLine parentCmdParser;
-
-    @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
-    private boolean helpFlag;
-
     @Override
     public void execute() {
         String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMPONENT_IDENTIFIER);
         errStream.println(commandUsageInfo);
-        return;
     }
     @Override
     public void setParentCmdParser(CommandLine parentCmdParser) {
-        this.parentCmdParser = parentCmdParser;
     }
     @Override
     public String getName() {

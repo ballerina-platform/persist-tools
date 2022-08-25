@@ -70,4 +70,16 @@ public class ToolingGenerateTest {
     public void testGenerateRemoveEntity() {
         assertGeneratedSources("tool_test_generate_7", GENERATE);
     }
+
+    @Test(enabled = false)
+    @Description("A persist entity with all the supported fields data types")
+    public void testGenerateAllEntityFieldTypes() {
+        assertGeneratedSources("tool_test_generate_8", GENERATE);
+    }
+
+    @Test(enabled = false)
+    @Description("All the use cases where client objects are not generated for the entities")
+    public void testGenerateClientNotGenerated() {
+        assertGeneratedSources("tool_test_generate_9", GENERATE);
+    }
 }

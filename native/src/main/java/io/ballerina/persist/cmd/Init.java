@@ -48,7 +48,6 @@ public class Init extends PersistCmd implements BLauncherCmd {
     private final PrintStream errStream = System.err;
     private final String configPath = PersistToolsConstants.CONFIG_PATH;
 
-    private CommandLine parentCmdParser;
     private String name = "";
     private static final String COMMAND_IDENTIFIER = "persist-init";
 
@@ -111,13 +110,8 @@ public class Init extends PersistCmd implements BLauncherCmd {
         }
     }
 
-    public void setHelpFlag() {
-        this.helpFlag = true;
-    }
-
     @Override
     public void setParentCmdParser(CommandLine parentCmdParser) {
-        this.parentCmdParser = parentCmdParser;
     }
     @Override
     public String getName() {
