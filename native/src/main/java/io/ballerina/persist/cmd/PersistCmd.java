@@ -19,6 +19,7 @@ package io.ballerina.persist.cmd;
 
 import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.PersistToolsConstants;
+import io.ballerina.projects.ProjectEnvironmentBuilder;
 import picocli.CommandLine;
 
 import java.io.PrintStream;
@@ -38,21 +39,16 @@ import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 public class PersistCmd implements BLauncherCmd {
 
     private static final PrintStream errStream = System.err;
-
-    private CommandLine parentCmdParser;
-
-    @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
-    private boolean helpFlag;
+    public String sourcePath = "";
+    public ProjectEnvironmentBuilder projectEnvironmentBuilder;
 
     @Override
     public void execute() {
         String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMPONENT_IDENTIFIER);
         errStream.println(commandUsageInfo);
-        return;
     }
     @Override
     public void setParentCmdParser(CommandLine parentCmdParser) {
-        this.parentCmdParser = parentCmdParser;
     }
     @Override
     public String getName() {
@@ -69,5 +65,13 @@ public class PersistCmd implements BLauncherCmd {
     public void printUsage(StringBuilder stringBuilder) {
         stringBuilder.append("  ballerina " + PersistToolsConstants.COMPONENT_IDENTIFIER).
                 append(System.lineSeparator());
+    }
+
+    public void setSourcePath(String sourceDir) {
+        this.sourcePath = sourceDir;
+    }
+
+    public void setEnvironmentBuilder(ProjectEnvironmentBuilder projectEnvironmentBuilder) {
+        this.projectEnvironmentBuilder = projectEnvironmentBuilder;
     }
 }
