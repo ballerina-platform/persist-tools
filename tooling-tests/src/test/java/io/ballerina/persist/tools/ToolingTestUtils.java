@@ -122,17 +122,17 @@ public class ToolingTestUtils {
 
     private static void generateSourceCode(Path sourcePath, Command cmd) {
         Class<?> persistClass;
-        PersistCmd persistCmd;
         try {
             if (cmd == Command.INIT) {
+                Init initCmd;
                 persistClass = Class.forName("io.ballerina.persist.cmd.Init");
+                initCmd = (Init) persistClass.getDeclaredConstructor().newInstance();
+                initCmd.setSourcePath(sourcePath.toAbsolutePath().toString());
+                initCmd.setEnvironmentBuilder(getEnvironmentBuilder());
+                initCmd.execute();
             } else {
-                persistClass = Class.forName("io.ballerina.persist.cmd.Generate");
+                // Todo: Add generate command implementation
             }
-            persistCmd = (Init) persistClass.getDeclaredConstructor().newInstance();
-            persistCmd.setSourcePath(sourcePath.toAbsolutePath().toString());
-            persistCmd.setEnvironmentBuilder(getEnvironmentBuilder());
-            persistCmd.execute();
         } catch (ClassNotFoundException | IllegalAccessException | InstantiationException |
                 NoSuchMethodException | InvocationTargetException e) {
             errStream.println(e.getMessage());

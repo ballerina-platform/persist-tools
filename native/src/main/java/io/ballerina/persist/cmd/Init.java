@@ -21,6 +21,7 @@ import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.nodegenerator.SyntaxTreeGenerator;
 import io.ballerina.projects.Project;
+import io.ballerina.projects.ProjectEnvironmentBuilder;
 import io.ballerina.projects.ProjectException;
 import io.ballerina.projects.directory.ProjectLoader;
 import io.ballerina.toml.syntax.tree.SyntaxTree;
@@ -43,10 +44,12 @@ import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
         name = "init",
         description = "generate database configurations.")
 
-public class Init extends PersistCmd implements BLauncherCmd {
+public class Init implements BLauncherCmd {
 
     private final PrintStream errStream = System.err;
     private final String configPath = PersistToolsConstants.CONFIG_PATH;
+    public String sourcePath = "";
+    public ProjectEnvironmentBuilder projectEnvironmentBuilder;
 
     private String name = "";
     private static final String COMMAND_IDENTIFIER = "persist-init";
@@ -128,5 +131,13 @@ public class Init extends PersistCmd implements BLauncherCmd {
     public void printUsage(StringBuilder stringBuilder) {
         stringBuilder.append("  ballerina " + COMPONENT_IDENTIFIER +
                 " init").append(System.lineSeparator());
+    }
+
+    public void setSourcePath(String sourceDir) {
+        this.sourcePath = sourceDir;
+    }
+
+    public void setEnvironmentBuilder(ProjectEnvironmentBuilder projectEnvironmentBuilder) {
+        this.projectEnvironmentBuilder = projectEnvironmentBuilder;
     }
 }

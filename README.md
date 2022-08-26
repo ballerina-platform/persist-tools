@@ -1,8 +1,7 @@
 Ballerina Persist Tools
 ===================
 
-[![Build](https://github.com/ballerina-platform/persist-tools/actions/workflows/build-timestamped-main.yml/badge.svg)](https://github.com/ballerina-platform/persist-tools/actions/workflows/build-timestamped-main.yml)
-[![Trivy](https://github.com/ballerina-platform/persist-tools/actions/workflows/trivy-scan.yml/badge.svg)](https://github.com/ballerina-platform/persist-tools/actions/workflows/trivy-scan.yml)
+[![Build](https://github.com/ballerina-platform/persist-tools/actions/workflows/build-timestamped-master.yml/badge.svg)](https://github.com/ballerina-platform/persist-tools/actions/workflows/build-timestamped-master.yml)
 [![GitHub Last Commit](https://img.shields.io/github/last-commit/ballerina-platform/persist-tools.svg)](https://github.com/ballerina-platform/persist-tools/commits/main)
 [![codecov](https://codecov.io/gh/ballerina-platform/persist-tools/branch/main/graph/badge.svg)](https://codecov.io/gh/ballerina-platform/persist-tools)
 
