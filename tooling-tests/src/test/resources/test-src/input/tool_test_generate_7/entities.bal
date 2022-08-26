@@ -1,7 +1,6 @@
 import ballerina/time;
 import ballerina/persist;
 
-
 @persist:Entity {
     key: ["itemId"],
     tableName: "MedicalItems"

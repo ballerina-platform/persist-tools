@@ -10,9 +10,10 @@ public type MedicalNeed record {|
     readonly int needId = -1;
 
     int itemId;
+    string name;
     int beneficiaryId;
     time:Civil period;
-    string urgency;
+    boolean urgency;
     int quantity;
 |};
 
