@@ -18,11 +18,21 @@
 
 package io.ballerina.persist.tools;
 
+import io.ballerina.compiler.syntax.tree.SyntaxTree;
+import io.ballerina.persist.cmd.CmdCommon;
+import io.ballerina.persist.cmd.Generate;
 import io.ballerina.persist.cmd.Init;
 import io.ballerina.persist.cmd.PersistCmd;
+import io.ballerina.projects.DiagnosticResult;
+import io.ballerina.projects.Package;
+import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.ProjectEnvironmentBuilder;
+import io.ballerina.projects.directory.BuildProject;
+import io.ballerina.projects.directory.SingleFileProject;
 import io.ballerina.projects.environment.Environment;
 import io.ballerina.projects.environment.EnvironmentBuilder;
+import io.ballerina.tools.text.TextDocument;
+import io.ballerina.tools.text.TextDocuments;
 import org.testng.Assert;
 
 import java.io.File;
@@ -68,13 +78,18 @@ public class ToolingTestUtils {
 
     public static void assertGeneratedSources(String subDir, Command cmd) {
         generateSourceCode(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir), cmd);
+//        errStream.println(directoryContentEquals(Paths.get(RESOURCES_EXPECTED_OUTPUT.toString()).resolve(subDir),
+//                Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)));
         Assert.assertTrue(directoryContentEquals(Paths.get(RESOURCES_EXPECTED_OUTPUT.toString()).resolve(subDir),
                 Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)));
+        Assert.assertFalse(hasSyntacticDiagnostics(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)));
+        //Assert.assertFalse(hasSemanticDiagnostics(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir), false));
 
         for (Path actualOutputFile: listFiles(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir))) {
             Path expectedOutputFile = Paths.get(RESOURCES_EXPECTED_OUTPUT.toString(), subDir).
                     resolve(actualOutputFile.subpath(3, actualOutputFile.getNameCount()));
-
+            errStream.println(Files.exists(actualOutputFile));
+            errStream.println(readContent(actualOutputFile).equals(readContent(expectedOutputFile)));
             Assert.assertTrue(Files.exists(actualOutputFile));
             Assert.assertEquals(readContent(actualOutputFile), readContent(expectedOutputFile));
         }
@@ -92,9 +107,9 @@ public class ToolingTestUtils {
         Class<?> persistCmdClass;
         try {
             persistCmdClass = Class.forName("io.ballerina.persist.cmd.PersistCmd");
-            PersistCmd  persistCmd = (PersistCmd) persistCmdClass.getDeclaredConstructor().newInstance();
+            CmdCommon  persistCmd = (PersistCmd) persistCmdClass.getDeclaredConstructor().newInstance();
             persistInitClass = Class.forName("io.ballerina.persist.cmd.Init");
-            Init persistCmdInit = (Init) persistInitClass.getDeclaredConstructor().newInstance();
+            CmdCommon persistCmdInit = (Init) persistInitClass.getDeclaredConstructor().newInstance();
             Assert.assertEquals(persistCmdInit.getName(), "persist");
             Assert.assertEquals(persistCmd.getName(), "persist");
             persistCmdInit.setEnvironmentBuilder(getEnvironmentBuilder());
@@ -122,14 +137,15 @@ public class ToolingTestUtils {
 
     private static void generateSourceCode(Path sourcePath, Command cmd) {
         Class<?> persistClass;
-        PersistCmd persistCmd;
+        CmdCommon persistCmd;
         try {
             if (cmd == Command.INIT) {
                 persistClass = Class.forName("io.ballerina.persist.cmd.Init");
+                persistCmd = (Init) persistClass.getDeclaredConstructor().newInstance();
             } else {
                 persistClass = Class.forName("io.ballerina.persist.cmd.Generate");
+                persistCmd = (Generate) persistClass.getDeclaredConstructor().newInstance();
             }
-            persistCmd = (Init) persistClass.getDeclaredConstructor().newInstance();
             persistCmd.setSourcePath(sourcePath.toAbsolutePath().toString());
             persistCmd.setEnvironmentBuilder(getEnvironmentBuilder());
             persistCmd.execute();
@@ -137,6 +153,31 @@ public class ToolingTestUtils {
                 NoSuchMethodException | InvocationTargetException e) {
             errStream.println(e.getMessage());
         }
+    }
+
+    public static boolean hasSemanticDiagnostics(Path projectPath, boolean isSingleFile) {
+        Package currentPackage;
+        if (isSingleFile) {
+            SingleFileProject singleFileProject = SingleFileProject.load(getEnvironmentBuilder(), projectPath);
+            currentPackage = singleFileProject.currentPackage();
+        } else {
+            BuildProject buildProject = BuildProject.load(getEnvironmentBuilder(), projectPath);
+            currentPackage = buildProject.currentPackage();
+        }
+        PackageCompilation compilation = currentPackage.getCompilation();
+        DiagnosticResult diagnosticResult = compilation.diagnosticResult();
+        return diagnosticResult.hasErrors();
+    }
+
+    public static boolean hasSyntacticDiagnostics(Path filePath) {
+        String content;
+        try {
+            content = Files.readString(filePath);
+        } catch (IOException e) {
+            return false;
+        }
+        TextDocument textDocument = TextDocuments.from(content);
+        return SyntaxTree.from(textDocument).hasDiagnostics();
     }
 
     private static List<Path> listFiles(Path path) {
@@ -152,7 +193,6 @@ public class ToolingTestUtils {
     private static boolean directoryContentEquals(Path dir1, Path dir2) {
         boolean dir1Exists = Files.exists(dir1) && Files.isDirectory(dir1);
         boolean dir2Exists = Files.exists(dir2) && Files.isDirectory(dir2);
-
         if (dir1Exists && dir2Exists) {
             HashMap<Path, Path> dir1Paths = new HashMap<>();
             HashMap<Path, Path> dir2Paths = new HashMap<>();
@@ -166,18 +206,24 @@ public class ToolingTestUtils {
             }
 
             if (dir1Paths.size() != dir2Paths.size()) {
+                errStream.println(dir1Paths);
+                errStream.println(dir2Paths);
                 return false;
             }
 
             for (Map.Entry<Path, Path> pathEntry : dir1Paths.entrySet()) {
                 Path relativePath = pathEntry.getKey();
                 if (!dir2Paths.containsKey(relativePath)) {
+                    errStream.println(dir2Paths);
+                    errStream.println(relativePath);
                     return false;
                 }
             }
             return true;
         }
+        errStream.println("3");
         return false;
+
     }
 
     private static String readContent(Path filePath) {

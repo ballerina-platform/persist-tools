@@ -24,16 +24,19 @@ import java.util.HashMap;
  * Class to store persist entities.
  */
 public class Entity {
+
+    public String module;
     public String[] keys;
     public String tableName;
 
     public String entityName;
 
     public ArrayList<HashMap> fields = new ArrayList<>();
-    public Entity(String[] keys, String tableName) {
+    public Entity(String[] keys, String tableName, String module) {
 
         this.keys = keys;
         this.tableName = tableName;
+        this.module = module;
     }
 
     public String[] getKeys() {

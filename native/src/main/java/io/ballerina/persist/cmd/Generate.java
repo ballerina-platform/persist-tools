@@ -23,7 +23,6 @@ import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator;
 import io.ballerina.persist.objects.Entity;
 import io.ballerina.projects.Project;
-import io.ballerina.projects.ProjectEnvironmentBuilder;
 import io.ballerina.projects.ProjectException;
 import io.ballerina.projects.directory.ProjectLoader;
 import org.ballerinalang.formatter.core.Formatter;
@@ -39,6 +38,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 /**
@@ -46,16 +49,14 @@ import java.util.ArrayList;
  */
 @CommandLine.Command(
         name = "generate",
-        description = "generate database configurations.",
-        subcommands = {Init.class}
+        description = "generate database configurations."
         )
 
-public class Generate implements BLauncherCmd {
+public class Generate extends CmdCommon implements BLauncherCmd {
 
     private static final PrintStream errStream = System.err;
 
     private String sourcePath = "";
-    private ProjectEnvironmentBuilder projectEnvironmentBuilder;
 
     private static final String COMMAND_IDENTIFIER = "persist-generate";
 
@@ -104,14 +105,18 @@ public class Generate implements BLauncherCmd {
     private ArrayList<Entity> readBalFiles() throws IOException {
         ArrayList<Entity> returnMetaData = new ArrayList<>();
         Path dirPath = Paths.get(this.sourcePath);
-        File folder = new File(dirPath.toAbsolutePath().toString());
-        File[] listOfFiles = folder.listFiles();
+        List<Path> fileList = listFiles(dirPath);
 
-        for (int i = 0; i < listOfFiles.length; i++) {
-            File file = listOfFiles[i];
-            if (file.isFile() && file.getName().endsWith(".bal")) {
-                Path filePath = Paths.get(this.sourcePath, file.getName());
-                ArrayList<Entity> retData = BalSyntaxTreeGenerator.readBalFiles(filePath);
+        for (Path i : fileList) {
+            if (i.toString().endsWith(".bal")) {
+                String[] pathElements = i.toString().strip().split(File.separator, -1);
+                String module = "";
+                String[] dirElements = this.sourcePath.split(File.separator, -1);
+                if (!Arrays.asList(dirElements).contains(pathElements[pathElements.length - 2])) {
+                    module = pathElements[pathElements.length - 2];
+                }
+                Path filePath = i;
+                ArrayList<Entity> retData = BalSyntaxTreeGenerator.readBalFiles(filePath, module);
                 if (retData.size() != 0) {
                     returnMetaData.addAll(retData);
                 }
@@ -122,9 +127,14 @@ public class Generate implements BLauncherCmd {
 
     private void generateScripts(Entity entity) throws Exception {
         SyntaxTree balTree = BalSyntaxTreeGenerator.generateBalFile(entity);
+        if (entity.module.equals("")) {
+            writeOutputFile(balTree, Paths.get(this.sourcePath, "modules", "generated_clients",
+                    entity.entityName.toLowerCase() + "_client.bal").toAbsolutePath().toString());
+        } else {
+            writeOutputFile(balTree, Paths.get(this.sourcePath, "modules", "generated_clients", entity.module,
+                    entity.entityName.toLowerCase() + "_client.bal").toAbsolutePath().toString());
+        }
 
-        writeOutputFile(balTree, Paths.get(this.sourcePath, "module", "generated_clients", entity.tableName
-                + "_client.bal").toAbsolutePath().toString());
     }
 
     public void setSourcePath(String sourcePath) {
@@ -143,6 +153,16 @@ public class Generate implements BLauncherCmd {
         try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8.name())) {
             writer.println(content);
         }
+    }
+
+    private static List<Path> listFiles(Path path) {
+        Stream<Path> walk = null;
+        try {
+            walk = Files.walk(path);
+        } catch (IOException e) {
+            errStream.println(e.getMessage());
+        }
+        return walk != null ? walk.filter(Files::isRegularFile).collect(Collectors.toList()) : new ArrayList<>();
     }
 
     @Override

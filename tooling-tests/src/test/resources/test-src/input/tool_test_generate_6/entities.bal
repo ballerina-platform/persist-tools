@@ -13,7 +13,7 @@ public type MedicalNeed record {|
     string name;
     int beneficiaryId;
     time:Civil period;
-    boolean urgency;
+    string urgency;
     int quantity;
 |};
 

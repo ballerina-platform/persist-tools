@@ -60,8 +60,8 @@ public class Class {
                 SyntaxTreeConstants.SYNTAX_TREE_CLOSE_BRACE);
     }
 
-    public void addMember(Node member) {
-        if (members.size() > 0) {
+    public void addMember(Node member, boolean newLine) {
+        if (newLine) {
             members = members.add(SyntaxTreeConstants.SYNTAX_TREE_BLANK_LINE);
         }
         members = members.add(member);

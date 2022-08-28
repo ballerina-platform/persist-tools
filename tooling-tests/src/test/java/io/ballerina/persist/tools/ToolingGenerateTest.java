@@ -29,55 +29,56 @@ import static io.ballerina.persist.tools.ToolingTestUtils.assertGeneratedSources
  */
 public class ToolingGenerateTest {
 
-    @Test(enabled = false)
+    @Test
     @Description("There is only a single entity in the Ballerina project")
     public void testGenerateSingleEntity() {
+
         assertGeneratedSources("tool_test_generate_1", GENERATE);
     }
 
-    @Test(enabled = false)
+    @Test
     @Description("There are multiple entities in the Ballerina project")
     public void testGenerateMultipleEntities() {
         assertGeneratedSources("tool_test_generate_2", GENERATE);
     }
 
-    @Test(enabled = false)
+    @Test
     @Description("There are no entities nor already generated client objects in the Ballerina project")
     public void testGenerateWithoutEntitiesWithoutClients() {
         assertGeneratedSources("tool_test_generate_3", GENERATE);
     }
 
-    @Test(enabled = false)
+    @Test
     @Description("There are no entities but there are already generated client objects in the Ballerina project")
     public void testGenerateWithoutEntitiesWithClients() {
         assertGeneratedSources("tool_test_generate_4", GENERATE);
     }
 
-    @Test(enabled = false)
+    @Test
     @Description("When the generate command is executed outside a Ballerina project")
     public void testGenerateOutsideBalProject() {
         assertGeneratedSources("tool_test_generate_5", GENERATE);
     }
 
-    @Test(enabled = false)
+    @Test
     @Description("There is a generated client object and the corresponding entity is updated")
     public void testGenerateUpdateEntity() {
         assertGeneratedSources("tool_test_generate_6", GENERATE);
     }
 
-    @Test(enabled = false)
+    @Test
     @Description("There is a generated client object and the corresponding entity is removed")
     public void testGenerateRemoveEntity() {
         assertGeneratedSources("tool_test_generate_7", GENERATE);
     }
 
-    @Test(enabled = false)
+    @Test
     @Description("A persist entity with all the supported fields data types")
     public void testGenerateAllEntityFieldTypes() {
         assertGeneratedSources("tool_test_generate_8", GENERATE);
     }
 
-    @Test(enabled = false)
+    @Test
     @Description("All the use cases where client objects are not generated for the entities")
     public void testGenerateClientNotGenerated() {
         assertGeneratedSources("tool_test_generate_9", GENERATE);

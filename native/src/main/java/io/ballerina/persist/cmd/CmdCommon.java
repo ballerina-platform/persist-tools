@@ -22,30 +22,17 @@ import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.projects.ProjectEnvironmentBuilder;
 import picocli.CommandLine;
 
-import java.io.PrintStream;
-
-import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
-
-
 /**
- * Class to implement "persist" command for ballerina.
+ * Common class to implement "persist" command for ballerina.
  */
-@CommandLine.Command(
-        name = "persist",
-        description = "generate database configurations.",
-        subcommands = {Init.class, Generate.class}
-        )
 
-public class PersistCmd extends CmdCommon implements BLauncherCmd {
+public class CmdCommon implements BLauncherCmd {
 
-    private static final PrintStream errStream = System.err;
     public String sourcePath = "";
     public ProjectEnvironmentBuilder projectEnvironmentBuilder;
 
     @Override
     public void execute() {
-        String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMPONENT_IDENTIFIER);
-        errStream.println(commandUsageInfo);
     }
     @Override
     public void setParentCmdParser(CommandLine parentCmdParser) {
@@ -54,17 +41,13 @@ public class PersistCmd extends CmdCommon implements BLauncherCmd {
     public String getName() {
         return PersistToolsConstants.COMPONENT_IDENTIFIER;
     }
-    
+
     @Override
     public void printLongDesc(StringBuilder out) {
-        out.append("Perform operations on Ballerina Persistent Layer").append(System.lineSeparator());
-        out.append(System.lineSeparator());
     }
-    
+
     @Override
     public void printUsage(StringBuilder stringBuilder) {
-        stringBuilder.append("  ballerina " + PersistToolsConstants.COMPONENT_IDENTIFIER).
-                append(System.lineSeparator());
     }
 
     public void setSourcePath(String sourceDir) {

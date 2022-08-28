@@ -43,7 +43,7 @@ import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
         name = "init",
         description = "generate database configurations.")
 
-public class Init extends PersistCmd implements BLauncherCmd {
+public class Init extends CmdCommon implements BLauncherCmd {
 
     private final PrintStream errStream = System.err;
     private final String configPath = PersistToolsConstants.CONFIG_PATH;
