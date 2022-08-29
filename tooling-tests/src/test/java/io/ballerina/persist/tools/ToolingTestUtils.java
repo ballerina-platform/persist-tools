@@ -77,14 +77,17 @@ public class ToolingTestUtils {
     }
 
     public static void assertGeneratedSources(String subDir, Command cmd) {
+
         generateSourceCode(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir), cmd);
         Assert.assertTrue(directoryContentEquals(Paths.get(RESOURCES_EXPECTED_OUTPUT.toString()).resolve(subDir),
                 Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)));
+
         if (!subDir.equals("tool_test_generate_4")) {
             Assert.assertFalse(hasSyntacticDiagnostics(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)));
             Assert.assertFalse(hasSemanticDiagnostics(Paths.get(GENERATED_SOURCES_DIRECTORY)
                     .resolve(subDir), false));
         }
+
         for (Path actualOutputFile: listFiles(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir))) {
             Path expectedOutputFile = Paths.get(RESOURCES_EXPECTED_OUTPUT.toString(), subDir).
                     resolve(actualOutputFile.subpath(3, actualOutputFile.getNameCount()));
@@ -204,19 +207,16 @@ public class ToolingTestUtils {
 
             }
             if (dir1Paths.size() != dir2Paths.size()) {
-                errStream.println("0");
                 return false;
             }
             for (Map.Entry<Path, Path> pathEntry : dir1Paths.entrySet()) {
                 Path relativePath = pathEntry.getKey();
                 if (!dir2Paths.containsKey(relativePath)) {
-                    errStream.println("1");
                     return false;
                 }
             }
             return true;
         }
-        errStream.println("3");
         return false;
     }
 

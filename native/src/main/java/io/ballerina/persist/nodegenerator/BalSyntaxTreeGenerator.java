@@ -206,11 +206,9 @@ public class BalSyntaxTreeGenerator {
         }
         Class client = new Class(className + "Client", false);
         client.addQualifiers(new String[]{"client"});
-
         client.addMember(NodeFactory.createBasicLiteralNode(SyntaxKind.STRING_LITERAL,
                 AbstractNodeFactory.createLiteralValueToken(SyntaxKind.STRING_LITERAL, " ",
                         NodeFactory.createEmptyMinutiaeList(), NodeFactory.createEmptyMinutiaeList())), false);
-
         client.addMember(TypeDescriptor.getObjectFieldNode(
                         "private",
                         new String[]{"final"},
@@ -229,6 +227,7 @@ public class BalSyntaxTreeGenerator {
                                 "`" + entity.getTableName() + "`",
                                 NodeFactory.createEmptyMinutiaeList(), NodeFactory.createEmptyMinutiaeList()))),
                 false);
+
         List<Node> subFields = new ArrayList<>();
         for (HashMap i : entity.getFields()) {
             if (i.get("fieldName").toString().equals(entity.getKeys()[0].trim().replaceAll("\"", ""))) {
@@ -282,6 +281,7 @@ public class BalSyntaxTreeGenerator {
             }
             keysString += i;
         }
+
         client.addMember(TypeDescriptor.getObjectFieldNode(
                 "private",
                 new String[]{},
@@ -310,6 +310,7 @@ public class BalSyntaxTreeGenerator {
                         "= database, port = port);"));
         init.addStatement(NodeParser.parseStatement("self.persistClient " +
                 "= check new (self.entityName, self.tableName, self.fieldMetadata, self.keyFields, dbClient);"));
+        client.addMember(init.getFunctionDefinitionNode(), true);
 
         Function create = new Function("create");
         create.addRequiredParameter(
@@ -333,9 +334,8 @@ public class BalSyntaxTreeGenerator {
                     entity.getKeys()[0].trim().replaceAll("\"", ""))));
             create.addIfElseStatement(valueNilCheck.getIfElseStatementNode());
         }
-
-
         create.addStatement(NodeParser.parseStatement(String.format("return <%s>result.lastInsertId;", keyType)));
+        client.addMember(create.getFunctionDefinitionNode(), true);
 
         Function readByKey = new Function("readByKey");
         readByKey.addRequiredParameter(
@@ -349,6 +349,7 @@ public class BalSyntaxTreeGenerator {
         readByKey.addStatement(NodeParser.parseStatement(String.format("return (check self.persistClient." +
                 "runReadByKeyQuery(%s, key)).cloneWithType(%s);", "entities:" + entity.getEntityName(), "entities:"
                 + entity.getEntityName())));
+        client.addMember(readByKey.getFunctionDefinitionNode(), true);
 
         Function read = new Function("read");
         read.addRequiredParameterWithDefault(
@@ -364,6 +365,7 @@ public class BalSyntaxTreeGenerator {
                 "check self.persistClient.runReadQuery(%s, filter);", "entities:" + entity.getEntityName())));
         read.addStatement(NodeParser.parseStatement(String.format("return new stream<%s, " +
                 "error?>(new %sStream(result));", "entities:" + entity.getEntityName(), className)));
+        client.addMember(read.getFunctionDefinitionNode(), true);
 
         Function update = new Function("update");
         update.addRequiredParameter(
@@ -379,6 +381,7 @@ public class BalSyntaxTreeGenerator {
         update.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode("", "error"));
         update.addStatement(NodeParser.parseStatement("_ = " +
                 "check self.persistClient.runUpdateQuery('object, filter);"));
+        client.addMember(update.getFunctionDefinitionNode(), true);
 
 
         Function delete = new Function("delete");
@@ -390,20 +393,12 @@ public class BalSyntaxTreeGenerator {
         delete.addQualifiers(new String[]{"remote"});
         delete.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode("", "error"));
         delete.addStatement(NodeParser.parseStatement("_ = check self.persistClient.runDeleteQuery(filter);"));
+        client.addMember(delete.getFunctionDefinitionNode(), true);
 
         Function close = new Function("close");
         close.addQualifiers(new String[]{});
         close.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode("", "error"));
         close.addStatement(NodeParser.parseStatement("return self.persistClient.close();"));
-
-
-
-        client.addMember(init.getFunctionDefinitionNode(), true);
-        client.addMember(create.getFunctionDefinitionNode(), true);
-        client.addMember(readByKey.getFunctionDefinitionNode(), true);
-        client.addMember(read.getFunctionDefinitionNode(), true);
-        client.addMember(update.getFunctionDefinitionNode(), true);
-        client.addMember(delete.getFunctionDefinitionNode(), true);
         client.addMember(close.getFunctionDefinitionNode(), true);
 
         moduleMembers = moduleMembers.add(client.getClassDefinitionNode());
@@ -431,6 +426,7 @@ public class BalSyntaxTreeGenerator {
                         SyntaxTreeConstants.SYNTAX_TREE_VAR_ANYDATA,
                         TypeDescriptor.getOptionalTypeDescriptorNode("", "error")),
                 "anydataStream");
+        clientStream.addMember(initStream.getFunctionDefinitionNode(), true);
 
         Function nextStream = new Function("next");
         nextStream.addQualifiers(new String[]{"public", "isolated"});
@@ -447,16 +443,13 @@ public class BalSyntaxTreeGenerator {
                 "entities:" + entity.getEntityName(), "entities:" + entity.getEntityName())));
         streamValueErrorCheck.addElseStatement(NodeParser.parseStatement("return nextRecord;"));
         streamValueNilCheck.addElseBody(streamValueErrorCheck);
-
         nextStream.addIfElseStatement(streamValueNilCheck.getIfElseStatementNode());
+        clientStream.addMember(nextStream.getFunctionDefinitionNode(), true);
 
         Function closeStream = new Function("close");
         closeStream.addQualifiers(new String[]{"public", "isolated"});
         closeStream.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode("", "error"));
         closeStream.addStatement(NodeParser.parseStatement("return self.anydataStream.close();"));
-
-        clientStream.addMember(initStream.getFunctionDefinitionNode(), true);
-        clientStream.addMember(nextStream.getFunctionDefinitionNode(), true);
         clientStream.addMember(closeStream.getFunctionDefinitionNode(), true);
 
         moduleMembers = moduleMembers.add(clientStream.getClassDefinitionNode());
@@ -472,11 +465,15 @@ public class BalSyntaxTreeGenerator {
         NodeList<ImportDeclarationNode> imports = AbstractNodeFactory.createEmptyNodeList();
         NodeList<ModuleMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
 
-        imports = imports.add(NodeParser.parseImportDeclaration("configurable int port = ?;"));
-        imports = imports.add(NodeParser.parseImportDeclaration("configurable string host = ?;"));
-        imports = imports.add(NodeParser.parseImportDeclaration("configurable string user = ?;"));
-        imports = imports.add(NodeParser.parseImportDeclaration("configurable string database = ?;"));
-        imports = imports.add(NodeParser.parseImportDeclaration("configurable string password = ?;"));
+        moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration("configurable int port = ?;"));
+        moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration(
+                "configurable string host = ?;"));
+        moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration(
+                "configurable string user = ?;"));
+        moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration(
+                "configurable string database = ?;"));
+        moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration(
+                "configurable string password = ?;"));
 
         Token eofToken = AbstractNodeFactory.createIdentifierToken("");
         ModulePartNode modulePartNode = NodeFactory.createModulePartNode(imports, moduleMembers, eofToken);
