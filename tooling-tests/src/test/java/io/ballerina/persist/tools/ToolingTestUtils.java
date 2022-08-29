@@ -78,18 +78,13 @@ public class ToolingTestUtils {
 
     public static void assertGeneratedSources(String subDir, Command cmd) {
         generateSourceCode(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir), cmd);
-//        errStream.println(directoryContentEquals(Paths.get(RESOURCES_EXPECTED_OUTPUT.toString()).resolve(subDir),
-//                Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)));
         Assert.assertTrue(directoryContentEquals(Paths.get(RESOURCES_EXPECTED_OUTPUT.toString()).resolve(subDir),
                 Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)));
         Assert.assertFalse(hasSyntacticDiagnostics(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)));
         //Assert.assertFalse(hasSemanticDiagnostics(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir), false));
-
         for (Path actualOutputFile: listFiles(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir))) {
             Path expectedOutputFile = Paths.get(RESOURCES_EXPECTED_OUTPUT.toString(), subDir).
                     resolve(actualOutputFile.subpath(3, actualOutputFile.getNameCount()));
-            errStream.println(Files.exists(actualOutputFile));
-            errStream.println(readContent(actualOutputFile).equals(readContent(expectedOutputFile)));
             Assert.assertTrue(Files.exists(actualOutputFile));
             Assert.assertEquals(readContent(actualOutputFile), readContent(expectedOutputFile));
         }
@@ -200,30 +195,21 @@ public class ToolingTestUtils {
             for (Path p : listFiles(dir1)) {
                 dir1Paths.put(dir1.relativize(p), p);
             }
-
             for (Path p : listFiles(dir2)) {
                 dir2Paths.put(dir2.relativize(p), p);
             }
-
             if (dir1Paths.size() != dir2Paths.size()) {
-                errStream.println(dir1Paths);
-                errStream.println(dir2Paths);
                 return false;
             }
-
             for (Map.Entry<Path, Path> pathEntry : dir1Paths.entrySet()) {
                 Path relativePath = pathEntry.getKey();
                 if (!dir2Paths.containsKey(relativePath)) {
-                    errStream.println(dir2Paths);
-                    errStream.println(relativePath);
                     return false;
                 }
             }
             return true;
         }
-        errStream.println("3");
         return false;
-
     }
 
     private static String readContent(Path filePath) {

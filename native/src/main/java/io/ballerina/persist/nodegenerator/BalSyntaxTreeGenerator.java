@@ -450,18 +450,23 @@ public class BalSyntaxTreeGenerator {
         return balTree.modifyWith(modulePartNode);
     }
 
-//    public static SyntaxTree generateConfigBalFile() {
-//        NodeList<ImportDeclarationNode> imports = AbstractNodeFactory.createEmptyNodeList();
-//        NodeList<ModuleMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
-//
-//        imports = imports.add(NodeParser.parseImportDeclaration("import ballerina/io;"));
-//        imports = imports.add(NodeParser.parseImportDeclaration("configurable int port = ?;"));
-//        imports = imports.add(NodeParser.parseImportDeclaration("configurable string host = ?;"));
-//        imports = imports.add(NodeParser.parseImportDeclaration("configurable string user = ?;"));
-//        imports = imports.add(NodeParser.parseImportDeclaration("configurable string database = ?;"));
-//        imports = imports.add(NodeParser.parseImportDeclaration("configurable string password = ?;"));
-//
-//    }
+    public static SyntaxTree generateConfigBalFile() {
+        NodeList<ImportDeclarationNode> imports = AbstractNodeFactory.createEmptyNodeList();
+        NodeList<ModuleMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
+
+        imports = imports.add(NodeParser.parseImportDeclaration("import ballerina/io;"));
+        imports = imports.add(NodeParser.parseImportDeclaration("configurable int port = ?;"));
+        imports = imports.add(NodeParser.parseImportDeclaration("configurable string host = ?;"));
+        imports = imports.add(NodeParser.parseImportDeclaration("configurable string user = ?;"));
+        imports = imports.add(NodeParser.parseImportDeclaration("configurable string database = ?;"));
+        imports = imports.add(NodeParser.parseImportDeclaration("configurable string password = ?;"));
+
+        Token eofToken = AbstractNodeFactory.createIdentifierToken("");
+        ModulePartNode modulePartNode = NodeFactory.createModulePartNode(imports, moduleMembers, eofToken);
+        TextDocument textDocument = TextDocuments.from("");
+        SyntaxTree balTree = SyntaxTree.from(textDocument);
+        return balTree.modifyWith(modulePartNode);
+    }
 
     private static String[] getArray(ArrayList<String> arrL) {
         String[] output = new String[arrL.size()];

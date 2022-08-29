@@ -97,6 +97,7 @@ public class Generate extends CmdCommon implements BLauncherCmd {
                 for (Entity entity : entityArray) {
                     generateScripts(entity);
                 }
+                generateConfigurationScripts();
             }
         } catch (Exception e) {
             errStream.println(e.getMessage());
@@ -116,8 +117,7 @@ public class Generate extends CmdCommon implements BLauncherCmd {
                 if (!Arrays.asList(dirElements).contains(pathElements[pathElements.length - 2])) {
                     module = pathElements[pathElements.length - 2];
                 }
-                Path filePath = i;
-                ArrayList<Entity> retData = BalSyntaxTreeGenerator.readBalFiles(filePath, module);
+                ArrayList<Entity> retData = BalSyntaxTreeGenerator.readBalFiles(i, module);
                 if (retData.size() != 0) {
                     returnMetaData.addAll(retData);
                 }
@@ -132,16 +132,16 @@ public class Generate extends CmdCommon implements BLauncherCmd {
             writeOutputFile(balTree, Paths.get(this.sourcePath, "modules", "generated_clients",
                     entity.entityName.toLowerCase() + "_client.bal").toAbsolutePath().toString());
         } else {
-            writeOutputFile(balTree, Paths.get(this.sourcePath, "modules", "generated_clients", entity.module,
-                    entity.entityName.toLowerCase() + "_client.bal").toAbsolutePath().toString());
+            writeOutputFile(balTree, Paths.get(this.sourcePath, "modules", "generated_clients",
+                    entity.module + "_" + entity.entityName.toLowerCase() + "_client.bal").toAbsolutePath().toString());
         }
 
     }
-//    private void generateConfigurationScripts() throws Exception {
-//        SyntaxTree configTree = BalSyntaxTreeGenerator.generateConfigBalFile();
-//        writeOutputFile(configTree, Paths.get(this.sourcePath, "config.bal").toAbsolutePath().toString());
-//
-//    }
+    private void generateConfigurationScripts() throws Exception {
+        SyntaxTree configTree = BalSyntaxTreeGenerator.generateConfigBalFile();
+        writeOutputFile(configTree, Paths.get(this.sourcePath, "modules", "config.bal")
+                .toAbsolutePath().toString());
+    }
 
     public void setSourcePath(String sourcePath) {
         this.sourcePath = sourcePath;
