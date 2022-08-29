@@ -35,7 +35,6 @@ public class IfElse {
 
     private final ExpressionNode condition;
     private Node elseBody;
-    private Node elseIfBody;
     private NodeList<StatementNode> ifStatements;
 
     private NodeList<StatementNode> elseStatements;

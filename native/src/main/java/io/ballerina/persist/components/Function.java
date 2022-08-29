@@ -20,7 +20,6 @@ package io.ballerina.persist.components;
 
 import io.ballerina.compiler.syntax.tree.AbstractNodeFactory;
 import io.ballerina.compiler.syntax.tree.AnnotationNode;
-import io.ballerina.compiler.syntax.tree.ExpressionNode;
 import io.ballerina.compiler.syntax.tree.FunctionBodyNode;
 import io.ballerina.compiler.syntax.tree.FunctionDefinitionNode;
 import io.ballerina.compiler.syntax.tree.FunctionSignatureNode;
@@ -39,7 +38,6 @@ import io.ballerina.persist.nodegenerator.SyntaxTreeConstants;
 import java.util.ArrayList;
 import java.util.List;
 
-import static io.ballerina.persist.components.Statement.getReturnStatementNode;
 import static io.ballerina.persist.components.TypeDescriptor.getReturnTypeDescriptorNode;
 
 /**
@@ -142,12 +140,6 @@ public class Function {
                 null,
                 statements,
                 SyntaxTreeConstants.SYNTAX_TREE_CLOSE_BRACE
-        );
-    }
-
-    public void addReturnStatement(ExpressionNode expressionNode) {
-        statements = statements.add(
-                getReturnStatementNode(expressionNode)
         );
     }
 

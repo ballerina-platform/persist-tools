@@ -73,7 +73,7 @@ public class ToolingGenerateTest {
     }
 
     @Test
-    @Description("Test case where key is a string")
+    @Description("There is only a single entity in the Ballerina project where key is a string")
     public void testGenerateSingleEntityWithStringKey() {
         assertGeneratedSources("tool_test_generate_8", GENERATE);
     }

@@ -37,7 +37,6 @@ import io.ballerina.compiler.syntax.tree.SimpleNameReferenceNode;
 import io.ballerina.compiler.syntax.tree.StreamTypeDescriptorNode;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
 import io.ballerina.compiler.syntax.tree.Token;
-import io.ballerina.compiler.syntax.tree.TypeCastExpressionNode;
 import io.ballerina.compiler.syntax.tree.TypeDescriptorNode;
 import io.ballerina.compiler.syntax.tree.UnionTypeDescriptorNode;
 import io.ballerina.persist.nodegenerator.SyntaxTreeConstants;
@@ -160,18 +159,6 @@ public class TypeDescriptor {
 
     public static SimpleNameReferenceNode getSimpleNameReferenceNode(String name) {
         return NodeFactory.createSimpleNameReferenceNode(AbstractNodeFactory.createIdentifierToken(name + " "));
-    }
-
-    public static TypeCastExpressionNode getTypeCastExpressionNode(String typeCastParam, ExpressionNode expression) {
-        return NodeFactory.createTypeCastExpressionNode(
-                SyntaxTreeConstants.SYNTAX_TREE_IT,
-                NodeFactory.createTypeCastParamNode(
-                        NodeFactory.createEmptyNodeList(),
-                        getBuiltinSimpleNameReferenceNode(typeCastParam)
-                ),
-                SyntaxTreeConstants.SYNTAX_TREE_GT,
-                expression
-        );
     }
 
     public static UnionTypeDescriptorNode getUnionTypeDescriptorNode(TypeDescriptorNode lhs, TypeDescriptorNode rhs) {
