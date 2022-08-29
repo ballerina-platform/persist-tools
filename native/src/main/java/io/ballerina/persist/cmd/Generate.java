@@ -40,6 +40,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -109,7 +110,7 @@ public class Generate extends CmdCommon implements BLauncherCmd {
 
         for (Path i : fileList) {
             if (i.toString().endsWith(".bal")) {
-                String[] pathElements = i.toString().strip().split(File.separator, -1);
+                String[] pathElements = i.toString().strip().split(Pattern.quote(File.separator));
                 String module = "";
                 String[] dirElements = this.sourcePath.split(File.separator, -1);
                 if (!Arrays.asList(dirElements).contains(pathElements[pathElements.length - 2])) {
@@ -136,6 +137,11 @@ public class Generate extends CmdCommon implements BLauncherCmd {
         }
 
     }
+//    private void generateConfigurationScripts() throws Exception {
+//        SyntaxTree configTree = BalSyntaxTreeGenerator.generateConfigBalFile();
+//        writeOutputFile(configTree, Paths.get(this.sourcePath, "config.bal").toAbsolutePath().toString());
+//
+//    }
 
     public void setSourcePath(String sourcePath) {
         this.sourcePath = sourcePath;
