@@ -112,7 +112,7 @@ public class Generate extends CmdCommon implements BLauncherCmd {
             if (i.toString().endsWith(".bal")) {
                 String[] pathElements = i.toString().strip().split(Pattern.quote(File.separator));
                 String module = "";
-                String[] dirElements = this.sourcePath.split(File.separator, -1);
+                String[] dirElements = this.sourcePath.split(Pattern.quote(File.separator));
                 if (!Arrays.asList(dirElements).contains(pathElements[pathElements.length - 2])) {
                     module = pathElements[pathElements.length - 2];
                 }
