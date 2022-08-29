@@ -49,38 +49,32 @@ public class ToolingGenerateTest {
     }
 
     @Test
-    @Description("There are no entities but there are already generated client objects in the Ballerina project")
-    public void testGenerateWithoutEntitiesWithClients() {
-        assertGeneratedSources("tool_test_generate_4", GENERATE);
-    }
-
-    @Test
     @Description("When the generate command is executed outside a Ballerina project")
     public void testGenerateOutsideBalProject() {
-        assertGeneratedSources("tool_test_generate_5", GENERATE);
+        assertGeneratedSources("tool_test_generate_4", GENERATE);
     }
 
     @Test
     @Description("There is a generated client object and the corresponding entity is updated")
     public void testGenerateUpdateEntity() {
-        assertGeneratedSources("tool_test_generate_6", GENERATE);
-    }
-
-    @Test
-    @Description("There is a generated client object and the corresponding entity is removed")
-    public void testGenerateRemoveEntity() {
-        assertGeneratedSources("tool_test_generate_7", GENERATE);
+        assertGeneratedSources("tool_test_generate_5", GENERATE);
     }
 
     @Test
     @Description("A persist entity with all the supported fields data types")
     public void testGenerateAllEntityFieldTypes() {
-        assertGeneratedSources("tool_test_generate_8", GENERATE);
+        assertGeneratedSources("tool_test_generate_6", GENERATE);
     }
 
     @Test
     @Description("All the use cases where client objects are not generated for the entities")
     public void testGenerateClientNotGenerated() {
-        assertGeneratedSources("tool_test_generate_9", GENERATE);
+        assertGeneratedSources("tool_test_generate_7", GENERATE);
+    }
+
+    @Test
+    @Description("Test case where key is a string")
+    public void testGenerateSingleEntityWithStringKey() {
+        assertGeneratedSources("tool_test_generate_8", GENERATE);
     }
 }

@@ -69,6 +69,14 @@ subprojects {
         ballerinaStdLibs
     
     }
+
+    dependencies {
+        ballerinaStdLibs "io.ballerina.stdlib:persist-ballerina:${stdlibPersistVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:time-ballerina:${stdlibTimeVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:io-ballerina:${stdlibIoVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:sql-ballerina:${stdlibSqlVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:mysql-ballerina:${stdlibMysqlVersion}"
+    }
 }
 
 def moduleVersion = project.version.replace("-SNAPSHOT", "")

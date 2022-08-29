@@ -179,6 +179,7 @@ public class BalSyntaxTreeGenerator {
     public static SyntaxTree generateBalFile(Entity entity) {
 
         boolean keyAutoInc = false;
+        String keyType = "int";
         NodeList<ImportDeclarationNode> imports = AbstractNodeFactory.createEmptyNodeList();
         NodeList<ModuleMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
 
@@ -191,6 +192,14 @@ public class BalSyntaxTreeGenerator {
             }
         }
         imports = imports.add(getImportDeclarationNode("ballerina", "persist"));
+        if (entity.module.equals("")) {
+            imports = imports.add(NodeParser.parseImportDeclaration(String.format("import %s as entities;",
+                    entity.packageName)));
+        } else {
+            imports = imports.add(NodeParser.parseImportDeclaration(String.format("import %s as entities;",
+                    entity.packageName + "." + entity.module)));
+        }
+
         String className = entity.entityName;
         if (!entity.module.equals("")) {
             className = entity.module.substring(0, 1).toUpperCase() + entity.module.substring(1)
@@ -223,6 +232,9 @@ public class BalSyntaxTreeGenerator {
                 false);
         List<Node> subFields = new ArrayList<>();
         for (HashMap i : entity.fields) {
+            if (i.get("fieldName").toString().equals(entity.keys[0].trim().replaceAll("\"", ""))) {
+                keyType = i.get("fieldType").toString().trim().replaceAll(" ", "");
+            }
             if (!subFields.isEmpty()) {
                 subFields.add(NodeFactory.createBasicLiteralNode(SyntaxKind.STRING_LITERAL,
                         AbstractNodeFactory.createLiteralValueToken(SyntaxKind.STRING_LITERAL, ", "
@@ -293,21 +305,27 @@ public class BalSyntaxTreeGenerator {
 
         Function init = new Function("init");
         init.addQualifiers(new String[]{"public"});
-        init.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode("persist", "Error"));
+        init.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode("", "error"));
         init.addStatement(NodeParser.parseStatement(
-                "mysql:Client dbClient = check new (host = HOST, user = USER, password = PASSWORD, database " +
-                        "= DATABASE, port = PORT);"));
+                "mysql:Client dbClient = check new (host = host, user = user, password = password, database " +
+                        "= database, port = port);"));
         init.addStatement(NodeParser.parseStatement("self.persistClient " +
                 "= check new (self.entityName, self.tableName, self.fieldMetadata, self.keyFields, dbClient);"));
 
         Function create = new Function("create");
         create.addRequiredParameter(
-                TypeDescriptor.getSimpleNameReferenceNode(entity.entityName),
+                TypeDescriptor.getQualifiedNameReferenceNode("entities", entity.entityName),
                 "value"
         );
         create.addQualifiers(new String[]{"remote"});
-        create.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(SyntaxTreeConstants.SYNTAX_TREE_VAR_INT,
-                TypeDescriptor.getOptionalTypeDescriptorNode("persist", "Error")));
+        if (keyType.equals("int")) {
+            create.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(SyntaxTreeConstants.SYNTAX_TREE_VAR_INT,
+                    TypeDescriptor.getOptionalTypeDescriptorNode("", "error")));
+        } else if (keyType.equals("string")) {
+            create.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(SyntaxTreeConstants.SYNTAX_TREE_VAR_STRING,
+                    TypeDescriptor.getOptionalTypeDescriptorNode("", "error")));
+        }
+
         create.addStatement(NodeParser.parseStatement("sql:ExecutionResult result = " +
                 "check self.persistClient.runInsertQuery(value);"));
         if (!keyAutoInc) {
@@ -318,7 +336,7 @@ public class BalSyntaxTreeGenerator {
         }
 
 
-        create.addStatement(NodeParser.parseStatement("return <int>result.lastInsertId;"));
+        create.addStatement(NodeParser.parseStatement(String.format("return <%s>result.lastInsertId;", keyType)));
 
         Function readByKey = new Function("readByKey");
         readByKey.addRequiredParameter(
@@ -327,10 +345,11 @@ public class BalSyntaxTreeGenerator {
         );
         readByKey.addQualifiers(new String[]{"remote"});
         readByKey.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(
-                TypeDescriptor.getSimpleNameReferenceNode(entity.entityName),
-                TypeDescriptor.getQualifiedNameReferenceNode("persist", "Error")));
+                TypeDescriptor.getQualifiedNameReferenceNode("entities", entity.entityName),
+                TypeDescriptor.getSimpleNameReferenceNode ("error")));
         readByKey.addStatement(NodeParser.parseStatement(String.format("return (check self.persistClient." +
-                "runReadByKeyQuery(%s, key)).cloneWithType(%s);", entity.entityName, entity.entityName)));
+                "runReadByKeyQuery(%s, key)).cloneWithType(%s);", "entities:" + entity.entityName, "entities:"
+                + entity.entityName)));
 
         Function read = new Function("read");
         read.addRequiredParameterWithDefault(
@@ -339,13 +358,13 @@ public class BalSyntaxTreeGenerator {
                 "filter");
         read.addQualifiers(new String[]{"remote"});
         read.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(TypeDescriptor.getStreamTypeDescriptorNode(
-                TypeDescriptor.getSimpleNameReferenceNode(entity.entityName),
-                        TypeDescriptor.getOptionalTypeDescriptorNode("persist", "Error")),
-                TypeDescriptor.getQualifiedNameReferenceNode("persist", "Error")));
-        read.addStatement(NodeParser.parseStatement("stream<anydata, error?> result = " +
-                "check self.persistClient.runReadQuery(filter);"));
+                TypeDescriptor.getQualifiedNameReferenceNode("entities", entity.entityName),
+                        TypeDescriptor.getOptionalTypeDescriptorNode("", "error")),
+                TypeDescriptor.getSimpleNameReferenceNode("error")));
+        read.addStatement(NodeParser.parseStatement(String.format("stream<anydata, error?> result = " +
+                "check self.persistClient.runReadQuery(%s, filter);", "entities:" + entity.entityName)));
         read.addStatement(NodeParser.parseStatement(String.format("return new stream<%s, " +
-                "error?>(new %sStream(result));", entity.entityName, entity.entityName)));
+                "error?>(new %sStream(result));", "entities:" + entity.entityName, className)));
 
         Function update = new Function("update");
         update.addRequiredParameter(
@@ -358,7 +377,7 @@ public class BalSyntaxTreeGenerator {
                 "filter"
         );
         update.addQualifiers(new String[]{"remote"});
-        update.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode("persist", "Error"));
+        update.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode("", "error"));
         update.addStatement(NodeParser.parseStatement("_ = " +
                 "check self.persistClient.runUpdateQuery('object, filter);"));
 
@@ -370,12 +389,12 @@ public class BalSyntaxTreeGenerator {
                 "filter"
         );
         delete.addQualifiers(new String[]{"remote"});
-        delete.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode("persist", "Error"));
+        delete.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode("", "error"));
         delete.addStatement(NodeParser.parseStatement("_ = check self.persistClient.runDeleteQuery(filter);"));
 
         Function close = new Function("close");
         close.addQualifiers(new String[]{});
-        close.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode("persist", "Error"));
+        close.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode("", "error"));
         close.addStatement(NodeParser.parseStatement("return self.persistClient.close();"));
 
 
@@ -401,7 +420,7 @@ public class BalSyntaxTreeGenerator {
                         new String[]{},
                         TypeDescriptor.getStreamTypeDescriptorNode(
                             SyntaxTreeConstants.SYNTAX_TREE_VAR_ANYDATA,
-                            TypeDescriptor.getOptionalTypeDescriptorNode("persist", "Error")),
+                            TypeDescriptor.getOptionalTypeDescriptorNode("", "error")),
                         "anydataStream"), true);
 
         Function initStream = new Function("init");
@@ -411,13 +430,13 @@ public class BalSyntaxTreeGenerator {
         initStream.addRequiredParameter(
                 TypeDescriptor.getStreamTypeDescriptorNode(
                         SyntaxTreeConstants.SYNTAX_TREE_VAR_ANYDATA,
-                        TypeDescriptor.getOptionalTypeDescriptorNode("persist", "Error")),
+                        TypeDescriptor.getOptionalTypeDescriptorNode("", "error")),
                 "anydataStream");
 
         Function nextStream = new Function("next");
         nextStream.addQualifiers(new String[]{"public", "isolated"});
-        nextStream.addReturns(NodeParser.parseTypeDescriptor(String.format("record {|%s value;|}|persist:Error?",
-                entity.entityName)));
+        nextStream.addReturns(NodeParser.parseTypeDescriptor(String.format("record {|%s value;|}|error?",
+                "entities:" + entity.entityName)));
         nextStream.addStatement(NodeParser.parseStatement("var streamValue = self.anydataStream.next();"));
 
         IfElse streamValueNilCheck = new IfElse(NodeParser.parseExpression("streamValue is ()"));
@@ -426,7 +445,7 @@ public class BalSyntaxTreeGenerator {
         streamValueErrorCheck.addIfStatement(NodeParser.parseStatement("return streamValue;"));
         streamValueErrorCheck.addElseStatement(NodeParser.parseStatement(String.format(
                 "record {|%s value;|} nextRecord = {value: check streamValue.value.cloneWithType(%s)};",
-                entity.entityName, entity.entityName)));
+                "entities:" + entity.entityName, "entities:" + entity.entityName)));
         streamValueErrorCheck.addElseStatement(NodeParser.parseStatement("return nextRecord;"));
         streamValueNilCheck.addElseBody(streamValueErrorCheck);
 
@@ -434,7 +453,7 @@ public class BalSyntaxTreeGenerator {
 
         Function closeStream = new Function("close");
         closeStream.addQualifiers(new String[]{"public", "isolated"});
-        closeStream.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode("persist", "Error"));
+        closeStream.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode("", "error"));
         closeStream.addStatement(NodeParser.parseStatement("return self.anydataStream.close();"));
 
         clientStream.addMember(initStream.getFunctionDefinitionNode(), true);
@@ -454,7 +473,6 @@ public class BalSyntaxTreeGenerator {
         NodeList<ImportDeclarationNode> imports = AbstractNodeFactory.createEmptyNodeList();
         NodeList<ModuleMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
 
-        imports = imports.add(NodeParser.parseImportDeclaration("import ballerina/io;"));
         imports = imports.add(NodeParser.parseImportDeclaration("configurable int port = ?;"));
         imports = imports.add(NodeParser.parseImportDeclaration("configurable string host = ?;"));
         imports = imports.add(NodeParser.parseImportDeclaration("configurable string user = ?;"));

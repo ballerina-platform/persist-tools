@@ -95,6 +95,8 @@ public class Generate extends CmdCommon implements BLauncherCmd {
                 errStream.println("Current directory doesn't contain any persist entities");
             } else {
                 for (Entity entity : entityArray) {
+                    entity.packageName = balProject.currentPackage().descriptor().org().value() + "/"
+                            + balProject.currentPackage().descriptor().name().value();
                     generateScripts(entity);
                 }
                 generateConfigurationScripts();
@@ -139,7 +141,7 @@ public class Generate extends CmdCommon implements BLauncherCmd {
     }
     private void generateConfigurationScripts() throws Exception {
         SyntaxTree configTree = BalSyntaxTreeGenerator.generateConfigBalFile();
-        writeOutputFile(configTree, Paths.get(this.sourcePath, "modules", "config.bal")
+        writeOutputFile(configTree, Paths.get(this.sourcePath, "modules", "generated_clients", "config.bal")
                 .toAbsolutePath().toString());
     }
 

@@ -2,28 +2,21 @@ import ballerina/time;
 import ballerina/persist;
 
 @persist:Entity {
-    key: ["needId"],
-    tableName: "MedicalNeeds"
+    key: ["a"],
+    tableName: "DataTypes"
 }
-public type MedicalNeed record {|
+public type DataType record {|
     @persist:AutoIncrement
-    readonly int needId = -1;
+    readonly int a = -1;
 
-    int itemId;
-    string name;
-    int beneficiaryId;
-    time:Civil period;
-    string urgency;
-    int quantity;
-|};
-
-@persist:Entity {
-    key: ["itemId"],
-    tableName: "MedicalItems"
-}
-public type MedicalItem record {|
-    readonly int itemId;
-    string name;
-    string 'type;
-    string unit;
+    string b1;
+    int c1;
+    boolean d1;
+    float e1;
+    decimal f1;
+    time:Utc j1;
+    time:Civil k1;
+    time:Date l1;
+    time:TimeOfDay m1;
+    anydata v1;
 |};

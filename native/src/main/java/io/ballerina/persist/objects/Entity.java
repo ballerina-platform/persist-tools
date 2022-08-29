@@ -31,6 +31,8 @@ public class Entity {
 
     public String entityName;
 
+    public String packageName;
+
     public ArrayList<HashMap> fields = new ArrayList<>();
     public Entity(String[] keys, String tableName, String module) {
 
@@ -46,13 +48,31 @@ public class Entity {
     public String getTableName() {
         return this.tableName;
     }
+    public void setTableName(String tableName) {
+        this.tableName = tableName;
+    }
+
+    public void setModule(String module) {
+        this.module = module;
+    }
+
+    public void setPackageName(String packageName) {
+        this.packageName = packageName;
+    }
 
     public String getEntityName() {
         return this.entityName;
     }
+    public void setEntityName(String entityName) {
+        this.entityName = entityName;
+    }
 
     public ArrayList<HashMap> getFields() {
         return this.fields;
+    }
+
+    public void addField(HashMap map) {
+        this.fields.add(map);
     }
 
 }

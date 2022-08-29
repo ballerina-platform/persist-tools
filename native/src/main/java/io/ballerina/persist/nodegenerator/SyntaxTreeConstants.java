@@ -30,7 +30,6 @@ public class SyntaxTreeConstants {
     public static final Token SYNTAX_TREE_COMMA = AbstractNodeFactory.createIdentifierToken(",");
 
     public static final Token SYNTAX_TREE_BLANK_LINE = AbstractNodeFactory.createIdentifierToken("\n\n");
-    public static final Token SYNTAX_TREE_ASTERISK = AbstractNodeFactory.createIdentifierToken("*");
 
     public static final Token SYNTAX_TREE_KEYWORD_IMPORT = AbstractNodeFactory.createIdentifierToken("import ");
     public static final Token SYNTAX_TREE_KEYWORD_RETURNS = AbstractNodeFactory.createIdentifierToken("returns ");
@@ -47,9 +46,6 @@ public class SyntaxTreeConstants {
     public static final Token SYNTAX_TREE_KEYWORD_RECORD = AbstractNodeFactory.createIdentifierToken("record ");
     public static final Token SYNTAX_TREE_KEYWORD_IF = AbstractNodeFactory.createIdentifierToken("if ");
     public static final Token SYNTAX_TREE_KEYWORD_ELSE = AbstractNodeFactory.createIdentifierToken("else ");
-
-    public static final Token SYNTAX_TREE_BODY_START_DELIMITER = AbstractNodeFactory.createIdentifierToken("{|");
-    public static final Token SYNTAX_TREE_BODY_END_DELIMITER = AbstractNodeFactory.createIdentifierToken("|}");
 
     public static final TypeDescriptorNode SYNTAX_TREE_VAR_STRING =
             TypeDescriptor.getBuiltinSimpleNameReferenceNode("string");

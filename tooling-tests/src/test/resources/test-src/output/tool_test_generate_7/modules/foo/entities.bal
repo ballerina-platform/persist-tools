@@ -6,7 +6,8 @@ import ballerina/persist;
     tableName: "MedicalNeeds"
 }
 public type MedicalNeed record {|
-    readonly string needId;
+    @persist:AutoIncrement
+    readonly int needId = -1;
 
     int itemId;
     int beneficiaryId;

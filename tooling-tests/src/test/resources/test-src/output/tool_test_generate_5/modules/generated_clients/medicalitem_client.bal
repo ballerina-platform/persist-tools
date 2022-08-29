@@ -1,7 +1,7 @@
 import ballerina/sql;
 import ballerinax/mysql;
 import ballerina/persist;
-import foo/perist_generate_2 as entities;
+import foo/perist_generate_5 as entities;
 
 client class MedicalItemClient {
 
