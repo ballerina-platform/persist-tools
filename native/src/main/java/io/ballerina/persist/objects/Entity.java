@@ -25,15 +25,15 @@ import java.util.HashMap;
  */
 public class Entity {
 
-    public String module;
-    public String[] keys;
-    public String tableName;
+    private String module;
+    private String[] keys;
+    private String tableName;
 
-    public String entityName;
+    private String entityName;
 
-    public String packageName;
+    private String packageName;
 
-    public ArrayList<HashMap> fields = new ArrayList<>();
+    private ArrayList<HashMap> fields = new ArrayList<>();
     public Entity(String[] keys, String tableName, String module) {
 
         this.keys = keys;
@@ -51,13 +51,17 @@ public class Entity {
     public void setTableName(String tableName) {
         this.tableName = tableName;
     }
-
-    public void setModule(String module) {
-        this.module = module;
+    
+    public String getModule() {
+        return this.module;
     }
 
     public void setPackageName(String packageName) {
         this.packageName = packageName;
+    }
+
+    public String getPackageName() {
+        return this.packageName;
     }
 
     public String getEntityName() {

@@ -95,8 +95,8 @@ public class Generate extends CmdCommon implements BLauncherCmd {
                 errStream.println("Current directory doesn't contain any persist entities");
             } else {
                 for (Entity entity : entityArray) {
-                    entity.packageName = balProject.currentPackage().descriptor().org().value() + "/"
-                            + balProject.currentPackage().descriptor().name().value();
+                    entity.setPackageName(balProject.currentPackage().descriptor().org().value() + "/"
+                            + balProject.currentPackage().descriptor().name().value());
                     generateScripts(entity);
                 }
                 generateConfigurationScripts();
@@ -130,12 +130,13 @@ public class Generate extends CmdCommon implements BLauncherCmd {
 
     private void generateScripts(Entity entity) throws Exception {
         SyntaxTree balTree = BalSyntaxTreeGenerator.generateBalFile(entity);
-        if (entity.module.equals("")) {
+        if (entity.getModule().equals("")) {
             writeOutputFile(balTree, Paths.get(this.sourcePath, "modules", "generated_clients",
-                    entity.entityName.toLowerCase() + "_client.bal").toAbsolutePath().toString());
+                    entity.getEntityName().toLowerCase() + "_client.bal").toAbsolutePath().toString());
         } else {
             writeOutputFile(balTree, Paths.get(this.sourcePath, "modules", "generated_clients",
-                    entity.module + "_" + entity.entityName.toLowerCase() + "_client.bal").toAbsolutePath().toString());
+                    entity.getModule() + "_" + entity.getEntityName().toLowerCase() + "_client.bal")
+                    .toAbsolutePath().toString());
         }
 
     }
