@@ -3,7 +3,7 @@ import ballerinax/mysql;
 import ballerina/persist;
 import foo/perist_generate_7 as entities;
 
-client class MedicalItemClient {
+public client class MedicalItemClient {
 
     private final string entityName = "MedicalItem";
     private final sql:ParameterizedQuery tableName = `MedicalItems`;

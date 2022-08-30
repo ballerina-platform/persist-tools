@@ -31,6 +31,7 @@ import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.projects.directory.SingleFileProject;
 import io.ballerina.projects.environment.Environment;
 import io.ballerina.projects.environment.EnvironmentBuilder;
+import io.ballerina.tools.diagnostics.Diagnostic;
 import io.ballerina.tools.text.TextDocument;
 import io.ballerina.tools.text.TextDocuments;
 import org.testng.Assert;
@@ -43,6 +44,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -137,6 +139,7 @@ public class ToolingTestUtils {
     }
 
     private static void generateSourceCode(Path sourcePath, Command cmd) {
+        //change this so a common class won't be reqiored
         Class<?> persistClass;
         CmdCommon persistCmd;
         try {
@@ -167,6 +170,11 @@ public class ToolingTestUtils {
         }
         PackageCompilation compilation = currentPackage.getCompilation();
         DiagnosticResult diagnosticResult = compilation.diagnosticResult();
+
+        Collection<Diagnostic> temp = diagnosticResult.errors();
+        for (Diagnostic i : temp) {
+            errStream.println(i);
+        }
         return diagnosticResult.hasErrors();
     }
 

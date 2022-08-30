@@ -20,6 +20,9 @@ public class SyntaxTreeConstants {
     public static final Token SYNTAX_TREE_COLON = AbstractNodeFactory.createIdentifierToken(":");
     public static final Token SYNTAX_TREE_OPEN_BRACE = AbstractNodeFactory.createIdentifierToken("{");
     public static final Token SYNTAX_TREE_CLOSE_BRACE = AbstractNodeFactory.createIdentifierToken("}");
+
+    public static final Token SYNTAX_TREE_OPEN_CLOSED_BRACE = AbstractNodeFactory.createIdentifierToken("{|");
+    public static final Token SYNTAX_TREE_CLOSE_CLOSED_BRACE = AbstractNodeFactory.createIdentifierToken("|}");
     public static final Token SYNTAX_TREE_OPEN_PAREN = AbstractNodeFactory.createIdentifierToken("(");
     public static final Token SYNTAX_TREE_CLOSE_PAREN = AbstractNodeFactory.createIdentifierToken(")");
     public static final Token SYNTAX_TREE_OPEN_BRACKET = AbstractNodeFactory.createIdentifierToken("[");

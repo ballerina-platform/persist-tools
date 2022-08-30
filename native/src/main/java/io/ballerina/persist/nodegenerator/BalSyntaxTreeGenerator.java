@@ -78,96 +78,104 @@ public class BalSyntaxTreeGenerator {
         int index = -1;
         ArrayList<String> keys = new ArrayList<>();
         String tableName = null;
-        int count = 0;
+        int count;
         SyntaxTree balSyntaxTree = SyntaxTree.from(TextDocuments.from(Files.readString(filePath)));
         ModulePartNode rootNote = balSyntaxTree.rootNode();
         NodeList<ModuleMemberDeclarationNode> nodeList = rootNote.members();
-        for (ModuleMemberDeclarationNode i : nodeList) {
-            if (i.kind().toString().equals("TYPE_DEFINITION")) {
-                Collection<ChildNodeEntry> temp = i.childEntries();
-                for (ChildNodeEntry j : temp) {
-                    if (j.name().equals("metadata")) {
-                        MetadataNode metaD = (MetadataNode) j.node().get();
-                        NodeList<AnnotationNode> annotations = metaD.annotations();
-                        for (AnnotationNode annotation : annotations) {
-                            Node annotReference = annotation.annotReference();
-                            if (annotReference.kind() == SyntaxKind.QUALIFIED_NAME_REFERENCE) {
-                                QualifiedNameReferenceNode qualifiedNameRef =
-                                        (QualifiedNameReferenceNode) annotReference;
-                                if (qualifiedNameRef.identifier().text().equals("Entity") && qualifiedNameRef
-                                        .modulePrefix().text().equals("persist") &&
-                                        annotation.annotValue().isPresent()) {
-                                    index += 1;
-                                    for (MappingFieldNode fieldNode : annotation.annotValue().get().fields()) {
-                                        if (fieldNode.kind() == SyntaxKind.SPECIFIC_FIELD) {
-                                            SpecificFieldNode specificField = (SpecificFieldNode) fieldNode;
-                                            if (specificField.fieldName().kind() == SyntaxKind.IDENTIFIER_TOKEN) {
-                                                ExpressionNode valueNode =
-                                                        ((SpecificFieldNode) fieldNode).valueExpr().get();
-                                                if (valueNode instanceof ListConstructorExpressionNode) {
-                                                    keys = new ArrayList<>();
-                                                    Iterator listIterator = ((ListConstructorExpressionNode) valueNode)
-                                                            .expressions().iterator();
-                                                    count = 0;
-                                                    while (listIterator.hasNext()) {
-                                                        keys.add(count, listIterator.next().toString());
-                                                        count += 1;
-                                                    }
-                                                } else if (valueNode instanceof BasicLiteralNode) {
-                                                    tableName = ((BasicLiteralNode) valueNode).literalToken().text()
-                                                            .replaceAll("\"", "");
-                                                }
-                                            }
-                                        }
+        for (ModuleMemberDeclarationNode i : nodeList) { //check if its possible to divide
+            if (i.kind() != SyntaxKind.TYPE_DEFINITION) { //use continue with !
+                continue;
+            }
+            Collection<ChildNodeEntry> temp = i.childEntries();
+            for (ChildNodeEntry j : temp) {
+                if (j.name().equals("metadata")) {
+                    MetadataNode metaD = (MetadataNode) j.node().get();
+                    NodeList<AnnotationNode> annotations = metaD.annotations();
+                    for (AnnotationNode annotation : annotations) {
+                        Node annotReference = annotation.annotReference();
+                        if (annotReference.kind() != SyntaxKind.QUALIFIED_NAME_REFERENCE) {
+                            continue;
+                        }
+                        QualifiedNameReferenceNode qualifiedNameRef =
+                                    (QualifiedNameReferenceNode) annotReference;
+                        if (qualifiedNameRef.identifier().text().equals("Entity") && qualifiedNameRef
+                                .modulePrefix().text().equals(BalFileConstants.PERSIST) &&
+                                annotation.annotValue().isPresent()) {
+                            index += 1;
+                            for (MappingFieldNode fieldNode : annotation.annotValue().get().fields()) {
+                                if (fieldNode.kind() != SyntaxKind.SPECIFIC_FIELD) {
+                                    continue;
+                                }
+                                SpecificFieldNode specificField = (SpecificFieldNode) fieldNode;
+                                if (specificField.fieldName().kind() != SyntaxKind.IDENTIFIER_TOKEN) {
+                                    continue;
+                                }
+                                ExpressionNode valueNode =
+                                        ((SpecificFieldNode) fieldNode).valueExpr().get();
+                                if (valueNode instanceof ListConstructorExpressionNode
+                                        && ((IdentifierToken) specificField.fieldName()).text()
+                                        .equals(BalFileConstants.ENTITY_KEY)) {
+                                    keys = new ArrayList<>();
+                                    Iterator listIterator = ((ListConstructorExpressionNode) valueNode)
+                                            .expressions().iterator();
+                                    count = 0;
+                                    while (listIterator.hasNext()) {
+                                        keys.add(count, listIterator.next().toString());
+                                        count += 1;
                                     }
-                                    entityArray.add(index, new Entity(getArray(keys), tableName, module));
-
+                                } else if (valueNode instanceof BasicLiteralNode &&
+                                        ((IdentifierToken) specificField.fieldName()).text()
+                                                .equals("tableName")) {
+                                    tableName = ((BasicLiteralNode) valueNode).literalToken().text()
+                                                .replaceAll("\"", "");
                                 }
 
                             }
+                            entityArray.add(index, new Entity(getArray(keys), tableName, module));
 
                         }
+
                     }
                 }
-                RecordTypeDescriptorNode recordDesc = (RecordTypeDescriptorNode) ((TypeDefinitionNode) i)
-                        .typeDescriptor();
-                entityArray.get(index).setEntityName(((TypeDefinitionNode) i).typeName().text());
-                for (Node k : recordDesc.fields()) {
-                    if (k.kind().toString().equals("RECORD_FIELD_WITH_DEFAULT_VALUE")) {
-                        RecordFieldWithDefaultValueNode fieldNode = (RecordFieldWithDefaultValueNode) k;
-                        String fName = fieldNode.fieldName().text();
-                        String fType = fieldNode.typeName().toString();
-                        HashMap<String, String> map = new HashMap<String, String>();
-                        if (((RecordFieldWithDefaultValueNode) k).metadata().isEmpty()) {
-                            map.put("fieldName", fName);
-                            map.put("fieldType", fType);
-                            map.put("autoGenerated", "false");
-                            entityArray.get(index).addField(map);
-                        } else {
-                            MetadataNode fieldMetaD = ((RecordFieldWithDefaultValueNode) k).metadata().get();
-                            map.put("fieldName", fName);
-                            map.put("fieldType", fType);
-                            map.put("autoGenerated", readMetaData(fieldMetaD));
-                            entityArray.get(index).addField(map);
-                        }
-                    } else if (k.kind().toString().equals("RECORD_FIELD")) {
-                        RecordFieldNode fieldNode = (RecordFieldNode) k;
-                        String fName = fieldNode.fieldName().text();
-                        String fType = fieldNode.typeName().toString();
-                        HashMap<String, String> map = new HashMap<String, String>();
-                        if (((RecordFieldNode) k).metadata().isEmpty()) {
-                            map.put("fieldName", fName);
-                            map.put("fieldType", fType);
-                            map.put("autoGenerated", "false");
-                            entityArray.get(index).addField(map);
-                        } else {
-                            MetadataNode fieldMetaD = ((RecordFieldNode) k).metadata().get();
-                            map.put("fieldName", fName);
-                            map.put("fieldType", fType);
-                            map.put("autoGenerated", readMetaData(fieldMetaD));
-                            entityArray.get(index).addField(map);
-                        }
+            }
+            RecordTypeDescriptorNode recordDesc = (RecordTypeDescriptorNode) ((TypeDefinitionNode) i)
+                    .typeDescriptor();
+            entityArray.get(index).setEntityName(((TypeDefinitionNode) i).typeName().text());
+            for (Node k : recordDesc.fields()) {
+                if (k.kind() == SyntaxKind.RECORD_FIELD_WITH_DEFAULT_VALUE) {
+                    RecordFieldWithDefaultValueNode fieldNode = (RecordFieldWithDefaultValueNode) k;
+                    String fName = fieldNode.fieldName().text();
+                    String fType = fieldNode.typeName().toString();
+                    HashMap<String, String> map = new HashMap<>();
+                    if (((RecordFieldWithDefaultValueNode) k).metadata().isEmpty()) {
+                        map.put(BalFileConstants.FIELD_NAME, fName);
+                        map.put(BalFileConstants.FIELD_TYPE, fType);
+                        map.put(BalFileConstants.AUTOGENERATED, "false");
+                    } else {
+                        MetadataNode fieldMetaD = ((RecordFieldWithDefaultValueNode) k).metadata().get();
+                        map.put(BalFileConstants.FIELD_NAME, fName);
+                        map.put(BalFileConstants.FIELD_TYPE, fType);
+                        map.put(BalFileConstants.AUTOGENERATED, readMetaData(fieldMetaD));
                     }
+                    entityArray.get(index).addField(map);
+                } else if (k.kind() == SyntaxKind.RECORD_FIELD) {
+                    RecordFieldNode fieldNode = (RecordFieldNode) k;
+                    String fName = fieldNode.fieldName().text();
+                    String fType = fieldNode.typeName().toString();
+                    HashMap<String, String> map = new HashMap<String, String>();
+                    if (((RecordFieldNode) k).metadata().isEmpty()) {
+                        map.put(BalFileConstants.FIELD_NAME, fName);
+                        map.put(BalFileConstants.FIELD_TYPE, fType);
+                        map.put(BalFileConstants.AUTOGENERATED, "false");
+
+                    } else {
+                        MetadataNode fieldMetaD = ((RecordFieldNode) k).metadata().get();
+                        map.put(BalFileConstants.FIELD_NAME, fName);
+                        map.put(BalFileConstants.FIELD_TYPE, fType);
+                        map.put(BalFileConstants.AUTOGENERATED, readMetaData(fieldMetaD));
+
+                    }
+                    entityArray.get(index).addField(map);
                 }
             }
         }
@@ -184,49 +192,48 @@ public class BalSyntaxTreeGenerator {
         List<Node> subFields = new ArrayList<>();
         boolean hasTime = false;
         for (HashMap field : entity.getFields()) {
-            if (field.get("fieldType").toString().contains("time") && !hasTime) {
+            if (field.get(BalFileConstants.FIELD_TYPE).toString().contains("time") && !hasTime) {
                 hasTime = true;
             }
             if (entity.getKeys().length > 1) {
                 for (String key : entity.getKeys()) {
-                    if (field.get("fieldName").toString().equals(key.trim().replaceAll("\"", ""))) {
-                        keys.put(field.get("fieldName").toString(), field.get("fieldType")
-                                .toString().trim().replaceAll(" ", ""));
-                        keyType = field.get("fieldType").toString().trim().replaceAll(" ", "");
+                    if (field.get(BalFileConstants.FIELD_NAME).toString().equals(key.trim().replaceAll("\"", ""))) {
+                        keys.put(field.get(BalFileConstants.FIELD_NAME)
+                            .toString(), field.get(BalFileConstants.FIELD_TYPE).toString().trim().replaceAll(" ", ""));
                     }
                 }
             } else {
-                if (field.get("fieldName").toString().equals(entity.getKeys()[0].trim().replaceAll("\"", ""))) {
-                    keyType = field.get("fieldType").toString().trim().replaceAll(" ", "");
+                if (field.get(BalFileConstants.FIELD_NAME).toString().equals(entity.getKeys()[0].trim()
+                        .replaceAll("\"", ""))) {
+                    keyType = field.get(BalFileConstants.FIELD_TYPE).toString().trim().replaceAll(" ", "");
                 }
             }
             if (!subFields.isEmpty()) {
                 subFields.add(NodeFactory.createBasicLiteralNode(SyntaxKind.STRING_LITERAL,
                         AbstractNodeFactory.createLiteralValueToken(SyntaxKind.STRING_LITERAL, ", "
-                                        + System.lineSeparator(),
-                                NodeFactory.createEmptyMinutiaeList(), NodeFactory.createEmptyMinutiaeList())));
+                                        + System.lineSeparator(), NodeFactory.createEmptyMinutiaeList(),
+                                NodeFactory.createEmptyMinutiaeList())));
             }
-            if (field.get("autoGenerated").equals("true")) {
+            if (field.get(BalFileConstants.AUTOGENERATED).equals("true")) {
                 subFields.add(NodeFactory.createSpecificFieldNode(null,
-                        AbstractNodeFactory.createIdentifierToken(field.get("fieldName").toString()),
-                        SyntaxTreeConstants.SYNTAX_TREE_COLON,
-                        NodeParser.parseExpression(String.format(
-                                "{columnName: \"%s\", 'type: %s, autoGenerated: %s}",
-                                field.get("fieldName").toString().trim().replaceAll("'", ""),
-                                field.get("fieldType").toString().trim().replaceAll(" ", ""),
-                                field.get("autoGenerated").toString().trim()))));
-                if (field.get("fieldName").toString().equals(entity.getKeys()[0].trim().replaceAll("\"",
-                        ""))) {
-                    keyAutoInc = true;
+                        AbstractNodeFactory.createIdentifierToken(field.get(BalFileConstants.FIELD_NAME).toString()),
+                        SyntaxTreeConstants.SYNTAX_TREE_COLON, NodeParser.parseExpression(String.format(
+                                BalFileConstants.FIELD_FORMAT_WITH_AUTO_G,
+                                field.get(BalFileConstants.FIELD_NAME).toString().trim().replaceAll("'", ""),
+                                field.get(BalFileConstants.FIELD_TYPE).toString().trim().replaceAll(" ", ""),
+                                field.get(BalFileConstants.AUTOGENERATED).toString().trim()))));
+                for (String key : entity.getKeys()) {
+                    if (field.get(BalFileConstants.FIELD_NAME).toString().equals(key.trim().replaceAll("\"", ""))) {
+                        keyAutoInc = true;
+                    }
                 }
-
             } else {
                 subFields.add(NodeFactory.createSpecificFieldNode(null,
-                        AbstractNodeFactory.createIdentifierToken(field.get("fieldName").toString()),
-                        SyntaxTreeConstants.SYNTAX_TREE_COLON,
-                        NodeParser.parseExpression(String.format("{columnName: \"%s\", 'type: %s}",
-                                field.get("fieldName").toString().trim().replaceAll("'", ""),
-                                field.get("fieldType").toString().trim().replaceAll(" ", "")
+                        AbstractNodeFactory.createIdentifierToken(field.get(BalFileConstants.FIELD_NAME)
+                                .toString()), SyntaxTreeConstants.SYNTAX_TREE_COLON,
+                        NodeParser.parseExpression(String.format(BalFileConstants.FIELD_FORMAT_WITHOUT_AUTO_G,
+                                field.get(BalFileConstants.FIELD_NAME).toString().trim().replaceAll("'", ""),
+                                field.get(BalFileConstants.FIELD_TYPE).toString().trim().replaceAll(" ", "")
                         ))));
             }
 
@@ -236,37 +243,32 @@ public class BalSyntaxTreeGenerator {
         if (hasTime) {
             imports = imports.add(getImportDeclarationNode("ballerina", "time"));
         }
-        imports = imports.add(getImportDeclarationNode("ballerina", "persist"));
+        imports = imports.add(getImportDeclarationNode("ballerina", BalFileConstants.PERSIST));
         if (entity.getModule().equals("")) {
-            imports = imports.add(NodeParser.parseImportDeclaration(String.format("import %s as entities;",
-                    entity.getPackageName())));
+            imports = imports.add(NodeParser.parseImportDeclaration(String.format(
+                    BalFileConstants.IMPORT_AS_ENTITIES, entity.getPackageName())));
         } else {
-            imports = imports.add(NodeParser.parseImportDeclaration(String.format("import %s as entities;",
-                    entity.getPackageName() + "." + entity.getModule())));
+            imports = imports.add(NodeParser.parseImportDeclaration(String.format(
+                    BalFileConstants.IMPORT_AS_ENTITIES, entity.getPackageName() + "." + entity.getModule())));
         }
-
         String className = entity.getEntityName();
         if (!entity.getModule().equals("")) {
             className = entity.getModule().substring(0, 1).toUpperCase() + entity.getModule().substring(1)
                     + entity.getEntityName();
         }
-        Class client = new Class(className + "Client", false);
+        Class client = new Class(className + "Client", true);
         client.addQualifiers(new String[]{"client"});
         client.addMember(NodeFactory.createBasicLiteralNode(SyntaxKind.STRING_LITERAL,
                 AbstractNodeFactory.createLiteralValueToken(SyntaxKind.STRING_LITERAL, " ",
                         NodeFactory.createEmptyMinutiaeList(), NodeFactory.createEmptyMinutiaeList())), false);
-        client.addMember(TypeDescriptor.getObjectFieldNode(
-                        "private",
-                        new String[]{"final"},
+        client.addMember(TypeDescriptor.getObjectFieldNode("private", new String[]{"final"},
                         TypeDescriptor.getBuiltinSimpleNameReferenceNode("string"),
                         "entityName", NodeFactory.createBasicLiteralNode(SyntaxKind.STRING_LITERAL,
                                 AbstractNodeFactory.createLiteralValueToken(SyntaxKind.STRING_LITERAL,
                                         "\"" + entity.getEntityName() + "\"",
                                         NodeFactory.createEmptyMinutiaeList(), NodeFactory.createEmptyMinutiaeList()))),
                 true);
-        client.addMember(TypeDescriptor.getObjectFieldNode(
-                        "private",
-                        new String[]{"final"},
+        client.addMember(TypeDescriptor.getObjectFieldNode("private", new String[]{"final"},
                         TypeDescriptor.getQualifiedNameReferenceNode("sql", "ParameterizedQuery"),
                         "tableName", NodeFactory.createBasicLiteralNode(SyntaxKind.STRING_LITERAL,
                                 AbstractNodeFactory.createLiteralValueToken(SyntaxKind.STRING_LITERAL,
@@ -274,85 +276,84 @@ public class BalSyntaxTreeGenerator {
                                         NodeFactory.createEmptyMinutiaeList(), NodeFactory.createEmptyMinutiaeList()))),
                 false);
 
-        client.addMember(TypeDescriptor.getObjectFieldNode(
-                        "private",
-                        new String[]{"final"},
-                        TypeDescriptor.getSimpleNameReferenceNode("map<persist:FieldMetadata>"),
-                        "fieldMetadata", NodeFactory.createMappingConstructorExpressionNode(
+        client.addMember(TypeDescriptor.getObjectFieldNode("private", new String[]{"final"},
+                        TypeDescriptor.getSimpleNameReferenceNode(BalFileConstants.TYPE_FIELD_METADATA_MAP),
+                        BalFileConstants.TAG_FIELD_METADATA, NodeFactory.createMappingConstructorExpressionNode(
                                 SyntaxTreeConstants.SYNTAX_TREE_OPEN_BRACE, AbstractNodeFactory
                                         .createSeparatedNodeList(subFields),
-                                SyntaxTreeConstants.SYNTAX_TREE_CLOSE_BRACE)
-                )
-                , true);
-        String keysString = "";
-        for (String i : entity.getKeys()) {
-            if (!keysString.equals("")) {
-                keysString += ", ";
+                                SyntaxTreeConstants.SYNTAX_TREE_CLOSE_BRACE)), true);
+
+        StringBuilder keysString = new StringBuilder();
+        for (String key : entity.getKeys()) {
+            if (keysString.length() > 0) {
+                keysString.append(", ");
             }
-            keysString += i;
+            keysString.append(key);
         }
 
-        client.addMember(TypeDescriptor.getObjectFieldNode(
-                "private",
-                new String[]{},
+        client.addMember(TypeDescriptor.getObjectFieldNode("private", new String[]{},
                 TypeDescriptor.getArrayTypeDescriptorNode("string"),
                 "keyFields", NodeFactory.createListConstructorExpressionNode(
                         SyntaxTreeConstants.SYNTAX_TREE_OPEN_BRACKET, AbstractNodeFactory
                                 .createSeparatedNodeList(NodeFactory.createBasicLiteralNode(SyntaxKind.STRING_LITERAL,
                                         AbstractNodeFactory.createLiteralValueToken(SyntaxKind.STRING_LITERAL,
-                                                keysString, NodeFactory.createEmptyMinutiaeList(),
+                                                keysString.toString(), NodeFactory.createEmptyMinutiaeList(),
                                                 NodeFactory.createEmptyMinutiaeList())))
                         , SyntaxTreeConstants.SYNTAX_TREE_CLOSE_BRACKET)
         ), false);
 
-        client.addMember(TypeDescriptor.getObjectFieldNodeWithoutExpression(
-                "private",
-                new String[]{},
-                TypeDescriptor.getQualifiedNameReferenceNode("persist",
-                        "SQLClient"),
-                "persistClient"), true);
+        client.addMember(TypeDescriptor.getObjectFieldNodeWithoutExpression("private", new String[]{},
+                TypeDescriptor.getQualifiedNameReferenceNode(BalFileConstants.PERSIST, "SQLClient"), "persistClient"),
+                true);
 
         Function init = new Function("init");
         init.addQualifiers(new String[]{"public"});
-        init.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode("", "error"));
-        init.addStatement(NodeParser.parseStatement(
-                "mysql:Client dbClient = check new (host = host, user = user, password = password, database " +
-                        "= database, port = port);"));
-        init.addStatement(NodeParser.parseStatement("self.persistClient " +
-                "= check new (self.entityName, self.tableName, self.fieldMetadata, self.keyFields, dbClient);"));
+        init.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode("", BalFileConstants.ERROR));
+        init.addStatement(NodeParser.parseStatement(BalFileConstants.INIT_MYSQL_CLIENT_LINE));
+        init.addStatement(NodeParser.parseStatement(BalFileConstants.INIT_PERSIST_CLIENT_LINE));
         client.addMember(init.getFunctionDefinitionNode(), true);
 
         Function create = new Function("create");
         create.addRequiredParameter(
-                TypeDescriptor.getQualifiedNameReferenceNode("entities", entity.getEntityName()),
+                TypeDescriptor.getQualifiedNameReferenceNode(BalFileConstants.ENTITIES, entity.getEntityName()),
                 "value"
         );
         create.addQualifiers(new String[]{"remote"});
 
         if (keys.size() > 1) {
-            create.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(SyntaxTreeConstants.SYNTAX_TREE_VAR_ANY,
-                    TypeDescriptor.getOptionalTypeDescriptorNode("", "error")));
-            create.addStatement(NodeParser.parseStatement("sql:ExecutionResult result = " +
-                    "check self.persistClient.runInsertQuery(value);"));
-            if (!keyAutoInc) {
-                IfElse valueNilCheck = new IfElse(NodeParser.parseExpression("result.lastInsertId is ()"));
-                String ret = "";
-                for (String key : keys.keySet()) {
-                    if (!ret.equals("")) {
-                        ret += ", ";
+            if (keyAutoInc) {
+                StringBuilder retRecord = new StringBuilder();
+                for (HashMap map : entity.getFields()) {
+                    if (retRecord.length() > 0) {
+                        retRecord.append(", ");
                     }
-                    ret += "value." + key;
+                    if (map.get(BalFileConstants.AUTOGENERATED).equals("true")) {
+                        retRecord.append(String.format("%s: <%s>result.lastInsertId",
+                                map.get(BalFileConstants.FIELD_NAME), "int"));
+                    } else {
+                        retRecord.append(String.format("%s: value.%s", map.get(BalFileConstants.FIELD_NAME),
+                                map.get(BalFileConstants.FIELD_NAME)));
+                    }
                 }
-                valueNilCheck.addIfStatement(NodeParser.parseStatement(String.format("return [%s];", ret)));
-                create.addIfElseStatement(valueNilCheck.getIfElseStatementNode());
+                create.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(
+                        TypeDescriptor.getQualifiedNameReferenceNode(BalFileConstants.ENTITIES,
+                                entity.getEntityName()), TypeDescriptor.getOptionalTypeDescriptorNode("",
+                                BalFileConstants.ERROR)));
+                create.addStatement(NodeParser.parseStatement(BalFileConstants.CREATE_SQL_RESULTS_LINE));
+                create.addStatement(NodeParser.parseStatement(String.format("return {%s};", retRecord)));
+            } else {
+                create.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(
+                        TypeDescriptor.getQualifiedNameReferenceNode(BalFileConstants.ENTITIES,
+                                entity.getEntityName()), TypeDescriptor.getOptionalTypeDescriptorNode("",
+                                BalFileConstants.ERROR)));
+                create.addStatement(NodeParser.parseStatement(BalFileConstants.CREATE_SQL_RESULTS_LINE));
+                create.addStatement(NodeParser.parseStatement("return value;"));
             }
-            create.addStatement(NodeParser.parseStatement("return result.lastInsertId;"));
 
         }  else if (keyType.equals("int")) {
             create.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(SyntaxTreeConstants.SYNTAX_TREE_VAR_INT,
-                    TypeDescriptor.getOptionalTypeDescriptorNode("", "error")));
-            create.addStatement(NodeParser.parseStatement("sql:ExecutionResult result = " +
-                    "check self.persistClient.runInsertQuery(value);"));
+                    TypeDescriptor.getOptionalTypeDescriptorNode("", BalFileConstants.ERROR)));
+            create.addStatement(NodeParser.parseStatement(BalFileConstants.CREATE_SQL_RESULTS_LINE));
 
             if (!keyAutoInc) {
                 IfElse valueNilCheck = new IfElse(NodeParser.parseExpression("result.lastInsertId is ()"));
@@ -363,9 +364,8 @@ public class BalSyntaxTreeGenerator {
             create.addStatement(NodeParser.parseStatement(String.format("return <%s>result.lastInsertId;", keyType)));
         } else if (keyType.equals("string")) {
             create.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(SyntaxTreeConstants.SYNTAX_TREE_VAR_STRING,
-                    TypeDescriptor.getOptionalTypeDescriptorNode("", "error")));
-            create.addStatement(NodeParser.parseStatement("sql:ExecutionResult result = " +
-                    "check self.persistClient.runInsertQuery(value);"));
+                    TypeDescriptor.getOptionalTypeDescriptorNode("", BalFileConstants.ERROR)));
+            create.addStatement(NodeParser.parseStatement(BalFileConstants.CREATE_SQL_RESULTS_LINE));
             if (!keyAutoInc) {
                 IfElse valueNilCheck = new IfElse(NodeParser.parseExpression("result.lastInsertId is ()"));
                 valueNilCheck.addIfStatement(NodeParser.parseStatement(String.format("return value.%s;",
@@ -377,36 +377,32 @@ public class BalSyntaxTreeGenerator {
         client.addMember(create.getFunctionDefinitionNode(), true);
 
         Function readByKey = new Function("readByKey");
-        String keyString = "key";
+        StringBuilder keyString = new StringBuilder();
+        keyString.append(BalFileConstants.ENTITY_KEY);
         if (keys.size() > 1) {
-            keyString = "";
-            int suffix = 0;
-            for (String key : keys.keySet()) {
-                readByKey.addRequiredParameter(
-                        TypeDescriptor.getBuiltinSimpleNameReferenceNode(keys.get(key)), "key" +
-                                String.valueOf(suffix));
-                if (!keyString.equals("")) {
-                    keyString += ", ";
-                }
-                keyString += "key" + String.valueOf(suffix);
-                suffix += 1;
+            keyString = new StringBuilder();
 
+            for (String key : keys.keySet()) {
+                keyString.append(keys.get(key));
+                keyString.append(" ");
+                keyString.append(key);
+                keyString.append(";");
             }
+            readByKey.addRequiredParameter(
+                    NodeParser.parseTypeDescriptor(String.format("record {|%s|}", keyString)),
+                    BalFileConstants.ENTITY_KEY);
         } else {
             readByKey.addRequiredParameter(
-                    TypeDescriptor.getBuiltinSimpleNameReferenceNode(keyType),
-                    "key"
-            );;
+                    TypeDescriptor.getBuiltinSimpleNameReferenceNode(keyType), BalFileConstants.ENTITY_KEY);
         }
-
 
         readByKey.addQualifiers(new String[]{"remote"});
         readByKey.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(
-                TypeDescriptor.getQualifiedNameReferenceNode("entities", entity.getEntityName()),
-                TypeDescriptor.getSimpleNameReferenceNode ("error")));
-        readByKey.addStatement(NodeParser.parseStatement(String.format("return (check self.persistClient." +
-                "runReadByKeyQuery(%s, %s)).cloneWithType(%s);", "entities:" + entity.getEntityName(), keyString,
-                "entities:" + entity.getEntityName())));
+                TypeDescriptor.getQualifiedNameReferenceNode(BalFileConstants.ENTITIES, entity.getEntityName()),
+                TypeDescriptor.getSimpleNameReferenceNode (BalFileConstants.ERROR)));
+        readByKey.addStatement(NodeParser.parseStatement(String.format(BalFileConstants.READ_BY_KEY_RETURN_LINE,
+                String.format("%s:%s", BalFileConstants.ENTITIES, entity.getEntityName()),
+                String.format("%s:%s", BalFileConstants.ENTITIES, entity.getEntityName()))));
         client.addMember(readByKey.getFunctionDefinitionNode(), true);
 
         Function read = new Function("read");
@@ -416,13 +412,13 @@ public class BalSyntaxTreeGenerator {
                 "filter");
         read.addQualifiers(new String[]{"remote"});
         read.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(TypeDescriptor.getStreamTypeDescriptorNode(
-                TypeDescriptor.getQualifiedNameReferenceNode("entities", entity.getEntityName()),
-                        TypeDescriptor.getOptionalTypeDescriptorNode("", "error")),
-                TypeDescriptor.getSimpleNameReferenceNode("error")));
-        read.addStatement(NodeParser.parseStatement(String.format("stream<anydata, error?> result = " +
-                "check self.persistClient.runReadQuery(%s, filter);", "entities:" + entity.getEntityName())));
-        read.addStatement(NodeParser.parseStatement(String.format("return new stream<%s, " +
-                "error?>(new %sStream(result));", "entities:" + entity.getEntityName(), className)));
+                TypeDescriptor.getQualifiedNameReferenceNode(BalFileConstants.ENTITIES, entity.getEntityName()),
+                        TypeDescriptor.getOptionalTypeDescriptorNode("", BalFileConstants.ERROR)),
+                TypeDescriptor.getSimpleNameReferenceNode(BalFileConstants.ERROR)));
+        read.addStatement(NodeParser.parseStatement(String.format(BalFileConstants.READ_RUN_READ_QUERY_LINE,
+                String.format("%s:%s", BalFileConstants.ENTITIES, entity.getEntityName()))));
+        read.addStatement(NodeParser.parseStatement(String.format(BalFileConstants.READ_RETURN_STREAM_LINE,
+                String.format("%s:%s", BalFileConstants.ENTITIES, entity.getEntityName()), className)));
         client.addMember(read.getFunctionDefinitionNode(), true);
 
         Function update = new Function("update");
@@ -436,9 +432,8 @@ public class BalSyntaxTreeGenerator {
                 "filter"
         );
         update.addQualifiers(new String[]{"remote"});
-        update.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode("", "error"));
-        update.addStatement(NodeParser.parseStatement("_ = " +
-                "check self.persistClient.runUpdateQuery('object, filter);"));
+        update.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode("", BalFileConstants.ERROR));
+        update.addStatement(NodeParser.parseStatement(BalFileConstants.UPDATE_RUN_UPDATE_QUERY_LINE));
         client.addMember(update.getFunctionDefinitionNode(), true);
 
 
@@ -449,14 +444,14 @@ public class BalSyntaxTreeGenerator {
                 "filter"
         );
         delete.addQualifiers(new String[]{"remote"});
-        delete.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode("", "error"));
-        delete.addStatement(NodeParser.parseStatement("_ = check self.persistClient.runDeleteQuery(filter);"));
+        delete.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode("", BalFileConstants.ERROR));
+        delete.addStatement(NodeParser.parseStatement(BalFileConstants.DELETE_RUN_DELETE_QUERY_LINE));
         client.addMember(delete.getFunctionDefinitionNode(), true);
 
         Function close = new Function("close");
         close.addQualifiers(new String[]{});
-        close.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode("", "error"));
-        close.addStatement(NodeParser.parseStatement("return self.persistClient.close();"));
+        close.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode("", BalFileConstants.ERROR));
+        close.addStatement(NodeParser.parseStatement(BalFileConstants.CLOSE_PERSIST_CLIENT_LINE));
         client.addMember(close.getFunctionDefinitionNode(), true);
 
         moduleMembers = moduleMembers.add(client.getClassDefinitionNode());
@@ -467,38 +462,41 @@ public class BalSyntaxTreeGenerator {
                 AbstractNodeFactory.createLiteralValueToken(SyntaxKind.STRING_LITERAL, " ",
                         NodeFactory.createEmptyMinutiaeList(), NodeFactory.createEmptyMinutiaeList())), true);
 
-        clientStream.addMember(TypeDescriptor.getObjectFieldNodeWithoutExpression(
-                        "private",
-                        new String[]{},
+        clientStream.addMember(TypeDescriptor.getObjectFieldNodeWithoutExpression("private", new String[]{},
                         TypeDescriptor.getStreamTypeDescriptorNode(
                             SyntaxTreeConstants.SYNTAX_TREE_VAR_ANYDATA,
-                            TypeDescriptor.getOptionalTypeDescriptorNode("", "error")),
+                            TypeDescriptor.getOptionalTypeDescriptorNode("", BalFileConstants.ERROR)),
                         "anydataStream"), true);
 
         Function initStream = new Function("init");
         initStream.addQualifiers(new String[]{"public", "isolated"});
-        initStream.addStatement(NodeParser.parseStatement(
-                "self.anydataStream = anydataStream;"));
+        initStream.addStatement(NodeParser.parseStatement(BalFileConstants.INIT_STREAM_LINE));
         initStream.addRequiredParameter(
                 TypeDescriptor.getStreamTypeDescriptorNode(
                         SyntaxTreeConstants.SYNTAX_TREE_VAR_ANYDATA,
-                        TypeDescriptor.getOptionalTypeDescriptorNode("", "error")),
+                        TypeDescriptor.getOptionalTypeDescriptorNode("", BalFileConstants.ERROR)),
                 "anydataStream");
         clientStream.addMember(initStream.getFunctionDefinitionNode(), true);
 
         Function nextStream = new Function("next");
         nextStream.addQualifiers(new String[]{"public", "isolated"});
-        nextStream.addReturns(NodeParser.parseTypeDescriptor(String.format("record {|%s value;|}|error?",
-                "entities:" + entity.getEntityName())));
-        nextStream.addStatement(NodeParser.parseStatement("var streamValue = self.anydataStream.next();"));
+        nextStream.addReturns(NodeParser.parseTypeDescriptor(String.format(
+                BalFileConstants.NEXT_STREAM_RETURN_TYPE_LINE,
+                String.format("%s:%s", BalFileConstants.ENTITIES, entity.getEntityName()))));
+        nextStream.addStatement(NodeParser.parseStatement(BalFileConstants.NEXT_STREAM_STREAM_VALUE_LINE));
 
-        IfElse streamValueNilCheck = new IfElse(NodeParser.parseExpression("streamValue is ()"));
-        streamValueNilCheck.addIfStatement(NodeParser.parseStatement("return streamValue;"));
-        IfElse streamValueErrorCheck = new IfElse(NodeParser.parseExpression("(streamValue is error)"));
-        streamValueErrorCheck.addIfStatement(NodeParser.parseStatement("return streamValue;"));
+        IfElse streamValueNilCheck = new IfElse(NodeParser.parseExpression(
+                BalFileConstants.NEXT_STREAM_IF_STATEMENT));
+        streamValueNilCheck.addIfStatement(NodeParser.parseStatement(
+                BalFileConstants.NEXT_STREAM_RETURN_STREAM_VALUE));
+        IfElse streamValueErrorCheck = new IfElse(NodeParser.parseExpression(
+                BalFileConstants.NEXT_STREAM_ELSE_IF_STATEMENT));
+        streamValueErrorCheck.addIfStatement(NodeParser.parseStatement(
+                BalFileConstants.NEXT_STREAM_RETURN_STREAM_VALUE));
         streamValueErrorCheck.addElseStatement(NodeParser.parseStatement(String.format(
-                "record {|%s value;|} nextRecord = {value: check streamValue.value.cloneWithType(%s)};",
-                "entities:" + entity.getEntityName(), "entities:" + entity.getEntityName())));
+                BalFileConstants.NEXT_STREAM_ELSE_STATEMENT_LINE,
+                String.format("%s:%s", BalFileConstants.ENTITIES, entity.getEntityName()),
+                String.format("%s:%s", BalFileConstants.ENTITIES, entity.getEntityName()))));
         streamValueErrorCheck.addElseStatement(NodeParser.parseStatement("return nextRecord;"));
         streamValueNilCheck.addElseBody(streamValueErrorCheck);
         nextStream.addIfElseStatement(streamValueNilCheck.getIfElseStatementNode());
@@ -506,8 +504,9 @@ public class BalSyntaxTreeGenerator {
 
         Function closeStream = new Function("close");
         closeStream.addQualifiers(new String[]{"public", "isolated"});
-        closeStream.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode("", "error"));
-        closeStream.addStatement(NodeParser.parseStatement("return self.anydataStream.close();"));
+        closeStream.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode("",
+                BalFileConstants.ERROR));
+        closeStream.addStatement(NodeParser.parseStatement(BalFileConstants.CLOSE_STREAM_CLOSE_STATEMENT_LINE));
         clientStream.addMember(closeStream.getFunctionDefinitionNode(), true);
 
         moduleMembers = moduleMembers.add(clientStream.getClassDefinitionNode());
@@ -523,15 +522,16 @@ public class BalSyntaxTreeGenerator {
         NodeList<ImportDeclarationNode> imports = AbstractNodeFactory.createEmptyNodeList();
         NodeList<ModuleMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
 
-        moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration("configurable int port = ?;"));
         moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration(
-                "configurable string host = ?;"));
+                BalFileConstants.CONFIGURABLE_PORT));
         moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration(
-                "configurable string user = ?;"));
+                BalFileConstants.CONFIGURABLE_HOST));
         moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration(
-                "configurable string database = ?;"));
+                BalFileConstants.CONFIGURABLE_USER));
         moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration(
-                "configurable string password = ?;"));
+                BalFileConstants.CONFIGURABLE_DATABASE));
+        moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration(
+                BalFileConstants.CONFIGURABLE_PASSWORD));
 
         Token eofToken = AbstractNodeFactory.createIdentifierToken("");
         ModulePartNode modulePartNode = NodeFactory.createModulePartNode(imports, moduleMembers, eofToken);
@@ -575,7 +575,7 @@ public class BalSyntaxTreeGenerator {
                 QualifiedNameReferenceNode qualifiedNameRef =
                         (QualifiedNameReferenceNode) annotReference;
                 if (qualifiedNameRef.identifier().text().equals("AutoIncrement") && qualifiedNameRef
-                        .modulePrefix().text().equals("persist")) {
+                        .modulePrefix().text().equals(BalFileConstants.PERSIST)) {
                     return "true";
                 }
             }

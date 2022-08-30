@@ -79,8 +79,14 @@ public class ToolingGenerateTest {
     }
 
     @Test
-    @Description("There is only a single entity in the Ballerina project with several keys")
-    public void testGenerateSingleEntityWithMultipleKeys() {
+    @Description("There is only a single entity in the Ballerina project with two keys one autoincrement")
+    public void testGenerateSingleEntityWithMultipleKeysAndAutoInc() {
         assertGeneratedSources("tool_test_generate_9", GENERATE);
+    }
+
+    @Test
+    @Description("There is only a single entity in the Ballerina project with two keys without autoincrement")
+    public void testGenerateSingleEntityWithMultipleKeys() {
+        assertGeneratedSources("tool_test_generate_10", GENERATE);
     }
 }

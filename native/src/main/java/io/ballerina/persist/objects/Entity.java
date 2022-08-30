@@ -33,7 +33,7 @@ public class Entity {
 
     private String packageName;
 
-    private final ArrayList<HashMap> fields = new ArrayList<>();
+    private final ArrayList<HashMap> fields = new ArrayList<>(); //to do hashtable
     public Entity(String[] keys, String tableName, String module) {
 
         this.keys = keys;

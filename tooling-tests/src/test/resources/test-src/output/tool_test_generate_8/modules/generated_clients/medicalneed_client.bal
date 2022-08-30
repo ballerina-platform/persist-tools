@@ -4,7 +4,7 @@ import ballerina/time;
 import ballerina/persist;
 import foo/perist_generate_8 as entities;
 
-client class MedicalNeedClient {
+public client class MedicalNeedClient {
 
     private final string entityName = "MedicalNeed";
     private final sql:ParameterizedQuery tableName = `MedicalNeeds`;

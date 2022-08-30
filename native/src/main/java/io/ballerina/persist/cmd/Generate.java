@@ -26,7 +26,6 @@ import io.ballerina.projects.Project;
 import io.ballerina.projects.ProjectException;
 import io.ballerina.projects.directory.ProjectLoader;
 import org.ballerinalang.formatter.core.Formatter;
-import org.ballerinalang.formatter.core.FormatterException;
 import picocli.CommandLine;
 
 import java.io.File;
@@ -97,9 +96,9 @@ public class Generate extends CmdCommon implements BLauncherCmd {
                 for (Entity entity : entityArray) {
                     entity.setPackageName(balProject.currentPackage().descriptor().org().value() + "/"
                             + balProject.currentPackage().descriptor().name().value());
-                    generateScripts(entity);
+                    generateClientBalFile(entity);
                 }
-                generateConfigurationScripts();
+                generateConfigurationBalFile();
             }
         } catch (Exception e) {
             errStream.println(e.getMessage());
@@ -109,26 +108,38 @@ public class Generate extends CmdCommon implements BLauncherCmd {
     private ArrayList<Entity> readBalFiles() throws IOException {
         ArrayList<Entity> returnMetaData = new ArrayList<>();
         Path dirPath = Paths.get(this.sourcePath);
-        List<Path> fileList = listFiles(dirPath);
+        List<Path> fileList;
 
-        for (Path i : fileList) {
-            if (i.toString().endsWith(".bal")) {
-                String[] pathElements = i.toString().strip().split(Pattern.quote(File.separator));
-                String module = "";
-                String[] dirElements = this.sourcePath.split(Pattern.quote(File.separator));
-                if (!Arrays.asList(dirElements).contains(pathElements[pathElements.length - 2])) {
-                    module = pathElements[pathElements.length - 2];
-                }
-                ArrayList<Entity> retData = BalSyntaxTreeGenerator.readBalFiles(i, module);
-                if (retData.size() != 0) {
-                    returnMetaData.addAll(retData);
+        Stream<Path> walk = null;
+        try {
+            walk = Files.walk(dirPath); //check this
+        } catch (IOException e) {
+            errStream.println(e.getMessage()); //change it to custom after checking
+        }
+        if (walk != null) {
+            fileList = walk.filter(Files::isRegularFile).collect(Collectors.toList());
+            for (Path filePath : fileList) {
+                if (filePath.toString().endsWith(".bal")) { //use java api to check extension
+                    String[] pathElements = filePath.toString().strip().split(Pattern.quote(File.separator));
+                    String module = "";
+                    String[] dirElements = this.sourcePath.split(Pattern.quote(File.separator));
+                    if (pathElements.length < 2) {
+                        module = "";
+                    } else if (!Arrays.asList(dirElements).contains(pathElements[pathElements.length - 2])) {
+                        module = pathElements[pathElements.length - 2];
+                    }
+                    ArrayList<Entity> retData = BalSyntaxTreeGenerator.readBalFiles(filePath, module);
+                    if (retData.size() != 0) {
+                        returnMetaData.addAll(retData);
+                    }
                 }
             }
+            return returnMetaData;
         }
-        return returnMetaData;
+        return new ArrayList<>();
     }
 
-    private void generateScripts(Entity entity) throws Exception {
+    private void generateClientBalFile(Entity entity) throws Exception {
         SyntaxTree balTree = BalSyntaxTreeGenerator.generateBalFile(entity);
         if (entity.getModule().equals("")) {
             writeOutputFile(balTree, Paths.get(this.sourcePath, "modules", "generated_clients",
@@ -138,11 +149,11 @@ public class Generate extends CmdCommon implements BLauncherCmd {
                     entity.getModule() + "_" + entity.getEntityName().toLowerCase() + "_client.bal")
                     .toAbsolutePath().toString());
         }
-
     }
-    private void generateConfigurationScripts() throws Exception {
+    private void generateConfigurationBalFile() throws Exception {
         SyntaxTree configTree = BalSyntaxTreeGenerator.generateConfigBalFile();
-        writeOutputFile(configTree, Paths.get(this.sourcePath, "modules", "generated_clients", "config.bal")
+        writeOutputFile(configTree, Paths.get(this.sourcePath, "modules",
+                        "generated_clients", "database_configuration.bal")
                 .toAbsolutePath().toString());
     }
 
@@ -152,26 +163,12 @@ public class Generate extends CmdCommon implements BLauncherCmd {
 
     private static void writeOutputFile(SyntaxTree syntaxTree, String outPath) throws Exception {
         String content;
-        try {
-            content = Formatter.format(syntaxTree.toSourceCode());
-        } catch (FormatterException e) {
-            throw e;
-        }
+        content = Formatter.format(syntaxTree.toSourceCode());
         Path pathToFile = Paths.get(outPath);
         Files.createDirectories(pathToFile.getParent());
         try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8.name())) {
             writer.println(content);
         }
-    }
-
-    private static List<Path> listFiles(Path path) {
-        Stream<Path> walk = null;
-        try {
-            walk = Files.walk(path);
-        } catch (IOException e) {
-            errStream.println(e.getMessage());
-        }
-        return walk != null ? walk.filter(Files::isRegularFile).collect(Collectors.toList()) : new ArrayList<>();
     }
 
     @Override
