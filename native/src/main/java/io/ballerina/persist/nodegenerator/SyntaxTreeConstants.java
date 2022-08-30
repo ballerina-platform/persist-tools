@@ -49,6 +49,8 @@ public class SyntaxTreeConstants {
 
     public static final TypeDescriptorNode SYNTAX_TREE_VAR_STRING =
             TypeDescriptor.getBuiltinSimpleNameReferenceNode("string");
+    public static final TypeDescriptorNode SYNTAX_TREE_VAR_ANY =
+            TypeDescriptor.getBuiltinSimpleNameReferenceNode("any");
 
 
 }

@@ -2,7 +2,7 @@ import ballerina/sql;
 import ballerinax/mysql;
 import ballerina/time;
 import ballerina/persist;
-import foo/perist_generate_8 as entities;
+import foo/perist_generate_9 as entities;
 
 client class MedicalNeedClient {
 
@@ -10,14 +10,14 @@ client class MedicalNeedClient {
     private final sql:ParameterizedQuery tableName = `MedicalNeeds`;
 
     private final map<persist:FieldMetadata> fieldMetadata = {
-        needId: {columnName: "needId", 'type: string},
+        needId: {columnName: "needId", 'type: int},
         itemId: {columnName: "itemId", 'type: int},
         beneficiaryId: {columnName: "beneficiaryId", 'type: int},
         period: {columnName: "period", 'type: time:Civil},
         urgency: {columnName: "urgency", 'type: string},
         quantity: {columnName: "quantity", 'type: int}
     };
-    private string[] keyFields = ["needId"];
+    private string[] keyFields = ["needId", "itemId"];
 
     private persist:SQLClient persistClient;
 
@@ -26,16 +26,16 @@ client class MedicalNeedClient {
         self.persistClient = check new (self.entityName, self.tableName, self.fieldMetadata, self.keyFields, dbClient);
     }
 
-    remote function create(entities:MedicalNeed value) returns string|error? {
+    remote function create(entities:MedicalNeed value) returns any|error? {
         sql:ExecutionResult result = check self.persistClient.runInsertQuery(value);
         if result.lastInsertId is () {
-            return value.needId;
+            return [value.itemId, value.needId];
         }
-        return <string>result.lastInsertId;
+        return result.lastInsertId;
     }
 
-    remote function readByKey(string key) returns entities:MedicalNeed|error {
-        return (check self.persistClient.runReadByKeyQuery(entities:MedicalNeed, key)).cloneWithType(entities:MedicalNeed);
+    remote function readByKey(int key0, int key1) returns entities:MedicalNeed|error {
+        return (check self.persistClient.runReadByKeyQuery(entities:MedicalNeed, key0, key1)).cloneWithType(entities:MedicalNeed);
     }
 
     remote function read(map<anydata>? filter = ()) returns stream<entities:MedicalNeed, error?>|error {
@@ -80,4 +80,3 @@ public class MedicalNeedStream {
         return self.anydataStream.close();
     }
 }
-

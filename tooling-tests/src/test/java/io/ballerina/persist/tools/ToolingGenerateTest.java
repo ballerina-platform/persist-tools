@@ -77,4 +77,10 @@ public class ToolingGenerateTest {
     public void testGenerateSingleEntityWithStringKey() {
         assertGeneratedSources("tool_test_generate_8", GENERATE);
     }
+
+    @Test
+    @Description("There is only a single entity in the Ballerina project with several keys")
+    public void testGenerateSingleEntityWithMultipleKeys() {
+        assertGeneratedSources("tool_test_generate_9", GENERATE);
+    }
 }
