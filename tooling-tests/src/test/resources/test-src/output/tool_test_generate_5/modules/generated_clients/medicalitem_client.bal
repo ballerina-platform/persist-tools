@@ -12,7 +12,7 @@ public client class MedicalItemClient {
         itemId: {columnName: "itemId", 'type: int},
         name: {columnName: "name", 'type: string},
         'type: {columnName: "type", 'type: string},
-        unit: {columnName: "unit", 'type: string}
+        unit: {columnName: "unit", 'type: int}
     };
     private string[] keyFields = ["itemId"];
 

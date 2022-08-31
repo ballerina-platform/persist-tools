@@ -14,7 +14,7 @@ public type MedicalNeed record {|
     int beneficiaryId;
     time:Civil period;
     string urgency;
-    int quantity;
+    string quantity;
 |};
 
 @persist:Entity {
@@ -25,5 +25,5 @@ public type MedicalItem record {|
     readonly int itemId;
     string name;
     string 'type;
-    string unit;
+    int unit;
 |};

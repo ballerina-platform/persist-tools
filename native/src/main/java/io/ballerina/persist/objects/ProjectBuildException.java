@@ -23,11 +23,11 @@
 package io.ballerina.persist.objects;
 
 /**
- * Exception in reading ballerina files.
+ * Exception for syntactical or semantical errors in .bal files.
  */
-public class FileReadException extends Exception {
+public class ProjectBuildException extends Exception {
 
-    public FileReadException(Exception e) {
-        super(e);
+    public ProjectBuildException(String message) {
+        super(message);
     }
 }
