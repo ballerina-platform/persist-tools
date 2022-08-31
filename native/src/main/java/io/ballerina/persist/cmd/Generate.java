@@ -23,6 +23,7 @@ import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator;
 import io.ballerina.persist.objects.Entity;
 import io.ballerina.projects.Project;
+import io.ballerina.projects.ProjectEnvironmentBuilder;
 import io.ballerina.projects.ProjectException;
 import io.ballerina.projects.directory.ProjectLoader;
 import org.ballerinalang.formatter.core.Formatter;
@@ -52,11 +53,12 @@ import java.util.stream.Stream;
         description = "generate database configurations."
         )
 
-public class Generate extends CmdCommon implements BLauncherCmd {
+public class Generate implements BLauncherCmd {
 
     private static final PrintStream errStream = System.err;
 
     private String sourcePath = "";
+    public ProjectEnvironmentBuilder projectEnvironmentBuilder;
 
     private static final String COMMAND_IDENTIFIER = "persist-generate";
 
@@ -105,36 +107,34 @@ public class Generate extends CmdCommon implements BLauncherCmd {
         }
     }
 
-    private ArrayList<Entity> readBalFiles() throws IOException {
+    private ArrayList<Entity> readBalFiles() {
         ArrayList<Entity> returnMetaData = new ArrayList<>();
         Path dirPath = Paths.get(this.sourcePath);
         List<Path> fileList;
 
-        Stream<Path> walk = null;
-        try {
-            walk = Files.walk(dirPath); //check this
-        } catch (IOException e) {
-            errStream.println(e.getMessage()); //change it to custom after checking
-        }
-        if (walk != null) {
-            fileList = walk.filter(Files::isRegularFile).collect(Collectors.toList());
-            for (Path filePath : fileList) {
-                if (filePath.toString().endsWith(".bal")) { //use java api to check extension
-                    String[] pathElements = filePath.toString().strip().split(Pattern.quote(File.separator));
-                    String module = "";
-                    String[] dirElements = this.sourcePath.split(Pattern.quote(File.separator));
-                    if (pathElements.length < 2) {
-                        module = "";
-                    } else if (!Arrays.asList(dirElements).contains(pathElements[pathElements.length - 2])) {
-                        module = pathElements[pathElements.length - 2];
-                    }
-                    ArrayList<Entity> retData = BalSyntaxTreeGenerator.readBalFiles(filePath, module);
-                    if (retData.size() != 0) {
-                        returnMetaData.addAll(retData);
+        try (Stream<Path> walk = Files.walk(dirPath)) {
+            if (walk != null) {
+                fileList = walk.filter(Files::isRegularFile).collect(Collectors.toList());
+                for (Path filePath : fileList) {
+                    if (filePath.toString().endsWith(".bal")) {
+                        String[] pathElements = filePath.toString().strip().split(Pattern.quote(File.separator));
+                        String module = "";
+                        String[] dirElements = this.sourcePath.split(Pattern.quote(File.separator));
+                        if (pathElements.length < 2) {
+                            module = "";
+                        } else if (!Arrays.asList(dirElements).contains(pathElements[pathElements.length - 2])) {
+                            module = pathElements[pathElements.length - 2];
+                        }
+                        ArrayList<Entity> retData = BalSyntaxTreeGenerator.readBalFiles(filePath, module);
+                        if (retData.size() != 0) {
+                            returnMetaData.addAll(retData);
+                        }
                     }
                 }
+                return returnMetaData;
             }
-            return returnMetaData;
+        } catch (IOException e) {
+            errStream.println("Error encountered while accessing the directory!");
         }
         return new ArrayList<>();
     }
@@ -157,9 +157,6 @@ public class Generate extends CmdCommon implements BLauncherCmd {
                 .toAbsolutePath().toString());
     }
 
-    public void setSourcePath(String sourcePath) {
-        this.sourcePath = sourcePath;
-    }
 
     private static void writeOutputFile(SyntaxTree syntaxTree, String outPath) throws Exception {
         String content;
@@ -169,6 +166,13 @@ public class Generate extends CmdCommon implements BLauncherCmd {
         try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8.name())) {
             writer.println(content);
         }
+    }
+
+    public void setSourcePath(String sourcePath) {
+        this.sourcePath = sourcePath;
+    }
+    public void setEnvironmentBuilder(ProjectEnvironmentBuilder projectEnvironmentBuilder) {
+        this.projectEnvironmentBuilder = projectEnvironmentBuilder;
     }
 
     @Override

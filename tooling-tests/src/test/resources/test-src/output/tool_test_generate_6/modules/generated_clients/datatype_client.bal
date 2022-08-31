@@ -32,9 +32,9 @@ public client class DataTypeClient {
         self.persistClient = check new (self.entityName, self.tableName, self.fieldMetadata, self.keyFields, dbClient);
     }
 
-    remote function create(entities:DataType value) returns int|error? {
+    remote function create(entities:DataType value) returns entities:DataType|error? {
         sql:ExecutionResult result = check self.persistClient.runInsertQuery(value);
-        return <int>result.lastInsertId;
+        return {a: <int>result.lastInsertId, b1: value.b1, c1: value.c1, d1: value.d1, e1: value.e1, f1: value.f1, j1: value.j1, k1: value.k1, l1: value.l1, m1: value.m1, v1: value.v1};
     }
 
     remote function readByKey(int key) returns entities:DataType|error {

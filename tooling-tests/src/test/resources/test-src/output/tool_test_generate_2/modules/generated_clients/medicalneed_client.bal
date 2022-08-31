@@ -26,9 +26,9 @@ public client class MedicalNeedClient {
         self.persistClient = check new (self.entityName, self.tableName, self.fieldMetadata, self.keyFields, dbClient);
     }
 
-    remote function create(entities:MedicalNeed value) returns int|error? {
+    remote function create(entities:MedicalNeed value) returns entities:MedicalNeed|error? {
         sql:ExecutionResult result = check self.persistClient.runInsertQuery(value);
-        return <int>result.lastInsertId;
+        return {needId: <int>result.lastInsertId, itemId: value.itemId, beneficiaryId: value.beneficiaryId, period: value.period, urgency: value.urgency, quantity: value.quantity};
     }
 
     remote function readByKey(int key) returns entities:MedicalNeed|error {

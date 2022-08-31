@@ -19,7 +19,6 @@
 package io.ballerina.persist.tools;
 
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
-import io.ballerina.persist.cmd.CmdCommon;
 import io.ballerina.persist.cmd.Generate;
 import io.ballerina.persist.cmd.Init;
 import io.ballerina.persist.cmd.PersistCmd;
@@ -110,9 +109,9 @@ public class ToolingTestUtils {
         Class<?> persistCmdClass;
         try {
             persistCmdClass = Class.forName("io.ballerina.persist.cmd.PersistCmd");
-            CmdCommon  persistCmd = (PersistCmd) persistCmdClass.getDeclaredConstructor().newInstance();
+            PersistCmd  persistCmd = (PersistCmd) persistCmdClass.getDeclaredConstructor().newInstance();
             persistInitClass = Class.forName("io.ballerina.persist.cmd.Init");
-            CmdCommon persistCmdInit = (Init) persistInitClass.getDeclaredConstructor().newInstance();
+            Init persistCmdInit = (Init) persistInitClass.getDeclaredConstructor().newInstance();
             Assert.assertEquals(persistCmdInit.getName(), "persist");
             Assert.assertEquals(persistCmd.getName(), "persist");
             persistCmdInit.setEnvironmentBuilder(getEnvironmentBuilder());
@@ -141,18 +140,22 @@ public class ToolingTestUtils {
     private static void generateSourceCode(Path sourcePath, Command cmd) {
         //change this so a common class won't be reqiored
         Class<?> persistClass;
-        CmdCommon persistCmd;
+
         try {
             if (cmd == Command.INIT) {
                 persistClass = Class.forName("io.ballerina.persist.cmd.Init");
-                persistCmd = (Init) persistClass.getDeclaredConstructor().newInstance();
+                Init persistCmd = (Init) persistClass.getDeclaredConstructor().newInstance();
+                persistCmd.setSourcePath(sourcePath.toAbsolutePath().toString());
+                persistCmd.setEnvironmentBuilder(getEnvironmentBuilder());
+                persistCmd.execute();
             } else {
                 persistClass = Class.forName("io.ballerina.persist.cmd.Generate");
-                persistCmd = (Generate) persistClass.getDeclaredConstructor().newInstance();
+                Generate persistCmd = (Generate) persistClass.getDeclaredConstructor().newInstance();
+                persistCmd.setSourcePath(sourcePath.toAbsolutePath().toString());
+                persistCmd.setEnvironmentBuilder(getEnvironmentBuilder());
+                persistCmd.execute();
             }
-            persistCmd.setSourcePath(sourcePath.toAbsolutePath().toString());
-            persistCmd.setEnvironmentBuilder(getEnvironmentBuilder());
-            persistCmd.execute();
+
         } catch (ClassNotFoundException | IllegalAccessException | InstantiationException |
                 NoSuchMethodException | InvocationTargetException e) {
             errStream.println(e.getMessage());
