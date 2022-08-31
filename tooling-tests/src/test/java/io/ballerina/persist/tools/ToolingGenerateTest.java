@@ -23,6 +23,7 @@ import org.testng.annotations.Test;
 
 import static io.ballerina.persist.tools.ToolingTestUtils.Command.GENERATE;
 import static io.ballerina.persist.tools.ToolingTestUtils.assertGeneratedSources;
+import static io.ballerina.persist.tools.ToolingTestUtils.assertGeneratedSourcesNegative;
 
 /**
  * persist tool generate command tests.
@@ -67,8 +68,8 @@ public class ToolingGenerateTest {
     }
 
     @Test
-    @Description("All the use cases where client objects are not generated for the entities")
-    public void testGenerateClientNotGenerated() {
+    @Description("Use case where a entity is located inside a module")
+    public void testGenerateClientWithEntityInModule() {
         assertGeneratedSources("tool_test_generate_7", GENERATE);
     }
 
@@ -88,5 +89,17 @@ public class ToolingGenerateTest {
     @Description("There is only a single entity in the Ballerina project with two keys without autoincrement")
     public void testGenerateSingleEntityWithMultipleKeys() {
         assertGeneratedSources("tool_test_generate_10", GENERATE);
+    }
+
+    @Test
+    @Description("There is only a single entity in the Ballerina project and there are errors in the project")
+    public void testGenerateSingleEntityWithErrors() {
+        assertGeneratedSourcesNegative("tool_test_generate_11", GENERATE, "modules");
+    }
+
+    @Test
+    @Description("There is only a single entity in the Ballerina project and there are errors in Entity annotation")
+    public void testGenerateSingleEntityWithAnnotationErrors() {
+        assertGeneratedSourcesNegative("tool_test_generate_12", GENERATE, "modules");
     }
 }

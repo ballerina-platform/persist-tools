@@ -54,7 +54,7 @@ public class ToolingInitTest {
     @Test
     @Description("When the init command is executed outside a Ballerina project")
     public void testsInitOutsideBalProject() {
-        assertGeneratedSourcesNegative("tool_test_init_4", INIT);
+        assertGeneratedSourcesNegative("tool_test_init_4", INIT, "Config.toml");
     }
 
     @Test

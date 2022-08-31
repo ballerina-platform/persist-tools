@@ -33,7 +33,6 @@ import io.ballerina.projects.ProjectEnvironmentBuilder;
 import io.ballerina.projects.ProjectException;
 import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.projects.directory.ProjectLoader;
-import io.ballerina.tools.diagnostics.Diagnostic;
 import io.ballerina.tools.text.TextDocument;
 import io.ballerina.tools.text.TextDocuments;
 import org.ballerinalang.formatter.core.Formatter;
@@ -50,7 +49,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -128,7 +126,6 @@ public class Generate implements BLauncherCmd {
     }
 
     private ArrayList<Entity> readBalFiles() throws IOException, ProjectBuildException {
-        errStream.println(Paths.get(""));
         ArrayList<Entity> returnMetaData = new ArrayList<>();
         Path dirPath = Paths.get(this.sourcePath);
         List<Path> fileList;
@@ -215,9 +212,6 @@ public class Generate implements BLauncherCmd {
             return false;
         }
         TextDocument textDocument = TextDocuments.from(content);
-        for (Diagnostic diag: SyntaxTree.from(textDocument).diagnostics()) {
-            errStream.println(diag);
-        }
         return SyntaxTree.from(textDocument).hasDiagnostics();
     }
 
@@ -233,11 +227,6 @@ public class Generate implements BLauncherCmd {
         }
         PackageCompilation compilation = currentPackage.getCompilation();
         DiagnosticResult diagnosticResult = compilation.diagnosticResult();
-
-        Collection<Diagnostic> temp = diagnosticResult.errors();
-        for (Diagnostic i : temp) {
-            errStream.println(i);
-        }
         return diagnosticResult.hasErrors();
     }
 

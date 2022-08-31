@@ -29,8 +29,7 @@ import io.ballerina.projects.ProjectEnvironmentBuilder;
 import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.projects.directory.SingleFileProject;
 import io.ballerina.projects.environment.Environment;
-import io.ballerina.projects.environment.EnvironmentBuilder;
-import io.ballerina.tools.diagnostics.Diagnostic;
+import io.ballerina.projects.environment.EnvironmentBuilder; //import io.ballerina.tools.diagnostics.Diagnostic;
 import io.ballerina.tools.text.TextDocument;
 import io.ballerina.tools.text.TextDocuments;
 import org.testng.Assert;
@@ -42,8 +41,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.ArrayList; //import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,8 +62,6 @@ public class ToolingTestUtils {
     }
 
     private static final PrintStream errStream = System.err;
-
-    public static final String CONFIG_FILE = "Config.toml";
     public static final String GENERATED_SOURCES_DIRECTORY = Paths.get("build", "generated-sources").toString();
     public static final Path RESOURCES_EXPECTED_OUTPUT = Paths.get("src", "test", "resources", "test-src", "output")
             .toAbsolutePath();
@@ -97,11 +93,13 @@ public class ToolingTestUtils {
         }
     }
 
-    public static void assertGeneratedSourcesNegative(String subDir, Command cmd) {
+    public static void assertGeneratedSourcesNegative(String subDir, Command cmd, String object) {
         Path sourceDirPath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);
-        Path actualConfigFilePath = sourceDirPath.resolve(CONFIG_FILE);
+        Assert.assertTrue(directoryContentEquals(Paths.get(RESOURCES_EXPECTED_OUTPUT.toString()).resolve(subDir),
+                Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)));
+        Path actualObjectFilePath = sourceDirPath.resolve(object);
         generateSourceCode(sourceDirPath, cmd);
-        Assert.assertFalse(Files.exists(actualConfigFilePath));
+        Assert.assertFalse(Files.exists(actualObjectFilePath));
     }
 
     public static void assertAuxiliaryFunctions() {
@@ -172,11 +170,6 @@ public class ToolingTestUtils {
         }
         PackageCompilation compilation = currentPackage.getCompilation();
         DiagnosticResult diagnosticResult = compilation.diagnosticResult();
-
-        Collection<Diagnostic> temp = diagnosticResult.errors();
-        for (Diagnostic i : temp) {
-            errStream.println(i);
-        }
         return diagnosticResult.hasErrors();
     }
 

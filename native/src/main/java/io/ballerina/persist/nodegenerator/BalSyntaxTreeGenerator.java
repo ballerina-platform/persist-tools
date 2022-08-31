@@ -118,7 +118,7 @@ public class BalSyntaxTreeGenerator {
                                         && ((IdentifierToken) specificField.fieldName()).text()
                                         .equals(BalFileConstants.ENTITY_KEY)) {
                                     keys = new ArrayList<>();
-                                    Iterator listIterator = ((ListConstructorExpressionNode) valueNode)
+                                    Iterator<Node> listIterator = ((ListConstructorExpressionNode) valueNode)
                                             .expressions().iterator();
                                     count = 0;
                                     while (listIterator.hasNext()) {
@@ -202,8 +202,8 @@ public class BalSyntaxTreeGenerator {
                 for (String key : entity.getKeys()) {
                     if (field.get(BalFileConstants.FIELD_NAME).toString().equals(key.trim().replaceAll(
                             BalFileConstants.DOUBLE_QUOTE, BalFileConstants.EMPTY_STRING))) {
-                        keys.put(field.get(BalFileConstants.FIELD_NAME)
-                            .toString(), field.get(BalFileConstants.FIELD_TYPE).toString().trim().replaceAll(" ",
+                        keys.put(field.get(BalFileConstants.FIELD_NAME).toString(),
+                                field.get(BalFileConstants.FIELD_TYPE).toString().trim().replaceAll(" ",
                                 BalFileConstants.EMPTY_STRING));
                     }
                 }
@@ -270,6 +270,24 @@ public class BalSyntaxTreeGenerator {
             className = entity.getModule().substring(0, 1).toUpperCase() + entity.getModule().substring(1)
                     + entity.getEntityName();
         }
+        Class client = createClientClass(entity, className, subFields,
+                keys, keyType, keyAutoInc);
+
+        moduleMembers = moduleMembers.add(client.getClassDefinitionNode());
+
+        Class clientStream = createClientStreamClass(entity, className);
+
+        moduleMembers = moduleMembers.add(clientStream.getClassDefinitionNode());
+
+        Token eofToken = AbstractNodeFactory.createIdentifierToken(BalFileConstants.EMPTY_STRING);
+        ModulePartNode modulePartNode = NodeFactory.createModulePartNode(imports, moduleMembers, eofToken);
+        TextDocument textDocument = TextDocuments.from(BalFileConstants.EMPTY_STRING);
+        SyntaxTree balTree = SyntaxTree.from(textDocument);
+        return balTree.modifyWith(modulePartNode);
+    }
+
+    private static Class createClientClass(Entity entity, String className, List<Node> subFields,
+                                           HashMap<String, String> keys, String keyType, boolean keyAutoInc) {
         Class client = new Class(className + "Client", true);
         client.addQualifiers(new String[]{BalFileConstants.KEYWORD_CLIENT});
         client.addMember(NodeFactory.createBasicLiteralNode(SyntaxKind.STRING_LITERAL,
@@ -297,11 +315,11 @@ public class BalSyntaxTreeGenerator {
 
         client.addMember(TypeDescriptor.getObjectFieldNode(BalFileConstants.KEYWORD_PRIVATE,
                 new String[]{BalFileConstants.KEYWORD_FINAL},
-                        TypeDescriptor.getSimpleNameReferenceNode(BalFileConstants.TYPE_FIELD_METADATA_MAP),
-                        BalFileConstants.TAG_FIELD_METADATA, NodeFactory.createMappingConstructorExpressionNode(
-                                SyntaxTreeConstants.SYNTAX_TREE_OPEN_BRACE, AbstractNodeFactory
-                                        .createSeparatedNodeList(subFields),
-                                SyntaxTreeConstants.SYNTAX_TREE_CLOSE_BRACE)), true);
+                TypeDescriptor.getSimpleNameReferenceNode(BalFileConstants.TYPE_FIELD_METADATA_MAP),
+                BalFileConstants.TAG_FIELD_METADATA, NodeFactory.createMappingConstructorExpressionNode(
+                        SyntaxTreeConstants.SYNTAX_TREE_OPEN_BRACE, AbstractNodeFactory
+                                .createSeparatedNodeList(subFields),
+                        SyntaxTreeConstants.SYNTAX_TREE_CLOSE_BRACE)), true);
 
         StringBuilder keysString = new StringBuilder();
         for (String key : entity.getKeys()) {
@@ -324,7 +342,7 @@ public class BalSyntaxTreeGenerator {
 
         client.addMember(TypeDescriptor.getObjectFieldNodeWithoutExpression(BalFileConstants.KEYWORD_PRIVATE,
                         new String[]{},
-                TypeDescriptor.getQualifiedNameReferenceNode(BalFileConstants.PERSIST, "SQLClient"),
+                        TypeDescriptor.getQualifiedNameReferenceNode(BalFileConstants.PERSIST, "SQLClient"),
                         BalFileConstants.PERSIST_CLIENT),
                 true);
 
@@ -425,7 +443,7 @@ public class BalSyntaxTreeGenerator {
         readByKey.addStatement(NodeParser.parseStatement(String.format(BalFileConstants.READ_BY_KEY_RETURN,
                 String.format(BalFileConstants.RECORD_FIELD_VAR,
                         BalFileConstants.ENTITIES, entity.getEntityName()), String.format(
-                                BalFileConstants.RECORD_FIELD_VAR,
+                        BalFileConstants.RECORD_FIELD_VAR,
                         BalFileConstants.ENTITIES, entity.getEntityName()))));
         client.addMember(readByKey.getFunctionDefinitionNode(), true);
 
@@ -436,7 +454,7 @@ public class BalSyntaxTreeGenerator {
                 "filter");
         read.addQualifiers(new String[]{BalFileConstants.KEYWORD_REMOTE});
         read.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(TypeDescriptor.getStreamTypeDescriptorNode(
-                TypeDescriptor.getQualifiedNameReferenceNode(BalFileConstants.ENTITIES, entity.getEntityName()),
+                        TypeDescriptor.getQualifiedNameReferenceNode(BalFileConstants.ENTITIES, entity.getEntityName()),
                         TypeDescriptor.getOptionalTypeDescriptorNode(BalFileConstants.EMPTY_STRING,
                                 BalFileConstants.ERROR)),
                 TypeDescriptor.getSimpleNameReferenceNode(BalFileConstants.ERROR)));
@@ -482,9 +500,10 @@ public class BalSyntaxTreeGenerator {
                 BalFileConstants.ERROR));
         close.addStatement(NodeParser.parseStatement(BalFileConstants.CLOSE_PERSIST_CLIENT));
         client.addMember(close.getFunctionDefinitionNode(), true);
+        return client;
+    }
 
-        moduleMembers = moduleMembers.add(client.getClassDefinitionNode());
-
+    private static Class createClientStreamClass(Entity entity, String className) {
         Class clientStream = new Class(className + "Stream", true);
 
         clientStream.addMember(NodeFactory.createBasicLiteralNode(SyntaxKind.STRING_LITERAL,
@@ -493,11 +512,11 @@ public class BalSyntaxTreeGenerator {
 
         clientStream.addMember(TypeDescriptor.getObjectFieldNodeWithoutExpression(BalFileConstants.KEYWORD_PRIVATE,
                 new String[]{},
-                        TypeDescriptor.getStreamTypeDescriptorNode(
-                            SyntaxTreeConstants.SYNTAX_TREE_VAR_ANYDATA,
-                            TypeDescriptor.getOptionalTypeDescriptorNode(BalFileConstants.EMPTY_STRING,
-                                    BalFileConstants.ERROR)),
-                        BalFileConstants.ANYDATA_STREAM), true);
+                TypeDescriptor.getStreamTypeDescriptorNode(
+                        SyntaxTreeConstants.SYNTAX_TREE_VAR_ANYDATA,
+                        TypeDescriptor.getOptionalTypeDescriptorNode(BalFileConstants.EMPTY_STRING,
+                                BalFileConstants.ERROR)),
+                BalFileConstants.ANYDATA_STREAM), true);
 
         Function initStream = new Function(BalFileConstants.INIT);
         initStream.addQualifiers(new String[]{BalFileConstants.KEYWORD_PUBLIC, BalFileConstants.KEYWORD_ISOLATED});
@@ -541,13 +560,7 @@ public class BalSyntaxTreeGenerator {
         closeStream.addStatement(NodeParser.parseStatement(BalFileConstants.CLOSE_STREAM_STATEMENT));
         clientStream.addMember(closeStream.getFunctionDefinitionNode(), true);
 
-        moduleMembers = moduleMembers.add(clientStream.getClassDefinitionNode());
-
-        Token eofToken = AbstractNodeFactory.createIdentifierToken(BalFileConstants.EMPTY_STRING);
-        ModulePartNode modulePartNode = NodeFactory.createModulePartNode(imports, moduleMembers, eofToken);
-        TextDocument textDocument = TextDocuments.from(BalFileConstants.EMPTY_STRING);
-        SyntaxTree balTree = SyntaxTree.from(textDocument);
-        return balTree.modifyWith(modulePartNode);
+        return clientStream;
     }
 
     public static SyntaxTree generateConfigBalFile() {
