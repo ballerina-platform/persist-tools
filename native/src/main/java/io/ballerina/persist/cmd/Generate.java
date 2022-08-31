@@ -33,8 +33,6 @@ import io.ballerina.projects.ProjectEnvironmentBuilder;
 import io.ballerina.projects.ProjectException;
 import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.projects.directory.ProjectLoader;
-import io.ballerina.projects.environment.Environment;
-import io.ballerina.projects.environment.EnvironmentBuilder;
 import io.ballerina.tools.diagnostics.Diagnostic;
 import io.ballerina.tools.text.TextDocument;
 import io.ballerina.tools.text.TextDocuments;
@@ -139,13 +137,9 @@ public class Generate implements BLauncherCmd {
         try (Stream<Path> walk = Files.walk(dirPath)) {
             if (walk != null) {
                 fileList = walk.filter(Files::isRegularFile).collect(Collectors.toList());
-                boolean bool1 = hasSyntacticDiagnostics(Paths.get(this.sourcePath));
-                boolean bool2 = hasSemanticDiagnostics(Paths.get(this.sourcePath), this.projectEnvironmentBuilder);
-
-                if (bool1 || bool2) {
-                    errStream.println("errors in files");
+                if (hasSyntacticDiagnostics(Paths.get(this.sourcePath)) ||
+                        hasSemanticDiagnostics(Paths.get(this.sourcePath), this.projectEnvironmentBuilder)) {
                     throw new ProjectBuildException("Errors Present in the projects!");
-
                 }
                 for (Path filePath : fileList) {
                     if (filePath.toString().endsWith(".bal")) {
@@ -213,12 +207,6 @@ public class Generate implements BLauncherCmd {
             writer.println(content);
         }
     }
-
-    private static ProjectEnvironmentBuilder getEnvironmentBuilder() {
-        Environment environment = EnvironmentBuilder.getBuilder().setBallerinaHome(
-                Paths.get("target", "ballerina-runtime")).build();
-        return ProjectEnvironmentBuilder.getBuilder(environment);
-    }
     public static boolean hasSyntacticDiagnostics(Path filePath) {
         String content;
         try {
@@ -237,7 +225,7 @@ public class Generate implements BLauncherCmd {
                                                  ProjectEnvironmentBuilder projectEnvironmentBuilder) {
         Package currentPackage;
         if (projectEnvironmentBuilder == null) {
-            BuildProject buildProject = BuildProject.load(projectPath);
+            BuildProject buildProject = BuildProject.load(projectPath.toAbsolutePath());
             currentPackage = buildProject.currentPackage();
         } else {
             BuildProject buildProject = BuildProject.load(projectEnvironmentBuilder, projectPath);

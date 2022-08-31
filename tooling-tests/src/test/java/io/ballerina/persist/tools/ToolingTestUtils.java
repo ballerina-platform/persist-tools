@@ -138,7 +138,6 @@ public class ToolingTestUtils {
     }
 
     private static void generateSourceCode(Path sourcePath, Command cmd) {
-        //change this so a common class won't be reqiored
         Class<?> persistClass;
 
         try {

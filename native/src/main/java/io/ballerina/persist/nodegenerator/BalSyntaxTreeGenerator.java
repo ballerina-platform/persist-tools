@@ -80,13 +80,16 @@ public class BalSyntaxTreeGenerator {
         SyntaxTree balSyntaxTree = SyntaxTree.from(TextDocuments.from(Files.readString(filePath)));
         ModulePartNode rootNote = balSyntaxTree.rootNode();
         NodeList<ModuleMemberDeclarationNode> nodeList = rootNote.members();
-        for (ModuleMemberDeclarationNode i : nodeList) { //check if its possible to divide
-            if (i.kind() != SyntaxKind.TYPE_DEFINITION) { //use continue with !
+        for (ModuleMemberDeclarationNode moduleNode : nodeList) {
+            if (moduleNode.kind() != SyntaxKind.TYPE_DEFINITION) {
                 continue;
             }
-            Collection<ChildNodeEntry> temp = i.childEntries();
+            Collection<ChildNodeEntry> temp = moduleNode.childEntries();
             for (ChildNodeEntry child : temp) {
                 if (child.name().equals("metadata")) {
+                    if (child.node().isEmpty()) {
+                        continue;
+                    }
                     MetadataNode metaD = (MetadataNode) child.node().get();
                     NodeList<AnnotationNode> annotations = metaD.annotations();
                     for (AnnotationNode annotation : annotations) {
@@ -105,11 +108,12 @@ public class BalSyntaxTreeGenerator {
                                     continue;
                                 }
                                 SpecificFieldNode specificField = (SpecificFieldNode) fieldNode;
-                                if (specificField.fieldName().kind() != SyntaxKind.IDENTIFIER_TOKEN) {
+                                if (specificField.fieldName().kind() != SyntaxKind.IDENTIFIER_TOKEN ||
+                                        specificField.valueExpr().isEmpty()) {
                                     continue;
                                 }
                                 ExpressionNode valueNode =
-                                        ((SpecificFieldNode) fieldNode).valueExpr().get();
+                                        specificField.valueExpr().get();
                                 if (valueNode instanceof ListConstructorExpressionNode
                                         && ((IdentifierToken) specificField.fieldName()).text()
                                         .equals(BalFileConstants.ENTITY_KEY)) {
@@ -137,9 +141,9 @@ public class BalSyntaxTreeGenerator {
                     }
                 }
             }
-            RecordTypeDescriptorNode recordDesc = (RecordTypeDescriptorNode) ((TypeDefinitionNode) i)
+            RecordTypeDescriptorNode recordDesc = (RecordTypeDescriptorNode) ((TypeDefinitionNode) moduleNode)
                     .typeDescriptor();
-            entityArray.get(index).setEntityName(((TypeDefinitionNode) i).typeName().text());
+            entityArray.get(index).setEntityName(((TypeDefinitionNode) moduleNode).typeName().text());
             for (Node node : recordDesc.fields()) {
                 if (node.kind() == SyntaxKind.RECORD_FIELD_WITH_DEFAULT_VALUE) {
                     RecordFieldWithDefaultValueNode fieldNode = (RecordFieldWithDefaultValueNode) node;
