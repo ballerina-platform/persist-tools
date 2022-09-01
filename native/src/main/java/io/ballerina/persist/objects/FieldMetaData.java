@@ -19,7 +19,7 @@ package io.ballerina.persist.objects;
 /**
  * Client Entity fieldMetaData class.
  *
- * @since 0.982.0
+ * @since 0.1.0
  */
 
 public class FieldMetaData {
