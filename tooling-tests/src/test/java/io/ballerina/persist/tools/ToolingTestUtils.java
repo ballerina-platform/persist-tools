@@ -29,7 +29,7 @@ import io.ballerina.projects.ProjectEnvironmentBuilder;
 import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.projects.directory.SingleFileProject;
 import io.ballerina.projects.environment.Environment;
-import io.ballerina.projects.environment.EnvironmentBuilder; //import io.ballerina.tools.diagnostics.Diagnostic;
+import io.ballerina.projects.environment.EnvironmentBuilder;
 import io.ballerina.tools.text.TextDocument;
 import io.ballerina.tools.text.TextDocuments;
 import org.testng.Assert;
@@ -41,7 +41,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList; //import java.util.Collection;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -185,13 +185,12 @@ public class ToolingTestUtils {
     }
 
     private static List<Path> listFiles(Path path) {
-        Stream<Path> walk = null;
-        try {
-            walk = Files.walk(path);
+        try (Stream<Path> walk = Files.walk(path)) {
+            return walk != null ? walk.filter(Files::isRegularFile).collect(Collectors.toList()) : new ArrayList<>();
         } catch (IOException e) {
             errStream.println(e.getMessage());
         }
-        return walk != null ? walk.filter(Files::isRegularFile).collect(Collectors.toList()) : new ArrayList<>();
+        return new ArrayList<>();
     }
 
     private static boolean directoryContentEquals(Path dir1, Path dir2) {

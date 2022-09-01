@@ -22,9 +22,7 @@ import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator;
 import io.ballerina.persist.objects.Entity;
-import io.ballerina.persist.objects.FileWriteException;
 import io.ballerina.persist.objects.GenerateBalException;
-import io.ballerina.persist.objects.ProjectBuildException;
 import io.ballerina.projects.DiagnosticResult;
 import io.ballerina.projects.Package;
 import io.ballerina.projects.PackageCompilation;
@@ -114,18 +112,12 @@ public class Generate implements BLauncherCmd {
                 }
                 generateConfigurationBalFile();
             }
-        } catch (FileWriteException e) {
-            errStream.println("Error occurred while writing ballerina client object!");
-        }  catch (GenerateBalException e) {
-            errStream.println("Error occurred while generating ballerina client object!");
-        } catch (IOException e) {
-            errStream.println("Error occurred while reading entities!");
-        } catch (ProjectBuildException e) {
-            errStream.println("Error occurred while building the project!");
+        } catch (Exception e) {
+            errStream.println(e.getMessage());
         }
     }
 
-    private ArrayList<Entity> readBalFiles() throws IOException, ProjectBuildException {
+    private ArrayList<Entity> readBalFiles() throws GenerateBalException {
         ArrayList<Entity> returnMetaData = new ArrayList<>();
         Path dirPath = Paths.get(this.sourcePath);
         List<Path> fileList;
@@ -136,7 +128,7 @@ public class Generate implements BLauncherCmd {
                 fileList = walk.filter(Files::isRegularFile).collect(Collectors.toList());
                 if (hasSyntacticDiagnostics(Paths.get(this.sourcePath)) ||
                         hasSemanticDiagnostics(Paths.get(this.sourcePath), this.projectEnvironmentBuilder)) {
-                    throw new ProjectBuildException("Errors Present in the projects!");
+                    throw new GenerateBalException("Error occurred while building the project!");
                 }
                 for (Path filePath : fileList) {
                     if (filePath.toString().endsWith(".bal")) {
@@ -157,12 +149,12 @@ public class Generate implements BLauncherCmd {
                 return returnMetaData;
             }
         } catch (IOException e) {
-            throw e;
+            throw new GenerateBalException("Error occurred while reading bal files!");
         }
         return new ArrayList<>();
     }
 
-    private void generateClientBalFile(Entity entity) throws FileWriteException, GenerateBalException {
+    private void generateClientBalFile(Entity entity) throws GenerateBalException {
         SyntaxTree balTree = BalSyntaxTreeGenerator.generateBalFile(entity);
         String clientPath;
         if (entity.getModule().equals("")) {
@@ -176,22 +168,22 @@ public class Generate implements BLauncherCmd {
         try {
             writeOutputFile(balTree, clientPath);
         } catch (IOException e) {
-            throw new FileWriteException(e);
+            throw new GenerateBalException("Error occurred in formatting ballerina client object!");
         } catch (FormatterException e) {
-            throw new GenerateBalException(e);
+            throw new GenerateBalException("Error occurred while generating ballerina client object!");
         }
 
     }
-    private void generateConfigurationBalFile() throws FileWriteException, GenerateBalException {
+    private void generateConfigurationBalFile() throws GenerateBalException {
         SyntaxTree configTree = BalSyntaxTreeGenerator.generateConfigBalFile();
         try {
             writeOutputFile(configTree, Paths.get(this.sourcePath, "modules",
                             "generated_clients", "database_configuration.bal")
                     .toAbsolutePath().toString());
         } catch (IOException e) {
-            throw new FileWriteException(e);
+            throw new GenerateBalException("Error occurred in formatting database configuration file!");
         } catch (FormatterException e) {
-            throw new GenerateBalException(e);
+            throw new GenerateBalException("Error occurred while generating database configuration file!");
         }
     }
 

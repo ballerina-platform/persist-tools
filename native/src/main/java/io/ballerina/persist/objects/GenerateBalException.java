@@ -26,4 +26,7 @@ public class GenerateBalException extends Exception {
     public GenerateBalException(Exception e) {
         super(e);
     }
+    public GenerateBalException(String message) {
+        super(message);
+    }
 }
