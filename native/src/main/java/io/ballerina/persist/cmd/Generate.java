@@ -54,11 +54,11 @@ import java.util.stream.Stream;
 
 
 /**
- * Class to implement "persist" command for ballerina.
+ * This Class implements the `persist generate` command in Ballerina persist-tool.
  */
 @CommandLine.Command(
         name = "generate",
-        description = "generate database configurations."
+        description = "Generate Ballerina client object for the entity."
         )
 
 public class Generate implements BLauncherCmd {
@@ -69,8 +69,6 @@ public class Generate implements BLauncherCmd {
     public ProjectEnvironmentBuilder projectEnvironmentBuilder;
 
     private static final String COMMAND_IDENTIFIER = "persist-generate";
-
-    private CommandLine parentCmdParser;
 
     Project balProject;
 
@@ -94,8 +92,6 @@ public class Generate implements BLauncherCmd {
             }
             name = balProject.currentPackage().descriptor().org().value() + "." + balProject.currentPackage()
                     .descriptor().name().value();
-
-
         } catch (ProjectException e) {
             errStream.println("The current directory is not a Ballerina project!");
             return;
@@ -122,7 +118,6 @@ public class Generate implements BLauncherCmd {
         Path dirPath = Paths.get(this.sourcePath);
         List<Path> fileList;
 
-
         try (Stream<Path> walk = Files.walk(dirPath)) {
             if (walk != null) {
                 fileList = walk.filter(Files::isRegularFile).collect(Collectors.toList());
@@ -148,6 +143,7 @@ public class Generate implements BLauncherCmd {
                 }
                 return returnMetaData;
             }
+
         } catch (IOException e) {
             throw new BalException("Error occurred while reading bal files!");
         }
@@ -168,9 +164,9 @@ public class Generate implements BLauncherCmd {
         try {
             writeOutputFile(balTree, clientPath);
         } catch (IOException e) {
-            throw new BalException("Error occurred in formatting ballerina client object!");
+            throw new BalException("Error occurred in writing ballerina client object!");
         } catch (FormatterException e) {
-            throw new BalException("Error occurred while generating ballerina client object!");
+            throw new BalException("Error occurred while formatting ballerina client object!");
         }
 
     }
@@ -181,9 +177,9 @@ public class Generate implements BLauncherCmd {
                             "generated_clients", "database_configuration.bal")
                     .toAbsolutePath().toString());
         } catch (IOException e) {
-            throw new BalException("Error occurred in formatting database configuration file!");
+            throw new BalException("Error occurred while writing database configuration file!");
         } catch (FormatterException e) {
-            throw new BalException("Error occurred while generating database configuration file!");
+            throw new BalException("Error occurred while formatting database configuration file!");
         }
     }
 
@@ -231,7 +227,7 @@ public class Generate implements BLauncherCmd {
 
     @Override
     public void setParentCmdParser(CommandLine parentCmdParser) {
-        this.parentCmdParser = parentCmdParser;
+
     }
     @Override
     public String getName() {

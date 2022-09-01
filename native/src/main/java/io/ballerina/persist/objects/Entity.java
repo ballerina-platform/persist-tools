@@ -18,7 +18,6 @@
 package io.ballerina.persist.objects;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 /**
  * Class to store persist entities.
@@ -33,7 +32,7 @@ public class Entity {
 
     private String packageName;
 
-    private final ArrayList<HashMap> fields = new ArrayList<>(); //to do hashtable
+    private final ArrayList<FieldMetaData> fields = new ArrayList<>(); //to do hashtable
     public Entity(String[] keys, String tableName, String module) {
 
         this.keys = keys;
@@ -71,12 +70,12 @@ public class Entity {
         this.entityName = entityName;
     }
 
-    public ArrayList<HashMap> getFields() {
+    public ArrayList<FieldMetaData> getFields() {
         return this.fields;
     }
 
-    public void addField(HashMap map) {
-        this.fields.add(map);
+    public void addField(FieldMetaData field) {
+        this.fields.add(field);
     }
 
 }
