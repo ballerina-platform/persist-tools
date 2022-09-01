@@ -32,7 +32,7 @@ public class Entity {
 
     private String packageName;
 
-    private final ArrayList<FieldMetaData> fields = new ArrayList<>(); //to do hashtable
+    private final ArrayList<FieldMetaData> fields = new ArrayList<>();
     public Entity(String[] keys, String tableName, String module) {
 
         this.keys = keys;
