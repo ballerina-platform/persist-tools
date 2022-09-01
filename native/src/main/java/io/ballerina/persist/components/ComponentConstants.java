@@ -15,18 +15,20 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-
-package io.ballerina.persist.objects;
+package io.ballerina.persist.components;
 
 /**
- * Exception for ballerina file generation.
+ * Class encapsulating all the constants related to components.
+ *
+ @since 0.1.0
  */
-public class GenerateBalException extends Exception {
+public class ComponentConstants {
 
-    public GenerateBalException(Exception e) {
-        super(e);
+    private ComponentConstants() {
+
     }
-    public GenerateBalException(String message) {
-        super(message);
-    }
+
+    public static final String TAG_CLASS = "class ";
+    public static final String TAG_PUBLIC = "public ";
+    public static final String TAG_FUNCTION = "function ";
 }

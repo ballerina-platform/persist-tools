@@ -139,16 +139,6 @@ public class TypeDescriptor {
         );
     }
 
-    public static RecordTypeDescriptorNode getClosedRecordTypeDescriptorNode() {
-        return NodeFactory.createRecordTypeDescriptorNode(
-                SyntaxTreeConstants.SYNTAX_TREE_KEYWORD_RECORD,
-                SyntaxTreeConstants.SYNTAX_TREE_OPEN_CLOSED_BRACE,
-                NodeFactory.createEmptyNodeList(),
-                null,
-                SyntaxTreeConstants.SYNTAX_TREE_CLOSE_CLOSED_BRACE
-        );
-    }
-
     public static ObjectFieldNode getObjectFieldNodeWithoutExpression(String visibility, String[] qualifiers,
                                                                       Node typeName, String fieldName) {
         NodeList<Token> qualifierList = NodeFactory.createEmptyNodeList();

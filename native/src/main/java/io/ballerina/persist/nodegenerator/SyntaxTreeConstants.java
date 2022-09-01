@@ -20,9 +20,6 @@ public class SyntaxTreeConstants {
     public static final Token SYNTAX_TREE_COLON = AbstractNodeFactory.createIdentifierToken(":");
     public static final Token SYNTAX_TREE_OPEN_BRACE = AbstractNodeFactory.createIdentifierToken("{");
     public static final Token SYNTAX_TREE_CLOSE_BRACE = AbstractNodeFactory.createIdentifierToken("}");
-
-    public static final Token SYNTAX_TREE_OPEN_CLOSED_BRACE = AbstractNodeFactory.createIdentifierToken("{|");
-    public static final Token SYNTAX_TREE_CLOSE_CLOSED_BRACE = AbstractNodeFactory.createIdentifierToken("|}");
     public static final Token SYNTAX_TREE_OPEN_PAREN = AbstractNodeFactory.createIdentifierToken("(");
     public static final Token SYNTAX_TREE_CLOSE_PAREN = AbstractNodeFactory.createIdentifierToken(")");
     public static final Token SYNTAX_TREE_OPEN_BRACKET = AbstractNodeFactory.createIdentifierToken("[");
@@ -36,12 +33,9 @@ public class SyntaxTreeConstants {
 
     public static final Token SYNTAX_TREE_KEYWORD_IMPORT = AbstractNodeFactory.createIdentifierToken("import ");
     public static final Token SYNTAX_TREE_KEYWORD_RETURNS = AbstractNodeFactory.createIdentifierToken("returns ");
-    public static final Token SYNTAX_TREE_KEYWORD_RETURN = AbstractNodeFactory.createIdentifierToken("return ");
     public static final Token SYNTAX_TREE_KEYWORD_STREAM = AbstractNodeFactory.createIdentifierToken("stream ");
     public static final Token SYNTAX_TREE_IT = AbstractNodeFactory.createIdentifierToken("<");
     public static final Token SYNTAX_TREE_GT = AbstractNodeFactory.createIdentifierToken(">");
-    public static final TypeDescriptorNode SYNTAX_TREE_VAR_INT =
-            TypeDescriptor.getBuiltinSimpleNameReferenceNode("int");
     public static final TypeDescriptorNode SYNTAX_TREE_VAR_ANYDATA =
             TypeDescriptor.getBuiltinSimpleNameReferenceNode("anydata");
     public static final Token SYNTAX_TREE_QUESTION_MARK = AbstractNodeFactory.createIdentifierToken("?");
@@ -49,11 +43,6 @@ public class SyntaxTreeConstants {
     public static final Token SYNTAX_TREE_KEYWORD_RECORD = AbstractNodeFactory.createIdentifierToken("record ");
     public static final Token SYNTAX_TREE_KEYWORD_IF = AbstractNodeFactory.createIdentifierToken("if ");
     public static final Token SYNTAX_TREE_KEYWORD_ELSE = AbstractNodeFactory.createIdentifierToken("else ");
-
-    public static final TypeDescriptorNode SYNTAX_TREE_VAR_STRING =
-            TypeDescriptor.getBuiltinSimpleNameReferenceNode("string");
-    public static final TypeDescriptorNode SYNTAX_TREE_VAR_ANY =
-            TypeDescriptor.getBuiltinSimpleNameReferenceNode("any");
 
 
 }

@@ -21,8 +21,8 @@ import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator;
+import io.ballerina.persist.objects.BalException;
 import io.ballerina.persist.objects.Entity;
-import io.ballerina.persist.objects.GenerateBalException;
 import io.ballerina.projects.DiagnosticResult;
 import io.ballerina.projects.Package;
 import io.ballerina.projects.PackageCompilation;
@@ -117,7 +117,7 @@ public class Generate implements BLauncherCmd {
         }
     }
 
-    private ArrayList<Entity> readBalFiles() throws GenerateBalException {
+    private ArrayList<Entity> readBalFiles() throws BalException {
         ArrayList<Entity> returnMetaData = new ArrayList<>();
         Path dirPath = Paths.get(this.sourcePath);
         List<Path> fileList;
@@ -128,7 +128,7 @@ public class Generate implements BLauncherCmd {
                 fileList = walk.filter(Files::isRegularFile).collect(Collectors.toList());
                 if (hasSyntacticDiagnostics(Paths.get(this.sourcePath)) ||
                         hasSemanticDiagnostics(Paths.get(this.sourcePath), this.projectEnvironmentBuilder)) {
-                    throw new GenerateBalException("Error occurred while building the project!");
+                    throw new BalException("Error occurred while building the project!");
                 }
                 for (Path filePath : fileList) {
                     if (filePath.toString().endsWith(".bal")) {
@@ -149,12 +149,12 @@ public class Generate implements BLauncherCmd {
                 return returnMetaData;
             }
         } catch (IOException e) {
-            throw new GenerateBalException("Error occurred while reading bal files!");
+            throw new BalException("Error occurred while reading bal files!");
         }
         return new ArrayList<>();
     }
 
-    private void generateClientBalFile(Entity entity) throws GenerateBalException {
+    private void generateClientBalFile(Entity entity) throws BalException {
         SyntaxTree balTree = BalSyntaxTreeGenerator.generateBalFile(entity);
         String clientPath;
         if (entity.getModule().equals("")) {
@@ -168,22 +168,22 @@ public class Generate implements BLauncherCmd {
         try {
             writeOutputFile(balTree, clientPath);
         } catch (IOException e) {
-            throw new GenerateBalException("Error occurred in formatting ballerina client object!");
+            throw new BalException("Error occurred in formatting ballerina client object!");
         } catch (FormatterException e) {
-            throw new GenerateBalException("Error occurred while generating ballerina client object!");
+            throw new BalException("Error occurred while generating ballerina client object!");
         }
 
     }
-    private void generateConfigurationBalFile() throws GenerateBalException {
+    private void generateConfigurationBalFile() throws BalException {
         SyntaxTree configTree = BalSyntaxTreeGenerator.generateConfigBalFile();
         try {
             writeOutputFile(configTree, Paths.get(this.sourcePath, "modules",
                             "generated_clients", "database_configuration.bal")
                     .toAbsolutePath().toString());
         } catch (IOException e) {
-            throw new GenerateBalException("Error occurred in formatting database configuration file!");
+            throw new BalException("Error occurred in formatting database configuration file!");
         } catch (FormatterException e) {
-            throw new GenerateBalException("Error occurred while generating database configuration file!");
+            throw new BalException("Error occurred while generating database configuration file!");
         }
     }
 
@@ -210,13 +210,13 @@ public class Generate implements BLauncherCmd {
     public static boolean hasSemanticDiagnostics(Path projectPath,
                                                  ProjectEnvironmentBuilder projectEnvironmentBuilder) {
         Package currentPackage;
+        BuildProject buildProject;
         if (projectEnvironmentBuilder == null) {
-            BuildProject buildProject = BuildProject.load(projectPath.toAbsolutePath());
-            currentPackage = buildProject.currentPackage();
+            buildProject = BuildProject.load(projectPath.toAbsolutePath());
         } else {
-            BuildProject buildProject = BuildProject.load(projectEnvironmentBuilder, projectPath);
-            currentPackage = buildProject.currentPackage();
+            buildProject = BuildProject.load(projectEnvironmentBuilder, projectPath);
         }
+        currentPackage = buildProject.currentPackage();
         PackageCompilation compilation = currentPackage.getCompilation();
         DiagnosticResult diagnosticResult = compilation.diagnosticResult();
         return diagnosticResult.hasErrors();
@@ -240,7 +240,7 @@ public class Generate implements BLauncherCmd {
     
     @Override
     public void printLongDesc(StringBuilder out) {
-        out.append("Generated the Client object").append(System.lineSeparator());
+        out.append("Generate Client objects corresponding to persist entities").append(System.lineSeparator());
         out.append(System.lineSeparator());
     }
     

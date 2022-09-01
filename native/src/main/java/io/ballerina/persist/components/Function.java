@@ -49,7 +49,7 @@ public class Function {
 
     private final SyntaxKind kind = SyntaxKind.OBJECT_METHOD_DEFINITION;
     private NodeList<Token> qualifierList;
-    private final Token finalKeyWord = AbstractNodeFactory.createIdentifierToken("function ");
+    private final Token finalKeyWord = AbstractNodeFactory.createIdentifierToken(ComponentConstants.TAG_FUNCTION);
     private final IdentifierToken functionName;
     private final NodeList<Node> relativeResourcePath;
     private final List<Node> parameters;

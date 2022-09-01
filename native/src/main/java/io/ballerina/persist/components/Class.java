@@ -35,13 +35,13 @@ public class Class {
 
     private Token visibilityQualifier;
     private NodeList<Token> classTypeQualifiers;
-    private final Token classKeyWord = AbstractNodeFactory.createIdentifierToken("class ");
+    private final Token classKeyWord = AbstractNodeFactory.createIdentifierToken(ComponentConstants.TAG_CLASS);
     private final Token className;
     private NodeList<Node> members;
 
     public Class(String name, boolean isPublic) {
         if (isPublic) {
-            visibilityQualifier = AbstractNodeFactory.createIdentifierToken("public ");
+            visibilityQualifier = AbstractNodeFactory.createIdentifierToken(ComponentConstants.TAG_PUBLIC);
         }
         classTypeQualifiers = AbstractNodeFactory.createEmptyNodeList();
         className = AbstractNodeFactory.createIdentifierToken(name + " ");

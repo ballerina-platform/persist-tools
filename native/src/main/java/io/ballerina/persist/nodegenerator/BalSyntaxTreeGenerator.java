@@ -407,12 +407,11 @@ public class BalSyntaxTreeGenerator {
                         BalFileConstants.LAST_RETURN_ID_NULL_CHECK));
                 valueNilCheck.addIfStatement(NodeParser.parseStatement(BalFileConstants.RETURN_VALUE));
                 create.addIfElseStatement(valueNilCheck.getIfElseStatementNode());
-                create.addStatement(NodeParser.parseStatement(String.format(BalFileConstants.RETURN_RECORD_VARIABLE,
-                        retRecord)));
-            } else {
-                create.addStatement(NodeParser.parseStatement(String.format(BalFileConstants.RETURN_RECORD_VARIABLE,
-                        retRecord)));
+
             }
+            create.addStatement(NodeParser.parseStatement(String.format(BalFileConstants.RETURN_RECORD_VARIABLE,
+                        retRecord)));
+
         }
         client.addMember(create.getFunctionDefinitionNode(), true);
 
