@@ -18,20 +18,12 @@
 
 package io.ballerina.persist.tools;
 
-import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.persist.cmd.Generate;
 import io.ballerina.persist.cmd.Init;
 import io.ballerina.persist.cmd.PersistCmd;
-import io.ballerina.projects.DiagnosticResult;
-import io.ballerina.projects.Package;
-import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.ProjectEnvironmentBuilder;
-import io.ballerina.projects.directory.BuildProject;
-import io.ballerina.projects.directory.SingleFileProject;
 import io.ballerina.projects.environment.Environment;
 import io.ballerina.projects.environment.EnvironmentBuilder;
-import io.ballerina.tools.text.TextDocument;
-import io.ballerina.tools.text.TextDocuments;
 import org.testng.Assert;
 
 import java.io.File;
@@ -47,6 +39,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static io.ballerina.persist.utils.BalProjectUtils.hasSemanticDiagnostics;
+import static io.ballerina.persist.utils.BalProjectUtils.hasSyntacticDiagnostics;
 
 /**
  * persist tool test Utils.
@@ -82,7 +77,7 @@ public class ToolingTestUtils {
         if (!subDir.equals("tool_test_generate_4")) {
             Assert.assertFalse(hasSyntacticDiagnostics(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)));
             Assert.assertFalse(hasSemanticDiagnostics(Paths.get(GENERATED_SOURCES_DIRECTORY)
-                    .resolve(subDir), false));
+                    .resolve(subDir), getEnvironmentBuilder()));
         }
 
         for (Path actualOutputFile: listFiles(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir))) {
@@ -157,31 +152,6 @@ public class ToolingTestUtils {
                 NoSuchMethodException | InvocationTargetException e) {
             errStream.println(e.getMessage());
         }
-    }
-
-    public static boolean hasSemanticDiagnostics(Path projectPath, boolean isSingleFile) {
-        Package currentPackage;
-        if (isSingleFile) {
-            SingleFileProject singleFileProject = SingleFileProject.load(getEnvironmentBuilder(), projectPath);
-            currentPackage = singleFileProject.currentPackage();
-        } else {
-            BuildProject buildProject = BuildProject.load(getEnvironmentBuilder(), projectPath);
-            currentPackage = buildProject.currentPackage();
-        }
-        PackageCompilation compilation = currentPackage.getCompilation();
-        DiagnosticResult diagnosticResult = compilation.diagnosticResult();
-        return diagnosticResult.hasErrors();
-    }
-
-    public static boolean hasSyntacticDiagnostics(Path filePath) {
-        String content;
-        try {
-            content = Files.readString(filePath);
-        } catch (IOException e) {
-            return false;
-        }
-        TextDocument textDocument = TextDocuments.from(content);
-        return SyntaxTree.from(textDocument).hasDiagnostics();
     }
 
     private static List<Path> listFiles(Path path) {

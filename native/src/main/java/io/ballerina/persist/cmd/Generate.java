@@ -23,16 +23,10 @@ import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator;
 import io.ballerina.persist.objects.BalException;
 import io.ballerina.persist.objects.Entity;
-import io.ballerina.projects.DiagnosticResult;
-import io.ballerina.projects.Package;
-import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.ProjectEnvironmentBuilder;
 import io.ballerina.projects.ProjectException;
-import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.projects.directory.ProjectLoader;
-import io.ballerina.tools.text.TextDocument;
-import io.ballerina.tools.text.TextDocuments;
 import org.ballerinalang.formatter.core.Formatter;
 import org.ballerinalang.formatter.core.FormatterException;
 import picocli.CommandLine;
@@ -52,9 +46,14 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static io.ballerina.persist.utils.BalProjectUtils.hasSemanticDiagnostics;
+import static io.ballerina.persist.utils.BalProjectUtils.hasSyntacticDiagnostics;
+
 
 /**
  * This Class implements the `persist generate` command in Ballerina persist-tool.
+ *
+ * @since 0.1.0
  */
 @CommandLine.Command(
         name = "generate",
@@ -135,7 +134,7 @@ public class Generate implements BLauncherCmd {
                         } else if (!Arrays.asList(dirElements).contains(pathElements[pathElements.length - 2])) {
                             module = pathElements[pathElements.length - 2];
                         }
-                        ArrayList<Entity> retData = BalSyntaxTreeGenerator.readBalFiles(filePath, module);
+                        ArrayList<Entity> retData = BalSyntaxTreeGenerator.getEntityRecord(filePath, module);
                         if (retData.size() != 0) {
                             returnMetaData.addAll(retData);
                         }
@@ -151,7 +150,7 @@ public class Generate implements BLauncherCmd {
     }
 
     private void generateClientBalFile(Entity entity) throws BalException {
-        SyntaxTree balTree = BalSyntaxTreeGenerator.generateBalFile(entity);
+        SyntaxTree balTree = BalSyntaxTreeGenerator.generateClientSyntaxTree(entity);
         String clientPath;
         if (entity.getModule().equals("")) {
             clientPath = Paths.get(this.sourcePath, "modules", "generated_clients",
@@ -164,14 +163,14 @@ public class Generate implements BLauncherCmd {
         try {
             writeOutputFile(balTree, clientPath);
         } catch (IOException e) {
-            throw new BalException("Error occurred in writing ballerina client object!");
+            throw new BalException("Error occurred in writing ballerina client files!");
         } catch (FormatterException e) {
-            throw new BalException("Error occurred while formatting ballerina client object!");
+            throw new BalException("Error occurred while formatting ballerina client files!");
         }
 
     }
     private void generateConfigurationBalFile() throws BalException {
-        SyntaxTree configTree = BalSyntaxTreeGenerator.generateConfigBalFile();
+        SyntaxTree configTree = BalSyntaxTreeGenerator.generateConfigSyntaxTree();
         try {
             writeOutputFile(configTree, Paths.get(this.sourcePath, "modules",
                             "generated_clients", "database_configuration.bal")
@@ -191,31 +190,6 @@ public class Generate implements BLauncherCmd {
         try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8.name())) {
             writer.println(content);
         }
-    }
-    public static boolean hasSyntacticDiagnostics(Path filePath) {
-        String content;
-        try {
-            content = Files.readString(filePath);
-        } catch (IOException e) {
-            return false;
-        }
-        TextDocument textDocument = TextDocuments.from(content);
-        return SyntaxTree.from(textDocument).hasDiagnostics();
-    }
-
-    public static boolean hasSemanticDiagnostics(Path projectPath,
-                                                 ProjectEnvironmentBuilder projectEnvironmentBuilder) {
-        Package currentPackage;
-        BuildProject buildProject;
-        if (projectEnvironmentBuilder == null) {
-            buildProject = BuildProject.load(projectPath.toAbsolutePath());
-        } else {
-            buildProject = BuildProject.load(projectEnvironmentBuilder, projectPath);
-        }
-        currentPackage = buildProject.currentPackage();
-        PackageCompilation compilation = currentPackage.getCompilation();
-        DiagnosticResult diagnosticResult = compilation.diagnosticResult();
-        return diagnosticResult.hasErrors();
     }
 
     public void setSourcePath(String sourcePath) {

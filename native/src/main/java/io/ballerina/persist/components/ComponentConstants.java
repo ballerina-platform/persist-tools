@@ -20,7 +20,7 @@ package io.ballerina.persist.components;
 /**
  * Class encapsulating all the constants related to components.
  *
- @since 0.1.0
+ * @since 0.1.0
  */
 public class ComponentConstants {
 

@@ -21,6 +21,8 @@ import java.util.ArrayList;
 
 /**
  * Class to store persist entities.
+ *
+ * @since 0.1.0
  */
 public class Entity {
 

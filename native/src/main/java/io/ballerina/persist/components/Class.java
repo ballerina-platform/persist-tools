@@ -27,9 +27,9 @@ import io.ballerina.compiler.syntax.tree.Token;
 import io.ballerina.persist.nodegenerator.SyntaxTreeConstants;
 
 /**
- * Class representing ClassDefinitionNode.
+ * Class containing methods and parameters to create Ballerina Classes.
  *
- @since 0.1.0
+ * @since 0.1.0
  */
 public class Class {
 

@@ -2,7 +2,7 @@ import ballerina/sql;
 import ballerinax/mysql;
 import ballerina/time;
 import ballerina/persist;
-import foo/perist_generate_10 as entities;
+import foo/persist_generate_10 as entities;
 
 public client class MedicalNeedClient {
 

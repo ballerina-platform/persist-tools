@@ -43,7 +43,7 @@ import static io.ballerina.persist.components.TypeDescriptor.getReturnTypeDescri
 /**
  * Class representing FunctionDefinitionNode.
  *
- @since 0.1.0
+ * @since 0.1.0
  */
 public class Function {
 
@@ -152,4 +152,3 @@ public class Function {
     }
 
 }
-

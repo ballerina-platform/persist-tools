@@ -20,7 +20,7 @@ package io.ballerina.persist.nodegenerator;
 /**
  * Class encapsulating all the syntax/code lines related to generation scripts.
  *
- @since 0.1.0
+ * @since 0.1.0
  */
 public class BalFileConstants {
 
@@ -110,9 +110,4 @@ public class BalFileConstants {
     public static final String KEYWORD_SQL = "sql";
     public static final String KEYWORD_MYSQL = "mysql";
     public static final String KEYWORD_TIME = "time";
-
-
-
-
-
 }

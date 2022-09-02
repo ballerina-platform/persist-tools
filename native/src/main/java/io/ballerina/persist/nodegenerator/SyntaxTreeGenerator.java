@@ -52,6 +52,8 @@ import static io.ballerina.persist.PersistToolsConstants.KEY_USER;
 
 /**
  * Class to create syntax tree for Config.toml.
+ *
+ * @since 0.1.0
  */
 public class SyntaxTreeGenerator {
     private static final String[] nodeMap = {KEY_HOST, KEY_PORT, KEY_USER, KEY_DATABASE, KEY_PASSWORD};

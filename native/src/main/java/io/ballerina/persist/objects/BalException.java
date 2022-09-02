@@ -20,6 +20,8 @@ package io.ballerina.persist.objects;
 
 /**
  * Exception for ballerina file generation.
+ *
+ * @since 0.1.0
  */
 public class BalException extends Exception {
     public BalException(String message) {

@@ -21,7 +21,6 @@ package io.ballerina.persist.nodegenerator;
 import io.ballerina.compiler.syntax.tree.AbstractNodeFactory;
 import io.ballerina.compiler.syntax.tree.AnnotationNode;
 import io.ballerina.compiler.syntax.tree.BasicLiteralNode;
-import io.ballerina.compiler.syntax.tree.ChildNodeEntry;
 import io.ballerina.compiler.syntax.tree.ExpressionNode;
 import io.ballerina.compiler.syntax.tree.IdentifierToken;
 import io.ballerina.compiler.syntax.tree.ImportDeclarationNode;
@@ -58,21 +57,22 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
 
 /**
- * Class to ballerina files as syntax trees.
+ * Class containing methods to create and read ballerina files as syntax trees.
+ *
+ * @since 0.1.0
  */
 public class BalSyntaxTreeGenerator {
 
     /**
      * method to read ballerina files.
      */
-    public static ArrayList<Entity> readBalFiles(Path filePath, String module) throws IOException {
+    public static ArrayList<Entity> getEntityRecord(Path filePath, String module) throws IOException {
         ArrayList<Entity> entityArray = new ArrayList<>();
         int index = -1;
         ArrayList<String> keys = new ArrayList<>();
@@ -82,66 +82,47 @@ public class BalSyntaxTreeGenerator {
         ModulePartNode rootNote = balSyntaxTree.rootNode();
         NodeList<ModuleMemberDeclarationNode> nodeList = rootNote.members();
         for (ModuleMemberDeclarationNode moduleNode : nodeList) {
-            if (moduleNode.kind() != SyntaxKind.TYPE_DEFINITION) {
+            if (moduleNode.kind() != SyntaxKind.TYPE_DEFINITION || ((TypeDefinitionNode) moduleNode)
+                    .metadata().isEmpty()) {
                 continue;
             }
-            Collection<ChildNodeEntry> temp = moduleNode.childEntries();
-            for (ChildNodeEntry child : temp) {
-                if (child.name().equals("metadata")) {
-                    if (child.node().isEmpty()) {
-                        continue;
-                    }
-                    MetadataNode metaD = (MetadataNode) child.node().get();
-                    NodeList<AnnotationNode> annotations = metaD.annotations();
-                    for (AnnotationNode annotation : annotations) {
-                        Node annotReference = annotation.annotReference();
-                        if (annotReference.kind() != SyntaxKind.QUALIFIED_NAME_REFERENCE) {
+            for (AnnotationNode annotation : ((TypeDefinitionNode) moduleNode).metadata().get().annotations()) {
+                Node annotReference = annotation.annotReference();
+                if (annotReference.kind() != SyntaxKind.QUALIFIED_NAME_REFERENCE) {
+                    continue;
+                }
+                QualifiedNameReferenceNode qualifiedNameRef = (QualifiedNameReferenceNode) annotReference;
+                if (qualifiedNameRef.identifier().text().equals("Entity") && qualifiedNameRef.modulePrefix().text()
+                        .equals(BalFileConstants.PERSIST) && annotation.annotValue().isPresent()) {
+                    index += 1;
+                    for (MappingFieldNode fieldNode : annotation.annotValue().get().fields()) {
+                        if (fieldNode.kind() != SyntaxKind.SPECIFIC_FIELD) {
                             continue;
                         }
-                        QualifiedNameReferenceNode qualifiedNameRef =
-                                    (QualifiedNameReferenceNode) annotReference;
-                        if (qualifiedNameRef.identifier().text().equals("Entity") && qualifiedNameRef
-                                .modulePrefix().text().equals(BalFileConstants.PERSIST) &&
-                                annotation.annotValue().isPresent()) {
-                            index += 1;
-                            for (MappingFieldNode fieldNode : annotation.annotValue().get().fields()) {
-                                if (fieldNode.kind() != SyntaxKind.SPECIFIC_FIELD) {
-                                    continue;
-                                }
-                                SpecificFieldNode specificField = (SpecificFieldNode) fieldNode;
-                                if (specificField.fieldName().kind() != SyntaxKind.IDENTIFIER_TOKEN ||
-                                        specificField.valueExpr().isEmpty()) {
-                                    continue;
-                                }
-                                ExpressionNode valueNode =
-                                        specificField.valueExpr().get();
-                                if (valueNode instanceof ListConstructorExpressionNode
-                                        && ((IdentifierToken) specificField.fieldName()).text()
-                                        .equals(BalFileConstants.KEY)) {
-                                    keys = new ArrayList<>();
-                                    Iterator<Node> listIterator = ((ListConstructorExpressionNode) valueNode)
-                                            .expressions().iterator();
-                                    count = 0;
-                                    while (listIterator.hasNext()) {
-                                        keys.add(count, listIterator.next().toString());
-                                        count += 1;
-                                    }
-                                } else if (valueNode instanceof BasicLiteralNode &&
-                                        ((IdentifierToken) specificField.fieldName()).text()
-                                                .equals("tableName")) {
-                                    tableName = ((BasicLiteralNode) valueNode).literalToken().text()
-                                                .replaceAll(BalFileConstants.DOUBLE_QUOTE,
-                                                        BalFileConstants.EMPTY_STRING);
-                                }
-
-                            }
-                            entityArray.add(index, new Entity(getArray(keys), tableName, module));
-
+                        SpecificFieldNode specificField = (SpecificFieldNode) fieldNode;
+                        if (specificField.fieldName().kind() != SyntaxKind.IDENTIFIER_TOKEN ||
+                                specificField.valueExpr().isEmpty()) {
+                            continue;
                         }
-
+                        ExpressionNode valueNode = specificField.valueExpr().get();
+                        if (((SpecificFieldNode) fieldNode).fieldName().toString().trim().equals("key")) {
+                            keys = new ArrayList<>();
+                            Iterator<Node> listIterator = ((ListConstructorExpressionNode) valueNode)
+                                    .expressions().iterator();
+                            count = 0;
+                            while (listIterator.hasNext()) {
+                                keys.add(count, listIterator.next().toString());
+                                count += 1;
+                            }
+                        } else if (((SpecificFieldNode) fieldNode).fieldName().toString().trim().equals("tableName")) {
+                            tableName = ((BasicLiteralNode) valueNode).literalToken().text()
+                                    .replaceAll(BalFileConstants.DOUBLE_QUOTE, BalFileConstants.EMPTY_STRING);
+                        }
                     }
+                    entityArray.add(index, new Entity(getArray(keys), tableName, module));
                 }
             }
+
             RecordTypeDescriptorNode recordDesc = (RecordTypeDescriptorNode) ((TypeDefinitionNode) moduleNode)
                     .typeDescriptor();
             entityArray.get(index).setEntityName(((TypeDefinitionNode) moduleNode).typeName().text());
@@ -176,8 +157,7 @@ public class BalSyntaxTreeGenerator {
         return entityArray;
     }
 
-    public static SyntaxTree generateBalFile(Entity entity) {
-
+    public static SyntaxTree generateClientSyntaxTree(Entity entity) {
         boolean keyAutoInc = false;
         HashMap<String, String> keys = new HashMap<>();
         String keyType = BalFileConstants.KEYWORD_INT;
@@ -239,7 +219,6 @@ public class BalSyntaxTreeGenerator {
                                         BalFileConstants.EMPTY_STRING)
                         ))));
             }
-
         }
         imports = imports.add(getImportDeclarationNode(BalFileConstants.KEYWORD_BALLERINA,
                 BalFileConstants.KEYWORD_SQL));
@@ -550,11 +529,10 @@ public class BalSyntaxTreeGenerator {
                 BalFileConstants.ERROR));
         closeStream.addStatement(NodeParser.parseStatement(BalFileConstants.CLOSE_STREAM_STATEMENT));
         clientStream.addMember(closeStream.getFunctionDefinitionNode(), true);
-
         return clientStream;
     }
 
-    public static SyntaxTree generateConfigBalFile() {
+    public static SyntaxTree generateConfigSyntaxTree() {
         NodeList<ImportDeclarationNode> imports = AbstractNodeFactory.createEmptyNodeList();
         NodeList<ModuleMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
 

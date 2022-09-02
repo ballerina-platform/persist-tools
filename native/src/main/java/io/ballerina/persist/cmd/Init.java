@@ -38,6 +38,8 @@ import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 
 /**
  * Class to implement "persist init" command for ballerina.
+ *
+ * @since 0.1.0
  */
 
 @CommandLine.Command(

@@ -44,7 +44,7 @@ import io.ballerina.persist.nodegenerator.SyntaxTreeConstants;
 /**
  * Class representing different types of TypeDescriptorNodes.
  *
- @since 0.1.0
+ * @since 0.1.0
  */
 public class TypeDescriptor {
 
