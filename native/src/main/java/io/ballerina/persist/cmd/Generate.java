@@ -42,6 +42,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -127,12 +128,11 @@ public class Generate implements BLauncherCmd {
                 for (Path filePath : fileList) {
                     if (filePath.toString().endsWith(".bal")) {
                         String[] pathElements = filePath.toString().strip().split(Pattern.quote(File.separator));
-                        String module = "";
+                        Optional<String> module = Optional.empty();
                         String[] dirElements = this.sourcePath.split(Pattern.quote(File.separator));
-                        if (pathElements.length < 2) {
-                            module = "";
-                        } else if (!Arrays.asList(dirElements).contains(pathElements[pathElements.length - 2])) {
-                            module = pathElements[pathElements.length - 2];
+                        if (pathElements.length > 2 && !Arrays.asList(dirElements).contains(pathElements[
+                                pathElements.length - 2])) {
+                            module = Optional.of(pathElements[pathElements.length - 2]);
                         }
                         ArrayList<Entity> retData = BalSyntaxTreeGenerator.getEntityRecord(filePath, module);
                         if (retData.size() != 0) {
@@ -152,12 +152,12 @@ public class Generate implements BLauncherCmd {
     private void generateClientBalFile(Entity entity) throws BalException {
         SyntaxTree balTree = BalSyntaxTreeGenerator.generateClientSyntaxTree(entity);
         String clientPath;
-        if (entity.getModule().equals("")) {
+        if (entity.getModule().isEmpty()) {
             clientPath = Paths.get(this.sourcePath, "modules", "generated_clients",
                     entity.getEntityName().toLowerCase() + "_client.bal").toAbsolutePath().toString();
         } else {
             clientPath = Paths.get(this.sourcePath, "modules", "generated_clients",
-                            entity.getModule() + "_" + entity.getEntityName().toLowerCase() + "_client.bal")
+                            entity.getModule().get() + "_" + entity.getEntityName().toLowerCase() + "_client.bal")
                     .toAbsolutePath().toString();
         }
         try {

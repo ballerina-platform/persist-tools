@@ -60,6 +60,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 
 /**
@@ -72,7 +73,7 @@ public class BalSyntaxTreeGenerator {
     /**
      * method to read ballerina files.
      */
-    public static ArrayList<Entity> getEntityRecord(Path filePath, String module) throws IOException {
+    public static ArrayList<Entity> getEntityRecord(Path filePath, Optional<String> module) throws IOException {
         ArrayList<Entity> entityArray = new ArrayList<>();
         int index = -1;
         ArrayList<String> keys = new ArrayList<>();
@@ -229,16 +230,16 @@ public class BalSyntaxTreeGenerator {
                     BalFileConstants.KEYWORD_TIME));
         }
         imports = imports.add(getImportDeclarationNode(BalFileConstants.KEYWORD_BALLERINA, BalFileConstants.PERSIST));
-        if (entity.getModule().equals(BalFileConstants.EMPTY_STRING)) {
+        if (entity.getModule().isEmpty()) {
             imports = imports.add(NodeParser.parseImportDeclaration(String.format(
                     BalFileConstants.IMPORT_AS_ENTITIES, entity.getPackageName())));
         } else {
             imports = imports.add(NodeParser.parseImportDeclaration(String.format(
-                    BalFileConstants.IMPORT_AS_ENTITIES, entity.getPackageName() + "." + entity.getModule())));
+                    BalFileConstants.IMPORT_AS_ENTITIES, entity.getPackageName() + "." + entity.getModule().get())));
         }
         String className = entity.getEntityName();
-        if (!entity.getModule().equals(BalFileConstants.EMPTY_STRING)) {
-            className = entity.getModule().substring(0, 1).toUpperCase() + entity.getModule().substring(1)
+        if (entity.getModule().isPresent()) {
+            className = entity.getModule().get().substring(0, 1).toUpperCase() + entity.getModule().get().substring(1)
                     + entity.getEntityName();
         }
         Class client = createClientClass(entity, className, subFields,
