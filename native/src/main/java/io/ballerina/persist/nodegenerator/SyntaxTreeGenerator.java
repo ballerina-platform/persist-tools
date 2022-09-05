@@ -91,7 +91,7 @@ public class SyntaxTreeGenerator {
                 moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) member);
             } else if (member instanceof TableNode) {
                 TableNode node = (TableNode) member;
-                if (node.identifier().toString().trim().equals(name)) {
+                if (node.identifier().toSourceCode().trim().equals(name)) {
                     if (!moduleMembers.isEmpty()) {
                         moduleMembers = addNewLine(moduleMembers, 1);
                     }
@@ -101,17 +101,17 @@ public class SyntaxTreeGenerator {
                         if (!isDatabaseConfigurationEntry(subMember.identifier())) {
                             moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) subMember);
                         } else {
-                            existingNodes.add(subMember.identifier().toString().trim());
-                            if (subMember.identifier().toString().trim().equals(KEY_PORT)) {
+                            existingNodes.add(subMember.identifier().toSourceCode().trim());
+                            if (subMember.identifier().toSourceCode().trim().equals(KEY_PORT)) {
                                 moduleMembers = moduleMembers.add(SampleNodeGenerator.createNumericKV(
-                                        subMember.identifier().toString().trim(),
+                                        subMember.identifier().toSourceCode().trim(),
                                         defaultValues[indexOf(
-                                                subMember.identifier().toString().trim())], null));
+                                                subMember.identifier().toSourceCode().trim())], null));
                             } else {
                                 moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
-                                        subMember.identifier().toString().trim(),
+                                        subMember.identifier().toSourceCode().trim(),
                                         defaultValues[indexOf(
-                                                subMember.identifier().toString().trim())], null));
+                                                subMember.identifier().toSourceCode().trim())], null));
                             }
                         }
                     }
@@ -138,7 +138,7 @@ public class SyntaxTreeGenerator {
     }
 
     private static boolean isDatabaseConfigurationEntry(KeyNode key) {
-        switch (key.toString().trim()) {
+        switch (key.toSourceCode().trim()) {
             case KEY_USER:
             case KEY_DATABASE:
             case KEY_PASSWORD:

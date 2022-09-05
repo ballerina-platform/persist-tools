@@ -112,10 +112,11 @@ public class BalSyntaxTreeGenerator {
                                     .expressions().iterator();
                             count = 0;
                             while (listIterator.hasNext()) {
-                                keys.add(count, listIterator.next().toString());
+                                keys.add(count, listIterator.next().toSourceCode());
                                 count += 1;
                             }
-                        } else if (((SpecificFieldNode) fieldNode).fieldName().toString().trim().equals("tableName")) {
+                        } else if (((SpecificFieldNode) fieldNode).fieldName().toSourceCode().trim()
+                                .equals("tableName")) {
                             tableName = ((BasicLiteralNode) valueNode).literalToken().text()
                                     .replaceAll(BalFileConstants.DOUBLE_QUOTE, BalFileConstants.EMPTY_STRING);
                         }
@@ -131,7 +132,7 @@ public class BalSyntaxTreeGenerator {
                 if (node.kind() == SyntaxKind.RECORD_FIELD_WITH_DEFAULT_VALUE) {
                     RecordFieldWithDefaultValueNode fieldNode = (RecordFieldWithDefaultValueNode) node;
                     String fName = fieldNode.fieldName().text();
-                    String fType = fieldNode.typeName().toString();
+                    String fType = fieldNode.typeName().toSourceCode();
                     FieldMetaData field;
                     if (((RecordFieldWithDefaultValueNode) node).metadata().isEmpty()) {
                         field = new FieldMetaData(fName, fType, false);
@@ -143,7 +144,7 @@ public class BalSyntaxTreeGenerator {
                 } else if (node.kind() == SyntaxKind.RECORD_FIELD) {
                     RecordFieldNode fieldNode = (RecordFieldNode) node;
                     String fName = fieldNode.fieldName().text();
-                    String fType = fieldNode.typeName().toString();
+                    String fType = fieldNode.typeName().toSourceCode();
                     FieldMetaData field;
                     if (((RecordFieldNode) node).metadata().isEmpty()) {
                         field = new FieldMetaData(fName, fType, false);
