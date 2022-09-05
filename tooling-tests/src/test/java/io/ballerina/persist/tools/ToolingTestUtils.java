@@ -18,6 +18,7 @@
 
 package io.ballerina.persist.tools;
 
+import io.ballerina.persist.cmd.Generate;
 import io.ballerina.persist.cmd.Init;
 import io.ballerina.persist.cmd.PersistCmd;
 import io.ballerina.projects.ProjectEnvironmentBuilder;
@@ -39,6 +40,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static io.ballerina.persist.utils.BalProjectUtils.hasSemanticDiagnostics;
+import static io.ballerina.persist.utils.BalProjectUtils.hasSyntacticDiagnostics;
+
 /**
  * persist tool test Utils.
  */
@@ -53,8 +57,6 @@ public class ToolingTestUtils {
     }
 
     private static final PrintStream errStream = System.err;
-
-    public static final String CONFIG_FILE = "Config.toml";
     public static final String GENERATED_SOURCES_DIRECTORY = Paths.get("build", "generated-sources").toString();
     public static final Path RESOURCES_EXPECTED_OUTPUT = Paths.get("src", "test", "resources", "test-src", "output")
             .toAbsolutePath();
@@ -67,24 +69,32 @@ public class ToolingTestUtils {
     }
 
     public static void assertGeneratedSources(String subDir, Command cmd) {
+
         generateSourceCode(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir), cmd);
         Assert.assertTrue(directoryContentEquals(Paths.get(RESOURCES_EXPECTED_OUTPUT.toString()).resolve(subDir),
                 Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)));
 
+        if (!subDir.equals("tool_test_generate_4")) {
+            Assert.assertFalse(hasSyntacticDiagnostics(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)));
+            Assert.assertFalse(hasSemanticDiagnostics(Paths.get(GENERATED_SOURCES_DIRECTORY)
+                    .resolve(subDir), getEnvironmentBuilder()));
+        }
+
         for (Path actualOutputFile: listFiles(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir))) {
             Path expectedOutputFile = Paths.get(RESOURCES_EXPECTED_OUTPUT.toString(), subDir).
                     resolve(actualOutputFile.subpath(3, actualOutputFile.getNameCount()));
-
             Assert.assertTrue(Files.exists(actualOutputFile));
             Assert.assertEquals(readContent(actualOutputFile), readContent(expectedOutputFile));
         }
     }
 
-    public static void assertGeneratedSourcesNegative(String subDir, Command cmd) {
+    public static void assertGeneratedSourcesNegative(String subDir, Command cmd, String object) {
         Path sourceDirPath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);
-        Path actualConfigFilePath = sourceDirPath.resolve(CONFIG_FILE);
+        Assert.assertTrue(directoryContentEquals(Paths.get(RESOURCES_EXPECTED_OUTPUT.toString()).resolve(subDir),
+                Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)));
+        Path actualObjectFilePath = sourceDirPath.resolve(object);
         generateSourceCode(sourceDirPath, cmd);
-        Assert.assertFalse(Files.exists(actualConfigFilePath));
+        Assert.assertFalse(Files.exists(actualObjectFilePath));
     }
 
     public static void assertAuxiliaryFunctions() {
@@ -122,17 +132,22 @@ public class ToolingTestUtils {
 
     private static void generateSourceCode(Path sourcePath, Command cmd) {
         Class<?> persistClass;
-        PersistCmd persistCmd;
+
         try {
             if (cmd == Command.INIT) {
                 persistClass = Class.forName("io.ballerina.persist.cmd.Init");
+                Init persistCmd = (Init) persistClass.getDeclaredConstructor().newInstance();
+                persistCmd.setSourcePath(sourcePath.toAbsolutePath().toString());
+                persistCmd.setEnvironmentBuilder(getEnvironmentBuilder());
+                persistCmd.execute();
             } else {
                 persistClass = Class.forName("io.ballerina.persist.cmd.Generate");
+                Generate persistCmd = (Generate) persistClass.getDeclaredConstructor().newInstance();
+                persistCmd.setSourcePath(sourcePath.toAbsolutePath().toString());
+                persistCmd.setEnvironmentBuilder(getEnvironmentBuilder());
+                persistCmd.execute();
             }
-            persistCmd = (Init) persistClass.getDeclaredConstructor().newInstance();
-            persistCmd.setSourcePath(sourcePath.toAbsolutePath().toString());
-            persistCmd.setEnvironmentBuilder(getEnvironmentBuilder());
-            persistCmd.execute();
+
         } catch (ClassNotFoundException | IllegalAccessException | InstantiationException |
                 NoSuchMethodException | InvocationTargetException e) {
             errStream.println(e.getMessage());
@@ -140,35 +155,32 @@ public class ToolingTestUtils {
     }
 
     private static List<Path> listFiles(Path path) {
-        Stream<Path> walk = null;
-        try {
-            walk = Files.walk(path);
+        try (Stream<Path> walk = Files.walk(path)) {
+            return walk != null ? walk.filter(Files::isRegularFile).collect(Collectors.toList()) : new ArrayList<>();
         } catch (IOException e) {
             errStream.println(e.getMessage());
         }
-        return walk != null ? walk.filter(Files::isRegularFile).collect(Collectors.toList()) : new ArrayList<>();
+        return new ArrayList<>();
     }
 
     private static boolean directoryContentEquals(Path dir1, Path dir2) {
         boolean dir1Exists = Files.exists(dir1) && Files.isDirectory(dir1);
         boolean dir2Exists = Files.exists(dir2) && Files.isDirectory(dir2);
-
         if (dir1Exists && dir2Exists) {
             HashMap<Path, Path> dir1Paths = new HashMap<>();
             HashMap<Path, Path> dir2Paths = new HashMap<>();
 
             for (Path p : listFiles(dir1)) {
                 dir1Paths.put(dir1.relativize(p), p);
-            }
 
+            }
             for (Path p : listFiles(dir2)) {
                 dir2Paths.put(dir2.relativize(p), p);
-            }
 
+            }
             if (dir1Paths.size() != dir2Paths.size()) {
                 return false;
             }
-
             for (Map.Entry<Path, Path> pathEntry : dir1Paths.entrySet()) {
                 Path relativePath = pathEntry.getKey();
                 if (!dir2Paths.containsKey(relativePath)) {

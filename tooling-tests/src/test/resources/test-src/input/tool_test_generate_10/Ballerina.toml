@@ -1,0 +1,8 @@
+[package]
+org = "foo"
+name = "persist_generate_10"
+version = "0.1.0"
+distribution = "2201.1.0-rc1.14"
+
+[build-options]
+observabilityIncluded = true

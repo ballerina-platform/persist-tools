@@ -10,8 +10,20 @@ public type MedicalNeed record {|
     readonly int needId = -1;
 
     int itemId;
+    string name;
     int beneficiaryId;
     time:Civil period;
     string urgency;
-    int quantity;
+    string quantity;
+|};
+
+@persist:Entity {
+    key: ["itemId"],
+    tableName: "MedicalItems"
+}
+public type MedicalItem record {|
+    readonly int itemId;
+    string name;
+    string 'type;
+    int unit;
 |};

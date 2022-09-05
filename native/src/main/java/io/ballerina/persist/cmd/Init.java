@@ -21,6 +21,7 @@ import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.nodegenerator.SyntaxTreeGenerator;
 import io.ballerina.projects.Project;
+import io.ballerina.projects.ProjectEnvironmentBuilder;
 import io.ballerina.projects.ProjectException;
 import io.ballerina.projects.directory.ProjectLoader;
 import io.ballerina.toml.syntax.tree.SyntaxTree;
@@ -37,18 +38,22 @@ import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 
 /**
  * Class to implement "persist init" command for ballerina.
+ *
+ * @since 0.1.0
  */
 
 @CommandLine.Command(
         name = "init",
         description = "generate database configurations.")
 
-public class Init extends PersistCmd implements BLauncherCmd {
+public class Init implements BLauncherCmd {
 
     private final PrintStream errStream = System.err;
     private final String configPath = PersistToolsConstants.CONFIG_PATH;
 
     private String name = "";
+    public String sourcePath = "";
+    public ProjectEnvironmentBuilder projectEnvironmentBuilder;
     private static final String COMMAND_IDENTIFIER = "persist-init";
 
     Project balProject;
@@ -108,6 +113,14 @@ public class Init extends PersistCmd implements BLauncherCmd {
         try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8.name())) {
             writer.println(content);
         }
+    }
+
+    public void setSourcePath(String sourceDir) {
+        this.sourcePath = sourceDir;
+    }
+
+    public void setEnvironmentBuilder(ProjectEnvironmentBuilder projectEnvironmentBuilder) {
+        this.projectEnvironmentBuilder = projectEnvironmentBuilder;
     }
 
     @Override

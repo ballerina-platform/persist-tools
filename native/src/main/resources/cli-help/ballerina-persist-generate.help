@@ -1,0 +1,6 @@
+NAME
+       Generated the Client object inside the Ballerina project
+
+SYNOPSIS
+       bal persist generate
+
