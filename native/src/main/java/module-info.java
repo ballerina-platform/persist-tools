@@ -25,4 +25,5 @@ module io.ballerina.persist {
     requires io.ballerina.tools.api;
     requires io.ballerina.parser;
     requires io.ballerina.formatter.core;
+    requires java.sql;
 }
