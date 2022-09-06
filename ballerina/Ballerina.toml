@@ -12,5 +12,5 @@ export = ["persist_tools"]
 [[platform.java11.dependency]]
 path = "../native/build/libs/persist-tools-native-0.1.0-SNAPSHOT.jar"
 
-[[platform.java11.dependency]]
-path = "./lib/mysql-connector-java-8.0.30.jar"
+#[[platform.java11.dependency]]
+#path = "./lib/mysql-connector-java-8.0.30.jar"
