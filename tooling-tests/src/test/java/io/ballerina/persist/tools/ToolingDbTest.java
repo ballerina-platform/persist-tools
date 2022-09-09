@@ -24,16 +24,34 @@ import org.testng.annotations.Test;
 
 import static io.ballerina.persist.tools.ToolingTestUtils.Command.DBPUSH;
 import static io.ballerina.persist.tools.ToolingTestUtils.assertGeneratedDbSources;
+import static io.ballerina.persist.tools.ToolingTestUtils.assertGeneratedSourcesNegative;
 
 /**
  * persist tool generate command tests.
  */
 public class ToolingDbTest {
 
-    @Test(enabled = false)
-    @Order(1)
+    @Test
     @Description("Database is not available and it is created while running the push command")
-    public void testGenerateSingleEntity() {
+    public void testDbPushA_WithoutDatabase() {
         assertGeneratedDbSources("tool_test_db_push_1", DBPUSH);
+    }
+
+    @Test
+    @Description("Database is not available and it is created while running the push command")
+    public void testDbPushB_OutsideBallerinaProject() {
+        assertGeneratedSourcesNegative("tool_test_db_push_2", DBPUSH, null);
+    }
+
+    @Test
+    @Description("Database is not available and it is created while running the push command")
+    public void testDbPushC_WithExistingTables() {
+        assertGeneratedDbSources("tool_test_db_push_3", DBPUSH);
+    }
+
+    @Test
+    @Description("Database is not available and it is created while running the push command")
+    public void testDbPushD_WithoutConfigFile() {
+        assertGeneratedSourcesNegative("tool_test_db_push_4", DBPUSH, null);
     }
 }

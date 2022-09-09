@@ -94,8 +94,6 @@ public class Push implements BLauncherCmd {
         try {
             configurations = SyntaxTreeGenerator.readToml(
                     Paths.get(this.sourcePath, this.configPath), this.name);
-
-            errStream.println(configurations);
             FileReader fileReader = new FileReader(new File(
                     "/Users/sahan/Desktop/Work/sahanhe/persist-tools/temp/query.sql"));
             BufferedReader bufferedReader = new BufferedReader(fileReader);
@@ -107,23 +105,19 @@ public class Push implements BLauncherCmd {
 
         } catch (BalException e) {
             errStream.println(e.getMessage());
+            return;
         } catch (IOException e) {
             errStream.println("Error occurred while reading generated SQL scripts");
+            return;
         }
         String url = String.format("jdbc:mysql://%s:%s",
                 configurations.get("host").toString().replaceAll("\"", ""), configurations.get("port").toString());
         String user = configurations.get("user").toString().replaceAll("\"", "");
         String password = configurations.get("password").toString().replaceAll("\"", "");
         String database = configurations.get("database").toString().replaceAll("\"", "");
-        errStream.println(url);
-        errStream.println(user);
-        errStream.println(database);
-        errStream.println(password);
         try {
             connection = DriverManager.getConnection(url, user, password);
-            errStream.println("connection done");
             ResultSet resultSet = connection.getMetaData().getCatalogs();
-            errStream.println("resultset done");
             boolean databaseExists = false;
             while (resultSet.next()) {
 
@@ -155,6 +149,7 @@ public class Push implements BLauncherCmd {
         } catch (SQLException e) {
             errStream.println("*** Error : " + e.getMessage());
             errStream.println("*** ");
+            return;
         }
 
     }

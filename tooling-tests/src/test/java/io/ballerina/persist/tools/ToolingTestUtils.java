@@ -111,7 +111,6 @@ public class ToolingTestUtils {
             resultSet = connection.getMetaData().getCatalogs();
             boolean databaseExists = false;
             while (resultSet.next()) {
-
                 if (resultSet.getString(1).trim().equals(database)) {
                     databaseExists = true;
                     break;
@@ -126,12 +125,24 @@ public class ToolingTestUtils {
                     configurations.get("host").toString().replaceAll("\"", ""), configurations.get("port").toString(),
                     configurations.get("database").toString().replaceAll("\"", ""));
             connection = DriverManager.getConnection(databaseUrl, user, password);
-            resultSet = connection.getMetaData().getSchemas();
+            resultSet = connection.getMetaData().getTables(null, null, "%", null);
+            boolean table1 = false;
+            boolean table2 = false;
             while (resultSet.next()) {
-                errStream.println(resultSet.getString(1));
+                if (resultSet.getString(3).trim().equals("Medical_Need")) {
+                    table1 = true;
+                } else if (resultSet.getString(3).trim().equals("Item")) {
+                    table2 = true;
+                }
+                if (table1 && table2) {
+                    break;
+                }
             }
             resultSet.close();
             connection.close();
+            if (!table1 && !table2) {
+                Assert.fail();
+            }
         } catch (SQLException e) {
             errStream.println("*** Error : " + e.getMessage());
             errStream.println("*** ");
@@ -150,11 +161,15 @@ public class ToolingTestUtils {
 
     public static void assertGeneratedSourcesNegative(String subDir, Command cmd, String object) {
         Path sourceDirPath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);
-        Assert.assertTrue(directoryContentEquals(Paths.get(RESOURCES_EXPECTED_OUTPUT.toString()).resolve(subDir),
-                Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)));
-        Path actualObjectFilePath = sourceDirPath.resolve(object);
         generateSourceCode(sourceDirPath, cmd);
-        Assert.assertFalse(Files.exists(actualObjectFilePath));
+        if (cmd == Command.DBPUSH) {
+            Assert.assertFalse(false);
+        } else {
+            Assert.assertTrue(directoryContentEquals(Paths.get(RESOURCES_EXPECTED_OUTPUT.toString()).resolve(subDir),
+                    Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)));
+            Path actualObjectFilePath = sourceDirPath.resolve(object);
+            Assert.assertFalse(Files.exists(actualObjectFilePath));
+        }
     }
 
     public static void assertAuxiliaryFunctions() {
