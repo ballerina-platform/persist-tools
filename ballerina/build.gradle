@@ -75,10 +75,20 @@ task copyExternalJars {
     }
 }
 
+task copyMySQLConector {
+    doLast {
+        copy {
+            into "$project.projectDir/build/jballerina-tools-2201.2.0-20220607-123700-52fedf4d/bre/lib"
+            from "$project.projectDir/lib"
+        }
+    }
+}
+
 task updateTomlFiles {
     doLast {
         def newConfig = ballerinaTomlFilePlaceHolder.text.replace("@project.version@", project.version)
         newConfig = newConfig.replace("@toml.version@", tomlVersion)
+        newConfig = newConfig.replace('@mysql.driver.version@', project.mySqlDriverVersion)
         ballerinaTomlFile.text = newConfig
     }
 }
@@ -122,3 +132,5 @@ build.dependsOn "generatePomFileForMavenPublication"
 
 publishToMavenLocal.dependsOn build
 publish.dependsOn build
+
+build.finalizedBy copyMySQLConector

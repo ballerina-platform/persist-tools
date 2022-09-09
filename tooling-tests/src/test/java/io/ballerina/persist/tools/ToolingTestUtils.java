@@ -21,6 +21,7 @@ package io.ballerina.persist.tools;
 import io.ballerina.persist.cmd.Generate;
 import io.ballerina.persist.cmd.Init;
 import io.ballerina.persist.cmd.PersistCmd;
+import io.ballerina.persist.cmd.Push;
 import io.ballerina.projects.ProjectEnvironmentBuilder;
 import io.ballerina.projects.environment.Environment;
 import io.ballerina.projects.environment.EnvironmentBuilder;
@@ -33,6 +34,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -53,7 +58,8 @@ public class ToolingTestUtils {
      */
     public enum Command {
         INIT,
-        GENERATE
+        GENERATE,
+        DBPUSH
     }
 
     private static final PrintStream errStream = System.err;
@@ -86,6 +92,60 @@ public class ToolingTestUtils {
             Assert.assertTrue(Files.exists(actualOutputFile));
             Assert.assertEquals(readContent(actualOutputFile), readContent(expectedOutputFile));
         }
+    }
+
+    public static void assertGeneratedDbSources(String subDir, Command cmd) {
+
+        Connection connection = null;
+        ResultSet resultSet = null;
+
+        HashMap configurations = generateSourceCode(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir), cmd);
+        String url = String.format("jdbc:mysql://%s:%s",
+                configurations.get("host").toString().replaceAll("\"", ""), configurations.get("port").toString());
+        String user = configurations.get("user").toString().replaceAll("\"", "");
+        String password = configurations.get("password").toString().replaceAll("\"", "");
+        String database = configurations.get("database").toString().replaceAll("\"", "");
+
+        try {
+            connection = DriverManager.getConnection(url, user, password);
+            resultSet = connection.getMetaData().getCatalogs();
+            boolean databaseExists = false;
+            while (resultSet.next()) {
+
+                if (resultSet.getString(1).trim().equals(database)) {
+                    databaseExists = true;
+                    break;
+                }
+            }
+            if (!databaseExists) {
+                Assert.fail();
+            }
+            resultSet.close();
+            connection.close();
+            String databaseUrl = String.format("jdbc:mysql://%s:%s/%s",
+                    configurations.get("host").toString().replaceAll("\"", ""), configurations.get("port").toString(),
+                    configurations.get("database").toString().replaceAll("\"", ""));
+            connection = DriverManager.getConnection(databaseUrl, user, password);
+            resultSet = connection.getMetaData().getSchemas();
+            while (resultSet.next()) {
+                errStream.println(resultSet.getString(1));
+            }
+            resultSet.close();
+            connection.close();
+        } catch (SQLException e) {
+            errStream.println("*** Error : " + e.getMessage());
+            errStream.println("*** ");
+            Assert.fail();
+        }
+        try {
+            if (connection != null && resultSet != null) {
+                resultSet.close();
+                connection.close();
+            }
+        } catch (SQLException e) {
+            errStream.println("Error Closing the database connections");
+        }
+
     }
 
     public static void assertGeneratedSourcesNegative(String subDir, Command cmd, String object) {
@@ -130,7 +190,7 @@ public class ToolingTestUtils {
         }
     }
 
-    private static void generateSourceCode(Path sourcePath, Command cmd) {
+    private static HashMap generateSourceCode(Path sourcePath, Command cmd) {
         Class<?> persistClass;
 
         try {
@@ -140,18 +200,26 @@ public class ToolingTestUtils {
                 persistCmd.setSourcePath(sourcePath.toAbsolutePath().toString());
                 persistCmd.setEnvironmentBuilder(getEnvironmentBuilder());
                 persistCmd.execute();
-            } else {
+            } else if (cmd == Command.GENERATE) {
                 persistClass = Class.forName("io.ballerina.persist.cmd.Generate");
                 Generate persistCmd = (Generate) persistClass.getDeclaredConstructor().newInstance();
                 persistCmd.setSourcePath(sourcePath.toAbsolutePath().toString());
                 persistCmd.setEnvironmentBuilder(getEnvironmentBuilder());
                 persistCmd.execute();
+            } else {
+                persistClass = Class.forName("io.ballerina.persist.cmd.Push");
+                Push persistCmd = (Push) persistClass.getDeclaredConstructor().newInstance();
+                persistCmd.setSourcePath(sourcePath.toAbsolutePath().toString());
+                persistCmd.setEnvironmentBuilder(getEnvironmentBuilder());
+                persistCmd.execute();
+                return persistCmd.getConfigurations();
             }
 
         } catch (ClassNotFoundException | IllegalAccessException | InstantiationException |
                 NoSuchMethodException | InvocationTargetException e) {
             errStream.println(e.getMessage());
         }
+        return new HashMap<>();
     }
 
     private static List<Path> listFiles(Path path) {

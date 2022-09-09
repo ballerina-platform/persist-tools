@@ -64,10 +64,9 @@ allprojects {
 }
 
 subprojects {
-
     configurations {
-        ballerinaStdLibs
         externalJars
+        ballerinaStdLibs
     }
 
     dependencies {
@@ -76,9 +75,10 @@ subprojects {
         ballerinaStdLibs "io.ballerina.stdlib:io-ballerina:${stdlibIoVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:sql-ballerina:${stdlibSqlVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:mysql-ballerina:${stdlibMysqlVersion}"
-        externalJars (group: 'mysql', name: 'mysql-connector-java', version: "8.0.30") {
+        externalJars (group: 'mysql', name: 'mysql-connector-java', version: "${mySqlDriverVersion}") {
             transitive = false
         }
+
     }
 }
 

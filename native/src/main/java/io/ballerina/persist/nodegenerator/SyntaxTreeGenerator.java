@@ -18,6 +18,7 @@
 
 package io.ballerina.persist.nodegenerator;
 
+import io.ballerina.persist.objects.BalException;
 import io.ballerina.toml.syntax.tree.AbstractNodeFactory;
 import io.ballerina.toml.syntax.tree.DocumentMemberDeclarationNode;
 import io.ballerina.toml.syntax.tree.DocumentNode;
@@ -37,6 +38,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import static io.ballerina.persist.PersistToolsConstants.DEFAULT_DATABASE;
 import static io.ballerina.persist.PersistToolsConstants.DEFAULT_HOST;
@@ -71,6 +73,43 @@ public class SyntaxTreeGenerator {
         DocumentNode documentNode = NodeFactory.createDocumentNode(moduleMembers, eofToken);
         TextDocument textDocument = TextDocuments.from(documentNode.toSourceCode());
         return SyntaxTree.from(textDocument);
+    }
+
+    public static HashMap readToml(Path configPath, String name) throws BalException {
+        HashMap<String, String> values = new HashMap<>();
+        Path fileNamePath = configPath.getFileName();
+        try {
+            TextDocument configDocument = TextDocuments.from(Files.readString(configPath));
+            SyntaxTree syntaxTree = SyntaxTree.from(configDocument, fileNamePath.toString());
+            DocumentNode rootNote = syntaxTree.rootNode();
+            NodeList nodeList = rootNote.members();
+            for (Object member : nodeList) {
+                if (member instanceof TableNode) {
+                    TableNode node = (TableNode) member;
+                    if (node.identifier().toSourceCode().trim().equals(name)) {
+                        NodeList<KeyValueNode> subNodeList = node.fields();
+                        for (KeyValueNode subMember : subNodeList) {
+                            if (isDatabaseConfigurationEntry(subMember.identifier())) {
+                                values.put(subMember.identifier().toSourceCode().trim(),
+                                        subMember.value().toSourceCode().trim());
+                            }
+                        }
+                    }
+
+                }
+            }
+            if (values.isEmpty() || values.size() < 5 || (!values.containsKey("database")
+                    || !values.containsKey("user") || !values.containsKey("host") || !values.containsKey("password") ||
+                    !values.containsKey("port"))) {
+                throw new BalException("Error occurred while reading Config.Toml file");
+            } else {
+                return values;
+            }
+        } catch (BalException e) {
+            throw e;
+        } catch (IOException e) {
+            throw new BalException("Error while reading configurations");
+        }
     }
 
     /**

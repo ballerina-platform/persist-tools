@@ -23,7 +23,6 @@ import picocli.CommandLine;
 
 import java.io.PrintStream;
 
-import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 
 
 /**
@@ -32,14 +31,15 @@ import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
  * @since 0.1.0
  */
 @CommandLine.Command(
-        name = "persist",
+        name = "db",
         description = "generate database configurations.",
-        subcommands = {Init.class, Generate.class, Db.class}
+        subcommands = {Push.class}
         )
 
-public class PersistCmd implements BLauncherCmd {
+public class Db implements BLauncherCmd {
 
     private static final PrintStream errStream = System.err;
+    public static final String COMPONENT_IDENTIFIER = "db";
 
     @Override
     public void execute() {

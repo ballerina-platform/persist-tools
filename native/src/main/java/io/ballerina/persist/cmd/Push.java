@@ -18,13 +18,26 @@
 package io.ballerina.persist.cmd;
 
 import io.ballerina.cli.BLauncherCmd;
+import io.ballerina.persist.nodegenerator.SyntaxTreeGenerator;
+import io.ballerina.persist.objects.BalException;
+import io.ballerina.projects.Project;
+import io.ballerina.projects.ProjectEnvironmentBuilder;
+import io.ballerina.projects.ProjectException;
+import io.ballerina.projects.directory.ProjectLoader;
 import picocli.CommandLine;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashMap;
 
 import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 
@@ -42,6 +55,12 @@ public class Push implements BLauncherCmd {
 
     private final PrintStream errStream = System.err;
     private static final String COMMAND_IDENTIFIER = "persist-push";
+    public ProjectEnvironmentBuilder projectEnvironmentBuilder;
+    Project balProject;
+    public String sourcePath = "";
+    public String configPath = "Config.toml";
+    private String name = "";
+    HashMap configurations;
 
     @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
     private boolean helpFlag;
@@ -53,18 +72,101 @@ public class Push implements BLauncherCmd {
             errStream.println(commandUsageInfo);
             return;
         }
-        try {
-            Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/persist",
-                    "root", "20098570");
-            Statement  statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("select * from employees");
-            while (resultSet.next()) {
-                errStream.println(resultSet.getString("Name"));
+        try  {
+            if (projectEnvironmentBuilder == null) {
+                balProject = ProjectLoader.loadProject(Paths.get(""));
+
+            } else {
+                balProject = ProjectLoader.loadProject(Paths.get(sourcePath), projectEnvironmentBuilder);
             }
-        } catch (Exception e) {
+            name = balProject.currentPackage().descriptor().org().value() + "." + balProject.currentPackage()
+                    .descriptor().name().value();
+        } catch (ProjectException e) {
+            errStream.println("The current directory is not a Ballerina project!");
+            return;
+        }
+        String sValue = new String();
+        StringBuffer stringBuffer = new StringBuffer();
+        configurations = new HashMap();
+        String[] sqlLines = {};
+        Connection connection;
+        Statement statement;
+        try {
+            configurations = SyntaxTreeGenerator.readToml(
+                    Paths.get(this.sourcePath, this.configPath), this.name);
+
+            errStream.println(configurations);
+            FileReader fileReader = new FileReader(new File(
+                    "/Users/sahan/Desktop/Work/sahanhe/persist-tools/temp/query.sql"));
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+            while ((sValue = bufferedReader.readLine()) != null) {
+                stringBuffer.append(sValue);
+            }
+            bufferedReader.close();
+            sqlLines = stringBuffer.toString().split(";");
+
+        } catch (BalException e) {
             errStream.println(e.getMessage());
+        } catch (IOException e) {
+            errStream.println("Error occurred while reading generated SQL scripts");
+        }
+        String url = String.format("jdbc:mysql://%s:%s",
+                configurations.get("host").toString().replaceAll("\"", ""), configurations.get("port").toString());
+        String user = configurations.get("user").toString().replaceAll("\"", "");
+        String password = configurations.get("password").toString().replaceAll("\"", "");
+        String database = configurations.get("database").toString().replaceAll("\"", "");
+        errStream.println(url);
+        errStream.println(user);
+        errStream.println(database);
+        errStream.println(password);
+        try {
+            connection = DriverManager.getConnection(url, user, password);
+            errStream.println("connection done");
+            ResultSet resultSet = connection.getMetaData().getCatalogs();
+            errStream.println("resultset done");
+            boolean databaseExists = false;
+            while (resultSet.next()) {
+
+                if (resultSet.getString(1).trim().equals(database)) {
+                    databaseExists = true;
+                    break;
+                }
+            }
+            if (!databaseExists) {
+                statement = connection.createStatement();
+                String query = String.format("CREATE DATABASE %s", database);
+                statement.executeUpdate(query);
+                errStream.println("Creating Database : " + database);
+            }
+            resultSet.close();
+            connection.close();
+            String databaseUrl = String.format("jdbc:mysql://%s:%s/%s",
+                    configurations.get("host").toString().replaceAll("\"", ""), configurations.get("port").toString(),
+                    configurations.get("database").toString().replaceAll("\"", ""));
+            connection = DriverManager.getConnection(databaseUrl, user, password);
+            statement = connection.createStatement();
+
+            for (int line = 0; line < sqlLines.length; line++) {
+                if (!sqlLines[line].trim().equals("")) {
+                    statement.executeUpdate(sqlLines[line]);
+                    errStream.println(">>" + sqlLines[line]);
+                }
+            }
+        } catch (SQLException e) {
+            errStream.println("*** Error : " + e.getMessage());
+            errStream.println("*** ");
         }
 
+    }
+
+    public void setSourcePath(String sourcePath) {
+        this.sourcePath = sourcePath;
+    }
+    public void setEnvironmentBuilder(ProjectEnvironmentBuilder projectEnvironmentBuilder) {
+        this.projectEnvironmentBuilder = projectEnvironmentBuilder;
+    }
+    public HashMap getConfigurations() {
+        return this.configurations;
     }
 
     @Override

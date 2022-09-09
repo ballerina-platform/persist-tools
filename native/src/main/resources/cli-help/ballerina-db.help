@@ -1,0 +1,13 @@
+NAME
+       Perform CRUD operations on Ballerina Persistent Layer
+
+SYNOPSIS
+       bal persist db <command> [args]
+
+COMMANDS
+        The available subcommands are:
+
+   Package Commands:
+        push            Execute CRUD operations.
+
+
