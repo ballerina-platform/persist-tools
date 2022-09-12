@@ -19,7 +19,6 @@
 package io.ballerina.persist.tools;
 
 import jdk.jfr.Description;
-import org.junit.jupiter.api.Order;
 import org.testng.annotations.Test;
 
 import static io.ballerina.persist.tools.ToolingTestUtils.Command.DBPUSH;
