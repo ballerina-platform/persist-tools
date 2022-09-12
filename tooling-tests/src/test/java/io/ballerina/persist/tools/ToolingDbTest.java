@@ -42,7 +42,7 @@ public class ToolingDbTest {
         assertGeneratedSourcesNegative("tool_test_db_push_2", DBPUSH, null);
     }
 
-    @Test
+    @Test(dependsOnMethods = { "testDbPushA_WithoutDatabase" })
     @Description("Database is not available and it is created while running the push command")
     public void testDbPushC_WithExistingTables() {
         assertGeneratedDbSources("tool_test_db_push_3", DBPUSH);
