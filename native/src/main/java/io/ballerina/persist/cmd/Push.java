@@ -31,6 +31,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -94,8 +95,8 @@ public class Push implements BLauncherCmd {
         try {
             configurations = SyntaxTreeGenerator.readToml(
                     Paths.get(this.sourcePath, this.configPath), this.name);
-            FileReader fileReader = new FileReader(new File(
-                    "/Users/sahan/Desktop/Work/sahanhe/persist-tools/temp/query.sql"));
+            Path path = Paths.get(this.sourcePath, "SQL", "query.sql");
+            FileReader fileReader = new FileReader(new File(path.toAbsolutePath().toString()));
             BufferedReader bufferedReader = new BufferedReader(fileReader);
             while ((sValue = bufferedReader.readLine()) != null) {
                 stringBuffer.append(sValue);
@@ -107,7 +108,7 @@ public class Push implements BLauncherCmd {
             errStream.println(e.getMessage());
             return;
         } catch (IOException e) {
-            errStream.println("Error occurred while reading generated SQL scripts");
+            errStream.println("Error occurred while reading generated SQL scripts!");
             return;
         }
         String url = String.format("jdbc:mysql://%s:%s",
