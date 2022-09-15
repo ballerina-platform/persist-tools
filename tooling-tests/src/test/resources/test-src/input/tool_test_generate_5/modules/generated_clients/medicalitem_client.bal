@@ -20,7 +20,7 @@ public client class MedicalItemClient {
 
     public function init() returns error? {
         mysql:Client dbClient = check new (host = host, user = user, password = password, database = database, port = port);
-        self.persistClient = check new (self.entityName, self.tableName, self.fieldMetadata, self.keyFields, dbClient);
+        self.persistClient = check new (dbClient, self.entityName, self.tableName, self.keyFields, self.fieldMetadata);
     }
 
     remote function create(entities:MedicalItem value) returns entities:MedicalItem|error? {
