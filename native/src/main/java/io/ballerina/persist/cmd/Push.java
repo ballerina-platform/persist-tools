@@ -95,7 +95,11 @@ public class Push implements BLauncherCmd {
         }
 
         try {
-            balProject = BuildProject.load(getEnvironmentBuilder(), Paths.get(sourcePath).toAbsolutePath());
+            if (projectEnvironmentBuilder == null) {
+                balProject = BuildProject.load(getEnvironmentBuilder(), Paths.get(sourcePath).toAbsolutePath());
+            } else {
+                balProject = BuildProject.load(projectEnvironmentBuilder, Paths.get(sourcePath).toAbsolutePath());
+            }
         } catch (ProjectException e) {
             errStream.println(e.getMessage());
             return;
