@@ -98,11 +98,13 @@ public class ToolingTestUtils {
         File sqlFile;
         sqlFile = new File(
                 Paths.get("target", "persist_db_scripts.sql").toAbsolutePath().toString());
-        boolean deleteRes = sqlFile.delete();
-        if (deleteRes) {
-            errStream.println("File deleted successfully");
-        } else {
-            errStream.println("Error while deleting file");
+        if (sqlFile.exists()) {
+            boolean deleteRes = sqlFile.delete();
+            if (deleteRes) {
+                errStream.println("File deleted successfully");
+            } else {
+                errStream.println("Error while deleting file");
+            }
         }
 
         Connection connection = null;
