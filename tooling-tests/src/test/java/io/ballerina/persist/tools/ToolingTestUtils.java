@@ -95,17 +95,25 @@ public class ToolingTestUtils {
     }
 
     public static void assertGeneratedDbSources(String subDir, Command cmd) {
+        File sqlFile;
+        sqlFile = new File(
+                Paths.get("target", "persist_db_scripts.sql").toAbsolutePath().toString());
+        boolean deleteRes = sqlFile.delete();
+        if (deleteRes) {
+            errStream.println("File deleted successfully");
+        } else {
+            errStream.println("Error while deleting file");
+        }
 
         Connection connection = null;
         ResultSet resultSet = null;
-
         HashMap configurations = generateSourceCode(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir), cmd);
+        Assert.assertTrue(Files.exists(Paths.get("target", "persist_db_scripts.sql").toAbsolutePath()));
         String url = String.format("jdbc:mysql://%s:%s",
                 configurations.get("host").toString().replaceAll("\"", ""), configurations.get("port").toString());
         String user = configurations.get("user").toString().replaceAll("\"", "");
         String password = configurations.get("password").toString().replaceAll("\"", "");
         String database = configurations.get("database").toString().replaceAll("\"", "");
-
         try {
             connection = DriverManager.getConnection(url, user, password);
             resultSet = connection.getMetaData().getCatalogs();
@@ -129,9 +137,9 @@ public class ToolingTestUtils {
             boolean table1 = false;
             boolean table2 = false;
             while (resultSet.next()) {
-                if (resultSet.getString(3).trim().equals("Medical_Need")) {
+                if (resultSet.getString(3).trim().equals("MedicalNeed")) {
                     table1 = true;
-                } else if (resultSet.getString(3).trim().equals("Item")) {
+                } else if (resultSet.getString(3).trim().equals("MedicalItems")) {
                     table2 = true;
                 }
                 if (table1 && table2) {
@@ -149,10 +157,8 @@ public class ToolingTestUtils {
             Assert.fail();
         }
         try {
-            if (connection != null && resultSet != null) {
                 resultSet.close();
                 connection.close();
-            }
         } catch (SQLException e) {
             errStream.println("Error Closing the database connections");
         }

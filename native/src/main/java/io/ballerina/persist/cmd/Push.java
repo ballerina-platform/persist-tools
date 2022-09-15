@@ -20,10 +20,14 @@ package io.ballerina.persist.cmd;
 import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.nodegenerator.SyntaxTreeGenerator;
 import io.ballerina.persist.objects.BalException;
+import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.ProjectEnvironmentBuilder;
 import io.ballerina.projects.ProjectException;
+import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.projects.directory.ProjectLoader;
+import io.ballerina.projects.environment.Environment;
+import io.ballerina.projects.environment.EnvironmentBuilder;
 import picocli.CommandLine;
 
 import java.io.BufferedReader;
@@ -63,6 +67,9 @@ public class Push implements BLauncherCmd {
     private String name = "";
     HashMap configurations;
 
+    private static final Path DISTRIBUTION_PATH = Paths.get("/Users/sahan/Desktop/Work/sahanhe/" +
+                    "persist-tools/target/ballerina-runtime").toAbsolutePath();
+
     @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
     private boolean helpFlag;
 
@@ -86,6 +93,22 @@ public class Push implements BLauncherCmd {
             errStream.println("The current directory is not a Ballerina project!");
             return;
         }
+
+        try {
+            balProject = BuildProject.load(getEnvironmentBuilder(), Paths.get(sourcePath).toAbsolutePath());
+        } catch (ProjectException e) {
+            errStream.println(e.getMessage());
+            return;
+        }
+        try {
+            PackageCompilation pkgCompilation = balProject.currentPackage().getCompilation();
+        } catch (ProjectException e) {
+            errStream.println(e.getMessage());
+            return;
+        } catch (NullPointerException e) {
+            errStream.println(e.getMessage());
+            return;
+        }
         String sValue = new String();
         StringBuffer stringBuffer = new StringBuffer();
         configurations = new HashMap();
@@ -95,7 +118,12 @@ public class Push implements BLauncherCmd {
         try {
             configurations = SyntaxTreeGenerator.readToml(
                     Paths.get(this.sourcePath, this.configPath), this.name);
-            Path path = Paths.get(this.sourcePath, "SQL", "query.sql");
+
+            Path path = Paths.get(this.sourcePath, "target", "persist_db_scripts.sql");
+            if (projectEnvironmentBuilder != null) {
+                path = Paths.get("target", "persist_db_scripts.sql");
+            }
+
             FileReader fileReader = new FileReader(new File(path.toAbsolutePath().toString()));
             BufferedReader bufferedReader = new BufferedReader(fileReader);
             while ((sValue = bufferedReader.readLine()) != null) {
@@ -153,6 +181,11 @@ public class Push implements BLauncherCmd {
             return;
         }
 
+    }
+
+    private static ProjectEnvironmentBuilder getEnvironmentBuilder() {
+        Environment environment = EnvironmentBuilder.getBuilder().setBallerinaHome(DISTRIBUTION_PATH).build();
+        return ProjectEnvironmentBuilder.getBuilder(environment);
     }
 
     public void setSourcePath(String sourcePath) {

@@ -4,5 +4,3 @@ name = "tool_test_db_push_3"
 version = "0.1.0"
 distribution = "2201.1.0-rc1.14"
 
-[build-options]
-observabilityIncluded = true

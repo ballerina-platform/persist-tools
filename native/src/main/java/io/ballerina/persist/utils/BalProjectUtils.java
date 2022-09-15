@@ -24,10 +24,12 @@ import io.ballerina.projects.Package;
 import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.ProjectEnvironmentBuilder;
 import io.ballerina.projects.directory.BuildProject;
+import io.ballerina.tools.diagnostics.Diagnostic;
 import io.ballerina.tools.text.TextDocument;
 import io.ballerina.tools.text.TextDocuments;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -38,6 +40,7 @@ import java.nio.file.Path;
  */
 
 public class BalProjectUtils {
+    private static final PrintStream errStream = System.err;
     private BalProjectUtils() {
 
     }
@@ -65,6 +68,9 @@ public class BalProjectUtils {
         currentPackage = buildProject.currentPackage();
         PackageCompilation compilation = currentPackage.getCompilation();
         DiagnosticResult diagnosticResult = compilation.diagnosticResult();
+        for (Diagnostic d : diagnosticResult.errors()) {
+            errStream.println(d.toString());
+        }
         return diagnosticResult.hasErrors();
     }
 
