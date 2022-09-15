@@ -56,8 +56,8 @@ public class BalFileConstants {
     public static final String TAG_FIELD_METADATA = "fieldMetadata";
     public static final String INIT_MYSQL_CLIENT = "mysql:Client dbClient = check new (host = host, user = user," +
             " password = password, database = database, port = port);";
-    public static final String INIT_PERSIST_CLIENT = "self.persistClient = check new (self.entityName, " +
-            "self.tableName, self.fieldMetadata, self.keyFields, dbClient);";
+    public static final String INIT_PERSIST_CLIENT = "self.persistClient = check new (dbClient, self.entityName, " +
+            "self.tableName, self.keyFields, self.fieldMetadata);";
     public static final String CREATE_SQL_RESULTS = "sql:ExecutionResult result = check " +
             "self.persistClient.runInsertQuery(value);";
     public static final String READ_BY_KEY_RETURN = "return (check self.persistClient" +
