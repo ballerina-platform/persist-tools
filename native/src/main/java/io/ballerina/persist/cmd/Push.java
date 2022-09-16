@@ -26,8 +26,6 @@ import io.ballerina.projects.ProjectEnvironmentBuilder;
 import io.ballerina.projects.ProjectException;
 import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.projects.directory.ProjectLoader;
-import io.ballerina.projects.environment.Environment;
-import io.ballerina.projects.environment.EnvironmentBuilder;
 import picocli.CommandLine;
 
 import java.io.BufferedReader;
@@ -68,10 +66,6 @@ public class Push implements BLauncherCmd {
     public String configPath = "Config.toml";
     private String name = "";
     HashMap configurations;
-
-    private static final Path DISTRIBUTION_PATH = Paths.get("/Users/sahan/Desktop/Work/sahanhe/" +
-                    "persist-tools/target/ballerina-runtime").toAbsolutePath();
-
     @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
     private boolean helpFlag;
 
@@ -98,7 +92,7 @@ public class Push implements BLauncherCmd {
 
         try {
             if (projectEnvironmentBuilder == null) {
-                project = BuildProject.load(getEnvironmentBuilder(), Paths.get(sourcePath).toAbsolutePath());
+                project = BuildProject.load(Paths.get(sourcePath).toAbsolutePath());
                 Path target = Paths.get("target").toAbsolutePath();
                 if (!Files.exists(target)) {
                     new File(target.toString()).mkdirs();
@@ -191,11 +185,6 @@ public class Push implements BLauncherCmd {
             return;
         }
 
-    }
-
-    private static ProjectEnvironmentBuilder getEnvironmentBuilder() {
-        Environment environment = EnvironmentBuilder.getBuilder().setBallerinaHome(DISTRIBUTION_PATH).build();
-        return ProjectEnvironmentBuilder.getBuilder(environment);
     }
 
     public void setSourcePath(String sourcePath) {
