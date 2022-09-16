@@ -35,6 +35,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
@@ -62,6 +63,7 @@ public class Push implements BLauncherCmd {
     private static final String COMMAND_IDENTIFIER = "persist-push";
     public ProjectEnvironmentBuilder projectEnvironmentBuilder;
     Project balProject;
+    Project project;
     public String sourcePath = "";
     public String configPath = "Config.toml";
     private String name = "";
@@ -96,16 +98,20 @@ public class Push implements BLauncherCmd {
 
         try {
             if (projectEnvironmentBuilder == null) {
-                balProject = BuildProject.load(getEnvironmentBuilder(), Paths.get(sourcePath).toAbsolutePath());
+                project = BuildProject.load(getEnvironmentBuilder(), Paths.get(sourcePath).toAbsolutePath());
+                Path target = Paths.get("target").toAbsolutePath();
+                if (!Files.exists(target)) {
+                    new File(target.toString()).mkdirs();
+                }
             } else {
-                balProject = BuildProject.load(projectEnvironmentBuilder, Paths.get(sourcePath).toAbsolutePath());
+                project = BuildProject.load(projectEnvironmentBuilder, Paths.get(sourcePath).toAbsolutePath());
             }
         } catch (ProjectException e) {
             errStream.println(e.getMessage());
             return;
         }
         try {
-            PackageCompilation pkgCompilation = balProject.currentPackage().getCompilation();
+            PackageCompilation pkgCompilation = project.currentPackage().getCompilation();
         } catch (ProjectException e) {
             errStream.println(e.getMessage());
             return;

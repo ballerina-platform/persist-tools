@@ -78,7 +78,7 @@ task copyExternalJars {
 task copyMySQLConector {
     doLast {
         copy {
-            into "$project.projectDir/build/jballerina-tools-2201.2.0-20220607-123700-52fedf4d/bre/lib"
+            into "$project.projectDir/build/jballerina-tools-2201.2.0/bre/lib"
             from "$project.projectDir/lib"
         }
     }
