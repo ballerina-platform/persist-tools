@@ -279,6 +279,7 @@ public class ToolingTestUtils {
 
             }
             if (dir1Paths.size() != dir2Paths.size()) {
+                errStream.println("files in directories doesn't match");
                 return false;
             }
             for (Map.Entry<Path, Path> pathEntry : dir1Paths.entrySet()) {
