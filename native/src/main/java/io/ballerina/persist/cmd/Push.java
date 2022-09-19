@@ -29,6 +29,7 @@ import io.ballerina.projects.directory.ProjectLoader;
 import picocli.CommandLine;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -113,7 +114,7 @@ public class Push implements BLauncherCmd {
         String sValue;
         StringBuffer stringBuffer = new StringBuffer();
         configurations = new HashMap();
-        String[] sqlLines;
+        String[] sqlLines = {};
         Connection connection;
         Statement statement;
         try {
@@ -122,7 +123,7 @@ public class Push implements BLauncherCmd {
 
             Path path = Paths.get(this.sourcePath, "target", "persist_db_scripts.sql");
 
-            FileReader fileReader = new FileReader(path.toAbsolutePath().toString());
+            FileReader fileReader = new FileReader(new File(path.toAbsolutePath().toString()));
             BufferedReader bufferedReader = new BufferedReader(fileReader);
             while ((sValue = bufferedReader.readLine()) != null) {
                 stringBuffer.append(sValue);
@@ -178,7 +179,9 @@ public class Push implements BLauncherCmd {
         } catch (SQLException e) {
             errStream.println("*** Error : " + e.getMessage());
             errStream.println("*** ");
+            return;
         }
+
     }
 
     public void setSourcePath(String sourcePath) {
