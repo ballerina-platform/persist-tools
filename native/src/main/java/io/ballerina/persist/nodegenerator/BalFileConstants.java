@@ -110,4 +110,6 @@ public class BalFileConstants {
     public static final String KEYWORD_SQL = "sql";
     public static final String KEYWORD_MYSQL = "mysql";
     public static final String KEYWORD_TIME = "time";
+    public static final String JDBC_URL_WITHOUT_DATABASE = "jdbc:%s://%s:%s";
+    public static final String JDBC_URL_WITH_DATABASE = "jdbc:%s://%s:%s/%s";
 }

@@ -20,7 +20,6 @@ package io.ballerina.persist.cmd;
 import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.nodegenerator.SyntaxTreeGenerator;
 import io.ballerina.persist.objects.BalException;
-import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.ProjectEnvironmentBuilder;
 import io.ballerina.projects.ProjectException;
@@ -29,11 +28,9 @@ import io.ballerina.projects.directory.ProjectLoader;
 import picocli.CommandLine;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
@@ -44,6 +41,13 @@ import java.sql.Statement;
 import java.util.HashMap;
 
 import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
+import static io.ballerina.persist.PersistToolsConstants.DATABASE;
+import static io.ballerina.persist.PersistToolsConstants.HOST;
+import static io.ballerina.persist.PersistToolsConstants.PASSWORD;
+import static io.ballerina.persist.PersistToolsConstants.PORT;
+import static io.ballerina.persist.PersistToolsConstants.USER;
+import static io.ballerina.persist.nodegenerator.BalFileConstants.JDBC_URL_WITHOUT_DATABASE;
+import static io.ballerina.persist.nodegenerator.BalFileConstants.JDBC_URL_WITH_DATABASE;
 
 /**
  * Class to implement "persist push" command for ballerina.
@@ -61,7 +65,6 @@ public class Push implements BLauncherCmd {
     private static final String COMMAND_IDENTIFIER = "persist-push";
     public ProjectEnvironmentBuilder projectEnvironmentBuilder;
     Project balProject;
-    Project project;
     public String sourcePath = "";
     public String configPath = "Config.toml";
     private String name = "";
@@ -92,31 +95,24 @@ public class Push implements BLauncherCmd {
 
         try {
             if (projectEnvironmentBuilder == null) {
-                project = BuildProject.load(Paths.get(sourcePath).toAbsolutePath());
-                Path target = Paths.get("target").toAbsolutePath();
-                if (!Files.exists(target)) {
-                    new File(target.toString()).mkdirs();
-                }
+                balProject = BuildProject.load(Paths.get(sourcePath).toAbsolutePath());
             } else {
-                project = BuildProject.load(projectEnvironmentBuilder, Paths.get(sourcePath).toAbsolutePath());
+                balProject = BuildProject.load(projectEnvironmentBuilder, Paths.get(sourcePath).toAbsolutePath());
             }
         } catch (ProjectException e) {
             errStream.println(e.getMessage());
             return;
         }
         try {
-            PackageCompilation pkgCompilation = project.currentPackage().getCompilation();
+            balProject.currentPackage().getCompilation();
         } catch (ProjectException e) {
             errStream.println(e.getMessage());
             return;
-        } catch (NullPointerException e) {
-            errStream.println(e.getMessage());
-            return;
         }
-        String sValue = new String();
-        StringBuffer stringBuffer = new StringBuffer();
+        String sValue;
+        StringBuilder stringBuffer = new StringBuilder();
         configurations = new HashMap();
-        String[] sqlLines = {};
+        String[] sqlLines;
         Connection connection;
         Statement statement;
         try {
@@ -124,11 +120,8 @@ public class Push implements BLauncherCmd {
                     Paths.get(this.sourcePath, this.configPath), this.name);
 
             Path path = Paths.get(this.sourcePath, "target", "persist_db_scripts.sql");
-            if (projectEnvironmentBuilder != null) {
-                path = Paths.get("target", "persist_db_scripts.sql");
-            }
 
-            FileReader fileReader = new FileReader(new File(path.toAbsolutePath().toString()));
+            FileReader fileReader = new FileReader(path.toAbsolutePath().toString());
             BufferedReader bufferedReader = new BufferedReader(fileReader);
             while ((sValue = bufferedReader.readLine()) != null) {
                 stringBuffer.append(sValue);
@@ -143,11 +136,11 @@ public class Push implements BLauncherCmd {
             errStream.println("Error occurred while reading generated SQL scripts!");
             return;
         }
-        String url = String.format("jdbc:mysql://%s:%s",
-                configurations.get("host").toString().replaceAll("\"", ""), configurations.get("port").toString());
-        String user = configurations.get("user").toString().replaceAll("\"", "");
-        String password = configurations.get("password").toString().replaceAll("\"", "");
-        String database = configurations.get("database").toString().replaceAll("\"", "");
+        String url = String.format(JDBC_URL_WITHOUT_DATABASE, "mysql",
+                configurations.get(HOST).toString().replaceAll("\"", ""), configurations.get(PORT).toString());
+        String user = configurations.get(USER).toString().replaceAll("\"", "");
+        String password = configurations.get(PASSWORD).toString().replaceAll("\"", "");
+        String database = configurations.get(DATABASE).toString().replaceAll("\"", "");
         try {
             connection = DriverManager.getConnection(url, user, password);
             ResultSet resultSet = connection.getMetaData().getCatalogs();
@@ -167,9 +160,9 @@ public class Push implements BLauncherCmd {
             }
             resultSet.close();
             connection.close();
-            String databaseUrl = String.format("jdbc:mysql://%s:%s/%s",
-                    configurations.get("host").toString().replaceAll("\"", ""), configurations.get("port").toString(),
-                    configurations.get("database").toString().replaceAll("\"", ""));
+            String databaseUrl = String.format(JDBC_URL_WITH_DATABASE, "mysql",
+                    configurations.get(HOST).toString().replaceAll("\"", ""), configurations.get(PORT).toString(),
+                    configurations.get(DATABASE).toString().replaceAll("\"", ""));
             connection = DriverManager.getConnection(databaseUrl, user, password);
             statement = connection.createStatement();
 
@@ -179,14 +172,13 @@ public class Push implements BLauncherCmd {
                     errStream.println(">>" + sqlLines[line]);
                 }
             }
+            statement.close();
+            connection.close();
         } catch (SQLException e) {
             errStream.println("*** Error : " + e.getMessage());
             errStream.println("*** ");
-            return;
         }
-
     }
-
     public void setSourcePath(String sourcePath) {
         this.sourcePath = sourcePath;
     }

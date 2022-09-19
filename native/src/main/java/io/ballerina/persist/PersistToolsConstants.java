@@ -43,4 +43,11 @@ public class PersistToolsConstants {
 
     public static final String CONFIG_PATH = "Config.toml";
 
+    public static final String PASSWORD = "password";
+    public static final String USER = "user";
+    public static final String MYSQL = "mysql";
+    public static final String DATABASE = "database";
+    public static final String HOST = "host";
+    public static final String PORT = "port";
+
 }
