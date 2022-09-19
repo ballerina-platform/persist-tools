@@ -20,6 +20,7 @@ package io.ballerina.persist.cmd;
 import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.nodegenerator.SyntaxTreeGenerator;
 import io.ballerina.persist.objects.BalException;
+import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.ProjectEnvironmentBuilder;
 import io.ballerina.projects.ProjectException;
@@ -28,7 +29,6 @@ import io.ballerina.projects.directory.ProjectLoader;
 import picocli.CommandLine;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -105,13 +105,13 @@ public class Push implements BLauncherCmd {
             return;
         }
         try {
-            balProject.currentPackage().getCompilation();
+            PackageCompilation pkgCompilation = balProject.currentPackage().getCompilation();
         } catch (ProjectException e) {
             errStream.println(e.getMessage());
             return;
         }
         String sValue;
-        StringBuilder stringBuffer = new StringBuilder();
+        StringBuffer stringBuffer = new StringBuffer();
         configurations = new HashMap();
         String[] sqlLines;
         Connection connection;
@@ -122,7 +122,7 @@ public class Push implements BLauncherCmd {
 
             Path path = Paths.get(this.sourcePath, "target", "persist_db_scripts.sql");
 
-            FileReader fileReader = new FileReader(new File(path.toAbsolutePath().toString()));
+            FileReader fileReader = new FileReader(path.toAbsolutePath().toString());
             BufferedReader bufferedReader = new BufferedReader(fileReader);
             while ((sValue = bufferedReader.readLine()) != null) {
                 stringBuffer.append(sValue);
@@ -180,6 +180,7 @@ public class Push implements BLauncherCmd {
             errStream.println("*** ");
         }
     }
+
     public void setSourcePath(String sourcePath) {
         this.sourcePath = sourcePath;
     }
