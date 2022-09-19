@@ -20,7 +20,6 @@ package io.ballerina.persist.cmd;
 import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.nodegenerator.SyntaxTreeGenerator;
 import io.ballerina.persist.objects.BalException;
-import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.ProjectEnvironmentBuilder;
 import io.ballerina.projects.ProjectException;
@@ -58,7 +57,7 @@ import static io.ballerina.persist.nodegenerator.BalFileConstants.JDBC_URL_WITH_
 
 @CommandLine.Command(
         name = "push",
-        description = "Run SQL scripts.")
+        description = "Generate and run SQL scripts.")
 
 public class Push implements BLauncherCmd {
 
@@ -105,7 +104,7 @@ public class Push implements BLauncherCmd {
             return;
         }
         try {
-            PackageCompilation pkgCompilation = balProject.currentPackage().getCompilation();
+            balProject.currentPackage().getCompilation();
         } catch (ProjectException e) {
             errStream.println(e.getMessage());
             return;
