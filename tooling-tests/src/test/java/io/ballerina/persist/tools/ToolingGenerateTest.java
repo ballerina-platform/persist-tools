@@ -31,14 +31,14 @@ import static io.ballerina.persist.tools.ToolingTestUtils.assertGeneratedSources
 public class ToolingGenerateTest {
 
     @Test(enabled = true)
-    @Description("There is only a single entity in the Ballerina project")
+    @Description("asd")
     public void testGenerateSingleEntity() {
 
         assertGeneratedSources("tool_test_generate_1", GENERATE);
     }
 
     @Test(enabled = true)
-    @Description("There are multiple entities in the Ballerina project")
+    @Description("")
     public void testGenerateMultipleEntities() {
         assertGeneratedSources("tool_test_generate_2", GENERATE);
     }

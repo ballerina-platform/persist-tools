@@ -2,7 +2,7 @@
 org = "foo"
 name = "perist_generate_6"
 version = "0.1.0"
-distribution = "2201.1.0-rc1.14"
+distribution = "2201.2.0"
 
 [build-options]
 observabilityIncluded = true

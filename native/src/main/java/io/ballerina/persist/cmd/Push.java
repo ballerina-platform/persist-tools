@@ -169,7 +169,6 @@ public class Push implements BLauncherCmd {
             for (int line = 0; line < sqlLines.length; line++) {
                 if (!sqlLines[line].trim().equals("")) {
                     statement.executeUpdate(sqlLines[line]);
-                    errStream.println(">>" + sqlLines[line]);
                 }
             }
             statement.close();
