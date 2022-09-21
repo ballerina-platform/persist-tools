@@ -31,7 +31,7 @@ import static io.ballerina.persist.tools.ToolingTestUtils.assertGeneratedSources
 public class ToolingGenerateTest {
 
     @Test(enabled = true)
-    @Description("asd")
+    @Description("There is only a single entity in the Ballerina project")
     public void testGenerateSingleEntity() {
 
         assertGeneratedSources("tool_test_generate_1", GENERATE);

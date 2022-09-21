@@ -31,7 +31,7 @@ import static io.ballerina.persist.tools.ToolingTestUtils.assertGeneratedSources
 public class ToolingDbTest {
 
     @Test(enabled = true)
-    @Description("Database doesn't exist and created in command runtime")
+    @Description("Database is not available and it is created while running the db push command")
     public void testDbPushA_WithoutDatabase() {
         assertGeneratedDbSources("tool_test_db_push_1", DBPUSH);
     }
