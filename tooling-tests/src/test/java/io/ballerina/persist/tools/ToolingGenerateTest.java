@@ -38,7 +38,7 @@ public class ToolingGenerateTest {
     }
 
     @Test(enabled = true)
-    @Description("")
+    @Description("There are multiple entities in the Ballerina project")
     public void testGenerateMultipleEntities() {
         assertGeneratedSources("tool_test_generate_2", GENERATE);
     }

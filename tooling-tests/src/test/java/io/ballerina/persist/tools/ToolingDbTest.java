@@ -37,19 +37,19 @@ public class ToolingDbTest {
     }
 
     @Test(enabled = true)
-    @Description("Command is run outside a ballerina project")
+    @Description("Database is not available and it is created while running the push command")
     public void testDbPushB_OutsideBallerinaProject() {
         assertGeneratedSourcesNegative("tool_test_db_push_2", DBPUSH, null);
     }
 
     @Test(enabled = true, dependsOnMethods = { "testDbPushA_WithoutDatabase" })
-    @Description("Database and tables are already available")
+    @Description("Database is not available and it is created while running the push command")
     public void testDbPushC_WithExistingTables() {
         assertGeneratedDbSources("tool_test_db_push_3", DBPUSH);
     }
 
     @Test(enabled = true)
-    @Description("Config file is not available")
+    @Description("Database is not available and it is created while running the push command")
     public void testDbPushD_WithoutConfigFile() {
         assertGeneratedSourcesNegative("tool_test_db_push_4", DBPUSH, null);
     }

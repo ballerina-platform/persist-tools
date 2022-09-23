@@ -68,6 +68,7 @@ public class ToolingTestUtils {
             .toAbsolutePath();
     private static final Path DISTRIBUTION_PATH = Paths.get(".." + File.separator, "target", "ballerina-runtime")
             .toAbsolutePath();
+    private static final Path DRIVER_PATH = Paths.get(".." + File.separator, "Ballerina", "lib").toAbsolutePath();
 
     private static ProjectEnvironmentBuilder getEnvironmentBuilder() {
         Environment environment = EnvironmentBuilder.getBuilder().setBallerinaHome(DISTRIBUTION_PATH).build();
@@ -247,6 +248,7 @@ public class ToolingTestUtils {
                 Push persistCmd = (Push) persistClass.getDeclaredConstructor().newInstance();
                 persistCmd.setSourcePath(sourcePath.toAbsolutePath().toString());
                 persistCmd.setEnvironmentBuilder(getEnvironmentBuilder());
+                persistCmd.setDriverPath(DRIVER_PATH);
                 persistCmd.execute();
                 return persistCmd.getConfigurations();
             }

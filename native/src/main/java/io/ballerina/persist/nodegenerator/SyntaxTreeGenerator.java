@@ -80,7 +80,7 @@ public class SyntaxTreeGenerator {
         return SyntaxTree.from(textDocument);
     }
 
-    public static HashMap readToml(Path configPath, String name) throws BalException {
+    public static HashMap<String, String> readToml(Path configPath, String name) throws BalException {
         HashMap<String, String> values = new HashMap<>();
         Path fileNamePath = configPath.getFileName();
         try {
@@ -120,7 +120,7 @@ public class SyntaxTreeGenerator {
     /**
      * Method to update the Config.toml with database configurations.
      */
-    public static SyntaxTree updateToml(Path configPath, String name) throws IOException {
+    public static SyntaxTree updateConfigToml(Path configPath, String name) throws IOException {
 
         ArrayList<String> existingNodes = new ArrayList<>();
         NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
@@ -175,6 +175,42 @@ public class SyntaxTreeGenerator {
             moduleMembers = populateRemaining(moduleMembers, existingNodes);
 
         }
+        Token eofToken = AbstractNodeFactory.createIdentifierToken("");
+        DocumentNode documentNode = NodeFactory.createDocumentNode(moduleMembers, eofToken);
+        TextDocument textDocument = TextDocuments.from(documentNode.toSourceCode());
+        return SyntaxTree.from(textDocument);
+    }
+
+    public static SyntaxTree updateBallerinaToml(Path balPAth) throws IOException {
+
+        NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
+        Path fileNamePath = balPAth.getFileName();
+        TextDocument configDocument = TextDocuments.from(Files.readString(balPAth));
+        SyntaxTree syntaxTree = SyntaxTree.from(configDocument, fileNamePath.toString());
+        DocumentNode rootNote = syntaxTree.rootNode();
+        NodeList nodeList = rootNote.members();
+
+        for (Object member : nodeList) {
+            if (member instanceof KeyValueNode) {
+                moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) member);
+            } else if (member instanceof TableNode) {
+                if (!moduleMembers.isEmpty()) {
+                    moduleMembers = addNewLine(moduleMembers, 1);
+                }
+                moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) member);
+            } else if (member instanceof TableArrayNode) {
+                moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) member);
+            }
+        }
+        moduleMembers = addNewLine(moduleMembers, 1);
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray(
+                SyntaxTreeConstants.JAVA_11_DEPENDANCY, null));
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("groupId",
+                "mysql", null));
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("artifactId",
+                "mysql-connector-java", null));
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("version",
+                "8.0.29", null));
         Token eofToken = AbstractNodeFactory.createIdentifierToken("");
         DocumentNode documentNode = NodeFactory.createDocumentNode(moduleMembers, eofToken);
         TextDocument textDocument = TextDocuments.from(documentNode.toSourceCode());
