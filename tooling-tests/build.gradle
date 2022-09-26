@@ -41,7 +41,9 @@ dependencies {
     testImplementation project(":persist-tools-native")
     testImplementation group: 'org.testng', name: 'testng', version: "${testngVersion}"
     implementation 'org.junit.jupiter:junit-jupiter:5.8.1'
-    implementation 'mysql:mysql-connector-java:8.0.29'
+    implementation (group: 'mysql', name: 'mysql-connector-java', version: "${mySqlDriverVersion}") {
+        transitive = false
+    }
 }
 
 tasks.withType(Checkstyle) {

@@ -1,5 +1,5 @@
 NAME
-       Create SQL files to create tables for the persist entity.
+       Execute the generated SQL script to create tables for the defined Ballerina entities.
 
 SYNOPSIS
        bal persist db push

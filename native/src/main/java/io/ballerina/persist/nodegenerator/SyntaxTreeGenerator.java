@@ -50,6 +50,9 @@ import static io.ballerina.persist.PersistToolsConstants.KEY_HOST;
 import static io.ballerina.persist.PersistToolsConstants.KEY_PASSWORD;
 import static io.ballerina.persist.PersistToolsConstants.KEY_PORT;
 import static io.ballerina.persist.PersistToolsConstants.KEY_USER;
+import static io.ballerina.persist.nodegenerator.SyntaxTreeConstants.ARTIFACT_ID;
+import static io.ballerina.persist.nodegenerator.SyntaxTreeConstants.GROUP_ID;
+import static io.ballerina.persist.nodegenerator.SyntaxTreeConstants.VERSION;
 
 
 /**
@@ -110,8 +113,6 @@ public class SyntaxTreeGenerator {
             } else {
                 return values;
             }
-        } catch (BalException e) {
-            throw e;
         } catch (IOException e) {
             throw new BalException("Error while reading configurations");
         }
@@ -205,12 +206,9 @@ public class SyntaxTreeGenerator {
         moduleMembers = addNewLine(moduleMembers, 1);
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray(
                 SyntaxTreeConstants.JAVA_11_DEPENDANCY, null));
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("groupId",
-                "mysql", null));
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("artifactId",
-                "mysql-connector-java", null));
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("version",
-                "8.0.29", null));
+        moduleMembers = moduleMembers.add(GROUP_ID);
+        moduleMembers = moduleMembers.add(ARTIFACT_ID);
+        moduleMembers = moduleMembers.add(VERSION);
         Token eofToken = AbstractNodeFactory.createIdentifierToken("");
         DocumentNode documentNode = NodeFactory.createDocumentNode(moduleMembers, eofToken);
         TextDocument textDocument = TextDocuments.from(documentNode.toSourceCode());
