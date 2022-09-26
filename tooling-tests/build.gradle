@@ -80,7 +80,7 @@ def checkTestDockerContainerStatus(dockerName) {
         }
     } else {
         println('\n' + "Windows Instance detected")
-        doLast {
+        exec {
             println('\n' + "skippped checking the docker container")
         }
     }
@@ -105,7 +105,7 @@ task startTestDockerContainer(type: Exec) {
         }
     } else {
         println('\n' + "Windows Instance detected")
-        doLast {
+        exec {
             println('\n' + "skippped starting the docker container")
         }
     }
