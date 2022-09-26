@@ -39,7 +39,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.Driver;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -90,11 +89,8 @@ public class Push implements BLauncherCmd {
     @Override
     public void execute() {
         String name;
-        String sValue;
-        StringBuilder stringBuffer = new StringBuilder();
         configurations = new HashMap<>();
         String[] sqlLines;
-        Connection connection;
         Statement statement;
 
         if (helpFlag) {
@@ -105,72 +101,26 @@ public class Push implements BLauncherCmd {
 
         boolean isTest = (projectEnvironmentBuilder != null);
         try  {
-            URL[] urls = {};
-            JdbcDriverLoader driverLoader;
             if (!isTest) {
                 balProject = ProjectLoader.loadProject(Paths.get(""));
             } else {
                 balProject = ProjectLoader.loadProject(Paths.get(sourcePath), projectEnvironmentBuilder);
             }
-            driverLoader = new JdbcDriverLoader(urls, driverPath.toAbsolutePath());
-            Class drvClass = driverLoader.loadClass(MYSQL_DRIVER_CLASS);
-            driver = (Driver) drvClass.getDeclaredConstructor().newInstance();
             name = balProject.currentPackage().descriptor().org().value() + "." + balProject.currentPackage()
                     .descriptor().name().value();
-        } catch (ProjectException e) {
-            errStream.println("The current directory is not a Ballerina project!");
-            return;
-        } catch (ClassNotFoundException e) {
-            errStream.println("Driver Not Found");
-            return;
-        } catch (InstantiationException | InvocationTargetException e) {
-            errStream.println("Error instantiation the jdbc driver");
-            return;
-        } catch (IllegalAccessException e) {
-            errStream.println("Access denied trying to instantiation the jdbc driver");
-            return;
-        } catch (NoSuchMethodException e) {
-            errStream.println("Method not fount error while trying to instantiate jdbc driver : " + e.getMessage());
-            return;
-        } catch (MalformedURLException e) {
-            errStream.println("Error in jdbc driver path : " + e.getMessage());
-            return;
-        }
-        try {
-            if (projectEnvironmentBuilder == null) {
+            setupJdbcDriver();
+
+            if (!isTest) {
                 balProject = BuildProject.load(Paths.get(sourcePath).toAbsolutePath());
             } else {
                 balProject = BuildProject.load(projectEnvironmentBuilder, Paths.get(sourcePath).toAbsolutePath());
             }
-        } catch (ProjectException e) {
-            errStream.println(e.getMessage());
-            return;
-        }
-        try {
             balProject.currentPackage().getCompilation();
-        } catch (ProjectException e) {
-            errStream.println(e.getMessage());
-            return;
-        }
-        try {
             configurations = SyntaxTreeGenerator.readToml(
                     Paths.get(this.sourcePath, this.configPath), name);
-
-            Path path = Paths.get(this.sourcePath, TARGET_DIR, SQL_SCRIPT_FILE);
-
-            FileReader fileReader = new FileReader(path.toAbsolutePath().toString());
-            BufferedReader bufferedReader = new BufferedReader(fileReader);
-            while ((sValue = bufferedReader.readLine()) != null) {
-                stringBuffer.append(sValue);
-            }
-            bufferedReader.close();
-            sqlLines = stringBuffer.toString().split(";");
-
-        } catch (BalException e) {
+            sqlLines = readSqlFile();
+        } catch (ProjectException | BalException  e) {
             errStream.println(e.getMessage());
-            return;
-        } catch (IOException e) {
-            errStream.println("Error occurred while reading generated SQL scripts!");
             return;
         }
         String url = String.format(JDBC_URL_WITHOUT_DATABASE, MYSQL,
@@ -181,8 +131,7 @@ public class Push implements BLauncherCmd {
         Properties props = new Properties();
         props.put("user", user);
         props.put("password", password);
-        try {
-            connection = driver.connect(url, props);
+        try (Connection connection = driver.connect(url, props)) {
             ResultSet resultSet = connection.getMetaData().getCatalogs();
             boolean databaseExists = false;
             while (resultSet.next()) {
@@ -198,25 +147,22 @@ public class Push implements BLauncherCmd {
                 statement.executeUpdate(query);
                 stdStream.println("Creating Database : " + database);
             }
-            resultSet.close();
-            connection.close();
-            String databaseUrl = String.format(JDBC_URL_WITH_DATABASE, MYSQL,
+        } catch (SQLException e) {
+            errStream.println("Error occurred when creating database tables: " + e.getMessage());
+        }
+
+        String databaseUrl = String.format(JDBC_URL_WITH_DATABASE, MYSQL,
                     configurations.get(HOST).replaceAll("\"", ""), configurations.get(PORT),
                     configurations.get(DATABASE).replaceAll("\"", ""));
-            if (!isTest) {
-                connection = driver.connect(databaseUrl, props);
-            } else {
-                connection = DriverManager.getConnection(databaseUrl, user, password);
-            }
-            statement = connection.createStatement();
 
+        try (Connection connection = driver.connect(databaseUrl, props)) {
+            statement = connection.createStatement();
             for (String sqlLine : sqlLines) {
                 if (!sqlLine.trim().equals("")) {
                     statement.executeUpdate(sqlLine);
                 }
             }
             statement.close();
-            connection.close();
         } catch (SQLException e) {
             errStream.println("Error occurred when creating database tables: " + e.getMessage());
         }
@@ -235,6 +181,46 @@ public class Push implements BLauncherCmd {
 
     public HashMap<String, String> getConfigurations() {
         return this.configurations;
+    }
+
+    private void setupJdbcDriver() throws BalException {
+        try {
+            URL[] urls = {};
+            JdbcDriverLoader driverLoader;
+            driverLoader = new JdbcDriverLoader(urls, driverPath.toAbsolutePath());
+            Class drvClass = driverLoader.loadClass(MYSQL_DRIVER_CLASS);
+            driver = (Driver) drvClass.getDeclaredConstructor().newInstance();
+        } catch (ProjectException e) {
+            throw new BalException("The current directory is not a Ballerina project!");
+        } catch (ClassNotFoundException e) {
+            throw new BalException("Driver Not Found");
+        } catch (InstantiationException | InvocationTargetException e) {
+            throw new BalException("Error instantiation the jdbc driver");
+        } catch (IllegalAccessException e) {
+            throw new BalException("Access denied trying to instantiation the jdbc driver");
+        } catch (NoSuchMethodException e) {
+            throw new BalException("Method not fount error while trying to instantiate jdbc driver : "
+                    + e.getMessage());
+        } catch (MalformedURLException e) {
+            throw new BalException("Error in jdbc driver path : " + e.getMessage());
+        }
+    }
+    private String[] readSqlFile() throws BalException {
+        String[] sqlLines;
+        String sValue;
+        StringBuilder stringBuilder = new StringBuilder();
+        try (FileReader fileReader = new FileReader(Paths.get(this.sourcePath, TARGET_DIR, SQL_SCRIPT_FILE).
+                toAbsolutePath().toString())) {
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+            while ((sValue = bufferedReader.readLine()) != null) {
+                stringBuilder.append(sValue);
+            }
+            bufferedReader.close();
+            sqlLines = stringBuilder.toString().split(";");
+            return sqlLines;
+        } catch (IOException e) {
+            throw new BalException("Error occurred while reading generated SQL scripts!");
+        }
     }
 
     @Override
