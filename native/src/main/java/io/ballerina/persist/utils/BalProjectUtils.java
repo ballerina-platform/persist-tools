@@ -73,7 +73,4 @@ public class BalProjectUtils {
         }
         return diagnosticResult.hasErrors();
     }
-
-
-
 }

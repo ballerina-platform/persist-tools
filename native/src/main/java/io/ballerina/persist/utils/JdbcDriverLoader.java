@@ -44,7 +44,6 @@ public class JdbcDriverLoader extends URLClassLoader {
         super(urls);
         List<Path> pathList = listFiles(driverPath);
         for (Path path : pathList) {
-
             addURL(new File(path.toString()).toURI().toURL());
 
         }
@@ -53,7 +52,7 @@ public class JdbcDriverLoader extends URLClassLoader {
         try (Stream<Path> walk = Files.walk(path)) {
             return walk != null ? walk.filter(Files::isRegularFile).collect(Collectors.toList()) : new ArrayList<>();
         } catch (IOException e) {
-            throw new BalException(e.getMessage());
+            throw new BalException("Error occurred while loading JDBC driver : " + e.getMessage());
         }
     }
 }

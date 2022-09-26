@@ -129,8 +129,8 @@ public class Push implements BLauncherCmd {
         String password = configurations.get(PASSWORD).replaceAll("\"", "");
         String database = configurations.get(DATABASE).replaceAll("\"", "");
         Properties props = new Properties();
-        props.put("user", user);
-        props.put("password", password);
+        props.put(USER, user);
+        props.put(PASSWORD, password);
         try (Connection connection = driver.connect(url, props)) {
             ResultSet resultSet = connection.getMetaData().getCatalogs();
             boolean databaseExists = false;
@@ -184,11 +184,10 @@ public class Push implements BLauncherCmd {
     }
 
     private void setupJdbcDriver() throws BalException {
+        URL[] urls = {};
         try {
-            URL[] urls = {};
-            JdbcDriverLoader driverLoader;
-            driverLoader = new JdbcDriverLoader(urls, driverPath.toAbsolutePath());
-            Class drvClass = driverLoader.loadClass(MYSQL_DRIVER_CLASS);
+            JdbcDriverLoader driverLoader = new JdbcDriverLoader(urls, driverPath.toAbsolutePath());
+            Class<?> drvClass = driverLoader.loadClass(MYSQL_DRIVER_CLASS);
             driver = (Driver) drvClass.getDeclaredConstructor().newInstance();
         } catch (ProjectException e) {
             throw new BalException("The current directory is not a Ballerina project!");
@@ -199,7 +198,7 @@ public class Push implements BLauncherCmd {
         } catch (IllegalAccessException e) {
             throw new BalException("Access denied trying to instantiation the jdbc driver");
         } catch (NoSuchMethodException e) {
-            throw new BalException("Method not fount error while trying to instantiate jdbc driver : "
+            throw new BalException("Method not found error while trying to instantiate jdbc driver : "
                     + e.getMessage());
         } catch (MalformedURLException e) {
             throw new BalException("Error in jdbc driver path : " + e.getMessage());

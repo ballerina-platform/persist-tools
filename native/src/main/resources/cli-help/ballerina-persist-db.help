@@ -8,6 +8,6 @@ COMMANDS
         The available subcommands are:
 
    Package Commands:
-        push            Execute CRUD operations.
+        push            Run the generated SQL file.
 
 
