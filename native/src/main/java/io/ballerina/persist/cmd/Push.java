@@ -47,15 +47,17 @@ import java.util.HashMap;
 import java.util.Properties;
 
 import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
+import static io.ballerina.persist.PersistToolsConstants.CONFIG_SCRIPT_FILE;
 import static io.ballerina.persist.PersistToolsConstants.CREATE_DATABASE_SQL;
 import static io.ballerina.persist.PersistToolsConstants.DATABASE;
 import static io.ballerina.persist.PersistToolsConstants.HOST;
 import static io.ballerina.persist.PersistToolsConstants.MYSQL;
-import static io.ballerina.persist.PersistToolsConstants.MYSQL_CLASS;
+import static io.ballerina.persist.PersistToolsConstants.MYSQL_DRIVER_CLASS;
 import static io.ballerina.persist.PersistToolsConstants.PASSWORD;
+import static io.ballerina.persist.PersistToolsConstants.PLATFORM_LIBS;
 import static io.ballerina.persist.PersistToolsConstants.PORT;
-import static io.ballerina.persist.PersistToolsConstants.SQL_PATH;
-import static io.ballerina.persist.PersistToolsConstants.TARGET;
+import static io.ballerina.persist.PersistToolsConstants.SQL_SCRIPT_FILE;
+import static io.ballerina.persist.PersistToolsConstants.TARGET_DIR;
 import static io.ballerina.persist.PersistToolsConstants.USER;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.JDBC_URL_WITHOUT_DATABASE;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.JDBC_URL_WITH_DATABASE;
@@ -78,8 +80,8 @@ public class Push implements BLauncherCmd {
     public ProjectEnvironmentBuilder projectEnvironmentBuilder;
     Project balProject;
     public String sourcePath = "";
-    public String configPath = "Config.toml";
-    public Path driverPath = Paths.get("target", "platform-libs");
+    public String configPath = CONFIG_SCRIPT_FILE;
+    public Path driverPath = Paths.get(TARGET_DIR, PLATFORM_LIBS);
     Driver driver;
     HashMap<String, String> configurations;
     @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
@@ -111,7 +113,7 @@ public class Push implements BLauncherCmd {
                 balProject = ProjectLoader.loadProject(Paths.get(sourcePath), projectEnvironmentBuilder);
             }
             driverLoader = new JdbcDriverLoader(urls, driverPath.toAbsolutePath());
-            Class drvClass = driverLoader.loadClass(MYSQL_CLASS);
+            Class drvClass = driverLoader.loadClass(MYSQL_DRIVER_CLASS);
             driver = (Driver) drvClass.getDeclaredConstructor().newInstance();
             name = balProject.currentPackage().descriptor().org().value() + "." + balProject.currentPackage()
                     .descriptor().name().value();
@@ -154,7 +156,7 @@ public class Push implements BLauncherCmd {
             configurations = SyntaxTreeGenerator.readToml(
                     Paths.get(this.sourcePath, this.configPath), name);
 
-            Path path = Paths.get(this.sourcePath, TARGET, SQL_PATH);
+            Path path = Paths.get(this.sourcePath, TARGET_DIR, SQL_SCRIPT_FILE);
 
             FileReader fileReader = new FileReader(path.toAbsolutePath().toString());
             BufferedReader bufferedReader = new BufferedReader(fileReader);

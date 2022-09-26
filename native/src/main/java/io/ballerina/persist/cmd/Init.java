@@ -49,8 +49,8 @@ import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 public class Init implements BLauncherCmd {
 
     private final PrintStream errStream = System.err;
-    private final String configPath = PersistToolsConstants.CONFIG_PATH;
-    private final String ballerinaPath = PersistToolsConstants.BALLERINA_PATH;
+    private final String configPath = PersistToolsConstants.CONFIG_SCRIPT_FILE;
+    private final String ballerinaPath = PersistToolsConstants.BALLERINA_SCRIP_FILE;
 
     private String name = "";
     public String sourcePath = "";
