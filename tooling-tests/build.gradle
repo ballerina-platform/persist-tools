@@ -78,6 +78,8 @@ def checkTestDockerContainerStatus(dockerName) {
         } catch (all) {
             return 1
         }
+    } else {
+        println('\n' + "Skipped checking Docker container")
     }
 }
 
@@ -98,6 +100,8 @@ task startTestDockerContainer(type: Exec) {
                 throw new GradleException("Docker container 'ballerina-mysql' health test exceeded timeout!")
             }
         }
+    } else {
+        println('\n' + "Skipped starting Docker container")
     }
 }
 
@@ -113,6 +117,8 @@ task stopTestDockerContainer() {
             } catch (all) {
                 println('Gradle process can safely ignore stopTestDockerContainer task')
             }
+        } else {
+            println('\n' + "Skipped stopping Docker container")
         }
     }
 }
