@@ -1,0 +1,5 @@
+NAME
+       Create SQL files to create tables for the persist entity.
+
+SYNOPSIS
+       bal persist db push

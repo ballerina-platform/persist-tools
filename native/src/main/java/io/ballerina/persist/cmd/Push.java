@@ -47,6 +47,7 @@ import java.util.HashMap;
 import java.util.Properties;
 
 import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
+import static io.ballerina.persist.PersistToolsConstants.CREATE_DATABASE_SQL;
 import static io.ballerina.persist.PersistToolsConstants.DATABASE;
 import static io.ballerina.persist.PersistToolsConstants.HOST;
 import static io.ballerina.persist.PersistToolsConstants.MYSQL;
@@ -72,7 +73,8 @@ import static io.ballerina.persist.nodegenerator.BalFileConstants.JDBC_URL_WITH_
 public class Push implements BLauncherCmd {
 
     private final PrintStream errStream = System.err;
-    private static final String COMMAND_IDENTIFIER = "persist-push";
+    private final PrintStream stdStream = System.out;
+    private static final String COMMAND_IDENTIFIER = "persist-db-push";
     public ProjectEnvironmentBuilder projectEnvironmentBuilder;
     Project balProject;
     public String sourcePath = "";
@@ -86,11 +88,19 @@ public class Push implements BLauncherCmd {
     @Override
     public void execute() {
         String name;
+        String sValue;
+        StringBuilder stringBuffer = new StringBuilder();
+        configurations = new HashMap<>();
+        String[] sqlLines;
+        Connection connection;
+        Statement statement;
+
         if (helpFlag) {
             String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMMAND_IDENTIFIER);
             errStream.println(commandUsageInfo);
             return;
         }
+
         boolean isTest = (projectEnvironmentBuilder != null);
         try  {
             URL[] urls = {};
@@ -140,12 +150,6 @@ public class Push implements BLauncherCmd {
             errStream.println(e.getMessage());
             return;
         }
-        String sValue;
-        StringBuffer stringBuffer = new StringBuffer();
-        configurations = new HashMap<>();
-        String[] sqlLines;
-        Connection connection;
-        Statement statement;
         try {
             configurations = SyntaxTreeGenerator.readToml(
                     Paths.get(this.sourcePath, this.configPath), name);
@@ -167,7 +171,7 @@ public class Push implements BLauncherCmd {
             errStream.println("Error occurred while reading generated SQL scripts!");
             return;
         }
-        String url = String.format(JDBC_URL_WITHOUT_DATABASE, "mysql",
+        String url = String.format(JDBC_URL_WITHOUT_DATABASE, MYSQL,
                 configurations.get(HOST).replaceAll("\"", ""), configurations.get(PORT));
         String user = configurations.get(USER).replaceAll("\"", "");
         String password = configurations.get(PASSWORD).replaceAll("\"", "");
@@ -188,9 +192,9 @@ public class Push implements BLauncherCmd {
             }
             if (!databaseExists) {
                 statement = connection.createStatement();
-                String query = String.format("CREATE DATABASE %s", database);
+                String query = String.format(CREATE_DATABASE_SQL, database);
                 statement.executeUpdate(query);
-                errStream.println("Creating Database : " + database);
+                stdStream.println("Creating Database : " + database);
             }
             resultSet.close();
             connection.close();
@@ -204,16 +208,15 @@ public class Push implements BLauncherCmd {
             }
             statement = connection.createStatement();
 
-            for (int line = 0; line < sqlLines.length; line++) {
-                if (!sqlLines[line].trim().equals("")) {
-                    statement.executeUpdate(sqlLines[line]);
+            for (String sqlLine : sqlLines) {
+                if (!sqlLine.trim().equals("")) {
+                    statement.executeUpdate(sqlLine);
                 }
             }
             statement.close();
             connection.close();
         } catch (SQLException e) {
-            errStream.println("*** Error : " + e.getMessage());
-            errStream.println("*** ");
+            errStream.println("Error occurred when creating database tables: " + e.getMessage());
         }
     }
 
@@ -242,12 +245,13 @@ public class Push implements BLauncherCmd {
     
     @Override
     public void printLongDesc(StringBuilder out) {
-        out.append("Generate database configurations file inside the Ballerina project").append(System.lineSeparator());
+        out.append("Create databases and tables for the entity records defined in the Ballerina project")
+                .append(System.lineSeparator());
         out.append(System.lineSeparator());
     }
     @Override
     public void printUsage(StringBuilder stringBuilder) {
         stringBuilder.append("  ballerina " + COMPONENT_IDENTIFIER +
-                " init").append(System.lineSeparator());
+                " db push").append(System.lineSeparator());
     }
 }

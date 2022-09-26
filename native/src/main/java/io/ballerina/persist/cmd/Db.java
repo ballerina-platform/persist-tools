@@ -32,19 +32,19 @@ import java.io.PrintStream;
  */
 @CommandLine.Command(
         name = "db",
-        description = "generate database configurations.",
+        description = "create databases and tables for the entity records.",
         subcommands = {Push.class}
         )
 
 public class Db implements BLauncherCmd {
 
-    private static final PrintStream errStream = System.err;
-    public static final String COMPONENT_IDENTIFIER = "db";
+    private static final PrintStream StdStream = System.out;
+    public static final String COMPONENT_IDENTIFIER = "persist-db";
 
     @Override
     public void execute() {
         String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMPONENT_IDENTIFIER);
-        errStream.println(commandUsageInfo);
+        StdStream.println(commandUsageInfo);
     }
     @Override
     public void setParentCmdParser(CommandLine parentCmdParser) {

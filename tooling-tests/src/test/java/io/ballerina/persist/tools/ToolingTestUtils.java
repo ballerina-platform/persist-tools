@@ -68,7 +68,7 @@ public class ToolingTestUtils {
             .toAbsolutePath();
     private static final Path DISTRIBUTION_PATH = Paths.get(".." + File.separator, "target", "ballerina-runtime")
             .toAbsolutePath();
-    private static final Path DRIVER_PATH = Paths.get(".." + File.separator, "Ballerina", "lib").toAbsolutePath();
+    private static final Path DRIVER_PATH = Paths.get("lib").toAbsolutePath();
 
     private static ProjectEnvironmentBuilder getEnvironmentBuilder() {
         Environment environment = EnvironmentBuilder.getBuilder().setBallerinaHome(DISTRIBUTION_PATH).build();
@@ -101,7 +101,7 @@ public class ToolingTestUtils {
 
     public static void assertGeneratedDbSources(String subDir, Command cmd) {
         String osName = System.getProperty("os.name");
-        if (!osName.toLowerCase().startsWith("windows")) {
+        if (!osName.toLowerCase().contains("windows")) {
             File sqlFile;
             sqlFile = new File(
                     Paths.get("target", "persist_db_scripts.sql").toAbsolutePath().toString());

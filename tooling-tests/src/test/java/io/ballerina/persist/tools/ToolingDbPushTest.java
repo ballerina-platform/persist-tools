@@ -26,9 +26,9 @@ import static io.ballerina.persist.tools.ToolingTestUtils.assertGeneratedDbSourc
 import static io.ballerina.persist.tools.ToolingTestUtils.assertGeneratedSourcesNegative;
 
 /**
- * persist tool generate command tests.
+ * persist tool db push command tests.
  */
-public class ToolingDbTest {
+public class ToolingDbPushTest {
 
     @Test(enabled = true)
     @Description("Database is not available and it is created while running the db push command")
