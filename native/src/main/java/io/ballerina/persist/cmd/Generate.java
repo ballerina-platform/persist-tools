@@ -121,9 +121,10 @@ public class Generate implements BLauncherCmd {
         try (Stream<Path> walk = Files.walk(dirPath)) {
             if (walk != null) {
                 fileList = walk.filter(Files::isRegularFile).collect(Collectors.toList());
-                if (hasSyntacticDiagnostics(Paths.get(this.sourcePath)) ||
-                        hasSemanticDiagnostics(Paths.get(this.sourcePath), this.projectEnvironmentBuilder)) {
-                    throw new BalException("Error occurred while building the project!");
+                if (hasSyntacticDiagnostics(Paths.get(this.sourcePath))) {
+                    throw new BalException("Syntax errors are found while building the project!");
+                } else if (hasSemanticDiagnostics(Paths.get(this.sourcePath), this.projectEnvironmentBuilder)) {
+                    throw new BalException("Semantic errors are found while building the project!");
                 }
                 for (Path filePath : fileList) {
                     if (filePath.toString().endsWith(".bal")) {
