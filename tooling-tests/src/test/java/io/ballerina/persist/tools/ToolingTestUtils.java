@@ -22,6 +22,7 @@ import io.ballerina.persist.cmd.Generate;
 import io.ballerina.persist.cmd.Init;
 import io.ballerina.persist.cmd.PersistCmd;
 import io.ballerina.persist.cmd.Push;
+import io.ballerina.persist.objects.BalException;
 import io.ballerina.projects.ProjectEnvironmentBuilder;
 import io.ballerina.projects.environment.Environment;
 import io.ballerina.projects.environment.EnvironmentBuilder;
@@ -82,9 +83,15 @@ public class ToolingTestUtils {
                 Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)));
 
         if (!subDir.equals("tool_test_generate_4")) {
-            Assert.assertFalse(hasSyntacticDiagnostics(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)));
+            try {
+                Assert.assertFalse(!hasSyntacticDiagnostics(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir))
+                        .isEmpty());
+            } catch (IOException | BalException e) {
+                errStream.println(e.getMessage());
+                Assert.fail();
+            }
             Assert.assertFalse(hasSemanticDiagnostics(Paths.get(GENERATED_SOURCES_DIRECTORY)
-                    .resolve(subDir), getEnvironmentBuilder()));
+                    .resolve(subDir), getEnvironmentBuilder()).hasErrors());
         }
 
         for (Path actualOutputFile: listFiles(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir))) {
