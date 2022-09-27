@@ -20,6 +20,7 @@ The conforming implementation of the specification is released and included in t
 1. [Overview](#1-overview)
 2. [Generating Database Configurations](#2-generating-database-configurations)
 3. [Generating Client Objects](#3-generating-client-objects)
+4. [Create database tables](#4-creating-database-tables)
 
 ## 1. Overview
 This specification elaborates on the operations available in the CLI Tool.
@@ -170,3 +171,39 @@ public class MedicalNeedStream {
     }
 }
 ```
+
+## 4. Creating Database Tables
+Users can define database entities in their Ballerina projects. They can create database tables corresponding to these entities by executing `bal persist db push` command. Users can then use the generated client objects to perform operations on these tables programmatically without having to write SQL statements.
+
+Consider the following entity record inside the Ballerina project.
+```ballerina
+import ballerina/time;
+import ballerina/persist;
+
+@persist:Entity {
+    key: ["needId"],
+    tableName: "MedicalNeeds"
+}
+public type MedicalNeed record {|
+    @persist:AutoIncrement
+    readonly int needId = -1;
+
+    int itemId;
+    int beneficiaryId;
+    time:Civil period;
+    string urgency;
+    int quantity;
+|};
+```
+
+Suppose the user has defined database configurations in the `Config.toml` file as follows.
+```
+[foo.bar]
+host = "localhost"
+port = 3306
+user = "root"
+password = "Test123#"
+database = "medicals"
+```
+
+When the user executes `bal persist db push` command, `MedicalNeeds` table will be created in the `medicals` database with `needId` as the primary key. 
