@@ -69,7 +69,7 @@ import static io.ballerina.persist.nodegenerator.BalFileConstants.JDBC_URL_WITH_
 
 @CommandLine.Command(
         name = "push",
-        description = "Generate and run SQL scripts.")
+        description = "Create database tables corresponding to user-defined entities")
 
 public class Push implements BLauncherCmd {
 
