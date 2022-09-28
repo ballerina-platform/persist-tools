@@ -15,7 +15,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
+import org.apache.tools.ant.taskdefs.condition.Os
 plugins {
     id 'java'
     id 'checkstyle'
@@ -40,6 +40,10 @@ dependencies {
     testImplementation group: 'org.ballerinalang', name: 'ballerina-parser', version: "${ballerinaLangVersion}"
     testImplementation project(":persist-tools-native")
     testImplementation group: 'org.testng', name: 'testng', version: "${testngVersion}"
+    implementation 'org.junit.jupiter:junit-jupiter:5.8.1'
+    implementation (group: 'mysql', name: 'mysql-connector-java', version: "${mySqlDriverVersion}") {
+        transitive = false
+    }
 }
 
 tasks.withType(Checkstyle) {
@@ -53,6 +57,72 @@ task copyTestResources(type: Copy) {
     }
 }
 
+def checkExecResult(execResult, failText, standardOutput) {
+    if (execResult) {
+        if (execResult.getExitValue() != 0) {
+            throw new GradleException('Non-zero exit value: ' + execResult.getExitValue())
+        }
+        if (standardOutput.toString().contains(failText)) {
+            throw new GradleException('"' + failText + '" string in output: ' + standardOutput.toString())
+        }
+    } else {
+        throw new GradleException('Returned a null execResult object')
+    }
+}
+
+def checkTestDockerContainerStatus(dockerName) {
+    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+        try {
+            return exec {
+                commandLine 'sh', '-c',
+                        "docker exec ${dockerName} mysqladmin ping -hlocalhost -uroot -pTest123# --silent"
+            }.exitValue
+        } catch (all) {
+            return 1
+        }
+    }
+}
+
+task startTestDockerContainer(type: Exec) {
+    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+        def standardOutput = new ByteArrayOutputStream()
+        commandLine 'sh', '-c', 'docker run --rm -d --name ballerina-persist-tools -e MYSQL_ROOT_PASSWORD="Test123#" -p 3307:3306 -t mysql:8.0.21'
+        def healthCheck = 1
+        def counter = 0
+        doLast {
+            checkExecResult(execResult, 'Error', standardOutput)
+            while (healthCheck != 0 && counter < 12) {
+                sleep(60 * 1000)
+                healthCheck = checkTestDockerContainerStatus('ballerina-persist-tools')
+                counter = counter + 1
+            }
+            if (healthCheck != 0) {
+                throw new GradleException("Docker container 'ballerina-mysql' health test exceeded timeout!")
+            }
+        }
+    } else {
+        commandLine 'cmd','slmgr /dlv'
+        println('\n' + "Windows Instance detected")
+        println('\n' + "skippped starting the docker container")
+    }
+}
+
+task stopTestDockerContainer() {
+    doLast {
+        if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+            try {
+                def stdOut = new ByteArrayOutputStream()
+                exec {
+                    commandLine 'sh', '-c', 'docker stop ballerina-persist-tools'
+                    standardOutput = stdOut
+                }
+            } catch (all) {
+                println('Gradle process can safely ignore stopTestDockerContainer task')
+            }
+        }
+    }
+}
+
 checkstyle {
     toolVersion "${project.checkstylePluginVersion}"
     configFile rootProject.file("build-config/checkstyle/build/checkstyle.xml")
@@ -63,7 +133,7 @@ checkstyleTest.dependsOn(":checkstyle:downloadCheckstyleRuleFiles")
 
 spotbugsTest {
     effort "max"
-    reportLevel "low"
+    reportLevel "Medium"
     reportsDir = file("$project.buildDir/reports/spotbugs")
     reports {
         html.enabled true
@@ -85,6 +155,7 @@ checkstyleMain {
 
 test {
     dependsOn(copyTestResources)
+    dependsOn(startTestDockerContainer)
     systemProperty "ballerina.offline.flag", "true"
     useTestNG() {
         suites 'src/test/resources/testng.xml'
@@ -128,3 +199,4 @@ compileJava {
 
 test.dependsOn ":persist-tools-native:build"
 test.dependsOn ":persist-tools-ballerina:build"
+test.finalizedBy stopTestDockerContainer

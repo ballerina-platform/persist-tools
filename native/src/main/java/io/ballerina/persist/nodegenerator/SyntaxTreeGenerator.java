@@ -18,6 +18,7 @@
 
 package io.ballerina.persist.nodegenerator;
 
+import io.ballerina.persist.objects.BalException;
 import io.ballerina.toml.syntax.tree.AbstractNodeFactory;
 import io.ballerina.toml.syntax.tree.DocumentMemberDeclarationNode;
 import io.ballerina.toml.syntax.tree.DocumentNode;
@@ -37,6 +38,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import static io.ballerina.persist.PersistToolsConstants.DEFAULT_DATABASE;
 import static io.ballerina.persist.PersistToolsConstants.DEFAULT_HOST;
@@ -48,6 +50,9 @@ import static io.ballerina.persist.PersistToolsConstants.KEY_HOST;
 import static io.ballerina.persist.PersistToolsConstants.KEY_PASSWORD;
 import static io.ballerina.persist.PersistToolsConstants.KEY_PORT;
 import static io.ballerina.persist.PersistToolsConstants.KEY_USER;
+import static io.ballerina.persist.nodegenerator.SyntaxTreeConstants.ARTIFACT_ID;
+import static io.ballerina.persist.nodegenerator.SyntaxTreeConstants.GROUP_ID;
+import static io.ballerina.persist.nodegenerator.SyntaxTreeConstants.VERSION;
 
 
 /**
@@ -57,8 +62,13 @@ import static io.ballerina.persist.PersistToolsConstants.KEY_USER;
  */
 public class SyntaxTreeGenerator {
     private static final String[] nodeMap = {KEY_HOST, KEY_PORT, KEY_USER, KEY_DATABASE, KEY_PASSWORD};
-    private static final String[] defaultValues = {DEFAULT_HOST, DEFAULT_PORT, DEFAULT_USER, DEFAULT_DATABASE,
-            DEFAULT_DATABASE};
+    private static final String[] defaultValues = {
+            DEFAULT_HOST,
+            DEFAULT_PORT,
+            DEFAULT_USER,
+            DEFAULT_DATABASE,
+            DEFAULT_DATABASE
+    };
 
     /**
      * Method to create a new Config.toml file with database configurations.
@@ -73,10 +83,45 @@ public class SyntaxTreeGenerator {
         return SyntaxTree.from(textDocument);
     }
 
+    public static HashMap<String, String> readToml(Path configPath, String name) throws BalException {
+        HashMap<String, String> values = new HashMap<>();
+        Path fileNamePath = configPath.getFileName();
+        try {
+            TextDocument configDocument = TextDocuments.from(Files.readString(configPath));
+            SyntaxTree syntaxTree = SyntaxTree.from(configDocument, fileNamePath.toString());
+            DocumentNode rootNote = syntaxTree.rootNode();
+            NodeList nodeList = rootNote.members();
+            for (Object member : nodeList) {
+                if (member instanceof TableNode) {
+                    TableNode node = (TableNode) member;
+                    if (node.identifier().toSourceCode().trim().equals(name)) {
+                        NodeList<KeyValueNode> subNodeList = node.fields();
+                        for (KeyValueNode subMember : subNodeList) {
+                            if (isDatabaseConfigurationEntry(subMember.identifier())) {
+                                values.put(subMember.identifier().toSourceCode().trim(),
+                                        subMember.value().toSourceCode().trim());
+                            }
+                        }
+                    }
+
+                }
+            }
+            if (values.isEmpty() || values.size() < 5 || (!values.containsKey("database")
+                    || !values.containsKey("user") || !values.containsKey("host") || !values.containsKey("password") ||
+                    !values.containsKey("port"))) {
+                throw new BalException("Error occurred while reading Config.Toml file");
+            } else {
+                return values;
+            }
+        } catch (IOException e) {
+            throw new BalException("Error while reading configurations");
+        }
+    }
+
     /**
      * Method to update the Config.toml with database configurations.
      */
-    public static SyntaxTree updateToml(Path configPath, String name) throws IOException {
+    public static SyntaxTree updateConfigToml(Path configPath, String name) throws IOException {
 
         ArrayList<String> existingNodes = new ArrayList<>();
         NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
@@ -131,6 +176,39 @@ public class SyntaxTreeGenerator {
             moduleMembers = populateRemaining(moduleMembers, existingNodes);
 
         }
+        Token eofToken = AbstractNodeFactory.createIdentifierToken("");
+        DocumentNode documentNode = NodeFactory.createDocumentNode(moduleMembers, eofToken);
+        TextDocument textDocument = TextDocuments.from(documentNode.toSourceCode());
+        return SyntaxTree.from(textDocument);
+    }
+
+    public static SyntaxTree updateBallerinaToml(Path balPAth) throws IOException {
+
+        NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
+        Path fileNamePath = balPAth.getFileName();
+        TextDocument configDocument = TextDocuments.from(Files.readString(balPAth));
+        SyntaxTree syntaxTree = SyntaxTree.from(configDocument, fileNamePath.toString());
+        DocumentNode rootNote = syntaxTree.rootNode();
+        NodeList nodeList = rootNote.members();
+
+        for (Object member : nodeList) {
+            if (member instanceof KeyValueNode) {
+                moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) member);
+            } else if (member instanceof TableNode) {
+                if (!moduleMembers.isEmpty()) {
+                    moduleMembers = addNewLine(moduleMembers, 1);
+                }
+                moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) member);
+            } else if (member instanceof TableArrayNode) {
+                moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) member);
+            }
+        }
+        moduleMembers = addNewLine(moduleMembers, 1);
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray(
+                SyntaxTreeConstants.JAVA_11_DEPENDANCY, null));
+        moduleMembers = moduleMembers.add(GROUP_ID);
+        moduleMembers = moduleMembers.add(ARTIFACT_ID);
+        moduleMembers = moduleMembers.add(VERSION);
         Token eofToken = AbstractNodeFactory.createIdentifierToken("");
         DocumentNode documentNode = NodeFactory.createDocumentNode(moduleMembers, eofToken);
         TextDocument textDocument = TextDocuments.from(documentNode.toSourceCode());

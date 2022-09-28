@@ -41,6 +41,22 @@ public class PersistToolsConstants {
     public static final String KEY_DATABASE = "database";
     public static final String KEY_HOST = "host";
 
-    public static final String CONFIG_PATH = "Config.toml";
+    public static final String CONFIG_SCRIPT_FILE = "Config.toml";
+    public static final String BALLERINA_SCRIP_FILE = "Ballerina.toml";
+    public static final String SQL_SCRIPT_FILE = "persist_db_scripts.sql";
+    public static final String TARGET_DIR = "target";
+
+    public static final String PLATFORM_LIBS = "platform-libs";
+
+    public static final String PASSWORD = "password";
+    public static final String USER = "user";
+    public static final String MYSQL_DRIVER_CLASS = "com.mysql.cj.jdbc.Driver";
+    public static final String MYSQL = "mysql";
+    public static final String DATABASE = "database";
+    public static final String HOST = "host";
+    public static final String PORT = "port";
+
+    public static final String CREATE_DATABASE_SQL = "CREATE DATABASE %s";
+
 
 }

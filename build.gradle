@@ -64,10 +64,9 @@ allprojects {
 }
 
 subprojects {
-
     configurations {
+        externalJars
         ballerinaStdLibs
-    
     }
 
     dependencies {

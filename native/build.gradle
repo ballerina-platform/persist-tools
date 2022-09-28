@@ -22,6 +22,15 @@ plugins {
 
 description = 'Ballerina - Persist-Tools Java Native'
 
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    implementation
+    externalJars
+}
+
 dependencies {
     checkstyle project(':checkstyle')
     checkstyle "com.puppycrawl.tools:checkstyle:${checkstylePluginVersion}"

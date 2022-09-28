@@ -1,0 +1,13 @@
+NAME
+       Perform DDL operations related to Ballerina entities against the Database
+
+SYNOPSIS
+       bal persist db <command> [args]
+
+COMMANDS
+        The available subcommands are:
+
+   Package Commands:
+        push            Run the generated SQL file.
+
+

@@ -49,7 +49,8 @@ import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 public class Init implements BLauncherCmd {
 
     private final PrintStream errStream = System.err;
-    private final String configPath = PersistToolsConstants.CONFIG_PATH;
+    private final String configPath = PersistToolsConstants.CONFIG_SCRIPT_FILE;
+    private final String ballerinaPath = PersistToolsConstants.BALLERINA_SCRIP_FILE;
 
     private String name = "";
     public String sourcePath = "";
@@ -84,16 +85,19 @@ public class Init implements BLauncherCmd {
         if (!Files.exists(Paths.get(sourcePath, configPath))) {
             try {
                 createConfigToml();
+                updateBallerinaToml();
             } catch (Exception e) {
                 errStream.println("Failure when creating the Config.toml file: " + e.getMessage());
             }
         } else {
             try {
                 updateConfigToml();
+                updateBallerinaToml();
             } catch (Exception e) {
                 errStream.println("Failure when updating the Config.toml file: " + e.getMessage());
             }
         }
+
     }
     private void createConfigToml() throws Exception {
         SyntaxTree syntaxTree = SyntaxTreeGenerator.createToml(this.name);
@@ -101,8 +105,15 @@ public class Init implements BLauncherCmd {
     }
 
     private void updateConfigToml() throws Exception {
-        SyntaxTree syntaxTree = SyntaxTreeGenerator.updateToml(Paths.get(this.sourcePath, this.configPath), this.name);
-        writeOutputFile(syntaxTree, Paths.get(this.sourcePath, "Config.toml").toAbsolutePath().toString());
+        SyntaxTree syntaxTree = SyntaxTreeGenerator.updateConfigToml(
+                Paths.get(this.sourcePath, this.configPath), this.name);
+        writeOutputFile(syntaxTree, Paths.get(this.sourcePath, this.configPath).toAbsolutePath().toString());
+    }
+
+    private void updateBallerinaToml() throws Exception {
+        SyntaxTree syntaxTree = SyntaxTreeGenerator.updateBallerinaToml(Paths.get(
+                this.sourcePath, this.ballerinaPath));
+        writeOutputFile(syntaxTree, Paths.get(this.sourcePath, this.ballerinaPath).toAbsolutePath().toString());
     }
 
     private void writeOutputFile(SyntaxTree syntaxTree, String outPath) throws Exception {

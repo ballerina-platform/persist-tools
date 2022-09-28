@@ -22,6 +22,8 @@ import io.ballerina.compiler.syntax.tree.AbstractNodeFactory;
 import io.ballerina.compiler.syntax.tree.Token;
 import io.ballerina.compiler.syntax.tree.TypeDescriptorNode;
 import io.ballerina.persist.components.TypeDescriptor;
+import io.ballerina.toml.syntax.tree.KeyValueNode;
+import io.ballerina.toml.validator.SampleNodeGenerator;
 
 /**
  * Class encapsulating all the Syntax tree related constants.
@@ -61,4 +63,12 @@ public class SyntaxTreeConstants {
     public static final Token SYNTAX_TREE_KEYWORD_RECORD = AbstractNodeFactory.createIdentifierToken("record ");
     public static final Token SYNTAX_TREE_KEYWORD_IF = AbstractNodeFactory.createIdentifierToken("if ");
     public static final Token SYNTAX_TREE_KEYWORD_ELSE = AbstractNodeFactory.createIdentifierToken("else ");
+    public static final String JAVA_11_DEPENDANCY = "platform.java11.dependency";
+
+    public static final KeyValueNode GROUP_ID = SampleNodeGenerator.createStringKV("groupId", "mysql", null);
+    public static final KeyValueNode ARTIFACT_ID = SampleNodeGenerator.createStringKV("artifactId",
+            "mysql-connector-java", null);
+    public static final KeyValueNode VERSION = SampleNodeGenerator.createStringKV("version",
+            "8.0.29", null);
+
 }

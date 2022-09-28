@@ -23,10 +23,12 @@ import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator;
 import io.ballerina.persist.objects.BalException;
 import io.ballerina.persist.objects.Entity;
+import io.ballerina.projects.DiagnosticResult;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.ProjectEnvironmentBuilder;
 import io.ballerina.projects.ProjectException;
 import io.ballerina.projects.directory.ProjectLoader;
+import io.ballerina.tools.diagnostics.Diagnostic;
 import org.ballerinalang.formatter.core.Formatter;
 import org.ballerinalang.formatter.core.FormatterException;
 import picocli.CommandLine;
@@ -121,9 +123,28 @@ public class Generate implements BLauncherCmd {
         try (Stream<Path> walk = Files.walk(dirPath)) {
             if (walk != null) {
                 fileList = walk.filter(Files::isRegularFile).collect(Collectors.toList());
-                if (hasSyntacticDiagnostics(Paths.get(this.sourcePath)) ||
-                        hasSemanticDiagnostics(Paths.get(this.sourcePath), this.projectEnvironmentBuilder)) {
-                    throw new BalException("Error occurred while building the project!");
+                DiagnosticResult diagnosticResult = hasSemanticDiagnostics(
+                        Paths.get(this.sourcePath), this.projectEnvironmentBuilder);
+                ArrayList<String> syntaxDiagnostics = hasSyntacticDiagnostics(Paths.get(this.sourcePath));
+                if (!syntaxDiagnostics.isEmpty()) {
+                    StringBuilder errorMessage = new StringBuilder();
+                    errorMessage.append("Error occurred when validating the project." +
+                            " The project contains syntax errors. ");
+                    for (String d : syntaxDiagnostics) {
+                        errorMessage.append(System.lineSeparator());
+                        errorMessage.append(d.toString());
+                    }
+                    throw new BalException(errorMessage.toString());
+                }
+                if (diagnosticResult.hasErrors()) {
+                    StringBuilder errorMessage = new StringBuilder();
+                    errorMessage.append("Error occurred when validating the project." +
+                            " The project contains semantic errors. ");
+                    for (Diagnostic d : diagnosticResult.errors()) {
+                        errorMessage.append(System.lineSeparator());
+                        errorMessage.append(d.toString());
+                    }
+                    throw new BalException(errorMessage.toString());
                 }
                 for (Path filePath : fileList) {
                     if (filePath.toString().endsWith(".bal")) {
