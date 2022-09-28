@@ -51,15 +51,15 @@ public class BalProjectUtils {
 
     }
 
-    public static ArrayList<Diagnostic> hasSyntacticDiagnostics(Path filePath) throws IOException, BalException {
-        ArrayList<Diagnostic> diagnostics = new ArrayList<>();
+    public static ArrayList<String> hasSyntacticDiagnostics(Path filePath) throws IOException, BalException {
+        ArrayList<String> diagnostics = new ArrayList<>();
         List<Path> pathList = listFiles(filePath);
         for (Path path : pathList) {
             if (path.toString().endsWith(".bal")) {
                 TextDocument textDocument = TextDocuments.from(Files.readString(path));
                 Iterator<Diagnostic> diagnosticIte = SyntaxTree.from(textDocument).diagnostics().iterator();
                 while (diagnosticIte.hasNext()) {
-                    diagnostics.add(diagnosticIte.next());
+                    diagnostics.add(fotmatError(diagnosticIte.next().toString(), path));
                 }
             }
         }
@@ -80,11 +80,19 @@ public class BalProjectUtils {
         DiagnosticResult diagnosticResult = compilation.diagnosticResult();
         return diagnosticResult;
     }
+
     private static List<Path> listFiles(Path path) throws BalException {
         try (Stream<Path> walk = Files.walk(path)) {
             return walk != null ? walk.filter(Files::isRegularFile).collect(Collectors.toList()) : new ArrayList<>();
         } catch (IOException e) {
             throw new BalException("Error occurred while reading bal : " + e.getMessage());
         }
+    }
+
+    private static String fotmatError(String errorMessage, Path path) {
+        if (errorMessage.contains("[null:")) {
+            return String.format("ERROR [%s:" + errorMessage.split(":", 2)[1], path.toFile().getName());
+        }
+        return errorMessage;
     }
 }

@@ -125,12 +125,12 @@ public class Generate implements BLauncherCmd {
                 fileList = walk.filter(Files::isRegularFile).collect(Collectors.toList());
                 DiagnosticResult diagnosticResult = hasSemanticDiagnostics(
                         Paths.get(this.sourcePath), this.projectEnvironmentBuilder);
-                ArrayList<Diagnostic> syntaxDiagnostics = hasSyntacticDiagnostics(Paths.get(this.sourcePath));
+                ArrayList<String> syntaxDiagnostics = hasSyntacticDiagnostics(Paths.get(this.sourcePath));
                 if (!syntaxDiagnostics.isEmpty()) {
                     StringBuilder errorMessage = new StringBuilder();
                     errorMessage.append("Error occurred when validating the project." +
                             " The project contains syntax errors. ");
-                    for (Diagnostic d : syntaxDiagnostics) {
+                    for (String d : syntaxDiagnostics) {
                         errorMessage.append(System.lineSeparator());
                         errorMessage.append(d.toString());
                     }
