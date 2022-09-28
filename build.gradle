@@ -95,5 +95,5 @@ release {
 }
 
 task build {
-    dependsOn('persist-tools-ballerina:build')
+    dependsOn('persist-tools-native:build')
 }
