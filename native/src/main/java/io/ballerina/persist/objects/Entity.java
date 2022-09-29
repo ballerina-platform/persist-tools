@@ -34,6 +34,9 @@ public class Entity {
     private String entityName;
 
     private String packageName;
+    public Relation relation = null;
+
+    public ArrayList<Relation> relations = new ArrayList<>();
 
     private final ArrayList<FieldMetaData> fields = new ArrayList<>();
     public Entity(String[] keys, String tableName, Optional<String> module) {

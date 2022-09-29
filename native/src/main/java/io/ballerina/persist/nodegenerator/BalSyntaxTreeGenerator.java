@@ -50,6 +50,7 @@ import io.ballerina.persist.components.IfElse;
 import io.ballerina.persist.components.TypeDescriptor;
 import io.ballerina.persist.objects.Entity;
 import io.ballerina.persist.objects.FieldMetaData;
+import io.ballerina.persist.objects.Relation;
 import io.ballerina.tools.text.TextDocument;
 import io.ballerina.tools.text.TextDocuments;
 
@@ -128,29 +129,36 @@ public class BalSyntaxTreeGenerator {
             RecordTypeDescriptorNode recordDesc = (RecordTypeDescriptorNode) ((TypeDefinitionNode) moduleNode)
                     .typeDescriptor();
             entityArray.get(index).setEntityName(((TypeDefinitionNode) moduleNode).typeName().text());
+            int relationIndex = 0;
             for (Node node : recordDesc.fields()) {
                 if (node.kind() == SyntaxKind.RECORD_FIELD_WITH_DEFAULT_VALUE) {
                     RecordFieldWithDefaultValueNode fieldNode = (RecordFieldWithDefaultValueNode) node;
-                    String fName = fieldNode.fieldName().text();
-                    String fType = fieldNode.typeName().toSourceCode();
+                    String fName = fieldNode.fieldName().text().trim();
+                    String fType = fieldNode.typeName().toSourceCode().trim();
                     FieldMetaData field;
                     if (((RecordFieldWithDefaultValueNode) node).metadata().isEmpty()) {
                         field = new FieldMetaData(fName, fType, false);
                     } else {
                         MetadataNode fieldMetaD = ((RecordFieldWithDefaultValueNode) node).metadata().get();
-                        field = new FieldMetaData(fName, fType, readMetaData(fieldMetaD));
+                        Relation relation = readMetaData(fName, fType, fieldMetaD);
+                        field = new FieldMetaData(fName, fType, checkAutoIncrement(fieldMetaD));
+                        entityArray.get(index).relation = relation;
+                        entityArray.get(index).relations.add(relation);
                     }
                     entityArray.get(index).addField(field);
                 } else if (node.kind() == SyntaxKind.RECORD_FIELD) {
                     RecordFieldNode fieldNode = (RecordFieldNode) node;
-                    String fName = fieldNode.fieldName().text();
-                    String fType = fieldNode.typeName().toSourceCode();
+                    String fName = fieldNode.fieldName().text().trim();
+                    String fType = fieldNode.typeName().toSourceCode().trim();
                     FieldMetaData field;
                     if (((RecordFieldNode) node).metadata().isEmpty()) {
                         field = new FieldMetaData(fName, fType, false);
                     } else {
                         MetadataNode fieldMetaD = ((RecordFieldNode) node).metadata().get();
-                        field = new FieldMetaData(fName, fType, readMetaData(fieldMetaD));
+                        Relation relation = readMetaData(fName, fType, fieldMetaD);
+                        field = new FieldMetaData(fName, fType, checkAutoIncrement(fieldMetaD));
+                        entityArray.get(index).relation = relation;
+                        entityArray.get(index).relations.add(relation);
                     }
                     entityArray.get(index).addField(field);
                 }
@@ -583,7 +591,7 @@ public class BalSyntaxTreeGenerator {
         );
     }
 
-    private static boolean readMetaData(MetadataNode metaD) {
+    private static boolean checkAutoIncrement(MetadataNode metaD) {
         NodeList<AnnotationNode> annotations = metaD.annotations();
         for (AnnotationNode annotation : annotations) {
             Node annotReference = annotation.annotReference();
@@ -597,5 +605,92 @@ public class BalSyntaxTreeGenerator {
             }
         }
         return false;
+    }
+
+    public static void generateRelations(ArrayList<Entity> entityArray) {
+        for (Entity entity : entityArray) {
+            //Entity entity = entityArray.get(j);
+            int counter = 0;
+            if (entity.relation != null) {
+                if (entity.relation.isChild) {
+                    continue;
+                }
+                String entityType = entity.relation.relatedType;
+                for (Entity childEntity : entityArray) {
+                    //Entity childEntity = entityArray.get(i);
+                    if (childEntity.getEntityName().equals(entityType)) {
+
+                        childEntity.relation = new Relation(entity.getEntityName(), null, new ArrayList<String>(),
+                                new ArrayList<String>(), true);
+                        childEntity.relation.refTable = entity.getTableName();
+                        entity.relation.refTable = childEntity.getTableName();
+                        for (FieldMetaData fieldMetaData : entity.getFields()) {
+                            if (!fieldMetaData.getFieldType().equals(childEntity.getEntityName())) {
+                                childEntity.relation.relatedFields.add(counter, fieldMetaData.getFieldName());
+                                counter += 1;
+                            }
+                        }
+                        counter = 0;
+                        for (FieldMetaData field : childEntity.getFields()) {
+                            if (!field.getFieldType().equals(entity.getEntityName())) {
+                                entity.relation.relatedFields.add(counter, field.getFieldName());
+                                counter += 1;
+                            }
+                            if (field.getFieldType().equals(entity.getEntityName())) {
+                                childEntity.relation.relatedInstance = field.getFieldName();
+                            }
+                        }
+                    }
+                }
+            }
+
+        }
+    }
+
+    private static Relation readMetaData(String entityName, String entityType, MetadataNode metaD) {
+        NodeList<AnnotationNode> annotations = metaD.annotations();
+        for (AnnotationNode annotation : annotations) {
+            Node annotReference = annotation.annotReference();
+            if (annotReference.kind() == SyntaxKind.QUALIFIED_NAME_REFERENCE) {
+                QualifiedNameReferenceNode qualifiedNameRef =
+                        (QualifiedNameReferenceNode) annotReference;
+                if (qualifiedNameRef.identifier().text().equals("Relation") && qualifiedNameRef.modulePrefix().text()
+                        .equals(BalFileConstants.PERSIST) && annotation.annotValue().isPresent()) {
+                    ArrayList<String> keyColumns = new ArrayList<>();
+                    ArrayList<String> reference = new ArrayList<>();
+                    for (MappingFieldNode fieldNode : annotation.annotValue().get().fields()) {
+                        if (fieldNode.kind() != SyntaxKind.SPECIFIC_FIELD) {
+                            continue;
+                        }
+                        SpecificFieldNode specificField = (SpecificFieldNode) fieldNode;
+                        if (specificField.fieldName().kind() != SyntaxKind.IDENTIFIER_TOKEN ||
+                                specificField.valueExpr().isEmpty()) {
+                            continue;
+                        }
+                        ExpressionNode valueNode = specificField.valueExpr().get();
+                        if (((SpecificFieldNode) fieldNode).fieldName().toString().trim().equals("keyColumns")) {
+                            Iterator<Node> listIterator = ((ListConstructorExpressionNode) valueNode)
+                                    .expressions().iterator();
+                            int count = 0;
+                            while (listIterator.hasNext()) {
+                                keyColumns.add(count, listIterator.next().toSourceCode());
+                                count += 1;
+                            }
+                        } else if (((SpecificFieldNode) fieldNode).fieldName().toSourceCode().trim()
+                                .equals("reference")) {
+                            Iterator<Node> listIterator = ((ListConstructorExpressionNode) valueNode)
+                                    .expressions().iterator();
+                            int count = 0;
+                            while (listIterator.hasNext()) {
+                                reference.add(count, listIterator.next().toSourceCode());
+                                count += 1;
+                            }
+                        }
+                    }
+                    return new Relation(entityType, entityName, keyColumns, reference, false);
+                }
+            }
+        }
+        return new Relation(entityType, entityName, new ArrayList<>(), new ArrayList<>(), false);
     }
 }
