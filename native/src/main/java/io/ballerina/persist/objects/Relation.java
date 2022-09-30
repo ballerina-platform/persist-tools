@@ -13,7 +13,7 @@ public class Relation {
     public ArrayList<String> keyColumns = new ArrayList<>();
     public ArrayList<String> references = new ArrayList<>();
 
-    public ArrayList<String> relatedFields = new ArrayList<>();
+    public ArrayList<FieldMetaData> relatedFields = new ArrayList<>();
     public boolean isChild = false;
     public String relatedType;
     public String refTable;
