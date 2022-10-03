@@ -19,6 +19,9 @@ public class Relation {
     public String refTable;
     public String relatedInstance;
 
+    public Entity relatedEntity;
+    public boolean parentIncluded = false;
+
     public Relation(String relatedType, String relatedInstance, ArrayList<String> keyColumns,
                     ArrayList<String> references, boolean isChild) {
         this.keyColumns = keyColumns;
@@ -26,5 +29,15 @@ public class Relation {
         this.relatedType = relatedType;
         this.isChild = isChild;
         this.relatedInstance = relatedInstance;
+    }
+
+    public String getClientName() {
+        String className = relatedEntity.getEntityName();
+        if (relatedEntity.getModule().isPresent()) {
+            className = relatedEntity.getModule().get().substring(0, 1).toUpperCase() +
+                    relatedEntity.getModule().get().substring(1)
+                    + relatedEntity.getEntityName();
+        }
+        return className;
     }
 }

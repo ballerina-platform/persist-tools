@@ -45,6 +45,7 @@ import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.compiler.syntax.tree.Token;
 import io.ballerina.compiler.syntax.tree.TypeDefinitionNode;
 import io.ballerina.persist.components.Class;
+import io.ballerina.persist.components.Enum;
 import io.ballerina.persist.components.Function;
 import io.ballerina.persist.components.IfElse;
 import io.ballerina.persist.components.TypeDescriptor;
@@ -62,6 +63,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+
+import static io.ballerina.persist.nodegenerator.BalFileConstants.CHECK_QUERY_ACTION;
+import static io.ballerina.persist.nodegenerator.SyntaxTreeConstants.SYNTAX_TREE_SEMICOLON;
 
 
 /**
@@ -142,8 +146,10 @@ public class BalSyntaxTreeGenerator {
                         MetadataNode fieldMetaD = ((RecordFieldWithDefaultValueNode) node).metadata().get();
                         Relation relation = readMetaData(fName, fType, fieldMetaD);
                         field = new FieldMetaData(fName, fType, checkAutoIncrement(fieldMetaD));
-                        entityArray.get(index).relation = relation;
-                        entityArray.get(index).relations.add(relation);
+//                        entityArray.get(index).relation = relation;
+                        if (!relation.keyColumns.isEmpty()) {
+                            entityArray.get(index).relations.add(relation);
+                        }
                     }
                     entityArray.get(index).addField(field);
                 } else if (node.kind() == SyntaxKind.RECORD_FIELD) {
@@ -157,8 +163,10 @@ public class BalSyntaxTreeGenerator {
                         MetadataNode fieldMetaD = ((RecordFieldNode) node).metadata().get();
                         Relation relation = readMetaData(fName, fType, fieldMetaD);
                         field = new FieldMetaData(fName, fType, checkAutoIncrement(fieldMetaD));
-                        entityArray.get(index).relation = relation;
-                        entityArray.get(index).relations.add(relation);
+//                        entityArray.get(index).relation = relation;
+                        if (!relation.relatedFields.isEmpty() || !relation.keyColumns.isEmpty()) {
+                            entityArray.get(index).relations.add(relation);
+                        }
                     }
                     entityArray.get(index).addField(field);
                 }
@@ -244,32 +252,30 @@ public class BalSyntaxTreeGenerator {
                         refFieldsString.append(", ");
                         joinColumnsString.append(", ");
                     }
-                    refFieldsString.append(BalFileConstants.DOUBLE_QUOTE);
                     refFieldsString.append(relation.keyColumns.get(i));
-                    refFieldsString.append(BalFileConstants.DOUBLE_QUOTE);
-                    joinColumnsString.append(BalFileConstants.DOUBLE_QUOTE);
                     joinColumnsString.append(relation.references.get(i));
-                    joinColumnsString.append(BalFileConstants.DOUBLE_QUOTE);
+                }
+                if (!joinSubFields.isEmpty()) {
+                    joinSubFields.add(NodeFactory.createBasicLiteralNode(SyntaxKind.STRING_LITERAL,
+                            AbstractNodeFactory.createLiteralValueToken(SyntaxKind.STRING_LITERAL, ", "
+                                            + System.lineSeparator(), NodeFactory.createEmptyMinutiaeList(),
+                                    NodeFactory.createEmptyMinutiaeList())));
                 }
                 joinSubFields.add(NodeFactory.createSpecificFieldNode(null,
                         AbstractNodeFactory.createIdentifierToken(relation.relatedInstance),
                         SyntaxTreeConstants.SYNTAX_TREE_COLON,
                         NodeParser.parseExpression(String.format(
                                 BalFileConstants.FIELD_FORMAT_JOIN_FIELD, relation.relatedType,
-                                relation.relatedInstance, relation.refTable, BalFileConstants.OPEN_SQUARE_BRACKET +
-                                        refFieldsString.toString() + BalFileConstants.CLOSE_SQUARE_BRACKET,
-                                BalFileConstants.OPEN_SQUARE_BRACKET +
-                                        joinColumnsString.toString() + BalFileConstants.CLOSE_SQUARE_BRACKET
-                        ))));
-
-                if (!subFields.isEmpty()) {
-                    subFields.add(NodeFactory.createBasicLiteralNode(SyntaxKind.STRING_LITERAL,
-                            AbstractNodeFactory.createLiteralValueToken(SyntaxKind.STRING_LITERAL, ", "
-                                            + System.lineSeparator(), NodeFactory.createEmptyMinutiaeList(),
-                                    NodeFactory.createEmptyMinutiaeList())));
-                }
+                                relation.relatedInstance, relation.refTable, //BalFileConstants.OPEN_SQUARE_BRACKET +
+                                        refFieldsString.toString(), joinColumnsString.toString()))));
                 if (relation.isChild) {
                     for (FieldMetaData fieldMetaData : relation.relatedFields) {
+                        if (!subFields.isEmpty()) {
+                            subFields.add(NodeFactory.createBasicLiteralNode(SyntaxKind.STRING_LITERAL,
+                                    AbstractNodeFactory.createLiteralValueToken(SyntaxKind.STRING_LITERAL, ", "
+                                                    + System.lineSeparator(), NodeFactory.createEmptyMinutiaeList(),
+                                            NodeFactory.createEmptyMinutiaeList())));
+                        }
                         subFields.add(NodeFactory.createSpecificFieldNode(null,
                                 AbstractNodeFactory.createIdentifierToken(BalFileConstants.DOUBLE_QUOTE +
                                         relation.relatedInstance + "." + fieldMetaData.getFieldName() +
@@ -283,6 +289,12 @@ public class BalSyntaxTreeGenerator {
                     }
                 } else {
                     for (FieldMetaData fieldMetaData : relation.relatedFields) {
+                        if (!subFields.isEmpty()) {
+                            subFields.add(NodeFactory.createBasicLiteralNode(SyntaxKind.STRING_LITERAL,
+                                    AbstractNodeFactory.createLiteralValueToken(SyntaxKind.STRING_LITERAL, ", "
+                                                    + System.lineSeparator(), NodeFactory.createEmptyMinutiaeList(),
+                                            NodeFactory.createEmptyMinutiaeList())));
+                        }
                         if (relation.references.contains(fieldMetaData.getFieldName())) {
                             int index = relation.references.indexOf(fieldMetaData.getFieldName());
                             subFields.add(NodeFactory.createSpecificFieldNode(null,
@@ -334,6 +346,22 @@ public class BalSyntaxTreeGenerator {
         Class client = createClientClass(entity, className, subFields, joinSubFields, keys, keyType, keyAutoInc);
 
         moduleMembers = moduleMembers.add(client.getClassDefinitionNode());
+        if (!entity.relations.isEmpty()) {
+            Enum relationsEnum = new Enum(String.format("%sRelations", entity.getEntityName()));
+            for (Relation relation : entity.relations) {
+                if (!relation.isChild) {
+                    relationsEnum.addMember(NodeParser.parseExpression(String.format("%sEntity = \"%s\"",
+                            relation.relatedType, relation.relatedInstance)));
+                } else {
+                    if (relation.parentIncluded) {
+                        relationsEnum.addMember(NodeParser.parseExpression(String.format("%sEntity = \"%s\"",
+                                relation.relatedType, relation.relatedInstance)));
+                    }
+                }
+            }
+            moduleMembers = moduleMembers.add(relationsEnum.getEnumDeclarationNode());
+        }
+
 
         Class clientStream = createClientStreamClass(entity, className);
 
@@ -345,6 +373,7 @@ public class BalSyntaxTreeGenerator {
         SyntaxTree balTree = SyntaxTree.from(textDocument);
         return balTree.modifyWith(modulePartNode);
     }
+
 
     private static Class createClientClass(Entity entity, String className, List<Node> subFields,
                                            List<Node> joinSubFields, HashMap<String, String> keys,
@@ -428,7 +457,6 @@ public class BalSyntaxTreeGenerator {
         client.addMember(init.getFunctionDefinitionNode(), true);
 
         Function create = new Function(BalFileConstants.CREATE);
-        if (joinSubFields.isEmpty()) {
         create.addRequiredParameter(
                 TypeDescriptor.getQualifiedNameReferenceNode(BalFileConstants.ENTITIES, entity.getEntityName()),
                 "value"
@@ -438,54 +466,55 @@ public class BalSyntaxTreeGenerator {
                 TypeDescriptor.getQualifiedNameReferenceNode(BalFileConstants.ENTITIES,
                         entity.getEntityName()), TypeDescriptor.getOptionalTypeDescriptorNode(
                         BalFileConstants.EMPTY_STRING, BalFileConstants.ERROR)));
-        StringBuilder retRecord = new StringBuilder();
-        create.addStatement(NodeParser.parseStatement(BalFileConstants.CREATE_SQL_RESULTS));
-        if (keys.size() > 1) {
-            for (FieldMetaData map : entity.getFields()) {
-                if (retRecord.length() > 0) {
-                    retRecord.append(", ");
+        if (joinSubFields.isEmpty()) {
+            StringBuilder retRecord = new StringBuilder();
+            create.addStatement(NodeParser.parseStatement(BalFileConstants.CREATE_SQL_RESULTS));
+            if (keys.size() > 1) {
+                for (FieldMetaData map : entity.getFields()) {
+                    if (retRecord.length() > 0) {
+                        retRecord.append(", ");
+                    }
+                    if (map.isAutoGenerated()) {
+                        retRecord.append(String.format(BalFileConstants.RECORD_FIELD_LAST_INSERT_ID,
+                                map.getFieldName(), BalFileConstants.KEYWORD_INT));
+                    } else {
+                        retRecord.append(String.format(BalFileConstants.RECORD_FIELD_VALUE,
+                                map.getFieldName(),
+                                map.getFieldName()));
+                    }
                 }
-                if (map.isAutoGenerated()) {
-                    retRecord.append(String.format(BalFileConstants.RECORD_FIELD_LAST_INSERT_ID,
-                            map.getFieldName(), BalFileConstants.KEYWORD_INT));
+                if (keyAutoInc) {
+                    create.addStatement(NodeParser.parseStatement(String.format(BalFileConstants.RETURN_RECORD_VARIABLE,
+                            retRecord)));
                 } else {
-                    retRecord.append(String.format(BalFileConstants.RECORD_FIELD_VALUE,
-                            map.getFieldName(),
-                            map.getFieldName()));
+                    create.addStatement(NodeParser.parseStatement(String.format(BalFileConstants.RETURN_VARIABLE,
+                            BalFileConstants.VALUE)));
                 }
-            }
-            if (keyAutoInc) {
+            } else {
+                for (FieldMetaData map : entity.getFields()) {
+                    if (retRecord.length() > 0) {
+                        retRecord.append(", ");
+                    }
+                    if (map.getFieldName().equals(entity.getKeys()[0].trim().replaceAll(
+                            BalFileConstants.DOUBLE_QUOTE, BalFileConstants.EMPTY_STRING))) {
+                        retRecord.append(String.format(BalFileConstants.RECORD_FIELD_LAST_INSERT_ID,
+                                map.getFieldName(), keyType));
+                    } else {
+                        retRecord.append(String.format(BalFileConstants.RECORD_FIELD_VALUE,
+                                map.getFieldName(),
+                                map.getFieldName()));
+                    }
+                }
+                if (!keyAutoInc) {
+                    IfElse valueNilCheck = new IfElse(NodeParser.parseExpression(
+                            BalFileConstants.LAST_RETURN_ID_NULL_CHECK));
+                    valueNilCheck.addIfStatement(NodeParser.parseStatement(BalFileConstants.RETURN_VALUE));
+                    create.addIfElseStatement(valueNilCheck.getIfElseStatementNode());
+
+                }
                 create.addStatement(NodeParser.parseStatement(String.format(BalFileConstants.RETURN_RECORD_VARIABLE,
                         retRecord)));
-            } else {
-                create.addStatement(NodeParser.parseStatement(String.format(BalFileConstants.RETURN_VARIABLE,
-                        BalFileConstants.VALUE)));
             }
-        }  else {
-            for (FieldMetaData map : entity.getFields()) {
-                if (retRecord.length() > 0) {
-                    retRecord.append(", ");
-                }
-                if (map.getFieldName().equals(entity.getKeys()[0].trim().replaceAll(
-                        BalFileConstants.DOUBLE_QUOTE, BalFileConstants.EMPTY_STRING))) {
-                    retRecord.append(String.format(BalFileConstants.RECORD_FIELD_LAST_INSERT_ID,
-                            map.getFieldName(), keyType));
-                } else {
-                    retRecord.append(String.format(BalFileConstants.RECORD_FIELD_VALUE,
-                            map.getFieldName(),
-                            map.getFieldName()));
-                }
-            }
-            if (!keyAutoInc) {
-                IfElse valueNilCheck = new IfElse(NodeParser.parseExpression(
-                        BalFileConstants.LAST_RETURN_ID_NULL_CHECK));
-                valueNilCheck.addIfStatement(NodeParser.parseStatement(BalFileConstants.RETURN_VALUE));
-                create.addIfElseStatement(valueNilCheck.getIfElseStatementNode());
-
-            }
-            create.addStatement(NodeParser.parseStatement(String.format(BalFileConstants.RETURN_RECORD_VARIABLE,
-                    retRecord)));
-        }
         } else {
             boolean isParent = false;
             for (Relation relation : entity.relations) {
@@ -502,9 +531,9 @@ public class BalSyntaxTreeGenerator {
                         "%sClient->exists(<%s> value.%s);", relation.relatedType.toLowerCase(),
                         relation.relatedType, relation.relatedInstance)));
                 IfElse checkExistence = new IfElse(NodeParser.parseExpression("!exists"));
-                checkExistence.addIfStatement(NodeParser.parseStatement(String.format("value.user = check %sClient" +
-                        "->create(<%s> value.%s);", relation.relatedType.toLowerCase(), relation.relatedType,
-                        relation.relatedInstance)));
+                checkExistence.addIfStatement(NodeParser.parseStatement(String.format("value.%s = check %sClient" +
+                        "->create(<%s> value.%s);", relation.relatedInstance, relation.relatedType.toLowerCase(),
+                        relation.relatedType, relation.relatedInstance)));
                 valueCheck.addIfStatement(checkExistence.getIfElseStatementNode());
 
                 create.addIfElseStatement(valueCheck.getIfElseStatementNode());
@@ -539,37 +568,49 @@ public class BalSyntaxTreeGenerator {
                 TypeDescriptor.getQualifiedNameReferenceNode(BalFileConstants.ENTITIES, entity.getEntityName()),
                 TypeDescriptor.getSimpleNameReferenceNode (BalFileConstants.ERROR)));
 
-//        if (!entity.relations.isEmpty()) {
-//            readByKey.addRequiredParameterWithDefault(NodeParser.parseTypeDescriptor(String.format("%sRelations[]",
-//                    entity.getEntityName())), "include");
-//            readByKey.addStatement(NodeParser.parseStatement(String.format("return <%s> check " +
-//                            "self.persistClient.runReadByKeyQuery(%s, key, include);", entity.getEntityName(),
-//                    entity.getEntityName())));
-//        } else {
+        if (entity.relations.size() != 0) {
+            readByKey.addRequiredParameterWithDefault(NodeParser.parseTypeDescriptor(String.format("%sRelations[]",
+                    entity.getEntityName())), "include", Function.Bracket.SQUARE);
+            readByKey.addStatement(NodeParser.parseStatement(String.format("return <%s> check " +
+                            "self.persistClient.runReadByKeyQuery(%s, key, include);", entity.getEntityName(),
+                    entity.getEntityName())));
+        } else {
         readByKey.addStatement(NodeParser.parseStatement(String.format(BalFileConstants.READ_BY_KEY_RETURN,
                 String.format(BalFileConstants.RECORD_FIELD_VAR,
                         BalFileConstants.ENTITIES, entity.getEntityName()), String.format(
                         BalFileConstants.RECORD_FIELD_VAR,
                         BalFileConstants.ENTITIES, entity.getEntityName()))));
-        //}
+        }
         client.addMember(readByKey.getFunctionDefinitionNode(), true);
 
         Function read = new Function(BalFileConstants.READ);
         read.addRequiredParameterWithDefault(
                 TypeDescriptor.getOptionalTypeDescriptorNode(BalFileConstants.EMPTY_STRING, TypeDescriptor
                         .getMapTypeDescriptorNode(SyntaxTreeConstants.SYNTAX_TREE_VAR_ANYDATA).toSourceCode()),
-                BalFileConstants.FILTER);
+                BalFileConstants.FILTER, Function.Bracket.NORMAL);
         read.addQualifiers(new String[]{BalFileConstants.KEYWORD_REMOTE});
         read.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(TypeDescriptor.getStreamTypeDescriptorNode(
                         TypeDescriptor.getQualifiedNameReferenceNode(BalFileConstants.ENTITIES, entity.getEntityName()),
                         TypeDescriptor.getOptionalTypeDescriptorNode(BalFileConstants.EMPTY_STRING,
                                 BalFileConstants.ERROR)),
                 TypeDescriptor.getSimpleNameReferenceNode(BalFileConstants.ERROR)));
-        read.addStatement(NodeParser.parseStatement(String.format(BalFileConstants.READ_RUN_READ_QUERY,
-                String.format(BalFileConstants.RECORD_FIELD_VAR, BalFileConstants.ENTITIES, entity.getEntityName()))));
-        read.addStatement(NodeParser.parseStatement(String.format(BalFileConstants.READ_RETURN_STREAM,
-                String.format(BalFileConstants.RECORD_FIELD_VAR, BalFileConstants.ENTITIES, entity.getEntityName()),
-                className)));
+        if (!entity.relations.isEmpty()) {
+            readByKey.addRequiredParameterWithDefault(NodeParser.parseTypeDescriptor(String.format("%sRelations[]",
+                    entity.getEntityName())), "include", Function.Bracket.SQUARE);
+            read.addStatement(NodeParser.parseStatement(String.format(BalFileConstants.READ_RUN_READ_QUERY_RELATED,
+                    String.format(BalFileConstants.RECORD_FIELD_VAR, BalFileConstants.ENTITIES,
+                            entity.getEntityName()))));
+            read.addStatement(NodeParser.parseStatement(String.format(BalFileConstants.READ_RETURN_STREAM_RELATION,
+                    String.format(BalFileConstants.RECORD_FIELD_VAR, BalFileConstants.ENTITIES, entity.getEntityName()),
+                    className)));
+        } else {
+            read.addStatement(NodeParser.parseStatement(String.format(BalFileConstants.READ_RUN_READ_QUERY,
+                    String.format(BalFileConstants.RECORD_FIELD_VAR, BalFileConstants.ENTITIES,
+                            entity.getEntityName()))));
+            read.addStatement(NodeParser.parseStatement(String.format(BalFileConstants.READ_RETURN_STREAM,
+                    String.format(BalFileConstants.RECORD_FIELD_VAR, BalFileConstants.ENTITIES, entity.getEntityName()),
+                    className)));
+        }
         client.addMember(read.getFunctionDefinitionNode(), true);
 
         Function update = new Function(BalFileConstants.UPDATE);
@@ -586,6 +627,37 @@ public class BalSyntaxTreeGenerator {
         update.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode(BalFileConstants.EMPTY_STRING,
                 BalFileConstants.ERROR));
         update.addStatement(NodeParser.parseStatement(BalFileConstants.UPDATE_RUN_UPDATE_QUERY));
+        if (!entity.relations.isEmpty()) {
+            for (Relation relation : entity.relations) {
+                if (relation.isChild) {
+                    continue;
+                }
+                IfElse typeCheck = new IfElse(NodeParser.parseExpression(String.format("'object[\"%s\"] is record {}",
+                        relation.relatedInstance)));
+                typeCheck.addIfStatement(NodeParser.parseStatement(String.format("record {} %sEntity = " +
+                                "<record {}> 'object[\"%s\"];", relation.relatedInstance, relation.relatedInstance)));
+                typeCheck.addIfStatement(NodeParser.parseStatement(String.format("%s userClient =" +
+                        " check new %s();", relation.getClientName(), relation.getClientName())));
+                typeCheck.addIfStatement(NodeParser.parseStatement(String.format("stream<%s, error?> " +
+                        "%sStream = check self->read(filter, [%sEntity]);",
+                        entity.getEntityName(), entity.getEntityName().toLowerCase(), relation.relatedType)));
+                typeCheck.addIfStatement(NodeFactory.createExpressionStatementNode(SyntaxKind.ACTION_STATEMENT,
+                        NodeFactory.createCheckExpressionNode(
+                        SyntaxKind.CHECK_ACTION,
+                        SyntaxTreeConstants.SYNTAX_TREE_KEYWORD_CHECK,
+                        NodeParser.parseActionOrExpression(String.format(CHECK_QUERY_ACTION, entity.getEntityName(),
+                                className.substring(0, 1).toLowerCase() + className.substring(1),
+                                relation.relatedInstance, relation.relatedType,
+                                className.substring(0, 1).toLowerCase() + className.substring(1),
+                                relation.relatedInstance, relation.relatedType, relation.relatedInstance, "id"))
+                ), SYNTAX_TREE_SEMICOLON));
+
+                update.addIfElseStatement(typeCheck.getIfElseStatementNode());
+
+                //to do here
+            }
+        }
+
         client.addMember(update.getFunctionDefinitionNode(), true);
 
 
@@ -601,15 +673,27 @@ public class BalSyntaxTreeGenerator {
         delete.addStatement(NodeParser.parseStatement(BalFileConstants.DELETE_RUN_DELETE_QUERY));
         client.addMember(delete.getFunctionDefinitionNode(), true);
 
-//        if (!joinSubFields.isEmpty()) {
-//            Function exists = new Function(BalFileConstants.EXISTS);
-//            exists.addRequiredParameter(TypeDescriptor.getQualifiedNameReferenceNode(BalFileConstants.ENTITIES,
-//                            entity.getEntityName()), entity.getEntityName().substring(0,1).toLowerCase() +
-//                    entity.getEntityName().substring(1));
-//            exists.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(
-//                    TypeDescriptor.getBuiltinSimpleNameReferenceNode("boolean"),
-//                    TypeDescriptor.getSimpleNameReferenceNode (BalFileConstants.ERROR)));
-//        }
+        if (!joinSubFields.isEmpty()) {
+            Function exists = new Function(BalFileConstants.EXISTS);
+            exists.addRequiredParameter(TypeDescriptor.getQualifiedNameReferenceNode(BalFileConstants.ENTITIES,
+                            entity.getEntityName()), entity.getEntityName().substring(0, 1).toLowerCase() +
+                    entity.getEntityName().substring(1));
+            exists.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(
+                    TypeDescriptor.getBuiltinSimpleNameReferenceNode("boolean"),
+                    TypeDescriptor.getSimpleNameReferenceNode (BalFileConstants.ERROR)));
+            exists.addStatement(NodeParser.parseStatement(String.format("%s|error result = self->readByKey(%s.id);",
+                    entity.getEntityName(), entity.getEntityName().substring(0, 1).toLowerCase())));
+
+            IfElse typeCheck = new IfElse(NodeParser.parseExpression(String.format("if result is %s",
+                    entity.getEntityName())));
+            typeCheck.addIfStatement(NodeParser.parseStatement("return true;"));
+            IfElse invalidKeyCheck = new IfElse(NodeParser.parseExpression("result is InvalidKey"));
+            invalidKeyCheck.addIfStatement(NodeParser.parseStatement("return false;"));
+            invalidKeyCheck.addElseStatement(NodeParser.parseStatement(String.format("return result;")));
+            typeCheck.addElseBody(invalidKeyCheck);
+            exists.addIfElseStatement(typeCheck.getIfElseStatementNode());
+
+        }
 
         Function close = new Function(BalFileConstants.CLOSE);
         close.addQualifiers(new String[]{});
@@ -724,7 +808,7 @@ public class BalSyntaxTreeGenerator {
                 importOrgNameNode,
                 moduleNodeList,
                 null,
-                SyntaxTreeConstants.SYNTAX_TREE_SEMICOLON
+                SYNTAX_TREE_SEMICOLON
         );
     }
 
@@ -792,6 +876,7 @@ public class BalSyntaxTreeGenerator {
                                         }
                                     } else {
                                         childIncludesParentColumns = true;
+                                        childEntity.relations.get(relationIndex).parentIncluded = true;
                                         indexesToRemove.add(childEntity.getFields().indexOf(fieldMetaData));
                                     }
                                     if (fieldMetaData.getFieldType().equals(entity.getEntityName())) {
@@ -805,6 +890,7 @@ public class BalSyntaxTreeGenerator {
                                 for (Integer index : indexesToRemove) {
                                     childEntity.getFields().remove(index.intValue());
                                 }
+                                relation.relatedEntity = childEntity;
                             }
                         }
                     } else {

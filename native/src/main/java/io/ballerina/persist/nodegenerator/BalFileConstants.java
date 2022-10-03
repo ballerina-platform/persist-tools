@@ -72,14 +72,18 @@ public class BalFileConstants {
     public static final String INIT_PERSIST_CLIENT = "self.persistClient = check new (dbClient, self.entityName, " +
             "self.tableName, self.keyFields, self.fieldMetadata);";
     public static final String INIT_PERSIST_CLIENT_RELATED = "self.persistClient = check " +
-            "new (dbClient, self.entityName, self.tableName, self.keyFields, self.fieldMetadata);";
+            "new (dbClient, self.entityName, self.tableName, self.keyFields, self.fieldMetadata, self.joinMetadata);";
     public static final String CREATE_SQL_RESULTS = "sql:ExecutionResult result = check " +
             "self.persistClient.runInsertQuery(value);";
     public static final String READ_BY_KEY_RETURN = "return (check self.persistClient" +
             ".runReadByKeyQuery(%s, key)).cloneWithType(%s);";
     public static final String READ_RUN_READ_QUERY = "stream<anydata, error?> result" +
             " = check self.persistClient.runReadQuery(%s, filter);";
+    public static final String READ_RUN_READ_QUERY_RELATED = "stream<anydata, error?> result" +
+            " = check self.persistClient.runReadQuery(%s, filter, include);";
     public static final String READ_RETURN_STREAM = "return new stream<%s, error?>(new %sStream(result));";
+    public static final String READ_RETURN_STREAM_RELATION =
+            "return new stream<%s, error?>(new %sStream(result, include));";
     public static final String UPDATE_RUN_UPDATE_QUERY = "_ = check self.persistClient.runUpdateQuery" +
             "('object, filter);";
     public static final String DELETE_RUN_DELETE_QUERY = "_ = check self.persistClient.runDeleteQuery(filter);";
@@ -128,4 +132,11 @@ public class BalFileConstants {
     public static final String KEYWORD_TIME = "time";
     public static final String JDBC_URL_WITHOUT_DATABASE = "jdbc:%s://%s:%s";
     public static final String JDBC_URL_WITH_DATABASE = "jdbc:%s://%s:%s/%s";
+
+    public static final String CHECK_QUERY_ACTION = "from %s p in %sStream\n" +
+            "                do {\n" +
+            "                    if p.%s is %s {\n" +
+            "                        check %sClient->update(%sEntity, {\"id\": (<%s> p.%s).%s});\n" +
+            "                    }\n" +
+            "                };";
 }
