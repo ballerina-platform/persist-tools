@@ -49,7 +49,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-//import static io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator.generateRelations;
 import static io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator.generateRelations;
 import static io.ballerina.persist.utils.BalProjectUtils.hasSemanticDiagnostics;
 import static io.ballerina.persist.utils.BalProjectUtils.hasSyntacticDiagnostics;

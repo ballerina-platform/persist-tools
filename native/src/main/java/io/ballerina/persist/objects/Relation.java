@@ -11,18 +11,16 @@ import java.util.Optional;
 
 public class Relation {
 
-    public ArrayList<String> keyColumns = new ArrayList<>();
-    public ArrayList<String> references = new ArrayList<>();
+    private ArrayList<String> keyColumns = new ArrayList<>();
+    private ArrayList<String> references = new ArrayList<>();
 
-    public ArrayList<FieldMetaData> relatedFields = new ArrayList<>();
-    public boolean isChild = false;
-    public String relatedType;
-    public String refTable;
-    public String relatedInstance;
-    public boolean parentIncluded = false;
-
-//    public Entity relatedEntity;
-    public Optional<String> relatedModule;
+    private ArrayList<FieldMetaData> relatedFields = new ArrayList<>();
+    private boolean isChild = false;
+    private String relatedType;
+    private String refTable;
+    private String relatedInstance;
+    private boolean parentIncluded = false;
+    private Optional<String> relatedModule;
 
     public Relation(String relatedType, String relatedInstance, ArrayList<String> keyColumns,
                     ArrayList<String> references, boolean isChild) {
@@ -89,6 +87,9 @@ public class Relation {
 
     public boolean isParentIncluded() {
         return this.parentIncluded;
+    }
+    public void setParentIncluded(boolean parentIncluded) {
+        this.parentIncluded = parentIncluded;
     }
 
 
