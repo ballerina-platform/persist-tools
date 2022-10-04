@@ -891,12 +891,11 @@ public class BalSyntaxTreeGenerator {
                 int counter = 0;
                 if (relation != null) {
                     if (!relation.isChild()) {
-                        String entityType = relation.getRelatedType();
                         for (Entity childEntity : entityArray) {
                             if (entity.getEntityName().equals(childEntity.getEntityName())) {
                                 continue;
                             }
-                            if (childEntity.getEntityName().equals(entityType)) {
+                            if (childEntity.getEntityName().equals(relation.getRelatedType())) {
                                 int relationIndex = childEntity.getRelations().size();
                                 childEntity.getRelations().add(relationIndex, new Relation(entity.getEntityName(), null,
                                         new ArrayList<String>(), new ArrayList<String>(), true));
@@ -949,7 +948,6 @@ public class BalSyntaxTreeGenerator {
                     }
                 }
             }
-
         }
     }
 
