@@ -28,12 +28,12 @@ import java.util.Optional;
 
 public class Relation {
 
-    private ArrayList<String> keyColumns = new ArrayList<>();
-    private ArrayList<String> references = new ArrayList<>();
+    private final ArrayList<String> keyColumns;
+    private final ArrayList<String> references;
 
     private ArrayList<FieldMetaData> relatedFields = new ArrayList<>();
-    private boolean isChild = false;
-    private String relatedType;
+    private final boolean isChild;
+    private final String relatedType;
     private String refTable;
     private String relatedInstance;
     private boolean parentIncluded = false;

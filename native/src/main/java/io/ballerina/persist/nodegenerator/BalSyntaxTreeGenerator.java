@@ -288,7 +288,7 @@ public class BalSyntaxTreeGenerator {
                         NodeParser.parseExpression(String.format(
                                 BalFileConstants.FIELD_FORMAT_JOIN_FIELD, "entities:" + relation.getRelatedType(),
                                 relation.getRelatedInstance(), relation.getRefTable(),
-                                        refFieldsString.toString(), joinColumnsString.toString()))));
+                                        refFieldsString, joinColumnsString))));
                 if (relation.isChild()) {
                     for (FieldMetaData fieldMetaData : relation.getRelatedFields()) {
                         if (!subFields.isEmpty()) {
@@ -681,7 +681,7 @@ public class BalSyntaxTreeGenerator {
                                 className.substring(0, 1).toLowerCase() + className.substring(1),
                                 relation.getRelatedInstance(), relation.getRelatedType(),
                                 relation.getClientName().substring(0, 1).toLowerCase() + relation.getClientName()
-                                        .substring(1), relation.getRelatedInstance(), relatedKeyString.toString()))
+                                        .substring(1), relation.getRelatedInstance(), relatedKeyString))
                 ), SYNTAX_TREE_SEMICOLON));
                 update.addIfElseStatement(typeCheck.getIfElseStatementNode());
             }
@@ -709,8 +709,8 @@ public class BalSyntaxTreeGenerator {
                 keyString.append("{");
 
                 for (String key : keys.keySet()) {
-                    keyString.append(entity.getEntityName().substring(0, 1).toLowerCase() +
-                            entity.getEntityName().substring(1));
+                    keyString.append(entity.getEntityName().substring(0, 1).toLowerCase());
+                    keyString.append(entity.getEntityName().substring(1));
                     keyString.append(".");
                     keyString.append(key);
                     keyString.append(", ");
@@ -719,8 +719,8 @@ public class BalSyntaxTreeGenerator {
 
             } else {
                 keyString = new StringBuilder();
-                keyString.append(entity.getEntityName().substring(0, 1).toLowerCase() +
-                        entity.getEntityName().substring(1));
+                keyString.append(entity.getEntityName().substring(0, 1).toLowerCase());
+                keyString.append(entity.getEntityName().substring(1));
                 keyString.append(".");
                 for (String key : keys.keySet()) {
                     keyString.append(key);
@@ -735,7 +735,7 @@ public class BalSyntaxTreeGenerator {
                     TypeDescriptor.getBuiltinSimpleNameReferenceNode("boolean"),
                     TypeDescriptor.getSimpleNameReferenceNode (BalFileConstants.ERROR)));
             exists.addStatement(NodeParser.parseStatement(String.format(EXIST_READ_BY_KEY, entity.getEntityName(),
-                    keyString.toString())));
+                    keyString)));
             IfElse typeCheck = new IfElse(NodeParser.parseExpression(String.format(CHECK_RESULT,
                     entity.getEntityName())));
             typeCheck.addIfStatement(NodeParser.parseStatement(RETURN_TRUE));
@@ -898,11 +898,11 @@ public class BalSyntaxTreeGenerator {
                             if (childEntity.getEntityName().equals(relation.getRelatedType())) {
                                 int relationIndex = childEntity.getRelations().size();
                                 childEntity.getRelations().add(relationIndex, new Relation(entity.getEntityName(), null,
-                                        new ArrayList<String>(), new ArrayList<String>(), true));
+                                        new ArrayList<>(), new ArrayList<>(), true));
                                 childEntity.getRelations().get(relationIndex).setRefTable(entity.getTableName());
                                 relation.setRefTable(childEntity.getTableName());
                                 boolean childIncludesParentColumns = false;
-                                ArrayList<Integer> indexesToRemove = new ArrayList<Integer>();
+                                ArrayList<Integer> indexesToRemove = new ArrayList<>();
                                 for (FieldMetaData fieldMetaData : entity.getFields()) {
                                     if (!fieldMetaData.getFieldType().equals(childEntity.getEntityName())) {
                                         if (!entityNames.contains(fieldMetaData.getFieldType())) {
@@ -917,7 +917,7 @@ public class BalSyntaxTreeGenerator {
                                 for (Integer index : indexesToRemove) {
                                     entity.getFields().remove(index.intValue());
                                 }
-                                indexesToRemove = new ArrayList<Integer>();
+                                indexesToRemove = new ArrayList<>();
                                 counter = 0;
                                 for (FieldMetaData fieldMetaData : childEntity.getFields()) {
                                     if (!fieldMetaData.getFieldType().equals(entity.getEntityName())) {

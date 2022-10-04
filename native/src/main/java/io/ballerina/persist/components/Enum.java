@@ -20,7 +20,6 @@ package io.ballerina.persist.components;
 
 import io.ballerina.compiler.syntax.tree.AbstractNodeFactory;
 import io.ballerina.compiler.syntax.tree.EnumDeclarationNode;
-import io.ballerina.compiler.syntax.tree.EnumMemberNode;
 import io.ballerina.compiler.syntax.tree.MetadataNode;
 import io.ballerina.compiler.syntax.tree.Node;
 import io.ballerina.compiler.syntax.tree.NodeFactory;
@@ -66,14 +65,5 @@ public class Enum {
             enumMemberList.add(SyntaxTreeConstants.SYNTAX_TREE_COMMA);
         }
         enumMemberList.add(member);
-    }
-
-    public static EnumMemberNode getEnumMemberNode(String member) {
-        return NodeFactory.createEnumMemberNode(
-                null,
-                AbstractNodeFactory.createIdentifierToken(member),
-                null,
-                null
-        );
     }
 }
