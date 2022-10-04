@@ -148,7 +148,8 @@ public class Push implements BLauncherCmd {
                 stdStream.println("Creating Database : " + database);
             }
         } catch (SQLException e) {
-            errStream.println("Error occurred when creating database tables: " + e.getMessage());
+            errStream.println("Error occurred when creating database: " + e.getMessage());
+            return;
         }
 
         String databaseUrl = String.format(JDBC_URL_WITH_DATABASE, MYSQL,
