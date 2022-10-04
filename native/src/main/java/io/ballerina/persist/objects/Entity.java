@@ -34,7 +34,6 @@ public class Entity {
     private String entityName;
 
     private String packageName;
-    public Relation relation = null;
 
     public ArrayList<Relation> relations = new ArrayList<>();
 
@@ -82,6 +81,10 @@ public class Entity {
 
     public void addField(FieldMetaData field) {
         this.fields.add(field);
+    }
+
+    public ArrayList<Relation> getRelations() {
+        return this.relations;
     }
 
 }

@@ -31,6 +31,8 @@ public class BalFileConstants {
     public static final String PERSIST_CLIENT = "persistClient";
     public static final String RETURN_RECORD_VARIABLE = "return {%s};";
     public static final String RETURN_VARIABLE = "return %s;";
+    public static final String RETURN_TRUE = "return true;";
+    public static final String RETURN_FALSE = "return false;";
     public static final String CLOSE_RECORD_VARIABLE = "record {|%s|}";
     public static final String DOUBLE_QUOTE = "\"";
     public static final String SINGLE_QUOTE = "\'";
@@ -41,6 +43,15 @@ public class BalFileConstants {
     public static final String ANYDATA_STREAM = "anydataStream";
     public static final String RETURN_NEXT_RECORD = "return nextRecord;";
     public static final String LAST_RETURN_ID_NULL_CHECK = "result.lastInsertId is ()";
+    public static final String VALUE_TYPE_CHECK = "value.%s is entities:%s";
+    public static final String GET_NEW_CLIENT = "%sClient %sClient = check new %sClient();";
+    public static final String CHECK_EXISTENCE = "boolean exists = check %sClient->exists(<entities:%s> value.%s);";
+    public static final String NOT_EXIST = "!exists";
+    public static final String CREATE_CLIENT = "value.%s = check %sClient->create(<entities:%s> value.%s);";
+    public static final String RETURN_VAUE = "return value;";
+    public static final String RETURN_RESULT = "return result;";
+    public static final String ENTITY_RELATIONS_ARRAY = "%sRelations[]";
+    public static final String INCLUDE = "include";
     public static final String KEY = "key";
     public static final String VALUE = "value";
     public static final String FILTER = "filter";
@@ -82,8 +93,6 @@ public class BalFileConstants {
     public static final String READ_RUN_READ_QUERY_RELATED = "stream<anydata, error?> result" +
             " = check self.persistClient.runReadQuery(%s, filter, include);";
     public static final String READ_RETURN_STREAM = "return new stream<%s, error?>(new %sStream(result));";
-    public static final String READ_RETURN_STREAM_RELATION =
-            "return new stream<%s, error?>(new %sStream(result, include));";
     public static final String UPDATE_RUN_UPDATE_QUERY = "_ = check self.persistClient.runUpdateQuery" +
             "('object, filter);";
     public static final String DELETE_RUN_DELETE_QUERY = "_ = check self.persistClient.runDeleteQuery(filter);";
@@ -130,13 +139,30 @@ public class BalFileConstants {
     public static final String KEYWORD_SQL = "sql";
     public static final String KEYWORD_MYSQL = "mysql";
     public static final String KEYWORD_TIME = "time";
+    public static final String ENTITY = "Entity";
+    public static final String RELATION = "Relation";
+    public static final String REFERENCE = "reference";
+    public static final String KEY_COLUMNS = "keyColumns";
+
+    public static final String ENUM_NAME = "%sRelations";
+
+    public static final String RECORD_CHECK = "'object[\"%s\"] is record {}";
+    public static final String GET_ENTITY_RECORD = "record {} %sEntity = <record {}> 'object[\"%s\"];";
+    public static final String GET_ENTITY_CLIENT = "%sClient %sClient = check new %sClient();";
+    public static final String GET_ENTITY_STREAM = "stream<entities:%s, error?> %sStream = " +
+            "check self->read(filter, [%sEntity]);";
+    public static final String EXIST_READ_BY_KEY = "entities:%s|error result = self->" +
+            "readByKey(%s);";
+    public static final String EXIST_CHECK_INVALID = "result is persist:InvalidKey";
+    public static final String CHECK_RESULT = "result is entities:%s";
+    public static final String ENUM_ENTRY = "%sEntity = \"%s\"";
     public static final String JDBC_URL_WITHOUT_DATABASE = "jdbc:%s://%s:%s";
     public static final String JDBC_URL_WITH_DATABASE = "jdbc:%s://%s:%s/%s";
 
-    public static final String CHECK_QUERY_ACTION = "from %s p in %sStream\n" +
+    public static final String CHECK_QUERY_ACTION = "from entities:%s p in %sStream\n" +
             "                do {\n" +
-            "                    if p.%s is %s {\n" +
-            "                        check %sClient->update(%sEntity, {\"id\": (<%s> p.%s).%s});\n" +
+            "                    if p.%s is entities:%s {\n" +
+            "                        check %sClient->update(%sEntity, %s);\n" +
             "                    }\n" +
-            "                };";
+            "                }";
 }
