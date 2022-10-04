@@ -21,10 +21,10 @@ package io.ballerina.persist.tools;
 import jdk.jfr.Description;
 import org.testng.annotations.Test;
 
-import static io.ballerina.persist.tools.ToolingTestUtils.Command.INIT;
-import static io.ballerina.persist.tools.ToolingTestUtils.assertAuxiliaryFunctions;
-import static io.ballerina.persist.tools.ToolingTestUtils.assertGeneratedSources;
-import static io.ballerina.persist.tools.ToolingTestUtils.assertGeneratedSourcesNegative;
+import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.Command.INIT;
+import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertAuxiliaryFunctions;
+import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertGeneratedSources;
+import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertGeneratedSourcesNegative;
 
 /**
  * persist tool init command tests.
