@@ -92,7 +92,7 @@ task startTestDockerContainer(type: Exec) {
         doLast {
             checkExecResult(execResult, 'Error', standardOutput)
             while (healthCheck != 0 && counter < 12) {
-                sleep(60 * 1000)
+                sleep(120 * 1000)
                 healthCheck = checkTestDockerContainerStatus('ballerina-persist-tools')
                 counter = counter + 1
             }
