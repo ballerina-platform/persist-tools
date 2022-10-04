@@ -60,8 +60,8 @@ public class ToolingDbPushTest {
                         .addColumn(new PersistTableColumn("type", sqlVarchar, no, no))
                         .addColumn(new PersistTableColumn("unit", sqlVarchar, no, no))
         );
-        assertCreateDatabaseTables("tool_test_db_push_1", tables);
         assertGeneratedSources("tool_test_generate_1", DB_PUSH);
+        assertCreateDatabaseTables("tool_test_db_push_1", tables);
     }
 
     @Test()
@@ -90,8 +90,8 @@ public class ToolingDbPushTest {
                         .addColumn(new PersistTableColumn("type", sqlVarchar, no, no))
                         .addColumn(new PersistTableColumn("unit", sqlVarchar, no, no))
         );
-        assertCreateDatabaseTables("tool_test_db_push_3", tables);
         assertGeneratedSources("tool_test_generate_3", DB_PUSH);
+        assertCreateDatabaseTables("tool_test_db_push_3", tables);
     }
 
     @Test()
@@ -120,7 +120,7 @@ public class ToolingDbPushTest {
                         .addColumn(new PersistTableColumn("type", sqlVarchar, no, no))
                         .addColumn(new PersistTableColumn("unit", sqlVarchar, no, no))
         );
-        assertCreateDatabaseTables("tool_test_db_push_5", tables);
         assertGeneratedSources("tool_test_generate_5", DB_PUSH);
+        assertCreateDatabaseTables("tool_test_db_push_5", tables);
     }
 }
