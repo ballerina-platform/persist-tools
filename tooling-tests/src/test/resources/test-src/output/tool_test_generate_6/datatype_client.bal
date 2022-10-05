@@ -2,7 +2,6 @@ import ballerina/sql;
 import ballerinax/mysql;
 import ballerina/time;
 import ballerina/persist;
-import foo/perist_generate_6 as entities;
 
 public client class DataTypeClient {
 
@@ -22,7 +21,6 @@ public client class DataTypeClient {
         m1: {columnName: "m1", 'type: time:TimeOfDay},
         v1: {columnName: "v1", 'type: anydata}
     };
-
     private string[] keyFields = ["a"];
 
     private persist:SQLClient persistClient;
@@ -32,18 +30,18 @@ public client class DataTypeClient {
         self.persistClient = check new (dbClient, self.entityName, self.tableName, self.keyFields, self.fieldMetadata);
     }
 
-    remote function create(entities:DataType value) returns entities:DataType|error? {
+    remote function create(DataType value) returns DataType|error? {
         sql:ExecutionResult result = check self.persistClient.runInsertQuery(value);
         return {a: <int>result.lastInsertId, b1: value.b1, c1: value.c1, d1: value.d1, e1: value.e1, f1: value.f1, j1: value.j1, k1: value.k1, l1: value.l1, m1: value.m1, v1: value.v1};
     }
 
-    remote function readByKey(int key) returns entities:DataType|error {
-        return (check self.persistClient.runReadByKeyQuery(entities:DataType, key)).cloneWithType(entities:DataType);
+    remote function readByKey(int key) returns DataType|error {
+        return (check self.persistClient.runReadByKeyQuery(DataType, key)).cloneWithType(DataType);
     }
 
-    remote function read(map<anydata>? filter = ()) returns stream<entities:DataType, error?>|error {
-        stream<anydata, error?> result = check self.persistClient.runReadQuery(entities:DataType, filter);
-        return new stream<entities:DataType, error?>(new DataTypeStream(result));
+    remote function read(map<anydata>? filter = ()) returns stream<DataType, error?>|error {
+        stream<anydata, error?> result = check self.persistClient.runReadQuery(DataType, filter);
+        return new stream<DataType, error?>(new DataTypeStream(result));
     }
 
     remote function update(record {} 'object, map<anydata> filter) returns error? {
@@ -67,14 +65,14 @@ public class DataTypeStream {
         self.anydataStream = anydataStream;
     }
 
-    public isolated function next() returns record {|entities:DataType value;|}|error? {
+    public isolated function next() returns record {|DataType value;|}|error? {
         var streamValue = self.anydataStream.next();
         if streamValue is () {
             return streamValue;
         } else if (streamValue is error) {
             return streamValue;
         } else {
-            record {|entities:DataType value;|} nextRecord = {value: check streamValue.value.cloneWithType(entities:DataType)};
+            record {|DataType value;|} nextRecord = {value: check streamValue.value.cloneWithType(DataType)};
             return nextRecord;
         }
     }
@@ -83,3 +81,4 @@ public class DataTypeStream {
         return self.anydataStream.close();
     }
 }
+

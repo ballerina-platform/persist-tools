@@ -16,7 +16,7 @@ public client class MedicalNeedClient {
         beneficiaryId: {columnName: "beneficiaryId", 'type: int},
         period: {columnName: "period", 'type: time:Civil},
         urgency: {columnName: "urgency", 'type: string},
-        quantity: {columnName: "quantity", 'type: string}
+        quantity: {columnName: "quantity", 'type: int}
     };
     private string[] keyFields = ["needId"];
 

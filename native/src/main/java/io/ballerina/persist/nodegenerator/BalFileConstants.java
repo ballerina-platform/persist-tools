@@ -27,7 +27,6 @@ public class BalFileConstants {
     private BalFileConstants() {
 
     }
-    public static final String ENTITIES = "entities";
     public static final String PERSIST_CLIENT = "persistClient";
     public static final String RETURN_RECORD_VARIABLE = "return {%s};";
     public static final String RETURN_VARIABLE = "return %s;";
@@ -94,7 +93,7 @@ public class BalFileConstants {
     public static final String CLOSE = "close";
     public static final String NEXT = "next";
 
-    public static final String RECORD_FIELD_VAR = "%s:%s";
+    public static final String RECORD_FIELD_VAR = "%s";
     public static final String RECORD_FIELD_LAST_INSERT_ID = "%s: <%s>result.lastInsertId";
     public static final String RECORD_FIELD_VALUE = "%s: value.%s";
     public static final String KEYWORD_BALLERINA = "ballerina";

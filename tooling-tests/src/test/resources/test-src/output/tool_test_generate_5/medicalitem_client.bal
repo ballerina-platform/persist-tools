@@ -1,7 +1,6 @@
 import ballerina/sql;
 import ballerinax/mysql;
 import ballerina/persist;
-import foo/perist_generate_7 as entities;
 
 public client class MedicalItemClient {
 
@@ -12,7 +11,7 @@ public client class MedicalItemClient {
         itemId: {columnName: "itemId", 'type: int},
         name: {columnName: "name", 'type: string},
         'type: {columnName: "type", 'type: string},
-        unit: {columnName: "unit", 'type: string}
+        unit: {columnName: "unit", 'type: int}
     };
     private string[] keyFields = ["itemId"];
 
@@ -23,7 +22,7 @@ public client class MedicalItemClient {
         self.persistClient = check new (dbClient, self.entityName, self.tableName, self.keyFields, self.fieldMetadata);
     }
 
-    remote function create(entities:MedicalItem value) returns entities:MedicalItem|error? {
+    remote function create(MedicalItem value) returns MedicalItem|error? {
         sql:ExecutionResult result = check self.persistClient.runInsertQuery(value);
         if result.lastInsertId is () {
             return value;
@@ -31,13 +30,13 @@ public client class MedicalItemClient {
         return {itemId: <int>result.lastInsertId, name: value.name, 'type: value.'type, unit: value.unit};
     }
 
-    remote function readByKey(int key) returns entities:MedicalItem|error {
-        return (check self.persistClient.runReadByKeyQuery(entities:MedicalItem, key)).cloneWithType(entities:MedicalItem);
+    remote function readByKey(int key) returns MedicalItem|error {
+        return (check self.persistClient.runReadByKeyQuery(MedicalItem, key)).cloneWithType(MedicalItem);
     }
 
-    remote function read(map<anydata>? filter = ()) returns stream<entities:MedicalItem, error?>|error {
-        stream<anydata, error?> result = check self.persistClient.runReadQuery(entities:MedicalItem, filter);
-        return new stream<entities:MedicalItem, error?>(new MedicalItemStream(result));
+    remote function read(map<anydata>? filter = ()) returns stream<MedicalItem, error?>|error {
+        stream<anydata, error?> result = check self.persistClient.runReadQuery(MedicalItem, filter);
+        return new stream<MedicalItem, error?>(new MedicalItemStream(result));
     }
 
     remote function update(record {} 'object, map<anydata> filter) returns error? {
@@ -54,20 +53,21 @@ public client class MedicalItemClient {
 }
 
 public class MedicalItemStream {
+
     private stream<anydata, error?> anydataStream;
 
     public isolated function init(stream<anydata, error?> anydataStream) {
         self.anydataStream = anydataStream;
     }
 
-    public isolated function next() returns record {|entities:MedicalItem value;|}|error? {
+    public isolated function next() returns record {|MedicalItem value;|}|error? {
         var streamValue = self.anydataStream.next();
         if streamValue is () {
             return streamValue;
         } else if (streamValue is error) {
             return streamValue;
         } else {
-            record {|entities:MedicalItem value;|} nextRecord = {value: check streamValue.value.cloneWithType(entities:MedicalItem)};
+            record {|MedicalItem value;|} nextRecord = {value: check streamValue.value.cloneWithType(MedicalItem)};
             return nextRecord;
         }
     }
@@ -76,3 +76,4 @@ public class MedicalItemStream {
         return self.anydataStream.close();
     }
 }
+

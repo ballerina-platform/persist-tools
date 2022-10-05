@@ -231,13 +231,7 @@ public class BalSyntaxTreeGenerator {
                     BalFileConstants.KEYWORD_TIME));
         }
         imports = imports.add(getImportDeclarationNode(BalFileConstants.KEYWORD_BALLERINA, BalFileConstants.PERSIST));
-        if (entity.getModule().isEmpty()) {
-            imports = imports.add(NodeParser.parseImportDeclaration(String.format(
-                    BalFileConstants.IMPORT_AS_ENTITIES, entity.getPackageName())));
-        } else {
-            imports = imports.add(NodeParser.parseImportDeclaration(String.format(
-                    BalFileConstants.IMPORT_AS_ENTITIES, entity.getPackageName() + "." + entity.getModule().get())));
-        }
+
         String className = entity.getEntityName();
         if (entity.getModule().isPresent()) {
             className = entity.getModule().get().substring(0, 1).toUpperCase() + entity.getModule().get().substring(1)
@@ -329,13 +323,13 @@ public class BalSyntaxTreeGenerator {
 
         Function create = new Function(BalFileConstants.CREATE);
         create.addRequiredParameter(
-                TypeDescriptor.getQualifiedNameReferenceNode(BalFileConstants.ENTITIES, entity.getEntityName()),
+                TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()),
                 "value"
         );
         create.addQualifiers(new String[]{BalFileConstants.KEYWORD_REMOTE});
         create.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(
-                TypeDescriptor.getQualifiedNameReferenceNode(BalFileConstants.ENTITIES,
-                        entity.getEntityName()), TypeDescriptor.getOptionalTypeDescriptorNode(
+                TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()),
+                TypeDescriptor.getOptionalTypeDescriptorNode(
                         BalFileConstants.EMPTY_STRING, BalFileConstants.ERROR)));
         StringBuilder retRecord = new StringBuilder();
         create.addStatement(NodeParser.parseStatement(BalFileConstants.CREATE_SQL_RESULTS));
@@ -410,13 +404,13 @@ public class BalSyntaxTreeGenerator {
 
         readByKey.addQualifiers(new String[]{BalFileConstants.KEYWORD_REMOTE});
         readByKey.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(
-                TypeDescriptor.getQualifiedNameReferenceNode(BalFileConstants.ENTITIES, entity.getEntityName()),
+                TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()),
                 TypeDescriptor.getSimpleNameReferenceNode (BalFileConstants.ERROR)));
         readByKey.addStatement(NodeParser.parseStatement(String.format(BalFileConstants.READ_BY_KEY_RETURN,
                 String.format(BalFileConstants.RECORD_FIELD_VAR,
-                        BalFileConstants.ENTITIES, entity.getEntityName()), String.format(
+                        entity.getEntityName()), String.format(
                         BalFileConstants.RECORD_FIELD_VAR,
-                        BalFileConstants.ENTITIES, entity.getEntityName()))));
+                        entity.getEntityName()))));
         client.addMember(readByKey.getFunctionDefinitionNode(), true);
 
         Function read = new Function(BalFileConstants.READ);
@@ -426,14 +420,14 @@ public class BalSyntaxTreeGenerator {
                 BalFileConstants.FILTER);
         read.addQualifiers(new String[]{BalFileConstants.KEYWORD_REMOTE});
         read.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(TypeDescriptor.getStreamTypeDescriptorNode(
-                        TypeDescriptor.getQualifiedNameReferenceNode(BalFileConstants.ENTITIES, entity.getEntityName()),
+                        TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()),
                         TypeDescriptor.getOptionalTypeDescriptorNode(BalFileConstants.EMPTY_STRING,
                                 BalFileConstants.ERROR)),
                 TypeDescriptor.getSimpleNameReferenceNode(BalFileConstants.ERROR)));
         read.addStatement(NodeParser.parseStatement(String.format(BalFileConstants.READ_RUN_READ_QUERY,
-                String.format(BalFileConstants.RECORD_FIELD_VAR, BalFileConstants.ENTITIES, entity.getEntityName()))));
+                String.format(BalFileConstants.RECORD_FIELD_VAR, entity.getEntityName()))));
         read.addStatement(NodeParser.parseStatement(String.format(BalFileConstants.READ_RETURN_STREAM,
-                String.format(BalFileConstants.RECORD_FIELD_VAR, BalFileConstants.ENTITIES, entity.getEntityName()),
+                String.format(BalFileConstants.RECORD_FIELD_VAR, entity.getEntityName()),
                 className)));
         client.addMember(read.getFunctionDefinitionNode(), true);
 
@@ -505,7 +499,7 @@ public class BalSyntaxTreeGenerator {
         nextStream.addQualifiers(new String[]{BalFileConstants.KEYWORD_PUBLIC, BalFileConstants.KEYWORD_ISOLATED});
         nextStream.addReturns(NodeParser.parseTypeDescriptor(String.format(
                 BalFileConstants.NEXT_STREAM_RETURN_TYPE,
-                String.format(BalFileConstants.RECORD_FIELD_VAR, BalFileConstants.ENTITIES, entity.getEntityName()))));
+                String.format(BalFileConstants.RECORD_FIELD_VAR, entity.getEntityName()))));
         nextStream.addStatement(NodeParser.parseStatement(BalFileConstants.NEXT_STREAM_STREAM_VALUE));
 
         IfElse streamValueNilCheck = new IfElse(NodeParser.parseExpression(
@@ -518,8 +512,8 @@ public class BalSyntaxTreeGenerator {
                 BalFileConstants.NEXT_STREAM_RETURN_STREAM_VALUE));
         streamValueErrorCheck.addElseStatement(NodeParser.parseStatement(String.format(
                 BalFileConstants.NEXT_STREAM_ELSE_STATEMENT,
-                String.format(BalFileConstants.RECORD_FIELD_VAR, BalFileConstants.ENTITIES, entity.getEntityName()),
-                String.format(BalFileConstants.RECORD_FIELD_VAR, BalFileConstants.ENTITIES, entity.getEntityName()))));
+                String.format(BalFileConstants.RECORD_FIELD_VAR, entity.getEntityName()),
+                String.format(BalFileConstants.RECORD_FIELD_VAR, entity.getEntityName()))));
         streamValueErrorCheck.addElseStatement(NodeParser.parseStatement(BalFileConstants.RETURN_NEXT_RECORD));
         streamValueNilCheck.addElseBody(streamValueErrorCheck);
         nextStream.addIfElseStatement(streamValueNilCheck.getIfElseStatementNode());
