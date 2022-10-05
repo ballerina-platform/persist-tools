@@ -234,7 +234,7 @@ public class ToolingTestUtils {
         }
     }
 
-    private static HashMap generateSourceCode(Path sourcePath, Command cmd) {
+    public static HashMap generateSourceCode(Path sourcePath, Command cmd) {
         Class<?> persistClass;
 
         try {
