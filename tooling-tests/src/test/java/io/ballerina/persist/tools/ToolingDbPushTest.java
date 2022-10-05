@@ -40,9 +40,9 @@ public class ToolingDbPushTest {
     private static final String yes = "YES";
     private static final String no = "NO";
 
-    @Test(enabled = true)
+    @Test()
     @Description("Database is not available and it is created while running the db push command")
-    public void testDbPushA_WithoutDatabase() {
+    public void testDbPushWithoutDatabase() {
         ArrayList<PersistTable> tables = new ArrayList<>();
         tables.add(
                 new PersistTable("MedicalNeeds", "needId")
@@ -64,21 +64,63 @@ public class ToolingDbPushTest {
         assertCreateDatabaseTables("tool_test_db_push_1", tables);
     }
 
-    @Test(enabled = true)
-    @Description("Database is not available and it is created while running the push command")
-    public void testDbPushB_OutsideBallerinaProject() {
+    @Test()
+    @Description("When the db push command is executed outside a Ballerina project")
+    public void testDbPushOutsideBallerinaProject() {
         assertGeneratedSourcesNegative("tool_test_db_push_2", DBPUSH, null);
     }
 
-    @Test(enabled = true, dependsOnMethods = { "testDbPushA_WithoutDatabase" })
-    @Description("Database is not available and it is created while running the push command")
-    public void testDbPushC_WithExistingTables() {
+    @Test(dependsOnMethods = { "testDbPushWithoutDatabase" })
+    @Description("Database already exists. An entity is removed. The database tables should not be affected.")
+    public void testDbPushEntityRemoved() {
+        ArrayList<PersistTable> tables = new ArrayList<>();
+        tables.add(
+                new PersistTable("MedicalNeeds", "needId")
+                        .addColumn(new PersistTableColumn("needId", sqlInt, yes, no))
+                        .addColumn(new PersistTableColumn("itemId", sqlInt, no, no))
+                        .addColumn(new PersistTableColumn("beneficiaryId", sqlInt, no, no))
+                        .addColumn(new PersistTableColumn("period", sqlVarchar, no, no))
+                        .addColumn(new PersistTableColumn("urgency", sqlVarchar, no, no))
+                        .addColumn(new PersistTableColumn("quantity", sqlInt, no, no))
+        );
+        tables.add(
+                new PersistTable("MedicalItems", "itemId")
+                        .addColumn(new PersistTableColumn("itemId", sqlInt, no, no))
+                        .addColumn(new PersistTableColumn("name", sqlVarchar, no, no))
+                        .addColumn(new PersistTableColumn("type", sqlVarchar, no, no))
+                        .addColumn(new PersistTableColumn("unit", sqlVarchar, no, no))
+        );
         assertGeneratedDbSources("tool_test_db_push_3", DBPUSH);
+        assertCreateDatabaseTables("tool_test_db_push_3", tables);
     }
 
-    @Test(enabled = true)
-    @Description("Database is not available and it is created while running the push command")
-    public void testDbPushD_WithoutConfigFile() {
-        assertGeneratedSourcesNegative("tool_test_db_push_4", DBPUSH, null);
+    @Test()
+    @Description("Database configurations are not provided through the Config.toml file")
+    public void testDbPushC_WithExistingTables() {
+        assertGeneratedDbSources("tool_test_db_push_4", DBPUSH);
+    }
+
+    @Test(dependsOnMethods = { "testDbPushEntityRemoved" })
+    @Description("Database already exists. An entity is updated. The respective table should be updated.")
+    public void testDbPushEntityUpdated() {
+        ArrayList<PersistTable> tables = new ArrayList<>();
+        tables.add(
+                new PersistTable("MedicalNeeds", "fooNeedId")
+                        .addColumn(new PersistTableColumn("fooNeedId", sqlInt, yes, no))
+                        .addColumn(new PersistTableColumn("fooItemId", sqlInt, no, no))
+                        .addColumn(new PersistTableColumn("fooBeneficiaryId", sqlInt, no, no))
+                        .addColumn(new PersistTableColumn("period", sqlVarchar, no, no))
+                        .addColumn(new PersistTableColumn("urgency", sqlInt, no, no))
+                        .addColumn(new PersistTableColumn("foo", sqlInt, no, no))
+        );
+        tables.add(
+                new PersistTable("MedicalItems", "itemId")
+                        .addColumn(new PersistTableColumn("itemId", sqlInt, no, no))
+                        .addColumn(new PersistTableColumn("name", sqlVarchar, no, no))
+                        .addColumn(new PersistTableColumn("type", sqlVarchar, no, no))
+                        .addColumn(new PersistTableColumn("unit", sqlVarchar, no, no))
+        );
+        assertGeneratedDbSources("tool_test_db_push_5", DBPUSH);
+        assertCreateDatabaseTables("tool_test_db_push_5", tables);
     }
 }
