@@ -18,22 +18,50 @@
 
 package io.ballerina.persist.tools;
 
+import io.ballerina.persist.tools.utils.PersistTable;
+import io.ballerina.persist.tools.utils.PersistTableColumn;
 import jdk.jfr.Description;
 import org.testng.annotations.Test;
+
+import java.util.ArrayList;
 
 import static io.ballerina.persist.tools.ToolingTestUtils.Command.DBPUSH;
 import static io.ballerina.persist.tools.ToolingTestUtils.assertGeneratedDbSources;
 import static io.ballerina.persist.tools.ToolingTestUtils.assertGeneratedSourcesNegative;
+import static io.ballerina.persist.tools.utils.DatabaseTestUtils.assertCreateDatabaseTables;
 
 /**
  * persist tool db push command tests.
  */
 public class ToolingDbPushTest {
 
+    private static final String sqlInt = "INT";
+    private static final String sqlVarchar = "VARCHAR";
+    private static final String yes = "YES";
+    private static final String no = "NO";
+
     @Test(enabled = true)
     @Description("Database is not available and it is created while running the db push command")
     public void testDbPushA_WithoutDatabase() {
+        ArrayList<PersistTable> tables = new ArrayList<>();
+        tables.add(
+                new PersistTable("MedicalNeeds", "needId")
+                        .addColumn(new PersistTableColumn("needId", sqlInt, yes, no))
+                        .addColumn(new PersistTableColumn("itemId", sqlInt, no, no))
+                        .addColumn(new PersistTableColumn("beneficiaryId", sqlInt, no, no))
+                        .addColumn(new PersistTableColumn("period", sqlVarchar, no, no))
+                        .addColumn(new PersistTableColumn("urgency", sqlVarchar, no, no))
+                        .addColumn(new PersistTableColumn("quantity", sqlInt, no, no))
+        );
+        tables.add(
+                new PersistTable("MedicalItems", "itemId")
+                        .addColumn(new PersistTableColumn("itemId", sqlInt, no, no))
+                        .addColumn(new PersistTableColumn("name", sqlVarchar, no, no))
+                        .addColumn(new PersistTableColumn("type", sqlVarchar, no, no))
+                        .addColumn(new PersistTableColumn("unit", sqlVarchar, no, no))
+        );
         assertGeneratedDbSources("tool_test_db_push_1", DBPUSH);
+        assertCreateDatabaseTables("tool_test_db_push_1", tables);
     }
 
     @Test(enabled = true)
