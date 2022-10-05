@@ -67,7 +67,7 @@ public class ToolingGenerateTest {
         assertGeneratedSources("tool_test_generate_6", GENERATE);
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     @Description("Use case where a entity is located inside a module")
     public void testGenerateClientWithEntityInModule() {
         assertGeneratedSources("tool_test_generate_7", GENERATE);
