@@ -35,10 +35,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -121,69 +117,13 @@ public class ToolingTestUtils {
                 }
             }
 
-            Connection connection = null;
-            ResultSet resultSet = null;
-            HashMap configurations = generateSourceCode(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir), cmd);
+            generateSourceCode(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir), cmd);
 
             Assert.assertTrue(directoryContentEquals(Paths.get(RESOURCES_EXPECTED_OUTPUT.toString()).resolve(subDir),
                     Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)));
 
             Assert.assertTrue(Files.exists(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir, "target"
                             , "persist_db_scripts.sql").toAbsolutePath()));
-            String url = String.format("jdbc:mysql://%s:%s",
-                    configurations.get("host").toString().replaceAll("\"", ""), configurations.get("port").toString());
-            String user = configurations.get("user").toString().replaceAll("\"", "");
-            String password = configurations.get("password").toString().replaceAll("\"", "");
-            String database = configurations.get("database").toString().replaceAll("\"", "");
-            try {
-                connection = DriverManager.getConnection(url, user, password);
-                resultSet = connection.getMetaData().getCatalogs();
-                boolean databaseExists = false;
-                while (resultSet.next()) {
-                    if (resultSet.getString(1).trim().equals(database)) {
-                        databaseExists = true;
-                        break;
-                    }
-                }
-                if (!databaseExists) {
-                    Assert.fail();
-                }
-                resultSet.close();
-                connection.close();
-                String databaseUrl = String.format("jdbc:mysql://%s:%s/%s",
-                        configurations.get("host").toString().replaceAll("\"", ""),
-                        configurations.get("port").toString(),
-                        configurations.get("database").toString().replaceAll("\"", ""));
-                connection = DriverManager.getConnection(databaseUrl, user, password);
-                resultSet = connection.getMetaData().getTables(null, null, "%", null);
-                boolean table1 = false;
-                boolean table2 = false;
-                while (resultSet.next()) {
-                    if (resultSet.getString(3).trim().equals("MedicalNeed")) {
-                        table1 = true;
-                    } else if (resultSet.getString(3).trim().equals("MedicalItems")) {
-                        table2 = true;
-                    }
-                    if (table1 && table2) {
-                        break;
-                    }
-                }
-                resultSet.close();
-                connection.close();
-                if (!table1 && !table2) {
-                    Assert.fail();
-                }
-            } catch (SQLException e) {
-                errStream.println("*** Error : " + e.getMessage());
-                errStream.println("*** ");
-                Assert.fail();
-            }
-            try {
-                resultSet.close();
-                connection.close();
-            } catch (SQLException e) {
-                errStream.println("Error Closing the database connections");
-            }
         }
 
     }
