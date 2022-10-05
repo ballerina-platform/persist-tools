@@ -175,16 +175,14 @@ public class BalSyntaxTreeGenerator {
                 for (String key : entity.getKeys()) {
                     if (field.getFieldName().equals(key.trim().replaceAll(
                             BalFileConstants.DOUBLE_QUOTE, BalFileConstants.EMPTY_STRING))) {
-                        keys.put(field.getFieldName(),
-                                field.getFieldType().trim().replaceAll(" ",
+                        keys.put(field.getFieldName(), field.getFieldType().trim().replaceAll(" ",
                                 BalFileConstants.EMPTY_STRING));
                     }
                 }
             } else {
                 if (field.getFieldName().equals(entity.getKeys()[0].trim()
                         .replaceAll(BalFileConstants.DOUBLE_QUOTE, BalFileConstants.EMPTY_STRING))) {
-                    keyType = field.getFieldType().trim().replaceAll(" ",
-                            BalFileConstants.EMPTY_STRING);
+                    keyType = field.getFieldType().trim().replaceAll(" ", BalFileConstants.EMPTY_STRING);
                 }
             }
             if (!subFields.isEmpty()) {

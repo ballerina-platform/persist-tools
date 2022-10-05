@@ -116,8 +116,7 @@ public class Push implements BLauncherCmd {
                 balProject = BuildProject.load(projectEnvironmentBuilder, Paths.get(sourcePath).toAbsolutePath());
             }
             balProject.currentPackage().getCompilation();
-            configurations = SyntaxTreeGenerator.readToml(
-                    Paths.get(this.sourcePath, this.configPath), name);
+            configurations = SyntaxTreeGenerator.readToml(Paths.get(this.sourcePath, this.configPath), name);
             sqlLines = readSqlFile();
         } catch (ProjectException | BalException  e) {
             errStream.println(e.getMessage());
@@ -239,7 +238,6 @@ public class Push implements BLauncherCmd {
     }
     @Override
     public void printUsage(StringBuilder stringBuilder) {
-        stringBuilder.append("  ballerina " + COMPONENT_IDENTIFIER +
-                " db push").append(System.lineSeparator());
+        stringBuilder.append("  ballerina " + COMPONENT_IDENTIFIER + " db push").append(System.lineSeparator());
     }
 }
