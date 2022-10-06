@@ -495,9 +495,142 @@ public class BalSyntaxTreeGenerator {
                         BalFileConstants.PERSIST_CLIENT),
                 true);
 
-        Function init = createInitMethod(entity);
+        Function init = getInitMethod(entity);
         client.addMember(init.getFunctionDefinitionNode(), true);
+        Function create = getCreateMethod(entity, joinSubFields, keys, keyAutoInc, keyType);
+        client.addMember(create.getFunctionDefinitionNode(), true);
+        StringBuilder keyString = new StringBuilder();
+        keyString.append(BalFileConstants.KEY);
+        if (keys.size() > 1) {
+            keyString = new StringBuilder();
+            for (String key : keys.keySet()) {
+                keyString.append(keys.get(key));
+                keyString.append(" ");
+                keyString.append(key);
+                keyString.append(";");
+            }
+        }
+        Function readByKey = getReadByKeyMethod(entity, keys, inclusions, keyType, keyString);
+        client.addMember(readByKey.getFunctionDefinitionNode(), true);
 
+        Function read = getReadMethod(entity, inclusions, className);
+        client.addMember(read.getFunctionDefinitionNode(), true);
+
+        Function update = getUpdateMethod(entity, className);
+
+        client.addMember(update.getFunctionDefinitionNode(), true);
+
+
+        Function delete = getDeleteMethod();
+        client.addMember(delete.getFunctionDefinitionNode(), true);
+
+        if (!entity.getRelations().isEmpty()) {
+            if (keys.size() > 1) {
+                keyString = new StringBuilder();
+                keyString.append("{");
+
+                for (String key : keys.keySet()) {
+                    keyString.append(entity.getEntityName().substring(0, 1).toLowerCase());
+                    keyString.append(entity.getEntityName().substring(1));
+                    keyString.append(".");
+                    keyString.append(key);
+                    keyString.append(", ");
+                }
+                keyString.append("}");
+
+            } else {
+                keyString = new StringBuilder();
+                keyString.append(entity.getEntityName().substring(0, 1).toLowerCase());
+                keyString.append(entity.getEntityName().substring(1));
+                keyString.append(".");
+                for (String key : keys.keySet()) {
+                    keyString.append(key);
+                }
+            }
+            Function exists = getExistMethod(entity, keyString);
+            client.addMember(exists.getFunctionDefinitionNode(), true);
+        }
+
+        Function close = getCloseMethod();
+        client.addMember(close.getFunctionDefinitionNode(), true);
+        return client;
+    }
+
+    private static Class createClientStreamClass(Entity entity, String className) {
+        Class clientStream = new Class(className + "Stream", true);
+
+        clientStream.addMember(NodeFactory.createBasicLiteralNode(SyntaxKind.STRING_LITERAL,
+                AbstractNodeFactory.createLiteralValueToken(SyntaxKind.STRING_LITERAL, " ",
+                        NodeFactory.createEmptyMinutiaeList(), NodeFactory.createEmptyMinutiaeList())), true);
+
+        clientStream.addMember(TypeDescriptor.getObjectFieldNodeWithoutExpression(BalFileConstants.KEYWORD_PRIVATE,
+                new String[]{},
+                TypeDescriptor.getStreamTypeDescriptorNode(
+                        SyntaxTreeConstants.SYNTAX_TREE_VAR_ANYDATA,
+                        TypeDescriptor.getOptionalTypeDescriptorNode(BalFileConstants.EMPTY_STRING,
+                                BalFileConstants.ERROR)),
+                BalFileConstants.ANYDATA_STREAM), true);
+
+        Function initStream = new Function(BalFileConstants.INIT);
+        initStream.addQualifiers(new String[]{BalFileConstants.KEYWORD_PUBLIC, BalFileConstants.KEYWORD_ISOLATED});
+        initStream.addStatement(NodeParser.parseStatement(BalFileConstants.INIT_STREAM_STATEMENT));
+        initStream.addRequiredParameter(
+                TypeDescriptor.getStreamTypeDescriptorNode(
+                        SyntaxTreeConstants.SYNTAX_TREE_VAR_ANYDATA,
+                        TypeDescriptor.getOptionalTypeDescriptorNode(BalFileConstants.EMPTY_STRING,
+                                BalFileConstants.ERROR)),
+                BalFileConstants.ANYDATA_STREAM);
+        clientStream.addMember(initStream.getFunctionDefinitionNode(), true);
+
+        Function nextStream = new Function(BalFileConstants.NEXT);
+        nextStream.addQualifiers(new String[]{BalFileConstants.KEYWORD_PUBLIC, BalFileConstants.KEYWORD_ISOLATED});
+        nextStream.addReturns(NodeParser.parseTypeDescriptor(String.format(
+                BalFileConstants.NEXT_STREAM_RETURN_TYPE,
+                String.format(BalFileConstants.RECORD_FIELD_VAR, entity.modulePrefix, entity.getEntityName()))));
+        nextStream.addStatement(NodeParser.parseStatement(BalFileConstants.NEXT_STREAM_STREAM_VALUE));
+
+        IfElse streamValueNilCheck = new IfElse(NodeParser.parseExpression(
+                BalFileConstants.NEXT_STREAM_IF_STATEMENT));
+        streamValueNilCheck.addIfStatement(NodeParser.parseStatement(
+                BalFileConstants.NEXT_STREAM_RETURN_STREAM_VALUE));
+        IfElse streamValueErrorCheck = new IfElse(NodeParser.parseExpression(
+                BalFileConstants.NEXT_STREAM_ELSE_IF_STATEMENT));
+        streamValueErrorCheck.addIfStatement(NodeParser.parseStatement(
+                BalFileConstants.NEXT_STREAM_RETURN_STREAM_VALUE));
+        streamValueErrorCheck.addElseStatement(NodeParser.parseStatement(String.format(
+                BalFileConstants.NEXT_STREAM_ELSE_STATEMENT,
+                String.format(BalFileConstants.RECORD_FIELD_VAR, entity.modulePrefix, entity.getEntityName()),
+                String.format(BalFileConstants.RECORD_FIELD_VAR, entity.modulePrefix, entity.getEntityName()))));
+        streamValueErrorCheck.addElseStatement(NodeParser.parseStatement(BalFileConstants.RETURN_NEXT_RECORD));
+        streamValueNilCheck.addElseBody(streamValueErrorCheck);
+        nextStream.addIfElseStatement(streamValueNilCheck.getIfElseStatementNode());
+        clientStream.addMember(nextStream.getFunctionDefinitionNode(), true);
+
+        Function closeStream = new Function(BalFileConstants.CLOSE);
+        closeStream.addQualifiers(new String[]{BalFileConstants.KEYWORD_PUBLIC, BalFileConstants.KEYWORD_ISOLATED});
+        closeStream.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode(BalFileConstants.EMPTY_STRING,
+                BalFileConstants.ERROR));
+        closeStream.addStatement(NodeParser.parseStatement(BalFileConstants.CLOSE_STREAM_STATEMENT));
+        clientStream.addMember(closeStream.getFunctionDefinitionNode(), true);
+        return clientStream;
+    }
+
+    private static Function getInitMethod(Entity entity) {
+        Function init = new Function(BalFileConstants.INIT);
+        init.addQualifiers(new String[]{BalFileConstants.KEYWORD_PUBLIC});
+        init.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode(BalFileConstants.EMPTY_STRING,
+                BalFileConstants.ERROR));
+        init.addStatement(NodeParser.parseStatement(BalFileConstants.INIT_MYSQL_CLIENT));
+        if (!entity.getRelations().isEmpty()) {
+            init.addStatement(NodeParser.parseStatement(BalFileConstants.INIT_PERSIST_CLIENT_RELATED));
+        } else {
+            init.addStatement(NodeParser.parseStatement(BalFileConstants.INIT_PERSIST_CLIENT));
+        }
+        return init;
+    }
+
+    private static Function getCreateMethod(Entity entity, List<Node> joinSubFields,
+                                            HashMap<String, String> keys, boolean keyAutoInc, String keyType) {
         Function create = new Function(BalFileConstants.CREATE);
         create.addRequiredParameter(
                 TypeDescriptor.getQualifiedNameReferenceNode(entity.modulePrefix, entity.getEntityName()),
@@ -568,7 +701,7 @@ public class BalSyntaxTreeGenerator {
             create.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(
                     TypeDescriptor.getQualifiedNameReferenceNode(entity.modulePrefix,
                             entity.getEntityName()), TypeDescriptor.getSimpleNameReferenceNode(
-                                    BalFileConstants.ERROR)));
+                            BalFileConstants.ERROR)));
             for (Relation relation : entity.getRelations()) {
                 if (relation.isChild()) {
                     continue;
@@ -593,20 +726,13 @@ public class BalSyntaxTreeGenerator {
             create.addStatement(NodeParser.parseStatement(BalFileConstants.CREATE_SQL_RESULTS));
             create.addStatement(NodeParser.parseStatement(RETURN_VAUE));
         }
+        return create;
+    }
 
-        client.addMember(create.getFunctionDefinitionNode(), true);
-
+    private static Function getReadByKeyMethod(Entity entity, HashMap<String, String> keys, boolean inclusions,
+                                               String keyType, StringBuilder keyString) {
         Function readByKey = new Function(BalFileConstants.READ_BY_KEY);
-        StringBuilder keyString = new StringBuilder();
-        keyString.append(BalFileConstants.KEY);
         if (keys.size() > 1) {
-            keyString = new StringBuilder();
-            for (String key : keys.keySet()) {
-                keyString.append(keys.get(key));
-                keyString.append(" ");
-                keyString.append(key);
-                keyString.append(";");
-            }
             readByKey.addRequiredParameter(
                     NodeParser.parseTypeDescriptor(String.format(BalFileConstants.CLOSE_RECORD_VARIABLE, keyString)),
                     BalFileConstants.KEY);
@@ -621,20 +747,22 @@ public class BalSyntaxTreeGenerator {
 
         if (inclusions) {
             readByKey.addRequiredParameterWithDefault(NodeParser.parseTypeDescriptor(String.format(
-                    ENTITY_RELATIONS_ARRAY, entity.getNamePrefix(false) + entity.getEntityName())), INCLUDE,
+                            ENTITY_RELATIONS_ARRAY, entity.getNamePrefix(false) + entity.getEntityName())), INCLUDE,
                     Function.Bracket.SQUARE);
             readByKey.addStatement(NodeParser.parseStatement(String.format("return <%s:%s> check " +
                             "self.persistClient.runReadByKeyQuery(%s:%s, key, include);", entity.modulePrefix,
                     entity.getEntityName(), entity.modulePrefix, entity.getEntityName())));
         } else {
-        readByKey.addStatement(NodeParser.parseStatement(String.format(BalFileConstants.READ_BY_KEY_RETURN,
-                String.format(BalFileConstants.RECORD_FIELD_VAR,
-                        entity.modulePrefix, entity.getEntityName()), String.format(
-                        BalFileConstants.RECORD_FIELD_VAR,
-                        entity.modulePrefix, entity.getEntityName()))));
+            readByKey.addStatement(NodeParser.parseStatement(String.format(BalFileConstants.READ_BY_KEY_RETURN,
+                    String.format(BalFileConstants.RECORD_FIELD_VAR,
+                            entity.modulePrefix, entity.getEntityName()), String.format(
+                            BalFileConstants.RECORD_FIELD_VAR,
+                            entity.modulePrefix, entity.getEntityName()))));
         }
-        client.addMember(readByKey.getFunctionDefinitionNode(), true);
+        return readByKey;
+    }
 
+    private static Function getReadMethod(Entity entity, boolean inclusions, String className) {
         Function read = new Function(BalFileConstants.READ);
         read.addRequiredParameterWithDefault(
                 TypeDescriptor.getOptionalTypeDescriptorNode(BalFileConstants.EMPTY_STRING, TypeDescriptor
@@ -648,7 +776,7 @@ public class BalSyntaxTreeGenerator {
                 TypeDescriptor.getSimpleNameReferenceNode(BalFileConstants.ERROR)));
         if (inclusions) {
             read.addRequiredParameterWithDefault(NodeParser.parseTypeDescriptor(String.format(
-                    ENTITY_RELATIONS_ARRAY, entity.getNamePrefix(false) + entity.getEntityName())),
+                            ENTITY_RELATIONS_ARRAY, entity.getNamePrefix(false) + entity.getEntityName())),
                     INCLUDE, Function.Bracket.SQUARE);
             read.addStatement(NodeParser.parseStatement(String.format(BalFileConstants.READ_RUN_READ_QUERY_RELATED,
                     String.format(BalFileConstants.RECORD_FIELD_VAR, entity.modulePrefix,
@@ -662,8 +790,10 @@ public class BalSyntaxTreeGenerator {
         read.addStatement(NodeParser.parseStatement(String.format(BalFileConstants.READ_RETURN_STREAM,
                 String.format(BalFileConstants.RECORD_FIELD_VAR, entity.modulePrefix, entity.getEntityName()),
                 className)));
-        client.addMember(read.getFunctionDefinitionNode(), true);
+        return read;
+    }
 
+    private static Function getUpdateMethod(Entity entity, String className) {
         Function update = new Function(BalFileConstants.UPDATE);
         update.addRequiredParameter(
                 TypeDescriptor.getRecordTypeDescriptorNode(),
@@ -689,7 +819,7 @@ public class BalSyntaxTreeGenerator {
                         relation.getRelatedInstance(), relation.getRelatedInstance())));
                 typeCheck.addIfStatement(NodeParser.parseStatement(String.format(GET_ENTITY_CLIENT,
                         relation.getClientName(), relation.getClientName().substring(0, 1)
-                        .toLowerCase() + relation.getClientName().substring(1), relation.getClientName())));
+                                .toLowerCase() + relation.getClientName().substring(1), relation.getClientName())));
                 typeCheck.addIfStatement(NodeParser.parseStatement(String.format(GET_ENTITY_STREAM,
                         entity.getNamePrefix(true), entity.getEntityName(),
                         className.substring(0, 1).toLowerCase() + className.substring(1), relation.getRelatedType())));
@@ -705,22 +835,24 @@ public class BalSyntaxTreeGenerator {
                 relatedKeyString.append("}");
                 typeCheck.addIfStatement(NodeFactory.createExpressionStatementNode(SyntaxKind.ACTION_STATEMENT,
                         NodeFactory.createCheckExpressionNode(
-                        SyntaxKind.CHECK_ACTION,
-                        SyntaxTreeConstants.SYNTAX_TREE_KEYWORD_CHECK,
-                        NodeParser.parseActionOrExpression(String.format(CHECK_QUERY_ACTION, entity.getNamePrefix(true),
-                                entity.getEntityName(),
-                                className.substring(0, 1).toLowerCase() + className.substring(1),
-                                relation.getRelatedInstance(), relation.getModulePrefix(), relation.getRelatedType(),
-                                relation.getClientName().substring(0, 1).toLowerCase() + relation.getClientName()
-                                        .substring(1), relation.getRelatedInstance(), relatedKeyString))
-                ), SYNTAX_TREE_SEMICOLON));
+                                SyntaxKind.CHECK_ACTION,
+                                SyntaxTreeConstants.SYNTAX_TREE_KEYWORD_CHECK,
+                                NodeParser.parseActionOrExpression(String.format(CHECK_QUERY_ACTION,
+                                        entity.getNamePrefix(true), entity.getEntityName(),
+                                        className.substring(0, 1).toLowerCase() + className.substring(1),
+                                        relation.getRelatedInstance(), relation.getModulePrefix(),
+                                        relation.getRelatedType(),
+                                        relation.getClientName().substring(0, 1).toLowerCase()
+                                                + relation.getClientName()
+                                                .substring(1), relation.getRelatedInstance(), relatedKeyString))
+                        ), SYNTAX_TREE_SEMICOLON));
                 update.addIfElseStatement(typeCheck.getIfElseStatementNode());
             }
         }
+        return update;
+    }
 
-        client.addMember(update.getFunctionDefinitionNode(), true);
-
-
+    private static Function getDeleteMethod() {
         Function delete = new Function(BalFileConstants.DELETE);
         delete.addRequiredParameter(
                 TypeDescriptor.getBuiltinSimpleNameReferenceNode(TypeDescriptor
@@ -731,134 +863,38 @@ public class BalSyntaxTreeGenerator {
         delete.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode(BalFileConstants.EMPTY_STRING,
                 BalFileConstants.ERROR));
         delete.addStatement(NodeParser.parseStatement(BalFileConstants.DELETE_RUN_DELETE_QUERY));
-        client.addMember(delete.getFunctionDefinitionNode(), true);
+        return delete;
+    }
 
-        if (!entity.getRelations().isEmpty()) {
-            Function exists = new Function(BalFileConstants.EXISTS);
-            if (keys.size() > 1) {
-                keyString = new StringBuilder();
-                keyString.append("{");
+    private static Function getExistMethod(Entity entity, StringBuilder keyString) {
+        Function exists = new Function(BalFileConstants.EXISTS);
+        exists.addRequiredParameter(TypeDescriptor.getQualifiedNameReferenceNode(entity.getNamePrefix(true),
+                entity.getEntityName()), entity.getEntityName().substring(0, 1).toLowerCase() +
+                entity.getEntityName().substring(1));
+        exists.addQualifiers(new String[]{BalFileConstants.KEYWORD_REMOTE});
+        exists.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(
+                TypeDescriptor.getBuiltinSimpleNameReferenceNode("boolean"),
+                TypeDescriptor.getSimpleNameReferenceNode (BalFileConstants.ERROR)));
+        exists.addStatement(NodeParser.parseStatement(String.format(EXIST_READ_BY_KEY, entity.getNamePrefix(true),
+                entity.getEntityName(), keyString)));
+        IfElse typeCheck = new IfElse(NodeParser.parseExpression(String.format(CHECK_RESULT,
+                entity.getNamePrefix(true), entity.getEntityName())));
+        typeCheck.addIfStatement(NodeParser.parseStatement(RETURN_TRUE));
+        IfElse invalidKeyCheck = new IfElse(NodeParser.parseExpression(EXIST_CHECK_INVALID));
+        invalidKeyCheck.addIfStatement(NodeParser.parseStatement(RETURN_FALSE));
+        invalidKeyCheck.addElseStatement(NodeParser.parseStatement(RETURN_RESULT));
+        typeCheck.addElseBody(invalidKeyCheck);
+        exists.addIfElseStatement(typeCheck.getIfElseStatementNode());
+        return exists;
+    }
 
-                for (String key : keys.keySet()) {
-                    keyString.append(entity.getEntityName().substring(0, 1).toLowerCase());
-                    keyString.append(entity.getEntityName().substring(1));
-                    keyString.append(".");
-                    keyString.append(key);
-                    keyString.append(", ");
-                }
-                keyString.append("}");
-
-            } else {
-                keyString = new StringBuilder();
-                keyString.append(entity.getEntityName().substring(0, 1).toLowerCase());
-                keyString.append(entity.getEntityName().substring(1));
-                keyString.append(".");
-                for (String key : keys.keySet()) {
-                    keyString.append(key);
-                }
-            }
-
-            exists.addRequiredParameter(TypeDescriptor.getQualifiedNameReferenceNode(entity.getNamePrefix(true),
-                            entity.getEntityName()), entity.getEntityName().substring(0, 1).toLowerCase() +
-                    entity.getEntityName().substring(1));
-            exists.addQualifiers(new String[]{BalFileConstants.KEYWORD_REMOTE});
-            exists.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(
-                    TypeDescriptor.getBuiltinSimpleNameReferenceNode("boolean"),
-                    TypeDescriptor.getSimpleNameReferenceNode (BalFileConstants.ERROR)));
-            exists.addStatement(NodeParser.parseStatement(String.format(EXIST_READ_BY_KEY, entity.getNamePrefix(true),
-                    entity.getEntityName(), keyString)));
-            IfElse typeCheck = new IfElse(NodeParser.parseExpression(String.format(CHECK_RESULT,
-                    entity.getNamePrefix(true), entity.getEntityName())));
-            typeCheck.addIfStatement(NodeParser.parseStatement(RETURN_TRUE));
-            IfElse invalidKeyCheck = new IfElse(NodeParser.parseExpression(EXIST_CHECK_INVALID));
-            invalidKeyCheck.addIfStatement(NodeParser.parseStatement(RETURN_FALSE));
-            invalidKeyCheck.addElseStatement(NodeParser.parseStatement(RETURN_RESULT));
-            typeCheck.addElseBody(invalidKeyCheck);
-            exists.addIfElseStatement(typeCheck.getIfElseStatementNode());
-            client.addMember(exists.getFunctionDefinitionNode(), true);
-
-        }
-
+    private static Function getCloseMethod() {
         Function close = new Function(BalFileConstants.CLOSE);
         close.addQualifiers(new String[]{});
         close.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode(BalFileConstants.EMPTY_STRING,
                 BalFileConstants.ERROR));
         close.addStatement(NodeParser.parseStatement(BalFileConstants.CLOSE_PERSIST_CLIENT));
-        client.addMember(close.getFunctionDefinitionNode(), true);
-        return client;
-    }
-
-    private static Class createClientStreamClass(Entity entity, String className) {
-        Class clientStream = new Class(className + "Stream", true);
-
-        clientStream.addMember(NodeFactory.createBasicLiteralNode(SyntaxKind.STRING_LITERAL,
-                AbstractNodeFactory.createLiteralValueToken(SyntaxKind.STRING_LITERAL, " ",
-                        NodeFactory.createEmptyMinutiaeList(), NodeFactory.createEmptyMinutiaeList())), true);
-
-        clientStream.addMember(TypeDescriptor.getObjectFieldNodeWithoutExpression(BalFileConstants.KEYWORD_PRIVATE,
-                new String[]{},
-                TypeDescriptor.getStreamTypeDescriptorNode(
-                        SyntaxTreeConstants.SYNTAX_TREE_VAR_ANYDATA,
-                        TypeDescriptor.getOptionalTypeDescriptorNode(BalFileConstants.EMPTY_STRING,
-                                BalFileConstants.ERROR)),
-                BalFileConstants.ANYDATA_STREAM), true);
-
-        Function initStream = new Function(BalFileConstants.INIT);
-        initStream.addQualifiers(new String[]{BalFileConstants.KEYWORD_PUBLIC, BalFileConstants.KEYWORD_ISOLATED});
-        initStream.addStatement(NodeParser.parseStatement(BalFileConstants.INIT_STREAM_STATEMENT));
-        initStream.addRequiredParameter(
-                TypeDescriptor.getStreamTypeDescriptorNode(
-                        SyntaxTreeConstants.SYNTAX_TREE_VAR_ANYDATA,
-                        TypeDescriptor.getOptionalTypeDescriptorNode(BalFileConstants.EMPTY_STRING,
-                                BalFileConstants.ERROR)),
-                BalFileConstants.ANYDATA_STREAM);
-        clientStream.addMember(initStream.getFunctionDefinitionNode(), true);
-
-        Function nextStream = new Function(BalFileConstants.NEXT);
-        nextStream.addQualifiers(new String[]{BalFileConstants.KEYWORD_PUBLIC, BalFileConstants.KEYWORD_ISOLATED});
-        nextStream.addReturns(NodeParser.parseTypeDescriptor(String.format(
-                BalFileConstants.NEXT_STREAM_RETURN_TYPE,
-                String.format(BalFileConstants.RECORD_FIELD_VAR, entity.modulePrefix, entity.getEntityName()))));
-        nextStream.addStatement(NodeParser.parseStatement(BalFileConstants.NEXT_STREAM_STREAM_VALUE));
-
-        IfElse streamValueNilCheck = new IfElse(NodeParser.parseExpression(
-                BalFileConstants.NEXT_STREAM_IF_STATEMENT));
-        streamValueNilCheck.addIfStatement(NodeParser.parseStatement(
-                BalFileConstants.NEXT_STREAM_RETURN_STREAM_VALUE));
-        IfElse streamValueErrorCheck = new IfElse(NodeParser.parseExpression(
-                BalFileConstants.NEXT_STREAM_ELSE_IF_STATEMENT));
-        streamValueErrorCheck.addIfStatement(NodeParser.parseStatement(
-                BalFileConstants.NEXT_STREAM_RETURN_STREAM_VALUE));
-        streamValueErrorCheck.addElseStatement(NodeParser.parseStatement(String.format(
-                BalFileConstants.NEXT_STREAM_ELSE_STATEMENT,
-                String.format(BalFileConstants.RECORD_FIELD_VAR, entity.modulePrefix, entity.getEntityName()),
-                String.format(BalFileConstants.RECORD_FIELD_VAR, entity.modulePrefix, entity.getEntityName()))));
-        streamValueErrorCheck.addElseStatement(NodeParser.parseStatement(BalFileConstants.RETURN_NEXT_RECORD));
-        streamValueNilCheck.addElseBody(streamValueErrorCheck);
-        nextStream.addIfElseStatement(streamValueNilCheck.getIfElseStatementNode());
-        clientStream.addMember(nextStream.getFunctionDefinitionNode(), true);
-
-        Function closeStream = new Function(BalFileConstants.CLOSE);
-        closeStream.addQualifiers(new String[]{BalFileConstants.KEYWORD_PUBLIC, BalFileConstants.KEYWORD_ISOLATED});
-        closeStream.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode(BalFileConstants.EMPTY_STRING,
-                BalFileConstants.ERROR));
-        closeStream.addStatement(NodeParser.parseStatement(BalFileConstants.CLOSE_STREAM_STATEMENT));
-        clientStream.addMember(closeStream.getFunctionDefinitionNode(), true);
-        return clientStream;
-    }
-
-    private static Function createInitMethod(Entity entity) {
-        Function init = new Function(BalFileConstants.INIT);
-        init.addQualifiers(new String[]{BalFileConstants.KEYWORD_PUBLIC});
-        init.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode(BalFileConstants.EMPTY_STRING,
-                BalFileConstants.ERROR));
-        init.addStatement(NodeParser.parseStatement(BalFileConstants.INIT_MYSQL_CLIENT));
-        if (!entity.getRelations().isEmpty()) {
-            init.addStatement(NodeParser.parseStatement(BalFileConstants.INIT_PERSIST_CLIENT_RELATED));
-        } else {
-            init.addStatement(NodeParser.parseStatement(BalFileConstants.INIT_PERSIST_CLIENT));
-        }
-        return init;
+        return close;
     }
 
     public static SyntaxTree generateConfigSyntaxTree() {
