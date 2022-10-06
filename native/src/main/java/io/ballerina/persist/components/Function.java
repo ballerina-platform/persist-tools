@@ -53,7 +53,7 @@ public class Function {
     public enum Bracket {
         SQUARE,
         CURLY,
-        NORMAL
+        PAREN
     }
 
     private final SyntaxKind kind = SyntaxKind.OBJECT_METHOD_DEFINITION;

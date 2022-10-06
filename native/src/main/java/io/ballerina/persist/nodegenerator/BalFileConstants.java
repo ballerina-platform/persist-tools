@@ -43,11 +43,11 @@ public class BalFileConstants {
     public static final String ANYDATA_STREAM = "anydataStream";
     public static final String RETURN_NEXT_RECORD = "return nextRecord;";
     public static final String LAST_RETURN_ID_NULL_CHECK = "result.lastInsertId is ()";
-    public static final String VALUE_TYPE_CHECK = "value.%s is entities:%s";
+    public static final String VALUE_TYPE_CHECK = "value.%s is %s:%s";
     public static final String GET_NEW_CLIENT = "%sClient %sClient = check new %sClient();";
-    public static final String CHECK_EXISTENCE = "boolean exists = check %sClient->exists(<entities:%s> value.%s);";
+    public static final String CHECK_EXISTENCE = "boolean exists = check %sClient->exists(<%s:%s> value.%s);";
     public static final String NOT_EXIST = "!exists";
-    public static final String CREATE_CLIENT = "value.%s = check %sClient->create(<entities:%s> value.%s);";
+    public static final String CREATE_CLIENT = "value.%s = check %sClient->create(<%s:%s> value.%s);";
     public static final String RETURN_VAUE = "return value;";
     public static final String RETURN_RESULT = "return result;";
     public static final String ENTITY_RELATIONS_ARRAY = "%sRelations[]";
@@ -74,6 +74,7 @@ public class BalFileConstants {
     public static final String TRUE = "true";
     public static final String FALSE = "false";
     public static final String IMPORT_AS_ENTITIES = "import %s as entities;";
+    public static final String IMPORT_AS_SUB_ENTITIES = "import %s as %sEntities;";
     public static final String TYPE_FIELD_METADATA_MAP = "map<persist:FieldMetadata>";
     public static final String TYPE_JOIN_METADATA_MAP = "map<persist:JoinMetadata>";
     public static final String TAG_FIELD_METADATA = "fieldMetadata";
@@ -149,19 +150,19 @@ public class BalFileConstants {
     public static final String RECORD_CHECK = "'object[\"%s\"] is record {}";
     public static final String GET_ENTITY_RECORD = "record {} %sEntity = <record {}> 'object[\"%s\"];";
     public static final String GET_ENTITY_CLIENT = "%sClient %sClient = check new %sClient();";
-    public static final String GET_ENTITY_STREAM = "stream<entities:%s, error?> %sStream = " +
+    public static final String GET_ENTITY_STREAM = "stream<%s:%s, error?> %sStream = " +
             "check self->read(filter, [%sEntity]);";
-    public static final String EXIST_READ_BY_KEY = "entities:%s|error result = self->" +
+    public static final String EXIST_READ_BY_KEY = "%s:%s|error result = self->" +
             "readByKey(%s);";
     public static final String EXIST_CHECK_INVALID = "result is persist:InvalidKey";
-    public static final String CHECK_RESULT = "result is entities:%s";
+    public static final String CHECK_RESULT = "result is %s:%s";
     public static final String ENUM_ENTRY = "%sEntity = \"%s\"";
     public static final String JDBC_URL_WITHOUT_DATABASE = "jdbc:%s://%s:%s";
     public static final String JDBC_URL_WITH_DATABASE = "jdbc:%s://%s:%s/%s";
 
-    public static final String CHECK_QUERY_ACTION = "from entities:%s p in %sStream\n" +
+    public static final String CHECK_QUERY_ACTION = "from %s:%s p in %sStream\n" +
             "                do {\n" +
-            "                    if p.%s is entities:%s {\n" +
+            "                    if p.%s is %s:%s {\n" +
             "                        check %sClient->update(%sEntity, %s);\n" +
             "                    }\n" +
             "                }";

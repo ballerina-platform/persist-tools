@@ -33,11 +33,13 @@ public class Relation {
 
     private ArrayList<FieldMetaData> relatedFields = new ArrayList<>();
     private final boolean isChild;
-    private final String relatedType;
+    private String relatedType;
     private String refTable;
     private String relatedInstance;
     private boolean parentIncluded = false;
     private Optional<String> relatedModule;
+
+    private String modulePrefix = "entities";
 
     public Relation(String relatedType, String relatedInstance, ArrayList<String> keyColumns,
                     ArrayList<String> references, boolean isChild) {
@@ -69,6 +71,9 @@ public class Relation {
     public String getRelatedType() {
         return this.relatedType;
     }
+    public void setRelatedType(String relatedType) {
+        this.relatedType = relatedType;
+    }
 
     public String getRelatedInstance() {
         return relatedInstance;
@@ -90,6 +95,10 @@ public class Relation {
         return relatedFields;
     }
 
+    public Optional<String> getRelatedModule() {
+        return this.relatedModule;
+    }
+
     public void setRelatedFields(ArrayList<FieldMetaData> relatedFields) {
         this.relatedFields = relatedFields;
     }
@@ -107,6 +116,14 @@ public class Relation {
     }
     public void setParentIncluded(boolean parentIncluded) {
         this.parentIncluded = parentIncluded;
+    }
+
+    public void setModulePrefix(String modulePrefix) {
+        this.modulePrefix = modulePrefix;
+    }
+
+    public String getModulePrefix() {
+        return this.modulePrefix;
     }
 
 

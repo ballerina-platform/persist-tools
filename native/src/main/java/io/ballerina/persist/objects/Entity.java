@@ -29,6 +29,7 @@ public class Entity {
 
     private final Optional<String> module;
     private final String[] keys;
+    public String modulePrefix = "entities";
     private String tableName;
 
     private String entityName;
@@ -43,6 +44,17 @@ public class Entity {
         this.keys = keys;
         this.tableName = tableName;
         this.module = module;
+    }
+
+    public String getNamePrefix(boolean withTail) {
+        if (!module.isEmpty() && withTail) {
+            return module.get() + "Entities";
+        } else if (!module.isEmpty() && !withTail) {
+            return module.get().substring(0, 1).toUpperCase() + module.get().substring(1);
+        } else if (module.isEmpty() && !withTail) {
+            return "";
+        }
+        return "entities";
     }
 
     public String[] getKeys() {
