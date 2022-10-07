@@ -102,4 +102,23 @@ public class ToolingGenerateTest {
     public void testGenerateSingleEntityWithAnnotationErrors() {
         assertGeneratedSourcesNegative("tool_test_generate_12", GENERATE, "modules");
     }
+    @Test(enabled = true)
+    @Description("There are three entities with one to one associations between each other")
+    public void testGenerateThreeEntitiesWith1To1Associations() {
+        assertGeneratedSources("tool_test_generate_13", GENERATE);
+    }
+
+    @Test(enabled = true)
+    @Description("There are three entities with one to one associations between each other with one parent entity " +
+            "in sub module")
+    public void testGenerateThreeEntitiesWith1To1AssociationsWithEntityInSubModule() {
+        assertGeneratedSources("tool_test_generate_14", GENERATE);
+    }
+
+    @Test(enabled = true)
+    @Description("There are three entities with one to one associations between each other with one child entity " +
+            "in sub module")
+    public void testGenerateThreeEntitiesWith1To1AssociationsWithChildEntityInSubModule() {
+        assertGeneratedSources("tool_test_generate_15", GENERATE);
+    }
 }

@@ -46,14 +46,14 @@ public type MedicalNeed record {|
 |};
 ```
 
-In this example, `MedicalNeed` is an entity with the attributes `itemId`, `beneficiaryId`, `period`, `urgency`, and `quantity`. When users execute `bal persist generate` inside a Ballerina project, a new module named `generated_clients` will be created. Inside the `generated_clients` module, Ballerina files will be generated encapsulating the client object with respect to each entity defined in the project. The following is the project structure after the command execution.
+In this example, `MedicalNeed` is an entity with the attributes `itemId`, `beneficiaryId`, `period`, `urgency`, and `quantity`. When users execute `bal persist generate` inside a Ballerina project, a new module named `clients` will be created. Inside the `clients` module, Ballerina files will be generated encapsulating the client object with respect to each entity defined in the project. The following is the project structure after the command execution.
 ```
 medical-center
 ├── Ballerina.toml
 ├── entities.bal
 ├── main.bal
 └── modules
-    └── generated_clients
+    └── clients
         └── medicalneed_client.bal
 ```
 
@@ -143,11 +143,11 @@ public class MedicalNeedStream {
 
 - The `bal persist generate` command should be executed inside a valid Ballerina project. If not, an error will be thrown.
 - If there are no entities defined in the Ballerina project there won't be any changes to the project.
-- If there are entities defined in the Ballerina project and there is no `generated_clients` module in the project, a new `generated_clients` module will get added.
-- If there are entities defined in the Ballerina project and there is a `generated_clients` module in the project, the generated bal files will be updated.
+- If there are entities defined in the Ballerina project and there is no `clients` module in the project, a new `clients` module will get added.
+- If there are entities defined in the Ballerina project and there is a `clients` module in the project, the generated bal files will be updated.
 
 ## Testing
 - Execute the command outside a Ballerina project. Validate if the expected error was returned.
 - Execute the command inside a Ballerina project without any entity. Validate that there was no change made to the project.
-- Execute the command inside a Ballerina project with an entity but without a `generated_clients` module. Validate that a `generated_clients` module was created and assert the content of the bal file containing the client object.
-- Execute the command inside a Ballerina project with an entity and with a `generated_clients` module. Validate that generated bal files in the `generated_clients` module was updated accordingly. Assert the content of the bal file containing the client object.
+- Execute the command inside a Ballerina project with an entity but without a `clients` module. Validate that a `clients` module was created and assert the content of the bal file containing the client object.
+- Execute the command inside a Ballerina project with an entity and with a `clients` module. Validate that generated bal files in the `clients` module was updated accordingly. Assert the content of the bal file containing the client object.

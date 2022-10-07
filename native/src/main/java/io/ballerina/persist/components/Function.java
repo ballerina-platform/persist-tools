@@ -47,6 +47,15 @@ import static io.ballerina.persist.components.TypeDescriptor.getReturnTypeDescri
  */
 public class Function {
 
+    /**
+     * Represents open and close bracket type.
+     */
+    public enum Bracket {
+        SQUARE,
+        CURLY,
+        PAREN
+    }
+
     private final SyntaxKind kind = SyntaxKind.OBJECT_METHOD_DEFINITION;
     private NodeList<Token> qualifierList;
     private final Token finalKeyWord = AbstractNodeFactory.createIdentifierToken(ComponentConstants.TAG_FUNCTION);
@@ -107,9 +116,21 @@ public class Function {
         );
     }
 
-    public void addRequiredParameterWithDefault(Node typeName, String name) {
+    public void addRequiredParameterWithDefault(Node typeName, String name, Bracket brkt) {
         if (parameters.size() > 0) {
             parameters.add(SyntaxTreeConstants.SYNTAX_TREE_COMMA);
+        }
+        Token open;
+        Token close;
+        if (brkt == Bracket.SQUARE) {
+            open = SyntaxTreeConstants.SYNTAX_TREE_OPEN_BRACKET;
+            close = SyntaxTreeConstants.SYNTAX_TREE_CLOSE_BRACKET;
+        } else if (brkt == Bracket.CURLY) {
+            open = SyntaxTreeConstants.SYNTAX_TREE_OPEN_BRACE;
+            close = SyntaxTreeConstants.SYNTAX_TREE_CLOSE_BRACE;
+        } else {
+            open = SyntaxTreeConstants.SYNTAX_TREE_OPEN_PAREN;
+            close = SyntaxTreeConstants.SYNTAX_TREE_CLOSE_PAREN;
         }
         NodeList<AnnotationNode> annotations = NodeFactory.createEmptyNodeList();
         parameters.add(
@@ -119,15 +140,12 @@ public class Function {
                         AbstractNodeFactory.createIdentifierToken(name),
                         SyntaxTreeConstants.SYNTAX_TREE_EQUAL,
                         NodeFactory.createListConstructorExpressionNode(
-                                SyntaxTreeConstants.SYNTAX_TREE_OPEN_PAREN, AbstractNodeFactory
+                                open, AbstractNodeFactory
                                         .createSeparatedNodeList(NodeFactory.createBasicLiteralNode(
                                                 SyntaxKind.NIL_LITERAL,
                                                 AbstractNodeFactory.createLiteralValueToken(SyntaxKind.NIL_LITERAL,
                                                         "", NodeFactory.createEmptyMinutiaeList(),
-                                                        NodeFactory.createEmptyMinutiaeList())))
-                                , SyntaxTreeConstants.SYNTAX_TREE_CLOSE_PAREN)
-                        )
-        );
+                                                        NodeFactory.createEmptyMinutiaeList()))), close)));
     }
 
     public void addReturns(TypeDescriptorNode node) {

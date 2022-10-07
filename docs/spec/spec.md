@@ -77,14 +77,14 @@ public type MedicalNeed record {|
 |};
 ```
 
-In this example, `MedicalNeed` is an entity with the attributes `itemId`, `beneficiaryId`, `period`, `urgency`, and `quantity`. When users execute `bal persist generate` inside a Ballerina project, a new module named `generated_clients` will be created. Inside the `generated_clients` module, Ballerina files will be generated encapsulating the client object with respect to each entity defined in the project. The following is the project structure after the command execution.
+In this example, `MedicalNeed` is an entity with the attributes `itemId`, `beneficiaryId`, `period`, `urgency`, and `quantity`. When users execute `bal persist generate` inside a Ballerina project, a new module named `clients` will be created. Inside the `clients` module, Ballerina files will be generated encapsulating the client object with respect to each entity defined in the project. The following is the project structure after the command execution.
 ```
 medical-center
 ├── Ballerina.toml
 ├── entities.bal
 ├── main.bal
 └── modules
-    └── generated_clients
+    └── clients
         └── medicalneed_client.bal
 ```
 
