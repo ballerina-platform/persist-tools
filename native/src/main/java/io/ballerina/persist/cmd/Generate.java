@@ -176,10 +176,10 @@ public class Generate implements BLauncherCmd {
         SyntaxTree balTree = BalSyntaxTreeGenerator.generateClientSyntaxTree(entity);
         String clientPath;
         if (entity.getModule().isEmpty()) {
-            clientPath = Paths.get(this.sourcePath, "modules", "generated_clients",
+            clientPath = Paths.get(this.sourcePath, "modules", "clients",
                     entity.getEntityName().toLowerCase() + "_client.bal").toAbsolutePath().toString();
         } else {
-            clientPath = Paths.get(this.sourcePath, "modules", "generated_clients",
+            clientPath = Paths.get(this.sourcePath, "modules", "clients",
                             entity.getModule().get() + "_" + entity.getEntityName().toLowerCase() + "_client.bal")
                     .toAbsolutePath().toString();
         }
@@ -196,7 +196,7 @@ public class Generate implements BLauncherCmd {
         SyntaxTree configTree = BalSyntaxTreeGenerator.generateConfigSyntaxTree();
         try {
             writeOutputFile(configTree, Paths.get(this.sourcePath, "modules",
-                            "generated_clients", "database_configuration.bal")
+                            "clients", "database_configuration.bal")
                     .toAbsolutePath().toString());
         } catch (IOException e) {
             throw new BalException("Error occurred while writing database configuration file!");
