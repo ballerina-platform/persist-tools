@@ -86,7 +86,7 @@ def checkTestDockerContainerStatus(dockerName) {
 task startTestDockerContainer(type: Exec) {
     if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
         def standardOutput = new ByteArrayOutputStream()
-        commandLine 'sh', '-c', 'docker run --rm -d --name ballerina-persist-tools -e MYSQL_ROOT_PASSWORD="Test123#" -p 3307:3306 -t mysql:8.0.21'
+        commandLine 'sh', '-c', 'docker run --platform linux/amd64 --rm -d --name ballerina-persist-tools -e MYSQL_ROOT_PASSWORD="Test123#" -p 3307:3306 -t mysql:8.0.21'
         def healthCheck = 1
         def counter = 0
         doLast {

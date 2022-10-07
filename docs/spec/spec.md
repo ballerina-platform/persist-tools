@@ -20,6 +20,7 @@ The conforming implementation of the specification is released and included in t
 1. [Overview](#1-overview)
 2. [Generating Database Configurations](#2-generating-database-configurations)
 3. [Generating Client Objects](#3-generating-client-objects)
+4. [Create database tables](#4-creating-database-tables)
 
 ## 1. Overview
 This specification elaborates on the operations available in the CLI Tool.
@@ -94,8 +95,9 @@ import ballerina/sql;
 import ballerinax/mysql;
 import ballerina/time;
 import ballerina/persist;
+import foo/persist_generate_1 as entities;
 
-client class MedicalNeedClient {
+public client class MedicalNeedClient {
 
     private final string entityName = "MedicalNeed";
     private final sql:ParameterizedQuery tableName = `MedicalNeeds`;
@@ -112,61 +114,105 @@ client class MedicalNeedClient {
 
     private persist:SQLClient persistClient;
 
-    public function init() returns persist:Error? {
-        mysql:Client dbClient = check new (host = HOST, user = USER, password = PASSWORD, database = DATABASE, port = PORT);
-        self.persistClient = check new (self.entityName, self.tableName, self.fieldMetadata, self.keyFields, dbClient);
+    public function init() returns error? {
+        mysql:Client dbClient = check new (host = host, user = user, password = password, database = database, port = port);
+        self.persistClient = check new (dbClient, self.entityName, self.tableName, self.keyFields, self.fieldMetadata);
     }
 
-    remote function create(MedicalNeed value) returns int|persist:Error? {
+    remote function create(entities:MedicalNeed value) returns entities:MedicalNeed|error? {
         sql:ExecutionResult result = check self.persistClient.runInsertQuery(value);
-        return <int>result.lastInsertId;
+        return {needId: <int>result.lastInsertId, itemId: value.itemId, beneficiaryId: value.beneficiaryId, period: value.period, urgency: value.urgency, quantity: value.quantity};
     }
 
-    remote function readByKey(int key) returns MedicalNeed|persist:Error {
-        return (check self.persistClient.runReadByKeyQuery(key)).cloneWithType(MedicalNeed);
+    remote function readByKey(int key) returns entities:MedicalNeed|error {
+        return (check self.persistClient.runReadByKeyQuery(entities:MedicalNeed, key)).cloneWithType(entities:MedicalNeed);
     }
 
-    remote function read(map<anydata>? filter = ()) returns stream<MedicalNeed, persist:Error?>|persist:Error {
-        stream<anydata, error?> result = check self.persistClient.runReadQuery(filter);
-        return new stream<MedicalNeed, error?>(new MedicalNeedStream(result));
+    remote function read(map<anydata>? filter = ()) returns stream<entities:MedicalNeed, error?>|error {
+        stream<anydata, error?> result = check self.persistClient.runReadQuery(entities:MedicalNeed, filter);
+        return new stream<entities:MedicalNeed, error?>(new MedicalNeedStream(result));
     }
 
-    remote function update(record {} 'object, map<anydata> filter) returns persist:Error? {
+    remote function update(record {} 'object, map<anydata> filter) returns error? {
         _ = check self.persistClient.runUpdateQuery('object, filter);
     }
 
-    remote function delete(map<anydata> filter) returns persist:Error? {
+    remote function delete(map<anydata> filter) returns error? {
         _ = check self.persistClient.runDeleteQuery(filter);
     }
 
-    function close() returns persist:Error? {
+    function close() returns error? {
         return self.persistClient.close();
     }
-
 }
 
 public class MedicalNeedStream {
 
-    private stream<anydata, persist:Error?> anydataStream;
+    private stream<anydata, error?> anydataStream;
 
-    public isolated function init(stream<anydata, persist:Error?> anydataStream) {
+    public isolated function init(stream<anydata, error?> anydataStream) {
         self.anydataStream = anydataStream;
     }
 
-    public isolated function next() returns record {|MedicalNeed value;|}|persist:Error? {
+    public isolated function next() returns record {|entities:MedicalNeed value;|}|error? {
         var streamValue = self.anydataStream.next();
         if streamValue is () {
             return streamValue;
         } else if (streamValue is error) {
             return streamValue;
         } else {
-            record {|MedicalNeed value;|} nextRecord = {value: check streamValue.value.cloneWithType(MedicalNeed)};
+            record {|entities:MedicalNeed value;|} nextRecord = {value: check streamValue.value.cloneWithType(entities:MedicalNeed)};
             return nextRecord;
         }
     }
 
-    public isolated function close() returns persist:Error? {
+    public isolated function close() returns error? {
         return self.anydataStream.close();
     }
 }
 ```
+
+In addition, a `database_configuration.bal` file will be generated in the same directory with the configurable variables related to database configurations as follows.
+```ballerina
+configurable int port = ?;
+configurable string host = ?;
+configurable string user = ?;
+configurable string database = ?;
+configurable string password = ?;
+```
+
+## 4. Creating Database Tables
+Users can define database entities in their Ballerina projects. They can create database tables corresponding to these entities by executing `bal persist db push` command. Users can then use the generated client objects to perform operations on these tables programmatically without having to write SQL statements.
+
+Consider the following entity record inside the Ballerina project.
+```ballerina
+import ballerina/time;
+import ballerina/persist;
+
+@persist:Entity {
+    key: ["needId"],
+    tableName: "MedicalNeeds"
+}
+public type MedicalNeed record {|
+    @persist:AutoIncrement
+    readonly int needId = -1;
+
+    int itemId;
+    int beneficiaryId;
+    time:Civil period;
+    string urgency;
+    int quantity;
+|};
+```
+
+Suppose the user has defined database configurations in the `Config.toml` file as follows.
+```
+[foo.bar]
+host = "localhost"
+port = 3306
+user = "root"
+password = "Test123#"
+database = "medicals"
+```
+
+When the user executes `bal persist db push` command, `MedicalNeeds` table will be created in the `medicals` database with `needId` as the primary key. 

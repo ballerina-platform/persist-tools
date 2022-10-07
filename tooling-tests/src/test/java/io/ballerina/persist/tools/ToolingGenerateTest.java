@@ -21,83 +21,83 @@ package io.ballerina.persist.tools;
 import jdk.jfr.Description;
 import org.testng.annotations.Test;
 
-import static io.ballerina.persist.tools.ToolingTestUtils.Command.GENERATE;
-import static io.ballerina.persist.tools.ToolingTestUtils.assertGeneratedSources;
-import static io.ballerina.persist.tools.ToolingTestUtils.assertGeneratedSourcesNegative;
+import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.Command.GENERATE;
+import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertGeneratedSources;
+import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertGeneratedSourcesNegative;
 
 /**
  * persist tool generate command tests.
  */
 public class ToolingGenerateTest {
 
-    @Test(enabled = true)
+    @Test()
     @Description("There is only a single entity in the Ballerina project")
     public void testGenerateSingleEntity() {
 
         assertGeneratedSources("tool_test_generate_1", GENERATE);
     }
 
-    @Test(enabled = true)
+    @Test()
     @Description("There are multiple entities in the Ballerina project")
     public void testGenerateMultipleEntities() {
         assertGeneratedSources("tool_test_generate_2", GENERATE);
     }
 
-    @Test(enabled = true)
+    @Test()
     @Description("There are no entities nor already generated client objects in the Ballerina project")
     public void testGenerateWithoutEntitiesWithoutClients() {
         assertGeneratedSources("tool_test_generate_3", GENERATE);
     }
 
-    @Test(enabled = true)
+    @Test()
     @Description("When the generate command is executed outside a Ballerina project")
     public void testGenerateOutsideBalProject() {
         assertGeneratedSources("tool_test_generate_4", GENERATE);
     }
 
-    @Test(enabled = true)
+    @Test()
     @Description("There is a generated client object and the corresponding entity is updated")
     public void testGenerateUpdateEntity() {
         assertGeneratedSources("tool_test_generate_5", GENERATE);
     }
 
-    @Test(enabled = true)
+    @Test()
     @Description("A persist entity with all the supported fields data types")
     public void testGenerateAllEntityFieldTypes() {
         assertGeneratedSources("tool_test_generate_6", GENERATE);
     }
 
-    @Test(enabled = true)
+    @Test()
     @Description("Use case where a entity is located inside a module")
     public void testGenerateClientWithEntityInModule() {
         assertGeneratedSources("tool_test_generate_7", GENERATE);
     }
 
-    @Test(enabled = true)
+    @Test()
     @Description("There is only a single entity in the Ballerina project where key is a string")
     public void testGenerateSingleEntityWithStringKey() {
         assertGeneratedSources("tool_test_generate_8", GENERATE);
     }
 
-    @Test(enabled = true)
+    @Test()
     @Description("There is only a single entity in the Ballerina project with two keys one autoincrement")
     public void testGenerateSingleEntityWithMultipleKeysAndAutoInc() {
         assertGeneratedSources("tool_test_generate_9", GENERATE);
     }
 
-    @Test(enabled = true)
+    @Test()
     @Description("There is only a single entity in the Ballerina project with two keys without autoincrement")
     public void testGenerateSingleEntityWithMultipleKeys() {
         assertGeneratedSources("tool_test_generate_10", GENERATE);
     }
 
-    @Test(enabled = true)
+    @Test()
     @Description("There is only a single entity in the Ballerina project and there are errors in the project")
     public void testGenerateSingleEntityWithErrors() {
         assertGeneratedSourcesNegative("tool_test_generate_11", GENERATE, "modules");
     }
 
-    @Test(enabled = true)
+    @Test()
     @Description("There is only a single entity in the Ballerina project and there are errors in Entity annotation")
     public void testGenerateSingleEntityWithAnnotationErrors() {
         assertGeneratedSourcesNegative("tool_test_generate_12", GENERATE, "modules");
