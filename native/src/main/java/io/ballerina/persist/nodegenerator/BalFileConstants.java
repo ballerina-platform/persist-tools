@@ -89,6 +89,8 @@ public class BalFileConstants {
             "self.persistClient.runInsertQuery(value);";
     public static final String READ_BY_KEY_RETURN = "return (check self.persistClient" +
             ".runReadByKeyQuery(%s, key)).cloneWithType(%s);";
+    public static final String READ_BY_KEY_RETURN_RELATION = "return <%s:%s> check " +
+            "self.persistClient.runReadByKeyQuery(%s:%s, key, include);";
     public static final String READ_RUN_READ_QUERY = "stream<anydata, error?> result" +
             " = check self.persistClient.runReadQuery(%s, filter);";
     public static final String READ_RUN_READ_QUERY_RELATED = "stream<anydata, error?> result" +

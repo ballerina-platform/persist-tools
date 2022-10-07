@@ -80,6 +80,7 @@ import static io.ballerina.persist.nodegenerator.BalFileConstants.GET_NEW_CLIENT
 import static io.ballerina.persist.nodegenerator.BalFileConstants.INCLUDE;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.KEY_COLUMNS;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.NOT_EXIST;
+import static io.ballerina.persist.nodegenerator.BalFileConstants.READ_BY_KEY_RETURN_RELATION;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.RECORD_CHECK;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.REFERENCE;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.RELATION;
@@ -749,9 +750,8 @@ public class BalSyntaxTreeGenerator {
             readByKey.addRequiredParameterWithDefault(NodeParser.parseTypeDescriptor(String.format(
                             ENTITY_RELATIONS_ARRAY, entity.getNamePrefix(false) + entity.getEntityName())), INCLUDE,
                     Function.Bracket.SQUARE);
-            readByKey.addStatement(NodeParser.parseStatement(String.format("return <%s:%s> check " +
-                            "self.persistClient.runReadByKeyQuery(%s:%s, key, include);", entity.modulePrefix,
-                    entity.getEntityName(), entity.modulePrefix, entity.getEntityName())));
+            readByKey.addStatement(NodeParser.parseStatement(String.format(READ_BY_KEY_RETURN_RELATION,
+                    entity.modulePrefix, entity.getEntityName(), entity.modulePrefix, entity.getEntityName())));
         } else {
             readByKey.addStatement(NodeParser.parseStatement(String.format(BalFileConstants.READ_BY_KEY_RETURN,
                     String.format(BalFileConstants.RECORD_FIELD_VAR,

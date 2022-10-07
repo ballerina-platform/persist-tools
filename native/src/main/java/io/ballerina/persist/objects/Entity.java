@@ -54,7 +54,7 @@ public class Entity {
         } else if (module.isEmpty() && !withTail) {
             return "";
         }
-        return "entities";
+        return modulePrefix;
     }
 
     public String[] getKeys() {
