@@ -116,8 +116,7 @@ public class Push implements BLauncherCmd {
                 balProject = BuildProject.load(projectEnvironmentBuilder, Paths.get(sourcePath).toAbsolutePath());
             }
             balProject.currentPackage().getCompilation();
-            configurations = SyntaxTreeGenerator.readToml(
-                    Paths.get(this.sourcePath, this.configPath), name);
+            configurations = SyntaxTreeGenerator.readToml(Paths.get(this.sourcePath, this.configPath), name);
             sqlLines = readSqlFile();
         } catch (ProjectException | BalException  e) {
             errStream.println(e.getMessage());
@@ -148,7 +147,8 @@ public class Push implements BLauncherCmd {
                 stdStream.println("Creating Database : " + database);
             }
         } catch (SQLException e) {
-            errStream.println("Error occurred when creating database tables: " + e.getMessage());
+            errStream.println("Error occurred when creating database: " + e.getMessage());
+            return;
         }
 
         String databaseUrl = String.format(JDBC_URL_WITH_DATABASE, MYSQL,
@@ -238,7 +238,6 @@ public class Push implements BLauncherCmd {
     }
     @Override
     public void printUsage(StringBuilder stringBuilder) {
-        stringBuilder.append("  ballerina " + COMPONENT_IDENTIFIER +
-                " db push").append(System.lineSeparator());
+        stringBuilder.append("  ballerina " + COMPONENT_IDENTIFIER + " db push").append(System.lineSeparator());
     }
 }
