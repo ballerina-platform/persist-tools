@@ -53,7 +53,7 @@ import static io.ballerina.persist.PersistToolsConstants.KEY_USER;
 import static io.ballerina.persist.PersistToolsConstants.MYSQL;
 import static io.ballerina.persist.nodegenerator.SyntaxTreeConstants.ARTIFACT_ID;
 import static io.ballerina.persist.nodegenerator.SyntaxTreeConstants.GROUP_ID;
-import static io.ballerina.persist.nodegenerator.SyntaxTreeConstants.GROUP_ID_STRING;
+import static io.ballerina.persist.nodegenerator.SyntaxTreeConstants.GROUP_ID_KEYWORD;
 import static io.ballerina.persist.nodegenerator.SyntaxTreeConstants.JAVA_11_DEPENDANCY;
 import static io.ballerina.persist.nodegenerator.SyntaxTreeConstants.VERSION;
 
@@ -207,7 +207,7 @@ public class SyntaxTreeGenerator {
                 if (((TableArrayNode) member).identifier().toSourceCode().contains(JAVA_11_DEPENDANCY)) {
                     NodeList<KeyValueNode> fields = ((TableArrayNode) member).fields();
                     for (KeyValueNode keyValueNode : fields) {
-                        if ((keyValueNode.identifier()).toSourceCode().contains(GROUP_ID_STRING) &&
+                        if ((keyValueNode.identifier()).toSourceCode().contains(GROUP_ID_KEYWORD) &&
                                 (keyValueNode.value()).toSourceCode().contains(MYSQL)) {
                             mysqlDriverExists = true;
                             break;
