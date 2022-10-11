@@ -68,6 +68,7 @@ public class SyntaxTreeConstants {
 
     public static final Token SYNTAX_TREE_KEYWORD_CHECK = AbstractNodeFactory.createIdentifierToken("check ");
     public static final String JAVA_11_DEPENDANCY = "platform.java11.dependency";
+    public static final String GROUP_ID_KEYWORD = "groupId";
 
     public static final KeyValueNode GROUP_ID = SampleNodeGenerator.createStringKV("groupId", "mysql", null);
     public static final KeyValueNode ARTIFACT_ID = SampleNodeGenerator.createStringKV("artifactId",
