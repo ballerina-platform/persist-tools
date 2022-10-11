@@ -20,7 +20,6 @@ include ':persist-tools-tooling-tests'
 
 project(':checkstyle').projectDir = file("build-config${File.separator}checkstyle")
 project(':persist-tools-native').projectDir = file('native')
-project(':persist-tools-ballerina').projectDir = file('ballerina')
 project(':persist-tools-tooling-tests').projectDir = file('tooling-tests')
 
 gradleEnterprise {

@@ -130,7 +130,7 @@ public class Generate implements BLauncherCmd {
                 if (!syntaxDiagnostics.isEmpty()) {
                     StringBuilder errorMessage = new StringBuilder();
                     errorMessage.append("Error occurred when validating the project." +
-                            " The project contains syntax errors. ");
+                            " The project contains syntax errors.");
                     for (String d : syntaxDiagnostics) {
                         errorMessage.append(System.lineSeparator());
                         errorMessage.append(d.toString());
@@ -140,7 +140,7 @@ public class Generate implements BLauncherCmd {
                 if (diagnosticResult.hasErrors()) {
                     StringBuilder errorMessage = new StringBuilder();
                     errorMessage.append("Error occurred when validating the project." +
-                            " The project contains semantic errors. ");
+                            " The project contains semantic errors.");
                     for (Diagnostic d : diagnosticResult.errors()) {
                         errorMessage.append(System.lineSeparator());
                         errorMessage.append(d.toString());
