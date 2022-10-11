@@ -77,7 +77,7 @@ public class SyntaxTreeGenerator {
      * Method to create a new Config.toml file with database configurations.
      */
     public static SyntaxTree createToml(String name) {
-        NodeList moduleMembers = AbstractNodeFactory.createEmptyNodeList();
+        NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(name, null));
         moduleMembers = populateNodeList(moduleMembers);
         Token eofToken = AbstractNodeFactory.createIdentifierToken("");
@@ -93,7 +93,7 @@ public class SyntaxTreeGenerator {
             TextDocument configDocument = TextDocuments.from(Files.readString(configPath));
             SyntaxTree syntaxTree = SyntaxTree.from(configDocument, fileNamePath.toString());
             DocumentNode rootNote = syntaxTree.rootNode();
-            NodeList nodeList = rootNote.members();
+            NodeList<DocumentMemberDeclarationNode> nodeList = rootNote.members();
             for (Object member : nodeList) {
                 if (member instanceof TableNode) {
                     TableNode node = (TableNode) member;
@@ -132,11 +132,11 @@ public class SyntaxTreeGenerator {
         TextDocument configDocument = TextDocuments.from(Files.readString(configPath));
         SyntaxTree syntaxTree = SyntaxTree.from(configDocument, fileNamePath.toString());
         DocumentNode rootNote = syntaxTree.rootNode();
-        NodeList nodeList = rootNote.members();
+        NodeList<DocumentMemberDeclarationNode> nodeList = rootNote.members();
 
-        for (Object member : nodeList) {
+        for (DocumentMemberDeclarationNode member : nodeList) {
             if (member instanceof KeyValueNode) {
-                moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) member);
+                moduleMembers = moduleMembers.add(member);
             } else if (member instanceof TableNode) {
                 TableNode node = (TableNode) member;
                 if (node.identifier().toSourceCode().trim().equals(name)) {
@@ -170,10 +170,10 @@ public class SyntaxTreeGenerator {
                         moduleMembers = populateRemaining(moduleMembers, existingNodes);
                     }
                 } else {
-                    moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) member);
+                    moduleMembers = moduleMembers.add(member);
                 }
             } else if (member instanceof TableArrayNode) {
-                moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) member);
+                moduleMembers = moduleMembers.add(member);
             }
         }
         if (existingNodes.isEmpty()) {
@@ -195,14 +195,14 @@ public class SyntaxTreeGenerator {
         TextDocument configDocument = TextDocuments.from(Files.readString(balPAth));
         SyntaxTree syntaxTree = SyntaxTree.from(configDocument, fileNamePath.toString());
         DocumentNode rootNote = syntaxTree.rootNode();
-        NodeList nodeList = rootNote.members();
+        NodeList<DocumentMemberDeclarationNode> nodeList = rootNote.members();
         boolean mysqlDriverExists = false;
 
-        for (Object member : nodeList) {
+        for (DocumentMemberDeclarationNode member : nodeList) {
             if (member instanceof KeyValueNode) {
-                moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) member);
+                moduleMembers = moduleMembers.add(member);
             } else if (member instanceof TableNode) {
-                moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) member);
+                moduleMembers = moduleMembers.add(member);
             } else if (member instanceof TableArrayNode) {
                 if (((TableArrayNode) member).identifier().toSourceCode().contains(JAVA_11_DEPENDANCY)) {
                     NodeList<KeyValueNode> fields = ((TableArrayNode) member).fields();
@@ -214,7 +214,7 @@ public class SyntaxTreeGenerator {
                         }
                     }
                     if (!mysqlDriverExists) {
-                        moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) member);
+                        moduleMembers = moduleMembers.add(member);
                     } else {
                         moduleMembers = addNewLine(moduleMembers, 1);
                         moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray(
@@ -224,7 +224,7 @@ public class SyntaxTreeGenerator {
                         moduleMembers = moduleMembers.add(VERSION);
                     }
                 } else {
-                    moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) member);
+                    moduleMembers = moduleMembers.add(member);
                 }
             }
 
@@ -266,7 +266,8 @@ public class SyntaxTreeGenerator {
         return -1;
     }
 
-    private static NodeList populateNodeList(NodeList moduleMembers) {
+    private static NodeList<DocumentMemberDeclarationNode> populateNodeList(
+            NodeList<DocumentMemberDeclarationNode> moduleMembers) {
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_HOST, DEFAULT_HOST, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createNumericKV(KEY_PORT, DEFAULT_PORT, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_USER, DEFAULT_USER, null));
@@ -275,7 +276,7 @@ public class SyntaxTreeGenerator {
         return moduleMembers;
     }
 
-    private static NodeList addNewLine(NodeList moduleMembers, int n) {
+    private static NodeList<DocumentMemberDeclarationNode> addNewLine(NodeList moduleMembers, int n) {
         for (int i = 0; i < n; i++) {
             moduleMembers = moduleMembers.add(AbstractNodeFactory.createIdentifierToken(System.lineSeparator()));
         }
