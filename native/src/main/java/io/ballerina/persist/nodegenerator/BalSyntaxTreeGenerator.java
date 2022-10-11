@@ -62,6 +62,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static io.ballerina.persist.nodegenerator.BalFileConstants.CHECK_EXISTENCE;
@@ -98,12 +99,13 @@ import static io.ballerina.persist.nodegenerator.SyntaxTreeConstants.SYNTAX_TREE
  * @since 0.1.0
  */
 public class BalSyntaxTreeGenerator {
-
     /**
      * method to read ballerina files.
      */
-    public static ArrayList<Entity> getEntityRecord(Path filePath, Optional<String> module) throws IOException {
+    public static Map<String, ArrayList> getEntityRecord(Path filePath, Optional<String> module)
+            throws IOException {
         ArrayList<Entity> entityArray = new ArrayList<>();
+        ArrayList<ModuleMemberDeclarationNode> entityMembers = new ArrayList<>();
         int index = -1;
         ArrayList<String> keys = new ArrayList<>();
         String tableName = null;
@@ -125,6 +127,7 @@ public class BalSyntaxTreeGenerator {
                 if (qualifiedNameRef.identifier().text().equals("Entity") && qualifiedNameRef.modulePrefix().text()
                         .equals(BalFileConstants.PERSIST) && annotation.annotValue().isPresent()) {
                     index += 1;
+                    entityMembers.add(moduleNode);
                     for (MappingFieldNode fieldNode : annotation.annotValue().get().fields()) {
                         if (fieldNode.kind() != SyntaxKind.SPECIFIC_FIELD) {
                             continue;
@@ -193,10 +196,34 @@ public class BalSyntaxTreeGenerator {
                 }
             }
         }
-        return entityArray;
+        Map<String, ArrayList> map = new HashMap();
+        map.put("entityArray", entityArray);
+        map.put("entityMembers", entityMembers);
+        return map;
     }
 
-    public static SyntaxTree generateClientSyntaxTree(Entity entity) {
+    public static SyntaxTree copyEntities(ArrayList<Entity> entityArray,
+                                    ArrayList<ModuleMemberDeclarationNode> entityMembers,
+                                          ArrayList<ImportDeclarationNode> importArray) {
+        boolean hasTime = false;
+        NodeList imports = AbstractNodeFactory.createEmptyNodeList();
+        NodeList moduleMembers = AbstractNodeFactory.createEmptyNodeList();
+        imports = imports.add(getImportDeclarationNode(BalFileConstants.KEYWORD_BALLERINA,
+                BalFileConstants.PERSIST));
+        for (ImportDeclarationNode impDec : importArray) {
+            imports = imports.add(impDec);
+        }
+        for (ModuleMemberDeclarationNode member : entityMembers) {
+            moduleMembers = moduleMembers.add(member);
+        }
+        Token eofToken = AbstractNodeFactory.createIdentifierToken(BalFileConstants.EMPTY_STRING);
+        ModulePartNode modulePartNode = NodeFactory.createModulePartNode(imports, moduleMembers, eofToken);
+        TextDocument textDocument = TextDocuments.from(BalFileConstants.EMPTY_STRING);
+        SyntaxTree balTree = SyntaxTree.from(textDocument);
+        return balTree.modifyWith(modulePartNode);
+    }
+
+    public static SyntaxTree generateClientSyntaxTree(Entity entity, ArrayList<ImportDeclarationNode> importsArray) {
         boolean keyAutoInc = false;
         Enum relationsEnum = null;
         HashMap<String, String> keys = new HashMap<>();
@@ -267,6 +294,8 @@ public class BalSyntaxTreeGenerator {
         imports = imports.add(getImportDeclarationNode(BalFileConstants.KEYWORD_BALLERINAX,
                 BalFileConstants.KEYWORD_MYSQL));
         if (hasTime) {
+            importsArray.add(getImportDeclarationNode(BalFileConstants.KEYWORD_BALLERINA,
+                    BalFileConstants.KEYWORD_TIME));
             imports = imports.add(getImportDeclarationNode(BalFileConstants.KEYWORD_BALLERINA,
                     BalFileConstants.KEYWORD_TIME));
         }
@@ -423,6 +452,7 @@ public class BalSyntaxTreeGenerator {
         ModulePartNode modulePartNode = NodeFactory.createModulePartNode(imports, moduleMembers, eofToken);
         TextDocument textDocument = TextDocuments.from(BalFileConstants.EMPTY_STRING);
         SyntaxTree balTree = SyntaxTree.from(textDocument);
+
         return balTree.modifyWith(modulePartNode);
     }
 
