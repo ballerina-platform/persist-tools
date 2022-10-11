@@ -63,6 +63,10 @@ public class SyntaxTreeConstants {
     public static final Token SYNTAX_TREE_KEYWORD_RECORD = AbstractNodeFactory.createIdentifierToken("record ");
     public static final Token SYNTAX_TREE_KEYWORD_IF = AbstractNodeFactory.createIdentifierToken("if ");
     public static final Token SYNTAX_TREE_KEYWORD_ELSE = AbstractNodeFactory.createIdentifierToken("else ");
+
+    public static final Token SYNTAX_TREE_KEYWORD_ENUM = AbstractNodeFactory.createIdentifierToken("enum ");
+
+    public static final Token SYNTAX_TREE_KEYWORD_CHECK = AbstractNodeFactory.createIdentifierToken("check ");
     public static final String JAVA_11_DEPENDANCY = "platform.java11.dependency";
     public static final String GROUP_ID_STRING = "groupId";
 

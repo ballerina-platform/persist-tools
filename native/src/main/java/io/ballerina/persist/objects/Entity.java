@@ -29,11 +29,14 @@ public class Entity {
 
     private final Optional<String> module;
     private final String[] keys;
+    public String modulePrefix = "entities";
     private String tableName;
 
     private String entityName;
 
     private String packageName;
+
+    private ArrayList<Relation> relations = new ArrayList<>();
 
     private final ArrayList<FieldMetaData> fields = new ArrayList<>();
     public Entity(String[] keys, String tableName, Optional<String> module) {
@@ -41,6 +44,17 @@ public class Entity {
         this.keys = keys;
         this.tableName = tableName;
         this.module = module;
+    }
+
+    public String getNamePrefix(boolean withTail) {
+        if (!module.isEmpty() && withTail) {
+            return module.get() + "Entities";
+        } else if (!module.isEmpty() && !withTail) {
+            return module.get().substring(0, 1).toUpperCase() + module.get().substring(1);
+        } else if (module.isEmpty() && !withTail) {
+            return "";
+        }
+        return modulePrefix;
     }
 
     public String[] getKeys() {
@@ -79,6 +93,10 @@ public class Entity {
 
     public void addField(FieldMetaData field) {
         this.fields.add(field);
+    }
+
+    public ArrayList<Relation> getRelations() {
+        return this.relations;
     }
 
 }
