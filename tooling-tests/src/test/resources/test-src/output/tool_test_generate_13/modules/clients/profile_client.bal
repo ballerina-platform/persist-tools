@@ -64,11 +64,11 @@ public client class ProfileClient {
         if value["user"] is record {} {
             record {} userEntity = <record {}>value["user"];
             UserClient userClient = check new UserClient();
-            stream<Profile, error?> profileStream = check self->read(filter, [UserEntity]);
+            stream<Profile, error?> profileStream = self->read(filter, [UserEntity]);
             check from Profile p in profileStream
                 do {
                     if p.user is User {
-                        check userClient->update(userEntity, {"id": (<User>p.user).id});
+                        check userClient->update(<User>userEntity);
                     }
                 };
         }
@@ -82,7 +82,7 @@ public client class ProfileClient {
         Profile|error result = self->readByKey(profile.id);
         if result is Profile {
             return true;
-        } else if result is persist:InvalidKey {
+        } else if result is persist:InvalidKeyError {
             return false;
         } else {
             return result;

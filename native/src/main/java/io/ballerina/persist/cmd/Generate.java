@@ -221,7 +221,7 @@ public class Generate implements BLauncherCmd {
     private void copyEntities(ArrayList<Entity> entityArray, ArrayList<ModuleMemberDeclarationNode> moduleMembers,
                               ArrayList<ImportDeclarationNode> importArray)
             throws BalException {
-        SyntaxTree copiedEntitiesTree = BalSyntaxTreeGenerator.copyEntities(entityArray, moduleMembers, importArray);
+        SyntaxTree copiedEntitiesTree = BalSyntaxTreeGenerator.copyEntities(moduleMembers, importArray);
         try {
             writeOutputFile(copiedEntitiesTree, Paths.get(this.sourcePath, "modules",
                             "clients", "entities.bal")

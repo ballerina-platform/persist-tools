@@ -64,7 +64,7 @@ public client class UserClient {
         User|error result = self->readByKey(user.id);
         if result is User {
             return true;
-        } else if result is persist:InvalidKey {
+        } else if result is persist:InvalidKeyError {
             return false;
         } else {
             return result;

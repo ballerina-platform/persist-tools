@@ -76,22 +76,22 @@ public client class MultipleAssociationsClient {
         if value["profile"] is record {} {
             record {} profileEntity = <record {}>value["profile"];
             ProfileClient profileClient = check new ProfileClient();
-            stream<MultipleAssociations, error?> multipleAssociationsStream = check self->read(filter, [ProfileEntity]);
+            stream<MultipleAssociations, error?> multipleAssociationsStream = self->read(filter, [ProfileEntity]);
             check from MultipleAssociations p in multipleAssociationsStream
                 do {
                     if p.profile is Profile {
-                        check profileClient->update(profileEntity, {"id": (<Profile>p.profile).id});
+                        check profileClient->update(<Profile>profileEntity);
                     }
                 };
         }
         if value["user"] is record {} {
             record {} userEntity = <record {}>value["user"];
             UserClient userClient = check new UserClient();
-            stream<MultipleAssociations, error?> multipleAssociationsStream = check self->read(filter, [UserEntity]);
+            stream<MultipleAssociations, error?> multipleAssociationsStream = self->read(filter, [UserEntity]);
             check from MultipleAssociations p in multipleAssociationsStream
                 do {
                     if p.user is User {
-                        check userClient->update(userEntity, {"id": (<User>p.user).id});
+                        check userClient->update(<User>userEntity);
                     }
                 };
         }
@@ -105,7 +105,7 @@ public client class MultipleAssociationsClient {
         MultipleAssociations|error result = self->readByKey(multipleAssociations.id);
         if result is MultipleAssociations {
             return true;
-        } else if result is persist:InvalidKey {
+        } else if result is persist:InvalidKeyError {
             return false;
         } else {
             return result;
