@@ -75,19 +75,23 @@ public class GeneratedSourcesTestUtils {
     public static void assertGeneratedSources(String subDir, Command cmd) {
 
         generateSourceCode(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir), cmd);
+        errStream.println(1);
         Assert.assertTrue(directoryContentEquals(Paths.get(RESOURCES_EXPECTED_OUTPUT.toString()).resolve(subDir),
                 Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)));
-
+        errStream.println(2);
         if (!subDir.equals("tool_test_generate_4")) {
             try {
                 Assert.assertFalse(!hasSyntacticDiagnostics(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir))
                         .isEmpty());
+                errStream.println(3);
             } catch (IOException | BalException e) {
                 errStream.println(e.getMessage());
                 Assert.fail();
             }
+            errStream.println(4);
             Assert.assertFalse(hasSemanticDiagnostics(Paths.get(GENERATED_SOURCES_DIRECTORY)
                     .resolve(subDir), getEnvironmentBuilder()).hasErrors());
+            errStream.println(5);
         }
 
         for (Path actualOutputFile: listFiles(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir))) {
@@ -98,8 +102,11 @@ public class GeneratedSourcesTestUtils {
             }
             Path expectedOutputFile = Paths.get(RESOURCES_EXPECTED_OUTPUT.toString(), subDir).
                     resolve(actualOutputFile.subpath(3, actualOutputFile.getNameCount()));
+            errStream.println(6);
             Assert.assertTrue(Files.exists(actualOutputFile));
+            errStream.println(7);
             Assert.assertEquals(readContent(actualOutputFile), readContent(expectedOutputFile));
+            errStream.println(8);
         }
     }
 
