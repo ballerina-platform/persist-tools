@@ -98,7 +98,8 @@ public class GeneratedSourcesTestUtils {
             Path expectedOutputFile = Paths.get(RESOURCES_EXPECTED_OUTPUT.toString(), subDir).
                     resolve(actualOutputFile.subpath(3, actualOutputFile.getNameCount()));
             Assert.assertTrue(Files.exists(actualOutputFile));
-            errStream.println(actualOutputFile.toString());
+            errStream.println(readContent(actualOutputFile));
+            errStream.println(readContent(expectedOutputFile));
             Assert.assertEquals(readContent(actualOutputFile), readContent(expectedOutputFile));
         }
     }
