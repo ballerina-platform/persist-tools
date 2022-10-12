@@ -194,15 +194,8 @@ public class Generate implements BLauncherCmd {
 
     private void generateClientBalFile(Entity entity, ArrayList<ImportDeclarationNode> imports) throws BalException {
         SyntaxTree balTree = BalSyntaxTreeGenerator.generateClientSyntaxTree(entity, imports);
-        String clientPath;
-        if (entity.getModule().isEmpty()) {
-            clientPath = Paths.get(this.sourcePath, "modules", "clients",
+        String clientPath = Paths.get(this.sourcePath, "modules", "clients",
                     entity.getEntityName().toLowerCase() + "_client.bal").toAbsolutePath().toString();
-        } else {
-            clientPath = Paths.get(this.sourcePath, "modules", "clients",
-                            entity.getModule().get() + "_" + entity.getEntityName().toLowerCase() + "_client.bal")
-                    .toAbsolutePath().toString();
-        }
         try {
             writeOutputFile(balTree, clientPath);
         } catch (IOException e) {

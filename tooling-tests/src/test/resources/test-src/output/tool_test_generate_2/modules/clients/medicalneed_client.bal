@@ -2,7 +2,6 @@ import ballerina/sql;
 import ballerinax/mysql;
 import ballerina/time;
 import ballerina/persist;
-import foo/perist_generate_2 as entities;
 
 public client class MedicalNeedClient {
 
@@ -26,26 +25,40 @@ public client class MedicalNeedClient {
         self.persistClient = check new (dbClient, self.entityName, self.tableName, self.keyFields, self.fieldMetadata);
     }
 
-    remote function create(entities:MedicalNeed value) returns entities:MedicalNeed|error? {
+    remote function create(MedicalNeed value) returns MedicalNeed|error {
         sql:ExecutionResult result = check self.persistClient.runInsertQuery(value);
         return {needId: <int>result.lastInsertId, itemId: value.itemId, beneficiaryId: value.beneficiaryId, period: value.period, urgency: value.urgency, quantity: value.quantity};
     }
 
-    remote function readByKey(int key) returns entities:MedicalNeed|error {
-        return (check self.persistClient.runReadByKeyQuery(entities:MedicalNeed, key)).cloneWithType(entities:MedicalNeed);
+    remote function readByKey(int key) returns MedicalNeed|error {
+        return (check self.persistClient.runReadByKeyQuery(MedicalNeed, key)).cloneWithType(MedicalNeed);
     }
 
-    remote function read(map<anydata>? filter = ()) returns stream<entities:MedicalNeed, error?>|error {
-        stream<anydata, error?> result = check self.persistClient.runReadQuery(entities:MedicalNeed, filter);
-        return new stream<entities:MedicalNeed, error?>(new MedicalNeedStream(result));
+    remote function read(map<anydata>? filter = ()) returns stream<MedicalNeed, error?> {
+        stream<anydata, error?>|error result = self.persistClient.runReadQuery(MedicalNeed, filter);
+        if result is error {
+            return new stream<MedicalNeed, error?>(new MedicalNeedStream((), result));
+        } else {
+            return new stream<MedicalNeed, error?>(new MedicalNeedStream(result));
+        }
     }
 
-    remote function update(record {} 'object, map<anydata> filter) returns error? {
-        _ = check self.persistClient.runUpdateQuery('object, filter);
+    remote function execute(sql:ParameterizedQuery filterClause) returns stream<MedicalNeed, error?> {
+        stream<anydata, error?>|error result = self.persistClient.runExecuteQuery(filterClause, MedicalNeed);
+        if result is error {
+            return new stream<MedicalNeed, error?>(new MedicalNeedStream((), result));
+        } else {
+            return new stream<MedicalNeed, error?>(new MedicalNeedStream(result));
+        }
     }
 
-    remote function delete(map<anydata> filter) returns error? {
-        _ = check self.persistClient.runDeleteQuery(filter);
+    remote function update(MedicalNeed value) returns error? {
+        map<anydata> filter = {"needId": value.needId};
+        _ = check self.persistClient.runUpdateQuery(value, filter);
+    }
+
+    remote function delete(MedicalNeed value) returns error? {
+        _ = check self.persistClient.runDeleteQuery(value);
     }
 
     function close() returns error? {
@@ -55,25 +68,38 @@ public client class MedicalNeedClient {
 
 public class MedicalNeedStream {
 
-    private stream<anydata, error?> anydataStream;
+    private stream<anydata, error?>? anydataStream;
+    private error? err;
 
-    public isolated function init(stream<anydata, error?> anydataStream) {
+    public isolated function init(stream<anydata, error?>? anydataStream, error? err = ()) {
         self.anydataStream = anydataStream;
+        self.err = err;
     }
 
-    public isolated function next() returns record {|entities:MedicalNeed value;|}|error? {
-        var streamValue = self.anydataStream.next();
-        if streamValue is () {
-            return streamValue;
-        } else if (streamValue is error) {
-            return streamValue;
+    public isolated function next() returns record {|MedicalNeed value;|}|error? {
+        if self.err is error {
+            return <error>self.err;
+        } else if self.anydataStream is stream<anydata, error?> {
+            var anydataStream = <stream<anydata, error?>>self.anydataStream;
+            var streamValue = anydataStream.next();
+            if streamValue is () {
+                return streamValue;
+            } else if (streamValue is error) {
+                return streamValue;
+            } else {
+                record {|MedicalNeed value;|} nextRecord = {value: check streamValue.value.cloneWithType(MedicalNeed)};
+                return nextRecord;
+            }
         } else {
-            record {|entities:MedicalNeed value;|} nextRecord = {value: check streamValue.value.cloneWithType(entities:MedicalNeed)};
-            return nextRecord;
+            return ();
         }
     }
 
     public isolated function close() returns error? {
-        return self.anydataStream.close();
+        if self.anydataStream is stream<anydata, error?> {
+            var anydataStream = <stream<anydata, error?>>self.anydataStream;
+            return anydataStream.close();
+        }
     }
 }
+
