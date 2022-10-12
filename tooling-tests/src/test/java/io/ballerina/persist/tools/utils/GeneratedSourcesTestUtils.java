@@ -28,7 +28,6 @@ import io.ballerina.projects.environment.Environment;
 import io.ballerina.projects.environment.EnvironmentBuilder;
 import org.testng.Assert;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
@@ -63,8 +62,8 @@ public class GeneratedSourcesTestUtils {
     public static final String GENERATED_SOURCES_DIRECTORY = Paths.get("build", "generated-sources").toString();
     public static final Path RESOURCES_EXPECTED_OUTPUT = Paths.get("src", "test", "resources", "test-src", "output")
             .toAbsolutePath();
-    private static final Path DISTRIBUTION_PATH = Paths.get(".." + File.separator, "target", "ballerina-runtime")
-            .toAbsolutePath();
+    private static final Path DISTRIBUTION_PATH = Paths.get("build", "extracted-distribution",
+                    "jballerina-tools-2201.2.0").toAbsolutePath();
     private static final Path DRIVER_PATH = Paths.get("lib").toAbsolutePath();
 
     private static ProjectEnvironmentBuilder getEnvironmentBuilder() {

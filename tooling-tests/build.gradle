@@ -26,23 +26,77 @@ description = 'Ballerina - persist-tools Tooling Test'
 
 def buildDir = "build";
 
+configurations {
+    balTools
+    dist {
+        transitive true
+    }
+}
+
 dependencies {
     checkstyle project(':checkstyle')
     checkstyle "com.puppycrawl.tools:checkstyle:${checkstylePluginVersion}"
 
-    testImplementation group: 'org.ballerinalang', name: 'ballerina-runtime', version: "${ballerinaLangVersion}"
-    testImplementation group: 'org.ballerinalang', name: 'ballerina-tools-api', version: "${ballerinaLangVersion}"
-    testImplementation (group: 'org.ballerinalang', name: 'ballerina-cli', version: "${ballerinaLangVersion}") {
-        exclude group: 'org.ballerinalang', module: 'maven-resolver'
+    implementation "org.ballerinalang:ballerina-lang:${ballerinaLangVersion}"
+    implementation "org.ballerinalang:ballerina-parser:${ballerinaLangVersion}"
+    implementation "org.ballerinalang:ballerina-cli:${ballerinaLangVersion}"
+    implementation "org.ballerinalang:formatter-core:${ballerinaLangVersion}"
+    implementation "org.ballerinalang:ballerina-tools-api:${ballerinaLangVersion}"
+    implementation "info.picocli:picocli:${picocliVersion}"
+    testImplementation "org.testng:testng:${testngVersion}"
+
+    balTools ("org.ballerinalang:jballerina-tools:${ballerinaLangVersion}") {
+        transitive = false
     }
-    testImplementation group: 'org.ballerinalang', name: 'ballerina-lang', version: "${ballerinaLangVersion}"
-    testImplementation group: 'org.ballerinalang', name: 'ballerina-tools-api', version: "${ballerinaLangVersion}"
-    testImplementation group: 'org.ballerinalang', name: 'ballerina-parser', version: "${ballerinaLangVersion}"
-    testImplementation project(":persist-tools-native")
+
+    implementation project(":persist-tools-native")
     testImplementation group: 'org.testng', name: 'testng', version: "${testngVersion}"
     implementation 'org.junit.jupiter:junit-jupiter:5.8.1'
     implementation (group: 'mysql', name: 'mysql-connector-java', version: "${mySqlDriverVersion}") {
         transitive = false
+    }
+}
+
+def bDistribution = file("$project.buildDir/extracted-distribution/jballerina-tools-${ballerinaLangVersion}")
+
+task jBallerinaPack {
+    doLast {
+        configurations.balTools.resolvedConfiguration.resolvedArtifacts.each { artifact ->
+            copy {
+                from project.zipTree(artifact.getFile())
+                into new File(project.buildDir, "extracted-distribution/")
+            }
+        }
+    }
+    outputs.dir bDistribution
+}
+
+task unpackStdLibs() {
+    dependsOn(jBallerinaPack)
+    doLast {
+        configurations.ballerinaStdLibs.resolvedConfiguration.resolvedArtifacts.each { artifact ->
+            copy {
+                from project.zipTree(artifact.getFile())
+                into new File("${project.buildDir}/extracted-distribution/" + artifact.name + "-zip")
+            }
+        }
+    }
+}
+
+task copyStdlibs(type: Copy) {
+    dependsOn(unpackStdLibs)
+    def ballerinaDist = "$project.buildDir/extracted-distribution/jballerina-tools-${ballerinaLangVersion}"
+    into ballerinaDist
+
+    /* Standard Libraries */
+    configurations.ballerinaStdLibs.resolvedConfiguration.resolvedArtifacts.each { artifact ->
+        def artifactExtractedPath = "${project.buildDir}/extracted-distribution/" + artifact.name + "-zip"
+        into("repo/bala") {
+            from "${artifactExtractedPath}/bala/"
+        }
+        into("repo/cache") {
+            from "${artifactExtractedPath}/cache"
+        }
     }
 }
 
@@ -154,6 +208,7 @@ checkstyleMain {
 }
 
 test {
+    dependsOn(copyStdlibs)
     dependsOn(copyTestResources)
     dependsOn(startTestDockerContainer)
     systemProperty "ballerina.offline.flag", "true"
@@ -198,5 +253,4 @@ compileJava {
 }
 
 test.dependsOn ":persist-tools-native:build"
-test.dependsOn ":persist-tools-ballerina:build"
 test.finalizedBy stopTestDockerContainer
