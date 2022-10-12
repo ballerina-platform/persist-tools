@@ -102,7 +102,7 @@ public class ToolingGenerateTest {
     public void testGenerateSingleEntityWithAnnotationErrors() {
         assertGeneratedSourcesNegative("tool_test_generate_12", GENERATE, "modules");
     }
-    @Test()
+    @Test(enabled = false)
     @Description("There are three entities with one to one associations between each other")
     public void testGenerateThreeEntitiesWith1To1Associations() {
         assertGeneratedSources("tool_test_generate_13", GENERATE);
