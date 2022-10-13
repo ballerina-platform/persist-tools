@@ -61,7 +61,7 @@ public client class MedicalNeed1Client {
         _ = check self.persistClient.runDeleteQuery(value);
     }
 
-    function close() returns error? {
+    public function close() returns error? {
         return self.persistClient.close();
     }
 }

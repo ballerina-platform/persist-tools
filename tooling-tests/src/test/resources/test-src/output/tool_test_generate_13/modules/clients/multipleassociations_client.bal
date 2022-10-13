@@ -112,7 +112,7 @@ public client class MultipleAssociationsClient {
         }
     }
 
-    function close() returns error? {
+    public function close() returns error? {
         return self.persistClient.close();
     }
 }

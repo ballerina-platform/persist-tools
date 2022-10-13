@@ -71,7 +71,7 @@ public client class UserClient {
         }
     }
 
-    function close() returns error? {
+    public function close() returns error? {
         return self.persistClient.close();
     }
 }

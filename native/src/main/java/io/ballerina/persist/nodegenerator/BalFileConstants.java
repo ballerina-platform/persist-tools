@@ -37,6 +37,8 @@ public class BalFileConstants {
     public static final String DOUBLE_QUOTE = "\"";
     public static final String SINGLE_QUOTE = "\'";
     public static final String EMPTY_STRING = "";
+    public static final String SPACE_STRING = " ";
+    public static final String COMMA_SPACE_STRING = ", ";
     public static final String RETURN_VALUE = "return value;";
     public static final String ANYDATA_STREAM = "anydataStream";
     public static final String RETURN_NEXT_RECORD = "return nextRecord;";
@@ -121,10 +123,14 @@ public class BalFileConstants {
     public static final String CLOSE = "close";
     public static final String NEXT = "next";
 
-    public static final String RECORD_FIELD_VAR = "%s:%s";
+    public static final String NULLABLE_ERROR = "error?";
+    public static final String RETURN_NILL = "return ();";
     public static final String RECORD_FIELD_LAST_INSERT_ID = "%s: <%s>result.lastInsertId";
     public static final String RECORD_FIELD_VALUE = "%s: value.%s";
     public static final String KEYWORD_BALLERINA = "ballerina";
+    public static final String KEYWORD_VALUE = "value";
+    public static final String KEYWORD_SQL = "sql";
+
     public static final String KEYWORD_BALLERINAX = "ballerinax";
     public static final String KEYWORD_PRIVATE = "private";
     public static final String KEYWORD_CLIENT = "client";
@@ -132,9 +138,13 @@ public class BalFileConstants {
     public static final String KEYWORD_ISOLATED = "isolated";
     public static final String KEYWORD_FINAL = "final";
     public static final String KEYWORD_REMOTE = "remote";
+    public static final String KEYWORD_MODULES = "modules";
+    public static final String KEYWORD_CLIENTS = "clients";
+    public static final String PATH_ENTITIES_FILE = "entities.bal";
+    public static final String PATH_CONFIGURATION_BAL_FILE = "database_configuration.bal";
     public static final String KEYWORD_INT = "int";
+    public static final String KEYWORD_TABLE_NAME = "tableName";
     public static final String KEYWORD_STRING = "string";
-    public static final String KEYWORD_SQL = "sql";
     public static final String KEYWORD_MYSQL = "mysql";
     public static final String KEYWORD_TIME = "time";
     public static final String ENTITY = "Entity";
@@ -175,4 +185,6 @@ public class BalFileConstants {
     public static final String CAST_ANYDATA_STREAM = "var anydataStream = <stream<anydata, error?>>self.anydataStream;";
     public static final String ANYDATA_STREAM_NEXT = "var streamValue = anydataStream.next();";
     public static final String RESULT_IS_ERROR = "result is error";
+    public static final String EXTENSION_BAL = ".bal";
+    public static final String NULLABLE_ANYDATA_STREAM_TYPE = "stream<anydata, error?>?";
 }

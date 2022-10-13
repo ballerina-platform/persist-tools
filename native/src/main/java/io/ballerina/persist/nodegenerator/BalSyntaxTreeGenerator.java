@@ -50,6 +50,7 @@ import io.ballerina.persist.components.Function;
 import io.ballerina.persist.components.IfElse;
 import io.ballerina.persist.components.TypeDescriptor;
 import io.ballerina.persist.objects.Entity;
+import io.ballerina.persist.objects.EntityMetaData;
 import io.ballerina.persist.objects.FieldMetaData;
 import io.ballerina.persist.objects.Relation;
 import io.ballerina.tools.text.TextDocument;
@@ -62,7 +63,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static io.ballerina.persist.nodegenerator.BalFileConstants.ANYDATASTREAM_IS_STREAM_TYPE;
@@ -73,7 +73,9 @@ import static io.ballerina.persist.nodegenerator.BalFileConstants.CAST_ANYDATA_S
 import static io.ballerina.persist.nodegenerator.BalFileConstants.CHECK_EXISTENCE;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.CHECK_QUERY_ACTION;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.CHECK_RESULT;
+import static io.ballerina.persist.nodegenerator.BalFileConstants.COMMA_SPACE_STRING;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.CREATE_CLIENT;
+import static io.ballerina.persist.nodegenerator.BalFileConstants.ENTITY;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.ENTITY_RELATIONS_ARRAY;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.ENUM_ENTRY;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.ENUM_NAME;
@@ -85,8 +87,14 @@ import static io.ballerina.persist.nodegenerator.BalFileConstants.GET_ENTITY_REC
 import static io.ballerina.persist.nodegenerator.BalFileConstants.GET_ENTITY_STREAM;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.GET_NEW_CLIENT;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.INCLUDE;
+import static io.ballerina.persist.nodegenerator.BalFileConstants.KEY;
+import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_SQL;
+import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_TABLE_NAME;
+import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_VALUE;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.KEY_COLUMNS;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.NOT_EXIST;
+import static io.ballerina.persist.nodegenerator.BalFileConstants.NULLABLE_ANYDATA_STREAM_TYPE;
+import static io.ballerina.persist.nodegenerator.BalFileConstants.NULLABLE_ERROR;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.NULLABLE_ERROR_STATEMENT;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.READ_BY_KEY_RETURN_RELATION;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.RECORD_CHECK;
@@ -95,10 +103,12 @@ import static io.ballerina.persist.nodegenerator.BalFileConstants.RELATION;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.RESULT_IS_ERROR;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.RETURN_CASTED_ERROR;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.RETURN_FALSE;
+import static io.ballerina.persist.nodegenerator.BalFileConstants.RETURN_NILL;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.RETURN_RESULT;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.RETURN_TRUE;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.RETURN_VAUE;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.SELF_ERR;
+import static io.ballerina.persist.nodegenerator.BalFileConstants.SPACE_STRING;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.VALUE_TYPE_CHECK;
 import static io.ballerina.persist.nodegenerator.SyntaxTreeConstants.SYNTAX_TREE_SEMICOLON;
 
@@ -112,7 +122,7 @@ public class BalSyntaxTreeGenerator {
     /**
      * method to read ballerina files.
      */
-    public static Map<String, ArrayList> getEntityRecord(Path filePath, Optional<String> module)
+    public static EntityMetaData getEntityRecord(Path filePath, Optional<String> module)
             throws IOException {
         ArrayList<Entity> entityArray = new ArrayList<>();
         ArrayList<ModuleMemberDeclarationNode> entityMembers = new ArrayList<>();
@@ -134,7 +144,7 @@ public class BalSyntaxTreeGenerator {
                     continue;
                 }
                 QualifiedNameReferenceNode qualifiedNameRef = (QualifiedNameReferenceNode) annotReference;
-                if (qualifiedNameRef.identifier().text().equals("Entity") && qualifiedNameRef.modulePrefix().text()
+                if (qualifiedNameRef.identifier().text().equals(ENTITY) && qualifiedNameRef.modulePrefix().text()
                         .equals(BalFileConstants.PERSIST) && annotation.annotValue().isPresent()) {
                     index += 1;
                     entityMembers.add(moduleNode);
@@ -148,7 +158,7 @@ public class BalSyntaxTreeGenerator {
                             continue;
                         }
                         ExpressionNode valueNode = specificField.valueExpr().get();
-                        if (((SpecificFieldNode) fieldNode).fieldName().toString().trim().equals("key")) {
+                        if (((SpecificFieldNode) fieldNode).fieldName().toString().trim().equals(KEY)) {
                             keys = new ArrayList<>();
                             Iterator<Node> listIterator = ((ListConstructorExpressionNode) valueNode)
                                     .expressions().iterator();
@@ -158,7 +168,7 @@ public class BalSyntaxTreeGenerator {
                                 count += 1;
                             }
                         } else if (((SpecificFieldNode) fieldNode).fieldName().toSourceCode().trim()
-                                .equals("tableName")) {
+                                .equals(KEYWORD_TABLE_NAME)) {
                             tableName = ((BasicLiteralNode) valueNode).literalToken().text()
                                     .replaceAll(BalFileConstants.DOUBLE_QUOTE, BalFileConstants.EMPTY_STRING);
                         }
@@ -206,10 +216,7 @@ public class BalSyntaxTreeGenerator {
                 }
             }
         }
-        Map<String, ArrayList> map = new HashMap();
-        map.put("entityArray", entityArray);
-        map.put("entityMembers", entityMembers);
-        return map;
+        return new EntityMetaData(entityArray, entityMembers);
     }
 
     public static SyntaxTree copyEntities(ArrayList<ModuleMemberDeclarationNode> entityMembers,
@@ -250,7 +257,7 @@ public class BalSyntaxTreeGenerator {
                 if (field.getFieldName().equals(key.trim().replaceAll(
                         BalFileConstants.DOUBLE_QUOTE, BalFileConstants.EMPTY_STRING))) {
                     keys.put(field.getFieldName(),
-                            field.getFieldType().trim().replaceAll(" ",
+                            field.getFieldType().trim().replaceAll(SPACE_STRING,
                                     BalFileConstants.EMPTY_STRING));
                 }
             }
@@ -258,13 +265,13 @@ public class BalSyntaxTreeGenerator {
             if (entity.getKeys().length == 1) {
                 if (field.getFieldName().equals(entity.getKeys()[0].trim()
                         .replaceAll(BalFileConstants.DOUBLE_QUOTE, BalFileConstants.EMPTY_STRING))) {
-                    keyType = field.getFieldType().trim().replaceAll(" ",
+                    keyType = field.getFieldType().trim().replaceAll(SPACE_STRING,
                             BalFileConstants.EMPTY_STRING);
                 }
             }
             if (!subFields.isEmpty()) {
                 subFields.add(NodeFactory.createBasicLiteralNode(SyntaxKind.STRING_LITERAL,
-                        AbstractNodeFactory.createLiteralValueToken(SyntaxKind.STRING_LITERAL, ", "
+                        AbstractNodeFactory.createLiteralValueToken(SyntaxKind.STRING_LITERAL, COMMA_SPACE_STRING
                                         + System.lineSeparator(), NodeFactory.createEmptyMinutiaeList(),
                                 NodeFactory.createEmptyMinutiaeList())));
             }
@@ -275,7 +282,7 @@ public class BalSyntaxTreeGenerator {
                                 BalFileConstants.FIELD_FORMAT_WITH_AUTO_G,
                                 field.getFieldName().trim().replaceAll(
                                         BalFileConstants.SINGLE_QUOTE, BalFileConstants.EMPTY_STRING),
-                                field.getFieldType().trim().replaceAll(" ",
+                                field.getFieldType().trim().replaceAll(SPACE_STRING,
                                         BalFileConstants.EMPTY_STRING),
                                 String.valueOf(field.isAutoGenerated()).trim()))));
                 for (String key : entity.getKeys()) {
@@ -292,13 +299,13 @@ public class BalSyntaxTreeGenerator {
                         NodeParser.parseExpression(String.format(BalFileConstants.FIELD_FORMAT_WITHOUT_AUTO_G,
                                 field.getFieldName().trim().replaceAll(
                                         BalFileConstants.SINGLE_QUOTE, BalFileConstants.EMPTY_STRING),
-                                field.getFieldType().trim().replaceAll(" ",
+                                field.getFieldType().trim().replaceAll(SPACE_STRING,
                                         BalFileConstants.EMPTY_STRING)
                         ))));
             }
         }
         imports = imports.add(getImportDeclarationNode(BalFileConstants.KEYWORD_BALLERINA,
-                BalFileConstants.KEYWORD_SQL));
+                KEYWORD_SQL));
         imports = imports.add(getImportDeclarationNode(BalFileConstants.KEYWORD_BALLERINAX,
                 BalFileConstants.KEYWORD_MYSQL));
         if (hasTime) {
@@ -324,15 +331,15 @@ public class BalSyntaxTreeGenerator {
 
                 for (int i = 0; i < relation.getKeyColumns().size(); i++) {
                     if (refFieldsString.length() != 0) {
-                        refFieldsString.append(", ");
-                        joinColumnsString.append(", ");
+                        refFieldsString.append(COMMA_SPACE_STRING);
+                        joinColumnsString.append(COMMA_SPACE_STRING);
                     }
                     refFieldsString.append(relation.getReferences().get(i));
                     joinColumnsString.append(relation.getKeyColumns().get(i));
                 }
                 if (!joinSubFields.isEmpty()) {
                     joinSubFields.add(NodeFactory.createBasicLiteralNode(SyntaxKind.STRING_LITERAL,
-                            AbstractNodeFactory.createLiteralValueToken(SyntaxKind.STRING_LITERAL, ", "
+                            AbstractNodeFactory.createLiteralValueToken(SyntaxKind.STRING_LITERAL, COMMA_SPACE_STRING
                                             + System.lineSeparator(), NodeFactory.createEmptyMinutiaeList(),
                                     NodeFactory.createEmptyMinutiaeList())));
                 }
@@ -351,7 +358,8 @@ public class BalSyntaxTreeGenerator {
                     for (FieldMetaData fieldMetaData : relation.getRelatedFields()) {
                         if (!subFields.isEmpty()) {
                             subFields.add(NodeFactory.createBasicLiteralNode(SyntaxKind.STRING_LITERAL,
-                                    AbstractNodeFactory.createLiteralValueToken(SyntaxKind.STRING_LITERAL, ", "
+                                    AbstractNodeFactory.createLiteralValueToken(
+                                            SyntaxKind.STRING_LITERAL, COMMA_SPACE_STRING
                                                     + System.lineSeparator(), NodeFactory.createEmptyMinutiaeList(),
                                             NodeFactory.createEmptyMinutiaeList())));
                         }
@@ -374,8 +382,9 @@ public class BalSyntaxTreeGenerator {
                     for (FieldMetaData fieldMetaData : relation.getRelatedFields()) {
                         if (!subFields.isEmpty()) {
                             subFields.add(NodeFactory.createBasicLiteralNode(SyntaxKind.STRING_LITERAL,
-                                    AbstractNodeFactory.createLiteralValueToken(SyntaxKind.STRING_LITERAL, ", "
-                                                    + System.lineSeparator(), NodeFactory.createEmptyMinutiaeList(),
+                                    AbstractNodeFactory.createLiteralValueToken(SyntaxKind.STRING_LITERAL,
+                                            COMMA_SPACE_STRING + System.lineSeparator(),
+                                            NodeFactory.createEmptyMinutiaeList(),
                                             NodeFactory.createEmptyMinutiaeList())));
                         }
                         if (relation.getReferences().contains(fieldMetaData.getFieldName())) {
@@ -433,7 +442,7 @@ public class BalSyntaxTreeGenerator {
         Class client = new Class(className + "Client", true);
         client.addQualifiers(new String[]{BalFileConstants.KEYWORD_CLIENT});
         client.addMember(NodeFactory.createBasicLiteralNode(SyntaxKind.STRING_LITERAL,
-                AbstractNodeFactory.createLiteralValueToken(SyntaxKind.STRING_LITERAL, " ",
+                AbstractNodeFactory.createLiteralValueToken(SyntaxKind.STRING_LITERAL, SPACE_STRING,
                         NodeFactory.createEmptyMinutiaeList(), NodeFactory.createEmptyMinutiaeList())), false);
         client.addMember(TypeDescriptor.getObjectFieldNode(BalFileConstants.KEYWORD_PRIVATE,
                         new String[]{BalFileConstants.KEYWORD_FINAL},
@@ -448,7 +457,7 @@ public class BalSyntaxTreeGenerator {
         client.addMember(TypeDescriptor.getObjectFieldNode(BalFileConstants.KEYWORD_PRIVATE,
                         new String[]{BalFileConstants.KEYWORD_FINAL},
                         TypeDescriptor.getQualifiedNameReferenceNode("sql", "ParameterizedQuery"),
-                        "tableName", NodeFactory.createBasicLiteralNode(SyntaxKind.STRING_LITERAL,
+                        KEYWORD_TABLE_NAME, NodeFactory.createBasicLiteralNode(SyntaxKind.STRING_LITERAL,
                                 AbstractNodeFactory.createLiteralValueToken(SyntaxKind.STRING_LITERAL,
                                         "`" + entity.getTableName() + "`",
                                         NodeFactory.createEmptyMinutiaeList(),
@@ -466,7 +475,7 @@ public class BalSyntaxTreeGenerator {
         StringBuilder keysString = new StringBuilder();
         for (String key : entity.getKeys()) {
             if (keysString.length() > 0) {
-                keysString.append(", ");
+                keysString.append(COMMA_SPACE_STRING);
             }
             keysString.append(key);
         }
@@ -506,7 +515,7 @@ public class BalSyntaxTreeGenerator {
             keyString = new StringBuilder();
             for (String key : keys.keySet()) {
                 keyString.append(keys.get(key));
-                keyString.append(" ");
+                keyString.append(SPACE_STRING);
                 keyString.append(key);
                 keyString.append(";");
             }
@@ -538,7 +547,7 @@ public class BalSyntaxTreeGenerator {
                     keyString.append(entity.getEntityName().substring(1));
                     keyString.append(".");
                     keyString.append(key);
-                    keyString.append(", ");
+                    keyString.append(COMMA_SPACE_STRING);
                 }
                 keyString.append("}");
 
@@ -564,7 +573,7 @@ public class BalSyntaxTreeGenerator {
         Class clientStream = new Class(className + "Stream", true);
 
         clientStream.addMember(NodeFactory.createBasicLiteralNode(SyntaxKind.STRING_LITERAL,
-                AbstractNodeFactory.createLiteralValueToken(SyntaxKind.STRING_LITERAL, " ",
+                AbstractNodeFactory.createLiteralValueToken(SyntaxKind.STRING_LITERAL, SPACE_STRING,
                         NodeFactory.createEmptyMinutiaeList(), NodeFactory.createEmptyMinutiaeList())), true);
 
         clientStream.addMember(NodeParser.parseStatement(ANYDATA_STREAM_STATEMENT), false);
@@ -574,8 +583,8 @@ public class BalSyntaxTreeGenerator {
         initStream.addQualifiers(new String[]{BalFileConstants.KEYWORD_PUBLIC, BalFileConstants.KEYWORD_ISOLATED});
         initStream.addStatement(NodeParser.parseStatement(BalFileConstants.INIT_STREAM_STATEMENT));
         initStream.addStatement(NodeParser.parseStatement(SELF_ERR));
-        initStream.addRequiredParameter(NodeParser.parseTypeDescriptor("stream<anydata, error?>?"), ANYDATA_KETWORD);
-        initStream.addRequiredParameterWithDefault(NodeParser.parseTypeDescriptor("error?"), "err",
+        initStream.addRequiredParameter(NodeParser.parseTypeDescriptor(NULLABLE_ANYDATA_STREAM_TYPE), ANYDATA_KETWORD);
+        initStream.addRequiredParameterWithDefault(NodeParser.parseTypeDescriptor(NULLABLE_ERROR), "err",
                 Function.Bracket.PAREN);
         clientStream.addMember(initStream.getFunctionDefinitionNode(), true);
 
@@ -604,7 +613,7 @@ public class BalSyntaxTreeGenerator {
         streamValueErrorCheck.addElseStatement(NodeParser.parseStatement(BalFileConstants.RETURN_NEXT_RECORD));
         streamValueNilCheck.addElseBody(streamValueErrorCheck);
         streamCheck.addIfStatement(streamValueNilCheck.getIfElseStatementNode());
-        streamCheck.addElseStatement(NodeParser.parseStatement("return ();"));
+        streamCheck.addElseStatement(NodeParser.parseStatement(RETURN_NILL));
         errorCheck.addElseBody(streamCheck);
         nextStream.addIfElseStatement(errorCheck.getIfElseStatementNode());
         clientStream.addMember(nextStream.getFunctionDefinitionNode(), true);
@@ -639,7 +648,7 @@ public class BalSyntaxTreeGenerator {
                                             HashMap<String, String> keys, boolean keyAutoInc, String keyType) {
         Function create = new Function(BalFileConstants.CREATE);
         create.addRequiredParameter(
-                TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()), "value");
+                TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()), KEYWORD_VALUE);
         create.addQualifiers(new String[]{BalFileConstants.KEYWORD_REMOTE});
         create.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(
                 TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()),
@@ -650,7 +659,7 @@ public class BalSyntaxTreeGenerator {
             if (keys.size() > 1) {
                 for (FieldMetaData map : entity.getFields()) {
                     if (retRecord.length() > 0) {
-                        retRecord.append(", ");
+                        retRecord.append(COMMA_SPACE_STRING);
                     }
                     if (map.isAutoGenerated()) {
                         retRecord.append(String.format(BalFileConstants.RECORD_FIELD_LAST_INSERT_ID,
@@ -671,7 +680,7 @@ public class BalSyntaxTreeGenerator {
             } else {
                 for (FieldMetaData map : entity.getFields()) {
                     if (retRecord.length() > 0) {
-                        retRecord.append(", ");
+                        retRecord.append(COMMA_SPACE_STRING);
                     }
                     if (map.getFieldName().equals(entity.getKeys()[0].trim().replaceAll(
                             BalFileConstants.DOUBLE_QUOTE, BalFileConstants.EMPTY_STRING))) {
@@ -780,7 +789,7 @@ public class BalSyntaxTreeGenerator {
     private static Function getExecuteMethod(Entity entity, String className) {
         Function execute = new Function("execute");
         execute.addQualifiers(new String[]{BalFileConstants.KEYWORD_REMOTE});
-        execute.addRequiredParameter(TypeDescriptor.getQualifiedNameReferenceNode("sql", "ParameterizedQuery"),
+        execute.addRequiredParameter(TypeDescriptor.getQualifiedNameReferenceNode(KEYWORD_SQL, "ParameterizedQuery"),
                 "filterClause");
         execute.addReturns(TypeDescriptor.getStreamTypeDescriptorNode(
                         TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()),
@@ -807,7 +816,7 @@ public class BalSyntaxTreeGenerator {
         update.addRequiredParameter(TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()), "value");
         for (int index = 0; index < entity.getKeys().length; index++) {
             if (index > 0) {
-                filter.append(", ");
+                filter.append(COMMA_SPACE_STRING);
             }
             filter.append(String.format("%s : value.%s", entity.getKeys()[index].trim(),
                     entity.getKeys()[index].trim().replaceAll("\"", "")));
@@ -885,7 +894,7 @@ public class BalSyntaxTreeGenerator {
 
     private static Function getCloseMethod() {
         Function close = new Function(BalFileConstants.CLOSE);
-        close.addQualifiers(new String[]{});
+        close.addQualifiers(new String[]{BalFileConstants.KEYWORD_PUBLIC});
         close.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode(BalFileConstants.EMPTY_STRING,
                 BalFileConstants.ERROR));
         close.addStatement(NodeParser.parseStatement(BalFileConstants.CLOSE_PERSIST_CLIENT));

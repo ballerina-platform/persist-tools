@@ -89,7 +89,7 @@ public client class ProfileClient {
         }
     }
 
-    function close() returns error? {
+    public function close() returns error? {
         return self.persistClient.close();
     }
 }

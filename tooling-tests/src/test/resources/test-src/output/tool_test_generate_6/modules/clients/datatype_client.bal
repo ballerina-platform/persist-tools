@@ -66,7 +66,7 @@ public client class DataTypeClient {
         _ = check self.persistClient.runDeleteQuery(value);
     }
 
-    function close() returns error? {
+    public function close() returns error? {
         return self.persistClient.close();
     }
 }
