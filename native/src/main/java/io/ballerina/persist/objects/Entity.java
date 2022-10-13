@@ -62,6 +62,9 @@ public class Entity {
     }
 
     public String getTableName() {
+        if (this.tableName == null) {
+            this.tableName = entityName;
+        }
         return this.tableName;
     }
     public void setTableName(String tableName) {

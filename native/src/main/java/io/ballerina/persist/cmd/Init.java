@@ -49,6 +49,7 @@ import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 public class Init implements BLauncherCmd {
 
     private final PrintStream errStream = System.err;
+    private final PrintStream outStream = System.out;
     private final String configPath = PersistToolsConstants.CONFIG_SCRIPT_FILE;
     private final String ballerinaPath = PersistToolsConstants.BALLERINA_SCRIP_FILE;
 
@@ -77,7 +78,7 @@ public class Init implements BLauncherCmd {
                 balProject = ProjectLoader.loadProject(Paths.get(sourcePath), projectEnvironmentBuilder);
             }
             name = balProject.currentPackage().descriptor().org().value() + "." + balProject.currentPackage()
-                    .descriptor().name().value();
+                    .descriptor().name().value() + "." + "clients";
         } catch (ProjectException e) {
             errStream.println("The current directory is not a Ballerina project!");
             return;
@@ -85,14 +86,18 @@ public class Init implements BLauncherCmd {
         if (!Files.exists(Paths.get(sourcePath, configPath))) {
             try {
                 createConfigToml();
+                outStream.println("Created Config.toml file with database configurations");
                 updateBallerinaToml();
+                outStream.println("Updated Ballerina.toml file with required dependencies");
             } catch (Exception e) {
                 errStream.println("Failure when creating the Config.toml file: " + e.getMessage());
             }
         } else {
             try {
                 updateConfigToml();
+                outStream.println("Updated Config.toml file with database configurations");
                 updateBallerinaToml();
+                outStream.println("Updated Ballerina.toml file with required dependencies");
             } catch (Exception e) {
                 errStream.println("Failure when updating the Config.toml file: " + e.getMessage());
             }

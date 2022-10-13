@@ -1,4 +1,4 @@
-[foo.perist_init_3]
+[foo.perist_init_3.clients]
 host = "wso2.com"
 port = 6688
 user = "john"
