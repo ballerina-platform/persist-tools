@@ -49,7 +49,7 @@ dependencies {
         transitive = false
     }
 
-    implementation project(":persist-tools-native")
+    implementation project(":persist-cli")
     testImplementation group: 'org.testng', name: 'testng', version: "${testngVersion}"
     implementation 'org.junit.jupiter:junit-jupiter:5.8.1'
     implementation (group: 'mysql', name: 'mysql-connector-java', version: "${mySqlDriverVersion}") {

@@ -95,5 +95,5 @@ release {
 }
 
 task build {
-    dependsOn('persist-tools-persist-cli:build')
+    dependsOn('persist-cli:build')
 }
