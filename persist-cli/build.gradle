@@ -20,7 +20,7 @@ plugins {
     id 'checkstyle'
 }
 
-description = 'Ballerina - Persist-Tools Java Native'
+description = 'Ballerina - Persist-CLI Java Native'
 
 repositories {
     mavenCentral()
