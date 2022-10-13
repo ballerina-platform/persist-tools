@@ -253,5 +253,5 @@ compileJava {
     }
 }
 
-test.dependsOn ":persist-tools-native:build"
+test.dependsOn ":persist-cli:build"
 test.finalizedBy stopTestDockerContainer
