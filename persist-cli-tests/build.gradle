@@ -38,7 +38,6 @@ dependencies {
     checkstyle "com.puppycrawl.tools:checkstyle:${checkstylePluginVersion}"
 
     testImplementation "org.ballerinalang:ballerina-lang:${ballerinaLangVersion}"
-    testImplementation "org.ballerinalang:ballerina-parser:${ballerinaLangVersion}"
     testImplementation "org.ballerinalang:ballerina-cli:${ballerinaLangVersion}"
 
     balTools ("org.ballerinalang:jballerina-tools:${ballerinaLangVersion}") {
