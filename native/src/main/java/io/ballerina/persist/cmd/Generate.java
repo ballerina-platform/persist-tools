@@ -158,8 +158,10 @@ public class Generate implements BLauncherCmd {
                     }
                     throw new BalException(errorMessage.toString());
                 }
+                Path clientEntitiesPath = Paths.get(this.sourcePath, "modules", "clients", "entities.bal")
+                        .toAbsolutePath();
                 for (Path filePath : fileList) {
-                    if (filePath.toString().endsWith(".bal")) {
+                    if (filePath.toString().endsWith(".bal") && !filePath.toAbsolutePath().equals(clientEntitiesPath)) {
                         String[] pathElements = filePath.toString().strip().split(Pattern.quote(File.separator));
                         Optional<String> module = Optional.empty();
                         String[] dirElements = this.sourcePath.split(Pattern.quote(File.separator));

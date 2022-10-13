@@ -107,7 +107,7 @@ public class Push implements BLauncherCmd {
                 balProject = ProjectLoader.loadProject(Paths.get(sourcePath), projectEnvironmentBuilder);
             }
             name = balProject.currentPackage().descriptor().org().value() + "." + balProject.currentPackage()
-                    .descriptor().name().value();
+                    .descriptor().name().value() + "." + "clients";
             setupJdbcDriver();
 
             if (!isTest) {
