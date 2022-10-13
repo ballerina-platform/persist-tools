@@ -71,6 +71,7 @@ import static io.ballerina.persist.utils.BalProjectUtils.hasSyntacticDiagnostics
 public class Generate implements BLauncherCmd {
 
     private static final PrintStream errStream = System.err;
+    private static final PrintStream outStream = System.out;
 
     private String sourcePath = "";
     public ProjectEnvironmentBuilder projectEnvironmentBuilder;
@@ -117,9 +118,12 @@ public class Generate implements BLauncherCmd {
                     entity.setPackageName(balProject.currentPackage().descriptor().org().value() + "/"
                             + balProject.currentPackage().descriptor().name().value());
                     generateClientBalFile(entity, imports);
+                    outStream.println(String.format("Created client for the entity : %s", entity.getEntityName()));
                 }
                 generateConfigurationBalFile();
+                outStream.println("Created database_configurations.bal");
                 copyEntities(entityArray, returnModuleMembers, imports);
+                outStream.println("Created entities.bal");
             }
         } catch (Exception e) {
             errStream.println(e.getMessage());

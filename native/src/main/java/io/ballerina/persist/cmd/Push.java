@@ -144,7 +144,7 @@ public class Push implements BLauncherCmd {
                 statement = connection.createStatement();
                 String query = String.format(CREATE_DATABASE_SQL, database);
                 statement.executeUpdate(query);
-                stdStream.println("Creating Database : " + database);
+                stdStream.println("Created Database : " + database);
             }
         } catch (SQLException e) {
             errStream.println("Error occurred when creating database: " + e.getMessage());
@@ -166,6 +166,7 @@ public class Push implements BLauncherCmd {
         } catch (SQLException e) {
             errStream.println("Error occurred when creating database tables: " + e.getMessage());
         }
+        stdStream.println("Updated the entity tables.");
     }
 
     public void setSourcePath(String sourcePath) {
