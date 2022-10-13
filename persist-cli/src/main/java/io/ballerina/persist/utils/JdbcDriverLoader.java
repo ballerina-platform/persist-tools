@@ -21,7 +21,6 @@ import io.ballerina.persist.objects.BalException;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -39,7 +38,6 @@ import java.util.stream.Stream;
  */
 public class JdbcDriverLoader extends URLClassLoader {
 
-    private final PrintStream errStream = System.err;
     public JdbcDriverLoader(URL[] urls, Path driverPath) throws MalformedURLException, BalException {
         super(urls);
         List<Path> pathList = listFiles(driverPath);

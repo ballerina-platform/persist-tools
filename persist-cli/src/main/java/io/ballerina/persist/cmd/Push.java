@@ -22,7 +22,6 @@ import io.ballerina.persist.nodegenerator.SyntaxTreeGenerator;
 import io.ballerina.persist.objects.BalException;
 import io.ballerina.persist.utils.JdbcDriverLoader;
 import io.ballerina.projects.Project;
-import io.ballerina.projects.ProjectEnvironmentBuilder;
 import io.ballerina.projects.ProjectException;
 import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.projects.directory.ProjectLoader;
@@ -76,7 +75,6 @@ public class Push implements BLauncherCmd {
     private final PrintStream errStream = System.err;
     private final PrintStream stdStream = System.out;
     private static final String COMMAND_IDENTIFIER = "persist-db-push";
-    public ProjectEnvironmentBuilder projectEnvironmentBuilder;
     Project balProject;
     public String sourcePath = "";
     public String configPath = CONFIG_SCRIPT_FILE;
@@ -99,22 +97,13 @@ public class Push implements BLauncherCmd {
             return;
         }
 
-        boolean isTest = (projectEnvironmentBuilder != null);
         try  {
-            if (!isTest) {
-                balProject = ProjectLoader.loadProject(Paths.get(""));
-            } else {
-                balProject = ProjectLoader.loadProject(Paths.get(sourcePath), projectEnvironmentBuilder);
-            }
+            balProject = ProjectLoader.loadProject(Paths.get(sourcePath));
             name = balProject.currentPackage().descriptor().org().value() + "." + balProject.currentPackage()
                     .descriptor().name().value() + "." + "clients";
             setupJdbcDriver();
 
-            if (!isTest) {
-                balProject = BuildProject.load(Paths.get(sourcePath).toAbsolutePath());
-            } else {
-                balProject = BuildProject.load(projectEnvironmentBuilder, Paths.get(sourcePath).toAbsolutePath());
-            }
+            balProject = BuildProject.load(Paths.get(sourcePath).toAbsolutePath());
             balProject.currentPackage().getCompilation();
             configurations = SyntaxTreeGenerator.readToml(Paths.get(this.sourcePath, this.configPath), name);
             sqlLines = readSqlFile();
@@ -171,9 +160,6 @@ public class Push implements BLauncherCmd {
 
     public void setSourcePath(String sourcePath) {
         this.sourcePath = sourcePath;
-    }
-    public void setEnvironmentBuilder(ProjectEnvironmentBuilder projectEnvironmentBuilder) {
-        this.projectEnvironmentBuilder = projectEnvironmentBuilder;
     }
 
     public void setDriverPath(Path path) {
