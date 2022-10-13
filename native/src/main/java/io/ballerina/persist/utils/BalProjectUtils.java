@@ -23,18 +23,15 @@ import io.ballerina.persist.objects.BalException;
 import io.ballerina.projects.DiagnosticResult;
 import io.ballerina.projects.Package;
 import io.ballerina.projects.PackageCompilation;
-import io.ballerina.projects.ProjectEnvironmentBuilder;
 import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.tools.diagnostics.Diagnostic;
 import io.ballerina.tools.text.TextDocument;
 import io.ballerina.tools.text.TextDocuments;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -46,7 +43,7 @@ import java.util.stream.Stream;
  */
 
 public class BalProjectUtils {
-    private static final PrintStream errStream = System.err;
+
     private BalProjectUtils() {
 
     }
@@ -57,28 +54,21 @@ public class BalProjectUtils {
         for (Path path : pathList) {
             if (path.toString().endsWith(".bal")) {
                 TextDocument textDocument = TextDocuments.from(Files.readString(path));
-                Iterator<Diagnostic> diagnosticIte = SyntaxTree.from(textDocument).diagnostics().iterator();
-                while (diagnosticIte.hasNext()) {
-                    diagnostics.add(fotmatError(diagnosticIte.next().toString(), path));
+                for (Diagnostic diagnostic : SyntaxTree.from(textDocument).diagnostics()) {
+                    diagnostics.add(fotmatError(diagnostic.toString(), path));
                 }
             }
         }
         return diagnostics;
     }
 
-    public static DiagnosticResult hasSemanticDiagnostics(Path projectPath,
-                                                 ProjectEnvironmentBuilder projectEnvironmentBuilder) {
+    public static DiagnosticResult hasSemanticDiagnostics(Path projectPath) {
         Package currentPackage;
         BuildProject buildProject;
-        if (projectEnvironmentBuilder == null) {
-            buildProject = BuildProject.load(projectPath.toAbsolutePath());
-        } else {
-            buildProject = BuildProject.load(projectEnvironmentBuilder, projectPath);
-        }
+        buildProject = BuildProject.load(projectPath.toAbsolutePath());
         currentPackage = buildProject.currentPackage();
         PackageCompilation compilation = currentPackage.getCompilation();
-        DiagnosticResult diagnosticResult = compilation.diagnosticResult();
-        return diagnosticResult;
+        return compilation.diagnosticResult();
     }
 
     private static List<Path> listFiles(Path path) throws BalException {

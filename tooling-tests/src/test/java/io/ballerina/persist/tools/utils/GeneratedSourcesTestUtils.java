@@ -84,8 +84,8 @@ public class GeneratedSourcesTestUtils {
                 errStream.println(e.getMessage());
                 Assert.fail();
             }
-            Assert.assertFalse(hasSemanticDiagnostics(Paths.get(GENERATED_SOURCES_DIRECTORY)
-                    .resolve(subDir), getEnvironmentBuilder()).hasErrors());
+            Assert.assertFalse(hasSemanticDiagnostics(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)).
+                    hasErrors());
         }
 
         for (Path actualOutputFile: listFiles(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir))) {
@@ -128,7 +128,6 @@ public class GeneratedSourcesTestUtils {
             Init persistCmdInit = (Init) persistInitClass.getDeclaredConstructor().newInstance();
             Assert.assertEquals(persistCmdInit.getName(), "persist");
             Assert.assertEquals(persistCmd.getName(), "persist");
-            persistCmdInit.setEnvironmentBuilder(getEnvironmentBuilder());
 
             StringBuilder initLongDesc = new StringBuilder();
             StringBuilder cmdLongDesc = new StringBuilder();
@@ -159,13 +158,11 @@ public class GeneratedSourcesTestUtils {
                 persistClass = Class.forName("io.ballerina.persist.cmd.Init");
                 Init persistCmd = (Init) persistClass.getDeclaredConstructor().newInstance();
                 persistCmd.setSourcePath(sourcePath.toAbsolutePath().toString());
-                persistCmd.setEnvironmentBuilder(getEnvironmentBuilder());
                 persistCmd.execute();
             } else if (cmd == Command.GENERATE) {
                 persistClass = Class.forName("io.ballerina.persist.cmd.Generate");
                 Generate persistCmd = (Generate) persistClass.getDeclaredConstructor().newInstance();
                 persistCmd.setSourcePath(sourcePath.toAbsolutePath().toString());
-                persistCmd.setEnvironmentBuilder(getEnvironmentBuilder());
                 persistCmd.execute();
             } else {
                 persistClass = Class.forName("io.ballerina.persist.cmd.Push");

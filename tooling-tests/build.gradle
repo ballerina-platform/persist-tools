@@ -209,6 +209,7 @@ checkstyleMain {
 
 test {
     dependsOn(copyStdlibs)
+    systemProperty "ballerina.home", bDistribution
     dependsOn(copyTestResources)
     dependsOn(startTestDockerContainer)
     systemProperty "ballerina.offline.flag", "true"

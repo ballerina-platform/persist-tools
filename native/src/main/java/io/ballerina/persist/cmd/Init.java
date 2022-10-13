@@ -21,7 +21,6 @@ import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.nodegenerator.SyntaxTreeGenerator;
 import io.ballerina.projects.Project;
-import io.ballerina.projects.ProjectEnvironmentBuilder;
 import io.ballerina.projects.ProjectException;
 import io.ballerina.projects.directory.ProjectLoader;
 import io.ballerina.toml.syntax.tree.SyntaxTree;
@@ -51,11 +50,9 @@ public class Init implements BLauncherCmd {
     private final PrintStream errStream = System.err;
     private final PrintStream outStream = System.out;
     private final String configPath = PersistToolsConstants.CONFIG_SCRIPT_FILE;
-    private final String ballerinaPath = PersistToolsConstants.BALLERINA_SCRIP_FILE;
 
     private String name = "";
     public String sourcePath = "";
-    public ProjectEnvironmentBuilder projectEnvironmentBuilder;
     private static final String COMMAND_IDENTIFIER = "persist-init";
 
     Project balProject;
@@ -71,12 +68,7 @@ public class Init implements BLauncherCmd {
             return;
         }
         try  {
-            if (projectEnvironmentBuilder == null) {
-                balProject = ProjectLoader.loadProject(Paths.get(""));
-
-            } else {
-                balProject = ProjectLoader.loadProject(Paths.get(sourcePath), projectEnvironmentBuilder);
-            }
+            balProject = ProjectLoader.loadProject(Paths.get(sourcePath));
             name = balProject.currentPackage().descriptor().org().value() + "." + balProject.currentPackage()
                     .descriptor().name().value() + "." + "clients";
         } catch (ProjectException e) {
@@ -116,9 +108,10 @@ public class Init implements BLauncherCmd {
     }
 
     private void updateBallerinaToml() throws Exception {
+        String ballerinaPath = PersistToolsConstants.BALLERINA_SCRIP_FILE;
         SyntaxTree syntaxTree = SyntaxTreeGenerator.updateBallerinaToml(Paths.get(
-                this.sourcePath, this.ballerinaPath));
-        writeOutputFile(syntaxTree, Paths.get(this.sourcePath, this.ballerinaPath).toAbsolutePath().toString());
+                this.sourcePath, ballerinaPath));
+        writeOutputFile(syntaxTree, Paths.get(this.sourcePath, ballerinaPath).toAbsolutePath().toString());
     }
 
     private void writeOutputFile(SyntaxTree syntaxTree, String outPath) throws Exception {
@@ -133,10 +126,6 @@ public class Init implements BLauncherCmd {
 
     public void setSourcePath(String sourceDir) {
         this.sourcePath = sourceDir;
-    }
-
-    public void setEnvironmentBuilder(ProjectEnvironmentBuilder projectEnvironmentBuilder) {
-        this.projectEnvironmentBuilder = projectEnvironmentBuilder;
     }
 
     @Override
