@@ -37,34 +37,30 @@ dependencies {
     checkstyle project(':checkstyle')
     checkstyle "com.puppycrawl.tools:checkstyle:${checkstylePluginVersion}"
 
-    implementation "org.ballerinalang:ballerina-lang:${ballerinaLangVersion}"
-    implementation "org.ballerinalang:ballerina-parser:${ballerinaLangVersion}"
-    implementation "org.ballerinalang:ballerina-cli:${ballerinaLangVersion}"
-    implementation "org.ballerinalang:formatter-core:${ballerinaLangVersion}"
-    implementation "org.ballerinalang:ballerina-tools-api:${ballerinaLangVersion}"
-    implementation "info.picocli:picocli:${picocliVersion}"
-    testImplementation "org.testng:testng:${testngVersion}"
+    testImplementation "org.ballerinalang:ballerina-lang:${ballerinaLangVersion}"
+    testImplementation "org.ballerinalang:ballerina-parser:${ballerinaLangVersion}"
+    testImplementation "org.ballerinalang:ballerina-cli:${ballerinaLangVersion}"
 
     balTools ("org.ballerinalang:jballerina-tools:${ballerinaLangVersion}") {
         transitive = false
     }
 
-    implementation project(":persist-cli")
+    testImplementation project(":persist-cli")
     testImplementation group: 'org.testng', name: 'testng', version: "${testngVersion}"
-    implementation 'org.junit.jupiter:junit-jupiter:5.8.1'
-    implementation (group: 'mysql', name: 'mysql-connector-java', version: "${mySqlDriverVersion}") {
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
+    testImplementation (group: 'mysql', name: 'mysql-connector-java', version: "${mySqlDriverVersion}") {
         transitive = false
     }
 }
 
-def bDistribution = file("$project.buildDir/extracted-distribution/jballerina-tools-${ballerinaLangVersion}")
+def bDistribution = file("$project.buildDir/jballerina-tools-${ballerinaLangVersion}")
 
 task jBallerinaPack {
     doLast {
         configurations.balTools.resolvedConfiguration.resolvedArtifacts.each { artifact ->
             copy {
                 from project.zipTree(artifact.getFile())
-                into new File(project.buildDir, "extracted-distribution/")
+                into new File("${project.buildDir}")
             }
         }
     }
@@ -77,7 +73,7 @@ task unpackStdLibs() {
         configurations.ballerinaStdLibs.resolvedConfiguration.resolvedArtifacts.each { artifact ->
             copy {
                 from project.zipTree(artifact.getFile())
-                into new File("${project.buildDir}/extracted-distribution/" + artifact.name + "-zip")
+                into new File("${project.buildDir}/extracted-stdlibs/" + artifact.name + "-zip")
             }
         }
     }
@@ -85,12 +81,12 @@ task unpackStdLibs() {
 
 task copyStdlibs(type: Copy) {
     dependsOn(unpackStdLibs)
-    def ballerinaDist = "$project.buildDir/extracted-distribution/jballerina-tools-${ballerinaLangVersion}"
+    def ballerinaDist = "$project.buildDir/jballerina-tools-${ballerinaLangVersion}"
     into ballerinaDist
 
     /* Standard Libraries */
     configurations.ballerinaStdLibs.resolvedConfiguration.resolvedArtifacts.each { artifact ->
-        def artifactExtractedPath = "${project.buildDir}/extracted-distribution/" + artifact.name + "-zip"
+        def artifactExtractedPath = "${project.buildDir}/extracted-stdlibs/" + artifact.name + "-zip"
         into("repo/bala") {
             from "${artifactExtractedPath}/bala/"
         }
