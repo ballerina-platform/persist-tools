@@ -1,5 +1,5 @@
 ignore:
-  - "tooling-tests"
+  - "persist-cli-tests"
 
 coverage:
   precision: 2
