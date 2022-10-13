@@ -34,8 +34,8 @@ public client class MedicalNeed1Client {
         return (check self.persistClient.runReadByKeyQuery(MedicalNeed1, key)).cloneWithType(MedicalNeed1);
     }
 
-    remote function read(map<anydata>? filter = ()) returns stream<MedicalNeed1, error?> {
-        stream<anydata, error?>|error result = self.persistClient.runReadQuery(MedicalNeed1, filter);
+    remote function read() returns stream<MedicalNeed1, error?> {
+        stream<anydata, error?>|error result = self.persistClient.runReadQuery(MedicalNeed1, ());
         if result is error {
             return new stream<MedicalNeed1, error?>(new MedicalNeed1Stream((), result));
         } else {

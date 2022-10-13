@@ -63,7 +63,7 @@ public class Entity {
 
     public String getTableName() {
         if (this.tableName == null) {
-            this.tableName = entityName.toLowerCase();
+            this.tableName = entityName;
         }
         return this.tableName;
     }

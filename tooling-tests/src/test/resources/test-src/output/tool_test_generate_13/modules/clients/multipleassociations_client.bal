@@ -52,8 +52,8 @@ public client class MultipleAssociationsClient {
         return <MultipleAssociations>check self.persistClient.runReadByKeyQuery(MultipleAssociations, key, include);
     }
 
-    remote function read(map<anydata>? filter = (), MultipleAssociationsRelations[] include = []) returns stream<MultipleAssociations, error?> {
-        stream<anydata, error?>|error result = self.persistClient.runReadQuery(MultipleAssociations, filter, include);
+    remote function read(MultipleAssociationsRelations[] include = []) returns stream<MultipleAssociations, error?> {
+        stream<anydata, error?>|error result = self.persistClient.runReadQuery(MultipleAssociations, (), include);
         if result is error {
             return new stream<MultipleAssociations, error?>(new MultipleAssociationsStream((), result));
         } else {
@@ -76,7 +76,7 @@ public client class MultipleAssociationsClient {
         if value["profile"] is record {} {
             record {} profileEntity = <record {}>value["profile"];
             ProfileClient profileClient = check new ProfileClient();
-            stream<MultipleAssociations, error?> multipleAssociationsStream = self->read(filter, [ProfileEntity]);
+            stream<MultipleAssociations, error?> multipleAssociationsStream = self->read([ProfileEntity]);
             check from MultipleAssociations p in multipleAssociationsStream
                 do {
                     if p.profile is Profile {
@@ -87,7 +87,7 @@ public client class MultipleAssociationsClient {
         if value["user"] is record {} {
             record {} userEntity = <record {}>value["user"];
             UserClient userClient = check new UserClient();
-            stream<MultipleAssociations, error?> multipleAssociationsStream = self->read(filter, [UserEntity]);
+            stream<MultipleAssociations, error?> multipleAssociationsStream = self->read([UserEntity]);
             check from MultipleAssociations p in multipleAssociationsStream
                 do {
                     if p.user is User {

@@ -39,8 +39,8 @@ public client class DataTypeClient {
         return (check self.persistClient.runReadByKeyQuery(DataType, key)).cloneWithType(DataType);
     }
 
-    remote function read(map<anydata>? filter = ()) returns stream<DataType, error?> {
-        stream<anydata, error?>|error result = self.persistClient.runReadQuery(DataType, filter);
+    remote function read() returns stream<DataType, error?> {
+        stream<anydata, error?>|error result = self.persistClient.runReadQuery(DataType, ());
         if result is error {
             return new stream<DataType, error?>(new DataTypeStream((), result));
         } else {

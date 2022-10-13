@@ -751,10 +751,6 @@ public class BalSyntaxTreeGenerator {
 
     private static Function getReadMethod(Entity entity, boolean inclusions, String className) {
         Function read = new Function(BalFileConstants.READ);
-        read.addRequiredParameterWithDefault(
-                TypeDescriptor.getOptionalTypeDescriptorNode(BalFileConstants.EMPTY_STRING, TypeDescriptor
-                        .getMapTypeDescriptorNode(SyntaxTreeConstants.SYNTAX_TREE_VAR_ANYDATA).toSourceCode()),
-                BalFileConstants.FILTER, Function.Bracket.PAREN);
         read.addQualifiers(new String[]{BalFileConstants.KEYWORD_REMOTE});
         read.addReturns(TypeDescriptor.getStreamTypeDescriptorNode(
                         TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()),
@@ -971,7 +967,7 @@ public class BalSyntaxTreeGenerator {
                 if (relation.getRelatedType().contains(":")) {
                     relation.setRelatedType(relation.getRelatedType().split(":", 2)[1]);
                 }
-                int counter = 0;
+                int counter;
                 if (relation != null) {
                     if (!relation.isChild()) {
                         for (Entity childEntity : entityArray) {

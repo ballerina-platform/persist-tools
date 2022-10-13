@@ -83,11 +83,11 @@ public class BalFileConstants {
     public static final String READ_BY_KEY_RETURN_RELATION = "return <%s> check " +
             "self.persistClient.runReadByKeyQuery(%s, key, include);";
     public static final String READ_RUN_READ_QUERY = "stream<anydata, error?>|error result" +
-            " = self.persistClient.runReadQuery(%s, filter);";
+            " = self.persistClient.runReadQuery(%s, ());";
     public static final String EXECUTE_RUN_EXECUTE_QUERY = "stream<anydata, error?>|error result" +
             " = self.persistClient.runExecuteQuery(filterClause, %s);";
     public static final String READ_RUN_READ_QUERY_RELATED = "stream<anydata, error?>|error result" +
-            " = self.persistClient.runReadQuery(%s, filter, include);";
+            " = self.persistClient.runReadQuery(%s, (), include);";
     public static final String READ_RETURN_STREAM_WHEN_ERROR = "return new stream<%s, error?>" +
             "(new %sStream((), result));";
     public static final String READ_RETURN_STREAM_WHEN_NOT_ERROR = "return new stream<%s, error?>" +
@@ -148,7 +148,7 @@ public class BalFileConstants {
     public static final String GET_ENTITY_RECORD = "record {} %sEntity = <record {}> value[\"%s\"];";
     public static final String GET_ENTITY_CLIENT = "%sClient %sClient = check new %sClient();";
     public static final String GET_ENTITY_STREAM = "stream<%s, error?> %sStream = " +
-            "self->read(filter, [%sEntity]);";
+            "self->read([%sEntity]);";
     public static final String EXIST_READ_BY_KEY = "%s|error result = self->" +
             "readByKey(%s);";
     public static final String EXIST_CHECK_INVALID = "result is persist:InvalidKeyError";

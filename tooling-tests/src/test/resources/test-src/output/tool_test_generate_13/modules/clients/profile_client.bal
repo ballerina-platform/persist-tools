@@ -40,8 +40,8 @@ public client class ProfileClient {
         return <Profile>check self.persistClient.runReadByKeyQuery(Profile, key, include);
     }
 
-    remote function read(map<anydata>? filter = (), ProfileRelations[] include = []) returns stream<Profile, error?> {
-        stream<anydata, error?>|error result = self.persistClient.runReadQuery(Profile, filter, include);
+    remote function read(ProfileRelations[] include = []) returns stream<Profile, error?> {
+        stream<anydata, error?>|error result = self.persistClient.runReadQuery(Profile, (), include);
         if result is error {
             return new stream<Profile, error?>(new ProfileStream((), result));
         } else {
@@ -64,7 +64,7 @@ public client class ProfileClient {
         if value["user"] is record {} {
             record {} userEntity = <record {}>value["user"];
             UserClient userClient = check new UserClient();
-            stream<Profile, error?> profileStream = self->read(filter, [UserEntity]);
+            stream<Profile, error?> profileStream = self->read([UserEntity]);
             check from Profile p in profileStream
                 do {
                     if p.user is User {

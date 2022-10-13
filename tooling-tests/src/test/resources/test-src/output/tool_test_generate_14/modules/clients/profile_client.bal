@@ -1,7 +1,6 @@
 import ballerina/sql;
 import ballerinax/mysql;
 import ballerina/persist;
-import foo/tool_test_generate_14 as entities;
 
 public client class ProfileClient {
 
