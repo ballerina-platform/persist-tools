@@ -25,6 +25,7 @@ plugins {
 description = 'Ballerina - persist-tools Tooling Test'
 
 def buildDir = "build";
+def ballerinaDist = "$project.buildDir/jballerina-tools-${ballerinaLangVersion}"
 
 configurations {
     balTools
@@ -52,8 +53,6 @@ dependencies {
     }
 }
 
-def bDistribution = file("$project.buildDir/jballerina-tools-${ballerinaLangVersion}")
-
 task jBallerinaPack {
     doLast {
         configurations.balTools.resolvedConfiguration.resolvedArtifacts.each { artifact ->
@@ -63,7 +62,7 @@ task jBallerinaPack {
             }
         }
     }
-    outputs.dir bDistribution
+    outputs.dir ballerinaDist
 }
 
 task unpackStdLibs() {
@@ -80,7 +79,6 @@ task unpackStdLibs() {
 
 task copyStdlibs(type: Copy) {
     dependsOn(unpackStdLibs)
-    def ballerinaDist = "$project.buildDir/jballerina-tools-${ballerinaLangVersion}"
     into ballerinaDist
 
     /* Standard Libraries */
@@ -97,6 +95,14 @@ task copyStdlibs(type: Copy) {
 
 tasks.withType(Checkstyle) {
     exclude '**/module-info.java'
+}
+
+task copyTestPack(type: Copy) {
+    dependsOn(copyStdlibs)
+    into buildDir
+    into("ballerina-distribution/") {
+        from ballerinaDist
+    }
 }
 
 task copyTestResources(type: Copy) {
@@ -203,8 +209,8 @@ checkstyleMain {
 }
 
 test {
-    dependsOn(copyStdlibs)
-    systemProperty "ballerina.home", bDistribution
+    dependsOn(copyTestPack)
+    systemProperty "ballerina.home", ballerinaDist
     dependsOn(copyTestResources)
     dependsOn(startTestDockerContainer)
     systemProperty "ballerina.offline.flag", "true"
