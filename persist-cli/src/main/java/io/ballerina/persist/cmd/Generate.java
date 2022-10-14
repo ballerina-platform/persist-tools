@@ -28,7 +28,6 @@ import io.ballerina.persist.objects.Entity;
 import io.ballerina.persist.objects.EntityMetaData;
 import io.ballerina.projects.DiagnosticResult;
 import io.ballerina.projects.Project;
-import io.ballerina.projects.ProjectEnvironmentBuilder;
 import io.ballerina.projects.ProjectException;
 import io.ballerina.projects.directory.ProjectLoader;
 import io.ballerina.tools.diagnostics.Diagnostic;
@@ -78,7 +77,6 @@ public class Generate implements BLauncherCmd {
     private static final PrintStream outStream = System.out;
 
     private String sourcePath = "";
-    public ProjectEnvironmentBuilder projectEnvironmentBuilder;
 
     private static final String COMMAND_IDENTIFIER = "persist-generate";
 
@@ -99,11 +97,7 @@ public class Generate implements BLauncherCmd {
             return;
         }
         try  {
-            if (projectEnvironmentBuilder == null) {
-                balProject = ProjectLoader.loadProject(Paths.get(""));
-            } else {
-                balProject = ProjectLoader.loadProject(Paths.get(this.sourcePath), projectEnvironmentBuilder);
-            }
+            balProject = ProjectLoader.loadProject(Paths.get(this.sourcePath));
             name = balProject.currentPackage().descriptor().org().value() + "." + balProject.currentPackage()
                     .descriptor().name().value();
         } catch (ProjectException e) {
@@ -143,8 +137,7 @@ public class Generate implements BLauncherCmd {
         try (Stream<Path> walk = Files.walk(dirPath)) {
             if (walk != null) {
                 fileList = walk.filter(Files::isRegularFile).collect(Collectors.toList());
-                DiagnosticResult diagnosticResult = hasSemanticDiagnostics(
-                        Paths.get(this.sourcePath), this.projectEnvironmentBuilder);
+                DiagnosticResult diagnosticResult = hasSemanticDiagnostics(Paths.get(this.sourcePath));
                 ArrayList<String> syntaxDiagnostics = hasSyntacticDiagnostics(Paths.get(this.sourcePath));
                 if (!syntaxDiagnostics.isEmpty()) {
                     StringBuilder errorMessage = new StringBuilder();
@@ -152,7 +145,7 @@ public class Generate implements BLauncherCmd {
                             " The project contains syntax errors. ");
                     for (String d : syntaxDiagnostics) {
                         errorMessage.append(System.lineSeparator());
-                        errorMessage.append(d.toString());
+                        errorMessage.append(d);
                     }
                     throw new BalException(errorMessage.toString());
                 }
@@ -250,9 +243,6 @@ public class Generate implements BLauncherCmd {
 
     public void setSourcePath(String sourcePath) {
         this.sourcePath = sourcePath;
-    }
-    public void setEnvironmentBuilder(ProjectEnvironmentBuilder projectEnvironmentBuilder) {
-        this.projectEnvironmentBuilder = projectEnvironmentBuilder;
     }
 
     @Override

@@ -23,12 +23,8 @@ import io.ballerina.persist.cmd.Init;
 import io.ballerina.persist.cmd.PersistCmd;
 import io.ballerina.persist.cmd.Push;
 import io.ballerina.persist.objects.BalException;
-import io.ballerina.projects.ProjectEnvironmentBuilder;
-import io.ballerina.projects.environment.Environment;
-import io.ballerina.projects.environment.EnvironmentBuilder;
 import org.testng.Assert;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
@@ -63,14 +59,7 @@ public class GeneratedSourcesTestUtils {
     public static final String GENERATED_SOURCES_DIRECTORY = Paths.get("build", "generated-sources").toString();
     public static final Path RESOURCES_EXPECTED_OUTPUT = Paths.get("src", "test", "resources", "test-src", "output")
             .toAbsolutePath();
-    private static final Path DISTRIBUTION_PATH = Paths.get(".." + File.separator, "target", "ballerina-runtime")
-            .toAbsolutePath();
     private static final Path DRIVER_PATH = Paths.get("lib").toAbsolutePath();
-
-    private static ProjectEnvironmentBuilder getEnvironmentBuilder() {
-        Environment environment = EnvironmentBuilder.getBuilder().setBallerinaHome(DISTRIBUTION_PATH).build();
-        return ProjectEnvironmentBuilder.getBuilder(environment);
-    }
 
     public static void assertGeneratedSources(String subDir, Command cmd) {
 
@@ -79,14 +68,14 @@ public class GeneratedSourcesTestUtils {
                 Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)));
         if (!subDir.equals("tool_test_generate_4")) {
             try {
-                Assert.assertFalse(!hasSyntacticDiagnostics(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir))
+                Assert.assertTrue(hasSyntacticDiagnostics(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir))
                         .isEmpty());
             } catch (IOException | BalException e) {
                 errStream.println(e.getMessage());
                 Assert.fail();
             }
-            Assert.assertFalse(hasSemanticDiagnostics(Paths.get(GENERATED_SOURCES_DIRECTORY)
-                    .resolve(subDir), getEnvironmentBuilder()).hasErrors());
+            Assert.assertFalse(hasSemanticDiagnostics(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)).
+                    hasErrors());
         }
 
         for (Path actualOutputFile: listFiles(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir))) {
@@ -129,7 +118,6 @@ public class GeneratedSourcesTestUtils {
             Init persistCmdInit = (Init) persistInitClass.getDeclaredConstructor().newInstance();
             Assert.assertEquals(persistCmdInit.getName(), "persist");
             Assert.assertEquals(persistCmd.getName(), "persist");
-            persistCmdInit.setEnvironmentBuilder(getEnvironmentBuilder());
 
             StringBuilder initLongDesc = new StringBuilder();
             StringBuilder cmdLongDesc = new StringBuilder();
@@ -160,19 +148,16 @@ public class GeneratedSourcesTestUtils {
                 persistClass = Class.forName("io.ballerina.persist.cmd.Init");
                 Init persistCmd = (Init) persistClass.getDeclaredConstructor().newInstance();
                 persistCmd.setSourcePath(sourcePath.toAbsolutePath().toString());
-                persistCmd.setEnvironmentBuilder(getEnvironmentBuilder());
                 persistCmd.execute();
             } else if (cmd == Command.GENERATE) {
                 persistClass = Class.forName("io.ballerina.persist.cmd.Generate");
                 Generate persistCmd = (Generate) persistClass.getDeclaredConstructor().newInstance();
                 persistCmd.setSourcePath(sourcePath.toAbsolutePath().toString());
-                persistCmd.setEnvironmentBuilder(getEnvironmentBuilder());
                 persistCmd.execute();
             } else {
                 persistClass = Class.forName("io.ballerina.persist.cmd.Push");
                 Push persistCmd = (Push) persistClass.getDeclaredConstructor().newInstance();
                 persistCmd.setSourcePath(sourcePath.toAbsolutePath().toString());
-                persistCmd.setEnvironmentBuilder(getEnvironmentBuilder());
                 persistCmd.setDriverPath(DRIVER_PATH);
                 persistCmd.execute();
                 return persistCmd.getConfigurations();
