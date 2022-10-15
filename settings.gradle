@@ -11,7 +11,7 @@ plugins {
     id "com.gradle.enterprise" version "3.2"
 }
 
-rootProject.name = 'persist'
+rootProject.name = 'persist-tools'
 
 include ':checkstyle'
 include ':persist-cli'
