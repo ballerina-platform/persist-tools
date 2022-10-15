@@ -133,10 +133,10 @@ public class Push implements BLauncherCmd {
                 statement = connection.createStatement();
                 String query = String.format(CREATE_DATABASE_SQL, database);
                 statement.executeUpdate(query);
-                stdStream.println("Created Database : " + database);
+                stdStream.println("Created Database. " + database);
             }
         } catch (SQLException e) {
-            errStream.println("Error occurred when creating database: " + e.getMessage());
+            errStream.println("Error occurred while creating the database." + e.getMessage());
             return;
         }
 
@@ -153,9 +153,11 @@ public class Push implements BLauncherCmd {
             }
             statement.close();
         } catch (SQLException e) {
-            errStream.println("Error occurred when creating database tables: " + e.getMessage());
+            errStream.println(String.format("Error while creating the tables in the database %s ", database)
+                    + e.getMessage());
+            return;
         }
-        stdStream.println("Updated the entity tables.");
+        stdStream.println(String.format("Created tables for entities in the database %s", database));
     }
 
     public void setSourcePath(String sourcePath) {
@@ -177,13 +179,15 @@ public class Push implements BLauncherCmd {
             Class<?> drvClass = driverLoader.loadClass(MYSQL_DRIVER_CLASS);
             driver = (Driver) drvClass.getDeclaredConstructor().newInstance();
         } catch (ProjectException e) {
-            throw new BalException("The current directory is not a Ballerina project!");
+            throw new BalException("Not a Ballerina project (or any parent up to mount point)\n" +
+                    "You should run this command inside a Ballerina project.");
         } catch (ClassNotFoundException e) {
-            throw new BalException("Driver Not Found");
+            throw new BalException("Required database driver not found. " + e.getMessage());
         } catch (InstantiationException | InvocationTargetException e) {
-            throw new BalException("Error instantiation the jdbc driver");
+            throw new BalException("Error instantiation the jdbc driver. " + e.getMessage());
         } catch (IllegalAccessException e) {
-            throw new BalException("Access denied trying to instantiation the jdbc driver");
+            throw new BalException("Access denied error while trying to instantiation the database driver" +
+                    e.getMessage());
         } catch (NoSuchMethodException e) {
             throw new BalException("Method not found error while trying to instantiate jdbc driver : "
                     + e.getMessage());
@@ -205,7 +209,8 @@ public class Push implements BLauncherCmd {
             sqlLines = stringBuilder.toString().split(";");
             return sqlLines;
         } catch (IOException e) {
-            throw new BalException("Error occurred while reading generated SQL scripts!");
+            throw new BalException("Error while reading the SQL script file (persist_db_push.sql) " +
+                    "generated in the project target directory. ");
         }
     }
 

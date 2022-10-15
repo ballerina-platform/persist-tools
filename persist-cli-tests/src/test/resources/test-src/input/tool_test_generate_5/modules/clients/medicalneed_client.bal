@@ -2,7 +2,6 @@ import ballerina/sql;
 import ballerinax/mysql;
 import ballerina/time;
 import ballerina/persist;
-import foo/perist_generate_5 as entities;
 
 public client class MedicalNeedClient {
 
@@ -16,65 +15,97 @@ public client class MedicalNeedClient {
         beneficiaryId: {columnName: "beneficiaryId", 'type: int},
         period: {columnName: "period", 'type: time:Civil},
         urgency: {columnName: "urgency", 'type: string},
-        quantity: {columnName: "quantity", 'type: int}
+        quantity: {columnName: "quantity", 'type: string}
     };
     private string[] keyFields = ["needId"];
 
     private persist:SQLClient persistClient;
 
-    public function init() returns error? {
-        mysql:Client dbClient = check new (host = host, user = user, password = password, database = database, port = port);
+    public function init() returns persist:Error? {
+        mysql:Client|sql:Error dbClient = new (host = host, user = user, password = password, database = database, port = port);
+        if dbClient is sql:Error {
+            return <persist:Error>error(dbClient.message());
+        }
         self.persistClient = check new (dbClient, self.entityName, self.tableName, self.keyFields, self.fieldMetadata);
     }
 
-    remote function create(entities:MedicalNeed value) returns entities:MedicalNeed|error? {
+    remote function create(MedicalNeed value) returns MedicalNeed|persist:Error {
         sql:ExecutionResult result = check self.persistClient.runInsertQuery(value);
         return {needId: <int>result.lastInsertId, itemId: value.itemId, name: value.name, beneficiaryId: value.beneficiaryId, period: value.period, urgency: value.urgency, quantity: value.quantity};
     }
 
-    remote function readByKey(int key) returns entities:MedicalNeed|error {
-        return (check self.persistClient.runReadByKeyQuery(entities:MedicalNeed, key)).cloneWithType(entities:MedicalNeed);
+    remote function readByKey(int key) returns MedicalNeed|persist:Error {
+        return <MedicalNeed>check self.persistClient.runReadByKeyQuery(MedicalNeed, key);
     }
 
-    remote function read(map<anydata>? filter = ()) returns stream<entities:MedicalNeed, error?>|error {
-        stream<anydata, error?> result = check self.persistClient.runReadQuery(entities:MedicalNeed, filter);
-        return new stream<entities:MedicalNeed, error?>(new MedicalNeedStream(result));
+    remote function read() returns stream<MedicalNeed, persist:Error?> {
+        stream<anydata, sql:Error?>|persist:Error result = self.persistClient.runReadQuery(MedicalNeed);
+        if result is persist:Error {
+            return new stream<MedicalNeed, persist:Error?>(new MedicalNeedStream((), result));
+        } else {
+            return new stream<MedicalNeed, persist:Error?>(new MedicalNeedStream(result));
+        }
     }
 
-    remote function update(record {} 'object, map<anydata> filter) returns error? {
-        _ = check self.persistClient.runUpdateQuery('object, filter);
+    remote function execute(sql:ParameterizedQuery filterClause) returns stream<MedicalNeed, persist:Error?> {
+        stream<anydata, sql:Error?>|persist:Error result = self.persistClient.runExecuteQuery(filterClause, MedicalNeed);
+        if result is persist:Error {
+            return new stream<MedicalNeed, persist:Error?>(new MedicalNeedStream((), result));
+        } else {
+            return new stream<MedicalNeed, persist:Error?>(new MedicalNeedStream(result));
+        }
     }
 
-    remote function delete(map<anydata> filter) returns error? {
-        _ = check self.persistClient.runDeleteQuery(filter);
+    remote function update(MedicalNeed value) returns persist:Error? {
+        _ = check self.persistClient.runUpdateQuery(value);
     }
 
-    function close() returns error? {
+    remote function delete(MedicalNeed value) returns persist:Error? {
+        _ = check self.persistClient.runDeleteQuery(value);
+    }
+
+    public function close() returns persist:Error? {
         return self.persistClient.close();
     }
 }
 
 public class MedicalNeedStream {
 
-    private stream<anydata, error?> anydataStream;
+    private stream<anydata, sql:Error?>? anydataStream;
+    private persist:Error? err;
 
-    public isolated function init(stream<anydata, error?> anydataStream) {
+    public isolated function init(stream<anydata, sql:Error?>? anydataStream, persist:Error? err = ()) {
         self.anydataStream = anydataStream;
+        self.err = err;
     }
 
-    public isolated function next() returns record {|entities:MedicalNeed value;|}|error? {
-        var streamValue = self.anydataStream.next();
-        if streamValue is () {
-            return streamValue;
-        } else if (streamValue is error) {
-            return streamValue;
+    public isolated function next() returns record {|MedicalNeed value;|}|persist:Error? {
+        if self.err is persist:Error {
+            return <persist:Error>self.err;
+        } else if self.anydataStream is stream<anydata, sql:Error?> {
+            var anydataStream = <stream<anydata, sql:Error?>>self.anydataStream;
+            var streamValue = anydataStream.next();
+            if streamValue is () {
+                return streamValue;
+            } else if (streamValue is sql:Error) {
+                return <persist:Error>error(streamValue.message());
+            } else {
+                record {|MedicalNeed value;|} nextRecord = {value: <MedicalNeed>streamValue.value};
+                return nextRecord;
+            }
         } else {
-            record {|entities:MedicalNeed value;|} nextRecord = {value: check streamValue.value.cloneWithType(entities:MedicalNeed)};
-            return nextRecord;
+            return ();
         }
     }
 
-    public isolated function close() returns error? {
-        return self.anydataStream.close();
+    public isolated function close() returns persist:Error? {
+        if self.anydataStream is stream<anydata, sql:Error?> {
+            var anydataStream = <stream<anydata, sql:Error?>>self.anydataStream;
+            sql:Error? e = anydataStream.close();
+            if e is sql:Error {
+                return <persist:Error>error(e.message());
+            }
+        }
     }
 }
+
