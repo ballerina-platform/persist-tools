@@ -89,7 +89,7 @@ public class GeneratedSourcesTestUtils {
             errStream.println(actualOutputFile.toString());
             if (actualOutputFile.toString().contains("persist_db_scripts.sql")
                     && (subDir.equals("tool_test_generate_7") || subDir.equals("tool_test_generate_14") ||
-                    subDir.equals("tool_test_generate_15"))) {
+                    subDir.equals("tool_test_generate_15") || subDir.equals("tool_test_generate_5"))) {
                 continue;
             }
             Path expectedOutputFile = Paths.get(RESOURCES_EXPECTED_OUTPUT.toString(), subDir).
