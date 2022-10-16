@@ -64,21 +64,29 @@ public class GeneratedSourcesTestUtils {
     public static void assertGeneratedSources(String subDir, Command cmd) {
 
         generateSourceCode(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir), cmd);
+        errStream.println(0);
         Assert.assertTrue(directoryContentEquals(Paths.get(RESOURCES_EXPECTED_OUTPUT.toString()).resolve(subDir),
                 Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)));
+        errStream.println(1);
+
         if (!subDir.equals("tool_test_generate_4")) {
             try {
+                errStream.println(3);
                 Assert.assertTrue(hasSyntacticDiagnostics(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir))
                         .isEmpty());
+                errStream.println(4);
             } catch (IOException | BalException e) {
                 errStream.println(e.getMessage());
                 Assert.fail();
             }
+            errStream.println(5);
             Assert.assertFalse(hasSemanticDiagnostics(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)).
                     hasErrors());
+            errStream.println(6);
         }
 
         for (Path actualOutputFile: listFiles(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir))) {
+            errStream.println(actualOutputFile.toString());
             if (actualOutputFile.toString().contains("persist_db_scripts.sql")
                     && (subDir.equals("tool_test_generate_7") || subDir.equals("tool_test_generate_14") ||
                     subDir.equals("tool_test_generate_15"))) {
@@ -87,11 +95,13 @@ public class GeneratedSourcesTestUtils {
             Path expectedOutputFile = Paths.get(RESOURCES_EXPECTED_OUTPUT.toString(), subDir).
                     resolve(actualOutputFile.subpath(3, actualOutputFile.getNameCount()));
             Assert.assertTrue(Files.exists(actualOutputFile));
+            errStream.println(7);
             if (subDir.equals("tool_test_generate_7") &&
                     actualOutputFile.toString().contains("entities.bal")) {
                 continue;
             }
             Assert.assertEquals(readContent(actualOutputFile), readContent(expectedOutputFile));
+            errStream.println(8);
         }
     }
 
