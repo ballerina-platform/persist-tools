@@ -2,7 +2,7 @@
 org = "foo"
 name = "persist_generate_1"
 version = "0.1.0"
-distribution = "2201.2.0"
+distribution = "2201.3.0-20221014-074800-bbf5f7a2"
 
 [build-options]
 observabilityIncluded = false
