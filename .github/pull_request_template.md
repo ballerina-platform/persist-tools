@@ -9,4 +9,3 @@ Fixes:
 - [ ] Updated the specification
 - [ ] Updated the changelog
 - [ ] Added tests
-- [ ] 
