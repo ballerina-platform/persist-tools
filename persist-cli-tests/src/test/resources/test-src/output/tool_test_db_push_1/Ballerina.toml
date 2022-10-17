@@ -2,7 +2,7 @@
 org = "foo"
 name = "tool_test_db_push_1"
 version = "0.1.0"
-distribution = "2201.2.0"
+distribution = "2201.3.0"
 
 [build-options]
 observabilityIncluded = false
