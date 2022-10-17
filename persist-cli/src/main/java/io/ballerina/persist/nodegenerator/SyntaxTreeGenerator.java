@@ -90,6 +90,7 @@ public class SyntaxTreeGenerator {
         HashMap<String, String> values = new HashMap<>();
         Path fileNamePath = configPath.getFileName();
         try {
+            boolean persistConfigs = false;
             TextDocument configDocument = TextDocuments.from(Files.readString(configPath));
             SyntaxTree syntaxTree = SyntaxTree.from(configDocument, fileNamePath.toString());
             DocumentNode rootNote = syntaxTree.rootNode();
@@ -98,6 +99,7 @@ public class SyntaxTreeGenerator {
                 if (member instanceof TableNode) {
                     TableNode node = (TableNode) member;
                     if (node.identifier().toSourceCode().trim().equals(name)) {
+                        persistConfigs = true;
                         NodeList<KeyValueNode> subNodeList = node.fields();
                         for (KeyValueNode subMember : subNodeList) {
                             if (isDatabaseConfigurationEntry(subMember.identifier())) {
@@ -109,15 +111,19 @@ public class SyntaxTreeGenerator {
 
                 }
             }
-            if (values.isEmpty() || values.size() < 5 || (!values.containsKey("database")
+            if (!persistConfigs) {
+                throw new BalException("Persist client related config doesn't exist in Config.toml.\n" +
+                        "You should add database configurations under <org name>.<pkg name>.clients ");
+            } else if (values.isEmpty() || values.size() < 5 || (!values.containsKey("database")
                     || !values.containsKey("user") || !values.containsKey("host") || !values.containsKey("password") ||
                     !values.containsKey("port"))) {
-                throw new BalException("Error occurred while reading Config.Toml file");
+                throw new BalException("Database is not configured properly\n" +
+                        "You should give the correct database configurations with database name to create tables");
             } else {
                 return values;
             }
         } catch (IOException e) {
-            throw new BalException("Error while reading configurations");
+            throw new BalException("Error while reading configurations. ");
         }
     }
 

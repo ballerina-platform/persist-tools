@@ -66,19 +66,8 @@ public class GeneratedSourcesTestUtils {
         generateSourceCode(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir), cmd);
         Assert.assertTrue(directoryContentEquals(Paths.get(RESOURCES_EXPECTED_OUTPUT.toString()).resolve(subDir),
                 Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)));
-        if (!subDir.equals("tool_test_generate_4")) {
-            try {
-                Assert.assertTrue(hasSyntacticDiagnostics(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir))
-                        .isEmpty());
-            } catch (IOException | BalException e) {
-                errStream.println(e.getMessage());
-                Assert.fail();
-            }
-            Assert.assertFalse(hasSemanticDiagnostics(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)).
-                    hasErrors());
-        }
-
         for (Path actualOutputFile: listFiles(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir))) {
+            errStream.println(actualOutputFile);
             if (actualOutputFile.toString().contains("persist_db_scripts.sql")
                     && (subDir.equals("tool_test_generate_7") || subDir.equals("tool_test_generate_14") ||
                     subDir.equals("tool_test_generate_15"))) {
@@ -92,6 +81,17 @@ public class GeneratedSourcesTestUtils {
                 continue;
             }
             Assert.assertEquals(readContent(actualOutputFile), readContent(expectedOutputFile));
+        }
+        if (!subDir.equals("tool_test_generate_4")) {
+            try {
+                Assert.assertTrue(hasSyntacticDiagnostics(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir))
+                        .isEmpty());
+            } catch (IOException | BalException e) {
+                errStream.println(e.getMessage());
+                Assert.fail();
+            }
+            Assert.assertFalse(hasSemanticDiagnostics(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)).
+                    hasErrors());
         }
     }
 

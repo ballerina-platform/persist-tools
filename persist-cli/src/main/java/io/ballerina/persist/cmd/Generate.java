@@ -101,7 +101,8 @@ public class Generate implements BLauncherCmd {
             name = balProject.currentPackage().descriptor().org().value() + "." + balProject.currentPackage()
                     .descriptor().name().value();
         } catch (ProjectException e) {
-            errStream.println("The current directory is not a Ballerina project!");
+            errStream.println("Not a Ballerina project (or any parent up to mount point)\n" +
+                    "You should run this command inside a Ballerina project. ");
             return;
         }
         try {
@@ -110,13 +111,14 @@ public class Generate implements BLauncherCmd {
             ArrayList<ModuleMemberDeclarationNode> returnModuleMembers = retEntityMetaData.moduleMembersArray;
             ArrayList<ImportDeclarationNode> imports = new ArrayList<>();
             if (entityArray.size() == 0) {
-                errStream.println("Current directory doesn't contain any persist entities");
+                errStream.println("No entity found inside the Ballerina project");
             } else {
                 for (Entity entity : entityArray) {
                     entity.setPackageName(balProject.currentPackage().descriptor().org().value() + "/"
                             + balProject.currentPackage().descriptor().name().value());
                     generateClientBalFile(entity, imports);
-                    outStream.println(String.format("Created client for the entity : %s", entity.getEntityName()));
+                    outStream.println(String.format("Generated Ballerina client file for entity %s, " +
+                            "inside clients sub module.", entity.getEntityName()));
                 }
                 generateConfigurationBalFile();
                 outStream.println("Created database_configurations.bal");
@@ -135,32 +137,41 @@ public class Generate implements BLauncherCmd {
         List<Path> fileList;
 
         try (Stream<Path> walk = Files.walk(dirPath)) {
+            boolean skipValidation = false;
             if (walk != null) {
                 fileList = walk.filter(Files::isRegularFile).collect(Collectors.toList());
-                DiagnosticResult diagnosticResult = hasSemanticDiagnostics(Paths.get(this.sourcePath));
-                ArrayList<String> syntaxDiagnostics = hasSyntacticDiagnostics(Paths.get(this.sourcePath));
-                if (!syntaxDiagnostics.isEmpty()) {
-                    StringBuilder errorMessage = new StringBuilder();
-                    errorMessage.append("Error occurred when validating the project." +
-                            " The project contains syntax errors. ");
-                    for (String d : syntaxDiagnostics) {
-                        errorMessage.append(System.lineSeparator());
-                        errorMessage.append(d);
-                    }
-                    throw new BalException(errorMessage.toString());
-                }
-                if (diagnosticResult.hasErrors()) {
-                    StringBuilder errorMessage = new StringBuilder();
-                    errorMessage.append("Error occurred when validating the project." +
-                            " The project contains semantic errors. ");
-                    for (Diagnostic d : diagnosticResult.errors()) {
-                        errorMessage.append(System.lineSeparator());
-                        errorMessage.append(d.toString());
-                    }
-                    throw new BalException(errorMessage.toString());
-                }
                 Path clientEntitiesPath = Paths.get(this.sourcePath, KEYWORD_MODULES, KEYWORD_CLIENTS,
-                                PATH_ENTITIES_FILE).toAbsolutePath();
+                        PATH_ENTITIES_FILE).toAbsolutePath();
+                for (Path path : fileList) {
+                    if (path.toAbsolutePath().toString().equals(clientEntitiesPath.toString())) {
+                        skipValidation = true;
+                        break;
+                    }
+                }
+                if (!skipValidation) {
+                    DiagnosticResult diagnosticResult = hasSemanticDiagnostics(Paths.get(this.sourcePath));
+                    ArrayList<String> syntaxDiagnostics = hasSyntacticDiagnostics(Paths.get(this.sourcePath));
+                    if (!syntaxDiagnostics.isEmpty()) {
+                        StringBuilder errorMessage = new StringBuilder();
+                        errorMessage.append("Error occurred when validating the project." +
+                                " The project contains syntax errors. ");
+                        for (String d : syntaxDiagnostics) {
+                            errorMessage.append(System.lineSeparator());
+                            errorMessage.append(d);
+                        }
+                        throw new BalException(errorMessage.toString());
+                    }
+                    if (diagnosticResult.hasErrors()) {
+                        StringBuilder errorMessage = new StringBuilder();
+                        errorMessage.append("Error occurred when validating the project." +
+                                " The project contains semantic errors. ");
+                        for (Diagnostic d : diagnosticResult.errors()) {
+                            errorMessage.append(System.lineSeparator());
+                            errorMessage.append(d.toString());
+                        }
+                        throw new BalException(errorMessage.toString());
+                    }
+                }
                 for (Path filePath : fileList) {
                     if (filePath.toString().endsWith(EXTENSION_BAL) &&
                             !filePath.toAbsolutePath().equals(clientEntitiesPath)) {
@@ -185,7 +196,7 @@ public class Generate implements BLauncherCmd {
             }
 
         } catch (IOException e) {
-            throw new BalException("Error occurred while reading bal files!");
+            throw new BalException("Error while reading entities in the Ballerina project. " + e.getMessage());
         }
         return new EntityMetaData(new ArrayList<>(), new ArrayList<>());
     }
@@ -196,12 +207,10 @@ public class Generate implements BLauncherCmd {
                     entity.getEntityName().toLowerCase() + "_client.bal").toAbsolutePath().toString();
         try {
             writeOutputFile(balTree, clientPath);
-        } catch (IOException e) {
-            throw new BalException("Error occurred in writing ballerina client files!");
-        } catch (FormatterException e) {
-            throw new BalException("Error occurred while formatting ballerina client files!");
+        } catch (IOException | FormatterException e) {
+            throw new BalException(String.format("Error while generating the client for the" +
+                    " %s entity. ", entity.getEntityName()) + e.getMessage());
         }
-
     }
     private void generateConfigurationBalFile() throws BalException {
         SyntaxTree configTree = BalSyntaxTreeGenerator.generateConfigSyntaxTree();
@@ -231,11 +240,20 @@ public class Generate implements BLauncherCmd {
         }
     }
 
-    private static void writeOutputFile(SyntaxTree syntaxTree, String outPath) throws IOException, FormatterException {
+    private static void writeOutputFile(SyntaxTree syntaxTree, String outPath) throws IOException, FormatterException,
+            BalException {
         String content;
         content = Formatter.format(syntaxTree.toSourceCode());
         Path pathToFile = Paths.get(outPath);
-        Files.createDirectories(pathToFile.getParent());
+        if (!Files.exists(pathToFile.getParent())) {
+            try {
+                Files.createDirectories(pathToFile.getParent());
+                outStream.println("Added new Ballerina module at modules/clients");
+            } catch (IOException e) {
+                throw new BalException("Error while adding new Ballerina module at modules/clients. " +
+                        e.getMessage());
+            }
+        }
         try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8.name())) {
             writer.println(content);
         }
