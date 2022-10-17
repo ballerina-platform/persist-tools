@@ -831,6 +831,7 @@ public class BalSyntaxTreeGenerator {
         update.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode(BalFileConstants.EMPTY_STRING,
                 BalFileConstants.PERSIST_ERROR));
         update.addStatement(NodeParser.parseStatement(BalFileConstants.UPDATE_RUN_UPDATE_QUERY));
+        update.addRequiredParameter(TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()), "value");
         boolean hasChildClient = false;
         if (!entity.getRelations().isEmpty()) {
             for (Relation relation : entity.getRelations()) {
@@ -861,12 +862,6 @@ public class BalSyntaxTreeGenerator {
                 update.addIfElseStatement(typeCheck.getIfElseStatementNode());
             }
         }
-        if (hasChildClient) {
-            update.addRequiredParameter(TypeDescriptor.getRecordTypeDescriptorNode(), "value");
-        } else {
-            update.addRequiredParameter(TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()), "value");
-        }
-
         return update;
     }
 

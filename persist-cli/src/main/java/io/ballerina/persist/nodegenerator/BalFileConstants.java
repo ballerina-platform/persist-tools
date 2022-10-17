@@ -156,8 +156,8 @@ public class BalFileConstants {
 
     public static final String ENUM_NAME = "%sRelations";
 
-    public static final String RECORD_CHECK = "value[\"%s\"] is record {}";
-    public static final String GET_ENTITY_RECORD = "%s %sEntity = <%s> value[\"%s\"];";
+    public static final String RECORD_CHECK = "value.%s is record {}";
+    public static final String GET_ENTITY_RECORD = "%s %sEntity = <%s> value.%s;";
     public static final String GET_ENTITY_CLIENT = "%sClient %sClient = check new %sClient();";
     public static final String EXIST_READ_BY_KEY = "%s|persist:Error result = self->" +
             "readByKey(%s);";

@@ -73,15 +73,15 @@ public client class MultipleAssociationsClient {
         }
     }
 
-    remote function update(record {} value) returns persist:Error? {
+    remote function update(MultipleAssociations value) returns persist:Error? {
         _ = check self.persistClient.runUpdateQuery(value);
-        if value["profile"] is record {} {
-            Profile profileEntity = <Profile>value["profile"];
+        if value.profile is record {} {
+            Profile profileEntity = <Profile>value.profile;
             ProfileClient profileClient = check new ProfileClient();
             check profileClient->update(profileEntity);
         }
-        if value["user"] is record {} {
-            User userEntity = <User>value["user"];
+        if value.user is record {} {
+            User userEntity = <User>value.user;
             UserClient userClient = check new UserClient();
             check userClient->update(userEntity);
         }

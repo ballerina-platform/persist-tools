@@ -61,10 +61,10 @@ public client class ProfileClient {
         }
     }
 
-    remote function update(record {} value) returns persist:Error? {
+    remote function update(Profile value) returns persist:Error? {
         _ = check self.persistClient.runUpdateQuery(value);
-        if value["user"] is record {} {
-            User userEntity = <User>value["user"];
+        if value.user is record {} {
+            User userEntity = <User>value.user;
             UserClient userClient = check new UserClient();
             check userClient->update(userEntity);
         }
