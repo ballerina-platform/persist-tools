@@ -544,33 +544,35 @@ public class BalSyntaxTreeGenerator {
         Function delete = getDeleteMethod(entity);
         client.addMember(delete.getFunctionDefinitionNode(), true);
 
-        if (!entity.getRelations().isEmpty()) {
-            if (keys.size() > 1) {
-                keyString = new StringBuilder();
-                keyString.append("{");
-
-                for (String key : keys.keySet()) {
-                    keyString.append(entity.getEntityName().substring(0, 1).toLowerCase());
-                    keyString.append(entity.getEntityName().substring(1));
-                    keyString.append(".");
-                    keyString.append(key);
-                    keyString.append(COMMA_SPACE_STRING);
+        StringBuilder keyStringExist = new StringBuilder();
+        if (keys.size() > 1) {
+            keyStringExist = new StringBuilder();
+            keyStringExist.append("{");
+            for (String key : keys.keySet()) {
+                if (!keyStringExist.toString().trim().equals("{")) {
+                    keyStringExist.append(COMMA_SPACE_STRING);
                 }
-                keyString.append("}");
-
-            } else {
-                keyString = new StringBuilder();
-                keyString.append(entity.getEntityName().substring(0, 1).toLowerCase());
-                keyString.append(entity.getEntityName().substring(1));
-                keyString.append(".");
-                for (String key : keys.keySet()) {
-                    keyString.append(key);
-                }
+                keyStringExist.append(String.format(key));
+                keyStringExist.append(":");
+                keyStringExist.append(" ");
+                keyStringExist.append(entity.getEntityName().substring(0, 1).toLowerCase());
+                keyStringExist.append(entity.getEntityName().substring(1));
+                keyStringExist.append(".");
+                keyStringExist.append(key);
             }
-            Function exists = getExistMethod(entity, keyString);
-            client.addMember(exists.getFunctionDefinitionNode(), true);
-        }
+            keyStringExist.append("}");
 
+        } else {
+            keyStringExist = new StringBuilder();
+            keyStringExist.append(entity.getEntityName().substring(0, 1).toLowerCase());
+            keyStringExist.append(entity.getEntityName().substring(1));
+            keyStringExist.append(".");
+            for (String key : keys.keySet()) {
+                keyStringExist.append(key);
+            }
+        }
+        Function exists = getExistMethod(entity, keyStringExist);
+        client.addMember(exists.getFunctionDefinitionNode(), true);
         Function close = getCloseMethod();
         client.addMember(close.getFunctionDefinitionNode(), true);
         return client;

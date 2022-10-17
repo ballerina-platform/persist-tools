@@ -64,6 +64,17 @@ public client class MedicalNeedClient {
         _ = check self.persistClient.runDeleteQuery(value);
     }
 
+    remote function exists(MedicalNeed medicalNeed) returns boolean|persist:Error {
+        MedicalNeed|persist:Error result = self->readByKey(medicalNeed.needId);
+        if result is MedicalNeed {
+            return true;
+        } else if result is persist:InvalidKeyError {
+            return false;
+        } else {
+            return result;
+        }
+    }
+
     public function close() returns persist:Error? {
         return self.persistClient.close();
     }

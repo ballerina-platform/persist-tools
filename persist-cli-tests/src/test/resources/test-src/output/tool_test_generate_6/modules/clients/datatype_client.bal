@@ -68,6 +68,17 @@ public client class DataTypeClient {
         _ = check self.persistClient.runDeleteQuery(value);
     }
 
+    remote function exists(DataType dataType) returns boolean|persist:Error {
+        DataType|persist:Error result = self->readByKey(dataType.a);
+        if result is DataType {
+            return true;
+        } else if result is persist:InvalidKeyError {
+            return false;
+        } else {
+            return result;
+        }
+    }
+
     public function close() returns persist:Error? {
         return self.persistClient.close();
     }

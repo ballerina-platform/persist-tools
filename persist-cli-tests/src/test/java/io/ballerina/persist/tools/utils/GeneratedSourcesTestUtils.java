@@ -66,7 +66,6 @@ public class GeneratedSourcesTestUtils {
         generateSourceCode(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir), cmd);
         Assert.assertTrue(directoryContentEquals(Paths.get(RESOURCES_EXPECTED_OUTPUT.toString()).resolve(subDir),
                 Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)));
-
         if (!subDir.equals("tool_test_generate_4")) {
             try {
                 Assert.assertTrue(hasSyntacticDiagnostics(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir))
@@ -80,7 +79,6 @@ public class GeneratedSourcesTestUtils {
         }
 
         for (Path actualOutputFile: listFiles(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir))) {
-            errStream.println(actualOutputFile.toString());
             if (actualOutputFile.toString().contains("persist_db_scripts.sql")
                     && (subDir.equals("tool_test_generate_7") || subDir.equals("tool_test_generate_14") ||
                     subDir.equals("tool_test_generate_15") || subDir.equals("tool_test_generate_5"))) {
