@@ -87,8 +87,6 @@ subprojects {
 def moduleVersion = project.version.replace("-SNAPSHOT", "")
 
 release {
-    // Disable check snapshots temporarily
-    failOnPublishNeeded = false
     versionPropertyFile = 'gradle.properties'
     tagTemplate = 'v${version}'
     git {
