@@ -56,6 +56,7 @@ import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_CLIENT
 import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_MODULES;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.PATH_CONFIGURATION_BAL_FILE;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.PATH_ENTITIES_FILE;
+import static io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator.formatModuleMembers;
 import static io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator.generateRelations;
 import static io.ballerina.persist.utils.BalProjectUtils.hasSemanticDiagnostics;
 import static io.ballerina.persist.utils.BalProjectUtils.hasSyntacticDiagnostics;
@@ -192,6 +193,7 @@ public class Generate implements BLauncherCmd {
                     }
                 }
                 generateRelations(returnMetaData);
+                formatModuleMembers(returnModuleMembers, returnMetaData);
                 return new EntityMetaData(returnMetaData, returnModuleMembers);
             }
 

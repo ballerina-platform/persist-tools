@@ -20,8 +20,6 @@ package io.ballerina.persist.nodegenerator;
 
 import io.ballerina.compiler.syntax.tree.AbstractNodeFactory;
 import io.ballerina.compiler.syntax.tree.Token;
-import io.ballerina.compiler.syntax.tree.TypeDescriptorNode;
-import io.ballerina.persist.components.TypeDescriptor;
 import io.ballerina.toml.syntax.tree.KeyValueNode;
 import io.ballerina.toml.validator.SampleNodeGenerator;
 
@@ -56,8 +54,7 @@ public class SyntaxTreeConstants {
     public static final Token SYNTAX_TREE_KEYWORD_STREAM = AbstractNodeFactory.createIdentifierToken("stream ");
     public static final Token SYNTAX_TREE_IT = AbstractNodeFactory.createIdentifierToken("<");
     public static final Token SYNTAX_TREE_GT = AbstractNodeFactory.createIdentifierToken(">");
-    public static final TypeDescriptorNode SYNTAX_TREE_VAR_ANYDATA =
-            TypeDescriptor.getBuiltinSimpleNameReferenceNode("anydata");
+    public static final Token TYPE_KEYWORD = AbstractNodeFactory.createIdentifierToken("type");
     public static final Token SYNTAX_TREE_QUESTION_MARK = AbstractNodeFactory.createIdentifierToken("?");
 
     public static final Token SYNTAX_TREE_KEYWORD_RECORD = AbstractNodeFactory.createIdentifierToken("record ");

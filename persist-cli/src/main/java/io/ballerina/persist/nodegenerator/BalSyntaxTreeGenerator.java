@@ -1051,6 +1051,124 @@ public class BalSyntaxTreeGenerator {
         }
     }
 
+    public static void formatModuleMembers(ArrayList<ModuleMemberDeclarationNode> moduleMembers, ArrayList<Entity>
+                                           entities) {
+        ArrayList<String> entityNames = new ArrayList<>();
+        ArrayList<ModuleMemberDeclarationNode> retModuleMembers = new ArrayList<>();
+        for (Entity entity : entities) {
+            entityNames.add(entity.getEntityName());
+        }
+        for (ModuleMemberDeclarationNode moduleMember : moduleMembers) {
+            RecordTypeDescriptorNode recordDesc = (RecordTypeDescriptorNode) ((TypeDefinitionNode) moduleMember)
+                    .typeDescriptor();
+            ModulePartNode parent = (ModulePartNode) moduleMember.parent();
+            int position = moduleMember.position();
+            MetadataNode metadataNode = ((TypeDefinitionNode) moduleMember).metadata().get();
+            NodeList nodeList = NodeFactory.createEmptyNodeList();
+            Token visibilityQualifier = null;
+            if (((TypeDefinitionNode) moduleMember).visibilityQualifier().isPresent()) {
+                visibilityQualifier = ((TypeDefinitionNode) moduleMember).visibilityQualifier().get();
+            }
+            Token typeKeyword = ((TypeDefinitionNode) moduleMember).typeKeyword();
+            Token typeName = ((TypeDefinitionNode) moduleMember).typeName();
+            for (Node node : recordDesc.fields()) {
+                if (node.kind() == SyntaxKind.RECORD_FIELD_WITH_DEFAULT_VALUE) {
+                    RecordFieldWithDefaultValueNode fieldNode = (RecordFieldWithDefaultValueNode) node;
+                    String fName = fieldNode.fieldName().text().trim();
+                    String fType = fieldNode.typeName().toSourceCode().trim();
+                    if (fType.contains(":")) {
+                        String[] sValues = fType.split(":");
+                        if (entityNames.contains(sValues[0])) {
+                            Optional<MetadataNode> fieldMetaData = ((RecordFieldWithDefaultValueNode) node).metadata();
+                            Token readOnlyKeyWord = null;
+                            if (((RecordFieldWithDefaultValueNode) node).readonlyKeyword().isPresent()) {
+                                readOnlyKeyWord = ((RecordFieldWithDefaultValueNode) node).readonlyKeyword().get();
+                            }
+                            ExpressionNode expressionNode = ((RecordFieldWithDefaultValueNode) node).expression();
+                            if (fieldMetaData.isPresent()) {
+                                nodeList = nodeList.add(NodeFactory.createRecordFieldWithDefaultValueNode(
+                                        fieldMetaData.get(),
+                                        readOnlyKeyWord,
+                                        TypeDescriptor.getBuiltinSimpleNameReferenceNode(sValues[1]),
+                                        AbstractNodeFactory.createIdentifierToken(fName),
+                                        SyntaxTreeConstants.SYNTAX_TREE_EQUAL,
+                                        expressionNode,
+                                        SyntaxTreeConstants.SYNTAX_TREE_SEMICOLON
+                                ));
+                            } else {
+                                nodeList = nodeList.add(NodeFactory.createRecordFieldWithDefaultValueNode(
+                                        null,
+                                        readOnlyKeyWord,
+                                        TypeDescriptor.getBuiltinSimpleNameReferenceNode(sValues[1]),
+                                        AbstractNodeFactory.createIdentifierToken(fName),
+                                        SyntaxTreeConstants.SYNTAX_TREE_EQUAL,
+                                        expressionNode,
+                                        SyntaxTreeConstants.SYNTAX_TREE_SEMICOLON
+                                ));
+                            }
+                        } else {
+                            nodeList = nodeList.add(node);
+                        }
+                    } else {
+                        nodeList = nodeList.add(node);
+                    }
+                } else if (node.kind() == SyntaxKind.RECORD_FIELD) {
+                    RecordFieldNode fieldNode = (RecordFieldNode) node;
+                    String fName = fieldNode.fieldName().text().trim();
+                    String fType = fieldNode.typeName().toSourceCode().trim();
+                    if (fType.contains(":")) {
+                        String[] sValues = fType.split(":");
+                        if (entityNames.contains(sValues[0])) {
+                            Optional<MetadataNode> fieldMetaData = ((RecordFieldNode) node).metadata();
+                            Token readOnlyKeyWord = null;
+                            Token questionMarkToken = null;
+                            if (((RecordFieldNode) node).readonlyKeyword().isPresent()) {
+                                readOnlyKeyWord = ((RecordFieldNode) node).readonlyKeyword().get();
+                            }
+                            if (((RecordFieldNode) node).questionMarkToken().isPresent()) {
+                                questionMarkToken = ((RecordFieldNode) node).questionMarkToken().get();
+                            }
+                            if (fieldMetaData.isPresent()) {
+                                nodeList = nodeList.add(NodeFactory.createRecordFieldNode(
+                                        fieldMetaData.get(),
+                                        readOnlyKeyWord,
+                                        TypeDescriptor.getBuiltinSimpleNameReferenceNode(sValues[1]),
+                                        AbstractNodeFactory.createIdentifierToken(fName),
+                                        questionMarkToken,
+                                        SyntaxTreeConstants.SYNTAX_TREE_SEMICOLON
+                                ));
+                            } else {
+                                nodeList = nodeList.add(NodeFactory.createRecordFieldNode(
+                                        null,
+                                        readOnlyKeyWord,
+                                        TypeDescriptor.getBuiltinSimpleNameReferenceNode(sValues[1]),
+                                        AbstractNodeFactory.createIdentifierToken(fName),
+                                        questionMarkToken,
+                                        SyntaxTreeConstants.SYNTAX_TREE_SEMICOLON
+                                ));
+                            }
+                        } else {
+                            nodeList = nodeList.add(node);
+                        }
+                    } else {
+                        nodeList = nodeList.add(node);
+                    }
+                }
+            }
+            RecordTypeDescriptorNode recordTypeDescriptorNode = NodeFactory.createRecordTypeDescriptorNode(
+                    SyntaxTreeConstants.SYNTAX_TREE_KEYWORD_RECORD,
+                    AbstractNodeFactory.createIdentifierToken("{|"),
+                    nodeList, null,
+                    AbstractNodeFactory.createIdentifierToken("|}")
+            );
+            TypeDefinitionNode modifiedEntity = NodeFactory.createTypeDefinitionNode(metadataNode, visibilityQualifier,
+                    typeKeyword, typeName,
+                    recordTypeDescriptorNode, SyntaxTreeConstants.SYNTAX_TREE_SEMICOLON);
+            retModuleMembers.add(modifiedEntity);
+        }
+
+    }
+
     private static Relation readMetaData(String entityName, String entityType, MetadataNode metaD) {
         NodeList<AnnotationNode> annotations = metaD.annotations();
         for (AnnotationNode annotation : annotations) {
