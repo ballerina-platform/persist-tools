@@ -18,7 +18,6 @@
 package io.ballerina.persist.objects;
 
 import java.util.ArrayList;
-import java.util.Optional;
 
 /**
  * Class to store entity relations.
@@ -37,9 +36,7 @@ public class Relation {
     private String refTable;
     private String relatedInstance;
     private boolean parentIncluded = false;
-    private Optional<String> relatedModule;
 
-    private String modulePrefix = "entities";
 
     public Relation(String relatedType, String relatedInstance, ArrayList<String> keyColumns,
                     ArrayList<String> references, boolean isChild) {
@@ -48,16 +45,6 @@ public class Relation {
         this.relatedType = relatedType;
         this.isChild = isChild;
         this.relatedInstance = relatedInstance;
-    }
-
-    public String getClientName() {
-        String className = relatedType;
-        if (relatedModule.isPresent()) {
-            className = relatedModule.get().substring(0, 1).toUpperCase() +
-                    relatedModule.get().substring(1)
-                    + relatedType;
-        }
-        return className;
     }
 
     public String getRefTable() {
@@ -95,10 +82,6 @@ public class Relation {
         return relatedFields;
     }
 
-    public Optional<String> getRelatedModule() {
-        return this.relatedModule;
-    }
-
     public void setRelatedFields(ArrayList<FieldMetaData> relatedFields) {
         this.relatedFields = relatedFields;
     }
@@ -107,24 +90,10 @@ public class Relation {
         return isChild;
     }
 
-    public void setRelatedModule(Optional<String> relatedModule) {
-        this.relatedModule = relatedModule;
-    }
-
     public boolean isParentIncluded() {
         return this.parentIncluded;
     }
     public void setParentIncluded(boolean parentIncluded) {
         this.parentIncluded = parentIncluded;
     }
-
-    public void setModulePrefix(String modulePrefix) {
-        this.modulePrefix = modulePrefix;
-    }
-
-    public String getModulePrefix() {
-        return this.modulePrefix;
-    }
-
-
 }
