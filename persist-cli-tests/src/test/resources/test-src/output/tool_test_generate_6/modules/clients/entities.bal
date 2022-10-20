@@ -18,6 +18,5 @@ public type DataType record {|
     time:Civil k1;
     time:Date l1;
     time:TimeOfDay m1;
-    anydata v1;
 |};
 

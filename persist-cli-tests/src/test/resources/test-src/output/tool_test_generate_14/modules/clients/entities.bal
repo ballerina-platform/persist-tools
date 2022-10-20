@@ -31,7 +31,6 @@ public type MultipleAssociations record {|
 
     @persist:Relation {keyColumns: ["profileId"], reference: ["id"]}
     Profile profile?;
-
     @persist:Relation {keyColumns: ["userId"], reference: ["id"]}
     User user?;
 |};
