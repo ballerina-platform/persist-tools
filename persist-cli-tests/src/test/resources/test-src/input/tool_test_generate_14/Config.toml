@@ -1,4 +1,4 @@
-[foo.tool_test_generate_14]
+[foo.tool_test_generate_14.clients]
 host = "localhost"
 port = 3307
 user = "root"
