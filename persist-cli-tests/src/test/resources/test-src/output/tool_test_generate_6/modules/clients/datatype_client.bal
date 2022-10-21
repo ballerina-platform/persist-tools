@@ -18,8 +18,7 @@ public client class DataTypeClient {
         j1: {columnName: "j1", 'type: time:Utc},
         k1: {columnName: "k1", 'type: time:Civil},
         l1: {columnName: "l1", 'type: time:Date},
-        m1: {columnName: "m1", 'type: time:TimeOfDay},
-        v1: {columnName: "v1", 'type: anydata}
+        m1: {columnName: "m1", 'type: time:TimeOfDay}
     };
     private string[] keyFields = ["a"];
 
@@ -35,7 +34,7 @@ public client class DataTypeClient {
 
     remote function create(DataType value) returns DataType|persist:Error {
         sql:ExecutionResult result = check self.persistClient.runInsertQuery(value);
-        return {a: <int>result.lastInsertId, b1: value.b1, c1: value.c1, d1: value.d1, e1: value.e1, f1: value.f1, j1: value.j1, k1: value.k1, l1: value.l1, m1: value.m1, v1: value.v1};
+        return {a: <int>result.lastInsertId, b1: value.b1, c1: value.c1, d1: value.d1, e1: value.e1, f1: value.f1, j1: value.j1, k1: value.k1, l1: value.l1, m1: value.m1};
     }
 
     remote function readByKey(int key) returns DataType|persist:Error {

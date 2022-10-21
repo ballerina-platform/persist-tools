@@ -39,6 +39,7 @@ public class ToolingDbPushTest {
     private static final String sqlVarchar = "VARCHAR";
     private static final String yes = "YES";
     private static final String no = "NO";
+    private static final String sqlDateTime = "DATETIME";
 
     @Test()
     @Description("Database is not available and it is created while running the db push command")
@@ -49,7 +50,7 @@ public class ToolingDbPushTest {
                         .addColumn(new PersistTableColumn("needId", sqlInt, yes, no))
                         .addColumn(new PersistTableColumn("itemId", sqlInt, no, no))
                         .addColumn(new PersistTableColumn("beneficiaryId", sqlInt, no, no))
-                        .addColumn(new PersistTableColumn("period", sqlVarchar, no, no))
+                        .addColumn(new PersistTableColumn("period", sqlDateTime, no, no))
                         .addColumn(new PersistTableColumn("urgency", sqlVarchar, no, no))
                         .addColumn(new PersistTableColumn("quantity", sqlInt, no, no))
         );
@@ -79,7 +80,7 @@ public class ToolingDbPushTest {
                         .addColumn(new PersistTableColumn("needId", sqlInt, yes, no))
                         .addColumn(new PersistTableColumn("itemId", sqlInt, no, no))
                         .addColumn(new PersistTableColumn("beneficiaryId", sqlInt, no, no))
-                        .addColumn(new PersistTableColumn("period", sqlVarchar, no, no))
+                        .addColumn(new PersistTableColumn("period", sqlDateTime, no, no))
                         .addColumn(new PersistTableColumn("urgency", sqlVarchar, no, no))
                         .addColumn(new PersistTableColumn("quantity", sqlInt, no, no))
         );
@@ -109,7 +110,7 @@ public class ToolingDbPushTest {
                         .addColumn(new PersistTableColumn("fooNeedId", sqlInt, yes, no))
                         .addColumn(new PersistTableColumn("fooItemId", sqlInt, no, no))
                         .addColumn(new PersistTableColumn("fooBeneficiaryId", sqlInt, no, no))
-                        .addColumn(new PersistTableColumn("period", sqlVarchar, no, no))
+                        .addColumn(new PersistTableColumn("period", sqlDateTime, no, no))
                         .addColumn(new PersistTableColumn("urgency", sqlInt, no, no))
                         .addColumn(new PersistTableColumn("foo", sqlInt, no, no))
         );
