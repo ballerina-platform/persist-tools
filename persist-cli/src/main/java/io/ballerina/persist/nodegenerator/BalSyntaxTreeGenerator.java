@@ -228,8 +228,8 @@ public class BalSyntaxTreeGenerator {
 
     public static SyntaxTree copyEntities(ArrayList<ModuleMemberDeclarationNode> entityMembers,
                                           ArrayList<ImportDeclarationNode> importArray) {
-        NodeList imports = AbstractNodeFactory.createEmptyNodeList();
-        NodeList moduleMembers = AbstractNodeFactory.createEmptyNodeList();
+        NodeList<ImportDeclarationNode> imports = AbstractNodeFactory.createEmptyNodeList();
+        NodeList<ModuleMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
         imports = imports.add(getImportDeclarationNode(BalFileConstants.KEYWORD_BALLERINA,
                 BalFileConstants.PERSIST));
         for (ImportDeclarationNode impDec : importArray) {
@@ -536,7 +536,7 @@ public class BalSyntaxTreeGenerator {
         Function execute = getExecuteMethod(entity, className);
         client.addMember(execute.getFunctionDefinitionNode(), true);
 
-        Function update = getUpdateMethod(entity, className);
+        Function update = getUpdateMethod(entity);
 
         client.addMember(update.getFunctionDefinitionNode(), true);
 
@@ -544,7 +544,7 @@ public class BalSyntaxTreeGenerator {
         Function delete = getDeleteMethod(entity);
         client.addMember(delete.getFunctionDefinitionNode(), true);
 
-        StringBuilder keyStringExist = new StringBuilder();
+        StringBuilder keyStringExist;
         if (keys.size() > 1) {
             keyStringExist = new StringBuilder();
             keyStringExist.append("{");
@@ -725,15 +725,16 @@ public class BalSyntaxTreeGenerator {
                 IfElse valueCheck = new IfElse(NodeParser.parseExpression(String.format(VALUE_TYPE_CHECK,
                         relation.getRelatedInstance(), relation.getRelatedType())));
                 valueCheck.addIfStatement(NodeParser.parseStatement(String.format(GET_NEW_CLIENT,
-                        relation.getClientName(), relation.getClientName().substring(0, 1).toLowerCase() +
-                                relation.getClientName().substring(1), relation.getClientName())));
+                        relation.getRelatedType(), relation.getRelatedType().substring(0, 1).toLowerCase() +
+                                relation.getRelatedType().substring(1), relation.getRelatedType())));
                 valueCheck.addIfStatement(NodeParser.parseStatement(String.format(CHECK_EXISTENCE,
-                        relation.getClientName().substring(0, 1).toLowerCase() + relation.getClientName().substring(1),
+                        relation.getRelatedType().substring(0, 1).toLowerCase() +
+                                relation.getRelatedType().substring(1),
                         relation.getRelatedType(), relation.getRelatedInstance())));
                 IfElse checkExistence = new IfElse(NodeParser.parseExpression(NOT_EXIST));
                 checkExistence.addIfStatement(NodeParser.parseStatement(String.format(CREATE_CLIENT,
-                        relation.getRelatedInstance(), relation.getClientName().substring(0, 1).toLowerCase()
-                                + relation.getClientName().substring(1), relation.getRelatedType(),
+                        relation.getRelatedInstance(), relation.getRelatedType().substring(0, 1).toLowerCase()
+                                + relation.getRelatedType().substring(1), relation.getRelatedType(),
                         relation.getRelatedInstance())));
                 valueCheck.addIfStatement(checkExistence.getIfElseStatementNode());
                 create.addIfElseStatement(valueCheck.getIfElseStatementNode());
@@ -778,12 +779,12 @@ public class BalSyntaxTreeGenerator {
         Function read = new Function(BalFileConstants.READ);
         read.addQualifiers(new String[]{BalFileConstants.KEYWORD_REMOTE});
         read.addReturns(TypeDescriptor.getStreamTypeDescriptorNode(
-                        TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()),
-                        TypeDescriptor.getOptionalTypeDescriptorNode(BalFileConstants.EMPTY_STRING,
-                                BalFileConstants.PERSIST_ERROR)));
+                TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()),
+                TypeDescriptor.getOptionalTypeDescriptorNode(BalFileConstants.EMPTY_STRING,
+                        BalFileConstants.PERSIST_ERROR)));
         if (inclusions) {
             read.addRequiredParameterWithDefault(NodeParser.parseTypeDescriptor(String.format(
-                            ENTITY_RELATIONS_ARRAY, entity.getNamePrefix(false) + entity.getEntityName())),
+                            ENTITY_RELATIONS_ARRAY, entity.getEntityName())),
                     INCLUDE, Function.Bracket.SQUARE);
             read.addStatement(NodeParser.parseStatement(String.format(BalFileConstants.READ_RUN_READ_QUERY_RELATED,
                     entity.getEntityName())));
@@ -808,11 +809,11 @@ public class BalSyntaxTreeGenerator {
         execute.addRequiredParameter(TypeDescriptor.getQualifiedNameReferenceNode(KEYWORD_SQL, "ParameterizedQuery"),
                 "filterClause");
         execute.addReturns(TypeDescriptor.getStreamTypeDescriptorNode(
-                        TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()),
-                        TypeDescriptor.getOptionalTypeDescriptorNode(BalFileConstants.EMPTY_STRING,
-                                BalFileConstants.PERSIST_ERROR)));
+                TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()),
+                TypeDescriptor.getOptionalTypeDescriptorNode(BalFileConstants.EMPTY_STRING,
+                        BalFileConstants.PERSIST_ERROR)));
         execute.addStatement(NodeParser.parseStatement(String.format(BalFileConstants.EXECUTE_RUN_EXECUTE_QUERY,
-                            entity.getEntityName())));
+                entity.getEntityName())));
 
         IfElse errorCheck = new IfElse(NodeParser.parseExpression(RESULT_IS_ERROR));
         errorCheck.addIfStatement(NodeParser.parseStatement(String.format(
@@ -825,20 +826,18 @@ public class BalSyntaxTreeGenerator {
         return execute;
     }
 
-    private static Function getUpdateMethod(Entity entity, String className) {
+    private static Function getUpdateMethod(Entity entity) {
         Function update = new Function(BalFileConstants.UPDATE);
         update.addQualifiers(new String[]{BalFileConstants.KEYWORD_REMOTE});
         update.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode(BalFileConstants.EMPTY_STRING,
                 BalFileConstants.PERSIST_ERROR));
         update.addStatement(NodeParser.parseStatement(BalFileConstants.UPDATE_RUN_UPDATE_QUERY));
         update.addRequiredParameter(TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()), "value");
-        boolean hasChildClient = false;
         if (!entity.getRelations().isEmpty()) {
             for (Relation relation : entity.getRelations()) {
                 if (relation.isChild()) {
                     continue;
                 }
-                hasChildClient = true;
                 IfElse typeCheck = new IfElse(NodeParser.parseExpression(String.format(RECORD_CHECK,
                         relation.getRelatedInstance())));
                 typeCheck.addIfStatement(NodeParser.parseStatement(String.format(GET_ENTITY_RECORD,
@@ -846,18 +845,18 @@ public class BalSyntaxTreeGenerator {
                                 .toLowerCase() + relation.getRelatedType().substring(1), relation.getRelatedType(),
                         relation.getRelatedInstance())));
                 typeCheck.addIfStatement(NodeParser.parseStatement(String.format(GET_ENTITY_CLIENT,
-                        relation.getClientName(), relation.getClientName().substring(0, 1)
-                                .toLowerCase() + relation.getClientName().substring(1), relation.getClientName())));
+                        relation.getRelatedType(), relation.getRelatedType().substring(0, 1)
+                                .toLowerCase() + relation.getRelatedType().substring(1), relation.getRelatedType())));
                 typeCheck.addIfStatement(NodeFactory.createExpressionStatementNode(SyntaxKind.ACTION_STATEMENT,
                         NodeFactory.createCheckExpressionNode(
                                 SyntaxKind.CHECK_ACTION,
                                 SyntaxTreeConstants.SYNTAX_TREE_KEYWORD_CHECK,
                                 NodeParser.parseActionOrExpression(String.format(CHECK_UPDATE_STATEMENT,
                                         relation.getRelatedType().substring(0, 1)
-                                        .toLowerCase() + relation.getRelatedType().substring(1),
+                                                .toLowerCase() + relation.getRelatedType().substring(1),
                                         relation.getRelatedType().substring(0, 1).toLowerCase() +
                                                 relation.getRelatedType().substring(1)
-                                        ))
+                                ))
                         ), SYNTAX_TREE_SEMICOLON));
                 update.addIfElseStatement(typeCheck.getIfElseStatementNode());
             }
@@ -980,75 +979,191 @@ public class BalSyntaxTreeGenerator {
                     relation.setRelatedType(relation.getRelatedType().split(":", 2)[1]);
                 }
                 int counter;
-                if (relation != null) {
-                    if (!relation.isChild()) {
-                        for (Entity childEntity : entityArray) {
-                            if (entity.getEntityName().equals(childEntity.getEntityName())) {
-                                continue;
+                if (!relation.isChild()) {
+                    for (Entity childEntity : entityArray) {
+                        if (entity.getEntityName().equals(childEntity.getEntityName())) {
+                            continue;
+                        }
+                        if (childEntity.getEntityName().equals(relation.getRelatedType())) {
+                            int relationIndex = childEntity.getRelations().size();
+                            childEntity.getRelations().add(relationIndex, new Relation(entity.getEntityName(), null,
+                                    new ArrayList<>(), new ArrayList<>(), true));
+                            childEntity.getRelations().get(relationIndex).setRefTable(entity.getTableName());
+                            relation.setRefTable(childEntity.getTableName());
+                            boolean childIncludesParentColumns = false;
+                            ArrayList<Integer> indexesToRemove = new ArrayList<>();
+                            for (FieldMetaData fieldMetaData : entity.getFields()) {
+                                if (fieldMetaData.getFieldType().contains(":")) {
+                                    if (entityNames.contains(fieldMetaData.getFieldType().split(":", 2)[1])) {
+                                        fieldMetaData.setFieldType(fieldMetaData.getFieldType().split(":", 2)[1]);
+                                    }
+                                }
+                                if (!fieldMetaData.getFieldType().equals(childEntity.getEntityName())) {
+                                    if (!entityNames.contains(fieldMetaData.getFieldType())) {
+                                        childEntity.getRelations().get(relationIndex).getRelatedFields()
+                                                .add(fieldMetaData);
+                                    }
+                                } else {
+                                    indexesToRemove.add(entity.getFields().indexOf(fieldMetaData));
+                                }
                             }
-                            if (childEntity.getEntityName().equals(relation.getRelatedType())) {
-                                int relationIndex = childEntity.getRelations().size();
-                                childEntity.getRelations().add(relationIndex, new Relation(entity.getEntityName(), null,
-                                        new ArrayList<>(), new ArrayList<>(), true));
-                                childEntity.getRelations().get(relationIndex).setRefTable(entity.getTableName());
-                                relation.setRefTable(childEntity.getTableName());
-                                boolean childIncludesParentColumns = false;
-                                ArrayList<Integer> indexesToRemove = new ArrayList<>();
-                                for (FieldMetaData fieldMetaData : entity.getFields()) {
-                                    if (fieldMetaData.getFieldType().contains(":")) {
-                                        if (entityNames.contains(fieldMetaData.getFieldType().split(":", 2)[1])) {
-                                            fieldMetaData.setFieldType(fieldMetaData.getFieldType().split(":", 2)[1]);
-                                        }
-                                    }
-                                    if (!fieldMetaData.getFieldType().equals(childEntity.getEntityName())) {
-                                        if (!entityNames.contains(fieldMetaData.getFieldType())) {
-                                            childEntity.getRelations().get(relationIndex).getRelatedFields()
-                                                    .add(fieldMetaData);
-                                        }
-                                    } else {
-                                        indexesToRemove.add(entity.getFields().indexOf(fieldMetaData));
+                            for (Integer index : indexesToRemove) {
+                                entity.getFields().remove(index.intValue());
+                            }
+                            indexesToRemove = new ArrayList<>();
+                            counter = 0;
+                            for (FieldMetaData fieldMetaData : childEntity.getFields()) {
+                                if (fieldMetaData.getFieldType().contains(":")) {
+                                    if (entityNames.contains(fieldMetaData.getFieldType().split(":", 2)[1])) {
+                                        fieldMetaData.setFieldType(fieldMetaData.getFieldType().split(":", 2)[1]);
                                     }
                                 }
-                                for (Integer index : indexesToRemove) {
-                                    entity.getFields().remove(index.intValue());
-                                }
-                                indexesToRemove = new ArrayList<>();
-                                counter = 0;
-                                for (FieldMetaData fieldMetaData : childEntity.getFields()) {
-                                    if (fieldMetaData.getFieldType().contains(":")) {
-                                        if (entityNames.contains(fieldMetaData.getFieldType().split(":", 2)[1])) {
-                                            fieldMetaData.setFieldType(fieldMetaData.getFieldType().split(":", 2)[1]);
-                                        }
+                                if (!fieldMetaData.getFieldType().equals(entity.getEntityName())) {
+                                    if (!entityNames.contains(fieldMetaData.getFieldType())) {
+                                        relation.getRelatedFields().add(counter, fieldMetaData);
+                                        counter += 1;
                                     }
-                                    if (!fieldMetaData.getFieldType().equals(entity.getEntityName())) {
-                                        if (!entityNames.contains(fieldMetaData.getFieldType())) {
-                                            relation.getRelatedFields().add(counter, fieldMetaData);
-                                            counter += 1;
-                                        }
-                                    } else {
-                                        childIncludesParentColumns = true;
-                                        childEntity.getRelations().get(relationIndex).setParentIncluded(true);
-                                        indexesToRemove.add(childEntity.getFields().indexOf(fieldMetaData));
-                                    }
-                                    if (fieldMetaData.getFieldType().equals(entity.getEntityName())) {
-                                        childEntity.getRelations().get(relationIndex).setRelatedInstance(
-                                                fieldMetaData.getFieldName());
-                                    }
+                                } else {
+                                    childIncludesParentColumns = true;
+                                    childEntity.getRelations().get(relationIndex).setParentIncluded(true);
+                                    indexesToRemove.add(childEntity.getFields().indexOf(fieldMetaData));
                                 }
-                                if (!childIncludesParentColumns) {
-                                    childEntity.getRelations().get(relationIndex).setRelatedFields(new ArrayList<>());
+                                if (fieldMetaData.getFieldType().equals(entity.getEntityName())) {
+                                    childEntity.getRelations().get(relationIndex).setRelatedInstance(
+                                            fieldMetaData.getFieldName());
                                 }
-                                for (Integer index : indexesToRemove) {
-                                    childEntity.getFields().remove(index.intValue());
-                                }
-                                relation.setRelatedModule(childEntity.getModule());
-                                childEntity.getRelations().get(relationIndex).setRelatedModule(entity.getModule());
+                            }
+                            if (!childIncludesParentColumns) {
+                                childEntity.getRelations().get(relationIndex).setRelatedFields(new ArrayList<>());
+                            }
+                            for (Integer index : indexesToRemove) {
+                                childEntity.getFields().remove(index.intValue());
                             }
                         }
                     }
                 }
             }
         }
+    }
+
+    public static ArrayList<ModuleMemberDeclarationNode> formatModuleMembers(
+            ArrayList<ModuleMemberDeclarationNode> moduleMembers, ArrayList<Entity> entities) {
+        ArrayList<String> entityNames = new ArrayList<>();
+        ArrayList<ModuleMemberDeclarationNode> retModuleMembers = new ArrayList<>();
+        for (Entity entity : entities) {
+            entityNames.add(entity.getEntityName());
+        }
+        for (ModuleMemberDeclarationNode moduleMember : moduleMembers) {
+            RecordTypeDescriptorNode recordDesc = (RecordTypeDescriptorNode) ((TypeDefinitionNode) moduleMember)
+                    .typeDescriptor();
+            MetadataNode metadataNode = null;
+            if (((TypeDefinitionNode) moduleMember).metadata().isPresent()) {
+                metadataNode = ((TypeDefinitionNode) moduleMember).metadata().get();
+            }
+            NodeList<Node> nodeList = NodeFactory.createEmptyNodeList();
+            Token visibilityQualifier = null;
+            if (((TypeDefinitionNode) moduleMember).visibilityQualifier().isPresent()) {
+                visibilityQualifier = ((TypeDefinitionNode) moduleMember).visibilityQualifier().get();
+            }
+            Token typeKeyword = ((TypeDefinitionNode) moduleMember).typeKeyword();
+            Token typeName = ((TypeDefinitionNode) moduleMember).typeName();
+            for (Node node : recordDesc.fields()) {
+                if (node.kind() == SyntaxKind.RECORD_FIELD_WITH_DEFAULT_VALUE) {
+                    RecordFieldWithDefaultValueNode fieldNode = (RecordFieldWithDefaultValueNode) node;
+                    String fName = fieldNode.fieldName().text().trim();
+                    String fType = fieldNode.typeName().toSourceCode().trim();
+                    if (fType.contains(":")) {
+                        String[] sValues = fType.split(":");
+                        if (entityNames.contains(sValues[1])) {
+                            Optional<MetadataNode> fieldMetaData = ((RecordFieldWithDefaultValueNode) node).metadata();
+                            Token readOnlyKeyWord = null;
+                            if (((RecordFieldWithDefaultValueNode) node).readonlyKeyword().isPresent()) {
+                                readOnlyKeyWord = ((RecordFieldWithDefaultValueNode) node).readonlyKeyword().get();
+                            }
+                            ExpressionNode expressionNode = ((RecordFieldWithDefaultValueNode) node).expression();
+                            if (fieldMetaData.isPresent()) {
+                                nodeList = nodeList.add(NodeFactory.createRecordFieldWithDefaultValueNode(
+                                        fieldMetaData.get(),
+                                        readOnlyKeyWord,
+                                        TypeDescriptor.getBuiltinSimpleNameReferenceNode(sValues[1]),
+                                        AbstractNodeFactory.createIdentifierToken(fName),
+                                        SyntaxTreeConstants.SYNTAX_TREE_EQUAL,
+                                        expressionNode,
+                                        SyntaxTreeConstants.SYNTAX_TREE_SEMICOLON
+                                ));
+                            } else {
+                                nodeList = nodeList.add(NodeFactory.createRecordFieldWithDefaultValueNode(
+                                        null,
+                                        readOnlyKeyWord,
+                                        TypeDescriptor.getBuiltinSimpleNameReferenceNode(sValues[1]),
+                                        AbstractNodeFactory.createIdentifierToken(fName),
+                                        SyntaxTreeConstants.SYNTAX_TREE_EQUAL,
+                                        expressionNode,
+                                        SyntaxTreeConstants.SYNTAX_TREE_SEMICOLON
+                                ));
+                            }
+                        } else {
+                            nodeList = nodeList.add(node);
+                        }
+                    } else {
+                        nodeList = nodeList.add(node);
+                    }
+                } else if (node.kind() == SyntaxKind.RECORD_FIELD) {
+                    RecordFieldNode fieldNode = (RecordFieldNode) node;
+                    String fName = fieldNode.fieldName().text().trim();
+                    String fType = fieldNode.typeName().toSourceCode().trim();
+                    if (fType.contains(":")) {
+                        String[] sValues = fType.split(":");
+                        if (entityNames.contains(sValues[1])) {
+                            Optional<MetadataNode> fieldMetaData = ((RecordFieldNode) node).metadata();
+                            Token readOnlyKeyWord = null;
+                            Token questionMarkToken = null;
+                            if (((RecordFieldNode) node).readonlyKeyword().isPresent()) {
+                                readOnlyKeyWord = ((RecordFieldNode) node).readonlyKeyword().get();
+                            }
+                            if (((RecordFieldNode) node).questionMarkToken().isPresent()) {
+                                questionMarkToken = ((RecordFieldNode) node).questionMarkToken().get();
+                            }
+                            if (fieldMetaData.isPresent()) {
+                                nodeList = nodeList.add(NodeFactory.createRecordFieldNode(
+                                        fieldMetaData.get(),
+                                        readOnlyKeyWord,
+                                        TypeDescriptor.getBuiltinSimpleNameReferenceNode(sValues[1]),
+                                        AbstractNodeFactory.createIdentifierToken(fName),
+                                        questionMarkToken,
+                                        SyntaxTreeConstants.SYNTAX_TREE_SEMICOLON
+                                ));
+                            } else {
+                                nodeList = nodeList.add(NodeFactory.createRecordFieldNode(
+                                        null,
+                                        readOnlyKeyWord,
+                                        TypeDescriptor.getBuiltinSimpleNameReferenceNode(sValues[1]),
+                                        AbstractNodeFactory.createIdentifierToken(fName),
+                                        questionMarkToken,
+                                        SyntaxTreeConstants.SYNTAX_TREE_SEMICOLON
+                                ));
+                            }
+                        } else {
+                            nodeList = nodeList.add(node);
+                        }
+                    } else {
+                        nodeList = nodeList.add(node);
+                    }
+                }
+            }
+            RecordTypeDescriptorNode recordTypeDescriptorNode = NodeFactory.createRecordTypeDescriptorNode(
+                    SyntaxTreeConstants.SYNTAX_TREE_KEYWORD_RECORD,
+                    AbstractNodeFactory.createIdentifierToken("{|"),
+                    nodeList, null,
+                    AbstractNodeFactory.createIdentifierToken("|}")
+            );
+            TypeDefinitionNode modifiedEntity = NodeFactory.createTypeDefinitionNode(metadataNode, visibilityQualifier,
+                    typeKeyword, typeName,
+                    recordTypeDescriptorNode, SyntaxTreeConstants.SYNTAX_TREE_SEMICOLON);
+            retModuleMembers.add(modifiedEntity);
+        }
+        return retModuleMembers;
+
     }
 
     private static Relation readMetaData(String entityName, String entityType, MetadataNode metaD) {
@@ -1102,4 +1217,3 @@ public class BalSyntaxTreeGenerator {
         return new Relation(entityType, entityName, new ArrayList<>(), new ArrayList<>(), false);
     }
 }
-
