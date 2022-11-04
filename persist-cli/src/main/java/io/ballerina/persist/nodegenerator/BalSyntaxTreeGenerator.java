@@ -1051,7 +1051,7 @@ public class BalSyntaxTreeGenerator {
                                         }
                                     }
                                 } else {
-                                    if (entityNames.contains(fieldMetaData.getFieldType())) {
+                                    if (entityNames.contains(fieldMetaData.getFieldType().replaceAll("\\[\\]", ""))) {
                                         if (fieldMetaData.getIsArrayType()) {
                                             relation.relationType = Relation.RelationType.MANY;
                                         }
@@ -1059,7 +1059,7 @@ public class BalSyntaxTreeGenerator {
                                 }
                                 if (!fieldMetaData.getFieldType().replaceAll("\\[\\]", "").
                                         equals(childEntity.getEntityName())) {
-                                    if (!entityNames.contains(fieldMetaData.getFieldType())) {
+                                    if (!entityNames.contains(fieldMetaData.getFieldType().replaceAll("\\[\\]", ""))) {
                                         childEntity.getRelations().get(relationIndex).getRelatedFields()
                                                 .add(fieldMetaData);
                                     }
@@ -1085,7 +1085,7 @@ public class BalSyntaxTreeGenerator {
 
                                 if (!fieldMetaData.getFieldType().replaceAll("\\[\\]", "")
                                         .equals(entity.getEntityName())) {
-                                    if (!entityNames.contains(fieldMetaData.getFieldType())) {
+                                    if (!entityNames.contains(fieldMetaData.getFieldType().replaceAll("\\[\\]", ""))) {
                                         relation.getRelatedFields().add(counter, fieldMetaData);
                                         counter += 1;
                                     }
