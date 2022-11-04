@@ -1093,14 +1093,11 @@ public class BalSyntaxTreeGenerator {
                                     childIncludesParentColumns = true;
                                     childEntity.getRelations().get(relationIndex).setParentIncluded(true);
                                     indexesToRemove.add(childEntity.getFields().indexOf(fieldMetaData));
-                                }
-                                if (fieldMetaData.getFieldType().replaceAll("\\[\\]", "")
-                                        .equals(entity.getEntityName())) {
                                     childEntity.getRelations().get(relationIndex).setRelatedInstance(
                                             fieldMetaData.getFieldName());
                                     if (fieldMetaData.getIsArrayType()) {
                                         childEntity.getRelations().get(relationIndex).relationType =
-                                                    Relation.RelationType.MANY;
+                                                Relation.RelationType.MANY;
                                     }
                                 }
                             }
