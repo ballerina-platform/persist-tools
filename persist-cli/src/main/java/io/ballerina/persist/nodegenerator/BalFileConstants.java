@@ -61,6 +61,9 @@ public class BalFileConstants {
 
     public static final String FIELD_FORMAT_JOIN_FIELD =
             "{entity: %s, fieldName: \"%s\", refTable: \"%s\", refFields: [\"%s\"], joinColumns: [\"%s\"]}";
+    public static final String FIELD_FORMAT_JOIN_FIELD_MANY =
+            "{entity: %s, fieldName: \"%s\", refTable: \"%s\", refFields: [\"%s\"], joinColumns: [\"%s\"]," +
+                    " 'type: persist:MANY}";
     public static final String FIELD_FORMAT_RELATED_PARENT_FIELD = "{columnName: \"%s\", 'type: %s, relation: " +
             "{entityName: \"%s\", refTable: \"%s\", refField: \"%s\"}}";
     public static final String FIELD_FORMAT_RELATED_PARENT_FIELD_WOUT_COLUMN_NAME = "{'type: %s, relation: " +
@@ -131,8 +134,9 @@ public class BalFileConstants {
     public static final String RECORD_FIELD_VALUE = "%s: value.%s";
     public static final String KEYWORD_BALLERINA = "ballerina";
     public static final String KEYWORD_VALUE = "value";
+    public static final String KEYWORD_SQL_CLIENT = "persist:SQLClient";
+    public static final String KEYWORD_PERSIST_CLIENT = "persistClient";
     public static final String KEYWORD_SQL = "sql";
-
     public static final String KEYWORD_BALLERINAX = "ballerinax";
     public static final String KEYWORD_PRIVATE = "private";
     public static final String KEYWORD_CLIENT = "client";
@@ -170,6 +174,10 @@ public class BalFileConstants {
     public static final String CHECK_UPDATE_STATEMENT = "%sClient->update(%sEntity)";
     public static final String ANYDATA_STREAM_STATEMENT = "private stream<anydata, sql:Error?>? anydataStream;";
     public static final String NULLABLE_ERROR_STATEMENT = "private persist:Error? err;";
+    public static final String DEFILE_INCLUDE_MANY = "private %sRelations[]? include;";
+    public static final String DEFINE_PERSIST_CLIENTS_MANY = "private persist:SQLClient? persistClient;";
+    public static final String INIT_PERSIST_CLIENT_MANY = "self.persistClient = persistClient;";
+    public static final String INIT_INCLUDE_MANY = "self.include = include;";
     public static final String SELF_ERR = "self.err = err;";
 
     public static final String ANYDATA_KETWORD = "anydataStream";
@@ -182,9 +190,14 @@ public class BalFileConstants {
     public static final String ANYDATA_STREAM_NEXT = "var streamValue = anydataStream.next();";
     public static final String RESULT_IS_ERROR = "result is persist:Error";
     public static final String EXTENSION_BAL = ".bal";
+
+    public static final String VAR_ENTITY_RELATION = "%sRelations[]";
     public static final String NULLABLE_ANYDATA_STREAM_TYPE = "stream<anydata, sql:Error?>?";
     public static final String IS_SQL_ERROR = "e is sql:Error";
     public static final String RETURN_PERSIST_ERROR_CLOSE_STREAM = "return <persist:Error>error(e.message());";
     public static final String DB_CLIENT_IS_DB_CLIENT = "dbClient is sql:Error";
     public static final String RETURN_PERSIST_ERROR_FROM_DBCLIENT = "return <persist:Error>error(dbClient.message());";
+    public static final String GET_MANY_RELATIONS = "check " +
+            "(<persist:SQLClient>self.persistClient).getManyRelations(nextRecord.value," +
+            " <%sRelations[]>self.include);";
 }
