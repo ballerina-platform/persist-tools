@@ -20,6 +20,7 @@ package io.ballerina.persist.nodegenerator;
 
 import io.ballerina.compiler.syntax.tree.AbstractNodeFactory;
 import io.ballerina.compiler.syntax.tree.AnnotationNode;
+import io.ballerina.compiler.syntax.tree.ArrayTypeDescriptorNode;
 import io.ballerina.compiler.syntax.tree.BasicLiteralNode;
 import io.ballerina.compiler.syntax.tree.ExpressionNode;
 import io.ballerina.compiler.syntax.tree.IdentifierToken;
@@ -201,7 +202,15 @@ public class BalSyntaxTreeGenerator {
                 if (node.kind() == SyntaxKind.RECORD_FIELD_WITH_DEFAULT_VALUE) {
                     RecordFieldWithDefaultValueNode fieldNode = (RecordFieldWithDefaultValueNode) node;
                     String fName = fieldNode.fieldName().text().trim();
-                    String fType = fieldNode.typeName().toSourceCode().trim();
+                    String fType;
+                    if (fieldNode.typeName().kind().equals(SyntaxKind.ARRAY_TYPE_DESC)) {
+                        ArrayTypeDescriptorNode arrayTypeDescriptorNode = (ArrayTypeDescriptorNode)
+                                fieldNode.typeName();
+                        fType = arrayTypeDescriptorNode.memberTypeDesc().toSourceCode().trim();
+
+                    } else {
+                        fType = fieldNode.typeName().toSourceCode().trim();
+                    }
                     FieldMetaData field;
                     if (((RecordFieldWithDefaultValueNode) node).metadata().isEmpty()) {
                         field = new FieldMetaData(fName, fType, false);
@@ -220,7 +229,15 @@ public class BalSyntaxTreeGenerator {
                 } else if (node.kind() == SyntaxKind.RECORD_FIELD) {
                     RecordFieldNode fieldNode = (RecordFieldNode) node;
                     String fName = fieldNode.fieldName().text().trim();
-                    String fType = fieldNode.typeName().toSourceCode().trim();
+                    String fType;
+                    if (fieldNode.typeName().kind().equals(SyntaxKind.ARRAY_TYPE_DESC)) {
+                        ArrayTypeDescriptorNode arrayTypeDescriptorNode = (ArrayTypeDescriptorNode)
+                                fieldNode.typeName();
+                        fType = arrayTypeDescriptorNode.memberTypeDesc().toSourceCode().trim();
+
+                    } else {
+                        fType = fieldNode.typeName().toSourceCode().trim();
+                    }
                     FieldMetaData field;
                     if (((RecordFieldNode) node).metadata().isEmpty()) {
                         field = new FieldMetaData(fName, fType, false);
@@ -1043,23 +1060,21 @@ public class BalSyntaxTreeGenerator {
                             ArrayList<Integer> indexesToRemove = new ArrayList<>();
                             for (FieldMetaData fieldMetaData : entity.getFields()) {
                                 if (fieldMetaData.getFieldType().contains(":")) {
-                                    if (entityNames.contains(fieldMetaData.getFieldType().split(":", 2)[1]
-                                            .replaceAll("\\[\\]", ""))) {
+                                    if (entityNames.contains(fieldMetaData.getFieldType().split(":", 2)[1])) {
                                         fieldMetaData.setFieldType(fieldMetaData.getFieldType().split(":", 2)[1]);
                                         if (fieldMetaData.getIsArrayType()) {
                                             relation.relationType = Relation.RelationType.MANY;
                                         }
                                     }
                                 } else {
-                                    if (entityNames.contains(fieldMetaData.getFieldType().replaceAll("\\[\\]", ""))) {
+                                    if (entityNames.contains(fieldMetaData.getFieldType())) {
                                         if (fieldMetaData.getIsArrayType()) {
                                             relation.relationType = Relation.RelationType.MANY;
                                         }
                                     }
                                 }
-                                if (!fieldMetaData.getFieldType().replaceAll("\\[\\]", "").
-                                        equals(childEntity.getEntityName())) {
-                                    if (!entityNames.contains(fieldMetaData.getFieldType().replaceAll("\\[\\]", ""))) {
+                                if (!fieldMetaData.getFieldType().equals(childEntity.getEntityName())) {
+                                    if (!entityNames.contains(fieldMetaData.getFieldType())) {
                                         childEntity.getRelations().get(relationIndex).getRelatedFields()
                                                 .add(fieldMetaData);
                                     }
@@ -1083,9 +1098,8 @@ public class BalSyntaxTreeGenerator {
                                     }
                                 }
 
-                                if (!fieldMetaData.getFieldType().replaceAll("\\[\\]", "")
-                                        .equals(entity.getEntityName())) {
-                                    if (!entityNames.contains(fieldMetaData.getFieldType().replaceAll("\\[\\]", ""))) {
+                                if (!fieldMetaData.getFieldType().equals(entity.getEntityName())) {
+                                    if (!entityNames.contains(fieldMetaData.getFieldType())) {
                                         relation.getRelatedFields().add(counter, fieldMetaData);
                                         counter += 1;
                                     }
