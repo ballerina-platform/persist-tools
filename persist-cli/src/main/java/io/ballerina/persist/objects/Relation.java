@@ -32,7 +32,8 @@ public class Relation {
      */
     public enum RelationType {
         MANY,
-        ONE
+        ONE,
+        NONE
     }
 
     private final ArrayList<String> keyColumns;

@@ -19,7 +19,7 @@
 package io.ballerina.persist.objects;
 
 /**
- * Exception for ballerina file generation.
+ * Exception for ballerina client generation.
  *
  * @since 0.1.0
  */
