@@ -188,11 +188,9 @@ public class GeneratedSourcesTestUtils {
 
             for (Path p : listFiles(dir1)) {
                 dir1Paths.put(dir1.relativize(p), p);
-
             }
             for (Path p : listFiles(dir2)) {
                 dir2Paths.put(dir2.relativize(p), p);
-
             }
             if (dir1Paths.size() != dir2Paths.size()) {
                 errStream.println("files in directories doesn't match");

@@ -13,8 +13,6 @@ public client class UserClient {
     };
     private string[] keyFields = ["id"];
 
-    private final map<persist:JoinMetadata> joinMetadata = {};
-
     private persist:SQLClient persistClient;
 
     public function init() returns persist:Error? {
@@ -22,7 +20,7 @@ public client class UserClient {
         if dbClient is sql:Error {
             return <persist:Error>error(dbClient.message());
         }
-        self.persistClient = check new (dbClient, self.entityName, self.tableName, self.keyFields, self.fieldMetadata, self.joinMetadata);
+        self.persistClient = check new (dbClient, self.entityName, self.tableName, self.keyFields, self.fieldMetadata);
     }
 
     remote function create(User value) returns User|persist:Error {

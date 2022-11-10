@@ -15,7 +15,7 @@ public client class CompanyClient {
     };
     private string[] keyFields = ["id"];
 
-    private final map<persist:JoinMetadata> joinMetadata = {employee: {entity: Employee, fieldName: "employee", refTable: "Employees", refFields: [""], joinColumns: [""], 'type: persist:MANY}};
+    private final map<persist:JoinMetadata> joinMetadata = {employee: {entity: Employee, fieldName: "employee", refTable: "Employees", refFields: ["id"], joinColumns: ["employeeId"], 'type: persist:MANY}};
 
     private persist:SQLClient persistClient;
 

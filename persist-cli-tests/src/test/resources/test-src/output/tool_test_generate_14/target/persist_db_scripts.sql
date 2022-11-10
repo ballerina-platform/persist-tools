@@ -1,5 +1,7 @@
 DROP TABLE IF EXISTS MultipleAssociations;
 
+DROP TABLE IF EXISTS Profiles;
+
 DROP TABLE IF EXISTS Users;
 CREATE TABLE Users (
 	id INT NOT NULL,
@@ -7,8 +9,6 @@ CREATE TABLE Users (
 	PRIMARY KEY(id)
 );
 
-
-DROP TABLE IF EXISTS Profiles;
 CREATE TABLE Profiles (
 	id INT NOT NULL,
 	name VARCHAR(191) NOT NULL,
