@@ -158,7 +158,7 @@ public class BalSyntaxTreeGenerator {
     /**
      * method to read ballerina files.
      */
-    public static EntityMetaData getEntityRecord(Path filePath, Optional<String> module)
+    public static EntityMetaData getEntityRecord(Path filePath)
             throws IOException {
         ArrayList<Entity> entityArray = new ArrayList<>();
         ArrayList<ModuleMemberDeclarationNode> entityMembers = new ArrayList<>();
@@ -211,7 +211,7 @@ public class BalSyntaxTreeGenerator {
                                     .replaceAll(BalFileConstants.DOUBLE_QUOTE, BalFileConstants.EMPTY_STRING);
                         }
                     }
-                    entityArray.add(index, new Entity(getArray(keys), tableName, module));
+                    entityArray.add(index, new Entity(getArray(keys), tableName));
                 }
             }
 
@@ -435,14 +435,15 @@ public class BalSyntaxTreeGenerator {
                                                     + System.lineSeparator(), NodeFactory.createEmptyMinutiaeList(),
                                             NodeFactory.createEmptyMinutiaeList())));
                         }
-                        String seperator = FIELD_ACCESSS_STRING;
+                        String fieldAccesssString = FIELD_ACCESSS_STRING;
                         if (relation.relationType == Relation.RelationType.MANY) {
-                            seperator = ARRAY_TYPE_STRING + FIELD_ACCESSS_STRING;
+                            fieldAccesssString = ARRAY_TYPE_STRING + FIELD_ACCESSS_STRING;
                             manyRelation = true;
                         }
                         subFields.add(NodeFactory.createSpecificFieldNode(null,
                                 AbstractNodeFactory.createIdentifierToken(BalFileConstants.DOUBLE_QUOTE +
-                                        relation.getRelatedInstance() + seperator + fieldMetaData.getFieldName() +
+                                        relation.getRelatedInstance() + fieldAccesssString + fieldMetaData.
+                                        getFieldName() +
                                         BalFileConstants.DOUBLE_QUOTE), SyntaxTreeConstants.SYNTAX_TREE_COLON,
                                 NodeParser.parseExpression(String.format(
                                         BalFileConstants.FIELD_FORMAT_RELATED_CHILD_FIELD,
