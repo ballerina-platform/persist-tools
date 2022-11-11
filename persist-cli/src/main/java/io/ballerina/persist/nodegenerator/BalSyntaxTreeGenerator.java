@@ -238,7 +238,7 @@ public class BalSyntaxTreeGenerator {
                         MetadataNode fieldMetaD = ((RecordFieldWithDefaultValueNode) node).metadata().get();
                         Relation relation = readMetaData(fName, fType, fieldMetaD);
                         field = new FieldMetaData(fName, fType, checkAutoIncrement(fieldMetaD));
-                        if (!(relation.getKeyColumns() == null) && !(relation.getReferences() == null)) {
+                        if (relation.getKeyColumns() != null && relation.getReferences() != null) {
                             entityArray.get(index).getRelations().add(relation);
                         }
                     }
@@ -265,7 +265,7 @@ public class BalSyntaxTreeGenerator {
                         MetadataNode fieldMetaD = ((RecordFieldNode) node).metadata().get();
                         Relation relation = readMetaData(fName, fType, fieldMetaD);
                         field = new FieldMetaData(fName, fType, checkAutoIncrement(fieldMetaD));
-                        if (!(relation.getKeyColumns() == null) && !(relation.getReferences() == null)) {
+                        if (relation.getKeyColumns() != null && relation.getReferences() != null) {
                             entityArray.get(index).getRelations().add(relation);
                             field.setIsRelationType(Relation.RelationType.ONE);
                         }
@@ -1106,8 +1106,7 @@ public class BalSyntaxTreeGenerator {
                             for (FieldMetaData fieldMetaData : entity.getFields()) {
                                 if (fieldMetaData.getFieldType().contains(COLON)) {
                                     if (entityNames.contains(fieldMetaData.getFieldType().split(COLON, 2)[1])) {
-                                        fieldMetaData.setFieldType(fieldMetaData.getFieldType().split(COLON,
-                                                2)[1]);
+                                        fieldMetaData.setFieldType(fieldMetaData.getFieldType().split(COLON, 2)[1]);
                                         if (fieldMetaData.getRelationType().equals(Relation.RelationType.MANY)) {
                                             relation.relationType = Relation.RelationType.MANY;
                                         } else {
