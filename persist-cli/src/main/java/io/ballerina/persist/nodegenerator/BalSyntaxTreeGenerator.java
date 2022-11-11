@@ -1085,8 +1085,7 @@ public class BalSyntaxTreeGenerator {
                             for (FieldMetaData fieldMetaData : entity.getFields()) {
                                 if (fieldMetaData.getFieldType().contains(COLON)) {
                                     if (entityNames.contains(fieldMetaData.getFieldType().split(COLON, 2)[1])) {
-                                        fieldMetaData.setFieldType(fieldMetaData.getFieldType().split(COLON,
-                                                2)[1]);
+                                        fieldMetaData.setFieldType(fieldMetaData.getFieldType().split(COLON, 2)[1]);
                                         if (fieldMetaData.getRelationType().equals(Relation.RelationType.MANY)) {
                                             relation.relationType = Relation.RelationType.MANY;
                                         } else {
