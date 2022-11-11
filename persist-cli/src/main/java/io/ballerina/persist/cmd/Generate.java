@@ -35,7 +35,6 @@ import org.ballerinalang.formatter.core.Formatter;
 import org.ballerinalang.formatter.core.FormatterException;
 import picocli.CommandLine;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
@@ -44,10 +43,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -85,8 +81,6 @@ public class Generate implements BLauncherCmd {
 
     String name;
 
-    boolean isTime = false;
-
     @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
     private boolean helpFlag;
 
@@ -118,12 +112,12 @@ public class Generate implements BLauncherCmd {
                     entity.setPackageName(balProject.currentPackage().descriptor().org().value() + "/"
                             + balProject.currentPackage().descriptor().name().value());
                     generateClientBalFile(entity, imports);
-                    outStream.println(String.format("Generated Ballerina client file for entity %s, " +
-                            "inside clients sub module.", entity.getEntityName()));
+                    outStream.printf("Generated Ballerina client file for entity %s, " +
+                            "inside clients sub module.%n", entity.getEntityName());
                 }
                 generateConfigurationBalFile();
                 outStream.println("Created database_configurations.bal");
-                copyEntities(entityArray, returnModuleMembers, imports);
+                copyEntities(returnModuleMembers, imports);
                 outStream.println("Created entities.bal");
             }
         } catch (Exception e) {
@@ -176,14 +170,7 @@ public class Generate implements BLauncherCmd {
                 for (Path filePath : fileList) {
                     if (filePath.toString().endsWith(EXTENSION_BAL) &&
                             !filePath.toAbsolutePath().equals(clientEntitiesPath)) {
-                        String[] pathElements = filePath.toString().strip().split(Pattern.quote(File.separator));
-                        Optional<String> module = Optional.empty();
-                        String[] dirElements = this.sourcePath.split(Pattern.quote(File.separator));
-                        if (pathElements.length > 2 && !Arrays.asList(dirElements).contains(pathElements[
-                                pathElements.length - 2])) {
-                            module = Optional.of(pathElements[pathElements.length - 2]);
-                        }
-                        EntityMetaData retEntityMetaData = BalSyntaxTreeGenerator.getEntityRecord(filePath, module);
+                        EntityMetaData retEntityMetaData = BalSyntaxTreeGenerator.getEntityRecord(filePath);
                         ArrayList<Entity> retData = retEntityMetaData.entityArray;
                         ArrayList<ModuleMemberDeclarationNode> retMembers = retEntityMetaData.moduleMembersArray;
                         if (retData.size() != 0) {
@@ -227,7 +214,7 @@ public class Generate implements BLauncherCmd {
         }
     }
 
-    private void copyEntities(ArrayList<Entity> entityArray, ArrayList<ModuleMemberDeclarationNode> moduleMembers,
+    private void copyEntities(ArrayList<ModuleMemberDeclarationNode> moduleMembers,
                               ArrayList<ImportDeclarationNode> importArray)
             throws BalException {
         SyntaxTree copiedEntitiesTree = BalSyntaxTreeGenerator.copyEntities(moduleMembers, importArray);

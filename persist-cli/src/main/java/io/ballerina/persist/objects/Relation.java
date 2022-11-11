@@ -27,6 +27,15 @@ import java.util.ArrayList;
 
 public class Relation {
 
+    /**
+     * Represents persist relation type.
+     */
+    public enum RelationType {
+        MANY,
+        ONE,
+        NONE
+    }
+
     private final ArrayList<String> keyColumns;
     private final ArrayList<String> references;
 
@@ -36,6 +45,7 @@ public class Relation {
     private String refTable;
     private String relatedInstance;
     private boolean parentIncluded = false;
+    public RelationType relationType = RelationType.ONE;
 
 
     public Relation(String relatedType, String relatedInstance, ArrayList<String> keyColumns,

@@ -18,8 +18,6 @@
 package io.ballerina.persist.objects;
 
 import java.util.ArrayList;
-import java.util.Optional;
-
 /**
  * Class to store persist entities.
  *
@@ -27,7 +25,6 @@ import java.util.Optional;
  */
 public class Entity {
 
-    private final Optional<String> module;
     private final String[] keys;
     private String tableName;
 
@@ -38,11 +35,10 @@ public class Entity {
     private ArrayList<Relation> relations = new ArrayList<>();
 
     private final ArrayList<FieldMetaData> fields = new ArrayList<>();
-    public Entity(String[] keys, String tableName, Optional<String> module) {
+    public Entity(String[] keys, String tableName) {
 
         this.keys = keys;
         this.tableName = tableName;
-        this.module = module;
     }
 
     public String[] getKeys() {
@@ -57,10 +53,6 @@ public class Entity {
     }
     public void setTableName(String tableName) {
         this.tableName = tableName;
-    }
-
-    public Optional<String> getModule() {
-        return this.module;
     }
 
     public void setPackageName(String packageName) {
