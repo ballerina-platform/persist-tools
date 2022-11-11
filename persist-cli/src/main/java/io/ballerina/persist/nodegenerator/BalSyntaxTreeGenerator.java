@@ -238,7 +238,7 @@ public class BalSyntaxTreeGenerator {
                         MetadataNode fieldMetaD = ((RecordFieldWithDefaultValueNode) node).metadata().get();
                         Relation relation = readMetaData(fName, fType, fieldMetaD);
                         field = new FieldMetaData(fName, fType, checkAutoIncrement(fieldMetaD));
-                        if (!(relation.getKeyColumns() == null) && !(relation.getReferences() == null)) {
+                        if (relation.getKeyColumns() != null && relation.getReferences() != null) {
                             entityArray.get(index).getRelations().add(relation);
                         }
                     }
