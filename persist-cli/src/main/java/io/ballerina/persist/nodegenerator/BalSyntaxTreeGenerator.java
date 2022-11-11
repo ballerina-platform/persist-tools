@@ -585,7 +585,7 @@ public class BalSyntaxTreeGenerator {
                         BalFileConstants.PERSIST_CLIENT),
                 true);
 
-        Function init = getInitMethod(entity, joinSubFields);
+        Function init = getInitMethod(joinSubFields);
         client.addMember(init.getFunctionDefinitionNode(), true);
         Function create = getCreateMethod(entity, joinSubFields, keys, keyAutoInc, keyType);
         client.addMember(create.getFunctionDefinitionNode(), true);
@@ -732,7 +732,7 @@ public class BalSyntaxTreeGenerator {
         return clientStream;
     }
 
-    private static Function getInitMethod(Entity entity, List<Node> joinSubFields) {
+    private static Function getInitMethod(List<Node> joinSubFields) {
         Function init = new Function(BalFileConstants.INIT);
         init.addQualifiers(new String[]{BalFileConstants.KEYWORD_PUBLIC});
         init.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode(BalFileConstants.EMPTY_STRING,
@@ -1075,7 +1075,7 @@ public class BalSyntaxTreeGenerator {
                             continue;
                         }
                         if (childEntity.getEntityName().equals(relation.getRelatedType())) {
-                            if (relation.getKeyColumns().isEmpty() && relation.getKeyColumns().isEmpty()) {
+                            if (relation.getKeyColumns().isEmpty() && relation.getReferences().isEmpty()) {
                                 for (String key : childEntity.getKeys()) {
                                     String modifiedKey = key.replace("\"", "").trim();
                                     relation.getKeyColumns().add(
