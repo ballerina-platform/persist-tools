@@ -365,6 +365,15 @@ public class BalSyntaxTreeGenerator {
                         ))));
             }
         }
+        if (!hasTime) {
+            for (Relation relation : entity.getRelations()) {
+                for (FieldMetaData fieldMetaData :relation.getRelatedFields()) {
+                    if (fieldMetaData.getFieldType().contains(BalFileConstants.KEYWORD_TIME)) {
+                        hasTime = true;
+                    }
+                }
+            }
+        }
         imports = imports.add(getImportDeclarationNode(BalFileConstants.KEYWORD_BALLERINA,
                 KEYWORD_SQL));
         imports = imports.add(getImportDeclarationNode(BalFileConstants.KEYWORD_BALLERINAX,
