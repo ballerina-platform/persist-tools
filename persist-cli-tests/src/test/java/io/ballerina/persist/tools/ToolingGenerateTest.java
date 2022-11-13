@@ -133,4 +133,10 @@ public class ToolingGenerateTest {
     public void testGenerateThreeClientsWith1ToManyAssociations() {
         assertGeneratedSources("tool_test_generate_17", GENERATE);
     }
+
+    @Test()
+    @Description("There are two entities and time modeule is imported through a relation")
+    public void testGenerateClientsWithAdditionsImportsTroughRelations() {
+        assertGeneratedSources("tool_test_generate_21", GENERATE);
+    }
 }
