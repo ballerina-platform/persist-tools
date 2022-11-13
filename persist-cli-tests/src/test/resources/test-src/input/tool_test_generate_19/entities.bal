@@ -51,6 +51,3 @@ public type MultipleAssociations record {|
     @persist:Relation
     User user?;
 |};
-
-
-

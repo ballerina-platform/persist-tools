@@ -44,6 +44,3 @@ public type MedicalItem record {
     string 'type;
     string unit;
 };
-
-
-
