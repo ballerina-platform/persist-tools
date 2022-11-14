@@ -1,0 +1,6 @@
+[foo.tool_test_generate_19.clients]
+host = "localhost"
+port = 3307
+user = "root"
+password = "Test123#"
+database = "persist"

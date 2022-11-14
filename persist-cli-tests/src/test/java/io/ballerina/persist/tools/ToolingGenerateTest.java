@@ -121,7 +121,6 @@ public class ToolingGenerateTest {
     public void testGenerateThreeEntitiesWith1To1AssociationsWithChildEntityInSubModule() {
         assertGeneratedSources("tool_test_generate_15", GENERATE);
     }
-
     @Test()
     @Description("There are two entities with one to many associations between each other")
     public void testGenerateClientsWith1ToManyAssociations() {
@@ -133,4 +132,23 @@ public class ToolingGenerateTest {
     public void testGenerateThreeClientsWith1ToManyAssociations() {
         assertGeneratedSources("tool_test_generate_17", GENERATE);
     }
+    @Test()
+    @Description("There are two entities with one to one associations between each " +
+            "other with no annotation values in any Relation")
+    public void testGenerateThreeEntitiesWith1To1AssociationsWithNoAnnotationValue() {
+        assertGeneratedSources("tool_test_generate_18", GENERATE);
+    }
+    @Test()
+    @Description("There are three entities with one to one associations between each other with only " +
+            "one annotation values in any Relation")
+    public void testGenerateThreeEntitiesWith1To1AssociationsWithOneAnnotationValue() {
+        assertGeneratedSources("tool_test_generate_19", GENERATE);
+    }
+    @Test()
+    @Description("There are two entities with one to many associations between each other with zero to " +
+            "one annotations")
+    public void testGenerateThreeEntitiesWith1ToManyAssociationsWithOneToNoAnnotationValue() {
+        assertGeneratedSources("tool_test_generate_20", GENERATE);
+    }
+
 }

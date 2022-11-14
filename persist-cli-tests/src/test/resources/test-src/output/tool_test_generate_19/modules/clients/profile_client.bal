@@ -2,20 +2,20 @@ import ballerina/sql;
 import ballerinax/mysql;
 import ballerina/persist;
 
-public client class UserClient {
+public client class ProfileClient {
 
-    private final string entityName = "User";
-    private final sql:ParameterizedQuery tableName = `Users`;
+    private final string entityName = "Profile";
+    private final sql:ParameterizedQuery tableName = `Profiles`;
 
     private final map<persist:FieldMetadata> fieldMetadata = {
         id: {columnName: "id", 'type: int},
         name: {columnName: "name", 'type: string},
-        "profile.id": {'type: int, relation: {entityName: "profile", refTable: "Profiles", refField: "id"}},
-        "profile.name": {'type: string, relation: {entityName: "profile", refTable: "Profiles", refField: "name"}}
+        "user.id": {columnName: "userId", 'type: int, relation: {entityName: "user", refTable: "Users", refField: "id"}},
+        "user.name": {'type: string, relation: {entityName: "user", refTable: "Users", refField: "name"}}
     };
     private string[] keyFields = ["id"];
 
-    private final map<persist:JoinMetadata> joinMetadata = {profile: {entity: Profile, fieldName: "profile", refTable: "Profiles", refFields: ["id"], joinColumns: ["profileId"]}};
+    private final map<persist:JoinMetadata> joinMetadata = {user: {entity: User, fieldName: "user", refTable: "Users", refFields: ["id"], joinColumns: ["userId"]}};
 
     private persist:SQLClient persistClient;
 
@@ -27,44 +27,56 @@ public client class UserClient {
         self.persistClient = check new (dbClient, self.entityName, self.tableName, self.keyFields, self.fieldMetadata, self.joinMetadata);
     }
 
-    remote function create(User value) returns User|persist:Error {
+    remote function create(Profile value) returns Profile|persist:Error {
+        if value.user is User {
+            UserClient userClient = check new UserClient();
+            boolean exists = check userClient->exists(<User>value.user);
+            if !exists {
+                value.user = check userClient->create(<User>value.user);
+            }
+        }
         _ = check self.persistClient.runInsertQuery(value);
         return value;
     }
 
-    remote function readByKey(int key, UserRelations[] include = []) returns User|persist:Error {
-        return <User>check self.persistClient.runReadByKeyQuery(User, key, include);
+    remote function readByKey(int key, ProfileRelations[] include = []) returns Profile|persist:Error {
+        return <Profile>check self.persistClient.runReadByKeyQuery(Profile, key, include);
     }
 
-    remote function read(UserRelations[] include = []) returns stream<User, persist:Error?> {
-        stream<anydata, sql:Error?>|persist:Error result = self.persistClient.runReadQuery(User, include);
+    remote function read(ProfileRelations[] include = []) returns stream<Profile, persist:Error?> {
+        stream<anydata, sql:Error?>|persist:Error result = self.persistClient.runReadQuery(Profile, include);
         if result is persist:Error {
-            return new stream<User, persist:Error?>(new UserStream((), result));
+            return new stream<Profile, persist:Error?>(new ProfileStream((), result));
         } else {
-            return new stream<User, persist:Error?>(new UserStream(result));
+            return new stream<Profile, persist:Error?>(new ProfileStream(result));
         }
     }
 
-    remote function execute(sql:ParameterizedQuery filterClause) returns stream<User, persist:Error?> {
-        stream<anydata, sql:Error?>|persist:Error result = self.persistClient.runExecuteQuery(filterClause, User);
+    remote function execute(sql:ParameterizedQuery filterClause) returns stream<Profile, persist:Error?> {
+        stream<anydata, sql:Error?>|persist:Error result = self.persistClient.runExecuteQuery(filterClause, Profile);
         if result is persist:Error {
-            return new stream<User, persist:Error?>(new UserStream((), result));
+            return new stream<Profile, persist:Error?>(new ProfileStream((), result));
         } else {
-            return new stream<User, persist:Error?>(new UserStream(result));
+            return new stream<Profile, persist:Error?>(new ProfileStream(result));
         }
     }
 
-    remote function update(User value) returns persist:Error? {
+    remote function update(Profile value) returns persist:Error? {
         _ = check self.persistClient.runUpdateQuery(value);
+        if value.user is record {} {
+            User userEntity = <User>value.user;
+            UserClient userClient = check new UserClient();
+            check userClient->update(userEntity);
+        }
     }
 
-    remote function delete(User value) returns persist:Error? {
+    remote function delete(Profile value) returns persist:Error? {
         _ = check self.persistClient.runDeleteQuery(value);
     }
 
-    remote function exists(User user) returns boolean|persist:Error {
-        User|persist:Error result = self->readByKey(user.id);
-        if result is User {
+    remote function exists(Profile profile) returns boolean|persist:Error {
+        Profile|persist:Error result = self->readByKey(profile.id);
+        if result is Profile {
             return true;
         } else if result is persist:InvalidKeyError {
             return false;
@@ -78,11 +90,11 @@ public client class UserClient {
     }
 }
 
-public enum UserRelations {
-    ProfileEntity = "profile"
+public enum ProfileRelations {
+    UserEntity = "user"
 }
 
-public class UserStream {
+public class ProfileStream {
 
     private stream<anydata, sql:Error?>? anydataStream;
     private persist:Error? err;
@@ -92,7 +104,7 @@ public class UserStream {
         self.err = err;
     }
 
-    public isolated function next() returns record {|User value;|}|persist:Error? {
+    public isolated function next() returns record {|Profile value;|}|persist:Error? {
         if self.err is persist:Error {
             return <persist:Error>self.err;
         } else if self.anydataStream is stream<anydata, sql:Error?> {
@@ -103,7 +115,7 @@ public class UserStream {
             } else if (streamValue is sql:Error) {
                 return <persist:Error>error(streamValue.message());
             } else {
-                record {|User value;|} nextRecord = {value: <User>streamValue.value};
+                record {|Profile value;|} nextRecord = {value: <Profile>streamValue.value};
                 return nextRecord;
             }
         } else {
