@@ -380,6 +380,7 @@ public class BalSyntaxTreeGenerator {
                     for (FieldMetaData fieldMetaData :relation.getRelatedFields()) {
                         if (fieldMetaData.getFieldType().contains(BalFileConstants.KEYWORD_TIME)) {
                             hasTime = true;
+                            break;
                         }
                     }
                 }
