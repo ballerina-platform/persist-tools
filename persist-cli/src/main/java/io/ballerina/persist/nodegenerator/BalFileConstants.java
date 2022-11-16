@@ -34,7 +34,7 @@ public class BalFileConstants {
     public static final String RETURN_FALSE = "return false;";
     public static final String CLOSE_RECORD_VARIABLE = "record {|%s|}";
     public static final String DOUBLE_QUOTE = "\"";
-    public static final String SINGLE_QUOTE = "\'";
+    public static final String SINGLE_QUOTE = "'";
     public static final String APOSTROPHE = "`";
     public static final String EMPTY_STRING = "";
     public static final String SPACE = " ";

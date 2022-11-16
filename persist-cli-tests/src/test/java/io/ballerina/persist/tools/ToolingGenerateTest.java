@@ -157,4 +157,10 @@ public class ToolingGenerateTest {
         assertGeneratedSources("tool_test_generate_21", GENERATE);
     }
 
+    @Test()
+    @Description("There are two special entities with special characters in field names")
+    public void testGenerateRelatedClientsWithSpecialCharactersInName() {
+        assertGeneratedSources("tool_test_generate_22", GENERATE);
+    }
+
 }
