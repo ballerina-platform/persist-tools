@@ -150,5 +150,11 @@ public class ToolingGenerateTest {
     public void testGenerateThreeEntitiesWith1ToManyAssociationsWithOneToNoAnnotationValue() {
         assertGeneratedSources("tool_test_generate_20", GENERATE);
     }
+    
+    @Test()
+    @Description("There are two entities and time modeule is imported through a relation")
+    public void testGenerateClientsWithAdditionsImportsTroughRelations() {
+        assertGeneratedSources("tool_test_generate_21", GENERATE);
+    }
 
 }
