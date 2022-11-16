@@ -371,22 +371,20 @@ public class BalSyntaxTreeGenerator {
                 KEYWORD_SQL));
         imports = imports.add(getImportDeclarationNode(BalFileConstants.KEYWORD_BALLERINAX,
                 BalFileConstants.KEYWORD_MYSQL));
-        if (hasTime) {
-            if (importsArray.isEmpty()) {
-                importsArray.add(getImportDeclarationNode(BalFileConstants.KEYWORD_BALLERINA,
-                        BalFileConstants.KEYWORD_TIME));
-            }
-            imports = imports.add(getImportDeclarationNode(BalFileConstants.KEYWORD_BALLERINA,
-                    BalFileConstants.KEYWORD_TIME));
-        }
-        imports = imports.add(getImportDeclarationNode(BalFileConstants.KEYWORD_BALLERINA, BalFileConstants.PERSIST));
-
         String className = entity.getEntityName();
         boolean inclusions = false;
         boolean manyRelation = false;
         if (entity.getRelations().size() != 0) {
             relationsEnum = new Enum(String.format(ENUM_NAME, className));
             for (Relation relation : entity.getRelations()) {
+                if (!hasTime) {
+                    for (FieldMetaData fieldMetaData :relation.getRelatedFields()) {
+                        if (fieldMetaData.getFieldType().contains(BalFileConstants.KEYWORD_TIME)) {
+                            hasTime = true;
+                            break;
+                        }
+                    }
+                }
                 if (relation.getRelatedFields().size() == 0) {
                     continue;
                 }
@@ -498,6 +496,15 @@ public class BalSyntaxTreeGenerator {
                 }
             }
         }
+        if (hasTime) {
+            if (importsArray.isEmpty()) {
+                importsArray.add(getImportDeclarationNode(BalFileConstants.KEYWORD_BALLERINA,
+                        BalFileConstants.KEYWORD_TIME));
+            }
+            imports = imports.add(getImportDeclarationNode(BalFileConstants.KEYWORD_BALLERINA,
+                    BalFileConstants.KEYWORD_TIME));
+        }
+        imports = imports.add(getImportDeclarationNode(BalFileConstants.KEYWORD_BALLERINA, BalFileConstants.PERSIST));
         Class client = createClientClass(entity, className, subFields, joinSubFields, keys, keyType, keyAutoInc,
                 inclusions);
 
