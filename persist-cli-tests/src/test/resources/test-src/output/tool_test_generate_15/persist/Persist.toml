@@ -1,11 +1,11 @@
 provider = "mysql"
 
-[persist_generate_15.database]
-host = "${clients.host}"
-port = "${clients.port}"
-user = "${clients.user}"
-password = "${clients.password}"
-database = "${clients.database}"
+[database]
+host = "${persist_generate_15.clients.host}"
+port = "${persist_generate_15.clients.port}"
+user = "${persist_generate_15.clients.user}"
+password = "${persist_generate_15.clients.password}"
+database = "${persist_generate_15.clients.database}"
 
 [shadowDatabase]
 
