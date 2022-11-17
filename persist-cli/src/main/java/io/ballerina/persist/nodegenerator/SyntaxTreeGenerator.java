@@ -40,17 +40,29 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import static io.ballerina.persist.PersistToolsConstants.DATABASE;
+import static io.ballerina.persist.PersistToolsConstants.DATABASE_PLACEHOLDER;
 import static io.ballerina.persist.PersistToolsConstants.DEFAULT_DATABASE;
 import static io.ballerina.persist.PersistToolsConstants.DEFAULT_HOST;
 import static io.ballerina.persist.PersistToolsConstants.DEFAULT_PASSWORD;
 import static io.ballerina.persist.PersistToolsConstants.DEFAULT_PORT;
 import static io.ballerina.persist.PersistToolsConstants.DEFAULT_USER;
+import static io.ballerina.persist.PersistToolsConstants.HOST;
+import static io.ballerina.persist.PersistToolsConstants.HOST_PLACEHOLDER;
+import static io.ballerina.persist.PersistToolsConstants.KEYWORD_PROVIDER;
+import static io.ballerina.persist.PersistToolsConstants.KEYWORD_SHADOWDATABASE;
 import static io.ballerina.persist.PersistToolsConstants.KEY_DATABASE;
 import static io.ballerina.persist.PersistToolsConstants.KEY_HOST;
 import static io.ballerina.persist.PersistToolsConstants.KEY_PASSWORD;
 import static io.ballerina.persist.PersistToolsConstants.KEY_PORT;
 import static io.ballerina.persist.PersistToolsConstants.KEY_USER;
 import static io.ballerina.persist.PersistToolsConstants.MYSQL;
+import static io.ballerina.persist.PersistToolsConstants.PASSWORD;
+import static io.ballerina.persist.PersistToolsConstants.PASSWORD_PLACEHOLDER;
+import static io.ballerina.persist.PersistToolsConstants.PORT;
+import static io.ballerina.persist.PersistToolsConstants.PORT_PLACEHOLDER;
+import static io.ballerina.persist.PersistToolsConstants.USER;
+import static io.ballerina.persist.PersistToolsConstants.USER_PLACEHOLDER;
 import static io.ballerina.persist.nodegenerator.SyntaxTreeConstants.ARTIFACT_ID;
 import static io.ballerina.persist.nodegenerator.SyntaxTreeConstants.GROUP_ID;
 import static io.ballerina.persist.nodegenerator.SyntaxTreeConstants.GROUP_ID_KEYWORD;
@@ -76,10 +88,23 @@ public class SyntaxTreeGenerator {
     /**
      * Method to create a new Config.toml file with database configurations.
      */
-    public static SyntaxTree createToml(String name) {
+    public static SyntaxTree createConfigToml(String name) {
         NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(name, null));
         moduleMembers = populateNodeList(moduleMembers);
+        Token eofToken = AbstractNodeFactory.createIdentifierToken("");
+        DocumentNode documentNode = NodeFactory.createDocumentNode(moduleMembers, eofToken);
+        TextDocument textDocument = TextDocuments.from(documentNode.toSourceCode());
+        return SyntaxTree.from(textDocument);
+    }
+    public static SyntaxTree createPesistToml(String name) {
+        NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEYWORD_PROVIDER, MYSQL, null));
+        moduleMembers = addNewLine(moduleMembers, 1);
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(name, null));
+        moduleMembers = populatePersistNodeList(moduleMembers);
+        moduleMembers = addNewLine(moduleMembers, 1);
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(KEYWORD_SHADOWDATABASE, null));
         Token eofToken = AbstractNodeFactory.createIdentifierToken("");
         DocumentNode documentNode = NodeFactory.createDocumentNode(moduleMembers, eofToken);
         TextDocument textDocument = TextDocuments.from(documentNode.toSourceCode());
@@ -114,9 +139,9 @@ public class SyntaxTreeGenerator {
             if (!persistConfigs) {
                 throw new BalException("Persist client related config doesn't exist in Config.toml.\n" +
                         "You should add database configurations under <org name>.<pkg name>.clients ");
-            } else if (values.isEmpty() || values.size() < 5 || (!values.containsKey("database")
-                    || !values.containsKey("user") || !values.containsKey("host") || !values.containsKey("password") ||
-                    !values.containsKey("port"))) {
+            } else if (values.isEmpty() || values.size() < 5 || (!values.containsKey(DATABASE)
+                    || !values.containsKey(USER) || !values.containsKey(HOST) || !values.containsKey(PASSWORD) ||
+                    !values.containsKey(PORT))) {
                 throw new BalException("Database is not configured properly\n" +
                         "You should give the correct database configurations with database name to create tables");
             } else {
@@ -279,6 +304,16 @@ public class SyntaxTreeGenerator {
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_USER, DEFAULT_USER, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_PASSWORD, DEFAULT_PASSWORD, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_DATABASE, DEFAULT_DATABASE, null));
+        return moduleMembers;
+    }
+
+    private static NodeList<DocumentMemberDeclarationNode> populatePersistNodeList(
+            NodeList<DocumentMemberDeclarationNode> moduleMembers) {
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_HOST, HOST_PLACEHOLDER, null));
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_PORT, PORT_PLACEHOLDER, null));
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_USER, USER_PLACEHOLDER, null));
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_PASSWORD, PASSWORD_PLACEHOLDER, null));
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_DATABASE, DATABASE_PLACEHOLDER, null));
         return moduleMembers;
     }
 

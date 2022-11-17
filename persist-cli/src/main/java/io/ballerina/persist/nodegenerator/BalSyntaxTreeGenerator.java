@@ -1008,6 +1008,7 @@ public class BalSyntaxTreeGenerator {
         NodeList<ImportDeclarationNode> imports = AbstractNodeFactory.createEmptyNodeList();
         NodeList<ModuleMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
 
+        imports = imports.add(NodeParser.parseImportDeclaration("import ballerinax/mysql.driver as _;"));
         moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration(
                 BalFileConstants.CONFIGURABLE_PORT));
         moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration(

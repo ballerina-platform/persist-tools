@@ -35,6 +35,7 @@ import org.ballerinalang.formatter.core.Formatter;
 import org.ballerinalang.formatter.core.FormatterException;
 import picocli.CommandLine;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
@@ -91,6 +92,11 @@ public class Generate implements BLauncherCmd {
             errStream.println(commandUsageInfo);
             return;
         }
+        File f = new File(Paths.get(this.sourcePath, "persist" , "Persist.toml").toString());
+        if (!f.exists()) {
+            errStream.println("Please run `bal persist init` before running `bal persist generate`");
+            return;
+        }
         try  {
             balProject = ProjectLoader.loadProject(Paths.get(this.sourcePath));
             name = balProject.currentPackage().descriptor().org().value() + "." + balProject.currentPackage()
@@ -105,8 +111,10 @@ public class Generate implements BLauncherCmd {
             ArrayList<Entity> entityArray = retEntityMetaData.entityArray;
             ArrayList<ModuleMemberDeclarationNode> returnModuleMembers = retEntityMetaData.moduleMembersArray;
             ArrayList<ImportDeclarationNode> imports = new ArrayList<>();
+            generateConfigurationBalFile();
+            outStream.println("Created database_configurations.bal");
             if (entityArray.size() == 0) {
-                errStream.println("No entity found inside the Ballerina project");
+                errStream.println("No entity found inside the Ballerina project to generate clients");
             } else {
                 for (Entity entity : entityArray) {
                     entity.setPackageName(balProject.currentPackage().descriptor().org().value() + "/"
@@ -115,8 +123,6 @@ public class Generate implements BLauncherCmd {
                     outStream.printf("Generated Ballerina client file for entity %s, " +
                             "inside clients sub module.%n", entity.getEntityName());
                 }
-                generateConfigurationBalFile();
-                outStream.println("Created database_configurations.bal");
                 copyEntities(returnModuleMembers, imports);
                 outStream.println("Created entities.bal");
             }

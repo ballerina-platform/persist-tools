@@ -41,6 +41,12 @@ public class PersistToolsConstants {
     public static final String KEY_DATABASE = "database";
     public static final String KEY_HOST = "host";
 
+    public static final String HOST_PLACEHOLDER = "${clients.host}";
+    public static final String PORT_PLACEHOLDER = "${clients.port}";
+    public static final String PASSWORD_PLACEHOLDER = "${clients.password}";
+    public static final String USER_PLACEHOLDER = "${clients.user}";
+    public static final String DATABASE_PLACEHOLDER = "${clients.database}";
+
     public static final String CONFIG_SCRIPT_FILE = "Config.toml";
     public static final String BALLERINA_SCRIP_FILE = "Ballerina.toml";
     public static final String SQL_SCRIPT_FILE = "persist_db_scripts.sql";
@@ -57,6 +63,16 @@ public class PersistToolsConstants {
     public static final String PORT = "port";
 
     public static final String CREATE_DATABASE_SQL = "CREATE DATABASE %s";
+    public static final String KEYWORD_PROVIDER = "provider";
+    public static final String KEYWORD_SHADOWDATABASE = "shadowDatabase";
+    public static final String KEYWORD_PERSIST = "persist";
+    public static final String KEYWORD_MODULES = "modules";
+    public static final String KEYWORD_CLIENTS = "clients";
+    public static final String PERSISTTOML = "Persist.toml";
+    public static final String DATABASE_CONFIGURATION_BAL = "database_configuration.bal";
+    public static final String CONFIG_TOML = "Config.toml";
+
+
 
 
 }

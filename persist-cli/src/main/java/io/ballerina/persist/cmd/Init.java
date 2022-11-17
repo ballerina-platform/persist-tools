@@ -27,6 +27,7 @@ import io.ballerina.projects.directory.ProjectLoader;
 import io.ballerina.toml.syntax.tree.SyntaxTree;
 import picocli.CommandLine;
 
+import java.io.File;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
@@ -35,6 +36,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
+import static io.ballerina.persist.PersistToolsConstants.CONFIG_TOML;
+import static io.ballerina.persist.PersistToolsConstants.DATABASE;
+import static io.ballerina.persist.PersistToolsConstants.DATABASE_CONFIGURATION_BAL;
+import static io.ballerina.persist.PersistToolsConstants.KEYWORD_CLIENTS;
+import static io.ballerina.persist.PersistToolsConstants.KEYWORD_MODULES;
+import static io.ballerina.persist.PersistToolsConstants.KEYWORD_PERSIST;
+import static io.ballerina.persist.PersistToolsConstants.PERSISTTOML;
 
 /**
  * Class to implement "persist init" command for ballerina.
@@ -52,9 +60,11 @@ public class Init implements BLauncherCmd {
     private final PrintStream outStream = System.out;
     private final String configPath = PersistToolsConstants.CONFIG_SCRIPT_FILE;
 
-    private String name = "";
+    private String configName = "";
+    private String persistName = "";
     public String sourcePath = "";
     private static final String COMMAND_IDENTIFIER = "persist-init";
+
 
     Project balProject;
 
@@ -63,35 +73,54 @@ public class Init implements BLauncherCmd {
 
     @Override
     public void execute() {
+        Path persistTomlPath = Paths.get(this.sourcePath, KEYWORD_PERSIST , PERSISTTOML);
+        Path databaseConfigPath = Paths.get(this.sourcePath, KEYWORD_MODULES, KEYWORD_CLIENTS,
+                DATABASE_CONFIGURATION_BAL);
         if (helpFlag) {
             String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMMAND_IDENTIFIER);
             errStream.println(commandUsageInfo);
             return;
         }
+        Generate persistCmd;
+        try {
+            Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Generate");
+            persistCmd = (Generate) persistClass.getDeclaredConstructor().newInstance();
+            persistCmd.setSourcePath(Paths.get(sourcePath).toAbsolutePath().toString());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         try  {
             balProject = ProjectLoader.loadProject(Paths.get(sourcePath));
-            name = balProject.currentPackage().descriptor().org().value() + "." + balProject.currentPackage()
-                    .descriptor().name().value() + "." + "clients";
+            configName = balProject.currentPackage().descriptor().name().value() + "." + KEYWORD_CLIENTS;
+            persistName = balProject.currentPackage().descriptor().name().value() + "." + DATABASE;
         } catch (ProjectException e) {
             errStream.println("Not a Ballerina project (or any parent up to mount point)\n" +
                     "You should run this command inside a Ballerina project. ");
             return;
         }
+        File persistToml = new File(persistTomlPath.toString());
+        File databaseConfig = new File(databaseConfigPath.toString());
+        if (persistToml.exists() || databaseConfig.exists()) {
+            errStream.println("`bal persist init` command can only be used for initializing the project");
+            return;
+        }
         if (!Files.exists(Paths.get(sourcePath, configPath))) {
             try {
+                createPersistToml(persistTomlPath);
+                outStream.println("created Persist.toml file with configurations.");
                 createConfigToml();
                 outStream.println("Created Config.toml file inside the Ballerina project");
-                updateBallerinaToml();
-                outStream.println("Updated Ballerina.toml file with mysql driver dependencies.");
+                persistCmd.execute();
             } catch (BalException e) {
                 errStream.println(e.getMessage());
             }
         } else {
             try {
+                createPersistToml(persistTomlPath);
+                outStream.println("created Persist.toml file with configurations.");
                 updateConfigToml();
                 outStream.println("Updated Config.toml file with default database configurations.");
-                updateBallerinaToml();
-                outStream.println("Updated Ballerina.toml file with mysql driver dependencies.");
+                persistCmd.execute();
             } catch (BalException e) {
                 errStream.println(e.getMessage());
             }
@@ -100,10 +129,20 @@ public class Init implements BLauncherCmd {
     }
     private void createConfigToml() throws BalException {
         try {
-            SyntaxTree syntaxTree = SyntaxTreeGenerator.createToml(this.name);
-            writeOutputFile(syntaxTree, Paths.get(this.sourcePath, "Config.toml").toAbsolutePath().toString());
+            SyntaxTree syntaxTree = SyntaxTreeGenerator.createConfigToml(this.configName);
+            writeOutputFile(syntaxTree, Paths.get(this.sourcePath, CONFIG_TOML).toAbsolutePath().toString());
         } catch (Exception e) {
             throw new BalException("Error while adding Config.toml file inside the Ballerina project. " +
+                    e.getMessage());
+        }
+    }
+
+    private void createPersistToml(Path persistTomlPath) throws BalException {
+        try {
+            SyntaxTree syntaxTree = SyntaxTreeGenerator.createPesistToml(this.persistName);
+            writeOutputFile(syntaxTree, persistTomlPath.toAbsolutePath().toString());
+        } catch (Exception e) {
+            throw new BalException("Error while adding Persist.toml file inside the Ballerina project. " +
                     e.getMessage());
         }
     }
@@ -111,25 +150,13 @@ public class Init implements BLauncherCmd {
     private void updateConfigToml() throws BalException {
         try {
             SyntaxTree syntaxTree = SyntaxTreeGenerator.updateConfigToml(
-                    Paths.get(this.sourcePath, this.configPath), this.name);
+                    Paths.get(this.sourcePath, this.configPath), this.configName);
             writeOutputFile(syntaxTree, Paths.get(this.sourcePath, this.configPath).toAbsolutePath().toString());
         } catch (Exception e) {
             throw new BalException("Error while updating Config.toml file to default database configurations . " +
                     e.getMessage());
         }
     }
-
-    private void updateBallerinaToml() throws BalException {
-        try {
-            String ballerinaPath = PersistToolsConstants.BALLERINA_SCRIP_FILE;
-            SyntaxTree syntaxTree = SyntaxTreeGenerator.updateBallerinaToml(Paths.get(
-                    this.sourcePath, ballerinaPath));
-            writeOutputFile(syntaxTree, Paths.get(this.sourcePath, ballerinaPath).toAbsolutePath().toString());
-        } catch (Exception e) {
-            throw new BalException("Error while updating Ballerina.toml file. " + e.getMessage());
-        }
-    }
-
     private void writeOutputFile(SyntaxTree syntaxTree, String outPath) throws Exception {
         String content;
         Path pathToFile = Paths.get(outPath);
