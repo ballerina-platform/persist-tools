@@ -51,8 +51,6 @@ public class PersistToolsConstants {
     public static final String SQL_SCRIPT_FILE = "persist_db_scripts.sql";
     public static final String TARGET_DIR = "target";
 
-    public static final String PLATFORM_LIBS = "platform-libs";
-
     public static final String PASSWORD = "password";
     public static final String USER = "user";
     public static final String MYSQL_DRIVER_CLASS = "com.mysql.cj.jdbc.Driver";
@@ -69,5 +67,8 @@ public class PersistToolsConstants {
     public static final String PERSIST_TOML_FILE = "Persist.toml";
     public static final String DATABASE_CONFIGURATION_BAL = "database_configuration.bal";
 
-
+    public static final String BALLERINA_MYSQL_DRIVER = "ballerinax/mysql.driver";
+    public static final String JAVA_11 = "java11";
+    public static final String PATH = "path";
+    public static final String MYSQL_CONNECTOR = "mysql-connector";
 }
