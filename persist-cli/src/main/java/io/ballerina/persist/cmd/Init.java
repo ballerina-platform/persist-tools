@@ -96,7 +96,7 @@ public class Init implements BLauncherCmd {
         File persistToml = new File(persistTomlPath.toString());
         File databaseConfig = new File(databaseConfigPath.toString());
         if (persistToml.exists() || databaseConfig.exists()) {
-            errStream.println("`bal persist init` command can only be used for initializing the project");
+            errStream.println("`bal persist init` command can only be used once to initialize the project");
             return;
         }
         Generate generateCMD = new Generate();
