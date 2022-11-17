@@ -117,7 +117,7 @@ public class Generate implements BLauncherCmd {
             generateConfigurationBalFile();
             outStream.println("Created database_configurations.bal");
             if (entityArray.size() == 0) {
-                errStream.println("No entity found inside the Ballerina project to generate clients");
+                errStream.println("No persist:Entity annotated records found in the project to generate clients");
             } else {
                 for (Entity entity : entityArray) {
                     entity.setPackageName(balProject.currentPackage().descriptor().org().value() + "/"
