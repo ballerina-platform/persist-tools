@@ -1,0 +1,11 @@
+provider = "mysql"
+
+[persist_generate_21.database]
+host = "${clients.host}"
+port = "${clients.port}"
+user = "${clients.user}"
+password = "${clients.password}"
+database = "${clients.database}"
+
+[shadowDatabase]
+
