@@ -101,8 +101,8 @@ public class SyntaxTreeGenerator {
         NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEYWORD_PROVIDER, MYSQL, null));
         moduleMembers = addNewLine(moduleMembers, 1);
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(name, null));
-        moduleMembers = populatePersistNodeList(moduleMembers);
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(DATABASE, null));
+        moduleMembers = populatePersistNodeList(moduleMembers, name);
         moduleMembers = addNewLine(moduleMembers, 1);
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(KEYWORD_SHADOWDATABASE, null));
         Token eofToken = AbstractNodeFactory.createIdentifierToken("");
@@ -308,12 +308,17 @@ public class SyntaxTreeGenerator {
     }
 
     private static NodeList<DocumentMemberDeclarationNode> populatePersistNodeList(
-            NodeList<DocumentMemberDeclarationNode> moduleMembers) {
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_HOST, HOST_PLACEHOLDER, null));
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_PORT, PORT_PLACEHOLDER, null));
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_USER, USER_PLACEHOLDER, null));
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_PASSWORD, PASSWORD_PLACEHOLDER, null));
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_DATABASE, DATABASE_PLACEHOLDER, null));
+            NodeList<DocumentMemberDeclarationNode> moduleMembers, String projectName) {
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_HOST, String.format(HOST_PLACEHOLDER,
+                projectName), null));
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_PORT, String.format(PORT_PLACEHOLDER,
+                projectName), null));
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_USER, String.format(USER_PLACEHOLDER,
+                projectName), null));
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_PASSWORD,
+                String.format(PASSWORD_PLACEHOLDER, projectName), null));
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_DATABASE,
+                String.format(DATABASE_PLACEHOLDER, projectName), null));
         return moduleMembers;
     }
 

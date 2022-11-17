@@ -56,6 +56,8 @@ import io.ballerina.persist.objects.FieldMetaData;
 import io.ballerina.persist.objects.Relation;
 import io.ballerina.tools.text.TextDocument;
 import io.ballerina.tools.text.TextDocuments;
+import org.ballerinalang.formatter.core.Formatter;
+import org.ballerinalang.formatter.core.FormatterException;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -1004,7 +1006,7 @@ public class BalSyntaxTreeGenerator {
         return close;
     }
 
-    public static SyntaxTree generateConfigSyntaxTree() {
+    public static String generateDatabaseConfigSyntaxTree() throws FormatterException {
         NodeList<ImportDeclarationNode> imports = AbstractNodeFactory.createEmptyNodeList();
         NodeList<ModuleMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
 
@@ -1024,7 +1026,9 @@ public class BalSyntaxTreeGenerator {
         ModulePartNode modulePartNode = NodeFactory.createModulePartNode(imports, moduleMembers, eofToken);
         TextDocument textDocument = TextDocuments.from(BalFileConstants.EMPTY_STRING);
         SyntaxTree balTree = SyntaxTree.from(textDocument);
-        return balTree.modifyWith(modulePartNode);
+        String content = Formatter.format(balTree.modifyWith(modulePartNode).toSourceCode());
+
+        return content; // output cannot be SyntaxTree as it will overlap with Toml Syntax Tree in Init Command
     }
 
     private static String[] getArray(ArrayList<String> arrL) {

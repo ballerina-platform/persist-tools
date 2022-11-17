@@ -48,12 +48,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static io.ballerina.persist.PersistToolsConstants.KEYWORD_PERSIST;
 import static io.ballerina.persist.PersistToolsConstants.PERSISTTOML;
+import static io.ballerina.persist.PersistToolsConstants.SUBMODULE_PERSIST;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.EXTENSION_BAL;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_CLIENTS;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_MODULES;
-import static io.ballerina.persist.nodegenerator.BalFileConstants.PATH_CONFIGURATION_BAL_FILE;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.PATH_ENTITIES_FILE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator.formatModuleMembers;
 import static io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator.generateRelations;
@@ -84,6 +83,8 @@ public class Generate implements BLauncherCmd {
 
     String name;
 
+    public Generate() {}
+
     @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
     private boolean helpFlag;
 
@@ -94,10 +95,11 @@ public class Generate implements BLauncherCmd {
             errStream.println(commandUsageInfo);
             return;
         }
-        Path persistTomlPath = Paths.get(this.sourcePath, KEYWORD_PERSIST , PERSISTTOML);
+        Path persistTomlPath = Paths.get(this.sourcePath, SUBMODULE_PERSIST, PERSISTTOML);
         File persistToml = new File(persistTomlPath.toString());
         if (!persistToml.exists()) {
-            errStream.println("Please run `bal persist init` before running `bal persist generate`");
+            errStream.println("Persist project is not initiated. Please run `bal persist init` " +
+                    "to initiate the project before generation");
             return;
         }
         try  {
@@ -114,11 +116,8 @@ public class Generate implements BLauncherCmd {
             ArrayList<Entity> entityArray = retEntityMetaData.entityArray;
             ArrayList<ModuleMemberDeclarationNode> returnModuleMembers = retEntityMetaData.moduleMembersArray;
             ArrayList<ImportDeclarationNode> imports = new ArrayList<>();
-            generateConfigurationBalFile();
             outStream.println("Created database_configurations.bal");
-            if (entityArray.size() == 0) {
-                errStream.println("No entity found inside the Ballerina project to generate clients");
-            } else {
+            if (entityArray.size() != 0) {
                 for (Entity entity : entityArray) {
                     entity.setPackageName(balProject.currentPackage().descriptor().org().value() + "/"
                             + balProject.currentPackage().descriptor().name().value());
@@ -208,18 +207,6 @@ public class Generate implements BLauncherCmd {
         } catch (IOException | FormatterException e) {
             throw new BalException(String.format("Error while generating the client for the" +
                     " %s entity. ", entity.getEntityName()) + e.getMessage());
-        }
-    }
-    private void generateConfigurationBalFile() throws BalException {
-        SyntaxTree configTree = BalSyntaxTreeGenerator.generateConfigSyntaxTree();
-        try {
-            writeOutputFile(configTree, Paths.get(this.sourcePath, KEYWORD_MODULES,
-                            KEYWORD_CLIENTS, PATH_CONFIGURATION_BAL_FILE)
-                    .toAbsolutePath().toString());
-        } catch (IOException e) {
-            throw new BalException("Error occurred while writing database configuration file!");
-        } catch (FormatterException e) {
-            throw new BalException("Error occurred while formatting database configuration file!");
         }
     }
 
