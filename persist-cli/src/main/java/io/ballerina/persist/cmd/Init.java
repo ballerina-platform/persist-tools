@@ -142,7 +142,7 @@ public class Init implements BLauncherCmd {
             SyntaxTree syntaxTree = SyntaxTreeGenerator.createPesistToml(this.persistName);
             writeOutputFile(syntaxTree, persistTomlPath.toAbsolutePath().toString());
         } catch (Exception e) {
-            throw new BalException("Error while adding Persist.toml file inside the Ballerina project. " +
+            throw new BalException("Error while adding Persist.toml to the project : " +
                     e.getMessage());
         }
     }
