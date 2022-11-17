@@ -162,4 +162,9 @@ public class ToolingGenerateTest {
     public void testGenerateRelatedClientsWithSpecialCharactersInName() {
         assertGeneratedSources("tool_test_generate_22", GENERATE);
     }
+    @Test()
+    @Description("Negative test case where init command was not run before generate command")
+    public void testGenerateWithoutInit() {
+        assertGeneratedSourcesNegative ("tool_test_generate_23", GENERATE, new String[]{});
+    }
 }
