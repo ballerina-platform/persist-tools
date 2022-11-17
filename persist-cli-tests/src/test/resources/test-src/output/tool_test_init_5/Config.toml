@@ -1,17 +1,10 @@
-[foo.perist_init_5.clients]
-foo1 = "bar1"
-host = "wso2.com"
-port = 6688
-user = "john"
-foo2 = "bar2"
-password = "john123"
-database = "mariadb"
-foo3 = "bar3"
-
 [perist_init_5.clients]
+foo1 = "bar1"
 host = "localhost"
 port = 3306
 user = "root"
-database = ""
+foo2 = "bar2"
 password = ""
+database = ""
+foo3 = "bar3"
 
