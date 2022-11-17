@@ -1,8 +1,9 @@
 foo1 = "bar1"
 
-[foo.perist_init_2.clients]
+[perist_init_2.clients]
 host = "localhost"
 port = 3306
 user = "root"
 database = ""
 password = ""
+

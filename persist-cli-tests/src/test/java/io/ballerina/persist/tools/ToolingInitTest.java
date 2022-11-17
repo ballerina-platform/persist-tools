@@ -97,4 +97,10 @@ public class ToolingInitTest {
     public void testAuxiliaryFunctions() {
         assertAuxiliaryFunctions();
     }
+
+    @Test()
+    @Description("Running init on a already initialized project")
+    public void testInitAlreadyInitializedProject() {
+        assertGeneratedSources("tool_test_init_10", INIT);
+    }
 }
