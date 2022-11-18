@@ -1,0 +1,8 @@
+provider = "mysql"
+
+[database]
+host = "${tool_test_db_push_2.clients.host}"
+port = "${tool_test_db_push_2.clients.port}"
+user = "${tool_test_db_push_2.clients.user}"
+password = "${tool_test_db_push_2.clients.password}"
+database = "${tool_test_db_push_2.clients.database}"
