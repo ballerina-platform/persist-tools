@@ -55,8 +55,9 @@ import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 import static io.ballerina.persist.PersistToolsConstants.CONFIG_SCRIPT_FILE;
 import static io.ballerina.persist.PersistToolsConstants.CREATE_DATABASE_SQL;
 import static io.ballerina.persist.PersistToolsConstants.DATABASE;
+import static io.ballerina.persist.PersistToolsConstants.DATABASE_CONFIGURATION_BAL;
 import static io.ballerina.persist.PersistToolsConstants.HOST;
-import static io.ballerina.persist.PersistToolsConstants.PLATFORM;
+import static io.ballerina.persist.PersistToolsConstants.KEYWORD_CLIENTS;
 import static io.ballerina.persist.PersistToolsConstants.MYSQL;
 import static io.ballerina.persist.PersistToolsConstants.MYSQL_CONNECTOR_NAME_PREFIX;
 import static io.ballerina.persist.PersistToolsConstants.MYSQL_DRIVER_CLASS;
@@ -64,7 +65,9 @@ import static io.ballerina.persist.PersistToolsConstants.PASSWORD;
 import static io.ballerina.persist.PersistToolsConstants.PATH;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_TOML_FILE;
 import static io.ballerina.persist.PersistToolsConstants.PORT;
+import static io.ballerina.persist.PersistToolsConstants.PLATFORM;
 import static io.ballerina.persist.PersistToolsConstants.SQL_SCRIPT_FILE;
+import static io.ballerina.persist.PersistToolsConstants.SUBMODULE_MODULES;
 import static io.ballerina.persist.PersistToolsConstants.SUBMODULE_PERSIST;
 import static io.ballerina.persist.PersistToolsConstants.TARGET_DIR;
 import static io.ballerina.persist.PersistToolsConstants.USER;
@@ -107,8 +110,11 @@ public class Push implements BLauncherCmd {
             return;
         }
         Path persistTomlPath = Paths.get(this.sourcePath, SUBMODULE_PERSIST, PERSIST_TOML_FILE);
+        Path databaseConfigurationBalPath = Paths.get(this.sourcePath, SUBMODULE_MODULES, KEYWORD_CLIENTS,
+                DATABASE_CONFIGURATION_BAL);
         File persistToml = new File(persistTomlPath.toString());
-        if (!persistToml.exists()) {
+        File databaseConfigurationsBal = new File(databaseConfigurationBalPath.toString());
+        if (!persistToml.exists() || !databaseConfigurationsBal.exists()) {
             errStream.println("Persist project is not initiated. Please run `bal persist init` " +
                     "to initiate the project before the database schema generation");
             return;
