@@ -54,7 +54,7 @@ public class ToolingInitTest {
     @Test()
     @Description("When the init command is executed outside a Ballerina project")
     public void testsInitOutsideBalProject() {
-        assertGeneratedSourcesNegative("tool_test_init_4", INIT, "Config.toml");
+        assertGeneratedSourcesNegative("tool_test_init_4", INIT, new String[]{"Config.toml"});
     }
 
     @Test()
@@ -96,5 +96,11 @@ public class ToolingInitTest {
     @Description("Test the auxiliary functions of the class")
     public void testAuxiliaryFunctions() {
         assertAuxiliaryFunctions();
+    }
+
+    @Test()
+    @Description("Running init on a already initialized project")
+    public void testInitAlreadyInitializedProject() {
+        assertGeneratedSources("tool_test_init_10", INIT);
     }
 }

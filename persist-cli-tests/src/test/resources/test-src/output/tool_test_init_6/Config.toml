@@ -1,9 +1,11 @@
-[foo.perist_init_6.clients]
+[perist_init_6.clients]
 foo1 = "bar1"
 host = "localhost"
 port = 3306
 foo2 = "bar2"
 database = ""
 foo3 = "bar3"
+
 user = "root"
 password = ""
+

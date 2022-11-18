@@ -1,3 +1,5 @@
+import ballerinax/mysql.driver as _;
+
 configurable int port = ?;
 configurable string host = ?;
 configurable string user = ?;
