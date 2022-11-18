@@ -183,7 +183,7 @@ public class Push implements BLauncherCmd {
     }
 
     public HashMap<String, String> getConfigurations() {
-        return this.configurations;
+        return this.persistConfigurations;
     }
 
     private void setupJdbcDriver() throws BalException {
@@ -213,12 +213,10 @@ public class Push implements BLauncherCmd {
                                                          String projectName)
             throws BalException {
         configurations = SyntaxTreeGenerator.readToml(Paths.get(this.sourcePath, this.configPath), name);
-        for (String key : persistConfigurations.keySet()) {
-            if (persistConfigurations.get(key).replaceAll("\"", "").equals(
-                    String.format(PLACE_HOLDER_TEMPLATE, projectName, key))) {
-                configurations = SyntaxTreeGenerator.readToml(Paths.get(this.sourcePath,
-                        this.configPath), name);
-                persistConfigurations.put(key, configurations.get(key));
+        for (String configKey : persistConfigurations.keySet()) {
+            if (persistConfigurations.get(configKey).replaceAll("\"", "").equals(
+                    String.format(PLACE_HOLDER_TEMPLATE, projectName, configKey))) {
+                persistConfigurations.put(configKey, configurations.get(configKey));
             }
         }
     }
