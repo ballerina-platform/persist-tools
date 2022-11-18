@@ -192,9 +192,10 @@ public class Push implements BLauncherCmd {
     }
 
     private void setupJdbcDriver() throws BalException {
+        Path driverPath = getDriverPath().toAbsolutePath();
         URL[] urls = {};
         try {
-            JdbcDriverLoader driverLoader = new JdbcDriverLoader(urls, getDriverPath().toAbsolutePath());
+            JdbcDriverLoader driverLoader = new JdbcDriverLoader(urls, driverPath);
             Class<?> drvClass = driverLoader.loadClass(MYSQL_DRIVER_CLASS);
             driver = (Driver) drvClass.getDeclaredConstructor().newInstance();
         } catch (ProjectException e) {
@@ -252,8 +253,7 @@ public class Push implements BLauncherCmd {
         stringBuilder.append("  ballerina " + COMPONENT_IDENTIFIER + " db push").append(System.lineSeparator());
     }
 
-    private Path getDriverPath() {
-        Path driverPath = null;
+    private Path getDriverPath() throws BalException {
         String relativeLibPath;
 
         DependencyGraph<ResolvedPackageDependency> resolvedPackageDependencyDependencyGraph =
@@ -270,10 +270,9 @@ public class Push implements BLauncherCmd {
         for (Map<String, Object> dependency : dependencies) {
             if (dependency.get(PATH).toString().contains(MYSQL_CONNECTOR_NAME_PREFIX)) {
                 relativeLibPath = dependency.get(PATH).toString();
-                driverPath = mysql.project().sourceRoot().resolve(relativeLibPath);
-                break;
+                return mysql.project().sourceRoot().resolve(relativeLibPath);
             }
         }
-        return driverPath;
+        throw new BalException("Failed to retrieve MySQL driver path in the local cache");
     }
 }
