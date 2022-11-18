@@ -116,7 +116,6 @@ public class Generate implements BLauncherCmd {
             ArrayList<Entity> entityArray = retEntityMetaData.entityArray;
             ArrayList<ModuleMemberDeclarationNode> returnModuleMembers = retEntityMetaData.moduleMembersArray;
             ArrayList<ImportDeclarationNode> imports = new ArrayList<>();
-            outStream.println("Created database_configurations.bal");
             if (entityArray.size() != 0) {
                 for (Entity entity : entityArray) {
                     entity.setPackageName(balProject.currentPackage().descriptor().org().value() + "/"
