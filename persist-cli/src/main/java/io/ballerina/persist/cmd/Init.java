@@ -102,22 +102,17 @@ public class Init implements BLauncherCmd {
         Generate generateCMD = new Generate();
         generateCMD.setSourcePath(Paths.get(sourcePath).toAbsolutePath().toString());
         try {
+            generateConfigurationBalFile();
+            outStream.println("Created database_configuration.bal file with configurations.");
+            createPersistToml(persistTomlPath);
+            outStream.println("Created Persist.toml file with configurations.");
+            generateCMD.execute();
             if (!Files.exists(Paths.get(sourcePath, configPath))) {
-                generateConfigurationBalFile();
-                outStream.println("Created database_configuration.bal file with configurations.");
-                createPersistToml(persistTomlPath);
-                outStream.println("Created Persist.toml file with configurations.");
                 createConfigToml();
                 outStream.println("Created Config.toml file inside the Ballerina project");
-                generateCMD.execute();
             } else {
-                generateConfigurationBalFile();
-                outStream.println("Created database_configuration.bal file with configurations.");
-                createPersistToml(persistTomlPath);
-                outStream.println("Created Persist.toml file with configurations.");
                 updateConfigToml();
                 outStream.println("Updated Config.toml file with default database configurations.");
-                generateCMD.execute();
             }
         } catch (BalException e) {
             errStream.println(e.getMessage());
