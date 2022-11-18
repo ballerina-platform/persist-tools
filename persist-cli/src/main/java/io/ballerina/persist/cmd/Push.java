@@ -108,12 +108,12 @@ public class Push implements BLauncherCmd {
             balProject = ProjectLoader.loadProject(Paths.get(sourcePath));
             name = balProject.currentPackage().descriptor().org().value() + "." + balProject.currentPackage()
                     .descriptor().name().value() + "." + "clients";
-            setupJdbcDriver();
 
             balProject = BuildProject.load(Paths.get(sourcePath).toAbsolutePath());
             balProject.currentPackage().getCompilation();
             configurations = SyntaxTreeGenerator.readToml(Paths.get(this.sourcePath, this.configPath), name);
             sqlLines = readSqlFile();
+            setupJdbcDriver();
         } catch (ProjectException | BalException  e) {
             errStream.println(e.getMessage());
             return;
