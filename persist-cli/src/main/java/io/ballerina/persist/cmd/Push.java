@@ -62,12 +62,12 @@ import static io.ballerina.persist.PersistToolsConstants.MYSQL;
 import static io.ballerina.persist.PersistToolsConstants.MYSQL_CONNECTOR_NAME_PREFIX;
 import static io.ballerina.persist.PersistToolsConstants.MYSQL_DRIVER_CLASS;
 import static io.ballerina.persist.PersistToolsConstants.PASSWORD;
-import static io.ballerina.persist.PersistToolsConstants.PATH;
+import static io.ballerina.persist.PersistToolsConstants.PROPERTY_KEY_PATH;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_TOML_FILE;
 import static io.ballerina.persist.PersistToolsConstants.PLATFORM;
 import static io.ballerina.persist.PersistToolsConstants.PORT;
 import static io.ballerina.persist.PersistToolsConstants.SQL_SCRIPT_FILE;
-import static io.ballerina.persist.PersistToolsConstants.SUBMODULE_MODULES;
+import static io.ballerina.persist.PersistToolsConstants.SUBMODULE_FOLDER;
 import static io.ballerina.persist.PersistToolsConstants.SUBMODULE_PERSIST;
 import static io.ballerina.persist.PersistToolsConstants.TARGET_DIR;
 import static io.ballerina.persist.PersistToolsConstants.USER;
@@ -110,7 +110,7 @@ public class Push implements BLauncherCmd {
             return;
         }
         Path persistTomlPath = Paths.get(this.sourcePath, SUBMODULE_PERSIST, PERSIST_TOML_FILE);
-        Path databaseConfigurationBalPath = Paths.get(this.sourcePath, SUBMODULE_MODULES, KEYWORD_CLIENTS,
+        Path databaseConfigurationBalPath = Paths.get(this.sourcePath, SUBMODULE_FOLDER, KEYWORD_CLIENTS,
                 DATABASE_CONFIGURATION_BAL);
         File persistToml = new File(persistTomlPath.toString());
         File databaseConfigurationsBal = new File(databaseConfigurationBalPath.toString());
@@ -268,8 +268,8 @@ public class Push implements BLauncherCmd {
         List<Map<String, Object>> dependencies = mysql.manifest().platform(PLATFORM).dependencies();
 
         for (Map<String, Object> dependency : dependencies) {
-            if (dependency.get(PATH).toString().contains(MYSQL_CONNECTOR_NAME_PREFIX)) {
-                relativeLibPath = dependency.get(PATH).toString();
+            if (dependency.get(PROPERTY_KEY_PATH).toString().contains(MYSQL_CONNECTOR_NAME_PREFIX)) {
+                relativeLibPath = dependency.get(PROPERTY_KEY_PATH).toString();
                 return mysql.project().sourceRoot().resolve(relativeLibPath);
             }
         }
