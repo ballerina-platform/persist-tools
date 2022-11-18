@@ -221,5 +221,6 @@ public class BalFileConstants {
             "(<persist:SQLClient>self.persistClient).getManyRelations(nextRecord.value," +
             " <%sRelations[]>self.include);";
     public static final String PLACE_HOLDER_TEMPLATE = "${%s.clients.%s}";
+    public static final String MYSQL_DRIVER_IMPORT = "import ballerinax/mysql.driver as _;";
 
 }

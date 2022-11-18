@@ -15,6 +15,7 @@
 // under the License.
 
 import ballerina/io;
+
 configurable string foo1 = ?;
 configurable string foo2 = ?;
 configurable string foo3 = ?;

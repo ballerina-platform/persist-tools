@@ -35,6 +35,7 @@ import org.ballerinalang.formatter.core.Formatter;
 import org.ballerinalang.formatter.core.FormatterException;
 import picocli.CommandLine;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
@@ -47,10 +48,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static io.ballerina.persist.PersistToolsConstants.PERSIST_TOML_FILE;
+import static io.ballerina.persist.PersistToolsConstants.SUBMODULE_PERSIST;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.EXTENSION_BAL;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_CLIENTS;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_MODULES;
-import static io.ballerina.persist.nodegenerator.BalFileConstants.PATH_CONFIGURATION_BAL_FILE;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.PATH_ENTITIES_FILE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator.formatModuleMembers;
 import static io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator.generateRelations;
@@ -81,6 +83,8 @@ public class Generate implements BLauncherCmd {
 
     String name;
 
+    public Generate() {}
+
     @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
     private boolean helpFlag;
 
@@ -89,6 +93,13 @@ public class Generate implements BLauncherCmd {
         if (helpFlag) {
             String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMMAND_IDENTIFIER);
             errStream.println(commandUsageInfo);
+            return;
+        }
+        Path persistTomlPath = Paths.get(this.sourcePath, SUBMODULE_PERSIST, PERSIST_TOML_FILE);
+        File persistToml = new File(persistTomlPath.toString());
+        if (!persistToml.exists()) {
+            errStream.println("Persist project is not initiated. Please run `bal persist init` " +
+                    "to initiate the project before generation");
             return;
         }
         try  {
@@ -105,9 +116,7 @@ public class Generate implements BLauncherCmd {
             ArrayList<Entity> entityArray = retEntityMetaData.entityArray;
             ArrayList<ModuleMemberDeclarationNode> returnModuleMembers = retEntityMetaData.moduleMembersArray;
             ArrayList<ImportDeclarationNode> imports = new ArrayList<>();
-            if (entityArray.size() == 0) {
-                errStream.println("No entity found inside the Ballerina project");
-            } else {
+            if (entityArray.size() != 0) {
                 for (Entity entity : entityArray) {
                     entity.setPackageName(balProject.currentPackage().descriptor().org().value() + "/"
                             + balProject.currentPackage().descriptor().name().value());
@@ -115,8 +124,6 @@ public class Generate implements BLauncherCmd {
                     outStream.printf("Generated Ballerina client file for entity %s, " +
                             "inside clients sub module.%n", entity.getEntityName());
                 }
-                generateConfigurationBalFile();
-                outStream.println("Created database_configurations.bal");
                 copyEntities(returnModuleMembers, imports);
                 outStream.println("Created entities.bal");
             }
@@ -201,18 +208,6 @@ public class Generate implements BLauncherCmd {
                     " %s entity. ", entity.getEntityName()) + e.getMessage());
         }
     }
-    private void generateConfigurationBalFile() throws BalException {
-        SyntaxTree configTree = BalSyntaxTreeGenerator.generateConfigSyntaxTree();
-        try {
-            writeOutputFile(configTree, Paths.get(this.sourcePath, KEYWORD_MODULES,
-                            KEYWORD_CLIENTS, PATH_CONFIGURATION_BAL_FILE)
-                    .toAbsolutePath().toString());
-        } catch (IOException e) {
-            throw new BalException("Error occurred while writing database configuration file!");
-        } catch (FormatterException e) {
-            throw new BalException("Error occurred while formatting database configuration file!");
-        }
-    }
 
     private void copyEntities(ArrayList<ModuleMemberDeclarationNode> moduleMembers,
                               ArrayList<ImportDeclarationNode> importArray)
@@ -229,20 +224,9 @@ public class Generate implements BLauncherCmd {
         }
     }
 
-    private static void writeOutputFile(SyntaxTree syntaxTree, String outPath) throws IOException, FormatterException,
-            BalException {
+    private static void writeOutputFile(SyntaxTree syntaxTree, String outPath) throws IOException, FormatterException {
         String content;
         content = Formatter.format(syntaxTree.toSourceCode());
-        Path pathToFile = Paths.get(outPath);
-        if (!Files.exists(pathToFile.getParent())) {
-            try {
-                Files.createDirectories(pathToFile.getParent());
-                outStream.println("Added new Ballerina module at modules/clients");
-            } catch (IOException e) {
-                throw new BalException("Error while adding new Ballerina module at modules/clients. " +
-                        e.getMessage());
-            }
-        }
         try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8.name())) {
             writer.println(content);
         }

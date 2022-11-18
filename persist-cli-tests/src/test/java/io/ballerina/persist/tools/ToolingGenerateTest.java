@@ -94,13 +94,13 @@ public class ToolingGenerateTest {
     @Test()
     @Description("There is only a single entity in the Ballerina project and there are errors in the project")
     public void testGenerateSingleEntityWithErrors() {
-        assertGeneratedSourcesNegative("tool_test_generate_11", GENERATE, "modules");
+        assertGeneratedSourcesNegative("tool_test_generate_11", GENERATE,  new String[]{});
     }
 
     @Test()
     @Description("There is only a single entity in the Ballerina project and there are errors in Entity annotation")
     public void testGenerateSingleEntityWithAnnotationErrors() {
-        assertGeneratedSourcesNegative("tool_test_generate_12", GENERATE, "modules");
+        assertGeneratedSourcesNegative("tool_test_generate_12", GENERATE, new String[]{});
     }
     @Test()
     @Description("There are three entities with one to one associations between each other")
@@ -162,5 +162,9 @@ public class ToolingGenerateTest {
     public void testGenerateRelatedClientsWithSpecialCharactersInName() {
         assertGeneratedSources("tool_test_generate_22", GENERATE);
     }
-
+    @Test()
+    @Description("Negative test case where init command was not run before generate command")
+    public void testGenerateWithoutInit() {
+        assertGeneratedSourcesNegative ("tool_test_generate_23", GENERATE, new String[]{});
+    }
 }
