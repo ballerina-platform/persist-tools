@@ -52,6 +52,7 @@ import static io.ballerina.persist.PersistToolsConstants.HOST;
 import static io.ballerina.persist.PersistToolsConstants.MYSQL;
 import static io.ballerina.persist.PersistToolsConstants.MYSQL_DRIVER_CLASS;
 import static io.ballerina.persist.PersistToolsConstants.PASSWORD;
+import static io.ballerina.persist.PersistToolsConstants.PERSIST_TOML_FILE;
 import static io.ballerina.persist.PersistToolsConstants.PLATFORM_LIBS;
 import static io.ballerina.persist.PersistToolsConstants.PORT;
 import static io.ballerina.persist.PersistToolsConstants.SQL_SCRIPT_FILE;
@@ -59,6 +60,8 @@ import static io.ballerina.persist.PersistToolsConstants.TARGET_DIR;
 import static io.ballerina.persist.PersistToolsConstants.USER;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.JDBC_URL_WITHOUT_DATABASE;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.JDBC_URL_WITH_DATABASE;
+import static io.ballerina.persist.nodegenerator.BalFileConstants.PERSIST;
+import static io.ballerina.persist.nodegenerator.BalFileConstants.PLACE_HOLDER_TEMPLATE;
 
 /**
  * Class to implement "persist push" command for ballerina.
@@ -78,9 +81,11 @@ public class Push implements BLauncherCmd {
     Project balProject;
     public String sourcePath = "";
     public String configPath = CONFIG_SCRIPT_FILE;
+    public String persistConfigPath = PERSIST_TOML_FILE;
     public Path driverPath = Paths.get(TARGET_DIR, PLATFORM_LIBS);
     Driver driver;
     HashMap<String, String> configurations;
+    HashMap<String, String> persistConfigurations;
     @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
     private boolean helpFlag;
 
@@ -96,26 +101,35 @@ public class Push implements BLauncherCmd {
             errStream.println(commandUsageInfo);
             return;
         }
-
         try  {
             balProject = ProjectLoader.loadProject(Paths.get(sourcePath));
-            name = balProject.currentPackage().descriptor().org().value() + "." + balProject.currentPackage()
-                    .descriptor().name().value() + "." + "clients";
+            name = balProject.currentPackage().descriptor().name().value() + "." + "clients";
             setupJdbcDriver();
 
             balProject = BuildProject.load(Paths.get(sourcePath).toAbsolutePath());
             balProject.currentPackage().getCompilation();
-            configurations = SyntaxTreeGenerator.readToml(Paths.get(this.sourcePath, this.configPath), name);
+            persistConfigurations = SyntaxTreeGenerator.readToml(Paths.get(this.sourcePath, PERSIST,
+                    this.persistConfigPath), name);
+            String projectName = balProject.currentPackage().descriptor().name().value();
+
+            for (String key : persistConfigurations.keySet()) {
+                if (persistConfigurations.get(key).replaceAll("\"", "").equals(
+                        String.format(PLACE_HOLDER_TEMPLATE, projectName, key))) {
+                    populatePlaceHolders(persistConfigurations, name, projectName);
+                    break;
+                }
+            }
             sqlLines = readSqlFile();
         } catch (ProjectException | BalException  e) {
             errStream.println(e.getMessage());
             return;
         }
         String url = String.format(JDBC_URL_WITHOUT_DATABASE, MYSQL,
-                configurations.get(HOST).replaceAll("\"", ""), configurations.get(PORT));
-        String user = configurations.get(USER).replaceAll("\"", "");
-        String password = configurations.get(PASSWORD).replaceAll("\"", "");
-        String database = configurations.get(DATABASE).replaceAll("\"", "");
+                persistConfigurations.get(HOST).replaceAll("\"", ""), persistConfigurations.get(PORT));
+        String user = persistConfigurations.get(USER).replaceAll("\"", "");
+        String password = persistConfigurations.get(PASSWORD).replaceAll("\"", "");
+        String database = persistConfigurations.get(DATABASE).replaceAll("\"", "");
+
         Properties props = new Properties();
         props.put(USER, user);
         props.put(PASSWORD, password);
@@ -141,8 +155,8 @@ public class Push implements BLauncherCmd {
         }
 
         String databaseUrl = String.format(JDBC_URL_WITH_DATABASE, MYSQL,
-                    configurations.get(HOST).replaceAll("\"", ""), configurations.get(PORT),
-                    configurations.get(DATABASE).replaceAll("\"", ""));
+                    persistConfigurations.get(HOST).replaceAll("\"", ""), persistConfigurations.get(PORT),
+                persistConfigurations.get(DATABASE).replaceAll("\"", ""));
 
         try (Connection connection = driver.connect(databaseUrl, props)) {
             statement = connection.createStatement();
@@ -193,6 +207,19 @@ public class Push implements BLauncherCmd {
                     + e.getMessage());
         } catch (MalformedURLException e) {
             throw new BalException("Error in jdbc driver path : " + e.getMessage());
+        }
+    }
+    private void populatePlaceHolders(HashMap<String, String> persistConfigurations, String name,
+                                                         String projectName)
+            throws BalException {
+        configurations = SyntaxTreeGenerator.readToml(Paths.get(this.sourcePath, this.configPath), name);
+        for (String key : persistConfigurations.keySet()) {
+            if (persistConfigurations.get(key).replaceAll("\"", "").equals(
+                    String.format(PLACE_HOLDER_TEMPLATE, projectName, key))) {
+                configurations = SyntaxTreeGenerator.readToml(Paths.get(this.sourcePath,
+                        this.configPath), name);
+                persistConfigurations.put(key, configurations.get(key));
+            }
         }
     }
     private String[] readSqlFile() throws BalException {

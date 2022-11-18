@@ -40,6 +40,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import static io.ballerina.persist.PersistToolsConstants.DATABASE;
 import static io.ballerina.persist.PersistToolsConstants.DEFAULT_DATABASE;
 import static io.ballerina.persist.PersistToolsConstants.DEFAULT_HOST;
 import static io.ballerina.persist.PersistToolsConstants.DEFAULT_PASSWORD;
@@ -51,6 +52,7 @@ import static io.ballerina.persist.PersistToolsConstants.KEY_PASSWORD;
 import static io.ballerina.persist.PersistToolsConstants.KEY_PORT;
 import static io.ballerina.persist.PersistToolsConstants.KEY_USER;
 import static io.ballerina.persist.PersistToolsConstants.MYSQL;
+import static io.ballerina.persist.PersistToolsConstants.PERSIST_TOML_FILE;
 import static io.ballerina.persist.nodegenerator.SyntaxTreeConstants.ARTIFACT_ID;
 import static io.ballerina.persist.nodegenerator.SyntaxTreeConstants.GROUP_ID;
 import static io.ballerina.persist.nodegenerator.SyntaxTreeConstants.GROUP_ID_KEYWORD;
@@ -98,7 +100,9 @@ public class SyntaxTreeGenerator {
             for (Object member : nodeList) {
                 if (member instanceof TableNode) {
                     TableNode node = (TableNode) member;
-                    if (node.identifier().toSourceCode().trim().equals(name)) {
+                    if (node.identifier().toSourceCode().trim().equals(name) ||
+                            ((node.identifier().toSourceCode().trim().equals(DATABASE)) &&
+                                    (configPath.toString().contains(PERSIST_TOML_FILE)))) {
                         persistConfigs = true;
                         NodeList<KeyValueNode> subNodeList = node.fields();
                         for (KeyValueNode subMember : subNodeList) {
