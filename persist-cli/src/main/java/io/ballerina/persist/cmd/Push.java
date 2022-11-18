@@ -129,7 +129,7 @@ public class Push implements BLauncherCmd {
             balProject.currentPackage().getCompilation();
             configurations = SyntaxTreeGenerator.readToml(Paths.get(this.sourcePath, this.configPath), name);
             sqlLines = readSqlFile();
-            setupJdbcDriver();
+            loadJdbcDriver();
         } catch (ProjectException | BalException  e) {
             errStream.println(e.getMessage());
             return;
@@ -191,7 +191,7 @@ public class Push implements BLauncherCmd {
         return this.configurations;
     }
 
-    private void setupJdbcDriver() throws BalException {
+    private void loadJdbcDriver() throws BalException {
         Path driverPath = getDriverPath().toAbsolutePath();
         URL[] urls = {};
         try {
