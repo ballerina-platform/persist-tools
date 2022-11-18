@@ -31,6 +31,7 @@ import io.ballerina.projects.directory.ProjectLoader;
 import picocli.CommandLine;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -61,8 +62,10 @@ import static io.ballerina.persist.PersistToolsConstants.MYSQL_CONNECTOR;
 import static io.ballerina.persist.PersistToolsConstants.MYSQL_DRIVER_CLASS;
 import static io.ballerina.persist.PersistToolsConstants.PASSWORD;
 import static io.ballerina.persist.PersistToolsConstants.PATH;
+import static io.ballerina.persist.PersistToolsConstants.PERSIST_TOML_FILE;
 import static io.ballerina.persist.PersistToolsConstants.PORT;
 import static io.ballerina.persist.PersistToolsConstants.SQL_SCRIPT_FILE;
+import static io.ballerina.persist.PersistToolsConstants.SUBMODULE_PERSIST;
 import static io.ballerina.persist.PersistToolsConstants.TARGET_DIR;
 import static io.ballerina.persist.PersistToolsConstants.USER;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.JDBC_URL_WITHOUT_DATABASE;
@@ -101,6 +104,13 @@ public class Push implements BLauncherCmd {
         if (helpFlag) {
             String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMMAND_IDENTIFIER);
             errStream.println(commandUsageInfo);
+            return;
+        }
+        Path persistTomlPath = Paths.get(this.sourcePath, SUBMODULE_PERSIST, PERSIST_TOML_FILE);
+        File persistToml = new File(persistTomlPath.toString());
+        if (!persistToml.exists()) {
+            errStream.println("Persist project is not initiated. Please run `bal persist init` " +
+                    "to initiate the project before database schema generation");
             return;
         }
 
