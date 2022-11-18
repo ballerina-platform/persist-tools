@@ -67,8 +67,8 @@ public class PersistToolsConstants {
     public static final String PERSIST_TOML_FILE = "Persist.toml";
     public static final String DATABASE_CONFIGURATION_BAL = "database_configuration.bal";
 
-    public static final String BALLERINA_MYSQL_DRIVER = "ballerinax/mysql.driver";
-    public static final String JAVA_11 = "java11";
+    public static final String BALLERINA_MYSQL_DRIVER_NAME = "ballerinax/mysql.driver";
+    public static final String PLATFORM = "java11";
     public static final String PATH = "path";
-    public static final String MYSQL_CONNECTOR = "mysql-connector";
+    public static final String MYSQL_CONNECTOR_NAME_PREFIX = "mysql-connector";
 }

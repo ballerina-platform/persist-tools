@@ -50,15 +50,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import static io.ballerina.persist.PersistToolsConstants.BALLERINA_MYSQL_DRIVER;
+import static io.ballerina.persist.PersistToolsConstants.BALLERINA_MYSQL_DRIVER_NAME;
 import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 import static io.ballerina.persist.PersistToolsConstants.CONFIG_SCRIPT_FILE;
 import static io.ballerina.persist.PersistToolsConstants.CREATE_DATABASE_SQL;
 import static io.ballerina.persist.PersistToolsConstants.DATABASE;
 import static io.ballerina.persist.PersistToolsConstants.HOST;
-import static io.ballerina.persist.PersistToolsConstants.JAVA_11;
+import static io.ballerina.persist.PersistToolsConstants.PLATFORM;
 import static io.ballerina.persist.PersistToolsConstants.MYSQL;
-import static io.ballerina.persist.PersistToolsConstants.MYSQL_CONNECTOR;
+import static io.ballerina.persist.PersistToolsConstants.MYSQL_CONNECTOR_NAME_PREFIX;
 import static io.ballerina.persist.PersistToolsConstants.MYSQL_DRIVER_CLASS;
 import static io.ballerina.persist.PersistToolsConstants.PASSWORD;
 import static io.ballerina.persist.PersistToolsConstants.PATH;
@@ -110,7 +110,7 @@ public class Push implements BLauncherCmd {
         File persistToml = new File(persistTomlPath.toString());
         if (!persistToml.exists()) {
             errStream.println("Persist project is not initiated. Please run `bal persist init` " +
-                    "to initiate the project before database schema generation");
+                    "to initiate the project before the database schema generation");
             return;
         }
 
@@ -157,7 +157,7 @@ public class Push implements BLauncherCmd {
             return;
         }
 
-        String databaseUrl = String.format(JDBC_URL_WITH_DATABASE , MYSQL,
+        String databaseUrl = String.format(JDBC_URL_WITH_DATABASE, MYSQL,
                     configurations.get(HOST).replaceAll("\"", ""), configurations.get(PORT),
                     configurations.get(DATABASE).replaceAll("\"", ""));
 
@@ -257,12 +257,12 @@ public class Push implements BLauncherCmd {
 
         Package mysql = resolvedPackageDependencyDependencyGraph.getDirectDependencies(root).stream().
                 filter(resolvedPackageDependency -> resolvedPackageDependency.packageInstance().
-                descriptor().toString().contains(BALLERINA_MYSQL_DRIVER)).findFirst().get().packageInstance();
+                descriptor().toString().contains(BALLERINA_MYSQL_DRIVER_NAME)).findFirst().get().packageInstance();
 
-        List<Map<String, Object>> dependencies = mysql.manifest().platform(JAVA_11).dependencies();
+        List<Map<String, Object>> dependencies = mysql.manifest().platform(PLATFORM).dependencies();
 
         for (Map<String, Object> dependency : dependencies) {
-            if (dependency.get(PATH).toString().contains(MYSQL_CONNECTOR)) {
+            if (dependency.get(PATH).toString().contains(MYSQL_CONNECTOR_NAME_PREFIX)) {
                 relativeLibPath = dependency.get(PATH).toString();
                 driverPath = mysql.project().sourceRoot().resolve(relativeLibPath);
                 break;
