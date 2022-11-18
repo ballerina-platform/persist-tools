@@ -42,7 +42,7 @@ import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 import static io.ballerina.persist.PersistToolsConstants.CONFIG_SCRIPT_FILE;
 import static io.ballerina.persist.PersistToolsConstants.DATABASE_CONFIGURATION_BAL;
 import static io.ballerina.persist.PersistToolsConstants.KEYWORD_CLIENTS;
-import static io.ballerina.persist.PersistToolsConstants.PERSISTTOML;
+import static io.ballerina.persist.PersistToolsConstants.PERSIST_TOML_FILE;
 import static io.ballerina.persist.PersistToolsConstants.SUBMODULE_MODULES;
 import static io.ballerina.persist.PersistToolsConstants.SUBMODULE_PERSIST;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.PATH_CONFIGURATION_BAL_FILE;
@@ -76,7 +76,7 @@ public class Init implements BLauncherCmd {
 
     @Override
     public void execute() {
-        Path persistTomlPath = Paths.get(this.sourcePath, SUBMODULE_PERSIST, PERSISTTOML);
+        Path persistTomlPath = Paths.get(this.sourcePath, SUBMODULE_PERSIST, PERSIST_TOML_FILE);
         Path databaseConfigPath = Paths.get(this.sourcePath, SUBMODULE_MODULES, KEYWORD_CLIENTS,
                 DATABASE_CONFIGURATION_BAL);
         if (helpFlag) {

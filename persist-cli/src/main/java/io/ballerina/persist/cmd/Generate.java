@@ -48,7 +48,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static io.ballerina.persist.PersistToolsConstants.PERSISTTOML;
+import static io.ballerina.persist.PersistToolsConstants.PERSIST_TOML_FILE;
 import static io.ballerina.persist.PersistToolsConstants.SUBMODULE_PERSIST;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.EXTENSION_BAL;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_CLIENTS;
@@ -95,7 +95,7 @@ public class Generate implements BLauncherCmd {
             errStream.println(commandUsageInfo);
             return;
         }
-        Path persistTomlPath = Paths.get(this.sourcePath, SUBMODULE_PERSIST, PERSISTTOML);
+        Path persistTomlPath = Paths.get(this.sourcePath, SUBMODULE_PERSIST, PERSIST_TOML_FILE);
         File persistToml = new File(persistTomlPath.toString());
         if (!persistToml.exists()) {
             errStream.println("Persist project is not initiated. Please run `bal persist init` " +
