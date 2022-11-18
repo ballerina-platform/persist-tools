@@ -6,6 +6,3 @@ port = "${persist_generate_17.clients.port}"
 user = "${persist_generate_17.clients.user}"
 password = "${persist_generate_17.clients.password}"
 database = "${persist_generate_17.clients.database}"
-
-[shadowDatabase]
-

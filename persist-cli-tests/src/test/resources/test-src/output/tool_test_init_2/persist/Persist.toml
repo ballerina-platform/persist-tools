@@ -6,6 +6,3 @@ port = "${perist_init_2.clients.port}"
 user = "${perist_init_2.clients.user}"
 password = "${perist_init_2.clients.password}"
 database = "${perist_init_2.clients.database}"
-
-[shadowDatabase]
-

@@ -50,7 +50,6 @@ import static io.ballerina.persist.PersistToolsConstants.DEFAULT_USER;
 import static io.ballerina.persist.PersistToolsConstants.HOST;
 import static io.ballerina.persist.PersistToolsConstants.HOST_PLACEHOLDER;
 import static io.ballerina.persist.PersistToolsConstants.KEYWORD_PROVIDER;
-import static io.ballerina.persist.PersistToolsConstants.KEYWORD_SHADOWDATABASE;
 import static io.ballerina.persist.PersistToolsConstants.KEY_DATABASE;
 import static io.ballerina.persist.PersistToolsConstants.KEY_HOST;
 import static io.ballerina.persist.PersistToolsConstants.KEY_PASSWORD;
@@ -103,8 +102,6 @@ public class SyntaxTreeGenerator {
         moduleMembers = addNewLine(moduleMembers, 1);
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(DATABASE, null));
         moduleMembers = populatePersistNodeList(moduleMembers, name);
-        moduleMembers = addNewLine(moduleMembers, 1);
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(KEYWORD_SHADOWDATABASE, null));
         Token eofToken = AbstractNodeFactory.createIdentifierToken("");
         DocumentNode documentNode = NodeFactory.createDocumentNode(moduleMembers, eofToken);
         TextDocument textDocument = TextDocuments.from(documentNode.toSourceCode());

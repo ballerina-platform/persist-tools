@@ -95,7 +95,7 @@ public class GeneratedSourcesTestUtils {
         }
     }
 
-    public static void assertGeneratedSourcesNegative(String subDir, Command cmd, String[] objects) {
+    public static void assertGeneratedSourcesNegative(String subDir, Command cmd, String[] relativeFilepaths) {
         Path sourceDirPath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);
         generateSourceCode(sourceDirPath, cmd);
         if (cmd == Command.DB_PUSH) {
@@ -103,9 +103,9 @@ public class GeneratedSourcesTestUtils {
         } else {
             Assert.assertTrue(directoryContentEquals(Paths.get(RESOURCES_EXPECTED_OUTPUT.toString()).resolve(subDir),
                     Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)));
-            for (String object : objects) {
-                Path actualObjectFilePath = sourceDirPath.resolve(object);
-                Assert.assertFalse(Files.exists(actualObjectFilePath));
+            for (String filePath : relativeFilepaths) {
+                Path absoluteFilepath = sourceDirPath.resolve(filePath);
+                Assert.assertFalse(Files.exists(absoluteFilepath));
             }
         }
     }
