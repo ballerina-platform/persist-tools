@@ -224,20 +224,9 @@ public class Generate implements BLauncherCmd {
         }
     }
 
-    private static void writeOutputFile(SyntaxTree syntaxTree, String outPath) throws IOException, FormatterException,
-            BalException {
+    private static void writeOutputFile(SyntaxTree syntaxTree, String outPath) throws IOException, FormatterException {
         String content;
         content = Formatter.format(syntaxTree.toSourceCode());
-        Path pathToFile = Paths.get(outPath);
-        if (!Files.exists(pathToFile.getParent())) {
-            try {
-                Files.createDirectories(pathToFile.getParent());
-                outStream.println("Added new Ballerina module at modules/clients");
-            } catch (IOException e) {
-                throw new BalException("Error while adding new Ballerina module at modules/clients. " +
-                        e.getMessage());
-            }
-        }
         try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8.name())) {
             writer.println(content);
         }

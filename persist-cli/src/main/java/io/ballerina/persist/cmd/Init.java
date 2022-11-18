@@ -103,10 +103,10 @@ public class Init implements BLauncherCmd {
         generateCMD.setSourcePath(Paths.get(sourcePath).toAbsolutePath().toString());
         try {
             generateConfigurationBalFile();
+            outStream.println("Added new Ballerina module at modules/clients");
             outStream.println("Created database_configuration.bal file with configurations.");
             createPersistToml(persistTomlPath);
             outStream.println("Created Persist.toml file with configurations.");
-            generateCMD.execute();
             if (!Files.exists(Paths.get(sourcePath, configPath))) {
                 createConfigToml();
                 outStream.println("Created Config.toml file inside the Ballerina project");
@@ -114,6 +114,7 @@ public class Init implements BLauncherCmd {
                 updateConfigToml();
                 outStream.println("Updated Config.toml file with default database configurations.");
             }
+            generateCMD.execute();
         } catch (BalException e) {
             errStream.println(e.getMessage());
         }
