@@ -1,0 +1,8 @@
+[package]
+org = "foo"
+name = "tool_test_db_push_6"
+version = "0.1.0"
+distribution = "2201.3.0"
+
+[build-options]
+observabilityIncluded = false

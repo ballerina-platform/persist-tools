@@ -124,4 +124,10 @@ public class ToolingDbPushTest {
         assertGeneratedSources("tool_test_db_push_5", DB_PUSH);
         assertCreateDatabaseTables("tool_test_db_push_5", tables);
     }
+
+    @Test(dependsOnMethods = { "testDbPushEntityUpdated" })
+    @Description("When the db push command is executed with faulty credentials")
+    public void testDbPushWithWrongCredentials() {
+        assertGeneratedSourcesNegative("tool_test_db_push_6", DB_PUSH, null);
+    }
 }

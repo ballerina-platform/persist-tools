@@ -1,6 +1,6 @@
 [tool_test_db_push_5.clients]
-host = "localhostnegative"
-port = 3305
-user = "admin"
-password = "12345"
-database = "medicalneed"
+host = "localhost23"
+port = 3307
+user = "root"
+password = "Test123#"
+database = "persistnew"

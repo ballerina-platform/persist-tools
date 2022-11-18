@@ -1,8 +1,8 @@
 provider = "mysql"
 
 [database]
-host = "${tool_test_db_push_5.clients.host}"
+host = "localhost"
 port = "${tool_test_db_push_5.clients.port}"
-user = "${tool_test_db_push_5.clients.user}"
+user = "root"
 password = "${tool_test_db_push_5.clients.password}"
-database = "${tool_test_db_push_5.clients.database}"
+database = "persist"

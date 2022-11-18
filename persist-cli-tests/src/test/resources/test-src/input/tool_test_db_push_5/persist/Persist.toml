@@ -2,7 +2,7 @@ provider = "mysql"
 
 [database]
 host = "localhost"
-port = 3307
+port = "${tool_test_db_push_5.clients.port}"
 user = "root"
-password = "Test123#"
+password = "${tool_test_db_push_5.clients.password}"
 database = "persist"
