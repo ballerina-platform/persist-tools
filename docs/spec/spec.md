@@ -98,6 +98,7 @@ import ballerina/persist;
 import foo/persist_generate_1 as entities;
 
 public client class MedicalNeedClient {
+    *persist:AbstractPersistClient;
 
     private final string entityName = "MedicalNeed";
     private final sql:ParameterizedQuery tableName = `MedicalNeeds`;

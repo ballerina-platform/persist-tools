@@ -27,6 +27,18 @@ public class BalFileConstants {
     private BalFileConstants() {
 
     }
+
+    /**
+     * Constants related to persist client type inheritance.
+     */
+    public static class InheritedTypeReference {
+        private InheritedTypeReference() {
+        }
+
+        public static final String PERSIST_MODULE_NAME = "persist";
+        public static final String ABSTRACT_PERSIST_CLIENT = "AbstractPersistClient";
+    }
+
     public static final String PERSIST_CLIENT = "persistClient";
     public static final String RETURN_RECORD_VARIABLE = "return {%s};";
     public static final String RETURN_VARIABLE = "return %s;";
