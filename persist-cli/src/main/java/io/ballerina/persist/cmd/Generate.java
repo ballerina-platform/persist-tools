@@ -39,14 +39,12 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_TOML_FILE;
 import static io.ballerina.persist.PersistToolsConstants.SUBMODULE_PERSIST;
-import static io.ballerina.persist.nodegenerator.BalFileConstants.EXTENSION_BAL;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_CLIENTS;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_MODULES;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.PATH_ENTITIES_FILE;
