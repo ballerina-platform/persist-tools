@@ -45,6 +45,7 @@ public class PersistToolsConstants {
     public static final String BALLERINA_SCRIP_FILE = "Ballerina.toml";
     public static final String SQL_SCRIPT_FILE = "persist_db_scripts.sql";
     public static final String TARGET_DIR = "target";
+    public static final String PERSIST_DIR = "persist";
 
     public static final String PLATFORM_LIBS = "platform-libs";
 
@@ -57,6 +58,44 @@ public class PersistToolsConstants {
     public static final String PORT = "port";
 
     public static final String CREATE_DATABASE_SQL = "CREATE DATABASE %s";
+    public static final String AUTO_INCREMENT_WITH_SPACE = " AUTO_INCREMENT";
+    public static final String AUTO_INCREMENT_WITH_TAB = "  AUTO_INCREMENT";
+    public static final String START_VALUE = "startValue";
+    public static final String ON_UPDATE = "onUpdate";
+    public static final String CONSTRAINT = "constraint";
+    public static final String STRING = "String";
+    public static final String LENGTH = "length";
+    public static final String MAX_LENGTH = "maxLength";
+    public static final String FILE_NAME = "persist_db_scripts.sql";
+    public static final String UNIQUE_CONSTRAINTS = "uniqueConstraints";
 
+    /**
+     * Constants related to Ballerina types.
+     */
+    public static final class BallerinaTypes {
+        public static final String INT = "int";
+        public static final String STRING = "string";
+        public static final String BOOLEAN = "boolean";
+        public static final String DECIMAL = "decimal";
+        public static final String FLOAT = "float";
+        public static final String DATE = "time:Date";
+        public static final String TIME_OF_DAY = "time:TimeOfDay";
+        public static final String UTC = "time:Utc";
+        public static final String CIVIL = "time:Civil";
+    }
 
+    /**
+     * Constants related to SQL types.
+     */
+    public static final class SqlTypes {
+        public static final String INT = "INT";
+        public static final String BOOLEAN = "BOOLEAN";
+        public static final String DECIMAL = "DECIMAL";
+        public static final String FLOAT = "FLOAT";
+        public static final String VARCHAR = "VARCHAR";
+        public static final String DATE = "DATE";
+        public static final String TIME = "TIME";
+        public static final String TIME_STAMP = "TIMESTAMP";
+        public static final String DATE_TIME = "DATETIME";
+    }
 }

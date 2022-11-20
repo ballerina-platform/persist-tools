@@ -20,7 +20,11 @@ package io.ballerina.persist.cmd;
 import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.nodegenerator.SyntaxTreeGenerator;
 import io.ballerina.persist.objects.BalException;
+import io.ballerina.persist.objects.Entity;
+import io.ballerina.persist.objects.EntityMetaData;
 import io.ballerina.persist.utils.JdbcDriverLoader;
+import io.ballerina.persist.utils.ReadBalFiles;
+import io.ballerina.persist.utils.SqlScriptGenerationUtils;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.ProjectException;
 import io.ballerina.projects.directory.BuildProject;
@@ -41,6 +45,7 @@ import java.sql.Driver;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Properties;
 
@@ -52,6 +57,7 @@ import static io.ballerina.persist.PersistToolsConstants.HOST;
 import static io.ballerina.persist.PersistToolsConstants.MYSQL;
 import static io.ballerina.persist.PersistToolsConstants.MYSQL_DRIVER_CLASS;
 import static io.ballerina.persist.PersistToolsConstants.PASSWORD;
+import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIR;
 import static io.ballerina.persist.PersistToolsConstants.PLATFORM_LIBS;
 import static io.ballerina.persist.PersistToolsConstants.PORT;
 import static io.ballerina.persist.PersistToolsConstants.SQL_SCRIPT_FILE;
@@ -102,10 +108,14 @@ public class Push implements BLauncherCmd {
             name = balProject.currentPackage().descriptor().org().value() + "." + balProject.currentPackage()
                     .descriptor().name().value() + "." + "clients";
             setupJdbcDriver();
-
-            balProject = BuildProject.load(Paths.get(sourcePath).toAbsolutePath());
+            Path absoluteSourcePath = Paths.get(sourcePath).toAbsolutePath();
+            balProject = BuildProject.load(absoluteSourcePath);
             balProject.currentPackage().getCompilation();
             configurations = SyntaxTreeGenerator.readToml(Paths.get(this.sourcePath, this.configPath), name);
+            EntityMetaData retEntityMetaData = ReadBalFiles.readBalFiles(this.sourcePath);
+            ArrayList<Entity> entityArray = retEntityMetaData.entityArray;
+            SqlScriptGenerationUtils.generateSqlScript(entityArray,
+                    Path.of(absoluteSourcePath.toString(), PERSIST_DIR).toAbsolutePath());
             sqlLines = readSqlFile();
         } catch (ProjectException | BalException  e) {
             errStream.println(e.getMessage());
@@ -199,7 +209,7 @@ public class Push implements BLauncherCmd {
         String[] sqlLines;
         String sValue;
         StringBuilder stringBuilder = new StringBuilder();
-        try (FileReader fileReader = new FileReader(Paths.get(this.sourcePath, TARGET_DIR, SQL_SCRIPT_FILE).
+        try (FileReader fileReader = new FileReader(Paths.get(this.sourcePath, PERSIST_DIR, SQL_SCRIPT_FILE).
                 toAbsolutePath().toString())) {
             BufferedReader bufferedReader = new BufferedReader(fileReader);
             while ((sValue = bufferedReader.readLine()) != null) {
