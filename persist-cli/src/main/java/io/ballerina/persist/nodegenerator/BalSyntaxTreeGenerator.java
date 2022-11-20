@@ -103,6 +103,7 @@ import static io.ballerina.persist.nodegenerator.BalFileConstants.INCLUDE;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.INIT_INCLUDE_MANY;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.INIT_PERSIST_CLIENT_MANY;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.IS_SQL_ERROR;
+import static io.ballerina.persist.nodegenerator.BalFileConstants.InheritedTypeReferenceConstants;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.KEY;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_AUTOINCREMENT;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_BOOLEAN;
@@ -538,10 +539,10 @@ public class BalSyntaxTreeGenerator {
         client.addMember(NodeFactory.createTypeReferenceNode(
                 AbstractNodeFactory.createToken(SyntaxKind.ASTERISK_TOKEN),
                 NodeFactory.createQualifiedNameReferenceNode(
-                        NodeFactory.createIdentifierToken(BalFileConstants.InheritedTypeReference.PERSIST_MODULE_NAME),
+                        NodeFactory.createIdentifierToken(InheritedTypeReferenceConstants.PERSIST_MODULE_NAME),
                         AbstractNodeFactory.createToken(SyntaxKind.COLON_TOKEN),
                         NodeFactory.createIdentifierToken(
-                                BalFileConstants.InheritedTypeReference.ABSTRACT_PERSIST_CLIENT)
+                                InheritedTypeReferenceConstants.ABSTRACT_PERSIST_CLIENT)
                 ),
                 AbstractNodeFactory.createToken(SyntaxKind.SEMICOLON_TOKEN)), false);
         client.addMember(NodeFactory.createBasicLiteralNode(SyntaxKind.STRING_LITERAL,

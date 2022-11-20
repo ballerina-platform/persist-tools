@@ -31,8 +31,8 @@ public class BalFileConstants {
     /**
      * Constants related to persist client type inheritance.
      */
-    public static class InheritedTypeReference {
-        private InheritedTypeReference() {
+    public static class InheritedTypeReferenceConstants {
+        private InheritedTypeReferenceConstants() {
         }
 
         public static final String PERSIST_MODULE_NAME = "persist";
