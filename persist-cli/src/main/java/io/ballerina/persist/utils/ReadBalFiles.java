@@ -44,7 +44,9 @@ import static io.ballerina.persist.utils.BalProjectUtils.hasSemanticDiagnostics;
 import static io.ballerina.persist.utils.BalProjectUtils.hasSyntacticDiagnostics;
 
 /**
+ * Class to implement to read the ballerina files.
  *
+ * @since 0.1.0
  */
 public class ReadBalFiles {
 

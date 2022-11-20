@@ -37,6 +37,8 @@ import java.util.Locale;
 
 /**
  * Sql script generator.
+ *
+ * @since 0.1.0
  */
 public class SqlScriptGenerationUtils {
 
