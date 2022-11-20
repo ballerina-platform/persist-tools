@@ -27,6 +27,18 @@ public class BalFileConstants {
     private BalFileConstants() {
 
     }
+
+    /**
+     * Constants related to persist client type inheritance.
+     */
+    public static class InheritedTypeReferenceConstants {
+        private InheritedTypeReferenceConstants() {
+        }
+
+        public static final String PERSIST_MODULE_NAME = "persist";
+        public static final String ABSTRACT_PERSIST_CLIENT = "AbstractPersistClient";
+    }
+
     public static final String PERSIST_CLIENT = "persistClient";
     public static final String RETURN_RECORD_VARIABLE = "return {%s};";
     public static final String RETURN_VARIABLE = "return %s;";
@@ -220,6 +232,7 @@ public class BalFileConstants {
     public static final String GET_MANY_RELATIONS = "check " +
             "(<persist:SQLClient>self.persistClient).getManyRelations(nextRecord.value," +
             " <%sRelations[]>self.include);";
+    public static final String MYSQL_DRIVER_IMPORT = "import ballerinax/mysql.driver as _;";
 
 
 }

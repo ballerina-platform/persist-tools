@@ -188,7 +188,7 @@ checkstyleTest.dependsOn(":checkstyle:downloadCheckstyleRuleFiles")
 
 spotbugsTest {
     effort "max"
-    reportLevel "Medium"
+    reportLevel "Low"
     reportsDir = file("$project.buildDir/reports/spotbugs")
     reports {
         html.enabled true

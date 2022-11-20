@@ -4,6 +4,7 @@ import ballerina/time;
 import ballerina/persist;
 
 public client class AidPackageOrderItemClient {
+    *persist:AbstractPersistClient;
 
     private final string entityName = "AidPackageOrderItem";
     private final sql:ParameterizedQuery tableName = `AidPackageOrderItem`;

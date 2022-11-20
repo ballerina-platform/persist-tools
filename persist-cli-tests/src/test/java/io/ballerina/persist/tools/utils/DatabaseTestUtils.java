@@ -29,6 +29,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Locale;
 
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.GENERATED_SOURCES_DIRECTORY;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.generateSourceCode;
@@ -47,7 +48,7 @@ public class DatabaseTestUtils {
 
     public static void assertCreateDatabaseTables(String subDir, ArrayList<PersistTable> tables) {
         String osName = System.getProperty("os.name");
-        if (osName.toLowerCase().contains("windows")) {
+        if (osName.toLowerCase(Locale.getDefault()).contains("windows")) {
             return;
         }
         HashMap configurations = generateSourceCode(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir),
