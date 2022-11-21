@@ -97,18 +97,19 @@ tasks.withType(Checkstyle) {
     exclude '**/module-info.java'
 }
 
-task copyTestPack(type: Copy) {
-    dependsOn(copyStdlibs)
-    into buildDir
-    into("ballerina-distribution/") {
-        from ballerinaDist
-    }
-}
-
 task copyTestResources(type: Copy) {
     into buildDir
     into("generated-sources/") {
         from "src/test/resources/test-src/input"
+    }
+}
+
+task copyTestPack(type: Copy) {
+    dependsOn(copyStdlibs)
+    dependsOn(copyTestResources)
+    into buildDir
+    into("ballerina-distribution/") {
+        from ballerinaDist
     }
 }
 
@@ -185,6 +186,12 @@ checkstyle {
 }
 
 checkstyleTest.dependsOn(":checkstyle:downloadCheckstyleRuleFiles")
+checkstyleTest.dependsOn(":persist-cli-tests:copyTestPack")
+checkstyleMain.dependsOn(":persist-cli-tests:copyTestPack")
+spotbugsTest.dependsOn(":persist-cli-tests:copyTestPack")
+spotbugsMain.dependsOn(":persist-cli-tests:copyTestPack")
+jar.dependsOn(":persist-cli-tests:copyTestPack")
+compileTestJava.dependsOn(":persist-cli-tests:copyTestPack")
 
 spotbugsTest {
     effort "max"
