@@ -104,7 +104,6 @@ public class Push implements BLauncherCmd {
 
     @Override
     public void execute() {
-        String name;
         configurations = new HashMap<>();
         String[] sqlLines;
         Statement statement;
@@ -129,7 +128,7 @@ public class Push implements BLauncherCmd {
             balProject = ProjectLoader.loadProject(Paths.get(sourcePath));
             balProject = BuildProject.load(Paths.get(sourcePath).toAbsolutePath());
             balProject.currentPackage().getCompilation();
-            persistConfigurations = SyntaxTreeGenerator.readToml(Paths.get(this.sourcePath, PERSIST,
+            persistConfigurations = SyntaxTreeGenerator.readPersistToml(Paths.get(this.sourcePath, PERSIST,
                     this.persistConfigPath));
             for (String key : persistConfigurations.keySet()) {
                 if (Pattern.matches(PLACEHOLDER_PATTERN, persistConfigurations.get(key))) {
@@ -186,11 +185,10 @@ public class Push implements BLauncherCmd {
             }
             statement.close();
         } catch (SQLException e) {
-            errStream.println(String.format("Error while creating the tables in the database %s ", database)
-                    + e.getMessage());
+            errStream.println("Error while creating the tables in the database " + database + e.getMessage());
             return;
         }
-        stdStream.println(String.format("Created tables for entities in the database %s", database));
+        stdStream.println("Created tables for entities in the database " + database);
     }
 
     public void setSourcePath(String sourcePath) {

@@ -64,11 +64,6 @@ import static io.ballerina.persist.PersistToolsConstants.PORT_PLACEHOLDER;
 import static io.ballerina.persist.PersistToolsConstants.USER;
 import static io.ballerina.persist.PersistToolsConstants.USER_PLACEHOLDER;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.PLACEHOLDER_PATTERN;
-import static io.ballerina.persist.nodegenerator.SyntaxTreeConstants.ARTIFACT_ID;
-import static io.ballerina.persist.nodegenerator.SyntaxTreeConstants.GROUP_ID;
-import static io.ballerina.persist.nodegenerator.SyntaxTreeConstants.GROUP_ID_KEYWORD;
-import static io.ballerina.persist.nodegenerator.SyntaxTreeConstants.JAVA_11_DEPENDANCY;
-import static io.ballerina.persist.nodegenerator.SyntaxTreeConstants.VERSION;
 
 
 /**
@@ -110,7 +105,7 @@ public class SyntaxTreeGenerator {
         return SyntaxTree.from(textDocument);
     }
 
-    public static HashMap<String, String> populateConfiguration(HashMap<String, String> persistConfig, Path configPath)
+    public static void populateConfiguration(HashMap<String, String> persistConfig, Path configPath)
             throws BalException {
         Path fileNamePath = configPath.getFileName();
         try {
@@ -149,13 +144,12 @@ public class SyntaxTreeGenerator {
                     }
                 }
             }
-            return persistConfig;
         } catch (IOException e) {
             throw new BalException("Error while reading configurations. ");
         }
     }
 
-    public static HashMap<String, String> readToml(Path configPath) throws BalException {
+    public static HashMap<String, String> readPersistToml(Path configPath) throws BalException {
         HashMap<String, String> values = new HashMap<>();
         Path fileNamePath = configPath.getFileName();
         try {
@@ -222,7 +216,7 @@ public class SyntaxTreeGenerator {
                     moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(name, null));
                     for (KeyValueNode subMember : subNodeList) {
                         if (!isDatabaseConfigurationEntry(subMember.identifier())) {
-                            moduleMembers = moduleMembers.add((DocumentMemberDeclarationNode) subMember);
+                            moduleMembers = moduleMembers.add(subMember);
                         } else {
                             existingNodes.add(subMember.identifier().toSourceCode().trim());
                             if (subMember.identifier().toSourceCode().trim().equals(KEY_PORT)) {
@@ -256,61 +250,6 @@ public class SyntaxTreeGenerator {
             moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(name, null));
             moduleMembers = populateRemaining(moduleMembers, existingNodes);
 
-        }
-        Token eofToken = AbstractNodeFactory.createIdentifierToken("");
-        DocumentNode documentNode = NodeFactory.createDocumentNode(moduleMembers, eofToken);
-        TextDocument textDocument = TextDocuments.from(documentNode.toSourceCode());
-        return SyntaxTree.from(textDocument);
-    }
-
-    public static SyntaxTree updateBallerinaToml(Path balPAth) throws IOException {
-
-        NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
-        Path fileNamePath = balPAth.getFileName();
-        TextDocument configDocument = TextDocuments.from(Files.readString(balPAth));
-        SyntaxTree syntaxTree = SyntaxTree.from(configDocument, fileNamePath.toString());
-        DocumentNode rootNote = syntaxTree.rootNode();
-        NodeList<DocumentMemberDeclarationNode> nodeList = rootNote.members();
-        boolean mysqlDriverExists = false;
-
-        for (DocumentMemberDeclarationNode member : nodeList) {
-            if (member instanceof KeyValueNode) {
-                moduleMembers = moduleMembers.add(member);
-            } else if (member instanceof TableNode) {
-                moduleMembers = moduleMembers.add(member);
-            } else if (member instanceof TableArrayNode) {
-                if (((TableArrayNode) member).identifier().toSourceCode().contains(JAVA_11_DEPENDANCY)) {
-                    NodeList<KeyValueNode> fields = ((TableArrayNode) member).fields();
-                    for (KeyValueNode keyValueNode : fields) {
-                        if ((keyValueNode.identifier()).toSourceCode().contains(GROUP_ID_KEYWORD) &&
-                                (keyValueNode.value()).toSourceCode().contains(MYSQL)) {
-                            mysqlDriverExists = true;
-                            break;
-                        }
-                    }
-                    if (!mysqlDriverExists) {
-                        moduleMembers = moduleMembers.add(member);
-                    } else {
-                        moduleMembers = addNewLine(moduleMembers, 1);
-                        moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray(
-                                JAVA_11_DEPENDANCY, null));
-                        moduleMembers = moduleMembers.add(GROUP_ID);
-                        moduleMembers = moduleMembers.add(ARTIFACT_ID);
-                        moduleMembers = moduleMembers.add(VERSION);
-                    }
-                } else {
-                    moduleMembers = moduleMembers.add(member);
-                }
-            }
-
-        }
-        if (!mysqlDriverExists) {
-            moduleMembers = addNewLine(moduleMembers, 1);
-            moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray(
-                    JAVA_11_DEPENDANCY, null));
-            moduleMembers = moduleMembers.add(GROUP_ID);
-            moduleMembers = moduleMembers.add(ARTIFACT_ID);
-            moduleMembers = moduleMembers.add(VERSION);
         }
         Token eofToken = AbstractNodeFactory.createIdentifierToken("");
         DocumentNode documentNode = NodeFactory.createDocumentNode(moduleMembers, eofToken);
