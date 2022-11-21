@@ -3,6 +3,7 @@ import ballerinax/mysql;
 import ballerina/persist;
 
 public client class VehicleClient {
+    *persist:AbstractPersistClient;
 
     private final string entityName = "Vehicle";
     private final sql:ParameterizedQuery tableName = `Vehicles`;

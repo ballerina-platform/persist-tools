@@ -4,6 +4,7 @@ import ballerina/time;
 import ballerina/persist;
 
 public client class MedicalNeed1Client {
+    *persist:AbstractPersistClient;
 
     private final string entityName = "MedicalNeed1";
     private final sql:ParameterizedQuery tableName = `MedicalNeeds1`;

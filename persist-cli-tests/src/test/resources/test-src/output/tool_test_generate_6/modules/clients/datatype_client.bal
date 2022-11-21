@@ -4,6 +4,7 @@ import ballerina/time;
 import ballerina/persist;
 
 public client class DataTypeClient {
+    *persist:AbstractPersistClient;
 
     private final string entityName = "DataType";
     private final sql:ParameterizedQuery tableName = `DataTypes`;
