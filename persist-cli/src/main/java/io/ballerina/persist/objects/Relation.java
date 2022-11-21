@@ -46,6 +46,8 @@ public class Relation {
     private String relatedInstance;
     private boolean parentIncluded = false;
     public RelationType relationType = RelationType.ONE;
+    public String onDelete = "";
+    public String onUpdate = "";
 
 
     public Relation(String relatedType, String relatedInstance, ArrayList<String> keyColumns,
@@ -55,6 +57,14 @@ public class Relation {
         this.relatedType = relatedType;
         this.isChild = isChild;
         this.relatedInstance = relatedInstance;
+    }
+
+    public void setOnDelete(String onDelete) {
+        this.onDelete = onDelete;
+    }
+
+    public void setOnUpdate(String onUpdate) {
+        this.onUpdate = onUpdate;
     }
 
     public String getRefTable() {
@@ -90,6 +100,14 @@ public class Relation {
 
     public ArrayList<FieldMetaData> getRelatedFields() {
         return relatedFields;
+    }
+
+    public String getOnDelete() {
+        return onDelete;
+    }
+
+    public String getOnUpdate() {
+        return onUpdate;
     }
 
     public void setRelatedFields(ArrayList<FieldMetaData> relatedFields) {

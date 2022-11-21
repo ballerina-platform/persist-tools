@@ -20,7 +20,11 @@ package io.ballerina.persist.cmd;
 import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.nodegenerator.SyntaxTreeGenerator;
 import io.ballerina.persist.objects.BalException;
+import io.ballerina.persist.objects.Entity;
+import io.ballerina.persist.objects.EntityMetaData;
+import io.ballerina.persist.utils.BalProjectUtils;
 import io.ballerina.persist.utils.JdbcDriverLoader;
+import io.ballerina.persist.utils.SqlScriptGenerationUtils;
 import io.ballerina.projects.DependencyGraph;
 import io.ballerina.projects.Package;
 import io.ballerina.projects.Project;
@@ -45,6 +49,7 @@ import java.sql.Driver;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,6 +68,7 @@ import static io.ballerina.persist.PersistToolsConstants.MYSQL;
 import static io.ballerina.persist.PersistToolsConstants.MYSQL_CONNECTOR_NAME_PREFIX;
 import static io.ballerina.persist.PersistToolsConstants.MYSQL_DRIVER_CLASS;
 import static io.ballerina.persist.PersistToolsConstants.PASSWORD;
+import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIR;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_TOML_FILE;
 import static io.ballerina.persist.PersistToolsConstants.PLATFORM;
 import static io.ballerina.persist.PersistToolsConstants.PORT;
@@ -70,7 +76,6 @@ import static io.ballerina.persist.PersistToolsConstants.PROPERTY_KEY_PATH;
 import static io.ballerina.persist.PersistToolsConstants.SQL_SCRIPT_FILE;
 import static io.ballerina.persist.PersistToolsConstants.SUBMODULE_FOLDER;
 import static io.ballerina.persist.PersistToolsConstants.SUBMODULE_PERSIST;
-import static io.ballerina.persist.PersistToolsConstants.TARGET_DIR;
 import static io.ballerina.persist.PersistToolsConstants.USER;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.JDBC_URL_WITHOUT_DATABASE;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.JDBC_URL_WITH_DATABASE;
@@ -123,6 +128,7 @@ public class Push implements BLauncherCmd {
         }
 
         try  {
+            Path absoluteSourcePath = Paths.get(sourcePath).toAbsolutePath();
             balProject = ProjectLoader.loadProject(Paths.get(sourcePath));
             balProject = BuildProject.load(Paths.get(sourcePath).toAbsolutePath());
             balProject.currentPackage().getCompilation();
@@ -137,6 +143,10 @@ public class Push implements BLauncherCmd {
             if (templatedEntryCount > 0) {
                 populatePlaceHolder(persistConfigurations);
             }
+            EntityMetaData retEntityMetaData = BalProjectUtils.readBalFiles(this.sourcePath);
+            ArrayList<Entity> entityArray = retEntityMetaData.entityArray;
+            SqlScriptGenerationUtils.generateSqlScript(entityArray,
+                    Path.of(absoluteSourcePath.toString(), PERSIST_DIR).toAbsolutePath());
             sqlLines = readSqlFile();
             loadJdbcDriver();
         } catch (ProjectException | BalException  e) {
@@ -233,7 +243,7 @@ public class Push implements BLauncherCmd {
         String[] sqlLines;
         String sValue;
         StringBuilder stringBuilder = new StringBuilder();
-        try (FileReader fileReader = new FileReader(Paths.get(this.sourcePath, TARGET_DIR, SQL_SCRIPT_FILE).
+        try (FileReader fileReader = new FileReader(Paths.get(this.sourcePath, PERSIST_DIR, SQL_SCRIPT_FILE).
                 toAbsolutePath().toString())) {
             BufferedReader bufferedReader = new BufferedReader(fileReader);
             while ((sValue = bufferedReader.readLine()) != null) {
