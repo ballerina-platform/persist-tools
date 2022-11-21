@@ -124,10 +124,16 @@ public class ToolingDbPushTest {
         assertGeneratedSources("tool_test_db_push_5", DB_PUSH);
         assertCreateDatabaseTables("tool_test_db_push_5", tables);
     }
-
     @Test()
     @Description("When the db push command is executed without the persist dir")
     public void testDbPushWithoutPersistDir() {
         assertGeneratedSourcesNegative("tool_test_db_push_6", DB_PUSH, null);
+    }
+
+    @Test(dependsOnMethods = { "testDbPushEntityUpdated" })
+    @Description("When the db push command is executed with faulty credentials")
+    public void testDbPushWithWrongCredentials() {
+        assertGeneratedSourcesNegative("tool_test_db_push_7", DB_PUSH, null);
+   
     }
 }
