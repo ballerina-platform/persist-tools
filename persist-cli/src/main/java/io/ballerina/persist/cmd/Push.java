@@ -94,8 +94,6 @@ public class Push implements BLauncherCmd {
     private static final String COMMAND_IDENTIFIER = "persist-db-push";
     Project balProject;
     public String sourcePath = "";
-    public String configPath = CONFIG_SCRIPT_FILE;
-    public String persistConfigPath = PERSIST_TOML_FILE;
     Driver driver;
     HashMap<String, String> configurations;
     HashMap<String, String> persistConfigurations;
@@ -129,12 +127,15 @@ public class Push implements BLauncherCmd {
             balProject = BuildProject.load(Paths.get(sourcePath).toAbsolutePath());
             balProject.currentPackage().getCompilation();
             persistConfigurations = SyntaxTreeGenerator.readPersistToml(Paths.get(this.sourcePath, PERSIST,
-                    this.persistConfigPath));
+                    PERSIST_TOML_FILE));
+            int templatedEntryCount = 0;
             for (String key : persistConfigurations.keySet()) {
                 if (Pattern.matches(PLACEHOLDER_PATTERN, persistConfigurations.get(key))) {
-                      populatePlaceHolder(persistConfigurations);
-                      break;
+                    templatedEntryCount += 1;
                 }
+            }
+            if (templatedEntryCount > 0) {
+                populatePlaceHolder(persistConfigurations);
             }
             sqlLines = readSqlFile();
             loadJdbcDriver();
@@ -226,7 +227,7 @@ public class Push implements BLauncherCmd {
     private void populatePlaceHolder(HashMap<String, String> persistConfigurations)
             throws BalException {
         SyntaxTreeGenerator.populateConfiguration(persistConfigurations, Paths.get(this.sourcePath,
-                                this.configPath).toAbsolutePath());
+                CONFIG_SCRIPT_FILE).toAbsolutePath());
     }
     private String[] readSqlFile() throws BalException {
         String[] sqlLines;

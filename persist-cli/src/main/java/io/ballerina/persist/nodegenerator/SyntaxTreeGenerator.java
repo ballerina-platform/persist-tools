@@ -158,7 +158,7 @@ public class SyntaxTreeGenerator {
             SyntaxTree syntaxTree = SyntaxTree.from(configDocument, fileNamePath.toString());
             DocumentNode rootNote = syntaxTree.rootNode();
             NodeList<DocumentMemberDeclarationNode> nodeList = rootNote.members();
-            for (Object member : nodeList) {
+            for (DocumentMemberDeclarationNode member : nodeList) {
                 if (member instanceof TableNode) {
                     TableNode node = (TableNode) member;
                     if (node.identifier().toSourceCode().trim().equals(DATABASE)) {
