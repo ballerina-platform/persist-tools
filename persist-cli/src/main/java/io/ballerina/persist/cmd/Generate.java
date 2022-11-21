@@ -27,11 +27,9 @@ import io.ballerina.persist.objects.BalException;
 import io.ballerina.persist.objects.Entity;
 import io.ballerina.persist.objects.EntityMetaData;
 import io.ballerina.persist.utils.BalProjectUtils;
-import io.ballerina.projects.DiagnosticResult;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.ProjectException;
 import io.ballerina.projects.directory.ProjectLoader;
-import io.ballerina.tools.diagnostics.Diagnostic;
 import org.ballerinalang.formatter.core.Formatter;
 import org.ballerinalang.formatter.core.FormatterException;
 import picocli.CommandLine;
@@ -41,24 +39,15 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_TOML_FILE;
 import static io.ballerina.persist.PersistToolsConstants.SUBMODULE_PERSIST;
-import static io.ballerina.persist.nodegenerator.BalFileConstants.EXTENSION_BAL;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_CLIENTS;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_MODULES;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.PATH_ENTITIES_FILE;
-import static io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator.formatModuleMembers;
-import static io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator.generateRelations;
-import static io.ballerina.persist.utils.BalProjectUtils.hasSemanticDiagnostics;
-import static io.ballerina.persist.utils.BalProjectUtils.hasSyntacticDiagnostics;
 
 
 /**
