@@ -145,7 +145,7 @@ public class SyntaxTreeGenerator {
                     }
                     if (!configExists) {
                         throw new BalException("Persist client related config doesn't exist in Config.toml.\n" +
-                                "You should add database configurations under <org name>.<pkg name>.clients ");
+                                "You should add database configurations under <pkg name>.clients ");
                     }
                 }
             }
@@ -181,8 +181,8 @@ public class SyntaxTreeGenerator {
                 }
             }
             if (!persistConfigs) {
-                throw new BalException("Persist client related config doesn't exist in Config.toml.\n" +
-                        "You should add database configurations under <org name>.<pkg name>.clients ");
+                throw new BalException("Persist client related config doesn't exist in Persist.toml.\n" +
+                        "You should add database configurations or placeholders under [database] ");
             } else if (values.isEmpty() || values.size() < 5 || (!values.containsKey(DATABASE)
                     || !values.containsKey(USER) || !values.containsKey(HOST) || !values.containsKey(PASSWORD) ||
                     !values.containsKey(PORT))) {
