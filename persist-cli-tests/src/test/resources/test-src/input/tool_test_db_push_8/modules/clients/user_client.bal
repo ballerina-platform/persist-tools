@@ -2,18 +2,17 @@ import ballerina/sql;
 import ballerinax/mysql;
 import ballerina/persist;
 
-public client class MedicalItemClient {
+public client class UserClient {
+    *persist:AbstractPersistClient;
 
-    private final string entityName = "MedicalItem";
-    private final sql:ParameterizedQuery tableName = `MedicalItems`;
+    private final string entityName = "User";
+    private final sql:ParameterizedQuery tableName = `Users`;
 
     private final map<persist:FieldMetadata> fieldMetadata = {
-        itemId: {columnName: "itemId", 'type: int},
-        name: {columnName: "name", 'type: string},
-        'type: {columnName: "type", 'type: string},
-        unit: {columnName: "unit", 'type: string}
+        id: {columnName: "id", 'type: int},
+        name: {columnName: "name", 'type: string}
     };
-    private string[] keyFields = ["itemId"];
+    private string[] keyFields = ["id"];
 
     private persist:SQLClient persistClient;
 
@@ -25,47 +24,47 @@ public client class MedicalItemClient {
         self.persistClient = check new (dbClient, self.entityName, self.tableName, self.keyFields, self.fieldMetadata);
     }
 
-    remote function create(MedicalItem value) returns MedicalItem|persist:Error {
+    remote function create(User value) returns User|persist:Error {
         sql:ExecutionResult result = check self.persistClient.runInsertQuery(value);
         if result.lastInsertId is () {
             return value;
         }
-        return {itemId: <int>result.lastInsertId, name: value.name, 'type: value.'type, unit: value.unit};
+        return {id: <int>result.lastInsertId, name: value.name};
     }
 
-    remote function readByKey(int key) returns MedicalItem|persist:Error {
-        return <MedicalItem>check self.persistClient.runReadByKeyQuery(MedicalItem, key);
+    remote function readByKey(int key) returns User|persist:Error {
+        return <User>check self.persistClient.runReadByKeyQuery(User, key);
     }
 
-    remote function read() returns stream<MedicalItem, persist:Error?> {
-        stream<anydata, sql:Error?>|persist:Error result = self.persistClient.runReadQuery(MedicalItem);
+    remote function read() returns stream<User, persist:Error?> {
+        stream<anydata, sql:Error?>|persist:Error result = self.persistClient.runReadQuery(User);
         if result is persist:Error {
-            return new stream<MedicalItem, persist:Error?>(new MedicalItemStream((), result));
+            return new stream<User, persist:Error?>(new UserStream((), result));
         } else {
-            return new stream<MedicalItem, persist:Error?>(new MedicalItemStream(result));
+            return new stream<User, persist:Error?>(new UserStream(result));
         }
     }
 
-    remote function execute(sql:ParameterizedQuery filterClause) returns stream<MedicalItem, persist:Error?> {
-        stream<anydata, sql:Error?>|persist:Error result = self.persistClient.runExecuteQuery(filterClause, MedicalItem);
+    remote function execute(sql:ParameterizedQuery filterClause) returns stream<User, persist:Error?> {
+        stream<anydata, sql:Error?>|persist:Error result = self.persistClient.runExecuteQuery(filterClause, User);
         if result is persist:Error {
-            return new stream<MedicalItem, persist:Error?>(new MedicalItemStream((), result));
+            return new stream<User, persist:Error?>(new UserStream((), result));
         } else {
-            return new stream<MedicalItem, persist:Error?>(new MedicalItemStream(result));
+            return new stream<User, persist:Error?>(new UserStream(result));
         }
     }
 
-    remote function update(MedicalItem value) returns persist:Error? {
+    remote function update(User value) returns persist:Error? {
         _ = check self.persistClient.runUpdateQuery(value);
     }
 
-    remote function delete(MedicalItem value) returns persist:Error? {
+    remote function delete(User value) returns persist:Error? {
         _ = check self.persistClient.runDeleteQuery(value);
     }
 
-    remote function exists(MedicalItem medicalItem) returns boolean|persist:Error {
-        MedicalItem|persist:Error result = self->readByKey(medicalItem.itemId);
-        if result is MedicalItem {
+    remote function exists(User user) returns boolean|persist:Error {
+        User|persist:Error result = self->readByKey(user.id);
+        if result is User {
             return true;
         } else if result is persist:InvalidKeyError {
             return false;
@@ -79,7 +78,7 @@ public client class MedicalItemClient {
     }
 }
 
-public class MedicalItemStream {
+public class UserStream {
 
     private stream<anydata, sql:Error?>? anydataStream;
     private persist:Error? err;
@@ -89,7 +88,7 @@ public class MedicalItemStream {
         self.err = err;
     }
 
-    public isolated function next() returns record {|MedicalItem value;|}|persist:Error? {
+    public isolated function next() returns record {|User value;|}|persist:Error? {
         if self.err is persist:Error {
             return <persist:Error>self.err;
         } else if self.anydataStream is stream<anydata, sql:Error?> {
@@ -100,7 +99,7 @@ public class MedicalItemStream {
             } else if (streamValue is sql:Error) {
                 return <persist:Error>error(streamValue.message());
             } else {
-                record {|MedicalItem value;|} nextRecord = {value: <MedicalItem>streamValue.value};
+                record {|User value;|} nextRecord = {value: <User>streamValue.value};
                 return nextRecord;
             }
         } else {

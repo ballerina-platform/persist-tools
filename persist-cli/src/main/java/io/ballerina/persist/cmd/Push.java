@@ -128,6 +128,7 @@ public class Push implements BLauncherCmd {
         }
 
         try  {
+            Path absoluteSourcePath = Paths.get(sourcePath).toAbsolutePath();
             balProject = ProjectLoader.loadProject(Paths.get(sourcePath));
             balProject = BuildProject.load(Paths.get(sourcePath).toAbsolutePath());
             balProject.currentPackage().getCompilation();
@@ -142,6 +143,10 @@ public class Push implements BLauncherCmd {
             if (templatedEntryCount > 0) {
                 populatePlaceHolder(persistConfigurations);
             }
+            EntityMetaData retEntityMetaData = BalProjectUtils.readBalFiles(this.sourcePath);
+            ArrayList<Entity> entityArray = retEntityMetaData.entityArray;
+            SqlScriptGenerationUtils.generateSqlScript(entityArray,
+                    Path.of(absoluteSourcePath.toString(), PERSIST_DIR).toAbsolutePath());
             sqlLines = readSqlFile();
             loadJdbcDriver();
         } catch (ProjectException | BalException  e) {
