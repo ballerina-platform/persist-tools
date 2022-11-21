@@ -139,8 +139,10 @@ public class SyntaxTreeGenerator {
                         }
                     }
                     if (!configExists) {
-                        throw new BalException("Persist client related config doesn't exist in Config.toml.\n" +
-                                "You should add database configurations under <pkg name>.clients ");
+                        throw new BalException(String.format("Persist client related config " +
+                                "doesn't exist in Config.toml.\n" +
+                                "Templated configuration %s is not found in Config.toml ", persistConfig.get(configKey)
+                                .replaceAll("\"", "")));
                     }
                 }
             }
