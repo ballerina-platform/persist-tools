@@ -15,7 +15,7 @@
 // under the License.
 
 import ballerina/persist;
-import tool_test_db_push_7.foo as foo;
+import tool_test_db_push_9.foo as foo;
 
 @persist:Entity {
     key: ["id"],
