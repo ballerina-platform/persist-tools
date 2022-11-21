@@ -90,7 +90,7 @@ public class GeneratedSourcesTestUtils {
                 errStream.println(e.getMessage());
                 Assert.fail();
             }
-            if (!(subDir.equals("tool_test_db_push_8") || subDir.equals("tool_test_db_push_7"))) {
+            if (!(subDir.equals("tool_test_db_push_8") || subDir.equals("tool_test_db_push_9"))) {
                 Assert.assertFalse(hasSemanticDiagnostics(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)).
                         hasErrors());
             }

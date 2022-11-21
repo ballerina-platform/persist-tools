@@ -1,4 +1,4 @@
-[foo.tool_test_db_push_7.clients]
+[foo.tool_test_db_push_9.clients]
 host = "localhost"
 port = 3307
 user = "root"

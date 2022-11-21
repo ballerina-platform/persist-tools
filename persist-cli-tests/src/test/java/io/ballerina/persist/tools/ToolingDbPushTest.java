@@ -134,7 +134,7 @@ public class ToolingDbPushTest {
     @Test()
     @Description("Test the created sql script content when entities are in the main and sub-modules")
     public void testDbPushWithSubModule() {
-        assertGeneratedSources("tool_test_db_push_7", DB_PUSH);
+        assertGeneratedSources("tool_test_db_push_9", DB_PUSH);
     }
 
     @Test()
