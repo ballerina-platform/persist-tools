@@ -134,6 +134,7 @@ public class Push implements BLauncherCmd {
             for (String key : persistConfigurations.keySet()) {
                 if (Pattern.matches(PLACEHOLDER_PATTERN, persistConfigurations.get(key))) {
                       populatePlaceHolder(persistConfigurations);
+                      break;
                 }
             }
             sqlLines = readSqlFile();
