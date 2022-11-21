@@ -139,8 +139,9 @@ public class SyntaxTreeGenerator {
                         }
                     }
                     if (!configExists) {
-                        throw new BalException(String.format("Persist.toml configuration template %s is not found in Config.toml ", persistConfig.get(configKey)
-                                .replaceAll("\"", "")));
+                        throw new BalException(
+                                String.format("Persist.toml configuration template %s is not found in Config.toml ",
+                                        persistConfig.get(configKey).replaceAll("\"", "")));
                     }
                 }
             }
