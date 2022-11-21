@@ -3,6 +3,6 @@ provider = "mysql"
 [database]
 host = "localhost"
 port = 3307
-user = "root"
+user = "${foo.tool_test_db_push_1.clients.root}"
 password = "${tool_test_db_push_1.clients.password}"
-database = "persist"
+database = "${foo.tool_test_db_push_1.clients.database}"
