@@ -70,6 +70,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
+import static io.ballerina.persist.PersistToolsConstants.ON_DELETE;
 import static io.ballerina.persist.PersistToolsConstants.ON_UPDATE;
 import static io.ballerina.persist.PersistToolsConstants.UNIQUE_CONSTRAINTS;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.ANYDATASTREAM_IS_STREAM_TYPE;
@@ -157,8 +158,6 @@ import static io.ballerina.persist.nodegenerator.BalFileConstants.VALUE;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.VALUE_TYPE_CHECK;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.VAR_ENTITY_RELATION;
 import static io.ballerina.persist.nodegenerator.SyntaxTreeConstants.SYNTAX_TREE_SEMICOLON;
-import static io.ballerina.persist.utils.SqlScriptGenerationUtils.ON_DELETE;
-
 
 /**
  * Class containing methods to create and read ballerina files as syntax trees.
@@ -263,7 +262,7 @@ public class BalSyntaxTreeGenerator {
                     if (metadata.isPresent()) {
                         MetadataNode fieldMetaD = metadata.get();
                         Relation relation = readMetaData(fName, fType, fieldMetaD);
-                        checkAutoIncrement(fieldMetaD, field,
+                        processAutoIncrement(fieldMetaD, field,
                                 recordFieldWithDefaultValueNode.expression().toSourceCode());
                         if (relation.getKeyColumns() != null && relation.getReferences() != null) {
                             entityArray.get(index).getRelations().add(relation);
@@ -291,7 +290,7 @@ public class BalSyntaxTreeGenerator {
                     if (recordFieldNode.metadata().isPresent()) {
                         MetadataNode fieldMetaD = ((RecordFieldNode) node).metadata().get();
                         Relation relation = readMetaData(fName, fType, fieldMetaD);
-                        checkAutoIncrement(fieldMetaD, field, "");
+                        processAutoIncrement(fieldMetaD, field, "");
                         if (relation.getKeyColumns() != null && relation.getReferences() != null) {
                             entityArray.get(index).getRelations().add(relation);
                             field.setIsRelationType(Relation.RelationType.ONE);
@@ -1090,9 +1089,9 @@ public class BalSyntaxTreeGenerator {
         );
     }
 
-    private static void checkAutoIncrement(MetadataNode metaD, FieldMetaData field, String startValue) {
+    private static void processAutoIncrement(MetadataNode metaD, FieldMetaData field, String startValue) {
         NodeList<AnnotationNode> annotations = metaD.annotations();
-        field.setStartValue(startValue);
+        field.setStartValueOfAutoIncrement(startValue);
         for (AnnotationNode annotation : annotations) {
             Node annotReference = annotation.annotReference();
             if (annotReference.kind() == SyntaxKind.QUALIFIED_NAME_REFERENCE) {
@@ -1110,7 +1109,7 @@ public class BalSyntaxTreeGenerator {
                                             equals(PersistToolsConstants.START_VALUE)) {
                                 Optional<ExpressionNode> valueExpr = specificFieldNode.valueExpr();
                                 valueExpr.ifPresent(expressionNode ->
-                                        field.setStartValue(expressionNode.toSourceCode().trim()));
+                                        field.setStartValueOfAutoIncrement(expressionNode.toSourceCode().trim()));
                             }
                         }
                     }

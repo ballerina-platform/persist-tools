@@ -75,7 +75,6 @@ import static io.ballerina.persist.PersistToolsConstants.PROPERTY_KEY_PATH;
 import static io.ballerina.persist.PersistToolsConstants.SQL_SCRIPT_FILE;
 import static io.ballerina.persist.PersistToolsConstants.SUBMODULE_FOLDER;
 import static io.ballerina.persist.PersistToolsConstants.SUBMODULE_PERSIST;
-import static io.ballerina.persist.PersistToolsConstants.TARGET_DIR;
 import static io.ballerina.persist.PersistToolsConstants.USER;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.JDBC_URL_WITHOUT_DATABASE;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.JDBC_URL_WITH_DATABASE;
@@ -229,7 +228,7 @@ public class Push implements BLauncherCmd {
         String[] sqlLines;
         String sValue;
         StringBuilder stringBuilder = new StringBuilder();
-        try (FileReader fileReader = new FileReader(Paths.get(this.sourcePath, TARGET_DIR, SQL_SCRIPT_FILE).
+        try (FileReader fileReader = new FileReader(Paths.get(this.sourcePath, PERSIST_DIR, SQL_SCRIPT_FILE).
                 toAbsolutePath().toString())) {
             BufferedReader bufferedReader = new BufferedReader(fileReader);
             while ((sValue = bufferedReader.readLine()) != null) {

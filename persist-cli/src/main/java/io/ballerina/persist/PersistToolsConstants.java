@@ -51,9 +51,6 @@ public class PersistToolsConstants {
     public static final String SQL_SCRIPT_FILE = "persist_db_scripts.sql";
     public static final String TARGET_DIR = "target";
     public static final String PERSIST_DIR = "persist";
-
-    public static final String PLATFORM_LIBS = "platform-libs";
-
     public static final String PASSWORD = "password";
     public static final String USER = "user";
     public static final String MYSQL_DRIVER_CLASS = "com.mysql.cj.jdbc.Driver";
@@ -68,6 +65,7 @@ public class PersistToolsConstants {
     public static final String AUTO_INCREMENT_WITH_TAB = "  AUTO_INCREMENT";
     public static final String START_VALUE = "startValue";
     public static final String ON_UPDATE = "onUpdate";
+    public static final String ON_DELETE = "onDelete";
     public static final String CONSTRAINT = "constraint";
     public static final String STRING = "String";
     public static final String LENGTH = "length";

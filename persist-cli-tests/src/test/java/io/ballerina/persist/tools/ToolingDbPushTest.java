@@ -131,13 +131,13 @@ public class ToolingDbPushTest {
         assertGeneratedSourcesNegative("tool_test_db_push_6", DB_PUSH, null);
     }
 
-    @Test(dependsOnMethods = { "testDbPushEntityUpdated" })
+    @Test()
     @Description("Test the created sql script content when entities are in the main and sub-modules")
     public void testDbPushWithSubModule() {
         assertGeneratedSources("tool_test_db_push_7", DB_PUSH);
     }
 
-    @Test(dependsOnMethods = { "testDbPushWithSubModule" })
+    @Test()
     @Description("Test the created sql script content when relation annotation hasn't properties")
     public void testDbPush() {
         assertGeneratedSources("tool_test_db_push_8", DB_PUSH);

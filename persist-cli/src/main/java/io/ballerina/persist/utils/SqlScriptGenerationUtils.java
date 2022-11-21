@@ -18,12 +18,12 @@
 package io.ballerina.persist.utils;
 
 import io.ballerina.persist.PersistToolsConstants;
+import io.ballerina.persist.objects.BalException;
 import io.ballerina.persist.objects.Entity;
 import io.ballerina.persist.objects.FieldMetaData;
 import io.ballerina.persist.objects.Relation;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -48,20 +48,19 @@ public class SqlScriptGenerationUtils {
     private static final String PRIMARY_KEY_START_SCRIPT = NEW_LINE + TAB + "PRIMARY KEY(";
     private static final String UNIQUE_KEY_START_SCRIPT = NEW_LINE + TAB + "UNIQUE KEY(";
     private static final String UNIQUE = " UNIQUE";
-    public static final String ON_DELETE = "onDelete";
-    public static final String ON_DELETE_SYNTAX = " ON DELETE";
-    public static final String ON_UPDATE_SYNTAX = " ON UPDATE";
-    public static final String RESTRICT = "persist:RESTRICT";
-    public static final String CASCADE = "persist:CASCADE";
-    public static final String SET_NULL = "persist:SET_NULL";
-    public static final String NO_ACTION = "persist:NO_ACTION";
-    public static final String RESTRICT_SYNTAX = " RESTRICT";
-    public static final String CASCADE_SYNTAX = " CASCADE";
-    public static final String NO_ACTION_SYNTAX = " NO ACTION";
-    public static final String SET_NULL_SYNTAX = " SET NULL";
-    public static final String SET_DEFAULT_SYNTAX = " SET DEFAULT";
+    private static final String ON_DELETE_SYNTAX = " ON DELETE";
+    private static final String ON_UPDATE_SYNTAX = " ON UPDATE";
+    private static final String RESTRICT = "persist:RESTRICT";
+    private static final String CASCADE = "persist:CASCADE";
+    private static final String SET_NULL = "persist:SET_NULL";
+    private static final String NO_ACTION = "persist:NO_ACTION";
+    private static final String RESTRICT_SYNTAX = " RESTRICT";
+    private static final String CASCADE_SYNTAX = " CASCADE";
+    private static final String NO_ACTION_SYNTAX = " NO ACTION";
+    private static final String SET_NULL_SYNTAX = " SET NULL";
+    private static final String SET_DEFAULT_SYNTAX = " SET DEFAULT";
 
-    public static void generateSqlScript(ArrayList<Entity> entityArray, Path absoluteSourcePath) {
+    public static void generateSqlScript(ArrayList<Entity> entityArray, Path absoluteSourcePath) throws BalException {
         HashMap<String, List<String>> referenceTables = new HashMap<>();
         List<String> tableNamesInScript = new ArrayList<>();
         generateSqlScript(entityArray, referenceTables, absoluteSourcePath, tableNamesInScript);
@@ -69,18 +68,30 @@ public class SqlScriptGenerationUtils {
 
     public static void generateSqlScript(ArrayList<Entity> entityArray,
                                          HashMap<String, List<String>> referenceTables, Path filePath,
-                                         List<String> tableNamesInScript) {
+                                         List<String> tableNamesInScript) throws BalException {
+        try {
+            Files.deleteIfExists(Paths.get(String.valueOf(filePath), PersistToolsConstants.FILE_NAME));
+        } catch (IOException e) {
+            throw new BalException("Error while reading the SQL script file (persist_db_push.sql) " +
+                    "generated in the project target directory. ");
+        }
         for (Entity entity : entityArray) {
-            String sqlScript = generateTableQuery(entity.getTableName());
-            String fieldsQuery = generateFieldsQuery(entity.getTableName(), Arrays.asList(entity.getKeys()),
-                    entity.getUniqueConstraints(), referenceTables, entity, entityArray);
-            createSqFile(sqlScript + fieldsQuery, entity.getTableName(), referenceTables, tableNamesInScript,
-                    filePath);
+            String tableName = entity.getTableName();
+            String sqlScript = generateDropTableQuery(tableName) + generateTableQuery(tableName, entityArray, entity,
+                    referenceTables);
+            createSqlFile(sqlScript, entity.getTableName(), referenceTables, tableNamesInScript, filePath);
         }
     }
 
-    private static String generateTableQuery(String tableName) {
-        return MessageFormat.format("DROP TABLE IF EXISTS {0};{1}CREATE TABLE {0} (", tableName, NEW_LINE);
+    private static String generateDropTableQuery(String tableName) {
+        return MessageFormat.format("DROP TABLE IF EXISTS {0};", tableName);
+    }
+
+    private static String generateTableQuery(String tableName, ArrayList<Entity> entityArray, Entity entity,
+                                             HashMap<String, List<String>> referenceTables) {
+        return MessageFormat.format("{1}CREATE TABLE {0} (", tableName, NEW_LINE) +
+                generateFieldsQuery(entity.getTableName(), Arrays.asList(entity.getKeys()),
+                        entity.getUniqueConstraints(), referenceTables, entity, entityArray);
     }
 
     private static String generateFieldsQuery(String tableName,
@@ -89,7 +100,7 @@ public class SqlScriptGenerationUtils {
                                               Entity entity, ArrayList<Entity> entityArray) {
         StringBuilder sqlScript = new StringBuilder();
         String end = NEW_LINE + ");";
-        end = createScriptForField(entity, end, sqlScript);
+        end = createColumnsScript(entity, end, sqlScript);
         int count = 0;
         if (entity.getRelations().size() > 0) {
             ArrayList<Relation> relations = entity.getRelations();
@@ -112,7 +123,7 @@ public class SqlScriptGenerationUtils {
                     String referenceSqlType = "";
                     String foreignKey = null;
                     if (!references.isEmpty()) {
-                        crateScriptFromGivenReferenceKeys(references, relation, keyColumns, onDeleteScript,
+                        createScriptFromGivenReferenceKeys(references, relation, keyColumns, onDeleteScript,
                                 onUpdateScript, tableName, sqlScript, referenceTables, entityArray);
                     } else {
                         String refTableName = null;
@@ -179,7 +190,7 @@ public class SqlScriptGenerationUtils {
         return sqlScript.substring(0, sqlScript.length() - 1) + end;
     }
 
-    private static String createScriptForField(Entity entity, String end, StringBuilder sqlScript) {
+    private static String createColumnsScript(Entity entity, String end, StringBuilder sqlScript) {
         for (FieldMetaData fieldMetaData :entity.getFields()) {
             String sqlType = getType(fieldMetaData.getFieldType());
             assert sqlType != null;
@@ -190,13 +201,13 @@ public class SqlScriptGenerationUtils {
             String autoIncrement = EMPTY;
             if (fieldMetaData.isAutoGenerated()) {
                 autoIncrement = PersistToolsConstants.AUTO_INCREMENT_WITH_SPACE;
-                String startValue = fieldMetaData.getStartValue();
+                String startValue = fieldMetaData.getStartValueOfAutoIncrement();
                 if (!startValue.isEmpty() && Integer.parseInt(startValue) > 1) {
                     end = MessageFormat.format("{0}){1} = {2};", NEW_LINE,
                             PersistToolsConstants.AUTO_INCREMENT_WITH_TAB, startValue);
                 }
             }
-            sqlScript.append(MessageFormat.format("{0}{1}{2}{3} {4}{5}{6},", sqlScript.toString(),
+            sqlScript.append(MessageFormat.format("{0}{1}{2} {3}{4}{5},",
                     NEW_LINE, TAB, fieldName, sqlType, " NOT NULL", autoIncrement));
         }
         return end;
@@ -209,7 +220,7 @@ public class SqlScriptGenerationUtils {
         return fieldName;
     }
 
-    private static void crateScriptFromGivenReferenceKeys(ArrayList<String> references, Relation relation,
+    private static void createScriptFromGivenReferenceKeys(ArrayList<String> references, Relation relation,
                                                           ArrayList<String> keyColumns, String onDeleteScript,
                                                           String onUpdateScript, String tableName,
                                                           StringBuilder sqlScript,
@@ -349,9 +360,9 @@ public class SqlScriptGenerationUtils {
         }
     }
 
-    private static void createSqFile(String script,
+    private static void createSqlFile(String script,
                                      String tableName, HashMap<String, List<String>> referenceTables,
-                                     List<String> tableNamesInScript, Path directoryPath) {
+                                     List<String> tableNamesInScript, Path directoryPath) throws BalException {
         try {
             String content = EMPTY;
             Path filePath = Paths.get(String.valueOf(directoryPath), PersistToolsConstants.FILE_NAME);
@@ -401,8 +412,7 @@ public class SqlScriptGenerationUtils {
             Files.writeString(filePath, content);
             tableNamesInScript.add(tableName);
         } catch (IOException e) {
-            PrintStream errStream = System.err;
-            errStream.println("error in read or write a script file: " + e.getMessage());
+            throw new BalException("Error in read or write a script file: " + e.getMessage());
         }
     }
 }
