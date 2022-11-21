@@ -22,8 +22,8 @@ import io.ballerina.persist.nodegenerator.SyntaxTreeGenerator;
 import io.ballerina.persist.objects.BalException;
 import io.ballerina.persist.objects.Entity;
 import io.ballerina.persist.objects.EntityMetaData;
+import io.ballerina.persist.utils.BalProjectUtils;
 import io.ballerina.persist.utils.JdbcDriverLoader;
-import io.ballerina.persist.utils.ReadBalFiles;
 import io.ballerina.persist.utils.SqlScriptGenerationUtils;
 import io.ballerina.projects.DependencyGraph;
 import io.ballerina.projects.Package;
@@ -134,7 +134,7 @@ public class Push implements BLauncherCmd {
             balProject = BuildProject.load(absoluteSourcePath);
             balProject.currentPackage().getCompilation();
             configurations = SyntaxTreeGenerator.readToml(Paths.get(this.sourcePath, this.configPath), name);
-            EntityMetaData retEntityMetaData = ReadBalFiles.readBalFiles(this.sourcePath);
+            EntityMetaData retEntityMetaData = BalProjectUtils.readBalFiles(this.sourcePath);
             ArrayList<Entity> entityArray = retEntityMetaData.entityArray;
             SqlScriptGenerationUtils.generateSqlScript(entityArray,
                     Path.of(absoluteSourcePath.toString(), PERSIST_DIR).toAbsolutePath());
