@@ -43,6 +43,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Properties;
+import java.util.regex.Pattern;
 
 import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 import static io.ballerina.persist.PersistToolsConstants.CONFIG_SCRIPT_FILE;
@@ -61,7 +62,7 @@ import static io.ballerina.persist.PersistToolsConstants.USER;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.JDBC_URL_WITHOUT_DATABASE;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.JDBC_URL_WITH_DATABASE;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.PERSIST;
-import static io.ballerina.persist.nodegenerator.BalFileConstants.PLACE_HOLDER_TEMPLATE;
+import static io.ballerina.persist.nodegenerator.BalFileConstants.PLACEHOLDER_PATTERN;
 
 /**
  * Class to implement "persist push" command for ballerina.
@@ -110,13 +111,9 @@ public class Push implements BLauncherCmd {
             balProject.currentPackage().getCompilation();
             persistConfigurations = SyntaxTreeGenerator.readToml(Paths.get(this.sourcePath, PERSIST,
                     this.persistConfigPath), name);
-            String projectName = balProject.currentPackage().descriptor().name().value();
-
             for (String key : persistConfigurations.keySet()) {
-                if (persistConfigurations.get(key).replaceAll("\"", "").equals(
-                        String.format(PLACE_HOLDER_TEMPLATE, projectName, key))) {
-                    populatePlaceHolders(persistConfigurations, name, projectName);
-                    break;
+                if (Pattern.matches(PLACEHOLDER_PATTERN, persistConfigurations.get(key))) {
+                      populatePlaceHolder(persistConfigurations);
                 }
             }
             sqlLines = readSqlFile();
@@ -209,16 +206,10 @@ public class Push implements BLauncherCmd {
             throw new BalException("Error in jdbc driver path : " + e.getMessage());
         }
     }
-    private void populatePlaceHolders(HashMap<String, String> persistConfigurations, String name,
-                                                         String projectName)
+    private void populatePlaceHolder(HashMap<String, String> persistConfigurations)
             throws BalException {
-        configurations = SyntaxTreeGenerator.readToml(Paths.get(this.sourcePath, this.configPath), name);
-        for (String configKey : persistConfigurations.keySet()) {
-            if (persistConfigurations.get(configKey).replaceAll("\"", "").equals(
-                    String.format(PLACE_HOLDER_TEMPLATE, projectName, configKey))) {
-                persistConfigurations.put(configKey, configurations.get(configKey));
-            }
-        }
+        SyntaxTreeGenerator.populateConfiguration(persistConfigurations, Paths.get(this.sourcePath,
+                                this.configPath).toAbsolutePath());
     }
     private String[] readSqlFile() throws BalException {
         String[] sqlLines;

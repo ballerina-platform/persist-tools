@@ -39,6 +39,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.regex.Pattern;
 
 import static io.ballerina.persist.PersistToolsConstants.DATABASE;
 import static io.ballerina.persist.PersistToolsConstants.DATABASE_PLACEHOLDER;
@@ -58,11 +59,11 @@ import static io.ballerina.persist.PersistToolsConstants.KEY_USER;
 import static io.ballerina.persist.PersistToolsConstants.MYSQL;
 import static io.ballerina.persist.PersistToolsConstants.PASSWORD;
 import static io.ballerina.persist.PersistToolsConstants.PASSWORD_PLACEHOLDER;
-import static io.ballerina.persist.PersistToolsConstants.PERSIST_TOML_FILE;
 import static io.ballerina.persist.PersistToolsConstants.PORT;
 import static io.ballerina.persist.PersistToolsConstants.PORT_PLACEHOLDER;
 import static io.ballerina.persist.PersistToolsConstants.USER;
 import static io.ballerina.persist.PersistToolsConstants.USER_PLACEHOLDER;
+import static io.ballerina.persist.nodegenerator.BalFileConstants.PLACEHOLDER_PATTERN;
 import static io.ballerina.persist.nodegenerator.SyntaxTreeConstants.ARTIFACT_ID;
 import static io.ballerina.persist.nodegenerator.SyntaxTreeConstants.GROUP_ID;
 import static io.ballerina.persist.nodegenerator.SyntaxTreeConstants.GROUP_ID_KEYWORD;
@@ -109,6 +110,51 @@ public class SyntaxTreeGenerator {
         return SyntaxTree.from(textDocument);
     }
 
+    public static HashMap<String, String> populateConfiguration(HashMap<String, String> persistConfig, Path configPath)
+            throws BalException {
+        Path fileNamePath = configPath.getFileName();
+        try {
+            TextDocument configDocument = TextDocuments.from(Files.readString(configPath));
+            SyntaxTree syntaxTree = SyntaxTree.from(configDocument, fileNamePath.toString());
+            DocumentNode rootNote = syntaxTree.rootNode();
+            NodeList<DocumentMemberDeclarationNode> nodeList = rootNote.members();
+            for (String configKey : persistConfig.keySet()) {
+                if (Pattern.matches(PLACEHOLDER_PATTERN, persistConfig.get(configKey))) {
+                    boolean configExists = false;
+                    String[] placeHolderValues = persistConfig.get(configKey).replaceAll("\"", "").split("\\.");
+                    String relatedKey =  placeHolderValues[placeHolderValues.length - 1].replaceAll("}", "");
+                    String placeHolderTable = persistConfig.get(configKey)
+                            .replaceAll("\\$\\{", "").replaceAll("}", "").replaceAll("\\." + relatedKey, "");
+                    for (Object member : nodeList) {
+                        if (member instanceof TableNode) {
+                            TableNode node = (TableNode) member;
+                            if (node.identifier().toSourceCode().trim().equals(placeHolderTable.
+                                    replaceAll("\"", ""))) {
+                                NodeList<KeyValueNode> subNodeList = node.fields();
+                                for (KeyValueNode subMember : subNodeList) {
+                                    if (subMember.identifier().toSourceCode().trim().equals(relatedKey)) {
+                                        persistConfig.put(configKey,
+                                                subMember.value().toSourceCode().trim());
+                                        configExists = true;
+                                    }
+
+                                }
+                            }
+
+                        }
+                    }
+                    if (!configExists) {
+                        throw new BalException("Persist client related config doesn't exist in Config.toml.\n" +
+                                "You should add database configurations under <org name>.<pkg name>.clients ");
+                    }
+                }
+            }
+            return persistConfig;
+        } catch (IOException e) {
+            throw new BalException("Error while reading configurations. ");
+        }
+    }
+
     public static HashMap<String, String> readToml(Path configPath, String name) throws BalException {
         HashMap<String, String> values = new HashMap<>();
         Path fileNamePath = configPath.getFileName();
@@ -121,9 +167,7 @@ public class SyntaxTreeGenerator {
             for (Object member : nodeList) {
                 if (member instanceof TableNode) {
                     TableNode node = (TableNode) member;
-                    if (node.identifier().toSourceCode().trim().equals(name) ||
-                            ((node.identifier().toSourceCode().trim().equals(DATABASE)) &&
-                                    (configPath.toString().contains(PERSIST_TOML_FILE)))) {
+                    if (node.identifier().toSourceCode().trim().equals(DATABASE)) {
                         persistConfigs = true;
                         NodeList<KeyValueNode> subNodeList = node.fields();
                         for (KeyValueNode subMember : subNodeList) {
