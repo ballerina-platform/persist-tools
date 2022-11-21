@@ -129,12 +129,19 @@ public class Push implements BLauncherCmd {
 
         try  {
             balProject = ProjectLoader.loadProject(Paths.get(sourcePath));
-            name = balProject.currentPackage().descriptor().org().value() + "." + balProject.currentPackage()
-                    .descriptor().name().value() + "." + "clients";
-
             balProject = BuildProject.load(Paths.get(sourcePath).toAbsolutePath());
             balProject.currentPackage().getCompilation();
-            configurations = SyntaxTreeGenerator.readToml(Paths.get(this.sourcePath, this.configPath), name);
+            persistConfigurations = SyntaxTreeGenerator.readPersistToml(Paths.get(this.sourcePath, PERSIST,
+                    PERSIST_TOML_FILE));
+            int templatedEntryCount = 0;
+            for (String key : persistConfigurations.keySet()) {
+                if (Pattern.matches(PLACEHOLDER_PATTERN, persistConfigurations.get(key))) {
+                    templatedEntryCount += 1;
+                }
+            }
+            if (templatedEntryCount > 0) {
+                populatePlaceHolder(persistConfigurations);
+            }
             sqlLines = readSqlFile();
             loadJdbcDriver();
         } catch (ProjectException | BalException  e) {

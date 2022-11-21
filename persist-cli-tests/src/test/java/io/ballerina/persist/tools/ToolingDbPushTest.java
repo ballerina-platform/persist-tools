@@ -131,6 +131,13 @@ public class ToolingDbPushTest {
         assertGeneratedSourcesNegative("tool_test_db_push_6", DB_PUSH, null);
     }
 
+    @Test(dependsOnMethods = { "testDbPushEntityUpdated" })
+    @Description("When the db push command is executed with faulty credentials")
+    public void testDbPushWithWrongCredentials() {
+        assertGeneratedSourcesNegative("tool_test_db_push_7", DB_PUSH, null);
+
+    }
+
     @Test()
     @Description("Test the created sql script content when entities are in the main and sub-modules")
     public void testDbPushWithSubModule() {
