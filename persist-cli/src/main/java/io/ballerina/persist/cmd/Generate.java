@@ -95,13 +95,6 @@ public class Generate implements BLauncherCmd {
             errStream.println(commandUsageInfo);
             return;
         }
-        Path persistTomlPath = Paths.get(this.sourcePath, SUBMODULE_PERSIST, PERSIST_TOML_FILE);
-        File persistToml = new File(persistTomlPath.toString());
-        if (!persistToml.exists()) {
-            errStream.println("Persist project is not initiated. Please run `bal persist init` " +
-                    "to initiate the project before generation");
-            return;
-        }
         try  {
             balProject = ProjectLoader.loadProject(Paths.get(this.sourcePath));
             name = balProject.currentPackage().descriptor().org().value() + "." + balProject.currentPackage()
@@ -112,6 +105,13 @@ public class Generate implements BLauncherCmd {
             return;
         }
         try {
+            Path persistTomlPath = Paths.get(this.sourcePath, SUBMODULE_PERSIST, PERSIST_TOML_FILE);
+            File persistToml = new File(persistTomlPath.toString());
+            if (!persistToml.exists()) {
+                errStream.println("Persist project is not initiated. Please run `bal persist init` " +
+                        "to initiate the project before generation");
+                return;
+            }
             EntityMetaData retEntityMetaData = readBalFiles();
             ArrayList<Entity> entityArray = retEntityMetaData.entityArray;
             ArrayList<ModuleMemberDeclarationNode> returnModuleMembers = retEntityMetaData.moduleMembersArray;
