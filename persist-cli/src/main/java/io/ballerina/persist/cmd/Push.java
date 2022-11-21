@@ -192,7 +192,7 @@ public class Push implements BLauncherCmd {
     }
 
     private void loadJdbcDriver() throws BalException {
-        Path driverPath = getDriverPath().toAbsolutePath();
+        Path driverPath = getDriverPath().getParent().toAbsolutePath();
         URL[] urls = {};
         try {
             JdbcDriverLoader driverLoader = new JdbcDriverLoader(urls, driverPath);
@@ -273,6 +273,8 @@ public class Push implements BLauncherCmd {
                 return mysql.project().sourceRoot().resolve(relativeLibPath);
             }
         }
+        // Unreachable code since the driver jar is pulled from the central and stored in the local cache
+        // when the project is being built prior to this function.
         throw new BalException("Failed to retrieve MySQL driver path in the local cache");
     }
 }
