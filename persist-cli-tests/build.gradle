@@ -53,12 +53,26 @@ dependencies {
     }
 }
 
+clean {
+    delete "$project.projectDir/build"
+    delete "$project.rootDir/target"
+}
+
 task jBallerinaPack {
     doLast {
         configurations.balTools.resolvedConfiguration.resolvedArtifacts.each { artifact ->
             copy {
                 from project.zipTree(artifact.getFile())
                 into new File("${project.buildDir}")
+            }
+            copy {
+                from(project.zipTree(artifact.getFile())) {
+                    eachFile { fcd ->
+                        fcd.relativePath = new RelativePath(!fcd.file.isDirectory(), fcd.relativePath.segments.drop(1))
+                    }
+                    includeEmptyDirs = false
+                }
+                into "${project.rootDir}/target/ballerina-distribution"
             }
         }
     }
@@ -77,18 +91,32 @@ task unpackStdLibs() {
     }
 }
 
-task copyStdlibs(type: Copy) {
+task copyStdlibs() {
     dependsOn(unpackStdLibs)
-    into ballerinaDist
 
     /* Standard Libraries */
-    configurations.ballerinaStdLibs.resolvedConfiguration.resolvedArtifacts.each { artifact ->
-        def artifactExtractedPath = "${project.buildDir}/extracted-stdlibs/" + artifact.name + "-zip"
-        into("repo/bala") {
-            from "${artifactExtractedPath}/bala/"
-        }
-        into("repo/cache") {
-            from "${artifactExtractedPath}/cache"
+    doLast {
+        configurations.ballerinaStdLibs.resolvedConfiguration.resolvedArtifacts.each { artifact ->
+            def artifactExtractedPath = "${project.buildDir}/extracted-stdlibs/" + artifact.name + "-zip"
+            copy {
+                into ballerinaDist
+                into("repo/bala") {
+                    from "${artifactExtractedPath}/bala"
+                }
+                into("repo/cache") {
+                    from "${artifactExtractedPath}/cache"
+                }
+            }
+            copy {
+                def runtimePath = "${project.rootDir}/target/ballerina-distribution"
+                into runtimePath
+                into("repo/bala") {
+                    from "${artifactExtractedPath}/bala"
+                }
+                into("repo/cache") {
+                    from "${artifactExtractedPath}/cache"
+                }
+            }
         }
     }
 }
@@ -254,3 +282,6 @@ jacocoTestReport {
 
 test.dependsOn ":persist-cli:build"
 test.finalizedBy stopTestDockerContainer
+
+build.dependsOn ":persist-cli:build"
+build.dependsOn copyTestPack
