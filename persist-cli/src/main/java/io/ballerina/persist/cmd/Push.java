@@ -20,7 +20,11 @@ package io.ballerina.persist.cmd;
 import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.nodegenerator.SyntaxTreeGenerator;
 import io.ballerina.persist.objects.BalException;
+import io.ballerina.persist.objects.Entity;
+import io.ballerina.persist.objects.EntityMetaData;
+import io.ballerina.persist.utils.BalProjectUtils;
 import io.ballerina.persist.utils.JdbcDriverLoader;
+import io.ballerina.persist.utils.SqlScriptGenerationUtils;
 import io.ballerina.projects.DependencyGraph;
 import io.ballerina.projects.Package;
 import io.ballerina.projects.Project;
@@ -45,6 +49,7 @@ import java.sql.Driver;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -123,6 +128,7 @@ public class Push implements BLauncherCmd {
         }
 
         try  {
+            Path absoluteSourcePath = Paths.get(sourcePath).toAbsolutePath();
             balProject = ProjectLoader.loadProject(Paths.get(sourcePath));
             balProject = BuildProject.load(Paths.get(sourcePath).toAbsolutePath());
             balProject.currentPackage().getCompilation();
@@ -137,6 +143,10 @@ public class Push implements BLauncherCmd {
             if (templatedEntryCount > 0) {
                 populatePlaceHolder(persistConfigurations);
             }
+            EntityMetaData retEntityMetaData = BalProjectUtils.readBalFiles(this.sourcePath);
+            ArrayList<Entity> entityArray = retEntityMetaData.entityArray;
+            SqlScriptGenerationUtils.generateSqlScript(entityArray,
+                    Path.of(absoluteSourcePath.toString(), PERSIST_DIR).toAbsolutePath());
             sqlLines = readSqlFile();
             loadJdbcDriver();
         } catch (ProjectException | BalException  e) {
