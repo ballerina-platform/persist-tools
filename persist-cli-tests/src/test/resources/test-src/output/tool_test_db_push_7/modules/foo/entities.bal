@@ -15,30 +15,12 @@
 // under the License.
 
 import ballerina/persist;
-import tool_test_db_push_6.foo as foo;
 
 @persist:Entity {
     key: ["id"],
-    tableName: "Profiles"
+    tableName: "Users"
 }
-public type Profile record  {|
+public type User record  {|
     readonly int id;
     string name;
-    @persist:Relation {keyColumns: ["userId"], reference: ["id"]}
-    foo:User user?;
-|};
-
-@persist:Entity {
-    key: ["id"],
-    tableName: "MultipleAssociations"
-}
-public type MultipleAssociations record {|
-    readonly int id;
-    string name;
-
-    @persist:Relation {keyColumns: ["profileId"], reference: ["id"]}
-    Profile profile?;
-
-    @persist:Relation {keyColumns: ["userId"], reference: ["id"]}
-    foo:User user?;
 |};

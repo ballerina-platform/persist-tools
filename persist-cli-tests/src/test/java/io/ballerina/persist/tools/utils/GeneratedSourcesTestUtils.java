@@ -160,7 +160,6 @@ public class GeneratedSourcesTestUtils {
                 persistClass = Class.forName("io.ballerina.persist.cmd.Push");
                 Push persistCmd = (Push) persistClass.getDeclaredConstructor().newInstance();
                 persistCmd.setSourcePath(sourcePath.toAbsolutePath().toString());
-                persistCmd.setDriverPath(DRIVER_PATH);
                 persistCmd.execute();
                 return persistCmd.getConfigurations();
             }

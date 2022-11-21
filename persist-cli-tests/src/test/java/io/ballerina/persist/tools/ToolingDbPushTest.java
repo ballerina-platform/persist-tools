@@ -125,15 +125,21 @@ public class ToolingDbPushTest {
         assertCreateDatabaseTables("tool_test_db_push_5", tables);
     }
 
+    @Test()
+    @Description("When the db push command is executed without the persist dir")
+    public void testDbPushWithoutPersistDir() {
+        assertGeneratedSourcesNegative("tool_test_db_push_6", DB_PUSH, null);
+    }
+
     @Test(dependsOnMethods = { "testDbPushEntityUpdated" })
     @Description("Test the created sql script content when entities are in the main and sub-modules")
     public void testDbPushWithSubModule() {
-        assertGeneratedSources("tool_test_db_push_6", DB_PUSH);
+        assertGeneratedSources("tool_test_db_push_7", DB_PUSH);
     }
 
     @Test(dependsOnMethods = { "testDbPushWithSubModule" })
     @Description("Test the created sql script content when relation annotation hasn't properties")
     public void testDbPush() {
-        assertGeneratedSources("tool_test_db_push_7", DB_PUSH);
+        assertGeneratedSources("tool_test_db_push_8", DB_PUSH);
     }
 }

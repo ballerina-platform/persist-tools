@@ -1,4 +1,4 @@
-// Copyright (c) 2022 WSO2 LLC. (https://www.wso2.com) All Rights Reserved.
+// Copyright (c) 2022 WSO2 LLC. (http://www.wso2.org) All Rights Reserved.
 //
 // WSO2 LLC. licenses this file to you under the Apache License,
 // Version 2.0 (the "License"); you may not use this file except
@@ -15,7 +15,6 @@
 // under the License.
 
 import ballerina/persist;
-import tool_test_db_push_6.foo as foo;
 
 @persist:Entity {
     key: ["id"],
@@ -24,8 +23,31 @@ import tool_test_db_push_6.foo as foo;
 public type Profile record  {|
     readonly int id;
     string name;
-    @persist:Relation {keyColumns: ["userId"], reference: ["id"]}
-    foo:User user?;
+|};
+
+@persist:Entity {
+    key: ["id"],
+    tableName: "Users"
+}
+public type User record  {|
+    readonly int id;
+    string name;
+|};
+
+@persist:Entity {
+    key: ["id"]
+}
+public type Dept record  {|
+    readonly int id;
+    string name;
+|};
+
+@persist:Entity {
+    key: ["id"]
+}
+public type Customer record  {|
+    readonly int id;
+    string name;
 |};
 
 @persist:Entity {
@@ -36,9 +58,15 @@ public type MultipleAssociations record {|
     readonly int id;
     string name;
 
-    @persist:Relation {keyColumns: ["profileId"], reference: ["id"]}
+    @persist:Relation
     Profile profile?;
 
-    @persist:Relation {keyColumns: ["userId"], reference: ["id"]}
-    foo:User user?;
+    @persist:Relation{}
+    User user?;
+
+    @persist:Relation{keyColumns: ["profileId"]}
+    Dept dept?;
+
+    @persist:Relation{reference: ["id"]}
+    Customer customer?;
 |};

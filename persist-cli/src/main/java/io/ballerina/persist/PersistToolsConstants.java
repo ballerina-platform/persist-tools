@@ -77,11 +77,15 @@ public class PersistToolsConstants {
 
     public static final String KEYWORD_PROVIDER = "provider";
     public static final String SUBMODULE_PERSIST = "persist";
-    public static final String SUBMODULE_MODULES = "modules";
+    public static final String SUBMODULE_FOLDER = "modules";
     public static final String KEYWORD_CLIENTS = "clients";
     public static final String PERSIST_TOML_FILE = "Persist.toml";
     public static final String DATABASE_CONFIGURATION_BAL = "database_configuration.bal";
 
+    public static final String BALLERINA_MYSQL_DRIVER_NAME = "ballerinax/mysql.driver";
+    public static final String PLATFORM = "java11";
+    public static final String PROPERTY_KEY_PATH = "path";
+    public static final String MYSQL_CONNECTOR_NAME_PREFIX = "mysql-connector";
 
     /**
      * Constants related to Ballerina types.
