@@ -4,3 +4,10 @@ port = 3307
 user = "root"
 password = "Test123#"
 database = "persist"
+
+[tool_test_db_push_9.clients]
+host = "localhost"
+port = 3306
+user = "root"
+database = "test1"
+password = "test1"
