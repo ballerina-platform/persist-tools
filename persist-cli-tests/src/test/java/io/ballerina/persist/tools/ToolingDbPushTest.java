@@ -128,6 +128,6 @@ public class ToolingDbPushTest {
     @Test(dependsOnMethods = { "testDbPushEntityUpdated" })
     @Description("When the db push command is executed with faulty credentials")
     public void testDbPushWithWrongCredentials() {
-        assertGeneratedSourcesNegative("tool_test_db_push_6", DB_PUSH, null);
+        assertGeneratedSourcesNegative("tool_test_db_push_7", DB_PUSH, null);
     }
 }
