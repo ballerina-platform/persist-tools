@@ -127,12 +127,10 @@ public class Push implements BLauncherCmd {
 
         try  {
             balProject = ProjectLoader.loadProject(Paths.get(sourcePath));
-            name = balProject.currentPackage().descriptor().name().value() + "." + "clients";
-
             balProject = BuildProject.load(Paths.get(sourcePath).toAbsolutePath());
             balProject.currentPackage().getCompilation();
             persistConfigurations = SyntaxTreeGenerator.readToml(Paths.get(this.sourcePath, PERSIST,
-                    this.persistConfigPath), name);
+                    this.persistConfigPath));
             for (String key : persistConfigurations.keySet()) {
                 if (Pattern.matches(PLACEHOLDER_PATTERN, persistConfigurations.get(key))) {
                       populatePlaceHolder(persistConfigurations);

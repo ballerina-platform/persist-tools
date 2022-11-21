@@ -155,7 +155,7 @@ public class SyntaxTreeGenerator {
         }
     }
 
-    public static HashMap<String, String> readToml(Path configPath, String name) throws BalException {
+    public static HashMap<String, String> readToml(Path configPath) throws BalException {
         HashMap<String, String> values = new HashMap<>();
         Path fileNamePath = configPath.getFileName();
         try {
