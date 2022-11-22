@@ -74,8 +74,8 @@ public class SqlScriptGenerationUtils {
         try {
             Files.deleteIfExists(Paths.get(String.valueOf(filePath), PersistToolsConstants.FILE_NAME));
         } catch (IOException e) {
-            throw new BalException("Error while reading the SQL script file (persist_db_push.sql) " +
-                    "generated in the project target directory. ");
+            throw new BalException("Error while deleting the SQL script file (persist_db_push.sql) in the project " +
+                    "persist directory: " + e.getMessage());
         }
         for (Entity entity : entityArray) {
             String tableName = entity.getTableName();
@@ -414,7 +414,7 @@ public class SqlScriptGenerationUtils {
             Files.writeString(filePath, content);
             tableNamesInScript.add(tableName);
         } catch (IOException e) {
-            throw new BalException("Error in read or write a script file: " + e.getMessage());
+            throw new BalException("Error while updating the SQL script file: " + e.getMessage());
         }
     }
 }

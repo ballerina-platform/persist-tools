@@ -64,9 +64,9 @@ public type MultipleAssociations record {|
     @persist:Relation{}
     User user?;
 
-    @persist:Relation{keyColumns: ["profileId"]}
+    @persist:Relation{keyColumns: ["profileId"], onDelete: persist:SET_DEFAULT}
     Dept dept?;
 
-    @persist:Relation{reference: ["id"]}
+    @persist:Relation{reference: ["id"], onUpdate: "SET_DEFAULT"}
     Customer customer?;
 |};
