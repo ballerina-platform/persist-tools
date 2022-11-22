@@ -25,8 +25,6 @@ plugins {
     id "net.researchgate.release" version "${researchgateReleaseVersion}"
 }
 
-def packageName = "persist"
-
 allprojects {
     group = project.group
     version = project.version
@@ -60,11 +58,6 @@ allprojects {
         maven {
             url = 'https://mvnrepository.com/artifact/org.testng/testng'
         }
-    }
-
-    ext {
-        snapshotVersion= '-SNAPSHOT'
-        timestampedVersionRegex = '.*-\\d{8}-\\d{6}-\\w.*\$'
     }
 }
 
@@ -122,55 +115,15 @@ task codeCoverageReport(type: JacocoReport) {
     }
 }
 
-def artifactCacheParent = file("$project.projectDir/build/cache_parent/")
-def artifactLibParent = file("$project.projectDir/build/lib_parent/")
-def targetPersistCliJar = file("$project.rootDir/persist-cli/build/libs/persist-cli-${project.version}.jar")
-
-jar {
-    manifest {
-        attributes('Implementation-Title': project.name,
-                'Implementation-Version': project.version)
+task copyPersitTool(type: Copy) {
+    into "$project.rootDir/target"
+    into("ballerina-distribution/bre/lib") {
+        from "$project.rootDir/persist-cli/build/libs/persist-cli-${project.version}.jar"
     }
 }
 
-task directoryBuild {
-    inputs.dir file(project.projectDir)
-    doLast {
-        copy {
-            from targetPersistCliJar
-            into file("$artifactLibParent/libs")
-        }
-    }
-
-    outputs.dir artifactCacheParent
-    outputs.dir artifactLibParent
-}
-
-task createArtifactZip(type: Zip) {
-    destinationDirectory = file("${buildDir}/distributions")
-    from directoryBuild
-}
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            artifact source: createArtifactZip, extension: 'zip'
-        }
-    }
-
-    repositories {
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/ballerina-platform/persist-tools")
-            credentials {
-                username = System.getenv("publishUser")
-                password = System.getenv("publishPAT")
-            }
-        }
-    }
-}
-
-directoryBuild.dependsOn ":${packageName}-cli:build"
-build.dependsOn directoryBuild
+copyPersitTool.dependsOn ":persist-cli-tests:build"
+copyPersitTool.dependsOn ":persist-cli:build"
+build.dependsOn copyPersitTool
 
 publish.dependsOn build
