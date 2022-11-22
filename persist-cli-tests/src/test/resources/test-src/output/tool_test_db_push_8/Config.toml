@@ -7,7 +7,8 @@ database = "persist"
 
 [tool_test_db_push_8.clients]
 host = "localhost"
-port = 3307
+port = 3306
 user = "root"
-password = "Test123#"
-database = "persist"
+password = ""
+database = ""
+

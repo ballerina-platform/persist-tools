@@ -20,9 +20,12 @@ import ballerina/persist;
     key: ["id"],
     tableName: "Profiles"
 }
-public type Profile record  {|
+public type Profile record {|
     readonly int id;
     string name;
+    boolean isAdult;
+    float salary;
+    decimal age;
 |};
 
 @persist:Entity {
@@ -32,6 +35,8 @@ public type Profile record  {|
 public type User record  {|
     readonly int id;
     string name;
+    @persist:Relation
+    Profile profile?;
 |};
 
 @persist:Entity {
@@ -57,9 +62,6 @@ public type Customer record  {|
 public type MultipleAssociations record {|
     readonly int id;
     string name;
-
-    @persist:Relation
-    Profile profile?;
 
     @persist:Relation{}
     User user?;
