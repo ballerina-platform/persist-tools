@@ -104,7 +104,7 @@ public class Init implements BLauncherCmd {
         try {
             if (!databaseConfig.exists()) {
                 generateConfigurationBalFile();
-                outStream.println("Added new Ballerina module at modules/clients");
+                outStream.println("Added new sub module 'clients' used for generated clients");
                 outStream.println("Created database_configuration.bal file with configurations.");
             } else {
                 generateConfigurationBalFile();
