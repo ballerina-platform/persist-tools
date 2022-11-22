@@ -81,6 +81,8 @@ public class SyntaxTreeGenerator {
             DEFAULT_DATABASE
     };
 
+    private SyntaxTreeGenerator(){}
+
     /**
      * Method to create a new Config.toml file with database configurations.
      */

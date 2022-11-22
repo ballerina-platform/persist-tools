@@ -68,11 +68,12 @@ public class Init implements BLauncherCmd {
     public String sourcePath = "";
     private static final String COMMAND_IDENTIFIER = "persist-init";
 
-
     Project balProject;
 
     @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
     private boolean helpFlag;
+
+    private Init() {}
 
     @Override
     public void execute() {

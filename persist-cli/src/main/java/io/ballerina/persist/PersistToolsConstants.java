@@ -24,8 +24,7 @@ package io.ballerina.persist;
  */
 public class PersistToolsConstants {
 
-    private PersistToolsConstants() {
-    }
+    private PersistToolsConstants() {}
 
     public static final String COMPONENT_IDENTIFIER = "persist";
 

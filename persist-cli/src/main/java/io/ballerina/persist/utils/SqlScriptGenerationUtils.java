@@ -60,6 +60,8 @@ public class SqlScriptGenerationUtils {
     private static final String SET_NULL_SYNTAX = " SET NULL";
     private static final String SET_DEFAULT_SYNTAX = " SET DEFAULT";
 
+    private SqlScriptGenerationUtils(){}
+
     public static void generateSqlScript(ArrayList<Entity> entityArray, Path absoluteSourcePath) throws BalException {
         HashMap<String, List<String>> referenceTables = new HashMap<>();
         List<String> tableNamesInScript = new ArrayList<>();

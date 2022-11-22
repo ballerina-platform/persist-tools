@@ -30,9 +30,7 @@ import io.ballerina.toml.validator.SampleNodeGenerator;
  */
 public class SyntaxTreeConstants {
 
-    private SyntaxTreeConstants() {
-
-    }
+    private SyntaxTreeConstants() {}
 
     public static final Token SYNTAX_TREE_SEMICOLON = AbstractNodeFactory.createIdentifierToken(";");
     public static final Token SYNTAX_TREE_COLON = AbstractNodeFactory.createIdentifierToken(":");
