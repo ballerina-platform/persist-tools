@@ -165,6 +165,9 @@ import static io.ballerina.persist.nodegenerator.SyntaxTreeConstants.SYNTAX_TREE
  * @since 0.1.0
  */
 public class BalSyntaxTreeGenerator {
+
+    private BalSyntaxTreeGenerator() {}
+
     /**
      * method to read ballerina files.
      */

@@ -56,9 +56,7 @@ import static io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator.generate
 
 public class BalProjectUtils {
 
-    private BalProjectUtils() {
-
-    }
+    private BalProjectUtils() {}
 
     public static ArrayList<String> hasSyntacticDiagnostics(Path filePath) throws IOException, BalException {
         ArrayList<String> diagnostics = new ArrayList<>();

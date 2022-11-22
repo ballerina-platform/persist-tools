@@ -105,6 +105,8 @@ public class Push implements BLauncherCmd {
     @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
     private boolean helpFlag;
 
+    public Push() {}
+
     @Override
     public void execute() {
         configurations = new HashMap<>();

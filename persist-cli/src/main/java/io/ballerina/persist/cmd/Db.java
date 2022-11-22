@@ -41,6 +41,8 @@ public class Db implements BLauncherCmd {
     private static final PrintStream StdStream = System.out;
     public static final String COMPONENT_IDENTIFIER = "persist-db";
 
+    public Db() {}
+
     @Override
     public void execute() {
         String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMPONENT_IDENTIFIER);

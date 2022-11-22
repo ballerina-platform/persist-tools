@@ -24,9 +24,7 @@ package io.ballerina.persist.nodegenerator;
  */
 public class BalFileConstants {
 
-    private BalFileConstants() {
-
-    }
+    private BalFileConstants() {}
 
     /**
      * Constants related to persist client type inheritance.

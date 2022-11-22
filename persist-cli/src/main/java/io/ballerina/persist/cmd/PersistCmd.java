@@ -41,6 +41,8 @@ public class PersistCmd implements BLauncherCmd {
 
     private static final PrintStream errStream = System.err;
 
+    public PersistCmd() {}
+
     @Override
     public void execute() {
         String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMPONENT_IDENTIFIER);
