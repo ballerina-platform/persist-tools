@@ -95,16 +95,21 @@ public class Init implements BLauncherCmd {
         }
         File persistToml = new File(persistTomlPath.toString());
         File databaseConfig = new File(databaseConfigPath.toString());
-        if (persistToml.exists() || databaseConfig.exists()) {
+        if (persistToml.exists()) {
             errStream.println("`bal persist init` command can only be used once to initialize the project");
             return;
         }
         Generate generateCMD = new Generate();
         generateCMD.setSourcePath(Paths.get(sourcePath).toAbsolutePath().toString());
         try {
-            generateConfigurationBalFile();
-            outStream.println("Added new Ballerina module at modules/clients");
-            outStream.println("Created database_configuration.bal file with configurations.");
+            if (!databaseConfig.exists()) {
+                generateConfigurationBalFile();
+                outStream.println("Added new Ballerina module at modules/clients");
+                outStream.println("Created database_configuration.bal file with configurations.");
+            } else {
+                generateConfigurationBalFile();
+                outStream.println("Replaced database_configuration.bal file with default configurations.");
+            }
             createPersistToml(persistTomlPath);
             outStream.println("Created Persist.toml file with configurations.");
             if (!Files.exists(Paths.get(sourcePath, configPath))) {
