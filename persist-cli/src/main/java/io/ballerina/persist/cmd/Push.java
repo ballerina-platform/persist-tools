@@ -34,10 +34,7 @@ import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.projects.directory.ProjectLoader;
 import picocli.CommandLine;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
@@ -68,12 +65,10 @@ import static io.ballerina.persist.PersistToolsConstants.MYSQL;
 import static io.ballerina.persist.PersistToolsConstants.MYSQL_CONNECTOR_NAME_PREFIX;
 import static io.ballerina.persist.PersistToolsConstants.MYSQL_DRIVER_CLASS;
 import static io.ballerina.persist.PersistToolsConstants.PASSWORD;
-import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIR;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_TOML_FILE;
 import static io.ballerina.persist.PersistToolsConstants.PLATFORM;
 import static io.ballerina.persist.PersistToolsConstants.PORT;
 import static io.ballerina.persist.PersistToolsConstants.PROPERTY_KEY_PATH;
-import static io.ballerina.persist.PersistToolsConstants.SQL_SCRIPT_FILE;
 import static io.ballerina.persist.PersistToolsConstants.SUBMODULE_FOLDER;
 import static io.ballerina.persist.PersistToolsConstants.SUBMODULE_PERSIST;
 import static io.ballerina.persist.PersistToolsConstants.USER;
@@ -110,8 +105,9 @@ public class Push implements BLauncherCmd {
     @Override
     public void execute() {
         configurations = new HashMap<>();
-        String[] sqlLines;
+        String sqlScript;
         Statement statement;
+        Path absoluteSourcePath = Paths.get(this.sourcePath).toAbsolutePath();
 
         if (helpFlag) {
             String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMMAND_IDENTIFIER);
@@ -130,7 +126,6 @@ public class Push implements BLauncherCmd {
         }
 
         try  {
-            Path absoluteSourcePath = Paths.get(sourcePath).toAbsolutePath();
             balProject = ProjectLoader.loadProject(Paths.get(sourcePath));
             balProject = BuildProject.load(Paths.get(sourcePath).toAbsolutePath());
             balProject.currentPackage().getCompilation();
@@ -147,9 +142,8 @@ public class Push implements BLauncherCmd {
             }
             EntityMetaData retEntityMetaData = BalProjectUtils.readBalFiles(this.sourcePath);
             ArrayList<Entity> entityArray = retEntityMetaData.entityArray;
-            SqlScriptGenerationUtils.generateSqlScript(entityArray,
-                    Path.of(absoluteSourcePath.toString(), PERSIST_DIR).toAbsolutePath());
-            sqlLines = readSqlFile();
+            sqlScript = SqlScriptGenerationUtils.generateSqlScript(entityArray);
+            SqlScriptGenerationUtils.addScriptToFile(sqlScript, Paths.get(absoluteSourcePath.toString(), PERSIST));
             loadJdbcDriver();
         } catch (ProjectException | BalException  e) {
             errStream.println(e.getMessage());
@@ -191,10 +185,8 @@ public class Push implements BLauncherCmd {
 
         try (Connection connection = driver.connect(databaseUrl, props)) {
             statement = connection.createStatement();
-            for (String sqlLine : sqlLines) {
-                if (!sqlLine.trim().equals("")) {
-                    statement.executeUpdate(sqlLine);
-                }
+            for (String sqlLine : sqlScript.split(";")) {
+                statement.executeUpdate(sqlLine);
             }
             statement.close();
         } catch (SQLException e) {
@@ -236,28 +228,11 @@ public class Push implements BLauncherCmd {
             throw new BalException("Error in jdbc driver path : " + e.getMessage());
         }
     }
+
     private void populatePlaceHolder(HashMap<String, String> persistConfigurations)
             throws BalException {
         SyntaxTreeGenerator.populateConfiguration(persistConfigurations, Paths.get(this.sourcePath,
                 CONFIG_SCRIPT_FILE).toAbsolutePath());
-    }
-    private String[] readSqlFile() throws BalException {
-        String[] sqlLines;
-        String sValue;
-        StringBuilder stringBuilder = new StringBuilder();
-        try (FileReader fileReader = new FileReader(Paths.get(this.sourcePath, PERSIST_DIR, SQL_SCRIPT_FILE).
-                toAbsolutePath().toString())) {
-            BufferedReader bufferedReader = new BufferedReader(fileReader);
-            while ((sValue = bufferedReader.readLine()) != null) {
-                stringBuilder.append(sValue);
-            }
-            bufferedReader.close();
-            sqlLines = stringBuilder.toString().split(";");
-            return sqlLines;
-        } catch (IOException e) {
-            throw new BalException("Error while reading the SQL script file (persist_db_push.sql) " +
-                    "generated in the project target directory. ");
-        }
     }
 
     @Override

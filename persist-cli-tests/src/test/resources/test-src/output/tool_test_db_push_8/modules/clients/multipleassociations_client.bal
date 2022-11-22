@@ -11,8 +11,6 @@ public client class MultipleAssociationsClient {
     private final map<persist:FieldMetadata> fieldMetadata = {
         id: {columnName: "id", 'type: int},
         name: {columnName: "name", 'type: string},
-        "profile.id": {columnName: "profileId", 'type: int, relation: {entityName: "profile", refTable: "Profiles", refField: "id"}},
-        "profile.name": {'type: string, relation: {entityName: "profile", refTable: "Profiles", refField: "name"}},
         "user.id": {columnName: "userId", 'type: int, relation: {entityName: "user", refTable: "Users", refField: "id"}},
         "user.name": {'type: string, relation: {entityName: "user", refTable: "Users", refField: "name"}},
         "dept.id": {columnName: "profileId", 'type: int, relation: {entityName: "dept", refTable: "Dept", refField: "id"}},
@@ -23,7 +21,6 @@ public client class MultipleAssociationsClient {
     private string[] keyFields = ["id"];
 
     private final map<persist:JoinMetadata> joinMetadata = {
-        profile: {entity: Profile, fieldName: "profile", refTable: "Profiles", refFields: ["id"], joinColumns: ["profileId"]},
         user: {entity: User, fieldName: "user", refTable: "Users", refFields: ["id"], joinColumns: ["userId"]},
         dept: {entity: Dept, fieldName: "dept", refTable: "Dept", refFields: ["id"], joinColumns: ["profileId"]},
         customer: {entity: Customer, fieldName: "customer", refTable: "Customer", refFields: ["id"], joinColumns: ["customerId"]}
@@ -40,13 +37,6 @@ public client class MultipleAssociationsClient {
     }
 
     remote function create(MultipleAssociations value) returns MultipleAssociations|persist:Error {
-        if value.profile is Profile {
-            ProfileClient profileClient = check new ProfileClient();
-            boolean exists = check profileClient->exists(<Profile>value.profile);
-            if !exists {
-                value.profile = check profileClient->create(<Profile>value.profile);
-            }
-        }
         if value.user is User {
             UserClient userClient = check new UserClient();
             boolean exists = check userClient->exists(<User>value.user);
@@ -96,11 +86,6 @@ public client class MultipleAssociationsClient {
 
     remote function update(MultipleAssociations value) returns persist:Error? {
         _ = check self.persistClient.runUpdateQuery(value);
-        if value.profile is record {} {
-            Profile profileEntity = <Profile>value.profile;
-            ProfileClient profileClient = check new ProfileClient();
-            check profileClient->update(profileEntity);
-        }
         if value.user is record {} {
             User userEntity = <User>value.user;
             UserClient userClient = check new UserClient();
@@ -139,7 +124,7 @@ public client class MultipleAssociationsClient {
 }
 
 public enum MultipleAssociationsRelations {
-    ProfileEntity = "profile", UserEntity = "user", DeptEntity = "dept", CustomerEntity = "customer"
+    UserEntity = "user", DeptEntity = "dept", CustomerEntity = "customer"
 }
 
 public class MultipleAssociationsStream {

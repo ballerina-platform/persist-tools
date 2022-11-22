@@ -24,7 +24,7 @@ import io.ballerina.persist.objects.FieldMetaData;
 import io.ballerina.persist.objects.Relation;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -62,26 +62,31 @@ public class SqlScriptGenerationUtils {
 
     private SqlScriptGenerationUtils(){}
 
-    public static void generateSqlScript(ArrayList<Entity> entityArray, Path absoluteSourcePath) throws BalException {
+    public static String generateSqlScript(ArrayList<Entity> entityArray) throws BalException {
         HashMap<String, List<String>> referenceTables = new HashMap<>();
         List<String> tableNamesInScript = new ArrayList<>();
-        generateSqlScript(entityArray, referenceTables, absoluteSourcePath, tableNamesInScript);
-    }
-
-    public static void generateSqlScript(ArrayList<Entity> entityArray,
-                                         HashMap<String, List<String>> referenceTables, Path filePath,
-                                         List<String> tableNamesInScript) throws BalException {
-        try {
-            Files.deleteIfExists(Paths.get(String.valueOf(filePath), PersistToolsConstants.FILE_NAME));
-        } catch (IOException e) {
-            throw new BalException("Error while reading the SQL script file (persist_db_push.sql) " +
-                    "generated in the project target directory. ");
-        }
+        String sqlScript = "";
         for (Entity entity : entityArray) {
             String tableName = entity.getTableName();
-            String sqlScript = generateDropTableQuery(tableName) + generateTableQuery(tableName, entityArray, entity,
+            String tableScript = generateDropTableQuery(tableName) + generateTableQuery(tableName, entityArray, entity,
                     referenceTables);
-            createSqlFile(sqlScript, entity.getTableName(), referenceTables, tableNamesInScript, filePath);
+            sqlScript = updateSqlScript(sqlScript, tableScript, entity.getTableName(), referenceTables,
+                    tableNamesInScript);
+
+        }
+        return sqlScript;
+    }
+
+    public static void addScriptToFile(String sqlScript, Path filePath) {
+        Path path = Paths.get(String.valueOf(filePath), PersistToolsConstants.FILE_NAME);
+        try {
+            Files.deleteIfExists(path);
+            Files.createFile(path);
+            Files.writeString(path, sqlScript);
+        } catch (IOException e) {
+            PrintStream errStream = System.err;
+            errStream.println("Error while updating the SQL script file (persist_db_push.sql) in the project " +
+                    "persist directory: " + e.getMessage());
         }
     }
 
@@ -103,11 +108,9 @@ public class SqlScriptGenerationUtils {
         StringBuilder sqlScript = new StringBuilder();
         String end = NEW_LINE + ");";
         end = createColumnsScript(entity, end, sqlScript);
-        int count = 0;
         if (entity.getRelations().size() > 0) {
             ArrayList<Relation> relations = entity.getRelations();
             for (Relation relation: relations) {
-                String uniqueKeyword = "";
                 if (!relation.isChild()) {
                     ArrayList<String> keyColumns = relation.getKeyColumns();
                     ArrayList<String> references = relation.getReferences();
@@ -115,76 +118,14 @@ public class SqlScriptGenerationUtils {
                     String onUpdate = relation.getOnUpdate();
                     String onDeleteScript = "";
                     String onUpdateScript = "";
-                    String referenceFieldName = "";
                     if (onDelete != null && !onDelete.isEmpty()) {
                         onDeleteScript = ON_DELETE_SYNTAX + getReferenceAction(onDelete);
                     }
                     if (onUpdate != null && !onUpdate.isEmpty()) {
                         onUpdateScript = ON_UPDATE_SYNTAX + getReferenceAction(onUpdate);
                     }
-                    String referenceSqlType = "";
-                    String foreignKey = null;
-                    if (!references.isEmpty()) {
-                        createScriptFromGivenReferenceKeys(references, relation, keyColumns, onDeleteScript,
-                                onUpdateScript, tableName, sqlScript, referenceTables, entityArray);
-                    } else {
-                        String refTableName = null;
-                        if (keyColumns.size() == 1) {
-                            refTableName = relation.getRefTable();
-                            for (Entity entityRecord : entityArray) {
-                                if (entityRecord.getEntityName().equals(refTableName)) {
-                                    String[] refPrimaryKeys = entityRecord.getKeys();
-                                    if (refPrimaryKeys.length == 1) {
-                                        referenceFieldName = removeSingleQuote(refPrimaryKeys[0]);
-                                        break;
-                                    } else {
-                                        uniqueConstraints = entityRecord.getUniqueConstraints();
-                                        if (uniqueConstraints.size() == 1 && uniqueConstraints.get(0).size() == 1) {
-                                            referenceFieldName = removeSingleQuote(uniqueConstraints.get(0).get(0));
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                        } else if (keyColumns.isEmpty()) {
-                            refTableName = relation.getRefTable();
-                            for (Entity entityRecord : entityArray) {
-                                if (entityRecord.getEntityName().equals(refTableName)) {
-                                    String[] refPrimaryKeys = entityRecord.getKeys();
-                                    if (refPrimaryKeys.length == 1) {
-                                        referenceFieldName = removeSingleQuote(refPrimaryKeys[0]);
-                                        break;
-                                    } else {
-                                        uniqueConstraints = entityRecord.getUniqueConstraints();
-                                        if (uniqueConstraints.size() == 1 && uniqueConstraints.get(0).size() == 1) {
-                                            referenceFieldName = removeSingleQuote(uniqueConstraints.get(0).get(0));
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                            foreignKey = refTableName.toLowerCase(Locale.ENGLISH) +
-                                    referenceFieldName.substring(0, 1).toUpperCase(Locale.ENGLISH) +
-                                    referenceFieldName.substring(1);
-                        }
-                        for (FieldMetaData fieldMetaData: relation.getRelatedFields()) {
-                            if (fieldMetaData.getFieldName().equals(referenceFieldName)) {
-                                referenceSqlType = fieldMetaData.getFieldType();
-                            }
-
-                        }
-                        if (relation.relationType.equals(Relation.RelationType.ONE)) {
-                            uniqueKeyword = UNIQUE;
-                        }
-                        assert refTableName != null;
-                        sqlScript.append(MessageFormat.format("{10}{11}{0} {1}{12},{10}{11}CONSTRAINT " +
-                                        "FK_{2}_{3}_{4} FOREIGN KEY({5}) REFERENCES {6}({7}){8}{9},",
-                                foreignKey, referenceSqlType, tableName.toUpperCase(Locale.ENGLISH),
-                                refTableName.toUpperCase(Locale.ENGLISH), count, foreignKey,
-                                refTableName, referenceFieldName, onDeleteScript, onUpdateScript, NEW_LINE, TAB,
-                                uniqueKeyword));
-                        updateReferenceTable(tableName, refTableName, referenceTables);
-                    }
+                    createScriptFromGivenReferenceKeys(references, relation, keyColumns, onDeleteScript,
+                            onUpdateScript, tableName, sqlScript, referenceTables, entityArray);
                 }
             }
         }
@@ -362,59 +303,50 @@ public class SqlScriptGenerationUtils {
         }
     }
 
-    private static void createSqlFile(String script,
-                                     String tableName, HashMap<String, List<String>> referenceTables,
-                                     List<String> tableNamesInScript, Path directoryPath) throws BalException {
-        try {
-            String content = EMPTY;
-            Path filePath = Paths.get(String.valueOf(directoryPath), PersistToolsConstants.FILE_NAME);
-            if (Files.exists(filePath)) {
-                byte[] bytes = Files.readAllBytes(filePath);
-                content = new String(bytes, StandardCharsets.UTF_8);
-                String tableNames = "";
-                int firstIndex = 0;
-                if (referenceTables.containsKey(tableName)) {
-                    List<String> tables = referenceTables.get(tableName);
-                    for (String table : tables) {
-                        String name = table + ";";
-                        int index = content.indexOf(name);
-                        if ((firstIndex == 0 || index < firstIndex) && index > 1) {
-                            tableNames = name;
-                            firstIndex = index;
-                        }
-                    }
-                    int index = firstIndex + tableNames.length();
-                    content = content.substring(0, index) + NEW_LINE + NEW_LINE + script + NEW_LINE +
-                            content.substring(index);
-                } else {
-                    int firstIndexOfScript = 0;
-                    for (String table :tableNamesInScript) {
-                        if (referenceTables.containsKey(table)) {
-                            int index = script.indexOf(tableName);
-                            if ((firstIndexOfScript == 0 || index < firstIndexOfScript) && index > 1) {
-                                firstIndexOfScript = index;
-                            }
-                        }
-                    }
-                    if (firstIndexOfScript > 0) {
-                        int index = firstIndexOfScript + tableName.length() + 1;
-                        content = script.substring(0, index) + NEW_LINE + NEW_LINE + content + NEW_LINE +
-                                script.substring(index);
-                    } else {
-                        script = script.concat(NEW_LINE + NEW_LINE);
-                        content = script.concat(content);
-                    }
-                }
-            } else {
-                if (Files.notExists(directoryPath)) {
-                    Files.createDirectories(directoryPath);
-                }
-                content = content.concat(script);
-            }
-            Files.writeString(filePath, content);
+    private static String updateSqlScript(String sqlScript, String tableScript, String tableName,
+                                          HashMap<String, List<String>> referenceTables,
+                                          List<String> tableNamesInScript) {
+        String tableNames = "";
+        int firstIndex = 0;
+        if (sqlScript.isEmpty()) {
             tableNamesInScript.add(tableName);
-        } catch (IOException e) {
-            throw new BalException("Error in read or write a script file: " + e.getMessage());
+            return tableScript;
+        } else {
+            if (referenceTables.containsKey(tableName)) {
+                List<String> tables = referenceTables.get(tableName);
+                for (String table : tables) {
+                    String name = table + ";";
+                    int index = sqlScript.indexOf(name);
+                    if ((firstIndex == 0 || index < firstIndex) && index > 1) {
+                        tableNames = name;
+                        firstIndex = index;
+                    }
+                }
+                int index = firstIndex + tableNames.length();
+                tableNamesInScript.add(tableName);
+                return sqlScript.substring(0, index) + NEW_LINE + NEW_LINE + tableScript + NEW_LINE +
+                        sqlScript.substring(index);
+            } else {
+                int firstIndexOfScript = 0;
+                for (String table : tableNamesInScript) {
+                    if (referenceTables.containsKey(table)) {
+                        int index = tableScript.indexOf(tableName);
+                        if ((firstIndexOfScript == 0 || index < firstIndexOfScript) && index > 1) {
+                            firstIndexOfScript = index;
+                        }
+                    }
+                }
+                if (firstIndexOfScript > 0) {
+                    int index = firstIndexOfScript + tableName.length() + 1;
+                    tableNamesInScript.add(tableName);
+                    return tableScript.substring(0, index) + NEW_LINE + NEW_LINE + sqlScript + NEW_LINE +
+                            tableScript.substring(index);
+                } else {
+                    tableScript = tableScript.concat(NEW_LINE + NEW_LINE);
+                    tableNamesInScript.add(tableName);
+                    return tableScript.concat(sqlScript);
+                }
+            }
         }
     }
 }

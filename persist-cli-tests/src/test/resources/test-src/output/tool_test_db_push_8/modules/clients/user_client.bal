@@ -10,9 +10,16 @@ public client class UserClient {
 
     private final map<persist:FieldMetadata> fieldMetadata = {
         id: {columnName: "id", 'type: int},
-        name: {columnName: "name", 'type: string}
+        name: {columnName: "name", 'type: string},
+        "profile.id": {columnName: "profileId", 'type: int, relation: {entityName: "profile", refTable: "Profiles", refField: "id"}},
+        "profile.name": {'type: string, relation: {entityName: "profile", refTable: "Profiles", refField: "name"}},
+        "profile.isAdult": {'type: boolean, relation: {entityName: "profile", refTable: "Profiles", refField: "isAdult"}},
+        "profile.salary": {'type: float, relation: {entityName: "profile", refTable: "Profiles", refField: "salary"}},
+        "profile.age": {'type: decimal, relation: {entityName: "profile", refTable: "Profiles", refField: "age"}}
     };
     private string[] keyFields = ["id"];
+
+    private final map<persist:JoinMetadata> joinMetadata = {profile: {entity: Profile, fieldName: "profile", refTable: "Profiles", refFields: ["id"], joinColumns: ["profileId"]}};
 
     private persist:SQLClient persistClient;
 
@@ -21,23 +28,27 @@ public client class UserClient {
         if dbClient is sql:Error {
             return <persist:Error>error(dbClient.message());
         }
-        self.persistClient = check new (dbClient, self.entityName, self.tableName, self.keyFields, self.fieldMetadata);
+        self.persistClient = check new (dbClient, self.entityName, self.tableName, self.keyFields, self.fieldMetadata, self.joinMetadata);
     }
 
     remote function create(User value) returns User|persist:Error {
-        sql:ExecutionResult result = check self.persistClient.runInsertQuery(value);
-        if result.lastInsertId is () {
-            return value;
+        if value.profile is Profile {
+            ProfileClient profileClient = check new ProfileClient();
+            boolean exists = check profileClient->exists(<Profile>value.profile);
+            if !exists {
+                value.profile = check profileClient->create(<Profile>value.profile);
+            }
         }
-        return {id: <int>result.lastInsertId, name: value.name};
+        _ = check self.persistClient.runInsertQuery(value);
+        return value;
     }
 
-    remote function readByKey(int key) returns User|persist:Error {
-        return <User>check self.persistClient.runReadByKeyQuery(User, key);
+    remote function readByKey(int key, UserRelations[] include = []) returns User|persist:Error {
+        return <User>check self.persistClient.runReadByKeyQuery(User, key, include);
     }
 
-    remote function read() returns stream<User, persist:Error?> {
-        stream<anydata, sql:Error?>|persist:Error result = self.persistClient.runReadQuery(User);
+    remote function read(UserRelations[] include = []) returns stream<User, persist:Error?> {
+        stream<anydata, sql:Error?>|persist:Error result = self.persistClient.runReadQuery(User, include);
         if result is persist:Error {
             return new stream<User, persist:Error?>(new UserStream((), result));
         } else {
@@ -56,6 +67,11 @@ public client class UserClient {
 
     remote function update(User value) returns persist:Error? {
         _ = check self.persistClient.runUpdateQuery(value);
+        if value.profile is record {} {
+            Profile profileEntity = <Profile>value.profile;
+            ProfileClient profileClient = check new ProfileClient();
+            check profileClient->update(profileEntity);
+        }
     }
 
     remote function delete(User value) returns persist:Error? {
@@ -76,6 +92,10 @@ public client class UserClient {
     public function close() returns persist:Error? {
         return self.persistClient.close();
     }
+}
+
+public enum UserRelations {
+    ProfileEntity = "profile"
 }
 
 public class UserStream {

@@ -9,5 +9,6 @@ database = "persist"
 host = "localhost"
 port = 3306
 user = "root"
-database = "test1"
-password = "test1"
+password = ""
+database = ""
+

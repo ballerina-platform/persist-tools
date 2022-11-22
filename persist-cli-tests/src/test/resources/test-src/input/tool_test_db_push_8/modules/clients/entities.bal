@@ -7,6 +7,9 @@ import ballerina/persist;
 public type Profile record {|
     readonly int id;
     string name;
+    boolean isAdult;
+    float salary;
+    decimal age;
 |};
 
 @persist:Entity {
@@ -16,6 +19,8 @@ public type Profile record {|
 public type User record {|
     readonly int id;
     string name;
+    @persist:Relation
+    Profile profile?;
 |};
 
 @persist:Entity {
@@ -42,16 +47,13 @@ public type MultipleAssociations record {|
     readonly int id;
     string name;
 
-    @persist:Relation
-    Profile profile?;
-
     @persist:Relation {}
     User user?;
 
-    @persist:Relation {keyColumns: ["profileId"]}
+    @persist:Relation {keyColumns: ["profileId"], onDelete: persist:SET_DEFAULT}
     Dept dept?;
 
-    @persist:Relation {reference: ["id"]}
+    @persist:Relation {reference: ["id"], onUpdate: "SET_DEFAULT"}
     Customer customer?;
 |};
 
