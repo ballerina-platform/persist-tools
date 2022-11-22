@@ -73,7 +73,7 @@ public class Init implements BLauncherCmd {
     @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
     private boolean helpFlag;
 
-    private Init() {}
+    public Init() {}
 
     @Override
     public void execute() {
