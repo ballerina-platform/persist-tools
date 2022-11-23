@@ -96,23 +96,23 @@ public class Init implements BLauncherCmd {
         File persistToml = new File(persistTomlPath.toString());
         File databaseConfig = new File(databaseConfigPath.toString());
         if (persistToml.exists() || databaseConfig.exists()) {
-            errStream.println("`bal persist init` command can only be used once to initialize the project");
+            errStream.println("`bal persist init` command can only be used once to initialize the project. ");
             return;
         }
         Generate generateCMD = new Generate();
         generateCMD.setSourcePath(Paths.get(sourcePath).toAbsolutePath().toString());
         try {
             generateConfigurationBalFile();
-            outStream.println("Added new Ballerina module at modules/clients");
-            outStream.println("Created database_configuration.bal file with configurations.");
+            outStream.println("Added new sub module 'clients' used for generated clients. ");
+            outStream.println("Created database_configuration.bal file with configurations. ");
             createPersistToml(persistTomlPath);
-            outStream.println("Created Persist.toml file with configurations.");
+            outStream.println("Created Persist.toml file with configurations. ");
             if (!Files.exists(Paths.get(sourcePath, configPath))) {
                 createConfigToml();
-                outStream.println("Created Config.toml file inside the Ballerina project");
+                outStream.println("Created Config.toml file inside the Ballerina project. ");
             } else {
                 updateConfigToml();
-                outStream.println("Updated Config.toml file with default database configurations.");
+                outStream.println("Updated Config.toml file with default database configurations. ");
             }
             generateCMD.execute();
         } catch (BalException e) {
@@ -136,7 +136,7 @@ public class Init implements BLauncherCmd {
             SyntaxTree syntaxTree = SyntaxTreeGenerator.createPesistToml(projectName);
             writeOutputSyntaxTree(syntaxTree, persistTomlPath.toAbsolutePath().toString());
         } catch (Exception e) {
-            throw new BalException("Error while adding Persist.toml to the project : " +
+            throw new BalException("Error while adding Persist.toml to the project. " +
                     e.getMessage());
         }
     }

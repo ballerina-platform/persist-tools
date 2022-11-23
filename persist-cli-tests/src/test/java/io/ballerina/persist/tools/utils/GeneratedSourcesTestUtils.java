@@ -22,7 +22,6 @@ import io.ballerina.persist.cmd.Generate;
 import io.ballerina.persist.cmd.Init;
 import io.ballerina.persist.cmd.PersistCmd;
 import io.ballerina.persist.cmd.Push;
-import io.ballerina.persist.objects.BalException;
 import org.testng.Assert;
 
 import java.io.IOException;
@@ -39,8 +38,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static io.ballerina.persist.utils.BalProjectUtils.hasSemanticDiagnostics;
-import static io.ballerina.persist.utils.BalProjectUtils.hasSyntacticDiagnostics;
-
 /**
  * persist tool test Utils.
  */
@@ -59,7 +56,6 @@ public class GeneratedSourcesTestUtils {
     public static final String GENERATED_SOURCES_DIRECTORY = Paths.get("build", "generated-sources").toString();
     public static final Path RESOURCES_EXPECTED_OUTPUT = Paths.get("src", "test", "resources", "test-src", "output")
             .toAbsolutePath();
-    private static final Path DRIVER_PATH = Paths.get("lib").toAbsolutePath();
 
     public static void assertGeneratedSources(String subDir, Command cmd) {
 
@@ -83,13 +79,6 @@ public class GeneratedSourcesTestUtils {
             Assert.assertEquals(readContent(actualOutputFile), readContent(expectedOutputFile));
         }
         if (!subDir.equals("tool_test_generate_4")) {
-            try {
-                Assert.assertTrue(hasSyntacticDiagnostics(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir))
-                        .isEmpty());
-            } catch (IOException | BalException e) {
-                errStream.println(e.getMessage());
-                Assert.fail();
-            }
             Assert.assertFalse(hasSemanticDiagnostics(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)).
                     hasErrors());
         }

@@ -57,7 +57,6 @@ import static io.ballerina.persist.nodegenerator.BalFileConstants.PATH_ENTITIES_
 import static io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator.formatModuleMembers;
 import static io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator.generateRelations;
 import static io.ballerina.persist.utils.BalProjectUtils.hasSemanticDiagnostics;
-import static io.ballerina.persist.utils.BalProjectUtils.hasSyntacticDiagnostics;
 
 
 /**
@@ -125,7 +124,7 @@ public class Generate implements BLauncherCmd {
                             "inside clients sub module.%n", entity.getEntityName());
                 }
                 copyEntities(returnModuleMembers, imports);
-                outStream.println("Created entities.bal");
+                outStream.println("Created entities.bal. ");
             }
         } catch (Exception e) {
             errStream.println(e.getMessage());
@@ -152,21 +151,9 @@ public class Generate implements BLauncherCmd {
                 }
                 if (!skipValidation) {
                     DiagnosticResult diagnosticResult = hasSemanticDiagnostics(Paths.get(this.sourcePath));
-                    ArrayList<String> syntaxDiagnostics = hasSyntacticDiagnostics(Paths.get(this.sourcePath));
-                    if (!syntaxDiagnostics.isEmpty()) {
-                        StringBuilder errorMessage = new StringBuilder();
-                        errorMessage.append("Error occurred when validating the project." +
-                                " The project contains syntax errors. ");
-                        for (String d : syntaxDiagnostics) {
-                            errorMessage.append(System.lineSeparator());
-                            errorMessage.append(d);
-                        }
-                        throw new BalException(errorMessage.toString());
-                    }
                     if (diagnosticResult.hasErrors()) {
                         StringBuilder errorMessage = new StringBuilder();
-                        errorMessage.append("Error occurred when validating the project." +
-                                " The project contains semantic errors. ");
+                        errorMessage.append("Error occurred when validating the project. ");
                         for (Diagnostic d : diagnosticResult.errors()) {
                             errorMessage.append(System.lineSeparator());
                             errorMessage.append(d.toString());
@@ -217,10 +204,8 @@ public class Generate implements BLauncherCmd {
             writeOutputFile(copiedEntitiesTree, Paths.get(this.sourcePath, KEYWORD_MODULES,
                             KEYWORD_CLIENTS, PATH_ENTITIES_FILE)
                     .toAbsolutePath().toString());
-        } catch (IOException e) {
-            throw new BalException("Error occurred while writing database configuration file!");
-        } catch (FormatterException e) {
-            throw new BalException("Error occurred while formatting database configuration file!");
+        } catch (IOException | FormatterException e) {
+            throw new BalException("Error occurred while creating entities.bal. ");
         }
     }
 
