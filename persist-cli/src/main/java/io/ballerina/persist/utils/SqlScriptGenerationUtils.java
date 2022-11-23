@@ -70,14 +70,13 @@ public class SqlScriptGenerationUtils {
             String tableName = entity.getTableName();
             String tableScript = generateDropTableQuery(tableName) + generateTableQuery(tableName, entityArray, entity,
                     referenceTables);
-            sqlScript = updateSqlScript(sqlScript, tableScript, entity.getTableName(), referenceTables,
-                    tableNamesInScript);
-
+            sqlScript = rearrangeSqlScriptWithReference(sqlScript, tableScript, entity.getTableName(),
+                    referenceTables, tableNamesInScript);
         }
         return sqlScript;
     }
 
-    public static void addScriptToFile(String sqlScript, Path filePath) {
+    public static void writeScriptFile(String sqlScript, Path filePath) {
         Path path = Paths.get(String.valueOf(filePath), PersistToolsConstants.FILE_NAME);
         try {
             Files.deleteIfExists(path);
@@ -96,18 +95,18 @@ public class SqlScriptGenerationUtils {
 
     private static String generateTableQuery(String tableName, ArrayList<Entity> entityArray, Entity entity,
                                              HashMap<String, List<String>> referenceTables) {
-        return MessageFormat.format("{1}CREATE TABLE {0} (", tableName, NEW_LINE) +
-                generateFieldsQuery(entity.getTableName(), Arrays.asList(entity.getKeys()),
+        return MessageFormat.format("{0}CREATE TABLE {1} (", NEW_LINE, tableName) +
+                generateFieldsDefinitionSegments(entity.getTableName(), Arrays.asList(entity.getKeys()),
                         entity.getUniqueConstraints(), referenceTables, entity, entityArray);
     }
 
-    private static String generateFieldsQuery(String tableName,
-                                              List<String> primaryKeys, List<List<String>> uniqueConstraints,
-                                              HashMap<String, List<String>> referenceTables,
-                                              Entity entity, ArrayList<Entity> entityArray) {
+    private static String generateFieldsDefinitionSegments(String tableName,
+                                                           List<String> primaryKeys,
+                                                           List<List<String>> uniqueConstraints,
+                                                           HashMap<String, List<String>> referenceTables,
+                                                           Entity entity, ArrayList<Entity> entityArray) {
         StringBuilder sqlScript = new StringBuilder();
-        String end = NEW_LINE + ");";
-        end = createColumnsScript(entity, end, sqlScript);
+        String endScript = createColumnsScript(entity, sqlScript);
         if (entity.getRelations().size() > 0) {
             ArrayList<Relation> relations = entity.getRelations();
             for (Relation relation: relations) {
@@ -130,10 +129,11 @@ public class SqlScriptGenerationUtils {
             }
         }
         sqlScript.append(addPrimaryKeyUniqueKey(primaryKeys, uniqueConstraints));
-        return sqlScript.substring(0, sqlScript.length() - 1) + end;
+        return sqlScript.substring(0, sqlScript.length() - 1) + endScript;
     }
 
-    private static String createColumnsScript(Entity entity, String end, StringBuilder sqlScript) {
+    private static String createColumnsScript(Entity entity, StringBuilder sqlScript) {
+        String autoIncrementStartValueScript = NEW_LINE + ");";
         for (FieldMetaData fieldMetaData :entity.getFields()) {
             String sqlType = getType(fieldMetaData.getFieldType());
             assert sqlType != null;
@@ -146,14 +146,14 @@ public class SqlScriptGenerationUtils {
                 autoIncrement = PersistToolsConstants.AUTO_INCREMENT_WITH_SPACE;
                 String startValue = fieldMetaData.getStartValueOfAutoIncrement();
                 if (!startValue.isEmpty() && Integer.parseInt(startValue) > 1) {
-                    end = MessageFormat.format("{0}){1} = {2};", NEW_LINE,
+                    autoIncrementStartValueScript = MessageFormat.format("{0}){1} = {2};", NEW_LINE,
                             PersistToolsConstants.AUTO_INCREMENT_WITH_TAB, startValue);
                 }
             }
             sqlScript.append(MessageFormat.format("{0}{1}{2} {3}{4}{5},",
                     NEW_LINE, TAB, fieldName, sqlType, " NOT NULL", autoIncrement));
         }
-        return end;
+        return autoIncrementStartValueScript;
     }
 
     private static String removeSingleQuote(String fieldName) {
@@ -303,9 +303,9 @@ public class SqlScriptGenerationUtils {
         }
     }
 
-    private static String updateSqlScript(String sqlScript, String tableScript, String tableName,
-                                          HashMap<String, List<String>> referenceTables,
-                                          List<String> tableNamesInScript) {
+    private static String rearrangeSqlScriptWithReference(String sqlScript, String tableScript, String tableName,
+                                                          HashMap<String, List<String>> referenceTables,
+                                                          List<String> tableNamesInScript) {
         String tableNames = "";
         int firstIndex = 0;
         if (sqlScript.isEmpty()) {
