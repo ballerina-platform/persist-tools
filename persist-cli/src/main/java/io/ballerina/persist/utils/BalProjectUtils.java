@@ -88,17 +88,17 @@ public class BalProjectUtils {
             }
             try (Stream<Path> walk = Files.walk(dirPath)) {
                 if (walk != null) {
-                    fileList = walk.filter(Files::isRegularFile).collect(Collectors.toList());
+                    fileList = walk.filter((filePath) -> Files.isRegularFile(filePath) &&
+                                    !filePath.toAbsolutePath().equals(clientEntitiesPath)
+                                    && filePath.normalize().toString().endsWith(EXTENSION_BAL))
+                            .collect(Collectors.toList());
                     for (Path filePath : fileList) {
-                        if (filePath.toString().endsWith(EXTENSION_BAL) &&
-                                !filePath.toAbsolutePath().equals(clientEntitiesPath)) {
-                            EntityMetaData retEntityMetaData = BalSyntaxTreeGenerator.getEntityRecord(filePath);
-                            ArrayList<Entity> retData = retEntityMetaData.entityArray;
-                            ArrayList<ModuleMemberDeclarationNode> retMembers = retEntityMetaData.moduleMembersArray;
-                            if (retData.size() != 0) {
-                                returnMetaData.addAll(retData);
-                                returnModuleMembers.addAll(retMembers);
-                            }
+                        EntityMetaData retEntityMetaData = BalSyntaxTreeGenerator.getEntityRecord(filePath);
+                        ArrayList<Entity> retData = retEntityMetaData.entityArray;
+                        ArrayList<ModuleMemberDeclarationNode> retMembers = retEntityMetaData.moduleMembersArray;
+                        if (retData.size() != 0) {
+                            returnMetaData.addAll(retData);
+                            returnModuleMembers.addAll(retMembers);
                         }
                     }
                     generateRelations(returnMetaData);
