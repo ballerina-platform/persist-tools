@@ -143,7 +143,7 @@ public class Push implements BLauncherCmd {
             EntityMetaData retEntityMetaData = BalProjectUtils.readBalFiles(this.sourcePath);
             ArrayList<Entity> entityArray = retEntityMetaData.entityArray;
             sqlScript = SqlScriptGenerationUtils.generateSqlScript(entityArray);
-            SqlScriptGenerationUtils.addScriptToFile(sqlScript, Paths.get(absoluteSourcePath.toString(), PERSIST));
+            SqlScriptGenerationUtils.writeScriptFile(sqlScript, Paths.get(absoluteSourcePath.toString(), PERSIST));
             loadJdbcDriver();
         } catch (ProjectException | BalException  e) {
             errStream.println(e.getMessage());
