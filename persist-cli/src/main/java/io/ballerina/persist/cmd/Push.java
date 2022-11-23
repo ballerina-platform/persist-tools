@@ -28,6 +28,7 @@ import io.ballerina.projects.ProjectException;
 import io.ballerina.projects.ResolvedPackageDependency;
 import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.projects.directory.ProjectLoader;
+import io.ballerina.toml.syntax.tree.TableNode;
 import picocli.CommandLine;
 
 import java.io.BufferedReader;
@@ -45,6 +46,7 @@ import java.sql.Driver;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -76,6 +78,7 @@ import static io.ballerina.persist.nodegenerator.BalFileConstants.JDBC_URL_WITHO
 import static io.ballerina.persist.nodegenerator.BalFileConstants.JDBC_URL_WITH_DATABASE;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.PERSIST;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.PLACEHOLDER_PATTERN;
+import static io.ballerina.persist.nodegenerator.SyntaxTreeGenerator.populateConfigurations;
 
 /**
  * Class to implement "persist push" command for ballerina.
@@ -128,14 +131,14 @@ public class Push implements BLauncherCmd {
             balProject.currentPackage().getCompilation();
             persistConfigurations = SyntaxTreeGenerator.readPersistToml(Paths.get(this.sourcePath, PERSIST,
                     PERSIST_TOML_FILE));
-            int templatedEntryCount = 0;
+            ArrayList<String> templatedEntry = new ArrayList<>();
             for (String key : persistConfigurations.keySet()) {
                 if (Pattern.matches(PLACEHOLDER_PATTERN, persistConfigurations.get(key))) {
-                    templatedEntryCount += 1;
+                    templatedEntry.add(key);
                 }
             }
-            if (templatedEntryCount > 0) {
-                populatePlaceHolder(persistConfigurations);
+            if (!templatedEntry.isEmpty()) {
+                populatePlaceHolder(persistConfigurations, templatedEntry);
             }
             sqlLines = readSqlFile();
             loadJdbcDriver();
@@ -224,10 +227,11 @@ public class Push implements BLauncherCmd {
             throw new BalException("Error in jdbc driver path : " + e.getMessage());
         }
     }
-    private void populatePlaceHolder(HashMap<String, String> persistConfigurations)
+    private void populatePlaceHolder(HashMap<String, String> persistConfigurations, ArrayList<String> templatedEntry)
             throws BalException {
-        SyntaxTreeGenerator.populateConfiguration(persistConfigurations, Paths.get(this.sourcePath,
-                CONFIG_SCRIPT_FILE).toAbsolutePath());
+        HashMap<String, TableNode> configs = SyntaxTreeGenerator.getConfigs(Paths.get(
+                this.sourcePath, CONFIG_SCRIPT_FILE).toAbsolutePath());
+        populateConfigurations(templatedEntry, persistConfigurations, configs);
     }
     private String[] readSqlFile() throws BalException {
         String[] sqlLines;
