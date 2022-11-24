@@ -118,6 +118,14 @@ public class SqlScriptGenerationUtils {
                                                            Entity entity, ArrayList<Entity> entityList) {
         StringBuilder sqlScript = new StringBuilder();
         createColumnsScript(entity, sqlScript);
+        addRelationScripts(entity, tableName, sqlScript, referenceTables, entityList);
+        addPrimaryKeyUniqueKey(primaryKeys, uniqueConstraints, sqlScript);
+        return sqlScript.substring(0, sqlScript.length() - 1);
+    }
+
+    private static void addRelationScripts(Entity entity, String tableName, StringBuilder sqlScript,
+                                              HashMap<String, List<String>> referenceTables,
+                                              ArrayList<Entity> entityList) {
         if (entity.getRelations().size() > 0) {
             ArrayList<Relation> relations = entity.getRelations();
             for (Relation relation: relations) {
@@ -139,8 +147,6 @@ public class SqlScriptGenerationUtils {
                 }
             }
         }
-        sqlScript.append(addPrimaryKeyUniqueKey(primaryKeys, uniqueConstraints));
-        return sqlScript.substring(0, sqlScript.length() - 1);
     }
 
     private static void createColumnsScript(Entity entity, StringBuilder sqlScript) {
@@ -241,23 +247,22 @@ public class SqlScriptGenerationUtils {
         referenceTables.put(tableName, setOfReferenceTables);
     }
 
-    private static StringBuilder addPrimaryKeyUniqueKey(List<String> primaryKeys,
-                                                        List<List<String>> uniqueConstraints) {
-        StringBuilder primaryAndUniqueKeyScript = createKeysScript(primaryKeys, PRIMARY_KEY_START_SCRIPT);
+    private static void addPrimaryKeyUniqueKey(List<String> primaryKeys,
+                                                        List<List<String>> uniqueConstraints,
+                                                        StringBuilder script) {
+        createKeysScript(primaryKeys, PRIMARY_KEY_START_SCRIPT, script);
         for (List<String> uniqueConstraint : uniqueConstraints) {
-            primaryAndUniqueKeyScript.append(createKeysScript(uniqueConstraint, UNIQUE_KEY_START_SCRIPT));
+            createKeysScript(uniqueConstraint, UNIQUE_KEY_START_SCRIPT, script);
         }
-        return primaryAndUniqueKeyScript;
     }
 
-    private static StringBuilder createKeysScript(List<String> keys, String prefix) {
+    private static void createKeysScript(List<String> keys, String prefix, StringBuilder script) {
         int size = keys.size();
-        StringBuilder script;
         if (size == 1) {
-            script = new StringBuilder(MessageFormat.format("{0}{1}),", prefix,
+            script.append(MessageFormat.format("{0}{1}),", prefix,
                     eliminateDoubleQuotes(keys.get(0))));
         } else {
-            script = new StringBuilder(MessageFormat.format("{0}{1},", prefix,
+            script.append(MessageFormat.format("{0}{1},", prefix,
                     eliminateDoubleQuotes(keys.get(0))));
             for (int i = 1; i < size - 2; i++) {
                 script.append(MessageFormat.format("{0},",
@@ -266,7 +271,6 @@ public class SqlScriptGenerationUtils {
             script.append(MessageFormat.format("{0}),",
                     eliminateDoubleQuotes(keys.get(size - 1))));
         }
-        return script;
     }
 
     private static String getReferenceAction(String value) {
