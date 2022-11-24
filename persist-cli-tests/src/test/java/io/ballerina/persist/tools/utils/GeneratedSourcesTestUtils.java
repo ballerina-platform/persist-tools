@@ -64,18 +64,15 @@ public class GeneratedSourcesTestUtils {
                 Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)));
         for (Path actualOutputFile: listFiles(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir))) {
             errStream.println(actualOutputFile);
-            if (actualOutputFile.toString().contains("persist_db_scripts.sql")
-                    && (subDir.equals("tool_test_generate_7") || subDir.equals("tool_test_generate_14") ||
+            if ((actualOutputFile.toString().contains("persist_db_scripts.sql") ||
+                    actualOutputFile.toString().contains("entities.bal")) &&
+                    (subDir.equals("tool_test_generate_7") || subDir.equals("tool_test_generate_14") ||
                     subDir.equals("tool_test_generate_15"))) {
                 continue;
             }
             Path expectedOutputFile = Paths.get(RESOURCES_EXPECTED_OUTPUT.toString(), subDir).
                     resolve(actualOutputFile.subpath(3, actualOutputFile.getNameCount()));
             Assert.assertTrue(Files.exists(actualOutputFile));
-            if (subDir.equals("tool_test_generate_7") &&
-                    actualOutputFile.toString().contains("entities.bal")) {
-                continue;
-            }
             Assert.assertEquals(readContent(actualOutputFile), readContent(expectedOutputFile));
         }
         if (!subDir.equals("tool_test_generate_4")) {

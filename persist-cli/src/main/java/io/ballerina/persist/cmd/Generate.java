@@ -27,8 +27,14 @@ import io.ballerina.persist.objects.BalException;
 import io.ballerina.persist.objects.Entity;
 import io.ballerina.persist.objects.EntityMetaData;
 import io.ballerina.projects.DiagnosticResult;
+import io.ballerina.projects.Document;
+import io.ballerina.projects.DocumentId;
+import io.ballerina.projects.Module;
+import io.ballerina.projects.Package;
+import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.ProjectException;
+import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.projects.directory.ProjectLoader;
 import io.ballerina.tools.diagnostics.Diagnostic;
 import org.ballerinalang.formatter.core.Formatter;
@@ -50,13 +56,11 @@ import java.util.stream.Stream;
 
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_TOML_FILE;
 import static io.ballerina.persist.PersistToolsConstants.SUBMODULE_PERSIST;
-import static io.ballerina.persist.nodegenerator.BalFileConstants.EXTENSION_BAL;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_CLIENTS;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_MODULES;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.PATH_ENTITIES_FILE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator.formatModuleMembers;
 import static io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator.generateRelations;
-import static io.ballerina.persist.utils.BalProjectUtils.hasSemanticDiagnostics;
 
 
 /**
@@ -149,27 +153,44 @@ public class Generate implements BLauncherCmd {
                         break;
                     }
                 }
-                if (!skipValidation) {
-                    DiagnosticResult diagnosticResult = hasSemanticDiagnostics(Paths.get(this.sourcePath));
-                    if (diagnosticResult.hasErrors()) {
-                        StringBuilder errorMessage = new StringBuilder();
-                        errorMessage.append("Error occurred when validating the project. ");
-                        for (Diagnostic d : diagnosticResult.errors()) {
-                            errorMessage.append(System.lineSeparator());
-                            errorMessage.append(d.toString());
+
+                BuildProject buildProject = BuildProject.load(Paths.get(this.sourcePath).toAbsolutePath());;
+                Package currentPackage = buildProject.currentPackage();
+                PackageCompilation compilation = currentPackage.getCompilation();
+                DiagnosticResult diagnosticResult = compilation.diagnosticResult();
+                if (diagnosticResult.hasErrors()) {
+                    StringBuilder errorMessage = new StringBuilder();
+                    int count = 0;
+                    errorMessage.append("Error occurred when validating the project. ");
+                    for (Diagnostic d : diagnosticResult.errors()) {
+                        if (d.toString().contains("redeclared symbol")) {
+                            continue;
                         }
+                        errorMessage.append(System.lineSeparator());
+                        errorMessage.append(d.toString());
+                        count += 1;
+                    }
+                    if (count > 0) {
                         throw new BalException(errorMessage.toString());
                     }
                 }
-                for (Path filePath : fileList) {
-                    if (filePath.toString().endsWith(EXTENSION_BAL) &&
-                            !filePath.toAbsolutePath().equals(clientEntitiesPath)) {
-                        EntityMetaData retEntityMetaData = BalSyntaxTreeGenerator.getEntityRecord(filePath);
+                ArrayList<String> entityNames = new ArrayList<>();
+                for (Module module : buildProject.currentPackage().modules()) {
+                    for (DocumentId documentId : module.documentIds()) {
+                        if (documentId.moduleId().moduleName().trim().endsWith(".clients")) {
+                            continue;
+                        }
+                        Document document = module.document(documentId);
+                        EntityMetaData retEntityMetaData = BalSyntaxTreeGenerator
+                                .getEntityRecord(document.syntaxTree());
                         ArrayList<Entity> retData = retEntityMetaData.entityArray;
                         ArrayList<ModuleMemberDeclarationNode> retMembers = retEntityMetaData.moduleMembersArray;
-                        if (retData.size() != 0) {
-                            returnMetaData.addAll(retData);
-                            returnModuleMembers.addAll(retMembers);
+                        for (Entity retEntity : retData) {
+//                            if (!entityNames.contains(retEntity.getEntityName())) {
+                            returnMetaData.add(retEntity);
+                            returnModuleMembers.add(retMembers.get(retData.indexOf(retEntity)));
+                            entityNames.add(retEntity.getEntityName());
+//                            }
                         }
                     }
                 }

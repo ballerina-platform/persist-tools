@@ -60,8 +60,6 @@ import org.ballerinalang.formatter.core.Formatter;
 import org.ballerinalang.formatter.core.FormatterException;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -164,7 +162,7 @@ public class BalSyntaxTreeGenerator {
     /**
      * method to read ballerina files.
      */
-    public static EntityMetaData getEntityRecord(Path filePath)
+    public static EntityMetaData getEntityRecord(SyntaxTree balSyntaxTree)
             throws IOException {
         ArrayList<Entity> entityArray = new ArrayList<>();
         ArrayList<ModuleMemberDeclarationNode> entityMembers = new ArrayList<>();
@@ -172,7 +170,6 @@ public class BalSyntaxTreeGenerator {
         ArrayList<String> keys = new ArrayList<>();
         String tableName = null;
         int count;
-        SyntaxTree balSyntaxTree = SyntaxTree.from(TextDocuments.from(Files.readString(filePath)));
         ModulePartNode rootNote = balSyntaxTree.rootNode();
         NodeList<ModuleMemberDeclarationNode> nodeList = rootNote.members();
         for (ModuleMemberDeclarationNode moduleNode : nodeList) {
