@@ -99,22 +99,23 @@ public class SqlScriptGenerationUtils {
 
     private static String generateCreateTableQuery(String tableName, ArrayList<Entity> entityArray, Entity entity,
                                              HashMap<String, List<String>> referenceTables) {
-        String endScript = NEW_LINE + ");";
+        String autoIncrementScript = "";
         String startValue = entity.getAutoIncrementStartValue();
         if (!startValue.isEmpty() && Integer.parseInt(startValue) > 1) {
-            endScript = MessageFormat.format("{0}){1} = {2};", NEW_LINE,
+            autoIncrementScript = MessageFormat.format("{1} = {2}", NEW_LINE,
                     PersistToolsConstants.AUTO_INCREMENT_WITH_TAB, startValue);
         }
-        return MessageFormat.format("{0}CREATE TABLE {1} (", NEW_LINE, tableName) +
+        return MessageFormat.format("{0}CREATE TABLE {1} ({2}{3}){4};", NEW_LINE, tableName,
                 generateFieldsDefinitionSegments(entity.getTableName(), Arrays.asList(entity.getKeys()),
-                        entity.getUniqueConstraints(), referenceTables, entity, entityArray) + endScript;
+                        entity.getUniqueConstraints(), referenceTables, entity, entityArray),
+                NEW_LINE, autoIncrementScript);
     }
 
     private static String generateFieldsDefinitionSegments(String tableName,
                                                            List<String> primaryKeys,
                                                            List<List<String>> uniqueConstraints,
                                                            HashMap<String, List<String>> referenceTables,
-                                                           Entity entity, ArrayList<Entity> entityArray) {
+                                                           Entity entity, ArrayList<Entity> entityList) {
         StringBuilder sqlScript = new StringBuilder();
         createColumnsScript(entity, sqlScript);
         if (entity.getRelations().size() > 0) {
@@ -134,7 +135,7 @@ public class SqlScriptGenerationUtils {
                         onUpdateScript = ON_UPDATE_SYNTAX + getReferenceAction(onUpdate);
                     }
                     createScriptFromGivenReferenceKeys(references, relation, keyColumns, onDeleteScript,
-                            onUpdateScript, tableName, sqlScript, referenceTables, entityArray);
+                            onUpdateScript, tableName, sqlScript, referenceTables, entityList);
                 }
             }
         }
@@ -217,11 +218,12 @@ public class SqlScriptGenerationUtils {
                     }
                 }
             }
-            sqlScript.append(MessageFormat.format("{10}{11}{0} {1}{12},{10}{11}CONSTRAINT " +
-                            "FK_{2}_{3}_{4} FOREIGN KEY({5}) REFERENCES {6}({7}){8}{9},",
-                    foreignKey, referenceSqlType, tableName.toUpperCase(Locale.ENGLISH),
-                    refTableName.toUpperCase(Locale.ENGLISH), count, foreignKey,
-                    refTableName, referenceFieldName, onDeleteScript, onUpdateScript, NEW_LINE, TAB, unique));
+            sqlScript.append(MessageFormat.format("{0}{1}{2} {3}{4},", NEW_LINE, TAB, foreignKey,
+                    referenceSqlType, unique));
+            sqlScript.append(MessageFormat.format("{0}{1}CONSTRAINT FK_{2}_{3}_{4} FOREIGN KEY({5}) " +
+                            "REFERENCES {6}({7}){8}{9},", NEW_LINE, TAB, tableName.toUpperCase(Locale.ENGLISH),
+                    refTableName.toUpperCase(Locale.ENGLISH), count, foreignKey, refTableName,
+                    referenceFieldName, onDeleteScript, onUpdateScript));
             updateReferenceTable(tableName, refTableName, referenceTables);
             count++;
         }
@@ -239,25 +241,30 @@ public class SqlScriptGenerationUtils {
         referenceTables.put(tableName, setOfReferenceTables);
     }
 
-    private static String addPrimaryKeyUniqueKey(List<String> primaryKeys, List<List<String>> uniqueConstraints) {
-        String primaryKeyScript = PRIMARY_KEY_START_SCRIPT;
-        String uniqueKeyScript = UNIQUE_KEY_START_SCRIPT;
-        String stringFormat = "{0}{1}, ";
-        String script = EMPTY;
-        for (String primaryKey : primaryKeys) {
-            primaryKeyScript = MessageFormat.format(stringFormat, primaryKeyScript, eliminateDoubleQuotes(primaryKey));
-        }
-        if (!primaryKeyScript.equals(PRIMARY_KEY_START_SCRIPT)) {
-            script = primaryKeyScript.substring(0, primaryKeyScript.length() - 2).concat("),");
-        }
+    private static StringBuilder addPrimaryKeyUniqueKey(List<String> primaryKeys,
+                                                        List<List<String>> uniqueConstraints) {
+        StringBuilder primaryAndUniqueKeyScript = createKeysScript(primaryKeys, PRIMARY_KEY_START_SCRIPT);
         for (List<String> uniqueConstraint : uniqueConstraints) {
-            for (String unique : uniqueConstraint) {
-                uniqueKeyScript = MessageFormat.format(stringFormat, uniqueKeyScript, eliminateDoubleQuotes(unique));
+            primaryAndUniqueKeyScript.append(createKeysScript(uniqueConstraint, UNIQUE_KEY_START_SCRIPT));
+        }
+        return primaryAndUniqueKeyScript;
+    }
+
+    private static StringBuilder createKeysScript(List<String> keys, String prefix) {
+        int size = keys.size();
+        StringBuilder script;
+        if (size == 1) {
+            script = new StringBuilder(MessageFormat.format("{0}{1}),", prefix,
+                    eliminateDoubleQuotes(keys.get(0))));
+        } else {
+            script = new StringBuilder(MessageFormat.format("{0}{1},", prefix,
+                    eliminateDoubleQuotes(keys.get(0))));
+            for (int i = 1; i < size - 2; i++) {
+                script.append(MessageFormat.format("{0},",
+                        eliminateDoubleQuotes(keys.get(i))));
             }
-            if (!uniqueKeyScript.equals(UNIQUE_KEY_START_SCRIPT)) {
-                script = script.concat(uniqueKeyScript.substring(0, uniqueKeyScript.length() - 2).concat("),"));
-            }
-            uniqueKeyScript = UNIQUE_KEY_START_SCRIPT;
+            script.append(MessageFormat.format("{0}),",
+                    eliminateDoubleQuotes(keys.get(size - 1))));
         }
         return script;
     }

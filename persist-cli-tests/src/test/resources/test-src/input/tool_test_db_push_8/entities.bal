@@ -49,11 +49,25 @@ public type Dept record  {|
 |};
 
 @persist:Entity {
-    key: ["id"]
+    key: ["id"],
+    uniqueConstraints: [["age", "name"]]
 }
 public type Customer record  {|
     readonly int id;
     string name;
+    int age;
+|};
+
+@persist:Entity {
+    key: ["id", "firstName"],
+    uniqueConstraints: [["age", "lastName"], ["nicNo"]]
+}
+public type Student record  {|
+    readonly int id;
+    readonly string firstName;
+    int age;
+    string lastName;
+    string nicNo;
 |};
 
 @persist:Entity {
@@ -67,7 +81,7 @@ public type MultipleAssociations record {|
     @persist:Relation{}
     User user?;
 
-    @persist:Relation{keyColumns: ["profileId"], onDelete: persist:SET_DEFAULT}
+    @persist:Relation{keyColumns: ["deptId"], onDelete: persist:SET_DEFAULT}
     Dept dept?;
 
     @persist:Relation{reference: ["id"], onUpdate: "SET_DEFAULT"}

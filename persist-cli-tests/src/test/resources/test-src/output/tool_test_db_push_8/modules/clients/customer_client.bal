@@ -10,7 +10,8 @@ public client class CustomerClient {
 
     private final map<persist:FieldMetadata> fieldMetadata = {
         id: {columnName: "id", 'type: int},
-        name: {columnName: "name", 'type: string}
+        name: {columnName: "name", 'type: string},
+        age: {columnName: "age", 'type: int}
     };
     private string[] keyFields = ["id"];
 
@@ -29,7 +30,7 @@ public client class CustomerClient {
         if result.lastInsertId is () {
             return value;
         }
-        return {id: <int>result.lastInsertId, name: value.name};
+        return {id: <int>result.lastInsertId, name: value.name, age: value.age};
     }
 
     remote function readByKey(int key) returns Customer|persist:Error {
