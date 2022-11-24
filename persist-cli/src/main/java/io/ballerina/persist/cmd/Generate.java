@@ -32,11 +32,11 @@ import io.ballerina.projects.DocumentId;
 import io.ballerina.projects.Module;
 import io.ballerina.projects.Package;
 import io.ballerina.projects.PackageCompilation;
+import io.ballerina.persist.utils.BalProjectUtils;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.ProjectException;
 import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.projects.directory.ProjectLoader;
-import io.ballerina.tools.diagnostics.Diagnostic;
 import org.ballerinalang.formatter.core.Formatter;
 import org.ballerinalang.formatter.core.FormatterException;
 import picocli.CommandLine;
@@ -46,13 +46,9 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_TOML_FILE;
 import static io.ballerina.persist.PersistToolsConstants.SUBMODULE_PERSIST;
@@ -115,7 +111,7 @@ public class Generate implements BLauncherCmd {
                         "to initiate the project before generation");
                 return;
             }
-            EntityMetaData retEntityMetaData = readBalFiles();
+            EntityMetaData retEntityMetaData = BalProjectUtils.getEntitiesInBalFiles(this.sourcePath);
             ArrayList<Entity> entityArray = retEntityMetaData.entityArray;
             ArrayList<ModuleMemberDeclarationNode> returnModuleMembers = retEntityMetaData.moduleMembersArray;
             ArrayList<ImportDeclarationNode> imports = new ArrayList<>();
@@ -134,77 +130,6 @@ public class Generate implements BLauncherCmd {
             errStream.println(e.getMessage());
         }
     }
-
-    private EntityMetaData readBalFiles() throws BalException {
-        ArrayList<Entity> returnMetaData = new ArrayList<>();
-        ArrayList<ModuleMemberDeclarationNode> returnModuleMembers = new ArrayList<>();
-        Path dirPath = Paths.get(this.sourcePath);
-        List<Path> fileList;
-
-        try (Stream<Path> walk = Files.walk(dirPath)) {
-            boolean skipValidation = false;
-            if (walk != null) {
-                fileList = walk.filter(Files::isRegularFile).collect(Collectors.toList());
-                Path clientEntitiesPath = Paths.get(this.sourcePath, KEYWORD_MODULES, KEYWORD_CLIENTS,
-                        PATH_ENTITIES_FILE).toAbsolutePath();
-                for (Path path : fileList) {
-                    if (path.toAbsolutePath().toString().equals(clientEntitiesPath.toString())) {
-                        skipValidation = true;
-                        break;
-                    }
-                }
-
-                BuildProject buildProject = BuildProject.load(Paths.get(this.sourcePath).toAbsolutePath());;
-                Package currentPackage = buildProject.currentPackage();
-                PackageCompilation compilation = currentPackage.getCompilation();
-                DiagnosticResult diagnosticResult = compilation.diagnosticResult();
-                if (diagnosticResult.hasErrors()) {
-                    StringBuilder errorMessage = new StringBuilder();
-                    int count = 0;
-                    errorMessage.append("Error occurred when validating the project. ");
-                    for (Diagnostic d : diagnosticResult.errors()) {
-                        if (d.toString().contains("redeclared symbol")) {
-                            continue;
-                        }
-                        errorMessage.append(System.lineSeparator());
-                        errorMessage.append(d.toString());
-                        count += 1;
-                    }
-                    if (count > 0) {
-                        throw new BalException(errorMessage.toString());
-                    }
-                }
-                ArrayList<String> entityNames = new ArrayList<>();
-                for (Module module : buildProject.currentPackage().modules()) {
-                    for (DocumentId documentId : module.documentIds()) {
-                        if (documentId.moduleId().moduleName().trim().endsWith(".clients")) {
-                            continue;
-                        }
-                        Document document = module.document(documentId);
-                        EntityMetaData retEntityMetaData = BalSyntaxTreeGenerator
-                                .getEntityRecord(document.syntaxTree());
-                        ArrayList<Entity> retData = retEntityMetaData.entityArray;
-                        ArrayList<ModuleMemberDeclarationNode> retMembers = retEntityMetaData.moduleMembersArray;
-                        for (Entity retEntity : retData) {
-//                            if (!entityNames.contains(retEntity.getEntityName())) {
-                            returnMetaData.add(retEntity);
-                            returnModuleMembers.add(retMembers.get(retData.indexOf(retEntity)));
-                            entityNames.add(retEntity.getEntityName());
-//                            }
-                        }
-                    }
-                }
-                generateRelations(returnMetaData);
-                returnModuleMembers = formatModuleMembers(returnModuleMembers, returnMetaData);
-                return new EntityMetaData(returnMetaData, returnModuleMembers);
-            }
-
-        } catch (IOException e) {
-            throw new BalException("Error while reading entities in the Ballerina project. " + e.getMessage());
-        }
-        return new EntityMetaData(new ArrayList<>(), new ArrayList<>());
-    }
-
     private void generateClientBalFile(Entity entity, ArrayList<ImportDeclarationNode> imports) throws BalException {
         SyntaxTree balTree = BalSyntaxTreeGenerator.generateClientSyntaxTree(entity, imports);
         String clientPath = Paths.get(this.sourcePath, KEYWORD_MODULES, KEYWORD_CLIENTS,

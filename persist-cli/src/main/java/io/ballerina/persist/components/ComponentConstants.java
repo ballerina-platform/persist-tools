@@ -24,9 +24,7 @@ package io.ballerina.persist.components;
  */
 public class ComponentConstants {
 
-    private ComponentConstants() {
-
-    }
+    private ComponentConstants() {}
 
     public static final String TAG_CLASS = "class ";
     public static final String TAG_PUBLIC = "public ";

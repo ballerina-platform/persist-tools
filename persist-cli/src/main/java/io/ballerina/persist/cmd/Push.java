@@ -20,7 +20,11 @@ package io.ballerina.persist.cmd;
 import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.nodegenerator.SyntaxTreeGenerator;
 import io.ballerina.persist.objects.BalException;
+import io.ballerina.persist.objects.Entity;
+import io.ballerina.persist.objects.EntityMetaData;
+import io.ballerina.persist.utils.BalProjectUtils;
 import io.ballerina.persist.utils.JdbcDriverLoader;
+import io.ballerina.persist.utils.SqlScriptGenerationUtils;
 import io.ballerina.projects.DependencyGraph;
 import io.ballerina.projects.Package;
 import io.ballerina.projects.Project;
@@ -31,10 +35,7 @@ import io.ballerina.projects.directory.ProjectLoader;
 import io.ballerina.toml.syntax.tree.TableNode;
 import picocli.CommandLine;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
@@ -46,6 +47,7 @@ import java.sql.Driver;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -68,10 +70,8 @@ import static io.ballerina.persist.PersistToolsConstants.PERSIST_TOML_FILE;
 import static io.ballerina.persist.PersistToolsConstants.PLATFORM;
 import static io.ballerina.persist.PersistToolsConstants.PORT;
 import static io.ballerina.persist.PersistToolsConstants.PROPERTY_KEY_PATH;
-import static io.ballerina.persist.PersistToolsConstants.SQL_SCRIPT_FILE;
 import static io.ballerina.persist.PersistToolsConstants.SUBMODULE_FOLDER;
 import static io.ballerina.persist.PersistToolsConstants.SUBMODULE_PERSIST;
-import static io.ballerina.persist.PersistToolsConstants.TARGET_DIR;
 import static io.ballerina.persist.PersistToolsConstants.USER;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.JDBC_URL_WITHOUT_DATABASE;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.JDBC_URL_WITH_DATABASE;
@@ -102,11 +102,14 @@ public class Push implements BLauncherCmd {
     @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
     private boolean helpFlag;
 
+    public Push() {}
+
     @Override
     public void execute() {
         configurations = new HashMap<>();
-        String[] sqlLines;
+        String[] sqlScripts;
         Statement statement;
+        Path absoluteSourcePath = Paths.get(this.sourcePath).toAbsolutePath();
 
         if (helpFlag) {
             String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMMAND_IDENTIFIER);
@@ -140,7 +143,11 @@ public class Push implements BLauncherCmd {
                 HashMap<String, String> resolvedEntries = populatePlaceHolder(templatedEntry);
                 persistConfigurations.putAll(resolvedEntries);
             }
-            sqlLines = readSqlFile();
+            EntityMetaData retEntityMetaData = BalProjectUtils.getEntitiesInBalFiles(this.sourcePath);
+            ArrayList<Entity> entityArray = retEntityMetaData.entityArray;
+            sqlScripts = SqlScriptGenerationUtils.generateSqlScript(entityArray);
+            SqlScriptGenerationUtils.writeScriptFile(sqlScripts,
+                    Paths.get(absoluteSourcePath.toString(), PERSIST));
             loadJdbcDriver();
         } catch (ProjectException | BalException  e) {
             errStream.println(e.getMessage());
@@ -182,10 +189,8 @@ public class Push implements BLauncherCmd {
 
         try (Connection connection = driver.connect(databaseUrl, props)) {
             statement = connection.createStatement();
-            for (String sqlLine : sqlLines) {
-                if (!sqlLine.trim().equals("")) {
-                    statement.executeUpdate(sqlLine);
-                }
+            for (String sqlLine : sqlScripts) {
+                statement.executeUpdate(sqlLine);
             }
             statement.close();
         } catch (SQLException e) {
@@ -227,30 +232,13 @@ public class Push implements BLauncherCmd {
             throw new BalException("Error in jdbc driver path : " + e.getMessage());
         }
     }
+    
     private HashMap<String, String> populatePlaceHolder(HashMap<String, String> templatedEntry)
             throws BalException {
         HashMap<String, TableNode> configs = SyntaxTreeGenerator.getConfigs(Paths.get(
                 this.sourcePath, CONFIG_SCRIPT_FILE).toAbsolutePath());
 
         return populateConfigurations(templatedEntry, configs);
-    }
-    private String[] readSqlFile() throws BalException {
-        String[] sqlLines;
-        String sValue;
-        StringBuilder stringBuilder = new StringBuilder();
-        try (FileReader fileReader = new FileReader(Paths.get(this.sourcePath, TARGET_DIR, SQL_SCRIPT_FILE).
-                toAbsolutePath().toString())) {
-            BufferedReader bufferedReader = new BufferedReader(fileReader);
-            while ((sValue = bufferedReader.readLine()) != null) {
-                stringBuilder.append(sValue);
-            }
-            bufferedReader.close();
-            sqlLines = stringBuilder.toString().split(";");
-            return sqlLines;
-        } catch (IOException e) {
-            throw new BalException("Error while reading the SQL script file (persist_db_push.sql) " +
-                    "generated in the project target directory. ");
-        }
     }
 
     @Override

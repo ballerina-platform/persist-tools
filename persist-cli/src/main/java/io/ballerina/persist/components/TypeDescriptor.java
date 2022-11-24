@@ -48,9 +48,7 @@ import io.ballerina.persist.nodegenerator.SyntaxTreeConstants;
  */
 public class TypeDescriptor {
 
-    private TypeDescriptor() {
-
-    }
+    private TypeDescriptor() {}
 
     public static ReturnTypeDescriptorNode getReturnTypeDescriptorNode(Node type) {
         NodeList<AnnotationNode> annotations = NodeFactory.createEmptyNodeList();
