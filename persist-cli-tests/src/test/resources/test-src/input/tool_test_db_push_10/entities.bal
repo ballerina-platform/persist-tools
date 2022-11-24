@@ -22,7 +22,8 @@ import ballerina/persist;
     tableName: "Profiles"
 }
 public type Profile record {|
-    readonly int id;
+    @persist:AutoIncrement
+    readonly int id = 5;
     string name;
     boolean isAdult;
     float salary;
@@ -34,6 +35,7 @@ public type Profile record {|
     tableName: "Users"
 }
 public type User record  {|
+    @persist:AutoIncrement
     readonly int id;
     string name;
 |};

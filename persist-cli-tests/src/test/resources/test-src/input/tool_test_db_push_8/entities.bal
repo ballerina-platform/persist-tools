@@ -21,6 +21,7 @@ import ballerina/persist;
     tableName: "Profiles"
 }
 public type Profile record {|
+    @persist:AutoIncrement{startValue: 10}
     readonly int id;
     string name;
     boolean isAdult;

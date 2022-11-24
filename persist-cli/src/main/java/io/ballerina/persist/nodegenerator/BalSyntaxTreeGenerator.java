@@ -265,8 +265,8 @@ public class BalSyntaxTreeGenerator {
                     if (metadata.isPresent()) {
                         MetadataNode fieldMetaD = metadata.get();
                         Relation relation = readMetaData(fName, fType, fieldMetaD);
-                        processAutoIncrement(fieldMetaD, field,
-                                recordFieldWithDefaultValueNode.expression().toSourceCode());
+                        processAutoIncrement(entityArray, fieldMetaD, field,
+                                recordFieldWithDefaultValueNode.expression().toSourceCode(), index);
                         if (relation.getKeyColumns() != null && relation.getReferences() != null) {
                             entityArray.get(index).getRelations().add(relation);
                         }
@@ -293,7 +293,7 @@ public class BalSyntaxTreeGenerator {
                     if (recordFieldNode.metadata().isPresent()) {
                         MetadataNode fieldMetaD = ((RecordFieldNode) node).metadata().get();
                         Relation relation = readMetaData(fName, fType, fieldMetaD);
-                        processAutoIncrement(fieldMetaD, field, "");
+                        processAutoIncrement(entityArray, fieldMetaD, field, "", index);
                         if (relation.getKeyColumns() != null && relation.getReferences() != null) {
                             entityArray.get(index).getRelations().add(relation);
                             field.setIsRelationType(Relation.RelationType.ONE);
@@ -1092,9 +1092,10 @@ public class BalSyntaxTreeGenerator {
         );
     }
 
-    private static void processAutoIncrement(MetadataNode metaD, FieldMetaData field, String startValue) {
+    private static void processAutoIncrement(ArrayList<Entity> entityArray, MetadataNode metaD, FieldMetaData field,
+                                             String startValue, int index) {
         NodeList<AnnotationNode> annotations = metaD.annotations();
-        field.setStartValueOfAutoIncrement(startValue);
+        entityArray.get(index).setAutoIncrementStartValue(startValue);
         for (AnnotationNode annotation : annotations) {
             Node annotReference = annotation.annotReference();
             if (annotReference.kind() == SyntaxKind.QUALIFIED_NAME_REFERENCE) {
@@ -1112,7 +1113,8 @@ public class BalSyntaxTreeGenerator {
                                             equals(PersistToolsConstants.START_VALUE)) {
                                 Optional<ExpressionNode> valueExpr = specificFieldNode.valueExpr();
                                 valueExpr.ifPresent(expressionNode ->
-                                        field.setStartValueOfAutoIncrement(expressionNode.toSourceCode().trim()));
+                                        entityArray.get(index).setAutoIncrementStartValue(
+                                                expressionNode.toSourceCode().trim()));
                             }
                         }
                     }

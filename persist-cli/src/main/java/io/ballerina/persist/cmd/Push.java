@@ -105,7 +105,7 @@ public class Push implements BLauncherCmd {
     @Override
     public void execute() {
         configurations = new HashMap<>();
-        String sqlScript;
+        String[] sqlScripts;
         Statement statement;
         Path absoluteSourcePath = Paths.get(this.sourcePath).toAbsolutePath();
 
@@ -142,8 +142,9 @@ public class Push implements BLauncherCmd {
             }
             EntityMetaData retEntityMetaData = BalProjectUtils.readBalFiles(this.sourcePath);
             ArrayList<Entity> entityArray = retEntityMetaData.entityArray;
-            sqlScript = SqlScriptGenerationUtils.generateSqlScript(entityArray);
-            SqlScriptGenerationUtils.writeScriptFile(sqlScript, Paths.get(absoluteSourcePath.toString(), PERSIST));
+            sqlScripts = SqlScriptGenerationUtils.generateSqlScript(entityArray);
+            SqlScriptGenerationUtils.writeScriptFile(sqlScripts,
+                    Paths.get(absoluteSourcePath.toString(), PERSIST));
             loadJdbcDriver();
         } catch (ProjectException | BalException  e) {
             errStream.println(e.getMessage());
@@ -185,7 +186,7 @@ public class Push implements BLauncherCmd {
 
         try (Connection connection = driver.connect(databaseUrl, props)) {
             statement = connection.createStatement();
-            for (String sqlLine : sqlScript.split(";")) {
+            for (String sqlLine : sqlScripts) {
                 statement.executeUpdate(sqlLine);
             }
             statement.close();

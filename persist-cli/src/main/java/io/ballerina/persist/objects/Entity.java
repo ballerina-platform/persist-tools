@@ -39,6 +39,9 @@ public class Entity {
     private ArrayList<Relation> relations = new ArrayList<>();
 
     private final ArrayList<FieldMetaData> fields = new ArrayList<>();
+
+    private String autoIncrementStartValue = "";
+
     public Entity(String[] keys, String tableName, List<List<String>> uniqueConstraints) {
 
         this.keys = keys;
@@ -60,6 +63,10 @@ public class Entity {
         }
         return this.tableName;
     }
+    public void setAutoIncrementStartValue(String autoIncrementStartValue) {
+        this.autoIncrementStartValue = autoIncrementStartValue;
+    }
+
     public void setTableName(String tableName) {
         this.tableName = tableName;
     }
@@ -85,5 +92,9 @@ public class Entity {
 
     public ArrayList<Relation> getRelations() {
         return this.relations;
+    }
+
+    public String getAutoIncrementStartValue() {
+        return this.autoIncrementStartValue;
     }
 }
