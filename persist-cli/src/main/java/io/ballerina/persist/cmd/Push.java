@@ -46,7 +46,6 @@ import java.sql.Driver;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -131,14 +130,15 @@ public class Push implements BLauncherCmd {
             balProject.currentPackage().getCompilation();
             persistConfigurations = SyntaxTreeGenerator.readPersistToml(Paths.get(this.sourcePath, PERSIST,
                     PERSIST_TOML_FILE));
-            ArrayList<String> templatedEntry = new ArrayList<>();
-            for (String key : persistConfigurations.keySet()) {
-                if (Pattern.matches(PLACEHOLDER_PATTERN, persistConfigurations.get(key))) {
-                    templatedEntry.add(key);
+            HashMap<String, String> templatedEntry = new HashMap<>();
+            for (Map.Entry<String, String> entry : persistConfigurations.entrySet()) {
+                if (Pattern.matches(PLACEHOLDER_PATTERN, persistConfigurations.get(entry.getKey()))) {
+                    templatedEntry.put(entry.getKey(), entry.getValue());
                 }
             }
             if (!templatedEntry.isEmpty()) {
-                populatePlaceHolder(persistConfigurations, templatedEntry);
+                HashMap<String, String> resolvedEntries = populatePlaceHolder(templatedEntry);
+                persistConfigurations.putAll(resolvedEntries);
             }
             sqlLines = readSqlFile();
             loadJdbcDriver();
@@ -227,11 +227,12 @@ public class Push implements BLauncherCmd {
             throw new BalException("Error in jdbc driver path : " + e.getMessage());
         }
     }
-    private void populatePlaceHolder(HashMap<String, String> persistConfigurations, ArrayList<String> templatedEntry)
+    private HashMap<String, String> populatePlaceHolder(HashMap<String, String> templatedEntry)
             throws BalException {
         HashMap<String, TableNode> configs = SyntaxTreeGenerator.getConfigs(Paths.get(
                 this.sourcePath, CONFIG_SCRIPT_FILE).toAbsolutePath());
-        populateConfigurations(templatedEntry, persistConfigurations, configs);
+
+        return populateConfigurations(templatedEntry, configs);
     }
     private String[] readSqlFile() throws BalException {
         String[] sqlLines;

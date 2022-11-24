@@ -39,6 +39,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 import static io.ballerina.persist.PersistToolsConstants.DATABASE;
 import static io.ballerina.persist.PersistToolsConstants.DATABASE_PLACEHOLDER;
@@ -125,33 +126,39 @@ public class SyntaxTreeGenerator {
         }
     }
 
-    public static void  populateConfigurations(ArrayList<String> templatedEntry, HashMap<String, String>
-            persistConfigurations, HashMap<String, TableNode> configs) throws BalException {
-        for (String configKey : templatedEntry) {
+    public static HashMap<String, String>  populateConfigurations(HashMap<String, String> templatedEntry,
+                                               HashMap<String, TableNode> configs) throws BalException {
+        StringBuilder missingConfigs = new StringBuilder();
+        for (Map.Entry<String, String> templatedConfig : templatedEntry.entrySet()) {
             boolean configExists = false;
-            String[] placeHolderValues = persistConfigurations.get(configKey).replaceAll("\"", "").replaceAll("}", "")
+            String[] placeHolderValues = templatedConfig.getValue().replaceAll("\"", "").replaceAll("}", "")
                     .split("\\.");
             String relatedKey =  placeHolderValues[placeHolderValues.length - 1];
-            String placeHolderTable = persistConfigurations.get(configKey)
+            String placeHolderTable = templatedConfig.getValue()
                     .replaceAll("\"\\$\\{", "").replaceAll("}\"", "").replaceAll("\\." + relatedKey, "");
             if (configs.containsKey(placeHolderTable)) {
                 TableNode tableNode = configs.get(placeHolderTable);
                 NodeList<KeyValueNode> subNodeList = tableNode.fields();
                 for (KeyValueNode subMember : subNodeList) {
                     if (subMember.identifier().toSourceCode().trim().equals(relatedKey)) {
-                        persistConfigurations.put(configKey,
+                        templatedEntry.put(templatedConfig.getKey(),
                                 subMember.value().toSourceCode().trim());
                         configExists = true;
                     }
                 }
             }
             if (!configExists) {
-                throw new BalException(
-                        String.format("Persist.toml configuration template %s is not found in Config.toml ",
-                                persistConfigurations.get(configKey).replaceAll("\"", "")));
+                missingConfigs.append(String.format("Persist.toml configuration template %s is not " +
+                                "found in Config.toml. ",
+                        templatedConfig.getValue().replaceAll("\"", "")));
+                missingConfigs.append(System.lineSeparator());
             }
 
         }
+        if (missingConfigs.length() != 0) {
+            throw new BalException(missingConfigs.toString());
+        }
+        return templatedEntry;
     }
 
     public static HashMap<String, String> readPersistToml(Path configPath) throws BalException {
