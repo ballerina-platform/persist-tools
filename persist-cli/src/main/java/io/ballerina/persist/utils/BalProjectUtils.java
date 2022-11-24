@@ -37,6 +37,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 
+import static io.ballerina.persist.nodegenerator.BalFileConstants.CONFIG_MODULE_ENDING;
 import static io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator.formatModuleMembers;
 import static io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator.generateRelations;
 
@@ -51,8 +52,8 @@ public class BalProjectUtils {
     private BalProjectUtils() {}
 
     public static EntityMetaData getEntitiesInBalFiles(String sourcePath) throws BalException {
-        ArrayList<Entity> returnMetaData = new ArrayList<>();
-        ArrayList<ModuleMemberDeclarationNode> returnModuleMembers = new ArrayList<>();
+        ArrayList<Entity> entityMetaData = new ArrayList<>();
+        ArrayList<ModuleMemberDeclarationNode> entityModuleMembers = new ArrayList<>();
         Path dirPath = Paths.get(sourcePath);
         try {
             BuildProject buildProject = BuildProject.load(dirPath.toAbsolutePath());;
@@ -61,41 +62,34 @@ public class BalProjectUtils {
             DiagnosticResult diagnosticResult = compilation.diagnosticResult();
             if (diagnosticResult.hasErrors()) {
                 StringBuilder errorMessage = new StringBuilder();
-                int count = 0;
                 errorMessage.append("Error occurred when validating the project. ");
                 for (Diagnostic d : diagnosticResult.errors()) {
-                    if (d.toString().contains("redeclared symbol")) {
-                        continue;
-                    }
                     errorMessage.append(System.lineSeparator());
                     errorMessage.append(d.toString());
-                    count += 1;
                 }
-                if (count > 0) {
-                    throw new BalException(errorMessage.toString());
-                }
+                throw new BalException(errorMessage.toString());
             }
-            ArrayList<String> entityNames = new ArrayList<>();
             for (Module module : buildProject.currentPackage().modules()) {
                 for (DocumentId documentId : module.documentIds()) {
-                    if (documentId.moduleId().moduleName().trim().endsWith(".clients")) {
+                    if (documentId.moduleId().moduleName().trim().endsWith(CONFIG_MODULE_ENDING)) {
                         continue;
                     }
                     Document document = module.document(documentId);
                     EntityMetaData retEntityMetaData = BalSyntaxTreeGenerator
-                            .getEntityRecord(document.syntaxTree());
-                    ArrayList<Entity> retData = retEntityMetaData.entityArray;
-                    ArrayList<ModuleMemberDeclarationNode> retMembers = retEntityMetaData.moduleMembersArray;
-                    for (Entity retEntity : retData) {
-                        returnMetaData.add(retEntity);
-                        returnModuleMembers.add(retMembers.get(retData.indexOf(retEntity)));
-                        entityNames.add(retEntity.getEntityName());
+                            .getEntityMetadata(document.syntaxTree());
+                    ArrayList<Entity> entityMetadataList = retEntityMetaData.entityArray;
+                    ArrayList<ModuleMemberDeclarationNode> entityModuleMembersList =
+                            retEntityMetaData.moduleMembersArray;
+                    for (Entity entityMetadata : entityMetadataList) {
+                        entityMetaData.add(entityMetadata);
+                        entityModuleMembers.add(entityModuleMembersList.get(entityMetadataList
+                                .indexOf(entityMetadata)));
                     }
                 }
             }
-            generateRelations(returnMetaData);
-            returnModuleMembers = formatModuleMembers(returnModuleMembers, returnMetaData);
-            return new EntityMetaData(returnMetaData, returnModuleMembers);
+            generateRelations(entityMetaData);
+            entityModuleMembers = formatModuleMembers(entityModuleMembers, entityMetaData);
+            return new EntityMetaData(entityMetaData, entityModuleMembers);
 
         } catch (IOException e) {
             throw new BalException("Error while reading entities in the Ballerina project. " + e.getMessage());

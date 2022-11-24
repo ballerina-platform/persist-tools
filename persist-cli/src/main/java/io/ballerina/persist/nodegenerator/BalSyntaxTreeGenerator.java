@@ -169,7 +169,7 @@ public class BalSyntaxTreeGenerator {
     /**
      * method to read ballerina files.
      */
-    public static EntityMetaData getEntityRecord(SyntaxTree balSyntaxTree)
+    public static EntityMetaData getEntityMetadata(SyntaxTree balSyntaxTree)
             throws IOException {
         ArrayList<Entity> entityArray = new ArrayList<>();
         ArrayList<ModuleMemberDeclarationNode> entityMembers = new ArrayList<>();

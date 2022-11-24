@@ -232,5 +232,6 @@ public class BalFileConstants {
             " <%sRelations[]>self.include);";
     public static final String PLACEHOLDER_PATTERN = "\"\\$\\{(.*?)}\"";
     public static final String MYSQL_DRIVER_IMPORT = "import ballerinax/mysql.driver as _;";
+    public static final String CONFIG_MODULE_ENDING = ".clients";
 
 }
