@@ -80,7 +80,7 @@ public class SqlScriptGenerationUtils {
         Path path = Paths.get(String.valueOf(filePath), PersistToolsConstants.FILE_NAME);
         StringBuilder sqlScript = new StringBuilder();
         for (String script : sqlScripts) {
-            sqlScript.append(script).append("\n");
+            sqlScript.append(script).append(NEW_LINE);
         }
         try {
             Files.deleteIfExists(path);

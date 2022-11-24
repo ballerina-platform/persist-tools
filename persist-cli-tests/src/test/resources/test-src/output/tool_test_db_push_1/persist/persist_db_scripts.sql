@@ -1,5 +1,4 @@
 DROP TABLE IF EXISTS MedicalNeeds;
-
 DROP TABLE IF EXISTS MedicalItems;
 
 CREATE TABLE MedicalItems (
