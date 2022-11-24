@@ -120,7 +120,7 @@ public class Push implements BLauncherCmd {
         File databaseConfigurationsBal = new File(databaseConfigurationBalPath.toString());
         if (!persistToml.exists() || !databaseConfigurationsBal.exists()) {
             errStream.println("Persist project is not initiated. Please run `bal persist init` " +
-                    "to initiate the project before the database schema generation");
+                    "to initiate the project before the database schema generation. ");
             return;
         }
 
@@ -169,10 +169,10 @@ public class Push implements BLauncherCmd {
                 statement = connection.createStatement();
                 String query = String.format(CREATE_DATABASE_SQL, database);
                 statement.executeUpdate(query);
-                stdStream.println("Created Database. " + database);
+                stdStream.println("Created Database : " + database + ".");
             }
         } catch (SQLException e) {
-            errStream.println("Error occurred while creating the database." + e.getMessage());
+            errStream.println("Error occurred while creating the database " + e.getMessage() + ".");
             return;
         }
 
@@ -189,10 +189,10 @@ public class Push implements BLauncherCmd {
             }
             statement.close();
         } catch (SQLException e) {
-            errStream.println("Error while creating the tables in the database " + database + e.getMessage());
+            errStream.println("Error while creating the tables in the database " + database + ". " +  e.getMessage());
             return;
         }
-        stdStream.println("Created tables for entities in the database " + database);
+        stdStream.println("Created tables for entities in the database " + database + ".");
     }
 
     public void setSourcePath(String sourcePath) {
@@ -214,14 +214,14 @@ public class Push implements BLauncherCmd {
             throw new BalException("Not a Ballerina project (or any parent up to mount point)\n" +
                     "You should run this command inside a Ballerina project.");
         } catch (ClassNotFoundException e) {
-            throw new BalException("Required database driver not found. " + e.getMessage());
+            throw new BalException("Required database driver class not found. " + e.getMessage());
         } catch (InstantiationException | InvocationTargetException e) {
             throw new BalException("Error instantiation the jdbc driver. " + e.getMessage());
         } catch (IllegalAccessException e) {
-            throw new BalException("Access denied error while trying to instantiation the database driver" +
+            throw new BalException("Access denied while trying to instantiation the database driver. " +
                     e.getMessage());
         } catch (NoSuchMethodException e) {
-            throw new BalException("Method not found error while trying to instantiate jdbc driver : "
+            throw new BalException("Method not found while trying to instantiate jdbc driver. "
                     + e.getMessage());
         } catch (MalformedURLException e) {
             throw new BalException("Error in jdbc driver path : " + e.getMessage());
@@ -294,6 +294,6 @@ public class Push implements BLauncherCmd {
         }
         // Unreachable code since the driver jar is pulled from the central and stored in the local cache
         // when the project is being built prior to this function.
-        throw new BalException("Failed to retrieve MySQL driver path in the local cache");
+        throw new BalException("Failed to retrieve MySQL driver path in the local cache. ");
     }
 }

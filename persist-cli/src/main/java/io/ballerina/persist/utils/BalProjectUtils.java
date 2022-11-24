@@ -18,23 +18,12 @@
 
 package io.ballerina.persist.utils;
 
-import io.ballerina.compiler.syntax.tree.SyntaxTree;
-import io.ballerina.persist.objects.BalException;
 import io.ballerina.projects.DiagnosticResult;
 import io.ballerina.projects.Package;
 import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.directory.BuildProject;
-import io.ballerina.tools.diagnostics.Diagnostic;
-import io.ballerina.tools.text.TextDocument;
-import io.ballerina.tools.text.TextDocuments;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * This Class implements the utility methods for persist tool.
@@ -48,20 +37,6 @@ public class BalProjectUtils {
 
     }
 
-    public static ArrayList<String> hasSyntacticDiagnostics(Path filePath) throws IOException, BalException {
-        ArrayList<String> diagnostics = new ArrayList<>();
-        List<Path> pathList = listFiles(filePath);
-        for (Path path : pathList) {
-            if (path.toString().endsWith(".bal")) {
-                TextDocument textDocument = TextDocuments.from(Files.readString(path));
-                for (Diagnostic diagnostic : SyntaxTree.from(textDocument).diagnostics()) {
-                    diagnostics.add(fotmatError(diagnostic.toString(), path));
-                }
-            }
-        }
-        return diagnostics;
-    }
-
     public static DiagnosticResult hasSemanticDiagnostics(Path projectPath) {
         Package currentPackage;
         BuildProject buildProject;
@@ -71,18 +46,4 @@ public class BalProjectUtils {
         return compilation.diagnosticResult();
     }
 
-    private static List<Path> listFiles(Path path) throws BalException {
-        try (Stream<Path> walk = Files.walk(path)) {
-            return walk != null ? walk.filter(Files::isRegularFile).collect(Collectors.toList()) : new ArrayList<>();
-        } catch (IOException e) {
-            throw new BalException("Error occurred while reading bal : " + e.getMessage());
-        }
-    }
-
-    private static String fotmatError(String errorMessage, Path path) {
-        if (errorMessage.contains("[null:")) {
-            return String.format("ERROR [%s:" + errorMessage.split(":", 2)[1], path.toFile().getName());
-        }
-        return errorMessage;
-    }
 }

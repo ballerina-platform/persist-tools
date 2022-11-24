@@ -1,5 +1,5 @@
 NAME
-       Perform DDL operations related to Ballerina entities against the Database
+       Perform DDL operations related to Ballerina entities against the Database.
 
 SYNOPSIS
        bal persist db <command> [args]
