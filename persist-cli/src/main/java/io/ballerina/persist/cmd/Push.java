@@ -143,7 +143,7 @@ public class Push implements BLauncherCmd {
                 HashMap<String, String> resolvedEntries = populatePlaceHolder(templatedEntry);
                 persistConfigurations.putAll(resolvedEntries);
             }
-            EntityMetaData retEntityMetaData = BalProjectUtils.readBalFiles(this.sourcePath);
+            EntityMetaData retEntityMetaData = BalProjectUtils.getEntitiesInBalFiles(this.sourcePath);
             ArrayList<Entity> entityArray = retEntityMetaData.entityArray;
             sqlScripts = SqlScriptGenerationUtils.generateSqlScript(entityArray);
             SqlScriptGenerationUtils.writeScriptFile(sqlScripts,

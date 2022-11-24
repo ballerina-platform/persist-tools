@@ -102,7 +102,7 @@ public class Generate implements BLauncherCmd {
                         "to initiate the project before generation");
                 return;
             }
-            EntityMetaData retEntityMetaData = BalProjectUtils.readBalFiles(this.sourcePath);
+            EntityMetaData retEntityMetaData = BalProjectUtils.getEntitiesInBalFiles(this.sourcePath);
             ArrayList<Entity> entityArray = retEntityMetaData.entityArray;
             ArrayList<ModuleMemberDeclarationNode> returnModuleMembers = retEntityMetaData.moduleMembersArray;
             ArrayList<ImportDeclarationNode> imports = new ArrayList<>();

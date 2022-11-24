@@ -65,7 +65,7 @@ public class BalProjectUtils {
         return compilation.diagnosticResult();
     }
 
-    public static EntityMetaData readBalFiles(String sourcePath) throws BalException {
+    public static EntityMetaData getEntitiesInBalFiles(String sourcePath) throws BalException {
         ArrayList<Entity> returnMetaData = new ArrayList<>();
         ArrayList<ModuleMemberDeclarationNode> returnModuleMembers = new ArrayList<>();
         Path dirPath = Paths.get(sourcePath);
