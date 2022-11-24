@@ -38,6 +38,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static io.ballerina.persist.utils.BalProjectUtils.hasSemanticDiagnostics;
+
 /**
  * persist tool test Utils.
  */

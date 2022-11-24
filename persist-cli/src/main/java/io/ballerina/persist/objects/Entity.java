@@ -18,6 +18,8 @@
 package io.ballerina.persist.objects;
 
 import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Class to store persist entities.
  *
@@ -26,6 +28,8 @@ import java.util.ArrayList;
 public class Entity {
 
     private final String[] keys;
+
+    private final List<List<String>> uniqueConstraints;
     private String tableName;
 
     private String entityName;
@@ -35,14 +39,22 @@ public class Entity {
     private ArrayList<Relation> relations = new ArrayList<>();
 
     private final ArrayList<FieldMetaData> fields = new ArrayList<>();
-    public Entity(String[] keys, String tableName) {
+
+    private String autoIncrementStartValue = "";
+
+    public Entity(String[] keys, String tableName, List<List<String>> uniqueConstraints) {
 
         this.keys = keys;
         this.tableName = tableName;
+        this.uniqueConstraints = uniqueConstraints;
     }
 
     public String[] getKeys() {
         return this.keys;
+    }
+
+    public List<List<String>> getUniqueConstraints() {
+        return this.uniqueConstraints;
     }
 
     public String getTableName() {
@@ -51,6 +63,10 @@ public class Entity {
         }
         return this.tableName;
     }
+    public void setAutoIncrementStartValue(String autoIncrementStartValue) {
+        this.autoIncrementStartValue = autoIncrementStartValue;
+    }
+
     public void setTableName(String tableName) {
         this.tableName = tableName;
     }
@@ -76,5 +92,9 @@ public class Entity {
 
     public ArrayList<Relation> getRelations() {
         return this.relations;
+    }
+
+    public String getAutoIncrementStartValue() {
+        return this.autoIncrementStartValue;
     }
 }
