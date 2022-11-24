@@ -179,12 +179,12 @@ public class SyntaxTreeGenerator {
             }
             if (!persistConfigs) {
                 throw new BalException("Persist client related config doesn't exist in Persist.toml.\n" +
-                        "You should add [database] table with configurations values or placeholders");
+                        "You should add [database] table with configurations values or placeholders. ");
             } else if (values.isEmpty() || values.size() < 5 || (!values.containsKey(DATABASE)
                     || !values.containsKey(USER) || !values.containsKey(HOST) || !values.containsKey(PASSWORD) ||
                     !values.containsKey(PORT))) {
                 throw new BalException("Database is not configured properly\n" +
-                        "You should give the correct database configurations with database name to create tables");
+                        "You should give the correct database configurations with database name to create tables.");
             } else {
                 return values;
             }

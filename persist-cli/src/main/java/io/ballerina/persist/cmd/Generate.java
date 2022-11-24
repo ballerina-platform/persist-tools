@@ -115,7 +115,7 @@ public class Generate implements BLauncherCmd {
                             "inside clients sub module.%n", entity.getEntityName());
                 }
                 copyEntities(returnModuleMembers, imports);
-                outStream.println("Created entities.bal");
+                outStream.println("Created entities.bal. ");
             }
         } catch (Exception e) {
             errStream.println(e.getMessage());
@@ -142,10 +142,8 @@ public class Generate implements BLauncherCmd {
             writeOutputFile(copiedEntitiesTree, Paths.get(this.sourcePath, KEYWORD_MODULES,
                             KEYWORD_CLIENTS, PATH_ENTITIES_FILE)
                     .toAbsolutePath().toString());
-        } catch (IOException e) {
-            throw new BalException("Error occurred while writing database configuration file!");
-        } catch (FormatterException e) {
-            throw new BalException("Error occurred while formatting database configuration file!");
+        } catch (IOException | FormatterException e) {
+            throw new BalException("Error occurred while creating entities.bal. ");
         }
     }
 

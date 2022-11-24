@@ -9,4 +9,5 @@ COMMANDS
 
    Package Commands:
         init            Generate database configurations file inside the Ballerina project
-
+        generate        Generated the Client object inside the Ballerina project
+        db              Perform DDL operations related to Ballerina entities against the Database.

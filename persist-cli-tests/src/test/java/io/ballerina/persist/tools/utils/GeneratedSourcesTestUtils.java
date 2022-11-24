@@ -57,7 +57,6 @@ public class GeneratedSourcesTestUtils {
     public static final String GENERATED_SOURCES_DIRECTORY = Paths.get("build", "generated-sources").toString();
     public static final Path RESOURCES_EXPECTED_OUTPUT = Paths.get("src", "test", "resources", "test-src", "output")
             .toAbsolutePath();
-    private static final Path DRIVER_PATH = Paths.get("lib").toAbsolutePath();
 
     public static void assertGeneratedSources(String subDir, Command cmd) {
 
