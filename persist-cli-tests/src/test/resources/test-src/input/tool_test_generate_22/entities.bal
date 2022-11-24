@@ -20,7 +20,7 @@ import ballerina/time;
 @persist:Entity {
     key: ["'record"]
 }
-public type MedicalNeed record {
+public type MedicalNeed record {|
     @persist:AutoIncrement
     readonly int 'record = -1;
 
@@ -31,16 +31,16 @@ public type MedicalNeed record {
     time:Civil 'time;
     string urgency;
     int quantity;
-};
+|};
 
 @persist:Entity {
     key: ["itemId"]
 }
-public type MedicalItem record {
+public type MedicalItem record {|
     @persist:AutoIncrement
     readonly int itemId = -1;
 
     string 'string;
     string 'type;
     string unit;
-};
+|};
