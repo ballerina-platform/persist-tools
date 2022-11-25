@@ -18,23 +18,33 @@
 
 package io.ballerina.persist.utils;
 
-import io.ballerina.compiler.syntax.tree.SyntaxTree;
+import io.ballerina.compiler.syntax.tree.ModuleMemberDeclarationNode;
+import io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator;
 import io.ballerina.persist.objects.BalException;
+import io.ballerina.persist.objects.Entity;
+import io.ballerina.persist.objects.EntityMetaData;
 import io.ballerina.projects.DiagnosticResult;
 import io.ballerina.projects.Package;
 import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.tools.diagnostics.Diagnostic;
-import io.ballerina.tools.text.TextDocument;
-import io.ballerina.tools.text.TextDocuments;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static io.ballerina.persist.nodegenerator.BalFileConstants.EXTENSION_BAL;
+import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_CLIENTS;
+import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_MODULES;
+import static io.ballerina.persist.nodegenerator.BalFileConstants.PATH_ENTITIES_FILE;
+import static io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator.formatModuleMembers;
+import static io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator.generateRelations;
 
 /**
  * This Class implements the utility methods for persist tool.
@@ -44,23 +54,7 @@ import java.util.stream.Stream;
 
 public class BalProjectUtils {
 
-    private BalProjectUtils() {
-
-    }
-
-    public static ArrayList<String> hasSyntacticDiagnostics(Path filePath) throws IOException, BalException {
-        ArrayList<String> diagnostics = new ArrayList<>();
-        List<Path> pathList = listFiles(filePath);
-        for (Path path : pathList) {
-            if (path.toString().endsWith(".bal")) {
-                TextDocument textDocument = TextDocuments.from(Files.readString(path));
-                for (Diagnostic diagnostic : SyntaxTree.from(textDocument).diagnostics()) {
-                    diagnostics.add(fotmatError(diagnostic.toString(), path));
-                }
-            }
-        }
-        return diagnostics;
-    }
+    private BalProjectUtils() {}
 
     public static DiagnosticResult hasSemanticDiagnostics(Path projectPath) {
         Package currentPackage;
@@ -71,18 +65,51 @@ public class BalProjectUtils {
         return compilation.diagnosticResult();
     }
 
-    private static List<Path> listFiles(Path path) throws BalException {
-        try (Stream<Path> walk = Files.walk(path)) {
-            return walk != null ? walk.filter(Files::isRegularFile).collect(Collectors.toList()) : new ArrayList<>();
-        } catch (IOException e) {
-            throw new BalException("Error occurred while reading bal : " + e.getMessage());
-        }
-    }
+    public static EntityMetaData getEntitiesInBalFiles(String sourcePath) throws BalException {
+        ArrayList<Entity> returnMetaData = new ArrayList<>();
+        ArrayList<ModuleMemberDeclarationNode> returnModuleMembers = new ArrayList<>();
+        Path dirPath = Paths.get(sourcePath);
+        List<Path> fileList;
+        Path clientEntitiesPath = Paths.get(sourcePath, KEYWORD_MODULES, KEYWORD_CLIENTS,
+                PATH_ENTITIES_FILE).toAbsolutePath();
+        File entitiesBal = new File(clientEntitiesPath.toString());
+        try {
+            if (!entitiesBal.exists()) {
+                DiagnosticResult diagnosticResult = hasSemanticDiagnostics(dirPath);
+                if (diagnosticResult.hasErrors()) {
+                    StringBuilder errorMessage = new StringBuilder();
+                    errorMessage.append("Error occurred when validating the project. ");
+                    for (Diagnostic d : diagnosticResult.errors()) {
+                        errorMessage.append(System.lineSeparator());
+                        errorMessage.append(d.toString());
+                    }
+                    throw new BalException(errorMessage.toString());
+                }
+            }
+            try (Stream<Path> walk = Files.walk(dirPath)) {
+                if (walk != null) {
+                    fileList = walk.filter((filePath) -> Files.isRegularFile(filePath) &&
+                                    !filePath.toAbsolutePath().equals(clientEntitiesPath)
+                                    && filePath.normalize().toString().endsWith(EXTENSION_BAL))
+                            .collect(Collectors.toList());
+                    for (Path filePath : fileList) {
+                        EntityMetaData retEntityMetaData = BalSyntaxTreeGenerator.getEntityRecord(filePath);
+                        ArrayList<Entity> retData = retEntityMetaData.entityArray;
+                        ArrayList<ModuleMemberDeclarationNode> retMembers = retEntityMetaData.moduleMembersArray;
+                        if (retData.size() != 0) {
+                            returnMetaData.addAll(retData);
+                            returnModuleMembers.addAll(retMembers);
+                        }
+                    }
+                    generateRelations(returnMetaData);
+                    returnModuleMembers = formatModuleMembers(returnModuleMembers, returnMetaData);
+                    return new EntityMetaData(returnMetaData, returnModuleMembers);
+                }
+            }
 
-    private static String fotmatError(String errorMessage, Path path) {
-        if (errorMessage.contains("[null:")) {
-            return String.format("ERROR [%s:" + errorMessage.split(":", 2)[1], path.toFile().getName());
+        } catch (IOException e) {
+            throw new BalException("Error while reading entities in the Ballerina project. " + e.getMessage());
         }
-        return errorMessage;
+        return new EntityMetaData(new ArrayList<>(), new ArrayList<>());
     }
 }

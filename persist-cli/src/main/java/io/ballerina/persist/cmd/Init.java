@@ -68,11 +68,12 @@ public class Init implements BLauncherCmd {
     public String sourcePath = "";
     private static final String COMMAND_IDENTIFIER = "persist-init";
 
-
     Project balProject;
 
     @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
     private boolean helpFlag;
+
+    public Init() {}
 
     @Override
     public void execute() {
@@ -111,13 +112,13 @@ public class Init implements BLauncherCmd {
                 outStream.println("Replaced database_configuration.bal file with default configurations.");
             }
             createPersistToml(persistTomlPath);
-            outStream.println("Created Persist.toml file with configurations.");
+            outStream.println("Created Persist.toml file with configurations. ");
             if (!Files.exists(Paths.get(sourcePath, configPath))) {
                 createConfigToml();
-                outStream.println("Created Config.toml file inside the Ballerina project");
+                outStream.println("Created Config.toml file inside the Ballerina project. ");
             } else {
                 updateConfigToml();
-                outStream.println("Updated Config.toml file with default database configurations.");
+                outStream.println("Updated Config.toml file with default database configurations. ");
             }
             generateCMD.execute();
         } catch (BalException e) {
@@ -141,7 +142,7 @@ public class Init implements BLauncherCmd {
             SyntaxTree syntaxTree = SyntaxTreeGenerator.createPesistToml(projectName);
             writeOutputSyntaxTree(syntaxTree, persistTomlPath.toAbsolutePath().toString());
         } catch (Exception e) {
-            throw new BalException("Error while adding Persist.toml to the project : " +
+            throw new BalException("Error while adding Persist.toml to the project. " +
                     e.getMessage());
         }
     }
