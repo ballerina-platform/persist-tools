@@ -108,8 +108,17 @@ public class Init implements BLauncherCmd {
                 outStream.println("Added new sub module 'clients' used for generated clients");
                 outStream.println("Created database_configuration.bal file with configurations.");
             } else {
+                File clientDirectoryPath = new File(Paths.get(this.sourcePath, BalFileConstants.KEYWORD_MODULES,
+                        BalFileConstants.KEYWORD_CLIENTS).toAbsolutePath().toString());
+                String[] filePaths = clientDirectoryPath.list();
+                for (String filePath: filePaths) {
+                    File currentFile = new File(clientDirectoryPath.getPath(), filePath);
+                    currentFile.delete();
+                }
+                clientDirectoryPath.delete();
+                outStream.println("Deleted `clients` module.");
                 generateConfigurationBalFile();
-                outStream.println("Replaced database_configuration.bal file with default configurations.");
+                outStream.println("Created database_configuration.bal file with default configurations.");
             }
             createPersistToml(persistTomlPath);
             outStream.println("Created Persist.toml file with configurations. ");
