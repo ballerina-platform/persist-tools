@@ -63,11 +63,17 @@ public class BalProjectUtils {
             if (diagnosticResult.hasErrors()) {
                 StringBuilder errorMessage = new StringBuilder();
                 errorMessage.append("Error occurred when validating the project. ");
-                for (Diagnostic d : diagnosticResult.errors()) {
-                    errorMessage.append(System.lineSeparator());
-                    errorMessage.append(d.toString());
+                int validErrors = 0;
+                for (Diagnostic diagnostic : diagnosticResult.errors()) {
+                    if (!diagnostic.diagnosticInfo().code().equals("BCE2066")) {
+                        errorMessage.append(System.lineSeparator());
+                        errorMessage.append(diagnostic);
+                        validErrors += 1;
+                    }
                 }
-                throw new BalException(errorMessage.toString());
+                if (validErrors > 0) {
+                    throw new BalException(errorMessage.toString());
+                }
             }
             for (Module module : buildProject.currentPackage().modules()) {
                 for (DocumentId documentId : module.documentIds()) {
