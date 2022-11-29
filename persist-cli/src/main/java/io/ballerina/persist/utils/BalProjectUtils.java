@@ -24,25 +24,21 @@ import io.ballerina.persist.objects.BalException;
 import io.ballerina.persist.objects.Entity;
 import io.ballerina.persist.objects.EntityMetaData;
 import io.ballerina.projects.DiagnosticResult;
+import io.ballerina.projects.Document;
+import io.ballerina.projects.DocumentId;
+import io.ballerina.projects.Module;
 import io.ballerina.projects.Package;
 import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.tools.diagnostics.Diagnostic;
+import org.ballerinalang.util.diagnostic.DiagnosticErrorCode;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import static io.ballerina.persist.nodegenerator.BalFileConstants.EXTENSION_BAL;
-import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_CLIENTS;
-import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_MODULES;
-import static io.ballerina.persist.nodegenerator.BalFileConstants.PATH_ENTITIES_FILE;
+import static io.ballerina.persist.nodegenerator.BalFileConstants.CONFIG_MODULE_ENDING;
 import static io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator.formatModuleMembers;
 import static io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator.generateRelations;
 
@@ -56,60 +52,56 @@ public class BalProjectUtils {
 
     private BalProjectUtils() {}
 
-    public static DiagnosticResult hasSemanticDiagnostics(Path projectPath) {
-        Package currentPackage;
-        BuildProject buildProject;
-        buildProject = BuildProject.load(projectPath.toAbsolutePath());
-        currentPackage = buildProject.currentPackage();
-        PackageCompilation compilation = currentPackage.getCompilation();
-        return compilation.diagnosticResult();
-    }
-
     public static EntityMetaData getEntitiesInBalFiles(String sourcePath) throws BalException {
-        ArrayList<Entity> returnMetaData = new ArrayList<>();
-        ArrayList<ModuleMemberDeclarationNode> returnModuleMembers = new ArrayList<>();
+        ArrayList<Entity> entityMetaData = new ArrayList<>();
+        ArrayList<ModuleMemberDeclarationNode> entityModuleMembers = new ArrayList<>();
         Path dirPath = Paths.get(sourcePath);
-        List<Path> fileList;
-        Path clientEntitiesPath = Paths.get(sourcePath, KEYWORD_MODULES, KEYWORD_CLIENTS,
-                PATH_ENTITIES_FILE).toAbsolutePath();
-        File entitiesBal = new File(clientEntitiesPath.toString());
         try {
-            if (!entitiesBal.exists()) {
-                DiagnosticResult diagnosticResult = hasSemanticDiagnostics(dirPath);
-                if (diagnosticResult.hasErrors()) {
-                    StringBuilder errorMessage = new StringBuilder();
-                    errorMessage.append("Error occurred when validating the project. ");
-                    for (Diagnostic d : diagnosticResult.errors()) {
+            BuildProject buildProject = BuildProject.load(dirPath.toAbsolutePath());
+            Package currentPackage = buildProject.currentPackage();
+            PackageCompilation compilation = currentPackage.getCompilation();
+            DiagnosticResult diagnosticResult = compilation.diagnosticResult();
+            if (diagnosticResult.hasErrors()) {
+                StringBuilder errorMessage = new StringBuilder();
+                errorMessage.append("error occurred when validating the project. ");
+                int validErrors = 0;
+                for (Diagnostic diagnostic : diagnosticResult.errors()) {
+                    if (!diagnostic.diagnosticInfo().code().equals(DiagnosticErrorCode
+                            .INCOMPATIBLE_TYPES.diagnosticId())) {
                         errorMessage.append(System.lineSeparator());
-                        errorMessage.append(d.toString());
+                        errorMessage.append(diagnostic);
+                        validErrors += 1;
                     }
+                }
+                if (validErrors > 0) {
                     throw new BalException(errorMessage.toString());
                 }
             }
-            try (Stream<Path> walk = Files.walk(dirPath)) {
-                if (walk != null) {
-                    fileList = walk.filter((filePath) -> Files.isRegularFile(filePath) &&
-                                    !filePath.toAbsolutePath().equals(clientEntitiesPath)
-                                    && filePath.normalize().toString().endsWith(EXTENSION_BAL))
-                            .collect(Collectors.toList());
-                    for (Path filePath : fileList) {
-                        EntityMetaData retEntityMetaData = BalSyntaxTreeGenerator.getEntityRecord(filePath);
-                        ArrayList<Entity> retData = retEntityMetaData.entityArray;
-                        ArrayList<ModuleMemberDeclarationNode> retMembers = retEntityMetaData.moduleMembersArray;
-                        if (retData.size() != 0) {
-                            returnMetaData.addAll(retData);
-                            returnModuleMembers.addAll(retMembers);
-                        }
+            for (Module module : buildProject.currentPackage().modules()) {
+                for (DocumentId documentId : module.documentIds()) {
+                    if (documentId.moduleId().moduleName().trim().endsWith(CONFIG_MODULE_ENDING)) {
+                        continue;
                     }
-                    generateRelations(returnMetaData);
-                    returnModuleMembers = formatModuleMembers(returnModuleMembers, returnMetaData);
-                    return new EntityMetaData(returnMetaData, returnModuleMembers);
+                    Document document = module.document(documentId);
+                    EntityMetaData retEntityMetaData = BalSyntaxTreeGenerator
+                            .getEntityMetadata(document.syntaxTree());
+                    ArrayList<Entity> entityMetadataList = retEntityMetaData.entityArray;
+                    ArrayList<ModuleMemberDeclarationNode> entityModuleMembersList =
+                            retEntityMetaData.moduleMembersArray;
+                    for (Entity entityMetadata : entityMetadataList) {
+                        entityMetaData.add(entityMetadata);
+                        entityModuleMembers.add(entityModuleMembersList.get(entityMetadataList
+                                .indexOf(entityMetadata)));
+                    }
                 }
             }
+            generateRelations(entityMetaData);
+            entityModuleMembers = formatModuleMembers(entityModuleMembers, entityMetaData);
+            return new EntityMetaData(entityMetaData, entityModuleMembers);
 
         } catch (IOException e) {
             throw new BalException("Error while reading entities in the Ballerina project. " + e.getMessage());
         }
-        return new EntityMetaData(new ArrayList<>(), new ArrayList<>());
     }
 }
+
