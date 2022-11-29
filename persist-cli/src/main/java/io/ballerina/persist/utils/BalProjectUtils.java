@@ -31,6 +31,7 @@ import io.ballerina.projects.Package;
 import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.tools.diagnostics.Diagnostic;
+import org.ballerinalang.util.diagnostic.DiagnosticErrorCode;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -56,7 +57,7 @@ public class BalProjectUtils {
         ArrayList<ModuleMemberDeclarationNode> entityModuleMembers = new ArrayList<>();
         Path dirPath = Paths.get(sourcePath);
         try {
-            BuildProject buildProject = BuildProject.load(dirPath.toAbsolutePath());;
+            BuildProject buildProject = BuildProject.load(dirPath.toAbsolutePath());
             Package currentPackage = buildProject.currentPackage();
             PackageCompilation compilation = currentPackage.getCompilation();
             DiagnosticResult diagnosticResult = compilation.diagnosticResult();
@@ -65,7 +66,8 @@ public class BalProjectUtils {
                 errorMessage.append("Error occurred when validating the project. ");
                 int validErrors = 0;
                 for (Diagnostic diagnostic : diagnosticResult.errors()) {
-                    if (!diagnostic.diagnosticInfo().code().equals("BCE2066")) {
+                    if (!diagnostic.diagnosticInfo().code().equals(DiagnosticErrorCode
+                            .INCOMPATIBLE_TYPES.diagnosticId())) {
                         errorMessage.append(System.lineSeparator());
                         errorMessage.append(diagnostic);
                         validErrors += 1;
