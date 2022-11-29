@@ -62,7 +62,7 @@ public class BalProjectUtils {
             DiagnosticResult diagnosticResult = compilation.diagnosticResult();
             if (diagnosticResult.hasErrors()) {
                 StringBuilder errorMessage = new StringBuilder();
-                errorMessage.append("Error occurred when validating the project. ");
+                errorMessage.append("error occurred when validating the project. ");
                 int validErrors = 0;
                 for (Diagnostic diagnostic : diagnosticResult.errors()) {
                     if (!diagnostic.diagnosticInfo().code().equals("BCE2066")) {
