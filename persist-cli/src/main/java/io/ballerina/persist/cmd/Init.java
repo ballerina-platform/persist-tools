@@ -96,16 +96,30 @@ public class Init implements BLauncherCmd {
         }
         File persistToml = new File(persistTomlPath.toString());
         File databaseConfig = new File(databaseConfigPath.toString());
-        if (persistToml.exists() || databaseConfig.exists()) {
-            errStream.println("`bal persist init` command can only be used once to initialize the project. ");
+        if (persistToml.exists()) {
+            errStream.println("`bal persist init` command can only be used once to initialize the project");
             return;
         }
         Generate generateCMD = new Generate();
         generateCMD.setSourcePath(Paths.get(sourcePath).toAbsolutePath().toString());
         try {
-            generateConfigurationBalFile();
-            outStream.println("Added new sub module 'clients' used for generated clients. ");
-            outStream.println("Created database_configuration.bal file with configurations. ");
+            if (!databaseConfig.exists()) {
+                generateConfigurationBalFile();
+                outStream.println("Added new sub module 'clients' used for generated clients");
+                outStream.println("Created database_configuration.bal file with configurations.");
+            } else {
+                File clientDirectoryPath = new File(Paths.get(this.sourcePath, BalFileConstants.KEYWORD_MODULES,
+                        BalFileConstants.KEYWORD_CLIENTS).toAbsolutePath().toString());
+                String[] filePaths = clientDirectoryPath.list();
+                for (String filePath: filePaths) {
+                    File currentFile = new File(clientDirectoryPath.getPath(), filePath);
+                    currentFile.delete();
+                }
+                clientDirectoryPath.delete();
+                outStream.println("Deleted `clients` module.");
+                generateConfigurationBalFile();
+                outStream.println("Created database_configuration.bal file with default configurations.");
+            }
             createPersistToml(persistTomlPath);
             outStream.println("Created Persist.toml file with configurations. ");
             if (!Files.exists(Paths.get(sourcePath, configPath))) {
