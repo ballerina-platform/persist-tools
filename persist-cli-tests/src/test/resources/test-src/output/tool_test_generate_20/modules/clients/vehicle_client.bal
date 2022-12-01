@@ -53,15 +53,6 @@ public client class VehicleClient {
         }
     }
 
-    remote function execute(sql:ParameterizedQuery filterClause) returns stream<Vehicle, persist:Error?> {
-        stream<anydata, sql:Error?>|persist:Error result = self.persistClient.runExecuteQuery(filterClause, Vehicle);
-        if result is persist:Error {
-            return new stream<Vehicle, persist:Error?>(new VehicleStream((), result));
-        } else {
-            return new stream<Vehicle, persist:Error?>(new VehicleStream(result));
-        }
-    }
-
     remote function update(Vehicle value) returns persist:Error? {
         _ = check self.persistClient.runUpdateQuery(value);
         if value.employee is record {} {

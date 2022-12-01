@@ -47,15 +47,6 @@ public client class MedicalNeed1Client {
         }
     }
 
-    remote function execute(sql:ParameterizedQuery filterClause) returns stream<MedicalNeed1, persist:Error?> {
-        stream<anydata, sql:Error?>|persist:Error result = self.persistClient.runExecuteQuery(filterClause, MedicalNeed1);
-        if result is persist:Error {
-            return new stream<MedicalNeed1, persist:Error?>(new MedicalNeed1Stream((), result));
-        } else {
-            return new stream<MedicalNeed1, persist:Error?>(new MedicalNeed1Stream(result));
-        }
-    }
-
     remote function update(MedicalNeed1 value) returns persist:Error? {
         _ = check self.persistClient.runUpdateQuery(value);
     }

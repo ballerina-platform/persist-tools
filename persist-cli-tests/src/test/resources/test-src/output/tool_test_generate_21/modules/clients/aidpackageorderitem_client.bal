@@ -58,15 +58,6 @@ public client class AidPackageOrderItemClient {
         }
     }
 
-    remote function execute(sql:ParameterizedQuery filterClause) returns stream<AidPackageOrderItem, persist:Error?> {
-        stream<anydata, sql:Error?>|persist:Error result = self.persistClient.runExecuteQuery(filterClause, AidPackageOrderItem);
-        if result is persist:Error {
-            return new stream<AidPackageOrderItem, persist:Error?>(new AidPackageOrderItemStream((), result));
-        } else {
-            return new stream<AidPackageOrderItem, persist:Error?>(new AidPackageOrderItemStream(result));
-        }
-    }
-
     remote function update(AidPackageOrderItem value) returns persist:Error? {
         _ = check self.persistClient.runUpdateQuery(value);
         if value.medicalNeed is record {} {

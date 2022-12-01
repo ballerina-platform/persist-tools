@@ -650,8 +650,9 @@ public class BalSyntaxTreeGenerator {
         Function read = getReadMethod(entity, inclusions, className);
         client.addMember(read.getFunctionDefinitionNode(), true);
 
-        Function execute = getExecuteMethod(entity, className);
-        client.addMember(execute.getFunctionDefinitionNode(), true);
+//        Remove advance filter support for phase 1.
+//        Function execute = getExecuteMethod(entity, className);
+//        client.addMember(execute.getFunctionDefinitionNode(), true);
 
         Function update = getUpdateMethod(entity, joinSubFields);
 
@@ -937,6 +938,7 @@ public class BalSyntaxTreeGenerator {
         return read;
     }
 
+    // Advance filter query support is de-prioritized and removed from phase 1
     private static Function getExecuteMethod(Entity entity, String className) {
         Function execute = new Function(BalFileConstants.EXECUTE);
         execute.addQualifiers(new String[]{BalFileConstants.KEYWORD_REMOTE});
