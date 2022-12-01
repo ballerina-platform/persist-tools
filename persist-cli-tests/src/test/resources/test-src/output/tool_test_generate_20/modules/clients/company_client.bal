@@ -46,15 +46,6 @@ public client class CompanyClient {
         }
     }
 
-    remote function execute(sql:ParameterizedQuery filterClause) returns stream<Company, persist:Error?> {
-        stream<anydata, sql:Error?>|persist:Error result = self.persistClient.runExecuteQuery(filterClause, Company);
-        if result is persist:Error {
-            return new stream<Company, persist:Error?>(new CompanyStream((), result));
-        } else {
-            return new stream<Company, persist:Error?>(new CompanyStream(result));
-        }
-    }
-
     remote function update(Company value) returns persist:Error? {
         _ = check self.persistClient.runUpdateQuery(value);
     }

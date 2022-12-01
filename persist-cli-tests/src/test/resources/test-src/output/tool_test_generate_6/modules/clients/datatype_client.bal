@@ -51,15 +51,6 @@ public client class DataTypeClient {
         }
     }
 
-    remote function execute(sql:ParameterizedQuery filterClause) returns stream<DataType, persist:Error?> {
-        stream<anydata, sql:Error?>|persist:Error result = self.persistClient.runExecuteQuery(filterClause, DataType);
-        if result is persist:Error {
-            return new stream<DataType, persist:Error?>(new DataTypeStream((), result));
-        } else {
-            return new stream<DataType, persist:Error?>(new DataTypeStream(result));
-        }
-    }
-
     remote function update(DataType value) returns persist:Error? {
         _ = check self.persistClient.runUpdateQuery(value);
     }
