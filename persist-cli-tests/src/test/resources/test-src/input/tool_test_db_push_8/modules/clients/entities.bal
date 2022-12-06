@@ -5,8 +5,12 @@ import ballerina/persist;
     tableName: "Profiles"
 }
 public type Profile record {|
+    @persist:AutoIncrement {startValue: 10}
     readonly int id;
     string name;
+    boolean isAdult;
+    float salary;
+    decimal age;
 |};
 
 @persist:Entity {
@@ -16,6 +20,8 @@ public type Profile record {|
 public type User record {|
     readonly int id;
     string name;
+    @persist:Relation
+    Profile profile?;
 |};
 
 @persist:Entity {
@@ -27,11 +33,25 @@ public type Dept record {|
 |};
 
 @persist:Entity {
-    key: ["id"]
+    key: ["id"],
+    uniqueConstraints: [["age", "name"]]
 }
 public type Customer record {|
     readonly int id;
     string name;
+    int age;
+|};
+
+@persist:Entity {
+    key: ["id", "firstName"],
+    uniqueConstraints: [["age", "lastName"], ["nicNo"]]
+}
+public type Student record {|
+    readonly int id;
+    readonly string firstName;
+    int age;
+    string lastName;
+    string nicNo;
 |};
 
 @persist:Entity {
@@ -42,16 +62,13 @@ public type MultipleAssociations record {|
     readonly int id;
     string name;
 
-    @persist:Relation
-    Profile profile?;
-
     @persist:Relation {}
     User user?;
 
-    @persist:Relation {keyColumns: ["profileId"]}
+    @persist:Relation {keyColumns: ["deptId"], onDelete: persist:SET_DEFAULT}
     Dept dept?;
 
-    @persist:Relation {reference: ["id"]}
+    @persist:Relation {reference: ["id"], onUpdate: "SET_DEFAULT"}
     Customer customer?;
 |};
 

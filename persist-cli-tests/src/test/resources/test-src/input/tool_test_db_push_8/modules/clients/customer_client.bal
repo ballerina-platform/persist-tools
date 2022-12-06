@@ -10,7 +10,8 @@ public client class CustomerClient {
 
     private final map<persist:FieldMetadata> fieldMetadata = {
         id: {columnName: "id", 'type: int},
-        name: {columnName: "name", 'type: string}
+        name: {columnName: "name", 'type: string},
+        age: {columnName: "age", 'type: int}
     };
     private string[] keyFields = ["id"];
 
@@ -29,7 +30,7 @@ public client class CustomerClient {
         if result.lastInsertId is () {
             return value;
         }
-        return {id: <int>result.lastInsertId, name: value.name};
+        return {id: <int>result.lastInsertId, name: value.name, age: value.age};
     }
 
     remote function readByKey(int key) returns Customer|persist:Error {
@@ -38,15 +39,6 @@ public client class CustomerClient {
 
     remote function read() returns stream<Customer, persist:Error?> {
         stream<anydata, sql:Error?>|persist:Error result = self.persistClient.runReadQuery(Customer);
-        if result is persist:Error {
-            return new stream<Customer, persist:Error?>(new CustomerStream((), result));
-        } else {
-            return new stream<Customer, persist:Error?>(new CustomerStream(result));
-        }
-    }
-
-    remote function execute(sql:ParameterizedQuery filterClause) returns stream<Customer, persist:Error?> {
-        stream<anydata, sql:Error?>|persist:Error result = self.persistClient.runExecuteQuery(filterClause, Customer);
         if result is persist:Error {
             return new stream<Customer, persist:Error?>(new CustomerStream((), result));
         } else {

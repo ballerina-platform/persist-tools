@@ -167,4 +167,10 @@ public class ToolingGenerateTest {
     public void testGenerateWithoutInit() {
         assertGeneratedSourcesNegative ("tool_test_generate_23", GENERATE, new String[]{});
     }
+
+    @Test()
+    @Description("Generate is executed with clients already initailized in main.bal")
+    public void testGenerateUpdateClientsWithAlreadyInitializedClients() {
+        assertGeneratedSourcesNegative ("tool_test_generate_24", GENERATE, new String[]{});
+    }
 }

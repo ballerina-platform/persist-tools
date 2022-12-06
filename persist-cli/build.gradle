@@ -98,3 +98,31 @@ compileJava {
         classpath = files()
     }
 }
+
+task createArtifactZip(type: Zip) {
+    dependsOn build
+    from 'build/libs/'
+    archiveFileName = "persist-cli-${project.version}.jar"
+    destinationDirectory = file("${projectDir}/build/zip")
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId "io.ballerina"
+            artifactId "persist-tools"
+            artifact source: createArtifactZip, extension: 'zip'
+        }
+    }
+
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/ballerina-platform/persist-tools")
+            credentials {
+                username = System.getenv("publishUser")
+                password = System.getenv("publishPAT")
+            }
+        }
+    }
+}

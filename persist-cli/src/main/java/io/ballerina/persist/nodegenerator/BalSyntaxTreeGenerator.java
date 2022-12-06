@@ -62,8 +62,6 @@ import org.ballerinalang.formatter.core.Formatter;
 import org.ballerinalang.formatter.core.FormatterException;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -165,16 +163,18 @@ import static io.ballerina.persist.nodegenerator.SyntaxTreeConstants.SYNTAX_TREE
  * @since 0.1.0
  */
 public class BalSyntaxTreeGenerator {
+
+    private BalSyntaxTreeGenerator() {}
+
     /**
      * method to read ballerina files.
      */
-    public static EntityMetaData getEntityRecord(Path filePath)
+    public static EntityMetaData getEntityMetadata(SyntaxTree balSyntaxTree)
             throws IOException {
         ArrayList<Entity> entityArray = new ArrayList<>();
         ArrayList<ModuleMemberDeclarationNode> entityMembers = new ArrayList<>();
         int index = -1;
         int count;
-        SyntaxTree balSyntaxTree = SyntaxTree.from(TextDocuments.from(Files.readString(filePath)));
         ModulePartNode rootNote = balSyntaxTree.rootNode();
         NodeList<ModuleMemberDeclarationNode> nodeList = rootNote.members();
         for (ModuleMemberDeclarationNode moduleNode : nodeList) {
@@ -262,8 +262,8 @@ public class BalSyntaxTreeGenerator {
                     if (metadata.isPresent()) {
                         MetadataNode fieldMetaD = metadata.get();
                         Relation relation = readMetaData(fName, fType, fieldMetaD);
-                        processAutoIncrement(fieldMetaD, field,
-                                recordFieldWithDefaultValueNode.expression().toSourceCode());
+                        processAutoIncrement(entityArray, fieldMetaD, field,
+                                recordFieldWithDefaultValueNode.expression().toSourceCode(), index);
                         if (relation.getKeyColumns() != null && relation.getReferences() != null) {
                             entityArray.get(index).getRelations().add(relation);
                         }
@@ -290,7 +290,7 @@ public class BalSyntaxTreeGenerator {
                     if (recordFieldNode.metadata().isPresent()) {
                         MetadataNode fieldMetaD = ((RecordFieldNode) node).metadata().get();
                         Relation relation = readMetaData(fName, fType, fieldMetaD);
-                        processAutoIncrement(fieldMetaD, field, "");
+                        processAutoIncrement(entityArray, fieldMetaD, field, "", index);
                         if (relation.getKeyColumns() != null && relation.getReferences() != null) {
                             entityArray.get(index).getRelations().add(relation);
                             field.setIsRelationType(Relation.RelationType.ONE);
@@ -650,8 +650,9 @@ public class BalSyntaxTreeGenerator {
         Function read = getReadMethod(entity, inclusions, className);
         client.addMember(read.getFunctionDefinitionNode(), true);
 
-        Function execute = getExecuteMethod(entity, className);
-        client.addMember(execute.getFunctionDefinitionNode(), true);
+//        Remove advance filter support for phase 1.
+//        Function execute = getExecuteMethod(entity, className);
+//        client.addMember(execute.getFunctionDefinitionNode(), true);
 
         Function update = getUpdateMethod(entity, joinSubFields);
 
@@ -937,6 +938,7 @@ public class BalSyntaxTreeGenerator {
         return read;
     }
 
+    // Advance filter query support is de-prioritized and removed from phase 1
     private static Function getExecuteMethod(Entity entity, String className) {
         Function execute = new Function(BalFileConstants.EXECUTE);
         execute.addQualifiers(new String[]{BalFileConstants.KEYWORD_REMOTE});
@@ -1089,9 +1091,10 @@ public class BalSyntaxTreeGenerator {
         );
     }
 
-    private static void processAutoIncrement(MetadataNode metaD, FieldMetaData field, String startValue) {
+    private static void processAutoIncrement(ArrayList<Entity> entityArray, MetadataNode metaD, FieldMetaData field,
+                                             String startValue, int index) {
         NodeList<AnnotationNode> annotations = metaD.annotations();
-        field.setStartValueOfAutoIncrement(startValue);
+        entityArray.get(index).setAutoIncrementStartValue(startValue);
         for (AnnotationNode annotation : annotations) {
             Node annotReference = annotation.annotReference();
             if (annotReference.kind() == SyntaxKind.QUALIFIED_NAME_REFERENCE) {
@@ -1109,7 +1112,8 @@ public class BalSyntaxTreeGenerator {
                                             equals(PersistToolsConstants.START_VALUE)) {
                                 Optional<ExpressionNode> valueExpr = specificFieldNode.valueExpr();
                                 valueExpr.ifPresent(expressionNode ->
-                                        field.setStartValueOfAutoIncrement(expressionNode.toSourceCode().trim()));
+                                        entityArray.get(index).setAutoIncrementStartValue(
+                                                expressionNode.toSourceCode().trim()));
                             }
                         }
                     }

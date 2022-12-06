@@ -103,4 +103,16 @@ public class ToolingInitTest {
     public void testInitAlreadyInitializedProject() {
         assertGeneratedSources("tool_test_init_10", INIT);
     }
+
+    @Test()
+    @Description("Running init on a already initialized project with config and database_configurations missing")
+    public void testInitAlreadyInitializedProjectWithOutConfigAndDatabaseConfiguration() {
+        assertGeneratedSourcesNegative("tool_test_init_11", INIT, new String[]{});
+    }
+
+    @Test()
+    @Description("Running init on a already initialized project with Persist directory missing")
+    public void testInitAlreadyInitializedProjectWithoutPersistDirectory() {
+        assertGeneratedSources("tool_test_init_12", INIT);
+    }
 }

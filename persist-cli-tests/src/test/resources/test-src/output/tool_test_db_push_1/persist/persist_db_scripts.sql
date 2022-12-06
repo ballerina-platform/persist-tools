@@ -1,4 +1,6 @@
+DROP TABLE IF EXISTS MedicalNeeds;
 DROP TABLE IF EXISTS MedicalItems;
+
 CREATE TABLE MedicalItems (
 	itemId INT NOT NULL,
 	name VARCHAR(191) NOT NULL,
@@ -7,7 +9,6 @@ CREATE TABLE MedicalItems (
 	PRIMARY KEY(itemId)
 );
 
-DROP TABLE IF EXISTS MedicalNeeds;
 CREATE TABLE MedicalNeeds (
 	needId INT NOT NULL AUTO_INCREMENT,
 	itemId INT NOT NULL,

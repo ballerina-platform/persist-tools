@@ -1,0 +1,8 @@
+provider = "mysql"
+
+[database]
+host = "${perist_init_12.clients.host}"
+port = "${perist_init_12.clients.port}"
+user = "${perist_init_12.clients.user}"
+password = "${perist_init_12.clients.password}"
+database = "${perist_init_12.clients.database}"

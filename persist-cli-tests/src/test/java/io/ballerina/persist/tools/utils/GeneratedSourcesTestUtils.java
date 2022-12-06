@@ -22,7 +22,9 @@ import io.ballerina.persist.cmd.Generate;
 import io.ballerina.persist.cmd.Init;
 import io.ballerina.persist.cmd.PersistCmd;
 import io.ballerina.persist.cmd.Push;
-import io.ballerina.persist.objects.BalException;
+import io.ballerina.projects.Package;
+import io.ballerina.projects.PackageCompilation;
+import io.ballerina.projects.directory.BuildProject;
 import org.testng.Assert;
 
 import java.io.IOException;
@@ -37,9 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static io.ballerina.persist.utils.BalProjectUtils.hasSemanticDiagnostics;
-import static io.ballerina.persist.utils.BalProjectUtils.hasSyntacticDiagnostics;
 
 /**
  * persist tool test Utils.
@@ -59,7 +58,6 @@ public class GeneratedSourcesTestUtils {
     public static final String GENERATED_SOURCES_DIRECTORY = Paths.get("build", "generated-sources").toString();
     public static final Path RESOURCES_EXPECTED_OUTPUT = Paths.get("src", "test", "resources", "test-src", "output")
             .toAbsolutePath();
-    private static final Path DRIVER_PATH = Paths.get("lib").toAbsolutePath();
 
     public static void assertGeneratedSources(String subDir, Command cmd) {
 
@@ -68,32 +66,24 @@ public class GeneratedSourcesTestUtils {
                 Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)));
         for (Path actualOutputFile: listFiles(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir))) {
             errStream.println(actualOutputFile);
-            if (actualOutputFile.toString().contains("persist_db_scripts.sql")
-                    && (subDir.equals("tool_test_generate_7") || subDir.equals("tool_test_generate_14") ||
-                    subDir.equals("tool_test_generate_15"))) {
+            if ((actualOutputFile.toString().contains("persist_db_scripts.sql") ||
+                    actualOutputFile.toString().contains("entities.bal")) &&
+                    (subDir.equals("tool_test_generate_7") || subDir.equals("tool_test_generate_14") ||
+                            subDir.equals("tool_test_generate_15"))) {
                 continue;
             }
             Path expectedOutputFile = Paths.get(RESOURCES_EXPECTED_OUTPUT.toString(), subDir).
                     resolve(actualOutputFile.subpath(3, actualOutputFile.getNameCount()));
             Assert.assertTrue(Files.exists(actualOutputFile));
-            if (subDir.equals("tool_test_generate_7") &&
-                    actualOutputFile.toString().contains("entities.bal")) {
-                continue;
-            }
             Assert.assertEquals(readContent(actualOutputFile), readContent(expectedOutputFile));
         }
         if (!subDir.equals("tool_test_generate_4")) {
-            try {
-                Assert.assertTrue(hasSyntacticDiagnostics(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir))
-                        .isEmpty());
-            } catch (IOException | BalException e) {
-                errStream.println(e.getMessage());
-                Assert.fail();
-            }
-            if (!(subDir.equals("tool_test_db_push_8") || subDir.equals("tool_test_db_push_9"))) {
-                Assert.assertFalse(hasSemanticDiagnostics(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)).
-                        hasErrors());
-            }
+
+            BuildProject buildProject = BuildProject.load(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)
+                    .toAbsolutePath());
+            Package currentPackage = buildProject.currentPackage();
+            PackageCompilation compilation = currentPackage.getCompilation();
+            Assert.assertFalse(compilation.diagnosticResult().hasErrors());
         }
     }
 
