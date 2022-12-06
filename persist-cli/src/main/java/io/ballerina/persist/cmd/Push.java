@@ -100,14 +100,12 @@ public class Push implements BLauncherCmd {
     Project balProject;
     public String sourcePath = "";
     Driver driver;
-    HashMap<String, String> configurations;
     HashMap<String, String> persistConfigurations;
     @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
     private boolean helpFlag;
 
     @Override
     public void execute() {
-        configurations = new HashMap<>();
         String[] sqlLines;
         Statement statement;
 
@@ -232,6 +230,8 @@ public class Push implements BLauncherCmd {
                     + e.getMessage());
         } catch (MalformedURLException e) {
             throw new BalException("Error in jdbc driver path : " + e.getMessage());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
     private void populatePlaceHolder(HashMap<String, String> persistConfigurations)
