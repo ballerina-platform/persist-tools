@@ -18,11 +18,13 @@
 package io.ballerina.persist.cmd;
 
 import io.ballerina.cli.BLauncherCmd;
+import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.nodegenerator.SyntaxTreeGenerator;
 import io.ballerina.persist.objects.BalException;
 import io.ballerina.persist.objects.Entity;
 import io.ballerina.persist.objects.EntityMetaData;
 import io.ballerina.persist.utils.BalProjectUtils;
+import io.ballerina.persist.utils.DataBaseValidationUtils;
 import io.ballerina.persist.utils.JdbcDriverLoader;
 import io.ballerina.persist.utils.SqlScriptGenerationUtils;
 import io.ballerina.projects.DependencyGraph;
@@ -33,31 +35,36 @@ import io.ballerina.projects.ResolvedPackageDependency;
 import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.projects.directory.ProjectLoader;
 import io.ballerina.toml.syntax.tree.TableNode;
+import org.apache.ibatis.jdbc.ScriptRunner;
 import picocli.CommandLine;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.PrintStream;
+import java.io.Reader;
 import java.lang.reflect.InvocationTargetException;
-import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.Driver;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
 import static io.ballerina.persist.PersistToolsConstants.BALLERINA_MYSQL_DRIVER_NAME;
 import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 import static io.ballerina.persist.PersistToolsConstants.CONFIG_SCRIPT_FILE;
-import static io.ballerina.persist.PersistToolsConstants.CREATE_DATABASE_SQL;
 import static io.ballerina.persist.PersistToolsConstants.DATABASE;
 import static io.ballerina.persist.PersistToolsConstants.DATABASE_CONFIGURATION_BAL;
 import static io.ballerina.persist.PersistToolsConstants.HOST;
@@ -88,7 +95,6 @@ import static io.ballerina.persist.nodegenerator.SyntaxTreeGenerator.populateCon
 @CommandLine.Command(
         name = "push",
         description = "Create database tables corresponding to user-defined entities")
-
 public class Push implements BLauncherCmd {
 
     private final PrintStream errStream = System.err;
@@ -97,7 +103,6 @@ public class Push implements BLauncherCmd {
     Project balProject;
     public String sourcePath = "";
     Driver driver;
-    HashMap<String, String> configurations;
     HashMap<String, String> persistConfigurations;
     @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
     private boolean helpFlag;
@@ -106,16 +111,14 @@ public class Push implements BLauncherCmd {
 
     @Override
     public void execute() {
-        configurations = new HashMap<>();
-        String[] sqlScripts;
-        Statement statement;
-        Path absoluteSourcePath = Paths.get(this.sourcePath).toAbsolutePath();
-
         if (helpFlag) {
             String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMMAND_IDENTIFIER);
             errStream.println(commandUsageInfo);
             return;
         }
+
+        String[] sqlScripts;
+        Path absoluteSourcePath = Paths.get(this.sourcePath).toAbsolutePath();
         Path persistTomlPath = Paths.get(this.sourcePath, SUBMODULE_PERSIST, PERSIST_TOML_FILE);
         Path databaseConfigurationBalPath = Paths.get(this.sourcePath, SUBMODULE_FOLDER, KEYWORD_CLIENTS,
                 DATABASE_CONFIGURATION_BAL);
@@ -148,7 +151,7 @@ public class Push implements BLauncherCmd {
             sqlScripts = SqlScriptGenerationUtils.generateSqlScript(entityArray);
             SqlScriptGenerationUtils.writeScriptFile(sqlScripts,
                     Paths.get(absoluteSourcePath.toString(), PERSIST));
-            loadJdbcDriver();
+            loadJdbcDriver(balProject);
         } catch (ProjectException | BalException  e) {
             errStream.println(e.getMessage());
             return;
@@ -162,8 +165,9 @@ public class Push implements BLauncherCmd {
         Properties props = new Properties();
         props.put(USER, user);
         props.put(PASSWORD, password);
-        try (Connection connection = driver.connect(url, props)) {
-            ResultSet resultSet = connection.getMetaData().getCatalogs();
+        try {
+            Connection connection = driver.connect(url, props);
+            ResultSet resultSet = connection.getMetaData().getCatalogs(); // have to remove
             boolean databaseExists = false;
             while (resultSet.next()) {
 
@@ -173,13 +177,21 @@ public class Push implements BLauncherCmd {
                 }
             }
             if (!databaseExists) {
-                statement = connection.createStatement();
-                String query = String.format(CREATE_DATABASE_SQL, database);
-                statement.executeUpdate(query);
+                String validatedDatabase = DataBaseValidationUtils.validateDatabaseInput(database);
+                String query = String.format("CREATE DATABASE %s", validatedDatabase);
+                PreparedStatement preparedStatement = connection.prepareStatement(query);
+                try {
+                    preparedStatement.executeUpdate();
+                } catch (Exception e) {
+                    throw new BalException(e.getMessage());
+                } finally {
+                    preparedStatement.close();
+                    connection.close();
+                }
                 stdStream.println("Created Database : " + database + ".");
             }
-        } catch (SQLException e) {
-            errStream.println("Error occurred while creating the database " + e.getMessage() + ".");
+        } catch (SQLException | BalException e) {
+            errStream.println("Error occurred while creating the database. " + e.getMessage());
             return;
         }
 
@@ -187,19 +199,26 @@ public class Push implements BLauncherCmd {
                     persistConfigurations.get(HOST).replaceAll("\"", ""), persistConfigurations.get(PORT),
                 persistConfigurations.get(DATABASE).replaceAll("\"", ""));
 
-        try (Connection connection = driver.connect(databaseUrl, props)) {
-            statement = connection.createStatement();
-            for (String sqlLine : sqlScripts) {
-                statement.executeUpdate(sqlLine);
+        try {
+            Connection connection = driver.connect(databaseUrl, props);
+            try {
+                ScriptRunner sr = new ScriptRunner(connection);
+                try (Reader fileReader = new BufferedReader(new FileReader(Paths.get(this.sourcePath,
+                        PERSIST, PersistToolsConstants.FILE_NAME).toAbsolutePath().toString(),
+                        StandardCharsets.UTF_8))) {
+                    sr.runScript(fileReader);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            } finally {
+                connection.close();
             }
-            statement.close();
         } catch (SQLException e) {
             errStream.println("Error while creating the tables in the database " + database + ". " +  e.getMessage());
             return;
         }
         stdStream.println("Created tables for entities in the database " + database + ".");
     }
-
     public void setSourcePath(String sourcePath) {
         this.sourcePath = sourcePath;
     }
@@ -208,28 +227,32 @@ public class Push implements BLauncherCmd {
         return this.persistConfigurations;
     }
 
-    private void loadJdbcDriver() throws BalException {
-        Path driverPath = getDriverPath().getParent().toAbsolutePath();
-        URL[] urls = {};
-        try {
-            JdbcDriverLoader driverLoader = new JdbcDriverLoader(urls, driverPath);
-            Class<?> drvClass = driverLoader.loadClass(MYSQL_DRIVER_CLASS);
-            driver = (Driver) drvClass.getDeclaredConstructor().newInstance();
-        } catch (ProjectException e) {
-            throw new BalException("Not a Ballerina project (or any parent up to mount point)\n" +
-                    "You should run this command inside a Ballerina project.");
-        } catch (ClassNotFoundException e) {
-            throw new BalException("Required database driver class not found. " + e.getMessage());
-        } catch (InstantiationException | InvocationTargetException e) {
-            throw new BalException("Error instantiation the jdbc driver. " + e.getMessage());
-        } catch (IllegalAccessException e) {
-            throw new BalException("Access denied while trying to instantiation the database driver. " +
-                    e.getMessage());
-        } catch (NoSuchMethodException e) {
-            throw new BalException("Method not found while trying to instantiate jdbc driver. "
-                    + e.getMessage());
-        } catch (MalformedURLException e) {
-            throw new BalException("Error in jdbc driver path : " + e.getMessage());
+
+
+    private void loadJdbcDriver(Project balProject) throws BalException {
+        Path driverDirectoryPath = getDriverPath(balProject).getParent();
+        if (Objects.nonNull(driverDirectoryPath)) {
+            Path driverPath = driverDirectoryPath.toAbsolutePath();
+            URL[] urls = {};
+            try (JdbcDriverLoader driverLoader = new JdbcDriverLoader(urls, driverPath)) {
+                Class<?> drvClass = driverLoader.loadClass(MYSQL_DRIVER_CLASS);
+                driver = (Driver) drvClass.getDeclaredConstructor().newInstance();
+            } catch (ProjectException e) {
+                throw new BalException("Not a Ballerina project (or any parent up to mount point)\n" +
+                        "You should run this command inside a Ballerina project.");
+            } catch (ClassNotFoundException e) {
+                throw new BalException("Required database driver class not found. " + e.getMessage());
+            } catch (InstantiationException | InvocationTargetException e) {
+                throw new BalException("Error instantiation the jdbc driver. " + e.getMessage());
+            } catch (IllegalAccessException e) {
+                throw new BalException("Access denied while trying to instantiation the database driver. " +
+                        e.getMessage());
+            } catch (NoSuchMethodException e) {
+                throw new BalException("Method not found while trying to instantiate jdbc driver. "
+                        + e.getMessage());
+            } catch (IOException e) {
+                throw new BalException("Error in jdbc driver path : " + e.getMessage());
+            }
         }
     }
     
@@ -260,7 +283,7 @@ public class Push implements BLauncherCmd {
         stringBuilder.append("  ballerina " + COMPONENT_IDENTIFIER + " db push").append(System.lineSeparator());
     }
 
-    private Path getDriverPath() throws BalException {
+    private Path getDriverPath(Project balProject) throws BalException {
         String relativeLibPath;
 
         DependencyGraph<ResolvedPackageDependency> resolvedPackageDependencyDependencyGraph =

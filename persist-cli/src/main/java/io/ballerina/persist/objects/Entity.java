@@ -27,14 +27,12 @@ import java.util.List;
  */
 public class Entity {
 
-    private final String[] keys;
+    private String[] keys;
 
     private final List<List<String>> uniqueConstraints;
     private String tableName;
 
     private String entityName;
-
-    private String packageName;
 
     private ArrayList<Relation> relations = new ArrayList<>();
 
@@ -44,13 +42,13 @@ public class Entity {
 
     public Entity(String[] keys, String tableName, List<List<String>> uniqueConstraints) {
 
-        this.keys = keys;
+        this.keys = keys.clone();
         this.tableName = tableName;
         this.uniqueConstraints = uniqueConstraints;
     }
 
     public String[] getKeys() {
-        return this.keys;
+        return this.keys.clone();
     }
 
     public List<List<String>> getUniqueConstraints() {
@@ -69,10 +67,6 @@ public class Entity {
 
     public void setTableName(String tableName) {
         this.tableName = tableName;
-    }
-
-    public void setPackageName(String packageName) {
-        this.packageName = packageName;
     }
 
     public String getEntityName() {
