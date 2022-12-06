@@ -17,11 +17,7 @@
   -->
 
 <FindBugsFilter>
-
     <Match>
         <Class name="io.ballerina.persist.cmd.Push" />
-        <Method name="execute" />
-        <Bug pattern="SQL_PREPARED_STATEMENT_GENERATED_FROM_NONCONSTANT_STRING" />
     </Match>
-
 </FindBugsFilter>

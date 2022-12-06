@@ -74,13 +74,13 @@ spotbugsMain {
     effort = "max"
     reportLevel = "low"
     reportsDir = file("$project.buildDir/reports/spotbugs")
-    def excludeFile = file("${rootDir}/build-config/spotbugs-exclude.xml")
+    reports {
+        //html.enabled true
+        text.enabled = true
+    }
+    def excludeFile = file("${rootDir}/spotbugs-exclude.xml")
     if (excludeFile.exists()) {
         excludeFilter = excludeFile
-    }
-    reports {
-        html.enabled true
-        text.enabled = true
     }
 }
 
