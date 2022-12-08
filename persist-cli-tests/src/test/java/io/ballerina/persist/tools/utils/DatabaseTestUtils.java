@@ -54,8 +54,6 @@ public class DatabaseTestUtils {
         if (osName.toLowerCase(Locale.getDefault()).contains("windows")) {
             return;
         }
-//        HashMap configurations = generateSourceCode(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir),
-//                GeneratedSourcesTestUtils.Command.DB_PUSH);
         PersistConfiguration configuration = SyntaxTreeGenerator.readPersistToml(
                 Paths.get(GENERATED_SOURCES_DIRECTORY, subDir, PERSIST_DIRECTORY, PERSIST_TOML_FILE));
         String username = configuration.getDbConfig().getUsername();

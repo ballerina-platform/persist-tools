@@ -167,11 +167,7 @@ public class SyntaxTreeGenerator {
     }
 
     public static PersistConfiguration readPersistToml(Path configPath) throws BalException {
-//        HashMap<String, String> values = new HashMap<>();
-        //Path fileNamePath = configPath.getFileName();
         try {
-//            if (Objects.nonNull(fileNamePath)) {
-//                boolean persistConfigs = false;
             TextDocument configDocument = TextDocuments.from(Files.readString(configPath));
             SyntaxTree syntaxTree = SyntaxTree.from(configDocument);
             DocumentNode rootNote = syntaxTree.rootNode();
@@ -199,15 +195,6 @@ public class SyntaxTreeGenerator {
                                     "You should give the correct database configurations " +
                                     "with database name to create tables.");
                         }
-
-//                            persistConfigs = true;
-//                        NodeList<KeyValueNode> subNodeList = node.fields();
-//                        for (KeyValueNode subMember : subNodeList) {
-//                            if (isDatabaseConfigurationEntry(subMember.identifier())) {
-//                                values.put(subMember.identifier().toSourceCode().trim(),
-//                                        subMember.value().toSourceCode().trim());
-//                            }
-//                        }
                     }
 
                 }
