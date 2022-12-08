@@ -18,7 +18,6 @@
 package io.ballerina.persist.cmd;
 
 import io.ballerina.cli.BLauncherCmd;
-import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.nodegenerator.SyntaxTreeGenerator;
 import io.ballerina.persist.objects.BalException;
 import io.ballerina.persist.objects.Entity;
@@ -26,6 +25,7 @@ import io.ballerina.persist.objects.EntityMetaData;
 import io.ballerina.persist.utils.BalProjectUtils;
 import io.ballerina.persist.utils.DataBaseValidationUtils;
 import io.ballerina.persist.utils.JdbcDriverLoader;
+import io.ballerina.persist.utils.ScriptRunner;
 import io.ballerina.persist.utils.SqlScriptGenerationUtils;
 import io.ballerina.projects.DependencyGraph;
 import io.ballerina.projects.Package;
@@ -35,23 +35,17 @@ import io.ballerina.projects.ResolvedPackageDependency;
 import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.projects.directory.ProjectLoader;
 import io.ballerina.toml.syntax.tree.TableNode;
-import org.apache.ibatis.jdbc.ScriptRunner;
 import picocli.CommandLine;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.io.Reader;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.Driver;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -65,6 +59,7 @@ import java.util.regex.Pattern;
 import static io.ballerina.persist.PersistToolsConstants.BALLERINA_MYSQL_DRIVER_NAME;
 import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 import static io.ballerina.persist.PersistToolsConstants.CONFIG_SCRIPT_FILE;
+import static io.ballerina.persist.PersistToolsConstants.CREATE_DATABASE_SQL;
 import static io.ballerina.persist.PersistToolsConstants.DATABASE;
 import static io.ballerina.persist.PersistToolsConstants.DATABASE_CONFIGURATION_BAL;
 import static io.ballerina.persist.PersistToolsConstants.HOST;
@@ -111,12 +106,12 @@ public class Push implements BLauncherCmd {
 
     @Override
     public void execute() {
+
         if (helpFlag) {
             String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMMAND_IDENTIFIER);
             errStream.println(commandUsageInfo);
             return;
         }
-
         String[] sqlScripts;
         Path absoluteSourcePath = Paths.get(this.sourcePath).toAbsolutePath();
         Path persistTomlPath = Paths.get(this.sourcePath, SUBMODULE_PERSIST, PERSIST_TOML_FILE);
@@ -178,14 +173,13 @@ public class Push implements BLauncherCmd {
             }
             if (!databaseExists) {
                 String validatedDatabase = DataBaseValidationUtils.validateDatabaseInput(database);
-                String query = String.format("CREATE DATABASE %s", validatedDatabase);
-                PreparedStatement preparedStatement = connection.prepareStatement(query);
+                String query = String.format(CREATE_DATABASE_SQL, validatedDatabase);
+                ScriptRunner scriptRunner = new ScriptRunner(connection);
                 try {
-                    preparedStatement.executeUpdate();
+                    scriptRunner.runQuery(query);
                 } catch (Exception e) {
                     throw new BalException(e.getMessage());
                 } finally {
-                    preparedStatement.close();
                     connection.close();
                 }
                 stdStream.println("Created Database : " + database + ".");
@@ -202,18 +196,12 @@ public class Push implements BLauncherCmd {
         try {
             Connection connection = driver.connect(databaseUrl, props);
             try {
-                ScriptRunner sr = new ScriptRunner(connection);
-                try (Reader fileReader = new BufferedReader(new FileReader(Paths.get(this.sourcePath,
-                        PERSIST, PersistToolsConstants.FILE_NAME).toAbsolutePath().toString(),
-                        StandardCharsets.UTF_8))) {
-                    sr.runScript(fileReader);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+                ScriptRunner scriptRunner = new ScriptRunner(connection);
+                scriptRunner.runScript(sqlScripts);
             } finally {
                 connection.close();
             }
-        } catch (SQLException e) {
+        } catch (SQLException | BalException e) {
             errStream.println("Error while creating the tables in the database " + database + ". " +  e.getMessage());
             return;
         }
@@ -222,7 +210,6 @@ public class Push implements BLauncherCmd {
     public void setSourcePath(String sourcePath) {
         this.sourcePath = sourcePath;
     }
-
     public HashMap<String, String> getConfigurations() {
         return this.persistConfigurations;
     }
@@ -234,7 +221,8 @@ public class Push implements BLauncherCmd {
         if (Objects.nonNull(driverDirectoryPath)) {
             Path driverPath = driverDirectoryPath.toAbsolutePath();
             URL[] urls = {};
-            try (JdbcDriverLoader driverLoader = new JdbcDriverLoader(urls, driverPath)) {
+            try {
+                JdbcDriverLoader driverLoader = new JdbcDriverLoader(urls, driverPath);
                 Class<?> drvClass = driverLoader.loadClass(MYSQL_DRIVER_CLASS);
                 driver = (Driver) drvClass.getDeclaredConstructor().newInstance();
             } catch (ProjectException e) {

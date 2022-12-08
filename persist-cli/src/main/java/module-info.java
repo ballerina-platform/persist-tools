@@ -26,5 +26,4 @@ module io.ballerina.persist {
     requires io.ballerina.parser;
     requires io.ballerina.formatter.core;
     requires java.sql;
-    requires ibatis.sqlmap;
 }

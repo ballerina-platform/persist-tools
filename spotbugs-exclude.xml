@@ -19,5 +19,11 @@
 <FindBugsFilter>
     <Match>
         <Class name="io.ballerina.persist.cmd.Push" />
+        <Method name="execute" />
+        <Bug pattern="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE" />
+    </Match>
+    <Match>
+        <Class name="io.ballerina.persist.utils.ScriptRunner" />
+        <Bug pattern="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE" />
     </Match>
 </FindBugsFilter>
