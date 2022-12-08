@@ -27,14 +27,14 @@ import static io.ballerina.persist.objects.PersistToolsConstants.COMPONENT_IDENT
 
 
 /**
- * Class to implement "persist" command for ballerina.
+ * Class to implement "persist" commands for ballerina.
  *
  * @since 0.1.0
  */
 @CommandLine.Command(
         name = "persist",
         description = "generate database configurations.",
-        subcommands = {Init.class, Generate.class, Db.class}
+        subcommands = {Init.class, Generate.class, Push.class}
         )
 
 public class PersistCmd implements BLauncherCmd {

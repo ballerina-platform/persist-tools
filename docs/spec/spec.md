@@ -183,7 +183,7 @@ configurable string password = ?;
 ```
 
 ## 4. Creating Database Tables
-Users can define database entities in their Ballerina projects. They can create database tables corresponding to these entities by executing `bal persist db push` command. Users can then use the generated client objects to perform operations on these tables programmatically without having to write SQL statements.
+Users can define database entities in their Ballerina projects. They can create database tables corresponding to these entities by executing `bal persist push` command. Users can then use the generated client objects to perform operations on these tables programmatically without having to write SQL statements.
 
 Consider the following entity record inside the Ballerina project.
 ```ballerina
@@ -216,4 +216,4 @@ password = "Test123#"
 database = "medicals"
 ```
 
-When the user executes `bal persist db push` command, `MedicalNeeds` table will be created in the `medicals` database with `needId` as the primary key. 
+When the user executes `bal persist push` command, `MedicalNeeds` table will be created in the `medicals` database with `needId` as the primary key. 
