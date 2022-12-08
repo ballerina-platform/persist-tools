@@ -18,6 +18,6 @@
 
 <FindBugsFilter>
     <Match>
-        <Class name="io.ballerina.persist.cmd.Push" />
+        <Class name="io.ballerina.persist.utils.ScriptRunner" />
     </Match>
 </FindBugsFilter>

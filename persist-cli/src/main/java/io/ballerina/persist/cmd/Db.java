@@ -18,7 +18,7 @@
 package io.ballerina.persist.cmd;
 
 import io.ballerina.cli.BLauncherCmd;
-import io.ballerina.persist.PersistToolsConstants;
+import io.ballerina.persist.objects.PersistToolsConstants;
 import picocli.CommandLine;
 
 import java.io.PrintStream;

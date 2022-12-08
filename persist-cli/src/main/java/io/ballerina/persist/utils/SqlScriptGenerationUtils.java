@@ -17,10 +17,10 @@
  */
 package io.ballerina.persist.utils;
 
-import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.objects.BalException;
 import io.ballerina.persist.objects.Entity;
 import io.ballerina.persist.objects.FieldMetaData;
+import io.ballerina.persist.objects.PersistToolsConstants;
 import io.ballerina.persist.objects.Relation;
 
 import java.io.IOException;
@@ -78,7 +78,7 @@ public class SqlScriptGenerationUtils {
     }
 
     public static void writeScriptFile(String[] sqlScripts, Path filePath) {
-        Path path = Paths.get(String.valueOf(filePath), PersistToolsConstants.FILE_NAME);
+        Path path = Paths.get(String.valueOf(filePath), PersistToolsConstants.SQL_SCHEMA_FILE);
         StringBuilder sqlScript = new StringBuilder();
         for (String script : sqlScripts) {
             sqlScript.append(script).append(NEW_LINE);

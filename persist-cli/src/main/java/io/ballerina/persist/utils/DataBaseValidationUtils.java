@@ -13,23 +13,23 @@ import java.util.regex.Pattern;
  */
 public class DataBaseValidationUtils {
 
+    public static final String REGEX_DB_NAME_PATTERN = "[^A-Za-z\\d$_]";
+
     private DataBaseValidationUtils(){}
 
-    public static String validateDatabaseInput(String inputDatabase) throws BalException {
-        if (inputDatabase == null) {
-            throw new BalException("Database name is null. ");
+    public static String validateDatabaseInput(String databaseName) throws BalException {
+        if (databaseName == null || databaseName.isEmpty() || databaseName.isBlank()) {
+            throw new BalException("Database name cannot be empty");
         }
-        String database = inputDatabase.trim();
+        String database = databaseName.trim();
         if (database.length() > 64) {
-            throw new BalException("Database name length exceeds the limit. ");
-        } else if (database.length() == 0) {
-            throw new BalException("Database name is empty. ");
+            throw new BalException("Database name should be less than or equal 64 characters");
         } else {
-            Pattern regex = Pattern.compile("[^A-Za-z0-9$_]");
+            Pattern regex = Pattern.compile(REGEX_DB_NAME_PATTERN);
             Matcher matcher = regex.matcher(database);
-            boolean hasSpecialChars = matcher.find();
-            if (hasSpecialChars) {
-                throw new BalException("Database name contains illegal characters. ");
+            boolean illegalCharExists = matcher.find();
+            if (illegalCharExists) {
+                throw new BalException("Database name contains illegal characters. "); // Add illegal character here.
             }
             return database;
         }

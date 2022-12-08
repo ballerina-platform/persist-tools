@@ -15,7 +15,9 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-package io.ballerina.persist;
+package io.ballerina.persist.objects;
+
+import java.util.Set;
 
 /**
  * Persist Tool contants class.
@@ -69,11 +71,11 @@ public class PersistToolsConstants {
     public static final String STRING = "String";
     public static final String LENGTH = "length";
     public static final String MAX_LENGTH = "maxLength";
-    public static final String FILE_NAME = "persist_db_scripts.sql";
+    public static final String SQL_SCHEMA_FILE = "persist_db_scripts.sql";
     public static final String UNIQUE_CONSTRAINTS = "uniqueConstraints";
 
     public static final String KEYWORD_PROVIDER = "provider";
-    public static final String SUBMODULE_PERSIST = "persist";
+    public static final String PERSIST_DIRECTORY = "persist";
     public static final String SUBMODULE_FOLDER = "modules";
     public static final String KEYWORD_CLIENTS = "clients";
     public static final String PERSIST_TOML_FILE = "Persist.toml";
@@ -82,6 +84,8 @@ public class PersistToolsConstants {
     public static final String PLATFORM = "java11";
     public static final String PROPERTY_KEY_PATH = "path";
     public static final String MYSQL_CONNECTOR_NAME_PREFIX = "mysql-connector";
+
+    public static final Set<String> SUPPORTED_DB_PROVIDERS = Set.of("mysql");
 
     /**
      * Constants related to Ballerina types.

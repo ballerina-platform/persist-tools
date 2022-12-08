@@ -18,6 +18,8 @@
 
 package io.ballerina.persist.nodegenerator;
 
+import io.ballerina.persist.configuration.DatabaseConfiguration;
+import io.ballerina.persist.configuration.PersistConfiguration;
 import io.ballerina.persist.objects.BalException;
 import io.ballerina.toml.syntax.tree.AbstractNodeFactory;
 import io.ballerina.toml.syntax.tree.DocumentMemberDeclarationNode;
@@ -42,28 +44,25 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import static io.ballerina.persist.PersistToolsConstants.DATABASE;
-import static io.ballerina.persist.PersistToolsConstants.DATABASE_PLACEHOLDER;
-import static io.ballerina.persist.PersistToolsConstants.DEFAULT_DATABASE;
-import static io.ballerina.persist.PersistToolsConstants.DEFAULT_HOST;
-import static io.ballerina.persist.PersistToolsConstants.DEFAULT_PASSWORD;
-import static io.ballerina.persist.PersistToolsConstants.DEFAULT_PORT;
-import static io.ballerina.persist.PersistToolsConstants.DEFAULT_USER;
-import static io.ballerina.persist.PersistToolsConstants.HOST;
-import static io.ballerina.persist.PersistToolsConstants.HOST_PLACEHOLDER;
-import static io.ballerina.persist.PersistToolsConstants.KEYWORD_PROVIDER;
-import static io.ballerina.persist.PersistToolsConstants.KEY_DATABASE;
-import static io.ballerina.persist.PersistToolsConstants.KEY_HOST;
-import static io.ballerina.persist.PersistToolsConstants.KEY_PASSWORD;
-import static io.ballerina.persist.PersistToolsConstants.KEY_PORT;
-import static io.ballerina.persist.PersistToolsConstants.KEY_USER;
-import static io.ballerina.persist.PersistToolsConstants.MYSQL;
-import static io.ballerina.persist.PersistToolsConstants.PASSWORD;
-import static io.ballerina.persist.PersistToolsConstants.PASSWORD_PLACEHOLDER;
-import static io.ballerina.persist.PersistToolsConstants.PORT;
-import static io.ballerina.persist.PersistToolsConstants.PORT_PLACEHOLDER;
-import static io.ballerina.persist.PersistToolsConstants.USER;
-import static io.ballerina.persist.PersistToolsConstants.USER_PLACEHOLDER;
+import static io.ballerina.persist.objects.PersistToolsConstants.DATABASE;
+import static io.ballerina.persist.objects.PersistToolsConstants.DATABASE_PLACEHOLDER;
+import static io.ballerina.persist.objects.PersistToolsConstants.DEFAULT_DATABASE;
+import static io.ballerina.persist.objects.PersistToolsConstants.DEFAULT_HOST;
+import static io.ballerina.persist.objects.PersistToolsConstants.DEFAULT_PASSWORD;
+import static io.ballerina.persist.objects.PersistToolsConstants.DEFAULT_PORT;
+import static io.ballerina.persist.objects.PersistToolsConstants.DEFAULT_USER;
+import static io.ballerina.persist.objects.PersistToolsConstants.HOST_PLACEHOLDER;
+import static io.ballerina.persist.objects.PersistToolsConstants.KEYWORD_PROVIDER;
+import static io.ballerina.persist.objects.PersistToolsConstants.KEY_DATABASE;
+import static io.ballerina.persist.objects.PersistToolsConstants.KEY_HOST;
+import static io.ballerina.persist.objects.PersistToolsConstants.KEY_PASSWORD;
+import static io.ballerina.persist.objects.PersistToolsConstants.KEY_PORT;
+import static io.ballerina.persist.objects.PersistToolsConstants.KEY_USER;
+import static io.ballerina.persist.objects.PersistToolsConstants.MYSQL;
+import static io.ballerina.persist.objects.PersistToolsConstants.PASSWORD_PLACEHOLDER;
+import static io.ballerina.persist.objects.PersistToolsConstants.PORT_PLACEHOLDER;
+import static io.ballerina.persist.objects.PersistToolsConstants.SUPPORTED_DB_PROVIDERS;
+import static io.ballerina.persist.objects.PersistToolsConstants.USER_PLACEHOLDER;
 
 
 /**
@@ -80,6 +79,7 @@ public class SyntaxTreeGenerator {
             DEFAULT_DATABASE,
             DEFAULT_DATABASE
     };
+    public static final String REGEX_TOML_TABLE_NAME_SPLITTER = "\\.";
 
     private SyntaxTreeGenerator(){}
 
@@ -166,47 +166,59 @@ public class SyntaxTreeGenerator {
         return templatedEntry;
     }
 
-    public static HashMap<String, String> readPersistToml(Path configPath) throws BalException {
-        HashMap<String, String> values = new HashMap<>();
-        Path fileNamePath = configPath.getFileName();
+    public static PersistConfiguration readPersistToml(Path configPath) throws BalException {
+//        HashMap<String, String> values = new HashMap<>();
+        //Path fileNamePath = configPath.getFileName();
         try {
-            if (Objects.nonNull(fileNamePath)) {
-                boolean persistConfigs = false;
-                TextDocument configDocument = TextDocuments.from(Files.readString(configPath));
-                SyntaxTree syntaxTree = SyntaxTree.from(configDocument, fileNamePath.toString());
-                DocumentNode rootNote = syntaxTree.rootNode();
-                NodeList<DocumentMemberDeclarationNode> nodeList = rootNote.members();
-                for (DocumentMemberDeclarationNode member : nodeList) {
-                    if (member instanceof TableNode) {
-                        TableNode node = (TableNode) member;
-                        if (node.identifier().toSourceCode().trim().equals(DATABASE)) {
-                            persistConfigs = true;
-                            NodeList<KeyValueNode> subNodeList = node.fields();
-                            for (KeyValueNode subMember : subNodeList) {
-                                if (isDatabaseConfigurationEntry(subMember.identifier())) {
-                                    values.put(subMember.identifier().toSourceCode().trim(),
-                                            subMember.value().toSourceCode().trim());
-                                }
+//            if (Objects.nonNull(fileNamePath)) {
+//                boolean persistConfigs = false;
+            TextDocument configDocument = TextDocuments.from(Files.readString(configPath));
+            SyntaxTree syntaxTree = SyntaxTree.from(configDocument);
+            DocumentNode rootNote = syntaxTree.rootNode();
+            NodeList<DocumentMemberDeclarationNode> nodeList = rootNote.members();
+            PersistConfiguration configuration = new PersistConfiguration();
+            boolean dbConfigExists = false;
+            for (DocumentMemberDeclarationNode member : nodeList) {
+                if (member instanceof TableNode) {
+                    TableNode node = (TableNode) member;
+                    String tableName = node.identifier().toSourceCode().trim();
+                    if (tableName.startsWith(DATABASE)) {
+                        String[] nameParts = tableName.split(REGEX_TOML_TABLE_NAME_SPLITTER);
+                        if (nameParts.length > 1 && SUPPORTED_DB_PROVIDERS.contains(nameParts[1])) {
+                            configuration.setProvider(nameParts[1]);
+                            dbConfigExists = true;
+                            if (nameParts.length == 3 && "shadow".equals(nameParts[2])) {
+                                DatabaseConfiguration shadowDbConfiguration = new DatabaseConfiguration(node.fields());
+                                configuration.setShadowDbConfig(shadowDbConfiguration);
+                            } else {
+                                DatabaseConfiguration databaseConfiguration = new DatabaseConfiguration(node.fields());
+                                configuration.setDbConfig(databaseConfiguration);
                             }
+                        } else {
+                            throw new BalException("Database is not configured properly\n" +
+                                    "You should give the correct database configurations " +
+                                    "with database name to create tables.");
                         }
 
+//                            persistConfigs = true;
+//                        NodeList<KeyValueNode> subNodeList = node.fields();
+//                        for (KeyValueNode subMember : subNodeList) {
+//                            if (isDatabaseConfigurationEntry(subMember.identifier())) {
+//                                values.put(subMember.identifier().toSourceCode().trim(),
+//                                        subMember.value().toSourceCode().trim());
+//                            }
+//                        }
                     }
-                }
-                if (!persistConfigs) {
-                    throw new BalException("Persist client related config doesn't exist in Persist.toml.\n" +
-                            "You should add [database] table with configurations values or placeholders. ");
-                } else if (values.isEmpty() || values.size() < 5 || (!values.containsKey(DATABASE)
-                        || !values.containsKey(USER) || !values.containsKey(HOST) || !values.containsKey(PASSWORD) ||
-                        !values.containsKey(PORT))) {
-                    throw new BalException("Database is not configured properly\n" +
-                            "You should give the correct database configurations with database name to create tables.");
-                } else {
-                    return values;
+
                 }
             }
-            return values;
+            if (!dbConfigExists) {
+                throw new BalException("The persist tool config doesn't exist in the Persist.toml.\n" +
+                        "You should add [database.<provide>] table with db configurations.");
+            }
+            return configuration;
         } catch (IOException e) {
-            throw new BalException("Error while reading configurations. ");
+            throw new BalException("Error while reading configurations. " + e.getMessage());
         }
     }
 
@@ -279,6 +291,7 @@ public class SyntaxTreeGenerator {
         return SyntaxTree.from(textDocument);
     }
 
+    // we don't need this.
     private static boolean isDatabaseConfigurationEntry(KeyNode key) {
         switch (key.toSourceCode().trim()) {
             case KEY_USER:

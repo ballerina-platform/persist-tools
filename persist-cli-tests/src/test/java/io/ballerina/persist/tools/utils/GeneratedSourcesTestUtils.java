@@ -150,10 +150,11 @@ public class GeneratedSourcesTestUtils {
                 persistCmd.execute();
             } else {
                 persistClass = Class.forName("io.ballerina.persist.cmd.Push");
-                Push persistCmd = (Push) persistClass.getDeclaredConstructor().newInstance();
-                persistCmd.setSourcePath(sourcePath.toAbsolutePath().toString());
+                Push persistCmd = (Push) persistClass.getDeclaredConstructor(String.class)
+                        .newInstance(sourcePath.toAbsolutePath().toString());
+                //persistCmd.setSourcePath(sourcePath.toAbsolutePath().toString());
                 persistCmd.execute();
-                return persistCmd.getConfigurations();
+                //return persistCmd.getConfigurations();
             }
 
         } catch (ClassNotFoundException | IllegalAccessException | InstantiationException |

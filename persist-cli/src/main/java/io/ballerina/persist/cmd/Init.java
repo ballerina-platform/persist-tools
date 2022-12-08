@@ -18,7 +18,6 @@
 package io.ballerina.persist.cmd;
 
 import io.ballerina.cli.BLauncherCmd;
-import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.nodegenerator.BalFileConstants;
 import io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator;
 import io.ballerina.persist.nodegenerator.SyntaxTreeGenerator;
@@ -39,14 +38,15 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
 
-import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
-import static io.ballerina.persist.PersistToolsConstants.CONFIG_SCRIPT_FILE;
-import static io.ballerina.persist.PersistToolsConstants.DATABASE_CONFIGURATION_BAL;
-import static io.ballerina.persist.PersistToolsConstants.KEYWORD_CLIENTS;
-import static io.ballerina.persist.PersistToolsConstants.PERSIST_TOML_FILE;
-import static io.ballerina.persist.PersistToolsConstants.SUBMODULE_FOLDER;
-import static io.ballerina.persist.PersistToolsConstants.SUBMODULE_PERSIST;
+
 import static io.ballerina.persist.nodegenerator.BalFileConstants.PATH_CONFIGURATION_BAL_FILE;
+import static io.ballerina.persist.objects.PersistToolsConstants.COMPONENT_IDENTIFIER;
+import static io.ballerina.persist.objects.PersistToolsConstants.CONFIG_SCRIPT_FILE;
+import static io.ballerina.persist.objects.PersistToolsConstants.DATABASE_CONFIGURATION_BAL;
+import static io.ballerina.persist.objects.PersistToolsConstants.KEYWORD_CLIENTS;
+import static io.ballerina.persist.objects.PersistToolsConstants.PERSIST_DIRECTORY;
+import static io.ballerina.persist.objects.PersistToolsConstants.PERSIST_TOML_FILE;
+import static io.ballerina.persist.objects.PersistToolsConstants.SUBMODULE_FOLDER;
 
 /**
  * Class to implement "persist init" command for ballerina.
@@ -62,7 +62,7 @@ public class Init implements BLauncherCmd {
 
     private final PrintStream errStream = System.err;
     private final PrintStream outStream = System.out;
-    private static final String configPath = PersistToolsConstants.CONFIG_SCRIPT_FILE;
+    private static final String configPath = CONFIG_SCRIPT_FILE;
 
     private String configName = "";
     private String projectName = "";
@@ -78,7 +78,7 @@ public class Init implements BLauncherCmd {
 
     @Override
     public void execute() {
-        Path persistTomlPath = Paths.get(this.sourcePath, SUBMODULE_PERSIST, PERSIST_TOML_FILE);
+        Path persistTomlPath = Paths.get(this.sourcePath, PERSIST_DIRECTORY, PERSIST_TOML_FILE);
         Path databaseConfigPath = Paths.get(this.sourcePath, SUBMODULE_FOLDER, KEYWORD_CLIENTS,
                 DATABASE_CONFIGURATION_BAL);
         if (helpFlag) {
