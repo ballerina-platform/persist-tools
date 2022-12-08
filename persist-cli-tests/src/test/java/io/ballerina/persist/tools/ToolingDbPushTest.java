@@ -96,12 +96,6 @@ public class ToolingDbPushTest {
         assertCreateDatabaseTables("tool_test_db_push_3", tables);
     }
 
-    @Test(enabled = false)
-    @Description("When the db push command is executed without the database configurations")
-    public void testDbPushWithoutConfigFile() {
-        assertGeneratedSourcesNegative("tool_test_db_push_4", DB_PUSH, null);
-    }
-
     @Test(dependsOnMethods = { "testDbPushEntityRemoved" })
     @Description("Database already exists. An entity is updated. The respective table should be updated.")
     public void testDbPushEntityUpdated() throws BalException {
