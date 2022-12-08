@@ -55,7 +55,7 @@ import static io.ballerina.persist.nodegenerator.BalFileConstants.PATH_CONFIGURA
 
 @CommandLine.Command(
         name = "init",
-        description = "generate database configurations.")
+        description = "Initialize the persistence layer in the Ballerina project.")
 
 public class Init implements BLauncherCmd {
 
@@ -65,7 +65,7 @@ public class Init implements BLauncherCmd {
 
     private String configName = "";
     private String projectName = "";
-    public String sourcePath = "";
+    private String sourcePath = "";
     private static final String COMMAND_IDENTIFIER = "persist-init";
 
     Project balProject;

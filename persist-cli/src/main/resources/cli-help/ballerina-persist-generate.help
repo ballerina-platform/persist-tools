@@ -1,5 +1,5 @@
 NAME
-       Generate the Client object inside the Ballerina project.
+       Generate client objects for the defined entities inside the Ballerina project
 
 SYNOPSIS
        bal persist generate

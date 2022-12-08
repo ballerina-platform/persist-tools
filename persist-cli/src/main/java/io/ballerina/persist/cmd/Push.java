@@ -232,7 +232,7 @@ public class Push implements BLauncherCmd {
             throw new BalException("Error in jdbc driver path : " + e.getMessage());
         }
     }
-    
+
     private HashMap<String, String> populatePlaceHolder(HashMap<String, String> templatedEntry)
             throws BalException {
         HashMap<String, TableNode> configs = SyntaxTreeGenerator.getConfigs(Paths.get(
