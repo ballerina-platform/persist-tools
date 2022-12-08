@@ -34,6 +34,7 @@ import io.ballerina.projects.Project;
 import io.ballerina.projects.ProjectException;
 import io.ballerina.projects.ResolvedPackageDependency;
 import io.ballerina.projects.directory.BuildProject;
+import io.ballerina.projects.directory.ProjectLoader;
 import picocli.CommandLine;
 
 import java.io.BufferedReader;
@@ -103,8 +104,15 @@ public class Push implements BLauncherCmd {
             return;
         }
 
+        try {
+            ProjectLoader.loadProject(Paths.get(this.sourcePath));
+        } catch (ProjectException e) {
+            errStream.println("Not a Ballerina project (or any parent up to mount point)\n" +
+                    "You should run this command inside a Ballerina project.");
+            return;
+        }
+
         Path projectPath = Paths.get(this.sourcePath).toAbsolutePath();
-        // check whether it is a ballerina project.
         Path persistTomlPath = Paths.get(this.sourcePath, PERSIST_DIRECTORY, PERSIST_TOML_FILE);
 
         if (!Files.exists(persistTomlPath)) {
