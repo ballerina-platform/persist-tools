@@ -82,6 +82,7 @@ import static io.ballerina.persist.objects.PersistToolsConstants.USER;
         description = "Create database tables corresponding to user-defined entities")
 public class Push implements BLauncherCmd {
 
+    private static final String CREATE_DATABASE_SQL_FORMAT = "CREATE DATABASE IF NOT EXISTS %s";
     private final PrintStream errStream = System.err;
     private static final String COMMAND_IDENTIFIER = "persist-db-push";
     private final String sourcePath;
@@ -144,7 +145,7 @@ public class Push implements BLauncherCmd {
             return;
         }
 
-        String query = String.format("CREATE DATABASE IF NOT EXISTS %s",
+        String query = String.format(CREATE_DATABASE_SQL_FORMAT,
                 persistConfigurations.getDbConfig().getDatabase());
         try (Connection connection = getDBConnection(driver, persistConfigurations, false)) {
             ScriptRunner sr = new ScriptRunner(connection);
