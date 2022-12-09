@@ -225,7 +225,7 @@ public class Push implements BLauncherCmd {
         } catch (ClassNotFoundException e) {
             throw new BalException("Required database driver class not found. " + e.getMessage());
         } catch (InstantiationException | InvocationTargetException e) {
-            throw new BalException("Error instantiation the jdbc driver. " + e.getMessage());
+            throw new BalException("The database driver instantiation is failed. " + e.getMessage());
         } catch (IllegalAccessException e) {
             throw new BalException("Access denied while trying to instantiation the database driver. " +
                     e.getMessage());
