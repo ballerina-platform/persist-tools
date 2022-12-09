@@ -132,46 +132,52 @@ public class Push implements BLauncherCmd {
             errStream.println("Error occurred while generating SQL schema. " + e.getMessage());
             return;
         }
-
-        Driver driver;
+        Project balProject;
         PersistConfiguration persistConfigurations;
         try {
-            Project balProject = BuildProject.load(projectPath); // refer the value from the project path
+            balProject = BuildProject.load(projectPath); // refer the value from the project path
             balProject.currentPackage().getCompilation();
-            driver = getJdbcDriver(balProject);
             persistConfigurations = SyntaxTreeGenerator.readPersistToml(persistTomlPath);
         } catch (BalException e) {
             errStream.println("Error occurred while loading db configurations and driver. " + e.getMessage());
             return;
         }
+        try (JdbcDriverLoader driverLoader = getJdbcDriverLoader(balProject)) {
+            Driver driver = getJdbcDriver(driverLoader);
+            String query = String.format(CREATE_DATABASE_SQL_FORMAT,
+                    persistConfigurations.getDbConfig().getDatabase());
+            try (Connection connection = getDBConnection(driver, persistConfigurations, false)) {
+                ScriptRunner sr = new ScriptRunner(connection);
+                sr.runQuery(query);
+            } catch (SQLException e) {
+                errStream.println("Error occurred while creating the database, " +
+                        persistConfigurations.getDbConfig().getDatabase() + "." + e.getMessage());
+                return;
+            }
 
-        String query = String.format(CREATE_DATABASE_SQL_FORMAT,
-                persistConfigurations.getDbConfig().getDatabase());
-        try (Connection connection = getDBConnection(driver, persistConfigurations, false)) {
-            ScriptRunner sr = new ScriptRunner(connection);
-            sr.runQuery(query);
-        } catch (SQLException e) {
-            errStream.println("Error occurred while creating the database, " +
-                    persistConfigurations.getDbConfig().getDatabase() + "." + e.getMessage());
-            return;
-        }
-
-        String sqlFilePath = Paths.get(this.sourcePath,
-                PERSIST_DIRECTORY, PersistToolsConstants.SQL_SCHEMA_FILE).toAbsolutePath().toString();
-        try (Connection connection = getDBConnection(driver, persistConfigurations, true);
-             Reader fileReader = new BufferedReader(new FileReader(sqlFilePath,
-                     StandardCharsets.UTF_8))) {
-            ScriptRunner sr = new ScriptRunner(connection);
-            sr.runScript(fileReader);
+            String sqlFilePath = Paths.get(this.sourcePath,
+                    PERSIST_DIRECTORY, PersistToolsConstants.SQL_SCHEMA_FILE).toAbsolutePath().toString();
+            try (Connection connection = getDBConnection(driver, persistConfigurations, true);
+                 Reader fileReader = new BufferedReader(new FileReader(sqlFilePath,
+                         StandardCharsets.UTF_8))) {
+                ScriptRunner sr = new ScriptRunner(connection);
+                sr.runScript(fileReader);
+            } catch (IOException e) {
+                errStream.println("Error occurred while reading SQL schema file, "
+                        + sqlFilePath + "." + e.getMessage());
+                return;
+            } catch (Exception e) {
+                errStream.println("Error occurred while executing SQL schema file, "
+                        + sqlFilePath + "." + e.getMessage());
+                return;
+            }
+            errStream.println("Created tables for entities in the database " +
+                    persistConfigurations.getDbConfig().getDatabase() + ".");
+        } catch (BalException e) {
+            errStream.println("Error occurred while executing the SQL scripts. " + e.getMessage());
         } catch (IOException e) {
-            errStream.println("Error occurred while reading SQL schema file, " + sqlFilePath + "." + e.getMessage());
-            return;
-        } catch (Exception e) {
-            errStream.println("Error occurred while executing SQL schema file, " + sqlFilePath + "." + e.getMessage());
-            return;
+            errStream.println("Error occurred in database driver loader. " + e.getMessage());
         }
-        errStream.println("Created tables for entities in the database " +
-                persistConfigurations.getDbConfig().getDatabase() + ".");
     }
 
     private Connection getDBConnection(Driver driver, PersistConfiguration persistConfigurations, boolean withDB)
@@ -196,34 +202,40 @@ public class Push implements BLauncherCmd {
         return driver.connect(url, props);
     }
 
-    private Driver getJdbcDriver(Project balProject) throws BalException {
-        Driver driver = null;
+    private JdbcDriverLoader getJdbcDriverLoader(Project balProject) throws BalException {
+        JdbcDriverLoader driverLoader = null;
         Path driverDirectoryPath = getDriverPath(balProject).getParent();
         if (Objects.nonNull(driverDirectoryPath)) {
             Path driverPath = driverDirectoryPath.toAbsolutePath();
             URL[] urls = {};
-            try (JdbcDriverLoader driverLoader = new JdbcDriverLoader(urls, driverPath)) {
-                Class<?> drvClass = driverLoader.loadClass(MYSQL_DRIVER_CLASS);
-                driver = (Driver) drvClass.getDeclaredConstructor().newInstance();
-            } catch (ProjectException e) {
-                throw new BalException("Not a Ballerina project (or any parent up to mount point)\n" +
-                        "You should run this command inside a Ballerina project.");
-            } catch (ClassNotFoundException e) {
-                throw new BalException("Required database driver class not found. " + e.getMessage());
-            } catch (InstantiationException | InvocationTargetException e) {
-                throw new BalException("Error instantiation the jdbc driver. " + e.getMessage());
-            } catch (IllegalAccessException e) {
-                throw new BalException("Access denied while trying to instantiation the database driver. " +
-                        e.getMessage());
-            } catch (NoSuchMethodException e) {
-                throw new BalException("Method not found while trying to instantiate jdbc driver. "
-                        + e.getMessage());
+            try {
+                driverLoader = new JdbcDriverLoader(urls, driverPath);
             } catch (IOException e) {
-                throw new BalException("Error in jdbc driver path : " + e.getMessage());
+                throw new BalException("Couldn't load the driver from the driver path. " + e.getMessage());
             }
+        }
+        return driverLoader;
+    }
+
+    private Driver getJdbcDriver (JdbcDriverLoader driverLoader) throws BalException {
+        Driver driver = null;
+        try {
+            Class<?> drvClass = driverLoader.loadClass(MYSQL_DRIVER_CLASS);
+            driver = (Driver) drvClass.getDeclaredConstructor().newInstance();
+        } catch (ClassNotFoundException e) {
+            throw new BalException("Required database driver class not found. " + e.getMessage());
+        } catch (InstantiationException | InvocationTargetException e) {
+            throw new BalException("The database driver instantiation is failed. " + e.getMessage());
+        } catch (IllegalAccessException e) {
+            throw new BalException("Access denied while trying to instantiation the database driver. " +
+                    e.getMessage());
+        } catch (NoSuchMethodException e) {
+            throw new BalException("Method not found while trying to instantiate jdbc driver. "
+                    + e.getMessage());
         }
         return driver;
     }
+
 
     @Override
     public void setParentCmdParser(CommandLine parentCmdParser) {
