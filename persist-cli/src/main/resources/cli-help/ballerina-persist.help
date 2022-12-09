@@ -9,6 +9,6 @@ COMMANDS
 
    Package Commands:
         init            Initialize the persistence layer in the Ballerina project.
-        generate        Generate clients for the defined entities inside the Ballerina project
+        generate        Generate client objects for the defined entities inside the Ballerina project
         push            Generate SQL script for the defined entities and execute the script against the Database.
 
