@@ -44,7 +44,7 @@ public class ToolingGenerateTest {
     }
 
     @Test()
-    @Description("There are no entities nor already generated client objects in the Ballerina project")
+    @Description("There are no entities nor already generated clients in the Ballerina project")
     public void testGenerateWithoutEntitiesWithoutClients() {
         assertGeneratedSources("tool_test_generate_3", GENERATE);
     }
@@ -56,7 +56,7 @@ public class ToolingGenerateTest {
     }
 
     @Test()
-    @Description("There is a generated client object and the corresponding entity is updated")
+    @Description("There is a generated client and the corresponding entity is updated")
     public void testGenerateUpdateEntity() {
         assertGeneratedSources("tool_test_generate_5", GENERATE);
     }

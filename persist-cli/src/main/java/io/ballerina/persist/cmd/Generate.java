@@ -57,7 +57,7 @@ import static io.ballerina.persist.objects.PersistToolsConstants.PERSIST_TOML_FI
  */
 @CommandLine.Command(
         name = "generate",
-        description = "Generate Ballerina client object for the entity."
+        description = "Generate Ballerina client for the entity."
 )
 
 public class Generate implements BLauncherCmd {
