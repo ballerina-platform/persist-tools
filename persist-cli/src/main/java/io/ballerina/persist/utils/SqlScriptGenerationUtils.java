@@ -17,10 +17,10 @@
  */
 package io.ballerina.persist.utils;
 
-import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.objects.BalException;
 import io.ballerina.persist.objects.Entity;
 import io.ballerina.persist.objects.FieldMetaData;
+import io.ballerina.persist.objects.PersistToolsConstants;
 import io.ballerina.persist.objects.Relation;
 
 import java.io.IOException;
@@ -34,6 +34,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -77,7 +78,7 @@ public class SqlScriptGenerationUtils {
     }
 
     public static void writeScriptFile(String[] sqlScripts, Path filePath) {
-        Path path = Paths.get(String.valueOf(filePath), PersistToolsConstants.FILE_NAME);
+        Path path = Paths.get(String.valueOf(filePath), PersistToolsConstants.SQL_SCHEMA_FILE);
         StringBuilder sqlScript = new StringBuilder();
         for (String script : sqlScripts) {
             sqlScript.append(script).append(NEW_LINE);
@@ -92,7 +93,6 @@ public class SqlScriptGenerationUtils {
                     "persist directory: " + e.getMessage());
         }
     }
-
     private static String generateDropTableQuery(String tableName) {
         return MessageFormat.format("DROP TABLE IF EXISTS {0};", tableName);
     }
@@ -321,19 +321,20 @@ public class SqlScriptGenerationUtils {
                                                           HashMap<String, List<String>> referenceTables,
                                                           HashMap<String, List<String>> tableScripts) {
         List<String> tableOrder = new ArrayList<>();
-        for (String table : referenceTables.keySet()) {
+
+        for (Map.Entry<String, List<String>> entry : referenceTables.entrySet()) {
             if (tableOrder.isEmpty()) {
-                tableOrder.add(table);
+                tableOrder.add(entry.getKey());
             } else {
                 int firstIndex = 0;
-                List<String> referenceTableNames = referenceTables.get(table);
+                List<String> referenceTableNames = referenceTables.get(entry.getKey());
                 for (String referenceTableName: referenceTableNames) {
                     int index = tableOrder.indexOf(referenceTableName);
                     if ((firstIndex == 0 || index > firstIndex) && index > 0) {
                         firstIndex = index;
                     }
                 }
-                tableOrder.add(firstIndex, table);
+                tableOrder.add(firstIndex, entry.getKey());
             }
         }
         for (String tableName : tables) {

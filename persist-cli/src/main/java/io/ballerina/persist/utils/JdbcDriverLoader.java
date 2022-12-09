@@ -43,7 +43,6 @@ public class JdbcDriverLoader extends URLClassLoader {
         List<Path> pathList = listFiles(driverPath);
         for (Path path : pathList) {
             addURL(new File(path.toString()).toURI().toURL());
-
         }
     }
     private List<Path> listFiles(Path path) throws BalException {

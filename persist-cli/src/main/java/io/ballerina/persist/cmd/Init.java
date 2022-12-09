@@ -18,7 +18,6 @@
 package io.ballerina.persist.cmd;
 
 import io.ballerina.cli.BLauncherCmd;
-import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.nodegenerator.BalFileConstants;
 import io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator;
 import io.ballerina.persist.nodegenerator.SyntaxTreeGenerator;
@@ -37,15 +36,17 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 
-import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
-import static io.ballerina.persist.PersistToolsConstants.CONFIG_SCRIPT_FILE;
-import static io.ballerina.persist.PersistToolsConstants.DATABASE_CONFIGURATION_BAL;
-import static io.ballerina.persist.PersistToolsConstants.KEYWORD_CLIENTS;
-import static io.ballerina.persist.PersistToolsConstants.PERSIST_TOML_FILE;
-import static io.ballerina.persist.PersistToolsConstants.SUBMODULE_FOLDER;
-import static io.ballerina.persist.PersistToolsConstants.SUBMODULE_PERSIST;
+
 import static io.ballerina.persist.nodegenerator.BalFileConstants.PATH_CONFIGURATION_BAL_FILE;
+import static io.ballerina.persist.objects.PersistToolsConstants.COMPONENT_IDENTIFIER;
+import static io.ballerina.persist.objects.PersistToolsConstants.CONFIG_SCRIPT_FILE;
+import static io.ballerina.persist.objects.PersistToolsConstants.DATABASE_CONFIGURATION_BAL;
+import static io.ballerina.persist.objects.PersistToolsConstants.KEYWORD_CLIENTS;
+import static io.ballerina.persist.objects.PersistToolsConstants.PERSIST_DIRECTORY;
+import static io.ballerina.persist.objects.PersistToolsConstants.PERSIST_TOML_FILE;
+import static io.ballerina.persist.objects.PersistToolsConstants.SUBMODULE_FOLDER;
 
 /**
  * Class to implement "persist init" command for ballerina.
@@ -61,7 +62,7 @@ public class Init implements BLauncherCmd {
 
     private final PrintStream errStream = System.err;
     private final PrintStream outStream = System.out;
-    private final String configPath = PersistToolsConstants.CONFIG_SCRIPT_FILE;
+    private static final String configPath = CONFIG_SCRIPT_FILE;
 
     private String configName = "";
     private String projectName = "";
@@ -77,7 +78,7 @@ public class Init implements BLauncherCmd {
 
     @Override
     public void execute() {
-        Path persistTomlPath = Paths.get(this.sourcePath, SUBMODULE_PERSIST, PERSIST_TOML_FILE);
+        Path persistTomlPath = Paths.get(this.sourcePath, PERSIST_DIRECTORY, PERSIST_TOML_FILE);
         Path databaseConfigPath = Paths.get(this.sourcePath, SUBMODULE_FOLDER, KEYWORD_CLIENTS,
                 DATABASE_CONFIGURATION_BAL);
         if (helpFlag) {
@@ -111,12 +112,25 @@ public class Init implements BLauncherCmd {
                 File clientDirectoryPath = new File(Paths.get(this.sourcePath, BalFileConstants.KEYWORD_MODULES,
                         BalFileConstants.KEYWORD_CLIENTS).toAbsolutePath().toString());
                 String[] filePaths = clientDirectoryPath.list();
+                if (filePaths == null) {
+                    errStream.println("IO submodule cannot be accessed. ");
+                    return;
+                }
                 for (String filePath: filePaths) {
                     File currentFile = new File(clientDirectoryPath.getPath(), filePath);
-                    currentFile.delete();
+                    boolean fileDeleted = currentFile.delete();
+                    if (!fileDeleted) {
+                        errStream.println("Following file could not be deleted. \n" + filePath);
+                        return;
+                    }
                 }
-                clientDirectoryPath.delete();
-                outStream.println("Deleted `clients` module.");
+                boolean moduleDeleted = clientDirectoryPath.delete();
+                if (moduleDeleted) {
+                    outStream.println("Deleted `clients` module.");
+                } else {
+                    errStream.println("`clients` module could not be deleted. ");
+                    return;
+                }
                 generateConfigurationBalFile();
                 outStream.println("Created database_configuration.bal file with default configurations.");
             }
@@ -181,24 +195,35 @@ public class Init implements BLauncherCmd {
     private void writeOutputSyntaxTree(SyntaxTree syntaxTree, String outPath) throws Exception {
         String content;
         Path pathToFile = Paths.get(outPath);
-        Files.createDirectories(pathToFile.getParent());
-        content = syntaxTree.toSourceCode();
-        try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8.name())) {
-            writer.println(content);
-        }
-    }
-    private void writeOutputString(String content, String outPath) throws Exception {
-        Path pathToFile = Paths.get(outPath);
-        if (!Files.exists(pathToFile.getParent())) {
+        Path parentDirectory = pathToFile.getParent();
+        if (Objects.nonNull(parentDirectory)) {
             try {
-                Files.createDirectories(pathToFile.getParent());
+                Files.createDirectories(parentDirectory);
             } catch (IOException e) {
                 throw new BalException("Error while creating a new file. " +
                         e.getMessage());
             }
+            content = syntaxTree.toSourceCode();
+            try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8.name())) {
+                writer.println(content);
+            }
         }
-        try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8.name())) {
-            writer.println(content);
+    }
+    private void writeOutputString(String content, String outPath) throws Exception {
+        Path pathToFile = Paths.get(outPath);
+        Path parentDirectory = pathToFile.getParent();
+        if (Objects.nonNull(parentDirectory)) {
+            if (!Files.exists(parentDirectory)) {
+                try {
+                    Files.createDirectories(parentDirectory);
+                } catch (IOException e) {
+                    throw new BalException("Error while creating a new file. " +
+                            e.getMessage());
+                }
+            }
+            try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8.name())) {
+                writer.println(content);
+            }
         }
     }
 

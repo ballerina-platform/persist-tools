@@ -18,12 +18,15 @@
 package io.ballerina.persist.cmd;
 
 import io.ballerina.cli.BLauncherCmd;
+import io.ballerina.persist.configuration.PersistConfiguration;
 import io.ballerina.persist.nodegenerator.SyntaxTreeGenerator;
 import io.ballerina.persist.objects.BalException;
 import io.ballerina.persist.objects.Entity;
 import io.ballerina.persist.objects.EntityMetaData;
+import io.ballerina.persist.objects.PersistToolsConstants;
 import io.ballerina.persist.utils.BalProjectUtils;
 import io.ballerina.persist.utils.JdbcDriverLoader;
+import io.ballerina.persist.utils.ScriptRunner;
 import io.ballerina.persist.utils.SqlScriptGenerationUtils;
 import io.ballerina.projects.DependencyGraph;
 import io.ballerina.projects.Package;
@@ -32,52 +35,41 @@ import io.ballerina.projects.ProjectException;
 import io.ballerina.projects.ResolvedPackageDependency;
 import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.projects.directory.ProjectLoader;
-import io.ballerina.toml.syntax.tree.TableNode;
 import picocli.CommandLine;
 
-import java.io.File;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.PrintStream;
+import java.io.Reader;
 import java.lang.reflect.InvocationTargetException;
-import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.Driver;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Properties;
-import java.util.regex.Pattern;
 
-import static io.ballerina.persist.PersistToolsConstants.BALLERINA_MYSQL_DRIVER_NAME;
-import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
-import static io.ballerina.persist.PersistToolsConstants.CONFIG_SCRIPT_FILE;
-import static io.ballerina.persist.PersistToolsConstants.CREATE_DATABASE_SQL;
-import static io.ballerina.persist.PersistToolsConstants.DATABASE;
-import static io.ballerina.persist.PersistToolsConstants.DATABASE_CONFIGURATION_BAL;
-import static io.ballerina.persist.PersistToolsConstants.HOST;
-import static io.ballerina.persist.PersistToolsConstants.KEYWORD_CLIENTS;
-import static io.ballerina.persist.PersistToolsConstants.MYSQL;
-import static io.ballerina.persist.PersistToolsConstants.MYSQL_CONNECTOR_NAME_PREFIX;
-import static io.ballerina.persist.PersistToolsConstants.MYSQL_DRIVER_CLASS;
-import static io.ballerina.persist.PersistToolsConstants.PASSWORD;
-import static io.ballerina.persist.PersistToolsConstants.PERSIST_TOML_FILE;
-import static io.ballerina.persist.PersistToolsConstants.PLATFORM;
-import static io.ballerina.persist.PersistToolsConstants.PORT;
-import static io.ballerina.persist.PersistToolsConstants.PROPERTY_KEY_PATH;
-import static io.ballerina.persist.PersistToolsConstants.SUBMODULE_FOLDER;
-import static io.ballerina.persist.PersistToolsConstants.SUBMODULE_PERSIST;
-import static io.ballerina.persist.PersistToolsConstants.USER;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.JDBC_URL_WITHOUT_DATABASE;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.JDBC_URL_WITH_DATABASE;
-import static io.ballerina.persist.nodegenerator.BalFileConstants.PERSIST;
-import static io.ballerina.persist.nodegenerator.BalFileConstants.PLACEHOLDER_PATTERN;
-import static io.ballerina.persist.nodegenerator.SyntaxTreeGenerator.populateConfigurations;
+import static io.ballerina.persist.objects.PersistToolsConstants.BALLERINA_MYSQL_DRIVER_NAME;
+import static io.ballerina.persist.objects.PersistToolsConstants.COMPONENT_IDENTIFIER;
+import static io.ballerina.persist.objects.PersistToolsConstants.MYSQL_CONNECTOR_NAME_PREFIX;
+import static io.ballerina.persist.objects.PersistToolsConstants.MYSQL_DRIVER_CLASS;
+import static io.ballerina.persist.objects.PersistToolsConstants.PASSWORD;
+import static io.ballerina.persist.objects.PersistToolsConstants.PERSIST_DIRECTORY;
+import static io.ballerina.persist.objects.PersistToolsConstants.PERSIST_TOML_FILE;
+import static io.ballerina.persist.objects.PersistToolsConstants.PLATFORM;
+import static io.ballerina.persist.objects.PersistToolsConstants.PROPERTY_KEY_PATH;
+import static io.ballerina.persist.objects.PersistToolsConstants.USER;
 
 /**
  * Class to implement "persist push" command for ballerina.
@@ -88,179 +80,173 @@ import static io.ballerina.persist.nodegenerator.SyntaxTreeGenerator.populateCon
 @CommandLine.Command(
         name = "push",
         description = "Create database tables corresponding to user-defined entities")
-
 public class Push implements BLauncherCmd {
 
+    private static final String CREATE_DATABASE_SQL_FORMAT = "CREATE DATABASE IF NOT EXISTS %s";
     private final PrintStream errStream = System.err;
-    private final PrintStream stdStream = System.out;
     private static final String COMMAND_IDENTIFIER = "persist-db-push";
-    Project balProject;
-    public String sourcePath = "";
-    Driver driver;
-    HashMap<String, String> configurations;
-    HashMap<String, String> persistConfigurations;
+    private final String sourcePath;
     @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
     private boolean helpFlag;
 
-    public Push() {}
+    public Push() {
+        this("");
+    }
+
+    public Push(String sourcePath) {
+        this.sourcePath = sourcePath;
+    }
 
     @Override
     public void execute() {
-        configurations = new HashMap<>();
-        String[] sqlScripts;
-        Statement statement;
-        Path absoluteSourcePath = Paths.get(this.sourcePath).toAbsolutePath();
-
         if (helpFlag) {
             String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMMAND_IDENTIFIER);
             errStream.println(commandUsageInfo);
             return;
         }
-        Path persistTomlPath = Paths.get(this.sourcePath, SUBMODULE_PERSIST, PERSIST_TOML_FILE);
-        Path databaseConfigurationBalPath = Paths.get(this.sourcePath, SUBMODULE_FOLDER, KEYWORD_CLIENTS,
-                DATABASE_CONFIGURATION_BAL);
-        File persistToml = new File(persistTomlPath.toString());
-        File databaseConfigurationsBal = new File(databaseConfigurationBalPath.toString());
-        if (!persistToml.exists() || !databaseConfigurationsBal.exists()) {
+
+        try {
+            ProjectLoader.loadProject(Paths.get(this.sourcePath));
+        } catch (ProjectException e) {
+            errStream.println("Not a Ballerina project (or any parent up to mount point)\n" +
+                    "You should run this command inside a Ballerina project.");
+            return;
+        }
+
+        Path projectPath = Paths.get(this.sourcePath).toAbsolutePath();
+        Path persistTomlPath = Paths.get(this.sourcePath, PERSIST_DIRECTORY, PERSIST_TOML_FILE);
+
+        if (!Files.exists(persistTomlPath)) {
             errStream.println("Persist project is not initiated. Please run `bal persist init` " +
                     "to initiate the project before the database schema generation. ");
             return;
         }
 
-        try  {
-            balProject = ProjectLoader.loadProject(Paths.get(sourcePath));
-            balProject = BuildProject.load(Paths.get(sourcePath).toAbsolutePath());
-            balProject.currentPackage().getCompilation();
-            persistConfigurations = SyntaxTreeGenerator.readPersistToml(Paths.get(this.sourcePath, PERSIST,
-                    PERSIST_TOML_FILE));
-            HashMap<String, String> templatedEntry = new HashMap<>();
-            for (Map.Entry<String, String> entry : persistConfigurations.entrySet()) {
-                if (Pattern.matches(PLACEHOLDER_PATTERN, persistConfigurations.get(entry.getKey()))) {
-                    templatedEntry.put(entry.getKey(), entry.getValue());
-                }
-            }
-            if (!templatedEntry.isEmpty()) {
-                HashMap<String, String> resolvedEntries = populatePlaceHolder(templatedEntry);
-                persistConfigurations.putAll(resolvedEntries);
-            }
+        try {
             EntityMetaData retEntityMetaData = BalProjectUtils.getEntitiesInBalFiles(this.sourcePath);
             ArrayList<Entity> entityArray = retEntityMetaData.entityArray;
-            sqlScripts = SqlScriptGenerationUtils.generateSqlScript(entityArray);
+            String[] sqlScripts = SqlScriptGenerationUtils.generateSqlScript(entityArray);
             SqlScriptGenerationUtils.writeScriptFile(sqlScripts,
-                    Paths.get(absoluteSourcePath.toString(), PERSIST));
-            loadJdbcDriver();
-        } catch (ProjectException | BalException  e) {
-            errStream.println(e.getMessage());
+                    Paths.get(projectPath.toString(), PERSIST_DIRECTORY));
+        } catch (ProjectException | BalException e) {
+            errStream.println("Error occurred while generating SQL schema. " + e.getMessage());
             return;
         }
-        String url = String.format(JDBC_URL_WITHOUT_DATABASE, MYSQL,
-                persistConfigurations.get(HOST).replaceAll("\"", ""), persistConfigurations.get(PORT));
-        String user = persistConfigurations.get(USER).replaceAll("\"", "");
-        String password = persistConfigurations.get(PASSWORD).replaceAll("\"", "");
-        String database = persistConfigurations.get(DATABASE).replaceAll("\"", "");
 
+        Driver driver;
+        PersistConfiguration persistConfigurations;
+        try {
+            Project balProject = BuildProject.load(projectPath); // refer the value from the project path
+            balProject.currentPackage().getCompilation();
+            driver = getJdbcDriver(balProject);
+            persistConfigurations = SyntaxTreeGenerator.readPersistToml(persistTomlPath);
+        } catch (BalException e) {
+            errStream.println("Error occurred while loading db configurations and driver. " + e.getMessage());
+            return;
+        }
+
+        String query = String.format(CREATE_DATABASE_SQL_FORMAT,
+                persistConfigurations.getDbConfig().getDatabase());
+        try (Connection connection = getDBConnection(driver, persistConfigurations, false)) {
+            ScriptRunner sr = new ScriptRunner(connection);
+            sr.runQuery(query);
+        } catch (SQLException e) {
+            errStream.println("Error occurred while creating the database, " +
+                    persistConfigurations.getDbConfig().getDatabase() + "." + e.getMessage());
+            return;
+        }
+
+        String sqlFilePath = Paths.get(this.sourcePath,
+                PERSIST_DIRECTORY, PersistToolsConstants.SQL_SCHEMA_FILE).toAbsolutePath().toString();
+        try (Connection connection = getDBConnection(driver, persistConfigurations, true);
+             Reader fileReader = new BufferedReader(new FileReader(sqlFilePath,
+                     StandardCharsets.UTF_8))) {
+            ScriptRunner sr = new ScriptRunner(connection);
+            sr.runScript(fileReader);
+        } catch (IOException e) {
+            errStream.println("Error occurred while reading SQL schema file, " + sqlFilePath + "." + e.getMessage());
+            return;
+        } catch (Exception e) {
+            errStream.println("Error occurred while executing SQL schema file, " + sqlFilePath + "." + e.getMessage());
+            return;
+        }
+        errStream.println("Created tables for entities in the database " +
+                persistConfigurations.getDbConfig().getDatabase() + ".");
+    }
+
+    private Connection getDBConnection(Driver driver, PersistConfiguration persistConfigurations, boolean withDB)
+            throws SQLException {
+        String host = persistConfigurations.getDbConfig().getHost();
+        int port = persistConfigurations.getDbConfig().getPort();
+        String user = persistConfigurations.getDbConfig().getUsername();
+        String password = persistConfigurations.getDbConfig().getPassword();
+        String database = persistConfigurations.getDbConfig().getDatabase();
+        String provider = persistConfigurations.getProvider();
+        String url;
+        if (withDB) {
+            url = String.format(JDBC_URL_WITH_DATABASE, provider,
+                    host, port,
+                    database);
+        } else {
+            url = String.format(JDBC_URL_WITHOUT_DATABASE, provider, host, port);
+        }
         Properties props = new Properties();
         props.put(USER, user);
         props.put(PASSWORD, password);
-        try (Connection connection = driver.connect(url, props)) {
-            ResultSet resultSet = connection.getMetaData().getCatalogs();
-            boolean databaseExists = false;
-            while (resultSet.next()) {
+        return driver.connect(url, props);
+    }
 
-                if (resultSet.getString(1).trim().equals(database)) {
-                    databaseExists = true;
-                    break;
-                }
+    private Driver getJdbcDriver(Project balProject) throws BalException {
+        Driver driver = null;
+        Path driverDirectoryPath = getDriverPath(balProject).getParent();
+        if (Objects.nonNull(driverDirectoryPath)) {
+            Path driverPath = driverDirectoryPath.toAbsolutePath();
+            URL[] urls = {};
+            try (JdbcDriverLoader driverLoader = new JdbcDriverLoader(urls, driverPath)) {
+                Class<?> drvClass = driverLoader.loadClass(MYSQL_DRIVER_CLASS);
+                driver = (Driver) drvClass.getDeclaredConstructor().newInstance();
+            } catch (ProjectException e) {
+                throw new BalException("Not a Ballerina project (or any parent up to mount point)\n" +
+                        "You should run this command inside a Ballerina project.");
+            } catch (ClassNotFoundException e) {
+                throw new BalException("Required database driver class not found. " + e.getMessage());
+            } catch (InstantiationException | InvocationTargetException e) {
+                throw new BalException("Error instantiation the jdbc driver. " + e.getMessage());
+            } catch (IllegalAccessException e) {
+                throw new BalException("Access denied while trying to instantiation the database driver. " +
+                        e.getMessage());
+            } catch (NoSuchMethodException e) {
+                throw new BalException("Method not found while trying to instantiate jdbc driver. "
+                        + e.getMessage());
+            } catch (IOException e) {
+                throw new BalException("Error in jdbc driver path : " + e.getMessage());
             }
-            if (!databaseExists) {
-                statement = connection.createStatement();
-                String query = String.format(CREATE_DATABASE_SQL, database);
-                statement.executeUpdate(query);
-                stdStream.println("Created Database : " + database + ".");
-            }
-        } catch (SQLException e) {
-            errStream.println("Error occurred while creating the database " + e.getMessage() + ".");
-            return;
         }
-
-        String databaseUrl = String.format(JDBC_URL_WITH_DATABASE, MYSQL,
-                    persistConfigurations.get(HOST).replaceAll("\"", ""), persistConfigurations.get(PORT),
-                persistConfigurations.get(DATABASE).replaceAll("\"", ""));
-
-        try (Connection connection = driver.connect(databaseUrl, props)) {
-            statement = connection.createStatement();
-            for (String sqlLine : sqlScripts) {
-                statement.executeUpdate(sqlLine);
-            }
-            statement.close();
-        } catch (SQLException e) {
-            errStream.println("Error while creating the tables in the database " + database + ". " +  e.getMessage());
-            return;
-        }
-        stdStream.println("Created tables for entities in the database " + database + ".");
-    }
-
-    public void setSourcePath(String sourcePath) {
-        this.sourcePath = sourcePath;
-    }
-
-    public HashMap<String, String> getConfigurations() {
-        return this.persistConfigurations;
-    }
-
-    private void loadJdbcDriver() throws BalException {
-        Path driverPath = getDriverPath().getParent().toAbsolutePath();
-        URL[] urls = {};
-        try {
-            JdbcDriverLoader driverLoader = new JdbcDriverLoader(urls, driverPath);
-            Class<?> drvClass = driverLoader.loadClass(MYSQL_DRIVER_CLASS);
-            driver = (Driver) drvClass.getDeclaredConstructor().newInstance();
-        } catch (ProjectException e) {
-            throw new BalException("Not a Ballerina project (or any parent up to mount point)\n" +
-                    "You should run this command inside a Ballerina project.");
-        } catch (ClassNotFoundException e) {
-            throw new BalException("Required database driver class not found. " + e.getMessage());
-        } catch (InstantiationException | InvocationTargetException e) {
-            throw new BalException("Error instantiation the jdbc driver. " + e.getMessage());
-        } catch (IllegalAccessException e) {
-            throw new BalException("Access denied while trying to instantiation the database driver. " +
-                    e.getMessage());
-        } catch (NoSuchMethodException e) {
-            throw new BalException("Method not found while trying to instantiate jdbc driver. "
-                    + e.getMessage());
-        } catch (MalformedURLException e) {
-            throw new BalException("Error in jdbc driver path : " + e.getMessage());
-        }
-    }
-
-    private HashMap<String, String> populatePlaceHolder(HashMap<String, String> templatedEntry)
-            throws BalException {
-        HashMap<String, TableNode> configs = SyntaxTreeGenerator.getConfigs(Paths.get(
-                this.sourcePath, CONFIG_SCRIPT_FILE).toAbsolutePath());
-
-        return populateConfigurations(templatedEntry, configs);
+        return driver;
     }
 
     @Override
     public void setParentCmdParser(CommandLine parentCmdParser) {
     }
+
     @Override
     public String getName() {
         return COMPONENT_IDENTIFIER;
     }
-    
+
     @Override
     public void printLongDesc(StringBuilder out) {
         out.append("Create databases and tables for the entity records defined in the Ballerina project")
                 .append(System.lineSeparator());
         out.append(System.lineSeparator());
     }
+
     @Override
     public void printUsage(StringBuilder stringBuilder) {
         stringBuilder.append("  ballerina " + COMPONENT_IDENTIFIER + " db push").append(System.lineSeparator());
     }
 
-    private Path getDriverPath() throws BalException {
+    private Path getDriverPath(Project balProject) throws BalException {
         String relativeLibPath;
 
         DependencyGraph<ResolvedPackageDependency> resolvedPackageDependencyDependencyGraph =
@@ -268,20 +254,24 @@ public class Push implements BLauncherCmd {
 
         ResolvedPackageDependency root = resolvedPackageDependencyDependencyGraph.getRoot();
 
-        Package mysql = resolvedPackageDependencyDependencyGraph.getDirectDependencies(root).stream().
+        Optional<ResolvedPackageDependency> mysqlDriverDependency = resolvedPackageDependencyDependencyGraph
+                .getDirectDependencies(root).stream().
                 filter(resolvedPackageDependency -> resolvedPackageDependency.packageInstance().
-                descriptor().toString().contains(BALLERINA_MYSQL_DRIVER_NAME)).findFirst().get().packageInstance();
+                        descriptor().toString().contains(BALLERINA_MYSQL_DRIVER_NAME)).findFirst();
 
-        List<Map<String, Object>> dependencies = mysql.manifest().platform(PLATFORM).dependencies();
+        if (mysqlDriverDependency.isPresent()) {
+            Package mysqlDriverPackage = mysqlDriverDependency.get().packageInstance();
+            List<Map<String, Object>> dependencies = mysqlDriverPackage.manifest().platform(PLATFORM).dependencies();
 
-        for (Map<String, Object> dependency : dependencies) {
-            if (dependency.get(PROPERTY_KEY_PATH).toString().contains(MYSQL_CONNECTOR_NAME_PREFIX)) {
-                relativeLibPath = dependency.get(PROPERTY_KEY_PATH).toString();
-                return mysql.project().sourceRoot().resolve(relativeLibPath);
+            for (Map<String, Object> dependency : dependencies) {
+                if (dependency.get(PROPERTY_KEY_PATH).toString().contains(MYSQL_CONNECTOR_NAME_PREFIX)) {
+                    relativeLibPath = dependency.get(PROPERTY_KEY_PATH).toString();
+                    return mysqlDriverPackage.project().sourceRoot().resolve(relativeLibPath);
+                }
             }
         }
         // Unreachable code since the driver jar is pulled from the central and stored in the local cache
         // when the project is being built prior to this function.
-        throw new BalException("Failed to retrieve MySQL driver path in the local cache. ");
+        throw new BalException("Failed to retrieve MySQL driver path in the local cache.");
     }
 }

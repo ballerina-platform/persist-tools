@@ -21,13 +21,12 @@ import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.compiler.syntax.tree.ImportDeclarationNode;
 import io.ballerina.compiler.syntax.tree.ModuleMemberDeclarationNode;
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
-import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator;
 import io.ballerina.persist.objects.BalException;
 import io.ballerina.persist.objects.Entity;
 import io.ballerina.persist.objects.EntityMetaData;
+import io.ballerina.persist.objects.PersistToolsConstants;
 import io.ballerina.persist.utils.BalProjectUtils;
-import io.ballerina.projects.Project;
 import io.ballerina.projects.ProjectException;
 import io.ballerina.projects.directory.ProjectLoader;
 import org.ballerinalang.formatter.core.Formatter;
@@ -42,12 +41,13 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Locale;
 
-import static io.ballerina.persist.PersistToolsConstants.PERSIST_TOML_FILE;
-import static io.ballerina.persist.PersistToolsConstants.SUBMODULE_PERSIST;
-import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_CLIENTS;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_MODULES;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.PATH_ENTITIES_FILE;
+import static io.ballerina.persist.objects.PersistToolsConstants.KEYWORD_CLIENTS;
+import static io.ballerina.persist.objects.PersistToolsConstants.PERSIST_DIRECTORY;
+import static io.ballerina.persist.objects.PersistToolsConstants.PERSIST_TOML_FILE;
 
 
 /**
@@ -58,7 +58,7 @@ import static io.ballerina.persist.nodegenerator.BalFileConstants.PATH_ENTITIES_
 @CommandLine.Command(
         name = "generate",
         description = "Generate Ballerina client object for the entity."
-        )
+)
 
 public class Generate implements BLauncherCmd {
 
@@ -69,11 +69,8 @@ public class Generate implements BLauncherCmd {
 
     private static final String COMMAND_IDENTIFIER = "persist-generate";
 
-    Project balProject;
-
-    String name;
-
-    public Generate() {}
+    public Generate() {
+    }
 
     @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
     private boolean helpFlag;
@@ -85,17 +82,15 @@ public class Generate implements BLauncherCmd {
             errStream.println(commandUsageInfo);
             return;
         }
-        try  {
-            balProject = ProjectLoader.loadProject(Paths.get(this.sourcePath));
-            name = balProject.currentPackage().descriptor().org().value() + "." + balProject.currentPackage()
-                    .descriptor().name().value();
+        try {
+            ProjectLoader.loadProject(Paths.get(this.sourcePath));
         } catch (ProjectException e) {
             errStream.println("Not a Ballerina project (or any parent up to mount point)\n" +
                     "You should run this command inside a Ballerina project. ");
             return;
         }
         try {
-            Path persistTomlPath = Paths.get(this.sourcePath, SUBMODULE_PERSIST, PERSIST_TOML_FILE);
+            Path persistTomlPath = Paths.get(this.sourcePath, PERSIST_DIRECTORY, PERSIST_TOML_FILE);
             File persistToml = new File(persistTomlPath.toString());
             if (!persistToml.exists()) {
                 errStream.println("Persist project is not initiated. Please run `bal persist init` " +
@@ -108,8 +103,6 @@ public class Generate implements BLauncherCmd {
             ArrayList<ImportDeclarationNode> imports = new ArrayList<>();
             if (entityArray.size() != 0) {
                 for (Entity entity : entityArray) {
-                    entity.setPackageName(balProject.currentPackage().descriptor().org().value() + "/"
-                            + balProject.currentPackage().descriptor().name().value());
                     generateClientBalFile(entity, imports);
                     outStream.printf("Generated Ballerina client file for entity %s, " +
                             "inside clients sub module.%n", entity.getEntityName());
@@ -125,7 +118,8 @@ public class Generate implements BLauncherCmd {
     private void generateClientBalFile(Entity entity, ArrayList<ImportDeclarationNode> imports) throws BalException {
         SyntaxTree balTree = BalSyntaxTreeGenerator.generateClientSyntaxTree(entity, imports);
         String clientPath = Paths.get(this.sourcePath, KEYWORD_MODULES, KEYWORD_CLIENTS,
-                    entity.getEntityName().toLowerCase() + "_client.bal").toAbsolutePath().toString();
+                        entity.getEntityName().toLowerCase(Locale.getDefault()) + "_client.bal")
+                .toAbsolutePath().toString();
         try {
             writeOutputFile(balTree, clientPath);
         } catch (IOException | FormatterException e) {
@@ -163,17 +157,18 @@ public class Generate implements BLauncherCmd {
     public void setParentCmdParser(CommandLine parentCmdParser) {
 
     }
+
     @Override
     public String getName() {
         return PersistToolsConstants.COMPONENT_IDENTIFIER;
     }
-    
+
     @Override
     public void printLongDesc(StringBuilder out) {
         out.append("Generate Client objects corresponding to persist entities").append(System.lineSeparator());
         out.append(System.lineSeparator());
     }
-    
+
     @Override
     public void printUsage(StringBuilder stringBuilder) {
         stringBuilder.append("  ballerina " + PersistToolsConstants.COMPONENT_IDENTIFIER + " generate").

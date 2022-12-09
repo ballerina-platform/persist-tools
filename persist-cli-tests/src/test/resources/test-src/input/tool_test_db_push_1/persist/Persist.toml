@@ -1,8 +1,6 @@
-provider = "mysql"
-
-[database]
+[database.mysql]
 host = "localhost"
 port = 3307
-user = "${foo.tool_test_db_push_1.clients.root}"
-password = "${tool_test_db_push_1.clients.password}"
-database = "${foo.tool_test_db_push_1.clients.database}"
+user = "root"
+password = "Test123#"
+database = "persist"

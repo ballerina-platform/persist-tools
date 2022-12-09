@@ -18,6 +18,7 @@
 
 package io.ballerina.persist.tools;
 
+import io.ballerina.persist.objects.BalException;
 import io.ballerina.persist.tools.utils.PersistTable;
 import io.ballerina.persist.tools.utils.PersistTableColumn;
 import jdk.jfr.Description;
@@ -43,7 +44,7 @@ public class ToolingDbPushTest {
 
     @Test()
     @Description("Database is not available and it is created while running the db push command")
-    public void testDbPushWithoutDatabase() {
+    public void testDbPushWithoutDatabase() throws BalException {
         ArrayList<PersistTable> tables = new ArrayList<>();
         tables.add(
                 new PersistTable("MedicalNeeds", "needId")
@@ -73,7 +74,7 @@ public class ToolingDbPushTest {
 
     @Test(dependsOnMethods = { "testDbPushWithoutDatabase" })
     @Description("Database already exists. An entity is removed. The database tables should not be affected.")
-    public void testDbPushEntityRemoved() {
+    public void testDbPushEntityRemoved() throws BalException {
         ArrayList<PersistTable> tables = new ArrayList<>();
         tables.add(
                 new PersistTable("MedicalNeeds", "needId")
@@ -95,15 +96,9 @@ public class ToolingDbPushTest {
         assertCreateDatabaseTables("tool_test_db_push_3", tables);
     }
 
-    @Test()
-    @Description("When the db push command is executed without the database configurations")
-    public void testDbPushWithoutConfigFile() {
-        assertGeneratedSourcesNegative("tool_test_db_push_4", DB_PUSH, null);
-    }
-
     @Test(dependsOnMethods = { "testDbPushEntityRemoved" })
     @Description("Database already exists. An entity is updated. The respective table should be updated.")
-    public void testDbPushEntityUpdated() {
+    public void testDbPushEntityUpdated() throws BalException {
         ArrayList<PersistTable> tables = new ArrayList<>();
         tables.add(
                 new PersistTable("MedicalNeeds", "fooNeedId")
