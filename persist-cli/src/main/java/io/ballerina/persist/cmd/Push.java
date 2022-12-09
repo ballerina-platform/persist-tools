@@ -211,7 +211,7 @@ public class Push implements BLauncherCmd {
             try {
                 driverLoader = new JdbcDriverLoader(urls, driverPath);
             } catch (IOException e) {
-                throw new BalException("Error in jdbc driver path : " + e.getMessage());
+                throw new BalException("Couldn't load the driver from the driver path. " + e.getMessage());
             }
         }
         return driverLoader;
