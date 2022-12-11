@@ -139,10 +139,11 @@ public class ToolingDbPushTest {
         assertGeneratedSources("tool_test_db_push_8", DB_PUSH);
     }
 
-    @Test()
+    @Test(enabled = false) // this is not valid because, defining entities in multiple modules is nit allowed.
     @Description("Test the created sql script content when entities are in the main and sub-modules")
     public void testDbPushWithSubModule() {
         assertGeneratedSources("tool_test_db_push_9", DB_PUSH);
+//        generateSourceCode(Paths.get(GENERATED_SOURCES_DIRECTORY, "tool_test_db_push_9"), DB_PUSH);
     }
 
     @Test()

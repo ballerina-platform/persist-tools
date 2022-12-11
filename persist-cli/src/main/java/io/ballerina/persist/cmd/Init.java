@@ -101,8 +101,7 @@ public class Init implements BLauncherCmd {
             errStream.println("`bal persist init` command can only be used once to initialize the project");
             return;
         }
-        Generate generateCMD = new Generate();
-        generateCMD.setSourcePath(Paths.get(sourcePath).toAbsolutePath().toString());
+        Generate generateCMD = new Generate(Paths.get(sourcePath).toAbsolutePath().toString());
         try {
             if (!databaseConfig.exists()) {
                 generateConfigurationBalFile();

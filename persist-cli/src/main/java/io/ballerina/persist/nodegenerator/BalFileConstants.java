@@ -175,6 +175,8 @@ public class BalFileConstants {
     public static final String KEYWORD_FINAL = "final";
     public static final String KEYWORD_REMOTE = "remote";
     public static final String KEYWORD_MODULES = "modules";
+
+    public static final String GENERATED_SOURCE_DIRECTORY = "generated";
     public static final String KEYWORD_CLIENTS = "clients";
     public static final String PATH_ENTITIES_FILE = "entities.bal";
     public static final String PATH_CONFIGURATION_BAL_FILE = "database_configuration.bal";

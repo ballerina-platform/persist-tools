@@ -27,17 +27,19 @@ import io.ballerina.persist.objects.Entity;
 import io.ballerina.persist.objects.EntityMetaData;
 import io.ballerina.persist.objects.PersistToolsConstants;
 import io.ballerina.persist.utils.BalProjectUtils;
+import io.ballerina.projects.Module;
 import io.ballerina.projects.ProjectException;
+import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.projects.directory.ProjectLoader;
 import org.ballerinalang.formatter.core.Formatter;
 import org.ballerinalang.formatter.core.FormatterException;
 import picocli.CommandLine;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -48,6 +50,8 @@ import static io.ballerina.persist.nodegenerator.BalFileConstants.PATH_ENTITIES_
 import static io.ballerina.persist.objects.PersistToolsConstants.KEYWORD_CLIENTS;
 import static io.ballerina.persist.objects.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.objects.PersistToolsConstants.PERSIST_TOML_FILE;
+import static io.ballerina.persist.utils.BalProjectUtils.getBuildProject;
+import static io.ballerina.persist.utils.BalProjectUtils.getEntityModule;
 
 
 /**
@@ -63,13 +67,17 @@ import static io.ballerina.persist.objects.PersistToolsConstants.PERSIST_TOML_FI
 public class Generate implements BLauncherCmd {
 
     private static final PrintStream errStream = System.err;
-    private static final PrintStream outStream = System.out;
 
-    private String sourcePath = "";
+    private final String sourcePath;
 
     private static final String COMMAND_IDENTIFIER = "persist-generate";
 
     public Generate() {
+        this("");
+    }
+
+    public Generate(String sourcePath) {
+        this.sourcePath = sourcePath;
     }
 
     @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
@@ -82,36 +90,48 @@ public class Generate implements BLauncherCmd {
             errStream.println(commandUsageInfo);
             return;
         }
+        Path projectPath = Paths.get(sourcePath);
         try {
-            ProjectLoader.loadProject(Paths.get(this.sourcePath));
+            ProjectLoader.loadProject(projectPath);
         } catch (ProjectException e) {
             errStream.println("Not a Ballerina project (or any parent up to mount point)\n" +
                     "You should run this command inside a Ballerina project. ");
             return;
         }
+
+        Path persistTomlPath = Paths.get(this.sourcePath, PERSIST_DIRECTORY, PERSIST_TOML_FILE);
+        //File persistToml = new File(persistTomlPath.toString());
+        if (!Files.exists(persistTomlPath)) {
+            errStream.println("Persist project is not initiated. Please run `bal persist init` " +
+                    "to initiate the project before generation");
+            return;
+        }
+
+        EntityMetaData entityMetaData;
         try {
-            Path persistTomlPath = Paths.get(this.sourcePath, PERSIST_DIRECTORY, PERSIST_TOML_FILE);
-            File persistToml = new File(persistTomlPath.toString());
-            if (!persistToml.exists()) {
-                errStream.println("Persist project is not initiated. Please run `bal persist init` " +
-                        "to initiate the project before generation");
-                return;
-            }
-            EntityMetaData retEntityMetaData = BalProjectUtils.getEntitiesInBalFiles(this.sourcePath);
-            ArrayList<Entity> entityArray = retEntityMetaData.entityArray;
-            ArrayList<ModuleMemberDeclarationNode> returnModuleMembers = retEntityMetaData.moduleMembersArray;
+            BuildProject buildProject = getBuildProject(projectPath);
+            Module module = getEntityModule(buildProject);
+            entityMetaData = BalProjectUtils.getEntities(module);
+        } catch (BalException e) {
+            errStream.println("Error while reading entities in the Ballerina project. " + e.getMessage());
+            return;
+        }
+
+        try {
+            ArrayList<Entity> entityArray = entityMetaData.entityArray;
+            ArrayList<ModuleMemberDeclarationNode> returnModuleMembers = entityMetaData.moduleMembersArray;
             ArrayList<ImportDeclarationNode> imports = new ArrayList<>();
             if (entityArray.size() != 0) {
                 for (Entity entity : entityArray) {
                     generateClientBalFile(entity, imports);
-                    outStream.printf("Generated Ballerina client file for entity %s, " +
+                    errStream.printf("Generated Ballerina client file for entity %s, " +
                             "inside clients sub module.%n", entity.getEntityName());
                 }
                 copyEntities(returnModuleMembers, imports);
-                outStream.println("Created entities.bal. ");
+                errStream.println("Created entities.bal. ");
             }
-        } catch (Exception e) {
-            errStream.println(e.getMessage());
+        } catch (BalException e) {
+            errStream.println("Error while generating clients for entities. " + e.getMessage());
         }
     }
 
@@ -147,10 +167,6 @@ public class Generate implements BLauncherCmd {
         try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8.name())) {
             writer.println(content);
         }
-    }
-
-    public void setSourcePath(String sourcePath) {
-        this.sourcePath = sourcePath;
     }
 
     @Override

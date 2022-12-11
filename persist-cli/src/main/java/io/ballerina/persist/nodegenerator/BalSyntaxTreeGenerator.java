@@ -169,8 +169,7 @@ public class BalSyntaxTreeGenerator {
     /**
      * method to read ballerina files.
      */
-    public static EntityMetaData getEntityMetadata(SyntaxTree balSyntaxTree)
-            throws IOException {
+    public static EntityMetaData getEntityMetadata(SyntaxTree balSyntaxTree) throws IOException {
         ArrayList<Entity> entityArray = new ArrayList<>();
         ArrayList<ModuleMemberDeclarationNode> entityMembers = new ArrayList<>();
         int index = -1;
@@ -178,14 +177,10 @@ public class BalSyntaxTreeGenerator {
         ModulePartNode rootNote = balSyntaxTree.rootNode();
         NodeList<ModuleMemberDeclarationNode> nodeList = rootNote.members();
         for (ModuleMemberDeclarationNode moduleNode : nodeList) {
-            ArrayList<String> keys = new ArrayList<>();
-            List<List<String>> uniqueConstraints = new ArrayList<>();
-            String tableName = null;
             if (moduleNode.kind() != SyntaxKind.TYPE_DEFINITION || ((TypeDefinitionNode) moduleNode)
                     .metadata().isEmpty()) {
                 continue;
             }
-
             for (AnnotationNode annotation : ((TypeDefinitionNode) moduleNode).metadata().get().annotations()) {
                 Node annotReference = annotation.annotReference();
                 if (annotReference.kind() != SyntaxKind.QUALIFIED_NAME_REFERENCE) {
@@ -195,6 +190,9 @@ public class BalSyntaxTreeGenerator {
                 if (qualifiedNameRef.identifier().text().equals(KEYWORD_ENTITY) && qualifiedNameRef
                         .modulePrefix().text().equals(PERSIST) && annotation.annotValue()
                         .isPresent()) {
+                    ArrayList<String> keys = new ArrayList<>();
+                    List<List<String>> uniqueConstraints = new ArrayList<>();
+                    String tableName = null;
                     index += 1;
                     entityMembers.add(moduleNode);
                     for (MappingFieldNode fieldNode : annotation.annotValue().get().fields()) {
