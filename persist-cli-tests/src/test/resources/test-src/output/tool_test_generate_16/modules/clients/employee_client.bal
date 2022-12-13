@@ -1,7 +1,8 @@
 // AUTO-GENERATED FILE. DO NOT MODIFY.
 
-// This file is an auto-generated script by Ballerina persistence layer for Employee.
+// This file is an auto-generated file by Ballerina persistence layer for Employee.
 // It should not be modified by hand.
+
 import ballerina/persist;
 import ballerina/sql;
 import ballerinax/mysql;
