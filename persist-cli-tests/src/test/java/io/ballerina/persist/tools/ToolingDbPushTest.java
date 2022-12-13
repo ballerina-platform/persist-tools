@@ -130,11 +130,9 @@ public class ToolingDbPushTest {
     @Description("When the db push command is executed with faulty credentials")
     public void testDbPushWithWrongCredentials() {
         assertGeneratedSourcesNegative("tool_test_db_push_7", DB_PUSH, null);
-
     }
-
     @Test()
-    @Description("Test the created sql script content when relation annotation hasn't properties")
+    @Description("Test the created sql script content when relation annotation hasn't properties.")
     public void testDbPush() {
         assertGeneratedSources("tool_test_db_push_8", DB_PUSH);
     }
@@ -149,5 +147,29 @@ public class ToolingDbPushTest {
     @Description("Test the created sql script content when relation annotation hasn't properties")
     public void testDbPushWithScriptHasUniqueConstraints() {
         assertGeneratedSources("tool_test_db_push_10", DB_PUSH);
+    }
+
+    @Test()
+    @Description("When the db push command is executed with faulty credentials vulnurable for injection attacks.")
+    public void testDbPushWithIllegalCredentials() {
+        assertGeneratedSourcesNegative("tool_test_db_push_11", DB_PUSH, null);
+    }
+
+    @Test()
+    @Description("When the db push command is executed with faulty credentials vulnurable for injection attacks.")
+    public void testDbPushWithIllegalCredentials2() {
+        assertGeneratedSourcesNegative("tool_test_db_push_12", DB_PUSH, null);
+    }
+
+    @Test()
+    @Description("When the db push command is executed with faulty credentials vulnurable for injection attacks.")
+    public void testDbPushWithIllegalCredentials3() {
+        assertGeneratedSourcesNegative("tool_test_db_push_13", DB_PUSH, null);
+    }
+
+    @Test()
+    @Description("When the db push command is executed with faulty credentials vulnurable for injection attacks.")
+    public void testDbPushWithEmptyCredentials() {
+        assertGeneratedSourcesNegative("tool_test_db_push_14", DB_PUSH, null);
     }
 }
