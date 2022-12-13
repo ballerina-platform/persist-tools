@@ -26,6 +26,7 @@ import io.ballerina.compiler.syntax.tree.ExpressionNode;
 import io.ballerina.compiler.syntax.tree.IdentifierToken;
 import io.ballerina.compiler.syntax.tree.ImportDeclarationNode;
 import io.ballerina.compiler.syntax.tree.ImportOrgNameNode;
+import io.ballerina.compiler.syntax.tree.ImportPrefixNode;
 import io.ballerina.compiler.syntax.tree.ListConstructorExpressionNode;
 import io.ballerina.compiler.syntax.tree.MappingConstructorExpressionNode;
 import io.ballerina.compiler.syntax.tree.MappingFieldNode;
@@ -112,12 +113,14 @@ import static io.ballerina.persist.nodegenerator.BalFileConstants.INIT_PERSIST_C
 import static io.ballerina.persist.nodegenerator.BalFileConstants.IS_SQL_ERROR;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.KEY;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_AUTOINCREMENT;
+import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_BALLERINAX;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_BOOLEAN;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_CLIENT_CLASS;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_ENTITY;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_ENTITY_NAME;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_ERR;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_KEYFIELDS;
+import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_MYSQLDRIVER;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_PARAMETERIZED_QUERY;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_PERSIST_CLIENT;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_PERSIST_SQL_CLIENT;
@@ -129,7 +132,6 @@ import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_STREAM
 import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_TABLE_NAME;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_VALUE;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.KEY_COLUMNS;
-import static io.ballerina.persist.nodegenerator.BalFileConstants.MYSQL_DRIVER_IMPORT;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.NOT_EXIST;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.NULLABLE_ANYDATA_STREAM_TYPE;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.NULLABLE_ERROR_STATEMENT;
@@ -157,6 +159,7 @@ import static io.ballerina.persist.nodegenerator.BalFileConstants.START_RECORD;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.VALUE;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.VALUE_TYPE_CHECK;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.VAR_ENTITY_RELATION;
+import static io.ballerina.persist.nodegenerator.SyntaxTreeConstants.SYNTAX_TREE_AS;
 import static io.ballerina.persist.nodegenerator.SyntaxTreeConstants.SYNTAX_TREE_KEYWORD_IMPORT;
 import static io.ballerina.persist.nodegenerator.SyntaxTreeConstants.SYNTAX_TREE_SEMICOLON;
 import static io.ballerina.persist.objects.PersistToolsConstants.ON_DELETE;
@@ -317,7 +320,7 @@ public class BalSyntaxTreeGenerator {
         NodeList<ImportDeclarationNode> imports = AbstractNodeFactory.createEmptyNodeList();
         NodeList<ModuleMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
         imports = imports.add(getImportDeclarationNode(BalFileConstants.KEYWORD_BALLERINA,
-                PERSIST, "", true));
+                PERSIST, "", true, null));
         for (ImportDeclarationNode impDec : importArray) {
             imports = imports.add(impDec);
         }
@@ -398,11 +401,11 @@ public class BalSyntaxTreeGenerator {
             }
         }
         imports = imports.add(getImportDeclarationNode(BalFileConstants.KEYWORD_BALLERINA, PERSIST,
-                entity.getEntityName(), true));
+                entity.getEntityName(), true, null));
         imports = imports.add(getImportDeclarationNode(BalFileConstants.KEYWORD_BALLERINA,
-                KEYWORD_SQL, entity.getEntityName(), false));
+                KEYWORD_SQL, entity.getEntityName(), false, null));
         imports = imports.add(getImportDeclarationNode(BalFileConstants.KEYWORD_BALLERINAX,
-                BalFileConstants.KEYWORD_MYSQL, entity.getEntityName(), false));
+                BalFileConstants.KEYWORD_MYSQL, entity.getEntityName(), false, null));
         String className = entity.getEntityName();
         boolean inclusions = false;
         boolean manyRelation = false;
@@ -531,10 +534,10 @@ public class BalSyntaxTreeGenerator {
         if (hasTime) {
             if (importsArray.isEmpty()) {
                 importsArray.add(getImportDeclarationNode(BalFileConstants.KEYWORD_BALLERINA,
-                        BalFileConstants.KEYWORD_TIME, entity.getEntityName(), false));
+                        BalFileConstants.KEYWORD_TIME, entity.getEntityName(), false, null));
             }
             imports = imports.add(getImportDeclarationNode(BalFileConstants.KEYWORD_BALLERINA,
-                    BalFileConstants.KEYWORD_TIME, entity.getEntityName(), false));
+                    BalFileConstants.KEYWORD_TIME, entity.getEntityName(), false, null));
         }
         Class client = createClientClass(entity, className, subFields, joinSubFields, keys, keyType, keyAutoInc,
                 inclusions);
@@ -1056,16 +1059,10 @@ public class BalSyntaxTreeGenerator {
     public static String generateDatabaseConfigSyntaxTree() throws FormatterException {
         NodeList<ImportDeclarationNode> imports = AbstractNodeFactory.createEmptyNodeList();
         NodeList<ModuleMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
-        StringBuilder driverBuilder = new StringBuilder();
-        driverBuilder.append(COMMENT_AUTOGENERATED);
-        driverBuilder.append(System.lineSeparator());
-        driverBuilder.append(System.lineSeparator());
-        driverBuilder.append(COMMENT_GENERATED_BY_BALLERINA);
-        driverBuilder.append(System.lineSeparator());
-        driverBuilder.append(COMMENT_SHOULD_NOT_BE_MODIFIED);
-        driverBuilder.append(System.lineSeparator());
-        driverBuilder.append(MYSQL_DRIVER_IMPORT);
-        imports = imports.add(NodeParser.parseImportDeclaration(driverBuilder.toString()));
+        ImportPrefixNode prefix = NodeFactory.createImportPrefixNode(SYNTAX_TREE_AS, AbstractNodeFactory.createToken(
+                SyntaxKind.UNDERSCORE_KEYWORD));
+
+        imports = imports.add(getImportDeclarationNode(KEYWORD_BALLERINAX, KEYWORD_MYSQLDRIVER, "", true, prefix));
         moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration(
                 BalFileConstants.CONFIGURABLE_PORT));
         moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration(
@@ -1095,7 +1092,8 @@ public class BalSyntaxTreeGenerator {
     }
 
     public static ImportDeclarationNode getImportDeclarationNode(String orgName, String moduleName, String entityName,
-                                                                 boolean includeAutogeneratedComment) {
+                                                                 boolean includeAutogeneratedComment,
+                                                                 ImportPrefixNode prefix) {
         Token orgNameToken = AbstractNodeFactory.createIdentifierToken(orgName);
         ImportOrgNameNode importOrgNameNode = NodeFactory.createImportOrgNameNode(
                 orgNameToken,
@@ -1126,7 +1124,7 @@ public class BalSyntaxTreeGenerator {
                 importToken,
                 importOrgNameNode,
                 moduleNodeList,
-                null,
+                prefix,
                 SYNTAX_TREE_SEMICOLON
         );
     }

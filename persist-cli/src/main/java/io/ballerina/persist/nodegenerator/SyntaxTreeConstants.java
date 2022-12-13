@@ -79,4 +79,8 @@ public class SyntaxTreeConstants {
     public static final Token SYNTAX_TREE_KEYWORD_CHECK = AbstractNodeFactory.createToken(SyntaxKind.CHECK_KEYWORD,
             AbstractNodeFactory.createEmptyMinutiaeList(),
             NodeFactory.createMinutiaeList(AbstractNodeFactory.createWhitespaceMinutiae(" ")));
+
+    public static final Token SYNTAX_TREE_AS = AbstractNodeFactory.createToken(SyntaxKind.AS_KEYWORD,
+            NodeFactory.createMinutiaeList(AbstractNodeFactory.createWhitespaceMinutiae(" ")),
+            NodeFactory.createMinutiaeList(AbstractNodeFactory.createWhitespaceMinutiae(" ")));
 }

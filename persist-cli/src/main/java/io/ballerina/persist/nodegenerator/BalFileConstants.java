@@ -166,6 +166,7 @@ public class BalFileConstants {
     public static final String KEYWORD_PERSIST_CLIENT = "persistClient";
     public static final String KEYWORD_SQL = "sql";
     public static final String KEYWORD_BALLERINAX = "ballerinax";
+    public static final String KEYWORD_MYSQLDRIVER = "mysql.driver";
     public static final String KEYWORD_ENTITY_NAME = "entityName";
     public static final String KEYWORD_PRIVATE = "private";
     public static final String KEYWORD_CLIENT = "client";
