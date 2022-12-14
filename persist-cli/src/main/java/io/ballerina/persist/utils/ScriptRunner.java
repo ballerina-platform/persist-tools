@@ -22,8 +22,6 @@ import java.io.BufferedReader;
 import java.io.PrintStream;
 import java.io.Reader;
 import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -128,35 +126,7 @@ public class ScriptRunner {
             String sql = command;
             // remove CR
             sql = sql.replace("\r\n", "\n");
-            boolean hasResults = statement.execute(sql);
-            while (!(!hasResults && statement.getUpdateCount() == -1)) {
-                printResults(statement, hasResults);
-                hasResults = statement.getMoreResults();
-            }
-        }
-    }
-
-    private void printResults(Statement statement, boolean hasResults) {
-        if (!hasResults) {
-            return;
-        }
-        try (ResultSet rs = statement.getResultSet()) {
-            ResultSetMetaData md = rs.getMetaData();
-            int cols = md.getColumnCount();
-            for (int i = 0; i < cols; i++) {
-                String name = md.getColumnLabel(i + 1);
-                errStream.print(name + "\t");
-            }
-            errStream.println();
-            while (rs.next()) {
-                for (int i = 0; i < cols; i++) {
-                    String value = rs.getString(i + 1);
-                    errStream.print(value + "\t");
-                }
-                errStream.println();
-            }
-        } catch (SQLException e) {
-            errStream.println("Error printing results: " + e.getMessage());
+            statement.execute(sql);
         }
     }
 }
