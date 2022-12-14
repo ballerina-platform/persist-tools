@@ -150,25 +150,25 @@ public class ToolingDbPushTest {
     }
 
     @Test()
-    @Description("When the db push command is executed with faulty credentials vulnurable for injection attacks.")
+    @Description("When the db push command is executed with faulty database name containing illegal characters.")
     public void testDbPushWithIllegalCredentials() {
         assertGeneratedSourcesNegative("tool_test_db_push_11", DB_PUSH, null);
     }
 
     @Test()
-    @Description("When the db push command is executed with faulty credentials vulnurable for injection attacks.")
+    @Description("When the db push command is executed with faulty database name containing illegal characters.")
     public void testDbPushWithIllegalCredentials2() {
         assertGeneratedSourcesNegative("tool_test_db_push_12", DB_PUSH, null);
     }
 
     @Test()
-    @Description("When the db push command is executed with faulty credentials vulnurable for injection attacks.")
+    @Description("When the db push command is executed with faulty database name containing illegal characters.")
     public void testDbPushWithIllegalCredentials3() {
         assertGeneratedSourcesNegative("tool_test_db_push_13", DB_PUSH, null);
     }
 
     @Test()
-    @Description("When the db push command is executed with faulty credentials vulnurable for injection attacks.")
+    @Description("When the db push command is executed with empty database name.")
     public void testDbPushWithEmptyCredentials() {
         assertGeneratedSourcesNegative("tool_test_db_push_14", DB_PUSH, null);
     }
