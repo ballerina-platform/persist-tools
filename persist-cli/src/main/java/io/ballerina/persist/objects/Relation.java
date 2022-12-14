@@ -17,7 +17,7 @@
  */
 package io.ballerina.persist.objects;
 
-import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Class to store entity relations.
@@ -36,70 +36,35 @@ public class Relation {
         NONE
     }
 
-    private final ArrayList<String> keyColumns;
-    private final ArrayList<String> references;
+    private List<String> keyColumns;
+    private List<String> references;
 
-    private ArrayList<FieldMetaData> relatedFields = new ArrayList<>();
-    private final boolean isChild;
-    private String relatedType;
-    private String refTable;
-    private String relatedInstance;
-    private boolean parentIncluded = false;
-    public RelationType relationType = RelationType.ONE;
-    public String onDelete = "";
-    public String onUpdate = "";
+    private final boolean owner;
+    private RelationType relationType;
+    private final String onDelete;
+    private final String onUpdate;
+
+    private Entity assocEntity;
 
 
-    public Relation(String relatedType, String relatedInstance, ArrayList<String> keyColumns,
-                    ArrayList<String> references, boolean isChild) {
+    private Relation(List<String> keyColumns,
+                     List<String> references, String onDelete, String onUpdate, RelationType relationType,
+                     Entity assocEntity, boolean owner) {
         this.keyColumns = keyColumns;
         this.references = references;
-        this.relatedType = relatedType;
-        this.isChild = isChild;
-        this.relatedInstance = relatedInstance;
-    }
-
-    public void setOnDelete(String onDelete) {
         this.onDelete = onDelete;
-    }
-
-    public void setOnUpdate(String onUpdate) {
         this.onUpdate = onUpdate;
+        this.relationType = relationType;
+        this.assocEntity = assocEntity;
+        this.owner = owner;
     }
 
-    public String getRefTable() {
-        return this.refTable;
-    }
-
-    public void setRefTable(String refTable) {
-        this.refTable = refTable;
-    }
-
-    public String getRelatedType() {
-        return this.relatedType;
-    }
-    public void setRelatedType(String relatedType) {
-        this.relatedType = relatedType;
-    }
-
-    public String getRelatedInstance() {
-        return relatedInstance;
-    }
-
-    public void setRelatedInstance(String relatedInstance) {
-        this.relatedInstance = relatedInstance;
-    }
-
-    public ArrayList<String> getKeyColumns() {
+    public List<String> getKeyColumns() {
         return keyColumns;
     }
 
-    public ArrayList<String> getReferences() {
+    public List<String> getReferences() {
         return references;
-    }
-
-    public ArrayList<FieldMetaData> getRelatedFields() {
-        return relatedFields;
     }
 
     public String getOnDelete() {
@@ -110,18 +75,82 @@ public class Relation {
         return onUpdate;
     }
 
-    public void setRelatedFields(ArrayList<FieldMetaData> relatedFields) {
-        this.relatedFields = relatedFields;
+    public boolean isOwner() {
+        return owner;
     }
 
-    public boolean isChild() {
-        return isChild;
+    public RelationType getRelationType() {
+        return relationType;
     }
 
-    public boolean isParentIncluded() {
-        return this.parentIncluded;
+    public void setKeyColumns(List<String> keyColumns) {
+        this.keyColumns = keyColumns;
     }
-    public void setParentIncluded(boolean parentIncluded) {
-        this.parentIncluded = parentIncluded;
+
+    public void setReferences(List<String> references) {
+        this.references = references;
+    }
+
+    public void setRelationType(RelationType relationType) {
+        this.relationType = relationType;
+    }
+
+    public Entity getAssocEntity() {
+        return assocEntity;
+    }
+
+    public void setAssocEntity(Entity assocEntity) {
+        this.assocEntity = assocEntity;
+    }
+
+    public static Relation.Builder newBuilder() {
+        return new Relation.Builder();
+    }
+
+    /**
+     * Entity Field Relation Definition.Builder.
+     */
+    public static class Builder {
+        List<String> keys = null;
+        List<String> references = null;
+        String onDeleteAction;
+        String onUpdateAction;
+        Entity assocEntity = null;
+
+        public RelationType relationType = RelationType.ONE;
+
+        boolean owner;
+
+        public void setKeys(List<String> keys) {
+            this.keys = keys;
+        }
+
+        public void setReferences(List<String> references) {
+            this.references = references;
+        }
+
+        public void setOnDeleteAction(String onDeleteAction) {
+            this.onDeleteAction = onDeleteAction;
+        }
+
+        public void setOnUpdateAction(String onUpdateAction) {
+            this.onUpdateAction = onUpdateAction;
+        }
+
+        public void setOwner(boolean owner) {
+            this.owner = owner;
+        }
+
+        public void setAssocEntity(Entity assocEntity) {
+            this.assocEntity = assocEntity;
+        }
+
+        public void setRelationType(RelationType relationType) {
+            this.relationType = relationType;
+        }
+
+        public Relation build() {
+            return new Relation(keys, references, onDeleteAction, onUpdateAction, relationType, assocEntity, owner);
+        }
     }
 }

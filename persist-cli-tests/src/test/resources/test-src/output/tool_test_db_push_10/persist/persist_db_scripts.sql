@@ -15,4 +15,4 @@ CREATE TABLE Profiles (
 	age DECIMAL NOT NULL,
 	PRIMARY KEY(id),
 	UNIQUE KEY(name)
-)  AUTO_INCREMENT = 5;
+);

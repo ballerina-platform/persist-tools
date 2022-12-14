@@ -51,9 +51,10 @@ import io.ballerina.persist.components.Enum;
 import io.ballerina.persist.components.Function;
 import io.ballerina.persist.components.IfElse;
 import io.ballerina.persist.components.TypeDescriptor;
+import io.ballerina.persist.objects.AutoIncrement;
 import io.ballerina.persist.objects.Entity;
-import io.ballerina.persist.objects.EntityMetaData;
-import io.ballerina.persist.objects.FieldMetaData;
+import io.ballerina.persist.objects.EntityField;
+import io.ballerina.persist.objects.Module;
 import io.ballerina.persist.objects.PersistToolsConstants;
 import io.ballerina.persist.objects.Relation;
 import io.ballerina.tools.text.TextDocument;
@@ -64,11 +65,11 @@ import org.ballerinalang.formatter.core.FormatterException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static io.ballerina.persist.nodegenerator.BalFileConstants.ANYDATASTREAM_IS_STREAM_TYPE;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.ANYDATA_KETWORD;
@@ -88,7 +89,6 @@ import static io.ballerina.persist.nodegenerator.BalFileConstants.DEFILE_INCLUDE
 import static io.ballerina.persist.nodegenerator.BalFileConstants.DEFINE_PERSIST_CLIENTS_MANY;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.DOUBLE_QUOTE;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.EMPTY_STRING;
-import static io.ballerina.persist.nodegenerator.BalFileConstants.END_CLOSED_RECORD;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.END_RECORD;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.ENTITY_RELATIONS_ARRAY;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.ENUM_ENTRY;
@@ -128,8 +128,8 @@ import static io.ballerina.persist.nodegenerator.BalFileConstants.MYSQL_DRIVER_I
 import static io.ballerina.persist.nodegenerator.BalFileConstants.NOT_EXIST;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.NULLABLE_ANYDATA_STREAM_TYPE;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.NULLABLE_ERROR_STATEMENT;
-import static io.ballerina.persist.nodegenerator.BalFileConstants.PERSIST;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.PERSIST_ERROR;
+import static io.ballerina.persist.nodegenerator.BalFileConstants.PERSIST_MODULE;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.READ_BY_KEY_RETURN;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.READ_BY_KEY_RETURN_RELATION;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.RECORD_CHECK;
@@ -147,7 +147,6 @@ import static io.ballerina.persist.nodegenerator.BalFileConstants.SEMICOLON;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.SINGLE_QUOTE;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.SPACE;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.SPECIFIC_ERROR;
-import static io.ballerina.persist.nodegenerator.BalFileConstants.START_CLOSED_RECORD;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.START_RECORD;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.VALUE;
 import static io.ballerina.persist.nodegenerator.BalFileConstants.VALUE_TYPE_CHECK;
@@ -164,37 +163,174 @@ import static io.ballerina.persist.objects.PersistToolsConstants.UNIQUE_CONSTRAI
  */
 public class BalSyntaxTreeGenerator {
 
-    private BalSyntaxTreeGenerator() {}
+    private BalSyntaxTreeGenerator() {
+    }
 
     /**
      * method to read ballerina files.
      */
-    public static EntityMetaData getEntityMetadata(SyntaxTree balSyntaxTree) throws IOException {
-        ArrayList<Entity> entityArray = new ArrayList<>();
-        ArrayList<ModuleMemberDeclarationNode> entityMembers = new ArrayList<>();
-        int index = -1;
-        int count;
+    public static void populateEntities(Module.Builder moduleBuilder, SyntaxTree balSyntaxTree) throws IOException {
         ModulePartNode rootNote = balSyntaxTree.rootNode();
         NodeList<ModuleMemberDeclarationNode> nodeList = rootNote.members();
+        Entity.Builder entityBuilder = null;
         for (ModuleMemberDeclarationNode moduleNode : nodeList) {
             if (moduleNode.kind() != SyntaxKind.TYPE_DEFINITION || ((TypeDefinitionNode) moduleNode)
                     .metadata().isEmpty()) {
                 continue;
             }
-            for (AnnotationNode annotation : ((TypeDefinitionNode) moduleNode).metadata().get().annotations()) {
-                Node annotReference = annotation.annotReference();
+            TypeDefinitionNode typeDefinitionNode = (TypeDefinitionNode) moduleNode;
+            if (typeDefinitionNode.metadata().isEmpty()) {
+                continue;
+            }
+            for (AnnotationNode annotationNode : typeDefinitionNode.metadata().get().annotations()) {
+                Node annotReference = annotationNode.annotReference();
                 if (annotReference.kind() != SyntaxKind.QUALIFIED_NAME_REFERENCE) {
                     continue;
                 }
                 QualifiedNameReferenceNode qualifiedNameRef = (QualifiedNameReferenceNode) annotReference;
                 if (qualifiedNameRef.identifier().text().equals(KEYWORD_ENTITY) && qualifiedNameRef
-                        .modulePrefix().text().equals(PERSIST) && annotation.annotValue()
+                        .modulePrefix().text().equals(PERSIST_MODULE) && annotationNode.annotValue()
                         .isPresent()) {
-                    ArrayList<String> keys = new ArrayList<>();
-                    List<List<String>> uniqueConstraints = new ArrayList<>();
-                    String tableName = null;
-                    index += 1;
-                    entityMembers.add(moduleNode);
+                    entityBuilder = Entity.newBuilder(typeDefinitionNode.typeName().text().trim());
+                    entityBuilder.setDeclarationNode(moduleNode);
+                    for (MappingFieldNode fieldNode : annotationNode.annotValue().get().fields()) {
+                        if (fieldNode.kind() != SyntaxKind.SPECIFIC_FIELD) {
+                            continue;
+                        }
+                        SpecificFieldNode specificField = (SpecificFieldNode) fieldNode;
+                        if (specificField.fieldName().kind() != SyntaxKind.IDENTIFIER_TOKEN ||
+                                specificField.valueExpr().isEmpty()) {
+                            continue;
+                        }
+                        ExpressionNode valueNode = specificField.valueExpr().get();
+                        if (specificField.fieldName().toString().trim().equals(KEY)) {
+                            List<String> keyArray = ((ListConstructorExpressionNode) valueNode)
+                                    .expressions().stream().map(node -> node.toSourceCode().trim().replaceAll(
+                                            DOUBLE_QUOTE, EMPTY_STRING)).collect(Collectors.toList());
+                            entityBuilder.setKeys(keyArray);
+                        } else if (specificField.fieldName().toSourceCode().trim().equals(KEYWORD_TABLE_NAME)) {
+                            entityBuilder.setTableName(((BasicLiteralNode) valueNode).literalToken().text());
+                        } else if (specificField.fieldName().toString().trim().equals(UNIQUE_CONSTRAINTS)) {
+                            for (Node node : ((ListConstructorExpressionNode) valueNode).expressions()) {
+                                List<String> keyArray = ((ListConstructorExpressionNode) node)
+                                        .expressions().stream().map(uniqueNode ->
+                                                uniqueNode.toSourceCode().trim().replaceAll(
+                                                        DOUBLE_QUOTE, EMPTY_STRING)).collect(Collectors.toList());
+                                entityBuilder.addUniqueKeys(keyArray);
+                            }
+                        }
+                    }
+                }
+            }
+            // If the record is not an entity, no need to process further
+            if (entityBuilder == null) {
+                continue;
+            }
+
+            RecordTypeDescriptorNode recordDesc = (RecordTypeDescriptorNode) ((TypeDefinitionNode) moduleNode)
+                    .typeDescriptor();
+            for (Node node : recordDesc.fields()) {
+                EntityField.Builder fieldBuilder;
+                if (node.kind() == SyntaxKind.RECORD_FIELD_WITH_DEFAULT_VALUE) {
+                    RecordFieldWithDefaultValueNode fieldNode = (RecordFieldWithDefaultValueNode) node;
+                    fieldBuilder = EntityField.newBuilder(fieldNode.fieldName().text().trim());
+                    String fType;
+                    if (fieldNode.typeName().kind().equals(SyntaxKind.ARRAY_TYPE_DESC)) {
+                        ArrayTypeDescriptorNode arrayTypeDescriptorNode = (ArrayTypeDescriptorNode)
+                                fieldNode.typeName();
+                        fType = arrayTypeDescriptorNode.memberTypeDesc().toSourceCode().trim();
+                        fieldBuilder.setArrayType(true);
+                    } else {
+                        fType = fieldNode.typeName().toSourceCode().trim();
+                    }
+                    fieldBuilder.setType(fType);
+                    Optional<MetadataNode> metadata = fieldNode.metadata();
+                    if (metadata.isPresent()) {
+                        MetadataNode metadataNode = metadata.get();
+                        processFieldAnnotations(fieldBuilder, metadataNode);
+                    }
+                    entityBuilder.addField(fieldBuilder.build());
+                } else if (node.kind() == SyntaxKind.RECORD_FIELD) {
+                    RecordFieldNode fieldNode = (RecordFieldNode) node;
+                    fieldBuilder = EntityField.newBuilder(fieldNode.fieldName().text().trim());
+                    String fType;
+                    if (fieldNode.typeName().kind().equals(SyntaxKind.ARRAY_TYPE_DESC)) {
+                        ArrayTypeDescriptorNode arrayTypeDescriptorNode = (ArrayTypeDescriptorNode)
+                                fieldNode.typeName();
+                        fType = arrayTypeDescriptorNode.memberTypeDesc().toSourceCode().trim();
+                        fieldBuilder.setArrayType(true);
+                    } else {
+                        fType = fieldNode.typeName().toSourceCode().trim();
+                    }
+                    fieldBuilder.setType(fType);
+                    RecordFieldNode recordFieldNode = (RecordFieldNode) node;
+                    if (recordFieldNode.metadata().isPresent()) {
+                        MetadataNode metadataNode = recordFieldNode.metadata().get();
+                        processFieldAnnotations(fieldBuilder, metadataNode);
+                    }
+                    entityBuilder.addField(fieldBuilder.build());
+                }
+            }
+            Entity entity = entityBuilder.build();
+            moduleBuilder.addEntity(entity.getEntityName(), entity);
+        }
+    }
+
+    private static void processFieldAnnotations(EntityField.Builder fieldBuilder, MetadataNode metadataNode) {
+        NodeList<AnnotationNode> annotations = metadataNode.annotations();
+        for (AnnotationNode annotation : annotations) {
+            Node annotReference = annotation.annotReference();
+            if (annotReference.kind() != SyntaxKind.QUALIFIED_NAME_REFERENCE) {
+                continue;
+            }
+            QualifiedNameReferenceNode qualifiedNameRef = (QualifiedNameReferenceNode) annotReference;
+            if (qualifiedNameRef.identifier().text().equals(KEYWORD_AUTOINCREMENT) && qualifiedNameRef
+                    .modulePrefix().text().equals(PERSIST_MODULE)) {
+                AutoIncrement.Builder aiBuilder = AutoIncrement.newBuilder();
+                Optional<MappingConstructorExpressionNode> annotationFields = annotation.annotValue();
+                if (annotationFields.isPresent()) {
+                    for (MappingFieldNode mappingFieldNode : annotationFields.get().fields()) {
+                        SpecificFieldNode specificFieldNode = (SpecificFieldNode) mappingFieldNode;
+                        if (specificFieldNode.fieldName().toSourceCode().trim().
+                                equals(PersistToolsConstants.START_VALUE)) {
+                            Optional<ExpressionNode> valueExpr = specificFieldNode.valueExpr();
+                            valueExpr.ifPresent(expressionNode ->
+                                    aiBuilder.setStartValue(Integer.parseInt(expressionNode.toSourceCode().trim())));
+                        }
+                        if (specificFieldNode.fieldName().toSourceCode().trim().
+                                equals(PersistToolsConstants.INCREMENT)) {
+                            Optional<ExpressionNode> valueExpr = specificFieldNode.valueExpr();
+                            valueExpr.ifPresent(expressionNode ->
+                                    aiBuilder.setInterval(Integer.parseInt(expressionNode.toSourceCode().trim())));
+                        }
+                    }
+                }
+                fieldBuilder.setAutoGenerated(aiBuilder.build());
+            } else if (qualifiedNameRef.identifier().text().trim().equals(PersistToolsConstants.STRING) &&
+                    qualifiedNameRef.modulePrefix().text().trim().equals(PersistToolsConstants.CONSTRAINT)) {
+                Optional<MappingConstructorExpressionNode> annotationFields = annotation.annotValue();
+                if (annotationFields.isPresent()) {
+                    for (MappingFieldNode mappingFieldNode : annotationFields.get().fields()) {
+                        SpecificFieldNode specificFieldNode = (SpecificFieldNode) mappingFieldNode;
+                        String fieldName = specificFieldNode.fieldName().toSourceCode().trim();
+                        if (fieldName.equals(PersistToolsConstants.MAX_LENGTH)) {
+                            Optional<ExpressionNode> valueExpr = specificFieldNode.valueExpr();
+                            valueExpr.ifPresent(expressionNode ->
+                                    fieldBuilder.setMaxLength(
+                                            Integer.parseInt(expressionNode.toSourceCode().trim())));
+                        } else if (fieldName.equals(PersistToolsConstants.LENGTH)) {
+                            Optional<ExpressionNode> valueExpr = specificFieldNode.valueExpr();
+                            if (valueExpr.isPresent()) {
+                                valueExpr.ifPresent(expressionNode -> fieldBuilder.setMaxLength(
+                                        Integer.parseInt(expressionNode.toSourceCode().trim())));
+                            }
+                        }
+                    }
+                }
+            } else if (qualifiedNameRef.identifier().text().equals(KEYWORD_RELATION) && qualifiedNameRef.modulePrefix()
+                    .text().equals(PERSIST_MODULE)) {
+                Relation.Builder relationBuilder = Relation.newBuilder();
+                if (annotation.annotValue().isPresent()) {
                     for (MappingFieldNode fieldNode : annotation.annotValue().get().fields()) {
                         if (fieldNode.kind() != SyntaxKind.SPECIFIC_FIELD) {
                             continue;
@@ -205,122 +341,81 @@ public class BalSyntaxTreeGenerator {
                             continue;
                         }
                         ExpressionNode valueNode = specificField.valueExpr().get();
-                        if (((SpecificFieldNode) fieldNode).fieldName().toString().trim().equals(KEY)) {
-                            keys = new ArrayList<>();
-                            Iterator<Node> listIterator = ((ListConstructorExpressionNode) valueNode)
-                                    .expressions().iterator();
-                            count = 0;
-                            while (listIterator.hasNext()) {
-                                keys.add(count, listIterator.next().toSourceCode());
-                                count += 1;
+                        String fieldName = ((SpecificFieldNode) fieldNode).fieldName().toString().trim();
+                        switch (fieldName) {
+                            case KEY_COLUMNS: {
+                                List<String> keys = ((ListConstructorExpressionNode) valueNode)
+                                        .expressions().stream().map(node -> node.toSourceCode().replaceAll(
+                                                DOUBLE_QUOTE, EMPTY_STRING)).collect(Collectors.toList());
+                                relationBuilder.setKeys(keys);
+                                break;
                             }
-                        } else if (((SpecificFieldNode) fieldNode).fieldName().toSourceCode().trim()
-                                .equals(KEYWORD_TABLE_NAME)) {
-                            tableName = ((BasicLiteralNode) valueNode).literalToken().text()
-                                    .replaceAll(DOUBLE_QUOTE, EMPTY_STRING);
-                        } else if (((SpecificFieldNode) fieldNode).fieldName().toString().trim().
-                                equals(UNIQUE_CONSTRAINTS)) {
-                            uniqueConstraints = new ArrayList<>();
-                            for (Node node : ((ListConstructorExpressionNode) valueNode).expressions()) {
-                                List<String> uniqueConstraint = new ArrayList<>();
-                                for (Node value : ((ListConstructorExpressionNode) node).expressions()) {
-                                    uniqueConstraint.add(value.toSourceCode());
-                                }
-                                uniqueConstraints.add(uniqueConstraint);
+                            case KEYWORD_REFERENCE: {
+                                List<String> references = ((ListConstructorExpressionNode) valueNode)
+                                        .expressions().stream().map(node -> node.toSourceCode().replaceAll(
+                                                DOUBLE_QUOTE, EMPTY_STRING)).collect(Collectors.toList());
+                                relationBuilder.setReferences(references);
+                                break;
                             }
+                            case ON_DELETE:
+                                relationBuilder.setOnDeleteAction(valueNode.toSourceCode());
+                                break;
+                            case ON_UPDATE:
+                                relationBuilder.setOnUpdateAction(valueNode.toSourceCode());
+                                break;
+                            default:
+                                // Do nothing.
                         }
                     }
-                    if (tableName == null) {
-                        tableName = ((TypeDefinitionNode) moduleNode).typeName().text().trim();
-                    }
-                    entityArray.add(index, new Entity(getArray(keys), tableName, uniqueConstraints));
                 }
-            }
-
-            RecordTypeDescriptorNode recordDesc = (RecordTypeDescriptorNode) ((TypeDefinitionNode) moduleNode)
-                    .typeDescriptor();
-            entityArray.get(index).setEntityName(((TypeDefinitionNode) moduleNode).typeName().text());
-            for (Node node : recordDesc.fields()) {
-                if (node.kind() == SyntaxKind.RECORD_FIELD_WITH_DEFAULT_VALUE) {
-                    RecordFieldWithDefaultValueNode fieldNode = (RecordFieldWithDefaultValueNode) node;
-                    String fName = fieldNode.fieldName().text().trim();
-                    String fType;
-                    if (fieldNode.typeName().kind().equals(SyntaxKind.ARRAY_TYPE_DESC)) {
-                        ArrayTypeDescriptorNode arrayTypeDescriptorNode = (ArrayTypeDescriptorNode)
-                                fieldNode.typeName();
-                        fType = arrayTypeDescriptorNode.memberTypeDesc().toSourceCode().trim();
-
-                    } else {
-                        fType = fieldNode.typeName().toSourceCode().trim();
-                    }
-                    FieldMetaData field = new FieldMetaData(fName, fType);
-                    RecordFieldWithDefaultValueNode recordFieldWithDefaultValueNode =
-                            (RecordFieldWithDefaultValueNode) node;
-                    Optional<MetadataNode> metadata = recordFieldWithDefaultValueNode.metadata();
-                    if (metadata.isPresent()) {
-                        MetadataNode fieldMetaD = metadata.get();
-                        Relation relation = readMetaData(fName, fType, fieldMetaD);
-                        processAutoIncrement(entityArray, fieldMetaD, field,
-                                recordFieldWithDefaultValueNode.expression().toSourceCode(), index);
-                        if (relation.getKeyColumns() != null && relation.getReferences() != null) {
-                            entityArray.get(index).getRelations().add(relation);
-                        }
-                    }
-                    if (((RecordFieldWithDefaultValueNode) node).typeName().kind() == SyntaxKind.ARRAY_TYPE_DESC) {
-                        field.setIsRelationType(Relation.RelationType.MANY);
-                    }
-                    entityArray.get(index).addField(field);
-                } else if (node.kind() == SyntaxKind.RECORD_FIELD) {
-                    RecordFieldNode fieldNode = (RecordFieldNode) node;
-                    String fName = fieldNode.fieldName().text().trim();
-                    String fType;
-                    if (fieldNode.typeName().kind().equals(SyntaxKind.ARRAY_TYPE_DESC)) {
-                        ArrayTypeDescriptorNode arrayTypeDescriptorNode = (ArrayTypeDescriptorNode)
-                                fieldNode.typeName();
-                        fType = arrayTypeDescriptorNode.memberTypeDesc().toSourceCode().trim();
-
-                    } else {
-                        fType = fieldNode.typeName().toSourceCode().trim();
-                    }
-                    FieldMetaData field;
-                    RecordFieldNode recordFieldNode = (RecordFieldNode) node;
-                    field = new FieldMetaData(fName, fType);
-                    if (recordFieldNode.metadata().isPresent()) {
-                        MetadataNode fieldMetaD = ((RecordFieldNode) node).metadata().get();
-                        Relation relation = readMetaData(fName, fType, fieldMetaD);
-                        processAutoIncrement(entityArray, fieldMetaD, field, "", index);
-                        if (relation.getKeyColumns() != null && relation.getReferences() != null) {
-                            entityArray.get(index).getRelations().add(relation);
-                            field.setIsRelationType(Relation.RelationType.ONE);
-                        }
-                    }
-                    if (((RecordFieldNode) node).typeName().kind() == SyntaxKind.ARRAY_TYPE_DESC) {
-                        field.setIsRelationType(Relation.RelationType.MANY);
-                    }
-                    entityArray.get(index).addField(field);
-                }
+                relationBuilder.setOwner(true);
+                fieldBuilder.setRelation(relationBuilder.build());
             }
         }
-        return new EntityMetaData(entityArray, entityMembers);
     }
 
-    public static SyntaxTree copyEntities(ArrayList<ModuleMemberDeclarationNode> entityMembers,
-                                          ArrayList<ImportDeclarationNode> importArray) {
-        NodeList<ImportDeclarationNode> imports = AbstractNodeFactory.createEmptyNodeList();
-        NodeList<ModuleMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
-        imports = imports.add(getImportDeclarationNode(BalFileConstants.KEYWORD_BALLERINA,
-                PERSIST));
-        for (ImportDeclarationNode impDec : importArray) {
-            imports = imports.add(impDec);
+    public static void inferRelationDetails(Module entityModule) {
+        Map<String, Entity> entityMap = entityModule.getEntityMap();
+        for (Entity entity : entityMap.values()) {
+            List<EntityField> fields = entity.getFields();
+            fields.stream().filter(field -> field.getRelation() != null).filter(field -> field.getRelation().isOwner())
+                    .forEach(field -> {
+                        String fieldType = field.getFieldType();
+                        field.getRelation().setRelationType(field.isArrayType() ?
+                                Relation.RelationType.MANY : Relation.RelationType.ONE);
+                        Entity assocEntity = entityMap.get(fieldType);
+                        if (assocEntity == null) {
+                            return;
+                        }
+                        field.getRelation().setAssocEntity(assocEntity);
+                        List<String> keyColumns = field.getRelation().getKeyColumns();
+                        if (keyColumns == null || keyColumns.size() == 0) {
+                            keyColumns = assocEntity.getKeys().stream().map(key ->
+                                    assocEntity.getEntityName().toLowerCase(Locale.getDefault())
+                                            + key.substring(0, 1).toUpperCase(Locale.getDefault())
+                                            + key.substring(1)).collect(Collectors.toList());
+                            field.getRelation().setKeyColumns(keyColumns);
+                        }
+                        List<String> references = field.getRelation().getReferences();
+                        if (references == null || references.size() == 0) {
+                            field.getRelation().setReferences(assocEntity.getKeys());
+                        }
+
+                        // create bidirectional mapping for associated entity
+                        Relation.Builder assocRelBuilder = Relation.newBuilder();
+                        assocRelBuilder.setOwner(false);
+                        assocRelBuilder.setAssocEntity(entity);
+                        assocRelBuilder.setKeys(assocEntity.getKeys());
+                        assocRelBuilder.setReferences(keyColumns);
+                        assocEntity.getFields().stream().filter(assocfield -> assocfield.getFieldType()
+                                .equals(entity.getEntityName())).forEach(
+                                assocField -> {
+                                    assocRelBuilder.relationType = assocField.isArrayType() ?
+                                            Relation.RelationType.MANY : Relation.RelationType.ONE;
+                                    assocField.setRelation(assocRelBuilder.build());
+                                });
+                    });
         }
-        for (ModuleMemberDeclarationNode member : entityMembers) {
-            moduleMembers = moduleMembers.add(member);
-        }
-        Token eofToken = AbstractNodeFactory.createIdentifierToken(EMPTY_STRING);
-        ModulePartNode modulePartNode = NodeFactory.createModulePartNode(imports, moduleMembers, eofToken);
-        TextDocument textDocument = TextDocuments.from(EMPTY_STRING);
-        SyntaxTree balTree = SyntaxTree.from(textDocument);
-        return balTree.modifyWith(modulePartNode);
     }
 
     public static SyntaxTree generateClientSyntaxTree(Entity entity, ArrayList<ImportDeclarationNode> importsArray) {
@@ -332,94 +427,77 @@ public class BalSyntaxTreeGenerator {
         NodeList<ModuleMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
         List<Node> subFields = new ArrayList<>();
         List<Node> joinSubFields = new ArrayList<>();
-        boolean hasTime = false;
-        for (FieldMetaData field : entity.getFields()) {
-            if (field.getFieldType().contains(BalFileConstants.KEYWORD_TIME) && !hasTime) {
-                hasTime = true;
+        boolean timeImport = false;
+        boolean inclusions = false;
+        boolean manyRelation = false;
+        for (EntityField field : entity.getFields()) {
+            if (field.getFieldType().contains(BalFileConstants.KEYWORD_TIME)) {
+                timeImport = true;
             }
 
             for (String key : entity.getKeys()) {
-                if (field.getFieldName().equals(key.trim().replaceAll(
-                        DOUBLE_QUOTE, EMPTY_STRING))) {
-                    keys.put(field.getFieldName(),
-                            field.getFieldType().trim().replaceAll(SPACE,
-                                    EMPTY_STRING));
+                if (field.getFieldName().equals(key)) {
+                    keys.put(field.getFieldName(), field.getFieldType());
                 }
             }
 
-            if (entity.getKeys().length == 1) {
-                if (field.getFieldName().equals(entity.getKeys()[0].trim()
-                        .replaceAll(DOUBLE_QUOTE, EMPTY_STRING))) {
-                    keyType = field.getFieldType().trim().replaceAll(SPACE,
-                            EMPTY_STRING);
+            if (entity.getKeys().size() == 1) {
+                if (field.getFieldName().equals(entity.getKeys().get(0))) {
+                    keyType = field.getFieldType();
                 }
             }
-            if (!subFields.isEmpty()) {
-                subFields.add(NodeFactory.createBasicLiteralNode(SyntaxKind.STRING_LITERAL,
-                        AbstractNodeFactory.createLiteralValueToken(SyntaxKind.STRING_LITERAL, COMMA_SPACE
-                                        + System.lineSeparator(), NodeFactory.createEmptyMinutiaeList(),
-                                NodeFactory.createEmptyMinutiaeList())));
-            }
-            if (field.isAutoGenerated()) {
-                subFields.add(NodeFactory.createSpecificFieldNode(null,
-                        AbstractNodeFactory.createIdentifierToken(field.getFieldName()),
-                        SyntaxTreeConstants.SYNTAX_TREE_COLON, NodeParser.parseExpression(String.format(
-                                BalFileConstants.FIELD_FORMAT_WITH_AUTO_G,
-                                field.getFieldName().trim().replaceAll(
-                                        SINGLE_QUOTE, EMPTY_STRING),
-                                field.getFieldType().trim().replaceAll(SPACE,
-                                        EMPTY_STRING),
-                                String.valueOf(field.isAutoGenerated()).trim()))));
-                for (String key : entity.getKeys()) {
-                    if (field.getFieldName().equals(key.trim().replaceAll(
-                            DOUBLE_QUOTE, EMPTY_STRING))) {
-                        keyAutoInc = true;
-                        break;
-                    }
+            if (field.getRelation() == null) {
+                // process non-relational fields in the entity
+                if (!subFields.isEmpty()) {
+                    subFields.add(NodeFactory.createBasicLiteralNode(SyntaxKind.STRING_LITERAL,
+                            AbstractNodeFactory.createLiteralValueToken(SyntaxKind.STRING_LITERAL, COMMA_SPACE
+                                            + System.lineSeparator(), NodeFactory.createEmptyMinutiaeList(),
+                                    NodeFactory.createEmptyMinutiaeList())));
                 }
-            } else {
-                subFields.add(NodeFactory.createSpecificFieldNode(null,
-                        AbstractNodeFactory.createIdentifierToken(field.getFieldName()),
-                        SyntaxTreeConstants.SYNTAX_TREE_COLON,
-                        NodeParser.parseExpression(String.format(BalFileConstants.FIELD_FORMAT_WITHOUT_AUTO_G,
-                                field.getFieldName().trim().replaceAll(
-                                        SINGLE_QUOTE, EMPTY_STRING),
-                                field.getFieldType().trim().replaceAll(SPACE,
-                                        EMPTY_STRING)
-                        ))));
-            }
-        }
-        imports = imports.add(getImportDeclarationNode(BalFileConstants.KEYWORD_BALLERINA,
-                KEYWORD_SQL));
-        imports = imports.add(getImportDeclarationNode(BalFileConstants.KEYWORD_BALLERINAX,
-                BalFileConstants.KEYWORD_MYSQL));
-        String className = entity.getEntityName();
-        boolean inclusions = false;
-        boolean manyRelation = false;
-        if (entity.getRelations().size() != 0) {
-            relationsEnum = new Enum(String.format(ENUM_NAME, className));
-            for (Relation relation : entity.getRelations()) {
-                if (!hasTime) {
-                    for (FieldMetaData fieldMetaData :relation.getRelatedFields()) {
-                        if (fieldMetaData.getFieldType().contains(BalFileConstants.KEYWORD_TIME)) {
-                            hasTime = true;
+
+                if (field.getAutoGenerated() != null) {
+                    subFields.add(NodeFactory.createSpecificFieldNode(null,
+                            AbstractNodeFactory.createIdentifierToken(field.getFieldName()),
+                            SyntaxTreeConstants.SYNTAX_TREE_COLON, NodeParser.parseExpression(String.format(
+                                    BalFileConstants.FIELD_FORMAT_WITH_AUTO_G,
+                                    field.getFieldName().trim().replaceAll(
+                                            SINGLE_QUOTE, EMPTY_STRING),
+                                    field.getFieldType().trim().replaceAll(SPACE,
+                                            EMPTY_STRING),
+                                    String.valueOf(field.getAutoGenerated() != null).trim()))));
+                    for (String key : entity.getKeys()) {
+                        if (field.getFieldName().equals(key)) {
+                            keyAutoInc = true;
                             break;
                         }
                     }
+                } else {
+                    subFields.add(NodeFactory.createSpecificFieldNode(null,
+                            AbstractNodeFactory.createIdentifierToken(field.getFieldName()),
+                            SyntaxTreeConstants.SYNTAX_TREE_COLON,
+                            NodeParser.parseExpression(String.format(BalFileConstants.FIELD_FORMAT_WITHOUT_AUTO_G,
+                                    field.getFieldName().trim().replaceAll(
+                                            SINGLE_QUOTE, EMPTY_STRING),
+                                    field.getFieldType().trim().replaceAll(SPACE,
+                                            EMPTY_STRING)
+                            ))));
                 }
-                if (relation.getRelatedFields().size() == 0) {
-                    continue;
+            } else {
+                // process relational fields in the entity
+                if (relationsEnum == null) {
+                    relationsEnum = new Enum(String.format(ENUM_NAME, entity.getEntityName()));
                 }
-                StringBuilder refFieldsString = new StringBuilder();
-                StringBuilder joinColumnsString = new StringBuilder();
+                Relation relation = field.getRelation();
+                StringBuilder sReferenceKeys = new StringBuilder();
+                StringBuilder sForeignKeys = new StringBuilder();
 
                 for (int i = 0; i < relation.getKeyColumns().size(); i++) {
-                    if (refFieldsString.length() != 0) {
-                        refFieldsString.append(COMMA_SPACE);
-                        joinColumnsString.append(COMMA_SPACE);
+                    if (sReferenceKeys.length() != 0) {
+                        sReferenceKeys.append(COMMA_SPACE);
+                        sForeignKeys.append(COMMA_SPACE);
                     }
-                    refFieldsString.append(relation.getReferences().get(i));
-                    joinColumnsString.append(relation.getKeyColumns().get(i));
+                    sReferenceKeys.append(relation.getReferences().get(i));
+                    sForeignKeys.append(relation.getKeyColumns().get(i));
                 }
 
                 if (!joinSubFields.isEmpty()) {
@@ -428,28 +506,79 @@ public class BalSyntaxTreeGenerator {
                                             + System.lineSeparator(), NodeFactory.createEmptyMinutiaeList(),
                                     NodeFactory.createEmptyMinutiaeList())));
                 }
-                if (relation.relationType == Relation.RelationType.ONE) {
+
+                if (relation.getRelationType() == Relation.RelationType.ONE) {
                     joinSubFields.add(NodeFactory.createSpecificFieldNode(null,
-                            AbstractNodeFactory.createIdentifierToken(relation.getRelatedInstance()),
+                            AbstractNodeFactory.createIdentifierToken(field.getFieldName()),
                             SyntaxTreeConstants.SYNTAX_TREE_COLON,
                             NodeParser.parseExpression(String.format(BalFileConstants.FIELD_FORMAT_JOIN_FIELD,
-                                    relation.getRelatedType(), relation.getRelatedInstance(),
-                                    relation.getRefTable(), refFieldsString, joinColumnsString))));
+                                    field.getFieldType(), field.getFieldName(),
+                                    relation.getAssocEntity().getTableName(), sReferenceKeys, sForeignKeys))));
                 } else {
                     joinSubFields.add(NodeFactory.createSpecificFieldNode(null,
-                            AbstractNodeFactory.createIdentifierToken(relation.getRelatedInstance()),
+                            AbstractNodeFactory.createIdentifierToken(field.getFieldName()),
                             SyntaxTreeConstants.SYNTAX_TREE_COLON,
                             NodeParser.parseExpression(String.format(BalFileConstants.FIELD_FORMAT_JOIN_FIELD_MANY,
-                                    relation.getRelatedType(), relation.getRelatedInstance(),
-                                    relation.getRefTable(), refFieldsString, joinColumnsString))));
+                                    field.getFieldType(), field.getFieldName(),
+                                    relation.getAssocEntity().getTableName(), sReferenceKeys, sForeignKeys))));
                 }
-                if (relation.isChild()) {
-                    if (relation.isParentIncluded()) {
-                        relationsEnum.addMember(NodeParser.parseExpression(String.format(ENUM_ENTRY,
-                                relation.getRelatedType(), relation.getRelatedInstance())));
-                        inclusions = true;
+
+
+                if (relation.isOwner()) {
+                    relationsEnum.addMember(NodeParser.parseExpression(String.format(ENUM_ENTRY,
+                            field.getFieldType(), field.getFieldName())));
+                    inclusions = true;
+                    for (EntityField entityField : relation.getAssocEntity().getFields()) {
+                        if (entityField.getRelation() != null) {
+                            continue;
+                        }
+                        if (entityField.getFieldType().contains(BalFileConstants.KEYWORD_TIME)) {
+                            timeImport = true;
+                        }
+                        if (!subFields.isEmpty()) {
+                            subFields.add(NodeFactory.createBasicLiteralNode(SyntaxKind.STRING_LITERAL,
+                                    AbstractNodeFactory.createLiteralValueToken(SyntaxKind.STRING_LITERAL,
+                                            COMMA_SPACE + System.lineSeparator(),
+                                            NodeFactory.createEmptyMinutiaeList(),
+                                            NodeFactory.createEmptyMinutiaeList())));
+                        }
+                        if (relation.getReferences().contains(entityField.getFieldName())) {
+                            int index = relation.getReferences().indexOf(entityField.getFieldName());
+                            subFields.add(NodeFactory.createSpecificFieldNode(null,
+                                    AbstractNodeFactory.createIdentifierToken(DOUBLE_QUOTE +
+                                            field.getFieldName() + FIELD_ACCESSS
+                                            + entityField.getFieldName()
+                                            + DOUBLE_QUOTE), SyntaxTreeConstants.SYNTAX_TREE_COLON,
+                                    NodeParser.parseExpression(String.format(BalFileConstants
+                                                    .FIELD_FORMAT_RELATED_PARENT_FIELD, relation.getKeyColumns()
+                                                    .get(index), entityField.getFieldType(), field.getFieldName(),
+                                            relation.getAssocEntity().getTableName(), entityField.getFieldName()
+                                    ))));
+                        } else {
+                            subFields.add(NodeFactory.createSpecificFieldNode(null,
+                                    AbstractNodeFactory.createIdentifierToken(DOUBLE_QUOTE +
+                                            field.getFieldName() + FIELD_ACCESSS
+                                            + entityField.getFieldName()
+                                            + DOUBLE_QUOTE), SyntaxTreeConstants.SYNTAX_TREE_COLON,
+                                    NodeParser.parseExpression(String.format(
+                                            BalFileConstants.FIELD_FORMAT_RELATED_PARENT_FIELD_WOUT_COLUMN_NAME,
+                                            entityField.getFieldType(), field.getFieldName(),
+                                            relation.getAssocEntity().getTableName(),
+                                            entityField.getFieldName().replaceAll(SINGLE_QUOTE, EMPTY_STRING)
+                                    ))));
+                        }
                     }
-                    for (FieldMetaData fieldMetaData : relation.getRelatedFields()) {
+                } else {
+                    relationsEnum.addMember(NodeParser.parseExpression(String.format(ENUM_ENTRY,
+                            field.getFieldType(), field.getFieldName())));
+                    inclusions = true;
+                    for (EntityField entityField : relation.getAssocEntity().getFields()) {
+                        if (entityField.getRelation() != null) {
+                            continue;
+                        }
+                        if (entityField.getFieldType().contains(BalFileConstants.KEYWORD_TIME)) {
+                            timeImport = true;
+                        }
                         if (!subFields.isEmpty()) {
                             subFields.add(NodeFactory.createBasicLiteralNode(SyntaxKind.STRING_LITERAL,
                                     AbstractNodeFactory.createLiteralValueToken(
@@ -458,67 +587,32 @@ public class BalSyntaxTreeGenerator {
                                             NodeFactory.createEmptyMinutiaeList())));
                         }
                         String fieldAccesssString = FIELD_ACCESSS;
-                        if (relation.relationType == Relation.RelationType.MANY) {
+                        if (relation.getRelationType() == Relation.RelationType.MANY) {
                             fieldAccesssString = ARRAY_TYPE + FIELD_ACCESSS;
                             manyRelation = true;
                         }
                         subFields.add(NodeFactory.createSpecificFieldNode(null,
                                 AbstractNodeFactory.createIdentifierToken(DOUBLE_QUOTE +
-                                        relation.getRelatedInstance() + fieldAccesssString + fieldMetaData.
+                                        field.getFieldName() + fieldAccesssString + entityField.
                                         getFieldName() +
                                         DOUBLE_QUOTE), SyntaxTreeConstants.SYNTAX_TREE_COLON,
                                 NodeParser.parseExpression(String.format(
                                         BalFileConstants.FIELD_FORMAT_RELATED_CHILD_FIELD,
-                                        fieldMetaData.getFieldType().trim().replaceAll(
+                                        entityField.getFieldType().trim().replaceAll(
                                                 SINGLE_QUOTE, EMPTY_STRING),
-                                        relation.getRelatedInstance(), relation.getRefTable(),
-                                        fieldMetaData.getFieldName().replaceAll(SINGLE_QUOTE, EMPTY_STRING)
+                                        field.getFieldName(), relation.getAssocEntity().getTableName(),
+                                        entityField.getFieldName().replaceAll(SINGLE_QUOTE, EMPTY_STRING)
                                 ))));
                     }
-                } else {
-                    relationsEnum.addMember(NodeParser.parseExpression(String.format(ENUM_ENTRY,
-                            relation.getRelatedType(), relation.getRelatedInstance())));
-                    inclusions = true;
-                    for (FieldMetaData fieldMetaData : relation.getRelatedFields()) {
-                        if (!subFields.isEmpty()) {
-                            subFields.add(NodeFactory.createBasicLiteralNode(SyntaxKind.STRING_LITERAL,
-                                    AbstractNodeFactory.createLiteralValueToken(SyntaxKind.STRING_LITERAL,
-                                            COMMA_SPACE + System.lineSeparator(),
-                                            NodeFactory.createEmptyMinutiaeList(),
-                                            NodeFactory.createEmptyMinutiaeList())));
-                        }
-                        if (relation.getReferences().contains(fieldMetaData.getFieldName())) {
-                            int index = relation.getReferences().indexOf(fieldMetaData.getFieldName());
-                            subFields.add(NodeFactory.createSpecificFieldNode(null,
-                                    AbstractNodeFactory.createIdentifierToken(DOUBLE_QUOTE +
-                                            relation.getRelatedInstance() + FIELD_ACCESSS
-                                            + fieldMetaData.getFieldName()
-                                            + DOUBLE_QUOTE), SyntaxTreeConstants.SYNTAX_TREE_COLON,
-                                    NodeParser.parseExpression(String.format(BalFileConstants
-                                            .FIELD_FORMAT_RELATED_PARENT_FIELD, relation.getKeyColumns()
-                                            .get(index), fieldMetaData.getFieldType(), relation
-                                            .getRelatedInstance(), relation.getRefTable(), fieldMetaData.getFieldName()
-                                            .replaceAll(SINGLE_QUOTE, EMPTY_STRING)
-                                    ))));
-                        } else {
-                            subFields.add(NodeFactory.createSpecificFieldNode(null,
-                                    AbstractNodeFactory.createIdentifierToken(DOUBLE_QUOTE +
-                                            relation.getRelatedInstance() + FIELD_ACCESSS
-                                            + fieldMetaData.getFieldName()
-                                            + DOUBLE_QUOTE), SyntaxTreeConstants.SYNTAX_TREE_COLON,
-                                    NodeParser.parseExpression(String.format(
-                                            BalFileConstants.FIELD_FORMAT_RELATED_PARENT_FIELD_WOUT_COLUMN_NAME,
-                                            fieldMetaData.getFieldType(), relation.getRelatedInstance(),
-                                            relation.getRefTable(), fieldMetaData.getFieldName().replaceAll(
-                                                    SINGLE_QUOTE, EMPTY_STRING)
-                                    ))));
-                        }
-                    }
-
                 }
             }
         }
-        if (hasTime) {
+        imports = imports.add(getImportDeclarationNode(BalFileConstants.KEYWORD_BALLERINA,
+                KEYWORD_SQL));
+        imports = imports.add(getImportDeclarationNode(BalFileConstants.KEYWORD_BALLERINAX,
+                BalFileConstants.KEYWORD_MYSQL));
+
+        if (timeImport) {
             if (importsArray.isEmpty()) {
                 importsArray.add(getImportDeclarationNode(BalFileConstants.KEYWORD_BALLERINA,
                         BalFileConstants.KEYWORD_TIME));
@@ -526,9 +620,9 @@ public class BalSyntaxTreeGenerator {
             imports = imports.add(getImportDeclarationNode(BalFileConstants.KEYWORD_BALLERINA,
                     BalFileConstants.KEYWORD_TIME));
         }
-        imports = imports.add(getImportDeclarationNode(BalFileConstants.KEYWORD_BALLERINA, PERSIST));
-        Class client = createClientClass(entity, className, subFields, joinSubFields, keys, keyType, keyAutoInc,
-                inclusions);
+        imports = imports.add(getImportDeclarationNode(BalFileConstants.KEYWORD_BALLERINA, PERSIST_MODULE));
+        Class client = createClientClass(entity, entity.getEntityName(), subFields, joinSubFields,
+                keys, keyType, keyAutoInc, inclusions);
 
         moduleMembers = moduleMembers.add(client.getClassDefinitionNode());
 
@@ -536,7 +630,7 @@ public class BalSyntaxTreeGenerator {
             moduleMembers = moduleMembers.add(relationsEnum.getEnumDeclarationNode());
         }
 
-        Class clientStream = createClientStreamClass(entity, className, manyRelation);
+        Class clientStream = createClientStreamClass(entity, entity.getEntityName(), manyRelation);
 
         moduleMembers = moduleMembers.add(clientStream.getClassDefinitionNode());
 
@@ -600,7 +694,7 @@ public class BalSyntaxTreeGenerator {
             if (keysString.length() > 0) {
                 keysString.append(COMMA_SPACE);
             }
-            keysString.append(key);
+            keysString.append(DOUBLE_QUOTE).append(key).append(DOUBLE_QUOTE);
         }
 
         client.addMember(TypeDescriptor.getObjectFieldNode(BalFileConstants.KEYWORD_PRIVATE, new String[]{},
@@ -624,7 +718,7 @@ public class BalSyntaxTreeGenerator {
         }
         client.addMember(TypeDescriptor.getObjectFieldNodeWithoutExpression(BalFileConstants.KEYWORD_PRIVATE,
                         new String[]{},
-                        TypeDescriptor.getQualifiedNameReferenceNode(PERSIST, KEYWORD_SQL_CLIENT),
+                        TypeDescriptor.getQualifiedNameReferenceNode(PERSIST_MODULE, KEYWORD_SQL_CLIENT),
                         BalFileConstants.PERSIST_CLIENT),
                 true);
 
@@ -801,22 +895,22 @@ public class BalSyntaxTreeGenerator {
         create.addQualifiers(new String[]{BalFileConstants.KEYWORD_REMOTE});
         create.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(
                 TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()),
-                TypeDescriptor.getQualifiedNameReferenceNode(PERSIST, SPECIFIC_ERROR)));
+                TypeDescriptor.getQualifiedNameReferenceNode(PERSIST_MODULE, SPECIFIC_ERROR)));
         if (joinSubFields.isEmpty()) {
             StringBuilder retRecord = new StringBuilder();
             create.addStatement(NodeParser.parseStatement(BalFileConstants.CREATE_SQL_RESULTS));
             if (keys.size() > 1) {
-                for (FieldMetaData map : entity.getFields()) {
+                for (EntityField entityField : entity.getFields()) {
                     if (retRecord.length() > 0) {
                         retRecord.append(COMMA_SPACE);
                     }
-                    if (map.isAutoGenerated()) {
+                    if (entityField.getAutoGenerated() != null) {
                         retRecord.append(String.format(BalFileConstants.RECORD_FIELD_LAST_INSERT_ID,
-                                map.getFieldName(), BalFileConstants.KEYWORD_INT));
+                                entityField.getFieldName(), BalFileConstants.KEYWORD_INT));
                     } else {
                         retRecord.append(String.format(BalFileConstants.RECORD_FIELD_VALUE,
-                                map.getFieldName(),
-                                map.getFieldName()));
+                                entityField.getFieldName(),
+                                entityField.getFieldName()));
                     }
                 }
                 if (keyAutoInc) {
@@ -827,18 +921,17 @@ public class BalSyntaxTreeGenerator {
                             VALUE)));
                 }
             } else {
-                for (FieldMetaData map : entity.getFields()) {
+                for (EntityField entityField : entity.getFields()) {
                     if (retRecord.length() > 0) {
                         retRecord.append(COMMA_SPACE);
                     }
-                    if (map.getFieldName().equals(entity.getKeys()[0].trim().replaceAll(
-                            DOUBLE_QUOTE, EMPTY_STRING))) {
+                    if (entityField.getFieldName().equals(entity.getKeys().get(0))) {
                         retRecord.append(String.format(BalFileConstants.RECORD_FIELD_LAST_INSERT_ID,
-                                map.getFieldName(), keyType));
+                                entityField.getFieldName(), keyType));
                     } else {
                         retRecord.append(String.format(BalFileConstants.RECORD_FIELD_VALUE,
-                                map.getFieldName(),
-                                map.getFieldName()));
+                                entityField.getFieldName(),
+                                entityField.getFieldName()));
                     }
                 }
                 if (!keyAutoInc) {
@@ -852,28 +945,27 @@ public class BalSyntaxTreeGenerator {
                         retRecord)));
             }
         } else {
-            for (Relation relation : entity.getRelations()) {
-                if (relation.isChild()) {
-                    continue;
+            for (EntityField entityField : entity.getFields()) {
+                if (entityField.getRelation() != null && entityField.getRelation().isOwner()) {
+                    IfElse valueCheck = new IfElse(NodeParser.parseExpression(String.format(VALUE_TYPE_CHECK,
+                            entityField.getFieldName(), entityField.getFieldType())));
+                    valueCheck.addIfStatement(NodeParser.parseStatement(String.format(GET_NEW_CLIENT,
+                            entityField.getFieldType(), entityField.getFieldType().substring(0, 1)
+                                    .toLowerCase(Locale.getDefault()) +
+                                    entityField.getFieldType().substring(1), entityField.getFieldType())));
+                    valueCheck.addIfStatement(NodeParser.parseStatement(String.format(CHECK_EXISTENCE,
+                            entityField.getFieldType().substring(0, 1).toLowerCase(Locale.getDefault())
+                                    + entityField.getFieldType().substring(1),
+                            entityField.getFieldType(), entityField.getFieldName())));
+                    IfElse checkExistence = new IfElse(NodeParser.parseExpression(NOT_EXIST));
+                    checkExistence.addIfStatement(NodeParser.parseStatement(String.format(CREATE_CLIENT,
+                            entityField.getFieldName(), entityField.getFieldType().substring(0, 1)
+                                    .toLowerCase(Locale.getDefault())
+                                    + entityField.getFieldType().substring(1), entityField.getFieldType(),
+                            entityField.getFieldName())));
+                    valueCheck.addIfStatement(checkExistence.getIfElseStatementNode());
+                    create.addIfElseStatement(valueCheck.getIfElseStatementNode());
                 }
-                IfElse valueCheck = new IfElse(NodeParser.parseExpression(String.format(VALUE_TYPE_CHECK,
-                        relation.getRelatedInstance(), relation.getRelatedType())));
-                valueCheck.addIfStatement(NodeParser.parseStatement(String.format(GET_NEW_CLIENT,
-                        relation.getRelatedType(), relation.getRelatedType().substring(0, 1)
-                                .toLowerCase(Locale.getDefault()) +
-                                relation.getRelatedType().substring(1), relation.getRelatedType())));
-                valueCheck.addIfStatement(NodeParser.parseStatement(String.format(CHECK_EXISTENCE,
-                        relation.getRelatedType().substring(0, 1).toLowerCase(Locale.getDefault())
-                                + relation.getRelatedType().substring(1),
-                        relation.getRelatedType(), relation.getRelatedInstance())));
-                IfElse checkExistence = new IfElse(NodeParser.parseExpression(NOT_EXIST));
-                checkExistence.addIfStatement(NodeParser.parseStatement(String.format(CREATE_CLIENT,
-                        relation.getRelatedInstance(), relation.getRelatedType().substring(0, 1)
-                                .toLowerCase(Locale.getDefault())
-                                + relation.getRelatedType().substring(1), relation.getRelatedType(),
-                        relation.getRelatedInstance())));
-                valueCheck.addIfStatement(checkExistence.getIfElseStatementNode());
-                create.addIfElseStatement(valueCheck.getIfElseStatementNode());
             }
             create.addStatement(NodeParser.parseStatement(BalFileConstants.CREATE_SQL_RESULTS_RELATION));
             create.addStatement(NodeParser.parseStatement(RETURN_VAUE));
@@ -895,7 +987,7 @@ public class BalSyntaxTreeGenerator {
         readByKey.addQualifiers(new String[]{BalFileConstants.KEYWORD_REMOTE});
         readByKey.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(
                 TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()),
-                TypeDescriptor.getQualifiedNameReferenceNode(PERSIST, SPECIFIC_ERROR)));
+                TypeDescriptor.getQualifiedNameReferenceNode(PERSIST_MODULE, SPECIFIC_ERROR)));
 
         if (inclusions) {
             readByKey.addRequiredParameterWithDefault(NodeParser.parseTypeDescriptor(String.format(
@@ -971,34 +1063,33 @@ public class BalSyntaxTreeGenerator {
         update.addStatement(NodeParser.parseStatement(BalFileConstants.UPDATE_RUN_UPDATE_QUERY));
         update.addRequiredParameter(TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()), VALUE);
         if (!joinSubFields.isEmpty()) {
-            for (Relation relation : entity.getRelations()) {
-                if (relation.isChild()) {
-                    continue;
+            for (EntityField entityField : entity.getFields()) {
+                if (entityField.getRelation() != null && entityField.getRelation().isOwner()) {
+                    IfElse typeCheck = new IfElse(NodeParser.parseExpression(String.format(RECORD_CHECK,
+                            entityField.getFieldName())));
+                    typeCheck.addIfStatement(NodeParser.parseStatement(String.format(GET_ENTITY_RECORD,
+                            entityField.getFieldType(), entityField.getFieldType().substring(0, 1)
+                                    .toLowerCase(Locale.getDefault())
+                                    + entityField.getFieldType().substring(1), entityField.getFieldType(),
+                            entityField.getFieldName())));
+                    typeCheck.addIfStatement(NodeParser.parseStatement(String.format(GET_ENTITY_CLIENT,
+                            entityField.getFieldType(), entityField.getFieldType().substring(0, 1)
+                                    .toLowerCase(Locale.getDefault())
+                                    + entityField.getFieldType().substring(1), entityField.getFieldType())));
+                    typeCheck.addIfStatement(NodeFactory.createExpressionStatementNode(SyntaxKind.ACTION_STATEMENT,
+                            NodeFactory.createCheckExpressionNode(
+                                    SyntaxKind.CHECK_ACTION,
+                                    SyntaxTreeConstants.SYNTAX_TREE_KEYWORD_CHECK,
+                                    NodeParser.parseActionOrExpression(String.format(CHECK_UPDATE_STATEMENT,
+                                            entityField.getFieldType().substring(0, 1)
+                                                    .toLowerCase(Locale.getDefault())
+                                                    + entityField.getFieldType().substring(1),
+                                            entityField.getFieldType().substring(0, 1).toLowerCase(Locale.getDefault())
+                                                    + entityField.getFieldType().substring(1)
+                                    ))
+                            ), SYNTAX_TREE_SEMICOLON));
+                    update.addIfElseStatement(typeCheck.getIfElseStatementNode());
                 }
-                IfElse typeCheck = new IfElse(NodeParser.parseExpression(String.format(RECORD_CHECK,
-                        relation.getRelatedInstance())));
-                typeCheck.addIfStatement(NodeParser.parseStatement(String.format(GET_ENTITY_RECORD,
-                        relation.getRelatedType(), relation.getRelatedType().substring(0, 1)
-                                .toLowerCase(Locale.getDefault())
-                                + relation.getRelatedType().substring(1), relation.getRelatedType(),
-                        relation.getRelatedInstance())));
-                typeCheck.addIfStatement(NodeParser.parseStatement(String.format(GET_ENTITY_CLIENT,
-                        relation.getRelatedType(), relation.getRelatedType().substring(0, 1)
-                                .toLowerCase(Locale.getDefault())
-                                + relation.getRelatedType().substring(1), relation.getRelatedType())));
-                typeCheck.addIfStatement(NodeFactory.createExpressionStatementNode(SyntaxKind.ACTION_STATEMENT,
-                        NodeFactory.createCheckExpressionNode(
-                                SyntaxKind.CHECK_ACTION,
-                                SyntaxTreeConstants.SYNTAX_TREE_KEYWORD_CHECK,
-                                NodeParser.parseActionOrExpression(String.format(CHECK_UPDATE_STATEMENT,
-                                        relation.getRelatedType().substring(0, 1)
-                                                .toLowerCase(Locale.getDefault())
-                                                + relation.getRelatedType().substring(1),
-                                        relation.getRelatedType().substring(0, 1).toLowerCase(Locale.getDefault()) +
-                                                relation.getRelatedType().substring(1)
-                                ))
-                        ), SYNTAX_TREE_SEMICOLON));
-                update.addIfElseStatement(typeCheck.getIfElseStatementNode());
             }
         }
         return update;
@@ -1022,7 +1113,7 @@ public class BalSyntaxTreeGenerator {
         exists.addQualifiers(new String[]{BalFileConstants.KEYWORD_REMOTE});
         exists.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(
                 TypeDescriptor.getBuiltinSimpleNameReferenceNode(KEYWORD_BOOLEAN),
-                TypeDescriptor.getQualifiedNameReferenceNode (PERSIST, SPECIFIC_ERROR)));
+                TypeDescriptor.getQualifiedNameReferenceNode(PERSIST_MODULE, SPECIFIC_ERROR)));
         exists.addStatement(NodeParser.parseStatement(String.format(EXIST_READ_BY_KEY, entity.getEntityName(),
                 keyString)));
         IfElse typeCheck = new IfElse(NodeParser.parseExpression(String.format(CHECK_RESULT, entity.getEntityName())));
@@ -1064,17 +1155,9 @@ public class BalSyntaxTreeGenerator {
         ModulePartNode modulePartNode = NodeFactory.createModulePartNode(imports, moduleMembers, eofToken);
         TextDocument textDocument = TextDocuments.from(EMPTY_STRING);
         SyntaxTree balTree = SyntaxTree.from(textDocument);
-        String content = Formatter.format(balTree.modifyWith(modulePartNode).toSourceCode());
 
-        return content; // output cannot be SyntaxTree as it will overlap with Toml Syntax Tree in Init Command
-    }
-
-    private static String[] getArray(ArrayList<String> arrL) {
-        String[] output = new String[arrL.size()];
-        for (int i = 0; i < arrL.size(); i++) {
-            output[i] = arrL.get(i);
-        }
-        return output;
+        // output cannot be SyntaxTree as it will overlap with Toml Syntax Tree in Init Command
+        return Formatter.format(balTree.modifyWith(modulePartNode).toSourceCode());
     }
 
     public static ImportDeclarationNode getImportDeclarationNode(String orgName, String moduleName) {
@@ -1094,407 +1177,5 @@ public class BalSyntaxTreeGenerator {
                 null,
                 SYNTAX_TREE_SEMICOLON
         );
-    }
-
-    private static void processAutoIncrement(ArrayList<Entity> entityArray, MetadataNode metaD, FieldMetaData field,
-                                             String startValue, int index) {
-        NodeList<AnnotationNode> annotations = metaD.annotations();
-        entityArray.get(index).setAutoIncrementStartValue(startValue);
-        for (AnnotationNode annotation : annotations) {
-            Node annotReference = annotation.annotReference();
-            if (annotReference.kind() == SyntaxKind.QUALIFIED_NAME_REFERENCE) {
-                QualifiedNameReferenceNode qualifiedNameRef =
-                        (QualifiedNameReferenceNode) annotReference;
-                if (qualifiedNameRef.identifier().text().equals(KEYWORD_AUTOINCREMENT) && qualifiedNameRef
-                        .modulePrefix().text().equals(PERSIST)) {
-                    field.setIsAutoGenerated(true);
-                    Optional<MappingConstructorExpressionNode> annotationFields = annotation.annotValue();
-                    if (annotationFields.isPresent()) {
-                        for (MappingFieldNode mappingFieldNode : annotationFields.get().fields()) {
-                            SpecificFieldNode specificFieldNode = (SpecificFieldNode) mappingFieldNode;
-                            if ((startValue.isEmpty() || Integer.parseInt(startValue) < 1) &&
-                                    specificFieldNode.fieldName().toSourceCode().trim().
-                                            equals(PersistToolsConstants.START_VALUE)) {
-                                Optional<ExpressionNode> valueExpr = specificFieldNode.valueExpr();
-                                valueExpr.ifPresent(expressionNode ->
-                                        entityArray.get(index).setAutoIncrementStartValue(
-                                                expressionNode.toSourceCode().trim()));
-                            }
-                        }
-                    }
-                } else if (qualifiedNameRef.identifier().text().trim().equals(PersistToolsConstants.STRING) &&
-                        qualifiedNameRef.modulePrefix().text().trim().equals(PersistToolsConstants.CONSTRAINT)) {
-                    Optional<MappingConstructorExpressionNode> annotationFields = annotation.annotValue();
-                    if (annotationFields.isPresent()) {
-                        for (MappingFieldNode mappingFieldNode : annotationFields.get().fields()) {
-                            SpecificFieldNode specificFieldNode = (SpecificFieldNode) mappingFieldNode;
-                            String fieldName = specificFieldNode.fieldName().toSourceCode().trim();
-                            if (fieldName.equals(PersistToolsConstants.MAX_LENGTH)) {
-                                Optional<ExpressionNode> valueExpr = specificFieldNode.valueExpr();
-                                valueExpr.ifPresent(expressionNode ->
-                                        field.setStringLength(expressionNode.toSourceCode().trim()));
-                            } else if (fieldName.equals(PersistToolsConstants.LENGTH)) {
-                                Optional<ExpressionNode> valueExpr = specificFieldNode.valueExpr();
-                                if (valueExpr.isPresent()) {
-                                    valueExpr.ifPresent(expressionNode ->
-                                            field.setStringLength(expressionNode.toSourceCode().trim()));
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    public static void generateRelations(ArrayList<Entity> entityArray) {
-        ArrayList<String> entityNames = new ArrayList<>();
-        for (Entity entity : entityArray) {
-            entityNames.add(entity.getEntityName());
-        }
-        for (Entity entity : entityArray) {
-            for (Relation relation : entity.getRelations()) {
-                if (relation.getRelatedType().contains(COLON)) {
-                    relation.setRelatedType(relation.getRelatedType().split(COLON, 2)[1]);
-                }
-                int counter;
-                if (!relation.isChild()) {
-                    for (Entity childEntity : entityArray) {
-                        if (entity.getEntityName().equals(childEntity.getEntityName())) {
-                            continue;
-                        }
-                        if (childEntity.getEntityName().equals(relation.getRelatedType())) {
-                            if (relation.getKeyColumns().isEmpty() && relation.getReferences().isEmpty()) {
-                                for (String key : childEntity.getKeys()) {
-                                    String modifiedKey = key.replace(DOUBLE_QUOTE, EMPTY_STRING).trim();
-                                    relation.getKeyColumns().add(
-                                            childEntity.getEntityName().toLowerCase(Locale.getDefault())
-                                                    + modifiedKey.substring(0, 1)
-                                                    .toUpperCase(Locale.getDefault()) + modifiedKey.substring(1));
-                                    relation.getReferences().add(modifiedKey);
-                                }
-                            } else if (relation.getKeyColumns().isEmpty()) {
-                                for (String key : relation.getReferences()) {
-                                    String modifiedKey = key.replace(DOUBLE_QUOTE, EMPTY_STRING).trim();
-                                    relation.getKeyColumns().add(
-                                            childEntity.getEntityName().toLowerCase(Locale.getDefault())
-                                                    + modifiedKey.substring(0, 1)
-                                                    .toUpperCase(Locale.getDefault()) + modifiedKey.substring(1));
-                                }
-                            } else if (relation.getReferences().isEmpty()) {
-                                for (String key : childEntity.getKeys()) {
-                                    String modifiedKey = key.replace(DOUBLE_QUOTE, EMPTY_STRING).trim();
-                                    relation.getReferences().add(modifiedKey);
-                                }
-                            }
-                            int relationIndex = childEntity.getRelations().size();
-                            childEntity.getRelations().add(relationIndex, new Relation(entity.getEntityName(), null,
-                                    new ArrayList<>(), new ArrayList<>(), true));
-                            childEntity.getRelations().get(relationIndex).setRefTable(entity.getTableName());
-                            relation.setRefTable(childEntity.getTableName());
-                            boolean childIncludesParentColumns = false;
-                            ArrayList<Integer> indexesToRemove = new ArrayList<>();
-                            for (FieldMetaData fieldMetaData : entity.getFields()) {
-                                if (fieldMetaData.getFieldType().contains(COLON)) {
-                                    if (entityNames.contains(fieldMetaData.getFieldType().split(COLON, 2)[1])) {
-                                        fieldMetaData.setFieldType(fieldMetaData.getFieldType().split(COLON, 2)[1]);
-                                        if (fieldMetaData.getRelationType().equals(Relation.RelationType.MANY)) {
-                                            relation.relationType = Relation.RelationType.MANY;
-                                        } else {
-                                            childEntity.getRelations().get(relationIndex).relationType =
-                                                    Relation.RelationType.ONE;
-                                        }
-                                    }
-                                } else {
-                                    if (entityNames.contains(fieldMetaData.getFieldType())) {
-                                        if (fieldMetaData.getRelationType().equals(Relation.RelationType.MANY)) {
-                                            relation.relationType = Relation.RelationType.MANY;
-                                        } else {
-                                            childEntity.getRelations().get(relationIndex).relationType =
-                                                    Relation.RelationType.ONE;
-                                        }
-                                    }
-                                }
-                                if (!fieldMetaData.getFieldType().equals(childEntity.getEntityName())) {
-                                    if (!entityNames.contains(fieldMetaData.getFieldType())) {
-                                        childEntity.getRelations().get(relationIndex).getRelatedFields()
-                                                .add(fieldMetaData);
-                                    }
-                                } else {
-                                    indexesToRemove.add(entity.getFields().indexOf(fieldMetaData));
-                                }
-                            }
-                            for (Integer index : indexesToRemove) {
-                                entity.getFields().remove(index.intValue());
-                            }
-                            indexesToRemove = new ArrayList<>();
-                            counter = 0;
-                            for (FieldMetaData fieldMetaData : childEntity.getFields()) {
-                                if (fieldMetaData.getFieldType().contains(COLON)) {
-                                    if (entityNames.contains(fieldMetaData.getFieldType().split(COLON, 2)[1])) {
-                                        fieldMetaData.setFieldType(fieldMetaData.getFieldType().split(COLON,
-                                                2)[1]);
-                                        if (fieldMetaData.getRelationType().equals(Relation.RelationType.MANY)) {
-                                            childEntity.getRelations().get(relationIndex).relationType =
-                                                    Relation.RelationType.MANY;
-                                        } else {
-                                            childEntity.getRelations().get(relationIndex).relationType =
-                                                    Relation.RelationType.ONE;
-                                        }
-                                    }
-                                }
-
-                                if (!fieldMetaData.getFieldType().equals(entity.getEntityName())) {
-                                    if (!entityNames.contains(fieldMetaData.getFieldType())) {
-                                        relation.getRelatedFields().add(counter, fieldMetaData);
-                                        counter += 1;
-                                    }
-                                } else {
-                                    childIncludesParentColumns = true;
-                                    childEntity.getRelations().get(relationIndex).setParentIncluded(true);
-                                    indexesToRemove.add(childEntity.getFields().indexOf(fieldMetaData));
-                                    childEntity.getRelations().get(relationIndex).setRelatedInstance(
-                                            fieldMetaData.getFieldName());
-                                    if (fieldMetaData.getRelationType().equals(Relation.RelationType.MANY)) {
-                                        childEntity.getRelations().get(relationIndex).relationType =
-                                                Relation.RelationType.MANY;
-                                    } else {
-                                        childEntity.getRelations().get(relationIndex).relationType =
-                                                Relation.RelationType.ONE;
-                                    }
-                                }
-                            }
-                            if (!childIncludesParentColumns) {
-                                childEntity.getRelations().get(relationIndex).setRelatedFields(new ArrayList<>());
-                            }
-                            for (Integer index : indexesToRemove) {
-                                childEntity.getFields().remove(index.intValue());
-                            }
-                            if (childEntity.getRelations().get(relationIndex).getKeyColumns().isEmpty() &&
-                                    childEntity.getRelations().get(relationIndex).getReferences().isEmpty()) {
-                                for (String key : entity.getKeys()) {
-                                    String modifiedKey = key.replace(DOUBLE_QUOTE, EMPTY_STRING).trim();
-                                    childEntity.getRelations().get(relationIndex).getKeyColumns().add(
-                                            entity.getEntityName().toLowerCase(Locale.getDefault())
-                                                    + modifiedKey.substring(0, 1)
-                                                    .toUpperCase(Locale.getDefault()) + modifiedKey.substring(1));
-                                    childEntity.getRelations().get(relationIndex).getReferences().add(modifiedKey);
-                                }
-                            } else if (childEntity.getRelations().get(relationIndex).getKeyColumns().isEmpty()) {
-                                for (String key : entity.getKeys()) {
-                                    String modifiedKey = key.replace(DOUBLE_QUOTE, EMPTY_STRING).trim();
-                                    childEntity.getRelations().get(relationIndex).getKeyColumns().add(
-                                            entity.getEntityName().toLowerCase(Locale.getDefault())
-                                                    + modifiedKey.substring(0, 1)
-                                                    .toUpperCase(Locale.getDefault()) + modifiedKey.substring(1));
-                                }
-                            } else if (childEntity.getRelations().get(relationIndex).getReferences().isEmpty()) {
-                                for (String key : entity.getKeys()) {
-                                    String modifiedKey = key.replace(DOUBLE_QUOTE, EMPTY_STRING).trim();
-                                    childEntity.getRelations().get(relationIndex).getReferences().add(modifiedKey);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    public static ArrayList<ModuleMemberDeclarationNode> formatModuleMembers(
-            ArrayList<ModuleMemberDeclarationNode> moduleMembers, ArrayList<Entity> entities) {
-        ArrayList<String> entityNames = new ArrayList<>();
-        ArrayList<ModuleMemberDeclarationNode> retModuleMembers = new ArrayList<>();
-        for (Entity entity : entities) {
-            entityNames.add(entity.getEntityName());
-        }
-        for (ModuleMemberDeclarationNode moduleMember : moduleMembers) {
-            RecordTypeDescriptorNode recordDesc = (RecordTypeDescriptorNode) ((TypeDefinitionNode) moduleMember)
-                    .typeDescriptor();
-            MetadataNode metadataNode = null;
-            if (((TypeDefinitionNode) moduleMember).metadata().isPresent()) {
-                metadataNode = ((TypeDefinitionNode) moduleMember).metadata().get();
-            }
-            NodeList<Node> nodeList = NodeFactory.createEmptyNodeList();
-            Token visibilityQualifier = null;
-            if (((TypeDefinitionNode) moduleMember).visibilityQualifier().isPresent()) {
-                visibilityQualifier = ((TypeDefinitionNode) moduleMember).visibilityQualifier().get();
-            }
-            Token typeKeyword = ((TypeDefinitionNode) moduleMember).typeKeyword();
-            Token typeName = ((TypeDefinitionNode) moduleMember).typeName();
-            for (Node node : recordDesc.fields()) {
-                if (node.kind() == SyntaxKind.RECORD_FIELD_WITH_DEFAULT_VALUE) {
-                    RecordFieldWithDefaultValueNode fieldNode = (RecordFieldWithDefaultValueNode) node;
-                    String fName = fieldNode.fieldName().text().trim();
-                    String fType = fieldNode.typeName().toSourceCode().trim();
-                    if (fType.contains(COLON)) {
-                        String[] sValues = fType.split(COLON);
-                        if (entityNames.contains(sValues[1])) {
-                            Optional<MetadataNode> fieldMetaData = ((RecordFieldWithDefaultValueNode) node).metadata();
-                            Token readOnlyKeyWord = null;
-                            if (((RecordFieldWithDefaultValueNode) node).readonlyKeyword().isPresent()) {
-                                readOnlyKeyWord = ((RecordFieldWithDefaultValueNode) node).readonlyKeyword().get();
-                            }
-                            ExpressionNode expressionNode = ((RecordFieldWithDefaultValueNode) node).expression();
-                            if (fieldMetaData.isPresent()) {
-                                nodeList = nodeList.add(NodeFactory.createRecordFieldWithDefaultValueNode(
-                                        fieldMetaData.get(),
-                                        readOnlyKeyWord,
-                                        TypeDescriptor.getBuiltinSimpleNameReferenceNode(sValues[1]),
-                                        AbstractNodeFactory.createIdentifierToken(fName),
-                                        SyntaxTreeConstants.SYNTAX_TREE_EQUAL,
-                                        expressionNode,
-                                        SyntaxTreeConstants.SYNTAX_TREE_SEMICOLON
-                                ));
-                            } else {
-                                nodeList = nodeList.add(NodeFactory.createRecordFieldWithDefaultValueNode(
-                                        null,
-                                        readOnlyKeyWord,
-                                        TypeDescriptor.getBuiltinSimpleNameReferenceNode(sValues[1]),
-                                        AbstractNodeFactory.createIdentifierToken(fName),
-                                        SyntaxTreeConstants.SYNTAX_TREE_EQUAL,
-                                        expressionNode,
-                                        SyntaxTreeConstants.SYNTAX_TREE_SEMICOLON
-                                ));
-                            }
-                        } else {
-                            nodeList = nodeList.add(node);
-                        }
-                    } else {
-                        nodeList = nodeList.add(node);
-                    }
-                } else if (node.kind() == SyntaxKind.RECORD_FIELD) {
-                    RecordFieldNode fieldNode = (RecordFieldNode) node;
-                    String fName = fieldNode.fieldName().text().trim();
-                    String fType = fieldNode.typeName().toSourceCode().trim();
-                    if (fType.contains(COLON)) {
-                        String[] sValues = fType.split(COLON);
-                        if (entityNames.contains(sValues[1])) {
-                            Optional<MetadataNode> fieldMetaData = ((RecordFieldNode) node).metadata();
-                            Token readOnlyKeyWord = null;
-                            Token questionMarkToken = null;
-                            if (((RecordFieldNode) node).readonlyKeyword().isPresent()) {
-                                readOnlyKeyWord = ((RecordFieldNode) node).readonlyKeyword().get();
-                            }
-                            if (((RecordFieldNode) node).questionMarkToken().isPresent()) {
-                                questionMarkToken = ((RecordFieldNode) node).questionMarkToken().get();
-                            }
-                            if (fieldMetaData.isPresent()) {
-                                nodeList = nodeList.add(NodeFactory.createRecordFieldNode(
-                                        fieldMetaData.get(),
-                                        readOnlyKeyWord,
-                                        TypeDescriptor.getBuiltinSimpleNameReferenceNode(sValues[1]),
-                                        AbstractNodeFactory.createIdentifierToken(fName),
-                                        questionMarkToken,
-                                        SyntaxTreeConstants.SYNTAX_TREE_SEMICOLON
-                                ));
-                            } else {
-                                nodeList = nodeList.add(NodeFactory.createRecordFieldNode(
-                                        null,
-                                        readOnlyKeyWord,
-                                        TypeDescriptor.getBuiltinSimpleNameReferenceNode(sValues[1]),
-                                        AbstractNodeFactory.createIdentifierToken(fName),
-                                        questionMarkToken,
-                                        SyntaxTreeConstants.SYNTAX_TREE_SEMICOLON
-                                ));
-                            }
-                        } else {
-                            nodeList = nodeList.add(node);
-                        }
-                    } else {
-                        nodeList = nodeList.add(node);
-                    }
-                }
-            }
-            RecordTypeDescriptorNode recordTypeDescriptorNode = NodeFactory.createRecordTypeDescriptorNode(
-                    SyntaxTreeConstants.SYNTAX_TREE_KEYWORD_RECORD,
-                    AbstractNodeFactory.createIdentifierToken(START_CLOSED_RECORD),
-                    nodeList, null,
-                    AbstractNodeFactory.createIdentifierToken(END_CLOSED_RECORD)
-            );
-            TypeDefinitionNode modifiedEntity = NodeFactory.createTypeDefinitionNode(metadataNode, visibilityQualifier,
-                    typeKeyword, typeName,
-                    recordTypeDescriptorNode, SyntaxTreeConstants.SYNTAX_TREE_SEMICOLON);
-            retModuleMembers.add(modifiedEntity);
-        }
-        return retModuleMembers;
-
-    }
-
-    private static Relation readMetaData(String entityName, String entityType, MetadataNode metaD)
-            throws RuntimeException {
-        NodeList<AnnotationNode> annotations = metaD.annotations();
-        Relation relation;
-        for (AnnotationNode annotation : annotations) {
-            Node annotReference = annotation.annotReference();
-            if (annotReference.kind() == SyntaxKind.QUALIFIED_NAME_REFERENCE) {
-                QualifiedNameReferenceNode qualifiedNameRef =
-                        (QualifiedNameReferenceNode) annotReference;
-                if (qualifiedNameRef.identifier().text().equals(KEYWORD_RELATION) && qualifiedNameRef.modulePrefix()
-                        .text().equals(PERSIST)) {
-                    ArrayList<String> keyColumns = new ArrayList<>();
-                    ArrayList<String> reference = new ArrayList<>();
-                    String onDeleteAction = null;
-                    String onUpdateAction = null;
-                    if (annotation.annotValue().isPresent()) {
-                        for (MappingFieldNode fieldNode : annotation.annotValue().get().fields()) {
-                            if (fieldNode.kind() != SyntaxKind.SPECIFIC_FIELD) {
-                                continue;
-                            }
-                            SpecificFieldNode specificField = (SpecificFieldNode) fieldNode;
-                            if (specificField.fieldName().kind() != SyntaxKind.IDENTIFIER_TOKEN ||
-                                    specificField.valueExpr().isEmpty()) {
-                                continue;
-                            }
-                            ExpressionNode valueNode = specificField.valueExpr().get();
-                            String fieldName = ((SpecificFieldNode) fieldNode).fieldName().toString().trim();
-                            switch (fieldName) {
-                                case KEY_COLUMNS: {
-                                    Iterator<Node> listIterator = ((ListConstructorExpressionNode) valueNode)
-                                            .expressions().iterator();
-                                    int count = 0;
-                                    while (listIterator.hasNext()) {
-                                        keyColumns.add(count, listIterator.next().toSourceCode().replaceAll(
-                                                DOUBLE_QUOTE, EMPTY_STRING
-                                        ));
-                                        count += 1;
-                                    }
-                                    break;
-                                }
-                                case KEYWORD_REFERENCE: {
-                                    Iterator<Node> listIterator = ((ListConstructorExpressionNode) valueNode)
-                                            .expressions().iterator();
-                                    int count = 0;
-                                    while (listIterator.hasNext()) {
-                                        reference.add(count, listIterator.next().toSourceCode().replaceAll(
-                                                DOUBLE_QUOTE, EMPTY_STRING
-                                        ));
-                                        count += 1;
-                                    }
-                                    break;
-                                }
-                                case ON_DELETE:
-                                    onDeleteAction = valueNode.toSourceCode();
-                                    break;
-                                case ON_UPDATE:
-                                    onUpdateAction = valueNode.toSourceCode();
-                                    break;
-
-                                default:
-                                    break;
-                            }
-                        }
-                        relation = new Relation(entityType, entityName, keyColumns, reference, false);
-                        relation.setOnDelete(onDeleteAction);
-                        relation.setOnUpdate(onUpdateAction);
-                        return relation;
-                    } else {
-                        return new Relation(entityType, entityName, new ArrayList<>(), new ArrayList<>(), false);
-                    }
-
-                }
-            }
-        }
-        return new Relation(entityType, entityName, null, null, false);
     }
 }

@@ -20,7 +20,7 @@ package io.ballerina.persist.objects;
 import java.util.Set;
 
 /**
- * Persist Tool contants class.
+ * Persist Tool constants class.
  *
  * @since 0.1.0
  */
@@ -42,29 +42,18 @@ public class PersistToolsConstants {
     public static final String KEY_DATABASE = "database";
     public static final String KEY_HOST = "host";
 
-    public static final String HOST_PLACEHOLDER = "${%s.clients.host}";
-    public static final String PORT_PLACEHOLDER = "${%s.clients.port}";
-    public static final String PASSWORD_PLACEHOLDER = "${%s.clients.password}";
-    public static final String USER_PLACEHOLDER = "${%s.clients.user}";
-    public static final String DATABASE_PLACEHOLDER = "${%s.clients.database}";
-
     public static final String CONFIG_SCRIPT_FILE = "Config.toml";
-    public static final String SQL_SCRIPT_FILE = "persist_db_scripts.sql";
-    public static final String TARGET_DIR = "target";
-    public static final String PERSIST_DIR = "persist";
     public static final String PASSWORD = "password";
     public static final String USER = "user";
     public static final String MYSQL_DRIVER_CLASS = "com.mysql.cj.jdbc.Driver";
-    public static final String MYSQL = "mysql";
-    public static final String DATABASE = "database";
-    public static final String HOST = "host";
-    public static final String PORT = "port";
 
-    public static final String CREATE_DATABASE_SQL = "CREATE DATABASE ?";
+    public static final String DATABASE = "database";
+    public static final String DATABASE_MYSQL = "database.mysql";
 
     public static final String AUTO_INCREMENT_WITH_SPACE = " AUTO_INCREMENT";
     public static final String AUTO_INCREMENT_WITH_TAB = "  AUTO_INCREMENT";
     public static final String START_VALUE = "startValue";
+    public static final String INCREMENT = "startValue";
     public static final String ON_UPDATE = "onUpdate";
     public static final String ON_DELETE = "onDelete";
     public static final String CONSTRAINT = "constraint";
@@ -73,13 +62,8 @@ public class PersistToolsConstants {
     public static final String MAX_LENGTH = "maxLength";
     public static final String SQL_SCHEMA_FILE = "persist_db_scripts.sql";
     public static final String UNIQUE_CONSTRAINTS = "uniqueConstraints";
-
-    public static final String KEYWORD_PROVIDER = "provider";
     public static final String PERSIST_DIRECTORY = "persist";
-    public static final String SUBMODULE_FOLDER = "modules";
-    public static final String KEYWORD_CLIENTS = "clients";
     public static final String PERSIST_TOML_FILE = "Persist.toml";
-    public static final String DATABASE_CONFIGURATION_BAL = "database_configuration.bal";
     public static final String BALLERINA_MYSQL_DRIVER_NAME = "ballerinax/mysql.driver";
     public static final String PLATFORM = "java11";
     public static final String PROPERTY_KEY_PATH = "path";

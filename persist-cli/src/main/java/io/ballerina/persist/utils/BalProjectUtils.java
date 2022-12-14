@@ -28,12 +28,10 @@ import io.ballerina.compiler.syntax.tree.SyntaxKind;
 import io.ballerina.compiler.syntax.tree.TypeDefinitionNode;
 import io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator;
 import io.ballerina.persist.objects.BalException;
-import io.ballerina.persist.objects.Entity;
-import io.ballerina.persist.objects.EntityMetaData;
+import io.ballerina.persist.objects.Module;
 import io.ballerina.projects.DiagnosticResult;
 import io.ballerina.projects.Document;
 import io.ballerina.projects.DocumentId;
-import io.ballerina.projects.Module;
 import io.ballerina.projects.Package;
 import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.directory.BuildProject;
@@ -42,12 +40,10 @@ import org.ballerinalang.util.diagnostic.DiagnosticErrorCode;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
 
 import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_ENTITY;
-import static io.ballerina.persist.nodegenerator.BalFileConstants.PERSIST;
-import static io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator.formatModuleMembers;
-import static io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator.generateRelations;
+import static io.ballerina.persist.nodegenerator.BalFileConstants.PERSIST_MODULE;
+import static io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator.inferRelationDetails;
 
 /**
  * This Class implements the utility methods for persist tool.
@@ -59,26 +55,16 @@ public class BalProjectUtils {
 
     private BalProjectUtils() {}
 
-    public static EntityMetaData getEntities(Module module) throws BalException {
-        ArrayList<Entity> entities = new ArrayList<>();
-        ArrayList<ModuleMemberDeclarationNode> entityMemberNodes = new ArrayList<>();
+    public static Module getEntities(io.ballerina.projects.Module module) throws BalException {
+        Module.Builder moduleBuilder = Module.newBuilder(module.moduleName().moduleNamePart());
         try {
             for (DocumentId documentId : module.documentIds()) {
                 Document document = module.document(documentId);
-                EntityMetaData retEntityMetaData = BalSyntaxTreeGenerator.getEntityMetadata(document.syntaxTree());
-                ArrayList<Entity> entityMetadataList = retEntityMetaData.entityArray;
-                ArrayList<ModuleMemberDeclarationNode> entityModuleMembersList =
-                        retEntityMetaData.moduleMembersArray;
-                for (Entity entityMetadata : entityMetadataList) {
-                    entities.add(entityMetadata);
-                    entityMemberNodes.add(entityModuleMembersList.get(entityMetadataList
-                            .indexOf(entityMetadata)));
-                }
+                BalSyntaxTreeGenerator.populateEntities(moduleBuilder, document.syntaxTree());
             }
-            generateRelations(entities);
-            entityMemberNodes = formatModuleMembers(entityMemberNodes, entities);
-            return new EntityMetaData(entities, entityMemberNodes);
-
+            Module entityModule = moduleBuilder.build();
+            inferRelationDetails(entityModule);
+            return entityModule;
         } catch (IOException e) {
             throw new BalException("Error while reading entities in the Ballerina project. " + e.getMessage());
         }
@@ -108,10 +94,10 @@ public class BalProjectUtils {
         return buildProject;
     }
 
-    public static Module getEntityModule(BuildProject project) throws BalException {
-        Module entityModule = null;
-        Module defaultModule = null;
-        for (Module module : project.currentPackage().modules()) {
+    public static io.ballerina.projects.Module getEntityModule(BuildProject project) throws BalException {
+        io.ballerina.projects.Module entityModule = null;
+        io.ballerina.projects.Module defaultModule = null;
+        for (io.ballerina.projects.Module module : project.currentPackage().modules()) {
             boolean entityExists = false;
             if (module.moduleName().moduleNamePart() == null) {
                 defaultModule = module;
@@ -137,7 +123,7 @@ public class BalProjectUtils {
                         }
                         QualifiedNameReferenceNode qualifiedNameRef = (QualifiedNameReferenceNode) annotReference;
                         if (qualifiedNameRef.identifier().text().equals(KEYWORD_ENTITY) && qualifiedNameRef
-                                .modulePrefix().text().equals(PERSIST) && annotation.annotValue()
+                                .modulePrefix().text().equals(PERSIST_MODULE) && annotation.annotValue()
                                 .isPresent()) {
                             entityExists = true;
                         }

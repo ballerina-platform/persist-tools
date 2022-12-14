@@ -41,28 +41,20 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
 import static io.ballerina.persist.objects.PersistToolsConstants.DATABASE;
-import static io.ballerina.persist.objects.PersistToolsConstants.DATABASE_PLACEHOLDER;
 import static io.ballerina.persist.objects.PersistToolsConstants.DEFAULT_DATABASE;
 import static io.ballerina.persist.objects.PersistToolsConstants.DEFAULT_HOST;
 import static io.ballerina.persist.objects.PersistToolsConstants.DEFAULT_PASSWORD;
 import static io.ballerina.persist.objects.PersistToolsConstants.DEFAULT_PORT;
 import static io.ballerina.persist.objects.PersistToolsConstants.DEFAULT_USER;
-import static io.ballerina.persist.objects.PersistToolsConstants.HOST_PLACEHOLDER;
-import static io.ballerina.persist.objects.PersistToolsConstants.KEYWORD_PROVIDER;
 import static io.ballerina.persist.objects.PersistToolsConstants.KEY_DATABASE;
 import static io.ballerina.persist.objects.PersistToolsConstants.KEY_HOST;
 import static io.ballerina.persist.objects.PersistToolsConstants.KEY_PASSWORD;
 import static io.ballerina.persist.objects.PersistToolsConstants.KEY_PORT;
 import static io.ballerina.persist.objects.PersistToolsConstants.KEY_USER;
-import static io.ballerina.persist.objects.PersistToolsConstants.MYSQL;
-import static io.ballerina.persist.objects.PersistToolsConstants.PASSWORD_PLACEHOLDER;
-import static io.ballerina.persist.objects.PersistToolsConstants.PORT_PLACEHOLDER;
 import static io.ballerina.persist.objects.PersistToolsConstants.SUPPORTED_DB_PROVIDERS;
-import static io.ballerina.persist.objects.PersistToolsConstants.USER_PLACEHOLDER;
 
 
 /**
@@ -81,7 +73,8 @@ public class SyntaxTreeGenerator {
     };
     public static final String REGEX_TOML_TABLE_NAME_SPLITTER = "\\.";
 
-    private SyntaxTreeGenerator(){}
+    private SyntaxTreeGenerator() {
+    }
 
     /**
      * Method to create a new Config.toml file with database configurations.
@@ -89,18 +82,7 @@ public class SyntaxTreeGenerator {
     public static SyntaxTree createConfigToml(String name) {
         NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(name, null));
-        moduleMembers = populateNodeList(moduleMembers);
-        Token eofToken = AbstractNodeFactory.createIdentifierToken("");
-        DocumentNode documentNode = NodeFactory.createDocumentNode(moduleMembers, eofToken);
-        TextDocument textDocument = TextDocuments.from(documentNode.toSourceCode());
-        return SyntaxTree.from(textDocument);
-    }
-    public static SyntaxTree createPesistToml(String name) {
-        NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEYWORD_PROVIDER, MYSQL, null));
-        moduleMembers = addNewLine(moduleMembers, 1);
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(DATABASE, null));
-        moduleMembers = populatePersistNodeList(moduleMembers, name);
+        moduleMembers = populateConfigNodeList(moduleMembers);
         Token eofToken = AbstractNodeFactory.createIdentifierToken("");
         DocumentNode documentNode = NodeFactory.createDocumentNode(moduleMembers, eofToken);
         TextDocument textDocument = TextDocuments.from(documentNode.toSourceCode());
@@ -129,41 +111,6 @@ public class SyntaxTreeGenerator {
         } catch (IOException e) {
             throw new BalException("Error while reading configurations. ");
         }
-    }
-
-    public static HashMap<String, String>  populateConfigurations(HashMap<String, String> templatedEntry,
-                                               HashMap<String, TableNode> configs) throws BalException {
-        StringBuilder missingConfigs = new StringBuilder();
-        for (Map.Entry<String, String> templatedConfig : templatedEntry.entrySet()) {
-            boolean configExists = false;
-            String[] placeHolderValues = templatedConfig.getValue().replaceAll("\"", "").replaceAll("}", "")
-                    .split("\\.");
-            String relatedKey =  placeHolderValues[placeHolderValues.length - 1];
-            String placeHolderTable = templatedConfig.getValue()
-                    .replaceAll("\"\\$\\{", "").replaceAll("}\"", "").replaceAll("\\." + relatedKey, "");
-            if (configs.containsKey(placeHolderTable)) {
-                TableNode tableNode = configs.get(placeHolderTable);
-                NodeList<KeyValueNode> subNodeList = tableNode.fields();
-                for (KeyValueNode subMember : subNodeList) {
-                    if (subMember.identifier().toSourceCode().trim().equals(relatedKey)) {
-                        templatedEntry.put(templatedConfig.getKey(),
-                                subMember.value().toSourceCode().trim());
-                        configExists = true;
-                    }
-                }
-            }
-            if (!configExists) {
-                missingConfigs.append(String.format("Persist.toml configuration template %s is not " +
-                                "found in Config.toml. ",
-                        templatedConfig.getValue().replaceAll("\"", "")));
-                missingConfigs.append(System.lineSeparator());
-            }
-
-        }
-        if (missingConfigs.length() != 0) {
-            throw new BalException(missingConfigs.toString());
-        }
-        return templatedEntry;
     }
 
     public static PersistConfiguration readPersistToml(Path configPath) throws BalException {
@@ -291,7 +238,8 @@ public class SyntaxTreeGenerator {
                 return false;
         }
     }
-        private static int indexOf(String key) {
+
+    private static int indexOf(String key) {
         int index = 0;
         for (String member : nodeMap) {
             if (key.equals(member)) {
@@ -302,28 +250,13 @@ public class SyntaxTreeGenerator {
         return -1;
     }
 
-    private static NodeList<DocumentMemberDeclarationNode> populateNodeList(
+    private static NodeList<DocumentMemberDeclarationNode> populateConfigNodeList(
             NodeList<DocumentMemberDeclarationNode> moduleMembers) {
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_HOST, DEFAULT_HOST, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createNumericKV(KEY_PORT, DEFAULT_PORT, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_USER, DEFAULT_USER, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_PASSWORD, DEFAULT_PASSWORD, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_DATABASE, DEFAULT_DATABASE, null));
-        return moduleMembers;
-    }
-
-    private static NodeList<DocumentMemberDeclarationNode> populatePersistNodeList(
-            NodeList<DocumentMemberDeclarationNode> moduleMembers, String projectName) {
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_HOST, String.format(HOST_PLACEHOLDER,
-                projectName), null));
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_PORT, String.format(PORT_PLACEHOLDER,
-                projectName), null));
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_USER, String.format(USER_PLACEHOLDER,
-                projectName), null));
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_PASSWORD,
-                String.format(PASSWORD_PLACEHOLDER, projectName), null));
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_DATABASE,
-                String.format(DATABASE_PLACEHOLDER, projectName), null));
         return moduleMembers;
     }
 

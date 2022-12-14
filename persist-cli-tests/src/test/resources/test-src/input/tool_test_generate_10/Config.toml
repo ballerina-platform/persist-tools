@@ -1,4 +1,4 @@
-[persist_generate_10.clients]
+[persist_generate_10]
 host = "localhost"
 port = 3306
 user = "root"

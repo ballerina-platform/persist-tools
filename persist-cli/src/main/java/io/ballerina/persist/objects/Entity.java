@@ -17,8 +17,13 @@
  */
 package io.ballerina.persist.objects;
 
+import io.ballerina.compiler.syntax.tree.ModuleMemberDeclarationNode;
+
 import java.util.ArrayList;
 import java.util.List;
+
+import static io.ballerina.persist.nodegenerator.BalFileConstants.DOUBLE_QUOTE;
+import static io.ballerina.persist.nodegenerator.BalFileConstants.EMPTY_STRING;
 
 /**
  * Class to store persist entities.
@@ -27,68 +32,103 @@ import java.util.List;
  */
 public class Entity {
 
-    private String[] keys;
+    private final List<String> keys;
 
-    private final List<List<String>> uniqueConstraints;
-    private String tableName;
+    private final List<List<String>> uniqueKeys;
+    private final String tableName;
 
-    private String entityName;
+    private final String entityName;
 
-    private ArrayList<Relation> relations = new ArrayList<>();
+    private final ModuleMemberDeclarationNode node;
 
-    private final ArrayList<FieldMetaData> fields = new ArrayList<>();
+    private final List<EntityField> fields;
 
-    private String autoIncrementStartValue = "";
-
-    public Entity(String[] keys, String tableName, List<List<String>> uniqueConstraints) {
-
-        this.keys = keys.clone();
+    private Entity(ModuleMemberDeclarationNode node, String entityName, List<String> keys,
+                   String tableName, List<List<String>> uniqueKeys, List<EntityField> fields) {
+        this.node = node;
+        this.entityName = entityName;
+        this.keys = keys;
         this.tableName = tableName;
-        this.uniqueConstraints = uniqueConstraints;
+        this.uniqueKeys = uniqueKeys;
+        this.fields = fields;
     }
 
-    public String[] getKeys() {
-        return this.keys.clone();
+    public List<String> getKeys() {
+        return this.keys;
     }
 
-    public List<List<String>> getUniqueConstraints() {
-        return this.uniqueConstraints;
+    public List<List<String>> getUniqueKeys() {
+        return this.uniqueKeys;
     }
 
     public String getTableName() {
-        if (this.tableName == null) {
-            this.tableName = entityName;
-        }
         return this.tableName;
-    }
-    public void setAutoIncrementStartValue(String autoIncrementStartValue) {
-        this.autoIncrementStartValue = autoIncrementStartValue;
-    }
-
-    public void setTableName(String tableName) {
-        this.tableName = tableName;
     }
 
     public String getEntityName() {
         return this.entityName;
     }
-    public void setEntityName(String entityName) {
-        this.entityName = entityName;
-    }
 
-    public ArrayList<FieldMetaData> getFields() {
+    public List<EntityField> getFields() {
         return this.fields;
     }
 
-    public void addField(FieldMetaData field) {
-        this.fields.add(field);
+    public ModuleMemberDeclarationNode getNode() {
+        return node;
     }
 
-    public ArrayList<Relation> getRelations() {
-        return this.relations;
+    public static Entity.Builder newBuilder(String entityName) {
+        return new Entity.Builder(entityName);
     }
 
-    public String getAutoIncrementStartValue() {
-        return this.autoIncrementStartValue;
+    /**
+     * Entity Definition.Builder.
+     */
+    public static class Builder {
+        String entityName;
+        String tableName = null;
+        List<String> keys;
+        List<List<String>> uniqueKeysList = null;
+
+        List<EntityField> fieldList = null;
+
+        ModuleMemberDeclarationNode node;
+
+        private Builder(String entityName) {
+            this.entityName = entityName;
+        }
+
+        public void setKeys(List<String> keys) {
+            this.keys = keys;
+        }
+
+        public void addUniqueKeys(List<String> keys) {
+            if (uniqueKeysList == null) {
+                this.uniqueKeysList = new ArrayList<>();
+            }
+            uniqueKeysList.add(keys);
+        }
+
+        public void setTableName(String tableName) {
+            this.tableName = tableName.replaceAll(DOUBLE_QUOTE, EMPTY_STRING);
+        }
+
+        public void setDeclarationNode(ModuleMemberDeclarationNode node) {
+            this.node = node;
+        }
+
+        public void addField(EntityField field) {
+            if (fieldList == null) {
+                this.fieldList = new ArrayList<>();
+            }
+            fieldList.add(field);
+        }
+
+        public Entity build() {
+            if (tableName == null) {
+                tableName = entityName;
+            }
+            return new Entity(node, entityName, keys, tableName, uniqueKeysList, fieldList);
+        }
     }
 }

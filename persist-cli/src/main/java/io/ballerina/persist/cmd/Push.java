@@ -22,14 +22,13 @@ import io.ballerina.persist.configuration.PersistConfiguration;
 import io.ballerina.persist.nodegenerator.SyntaxTreeGenerator;
 import io.ballerina.persist.objects.BalException;
 import io.ballerina.persist.objects.Entity;
-import io.ballerina.persist.objects.EntityMetaData;
+import io.ballerina.persist.objects.Module;
 import io.ballerina.persist.objects.PersistToolsConstants;
 import io.ballerina.persist.utils.BalProjectUtils;
 import io.ballerina.persist.utils.JdbcDriverLoader;
 import io.ballerina.persist.utils.ScriptRunner;
 import io.ballerina.persist.utils.SqlScriptGenerationUtils;
 import io.ballerina.projects.DependencyGraph;
-import io.ballerina.projects.Module;
 import io.ballerina.projects.Package;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.ProjectException;
@@ -127,9 +126,9 @@ public class Push implements BLauncherCmd {
 
         try {
             BuildProject buildProject = getBuildProject(projectPath);
-            Module module = getEntityModule(buildProject);
-            EntityMetaData retEntityMetaData = BalProjectUtils.getEntities(module);
-            ArrayList<Entity> entityArray = retEntityMetaData.entityArray;
+            io.ballerina.projects.Module module = getEntityModule(buildProject);
+            Module entityModule = BalProjectUtils.getEntities(module);
+            ArrayList<Entity> entityArray = new ArrayList<>(entityModule.getEntityMap().values());
             String[] sqlScripts = SqlScriptGenerationUtils.generateSqlScript(entityArray);
             SqlScriptGenerationUtils.writeScriptFile(sqlScripts,
                     Paths.get(projectPath.toString(), PERSIST_DIRECTORY));
