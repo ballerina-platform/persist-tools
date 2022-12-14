@@ -18,11 +18,11 @@
 package io.ballerina.persist.cmd;
 
 import io.ballerina.cli.BLauncherCmd;
-import io.ballerina.persist.nodegenerator.BalFileConstants;
-import io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator;
-import io.ballerina.persist.nodegenerator.SyntaxTreeGenerator;
-import io.ballerina.persist.objects.BalException;
-import io.ballerina.persist.objects.Module;
+import io.ballerina.persist.BalException;
+import io.ballerina.persist.models.Module;
+import io.ballerina.persist.nodegenerator.BalSyntaxConstants;
+import io.ballerina.persist.nodegenerator.BalSyntaxGenerator;
+import io.ballerina.persist.nodegenerator.TomlSyntaxGenerator;
 import io.ballerina.persist.utils.BalProjectUtils;
 import io.ballerina.projects.ProjectException;
 import io.ballerina.projects.directory.BuildProject;
@@ -39,13 +39,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
 
-
-import static io.ballerina.persist.nodegenerator.BalFileConstants.PATH_CONFIGURATION_BAL_FILE;
-import static io.ballerina.persist.objects.PersistToolsConstants.COMPONENT_IDENTIFIER;
-import static io.ballerina.persist.objects.PersistToolsConstants.CONFIG_SCRIPT_FILE;
-import static io.ballerina.persist.objects.PersistToolsConstants.DATABASE_MYSQL;
-import static io.ballerina.persist.objects.PersistToolsConstants.PERSIST_DIRECTORY;
-import static io.ballerina.persist.objects.PersistToolsConstants.PERSIST_TOML_FILE;
+import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
+import static io.ballerina.persist.PersistToolsConstants.CONFIG_SCRIPT_FILE;
+import static io.ballerina.persist.PersistToolsConstants.DATABASE_MYSQL;
+import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
+import static io.ballerina.persist.PersistToolsConstants.PERSIST_TOML_FILE;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PATH_CONFIGURATION_BAL_FILE;
 import static io.ballerina.persist.utils.BalProjectUtils.getBuildProject;
 import static io.ballerina.persist.utils.BalProjectUtils.getEntityModule;
 
@@ -111,9 +110,9 @@ public class Init implements BLauncherCmd {
 
         Path generatedSourceDirPath;
         if (module.moduleName().moduleNamePart() == null) {
-            generatedSourceDirPath = Paths.get(this.sourcePath, BalFileConstants.GENERATED_SOURCE_DIRECTORY);
+            generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);
         } else {
-            generatedSourceDirPath = Paths.get(this.sourcePath, BalFileConstants.GENERATED_SOURCE_DIRECTORY,
+            generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY,
                     module.moduleName().moduleNamePart());
         }
         try {
@@ -139,7 +138,7 @@ public class Init implements BLauncherCmd {
 
     private void createConfigToml(String configName) throws BalException {
         try {
-            SyntaxTree syntaxTree = SyntaxTreeGenerator.createConfigToml(configName);
+            SyntaxTree syntaxTree = TomlSyntaxGenerator.createConfigToml(configName);
             writeOutputSyntaxTree(syntaxTree, Paths.get(this.sourcePath, CONFIG_SCRIPT_FILE)
                     .toAbsolutePath().toString());
         } catch (Exception e) {
@@ -150,7 +149,7 @@ public class Init implements BLauncherCmd {
 
     private void createPersistToml(Path persistTomlPath) throws BalException {
         try {
-            SyntaxTree syntaxTree = SyntaxTreeGenerator.createConfigToml(DATABASE_MYSQL);
+            SyntaxTree syntaxTree = TomlSyntaxGenerator.createConfigToml(DATABASE_MYSQL);
             writeOutputSyntaxTree(syntaxTree, persistTomlPath.toAbsolutePath().toString());
         } catch (Exception e) {
             throw new BalException("Error while adding Persist.toml to the project. " +
@@ -160,7 +159,7 @@ public class Init implements BLauncherCmd {
 
     private void generateConfigurationBalFile(Path generatedSourcePath) throws BalException {
         try {
-            String configTree = BalSyntaxTreeGenerator.generateDatabaseConfigSyntaxTree();
+            String configTree = BalSyntaxGenerator.generateDatabaseConfigSyntaxTree();
             writeOutputString(configTree, generatedSourcePath.resolve(PATH_CONFIGURATION_BAL_FILE)
                     .toAbsolutePath().toString());
         } catch (Exception e) {
@@ -171,7 +170,7 @@ public class Init implements BLauncherCmd {
 
     private void updateConfigToml(String configName) throws BalException {
         try {
-            SyntaxTree syntaxTree = SyntaxTreeGenerator.updateConfigToml(
+            SyntaxTree syntaxTree = TomlSyntaxGenerator.updateConfigToml(
                     Paths.get(this.sourcePath, CONFIG_SCRIPT_FILE), configName);
             writeOutputSyntaxTree(syntaxTree,
                     Paths.get(this.sourcePath, CONFIG_SCRIPT_FILE).toAbsolutePath().toString());

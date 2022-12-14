@@ -17,11 +17,11 @@
  */
 package io.ballerina.persist.utils;
 
-import io.ballerina.persist.objects.BalException;
-import io.ballerina.persist.objects.Entity;
-import io.ballerina.persist.objects.EntityField;
-import io.ballerina.persist.objects.PersistToolsConstants;
-import io.ballerina.persist.objects.Relation;
+import io.ballerina.persist.BalException;
+import io.ballerina.persist.PersistToolsConstants;
+import io.ballerina.persist.models.Entity;
+import io.ballerina.persist.models.EntityField;
+import io.ballerina.persist.models.Relation;
 
 import java.io.IOException;
 import java.io.PrintStream;

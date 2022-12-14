@@ -16,7 +16,7 @@
  *  under the License.
  */
 
-package io.ballerina.persist.objects;
+package io.ballerina.persist;
 
 /**
  * Exception for ballerina client generation.

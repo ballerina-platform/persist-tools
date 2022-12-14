@@ -18,9 +18,9 @@
 
 package io.ballerina.persist.nodegenerator;
 
+import io.ballerina.persist.BalException;
 import io.ballerina.persist.configuration.DatabaseConfiguration;
 import io.ballerina.persist.configuration.PersistConfiguration;
-import io.ballerina.persist.objects.BalException;
 import io.ballerina.toml.syntax.tree.AbstractNodeFactory;
 import io.ballerina.toml.syntax.tree.DocumentMemberDeclarationNode;
 import io.ballerina.toml.syntax.tree.DocumentNode;
@@ -43,18 +43,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
 
-import static io.ballerina.persist.objects.PersistToolsConstants.DATABASE;
-import static io.ballerina.persist.objects.PersistToolsConstants.DEFAULT_DATABASE;
-import static io.ballerina.persist.objects.PersistToolsConstants.DEFAULT_HOST;
-import static io.ballerina.persist.objects.PersistToolsConstants.DEFAULT_PASSWORD;
-import static io.ballerina.persist.objects.PersistToolsConstants.DEFAULT_PORT;
-import static io.ballerina.persist.objects.PersistToolsConstants.DEFAULT_USER;
-import static io.ballerina.persist.objects.PersistToolsConstants.KEY_DATABASE;
-import static io.ballerina.persist.objects.PersistToolsConstants.KEY_HOST;
-import static io.ballerina.persist.objects.PersistToolsConstants.KEY_PASSWORD;
-import static io.ballerina.persist.objects.PersistToolsConstants.KEY_PORT;
-import static io.ballerina.persist.objects.PersistToolsConstants.KEY_USER;
-import static io.ballerina.persist.objects.PersistToolsConstants.SUPPORTED_DB_PROVIDERS;
+import static io.ballerina.persist.PersistToolsConstants.DATABASE;
+import static io.ballerina.persist.PersistToolsConstants.DEFAULT_DATABASE;
+import static io.ballerina.persist.PersistToolsConstants.DEFAULT_HOST;
+import static io.ballerina.persist.PersistToolsConstants.DEFAULT_PASSWORD;
+import static io.ballerina.persist.PersistToolsConstants.DEFAULT_PORT;
+import static io.ballerina.persist.PersistToolsConstants.DEFAULT_USER;
+import static io.ballerina.persist.PersistToolsConstants.KEY_DATABASE;
+import static io.ballerina.persist.PersistToolsConstants.KEY_HOST;
+import static io.ballerina.persist.PersistToolsConstants.KEY_PASSWORD;
+import static io.ballerina.persist.PersistToolsConstants.KEY_PORT;
+import static io.ballerina.persist.PersistToolsConstants.KEY_USER;
+import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_DB_PROVIDERS;
 
 
 /**
@@ -62,7 +62,7 @@ import static io.ballerina.persist.objects.PersistToolsConstants.SUPPORTED_DB_PR
  *
  * @since 0.1.0
  */
-public class SyntaxTreeGenerator {
+public class TomlSyntaxGenerator {
     private static final String[] nodeMap = {KEY_HOST, KEY_PORT, KEY_USER, KEY_DATABASE, KEY_PASSWORD};
     private static final String[] defaultValues = {
             DEFAULT_HOST,
@@ -73,7 +73,7 @@ public class SyntaxTreeGenerator {
     };
     public static final String REGEX_TOML_TABLE_NAME_SPLITTER = "\\.";
 
-    private SyntaxTreeGenerator() {
+    private TomlSyntaxGenerator() {
     }
 
     /**

@@ -18,7 +18,7 @@
 
 package io.ballerina.persist.tools;
 
-import io.ballerina.persist.objects.BalException;
+import io.ballerina.persist.BalException;
 import io.ballerina.persist.tools.utils.PersistTable;
 import io.ballerina.persist.tools.utils.PersistTableColumn;
 import jdk.jfr.Description;

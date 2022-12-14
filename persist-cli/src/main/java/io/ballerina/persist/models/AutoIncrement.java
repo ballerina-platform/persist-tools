@@ -1,4 +1,4 @@
-package io.ballerina.persist.objects;
+package io.ballerina.persist.models;
 
 /**
  * Model class for auto increment parameters.

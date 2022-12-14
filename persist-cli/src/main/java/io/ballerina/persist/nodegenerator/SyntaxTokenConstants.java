@@ -26,9 +26,9 @@ import io.ballerina.compiler.syntax.tree.Token;
  *
  * @since 0.1.0
  */
-public class SyntaxTreeConstants {
+public class SyntaxTokenConstants {
 
-    private SyntaxTreeConstants() {}
+    private SyntaxTokenConstants() {}
 
     public static final Token SYNTAX_TREE_SEMICOLON = AbstractNodeFactory.createIdentifierToken(";");
     public static final Token SYNTAX_TREE_COLON = AbstractNodeFactory.createIdentifierToken(":");

@@ -20,12 +20,12 @@ package io.ballerina.persist.cmd;
 import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.compiler.syntax.tree.ImportDeclarationNode;
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
-import io.ballerina.persist.nodegenerator.BalFileConstants;
-import io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator;
-import io.ballerina.persist.objects.BalException;
-import io.ballerina.persist.objects.Entity;
-import io.ballerina.persist.objects.Module;
-import io.ballerina.persist.objects.PersistToolsConstants;
+import io.ballerina.persist.BalException;
+import io.ballerina.persist.PersistToolsConstants;
+import io.ballerina.persist.models.Entity;
+import io.ballerina.persist.models.Module;
+import io.ballerina.persist.nodegenerator.BalSyntaxConstants;
+import io.ballerina.persist.nodegenerator.BalSyntaxGenerator;
 import io.ballerina.persist.utils.BalProjectUtils;
 import io.ballerina.projects.ProjectException;
 import io.ballerina.projects.directory.BuildProject;
@@ -45,8 +45,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Locale;
 
-import static io.ballerina.persist.objects.PersistToolsConstants.PERSIST_DIRECTORY;
-import static io.ballerina.persist.objects.PersistToolsConstants.PERSIST_TOML_FILE;
+import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
+import static io.ballerina.persist.PersistToolsConstants.PERSIST_TOML_FILE;
 import static io.ballerina.persist.utils.BalProjectUtils.getBuildProject;
 import static io.ballerina.persist.utils.BalProjectUtils.getEntityModule;
 
@@ -109,9 +109,9 @@ public class Generate implements BLauncherCmd {
             BuildProject buildProject = getBuildProject(projectPath);
             io.ballerina.projects.Module module = getEntityModule(buildProject);
             if (module.moduleName().moduleNamePart() == null) {
-                generatedSourceDirPath = Paths.get(this.sourcePath, BalFileConstants.GENERATED_SOURCE_DIRECTORY);
+                generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);
             } else {
-                generatedSourceDirPath = Paths.get(this.sourcePath, BalFileConstants.GENERATED_SOURCE_DIRECTORY,
+                generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY,
                         module.moduleName().moduleNamePart());
             }
             entityModule = BalProjectUtils.getEntities(module);
@@ -140,7 +140,7 @@ public class Generate implements BLauncherCmd {
 
     private static void generateClientBalFile(Entity entity, Path outputPath) throws BalException {
         ArrayList<ImportDeclarationNode> imports = new ArrayList<>();
-        SyntaxTree balTree = BalSyntaxTreeGenerator.generateClientSyntaxTree(entity, imports);
+        SyntaxTree balTree = BalSyntaxGenerator.generateClientSyntaxTree(entity, imports);
         String clientPath = outputPath.resolve(
                 entity.getEntityName().toLowerCase(Locale.getDefault()) + "_client.bal").
                 toAbsolutePath().toString();

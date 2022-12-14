@@ -15,9 +15,9 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-package io.ballerina.persist.objects;
+package io.ballerina.persist.models;
 
-import static io.ballerina.persist.nodegenerator.BalFileConstants.COLON;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.COLON;
 
 /**
  * Client Entity fieldMetaData class.

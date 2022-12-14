@@ -15,15 +15,15 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-package io.ballerina.persist.objects;
+package io.ballerina.persist.models;
 
 import io.ballerina.compiler.syntax.tree.ModuleMemberDeclarationNode;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static io.ballerina.persist.nodegenerator.BalFileConstants.DOUBLE_QUOTE;
-import static io.ballerina.persist.nodegenerator.BalFileConstants.EMPTY_STRING;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.DOUBLE_QUOTE;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.EMPTY_STRING;
 
 /**
  * Class to store persist entities.

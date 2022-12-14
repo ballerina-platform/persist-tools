@@ -26,9 +26,9 @@ import io.ballerina.compiler.syntax.tree.NodeList;
 import io.ballerina.compiler.syntax.tree.QualifiedNameReferenceNode;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
 import io.ballerina.compiler.syntax.tree.TypeDefinitionNode;
-import io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator;
-import io.ballerina.persist.objects.BalException;
-import io.ballerina.persist.objects.Module;
+import io.ballerina.persist.BalException;
+import io.ballerina.persist.models.Module;
+import io.ballerina.persist.nodegenerator.BalSyntaxGenerator;
 import io.ballerina.projects.DiagnosticResult;
 import io.ballerina.projects.Document;
 import io.ballerina.projects.DocumentId;
@@ -41,9 +41,9 @@ import org.ballerinalang.util.diagnostic.DiagnosticErrorCode;
 import java.io.IOException;
 import java.nio.file.Path;
 
-import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_ENTITY;
-import static io.ballerina.persist.nodegenerator.BalFileConstants.PERSIST_MODULE;
-import static io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator.inferRelationDetails;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_ENTITY;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PERSIST_MODULE;
+import static io.ballerina.persist.nodegenerator.BalSyntaxGenerator.inferRelationDetails;
 
 /**
  * This Class implements the utility methods for persist tool.
@@ -60,7 +60,7 @@ public class BalProjectUtils {
         try {
             for (DocumentId documentId : module.documentIds()) {
                 Document document = module.document(documentId);
-                BalSyntaxTreeGenerator.populateEntities(moduleBuilder, document.syntaxTree());
+                BalSyntaxGenerator.populateEntities(moduleBuilder, document.syntaxTree());
             }
             Module entityModule = moduleBuilder.build();
             inferRelationDetails(entityModule);
@@ -101,10 +101,6 @@ public class BalProjectUtils {
             boolean entityExists = false;
             if (module.moduleName().moduleNamePart() == null) {
                 defaultModule = module;
-            }
-            // TODO: remove this condition.
-            if ("clients".equals(module.moduleName().moduleNamePart())) {
-                continue;
             }
             for (DocumentId documentId : module.documentIds()) {
                 Document document = module.document(documentId);

@@ -22,9 +22,9 @@ package io.ballerina.persist.nodegenerator;
  *
  * @since 0.1.0
  */
-public class BalFileConstants {
+public class BalSyntaxConstants {
 
-    private BalFileConstants() {}
+    private BalSyntaxConstants() {}
 
     /**
      * Constants related to persist client type inheritance.
