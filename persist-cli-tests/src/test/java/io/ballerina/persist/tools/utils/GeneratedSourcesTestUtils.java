@@ -140,13 +140,13 @@ public class GeneratedSourcesTestUtils {
         try {
             if (cmd == Command.INIT) {
                 persistClass = Class.forName("io.ballerina.persist.cmd.Init");
-                Init persistCmd = (Init) persistClass.getDeclaredConstructor().newInstance();
-                persistCmd.setSourcePath(sourcePath.toAbsolutePath().toString());
+                Init persistCmd = (Init) persistClass.getDeclaredConstructor(String.class)
+                        .newInstance(sourcePath.toAbsolutePath().toString());
                 persistCmd.execute();
             } else if (cmd == Command.GENERATE) {
                 persistClass = Class.forName("io.ballerina.persist.cmd.Generate");
-                Generate persistCmd = (Generate) persistClass.getDeclaredConstructor().newInstance();
-                persistCmd.setSourcePath(sourcePath.toAbsolutePath().toString());
+                Generate persistCmd = (Generate) persistClass.getDeclaredConstructor(String.class)
+                        .newInstance(sourcePath.toAbsolutePath().toString());
                 persistCmd.execute();
             } else {
                 persistClass = Class.forName("io.ballerina.persist.cmd.Push");

@@ -17,7 +17,7 @@
  */
 package io.ballerina.persist.utils;
 
-import io.ballerina.persist.objects.BalException;
+import io.ballerina.persist.BalException;
 
 import java.io.File;
 import java.io.IOException;

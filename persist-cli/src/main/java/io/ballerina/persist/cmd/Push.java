@@ -18,12 +18,12 @@
 package io.ballerina.persist.cmd;
 
 import io.ballerina.cli.BLauncherCmd;
+import io.ballerina.persist.BalException;
+import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.configuration.PersistConfiguration;
-import io.ballerina.persist.nodegenerator.SyntaxTreeGenerator;
-import io.ballerina.persist.objects.BalException;
-import io.ballerina.persist.objects.Entity;
-import io.ballerina.persist.objects.EntityMetaData;
-import io.ballerina.persist.objects.PersistToolsConstants;
+import io.ballerina.persist.models.Entity;
+import io.ballerina.persist.models.Module;
+import io.ballerina.persist.nodegenerator.TomlSyntaxGenerator;
 import io.ballerina.persist.utils.BalProjectUtils;
 import io.ballerina.persist.utils.JdbcDriverLoader;
 import io.ballerina.persist.utils.ScriptRunner;
@@ -58,18 +58,20 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 
-import static io.ballerina.persist.nodegenerator.BalFileConstants.JDBC_URL_WITHOUT_DATABASE;
-import static io.ballerina.persist.nodegenerator.BalFileConstants.JDBC_URL_WITH_DATABASE;
-import static io.ballerina.persist.objects.PersistToolsConstants.BALLERINA_MYSQL_DRIVER_NAME;
-import static io.ballerina.persist.objects.PersistToolsConstants.COMPONENT_IDENTIFIER;
-import static io.ballerina.persist.objects.PersistToolsConstants.MYSQL_CONNECTOR_NAME_PREFIX;
-import static io.ballerina.persist.objects.PersistToolsConstants.MYSQL_DRIVER_CLASS;
-import static io.ballerina.persist.objects.PersistToolsConstants.PASSWORD;
-import static io.ballerina.persist.objects.PersistToolsConstants.PERSIST_DIRECTORY;
-import static io.ballerina.persist.objects.PersistToolsConstants.PERSIST_TOML_FILE;
-import static io.ballerina.persist.objects.PersistToolsConstants.PLATFORM;
-import static io.ballerina.persist.objects.PersistToolsConstants.PROPERTY_KEY_PATH;
-import static io.ballerina.persist.objects.PersistToolsConstants.USER;
+import static io.ballerina.persist.PersistToolsConstants.BALLERINA_MYSQL_DRIVER_NAME;
+import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
+import static io.ballerina.persist.PersistToolsConstants.MYSQL_CONNECTOR_NAME_PREFIX;
+import static io.ballerina.persist.PersistToolsConstants.MYSQL_DRIVER_CLASS;
+import static io.ballerina.persist.PersistToolsConstants.PASSWORD;
+import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
+import static io.ballerina.persist.PersistToolsConstants.PERSIST_TOML_FILE;
+import static io.ballerina.persist.PersistToolsConstants.PLATFORM;
+import static io.ballerina.persist.PersistToolsConstants.PROPERTY_KEY_PATH;
+import static io.ballerina.persist.PersistToolsConstants.USER;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.JDBC_URL_WITHOUT_DATABASE;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.JDBC_URL_WITH_DATABASE;
+import static io.ballerina.persist.utils.BalProjectUtils.getBuildProject;
+import static io.ballerina.persist.utils.BalProjectUtils.getEntityModule;
 
 /**
  * Class to implement "persist push" command for ballerina.
@@ -123,8 +125,10 @@ public class Push implements BLauncherCmd {
         }
 
         try {
-            EntityMetaData retEntityMetaData = BalProjectUtils.getEntitiesInBalFiles(this.sourcePath);
-            ArrayList<Entity> entityArray = retEntityMetaData.entityArray;
+            BuildProject buildProject = getBuildProject(projectPath);
+            io.ballerina.projects.Module module = getEntityModule(buildProject);
+            Module entityModule = BalProjectUtils.getEntities(module);
+            ArrayList<Entity> entityArray = new ArrayList<>(entityModule.getEntityMap().values());
             String[] sqlScripts = SqlScriptGenerationUtils.generateSqlScript(entityArray);
             SqlScriptGenerationUtils.writeScriptFile(sqlScripts,
                     Paths.get(projectPath.toString(), PERSIST_DIRECTORY));
@@ -137,7 +141,7 @@ public class Push implements BLauncherCmd {
         try {
             balProject = BuildProject.load(projectPath); // refer the value from the project path
             balProject.currentPackage().getCompilation();
-            persistConfigurations = SyntaxTreeGenerator.readPersistToml(persistTomlPath);
+            persistConfigurations = TomlSyntaxGenerator.readPersistToml(persistTomlPath);
         } catch (BalException e) {
             errStream.println("Error occurred while loading db configurations and driver. " + e.getMessage());
             return;
@@ -235,7 +239,6 @@ public class Push implements BLauncherCmd {
         }
         return driver;
     }
-
 
     @Override
     public void setParentCmdParser(CommandLine parentCmdParser) {

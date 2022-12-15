@@ -18,7 +18,7 @@
 
 package io.ballerina.persist.configuration;
 
-import io.ballerina.persist.objects.BalException;
+import io.ballerina.persist.BalException;
 import io.ballerina.persist.utils.DataBaseValidationUtils;
 import io.ballerina.toml.syntax.tree.KeyValueNode;
 import io.ballerina.toml.syntax.tree.NodeList;
