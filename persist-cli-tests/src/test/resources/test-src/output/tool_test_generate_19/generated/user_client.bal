@@ -3,9 +3,9 @@
 // This file is an auto-generated file by Ballerina persistence layer for User.
 // It should not be modified by hand.
 
+import ballerinax/mysql;
 import ballerina/persist;
 import ballerina/sql;
-import ballerinax/mysql;
 
 public client class UserClient {
     *persist:AbstractPersistClient;

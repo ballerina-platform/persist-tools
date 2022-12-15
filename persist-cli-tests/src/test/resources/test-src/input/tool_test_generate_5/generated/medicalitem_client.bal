@@ -4,9 +4,9 @@
 // It should not be modified by hand.
 
 
+import ballerinax/mysql;
 import ballerina/persist;
 import ballerina/sql;
-import ballerinax/mysql;
 
 public client class MedicalItemClient {
     *persist:AbstractPersistClient;
