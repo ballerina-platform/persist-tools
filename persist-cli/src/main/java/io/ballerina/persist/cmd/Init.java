@@ -119,7 +119,7 @@ public class Init implements BLauncherCmd {
 
             generateConfigurationBalFile(generatedSourceDirPath);
             errStream.println("Created database_configuration.bal file with default configurations " +
-                    "in the generated directory");
+                    "in the generated directory.");
 
             createPersistToml(persistTomlPath);
             errStream.println("Created Persist.toml file with configurations. ");
