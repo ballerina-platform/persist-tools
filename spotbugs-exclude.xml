@@ -20,4 +20,9 @@
     <Match>
         <Class name="io.ballerina.persist.utils.ScriptRunner" />
     </Match>
+    <Match>
+        <Class name="io.ballerina.persist.cmd.Push" />
+        <Method name="execute" />
+        <Bug pattern="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE" />
+    </Match>
 </FindBugsFilter>

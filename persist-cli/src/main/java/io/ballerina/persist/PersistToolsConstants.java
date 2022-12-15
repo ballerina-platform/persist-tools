@@ -53,7 +53,7 @@ public class PersistToolsConstants {
     public static final String AUTO_INCREMENT_WITH_SPACE = " AUTO_INCREMENT";
     public static final String AUTO_INCREMENT_WITH_TAB = "  AUTO_INCREMENT";
     public static final String START_VALUE = "startValue";
-    public static final String INCREMENT = "startValue";
+    public static final String INCREMENT = "increment";
     public static final String ON_UPDATE = "onUpdate";
     public static final String ON_DELETE = "onDelete";
     public static final String CONSTRAINT = "constraint";
