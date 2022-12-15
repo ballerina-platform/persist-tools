@@ -30,7 +30,7 @@ import io.ballerina.compiler.syntax.tree.Token;
  */
 public class SyntaxTokenConstants {
 
-    private SyntaxTreeConstants() {}
+    private SyntaxTokenConstants() {}
     public static final Token SYNTAX_TREE_SEMICOLON = AbstractNodeFactory.createToken(SyntaxKind.SEMICOLON_TOKEN);
     public static final Token SYNTAX_TREE_COLON = AbstractNodeFactory.createToken(SyntaxKind.COLON_TOKEN);
     public static final Token SYNTAX_TREE_OPEN_BRACE = AbstractNodeFactory.createToken(SyntaxKind.OPEN_BRACE_TOKEN);
@@ -44,7 +44,6 @@ public class SyntaxTokenConstants {
     public static final Token SYNTAX_TREE_PIPE = AbstractNodeFactory.createToken(SyntaxKind.PIPE_TOKEN);
     public static final Token SYNTAX_TREE_SLASH = AbstractNodeFactory.createToken(SyntaxKind.SLASH_TOKEN);
     public static final Token SYNTAX_TREE_COMMA = AbstractNodeFactory.createToken(SyntaxKind.COMMA_TOKEN);
-    private SyntaxTokenConstants() {}
 
     public static final Token SYNTAX_TREE_BLANK_LINE = AbstractNodeFactory.createIdentifierToken("\n\n");
 
