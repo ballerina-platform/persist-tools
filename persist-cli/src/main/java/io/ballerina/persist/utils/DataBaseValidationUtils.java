@@ -18,7 +18,7 @@
 
 package io.ballerina.persist.utils;
 
-import io.ballerina.persist.objects.BalException;
+import io.ballerina.persist.BalException;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

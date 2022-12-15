@@ -1,4 +1,4 @@
-[tool_test_generate_16.clients]
+[tool_test_generate_16]
 host = "localhost"
 port = 3307
 user = "root"

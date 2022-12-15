@@ -18,12 +18,12 @@
 package io.ballerina.persist.cmd;
 
 import io.ballerina.cli.BLauncherCmd;
-import io.ballerina.persist.objects.PersistToolsConstants;
+import io.ballerina.persist.PersistToolsConstants;
 import picocli.CommandLine;
 
 import java.io.PrintStream;
 
-import static io.ballerina.persist.objects.PersistToolsConstants.COMPONENT_IDENTIFIER;
+import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 
 
 /**

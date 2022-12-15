@@ -39,7 +39,7 @@ import io.ballerina.compiler.syntax.tree.SyntaxKind;
 import io.ballerina.compiler.syntax.tree.Token;
 import io.ballerina.compiler.syntax.tree.TypeDescriptorNode;
 import io.ballerina.compiler.syntax.tree.UnionTypeDescriptorNode;
-import io.ballerina.persist.nodegenerator.SyntaxTreeConstants;
+import io.ballerina.persist.nodegenerator.SyntaxTokenConstants;
 
 /**
  * Class representing different types of TypeDescriptorNodes.
@@ -53,7 +53,7 @@ public class TypeDescriptor {
     public static ReturnTypeDescriptorNode getReturnTypeDescriptorNode(Node type) {
         NodeList<AnnotationNode> annotations = NodeFactory.createEmptyNodeList();
         return NodeFactory.createReturnTypeDescriptorNode(
-                SyntaxTreeConstants.SYNTAX_TREE_KEYWORD_RETURNS,
+                SyntaxTokenConstants.SYNTAX_TREE_KEYWORD_RETURNS,
                 annotations,
                 type
         );
@@ -71,14 +71,14 @@ public class TypeDescriptor {
                 qualifierList,
                 typeName,
                 AbstractNodeFactory.createIdentifierToken(fieldName),
-                SyntaxTreeConstants.SYNTAX_TREE_EQUAL, expression,
-                SyntaxTreeConstants.SYNTAX_TREE_SEMICOLON
+                SyntaxTokenConstants.SYNTAX_TREE_EQUAL, expression,
+                SyntaxTokenConstants.SYNTAX_TREE_SEMICOLON
         );
     }
     public static QualifiedNameReferenceNode getQualifiedNameReferenceNode(String modulePrefix, String identifier) {
         return NodeFactory.createQualifiedNameReferenceNode(
                 AbstractNodeFactory.createIdentifierToken(modulePrefix),
-                SyntaxTreeConstants.SYNTAX_TREE_COLON,
+                SyntaxTokenConstants.SYNTAX_TREE_COLON,
                 AbstractNodeFactory.createIdentifierToken(identifier + " ")
         );
     }
@@ -116,9 +116,9 @@ public class TypeDescriptor {
 
     public static ArrayTypeDescriptorNode getArrayTypeDescriptorNode(String type) {
         ArrayDimensionNode arrayDimensionNode = NodeFactory.createArrayDimensionNode(
-                SyntaxTreeConstants.SYNTAX_TREE_OPEN_BRACKET,
+                SyntaxTokenConstants.SYNTAX_TREE_OPEN_BRACKET,
                 null,
-                SyntaxTreeConstants.SYNTAX_TREE_CLOSE_BRACKET
+                SyntaxTokenConstants.SYNTAX_TREE_CLOSE_BRACKET
         );
         NodeList<ArrayDimensionNode> dimensionList = NodeFactory.createNodeList(arrayDimensionNode);
         return NodeFactory.createArrayTypeDescriptorNode(
@@ -129,11 +129,11 @@ public class TypeDescriptor {
 
     public static RecordTypeDescriptorNode getRecordTypeDescriptorNode() {
         return NodeFactory.createRecordTypeDescriptorNode(
-                SyntaxTreeConstants.SYNTAX_TREE_KEYWORD_RECORD,
-                SyntaxTreeConstants.SYNTAX_TREE_OPEN_BRACE,
+                SyntaxTokenConstants.SYNTAX_TREE_KEYWORD_RECORD,
+                SyntaxTokenConstants.SYNTAX_TREE_OPEN_BRACE,
                 NodeFactory.createEmptyNodeList(),
                 null,
-                SyntaxTreeConstants.SYNTAX_TREE_CLOSE_BRACE
+                SyntaxTokenConstants.SYNTAX_TREE_CLOSE_BRACE
         );
     }
 
@@ -151,7 +151,7 @@ public class TypeDescriptor {
                 AbstractNodeFactory.createIdentifierToken(fieldName),
                 null,
                 null,
-                SyntaxTreeConstants.SYNTAX_TREE_SEMICOLON
+                SyntaxTokenConstants.SYNTAX_TREE_SEMICOLON
         );
     }
 
@@ -162,7 +162,7 @@ public class TypeDescriptor {
     public static UnionTypeDescriptorNode getUnionTypeDescriptorNode(TypeDescriptorNode lhs, TypeDescriptorNode rhs) {
         return NodeFactory.createUnionTypeDescriptorNode(
                 lhs,
-                SyntaxTreeConstants.SYNTAX_TREE_PIPE,
+                SyntaxTokenConstants.SYNTAX_TREE_PIPE,
                 rhs
         );
     }
@@ -171,12 +171,12 @@ public class TypeDescriptor {
         if (modulePrefix.isEmpty()) {
             return NodeFactory.createOptionalTypeDescriptorNode(
                     getSimpleNameReferenceNode(identifier),
-                    SyntaxTreeConstants.SYNTAX_TREE_QUESTION_MARK
+                    SyntaxTokenConstants.SYNTAX_TREE_QUESTION_MARK
             );
         }
         return NodeFactory.createOptionalTypeDescriptorNode(
                 getQualifiedNameReferenceNode(modulePrefix, identifier),
-                SyntaxTreeConstants.SYNTAX_TREE_QUESTION_MARK
+                SyntaxTokenConstants.SYNTAX_TREE_QUESTION_MARK
         );
     }
 
@@ -185,16 +185,16 @@ public class TypeDescriptor {
         if (rhs == null) {
             comma = null;
         } else {
-            comma = SyntaxTreeConstants.SYNTAX_TREE_COMMA;
+            comma = SyntaxTokenConstants.SYNTAX_TREE_COMMA;
         }
         return NodeFactory.createStreamTypeDescriptorNode(
-                SyntaxTreeConstants.SYNTAX_TREE_KEYWORD_STREAM,
+                SyntaxTokenConstants.SYNTAX_TREE_KEYWORD_STREAM,
                 NodeFactory.createStreamTypeParamsNode(
-                        SyntaxTreeConstants.SYNTAX_TREE_IT,
+                        SyntaxTokenConstants.SYNTAX_TREE_IT,
                         lhs,
                         comma,
                         rhs,
-                        SyntaxTreeConstants.SYNTAX_TREE_GT
+                        SyntaxTokenConstants.SYNTAX_TREE_GT
                 )
         );
     }
@@ -203,9 +203,9 @@ public class TypeDescriptor {
         return NodeFactory.createMapTypeDescriptorNode(
                 AbstractNodeFactory.createIdentifierToken("map"),
                 NodeFactory.createTypeParameterNode(
-                        SyntaxTreeConstants.SYNTAX_TREE_IT,
+                        SyntaxTokenConstants.SYNTAX_TREE_IT,
                         descriptorNode,
-                        SyntaxTreeConstants.SYNTAX_TREE_GT
+                        SyntaxTokenConstants.SYNTAX_TREE_GT
                 )
         );
     }

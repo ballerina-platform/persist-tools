@@ -6,7 +6,7 @@ format = "json"
 name = "myorg/myproject.foo"
 level = "DEBUG"
 
-[perist_init_8.clients]
+[perist_init_8]
 host = "localhost"
 port = 3306
 user = "root"

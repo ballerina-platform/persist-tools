@@ -23,7 +23,7 @@ import io.ballerina.compiler.syntax.tree.EnumDeclarationNode;
 import io.ballerina.compiler.syntax.tree.Node;
 import io.ballerina.compiler.syntax.tree.NodeFactory;
 import io.ballerina.compiler.syntax.tree.Token;
-import io.ballerina.persist.nodegenerator.SyntaxTreeConstants;
+import io.ballerina.persist.nodegenerator.SyntaxTokenConstants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,18 +48,18 @@ public class Enum {
         return NodeFactory.createEnumDeclarationNode(
                 null,
                 qualifier,
-                SyntaxTreeConstants.SYNTAX_TREE_KEYWORD_ENUM,
+                SyntaxTokenConstants.SYNTAX_TREE_KEYWORD_ENUM,
                 AbstractNodeFactory.createIdentifierToken(name),
-                SyntaxTreeConstants.SYNTAX_TREE_OPEN_BRACE,
+                SyntaxTokenConstants.SYNTAX_TREE_OPEN_BRACE,
                 NodeFactory.createSeparatedNodeList(enumMemberList),
-                SyntaxTreeConstants.SYNTAX_TREE_CLOSE_BRACE,
+                SyntaxTokenConstants.SYNTAX_TREE_CLOSE_BRACE,
                 null
         );
     }
 
     public void addMember(Node member) {
         if (enumMemberList.size() > 0) {
-            enumMemberList.add(SyntaxTreeConstants.SYNTAX_TREE_COMMA);
+            enumMemberList.add(SyntaxTokenConstants.SYNTAX_TREE_COMMA);
         }
         enumMemberList.add(member);
     }

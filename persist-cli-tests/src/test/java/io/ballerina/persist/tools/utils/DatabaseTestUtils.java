@@ -18,9 +18,9 @@
 
 package io.ballerina.persist.tools.utils;
 
+import io.ballerina.persist.BalException;
 import io.ballerina.persist.configuration.PersistConfiguration;
-import io.ballerina.persist.nodegenerator.SyntaxTreeGenerator;
-import io.ballerina.persist.objects.BalException;
+import io.ballerina.persist.nodegenerator.TomlSyntaxGenerator;
 import org.testng.Assert;
 
 import java.io.PrintStream;
@@ -33,8 +33,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Locale;
 
-import static io.ballerina.persist.objects.PersistToolsConstants.PERSIST_DIRECTORY;
-import static io.ballerina.persist.objects.PersistToolsConstants.PERSIST_TOML_FILE;
+import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
+import static io.ballerina.persist.PersistToolsConstants.PERSIST_TOML_FILE;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.GENERATED_SOURCES_DIRECTORY;
 
 /**
@@ -54,7 +54,7 @@ public class DatabaseTestUtils {
         if (osName.toLowerCase(Locale.getDefault()).contains("windows")) {
             return;
         }
-        PersistConfiguration configuration = SyntaxTreeGenerator.readPersistToml(
+        PersistConfiguration configuration = TomlSyntaxGenerator.readPersistToml(
                 Paths.get(GENERATED_SOURCES_DIRECTORY, subDir, PERSIST_DIRECTORY, PERSIST_TOML_FILE));
         String username = configuration.getDbConfig().getUsername();
         String password = configuration.getDbConfig().getPassword();
