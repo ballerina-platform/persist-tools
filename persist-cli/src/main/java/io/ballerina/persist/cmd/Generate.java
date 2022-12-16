@@ -58,7 +58,7 @@ import static io.ballerina.persist.utils.BalProjectUtils.getEntityModule;
  */
 @CommandLine.Command(
         name = "generate",
-        description = "Generate Ballerina client for the entity."
+        description = "Generate Ballerina client object for the entity."
 )
 
 public class Generate implements BLauncherCmd {
