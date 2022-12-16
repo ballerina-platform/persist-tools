@@ -57,6 +57,7 @@ public class ToolingGenerateTest {
 
     @Test(enabled = true)
     @Description("There is a generated client object and the corresponding entity is updated")
+
     public void testGenerateUpdateEntity() {
         assertGeneratedSources("tool_test_generate_5", GENERATE);
     }

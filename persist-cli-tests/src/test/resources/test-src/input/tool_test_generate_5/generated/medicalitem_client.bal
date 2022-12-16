@@ -1,6 +1,12 @@
-import ballerina/sql;
+// AUTO-GENERATED FILE. DO NOT MODIFY.
+
+// This file is an auto-generated file by Ballerina persistence layer for MedicalItem.
+// It should not be modified by hand.
+
+
 import ballerinax/mysql;
 import ballerina/persist;
+import ballerina/sql;
 
 public client class MedicalItemClient {
     *persist:AbstractPersistClient;

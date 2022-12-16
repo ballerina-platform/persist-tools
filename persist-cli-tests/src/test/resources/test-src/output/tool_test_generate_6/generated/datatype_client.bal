@@ -1,7 +1,12 @@
-import ballerina/sql;
+// AUTO-GENERATED FILE. DO NOT MODIFY.
+
+// This file is an auto-generated file by Ballerina persistence layer for DataType.
+// It should not be modified by hand.
+
 import ballerinax/mysql;
-import ballerina/time;
 import ballerina/persist;
+import ballerina/sql;
+import ballerina/time;
 
 public client class DataTypeClient {
     *persist:AbstractPersistClient;
