@@ -1225,7 +1225,4 @@ public class BalSyntaxGenerator {
                 SYNTAX_TREE_SEMICOLON
         );
     }
-
-
-
 }
