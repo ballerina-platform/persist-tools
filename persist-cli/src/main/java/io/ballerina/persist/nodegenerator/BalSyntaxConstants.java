@@ -204,7 +204,7 @@ public class BalSyntaxConstants {
     public static final String INIT_INCLUDE_MANY = "self.include = include;";
     public static final String SELF_ERR = "self.err = err;";
 
-    public static final String ANYDATA_KETWORD = "anydataStream";
+    public static final String ANYDATA_KEYWORD = "anydataStream";
 
     public static final String ERR_IS_ERROR = "self.err is persist:Error";
     public static final String RETURN_CASTED_ERROR = "return <persist:Error>self.err;";
@@ -234,6 +234,6 @@ public class BalSyntaxConstants {
     public static final String COMMENT_SHOULD_NOT_BE_MODIFIED = "// It should not be modified by hand.";
 
 
-    public static final String MYSQL_DRIVER_IMPORT = "import ballerinax/mysql.driver as _;";
+    public static final String MYSQL_DRIVER = "mysql.driver";
 
 }
