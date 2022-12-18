@@ -80,8 +80,11 @@ public class BalProjectUtils {
             errorMessage.append("error occurred when validating the project. ");
             int validErrors = 0;
             for (Diagnostic diagnostic : diagnosticResult.errors()) {
+
                 if (!diagnostic.diagnosticInfo().code().equals(DiagnosticErrorCode
-                        .INCOMPATIBLE_TYPES.diagnosticId())) {
+                        .INCOMPATIBLE_TYPES.diagnosticId()) &&
+                        !diagnostic.diagnosticInfo().code().equals(DiagnosticErrorCode
+                        .INCOMPATIBLE_MAPPING_CONSTRUCTOR.diagnosticId())) {
                     errorMessage.append(System.lineSeparator());
                     errorMessage.append(diagnostic);
                     validErrors += 1;
