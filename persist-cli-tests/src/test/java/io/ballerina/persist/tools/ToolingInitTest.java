@@ -32,7 +32,7 @@ import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertG
 public class ToolingInitTest {
 
     @Test(enabled = true)
-    @Description("When there isn't a Persist.toml file inside the project root directory")
+    @Description("When there is no Persist.toml file inside the project root directory")
     public void testInitCreateConfig() {
         assertGeneratedSources("tool_test_init_1", INIT);
     }
