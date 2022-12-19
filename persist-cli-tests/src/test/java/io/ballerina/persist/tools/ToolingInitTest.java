@@ -122,7 +122,7 @@ public class ToolingInitTest {
         assertGeneratedSourcesNegative("tool_test_init_13", INIT, new String[]{});
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     @Description("Running init on a project with entities in multiple places.")
     public void testInitWithMultipleEntitiesInDifferentPlaces() {
         assertGeneratedSourcesNegative("tool_test_init_14", INIT, new String[]{});
