@@ -11,7 +11,7 @@ public client class ProfileClient {
     *persist:AbstractPersistClient;
 
     private final string entityName = "Profile";
-    private final sql:ParameterizedQuery tableName = `Profiles`;
+    private final sql:ParameterizedQuery tableName = `Profile`;
 
     private final map<persist:FieldMetadata> fieldMetadata = {
         id: {columnName: "id", 'type: int},

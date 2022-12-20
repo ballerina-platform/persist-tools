@@ -47,7 +47,7 @@ public class ToolingDbPushTest {
     public void testDbPushWithoutDatabase() throws BalException {
         ArrayList<PersistTable> tables = new ArrayList<>();
         tables.add(
-                new PersistTable("MedicalNeeds", "needId")
+                new PersistTable("MedicalNeed", "needId")
                         .addColumn(new PersistTableColumn("needId", sqlInt, yes, no))
                         .addColumn(new PersistTableColumn("itemId", sqlInt, no, no))
                         .addColumn(new PersistTableColumn("beneficiaryId", sqlInt, no, no))
@@ -56,7 +56,7 @@ public class ToolingDbPushTest {
                         .addColumn(new PersistTableColumn("quantity", sqlInt, no, no))
         );
         tables.add(
-                new PersistTable("MedicalItems", "itemId")
+                new PersistTable("MedicalItem", "itemId")
                         .addColumn(new PersistTableColumn("itemId", sqlInt, no, no))
                         .addColumn(new PersistTableColumn("name", sqlVarchar, no, no))
                         .addColumn(new PersistTableColumn("type", sqlVarchar, no, no))
@@ -77,7 +77,7 @@ public class ToolingDbPushTest {
     public void testDbPushEntityRemoved() throws BalException {
         ArrayList<PersistTable> tables = new ArrayList<>();
         tables.add(
-                new PersistTable("MedicalNeeds", "needId")
+                new PersistTable("MedicalNeed", "needId")
                         .addColumn(new PersistTableColumn("needId", sqlInt, yes, no))
                         .addColumn(new PersistTableColumn("itemId", sqlInt, no, no))
                         .addColumn(new PersistTableColumn("beneficiaryId", sqlInt, no, no))
@@ -86,7 +86,7 @@ public class ToolingDbPushTest {
                         .addColumn(new PersistTableColumn("quantity", sqlInt, no, no))
         );
         tables.add(
-                new PersistTable("MedicalItems", "itemId")
+                new PersistTable("MedicalItem", "itemId")
                         .addColumn(new PersistTableColumn("itemId", sqlInt, no, no))
                         .addColumn(new PersistTableColumn("name", sqlVarchar, no, no))
                         .addColumn(new PersistTableColumn("type", sqlVarchar, no, no))
@@ -101,7 +101,7 @@ public class ToolingDbPushTest {
     public void testDbPushEntityUpdated() throws BalException {
         ArrayList<PersistTable> tables = new ArrayList<>();
         tables.add(
-                new PersistTable("MedicalNeeds", "fooNeedId")
+                new PersistTable("MedicalNeed", "fooNeedId")
                         .addColumn(new PersistTableColumn("fooNeedId", sqlInt, yes, no))
                         .addColumn(new PersistTableColumn("fooItemId", sqlInt, no, no))
                         .addColumn(new PersistTableColumn("fooBeneficiaryId", sqlInt, no, no))
@@ -110,7 +110,7 @@ public class ToolingDbPushTest {
                         .addColumn(new PersistTableColumn("foo", sqlInt, no, no))
         );
         tables.add(
-                new PersistTable("MedicalItems", "itemId")
+                new PersistTable("MedicalItem", "itemId")
                         .addColumn(new PersistTableColumn("itemId", sqlInt, no, no))
                         .addColumn(new PersistTableColumn("name", sqlVarchar, no, no))
                         .addColumn(new PersistTableColumn("type", sqlVarchar, no, no))
@@ -150,25 +150,25 @@ public class ToolingDbPushTest {
         assertGeneratedSources("tool_test_db_push_10", DB_PUSH);
     }
 
-    @Test()
+    @Test(enabled = true)
     @Description("When the db push command is executed with faulty database name containing illegal characters.")
     public void testDbPushWithIllegalCredentials() {
         assertGeneratedSourcesNegative("tool_test_db_push_11", DB_PUSH, null);
     }
 
-    @Test()
+    @Test(enabled = true)
     @Description("When the db push command is executed with faulty database name containing illegal characters.")
     public void testDbPushWithIllegalCredentials2() {
         assertGeneratedSourcesNegative("tool_test_db_push_12", DB_PUSH, null);
     }
 
-    @Test()
+    @Test(enabled = true)
     @Description("When the db push command is executed with faulty database name containing illegal characters.")
     public void testDbPushWithIllegalCredentials3() {
         assertGeneratedSourcesNegative("tool_test_db_push_13", DB_PUSH, null);
     }
 
-    @Test()
+    @Test(enabled = true)
     @Description("When the db push command is executed with empty database name.")
     public void testDbPushWithEmptyCredentials() {
         assertGeneratedSourcesNegative("tool_test_db_push_14", DB_PUSH, null);

@@ -11,17 +11,17 @@ public client class VehicleClient {
     *persist:AbstractPersistClient;
 
     private final string entityName = "Vehicle";
-    private final sql:ParameterizedQuery tableName = `Vehicles`;
+    private final sql:ParameterizedQuery tableName = `Vehicle`;
 
     private final map<persist:FieldMetadata> fieldMetadata = {
         model: {columnName: "model", 'type: int},
         name: {columnName: "name", 'type: string},
-        "employee.id": {columnName: "employeeId", 'type: int, relation: {entityName: "employee", refTable: "Employees", refField: "id"}},
-        "employee.name": {'type: string, relation: {entityName: "employee", refTable: "Employees", refField: "name"}}
+        "employee.id": {columnName: "employeeId", 'type: int, relation: {entityName: "employee", refTable: "Employee", refField: "id"}},
+        "employee.name": {'type: string, relation: {entityName: "employee", refTable: "Employee", refField: "name"}}
     };
     private string[] keyFields = ["model"];
 
-    private final map<persist:JoinMetadata> joinMetadata = {employee: {entity: Employee, fieldName: "employee", refTable: "Employees", refFields: ["id"], joinColumns: ["employeeId"]}};
+    private final map<persist:JoinMetadata> joinMetadata = {employee: {entity: Employee, fieldName: "employee", refTable: "Employee", refFields: ["id"], joinColumns: ["employeeId"]}};
 
     private persist:SQLClient persistClient;
 

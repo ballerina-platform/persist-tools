@@ -12,7 +12,7 @@ public client class MedicalItemClient {
     *persist:AbstractPersistClient;
 
     private final string entityName = "MedicalItem";
-    private final sql:ParameterizedQuery tableName = `MedicalItems`;
+    private final sql:ParameterizedQuery tableName = `MedicalItem`;
 
     private final map<persist:FieldMetadata> fieldMetadata = {
         itemId: {columnName: "itemId", 'type: int},
