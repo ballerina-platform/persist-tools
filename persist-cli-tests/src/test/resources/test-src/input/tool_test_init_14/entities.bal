@@ -31,4 +31,3 @@ public type MedicalNeed record {|
     string urgency;
     int quantity;
 |};
-
