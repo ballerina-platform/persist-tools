@@ -36,11 +36,12 @@ import io.ballerina.projects.Package;
 import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.tools.diagnostics.Diagnostic;
-import org.ballerinalang.util.diagnostic.DiagnosticErrorCode;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_ENTITY;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PERSIST_MODULE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxGenerator.inferRelationDetails;
@@ -80,8 +81,11 @@ public class BalProjectUtils {
             errorMessage.append("error occurred when validating the project. ");
             int validErrors = 0;
             for (Diagnostic diagnostic : diagnosticResult.errors()) {
-                if (!diagnostic.diagnosticInfo().code().equals(DiagnosticErrorCode
-                        .INCOMPATIBLE_TYPES.diagnosticId())) {
+                String[] path = diagnostic.location().lineRange().filePath().split(
+                        System.getProperty("file.separator"));
+                String fileName = path[path.length - 1].trim();
+
+                if (!Files.exists(projectPath.toAbsolutePath().resolve(GENERATED_SOURCE_DIRECTORY).resolve(fileName))) {
                     errorMessage.append(System.lineSeparator());
                     errorMessage.append(diagnostic);
                     validErrors += 1;
