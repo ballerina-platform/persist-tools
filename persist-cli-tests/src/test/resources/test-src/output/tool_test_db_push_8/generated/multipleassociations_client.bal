@@ -16,8 +16,8 @@ public client class MultipleAssociationsClient {
     private final map<persist:FieldMetadata> fieldMetadata = {
         id: {columnName: "id", 'type: int},
         name: {columnName: "name", 'type: string},
-        "user.id": {columnName: "userId", 'type: int, relation: {entityName: "user", refTable: "Users", refField: "id"}},
-        "user.name": {'type: string, relation: {entityName: "user", refTable: "Users", refField: "name"}},
+        "user.id": {columnName: "userId", 'type: int, relation: {entityName: "user", refTable: "User", refField: "id"}},
+        "user.name": {'type: string, relation: {entityName: "user", refTable: "User", refField: "name"}},
         "dept.id": {columnName: "deptId", 'type: int, relation: {entityName: "dept", refTable: "Dept", refField: "id"}},
         "dept.name": {'type: string, relation: {entityName: "dept", refTable: "Dept", refField: "name"}},
         "customer.id": {columnName: "customerId", 'type: int, relation: {entityName: "customer", refTable: "Customer", refField: "id"}},
@@ -27,7 +27,7 @@ public client class MultipleAssociationsClient {
     private string[] keyFields = ["id"];
 
     private final map<persist:JoinMetadata> joinMetadata = {
-        user: {entity: User, fieldName: "user", refTable: "Users", refFields: ["id"], joinColumns: ["userId"]},
+        user: {entity: User, fieldName: "user", refTable: "User", refFields: ["id"], joinColumns: ["userId"]},
         dept: {entity: Dept, fieldName: "dept", refTable: "Dept", refFields: ["id"], joinColumns: ["deptId"]},
         customer: {entity: Customer, fieldName: "customer", refTable: "Customer", refFields: ["id"], joinColumns: ["customerId"]}
     };

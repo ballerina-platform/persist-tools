@@ -1,5 +1,5 @@
-DROP TABLE IF EXISTS MedicalItems;
-CREATE TABLE MedicalItems (
+DROP TABLE IF EXISTS MedicalItem;
+CREATE TABLE MedicalItem (
 	itemId INT NOT NULL,
 	name VARCHAR(191) NOT NULL,
 	type VARCHAR(191) NOT NULL,

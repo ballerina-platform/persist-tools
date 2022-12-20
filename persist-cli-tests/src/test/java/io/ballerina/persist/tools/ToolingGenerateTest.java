@@ -68,10 +68,10 @@ public class ToolingGenerateTest {
         assertGeneratedSources("tool_test_generate_6", GENERATE);
     }
 
-    @Test(enabled = true) // this testcase not valid.
-    @Description("Use case where a entity is located inside a module")
-    public void testGenerateClientWithEntityInModule() {
-        assertGeneratedSources("tool_test_generate_7", GENERATE);
+    @Test(enabled = true) //disabled sue to compiler plugin changes
+    @Description("Use case where unsupported datatypes are used")
+    public void testGenerateClientWithUnsupportedDataTypes() {
+        assertGeneratedSourcesNegative("tool_test_generate_7", GENERATE, new String[]{});
     }
 
     @Test(enabled = true)
@@ -109,18 +109,18 @@ public class ToolingGenerateTest {
         assertGeneratedSources("tool_test_generate_13", GENERATE);
     }
 
-    @Test(enabled = true) // not valid
+    @Test(enabled = true)
     @Description("There are three entities with one to one associations between each other with one parent entity " +
             "in sub module")
-    public void testGenerateThreeEntitiesWith1To1AssociationsWithEntityInSubModule() {
+    public void testGenerateWithDifferentEntities() {
         assertGeneratedSources("tool_test_generate_14", GENERATE);
     }
 
-    @Test(enabled = true) // not valid
+    @Test(enabled = true)
     @Description("There are three entities with one to one associations between each other with one child entity " +
             "in sub module")
     public void testGenerateThreeEntitiesWith1To1AssociationsWithChildEntityInSubModule() {
-        assertGeneratedSources("tool_test_generate_15", GENERATE);
+        assertGeneratedSourcesNegative("tool_test_generate_15", GENERATE, new String[]{});
     }
     @Test(enabled = true)
     @Description("There are two entities with one to many associations between each other")
@@ -151,7 +151,7 @@ public class ToolingGenerateTest {
     public void testGenerateThreeEntitiesWith1ToManyAssociationsWithOneToNoAnnotationValue() {
         assertGeneratedSources("tool_test_generate_20", GENERATE);
     }
-    
+
     @Test(enabled = true)
     @Description("There are two entities and time modeule is imported through a relation")
     public void testGenerateClientsWithAdditionsImportsTroughRelations() {
@@ -172,6 +172,6 @@ public class ToolingGenerateTest {
     @Test(enabled = true)
     @Description("Generate is executed with clients already initailized in main.bal")
     public void testGenerateUpdateClientsWithAlreadyInitializedClients() {
-        assertGeneratedSourcesNegative ("tool_test_generate_24", GENERATE, new String[]{});
+        assertGeneratedSources("tool_test_generate_24", GENERATE);
     }
 }

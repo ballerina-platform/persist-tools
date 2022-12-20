@@ -18,8 +18,7 @@ import ballerina/time;
 import ballerina/persist;
 
 @persist:Entity {
-    key: ["needId"],
-    tableName: "MedicalNeeds"
+    key: ["needId"]
 }
 public type MedicalNeed record {|
     @persist:AutoIncrement

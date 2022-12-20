@@ -28,6 +28,7 @@ public type MedicalNeed record {|
     time:Civil period;
     string urgency;
     int quantity;
+    AidPackageOrderItem aidPackageOrderItem?;
 |};
 
 @persist:Entity {

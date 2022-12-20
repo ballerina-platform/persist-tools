@@ -15,13 +15,10 @@
 // under the License.
 import ballerina/time;
 import ballerina/io;
-import perist_generate_7.clients;
-import perist_generate_7.foo;
 
 public function main() returns error? {
-    clients:MedicalItemClient miClient = check new ();
-    clients:MedicalNeedClient mnClient = check new ();
-    clients:MedicalNeed1Client mn1Client = check new ();
+    MedicalItemClient miClient = check new ();
+    MedicalNeed1Client mn1Client = check new ();
     MedicalItem item = {
         itemId: 1,
         'type: "type1",
@@ -38,14 +35,6 @@ public function main() returns error? {
     };
     MedicalNeed1 createdNeed1 = check mn1Client->create(item2);
 
-    foo:MedicalNeed item3 = {
-        needId: 1,
-        itemId: 1,
-        period: check time:civilFromString("2021-04-12T23:20:50.520+05:30[Asia/Colombo]"),
-        quantity: 1
-    };
-    foo:MedicalNeed createdNeed = check mnClient->create(item3);
     io:println(createdItem);
     io:println(createdNeed1);
-    io:println(createdNeed);
 }

@@ -18,8 +18,7 @@ import ballerina/time;
 import ballerina/persist;
 
 @persist:Entity {
-    key: ["a"],
-    tableName: "DataTypes"
+    key: ["a"]
 }
 public type DataType record {|
     @persist:AutoIncrement

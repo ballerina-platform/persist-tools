@@ -17,8 +17,7 @@
 import ballerina/persist;
 
 @persist:Entity {
-    key: ["id"],
-    tableName: "Companies"
+    key: ["id"]
 }
 public type Company record {|
     readonly int id;
@@ -27,8 +26,7 @@ public type Company record {|
 |};
 
 @persist:Entity {
-    key: ["id"],
-    tableName: "Employees"
+    key: ["id"]
 }
 public type Employee record {|
     readonly int id;
@@ -41,8 +39,7 @@ public type Employee record {|
 |};
 
 @persist:Entity {
-    key: ["model"],
-    tableName: "Vehicles"
+    key: ["model"]
 }
 public type Vehicle record {|
     readonly int model;

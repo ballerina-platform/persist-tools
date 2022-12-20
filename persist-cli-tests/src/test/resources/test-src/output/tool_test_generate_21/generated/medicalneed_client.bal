@@ -19,9 +19,14 @@ public client class MedicalNeedClient {
         beneficiaryId: {columnName: "beneficiaryId", 'type: int},
         period: {columnName: "period", 'type: time:Civil},
         urgency: {columnName: "urgency", 'type: string},
-        quantity: {columnName: "quantity", 'type: int}
+        quantity: {columnName: "quantity", 'type: int},
+        "aidPackageOrderItem.id": {'type: int, relation: {entityName: "aidPackageOrderItem", refTable: "AidPackageOrderItem", refField: "id"}},
+        "aidPackageOrderItem.quantity": {'type: int, relation: {entityName: "aidPackageOrderItem", refTable: "AidPackageOrderItem", refField: "quantity"}},
+        "aidPackageOrderItem.totalAmount": {'type: int, relation: {entityName: "aidPackageOrderItem", refTable: "AidPackageOrderItem", refField: "totalAmount"}}
     };
     private string[] keyFields = ["needId"];
+
+    private final map<persist:JoinMetadata> joinMetadata = {aidPackageOrderItem: {entity: AidPackageOrderItem, fieldName: "aidPackageOrderItem", refTable: "AidPackageOrderItem", refFields: ["needId"], joinColumns: ["needId"]}};
 
     private persist:SQLClient persistClient;
 
@@ -30,20 +35,20 @@ public client class MedicalNeedClient {
         if dbClient is sql:Error {
             return <persist:Error>error(dbClient.message());
         }
-        self.persistClient = check new (dbClient, self.entityName, self.tableName, self.keyFields, self.fieldMetadata);
+        self.persistClient = check new (dbClient, self.entityName, self.tableName, self.keyFields, self.fieldMetadata, self.joinMetadata);
     }
 
     remote function create(MedicalNeed value) returns MedicalNeed|persist:Error {
-        sql:ExecutionResult result = check self.persistClient.runInsertQuery(value);
-        return {needId: <int>result.lastInsertId, beneficiaryId: value.beneficiaryId, period: value.period, urgency: value.urgency, quantity: value.quantity};
+        _ = check self.persistClient.runInsertQuery(value);
+        return value;
     }
 
-    remote function readByKey(int key) returns MedicalNeed|persist:Error {
-        return <MedicalNeed>check self.persistClient.runReadByKeyQuery(MedicalNeed, key);
+    remote function readByKey(int key, MedicalNeedRelations[] include = []) returns MedicalNeed|persist:Error {
+        return <MedicalNeed>check self.persistClient.runReadByKeyQuery(MedicalNeed, key, include);
     }
 
-    remote function read() returns stream<MedicalNeed, persist:Error?> {
-        stream<anydata, sql:Error?>|persist:Error result = self.persistClient.runReadQuery(MedicalNeed);
+    remote function read(MedicalNeedRelations[] include = []) returns stream<MedicalNeed, persist:Error?> {
+        stream<anydata, sql:Error?>|persist:Error result = self.persistClient.runReadQuery(MedicalNeed, include);
         if result is persist:Error {
             return new stream<MedicalNeed, persist:Error?>(new MedicalNeedStream((), result));
         } else {
@@ -73,6 +78,10 @@ public client class MedicalNeedClient {
     public function close() returns persist:Error? {
         return self.persistClient.close();
     }
+}
+
+public enum MedicalNeedRelations {
+    AidPackageOrderItemEntity = "aidPackageOrderItem"
 }
 
 public class MedicalNeedStream {

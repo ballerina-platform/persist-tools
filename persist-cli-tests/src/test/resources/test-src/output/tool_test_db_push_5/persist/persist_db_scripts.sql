@@ -1,5 +1,5 @@
-DROP TABLE IF EXISTS MedicalNeeds;
-CREATE TABLE MedicalNeeds (
+DROP TABLE IF EXISTS MedicalNeed;
+CREATE TABLE MedicalNeed (
 	fooNeedId INT NOT NULL AUTO_INCREMENT,
 	fooItemId INT NOT NULL,
 	fooBeneficiaryId INT NOT NULL,
