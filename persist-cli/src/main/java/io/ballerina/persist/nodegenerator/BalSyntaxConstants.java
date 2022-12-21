@@ -17,8 +17,6 @@
  */
 package io.ballerina.persist.nodegenerator;
 
-import java.util.regex.Pattern;
-
 /**
  * Class encapsulating all the syntax/code lines related to generation scripts.
  *
