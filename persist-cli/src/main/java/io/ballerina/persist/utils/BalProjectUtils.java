@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.FILE_PATH_SEPARATOR;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_ENTITY;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PERSIST_MODULE;
@@ -81,8 +82,7 @@ public class BalProjectUtils {
             errorMessage.append("error occurred when validating the project. ");
             int validErrors = 0;
             for (Diagnostic diagnostic : diagnosticResult.errors()) {
-                String[] path = diagnostic.location().lineRange().filePath().split(
-                        System.getProperty("file.separator"));
+                String[] path = diagnostic.location().lineRange().filePath().split(FILE_PATH_SEPARATOR);
                 String fileName = path[path.length - 1].trim();
 
                 if (!Files.exists(projectPath.toAbsolutePath().resolve(GENERATED_SOURCE_DIRECTORY).resolve(fileName))) {

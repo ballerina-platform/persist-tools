@@ -17,6 +17,8 @@
  */
 package io.ballerina.persist.nodegenerator;
 
+import java.util.regex.Pattern;
+
 /**
  * Class encapsulating all the syntax/code lines related to generation scripts.
  *
@@ -235,5 +237,6 @@ public class BalSyntaxConstants {
 
 
     public static final String MYSQL_DRIVER = "mysql.driver";
+    public static final String FILE_PATH_SEPARATOR = Pattern.quote(System.getProperty("file.separator"));
 
 }
