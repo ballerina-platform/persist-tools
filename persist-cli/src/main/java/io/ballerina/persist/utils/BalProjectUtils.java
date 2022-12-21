@@ -36,11 +36,11 @@ import io.ballerina.projects.Package;
 import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.tools.diagnostics.Diagnostic;
-import org.ballerinalang.util.diagnostic.DiagnosticErrorCode;
 
 import java.io.IOException;
 import java.nio.file.Path;
 
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_ENTITY;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PERSIST_MODULE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxGenerator.inferRelationDetails;
@@ -77,14 +77,11 @@ public class BalProjectUtils {
         DiagnosticResult diagnosticResult = compilation.diagnosticResult();
         if (diagnosticResult.hasErrors()) {
             StringBuilder errorMessage = new StringBuilder();
-            errorMessage.append("error occurred when validating the project. ");
+            errorMessage.append("Error occurred when validating the project. ");
             int validErrors = 0;
             for (Diagnostic diagnostic : diagnosticResult.errors()) {
-
-                if (!diagnostic.diagnosticInfo().code().equals(DiagnosticErrorCode
-                        .INCOMPATIBLE_TYPES.diagnosticId()) &&
-                        !diagnostic.diagnosticInfo().code().equals(DiagnosticErrorCode
-                        .INCOMPATIBLE_MAPPING_CONSTRUCTOR.diagnosticId())) {
+                if (!diagnostic.location().lineRange().filePath().startsWith(
+                        GENERATED_SOURCE_DIRECTORY)) {
                     errorMessage.append(System.lineSeparator());
                     errorMessage.append(diagnostic);
                     validErrors += 1;
@@ -96,7 +93,7 @@ public class BalProjectUtils {
         }
         return buildProject;
     }
-
+    
     public static io.ballerina.projects.Module getEntityModule(BuildProject project) throws BalException {
         io.ballerina.projects.Module entityModule = null;
         io.ballerina.projects.Module defaultModule = null;

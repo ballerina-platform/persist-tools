@@ -17,8 +17,7 @@
 import ballerina/persist;
 
 @persist:Entity {
-    key: ["id"],
-    tableName: "Profiles"
+    key: ["id"]
 }
 public type Profile record {|
     @persist:AutoIncrement{startValue: 10}
@@ -27,17 +26,18 @@ public type Profile record {|
     boolean isAdult;
     float salary;
     decimal age;
+    User user?;
 |};
 
 @persist:Entity {
-    key: ["id"],
-    tableName: "Users"
+    key: ["id"]
 }
 public type User record  {|
     readonly int id;
     string name;
     @persist:Relation
     Profile profile?;
+    MultipleAssociations multipleAssociations?;
 |};
 
 @persist:Entity {
@@ -46,6 +46,7 @@ public type User record  {|
 public type Dept record  {|
     readonly int id;
     string name;
+    MultipleAssociations multipleAssociations?;
 |};
 
 @persist:Entity {
@@ -56,6 +57,7 @@ public type Customer record  {|
     readonly int id;
     string name;
     int age;
+    MultipleAssociations multipleAssociations?;
 |};
 
 @persist:Entity {
@@ -71,8 +73,7 @@ public type Student record  {|
 |};
 
 @persist:Entity {
-    key: ["id"],
-    tableName: "MultipleAssociations"
+    key: ["id"]
 }
 public type MultipleAssociations record {|
     readonly int id;
