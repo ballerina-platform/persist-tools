@@ -22,6 +22,7 @@ import io.ballerina.compiler.syntax.tree.AbstractNodeFactory;
 import io.ballerina.compiler.syntax.tree.AnnotationNode;
 import io.ballerina.compiler.syntax.tree.ArrayTypeDescriptorNode;
 import io.ballerina.compiler.syntax.tree.BasicLiteralNode;
+import io.ballerina.compiler.syntax.tree.BuiltinSimpleNameReferenceNode;
 import io.ballerina.compiler.syntax.tree.ExpressionNode;
 import io.ballerina.compiler.syntax.tree.IdentifierToken;
 import io.ballerina.compiler.syntax.tree.ImportDeclarationNode;
@@ -43,11 +44,13 @@ import io.ballerina.compiler.syntax.tree.RecordFieldNode;
 import io.ballerina.compiler.syntax.tree.RecordFieldWithDefaultValueNode;
 import io.ballerina.compiler.syntax.tree.RecordTypeDescriptorNode;
 import io.ballerina.compiler.syntax.tree.SeparatedNodeList;
+import io.ballerina.compiler.syntax.tree.SimpleNameReferenceNode;
 import io.ballerina.compiler.syntax.tree.SpecificFieldNode;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.compiler.syntax.tree.Token;
 import io.ballerina.compiler.syntax.tree.TypeDefinitionNode;
+import io.ballerina.compiler.syntax.tree.TypeDescriptorNode;
 import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.components.Class;
 import io.ballerina.persist.components.Enum;
@@ -243,10 +246,11 @@ public class BalSyntaxGenerator {
                     if (fieldNode.typeName().kind().equals(SyntaxKind.ARRAY_TYPE_DESC)) {
                         ArrayTypeDescriptorNode arrayTypeDescriptorNode = (ArrayTypeDescriptorNode)
                                 fieldNode.typeName();
-                        fType = arrayTypeDescriptorNode.memberTypeDesc().toSourceCode().trim();
+                        fType = ((SimpleNameReferenceNode) arrayTypeDescriptorNode.memberTypeDesc())
+                                .name().text().trim();
                         fieldBuilder.setArrayType(true);
                     } else {
-                        fType = fieldNode.typeName().toSourceCode().trim();
+                        fType = getType((TypeDescriptorNode) fieldNode.typeName());
                     }
                     fieldBuilder.setType(fType);
                     Optional<MetadataNode> metadata = fieldNode.metadata();
@@ -262,10 +266,11 @@ public class BalSyntaxGenerator {
                     if (fieldNode.typeName().kind().equals(SyntaxKind.ARRAY_TYPE_DESC)) {
                         ArrayTypeDescriptorNode arrayTypeDescriptorNode = (ArrayTypeDescriptorNode)
                                 fieldNode.typeName();
-                        fType = arrayTypeDescriptorNode.memberTypeDesc().toSourceCode().trim();
+                        fType = ((SimpleNameReferenceNode) arrayTypeDescriptorNode.memberTypeDesc())
+                                .name().text().trim();
                         fieldBuilder.setArrayType(true);
                     } else {
-                        fType = fieldNode.typeName().toSourceCode().trim();
+                        fType = getType((TypeDescriptorNode) fieldNode.typeName());
                     }
                     fieldBuilder.setType(fType);
                     RecordFieldNode recordFieldNode = (RecordFieldNode) node;
@@ -278,6 +283,27 @@ public class BalSyntaxGenerator {
             }
             Entity entity = entityBuilder.build();
             moduleBuilder.addEntity(entity.getEntityName(), entity);
+        }
+    }
+
+    private static String getType(TypeDescriptorNode typeDesc) {
+        switch (typeDesc.kind()) {
+            case INT_TYPE_DESC:
+            case BOOLEAN_TYPE_DESC:
+            case DECIMAL_TYPE_DESC:
+            case FLOAT_TYPE_DESC:
+            case STRING_TYPE_DESC:
+                return ((BuiltinSimpleNameReferenceNode) typeDesc).name().text();
+            case QUALIFIED_NAME_REFERENCE:
+                QualifiedNameReferenceNode qualifiedName = (QualifiedNameReferenceNode) typeDesc;
+                String modulePrefix = qualifiedName.modulePrefix().text();
+                String identifier = qualifiedName.identifier().text();
+                String qualifiedType = modulePrefix + COLON + identifier;
+                return qualifiedType;
+            case SIMPLE_NAME_REFERENCE:
+                return ((SimpleNameReferenceNode) typeDesc).name().text();
+            default:
+                return "";
         }
     }
 
