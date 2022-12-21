@@ -68,7 +68,7 @@ public class ToolingGenerateTest {
         assertGeneratedSources("tool_test_generate_6", GENERATE);
     }
 
-    @Test(enabled = true) //disabled sue to compiler plugin changes
+    @Test(enabled = true)
     @Description("Use case where unsupported datatypes are used")
     public void testGenerateClientWithUnsupportedDataTypes() {
         assertGeneratedSourcesNegative("tool_test_generate_7", GENERATE, new String[]{});
