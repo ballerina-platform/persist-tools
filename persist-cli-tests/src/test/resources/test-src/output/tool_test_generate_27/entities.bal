@@ -17,8 +17,7 @@
 import ballerina/persist;
 
 @persist:Entity {
-    key: ["id"],
-    tableName: "Profiles"
+    key: ["id"]
 }
 public type Profile record  {|
     //comment1
@@ -28,11 +27,11 @@ public type Profile record  {|
     //comment4
     @persist:Relation {keyColumns: ["userId"], reference: ["id"]}
     User user?;
+    MultipleAssociations multipleAssociations?;
 |};
 
 @persist:Entity {
-    key: ["id"],
-    tableName: "Users"
+    key: ["id"]
 }
 public type User record  {|
     //comment5
@@ -40,11 +39,11 @@ public type User record  {|
     string name;
     //comment6
     Profile profile?;
+    MultipleAssociations multipleAssociations?;
 |};
 //comment7
 @persist:Entity {
-    key: ["id"],
-    tableName: "MultipleAssociations"
+    key: ["id"]
 }
 //comment8
 public type MultipleAssociations record {|

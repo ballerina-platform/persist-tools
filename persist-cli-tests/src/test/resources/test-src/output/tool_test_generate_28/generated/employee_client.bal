@@ -1,32 +1,27 @@
 // AUTO-GENERATED FILE. DO NOT MODIFY.
 
-// This file is an auto-generated file by Ballerina persistence layer for User.
+// This file is an auto-generated file by Ballerina persistence layer for Employee.
 // It should not be modified by hand.
 
 import ballerinax/mysql;
 import ballerina/persist;
 import ballerina/sql;
 
-public client class UserClient {
+public client class EmployeeClient {
     *persist:AbstractPersistClient;
 
-    private final string entityName = "User";
-    private final sql:ParameterizedQuery tableName = `User`;
+    private final string entityName = "Employee";
+    private final sql:ParameterizedQuery tableName = `Employee`;
 
     private final map<persist:FieldMetadata> fieldMetadata = {
         id: {columnName: "id", 'type: int},
         name: {columnName: "name", 'type: string},
-        "profile.id": {'type: int, relation: {entityName: "profile", refTable: "Profile", refField: "id"}},
-        "profile.name": {'type: string, relation: {entityName: "profile", refTable: "Profile", refField: "name"}},
-        "multipleAssociations.id": {'type: int, relation: {entityName: "multipleAssociations", refTable: "MultipleAssociations", refField: "id"}},
-        "multipleAssociations.name": {'type: string, relation: {entityName: "multipleAssociations", refTable: "MultipleAssociations", refField: "name"}}
+        "company.id": {columnName: "companyId", 'type: int, relation: {entityName: "company", refTable: "Company", refField: "id"}},
+        "company.name": {'type: string, relation: {entityName: "company", refTable: "Company", refField: "name"}}
     };
     private string[] keyFields = ["id"];
 
-    private final map<persist:JoinMetadata> joinMetadata = {
-        profile: {entity: Profile, fieldName: "profile", refTable: "Profile", refFields: ["userId"], joinColumns: ["id"]},
-        multipleAssociations: {entity: MultipleAssociations, fieldName: "multipleAssociations", refTable: "MultipleAssociations", refFields: ["userId"], joinColumns: ["id"]}
-    };
+    private final map<persist:JoinMetadata> joinMetadata = {company: {entity: Company, fieldName: "company", refTable: "Company", refFields: ["id"], joinColumns: ["companyId"]}};
 
     private persist:SQLClient persistClient;
 
@@ -38,35 +33,47 @@ public client class UserClient {
         self.persistClient = check new (dbClient, self.entityName, self.tableName, self.keyFields, self.fieldMetadata, self.joinMetadata);
     }
 
-    remote function create(User value) returns User|persist:Error {
+    remote function create(Employee value) returns Employee|persist:Error {
+        if value.company is Company {
+            CompanyClient companyClient = check new CompanyClient();
+            boolean exists = check companyClient->exists(<Company>value.company);
+            if !exists {
+                value.company = check companyClient->create(<Company>value.company);
+            }
+        }
         _ = check self.persistClient.runInsertQuery(value);
         return value;
     }
 
-    remote function readByKey(int key, UserRelations[] include = []) returns User|persist:Error {
-        return <User>check self.persistClient.runReadByKeyQuery(User, key, include);
+    remote function readByKey(int key, EmployeeRelations[] include = []) returns Employee|persist:Error {
+        return <Employee>check self.persistClient.runReadByKeyQuery(Employee, key, include);
     }
 
-    remote function read(UserRelations[] include = []) returns stream<User, persist:Error?> {
-        stream<anydata, sql:Error?>|persist:Error result = self.persistClient.runReadQuery(User, include);
+    remote function read(EmployeeRelations[] include = []) returns stream<Employee, persist:Error?> {
+        stream<anydata, sql:Error?>|persist:Error result = self.persistClient.runReadQuery(Employee, include);
         if result is persist:Error {
-            return new stream<User, persist:Error?>(new UserStream((), result));
+            return new stream<Employee, persist:Error?>(new EmployeeStream((), result));
         } else {
-            return new stream<User, persist:Error?>(new UserStream(result));
+            return new stream<Employee, persist:Error?>(new EmployeeStream(result));
         }
     }
 
-    remote function update(User value) returns persist:Error? {
+    remote function update(Employee value) returns persist:Error? {
         _ = check self.persistClient.runUpdateQuery(value);
+        if value.company is record {} {
+            Company companyEntity = <Company>value.company;
+            CompanyClient companyClient = check new CompanyClient();
+            check companyClient->update(companyEntity);
+        }
     }
 
-    remote function delete(User value) returns persist:Error? {
+    remote function delete(Employee value) returns persist:Error? {
         _ = check self.persistClient.runDeleteQuery(value);
     }
 
-    remote function exists(User user) returns boolean|persist:Error {
-        User|persist:Error result = self->readByKey(user.id);
-        if result is User {
+    remote function exists(Employee employee) returns boolean|persist:Error {
+        Employee|persist:Error result = self->readByKey(employee.id);
+        if result is Employee {
             return true;
         } else if result is persist:InvalidKeyError {
             return false;
@@ -80,11 +87,11 @@ public client class UserClient {
     }
 }
 
-public enum UserRelations {
-    ProfileEntity = "profile", MultipleAssociationsEntity = "multipleAssociations"
+public enum EmployeeRelations {
+    CompanyEntity = "company"
 }
 
-public class UserStream {
+public class EmployeeStream {
 
     private stream<anydata, sql:Error?>? anydataStream;
     private persist:Error? err;
@@ -94,7 +101,7 @@ public class UserStream {
         self.err = err;
     }
 
-    public isolated function next() returns record {|User value;|}|persist:Error? {
+    public isolated function next() returns record {|Employee value;|}|persist:Error? {
         if self.err is persist:Error {
             return <persist:Error>self.err;
         } else if self.anydataStream is stream<anydata, sql:Error?> {
@@ -105,7 +112,7 @@ public class UserStream {
             } else if (streamValue is sql:Error) {
                 return <persist:Error>error(streamValue.message());
             } else {
-                record {|User value;|} nextRecord = {value: <User>streamValue.value};
+                record {|Employee value;|} nextRecord = {value: <Employee>streamValue.value};
                 return nextRecord;
             }
         } else {

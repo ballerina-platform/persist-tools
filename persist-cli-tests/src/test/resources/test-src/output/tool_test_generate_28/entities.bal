@@ -15,49 +15,43 @@
 // under the License.
 
 import ballerina/persist;
-
+//comment1
+//comment2
 @persist:Entity {
+    //comment3
     key: ["id"]
+    //comment3
 }
-public type Profile record  {|
-    //comment1
-    readonly int id;
-    //comment2
-    string name;
-    //comment4
-    @persist:Relation {keyColumns: ["userId"], reference: ["id"]}
-    User user?;
-    MultipleAssociations multipleAssociations?;
-|};
-
-@persist:Entity {
-    key: ["id"]
-}
-public type User record  {|
+//comment3
+//comment4
+public type Company record {|
     //comment5
-    readonly int id;
-    string name;
     //comment6
-    Profile profile?;
-    MultipleAssociations multipleAssociations?;
+    readonly int id;
+    //comment7
+    //comment8
+    string name;
+    //comment9
+    //comment10
+    Employee[] employees?;
 |};
-//comment7
+
 @persist:Entity {
+    //comment11
+    //comment12
     key: ["id"]
 }
-//comment8
-public type MultipleAssociations record {|
-    //comment9
+public type Employee record {|
+    //comment13
+    //comment14
     readonly int id;
+    //comment15
+    //comment16
     string name;
-    //comment10
-    @persist:Relation {keyColumns: ["profileId"], reference: ["id"]}
-    //comment11
-    Profile profile?;
-    //comment8
-    @persist:Relation {keyColumns: ["userId"], reference: ["id"]}
-    User user?;
+    //comment17
+    //comment18
+    @persist:Relation {keyColumns: ["companyId"], reference: ["id"]}
+    //comment19
+    //comment20
+    Company company?;
 |};
-
-
-
