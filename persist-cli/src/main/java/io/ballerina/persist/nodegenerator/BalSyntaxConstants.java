@@ -237,6 +237,5 @@ public class BalSyntaxConstants {
 
 
     public static final String MYSQL_DRIVER = "mysql.driver";
-    public static final String FILE_PATH_SEPARATOR = Pattern.quote(System.getProperty("file.separator"));
 
 }
