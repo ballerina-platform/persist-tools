@@ -21,7 +21,6 @@ package io.ballerina.persist.nodegenerator;
 import io.ballerina.compiler.syntax.tree.AbstractNodeFactory;
 import io.ballerina.compiler.syntax.tree.AnnotationNode;
 import io.ballerina.compiler.syntax.tree.ArrayTypeDescriptorNode;
-import io.ballerina.compiler.syntax.tree.BasicLiteralNode;
 import io.ballerina.compiler.syntax.tree.BuiltinSimpleNameReferenceNode;
 import io.ballerina.compiler.syntax.tree.ExpressionNode;
 import io.ballerina.compiler.syntax.tree.IdentifierToken;
@@ -211,14 +210,12 @@ public class BalSyntaxGenerator {
                             continue;
                         }
                         ExpressionNode valueNode = specificField.valueExpr().get();
-                        if (specificField.fieldName().toString().trim().equals(KEY)) {
+                        if (((Token) specificField.fieldName()).text().equals(KEY)) {
                             List<String> keyArray = ((ListConstructorExpressionNode) valueNode)
                                     .expressions().stream().map(node -> node.toSourceCode().trim().replaceAll(
                                             DOUBLE_QUOTE, EMPTY_STRING)).collect(Collectors.toList());
                             entityBuilder.setKeys(keyArray);
-                        } else if (specificField.fieldName().toSourceCode().trim().equals(KEYWORD_TABLE_NAME)) {
-                            entityBuilder.setTableName(((BasicLiteralNode) valueNode).literalToken().text());
-                        } else if (specificField.fieldName().toString().trim().equals(UNIQUE_CONSTRAINTS)) {
+                        } else if (((Token) specificField.fieldName()).text().equals(UNIQUE_CONSTRAINTS)) {
                             for (Node node : ((ListConstructorExpressionNode) valueNode).expressions()) {
                                 List<String> keyArray = ((ListConstructorExpressionNode) node)
                                         .expressions().stream().map(uniqueNode ->
