@@ -183,15 +183,14 @@ public class ToolingGenerateTest {
     }
 
     @Test(enabled = true)
-    @Description("There are three entities with one to one associations between each other with comments " +
+    @Description("There are three entities with one to many associations between each other with comments " +
             "in entity fields")
     public void testGenerateThreeEntitiesWith1ToManyAssociationsWithComments() {
         assertGeneratedSources("tool_test_generate_28", GENERATE);
     }
 
     @Test(enabled = true)
-    @Description("There are three entities with one to one associations between each other with comments " +
-            "in entity fields")
+    @Description("There is a entity inside the project with comments inside entity")
     public void testGenerateWithComments() {
         assertGeneratedSources("tool_test_generate_29", GENERATE);
     }
