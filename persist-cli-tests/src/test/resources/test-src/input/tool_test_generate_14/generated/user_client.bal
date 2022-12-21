@@ -15,9 +15,9 @@ public client class UserClient {
 
     private final map<persist:FieldMetadata> fieldMetadata = {
         id: {columnName: "id", 'type: int},
+        name: {columnName: "name", 'type: string},
         "profile.id": {'type: int, relation: {entityName: "profile", refTable: "Profile", refField: "id"}},
-        "profile.name": {'type: string, relation: {entityName: "profile", refTable: "Profile", refField: "name"}},
-        "profile.gender": {'type: string, relation: {entityName: "profile", refTable: "Profile", refField: "gender"}}
+        "profile.name": {'type: string, relation: {entityName: "profile", refTable: "Profile", refField: "name"}}
     };
     private string[] keyFields = ["id"];
 

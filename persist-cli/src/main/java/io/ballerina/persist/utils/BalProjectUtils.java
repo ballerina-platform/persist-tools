@@ -38,10 +38,8 @@ import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.tools.diagnostics.Diagnostic;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.FILE_PATH_SEPARATOR;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_ENTITY;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PERSIST_MODULE;
@@ -79,13 +77,11 @@ public class BalProjectUtils {
         DiagnosticResult diagnosticResult = compilation.diagnosticResult();
         if (diagnosticResult.hasErrors()) {
             StringBuilder errorMessage = new StringBuilder();
-            errorMessage.append("error occurred when validating the project. ");
+            errorMessage.append("Error occurred when validating the project. ");
             int validErrors = 0;
             for (Diagnostic diagnostic : diagnosticResult.errors()) {
-                String[] path = diagnostic.location().lineRange().filePath().split(FILE_PATH_SEPARATOR);
-                String fileName = path[path.length - 1].trim();
-
-                if (!Files.exists(projectPath.toAbsolutePath().resolve(GENERATED_SOURCE_DIRECTORY).resolve(fileName))) {
+                if (!diagnostic.location().lineRange().filePath().startsWith(
+                        GENERATED_SOURCE_DIRECTORY)) {
                     errorMessage.append(System.lineSeparator());
                     errorMessage.append(diagnostic);
                     validErrors += 1;
@@ -97,7 +93,7 @@ public class BalProjectUtils {
         }
         return buildProject;
     }
-
+    
     public static io.ballerina.projects.Module getEntityModule(BuildProject project) throws BalException {
         io.ballerina.projects.Module entityModule = null;
         io.ballerina.projects.Module defaultModule = null;
