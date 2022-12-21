@@ -1,18 +1,32 @@
-import ballerina/sql;
+// AUTO-GENERATED FILE. DO NOT MODIFY.
+
+// This file is an auto-generated file by Ballerina persistence layer for User.
+// It should not be modified by hand.
+
 import ballerinax/mysql;
 import ballerina/persist;
+import ballerina/sql;
 
 public client class UserClient {
     *persist:AbstractPersistClient;
 
     private final string entityName = "User";
-    private final sql:ParameterizedQuery tableName = `Users`;
+    private final sql:ParameterizedQuery tableName = `User`;
 
     private final map<persist:FieldMetadata> fieldMetadata = {
         id: {columnName: "id", 'type: int},
-        name: {columnName: "name", 'type: string}
+        name: {columnName: "name", 'type: string},
+        "multipleAssociations.id": {'type: int, relation: {entityName: "multipleAssociations", refTable: "MultipleAssociations", refField: "id"}},
+        "multipleAssociations.name": {'type: string, relation: {entityName: "multipleAssociations", refTable: "MultipleAssociations", refField: "name"}},
+        "profile.id": {'type: int, relation: {entityName: "profile", refTable: "Profile", refField: "id"}},
+        "profile.name": {'type: string, relation: {entityName: "profile", refTable: "Profile", refField: "name"}}
     };
     private string[] keyFields = ["id"];
+
+    private final map<persist:JoinMetadata> joinMetadata = {
+        multipleAssociations: {entity: MultipleAssociations, fieldName: "multipleAssociations", refTable: "MultipleAssociations", refFields: ["userId"], joinColumns: ["id"]},
+        profile: {entity: Profile, fieldName: "profile", refTable: "Profile", refFields: ["userId"], joinColumns: ["id"]}
+    };
 
     private persist:SQLClient persistClient;
 
@@ -21,23 +35,20 @@ public client class UserClient {
         if dbClient is sql:Error {
             return <persist:Error>error(dbClient.message());
         }
-        self.persistClient = check new (dbClient, self.entityName, self.tableName, self.keyFields, self.fieldMetadata);
+        self.persistClient = check new (dbClient, self.entityName, self.tableName, self.keyFields, self.fieldMetadata, self.joinMetadata);
     }
 
     remote function create(User value) returns User|persist:Error {
-        sql:ExecutionResult result = check self.persistClient.runInsertQuery(value);
-        if result.lastInsertId is () {
-            return value;
-        }
-        return {id: <int>result.lastInsertId, name: value.name};
+        _ = check self.persistClient.runInsertQuery(value);
+        return value;
     }
 
-    remote function readByKey(int key) returns User|persist:Error {
-        return <User>check self.persistClient.runReadByKeyQuery(User, key);
+    remote function readByKey(int key, UserRelations[] include = []) returns User|persist:Error {
+        return <User>check self.persistClient.runReadByKeyQuery(User, key, include);
     }
 
-    remote function read() returns stream<User, persist:Error?> {
-        stream<anydata, sql:Error?>|persist:Error result = self.persistClient.runReadQuery(User);
+    remote function read(UserRelations[] include = []) returns stream<User, persist:Error?> {
+        stream<anydata, sql:Error?>|persist:Error result = self.persistClient.runReadQuery(User, include);
         if result is persist:Error {
             return new stream<User, persist:Error?>(new UserStream((), result));
         } else {
@@ -67,6 +78,10 @@ public client class UserClient {
     public function close() returns persist:Error? {
         return self.persistClient.close();
     }
+}
+
+public enum UserRelations {
+    MultipleAssociationsEntity = "multipleAssociations", ProfileEntity = "profile"
 }
 
 public class UserStream {

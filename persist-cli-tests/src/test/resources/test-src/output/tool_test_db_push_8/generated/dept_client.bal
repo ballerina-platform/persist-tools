@@ -1,6 +1,11 @@
-import ballerina/sql;
+// AUTO-GENERATED FILE. DO NOT MODIFY.
+
+// This file is an auto-generated file by Ballerina persistence layer for Dept.
+// It should not be modified by hand.
+
 import ballerinax/mysql;
 import ballerina/persist;
+import ballerina/sql;
 
 public client class DeptClient {
     *persist:AbstractPersistClient;
@@ -10,9 +15,13 @@ public client class DeptClient {
 
     private final map<persist:FieldMetadata> fieldMetadata = {
         id: {columnName: "id", 'type: int},
-        name: {columnName: "name", 'type: string}
+        name: {columnName: "name", 'type: string},
+        "multipleAssociations.id": {'type: int, relation: {entityName: "multipleAssociations", refTable: "MultipleAssociations", refField: "id"}},
+        "multipleAssociations.name": {'type: string, relation: {entityName: "multipleAssociations", refTable: "MultipleAssociations", refField: "name"}}
     };
     private string[] keyFields = ["id"];
+
+    private final map<persist:JoinMetadata> joinMetadata = {multipleAssociations: {entity: MultipleAssociations, fieldName: "multipleAssociations", refTable: "MultipleAssociations", refFields: ["deptId"], joinColumns: ["id"]}};
 
     private persist:SQLClient persistClient;
 
@@ -21,23 +30,20 @@ public client class DeptClient {
         if dbClient is sql:Error {
             return <persist:Error>error(dbClient.message());
         }
-        self.persistClient = check new (dbClient, self.entityName, self.tableName, self.keyFields, self.fieldMetadata);
+        self.persistClient = check new (dbClient, self.entityName, self.tableName, self.keyFields, self.fieldMetadata, self.joinMetadata);
     }
 
     remote function create(Dept value) returns Dept|persist:Error {
-        sql:ExecutionResult result = check self.persistClient.runInsertQuery(value);
-        if result.lastInsertId is () {
-            return value;
-        }
-        return {id: <int>result.lastInsertId, name: value.name};
+        _ = check self.persistClient.runInsertQuery(value);
+        return value;
     }
 
-    remote function readByKey(int key) returns Dept|persist:Error {
-        return <Dept>check self.persistClient.runReadByKeyQuery(Dept, key);
+    remote function readByKey(int key, DeptRelations[] include = []) returns Dept|persist:Error {
+        return <Dept>check self.persistClient.runReadByKeyQuery(Dept, key, include);
     }
 
-    remote function read() returns stream<Dept, persist:Error?> {
-        stream<anydata, sql:Error?>|persist:Error result = self.persistClient.runReadQuery(Dept);
+    remote function read(DeptRelations[] include = []) returns stream<Dept, persist:Error?> {
+        stream<anydata, sql:Error?>|persist:Error result = self.persistClient.runReadQuery(Dept, include);
         if result is persist:Error {
             return new stream<Dept, persist:Error?>(new DeptStream((), result));
         } else {
@@ -67,6 +73,10 @@ public client class DeptClient {
     public function close() returns persist:Error? {
         return self.persistClient.close();
     }
+}
+
+public enum DeptRelations {
+    MultipleAssociationsEntity = "multipleAssociations"
 }
 
 public class DeptStream {

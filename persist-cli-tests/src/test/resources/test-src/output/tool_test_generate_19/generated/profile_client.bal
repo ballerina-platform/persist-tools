@@ -1,22 +1,32 @@
-import ballerina/sql;
+// AUTO-GENERATED FILE. DO NOT MODIFY.
+
+// This file is an auto-generated file by Ballerina persistence layer for Profile.
+// It should not be modified by hand.
+
 import ballerinax/mysql;
 import ballerina/persist;
+import ballerina/sql;
 
 public client class ProfileClient {
     *persist:AbstractPersistClient;
 
     private final string entityName = "Profile";
-    private final sql:ParameterizedQuery tableName = `Profiles`;
+    private final sql:ParameterizedQuery tableName = `Profile`;
 
     private final map<persist:FieldMetadata> fieldMetadata = {
         id: {columnName: "id", 'type: int},
         name: {columnName: "name", 'type: string},
-        "user.id": {columnName: "userId", 'type: int, relation: {entityName: "user", refTable: "Users", refField: "id"}},
-        "user.name": {'type: string, relation: {entityName: "user", refTable: "Users", refField: "name"}}
+        "user.id": {columnName: "userId", 'type: int, relation: {entityName: "user", refTable: "User", refField: "id"}},
+        "user.name": {'type: string, relation: {entityName: "user", refTable: "User", refField: "name"}},
+        "multipleAssociations.id": {'type: int, relation: {entityName: "multipleAssociations", refTable: "MultipleAssociations", refField: "id"}},
+        "multipleAssociations.name": {'type: string, relation: {entityName: "multipleAssociations", refTable: "MultipleAssociations", refField: "name"}}
     };
     private string[] keyFields = ["id"];
 
-    private final map<persist:JoinMetadata> joinMetadata = {user: {entity: User, fieldName: "user", refTable: "Users", refFields: ["id"], joinColumns: ["userId"]}};
+    private final map<persist:JoinMetadata> joinMetadata = {
+        user: {entity: User, fieldName: "user", refTable: "User", refFields: ["id"], joinColumns: ["userId"]},
+        multipleAssociations: {entity: MultipleAssociations, fieldName: "multipleAssociations", refTable: "MultipleAssociations", refFields: ["profileId"], joinColumns: ["id"]}
+    };
 
     private persist:SQLClient persistClient;
 
@@ -83,7 +93,7 @@ public client class ProfileClient {
 }
 
 public enum ProfileRelations {
-    UserEntity = "user"
+    UserEntity = "user", MultipleAssociationsEntity = "multipleAssociations"
 }
 
 public class ProfileStream {

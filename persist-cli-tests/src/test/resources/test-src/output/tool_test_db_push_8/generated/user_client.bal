@@ -1,25 +1,35 @@
-import ballerina/sql;
+// AUTO-GENERATED FILE. DO NOT MODIFY.
+
+// This file is an auto-generated file by Ballerina persistence layer for User.
+// It should not be modified by hand.
+
 import ballerinax/mysql;
 import ballerina/persist;
+import ballerina/sql;
 
 public client class UserClient {
     *persist:AbstractPersistClient;
 
     private final string entityName = "User";
-    private final sql:ParameterizedQuery tableName = `Users`;
+    private final sql:ParameterizedQuery tableName = `User`;
 
     private final map<persist:FieldMetadata> fieldMetadata = {
         id: {columnName: "id", 'type: int},
         name: {columnName: "name", 'type: string},
-        "profile.id": {columnName: "profileId", 'type: int, relation: {entityName: "profile", refTable: "Profiles", refField: "id"}},
-        "profile.name": {'type: string, relation: {entityName: "profile", refTable: "Profiles", refField: "name"}},
-        "profile.isAdult": {'type: boolean, relation: {entityName: "profile", refTable: "Profiles", refField: "isAdult"}},
-        "profile.salary": {'type: float, relation: {entityName: "profile", refTable: "Profiles", refField: "salary"}},
-        "profile.age": {'type: decimal, relation: {entityName: "profile", refTable: "Profiles", refField: "age"}}
+        "profile.id": {columnName: "profileId", 'type: int, relation: {entityName: "profile", refTable: "Profile", refField: "id"}},
+        "profile.name": {'type: string, relation: {entityName: "profile", refTable: "Profile", refField: "name"}},
+        "profile.isAdult": {'type: boolean, relation: {entityName: "profile", refTable: "Profile", refField: "isAdult"}},
+        "profile.salary": {'type: float, relation: {entityName: "profile", refTable: "Profile", refField: "salary"}},
+        "profile.age": {'type: decimal, relation: {entityName: "profile", refTable: "Profile", refField: "age"}},
+        "multipleAssociations.id": {'type: int, relation: {entityName: "multipleAssociations", refTable: "MultipleAssociations", refField: "id"}},
+        "multipleAssociations.name": {'type: string, relation: {entityName: "multipleAssociations", refTable: "MultipleAssociations", refField: "name"}}
     };
     private string[] keyFields = ["id"];
 
-    private final map<persist:JoinMetadata> joinMetadata = {profile: {entity: Profile, fieldName: "profile", refTable: "Profiles", refFields: ["id"], joinColumns: ["profileId"]}};
+    private final map<persist:JoinMetadata> joinMetadata = {
+        profile: {entity: Profile, fieldName: "profile", refTable: "Profile", refFields: ["id"], joinColumns: ["profileId"]},
+        multipleAssociations: {entity: MultipleAssociations, fieldName: "multipleAssociations", refTable: "MultipleAssociations", refFields: ["userId"], joinColumns: ["id"]}
+    };
 
     private persist:SQLClient persistClient;
 
@@ -86,7 +96,7 @@ public client class UserClient {
 }
 
 public enum UserRelations {
-    ProfileEntity = "profile"
+    ProfileEntity = "profile", MultipleAssociationsEntity = "multipleAssociations"
 }
 
 public class UserStream {

@@ -14,18 +14,10 @@
 // specific language governing permissions and limitations
 // under the License.
 
+import ballerina/io;
 import ballerina/time;
-import ballerina/persist;
 
-@persist:Entity {
-    key: ["needId"],
-    tableName: "MedicalNeeds"
+public function main() {
+    io:println("hello");
+    http:client
 }
-public type MedicalNeed record {|
-    @persist:AutoIncrement
-    readonly int needId = -1;
-
-    int itemId;
-    time:Civil period;
-    int quantity;
-|};

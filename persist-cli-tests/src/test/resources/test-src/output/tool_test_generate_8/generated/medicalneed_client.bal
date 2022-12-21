@@ -1,13 +1,18 @@
-import ballerina/sql;
+// AUTO-GENERATED FILE. DO NOT MODIFY.
+
+// This file is an auto-generated file by Ballerina persistence layer for MedicalNeed.
+// It should not be modified by hand.
+
 import ballerinax/mysql;
-import ballerina/time;
 import ballerina/persist;
+import ballerina/sql;
+import ballerina/time;
 
 public client class MedicalNeedClient {
     *persist:AbstractPersistClient;
 
     private final string entityName = "MedicalNeed";
-    private final sql:ParameterizedQuery tableName = `MedicalNeeds`;
+    private final sql:ParameterizedQuery tableName = `MedicalNeed`;
 
     private final map<persist:FieldMetadata> fieldMetadata = {
         needId: {columnName: "needId", 'type: string},

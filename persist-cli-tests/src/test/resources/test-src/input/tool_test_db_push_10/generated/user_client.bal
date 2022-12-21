@@ -1,12 +1,17 @@
-import ballerina/sql;
+// AUTO-GENERATED FILE. DO NOT MODIFY.
+
+// This file is an auto-generated file by Ballerina persistence layer for User.
+// It should not be modified by hand.
+
 import ballerinax/mysql;
 import ballerina/persist;
+import ballerina/sql;
 
 public client class UserClient {
     *persist:AbstractPersistClient;
 
     private final string entityName = "User";
-    private final sql:ParameterizedQuery tableName = `Users`;
+    private final sql:ParameterizedQuery tableName = `User`;
 
     private final map<persist:FieldMetadata> fieldMetadata = {
         id: {columnName: "id", 'type: int},

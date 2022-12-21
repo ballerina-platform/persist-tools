@@ -18,19 +18,18 @@ import ballerina/persist;
 import foo/tool_test_generate_15.foo as entities;
 
 @persist:Entity {
-    key: ["id"],
-    tableName: "Profiles"
+    key: ["id"]
 }
 public type Profile record  {|
     readonly int id;
     string name;
     @persist:Relation {keyColumns: ["userId"], reference: ["id"]}
     entities:User user?;
+    MultipleAssociations multipleAssociations?;
 |};
 
 @persist:Entity {
-    key: ["id"],
-    tableName: "MultipleAssociations"
+    key: ["id"]
 }
 public type MultipleAssociations record {|
     readonly int id;

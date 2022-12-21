@@ -1,22 +1,27 @@
-import ballerina/sql;
+// AUTO-GENERATED FILE. DO NOT MODIFY.
+
+// This file is an auto-generated file by Ballerina persistence layer for Company.
+// It should not be modified by hand.
+
 import ballerinax/mysql;
 import ballerina/persist;
+import ballerina/sql;
 
 public client class CompanyClient {
     *persist:AbstractPersistClient;
 
     private final string entityName = "Company";
-    private final sql:ParameterizedQuery tableName = `Companies`;
+    private final sql:ParameterizedQuery tableName = `Company`;
 
     private final map<persist:FieldMetadata> fieldMetadata = {
         id: {columnName: "id", 'type: int},
         name: {columnName: "name", 'type: string},
-        "employee[].id": {'type: int, relation: {entityName: "employee", refTable: "Employees", refField: "id"}},
-        "employee[].name": {'type: string, relation: {entityName: "employee", refTable: "Employees", refField: "name"}}
+        "employee[].id": {'type: int, relation: {entityName: "employee", refTable: "Employee", refField: "id"}},
+        "employee[].name": {'type: string, relation: {entityName: "employee", refTable: "Employee", refField: "name"}}
     };
     private string[] keyFields = ["id"];
 
-    private final map<persist:JoinMetadata> joinMetadata = {employee: {entity: Employee, fieldName: "employee", refTable: "Employees", refFields: ["companyId"], joinColumns: ["id"], 'type: persist:MANY}};
+    private final map<persist:JoinMetadata> joinMetadata = {employee: {entity: Employee, fieldName: "employee", refTable: "Employee", refFields: ["companyId"], joinColumns: ["id"], 'type: persist:MANY}};
 
     private persist:SQLClient persistClient;
 

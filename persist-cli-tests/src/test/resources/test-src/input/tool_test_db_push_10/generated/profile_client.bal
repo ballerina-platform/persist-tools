@@ -1,12 +1,17 @@
-import ballerina/sql;
+// AUTO-GENERATED FILE. DO NOT MODIFY.
+
+// This file is an auto-generated file by Ballerina persistence layer for Profile.
+// It should not be modified by hand.
+
 import ballerinax/mysql;
 import ballerina/persist;
+import ballerina/sql;
 
 public client class ProfileClient {
     *persist:AbstractPersistClient;
 
     private final string entityName = "Profile";
-    private final sql:ParameterizedQuery tableName = `Profiles`;
+    private final sql:ParameterizedQuery tableName = `Profile`;
 
     private final map<persist:FieldMetadata> fieldMetadata = {
         id: {columnName: "id", 'type: int},
