@@ -173,4 +173,16 @@ public class ToolingGenerateTest {
     public void testGenerateUpdateClientsWithAlreadyInitializedClients() {
         assertGeneratedSourcesNegative ("tool_test_generate_24", GENERATE, new String[]{});
     }
+
+    @Test(enabled = true)
+    @Description("There are two entities with one to many associations between each other without relation annotation")
+    public void testGenerateOneToManyAssociationsWithoutRelationAnnotation() {
+        assertGeneratedSources("tool_test_generate_25", GENERATE);
+    }
+
+    @Test(enabled = true)
+    @Description("There are two entities with one to one associations between each other without relation annotation")
+    public void testGenerateOneToOneAssociationsWithoutRelationAnnotation() {
+        assertGeneratedSources("tool_test_generate_26", GENERATE);
+    }
 }

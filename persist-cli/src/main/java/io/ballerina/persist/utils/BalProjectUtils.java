@@ -38,7 +38,6 @@ import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.tools.diagnostics.Diagnostic;
 import org.ballerinalang.util.diagnostic.DiagnosticErrorCode;
 
-import java.io.IOException;
 import java.nio.file.Path;
 
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_ENTITY;
@@ -65,8 +64,8 @@ public class BalProjectUtils {
             Module entityModule = moduleBuilder.build();
             inferRelationDetails(entityModule);
             return entityModule;
-        } catch (IOException e) {
-            throw new BalException("Error while reading entities in the Ballerina project. " + e.getMessage());
+        } catch (Exception e) {
+            throw new BalException(e.getMessage());
         }
     }
 
