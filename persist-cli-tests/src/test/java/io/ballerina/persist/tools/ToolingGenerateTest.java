@@ -174,4 +174,11 @@ public class ToolingGenerateTest {
     public void testGenerateUpdateClientsWithAlreadyInitializedClients() {
         assertGeneratedSourcesNegative ("tool_test_generate_24", GENERATE, new String[]{});
     }
+
+    @Test(enabled = true)
+    @Description("There are three entities with one to one associations between each other with comments " +
+            "in entity fields")
+    public void testGenerateThreeEntitiesWith1To1AssociationsWithComments() {
+        assertGeneratedSources("tool_test_generate_27", GENERATE);
+    }
 }
