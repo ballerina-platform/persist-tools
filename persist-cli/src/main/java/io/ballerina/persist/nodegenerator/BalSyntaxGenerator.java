@@ -50,6 +50,7 @@ import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.compiler.syntax.tree.Token;
 import io.ballerina.compiler.syntax.tree.TypeDefinitionNode;
 import io.ballerina.compiler.syntax.tree.TypeDescriptorNode;
+import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.components.Class;
 import io.ballerina.persist.components.Enum;
@@ -176,7 +177,8 @@ public class BalSyntaxGenerator {
     /**
      * method to read ballerina files.
      */
-    public static void populateEntities(Module.Builder moduleBuilder, SyntaxTree balSyntaxTree) throws IOException {
+    public static void populateEntities(Module.Builder moduleBuilder, SyntaxTree balSyntaxTree) throws IOException,
+            BalException {
         ModulePartNode rootNote = balSyntaxTree.rootNode();
         NodeList<ModuleMemberDeclarationNode> nodeList = rootNote.members();
         Entity.Builder entityBuilder = null;
@@ -247,7 +249,9 @@ public class BalSyntaxGenerator {
                                 .name().text().trim();
                         fieldBuilder.setArrayType(true);
                     } else {
-                        fType = getType((TypeDescriptorNode) fieldNode.typeName());
+
+                        fType = getType((TypeDescriptorNode) fieldNode.typeName(),
+                                    fieldNode.fieldName().text().trim());
                     }
                     fieldBuilder.setType(fType);
                     Optional<MetadataNode> metadata = fieldNode.metadata();
@@ -267,7 +271,9 @@ public class BalSyntaxGenerator {
                                 .name().text().trim();
                         fieldBuilder.setArrayType(true);
                     } else {
-                        fType = getType((TypeDescriptorNode) fieldNode.typeName());
+                        fType = getType((TypeDescriptorNode) fieldNode.typeName(),
+                                    fieldNode.fieldName().text().trim());
+
                     }
                     fieldBuilder.setType(fType);
                     RecordFieldNode recordFieldNode = (RecordFieldNode) node;
@@ -283,7 +289,7 @@ public class BalSyntaxGenerator {
         }
     }
 
-    private static String getType(TypeDescriptorNode typeDesc) {
+    private static String getType(TypeDescriptorNode typeDesc, String fieldName) throws BalException {
         switch (typeDesc.kind()) {
             case INT_TYPE_DESC:
             case BOOLEAN_TYPE_DESC:
@@ -300,7 +306,7 @@ public class BalSyntaxGenerator {
             case SIMPLE_NAME_REFERENCE:
                 return ((SimpleNameReferenceNode) typeDesc).name().text();
             default:
-                return "";
+                throw new BalException(String.format("Unsupported data type found for the field `%s`", fieldName));
         }
     }
 

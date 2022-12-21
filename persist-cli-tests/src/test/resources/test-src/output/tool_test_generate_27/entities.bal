@@ -58,6 +58,3 @@ public type MultipleAssociations record {|
     @persist:Relation {keyColumns: ["userId"], reference: ["id"]}
     User user?;
 |};
-
-
-
