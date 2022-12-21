@@ -11,17 +11,17 @@ public client class ProfileClient {
     *persist:AbstractPersistClient;
 
     private final string entityName = "Profile";
-    private final sql:ParameterizedQuery tableName = `Profiles`;
+    private final sql:ParameterizedQuery tableName = `Profile`;
 
     private final map<persist:FieldMetadata> fieldMetadata = {
         id: {columnName: "id", 'type: int},
         name: {columnName: "name", 'type: string},
-        "user.id": {columnName: "userId", 'type: int, relation: {entityName: "user", refTable: "Users", refField: "id"}},
-        "user.name": {'type: string, relation: {entityName: "user", refTable: "Users", refField: "name"}}
+        gender: {columnName: "gender", 'type: string},
+        "user.id": {columnName: "userId", 'type: int, relation: {entityName: "user", refTable: "User", refField: "id"}}
     };
     private string[] keyFields = ["id"];
 
-    private final map<persist:JoinMetadata> joinMetadata = {user: {entity: User, fieldName: "user", refTable: "Users", refFields: ["id"], joinColumns: ["userId"]}};
+    private final map<persist:JoinMetadata> joinMetadata = {user: {entity: User, fieldName: "user", refTable: "User", refFields: ["id"], joinColumns: ["userId"]}};
 
     private persist:SQLClient persistClient;
 
