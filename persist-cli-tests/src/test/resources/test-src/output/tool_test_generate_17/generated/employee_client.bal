@@ -93,7 +93,7 @@ public client class EmployeeClient {
 }
 
 public enum EmployeeRelations {
-    CompanyEntity = "company", VehicleEntity = "vehicles"
+    company, vehicles
 }
 
 public class EmployeeStream {

@@ -18,14 +18,14 @@ public client class MultipleAssociationsClient {
         name: {columnName: "name", 'type: string},
         "profile.id": {columnName: "profileId", 'type: int, relation: {entityName: "profile", refTable: "Profile", refField: "id"}},
         "profile.name": {'type: string, relation: {entityName: "profile", refTable: "Profile", refField: "name"}},
-        "user.id": {columnName: "userId", 'type: int, relation: {entityName: "user", refTable: "User", refField: "id"}},
-        "user.name": {'type: string, relation: {entityName: "user", refTable: "User", refField: "name"}}
+        "owner.id": {columnName: "userId", 'type: int, relation: {entityName: "owner", refTable: "User", refField: "id"}},
+        "owner.name": {'type: string, relation: {entityName: "owner", refTable: "User", refField: "name"}}
     };
     private string[] keyFields = ["id"];
 
     private final map<persist:JoinMetadata> joinMetadata = {
         profile: {entity: Profile, fieldName: "profile", refTable: "Profile", refFields: ["id"], joinColumns: ["profileId"]},
-        user: {entity: User, fieldName: "user", refTable: "User", refFields: ["id"], joinColumns: ["userId"]}
+        owner: {entity: User, fieldName: "owner", refTable: "User", refFields: ["id"], joinColumns: ["userId"]}
     };
 
     private persist:SQLClient persistClient;
@@ -46,11 +46,11 @@ public client class MultipleAssociationsClient {
                 value.profile = check profileClient->create(<Profile>value.profile);
             }
         }
-        if value.user is User {
+        if value.owner is User {
             UserClient userClient = check new UserClient();
-            boolean exists = check userClient->exists(<User>value.user);
+            boolean exists = check userClient->exists(<User>value.owner);
             if !exists {
-                value.user = check userClient->create(<User>value.user);
+                value.owner = check userClient->create(<User>value.owner);
             }
         }
         _ = check self.persistClient.runInsertQuery(value);
@@ -77,8 +77,8 @@ public client class MultipleAssociationsClient {
             ProfileClient profileClient = check new ProfileClient();
             check profileClient->update(profileEntity);
         }
-        if value.user is record {} {
-            User userEntity = <User>value.user;
+        if value.owner is record {} {
+            User userEntity = <User>value.owner;
             UserClient userClient = check new UserClient();
             check userClient->update(userEntity);
         }
@@ -105,7 +105,7 @@ public client class MultipleAssociationsClient {
 }
 
 public enum MultipleAssociationsRelations {
-    ProfileEntity = "profile", UserEntity = "user"
+    profile, owner
 }
 
 public class MultipleAssociationsStream {

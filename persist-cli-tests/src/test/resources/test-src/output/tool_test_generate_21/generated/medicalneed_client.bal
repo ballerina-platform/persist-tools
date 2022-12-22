@@ -81,7 +81,7 @@ public client class MedicalNeedClient {
 }
 
 public enum MedicalNeedRelations {
-    AidPackageOrderItemEntity = "aidPackageOrderItem"
+    aidPackageOrderItem
 }
 
 public class MedicalNeedStream {

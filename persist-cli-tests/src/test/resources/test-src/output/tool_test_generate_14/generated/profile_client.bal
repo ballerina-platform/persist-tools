@@ -17,11 +17,11 @@ public client class ProfileClient {
         id: {columnName: "id", 'type: int},
         name: {columnName: "name", 'type: string},
         gender: {columnName: "gender", 'type: string},
-        "user.id": {columnName: "userId", 'type: int, relation: {entityName: "user", refTable: "User", refField: "id"}}
+        "owner.id": {columnName: "userId", 'type: int, relation: {entityName: "owner", refTable: "User", refField: "id"}}
     };
     private string[] keyFields = ["id"];
 
-    private final map<persist:JoinMetadata> joinMetadata = {user: {entity: User, fieldName: "user", refTable: "User", refFields: ["id"], joinColumns: ["userId"]}};
+    private final map<persist:JoinMetadata> joinMetadata = {owner: {entity: User, fieldName: "owner", refTable: "User", refFields: ["id"], joinColumns: ["userId"]}};
 
     private persist:SQLClient persistClient;
 
@@ -34,11 +34,11 @@ public client class ProfileClient {
     }
 
     remote function create(Profile value) returns Profile|persist:Error {
-        if value.user is User {
+        if value.owner is User {
             UserClient userClient = check new UserClient();
-            boolean exists = check userClient->exists(<User>value.user);
+            boolean exists = check userClient->exists(<User>value.owner);
             if !exists {
-                value.user = check userClient->create(<User>value.user);
+                value.owner = check userClient->create(<User>value.owner);
             }
         }
         _ = check self.persistClient.runInsertQuery(value);
@@ -60,8 +60,8 @@ public client class ProfileClient {
 
     remote function update(Profile value) returns persist:Error? {
         _ = check self.persistClient.runUpdateQuery(value);
-        if value.user is record {} {
-            User userEntity = <User>value.user;
+        if value.owner is record {} {
+            User userEntity = <User>value.owner;
             UserClient userClient = check new UserClient();
             check userClient->update(userEntity);
         }
@@ -88,7 +88,7 @@ public client class ProfileClient {
 }
 
 public enum ProfileRelations {
-    UserEntity = "user"
+    owner
 }
 
 public class ProfileStream {

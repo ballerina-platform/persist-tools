@@ -23,7 +23,7 @@ public type Profile record  {|
     readonly int id;
     string name;
     @persist:Relation {keyColumns: ["userId"], reference: ["id"]}
-    User user?;
+    User owner?;
     MultipleAssociations multipleAssociations?;
 |};
 
@@ -48,7 +48,7 @@ public type MultipleAssociations record {|
     Profile profile?;
 
     @persist:Relation {keyColumns: ["userId"], reference: ["id"]}
-    User user?;
+    User owner?;
 |};
 
 

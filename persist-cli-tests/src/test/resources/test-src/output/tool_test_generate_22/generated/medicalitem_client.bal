@@ -82,7 +82,7 @@ public client class MedicalItemClient {
 }
 
 public enum MedicalItemRelations {
-    MedicalNeedEntity = "medicalNeed"
+    medicalNeed
 }
 
 public class MedicalItemStream {
