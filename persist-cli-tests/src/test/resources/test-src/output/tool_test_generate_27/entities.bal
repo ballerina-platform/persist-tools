@@ -26,7 +26,7 @@ public type Profile record  {|
     string name;
     //comment4
     @persist:Relation {keyColumns: ["userId"], reference: ["id"]}
-    User user?;
+    User owner?;
     MultipleAssociations multipleAssociations?;
 |};
 
@@ -56,5 +56,5 @@ public type MultipleAssociations record {|
     Profile profile?;
     //comment8
     @persist:Relation {keyColumns: ["userId"], reference: ["id"]}
-    User user?;
+    User owner?;
 |};
