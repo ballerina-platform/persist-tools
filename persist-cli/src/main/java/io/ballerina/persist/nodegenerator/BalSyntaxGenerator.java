@@ -98,7 +98,6 @@ import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.DOUBLE_QUOTE
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.EMPTY_STRING;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.END_RECORD;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.ENTITY_RELATIONS_ARRAY;
-import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.ENUM_ENTRY;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.ENUM_NAME;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.ERR_IS_ERROR;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.EXIST_CHECK_INVALID;
@@ -530,8 +529,7 @@ public class BalSyntaxGenerator {
 
 
                 if (relation.isOwner()) {
-                    relationsEnum.addMember(NodeParser.parseExpression(String.format(ENUM_ENTRY,
-                            field.getFieldType(), field.getFieldName())));
+                    relationsEnum.addMember(NodeParser.parseExpression(field.getFieldName()));
                     inclusions = true;
                     for (EntityField entityField : relation.getAssocEntity().getFields()) {
                         if (entityField.getRelation() != null) {
@@ -574,8 +572,7 @@ public class BalSyntaxGenerator {
                         }
                     }
                 } else {
-                    relationsEnum.addMember(NodeParser.parseExpression(String.format(ENUM_ENTRY,
-                            field.getFieldType(), field.getFieldName())));
+                    relationsEnum.addMember(NodeParser.parseExpression(field.getFieldName()));
                     inclusions = true;
                     for (EntityField entityField : relation.getAssocEntity().getFields()) {
                         if (entityField.getRelation() != null) {
