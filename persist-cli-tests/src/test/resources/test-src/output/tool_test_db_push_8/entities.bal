@@ -26,7 +26,7 @@ public type Profile record {|
     boolean isAdult;
     float salary;
     decimal age;
-    User user?;
+    User owner?;
 |};
 
 @persist:Entity {
@@ -80,7 +80,7 @@ public type MultipleAssociations record {|
     string name;
 
     @persist:Relation{}
-    User user?;
+    User owner?;
 
     @persist:Relation{keyColumns: ["deptId"], onDelete: persist:SET_DEFAULT}
     Dept dept?;

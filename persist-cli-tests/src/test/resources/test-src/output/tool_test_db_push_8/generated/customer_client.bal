@@ -77,7 +77,7 @@ public client class CustomerClient {
 }
 
 public enum CustomerRelations {
-    MultipleAssociationsEntity = "multipleAssociations"
+    multipleAssociations
 }
 
 public class CustomerStream {

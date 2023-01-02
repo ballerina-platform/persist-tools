@@ -191,7 +191,6 @@ public class BalSyntaxConstants {
             "readByKey(%s);";
     public static final String EXIST_CHECK_INVALID = "result is persist:InvalidKeyError";
     public static final String CHECK_RESULT = "result is %s";
-    public static final String ENUM_ENTRY = "%sEntity = \"%s\"";
     public static final String JDBC_URL_WITHOUT_DATABASE = "jdbc:%s://%s:%s";
     public static final String JDBC_URL_WITH_DATABASE = "jdbc:%s://%s:%s/%s";
 

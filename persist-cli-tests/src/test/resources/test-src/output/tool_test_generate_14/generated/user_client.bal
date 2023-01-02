@@ -76,7 +76,7 @@ public client class UserClient {
 }
 
 public enum UserRelations {
-    ProfileEntity = "profile"
+    profile
 }
 
 public class UserStream {

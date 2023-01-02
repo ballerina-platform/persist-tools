@@ -37,6 +37,7 @@ import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.tools.diagnostics.Diagnostic;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY;
@@ -64,8 +65,8 @@ public class BalProjectUtils {
             Module entityModule = moduleBuilder.build();
             inferRelationDetails(entityModule);
             return entityModule;
-        } catch (Exception e) {
-            throw new BalException(e.getMessage());
+        } catch (IOException | BalException e) {
+            throw new BalException("Error while reading entities in the Ballerina project. " + e.getMessage());
         }
     }
 

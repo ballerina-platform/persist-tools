@@ -24,7 +24,7 @@ public type Profile record  {|
     string name;
     string gender;
     @persist:Relation {keyColumns: ["userId"], reference: ["id"]}
-    User user?;
+    User owner?;
 |};
 
 @persist:Entity {
