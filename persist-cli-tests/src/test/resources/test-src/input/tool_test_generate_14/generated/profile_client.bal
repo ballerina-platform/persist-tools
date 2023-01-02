@@ -88,7 +88,7 @@ public client class ProfileClient {
 }
 
 public enum ProfileRelations {
-    UserEntity = "user"
+    user
 }
 
 public class ProfileStream {

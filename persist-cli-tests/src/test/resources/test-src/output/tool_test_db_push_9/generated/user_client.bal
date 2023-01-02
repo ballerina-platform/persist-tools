@@ -81,7 +81,7 @@ public client class UserClient {
 }
 
 public enum UserRelations {
-    MultipleAssociationsEntity = "multipleAssociations", ProfileEntity = "profile"
+    multipleAssociations, profile
 }
 
 public class UserStream {

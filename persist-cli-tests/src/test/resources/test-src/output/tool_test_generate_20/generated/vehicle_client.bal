@@ -88,7 +88,7 @@ public client class VehicleClient {
 }
 
 public enum VehicleRelations {
-    EmployeeEntity = "employee"
+    employee
 }
 
 public class VehicleStream {

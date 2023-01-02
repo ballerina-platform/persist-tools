@@ -76,7 +76,7 @@ public client class DeptClient {
 }
 
 public enum DeptRelations {
-    MultipleAssociationsEntity = "multipleAssociations"
+    multipleAssociations
 }
 
 public class DeptStream {

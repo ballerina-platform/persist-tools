@@ -19,12 +19,12 @@ public client class ProfileClient {
         isAdult: {columnName: "isAdult", 'type: boolean},
         salary: {columnName: "salary", 'type: float},
         age: {columnName: "age", 'type: decimal},
-        "user.id": {'type: int, relation: {entityName: "user", refTable: "User", refField: "id"}},
-        "user.name": {'type: string, relation: {entityName: "user", refTable: "User", refField: "name"}}
+        "owner.id": {'type: int, relation: {entityName: "owner", refTable: "User", refField: "id"}},
+        "owner.name": {'type: string, relation: {entityName: "owner", refTable: "User", refField: "name"}}
     };
     private string[] keyFields = ["id"];
 
-    private final map<persist:JoinMetadata> joinMetadata = {user: {entity: User, fieldName: "user", refTable: "User", refFields: ["profileId"], joinColumns: ["id"]}};
+    private final map<persist:JoinMetadata> joinMetadata = {owner: {entity: User, fieldName: "owner", refTable: "User", refFields: ["profileId"], joinColumns: ["id"]}};
 
     private persist:SQLClient persistClient;
 
@@ -79,7 +79,7 @@ public client class ProfileClient {
 }
 
 public enum ProfileRelations {
-    UserEntity = "user"
+    owner
 }
 
 public class ProfileStream {
