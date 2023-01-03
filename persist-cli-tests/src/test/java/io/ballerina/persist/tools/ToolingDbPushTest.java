@@ -27,6 +27,7 @@ import org.testng.annotations.Test;
 import java.util.ArrayList;
 
 import static io.ballerina.persist.tools.utils.DatabaseTestUtils.assertCreateDatabaseTables;
+import static io.ballerina.persist.tools.utils.DatabaseTestUtils.assertCreatedDatabaseNegative;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.Command.DB_PUSH;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertGeneratedSources;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertGeneratedSourcesNegative;
@@ -176,7 +177,8 @@ public class ToolingDbPushTest {
 
     @Test(enabled = true)
     @Description("When the db push command is executed with faulty clients.")
-    public void testDbPushWithMissMatchedClients() {
+    public void testDbPushWithMissMatchedClients() throws BalException {
         assertGeneratedSourcesNegative("tool_test_db_push_15", DB_PUSH, null);
+        assertCreatedDatabaseNegative("tool_test_db_push_15");
     }
 }
