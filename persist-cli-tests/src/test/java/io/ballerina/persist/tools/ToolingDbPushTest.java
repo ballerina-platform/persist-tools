@@ -173,4 +173,10 @@ public class ToolingDbPushTest {
     public void testDbPushWithEmptyCredentials() {
         assertGeneratedSourcesNegative("tool_test_db_push_14", DB_PUSH, null);
     }
+
+    @Test(enabled = true)
+    @Description("When the db push command is executed with faulty clients.")
+    public void testDbPushWithMissMatchedClients() {
+        assertGeneratedSourcesNegative("tool_test_db_push_15", DB_PUSH, null);
+    }
 }
