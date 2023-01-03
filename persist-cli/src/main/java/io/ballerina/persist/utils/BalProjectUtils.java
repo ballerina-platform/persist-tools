@@ -93,6 +93,24 @@ public class BalProjectUtils {
         }
         return buildProject;
     }
+
+    public static BuildProject getFullBuildProject(Path projectPath) throws BalException {
+        BuildProject buildProject = BuildProject.load(projectPath.toAbsolutePath());
+        Package currentPackage = buildProject.currentPackage();
+        PackageCompilation compilation = currentPackage.getCompilation();
+        DiagnosticResult diagnosticResult = compilation.diagnosticResult();
+        if (diagnosticResult.hasErrors()) {
+            StringBuilder errorMessage = new StringBuilder();
+            errorMessage.append("Error occurred when validating the project. ");
+            for (Diagnostic diagnostic : diagnosticResult.errors()) {
+                errorMessage.append(System.lineSeparator());
+                errorMessage.append(diagnostic);
+
+            }
+            throw new BalException(errorMessage.toString());
+        }
+        return buildProject;
+    }
     
     public static io.ballerina.projects.Module getEntityModule(BuildProject project) throws BalException {
         io.ballerina.projects.Module entityModule = null;
