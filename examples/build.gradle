@@ -40,9 +40,7 @@ task generateExamples {
             try {
                 exec {
                     workingDir "${project.projectDir}/build/generated-examples/${example}"
-                    if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-                        commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat persist generate && exit %%ERRORLEVEL%%"
-                    } else {
+                    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
                         commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate"
                     }
                 }
