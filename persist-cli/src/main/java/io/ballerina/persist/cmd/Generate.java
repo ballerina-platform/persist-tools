@@ -106,7 +106,7 @@ public class Generate implements BLauncherCmd {
         Module entityModule;
         Path generatedSourceDirPath;
         try {
-            BuildProject buildProject = getBuildProject(projectPath);
+            BuildProject buildProject = getBuildProject(projectPath, true);
             io.ballerina.projects.Module module = getEntityModule(buildProject);
             if (module.moduleName().moduleNamePart() == null) {
                 generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);

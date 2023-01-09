@@ -70,7 +70,7 @@ public class BalProjectUtils {
         }
     }
 
-    public static BuildProject getBuildProject(Path projectPath) throws BalException {
+    public static BuildProject getBuildProject(Path projectPath, boolean skipGeneratedDir) throws BalException {
         BuildProject buildProject = BuildProject.load(projectPath.toAbsolutePath());
         Package currentPackage = buildProject.currentPackage();
         PackageCompilation compilation = currentPackage.getCompilation();
@@ -80,7 +80,7 @@ public class BalProjectUtils {
             errorMessage.append("Error occurred when validating the project. ");
             int validErrors = 0;
             for (Diagnostic diagnostic : diagnosticResult.errors()) {
-                if (!diagnostic.location().lineRange().filePath().startsWith(
+                if (!skipGeneratedDir || !diagnostic.location().lineRange().filePath().startsWith(
                         GENERATED_SOURCE_DIRECTORY)) {
                     errorMessage.append(System.lineSeparator());
                     errorMessage.append(diagnostic);
@@ -90,24 +90,6 @@ public class BalProjectUtils {
             if (validErrors > 0) {
                 throw new BalException(errorMessage.toString());
             }
-        }
-        return buildProject;
-    }
-
-    public static BuildProject getFullBuildProject(Path projectPath) throws BalException {
-        BuildProject buildProject = BuildProject.load(projectPath.toAbsolutePath());
-        Package currentPackage = buildProject.currentPackage();
-        PackageCompilation compilation = currentPackage.getCompilation();
-        DiagnosticResult diagnosticResult = compilation.diagnosticResult();
-        if (diagnosticResult.hasErrors()) {
-            StringBuilder errorMessage = new StringBuilder();
-            errorMessage.append("Error occurred when validating the project. ");
-            for (Diagnostic diagnostic : diagnosticResult.errors()) {
-                errorMessage.append(System.lineSeparator());
-                errorMessage.append(diagnostic);
-
-            }
-            throw new BalException(errorMessage.toString());
         }
         return buildProject;
     }
