@@ -300,8 +300,7 @@ public class BalSyntaxGenerator {
                 QualifiedNameReferenceNode qualifiedName = (QualifiedNameReferenceNode) typeDesc;
                 String modulePrefix = qualifiedName.modulePrefix().text();
                 String identifier = qualifiedName.identifier().text();
-                String qualifiedType = modulePrefix + COLON + identifier;
-                return qualifiedType;
+                return modulePrefix + COLON + identifier;
             case SIMPLE_NAME_REFERENCE:
                 return ((SimpleNameReferenceNode) typeDesc).name().text();
             default:
@@ -415,15 +414,6 @@ public class BalSyntaxGenerator {
                     .forEach(field -> {
                         String fieldType = field.getFieldType();
                         Entity assocEntity = entityMap.get(fieldType);
-                        // Check and avoid having one directional association within entities. Can remove this once
-                        // this is validated at compile time.
-                        long count = assocEntity.getFields().stream().filter(assocfield -> assocfield.getFieldType()
-                                .equals(entity.getEntityName())).count();
-                        if (count == 0) {
-                            throw new RuntimeException(String.format(
-                                    "Bidirectional mapping for the associate field %s is not found in the entity %s",
-                                    field.getFieldName(), assocEntity.getEntityName()));
-                        }
                         if (field.getRelation() == null) {
                             // this branch only handles one-to-many or many-to-many with no relation annotations
                             assocEntity.getFields().stream().filter(assocfield -> assocfield.getFieldType()
