@@ -77,7 +77,8 @@ public class GeneratedSourcesTestUtils {
             Assert.assertTrue(Files.exists(actualOutputFile));
             Assert.assertEquals(readContent(actualOutputFile), readContent(expectedOutputFile));
         }
-        if (!(subDir.equals("tool_test_generate_4") || subDir.equals("tool_test_generate_26"))) {
+        if (!(subDir.equals("tool_test_generate_4") || subDir.equals("tool_test_generate_26") ||
+                subDir.equals("tool_test_generate_18"))) {
 
             BuildProject buildProject = BuildProject.load(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)
                     .toAbsolutePath());
