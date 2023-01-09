@@ -23,7 +23,7 @@ apply plugin: 'java'
 description = 'Ballerina - Persist Examples'
 
 def ballerinaDist = "${project.rootDir}/target/ballerina-distribution"
-def examples = ["medical-center", "one-one-association"]
+def examples = ["medical-center"]
 
 task copyTestResources(type: Copy) {
     examples.each { example ->
