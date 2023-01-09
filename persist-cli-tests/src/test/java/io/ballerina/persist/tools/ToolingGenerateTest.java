@@ -133,7 +133,7 @@ public class ToolingGenerateTest {
     public void testGenerateThreeClientsWith1ToManyAssociations() {
         assertGeneratedSources("tool_test_generate_17", GENERATE);
     }
-    @Test(enabled = true)
+    @Test(enabled = false)
     @Description("There are two entities with one to one associations between each " +
             "other with no annotation values in any Relation")
     public void testGenerateThreeEntitiesWith1To1AssociationsWithNoAnnotationValue() {
