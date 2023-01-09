@@ -79,16 +79,8 @@ task jBallerinaPack {
     outputs.dir ballerinaDist
 }
 
-task copyPersitTool(type: Copy) {
-    dependsOn(jBallerinaPack)
-    into "$project.rootDir/target"
-    into("ballerina-distribution/bre/lib") {
-        from "$project.rootDir/persist-cli/build/libs/persist-cli-${project.version}.jar"
-    }
-}
-
 task unpackStdLibs() {
-    dependsOn(copyPersitTool)
+    dependsOn(jBallerinaPack)
     doLast {
         configurations.ballerinaStdLibs.resolvedConfiguration.resolvedArtifacts.each { artifact ->
             copy {
