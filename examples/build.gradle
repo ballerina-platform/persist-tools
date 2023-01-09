@@ -23,7 +23,7 @@ apply plugin: 'java'
 description = 'Ballerina - Persist Examples'
 
 def ballerinaDist = "${project.rootDir}/target/ballerina-distribution"
-def examples = ["medical-center"]
+def examples = ["medical-center", "one-one-association"]
 
 task copyTestResources(type: Copy) {
     examples.each { example ->
@@ -34,7 +34,15 @@ task copyTestResources(type: Copy) {
     }
 }
 
+task copyPersitTool(type: Copy) {
+    into "$project.rootDir/target"
+    into("ballerina-distribution/bre/lib") {
+        from "$project.rootDir/persist-cli/build/libs/persist-cli-${project.version}.jar"
+    }
+}
+
 task generateExamples {
+    dependsOn(copyPersitTool)
     doLast {
         examples.each { example ->
             try {
@@ -156,8 +164,9 @@ task testExamples {
 }
 
 
-
-generateExamples.dependsOn ":persist-cli-tests:build"
+copyPersitTool.dependsOn ":persist-cli-tests:build"
+copyPersitTool.dependsOn ":persist-cli:build"
+//generateExamples.dependsOn ":persist-cli-tests:build"
 generateExamples.dependsOn copyTestResources
 pushExamples.dependsOn generateExamples
 testExamples.dependsOn pushExamples
