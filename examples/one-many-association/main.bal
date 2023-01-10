@@ -57,38 +57,17 @@ public function main() returns error? {
     };
     _ = check employeeClient->create(employee4);
 
-    // _ = check employeeClient->create({
-    //     id: 4,
-    //     name: "TestEmployee3",
-    //     company: {
-    //         id: 4,
-    //         name: "TestCompany4"
-    //     }
-    //     });
-
     Company company2 = check companyClient->readByKey(2, ["employees"]);
     Employee employee9 = {
         id: 9,
         name: "TestEmployee9",
         company: {
-            id: 4,
+            id: 9,
             name: "TestCompany"
         }
     };
     _ = check employeeClient->create(employee9);
-    // employee9.name = "TestEmployee9Updated9";
-    // employee9.company.name = "TestCompanyUpdated9";
-    // _ = check employeeClient->update(employee9);
-
-    //     io:println("\n========== Company ==========");
-    //     _ = check from Company companyItem in companyClient->read()
-    //         do {
-    //             io:println(companyItem);
-    //         };
-
-    //     io:println("\n========== MultipleAssociations ==========");
-    //     _ = check from Employee employeeItem in employeeClient->read()
-    //         do {
-    //             io:println(employeeItem);
-    //         };
+    employee9.name = "TestEmployee9Updated9";
+    employee9.company.name = "TestCompanyUpdated9";
+    _ = check employeeClient->update(employee9);
 }
