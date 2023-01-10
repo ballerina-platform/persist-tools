@@ -125,7 +125,7 @@ public class Push implements BLauncherCmd {
         }
 
         try {
-            BuildProject buildProject = getBuildProject(projectPath);
+            BuildProject buildProject = getBuildProject(projectPath, false);
             io.ballerina.projects.Module module = getEntityModule(buildProject);
             Module entityModule = BalProjectUtils.getEntities(module);
             ArrayList<Entity> entityArray = new ArrayList<>(entityModule.getEntityMap().values());

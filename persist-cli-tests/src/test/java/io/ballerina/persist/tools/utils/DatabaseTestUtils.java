@@ -89,6 +89,33 @@ public class DatabaseTestUtils {
         }
     }
 
+    public static void assertCreatedDatabaseNegative(String subDir) throws BalException {
+        String osName = System.getProperty("os.name");
+        if (osName.toLowerCase(Locale.getDefault()).contains("windows")) {
+            return;
+        }
+        PersistConfiguration configuration = TomlSyntaxGenerator.readPersistToml(
+                Paths.get(GENERATED_SOURCES_DIRECTORY, subDir, PERSIST_DIRECTORY, PERSIST_TOML_FILE));
+        String username = configuration.getDbConfig().getUsername();
+        String password = configuration.getDbConfig().getPassword();
+        String database = configuration.getDbConfig().getDatabase();
+        String host = configuration.getDbConfig().getHost();
+        int port = configuration.getDbConfig().getPort();
+        String url = String.format("jdbc:mysql://%s:%s", host, port);
+        Connection connection = null;
+        try {
+            connection = DriverManager.getConnection(url, username, password);
+        } catch (SQLException e) {
+            errStream.println("Failed to create database connection: " + e.getMessage());
+        }
+        try {
+            assert connection != null;
+            Assert.assertFalse(databaseExists(connection, database));
+        } catch (SQLException e) {
+            errStream.println("Failed to check if database exists: " + e.getMessage());
+        }
+    }
+    
     private static boolean databaseExists(Connection connection, String databaseName) throws SQLException {
 
         boolean exists = false;
