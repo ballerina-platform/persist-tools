@@ -100,7 +100,7 @@ public class Init implements BLauncherCmd {
         io.ballerina.projects.Module module;
         Module entityModule;
         try {
-            BuildProject buildProject = getBuildProject(projectPath);
+            BuildProject buildProject = getBuildProject(projectPath, true);
             module = getEntityModule(buildProject);
             entityModule = BalProjectUtils.getEntities(module);
         } catch (BalException e) {
