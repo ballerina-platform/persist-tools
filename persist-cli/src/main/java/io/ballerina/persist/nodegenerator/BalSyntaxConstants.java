@@ -125,6 +125,7 @@ public class BalSyntaxConstants {
             "return <persist:Error>error(streamValue.message());";
     public static final String NEXT_STREAM_ELSE_STATEMENT = "record {|%s value;|} nextRecord = " +
             "{value: <%s>streamValue.value};";
+    public static final String RELATION_ENUM_ARRAY_CHECK = "self.include is %sRelations[]";
     public static final String CLOSE_STREAM_STATEMENT = "sql:Error? e = anydataStream.close();";
 
     public static final String CONFIGURABLE_PORT = "configurable int port = ?;";
