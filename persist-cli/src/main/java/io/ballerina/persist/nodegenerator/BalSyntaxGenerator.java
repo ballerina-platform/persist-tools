@@ -878,8 +878,11 @@ public class BalSyntaxGenerator {
         streamValueErrorCheck.addElseStatement(NodeParser.parseStatement(String.format(
                 BalSyntaxConstants.NEXT_STREAM_ELSE_STATEMENT, entity.getEntityName(), entity.getEntityName())));
         if (hasManyRelation) {
-            streamValueErrorCheck.addElseStatement(NodeParser.parseStatement(String.format(GET_MANY_RELATIONS,
+            IfElse clientRelationsCheck = new IfElse(NodeParser.parseExpression(String.format(
+                    BalSyntaxConstants.RELATION_ENUM_ARRAY_CHECK, entity.getEntityName())));
+            clientRelationsCheck.addIfStatement(NodeParser.parseStatement(String.format(GET_MANY_RELATIONS,
                     className)));
+            streamValueErrorCheck.addElseStatement(clientRelationsCheck.getIfElseStatementNode());
         }
         streamValueErrorCheck.addElseStatement(NodeParser.parseStatement(BalSyntaxConstants.RETURN_NEXT_RECORD));
         streamValueNilCheck.addElseBody(streamValueErrorCheck);
