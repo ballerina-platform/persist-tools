@@ -17,8 +17,7 @@
 import ballerina/persist;
 
 @persist:Entity {
-    key: ["id"],
-    tableName: "Profiles"
+    key: ["id"]
 }
 public type Profile record {|
     @persist:AutoIncrement{startValue: 10}
@@ -27,17 +26,18 @@ public type Profile record {|
     boolean isAdult;
     float salary;
     decimal age;
+    User owner?;
 |};
 
 @persist:Entity {
-    key: ["id"],
-    tableName: "Users"
+    key: ["id"]
 }
 public type User record  {|
     readonly int id;
     string name;
     @persist:Relation
     Profile profile?;
+    MultipleAssociations multipleAssociations?;
 |};
 
 @persist:Entity {
@@ -46,28 +46,43 @@ public type User record  {|
 public type Dept record  {|
     readonly int id;
     string name;
-|};
-
-@persist:Entity {
-    key: ["id"]
-}
-public type Customer record  {|
-    readonly int id;
-    string name;
+    MultipleAssociations multipleAssociations?;
 |};
 
 @persist:Entity {
     key: ["id"],
-    tableName: "MultipleAssociations"
+    uniqueConstraints: [["age", "name"]]
+}
+public type Customer record  {|
+    readonly int id;
+    string name;
+    int age;
+    MultipleAssociations multipleAssociations?;
+|};
+
+@persist:Entity {
+    key: ["id", "firstName"],
+    uniqueConstraints: [["age", "lastName"], ["nicNo"]]
+}
+public type Student record  {|
+    readonly int id;
+    readonly string firstName;
+    int age;
+    string lastName;
+    string nicNo;
+|};
+
+@persist:Entity {
+    key: ["id"]
 }
 public type MultipleAssociations record {|
     readonly int id;
     string name;
 
     @persist:Relation{}
-    User user?;
+    User owner?;
 
-    @persist:Relation{keyColumns: ["profileId"], onDelete: persist:SET_DEFAULT}
+    @persist:Relation{keyColumns: ["deptId"], onDelete: persist:SET_DEFAULT}
     Dept dept?;
 
     @persist:Relation{reference: ["id"], onUpdate: "SET_DEFAULT"}

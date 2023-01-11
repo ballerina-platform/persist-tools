@@ -1,5 +1,5 @@
 NAME
-       Generate database configurations file inside the Ballerina project
+       Initialize the persistence layer in the Ballerina project.
 
 SYNOPSIS
        bal persist init

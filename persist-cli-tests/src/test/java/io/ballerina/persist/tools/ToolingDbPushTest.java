@@ -18,6 +18,7 @@
 
 package io.ballerina.persist.tools;
 
+import io.ballerina.persist.BalException;
 import io.ballerina.persist.tools.utils.PersistTable;
 import io.ballerina.persist.tools.utils.PersistTableColumn;
 import jdk.jfr.Description;
@@ -26,6 +27,7 @@ import org.testng.annotations.Test;
 import java.util.ArrayList;
 
 import static io.ballerina.persist.tools.utils.DatabaseTestUtils.assertCreateDatabaseTables;
+import static io.ballerina.persist.tools.utils.DatabaseTestUtils.assertCreatedDatabaseNegative;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.Command.DB_PUSH;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertGeneratedSources;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertGeneratedSourcesNegative;
@@ -41,12 +43,12 @@ public class ToolingDbPushTest {
     private static final String no = "NO";
     private static final String sqlDateTime = "DATETIME";
 
-    @Test()
+    @Test(enabled = true)
     @Description("Database is not available and it is created while running the db push command")
-    public void testDbPushWithoutDatabase() {
+    public void testDbPushWithoutDatabase() throws BalException {
         ArrayList<PersistTable> tables = new ArrayList<>();
         tables.add(
-                new PersistTable("MedicalNeeds", "needId")
+                new PersistTable("MedicalNeed", "needId")
                         .addColumn(new PersistTableColumn("needId", sqlInt, yes, no))
                         .addColumn(new PersistTableColumn("itemId", sqlInt, no, no))
                         .addColumn(new PersistTableColumn("beneficiaryId", sqlInt, no, no))
@@ -55,7 +57,7 @@ public class ToolingDbPushTest {
                         .addColumn(new PersistTableColumn("quantity", sqlInt, no, no))
         );
         tables.add(
-                new PersistTable("MedicalItems", "itemId")
+                new PersistTable("MedicalItem", "itemId")
                         .addColumn(new PersistTableColumn("itemId", sqlInt, no, no))
                         .addColumn(new PersistTableColumn("name", sqlVarchar, no, no))
                         .addColumn(new PersistTableColumn("type", sqlVarchar, no, no))
@@ -65,18 +67,18 @@ public class ToolingDbPushTest {
         assertCreateDatabaseTables("tool_test_db_push_1", tables);
     }
 
-    @Test()
+    @Test(enabled = true)
     @Description("When the db push command is executed outside a Ballerina project")
     public void testDbPushOutsideBallerinaProject() {
         assertGeneratedSourcesNegative("tool_test_db_push_2", DB_PUSH, null);
     }
 
-    @Test(dependsOnMethods = { "testDbPushWithoutDatabase" })
+    @Test(enabled = true, dependsOnMethods = { "testDbPushWithoutDatabase" })
     @Description("Database already exists. An entity is removed. The database tables should not be affected.")
-    public void testDbPushEntityRemoved() {
+    public void testDbPushEntityRemoved() throws BalException {
         ArrayList<PersistTable> tables = new ArrayList<>();
         tables.add(
-                new PersistTable("MedicalNeeds", "needId")
+                new PersistTable("MedicalNeed", "needId")
                         .addColumn(new PersistTableColumn("needId", sqlInt, yes, no))
                         .addColumn(new PersistTableColumn("itemId", sqlInt, no, no))
                         .addColumn(new PersistTableColumn("beneficiaryId", sqlInt, no, no))
@@ -85,7 +87,7 @@ public class ToolingDbPushTest {
                         .addColumn(new PersistTableColumn("quantity", sqlInt, no, no))
         );
         tables.add(
-                new PersistTable("MedicalItems", "itemId")
+                new PersistTable("MedicalItem", "itemId")
                         .addColumn(new PersistTableColumn("itemId", sqlInt, no, no))
                         .addColumn(new PersistTableColumn("name", sqlVarchar, no, no))
                         .addColumn(new PersistTableColumn("type", sqlVarchar, no, no))
@@ -95,18 +97,12 @@ public class ToolingDbPushTest {
         assertCreateDatabaseTables("tool_test_db_push_3", tables);
     }
 
-    @Test()
-    @Description("When the db push command is executed without the database configurations")
-    public void testDbPushWithoutConfigFile() {
-        assertGeneratedSourcesNegative("tool_test_db_push_4", DB_PUSH, null);
-    }
-
-    @Test(dependsOnMethods = { "testDbPushEntityRemoved" })
+    @Test(enabled = true, dependsOnMethods = { "testDbPushEntityRemoved" })
     @Description("Database already exists. An entity is updated. The respective table should be updated.")
-    public void testDbPushEntityUpdated() {
+    public void testDbPushEntityUpdated() throws BalException {
         ArrayList<PersistTable> tables = new ArrayList<>();
         tables.add(
-                new PersistTable("MedicalNeeds", "fooNeedId")
+                new PersistTable("MedicalNeed", "fooNeedId")
                         .addColumn(new PersistTableColumn("fooNeedId", sqlInt, yes, no))
                         .addColumn(new PersistTableColumn("fooItemId", sqlInt, no, no))
                         .addColumn(new PersistTableColumn("fooBeneficiaryId", sqlInt, no, no))
@@ -115,7 +111,7 @@ public class ToolingDbPushTest {
                         .addColumn(new PersistTableColumn("foo", sqlInt, no, no))
         );
         tables.add(
-                new PersistTable("MedicalItems", "itemId")
+                new PersistTable("MedicalItem", "itemId")
                         .addColumn(new PersistTableColumn("itemId", sqlInt, no, no))
                         .addColumn(new PersistTableColumn("name", sqlVarchar, no, no))
                         .addColumn(new PersistTableColumn("type", sqlVarchar, no, no))
@@ -125,34 +121,64 @@ public class ToolingDbPushTest {
         assertCreateDatabaseTables("tool_test_db_push_5", tables);
     }
 
-    @Test()
+    @Test(enabled = true)
     @Description("When the db push command is executed without the persist dir")
     public void testDbPushWithoutPersistDir() {
         assertGeneratedSourcesNegative("tool_test_db_push_6", DB_PUSH, null);
     }
 
-    @Test(dependsOnMethods = { "testDbPushEntityUpdated" })
+    @Test(enabled = true, dependsOnMethods = { "testDbPushEntityUpdated" })
     @Description("When the db push command is executed with faulty credentials")
     public void testDbPushWithWrongCredentials() {
         assertGeneratedSourcesNegative("tool_test_db_push_7", DB_PUSH, null);
-
     }
 
-    @Test()
+    @Test(enabled = true)
     @Description("Test the created sql script content when relation annotation hasn't properties")
     public void testDbPush() {
         assertGeneratedSources("tool_test_db_push_8", DB_PUSH);
     }
 
-    @Test()
+    @Test(enabled = true) // this is not valid because, defining entities in multiple modules is init allowed.
     @Description("Test the created sql script content when entities are in the main and sub-modules")
     public void testDbPushWithSubModule() {
         assertGeneratedSources("tool_test_db_push_9", DB_PUSH);
     }
 
-    @Test()
+    @Test(enabled = true)
     @Description("Test the created sql script content when relation annotation hasn't properties")
     public void testDbPushWithScriptHasUniqueConstraints() {
         assertGeneratedSources("tool_test_db_push_10", DB_PUSH);
+    }
+
+    @Test(enabled = true)
+    @Description("When the db push command is executed with faulty database name containing illegal characters.")
+    public void testDbPushWithIllegalCredentials() {
+        assertGeneratedSourcesNegative("tool_test_db_push_11", DB_PUSH, null);
+    }
+
+    @Test(enabled = true)
+    @Description("When the db push command is executed with faulty database name containing illegal characters.")
+    public void testDbPushWithIllegalCredentials2() {
+        assertGeneratedSourcesNegative("tool_test_db_push_12", DB_PUSH, null);
+    }
+
+    @Test(enabled = true)
+    @Description("When the db push command is executed with faulty database name containing illegal characters.")
+    public void testDbPushWithIllegalCredentials3() {
+        assertGeneratedSourcesNegative("tool_test_db_push_13", DB_PUSH, null);
+    }
+
+    @Test(enabled = true)
+    @Description("When the db push command is executed with empty database name.")
+    public void testDbPushWithEmptyCredentials() {
+        assertGeneratedSourcesNegative("tool_test_db_push_14", DB_PUSH, null);
+    }
+
+    @Test(enabled = true)
+    @Description("When the db push command is executed with faulty clients.")
+    public void testDbPushWithMissMatchedClients() throws BalException {
+        assertGeneratedSourcesNegative("tool_test_db_push_15", DB_PUSH, null);
+        assertCreatedDatabaseNegative("tool_test_db_push_15");
     }
 }

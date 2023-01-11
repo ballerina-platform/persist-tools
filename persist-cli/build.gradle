@@ -18,6 +18,7 @@
 plugins {
     id 'java'
     id 'checkstyle'
+    id 'com.github.spotbugs'
 }
 
 description = 'Ballerina - Persist-CLI Java Native'
@@ -66,6 +67,26 @@ test {
     finalizedBy jacocoTestReport
 }
 
+
+spotbugsMain {
+    ignoreFailures = true
+    effort = "max"
+    reportLevel = "low"
+    reportsDir = file("$project.buildDir/reports/spotbugs")
+    reports {
+        //html.enabled true
+        text.enabled = true
+    }
+    def excludeFile = file("${rootDir}/spotbugs-exclude.xml")
+    if (excludeFile.exists()) {
+        excludeFilter = excludeFile
+    }
+}
+
+spotbugsTest {
+    enabled = false
+}
+
 jacoco {
     toolVersion = "${jacocoVersion}"
 }
@@ -77,12 +98,26 @@ jacocoTestReport {
     }
 }
 
+task validateSpotbugs() {
+    doLast {
+        if (spotbugsMain.reports.size() > 0 &&
+                spotbugsMain.reports[0].destination.exists() &&
+                spotbugsMain.reports[0].destination.text.readLines().size() > 0) {
+            spotbugsMain.reports[0].destination?.eachLine {
+                println 'Failure: ' + it
+            }
+            throw new GradleException("Spotbugs rule violations were found.");
+        }
+    }
+}
+
 checkstyle {
     toolVersion "${checkstylePluginVersion}"
     configFile rootProject.file("build-config/checkstyle/build/checkstyle.xml")
     configProperties = ["suppressionFile" : file("${rootDir}/build-config/checkstyle/build/suppressions.xml")]
 }
 
+spotbugsMain.finalizedBy validateSpotbugs
 checkstyleMain.dependsOn(":checkstyle:downloadCheckstyleRuleFiles")
 
 def excludePattern = '**/module-info.java'

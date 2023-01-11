@@ -18,33 +18,32 @@
 
 package io.ballerina.persist.utils;
 
+import io.ballerina.compiler.syntax.tree.AnnotationNode;
 import io.ballerina.compiler.syntax.tree.ModuleMemberDeclarationNode;
-import io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator;
-import io.ballerina.persist.objects.BalException;
-import io.ballerina.persist.objects.Entity;
-import io.ballerina.persist.objects.EntityMetaData;
+import io.ballerina.compiler.syntax.tree.ModulePartNode;
+import io.ballerina.compiler.syntax.tree.Node;
+import io.ballerina.compiler.syntax.tree.NodeList;
+import io.ballerina.compiler.syntax.tree.QualifiedNameReferenceNode;
+import io.ballerina.compiler.syntax.tree.SyntaxKind;
+import io.ballerina.compiler.syntax.tree.TypeDefinitionNode;
+import io.ballerina.persist.BalException;
+import io.ballerina.persist.models.Module;
+import io.ballerina.persist.nodegenerator.BalSyntaxGenerator;
 import io.ballerina.projects.DiagnosticResult;
+import io.ballerina.projects.Document;
+import io.ballerina.projects.DocumentId;
 import io.ballerina.projects.Package;
 import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.tools.diagnostics.Diagnostic;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import static io.ballerina.persist.nodegenerator.BalFileConstants.EXTENSION_BAL;
-import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_CLIENTS;
-import static io.ballerina.persist.nodegenerator.BalFileConstants.KEYWORD_MODULES;
-import static io.ballerina.persist.nodegenerator.BalFileConstants.PATH_ENTITIES_FILE;
-import static io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator.formatModuleMembers;
-import static io.ballerina.persist.nodegenerator.BalSyntaxTreeGenerator.generateRelations;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_ENTITY;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PERSIST_MODULE;
+import static io.ballerina.persist.nodegenerator.BalSyntaxGenerator.inferRelationDetails;
 
 /**
  * This Class implements the utility methods for persist tool.
@@ -56,60 +55,88 @@ public class BalProjectUtils {
 
     private BalProjectUtils() {}
 
-    public static DiagnosticResult hasSemanticDiagnostics(Path projectPath) {
-        Package currentPackage;
-        BuildProject buildProject;
-        buildProject = BuildProject.load(projectPath.toAbsolutePath());
-        currentPackage = buildProject.currentPackage();
-        PackageCompilation compilation = currentPackage.getCompilation();
-        return compilation.diagnosticResult();
-    }
-
-    public static EntityMetaData readBalFiles(String sourcePath) throws BalException {
-        ArrayList<Entity> returnMetaData = new ArrayList<>();
-        ArrayList<ModuleMemberDeclarationNode> returnModuleMembers = new ArrayList<>();
-        Path dirPath = Paths.get(sourcePath);
-        List<Path> fileList;
-        Path clientEntitiesPath = Paths.get(sourcePath, KEYWORD_MODULES, KEYWORD_CLIENTS,
-                PATH_ENTITIES_FILE).toAbsolutePath();
-        File entitiesBal = new File(clientEntitiesPath.toString());
+    public static Module getEntities(io.ballerina.projects.Module module) throws BalException {
+        Module.Builder moduleBuilder = Module.newBuilder(module.moduleName().moduleNamePart());
         try {
-            if (!entitiesBal.exists()) {
-                DiagnosticResult diagnosticResult = hasSemanticDiagnostics(dirPath);
-                if (diagnosticResult.hasErrors()) {
-                    StringBuilder errorMessage = new StringBuilder();
-                    errorMessage.append("Error occurred when validating the project. ");
-                    for (Diagnostic d : diagnosticResult.errors()) {
-                        errorMessage.append(System.lineSeparator());
-                        errorMessage.append(d.toString());
-                    }
-                    throw new BalException(errorMessage.toString());
-                }
+            for (DocumentId documentId : module.documentIds()) {
+                Document document = module.document(documentId);
+                BalSyntaxGenerator.populateEntities(moduleBuilder, document.syntaxTree());
             }
-            try (Stream<Path> walk = Files.walk(dirPath)) {
-                if (walk != null) {
-                    fileList = walk.filter((filePath) -> Files.isRegularFile(filePath) &&
-                                    !filePath.toAbsolutePath().equals(clientEntitiesPath)
-                                    && filePath.normalize().toString().endsWith(EXTENSION_BAL))
-                            .collect(Collectors.toList());
-                    for (Path filePath : fileList) {
-                        EntityMetaData retEntityMetaData = BalSyntaxTreeGenerator.getEntityRecord(filePath);
-                        ArrayList<Entity> retData = retEntityMetaData.entityArray;
-                        ArrayList<ModuleMemberDeclarationNode> retMembers = retEntityMetaData.moduleMembersArray;
-                        if (retData.size() != 0) {
-                            returnMetaData.addAll(retData);
-                            returnModuleMembers.addAll(retMembers);
-                        }
-                    }
-                    generateRelations(returnMetaData);
-                    returnModuleMembers = formatModuleMembers(returnModuleMembers, returnMetaData);
-                    return new EntityMetaData(returnMetaData, returnModuleMembers);
-                }
-            }
-
-        } catch (IOException e) {
+            Module entityModule = moduleBuilder.build();
+            inferRelationDetails(entityModule);
+            return entityModule;
+        } catch (IOException | BalException e) {
             throw new BalException("Error while reading entities in the Ballerina project. " + e.getMessage());
         }
-        return new EntityMetaData(new ArrayList<>(), new ArrayList<>());
+    }
+
+    public static BuildProject getBuildProject(Path projectPath, boolean skipGeneratedDir) throws BalException {
+        BuildProject buildProject = BuildProject.load(projectPath.toAbsolutePath());
+        Package currentPackage = buildProject.currentPackage();
+        PackageCompilation compilation = currentPackage.getCompilation();
+        DiagnosticResult diagnosticResult = compilation.diagnosticResult();
+        if (diagnosticResult.hasErrors()) {
+            StringBuilder errorMessage = new StringBuilder();
+            errorMessage.append("Error occurred when validating the project. ");
+            int validErrors = 0;
+            for (Diagnostic diagnostic : diagnosticResult.errors()) {
+                if (!skipGeneratedDir || !diagnostic.location().lineRange().filePath().startsWith(
+                        GENERATED_SOURCE_DIRECTORY)) {
+                    errorMessage.append(System.lineSeparator());
+                    errorMessage.append(diagnostic);
+                    validErrors += 1;
+                }
+            }
+            if (validErrors > 0) {
+                throw new BalException(errorMessage.toString());
+            }
+        }
+        return buildProject;
+    }
+    
+    public static io.ballerina.projects.Module getEntityModule(BuildProject project) throws BalException {
+        io.ballerina.projects.Module entityModule = null;
+        io.ballerina.projects.Module defaultModule = null;
+        for (io.ballerina.projects.Module module : project.currentPackage().modules()) {
+            boolean entityExists = false;
+            if (module.moduleName().moduleNamePart() == null) {
+                defaultModule = module;
+            }
+            for (DocumentId documentId : module.documentIds()) {
+                Document document = module.document(documentId);
+                ModulePartNode rootNote = document.syntaxTree().rootNode();
+                NodeList<ModuleMemberDeclarationNode> nodeList = rootNote.members();
+                for (ModuleMemberDeclarationNode moduleNode : nodeList) {
+                    if (moduleNode.kind() != SyntaxKind.TYPE_DEFINITION || ((TypeDefinitionNode) moduleNode)
+                            .metadata().isEmpty()) {
+                        continue;
+                    }
+
+                    for (AnnotationNode annotation : ((TypeDefinitionNode) moduleNode).metadata().get().annotations()) {
+                        Node annotReference = annotation.annotReference();
+                        if (annotReference.kind() != SyntaxKind.QUALIFIED_NAME_REFERENCE) {
+                            continue;
+                        }
+                        QualifiedNameReferenceNode qualifiedNameRef = (QualifiedNameReferenceNode) annotReference;
+                        if (qualifiedNameRef.identifier().text().equals(KEYWORD_ENTITY) && qualifiedNameRef
+                                .modulePrefix().text().equals(PERSIST_MODULE) && annotation.annotValue()
+                                .isPresent()) {
+                            entityExists = true;
+                        }
+                    }
+                }
+            }
+            if (entityExists) {
+                if (entityModule == null) {
+                    entityModule = module;
+                } else {
+                    throw new BalException("Entities are allowed to define in one module. " +
+                            "but found in both " + entityModule.moduleName() + " and " +
+                            module.moduleName());
+                }
+            }
+        }
+        return entityModule == null ? defaultModule : entityModule;
     }
 }
+

@@ -33,7 +33,7 @@ import io.ballerina.compiler.syntax.tree.StatementNode;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
 import io.ballerina.compiler.syntax.tree.Token;
 import io.ballerina.compiler.syntax.tree.TypeDescriptorNode;
-import io.ballerina.persist.nodegenerator.SyntaxTreeConstants;
+import io.ballerina.persist.nodegenerator.SyntaxTokenConstants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -95,16 +95,16 @@ public class Function {
 
     private FunctionSignatureNode getFunctionSignature() {
         return NodeFactory.createFunctionSignatureNode(
-                SyntaxTreeConstants.SYNTAX_TREE_OPEN_PAREN,
+                SyntaxTokenConstants.SYNTAX_TREE_OPEN_PAREN,
                 AbstractNodeFactory.createSeparatedNodeList(parameters),
-                SyntaxTreeConstants.SYNTAX_TREE_CLOSE_PAREN,
+                SyntaxTokenConstants.SYNTAX_TREE_CLOSE_PAREN,
                 returnTypeDescriptorNode
         );
     }
 
     public void addRequiredParameter(Node typeName, String name) {
         if (parameters.size() > 0) {
-            parameters.add(SyntaxTreeConstants.SYNTAX_TREE_COMMA);
+            parameters.add(SyntaxTokenConstants.SYNTAX_TREE_COMMA);
         }
         NodeList<AnnotationNode> annotations = NodeFactory.createEmptyNodeList();
         parameters.add(
@@ -118,19 +118,19 @@ public class Function {
 
     public void addRequiredParameterWithDefault(Node typeName, String name, Bracket brkt) {
         if (parameters.size() > 0) {
-            parameters.add(SyntaxTreeConstants.SYNTAX_TREE_COMMA);
+            parameters.add(SyntaxTokenConstants.SYNTAX_TREE_COMMA);
         }
         Token open;
         Token close;
         if (brkt == Bracket.SQUARE) {
-            open = SyntaxTreeConstants.SYNTAX_TREE_OPEN_BRACKET;
-            close = SyntaxTreeConstants.SYNTAX_TREE_CLOSE_BRACKET;
+            open = SyntaxTokenConstants.SYNTAX_TREE_OPEN_BRACKET;
+            close = SyntaxTokenConstants.SYNTAX_TREE_CLOSE_BRACKET;
         } else if (brkt == Bracket.CURLY) {
-            open = SyntaxTreeConstants.SYNTAX_TREE_OPEN_BRACE;
-            close = SyntaxTreeConstants.SYNTAX_TREE_CLOSE_BRACE;
+            open = SyntaxTokenConstants.SYNTAX_TREE_OPEN_BRACE;
+            close = SyntaxTokenConstants.SYNTAX_TREE_CLOSE_BRACE;
         } else {
-            open = SyntaxTreeConstants.SYNTAX_TREE_OPEN_PAREN;
-            close = SyntaxTreeConstants.SYNTAX_TREE_CLOSE_PAREN;
+            open = SyntaxTokenConstants.SYNTAX_TREE_OPEN_PAREN;
+            close = SyntaxTokenConstants.SYNTAX_TREE_CLOSE_PAREN;
         }
         NodeList<AnnotationNode> annotations = NodeFactory.createEmptyNodeList();
         parameters.add(
@@ -138,7 +138,7 @@ public class Function {
                         annotations,
                         typeName,
                         AbstractNodeFactory.createIdentifierToken(name),
-                        SyntaxTreeConstants.SYNTAX_TREE_EQUAL,
+                        SyntaxTokenConstants.SYNTAX_TREE_EQUAL,
                         NodeFactory.createListConstructorExpressionNode(
                                 open, AbstractNodeFactory
                                         .createSeparatedNodeList(NodeFactory.createBasicLiteralNode(
@@ -154,10 +154,10 @@ public class Function {
 
     private FunctionBodyNode getFunctionBody() {
         return NodeFactory.createFunctionBodyBlockNode(
-                SyntaxTreeConstants.SYNTAX_TREE_OPEN_BRACE,
+                SyntaxTokenConstants.SYNTAX_TREE_OPEN_BRACE,
                 null,
                 statements,
-                SyntaxTreeConstants.SYNTAX_TREE_CLOSE_BRACE,
+                SyntaxTokenConstants.SYNTAX_TREE_CLOSE_BRACE,
                 null
         );
     }

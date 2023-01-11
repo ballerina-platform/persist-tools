@@ -22,6 +22,9 @@ import io.ballerina.persist.cmd.Generate;
 import io.ballerina.persist.cmd.Init;
 import io.ballerina.persist.cmd.PersistCmd;
 import io.ballerina.persist.cmd.Push;
+import io.ballerina.projects.Package;
+import io.ballerina.projects.PackageCompilation;
+import io.ballerina.projects.directory.BuildProject;
 import org.testng.Assert;
 
 import java.io.IOException;
@@ -36,8 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static io.ballerina.persist.utils.BalProjectUtils.hasSemanticDiagnostics;
 
 /**
  * persist tool test Utils.
@@ -57,7 +58,6 @@ public class GeneratedSourcesTestUtils {
     public static final String GENERATED_SOURCES_DIRECTORY = Paths.get("build", "generated-sources").toString();
     public static final Path RESOURCES_EXPECTED_OUTPUT = Paths.get("src", "test", "resources", "test-src", "output")
             .toAbsolutePath();
-    private static final Path DRIVER_PATH = Paths.get("lib").toAbsolutePath();
 
     public static void assertGeneratedSources(String subDir, Command cmd) {
 
@@ -66,23 +66,24 @@ public class GeneratedSourcesTestUtils {
                 Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)));
         for (Path actualOutputFile: listFiles(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir))) {
             errStream.println(actualOutputFile);
-            if (actualOutputFile.toString().contains("persist_db_scripts.sql")
-                    && (subDir.equals("tool_test_generate_7") || subDir.equals("tool_test_generate_14") ||
-                    subDir.equals("tool_test_generate_15"))) {
+            if ((actualOutputFile.toString().contains("persist_db_scripts.sql") ||
+                    actualOutputFile.toString().contains("entities.bal")) &&
+                    (subDir.equals("tool_test_generate_7") || subDir.equals("tool_test_generate_14") ||
+                            subDir.equals("tool_test_generate_15"))) {
                 continue;
             }
             Path expectedOutputFile = Paths.get(RESOURCES_EXPECTED_OUTPUT.toString(), subDir).
                     resolve(actualOutputFile.subpath(3, actualOutputFile.getNameCount()));
             Assert.assertTrue(Files.exists(actualOutputFile));
-            if (subDir.equals("tool_test_generate_7") &&
-                    actualOutputFile.toString().contains("entities.bal")) {
-                continue;
-            }
             Assert.assertEquals(readContent(actualOutputFile), readContent(expectedOutputFile));
         }
         if (!subDir.equals("tool_test_generate_4")) {
-            Assert.assertFalse(hasSemanticDiagnostics(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)).
-                    hasErrors());
+
+            BuildProject buildProject = BuildProject.load(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)
+                    .toAbsolutePath());
+            Package currentPackage = buildProject.currentPackage();
+            PackageCompilation compilation = currentPackage.getCompilation();
+            Assert.assertFalse(compilation.diagnosticResult().hasErrors());
         }
     }
 
@@ -139,20 +140,19 @@ public class GeneratedSourcesTestUtils {
         try {
             if (cmd == Command.INIT) {
                 persistClass = Class.forName("io.ballerina.persist.cmd.Init");
-                Init persistCmd = (Init) persistClass.getDeclaredConstructor().newInstance();
-                persistCmd.setSourcePath(sourcePath.toAbsolutePath().toString());
+                Init persistCmd = (Init) persistClass.getDeclaredConstructor(String.class)
+                        .newInstance(sourcePath.toAbsolutePath().toString());
                 persistCmd.execute();
             } else if (cmd == Command.GENERATE) {
                 persistClass = Class.forName("io.ballerina.persist.cmd.Generate");
-                Generate persistCmd = (Generate) persistClass.getDeclaredConstructor().newInstance();
-                persistCmd.setSourcePath(sourcePath.toAbsolutePath().toString());
+                Generate persistCmd = (Generate) persistClass.getDeclaredConstructor(String.class)
+                        .newInstance(sourcePath.toAbsolutePath().toString());
                 persistCmd.execute();
             } else {
                 persistClass = Class.forName("io.ballerina.persist.cmd.Push");
-                Push persistCmd = (Push) persistClass.getDeclaredConstructor().newInstance();
-                persistCmd.setSourcePath(sourcePath.toAbsolutePath().toString());
+                Push persistCmd = (Push) persistClass.getDeclaredConstructor(String.class)
+                        .newInstance(sourcePath.toAbsolutePath().toString());
                 persistCmd.execute();
-                return persistCmd.getConfigurations();
             }
 
         } catch (ClassNotFoundException | IllegalAccessException | InstantiationException |

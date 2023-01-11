@@ -20,11 +20,10 @@ package io.ballerina.persist.components;
 
 import io.ballerina.compiler.syntax.tree.AbstractNodeFactory;
 import io.ballerina.compiler.syntax.tree.EnumDeclarationNode;
-import io.ballerina.compiler.syntax.tree.MetadataNode;
 import io.ballerina.compiler.syntax.tree.Node;
 import io.ballerina.compiler.syntax.tree.NodeFactory;
 import io.ballerina.compiler.syntax.tree.Token;
-import io.ballerina.persist.nodegenerator.SyntaxTreeConstants;
+import io.ballerina.persist.nodegenerator.SyntaxTokenConstants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,8 +34,6 @@ import java.util.List;
  * @since 0.1.0
  */
 public class Enum {
-
-    private final MetadataNode metadata;
     private final Token qualifier;
     private final String name;
     private final List<Node> enumMemberList;
@@ -44,26 +41,25 @@ public class Enum {
     public Enum(String name) {
         this.name = name;
         qualifier = AbstractNodeFactory.createIdentifierToken("public ");
-        metadata = null;
         enumMemberList = new ArrayList<>();
     }
 
     public EnumDeclarationNode getEnumDeclarationNode() {
         return NodeFactory.createEnumDeclarationNode(
-                metadata,
+                null,
                 qualifier,
-                SyntaxTreeConstants.SYNTAX_TREE_KEYWORD_ENUM,
+                SyntaxTokenConstants.SYNTAX_TREE_KEYWORD_ENUM,
                 AbstractNodeFactory.createIdentifierToken(name),
-                SyntaxTreeConstants.SYNTAX_TREE_OPEN_BRACE,
+                SyntaxTokenConstants.SYNTAX_TREE_OPEN_BRACE,
                 NodeFactory.createSeparatedNodeList(enumMemberList),
-                SyntaxTreeConstants.SYNTAX_TREE_CLOSE_BRACE,
+                SyntaxTokenConstants.SYNTAX_TREE_CLOSE_BRACE,
                 null
         );
     }
 
     public void addMember(Node member) {
         if (enumMemberList.size() > 0) {
-            enumMemberList.add(SyntaxTreeConstants.SYNTAX_TREE_COMMA);
+            enumMemberList.add(SyntaxTokenConstants.SYNTAX_TREE_COMMA);
         }
         enumMemberList.add(member);
     }

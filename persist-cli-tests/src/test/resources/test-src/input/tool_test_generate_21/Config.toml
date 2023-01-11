@@ -1,4 +1,4 @@
-[persist_generate_21.clients]
+[persist_generate_21]
 host = "localhost"
 port = 3306
 user = "root"

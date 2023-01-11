@@ -11,7 +11,7 @@ This is the specification for the Persist Tools of [Ballerina language](https://
 
 The Persist Tools specification has evolved and may continue to evolve in the future. The released versions of the specification can be found under the relevant GitHub tag.
 
-If you have any feedback or suggestions about the tool, start a discussion via a [GitHub issue](https://github.com/ballerina-platform/ballerina-standard-library/issues) or in the [Slack channel](https://ballerina.io/community/). Based on the outcome of the discussion, the specification and implementation can be updated. Community feedback is always welcome. Any accepted proposal, which affects the specification is stored under `/docs/proposals`. Proposals under discussion can be found with the label `type/proposal` in GitHub.
+If you have any feedback or suggestions about the tool, start a discussion via a [GitHub issue](https://github.com/ballerina-platform/ballerina-standard-library/issues) or in the [Discrod server](https://discord.gg/ballerinalang). Based on the outcome of the discussion, the specification and implementation can be updated. Community feedback is always welcome. Any accepted proposal, which affects the specification is stored under `/docs/proposals`. Proposals under discussion can be found with the label `type/proposal` in GitHub.
 
 The conforming implementation of the specification is released and included in the distribution. Any deviation from the specification is considered a bug.
 
@@ -183,7 +183,7 @@ configurable string password = ?;
 ```
 
 ## 4. Creating Database Tables
-Users can define database entities in their Ballerina projects. They can create database tables corresponding to these entities by executing `bal persist db push` command. Users can then use the generated client objects to perform operations on these tables programmatically without having to write SQL statements.
+Users can define database entities in their Ballerina projects. They can create database tables corresponding to these entities by executing `bal persist push` command. Users can then use the generated client objects to perform operations on these tables programmatically without having to write SQL statements.
 
 Consider the following entity record inside the Ballerina project.
 ```ballerina
@@ -216,4 +216,4 @@ password = "Test123#"
 database = "medicals"
 ```
 
-When the user executes `bal persist db push` command, `MedicalNeeds` table will be created in the `medicals` database with `needId` as the primary key. 
+When the user executes `bal persist push` command, `MedicalNeeds` table will be created in the `medicals` database with `needId` as the primary key. 

@@ -24,7 +24,7 @@ import io.ballerina.compiler.syntax.tree.Node;
 import io.ballerina.compiler.syntax.tree.NodeFactory;
 import io.ballerina.compiler.syntax.tree.NodeList;
 import io.ballerina.compiler.syntax.tree.StatementNode;
-import io.ballerina.persist.nodegenerator.SyntaxTreeConstants;
+import io.ballerina.persist.nodegenerator.SyntaxTokenConstants;
 
 /**
  * Class representing IfElseStatementNode.
@@ -48,22 +48,22 @@ public class IfElse {
     public IfElseStatementNode getIfElseStatementNode() {
         if (elseStatements.size() > 0) {
             elseBody = NodeFactory.createElseBlockNode(
-                    SyntaxTreeConstants.SYNTAX_TREE_KEYWORD_ELSE,
+                    SyntaxTokenConstants.SYNTAX_TREE_KEYWORD_ELSE,
                     NodeFactory.createBlockStatementNode(
-                            SyntaxTreeConstants.SYNTAX_TREE_OPEN_BRACE,
+                            SyntaxTokenConstants.SYNTAX_TREE_OPEN_BRACE,
                             elseStatements,
-                            SyntaxTreeConstants.SYNTAX_TREE_CLOSE_BRACE
+                            SyntaxTokenConstants.SYNTAX_TREE_CLOSE_BRACE
                     )
             );
         }
 
         return NodeFactory.createIfElseStatementNode(
-                SyntaxTreeConstants.SYNTAX_TREE_KEYWORD_IF,
+                SyntaxTokenConstants.SYNTAX_TREE_KEYWORD_IF,
                 condition,
                 NodeFactory.createBlockStatementNode(
-                        SyntaxTreeConstants.SYNTAX_TREE_OPEN_BRACE,
+                        SyntaxTokenConstants.SYNTAX_TREE_OPEN_BRACE,
                         ifStatements,
-                        SyntaxTreeConstants.SYNTAX_TREE_CLOSE_BRACE
+                        SyntaxTokenConstants.SYNTAX_TREE_CLOSE_BRACE
                 ),
                 elseBody
         );
@@ -71,7 +71,7 @@ public class IfElse {
 
     public void addElseBody(IfElse elseBody) {
         this.elseBody = NodeFactory.createElseBlockNode(
-                SyntaxTreeConstants.SYNTAX_TREE_KEYWORD_ELSE,
+                SyntaxTokenConstants.SYNTAX_TREE_KEYWORD_ELSE,
                 elseBody.getIfElseStatementNode()
         );
     }
