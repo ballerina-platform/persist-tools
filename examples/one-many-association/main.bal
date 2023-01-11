@@ -14,7 +14,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-//import ballerina/io;
+import ballerina/io;
 
 public function main() returns error? {
     EmployeeClient employeeClient = check new ();
@@ -70,4 +70,10 @@ public function main() returns error? {
     employee9.name = "TestEmployee9Updated9";
     employee9.company.name = "TestCompanyUpdated9";
     _ = check employeeClient->update(employee9);
+
+    io:println("\n========== Employees ==========");
+    _ = check from Employee employeeItem in employeeClient->read()
+        do {
+            io:println(employeeItem);
+        };
 }
