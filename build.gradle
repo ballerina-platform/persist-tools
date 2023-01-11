@@ -115,17 +115,16 @@ task codeCoverageReport(type: JacocoReport) {
     }
 }
 
-//task copyPersitTool(type: Copy) {
-//    into "$project.rootDir/target"
-//    into("ballerina-distribution/bre/lib") {
-//        from "$project.rootDir/persist-cli/build/libs/persist-cli-${project.version}.jar"
-//    }
-//}
-//
-//copyPersitTool.dependsOn ":persist-cli-tests:build"
-//copyPersitTool.dependsOn ":persist-cli:build"
-//build.dependsOn copyPersitTool
+task copyPersitTool(type: Copy) {
+    into "$project.rootDir/target"
+    into("ballerina-distribution/bre/lib") {
+        from "$project.rootDir/persist-cli/build/libs/persist-cli-${project.version}.jar"
+    }
+}
+
+copyPersitTool.dependsOn ":persist-cli-tests:build"
+copyPersitTool.dependsOn ":persist-cli:build"
+build.dependsOn copyPersitTool
 build.dependsOn ":examples:build"
-//build.finalizedBy ":examples:build"
 
 publish.dependsOn build

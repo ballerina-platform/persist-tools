@@ -22,12 +22,89 @@ apply plugin: 'java'
 
 description = 'Ballerina - Persist Examples'
 
-def ballerinaDist = "${project.rootDir}/target/ballerina-distribution"
+def ballerinaDist = "${project.buildDir}/ballerina-distribution"
 def examples = ["medical-center", "one-one-association", "one-many-association"]
 
+configurations {
+    balTools
+    dist {
+        transitive true
+    }
+}
+
+dependencies {
+    balTools ("org.ballerinalang:jballerina-tools:${ballerinaLangVersion}") {
+        transitive = false
+    }
+}
+
+task jBallerinaPack {
+    doLast {
+        configurations.balTools.resolvedConfiguration.resolvedArtifacts.each { artifact ->
+            copy {
+                from project.zipTree(artifact.getFile())
+                into new File("${project.buildDir}")
+                println project.buildDir
+            }
+            copy {
+                from(project.zipTree(artifact.getFile())) {
+                    eachFile { fcd ->
+                        fcd.relativePath = new RelativePath(!fcd.file.isDirectory(), fcd.relativePath.segments.drop(1))
+                    }
+                    includeEmptyDirs = false
+                }
+                into "${project.buildDir}/ballerina-distribution"
+            }
+        }
+    }
+    outputs.dir ballerinaDist
+}
+
+task unpackStdLibs() {
+    dependsOn(jBallerinaPack)
+    doLast {
+        configurations.ballerinaStdLibs.resolvedConfiguration.resolvedArtifacts.each { artifact ->
+            copy {
+                from project.zipTree(artifact.getFile())
+                into new File("${project.buildDir}/extracted-stdlibs/" + artifact.name + "-zip")
+            }
+        }
+    }
+}
+
+task copyStdlibs() {
+    dependsOn(unpackStdLibs)
+
+    /* Standard Libraries */
+    doLast {
+        configurations.ballerinaStdLibs.resolvedConfiguration.resolvedArtifacts.each { artifact ->
+            def artifactExtractedPath = "${project.buildDir}/extracted-stdlibs/" + artifact.name + "-zip"
+            copy {
+                into ballerinaDist
+                into("repo/bala") {
+                    from "${artifactExtractedPath}/bala"
+                }
+                into("repo/cache") {
+                    from "${artifactExtractedPath}/cache"
+                }
+            }
+            copy {
+                def runtimePath = "${project.buildDir}/ballerina-distribution"
+                into runtimePath
+                into("repo/bala") {
+                    from "${artifactExtractedPath}/bala"
+                }
+                into("repo/cache") {
+                    from "${artifactExtractedPath}/cache"
+                }
+            }
+        }
+    }
+}
 
 task copyPersitTool(type: Copy) {
-    into "$project.rootDir/target"
+    dependsOn(copyStdlibs)
+    into "$project.buildDir"
     into("ballerina-distribution/bre/lib") {
         from "$project.rootDir/persist-cli/build/libs/persist-cli-${project.version}.jar"
     }
@@ -43,7 +120,6 @@ task copyTestResources(type: Copy) {
 }
 
 task generateExamples {
-    dependsOn(copyPersitTool)
     doLast {
         examples.each { example ->
             try {
@@ -51,6 +127,9 @@ task generateExamples {
                     workingDir "${project.projectDir}/build/generated-examples/${example}"
                     if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
                         commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate"
+                    } else {
+                        commandLine 'cmd','slmgr /dlv'
+                        println('\n' + "Windows Instance detected")
                     }
                 }
             } catch (Exception e) {
@@ -71,6 +150,9 @@ def checkTestDockerContainerStatus(dockerName) {
         } catch (all) {
             return 1
         }
+    } else {
+        commandLine 'cmd','slmgr /dlv'
+        println('\n' + "Windows Instance detected")
     }
 }
 
@@ -136,6 +218,9 @@ task pushExamples {
                     workingDir "${project.projectDir}/build/generated-examples/${example}"
                     if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
                         commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist push"
+                    } else {
+                        commandLine 'cmd','slmgr /dlv'
+                        println('\n' + "Windows Instance detected")
                     }
                 }
             } catch (Exception e) {
@@ -154,6 +239,9 @@ task testExamples {
                     workingDir "${project.projectDir}/build/generated-examples/${example}"
                     if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
                         commandLine 'sh', '-c', "${ballerinaDist}/bin/bal run --offline"
+                    } else {
+                        commandLine 'cmd','slmgr /dlv'
+                        println('\n' + "Windows Instance detected")
                     }
                 }
             } catch (Exception e) {
@@ -167,6 +255,7 @@ task testExamples {
 
 copyPersitTool.dependsOn ":persist-cli-tests:build"
 copyPersitTool.dependsOn ":persist-cli:build"
+copyTestResources.dependsOn copyPersitTool
 generateExamples.dependsOn copyTestResources
 pushExamples.dependsOn generateExamples
 testExamples.dependsOn pushExamples
