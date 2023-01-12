@@ -39,7 +39,10 @@ import java.util.ArrayList;
 import java.util.Objects;
 
 import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
+import static io.ballerina.persist.PersistToolsConstants.GENERATED_DIRECTORY;
+import static io.ballerina.persist.PersistToolsConstants.PATH_BALLERINA_TOML;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.BAL_EXTENTION;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PATH_CONFIGURATION_BAL_FILE;
 
 /**
@@ -112,12 +115,12 @@ public class Init implements BLauncherCmd {
             }
         } else {
             for (String schema : schemaFiles) {
-                if (schema.endsWith(".bal")) {
-                    schemaFilesList.add(schema.replace(".bal", ""));
+                if (schema.endsWith(BAL_EXTENTION)) {
+                    schemaFilesList.add(schema.replace(BAL_EXTENTION, ""));
                 }
             }
         }
-        Path generatedSourceDirPath = Paths.get(this.sourcePath, "generated");
+        Path generatedSourceDirPath = Paths.get(this.sourcePath, GENERATED_DIRECTORY);
         if (!Files.exists(generatedSourceDirPath)) {
             try {
                 Files.createDirectory(generatedSourceDirPath.toAbsolutePath());
@@ -160,7 +163,7 @@ public class Init implements BLauncherCmd {
     private void generateSchemaBalFile(Path persistPath, String packageName) throws BalException {
         try {
             String configTree = BalSyntaxGenerator.generateSchemaSyntaxTree();
-            writeOutputString(configTree, persistPath.resolve(packageName + ".bal")
+            writeOutputString(configTree, persistPath.resolve(packageName + BAL_EXTENTION)
                     .toAbsolutePath().toString());
         } catch (Exception e) {
             throw new BalException("Error while adding schema file inside the persist directory. " +
@@ -171,9 +174,9 @@ public class Init implements BLauncherCmd {
     private void addPersistTable(ArrayList<String> schemas) throws BalException {
         try {
             SyntaxTree syntaxTree = TomlSyntaxGenerator.updateBallerinaToml(
-                    Paths.get(this.sourcePath, "Ballerina.toml"), schemas);
+                    Paths.get(this.sourcePath, PATH_BALLERINA_TOML), schemas);
             writeOutputSyntaxTree(syntaxTree,
-                    Paths.get(this.sourcePath, "Ballerina.toml").toAbsolutePath().toString());
+                    Paths.get(this.sourcePath, PATH_BALLERINA_TOML).toAbsolutePath().toString());
         } catch (Exception e) {
             throw new BalException("Error while updating Config.toml file to default database configurations . " +
                     e.getMessage());
