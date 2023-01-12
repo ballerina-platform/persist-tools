@@ -133,7 +133,7 @@ public class ToolingGenerateTest {
     public void testGenerateThreeClientsWith1ToManyAssociations() {
         assertGeneratedSources("tool_test_generate_17", GENERATE);
     }
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("There are two entities with one to one associations between each " +
             "other with no annotation values in any Relation")
     public void testGenerateThreeEntitiesWith1To1AssociationsWithNoAnnotationValue() {
@@ -173,6 +173,18 @@ public class ToolingGenerateTest {
     @Description("Generate is executed with clients already initailized in main.bal")
     public void testGenerateUpdateClientsWithAlreadyInitializedClients() {
         assertGeneratedSources("tool_test_generate_24", GENERATE);
+    }
+
+    @Test(enabled = true)
+    @Description("There are two entities with one to many associations between each other without relation annotation")
+    public void testGenerateOneToManyAssociationsWithoutRelationAnnotation() {
+        assertGeneratedSources("tool_test_generate_25", GENERATE);
+    }
+
+    @Test(enabled = true)
+    @Description("There are two entities with one to one associations between each other without relation annotation")
+    public void testGenerateOneToOneAssociationsWithoutRelationAnnotation() {
+        assertGeneratedSources("tool_test_generate_26", GENERATE);
     }
 
     @Test(enabled = true)
