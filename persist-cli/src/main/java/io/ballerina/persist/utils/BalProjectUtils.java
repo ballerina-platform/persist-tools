@@ -65,7 +65,7 @@ public class BalProjectUtils {
             Module entityModule = moduleBuilder.build();
             inferRelationDetails(entityModule);
             return entityModule;
-        } catch (IOException | BalException e) {
+        } catch (IOException | BalException | RuntimeException e) {
             throw new BalException("Error while reading entities in the Ballerina project. " + e.getMessage());
         }
     }

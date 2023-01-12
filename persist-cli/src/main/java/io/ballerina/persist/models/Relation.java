@@ -118,7 +118,7 @@ public class Relation {
         String onUpdateAction;
         Entity assocEntity = null;
 
-        public RelationType relationType = RelationType.ONE;
+        RelationType relationType = RelationType.ONE;
 
         boolean owner;
 

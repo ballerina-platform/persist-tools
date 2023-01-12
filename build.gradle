@@ -125,5 +125,6 @@ task copyPersitTool(type: Copy) {
 copyPersitTool.dependsOn ":persist-cli-tests:build"
 copyPersitTool.dependsOn ":persist-cli:build"
 build.dependsOn copyPersitTool
+build.dependsOn ":examples:build"
 
 publish.dependsOn build
