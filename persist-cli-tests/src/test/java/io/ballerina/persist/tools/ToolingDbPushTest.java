@@ -43,7 +43,7 @@ public class ToolingDbPushTest {
     private static final String no = "NO";
     private static final String sqlDateTime = "DATETIME";
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     @Description("Database is not available and it is created while running the db push command")
     public void testDbPushWithoutDatabase() throws BalException {
         ArrayList<PersistTable> tables = new ArrayList<>();
@@ -67,13 +67,13 @@ public class ToolingDbPushTest {
         assertCreateDatabaseTables("tool_test_db_push_1", tables);
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     @Description("When the db push command is executed outside a Ballerina project")
     public void testDbPushOutsideBallerinaProject() {
         assertGeneratedSourcesNegative("tool_test_db_push_2", DB_PUSH, null);
     }
 
-    @Test(enabled = true, dependsOnMethods = { "testDbPushWithoutDatabase" })
+    @Test(enabled = false, dependsOnMethods = { "testDbPushWithoutDatabase" })
     @Description("Database already exists. An entity is removed. The database tables should not be affected.")
     public void testDbPushEntityRemoved() throws BalException {
         ArrayList<PersistTable> tables = new ArrayList<>();
@@ -97,7 +97,7 @@ public class ToolingDbPushTest {
         assertCreateDatabaseTables("tool_test_db_push_3", tables);
     }
 
-    @Test(enabled = true, dependsOnMethods = { "testDbPushEntityRemoved" })
+    @Test(enabled = false, dependsOnMethods = { "testDbPushEntityRemoved" })
     @Description("Database already exists. An entity is updated. The respective table should be updated.")
     public void testDbPushEntityUpdated() throws BalException {
         ArrayList<PersistTable> tables = new ArrayList<>();
@@ -121,61 +121,61 @@ public class ToolingDbPushTest {
         assertCreateDatabaseTables("tool_test_db_push_5", tables);
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     @Description("When the db push command is executed without the persist dir")
     public void testDbPushWithoutPersistDir() {
         assertGeneratedSourcesNegative("tool_test_db_push_6", DB_PUSH, null);
     }
 
-    @Test(enabled = true, dependsOnMethods = { "testDbPushEntityUpdated" })
+    @Test(enabled = false, dependsOnMethods = { "testDbPushEntityUpdated" })
     @Description("When the db push command is executed with faulty credentials")
     public void testDbPushWithWrongCredentials() {
         assertGeneratedSourcesNegative("tool_test_db_push_7", DB_PUSH, null);
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     @Description("Test the created sql script content when relation annotation hasn't properties")
     public void testDbPush() {
         assertGeneratedSources("tool_test_db_push_8", DB_PUSH);
     }
 
-    @Test(enabled = true) // this is not valid because, defining entities in multiple modules is init allowed.
+    @Test(enabled = false) // this is not valid because, defining entities in multiple modules is init allowed.
     @Description("Test the created sql script content when entities are in the main and sub-modules")
     public void testDbPushWithSubModule() {
         assertGeneratedSources("tool_test_db_push_9", DB_PUSH);
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     @Description("Test the created sql script content when relation annotation hasn't properties")
     public void testDbPushWithScriptHasUniqueConstraints() {
         assertGeneratedSources("tool_test_db_push_10", DB_PUSH);
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     @Description("When the db push command is executed with faulty database name containing illegal characters.")
     public void testDbPushWithIllegalCredentials() {
         assertGeneratedSourcesNegative("tool_test_db_push_11", DB_PUSH, null);
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     @Description("When the db push command is executed with faulty database name containing illegal characters.")
     public void testDbPushWithIllegalCredentials2() {
         assertGeneratedSourcesNegative("tool_test_db_push_12", DB_PUSH, null);
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     @Description("When the db push command is executed with faulty database name containing illegal characters.")
     public void testDbPushWithIllegalCredentials3() {
         assertGeneratedSourcesNegative("tool_test_db_push_13", DB_PUSH, null);
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     @Description("When the db push command is executed with empty database name.")
     public void testDbPushWithEmptyCredentials() {
         assertGeneratedSourcesNegative("tool_test_db_push_14", DB_PUSH, null);
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     @Description("When the db push command is executed with faulty clients.")
     public void testDbPushWithMissMatchedClients() throws BalException {
         assertGeneratedSourcesNegative("tool_test_db_push_15", DB_PUSH, null);

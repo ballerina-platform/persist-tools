@@ -1,9 +1,0 @@
-[perist_init_5]
-foo1 = "bar1"
-host = "wso2.com"
-port = 6688
-user = "john"
-foo2 = "bar2"
-password = "john123"
-database = "mariadb"
-foo3 = "bar3"

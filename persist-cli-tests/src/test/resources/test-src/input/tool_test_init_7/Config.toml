@@ -1,3 +1,0 @@
-[ballerina.log]
-level = "DEBUG"
-format = "json"
