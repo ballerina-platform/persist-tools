@@ -35,6 +35,3 @@ public type Employee record {|
     @persist:Relation {keyColumns: ["companyId"], reference: ["id"]}
     Company company?;
 |};
-
-
-
