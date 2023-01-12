@@ -105,7 +105,9 @@ public class CompanyStream {
                 return <persist:Error>error(streamValue.message());
             } else {
                 record {|Company value;|} nextRecord = {value: <Company>streamValue.value};
-                check (<persist:SQLClient>self.persistClient).getManyRelations(nextRecord.value, <CompanyRelations[]>self.include);
+                if self.include is CompanyRelations[] {
+                    check (<persist:SQLClient>self.persistClient).getManyRelations(nextRecord.value, <CompanyRelations[]>self.include);
+                }
                 return nextRecord;
             }
         } else {
