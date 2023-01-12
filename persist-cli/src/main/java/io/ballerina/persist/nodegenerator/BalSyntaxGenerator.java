@@ -1201,6 +1201,20 @@ public class BalSyntaxGenerator {
         return Formatter.format(balTree.modifyWith(modulePartNode).toSourceCode());
     }
 
+    public static String generateSchemaSyntaxTree() throws FormatterException {
+        NodeList<ImportDeclarationNode> imports = AbstractNodeFactory.createEmptyNodeList();
+        NodeList<ModuleMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
+
+        imports = imports.add(NodeParser.parseImportDeclaration("import ballerina/persist as _"));
+        Token eofToken = AbstractNodeFactory.createIdentifierToken(EMPTY_STRING);
+        ModulePartNode modulePartNode = NodeFactory.createModulePartNode(imports, moduleMembers, eofToken);
+        TextDocument textDocument = TextDocuments.from(EMPTY_STRING);
+        SyntaxTree balTree = SyntaxTree.from(textDocument);
+
+        // output cannot be SyntaxTree as it will overlap with Toml Syntax Tree in Init Command
+        return Formatter.format(balTree.modifyWith(modulePartNode).toSourceCode());
+    }
+
     private static ImportDeclarationNode getImportDeclarationNode(String orgName, String moduleName,
                                                                  ImportPrefixNode prefix) {
         Token orgNameToken = AbstractNodeFactory.createIdentifierToken(orgName);
