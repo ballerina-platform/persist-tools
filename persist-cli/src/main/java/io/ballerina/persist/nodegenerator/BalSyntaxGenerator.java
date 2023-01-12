@@ -300,8 +300,7 @@ public class BalSyntaxGenerator {
                 QualifiedNameReferenceNode qualifiedName = (QualifiedNameReferenceNode) typeDesc;
                 String modulePrefix = qualifiedName.modulePrefix().text();
                 String identifier = qualifiedName.identifier().text();
-                String qualifiedType = modulePrefix + COLON + identifier;
-                return qualifiedType;
+                return modulePrefix + COLON + identifier;
             case SIMPLE_NAME_REFERENCE:
                 return ((SimpleNameReferenceNode) typeDesc).name().text();
             default:
@@ -411,44 +410,81 @@ public class BalSyntaxGenerator {
         Map<String, Entity> entityMap = entityModule.getEntityMap();
         for (Entity entity : entityMap.values()) {
             List<EntityField> fields = entity.getFields();
-            fields.stream().filter(field -> field.getRelation() != null).filter(field -> field.getRelation().isOwner())
+            fields.stream().filter(field -> entityMap.get(field.getFieldType()) != null)
                     .forEach(field -> {
                         String fieldType = field.getFieldType();
-                        field.getRelation().setRelationType(field.isArrayType() ?
-                                Relation.RelationType.MANY : Relation.RelationType.ONE);
                         Entity assocEntity = entityMap.get(fieldType);
-                        if (assocEntity == null) {
-                            return;
-                        }
-                        field.getRelation().setAssocEntity(assocEntity);
-                        List<String> keyColumns = field.getRelation().getKeyColumns();
-                        if (keyColumns == null || keyColumns.size() == 0) {
-                            keyColumns = assocEntity.getKeys().stream().map(key ->
-                                    assocEntity.getEntityName().toLowerCase(Locale.getDefault())
-                                            + key.substring(0, 1).toUpperCase(Locale.getDefault())
-                                            + key.substring(1)).collect(Collectors.toList());
-                            field.getRelation().setKeyColumns(keyColumns);
-                        }
-                        List<String> references = field.getRelation().getReferences();
-                        if (references == null || references.size() == 0) {
-                            field.getRelation().setReferences(assocEntity.getKeys());
-                        }
+                        if (field.getRelation() == null) {
+                            // this branch only handles one-to-many or many-to-many with no relation annotations
+                            assocEntity.getFields().stream().filter(assocfield -> assocfield.getFieldType()
+                                            .equals(entity.getEntityName()))
+                                    .filter(assocfield -> assocfield.getRelation() == null).forEach(assocfield -> {
+                                        // one-to-many or many-to-many with no relation annotations
+                                        if (!field.isArrayType() && !assocfield.isArrayType()) {
+                                            throw new RuntimeException("Couldn't find the relation owner between " +
+                                                    entity.getEntityName() + " and " + assocEntity.getEntityName());
+                                        }
+                                        field.setRelation(computeRelation(field, entity, assocEntity));
+                                        assocfield.setRelation(computeRelation(assocfield, assocEntity, entity));
+                                    });
+                        } else if (field.getRelation() != null && field.getRelation().isOwner()) {
+                            field.getRelation().setRelationType(field.isArrayType() ?
+                                    Relation.RelationType.MANY : Relation.RelationType.ONE);
+                            field.getRelation().setAssocEntity(assocEntity);
+                            List<String> keyColumns = field.getRelation().getKeyColumns();
+                            if (keyColumns == null || keyColumns.size() == 0) {
+                                keyColumns = assocEntity.getKeys().stream().map(key ->
+                                        assocEntity.getEntityName().toLowerCase(Locale.getDefault())
+                                                + key.substring(0, 1).toUpperCase(Locale.getDefault())
+                                                + key.substring(1)).collect(Collectors.toList());
+                                field.getRelation().setKeyColumns(keyColumns);
+                            }
+                            List<String> references = field.getRelation().getReferences();
+                            if (references == null || references.size() == 0) {
+                                field.getRelation().setReferences(assocEntity.getKeys());
+                            }
 
-                        // create bidirectional mapping for associated entity
-                        Relation.Builder assocRelBuilder = Relation.newBuilder();
-                        assocRelBuilder.setOwner(false);
-                        assocRelBuilder.setAssocEntity(entity);
-                        assocRelBuilder.setKeys(assocEntity.getKeys());
-                        assocRelBuilder.setReferences(keyColumns);
-                        assocEntity.getFields().stream().filter(assocfield -> assocfield.getFieldType()
-                                .equals(entity.getEntityName())).forEach(
-                                assocField -> {
-                                    assocRelBuilder.relationType = assocField.isArrayType() ?
-                                            Relation.RelationType.MANY : Relation.RelationType.ONE;
-                                    assocField.setRelation(assocRelBuilder.build());
-                                });
+                            // create bidirectional mapping for associated entity
+                            Relation.Builder assocRelBuilder = Relation.newBuilder();
+                            assocRelBuilder.setOwner(false);
+                            assocRelBuilder.setAssocEntity(entity);
+                            assocRelBuilder.setKeys(assocEntity.getKeys());
+                            assocRelBuilder.setReferences(keyColumns);
+                            assocEntity.getFields().stream().filter(assocfield -> assocfield.getFieldType()
+                                    .equals(entity.getEntityName())).forEach(
+                                    assocField -> {
+                                        assocRelBuilder.setRelationType(assocField.isArrayType() ?
+                                                Relation.RelationType.MANY : Relation.RelationType.ONE);
+                                        assocField.setRelation(assocRelBuilder.build());
+                                    });
+                        }
                     });
         }
+    }
+
+    private static Relation computeRelation(EntityField field, Entity entity, Entity assocEntity) {
+        Relation.Builder relBuilder = new Relation.Builder();
+        relBuilder.setAssocEntity(assocEntity);
+        if (field.isArrayType()) {
+            List<String> refColumns = entity.getKeys().stream().map(key ->
+                    entity.getEntityName().toLowerCase(Locale.getDefault())
+                            + key.substring(0, 1).toUpperCase(Locale.getDefault())
+                            + key.substring(1)).collect(Collectors.toList());
+            relBuilder.setOwner(false);
+            relBuilder.setRelationType(Relation.RelationType.MANY);
+            relBuilder.setKeys(entity.getKeys());
+            relBuilder.setReferences(refColumns);
+        } else {
+            List<String> keyColumns = assocEntity.getKeys().stream().map(key ->
+                    assocEntity.getEntityName().toLowerCase(Locale.getDefault())
+                            + key.substring(0, 1).toUpperCase(Locale.getDefault())
+                            + key.substring(1)).collect(Collectors.toList());
+            relBuilder.setOwner(true);
+            relBuilder.setRelationType(Relation.RelationType.ONE);
+            relBuilder.setKeys(keyColumns);
+            relBuilder.setReferences(assocEntity.getKeys());
+        }
+        return relBuilder.build();
     }
 
     public static SyntaxTree generateClientSyntaxTree(Entity entity, ArrayList<ImportDeclarationNode> importsArray) {
