@@ -16,12 +16,12 @@ public client class CompanyClient {
     private final map<persist:FieldMetadata> fieldMetadata = {
         id: {columnName: "id", 'type: int},
         name: {columnName: "name", 'type: string},
-        "employee[].id": {'type: int, relation: {entityName: "employee", refTable: "Employee", refField: "id"}},
-        "employee[].name": {'type: string, relation: {entityName: "employee", refTable: "Employee", refField: "name"}}
+        "employees[].id": {'type: int, relation: {entityName: "employees", refTable: "Employee", refField: "id"}},
+        "employees[].name": {'type: string, relation: {entityName: "employees", refTable: "Employee", refField: "name"}}
     };
     private string[] keyFields = ["id"];
 
-    private final map<persist:JoinMetadata> joinMetadata = {employee: {entity: Employee, fieldName: "employee", refTable: "Employee", refFields: ["companyId"], joinColumns: ["id"], 'type: persist:MANY}};
+    private final map<persist:JoinMetadata> joinMetadata = {employees: {entity: Employee, fieldName: "employees", refTable: "Employee", refFields: ["companyId"], joinColumns: ["id"], 'type: persist:MANY}};
 
     private persist:SQLClient persistClient;
 
@@ -76,7 +76,7 @@ public client class CompanyClient {
 }
 
 public enum CompanyRelations {
-    employee
+    employees
 }
 
 public class CompanyStream {
@@ -105,9 +105,7 @@ public class CompanyStream {
                 return <persist:Error>error(streamValue.message());
             } else {
                 record {|Company value;|} nextRecord = {value: <Company>streamValue.value};
-                if self.include is CompanyRelations[] {
-                    check (<persist:SQLClient>self.persistClient).getManyRelations(nextRecord.value, <CompanyRelations[]>self.include);
-                }
+                check (<persist:SQLClient>self.persistClient).getManyRelations(nextRecord.value, <CompanyRelations[]>self.include);
                 return nextRecord;
             }
         } else {

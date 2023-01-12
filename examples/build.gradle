@@ -1,0 +1,262 @@
+/*
+ * Copyright (c) 2023, WSO2 LLC. (http://www.wso2.org) All Rights Reserved.
+ *
+ * WSO2 LLC. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import org.apache.tools.ant.taskdefs.condition.Os
+
+apply plugin: 'java'
+
+description = 'Ballerina - Persist Examples'
+
+def ballerinaDist = "${project.buildDir}/ballerina-distribution"
+def examples = ["medical-center", "one-one-association", "one-many-association"]
+
+configurations {
+    balTools
+    dist {
+        transitive true
+    }
+}
+
+dependencies {
+    balTools ("org.ballerinalang:jballerina-tools:${ballerinaLangVersion}") {
+        transitive = false
+    }
+}
+
+task jBallerinaPack {
+    doLast {
+        configurations.balTools.resolvedConfiguration.resolvedArtifacts.each { artifact ->
+            copy {
+                from project.zipTree(artifact.getFile())
+                into new File("${project.buildDir}")
+            }
+            copy {
+                from(project.zipTree(artifact.getFile())) {
+                    eachFile { fcd ->
+                        fcd.relativePath = new RelativePath(!fcd.file.isDirectory(), fcd.relativePath.segments.drop(1))
+                    }
+                    includeEmptyDirs = false
+                }
+                into "${project.buildDir}/ballerina-distribution"
+            }
+        }
+    }
+    outputs.dir ballerinaDist
+}
+
+task unpackStdLibs() {
+    dependsOn(jBallerinaPack)
+    doLast {
+        configurations.ballerinaStdLibs.resolvedConfiguration.resolvedArtifacts.each { artifact ->
+            copy {
+                from project.zipTree(artifact.getFile())
+                into new File("${project.buildDir}/extracted-stdlibs/" + artifact.name + "-zip")
+            }
+        }
+    }
+}
+
+task copyStdlibs() {
+    dependsOn(unpackStdLibs)
+
+    /* Standard Libraries */
+    doLast {
+        configurations.ballerinaStdLibs.resolvedConfiguration.resolvedArtifacts.each { artifact ->
+            def artifactExtractedPath = "${project.buildDir}/extracted-stdlibs/" + artifact.name + "-zip"
+            copy {
+                into ballerinaDist
+                into("repo/bala") {
+                    from "${artifactExtractedPath}/bala"
+                }
+                into("repo/cache") {
+                    from "${artifactExtractedPath}/cache"
+                }
+            }
+            copy {
+                def runtimePath = "${project.buildDir}/ballerina-distribution"
+                into runtimePath
+                into("repo/bala") {
+                    from "${artifactExtractedPath}/bala"
+                }
+                into("repo/cache") {
+                    from "${artifactExtractedPath}/cache"
+                }
+            }
+        }
+    }
+}
+
+task copyPersitTool(type: Copy) {
+    dependsOn(copyStdlibs)
+    into "$project.buildDir"
+    into("ballerina-distribution/bre/lib") {
+        from "$project.rootDir/persist-cli/build/libs/persist-cli-${project.version}.jar"
+    }
+}
+
+task copyTestResources(type: Copy) {
+    examples.each { example ->
+        into buildDir
+        into("generated-examples/${example}/") {
+            from "${example}"
+        }
+    }
+}
+
+task generateExamples {
+    doLast {
+        examples.each { example ->
+            try {
+                exec {
+                    workingDir "${project.projectDir}/build/generated-examples/${example}"
+                    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate"
+                    } else {
+                        commandLine 'cmd','slmgr /dlv'
+                        println('\n' + "Windows Instance detected")
+                    }
+                }
+            } catch (Exception e) {
+                println("Example '${example}' Generation failed: " + e.message)
+                throw e
+            }
+        }
+    }
+}
+
+def checkTestDockerContainerStatus(dockerName) {
+    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+        try {
+            return exec {
+                commandLine 'sh', '-c',
+                        "docker exec ${dockerName} mysqladmin ping -hlocalhost -uroot -pTest123# --silent"
+            }.exitValue
+        } catch (all) {
+            return 1
+        }
+    } else {
+        commandLine 'cmd','slmgr /dlv'
+        println('\n' + "Windows Instance detected")
+    }
+}
+
+def checkExecResult(execResult, failText, standardOutput) {
+    if (execResult) {
+        if (execResult.getExitValue() != 0) {
+            throw new GradleException('Non-zero exit value: ' + execResult.getExitValue())
+        }
+        if (standardOutput.toString().contains(failText)) {
+            throw new GradleException('"' + failText + '" string in output: ' + standardOutput.toString())
+        }
+    } else {
+        throw new GradleException('Returned a null execResult object')
+    }
+}
+
+task startTestDockerContainer(type: Exec) {
+    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+        def standardOutput = new ByteArrayOutputStream()
+        commandLine 'sh', '-c', 'docker run --platform linux/amd64 --rm -d --name ballerina-persist-tools-example -e MYSQL_ROOT_PASSWORD="Test123#" -p 3308:3306 -t mysql:8.0.21'
+        def healthCheck = 1
+        def counter = 0
+        doLast {
+            checkExecResult(execResult, 'Error', standardOutput)
+            while (healthCheck != 0 && counter < 12) {
+                sleep(60 * 1000)
+                healthCheck = checkTestDockerContainerStatus('ballerina-persist-tools-example')
+                counter = counter + 1
+            }
+            if (healthCheck != 0) {
+                throw new GradleException("Docker container 'ballerina-mysql' health test exceeded timeout!")
+            }
+        }
+    } else {
+        commandLine 'cmd','slmgr /dlv'
+        println('\n' + "Windows Instance detected")
+        println('\n' + "skippped starting the docker container")
+    }
+}
+
+task stopTestDockerContainer() {
+    doLast {
+        if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+            try {
+                def stdOut = new ByteArrayOutputStream()
+                exec {
+                    commandLine 'sh', '-c', 'docker stop ballerina-persist-tools-example'
+                    standardOutput = stdOut
+                }
+            } catch (all) {
+                println('Gradle process can safely ignore stopTestDockerContainer task')
+            }
+        }
+    }
+}
+
+task pushExamples {
+    dependsOn(startTestDockerContainer)
+    doLast {
+        examples.each { example ->
+            try {
+                exec {
+                    workingDir "${project.projectDir}/build/generated-examples/${example}"
+                    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist push"
+                    } else {
+                        commandLine 'cmd','slmgr /dlv'
+                        println('\n' + "Windows Instance detected")
+                    }
+                }
+            } catch (Exception e) {
+                println("Example '${example}' Generation failed: " + e.message)
+                throw e
+            }
+        }
+    }
+}
+
+task testExamples {
+    doLast {
+        examples.each { example ->
+            try {
+                exec {
+                    workingDir "${project.projectDir}/build/generated-examples/${example}"
+                    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal run --offline"
+                    } else {
+                        commandLine 'cmd','slmgr /dlv'
+                        println('\n' + "Windows Instance detected")
+                    }
+                }
+            } catch (Exception e) {
+                println("Example '${example}' test failed: " + e.message)
+                throw e
+            }
+        }
+    }
+}
+
+copyPersitTool.dependsOn ":persist-cli-tests:build"
+copyPersitTool.dependsOn ":persist-cli:build"
+copyTestResources.dependsOn copyPersitTool
+generateExamples.dependsOn copyTestResources
+pushExamples.dependsOn generateExamples
+testExamples.dependsOn pushExamples
+
+build.dependsOn testExamples
+build.finalizedBy stopTestDockerContainer

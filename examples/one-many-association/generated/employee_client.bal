@@ -17,16 +17,11 @@ public client class EmployeeClient {
         id: {columnName: "id", 'type: int},
         name: {columnName: "name", 'type: string},
         "company.id": {columnName: "companyId", 'type: int, relation: {entityName: "company", refTable: "Company", refField: "id"}},
-        "company.name": {'type: string, relation: {entityName: "company", refTable: "Company", refField: "name"}},
-        "vehicles[].model": {'type: int, relation: {entityName: "vehicles", refTable: "Vehicle", refField: "model"}},
-        "vehicles[].name": {'type: string, relation: {entityName: "vehicles", refTable: "Vehicle", refField: "name"}}
+        "company.name": {'type: string, relation: {entityName: "company", refTable: "Company", refField: "name"}}
     };
     private string[] keyFields = ["id"];
 
-    private final map<persist:JoinMetadata> joinMetadata = {
-        company: {entity: Company, fieldName: "company", refTable: "Company", refFields: ["id"], joinColumns: ["companyId"]},
-        vehicles: {entity: Vehicle, fieldName: "vehicles", refTable: "Vehicle", refFields: ["employeeId"], joinColumns: ["id"], 'type: persist:MANY}
-    };
+    private final map<persist:JoinMetadata> joinMetadata = {company: {entity: Company, fieldName: "company", refTable: "Company", refFields: ["id"], joinColumns: ["companyId"]}};
 
     private persist:SQLClient persistClient;
 
@@ -93,21 +88,17 @@ public client class EmployeeClient {
 }
 
 public enum EmployeeRelations {
-    company, vehicles
+    company
 }
 
 public class EmployeeStream {
 
     private stream<anydata, sql:Error?>? anydataStream;
     private persist:Error? err;
-    private EmployeeRelations[]? include;
-    private persist:SQLClient? persistClient;
 
-    public isolated function init(stream<anydata, sql:Error?>? anydataStream, persist:Error? err = (), EmployeeRelations[]? include = (), persist:SQLClient? persistClient = ()) {
+    public isolated function init(stream<anydata, sql:Error?>? anydataStream, persist:Error? err = ()) {
         self.anydataStream = anydataStream;
         self.err = err;
-        self.include = include;
-        self.persistClient = persistClient;
     }
 
     public isolated function next() returns record {|Employee value;|}|persist:Error? {
@@ -122,9 +113,6 @@ public class EmployeeStream {
                 return <persist:Error>error(streamValue.message());
             } else {
                 record {|Employee value;|} nextRecord = {value: <Employee>streamValue.value};
-                if self.include is EmployeeRelations[] {
-                    check (<persist:SQLClient>self.persistClient).getManyRelations(nextRecord.value, <EmployeeRelations[]>self.include);
-                }
                 return nextRecord;
             }
         } else {
