@@ -122,7 +122,9 @@ public class EmployeeStream {
                 return <persist:Error>error(streamValue.message());
             } else {
                 record {|Employee value;|} nextRecord = {value: <Employee>streamValue.value};
-                check (<persist:SQLClient>self.persistClient).getManyRelations(nextRecord.value, <EmployeeRelations[]>self.include);
+                if self.include is EmployeeRelations[] {
+                    check (<persist:SQLClient>self.persistClient).getManyRelations(nextRecord.value, <EmployeeRelations[]>self.include);
+                }
                 return nextRecord;
             }
         } else {
