@@ -167,11 +167,10 @@ public class SqlScriptGenerationUtils {
         if (onUpdate != null && !onUpdate.isEmpty()) {
             onUpdateScript = ON_UPDATE_SYNTAX + getReferenceAction(onUpdate);
         }
-
+        Entity assocEntity = relation.getAssocEntity();
         for (int i = 0; i < references.size(); i++) {
             String referenceSqlType = null;
             String referenceFieldName = null;
-            Entity assocEntity = relation.getAssocEntity();
             for (EntityField assocField : assocEntity.getFields()) {
                 if (assocField.getRelation() != null) {
                     continue;
@@ -187,7 +186,15 @@ public class SqlScriptGenerationUtils {
             }
             String foreignKey = keyColumns.get(i);
             String unique = "";
-            if (relation.getRelationType().equals(Relation.RelationType.ONE)) {
+            Relation.RelationType associatedEntityRelationType = Relation.RelationType.NONE;
+            for (EntityField field: assocEntity.getFields()) {
+                if (field.getFieldType().equals(tableName)) {
+                    associatedEntityRelationType = field.getRelation().getRelationType();
+                    break;
+                }
+            }
+            if (relation.getRelationType().equals(Relation.RelationType.ONE) &&
+                    associatedEntityRelationType.equals(Relation.RelationType.ONE)) {
                 List<String> keys = assocEntity.getKeys();
                 List<List<String>> uniqueConstraints = assocEntity.getUniqueKeys();
                 if ((keys.size() == 1 && keys.get(0).equals(referenceFieldName)) ||
