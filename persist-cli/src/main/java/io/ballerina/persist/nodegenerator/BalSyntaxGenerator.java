@@ -241,17 +241,14 @@ public class BalSyntaxGenerator {
                     RecordFieldWithDefaultValueNode fieldNode = (RecordFieldWithDefaultValueNode) node;
                     fieldBuilder = EntityField.newBuilder(fieldNode.fieldName().text().trim());
                     String fType;
+                    TypeDescriptorNode type;
                     if (fieldNode.typeName().kind().equals(SyntaxKind.ARRAY_TYPE_DESC)) {
-                        ArrayTypeDescriptorNode arrayTypeDescriptorNode = (ArrayTypeDescriptorNode)
-                                fieldNode.typeName();
-                        fType = ((SimpleNameReferenceNode) arrayTypeDescriptorNode.memberTypeDesc())
-                                .name().text().trim();
+                        type = ((ArrayTypeDescriptorNode) fieldNode.typeName()).memberTypeDesc();
                         fieldBuilder.setArrayType(true);
                     } else {
-
-                        fType = getType((TypeDescriptorNode) fieldNode.typeName(),
-                                    fieldNode.fieldName().text().trim());
+                        type = (TypeDescriptorNode) fieldNode.typeName();
                     }
+                    fType = getType(type, fieldNode.fieldName().text().trim());
                     fieldBuilder.setType(fType);
                     Optional<MetadataNode> metadata = fieldNode.metadata();
                     if (metadata.isPresent()) {
@@ -263,17 +260,14 @@ public class BalSyntaxGenerator {
                     RecordFieldNode fieldNode = (RecordFieldNode) node;
                     fieldBuilder = EntityField.newBuilder(fieldNode.fieldName().text().trim());
                     String fType;
+                    TypeDescriptorNode type;
                     if (fieldNode.typeName().kind().equals(SyntaxKind.ARRAY_TYPE_DESC)) {
-                        ArrayTypeDescriptorNode arrayTypeDescriptorNode = (ArrayTypeDescriptorNode)
-                                fieldNode.typeName();
-                        fType = ((SimpleNameReferenceNode) arrayTypeDescriptorNode.memberTypeDesc())
-                                .name().text().trim();
+                        type = ((ArrayTypeDescriptorNode) fieldNode.typeName()).memberTypeDesc();
                         fieldBuilder.setArrayType(true);
                     } else {
-                        fType = getType((TypeDescriptorNode) fieldNode.typeName(),
-                                    fieldNode.fieldName().text().trim());
-
+                        type = (TypeDescriptorNode) fieldNode.typeName();
                     }
+                    fType = getType(type, fieldNode.fieldName().text().trim());
                     fieldBuilder.setType(fType);
                     RecordFieldNode recordFieldNode = (RecordFieldNode) node;
                     if (recordFieldNode.metadata().isPresent()) {
@@ -295,6 +289,7 @@ public class BalSyntaxGenerator {
             case DECIMAL_TYPE_DESC:
             case FLOAT_TYPE_DESC:
             case STRING_TYPE_DESC:
+            case BYTE_TYPE_DESC:
                 return ((BuiltinSimpleNameReferenceNode) typeDesc).name().text();
             case QUALIFIED_NAME_REFERENCE:
                 QualifiedNameReferenceNode qualifiedName = (QualifiedNameReferenceNode) typeDesc;

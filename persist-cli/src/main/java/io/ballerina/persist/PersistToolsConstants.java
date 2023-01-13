@@ -86,6 +86,7 @@ public class PersistToolsConstants {
         public static final String TIME_OF_DAY = "time:TimeOfDay";
         public static final String UTC = "time:Utc";
         public static final String CIVIL = "time:Civil";
+        public static final String BYTE = "byte";
     }
 
     /**
@@ -101,5 +102,6 @@ public class PersistToolsConstants {
         public static final String TIME = "TIME";
         public static final String TIME_STAMP = "TIMESTAMP";
         public static final String DATE_TIME = "DATETIME";
+        public static final String BINARY = "BINARY";
     }
 }

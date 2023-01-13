@@ -135,7 +135,7 @@ public class SqlScriptGenerationUtils {
             if (entityField.getRelation() != null) {
                 continue;
             }
-            String sqlType = getType(entityField.getFieldType());
+            String sqlType = getType(entityField);
             assert sqlType != null;
             if (sqlType.equals(PersistToolsConstants.SqlTypes.VARCHAR)) {
                 sqlType += "(" + entityField.getMaxLength() + ")";
@@ -167,17 +167,16 @@ public class SqlScriptGenerationUtils {
         if (onUpdate != null && !onUpdate.isEmpty()) {
             onUpdateScript = ON_UPDATE_SYNTAX + getReferenceAction(onUpdate);
         }
-
+        Entity assocEntity = relation.getAssocEntity();
         for (int i = 0; i < references.size(); i++) {
             String referenceSqlType = null;
             String referenceFieldName = null;
-            Entity assocEntity = relation.getAssocEntity();
             for (EntityField assocField : assocEntity.getFields()) {
                 if (assocField.getRelation() != null) {
                     continue;
                 }
                 if (assocField.getFieldName().equals(references.get(i))) {
-                    referenceSqlType = getType(assocField.getFieldType());
+                    referenceSqlType = getType(assocField);
                     if (referenceSqlType.equals(PersistToolsConstants.SqlTypes.VARCHAR)) {
                         referenceSqlType += "(" + entityField.getMaxLength() + ")";
                     }
@@ -187,7 +186,15 @@ public class SqlScriptGenerationUtils {
             }
             String foreignKey = keyColumns.get(i);
             String unique = "";
-            if (relation.getRelationType().equals(Relation.RelationType.ONE)) {
+            Relation.RelationType associatedEntityRelationType = Relation.RelationType.NONE;
+            for (EntityField field: assocEntity.getFields()) {
+                if (field.getFieldType().equals(tableName)) {
+                    associatedEntityRelationType = field.getRelation().getRelationType();
+                    break;
+                }
+            }
+            if (relation.getRelationType().equals(Relation.RelationType.ONE) &&
+                    associatedEntityRelationType.equals(Relation.RelationType.ONE)) {
                 List<String> keys = assocEntity.getKeys();
                 List<List<String>> uniqueConstraints = assocEntity.getUniqueKeys();
                 if ((keys.size() == 1 && keys.get(0).equals(referenceFieldName)) ||
@@ -266,28 +273,36 @@ public class SqlScriptGenerationUtils {
         }
     }
 
-    private static String getType(String type) throws BalException {
-        switch (type) {
-            case PersistToolsConstants.BallerinaTypes.INT:
-                return PersistToolsConstants.SqlTypes.INT;
-            case PersistToolsConstants.BallerinaTypes.BOOLEAN:
-                return PersistToolsConstants.SqlTypes.BOOLEAN;
-            case PersistToolsConstants.BallerinaTypes.DECIMAL:
-                return PersistToolsConstants.SqlTypes.DECIMAL;
-            case PersistToolsConstants.BallerinaTypes.FLOAT:
-                return PersistToolsConstants.SqlTypes.FLOAT;
-            case PersistToolsConstants.BallerinaTypes.DATE:
-                return PersistToolsConstants.SqlTypes.DATE;
-            case PersistToolsConstants.BallerinaTypes.TIME_OF_DAY:
-                return PersistToolsConstants.SqlTypes.TIME;
-            case PersistToolsConstants.BallerinaTypes.UTC:
-                return PersistToolsConstants.SqlTypes.TIME_STAMP;
-            case PersistToolsConstants.BallerinaTypes.CIVIL:
-                return PersistToolsConstants.SqlTypes.DATE_TIME;
-            case PersistToolsConstants.BallerinaTypes.STRING:
-                return PersistToolsConstants.SqlTypes.VARCHAR;
-            default:
-                throw new BalException("Couldn't find equavalent SQL type for the field type: " + type);
+    private static String getType(EntityField field) throws BalException {
+        String fieldType = field.getFieldType();
+        if (!field.isArrayType()) {
+            switch (fieldType) {
+                case PersistToolsConstants.BallerinaTypes.INT:
+                    return PersistToolsConstants.SqlTypes.INT;
+                case PersistToolsConstants.BallerinaTypes.BOOLEAN:
+                    return PersistToolsConstants.SqlTypes.BOOLEAN;
+                case PersistToolsConstants.BallerinaTypes.DECIMAL:
+                    return PersistToolsConstants.SqlTypes.DECIMAL;
+                case PersistToolsConstants.BallerinaTypes.FLOAT:
+                    return PersistToolsConstants.SqlTypes.FLOAT;
+                case PersistToolsConstants.BallerinaTypes.DATE:
+                    return PersistToolsConstants.SqlTypes.DATE;
+                case PersistToolsConstants.BallerinaTypes.TIME_OF_DAY:
+                    return PersistToolsConstants.SqlTypes.TIME;
+                case PersistToolsConstants.BallerinaTypes.UTC:
+                    return PersistToolsConstants.SqlTypes.TIME_STAMP;
+                case PersistToolsConstants.BallerinaTypes.CIVIL:
+                    return PersistToolsConstants.SqlTypes.DATE_TIME;
+                case PersistToolsConstants.BallerinaTypes.STRING:
+                    return PersistToolsConstants.SqlTypes.VARCHAR;
+                default:
+                    throw new BalException("Couldn't find equivalent SQL type for the field type: " + fieldType);
+            }
+        } else {
+            if (PersistToolsConstants.BallerinaTypes.BYTE.equals(field.getFieldType())) {
+                return PersistToolsConstants.SqlTypes.BINARY;
+            }
+            throw new BalException("Couldn't find equivalent SQL type for the field type: " + fieldType);
         }
     }
 
