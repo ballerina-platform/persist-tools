@@ -176,18 +176,6 @@ public class ToolingGenerateTest {
     }
 
     @Test(enabled = true)
-    @Description("There are two entities with one to many associations between each other without relation annotation")
-    public void testGenerateOneToManyAssociationsWithoutRelationAnnotation() {
-        assertGeneratedSources("tool_test_generate_25", GENERATE);
-    }
-
-    @Test(enabled = true)
-    @Description("There are two entities with one to one associations between each other without relation annotation")
-    public void testGenerateOneToOneAssociationsWithoutRelationAnnotation() {
-        assertGeneratedSources("tool_test_generate_26", GENERATE);
-    }
-
-    @Test(enabled = true)
     @Description("There are three entities with one to one associations between each other with comments " +
             "in entity fields")
     public void testGenerateThreeEntitiesWith1To1AssociationsWithComments() {

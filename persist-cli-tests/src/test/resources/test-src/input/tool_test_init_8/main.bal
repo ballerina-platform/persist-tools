@@ -15,7 +15,9 @@
 // under the License.
 
 import ballerina/io;
+import ballerina/time;
 
 public function main() {
     io:println("hello");
+    http:client
 }

@@ -19,11 +19,8 @@ package io.ballerina.persist.cmd;
 
 import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.BalException;
-import io.ballerina.persist.models.Module;
-import io.ballerina.persist.nodegenerator.BalSyntaxConstants;
 import io.ballerina.persist.nodegenerator.BalSyntaxGenerator;
 import io.ballerina.persist.nodegenerator.TomlSyntaxGenerator;
-import io.ballerina.persist.utils.BalProjectUtils;
 import io.ballerina.projects.ProjectException;
 import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.projects.directory.ProjectLoader;
@@ -37,16 +34,20 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 import static io.ballerina.persist.PersistToolsConstants.CONFIG_SCRIPT_FILE;
-import static io.ballerina.persist.PersistToolsConstants.DATABASE_MYSQL;
+import static io.ballerina.persist.PersistToolsConstants.GENERATED_DIRECTORY;
+import static io.ballerina.persist.PersistToolsConstants.PATH_BALLERINA_TOML;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
-import static io.ballerina.persist.PersistToolsConstants.PERSIST_TOML_FILE;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.BAL_EXTENTION;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PATH_CONFIGURATION_BAL_FILE;
-import static io.ballerina.persist.utils.BalProjectUtils.getBuildProject;
-import static io.ballerina.persist.utils.BalProjectUtils.getEntityModule;
 
 /**
  * Class to implement "persist init" command for ballerina.
@@ -90,70 +91,80 @@ public class Init implements BLauncherCmd {
                     "You should run this command inside a Ballerina project. ");
             return;
         }
-
-        Path persistTomlPath = Paths.get(this.sourcePath, PERSIST_DIRECTORY, PERSIST_TOML_FILE);
-        if (Files.exists(persistTomlPath)) {
-            errStream.println("`bal persist init` command can only be used once to initialize the project");
-            return;
-        }
-
-        io.ballerina.projects.Module module;
-        Module entityModule;
-        try {
-            BuildProject buildProject = getBuildProject(projectPath, true);
-            module = getEntityModule(buildProject);
-            entityModule = BalProjectUtils.getEntities(module);
-        } catch (BalException e) {
-            errStream.println("Error while fetching entity module in the Ballerina project. " + e.getMessage());
-            return;
-        }
-
-        Path generatedSourceDirPath;
-        if (module.moduleName().moduleNamePart() == null) {
-            generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);
-        } else {
-            generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY,
-                    module.moduleName().moduleNamePart());
-        }
-        try {
-
-            generateConfigurationBalFile(generatedSourceDirPath);
-            errStream.println("Created database_configuration.bal file with default configurations " +
-                    "in the generated directory.");
-
-            createPersistToml(persistTomlPath);
-            errStream.println("Created Persist.toml file with configurations. ");
-            if (!Files.exists(Paths.get(sourcePath, CONFIG_SCRIPT_FILE))) {
-                createConfigToml(module.moduleName().toString());
-                errStream.println("Created Config.toml file inside the Ballerina project. ");
-            } else {
-                updateConfigToml(module.moduleName().toString());
-                errStream.println("Updated Config.toml file with default database configurations. ");
+        BuildProject buildProject = BuildProject.load(projectPath.toAbsolutePath());
+        String packageName = buildProject.currentPackage().packageName().value();
+        Path persistDirPath = Paths.get(this.sourcePath, PERSIST_DIRECTORY);
+        if (!Files.exists(persistDirPath)) {
+            try {
+                Files.createDirectory(persistDirPath.toAbsolutePath());
+            } catch (IOException e) {
+                errStream.println("Error while creating the persist directory. " + e.getMessage());
+                return;
             }
-            Generate.generatePersistClients(entityModule, generatedSourceDirPath);
+        }
+        List<Path> schemaFiles;
+        try (Stream<Path> stream = Files.list(persistDirPath)) {
+            schemaFiles = stream.filter(file -> !Files.isDirectory(file))
+                    .filter(file -> file.toString().toLowerCase(Locale.ENGLISH).endsWith(BAL_EXTENTION))
+                    .collect(Collectors.toList());
+        } catch (IOException e) {
+            errStream.println("Error while listing the persist schema files in persist directory. " + e.getMessage());
+            return;
+        }
+        if (schemaFiles == null) {
+            errStream.println("Error while reading the persist directory content. ");
+            return;
+        }
+        ArrayList<String> schemaFilesList = new ArrayList<>();
+        if (schemaFiles.size() == 0) {
+            schemaFilesList.add(packageName);
+            try {
+                generateSchemaBalFile(persistDirPath, packageName);
+            } catch (BalException e) {
+                errStream.println("Error while creating the schemas in persist directory. " + e.getMessage());
+                return;
+            }
+        } else {
+            for (Path schema : schemaFiles) {
+                Path fileName = schema.getFileName();
+                if (fileName == null) {
+                    errStream.println("Error while creating the schemas in persist directory. ");
+                    return;
+                }
+                schemaFilesList.add(fileName.toString().replace(BAL_EXTENTION, ""));
+            }
+        }
+        Path generatedSourceDirPath = Paths.get(this.sourcePath, GENERATED_DIRECTORY);
+        if (!Files.exists(generatedSourceDirPath)) {
+            try {
+                Files.createDirectory(generatedSourceDirPath.toAbsolutePath());
+            } catch (IOException e) {
+                errStream.println("Error while creating the generated directory. " + e.getMessage());
+                return;
+            }
+        }
+        for (String file : schemaFilesList) {
+            Path schemaDirPath = generatedSourceDirPath.resolve(file);
+            Path databaseConfigPath = schemaDirPath.resolve(PATH_CONFIGURATION_BAL_FILE);
+            if (!Files.exists(databaseConfigPath)) {
+                try {
+                    generateConfigurationBalFile(schemaDirPath);
+                } catch (BalException e) {
+                    errStream.println("Error while generating the database_configurations.bal file. " + e.getMessage());
+                    return;
+                }
+            }
+        }
+
+        try {
+            updateBallerinaToml(schemaFilesList);
+            if (!Files.exists(Paths.get(this.sourcePath, CONFIG_SCRIPT_FILE).toAbsolutePath())) {
+                createConfigTomlFile(schemaFilesList, packageName);
+            } else {
+                updateConfigTomlFile(schemaFilesList, packageName);
+            }
         } catch (BalException e) {
-            errStream.println(e.getMessage());
-        }
-    }
-
-    private void createConfigToml(String configName) throws BalException {
-        try {
-            SyntaxTree syntaxTree = TomlSyntaxGenerator.createConfigToml(configName);
-            writeOutputSyntaxTree(syntaxTree, Paths.get(this.sourcePath, CONFIG_SCRIPT_FILE)
-                    .toAbsolutePath().toString());
-        } catch (Exception e) {
-            throw new BalException("Error while adding Config.toml file inside the Ballerina project. " +
-                    e.getMessage());
-        }
-    }
-
-    private void createPersistToml(Path persistTomlPath) throws BalException {
-        try {
-            SyntaxTree syntaxTree = TomlSyntaxGenerator.createConfigToml(DATABASE_MYSQL);
-            writeOutputSyntaxTree(syntaxTree, persistTomlPath.toAbsolutePath().toString());
-        } catch (Exception e) {
-            throw new BalException("Error while adding Persist.toml to the project. " +
-                    e.getMessage());
+            errStream.println("Error while adding database configurations. " + e.getMessage());
         }
     }
 
@@ -168,14 +179,47 @@ public class Init implements BLauncherCmd {
         }
     }
 
-    private void updateConfigToml(String configName) throws BalException {
+    private void generateSchemaBalFile(Path persistPath, String packageName) throws BalException {
         try {
-            SyntaxTree syntaxTree = TomlSyntaxGenerator.updateConfigToml(
-                    Paths.get(this.sourcePath, CONFIG_SCRIPT_FILE), configName);
-            writeOutputSyntaxTree(syntaxTree,
-                    Paths.get(this.sourcePath, CONFIG_SCRIPT_FILE).toAbsolutePath().toString());
+            String configTree = BalSyntaxGenerator.generateSchemaSyntaxTree();
+            writeOutputString(configTree, persistPath.resolve(packageName + BAL_EXTENTION)
+                    .toAbsolutePath().toString());
         } catch (Exception e) {
-            throw new BalException("Error while updating Config.toml file to default database configurations . " +
+            throw new BalException("Error while adding schema file inside the persist directory. " +
+                    e.getMessage());
+        }
+    }
+
+    private void updateBallerinaToml(ArrayList<String> schemas) throws BalException {
+        try {
+            SyntaxTree syntaxTree = TomlSyntaxGenerator.updateBallerinaToml(
+                    Paths.get(this.sourcePath, PATH_BALLERINA_TOML), schemas);
+            writeOutputSyntaxTree(syntaxTree,
+                    Paths.get(this.sourcePath, PATH_BALLERINA_TOML).toAbsolutePath().toString());
+        } catch (Exception e) {
+            throw new BalException("Error while updating Ballerina.toml with database configurations . " +
+                    e.getMessage());
+        }
+    }
+
+    private void createConfigTomlFile(ArrayList<String> schemas, String packageName) throws BalException {
+        try {
+            Path configPath = Paths.get(this.sourcePath, CONFIG_SCRIPT_FILE).toAbsolutePath();
+            SyntaxTree syntaxTree = TomlSyntaxGenerator.createConfigToml(schemas, packageName);
+            writeOutputSyntaxTree(syntaxTree, configPath.toString());
+        } catch (Exception e) {
+            throw new BalException("Error while adding Config.toml file inside the Ballerina project. " +
+                    e.getMessage());
+        }
+    }
+
+    private void updateConfigTomlFile(ArrayList<String> schemas, String packageName) throws BalException {
+        try {
+            Path configPath = Paths.get(this.sourcePath, CONFIG_SCRIPT_FILE).toAbsolutePath();
+            SyntaxTree syntaxTree = TomlSyntaxGenerator.updateConfigToml(configPath, schemas, packageName);
+            writeOutputSyntaxTree(syntaxTree, configPath.toString());
+        } catch (Exception e) {
+            throw new BalException("Error while updating Config.toml file inside the Ballerina project. " +
                     e.getMessage());
         }
     }

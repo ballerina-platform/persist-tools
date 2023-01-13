@@ -1,7 +1,6 @@
-[perist_init_1]
+[perist_init_1.perist_init_1]
 host = "localhost"
 port = 3306
 user = "root"
 password = ""
 database = ""
-
