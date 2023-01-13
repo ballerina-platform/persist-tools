@@ -113,6 +113,7 @@ import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.GET_NEW_CLIE
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.INCLUDE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.INIT_INCLUDE_MANY;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.INIT_PERSIST_CLIENT_MANY;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.INSERT_RECORD_TEMPLATE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.IS_SQL_ERROR;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEY;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_AUTOINCREMENT;
@@ -126,6 +127,7 @@ import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_KEYF
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_PARAMETERIZED_QUERY;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_PERSIST_CLIENT;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_PERSIST_SQL_CLIENT;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_READONLY;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_REFERENCE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_RELATION;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_SQL;
@@ -136,10 +138,12 @@ import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_VALU
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEY_COLUMNS;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.MYSQL_DRIVER;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.NOT_EXIST;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.NULLABLE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.NULLABLE_ANYDATA_STREAM_TYPE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.NULLABLE_ERROR_STATEMENT;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PERSIST_ERROR;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PERSIST_MODULE;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.READONLY_RECORD_TEMPLATE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.READ_BY_KEY_RETURN;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.READ_BY_KEY_RETURN_RELATION;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.RECORD_CHECK;
@@ -158,6 +162,7 @@ import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.SINGLE_QUOTE
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.SPACE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.SPECIFIC_ERROR;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.START_RECORD;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.UPDATE_RECORD_TEMPLATE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.VALUE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.VALUE_TYPE_CHECK;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.VAR_ENTITY_RELATION;
@@ -497,12 +502,12 @@ public class BalSyntaxGenerator {
                     entityModule.getEntityMap()));
 
             moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration(
-                    String.format("type %sInsert %s;", entityModule.getEntityMap().get(key).getEntityName(),
+                    String.format(INSERT_RECORD_TEMPLATE, entityModule.getEntityMap().get(key).getEntityName(),
                             entityModule.getEntityMap().get(key).getEntityName())));
             moduleMembers = moduleMembers.add(getUpdateRecords(entityModule.getEntityMap().get(key),
                     entityModule.getEntityMap()));
             if (imports.size() == 0) {
-                imports = getImports(entityModule.getEntityMap().get(key), imports);
+                imports = getTimeImports(entityModule.getEntityMap().get(key), imports);
             }
         }
         Token eofToken = AbstractNodeFactory.createIdentifierToken(EMPTY_STRING);
@@ -513,10 +518,12 @@ public class BalSyntaxGenerator {
         return balTree.modifyWith(modulePartNode);
     }
 
-    private static NodeList<ImportDeclarationNode> getImports(Entity entity, NodeList<ImportDeclarationNode> imports) {
+    private static NodeList<ImportDeclarationNode> getTimeImports(Entity entity,
+                                                                  NodeList<ImportDeclarationNode> imports) {
         for (EntityField field : entity.getFields()) {
-            if (field.getFieldType().trim().equals("time")) {
-                imports = imports.add(NodeParser.parseImportDeclaration("import ballerina/time;"));
+            if (field.getFieldType().trim().contains("time:")) {
+                imports = imports.add(getImportDeclarationNode(BalSyntaxConstants.KEYWORD_BALLERINA,
+                        BalSyntaxConstants.KEYWORD_TIME, null));
                 break;
             }
         }
@@ -527,31 +534,41 @@ public class BalSyntaxGenerator {
         StringBuilder recordFields = new StringBuilder();
         for (EntityField field : entity.getFields()) {
             if (entity.getKeys().contains(field.getFieldName())) {
-                recordFields.append("readonly ");
-                recordFields.append(" ");
+                recordFields.append(KEYWORD_READONLY);
+                recordFields.append(SPACE);
                 recordFields.append(field.getFieldType());
-                recordFields.append(" ");
+                recordFields.append(SPACE);
                 recordFields.append(field.getFieldName());
-                recordFields.append("; ");
+                recordFields.append(SEMICOLON);
+                recordFields.append(SPACE);
             } else if (entityMap.keySet().contains(field.getFieldType())) {
                 if (field.getRelation().isOwner()) {
                     List<String> keySet = field.getRelation().getKeyColumns();
+                    Entity relatedEntity = entityMap.get(field.getFieldType());
                     for (String key : keySet) {
-                        recordFields.append("int");
-                        recordFields.append(" ");
+                        String referenceKey = field.getRelation().getReferences().get(keySet.indexOf(key));
+                        for (EntityField entityField : relatedEntity.getFields()) {
+                            if (entityField.getFieldName().equals(referenceKey)) {
+                                recordFields.append(entityField.getFieldType());
+                                break;
+                            }
+                        }
+                        recordFields.append(SPACE);
                         recordFields.append(key);
-                        recordFields.append("; ");
+                        recordFields.append(SEMICOLON);
+                        recordFields.append(SPACE);
                     }
                 }
             } else {
                 recordFields.append(field.getFieldType());
-                recordFields.append(" ");
+                recordFields.append(SPACE);
                 recordFields.append(field.getFieldName());
-                recordFields.append("; ");
+                recordFields.append(SEMICOLON);
+                recordFields.append(SPACE);
             }
 
         }
-        return NodeParser.parseModuleMemberDeclaration(String.format("public type %s readonly & record {| %s |};",
+        return NodeParser.parseModuleMemberDeclaration(String.format(READONLY_RECORD_TEMPLATE,
                 entity.getEntityName().trim(), recordFields));
     }
 
@@ -563,22 +580,33 @@ public class BalSyntaxGenerator {
             } else if (entityMap.keySet().contains(field.getFieldType())) {
                 if (field.getRelation().isOwner()) {
                     List<String> keySet = field.getRelation().getKeyColumns();
+                    Entity relatedEntity = entityMap.get(field.getFieldType());
                     for (String key : keySet) {
-                        recordFields.append("int");
-                        recordFields.append(" ");
+                        String referenceKey = field.getRelation().getReferences().get(keySet.indexOf(key));
+                        for (EntityField entityField : relatedEntity.getFields()) {
+                            if (entityField.getFieldName().equals(referenceKey)) {
+                                recordFields.append(entityField.getFieldType());
+                                break;
+                            }
+                        }
+                        recordFields.append(SPACE);
                         recordFields.append(key);
-                        recordFields.append("?; ");
+                        recordFields.append(NULLABLE);
+                        recordFields.append(SEMICOLON);
+                        recordFields.append(SPACE);
                     }
                 }
             } else {
                 recordFields.append(field.getFieldType());
-                recordFields.append(" ");
+                recordFields.append(SPACE);
                 recordFields.append(field.getFieldName());
-                recordFields.append("?; ");
+                recordFields.append(NULLABLE);
+                recordFields.append(SEMICOLON);
+                recordFields.append(SPACE);
             }
 
         }
-        return NodeParser.parseModuleMemberDeclaration(String.format("public type %sUpdate record {| %s |};",
+        return NodeParser.parseModuleMemberDeclaration(String.format(UPDATE_RECORD_TEMPLATE,
                 entity.getEntityName().trim(), recordFields));
     }
 

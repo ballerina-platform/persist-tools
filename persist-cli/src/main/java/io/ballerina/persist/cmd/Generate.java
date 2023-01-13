@@ -146,7 +146,7 @@ public class Generate implements BLauncherCmd {
 
                 generateTypeBalFile(entityModule, outputPath);
                 errStream.printf("Generated Ballerina client file for entities, " +
-                            "inside generated directory.");
+                            "inside generated directory.%n");
             }
         } catch (BalException e) {
             errStream.println("Error while generating clients for entities. " + e.getMessage());
