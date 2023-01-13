@@ -26,6 +26,7 @@ public type Profile record {|
     boolean isAdult;
     float salary;
     decimal age;
+    byte[] isRegistered;
     User owner?;
 |};
 
