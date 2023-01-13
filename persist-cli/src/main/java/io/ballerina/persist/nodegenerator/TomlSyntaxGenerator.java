@@ -72,6 +72,19 @@ public class TomlSyntaxGenerator {
      * Method to create a new Config.toml file with database configurations.
      */
 
+    public static SyntaxTree createConfigToml(ArrayList<String> schemas, String packageName) {
+        NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
+        for (String schema : schemas) {
+            moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(packageName + "." + schema, null));
+            moduleMembers = populateConfigNodeList(moduleMembers);
+            moduleMembers = addNewLine(moduleMembers, 1);
+        }
+        Token eofToken = AbstractNodeFactory.createIdentifierToken("");
+        DocumentNode documentNode = NodeFactory.createDocumentNode(moduleMembers, eofToken);
+        TextDocument textDocument = TextDocuments.from(documentNode.toSourceCode());
+        return SyntaxTree.from(textDocument);
+    }
+
     public static PersistConfiguration readPersistToml(Path configPath) throws BalException {
         try {
             TextDocument configDocument = TextDocuments.from(Files.readString(configPath));
@@ -154,6 +167,54 @@ public class TomlSyntaxGenerator {
                         continue;
                     }
                     moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(PERSIST_DIRECTORY + "."
+                            + schema, null));
+                    moduleMembers = populateConfigNodeList(moduleMembers);
+                }
+            }
+        }
+        Token eofToken = AbstractNodeFactory.createIdentifierToken("");
+        DocumentNode documentNode = NodeFactory.createDocumentNode(moduleMembers, eofToken);
+        TextDocument textDocument = TextDocuments.from(documentNode.toSourceCode());
+        return SyntaxTree.from(textDocument);
+    }
+
+    public static SyntaxTree updateConfigToml(Path configPath, ArrayList<String> names, String packageName)
+            throws IOException {
+
+        ArrayList<String> existingNodes = new ArrayList<>();
+
+        NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
+        Path fileNamePath = configPath.getFileName();
+        TextDocument configDocument = TextDocuments.from(Files.readString(configPath));
+        if (Objects.nonNull(fileNamePath)) {
+            SyntaxTree syntaxTree = SyntaxTree.from(configDocument, fileNamePath.toString());
+            DocumentNode rootNote = syntaxTree.rootNode();
+            NodeList<DocumentMemberDeclarationNode> nodeList = rootNote.members();
+
+            for (DocumentMemberDeclarationNode member : nodeList) {
+                if (member instanceof KeyValueNode) {
+                    moduleMembers = moduleMembers.add(member);
+                } else if (member instanceof TableNode) {
+                    TableNode node = (TableNode) member;
+                    for (String schema : names) {
+                        if (node.identifier().toSourceCode().trim().equals(packageName + "."
+                                + schema)) {
+                            existingNodes.add(schema);
+                            break;
+                        }
+                    }
+                    moduleMembers = moduleMembers.add(member);
+                } else if (member instanceof TableArrayNode) {
+                    moduleMembers = moduleMembers.add(member);
+                }
+            }
+            if (existingNodes.size() != names.size()) {
+                for (String schema : names) {
+                    moduleMembers = addNewLine(moduleMembers, 1);
+                    if (existingNodes.contains(schema)) {
+                        continue;
+                    }
+                    moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(packageName + "."
                             + schema, null));
                     moduleMembers = populateConfigNodeList(moduleMembers);
                 }
