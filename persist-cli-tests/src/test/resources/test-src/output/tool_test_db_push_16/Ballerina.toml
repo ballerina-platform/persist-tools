@@ -1,0 +1,8 @@
+[package]
+org = "foo"
+name = "tool_test_generate_16"
+version = "0.1.0"
+distribution = "2201.4.0"
+
+[build-options]
+observabilityIncluded = false
