@@ -487,6 +487,101 @@ public class BalSyntaxGenerator {
         return relBuilder.build();
     }
 
+    public static SyntaxTree generateTypeSyntaxTree(Module entityModule,
+                                                    ArrayList<ImportDeclarationNode> importsArray) {
+
+        NodeList<ImportDeclarationNode> imports = AbstractNodeFactory.createEmptyNodeList();
+        NodeList<ModuleMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
+        for (String key : entityModule.getEntityMap().keySet()) {
+            moduleMembers = moduleMembers.add(getReadOnlyRecords(entityModule.getEntityMap().get(key),
+                    entityModule.getEntityMap()));
+
+            moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration(
+                    String.format("type %sInsert %s;", entityModule.getEntityMap().get(key).getEntityName(),
+                            entityModule.getEntityMap().get(key).getEntityName())));
+            moduleMembers = moduleMembers.add(getUpdateRecords(entityModule.getEntityMap().get(key),
+                    entityModule.getEntityMap()));
+            if (imports.size() == 0) {
+                imports = getImports(entityModule.getEntityMap().get(key), imports);
+            }
+        }
+        Token eofToken = AbstractNodeFactory.createIdentifierToken(EMPTY_STRING);
+        ModulePartNode modulePartNode = NodeFactory.createModulePartNode(imports, moduleMembers, eofToken);
+        TextDocument textDocument = TextDocuments.from(EMPTY_STRING);
+        SyntaxTree balTree = SyntaxTree.from(textDocument);
+
+        return balTree.modifyWith(modulePartNode);
+    }
+
+    private static NodeList<ImportDeclarationNode> getImports(Entity entity, NodeList<ImportDeclarationNode> imports) {
+        for (EntityField field : entity.getFields()) {
+            if (field.getFieldType().trim().equals("time")) {
+                imports = imports.add(NodeParser.parseImportDeclaration("import ballerina/time;"));
+                break;
+            }
+        }
+        return imports;
+    }
+
+    private static ModuleMemberDeclarationNode getReadOnlyRecords(Entity entity, Map<String, Entity> entityMap) {
+        StringBuilder recordFields = new StringBuilder();
+        for (EntityField field : entity.getFields()) {
+            if (entity.getKeys().contains(field.getFieldName())) {
+                recordFields.append("readonly ");
+                recordFields.append(" ");
+                recordFields.append(field.getFieldType());
+                recordFields.append(" ");
+                recordFields.append(field.getFieldName());
+                recordFields.append("; ");
+            } else if (entityMap.keySet().contains(field.getFieldType())) {
+                if (field.getRelation().isOwner()) {
+                    List<String> keySet = field.getRelation().getKeyColumns();
+                    for (String key : keySet) {
+                        recordFields.append("int");
+                        recordFields.append(" ");
+                        recordFields.append(key);
+                        recordFields.append("; ");
+                    }
+                }
+            } else {
+                recordFields.append(field.getFieldType());
+                recordFields.append(" ");
+                recordFields.append(field.getFieldName());
+                recordFields.append("; ");
+            }
+
+        }
+        return NodeParser.parseModuleMemberDeclaration(String.format("public type %s readonly & record {| %s |};",
+                entity.getEntityName().trim(), recordFields));
+    }
+
+    private static ModuleMemberDeclarationNode getUpdateRecords(Entity entity, Map<String, Entity> entityMap) {
+        StringBuilder recordFields = new StringBuilder();
+        for (EntityField field : entity.getFields()) {
+            if (entity.getKeys().contains(field.getFieldName())) {
+                continue;
+            } else if (entityMap.keySet().contains(field.getFieldType())) {
+                if (field.getRelation().isOwner()) {
+                    List<String> keySet = field.getRelation().getKeyColumns();
+                    for (String key : keySet) {
+                        recordFields.append("int");
+                        recordFields.append(" ");
+                        recordFields.append(key);
+                        recordFields.append("?; ");
+                    }
+                }
+            } else {
+                recordFields.append(field.getFieldType());
+                recordFields.append(" ");
+                recordFields.append(field.getFieldName());
+                recordFields.append("?; ");
+            }
+
+        }
+        return NodeParser.parseModuleMemberDeclaration(String.format("public type %sUpdate record {| %s |};",
+                entity.getEntityName().trim(), recordFields));
+    }
+
     public static SyntaxTree generateClientSyntaxTree(Entity entity, ArrayList<ImportDeclarationNode> importsArray) {
         boolean keyAutoInc = false;
         Enum relationsEnum = null;

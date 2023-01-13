@@ -119,8 +119,9 @@ public class Generate implements BLauncherCmd {
             errStream.println("Error while reading entities in the Ballerina project. " + e.getMessage());
             return;
         }
-
+        generateDataTypes(entityModule, generatedSourceDirPath);
         generatePersistClients(entityModule, generatedSourceDirPath);
+
     }
 
     public static void generatePersistClients(Module entityModule, Path outputPath) {
@@ -138,6 +139,20 @@ public class Generate implements BLauncherCmd {
         }
     }
 
+    public static void generateDataTypes(Module entityModule, Path outputPath) {
+        try {
+            Collection<Entity> entityArray = entityModule.getEntityMap().values();
+            if (entityArray.size() != 0) {
+
+                generateTypeBalFile(entityModule, outputPath);
+                errStream.printf("Generated Ballerina client file for entities, " +
+                            "inside generated directory.");
+            }
+        } catch (BalException e) {
+            errStream.println("Error while generating clients for entities. " + e.getMessage());
+        }
+    }
+
     private static void generateClientBalFile(Entity entity, Path outputPath) throws BalException {
         ArrayList<ImportDeclarationNode> imports = new ArrayList<>();
         SyntaxTree balTree = BalSyntaxGenerator.generateClientSyntaxTree(entity, imports);
@@ -149,6 +164,17 @@ public class Generate implements BLauncherCmd {
         } catch (IOException | FormatterException e) {
             throw new BalException(String.format("Error while generating the client for the" +
                     " %s entity. ", entity.getEntityName()) + e.getMessage());
+        }
+    }
+
+    private static void generateTypeBalFile(Module entityModule, Path outputPath) throws BalException {
+        ArrayList<ImportDeclarationNode> imports = new ArrayList<>();
+        SyntaxTree generatedTypes =  BalSyntaxGenerator.generateTypeSyntaxTree(entityModule, imports);
+        String generatedTypesPath = outputPath.resolve("generated_types.bal").toAbsolutePath().toString();
+        try {
+            writeOutputFile(generatedTypes, generatedTypesPath);
+        } catch (IOException | FormatterException e) {
+            throw new BalException("Error while generating the generated_types.bal");
         }
     }
 
