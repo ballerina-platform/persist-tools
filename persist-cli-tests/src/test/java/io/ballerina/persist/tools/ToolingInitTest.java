@@ -44,7 +44,7 @@ public class ToolingInitTest {
     }
 
     @Test(enabled = true)
-    @Description("When there is a database config files inside the directories and there are lacking database " +
+    @Description("When there is a database config files inside the directories and there are missing database " +
             "configurations")
     public void testsInitUpdateConfigWithPartialyInitiatedFiles() {
         assertGeneratedSources("tool_test_init_3", INIT);
@@ -62,7 +62,7 @@ public class ToolingInitTest {
         assertGeneratedSources("tool_test_init_5", INIT);
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("Test the auxiliary functions of the class")
     public void testAuxiliaryFunctions() {
         assertAuxiliaryFunctions();

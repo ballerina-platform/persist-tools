@@ -1,0 +1,9 @@
+[perist_init_5.perist_init_5]
+host = "localhost"
+port = 3307
+user = "root"
+password = "test123"
+database = "persistdb"
+
+
+
