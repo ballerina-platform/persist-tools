@@ -1,2 +1,2 @@
-import ballerina/persist as _
+import ballerina/persist as _;
 

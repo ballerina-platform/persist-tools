@@ -1241,7 +1241,7 @@ public class BalSyntaxGenerator {
         NodeList<ImportDeclarationNode> imports = AbstractNodeFactory.createEmptyNodeList();
         NodeList<ModuleMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
 
-        imports = imports.add(NodeParser.parseImportDeclaration("import ballerina/persist as _"));
+        imports = imports.add(NodeParser.parseImportDeclaration("import ballerina/persist as _;"));
         Token eofToken = AbstractNodeFactory.createIdentifierToken(EMPTY_STRING);
         ModulePartNode modulePartNode = NodeFactory.createModulePartNode(imports, moduleMembers, eofToken);
         TextDocument textDocument = TextDocuments.from(EMPTY_STRING);
