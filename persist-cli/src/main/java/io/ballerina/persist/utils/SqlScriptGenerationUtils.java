@@ -186,24 +186,25 @@ public class SqlScriptGenerationUtils {
             }
             String foreignKey = keyColumns.get(i);
             String unique = "";
-            Relation.RelationType associatedEntityRelationType = Relation.RelationType.NONE;
-            for (EntityField field: assocEntity.getFields()) {
-                if (field.getFieldType().equals(tableName)) {
-                    associatedEntityRelationType = field.getRelation().getRelationType();
-                    break;
-                }
-            }
-            if (relation.getRelationType().equals(Relation.RelationType.ONE) &&
-                    associatedEntityRelationType.equals(Relation.RelationType.ONE)) {
-                List<String> keys = assocEntity.getKeys();
-                List<List<String>> uniqueConstraints = assocEntity.getUniqueKeys();
-                if ((keys.size() == 1 && keys.get(0).equals(referenceFieldName)) ||
-                        (uniqueConstraints != null && uniqueConstraints.size() == 1 &&
-                                uniqueConstraints.get(0).size() == 1 &&
-                                uniqueConstraints.get(0).get(0).equals(referenceFieldName))) {
-                    unique = UNIQUE;
-                }
-            }
+            // TODO: check whether we need this as we remove unique keys support
+//            Relation.RelationType associatedEntityRelationType = Relation.RelationType.NONE;
+//            for (EntityField field: assocEntity.getFields()) {
+//                if (field.getFieldType().equals(tableName)) {
+//                    associatedEntityRelationType = field.getRelation().getRelationType();
+//                    break;
+//                }
+//            }
+//            if (relation.getRelationType().equals(Relation.RelationType.ONE) &&
+//                    associatedEntityRelationType.equals(Relation.RelationType.ONE)) {
+//                List<String> keys = assocEntity.getKeys();
+//                List<List<String>> uniqueConstraints = assocEntity.getUniqueKeys();
+//                if ((keys.size() == 1 && keys.get(0).equals(referenceFieldName)) ||
+//                        (uniqueConstraints != null && uniqueConstraints.size() == 1 &&
+//                                uniqueConstraints.get(0).size() == 1 &&
+//                                uniqueConstraints.get(0).get(0).equals(referenceFieldName))) {
+//                    unique = UNIQUE;
+//                }
+//            }
             relationScripts.append(MessageFormat.format("{0}{1}{2} {3}{4},", NEW_LINE, TAB, foreignKey,
                     referenceSqlType, unique));
             relationScripts.append(MessageFormat.format("{0}{1}CONSTRAINT FK_{2}_{3}_{4} FOREIGN KEY({5}) " +
