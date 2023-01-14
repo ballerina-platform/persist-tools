@@ -70,8 +70,8 @@ import static io.ballerina.persist.PersistToolsConstants.PROPERTY_KEY_PATH;
 import static io.ballerina.persist.PersistToolsConstants.USER;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.JDBC_URL_WITHOUT_DATABASE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.JDBC_URL_WITH_DATABASE;
-import static io.ballerina.persist.utils.BalProjectUtils.getBuildProject;
 import static io.ballerina.persist.utils.BalProjectUtils.getEntityModule;
+import static io.ballerina.persist.utils.BalProjectUtils.validateSchemaFile;
 
 /**
  * Class to implement "persist push" command for ballerina.
@@ -125,7 +125,7 @@ public class Push implements BLauncherCmd {
         }
 
         try {
-            BuildProject buildProject = getBuildProject(projectPath, false);
+            BuildProject buildProject = validateSchemaFile(projectPath, false);
             io.ballerina.projects.Module module = getEntityModule(buildProject);
             Module entityModule = BalProjectUtils.getEntities(module);
             ArrayList<Entity> entityArray = new ArrayList<>(entityModule.getEntityMap().values());

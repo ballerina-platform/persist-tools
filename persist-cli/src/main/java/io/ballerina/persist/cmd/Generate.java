@@ -18,17 +18,13 @@
 package io.ballerina.persist.cmd;
 
 import io.ballerina.cli.BLauncherCmd;
-import io.ballerina.compiler.syntax.tree.ImportDeclarationNode;
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
-import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.BalSyntaxConstants;
-import io.ballerina.persist.nodegenerator.BalSyntaxGenerator;
 import io.ballerina.persist.utils.BalProjectUtils;
 import io.ballerina.projects.ProjectException;
-import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.projects.directory.ProjectLoader;
 import org.ballerinalang.formatter.core.Formatter;
 import org.ballerinalang.formatter.core.FormatterException;
@@ -41,18 +37,18 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
-import static io.ballerina.persist.PersistToolsConstants.PERSIST_TOML_FILE;
-import static io.ballerina.persist.utils.BalProjectUtils.getBuildProject;
-import static io.ballerina.persist.utils.BalProjectUtils.getEntityModule;
+import static io.ballerina.persist.nodegenerator.BalSyntaxGenerator.generateClientSyntaxTree;
+import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
 
 
 /**
- * This Class implements the `persist generate` command in Ballerina persist-tool.
+ * This Client implements the `persist generate` command in Ballerina persist-tool.
  *
  * @since 0.1.0
  */
@@ -96,59 +92,54 @@ public class Generate implements BLauncherCmd {
             return;
         }
 
-        Path persistTomlPath = Paths.get(this.sourcePath, PERSIST_DIRECTORY, PERSIST_TOML_FILE);
-        if (!Files.exists(persistTomlPath)) {
-            errStream.println("Persist project is not initiated. Please run `bal persist init` " +
-                    "to initiate the project before generation");
+        Path persistDir = Paths.get(this.sourcePath, PERSIST_DIRECTORY);
+        if (!Files.isDirectory(persistDir, NOFOLLOW_LINKS)) {
+            errStream.println("The persist directory inside the Ballerina project doesn't exist. " +
+                    "Please run `bal persist init` to initiate the project before generation");
             return;
         }
 
-        Module entityModule;
-        Path generatedSourceDirPath;
-        try {
-            BuildProject buildProject = getBuildProject(projectPath, true);
-            io.ballerina.projects.Module module = getEntityModule(buildProject);
-            if (module.moduleName().moduleNamePart() == null) {
-                generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);
-            } else {
+        List<Path> schemaFilePaths;
+        try (Stream<Path> stream = Files.list(persistDir)) {
+            schemaFilePaths = stream.filter(file -> !Files.isDirectory(file))
+                    .filter(file -> file.toString().toLowerCase(Locale.ENGLISH).endsWith(".bal"))
+                    .collect(Collectors.toList());
+        } catch (IOException e) {
+            errStream.println("Error while listing the persist schema files in persist directory. " + e.getMessage());
+            return;
+        }
+
+        if (schemaFilePaths.isEmpty()) {
+            errStream.println("The persist directory doesn't contain any schema file. " +
+                    "Please run `bal persist init` to initiate the project before generation");
+            return;
+        }
+
+        schemaFilePaths.forEach(file -> {
+            Module entityModule;
+            Path generatedSourceDirPath;
+            try {
+                BalProjectUtils.validateSchemaFile(file);
+                entityModule = BalProjectUtils.getEntities(file);
                 generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY,
-                        module.moduleName().moduleNamePart());
+                        entityModule.getModuleName());
+                generateClientBalFile(entityModule, generatedSourceDirPath);
+            } catch (BalException e) {
+                errStream.println("Error while validating entities defined in "
+                        + file + " file . " + e.getMessage());
             }
-            entityModule = BalProjectUtils.getEntities(module);
-        } catch (BalException e) {
-            errStream.println("Error while reading entities in the Ballerina project. " + e.getMessage());
-            return;
-        }
-
-        generatePersistClients(entityModule, generatedSourceDirPath);
+        });
     }
 
-    public static void generatePersistClients(Module entityModule, Path outputPath) {
-        try {
-            Collection<Entity> entityArray = entityModule.getEntityMap().values();
-            if (entityArray.size() != 0) {
-                for (Entity entity : entityArray) {
-                    generateClientBalFile(entity, outputPath);
-                    errStream.printf("Generated Ballerina client file for entity %s, " +
-                            "inside generated directory.%n", entity.getEntityName());
-                }
-            }
-        } catch (BalException e) {
-            errStream.println("Error while generating clients for entities. " + e.getMessage());
-        }
-    }
+    private static void generateClientBalFile(Module entityModule, Path outputPath) throws BalException {
+        String clientPath = outputPath.resolve("generated_client.bal").toAbsolutePath().toString();
 
-    private static void generateClientBalFile(Entity entity, Path outputPath) throws BalException {
-        ArrayList<ImportDeclarationNode> imports = new ArrayList<>();
-        SyntaxTree balTree = BalSyntaxGenerator.generateClientSyntaxTree(entity, imports);
-        String clientPath = outputPath.resolve(
-                entity.getEntityName().toLowerCase(Locale.getDefault()) + "_client.bal").
-                toAbsolutePath().toString();
+        SyntaxTree balTree = generateClientSyntaxTree(entityModule);
         try {
             writeOutputFile(balTree, clientPath);
         } catch (IOException | FormatterException e) {
             throw new BalException(String.format("Error while generating the client for the" +
-                    " %s entity. ", entity.getEntityName()) + e.getMessage());
+                    " %s data model. ", entityModule.getModuleName()) + e.getMessage());
         }
     }
 

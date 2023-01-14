@@ -31,7 +31,7 @@ import io.ballerina.persist.nodegenerator.SyntaxTokenConstants;
  *
  * @since 0.1.0
  */
-public class Class {
+public class Client {
 
     private Token visibilityQualifier;
     private NodeList<Token> classTypeQualifiers;
@@ -39,7 +39,9 @@ public class Class {
     private final Token className;
     private NodeList<Node> members;
 
-    public Class(String name, boolean isPublic) {
+    private boolean timeImport = false;
+
+    public Client(String name, boolean isPublic) {
         if (isPublic) {
             visibilityQualifier = AbstractNodeFactory.createIdentifierToken(ComponentConstants.TAG_PUBLIC);
         }
@@ -72,5 +74,13 @@ public class Class {
         for (String qualifier : qualifiers) {
             classTypeQualifiers = classTypeQualifiers.add(AbstractNodeFactory.createIdentifierToken(qualifier + " "));
         }
+    }
+
+    public boolean isTimeImport() {
+        return timeImport;
+    }
+
+    public void setTimeImport(boolean timeImport) {
+        this.timeImport = timeImport;
     }
 }

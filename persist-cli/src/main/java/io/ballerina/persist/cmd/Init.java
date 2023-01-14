@@ -45,11 +45,11 @@ import static io.ballerina.persist.PersistToolsConstants.DATABASE_MYSQL;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_TOML_FILE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PATH_CONFIGURATION_BAL_FILE;
-import static io.ballerina.persist.utils.BalProjectUtils.getBuildProject;
 import static io.ballerina.persist.utils.BalProjectUtils.getEntityModule;
+import static io.ballerina.persist.utils.BalProjectUtils.validateSchemaFile;
 
 /**
- * Class to implement "persist init" command for ballerina.
+ * Client to implement "persist init" command for ballerina.
  *
  * @since 0.1.0
  */
@@ -100,7 +100,7 @@ public class Init implements BLauncherCmd {
         io.ballerina.projects.Module module;
         Module entityModule;
         try {
-            BuildProject buildProject = getBuildProject(projectPath, true);
+            BuildProject buildProject = validateSchemaFile(projectPath, true);
             module = getEntityModule(buildProject);
             entityModule = BalProjectUtils.getEntities(module);
         } catch (BalException e) {
@@ -130,7 +130,7 @@ public class Init implements BLauncherCmd {
                 updateConfigToml(module.moduleName().toString());
                 errStream.println("Updated Config.toml file with default database configurations. ");
             }
-            Generate.generatePersistClients(entityModule, generatedSourceDirPath);
+//            Generate.generatePersistClients(entityModule, generatedSourceDirPath);
         } catch (BalException e) {
             errStream.println(e.getMessage());
         }

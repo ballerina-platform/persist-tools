@@ -21,7 +21,7 @@ package io.ballerina.persist.models;
 import java.util.List;
 
 /**
- * Class to store entity relations.
+ * Client to store entity relations.
  *
  * @since 0.1.0
  */

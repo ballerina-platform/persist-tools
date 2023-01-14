@@ -125,7 +125,7 @@ public class SqlScriptGenerationUtils {
         for (EntityField entityField : relationFields) {
             sqlScript.append(getRelationScripts(entity.getTableName(), entityField, referenceTables));
         }
-        sqlScript.append(addPrimaryKeyUniqueKey(entity.getKeys(), entity.getUniqueKeys()));
+        sqlScript.append(addPrimaryKey(entity.getKeys()));
         return sqlScript.substring(0, sqlScript.length() - 1);
     }
 
@@ -186,19 +186,8 @@ public class SqlScriptGenerationUtils {
                 }
             }
             String foreignKey = keyColumns.get(i);
-            String unique = "";
-            if (relation.getRelationType().equals(Relation.RelationType.ONE)) {
-                List<String> keys = assocEntity.getKeys();
-                List<List<String>> uniqueConstraints = assocEntity.getUniqueKeys();
-                if ((keys.size() == 1 && keys.get(0).equals(referenceFieldName)) ||
-                        (uniqueConstraints != null && uniqueConstraints.size() == 1 &&
-                                uniqueConstraints.get(0).size() == 1 &&
-                                uniqueConstraints.get(0).get(0).equals(referenceFieldName))) {
-                    unique = UNIQUE;
-                }
-            }
-            relationScripts.append(MessageFormat.format("{0}{1}{2} {3}{4},", NEW_LINE, TAB, foreignKey,
-                    referenceSqlType, unique));
+            relationScripts.append(MessageFormat.format("{0}{1}{2} {3},", NEW_LINE, TAB, foreignKey,
+                    referenceSqlType));
             relationScripts.append(MessageFormat.format("{0}{1}CONSTRAINT FK_{2}_{3}_{4} FOREIGN KEY({5}) " +
                             "REFERENCES {6}({7}){8}{9},", NEW_LINE, TAB, tableName.toUpperCase(Locale.ENGLISH),
                     assocEntity.getTableName().toUpperCase(Locale.ENGLISH), i, foreignKey, assocEntity.getTableName(),
@@ -227,22 +216,14 @@ public class SqlScriptGenerationUtils {
         referenceTables.put(tableName, setOfReferenceTables);
     }
 
-    private static String addPrimaryKeyUniqueKey(List<String> primaryKeys,
-                                                        List<List<String>> uniqueConstraints) {
-        StringBuilder keyScripts = new StringBuilder();
-        keyScripts.append(createKeysScript(primaryKeys, PRIMARY_KEY_START_SCRIPT));
-        if (uniqueConstraints != null) {
-            for (List<String> uniqueConstraint : uniqueConstraints) {
-                keyScripts.append(createKeysScript(uniqueConstraint, UNIQUE_KEY_START_SCRIPT));
-            }
-        }
-        return keyScripts.toString();
+    private static String addPrimaryKey(List<String> primaryKeys) {
+        return createKeysScript(primaryKeys);
     }
 
-    private static String createKeysScript(List<String> keys, String keyType) {
+    private static String createKeysScript(List<String> keys) {
         StringBuilder keyScripts = new StringBuilder();
         if (keys.size() > 0) {
-            keyScripts.append(MessageFormat.format("{0}", keyType));
+            keyScripts.append(MessageFormat.format("{0}", PRIMARY_KEY_START_SCRIPT));
             for (String key : keys) {
                 keyScripts.append(MessageFormat.format("{0},", key));
             }
