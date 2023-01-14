@@ -234,5 +234,6 @@ public class BalSyntaxConstants {
 
 
     public static final String MYSQL_DRIVER = "mysql.driver";
+    public static final String BAL_EXTENTION = ".bal";
 
 }

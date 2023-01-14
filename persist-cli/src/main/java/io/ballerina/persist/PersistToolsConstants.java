@@ -63,7 +63,9 @@ public class PersistToolsConstants {
     public static final String SQL_SCHEMA_FILE = "persist_db_scripts.sql";
     public static final String UNIQUE_CONSTRAINTS = "uniqueConstraints";
     public static final String PERSIST_DIRECTORY = "persist";
+    public static final String GENERATED_DIRECTORY = "generated";
     public static final String PERSIST_TOML_FILE = "Persist.toml";
+    public static final String PATH_BALLERINA_TOML = "Ballerina.toml";
     public static final String BALLERINA_MYSQL_DRIVER_NAME = "ballerinax/mysql.driver";
     public static final String PLATFORM = "java11";
     public static final String PROPERTY_KEY_PATH = "path";
@@ -84,6 +86,7 @@ public class PersistToolsConstants {
         public static final String TIME_OF_DAY = "time:TimeOfDay";
         public static final String UTC = "time:Utc";
         public static final String CIVIL = "time:Civil";
+        public static final String BYTE = "byte";
     }
 
     /**
@@ -99,5 +102,6 @@ public class PersistToolsConstants {
         public static final String TIME = "TIME";
         public static final String TIME_STAMP = "TIMESTAMP";
         public static final String DATE_TIME = "DATETIME";
+        public static final String BINARY = "BINARY";
     }
 }

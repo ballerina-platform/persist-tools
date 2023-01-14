@@ -1,10 +1,9 @@
-[perist_init_5]
-foo1 = "bar1"
+[perist_init_5.perist_init_5]
 host = "localhost"
-port = 3306
+port = 3307
 user = "root"
-foo2 = "bar2"
-password = ""
-database = ""
-foo3 = "bar3"
+password = "test123"
+database = "persistdb"
+
+
 

@@ -1,7 +1,6 @@
-[perist_init_6]
-foo1 = "bar1"
-host = "wso2.com"
-port = 6688
-foo2 = "bar2"
-database = "mariadb"
-foo3 = "bar3"
+[perist_init_6.perist_init_6]
+host = "localhost"
+port = 3306
+user = "root"
+password = ""
+database = ""

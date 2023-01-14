@@ -1,11 +1,9 @@
-[ballerina.log]
-level = "DEBUG"
-format = "json"
-
-[perist_init_7]
+[perist_init_7.perist_init_7]
 host = "localhost"
 port = 3306
 user = "root"
-database = ""
 password = ""
+database = ""
+
+
 

@@ -181,4 +181,10 @@ public class ToolingDbPushTest {
         assertGeneratedSourcesNegative("tool_test_db_push_15", DB_PUSH, null);
         assertCreatedDatabaseNegative("tool_test_db_push_15");
     }
+
+    @Test(enabled = true)
+    @Description("Test the created sql script with one to many relation entity")
+    public void testDbPushWithOneToManyRelationship() {
+        assertGeneratedSources("tool_test_db_push_16", DB_PUSH);
+    }
 }

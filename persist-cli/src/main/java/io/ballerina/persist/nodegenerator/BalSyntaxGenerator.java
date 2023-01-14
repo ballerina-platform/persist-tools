@@ -142,17 +142,14 @@ public class BalSyntaxGenerator {
                     }
                     fieldBuilder = EntityField.newBuilder(fieldNode.fieldName().text().trim());
                     String fType;
+                    TypeDescriptorNode type;
                     if (fieldNode.typeName().kind().equals(SyntaxKind.ARRAY_TYPE_DESC)) {
-                        ArrayTypeDescriptorNode arrayTypeDescriptorNode = (ArrayTypeDescriptorNode)
-                                fieldNode.typeName();
-                        fType = ((SimpleNameReferenceNode) arrayTypeDescriptorNode.memberTypeDesc())
-                                .name().text().trim();
+                        type = ((ArrayTypeDescriptorNode) fieldNode.typeName()).memberTypeDesc();
                         fieldBuilder.setArrayType(true);
                     } else {
-
-                        fType = getType((TypeDescriptorNode) fieldNode.typeName(),
-                                    fieldNode.fieldName().text().trim());
+                        type = (TypeDescriptorNode) fieldNode.typeName();
                     }
+                    fType = getType(type, fieldNode.fieldName().text().trim());
                     fieldBuilder.setType(fType);
                     entityBuilder.addField(fieldBuilder.build());
                 } else if (node.kind() == SyntaxKind.RECORD_FIELD) {
@@ -162,16 +159,14 @@ public class BalSyntaxGenerator {
                     }
                     fieldBuilder = EntityField.newBuilder(fieldNode.fieldName().text().trim());
                     String fType;
+                    TypeDescriptorNode type;
                     if (fieldNode.typeName().kind().equals(SyntaxKind.ARRAY_TYPE_DESC)) {
-                        ArrayTypeDescriptorNode arrayTypeDescriptorNode = (ArrayTypeDescriptorNode)
-                                fieldNode.typeName();
-                        fType = ((SimpleNameReferenceNode) arrayTypeDescriptorNode.memberTypeDesc())
-                                .name().text().trim();
+                        type = ((ArrayTypeDescriptorNode) fieldNode.typeName()).memberTypeDesc();
                         fieldBuilder.setArrayType(true);
                     } else {
-                        fType = getType((TypeDescriptorNode) fieldNode.typeName(),
-                                    fieldNode.fieldName().text().trim());
+                        type = (TypeDescriptorNode) fieldNode.typeName();
                     }
+                    fType = getType(type, fieldNode.fieldName().text().trim());
                     fieldBuilder.setType(fType);
                     entityBuilder.addField(fieldBuilder.build());
                 }
@@ -189,6 +184,7 @@ public class BalSyntaxGenerator {
             case DECIMAL_TYPE_DESC:
             case FLOAT_TYPE_DESC:
             case STRING_TYPE_DESC:
+            case BYTE_TYPE_DESC:
                 return ((BuiltinSimpleNameReferenceNode) typeDesc).name().text();
             case QUALIFIED_NAME_REFERENCE:
                 QualifiedNameReferenceNode qualifiedName = (QualifiedNameReferenceNode) typeDesc;
@@ -805,6 +801,20 @@ public class BalSyntaxGenerator {
         moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration(
                 BalSyntaxConstants.CONFIGURABLE_PASSWORD));
 
+        Token eofToken = AbstractNodeFactory.createIdentifierToken(EMPTY_STRING);
+        ModulePartNode modulePartNode = NodeFactory.createModulePartNode(imports, moduleMembers, eofToken);
+        TextDocument textDocument = TextDocuments.from(EMPTY_STRING);
+        SyntaxTree balTree = SyntaxTree.from(textDocument);
+
+        // output cannot be SyntaxTree as it will overlap with Toml Syntax Tree in Init Command
+        return Formatter.format(balTree.modifyWith(modulePartNode).toSourceCode());
+    }
+
+    public static String generateSchemaSyntaxTree() throws FormatterException {
+        NodeList<ImportDeclarationNode> imports = AbstractNodeFactory.createEmptyNodeList();
+        NodeList<ModuleMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
+
+        imports = imports.add(NodeParser.parseImportDeclaration("import ballerina/persist as _;"));
         Token eofToken = AbstractNodeFactory.createIdentifierToken(EMPTY_STRING);
         ModulePartNode modulePartNode = NodeFactory.createModulePartNode(imports, moduleMembers, eofToken);
         TextDocument textDocument = TextDocuments.from(EMPTY_STRING);
