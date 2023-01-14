@@ -18,8 +18,7 @@ import ballerina/persist;
 import foo/tool_test_generate_15.foo as entities;
 
 @persist:Entity {
-    key: ["id"],
-    tableName: "Profiles"
+    key: ["id"]
 }
 public type Profile record  {|
     readonly int id;
@@ -29,8 +28,7 @@ public type Profile record  {|
 |};
 
 @persist:Entity {
-    key: ["id"],
-    tableName: "MultipleAssociations"
+    key: ["id"]
 }
 public type MultipleAssociations record {|
     readonly int id;

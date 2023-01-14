@@ -18,6 +18,9 @@
 
 package io.ballerina.persist.tools.utils;
 
+import io.ballerina.persist.BalException;
+import io.ballerina.persist.configuration.PersistConfiguration;
+import io.ballerina.persist.nodegenerator.TomlSyntaxGenerator;
 import org.testng.Assert;
 
 import java.io.PrintStream;
@@ -28,11 +31,11 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Locale;
 
+import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
+import static io.ballerina.persist.PersistToolsConstants.PERSIST_TOML_FILE;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.GENERATED_SOURCES_DIRECTORY;
-import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.generateSourceCode;
 
 /**
  * Test util functions related to Push command.
@@ -46,18 +49,18 @@ public class DatabaseTestUtils {
     private static final String autoincrement = "IS_AUTOINCREMENT";
     private static final String nullable = "IS_NULLABLE";
 
-    public static void assertCreateDatabaseTables(String subDir, ArrayList<PersistTable> tables) {
+    public static void assertCreateDatabaseTables(String subDir, ArrayList<PersistTable> tables) throws BalException {
         String osName = System.getProperty("os.name");
         if (osName.toLowerCase(Locale.getDefault()).contains("windows")) {
             return;
         }
-        HashMap configurations = generateSourceCode(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir),
-                GeneratedSourcesTestUtils.Command.DB_PUSH);
-        String username = configurations.get("user").toString().replaceAll("\"", "");
-        String password = configurations.get("password").toString().replaceAll("\"", "");
-        String database = configurations.get("database").toString().replaceAll("\"", "");
-        String host = configurations.get("host").toString().replaceAll("\"", "");
-        String port = configurations.get("port").toString();
+        PersistConfiguration configuration = TomlSyntaxGenerator.readPersistToml(
+                Paths.get(GENERATED_SOURCES_DIRECTORY, subDir, PERSIST_DIRECTORY, PERSIST_TOML_FILE));
+        String username = configuration.getDbConfig().getUsername();
+        String password = configuration.getDbConfig().getPassword();
+        String database = configuration.getDbConfig().getDatabase();
+        String host = configuration.getDbConfig().getHost();
+        int port = configuration.getDbConfig().getPort();
 
         String url = String.format("jdbc:mysql://%s:%s", host, port);
 
@@ -86,6 +89,33 @@ public class DatabaseTestUtils {
         }
     }
 
+    public static void assertCreatedDatabaseNegative(String subDir) throws BalException {
+        String osName = System.getProperty("os.name");
+        if (osName.toLowerCase(Locale.getDefault()).contains("windows")) {
+            return;
+        }
+        PersistConfiguration configuration = TomlSyntaxGenerator.readPersistToml(
+                Paths.get(GENERATED_SOURCES_DIRECTORY, subDir, PERSIST_DIRECTORY, PERSIST_TOML_FILE));
+        String username = configuration.getDbConfig().getUsername();
+        String password = configuration.getDbConfig().getPassword();
+        String database = configuration.getDbConfig().getDatabase();
+        String host = configuration.getDbConfig().getHost();
+        int port = configuration.getDbConfig().getPort();
+        String url = String.format("jdbc:mysql://%s:%s", host, port);
+        Connection connection = null;
+        try {
+            connection = DriverManager.getConnection(url, username, password);
+        } catch (SQLException e) {
+            errStream.println("Failed to create database connection: " + e.getMessage());
+        }
+        try {
+            assert connection != null;
+            Assert.assertFalse(databaseExists(connection, database));
+        } catch (SQLException e) {
+            errStream.println("Failed to check if database exists: " + e.getMessage());
+        }
+    }
+    
     private static boolean databaseExists(Connection connection, String databaseName) throws SQLException {
 
         boolean exists = false;

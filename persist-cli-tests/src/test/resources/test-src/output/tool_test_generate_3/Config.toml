@@ -1,4 +1,4 @@
-[perist_generate_3.clients]
+[perist_generate_3]
 host = "localhost"
 port = 3306
 user = "root"

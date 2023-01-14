@@ -17,29 +17,28 @@
 import ballerina/persist;
 
 @persist:Entity {
-    key: ["id"],
-    tableName: "Profiles"
+    key: ["id"]
 }
 public type Profile record  {|
     readonly int id;
     string name;
     @persist:Relation {reference: ["id"]}
-    User user?;
+    User owner?;
+    MultipleAssociations multipleAssociations?;
 |};
 
 @persist:Entity {
-    key: ["id"],
-    tableName: "Users"
+    key: ["id"]
 }
 public type User record  {|
     readonly int id;
     string name;
     Profile profile?;
+    MultipleAssociations multipleAssociations?;
 |};
 
 @persist:Entity {
-    key: ["id"],
-    tableName: "MultipleAssociations"
+    key: ["id"]
 }
 public type MultipleAssociations record {|
     readonly int id;
@@ -49,5 +48,5 @@ public type MultipleAssociations record {|
     Profile profile?;
 
     @persist:Relation
-    User user?;
+    User owner?;
 |};

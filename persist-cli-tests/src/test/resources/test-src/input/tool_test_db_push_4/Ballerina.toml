@@ -1,6 +1,0 @@
-[package]
-org = "foo"
-name = "tool_test_db_push_4"
-version = "0.1.0"
-distribution = "2201.3.0"
-

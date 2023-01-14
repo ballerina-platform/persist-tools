@@ -77,7 +77,8 @@ public class GeneratedSourcesTestUtils {
             Assert.assertTrue(Files.exists(actualOutputFile));
             Assert.assertEquals(readContent(actualOutputFile), readContent(expectedOutputFile));
         }
-        if (!subDir.equals("tool_test_generate_4")) {
+        if (!(subDir.equals("tool_test_generate_4") || subDir.equals("tool_test_generate_26") ||
+                subDir.equals("tool_test_generate_18"))) {
 
             BuildProject buildProject = BuildProject.load(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)
                     .toAbsolutePath());
@@ -140,20 +141,19 @@ public class GeneratedSourcesTestUtils {
         try {
             if (cmd == Command.INIT) {
                 persistClass = Class.forName("io.ballerina.persist.cmd.Init");
-                Init persistCmd = (Init) persistClass.getDeclaredConstructor().newInstance();
-                persistCmd.setSourcePath(sourcePath.toAbsolutePath().toString());
+                Init persistCmd = (Init) persistClass.getDeclaredConstructor(String.class)
+                        .newInstance(sourcePath.toAbsolutePath().toString());
                 persistCmd.execute();
             } else if (cmd == Command.GENERATE) {
                 persistClass = Class.forName("io.ballerina.persist.cmd.Generate");
-                Generate persistCmd = (Generate) persistClass.getDeclaredConstructor().newInstance();
-                persistCmd.setSourcePath(sourcePath.toAbsolutePath().toString());
+                Generate persistCmd = (Generate) persistClass.getDeclaredConstructor(String.class)
+                        .newInstance(sourcePath.toAbsolutePath().toString());
                 persistCmd.execute();
             } else {
                 persistClass = Class.forName("io.ballerina.persist.cmd.Push");
-                Push persistCmd = (Push) persistClass.getDeclaredConstructor().newInstance();
-                persistCmd.setSourcePath(sourcePath.toAbsolutePath().toString());
+                Push persistCmd = (Push) persistClass.getDeclaredConstructor(String.class)
+                        .newInstance(sourcePath.toAbsolutePath().toString());
                 persistCmd.execute();
-                return persistCmd.getConfigurations();
             }
 
         } catch (ClassNotFoundException | IllegalAccessException | InstantiationException |

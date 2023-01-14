@@ -31,88 +31,100 @@ import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertG
  */
 public class ToolingInitTest {
 
-    @Test()
-    @Description("When there isn't a Config.toml file inside the project root directory")
+    @Test(enabled = true)
+    @Description("When there is no Persist.toml file inside the project root directory")
     public void testInitCreateConfig() {
         assertGeneratedSources("tool_test_init_1", INIT);
     }
 
-    @Test()
+    @Test(enabled = true)
     @Description("When there is a Config.toml file inside the project root directory but there are no database " +
-            "configurations")
+            "configurations or Persist.toml")
     public void testInitUpdateConfigWithNewDbConfigurations() {
         assertGeneratedSources("tool_test_init_2", INIT);
     }
 
-    @Test()
+    @Test(enabled = true)
     @Description("When there is a Config.toml file inside the project root directory and there are database " +
             "configurations")
     public void testsInitUpdateConfigWithUpdatedDbConfigurations() {
         assertGeneratedSources("tool_test_init_3", INIT);
     }
 
-    @Test()
+    @Test(enabled = true)
     @Description("When the init command is executed outside a Ballerina project")
     public void testsInitOutsideBalProject() {
         assertGeneratedSourcesNegative("tool_test_init_4", INIT, new String[]{"Config.toml"});
     }
 
-    @Test()
+    @Test(enabled = true)
     @Description("When there is a Config.toml file inside the project root directory and there are database " +
             "configurations mixed with other configurations")
     public void testsInitUpdateConfigWithUpdatedDbConfigurationsMixed() {
         assertGeneratedSources("tool_test_init_5", INIT);
     }
 
-    @Test()
+    @Test(enabled = true)
     @Description("When there is a Config.toml file inside the project root directory and there are database " +
             "configurations mixed with other configurations")
     public void testsInitUpdateConfigWithUpdatedDbConfigurationsMixed2() {
         assertGeneratedSources("tool_test_init_6", INIT);
     }
 
-    @Test()
+    @Test(enabled = true)
     @Description("When there is a Config.toml file inside the project root directory but there are no database " +
             "configurations but there is a table")
     public void testInitUpdateConfigWithNewDbConfigurationsWithTable() {
         assertGeneratedSources("tool_test_init_7", INIT);
     }
 
-    @Test()
-    @Description("When there is a Config.toml file inside the project root directory but there are no database " +
-            "configurations but there is a table")
+    @Test(enabled = true)
+    @Description("When there is a Config.toml and entities.bal file inside the project " +
+            "root directory but there are no database configurations but there are tables")
     public void testInitUpdateConfigWithNewDbConfigurationsWithTableArray() {
         assertGeneratedSources("tool_test_init_8", INIT);
     }
 
-    @Test()
+    @Test(enabled = true)
     @Description("When there is a Config.toml file inside the project root directory and there are database " +
             "configurations and a table")
     public void testInitUpdateConfigWithUpdateDbConfigurationsWithTableArray() {
         assertGeneratedSources("tool_test_init_9", INIT);
     }
 
-    @Test()
+    @Test(enabled = true)
     @Description("Test the auxiliary functions of the class")
     public void testAuxiliaryFunctions() {
         assertAuxiliaryFunctions();
     }
 
-    @Test()
+    @Test(enabled = true)
     @Description("Running init on a already initialized project")
     public void testInitAlreadyInitializedProject() {
         assertGeneratedSources("tool_test_init_10", INIT);
     }
 
-    @Test()
+    @Test(enabled = true)
     @Description("Running init on a already initialized project with config and database_configurations missing")
     public void testInitAlreadyInitializedProjectWithOutConfigAndDatabaseConfiguration() {
         assertGeneratedSourcesNegative("tool_test_init_11", INIT, new String[]{});
     }
 
-    @Test()
+    @Test(enabled = true)
     @Description("Running init on a already initialized project with Persist directory missing")
     public void testInitAlreadyInitializedProjectWithoutPersistDirectory() {
         assertGeneratedSources("tool_test_init_12", INIT);
+    }
+
+    @Test(enabled = true)
+    @Description("Running init on a project with syntax errors.")
+    public void testInitWithSyntaxErrors() {
+        assertGeneratedSourcesNegative("tool_test_init_13", INIT, new String[]{});
+    }
+
+    @Test(enabled = false)
+    @Description("Running init on a project with entities in multiple places.")
+    public void testInitWithMultipleEntitiesInDifferentPlaces() {
+        assertGeneratedSourcesNegative("tool_test_init_14", INIT, new String[]{});
     }
 }

@@ -17,7 +17,7 @@
  */
 package io.ballerina.persist.utils;
 
-import io.ballerina.persist.objects.BalException;
+import io.ballerina.persist.BalException;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,7 +43,6 @@ public class JdbcDriverLoader extends URLClassLoader {
         List<Path> pathList = listFiles(driverPath);
         for (Path path : pathList) {
             addURL(new File(path.toString()).toURI().toURL());
-
         }
     }
     private List<Path> listFiles(Path path) throws BalException {

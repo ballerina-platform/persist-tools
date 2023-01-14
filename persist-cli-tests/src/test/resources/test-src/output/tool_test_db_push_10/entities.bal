@@ -18,8 +18,7 @@ import ballerina/persist;
 
 @persist:Entity {
     key: ["id"],
-    uniqueConstraints: [["name"]],
-    tableName: "Profiles"
+    uniqueConstraints: [["name"]]
 }
 public type Profile record {|
     @persist:AutoIncrement
@@ -31,8 +30,7 @@ public type Profile record {|
 |};
 
 @persist:Entity {
-    key: ["id"],
-    tableName: "Users"
+    key: ["id"]
 }
 public type User record  {|
     @persist:AutoIncrement

@@ -1,8 +1,6 @@
-provider = "mysql"
-
-[database]
-host = "${perist_init_6.clients.host}"
-port = "${perist_init_6.clients.port}"
-user = "${perist_init_6.clients.user}"
-password = "${perist_init_6.clients.password}"
-database = "${perist_init_6.clients.database}"
+[database.mysql]
+host = "localhost"
+port = 3306
+user = "root"
+password = ""
+database = ""

@@ -24,7 +24,7 @@ import io.ballerina.compiler.syntax.tree.Node;
 import io.ballerina.compiler.syntax.tree.NodeFactory;
 import io.ballerina.compiler.syntax.tree.NodeList;
 import io.ballerina.compiler.syntax.tree.Token;
-import io.ballerina.persist.nodegenerator.SyntaxTreeConstants;
+import io.ballerina.persist.nodegenerator.SyntaxTokenConstants;
 
 /**
  * Class encapsulating methods to create Ballerina Classes.
@@ -55,15 +55,15 @@ public class Class {
                 classTypeQualifiers,
                 classKeyWord,
                 className,
-                SyntaxTreeConstants.SYNTAX_TREE_OPEN_BRACE,
+                SyntaxTokenConstants.SYNTAX_TREE_OPEN_BRACE,
                 members,
-                SyntaxTreeConstants.SYNTAX_TREE_CLOSE_BRACE,
+                SyntaxTokenConstants.SYNTAX_TREE_CLOSE_BRACE,
                 null);
     }
 
     public void addMember(Node member, boolean newLine) {
         if (newLine) {
-            members = members.add(SyntaxTreeConstants.SYNTAX_TREE_BLANK_LINE);
+            members = members.add(SyntaxTokenConstants.SYNTAX_TREE_BLANK_LINE);
         }
         members = members.add(member);
     }
