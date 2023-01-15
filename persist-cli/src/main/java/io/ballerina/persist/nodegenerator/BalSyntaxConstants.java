@@ -48,6 +48,7 @@ public class BalSyntaxConstants {
     public static final String APOSTROPHE = "`";
     public static final String EMPTY_STRING = "";
     public static final String SPACE = " ";
+    public static final String NULLABLE = "?";
     public static final String COMMA_SPACE = ", ";
     public static final String FIELD_ACCESSS = ".";
     public static final String ARRAY_TYPE = "[]";
@@ -175,6 +176,7 @@ public class BalSyntaxConstants {
     public static final String KEYWORD_INT = "int";
     public static final String KEYWORD_TABLE_NAME = "tableName";
     public static final String KEYWORD_STRING = "string";
+    public static final String KEYWORD_READONLY = "readonly";
     public static final String KEYWORD_MYSQL = "mysql";
     public static final String KEYWORD_TIME = "time";
     public static final String KEYWORD_ENTITY = "Entity";
@@ -235,5 +237,8 @@ public class BalSyntaxConstants {
 
     public static final String MYSQL_DRIVER = "mysql.driver";
     public static final String BAL_EXTENTION = ".bal";
+    public static final String INSERT_RECORD_TEMPLATE = "type %sInsert %s;";
+    public static final String UPDATE_RECORD_TEMPLATE = "public type %sUpdate record {| %s |};";
+    public static final String READONLY_RECORD_TEMPLATE = "public type %s readonly & record {| %s |};";
 
 }

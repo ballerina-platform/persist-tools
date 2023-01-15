@@ -18,11 +18,14 @@
 package io.ballerina.persist.cmd;
 
 import io.ballerina.cli.BLauncherCmd;
+import io.ballerina.compiler.syntax.tree.ImportDeclarationNode;
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
+import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.BalSyntaxConstants;
+import io.ballerina.persist.nodegenerator.BalSyntaxGenerator;
 import io.ballerina.persist.utils.BalProjectUtils;
 import io.ballerina.projects.ProjectException;
 import io.ballerina.projects.directory.ProjectLoader;
@@ -37,6 +40,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -48,7 +53,7 @@ import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
 
 
 /**
- * This Client implements the `persist generate` command in Ballerina persist-tool.
+ * This Class implements the `persist generate` command in Ballerina persist-tool.
  *
  * @since 0.1.0
  */
@@ -123,6 +128,7 @@ public class Generate implements BLauncherCmd {
                 entityModule = BalProjectUtils.getEntities(file);
                 generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY,
                         entityModule.getModuleName());
+                generateDataTypes(entityModule, generatedSourceDirPath);
                 generateClientBalFile(entityModule, generatedSourceDirPath);
             } catch (BalException e) {
                 errStream.println("Error while validating entities defined in "
@@ -140,6 +146,31 @@ public class Generate implements BLauncherCmd {
         } catch (IOException | FormatterException e) {
             throw new BalException(String.format("Error while generating the client for the" +
                     " %s data model. ", entityModule.getModuleName()) + e.getMessage());
+        }
+    }
+
+    public static void generateDataTypes(Module entityModule, Path outputPath) {
+        try {
+            Collection<Entity> entityArray = entityModule.getEntityMap().values();
+            if (entityArray.size() != 0) {
+
+                generateTypeBalFile(entityModule, outputPath);
+                errStream.printf("Generated Ballerina client file for entities, " +
+                        "inside generated directory.");
+            }
+        } catch (BalException e) {
+            errStream.println("Error while generating clients for entities. " + e.getMessage());
+        }
+    }
+
+    private static void generateTypeBalFile(Module entityModule, Path outputPath) throws BalException {
+        ArrayList<ImportDeclarationNode> imports = new ArrayList<>();
+        SyntaxTree generatedTypes =  BalSyntaxGenerator.generateTypeSyntaxTree(entityModule, imports);
+        String generatedTypesPath = outputPath.resolve("generated_types.bal").toAbsolutePath().toString();
+        try {
+            writeOutputFile(generatedTypes, generatedTypesPath);
+        } catch (IOException | FormatterException e) {
+            throw new BalException("Error while generating the generated_types.bal");
         }
     }
 
