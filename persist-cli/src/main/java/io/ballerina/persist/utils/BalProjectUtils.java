@@ -76,7 +76,7 @@ public class BalProjectUtils {
 
     public static Module getEntities(Path schemaFile) throws BalException {
         if (schemaFile == null || schemaFile.getFileName() == null) {
-            throw new BalException("Error while reading entities in schema file. schema file is null or empty");
+            throw new BalException("schema file is null or empty");
         }
         String schemaFilename = schemaFile.getFileName().toString();
         String moduleName = schemaFilename.substring(0, schemaFilename.lastIndexOf('.'));
@@ -89,7 +89,7 @@ public class BalProjectUtils {
             inferRelationDetails(entityModule);
             return entityModule;
         } catch (IOException | BalException | RuntimeException e) {
-            throw new BalException("Error while reading entities in the Ballerina project. " + e.getMessage());
+            throw new BalException(e.getMessage());
         }
     }
 

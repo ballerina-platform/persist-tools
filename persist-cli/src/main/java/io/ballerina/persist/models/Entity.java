@@ -34,7 +34,7 @@ import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.EMPTY_STRING
  */
 public class Entity {
 
-    private final List<String> keys;
+    private final List<EntityField> keys;
     private final String tableName;
 
     private final String entityName;
@@ -43,7 +43,7 @@ public class Entity {
 
     private final List<EntityField> fields;
 
-    private Entity(ModuleMemberDeclarationNode node, String entityName, List<String> keys,
+    private Entity(ModuleMemberDeclarationNode node, String entityName, List<EntityField> keys,
                    String tableName, List<EntityField> fields) {
         this.node = node;
         this.entityName = entityName;
@@ -52,7 +52,7 @@ public class Entity {
         this.fields = fields;
     }
 
-    public List<String> getKeys() {
+    public List<EntityField> getKeys() {
         return this.keys;
     }
 
@@ -82,7 +82,7 @@ public class Entity {
     public static class Builder {
         String entityName;
         String tableName = null;
-        List<String> keys;
+        List<EntityField> keys;
 
         List<EntityField> fieldList = null;
 
@@ -92,7 +92,7 @@ public class Entity {
             this.entityName = entityName;
         }
 
-        public void setKeys(List<String> keys) {
+        public void setKeys(List<EntityField> keys) {
             this.keys = keys;
         }
 

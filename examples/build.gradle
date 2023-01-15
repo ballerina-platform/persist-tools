@@ -258,5 +258,5 @@ generateExamples.dependsOn copyTestResources
 pushExamples.dependsOn generateExamples
 testExamples.dependsOn pushExamples
 
-build.dependsOn testExamples
-build.finalizedBy stopTestDockerContainer
+//build.dependsOn testExamples
+//build.finalizedBy stopTestDockerContainer

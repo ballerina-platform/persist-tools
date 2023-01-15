@@ -1,4 +1,5 @@
 import ballerina/time;
+import ballerina/persist as _;
 
 // Defines the entity type with the entity identity
 type Building record {|

@@ -155,7 +155,7 @@ public class SqlScriptGenerationUtils {
                                              HashMap<String, List<String>> referenceTables) throws BalException {
         StringBuilder relationScripts = new StringBuilder();
         Relation relation = entityField.getRelation();
-        List<String> keyColumns = relation.getKeyColumns();
+        List<Relation.Key> keyColumns = relation.getKeyColumns();
         List<String> references = relation.getReferences();
         String onDelete = relation.getOnDelete();
         String onUpdate = relation.getOnUpdate();
@@ -184,7 +184,7 @@ public class SqlScriptGenerationUtils {
                     break;
                 }
             }
-            String foreignKey = keyColumns.get(i);
+            String foreignKey = keyColumns.get(i).getField();
             String unique = "";
             // TODO: check whether we need this as we remove unique keys support
 //            Relation.RelationType associatedEntityRelationType = Relation.RelationType.NONE;
@@ -235,16 +235,16 @@ public class SqlScriptGenerationUtils {
         referenceTables.put(tableName, setOfReferenceTables);
     }
 
-    private static String addPrimaryKey(List<String> primaryKeys) {
+    private static String addPrimaryKey(List<EntityField> primaryKeys) {
         return createKeysScript(primaryKeys);
     }
 
-    private static String createKeysScript(List<String> keys) {
+    private static String createKeysScript(List<EntityField> keys) {
         StringBuilder keyScripts = new StringBuilder();
         if (keys.size() > 0) {
             keyScripts.append(MessageFormat.format("{0}", PRIMARY_KEY_START_SCRIPT));
-            for (String key : keys) {
-                keyScripts.append(MessageFormat.format("{0},", key));
+            for (EntityField key : keys) {
+                keyScripts.append(MessageFormat.format("{0},", key.getFieldName()));
             }
             keyScripts.deleteCharAt(keyScripts.length() - 1).append("),");
         }

@@ -82,7 +82,6 @@ import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.EMPTY_STRING
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.ERR_IS_ERROR;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.IS_SQL_ERROR;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_BALLERINAX;
-import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_CLIENT_CLASS;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_ERR;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_ISOLATED;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_STREAM;
@@ -130,16 +129,14 @@ public class BalSyntaxGenerator {
             entityBuilder = Entity.newBuilder(typeDefinitionNode.typeName().text().trim());
             entityBuilder.setDeclarationNode(moduleNode);
 
-            List<String> keyArray = new ArrayList<>();
+            List<EntityField> keyArray = new ArrayList<>();
             RecordTypeDescriptorNode recordDesc = (RecordTypeDescriptorNode) ((TypeDefinitionNode) moduleNode)
                     .typeDescriptor();
             for (Node node : recordDesc.fields()) {
                 EntityField.Builder fieldBuilder;
                 if (node.kind() == SyntaxKind.RECORD_FIELD_WITH_DEFAULT_VALUE) {
                     RecordFieldWithDefaultValueNode fieldNode = (RecordFieldWithDefaultValueNode) node;
-                    if (fieldNode.readonlyKeyword().isPresent()) {
-                        keyArray.add(fieldNode.fieldName().text());
-                    }
+
                     fieldBuilder = EntityField.newBuilder(fieldNode.fieldName().text().trim());
                     String fType;
                     TypeDescriptorNode type;
@@ -151,12 +148,13 @@ public class BalSyntaxGenerator {
                     }
                     fType = getType(type, fieldNode.fieldName().text().trim());
                     fieldBuilder.setType(fType);
-                    entityBuilder.addField(fieldBuilder.build());
+                    EntityField entityField = fieldBuilder.build();
+                    entityBuilder.addField(entityField);
+                    if (fieldNode.readonlyKeyword().isPresent()) {
+                        keyArray.add(entityField);
+                    }
                 } else if (node.kind() == SyntaxKind.RECORD_FIELD) {
                     RecordFieldNode fieldNode = (RecordFieldNode) node;
-                    if (fieldNode.readonlyKeyword().isPresent()) {
-                        keyArray.add(fieldNode.fieldName().text());
-                    }
                     fieldBuilder = EntityField.newBuilder(fieldNode.fieldName().text().trim());
                     String fType;
                     TypeDescriptorNode type;
@@ -168,7 +166,11 @@ public class BalSyntaxGenerator {
                     }
                     fType = getType(type, fieldNode.fieldName().text().trim());
                     fieldBuilder.setType(fType);
-                    entityBuilder.addField(fieldBuilder.build());
+                    EntityField entityField = fieldBuilder.build();
+                    entityBuilder.addField(entityField);
+                    if (fieldNode.readonlyKeyword().isPresent()) {
+                        keyArray.add(entityField);
+                    }
                 }
             }
             entityBuilder.setKeys(keyArray);
@@ -231,25 +233,36 @@ public class BalSyntaxGenerator {
                             field.getRelation().setRelationType(field.isArrayType() ?
                                     Relation.RelationType.MANY : Relation.RelationType.ONE);
                             field.getRelation().setAssocEntity(assocEntity);
-                            List<String> keyColumns = field.getRelation().getKeyColumns();
+                            List<Relation.Key> keyColumns = field.getRelation().getKeyColumns();
                             if (keyColumns == null || keyColumns.size() == 0) {
                                 keyColumns = assocEntity.getKeys().stream().map(key ->
-                                        assocEntity.getEntityName().toLowerCase(Locale.getDefault())
-                                                + key.substring(0, 1).toUpperCase(Locale.getDefault())
-                                                + key.substring(1)).collect(Collectors.toList());
+                                        new Relation.Key(assocEntity.getEntityName().toLowerCase(Locale.ENGLISH)
+                                                + key.getFieldName().substring(0, 1).toUpperCase(Locale.ENGLISH)
+                                                + key.getFieldName().substring(1),
+                                                key.getFieldName(), key.getFieldType())).collect(Collectors.toList());
                                 field.getRelation().setKeyColumns(keyColumns);
                             }
                             List<String> references = field.getRelation().getReferences();
                             if (references == null || references.size() == 0) {
-                                field.getRelation().setReferences(assocEntity.getKeys());
+                                field.getRelation().setReferences(assocEntity.getKeys().stream()
+                                        .map(EntityField::getFieldName)
+                                        .collect(Collectors.toList()));
                             }
 
                             // create bidirectional mapping for associated entity
                             Relation.Builder assocRelBuilder = Relation.newBuilder();
                             assocRelBuilder.setOwner(false);
                             assocRelBuilder.setAssocEntity(entity);
-                            assocRelBuilder.setKeys(assocEntity.getKeys());
-                            assocRelBuilder.setReferences(keyColumns);
+
+                            List<Relation.Key> assockeyColumns = assocEntity.getKeys().stream().map(key ->
+                                    new Relation.Key(key.getFieldName(),
+                                            assocEntity.getEntityName().toLowerCase(Locale.ENGLISH)
+                                                    + key.getFieldName().substring(0, 1).toUpperCase(Locale.ENGLISH)
+                                                    + key.getFieldName().substring(1), key.getFieldType()))
+                                    .collect(Collectors.toList());
+                            assocRelBuilder.setKeys(assockeyColumns);
+                            assocRelBuilder.setReferences(assockeyColumns.stream().map(Relation.Key::getReference)
+                                    .collect(Collectors.toList()));
                             assocEntity.getFields().stream().filter(assocfield -> assocfield.getFieldType()
                                     .equals(entity.getEntityName())).forEach(
                                     assocField -> {
@@ -266,23 +279,26 @@ public class BalSyntaxGenerator {
         Relation.Builder relBuilder = new Relation.Builder();
         relBuilder.setAssocEntity(assocEntity);
         if (isOwner) {
-            List<String> keyColumns = assocEntity.getKeys().stream().map(key ->
-                    assocEntity.getEntityName().toLowerCase(Locale.ENGLISH)
-                            + key.substring(0, 1).toUpperCase(Locale.ENGLISH)
-                            + key.substring(1)).collect(Collectors.toList());
+            List<Relation.Key> keyColumns = assocEntity.getKeys().stream().map(key ->
+                    new Relation.Key(assocEntity.getEntityName().toLowerCase(Locale.ENGLISH)
+                            + key.getFieldName().substring(0, 1).toUpperCase(Locale.ENGLISH)
+                            + key.getFieldName().substring(1), key.getFieldName(), key.getFieldType()
+                            )).collect(Collectors.toList());
             relBuilder.setOwner(true);
             relBuilder.setRelationType(Relation.RelationType.ONE);
             relBuilder.setKeys(keyColumns);
-            relBuilder.setReferences(assocEntity.getKeys());
+            relBuilder.setReferences(assocEntity.getKeys().stream().map(EntityField::getFieldName)
+                    .collect(Collectors.toList()));
         } else {
-            List<String> refColumns = entity.getKeys().stream().map(key ->
-                    entity.getEntityName().toLowerCase(Locale.ENGLISH)
-                            + key.substring(0, 1).toUpperCase(Locale.ENGLISH)
-                            + key.substring(1)).collect(Collectors.toList());
+            List<Relation.Key> keyColumns = entity.getKeys().stream().map(key ->
+                    new Relation.Key(key.getFieldName(),
+                            entity.getEntityName().toLowerCase(Locale.ENGLISH)
+                            + key.getFieldName().substring(0, 1).toUpperCase(Locale.ENGLISH)
+                            + key.getFieldName().substring(1), key.getFieldType())).collect(Collectors.toList());
             relBuilder.setOwner(false);
             relBuilder.setRelationType(Relation.RelationType.MANY);
-            relBuilder.setKeys(entity.getKeys());
-            relBuilder.setReferences(refColumns);
+            relBuilder.setKeys(keyColumns);
+            relBuilder.setReferences(keyColumns.stream().map(Relation.Key::getReference).collect(Collectors.toList()));
         }
         return relBuilder.build();
     }
@@ -331,7 +347,7 @@ public class BalSyntaxGenerator {
     }
 
     private static Client createClient(Module entityModule) throws BalException {
-        Client clientObject = new Client(entityModule.getModuleName() + KEYWORD_CLIENT_CLASS, true);
+        Client clientObject = new Client(entityModule.getClientName(), true);
         clientObject.addQualifiers(new String[]{BalSyntaxConstants.KEYWORD_CLIENT});
         clientObject.addMember(NodeFactory.createTypeReferenceNode(
                 AbstractNodeFactory.createToken(SyntaxKind.ASTERISK_TOKEN),
@@ -423,13 +439,9 @@ public class BalSyntaxGenerator {
 //                                "\"" + entity.getTableName().trim() + "\"", NodeFactory.createEmptyMinutiaeList(),
 //                                NodeFactory.createEmptyMinutiaeList()))));
 
-        for (EntityField field : entity.getFields()) {
-
-            for (String key : entity.getKeys()) {
-                if (field.getFieldName().equals(key)) {
-                    keys.put(field.getFieldName(), field.getFieldType());
-                }
-            }
+        for (EntityField field : entity.getKeys()) {
+            keys.put(field.getFieldName(), field.getFieldType());
+        }
             // TODO: uncomment the code for the implementation
 //            if (!fields.isEmpty()) {
 //                fields.add(NodeFactory.createBasicLiteralNode(SyntaxKind.STRING_LITERAL,
@@ -447,7 +459,6 @@ public class BalSyntaxGenerator {
 //                            field.getFieldType().trim().replaceAll(SPACE,
 //                                    EMPTY_STRING)
 //                    ))));
-        }
 
         // TODO: uncomment the code for the implementation
 //        resource.addMetadata(NodeFactory.createSpecificFieldNode(null,
@@ -878,23 +889,29 @@ public class BalSyntaxGenerator {
         );
     }
 
-    public static SyntaxTree generateTypeSyntaxTree(Module entityModule,
-                                                    ArrayList<ImportDeclarationNode> importsArray) {
-
+    public static SyntaxTree generateTypeSyntaxTree(Module entityModule) {
         NodeList<ImportDeclarationNode> imports = AbstractNodeFactory.createEmptyNodeList();
         NodeList<ModuleMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
-        for (String key : entityModule.getEntityMap().keySet()) {
-            moduleMembers = moduleMembers.add(getReadOnlyRecords(entityModule.getEntityMap().get(key),
-                    entityModule.getEntityMap()));
+        MinutiaeList commentMinutiaeList = createCommentMinutiaeList(String.format(
+                AUTO_GENERATED_COMMENT_WITH_REASON, entityModule.getModuleName()));
+        boolean timeImport = false;
+        for (Entity entity : entityModule.getEntityMap().values()) {
+            moduleMembers = moduleMembers.add(createEntityRecord(entity));
 
             moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration(
-                    String.format("type %sInsert %s;", entityModule.getEntityMap().get(key).getEntityName(),
-                            entityModule.getEntityMap().get(key).getEntityName())));
-            moduleMembers = moduleMembers.add(getUpdateRecords(entityModule.getEntityMap().get(key),
-                    entityModule.getEntityMap()));
-            if (imports.size() == 0) {
-                imports = getImports(entityModule.getEntityMap().get(key), imports);
+                    String.format("type %sInsert %s;", entity.getEntityName(),
+                            entity.getEntityName())));
+            moduleMembers = moduleMembers.add(createUpdateRecord(entity));
+
+            // TODO: improve import logic
+            if (entity.getFields().stream().anyMatch(entityField ->
+                    entityField.getFieldType().trim().startsWith(BalSyntaxConstants.KEYWORD_TIME_PREFIX))) {
+                timeImport = true;
             }
+        }
+
+        if (timeImport) {
+            imports = addTimeImportDeclaration(imports, commentMinutiaeList);
         }
         Token eofToken = AbstractNodeFactory.createIdentifierToken(EMPTY_STRING);
         ModulePartNode modulePartNode = NodeFactory.createModulePartNode(imports, moduleMembers, eofToken);
@@ -904,33 +921,29 @@ public class BalSyntaxGenerator {
         return balTree.modifyWith(modulePartNode);
     }
 
-    private static NodeList<ImportDeclarationNode> getImports(Entity entity, NodeList<ImportDeclarationNode> imports) {
-        for (EntityField field : entity.getFields()) {
-            if (field.getFieldType().trim().equals("time")) {
-                imports = imports.add(NodeParser.parseImportDeclaration("import ballerina/time;"));
-                break;
-            }
-        }
-        return imports;
+    private static NodeList<ImportDeclarationNode> addTimeImportDeclaration(NodeList<ImportDeclarationNode> imports,
+                                                                            MinutiaeList commentMinutiaeList) {
+        return imports.add(getImportDeclarationNodeWithAutogeneratedComment(
+                BalSyntaxConstants.KEYWORD_BALLERINA, BalSyntaxConstants.KEYWORD_TIME_PREFIX,
+                commentMinutiaeList, null));
     }
 
-    private static ModuleMemberDeclarationNode getReadOnlyRecords(Entity entity, Map<String, Entity> entityMap) {
+    private static ModuleMemberDeclarationNode createEntityRecord(Entity entity) {
         StringBuilder recordFields = new StringBuilder();
         for (EntityField field : entity.getFields()) {
-            if (entity.getKeys().contains(field.getFieldName())) {
+            if (entity.getKeys().stream().anyMatch(key -> key == field)) {
                 recordFields.append("readonly ");
                 recordFields.append(" ");
                 recordFields.append(field.getFieldType());
                 recordFields.append(" ");
                 recordFields.append(field.getFieldName());
                 recordFields.append("; ");
-            } else if (entityMap.keySet().contains(field.getFieldType())) {
+            } else if (field.getRelation() != null) {
                 if (field.getRelation().isOwner()) {
-                    List<String> keySet = field.getRelation().getKeyColumns();
-                    for (String key : keySet) {
-                        recordFields.append("int");
+                    for (Relation.Key key : field.getRelation().getKeyColumns()) {
+                        recordFields.append(key.getType());
                         recordFields.append(" ");
-                        recordFields.append(key);
+                        recordFields.append(key.getField());
                         recordFields.append("; ");
                     }
                 }
@@ -942,30 +955,29 @@ public class BalSyntaxGenerator {
             }
 
         }
-        return NodeParser.parseModuleMemberDeclaration(String.format("public type %s readonly & record {| %s |};",
+        return NodeParser.parseModuleMemberDeclaration(String.format("public type %s record {| %s |};",
                 entity.getEntityName().trim(), recordFields));
     }
 
-    private static ModuleMemberDeclarationNode getUpdateRecords(Entity entity, Map<String, Entity> entityMap) {
+    private static ModuleMemberDeclarationNode createUpdateRecord(Entity entity) {
         StringBuilder recordFields = new StringBuilder();
         for (EntityField field : entity.getFields()) {
-            if (entity.getKeys().contains(field.getFieldName())) {
-                continue;
-            } else if (entityMap.containsKey(field.getFieldType())) {
-                if (field.getRelation().isOwner()) {
-                    List<String> keySet = field.getRelation().getKeyColumns();
-                    for (String key : keySet) {
-                        recordFields.append("int");
-                        recordFields.append(" ");
-                        recordFields.append(key);
-                        recordFields.append("?; ");
+            if (entity.getKeys().stream().noneMatch(key -> key == field)) {
+                if (field.getRelation() != null) {
+                    if (field.getRelation().isOwner()) {
+                        for (Relation.Key key : field.getRelation().getKeyColumns()) {
+                            recordFields.append(key.getType());
+                            recordFields.append(" ");
+                            recordFields.append(key.getField());
+                            recordFields.append("?; ");
+                        }
                     }
+                } else {
+                    recordFields.append(field.getFieldType());
+                    recordFields.append(" ");
+                    recordFields.append(field.getFieldName());
+                    recordFields.append("?; ");
                 }
-            } else {
-                recordFields.append(field.getFieldType());
-                recordFields.append(" ");
-                recordFields.append(field.getFieldName());
-                recordFields.append("?; ");
             }
 
         }

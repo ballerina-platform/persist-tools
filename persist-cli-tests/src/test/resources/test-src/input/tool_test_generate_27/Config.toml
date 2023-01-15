@@ -1,4 +1,4 @@
-[tool_test_generate_13]
+[tool_test_generate_13.entities]
 host = "localhost"
 port = 3307
 user = "root"

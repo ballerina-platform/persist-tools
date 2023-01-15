@@ -178,7 +178,7 @@ public class BalSyntaxConstants {
     public static final String KEYWORD_STRING = "string";
     public static final String KEYWORD_READONLY = "readonly";
     public static final String KEYWORD_MYSQL = "mysql";
-    public static final String KEYWORD_TIME = "time";
+    public static final String KEYWORD_TIME_PREFIX = "time";
     public static final String KEYWORD_ENTITY = "Entity";
     public static final String KEYWORD_RELATION = "Relation";
     public static final String KEYWORD_REFERENCE = "reference";

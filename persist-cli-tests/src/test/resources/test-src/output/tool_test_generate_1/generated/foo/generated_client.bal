@@ -5,7 +5,7 @@
 
 import ballerina/persist;
 
-public client class fooClient {
+public client class FooClient {
     *persist:AbstractPersistClient;
 
     isolated resource function get building() returns stream<Building, persist:Error?> = external;
