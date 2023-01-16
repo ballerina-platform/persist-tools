@@ -138,6 +138,7 @@ compileJava {
 task createArtifactZip(type: Zip) {
     dependsOn build
     from 'build/libs/'
+    into 'libs'
     archiveFileName = "persist-cli-${project.version}.zip"
     destinationDirectory = file("${projectDir}/build/zip")
 }
