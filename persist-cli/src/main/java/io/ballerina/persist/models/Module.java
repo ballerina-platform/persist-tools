@@ -18,6 +18,7 @@
 
 package io.ballerina.persist.models;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,9 +30,11 @@ import java.util.Map;
 public class Module {
     private final Map<String, Entity> entityMap;
     private final String moduleName;
+    private final String clientName;
 
-    private Module(String moduleName, Map<String, Entity> entityMap) {
+    private Module(String moduleName, String clientName, Map<String, Entity> entityMap) {
         this.moduleName = moduleName;
+        this.clientName = clientName;
         this.entityMap = entityMap;
     }
 
@@ -43,6 +46,10 @@ public class Module {
         return moduleName;
     }
 
+    public String getClientName() {
+        return clientName;
+    }
+
     public static Module.Builder newBuilder(String moduleName) {
         return new Module.Builder(moduleName);
     }
@@ -51,6 +58,7 @@ public class Module {
      * Module Definition.Builder.
      */
     public static class Builder {
+        private static final String SUFFIX_CLIENT = "Client";
         String moduleName;
         Map<String, Entity> entityMap = new HashMap<>();
 
@@ -63,7 +71,18 @@ public class Module {
         }
 
         public Module build() {
-            return new Module(moduleName, entityMap);
+            String clientName = convertTitleCase(moduleName) + SUFFIX_CLIENT;
+            return new Module(moduleName, clientName, entityMap);
+        }
+
+        private String convertTitleCase(String moduleName) {
+            StringBuilder titleBuilder = new StringBuilder();
+            String[] moduleParts = moduleName.split(" +");
+            Arrays.stream(moduleParts).forEach(modulePart -> {
+                titleBuilder.append(modulePart.substring(0, 1).toUpperCase())
+                        .append(modulePart.substring(1));
+            });
+            return titleBuilder.toString();
         }
     }
 }

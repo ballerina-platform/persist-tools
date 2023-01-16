@@ -175,7 +175,10 @@ public class TypeDescriptor {
             );
         }
         return NodeFactory.createOptionalTypeDescriptorNode(
-                getQualifiedNameReferenceNode(modulePrefix, identifier),
+                NodeFactory.createQualifiedNameReferenceNode(
+                        AbstractNodeFactory.createIdentifierToken(modulePrefix),
+                        SyntaxTokenConstants.SYNTAX_TREE_COLON,
+                        AbstractNodeFactory.createIdentifierToken(identifier)),
                 SyntaxTokenConstants.SYNTAX_TREE_QUESTION_MARK
         );
     }
@@ -185,16 +188,20 @@ public class TypeDescriptor {
         if (rhs == null) {
             comma = null;
         } else {
-            comma = SyntaxTokenConstants.SYNTAX_TREE_COMMA;
+            comma = AbstractNodeFactory.createToken(SyntaxKind.COMMA_TOKEN,
+                    AbstractNodeFactory.createEmptyMinutiaeList(),
+                    NodeFactory.createMinutiaeList(AbstractNodeFactory.createWhitespaceMinutiae(" ")));
         }
         return NodeFactory.createStreamTypeDescriptorNode(
-                SyntaxTokenConstants.SYNTAX_TREE_KEYWORD_STREAM,
+                AbstractNodeFactory.createToken(SyntaxKind.STREAM_KEYWORD),
                 NodeFactory.createStreamTypeParamsNode(
-                        SyntaxTokenConstants.SYNTAX_TREE_IT,
+                        AbstractNodeFactory.createToken(SyntaxKind.LT_TOKEN),
                         lhs,
                         comma,
                         rhs,
-                        SyntaxTokenConstants.SYNTAX_TREE_GT
+                        AbstractNodeFactory.createToken(SyntaxKind.GT_TOKEN,
+                                AbstractNodeFactory.createEmptyMinutiaeList(),
+                                NodeFactory.createMinutiaeList(AbstractNodeFactory.createWhitespaceMinutiae(" ")))
                 )
         );
     }

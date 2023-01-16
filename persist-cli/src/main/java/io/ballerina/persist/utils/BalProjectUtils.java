@@ -25,6 +25,7 @@ import io.ballerina.compiler.syntax.tree.Node;
 import io.ballerina.compiler.syntax.tree.NodeList;
 import io.ballerina.compiler.syntax.tree.QualifiedNameReferenceNode;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
+import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.compiler.syntax.tree.TypeDefinitionNode;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.models.Module;
@@ -35,9 +36,12 @@ import io.ballerina.projects.DocumentId;
 import io.ballerina.projects.Package;
 import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.directory.BuildProject;
+import io.ballerina.projects.directory.SingleFileProject;
 import io.ballerina.tools.diagnostics.Diagnostic;
+import io.ballerina.tools.text.TextDocuments;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY;
@@ -54,7 +58,7 @@ import static io.ballerina.persist.nodegenerator.BalSyntaxGenerator.inferRelatio
 public class BalProjectUtils {
 
     private BalProjectUtils() {}
-
+    // TODO: Remove this function once DB push command migrated.
     public static Module getEntities(io.ballerina.projects.Module module) throws BalException {
         Module.Builder moduleBuilder = Module.newBuilder(module.moduleName().moduleNamePart());
         try {
@@ -70,7 +74,27 @@ public class BalProjectUtils {
         }
     }
 
-    public static BuildProject getBuildProject(Path projectPath, boolean skipGeneratedDir) throws BalException {
+    public static Module getEntities(Path schemaFile) throws BalException {
+        if (schemaFile == null || schemaFile.getFileName() == null) {
+            throw new BalException("schema file is null or empty");
+        }
+        String schemaFilename = schemaFile.getFileName().toString();
+        String moduleName = schemaFilename.substring(0, schemaFilename.lastIndexOf('.'));
+        Module.Builder moduleBuilder = Module.newBuilder(moduleName);
+
+        try {
+            SyntaxTree balSyntaxTree = SyntaxTree.from(TextDocuments.from(Files.readString(schemaFile)));
+            BalSyntaxGenerator.populateEntities(moduleBuilder, balSyntaxTree);
+            Module entityModule = moduleBuilder.build();
+            inferRelationDetails(entityModule);
+            return entityModule;
+        } catch (IOException | BalException | RuntimeException e) {
+            throw new BalException(e.getMessage());
+        }
+    }
+
+    // TODO: Remove this function once DB push command migrated.
+    public static BuildProject validateSchemaFile(Path projectPath, boolean skipGeneratedDir) throws BalException {
         BuildProject buildProject = BuildProject.load(projectPath.toAbsolutePath());
         Package currentPackage = buildProject.currentPackage();
         PackageCompilation compilation = currentPackage.getCompilation();
@@ -92,6 +116,26 @@ public class BalProjectUtils {
             }
         }
         return buildProject;
+    }
+
+    public static void validateSchemaFile(Path schemaPath) throws BalException {
+        SingleFileProject buildProject = SingleFileProject.load(schemaPath.toAbsolutePath());
+        Package currentPackage = buildProject.currentPackage();
+        PackageCompilation compilation = currentPackage.getCompilation();
+        DiagnosticResult diagnosticResult = compilation.diagnosticResult();
+        if (diagnosticResult.hasErrors()) {
+            StringBuilder errorMessage = new StringBuilder();
+            errorMessage.append("Error occurred when validating the project. ");
+            int validErrors = 0;
+            for (Diagnostic diagnostic : diagnosticResult.errors()) {
+                errorMessage.append(System.lineSeparator());
+                errorMessage.append(diagnostic);
+                validErrors += 1;
+            }
+            if (validErrors > 0) {
+                throw new BalException(errorMessage.toString());
+            }
+        }
     }
     
     public static io.ballerina.projects.Module getEntityModule(BuildProject project) throws BalException {
@@ -139,4 +183,3 @@ public class BalProjectUtils {
         return entityModule == null ? defaultModule : entityModule;
     }
 }
-

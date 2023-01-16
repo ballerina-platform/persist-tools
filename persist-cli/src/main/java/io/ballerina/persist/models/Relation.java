@@ -37,7 +37,7 @@ public class Relation {
         NONE
     }
 
-    private List<String> keyColumns;
+    private List<Key> keyColumns;
     private List<String> references;
 
     private final boolean owner;
@@ -48,7 +48,7 @@ public class Relation {
     private Entity assocEntity;
 
 
-    private Relation(List<String> keyColumns,
+    private Relation(List<Key> keyColumns,
                      List<String> references, String onDelete, String onUpdate, RelationType relationType,
                      Entity assocEntity, boolean owner) {
         this.keyColumns = keyColumns;
@@ -60,7 +60,7 @@ public class Relation {
         this.owner = owner;
     }
 
-    public List<String> getKeyColumns() {
+    public List<Key> getKeyColumns() {
         return keyColumns;
     }
 
@@ -84,7 +84,7 @@ public class Relation {
         return relationType;
     }
 
-    public void setKeyColumns(List<String> keyColumns) {
+    public void setKeyColumns(List<Key> keyColumns) {
         this.keyColumns = keyColumns;
     }
 
@@ -112,7 +112,7 @@ public class Relation {
      * Entity Field Relation Definition.Builder.
      */
     public static class Builder {
-        List<String> keys = null;
+        List<Key> keys = null;
         List<String> references = null;
         String onDeleteAction;
         String onUpdateAction;
@@ -122,7 +122,7 @@ public class Relation {
 
         boolean owner;
 
-        public void setKeys(List<String> keys) {
+        public void setKeys(List<Key> keys) {
             this.keys = keys;
         }
 
@@ -152,6 +152,33 @@ public class Relation {
 
         public Relation build() {
             return new Relation(keys, references, onDeleteAction, onUpdateAction, relationType, assocEntity, owner);
+        }
+    }
+
+    /**
+     * Entity Field Relation Key Definition.
+     */
+    public static class Key {
+        private final String field;
+        private final String reference;
+        private final String type;
+
+        public Key(String field, String reference, String type) {
+            this.field = field;
+            this.reference = reference;
+            this.type = type;
+        }
+
+        public String getField() {
+            return field;
+        }
+
+        public String getReference() {
+            return reference;
+        }
+
+        public String getType() {
+            return type;
         }
     }
 }

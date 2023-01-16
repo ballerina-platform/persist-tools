@@ -6,3 +6,12 @@ distribution = "2201.3.0"
 
 [build-options]
 observabilityIncluded = false
+
+[persist.entities]
+provider = "mysql"
+host = ""
+port = 3307
+user = ""
+password = ""
+# database = "entities"
+

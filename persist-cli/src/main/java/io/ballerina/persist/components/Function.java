@@ -56,21 +56,22 @@ public class Function {
         PAREN
     }
 
-    private final SyntaxKind kind = SyntaxKind.OBJECT_METHOD_DEFINITION;
+    private final SyntaxKind kind;
     private NodeList<Token> qualifierList;
     private final Token finalKeyWord = AbstractNodeFactory.createIdentifierToken(ComponentConstants.TAG_FUNCTION);
     private final IdentifierToken functionName;
-    private final NodeList<Node> relativeResourcePath;
+    private NodeList<Node> relativeResourcePath;
     private final List<Node> parameters;
     private ReturnTypeDescriptorNode returnTypeDescriptorNode;
     private NodeList<StatementNode> statements;
 
-    public Function(String name) {
+    public Function(String name, SyntaxKind kind) {
         qualifierList = AbstractNodeFactory.createEmptyNodeList();
-        functionName = AbstractNodeFactory.createIdentifierToken(name);
+        functionName = AbstractNodeFactory.createIdentifierToken(name + " ");
         relativeResourcePath = AbstractNodeFactory.createEmptyNodeList();
         parameters = new ArrayList<>();
         statements = NodeFactory.createEmptyNodeList();
+        this.kind = kind;
     }
 
     public FunctionDefinitionNode getFunctionDefinitionNode() {
@@ -85,6 +86,10 @@ public class Function {
                 getFunctionBody()
 
         );
+    }
+
+    public void addRelativeResourcePaths(NodeList<Node> paths) {
+        relativeResourcePath = paths;
     }
 
     public void addQualifiers(String[] qualifiers) {
@@ -153,12 +158,23 @@ public class Function {
     }
 
     private FunctionBodyNode getFunctionBody() {
-        return NodeFactory.createFunctionBodyBlockNode(
-                SyntaxTokenConstants.SYNTAX_TREE_OPEN_BRACE,
-                null,
-                statements,
-                SyntaxTokenConstants.SYNTAX_TREE_CLOSE_BRACE,
-                null
+//        return NodeFactory.createFunctionBodyBlockNode(
+//                SyntaxTokenConstants.SYNTAX_TREE_OPEN_BRACE,
+//                null,
+//                statements,
+//                SyntaxTokenConstants.SYNTAX_TREE_CLOSE_BRACE,
+//                null
+//        );
+        NodeList<AnnotationNode> annotations = NodeFactory.createEmptyNodeList();
+        return NodeFactory.createExternalFunctionBodyNode(
+                NodeFactory.createToken(SyntaxKind.EQUAL_TOKEN,
+                        AbstractNodeFactory.createEmptyMinutiaeList(),
+                        NodeFactory.createMinutiaeList(AbstractNodeFactory.createWhitespaceMinutiae(" "))),
+                annotations,
+                NodeFactory.createToken(SyntaxKind.EXTERNAL_KEYWORD),
+                NodeFactory.createToken(SyntaxKind.SEMICOLON_TOKEN,
+                        AbstractNodeFactory.createEmptyMinutiaeList(),
+                        NodeFactory.createMinutiaeList(AbstractNodeFactory.createEndOfLineMinutiae("\n")))
         );
     }
 

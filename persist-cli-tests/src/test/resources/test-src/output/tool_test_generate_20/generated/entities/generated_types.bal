@@ -1,0 +1,37 @@
+public type Vehicle record {|
+    readonly int model;
+    string name;
+    int employeeId;
+|};
+
+public type VehicleInsert Vehicle;
+
+public type VehicleUpdate record {|
+    string name?;
+    int employeeId?;
+|};
+
+public type Company record {|
+    readonly int id;
+    string name;
+|};
+
+public type CompanyInsert Company;
+
+public type CompanyUpdate record {|
+    string name?;
+|};
+
+public type Employee record {|
+    readonly int id;
+    string name;
+    int companyId;
+|};
+
+public type EmployeeInsert Employee;
+
+public type EmployeeUpdate record {|
+    string name?;
+    int companyId?;
+|};
+

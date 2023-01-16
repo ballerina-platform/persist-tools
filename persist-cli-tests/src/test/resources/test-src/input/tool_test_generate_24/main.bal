@@ -13,28 +13,55 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import ballerina/time;
+import ballerina/uuid;
 import ballerina/io;
+import foo/persist_generate_24.rainier;
 
 public function main() returns error? {
-    MedicalItemClient miClient = check new ();
-    MedicalNeed1Client mn1Client = check new ();
-    MedicalItem item = {
-        itemId: 1,
-        'type: "type1",
-        unit: "ml"
+    rainier:RainierClient rc = new ();
+    string employeeId = "40083df0-5a27-48a9-8e0d-6e70e0d6acbf";
+
+    // Select just the employee
+    rainier:Employee? employee = check rc->/employee/[employeeId]();
+    io:println(employee);
+
+    // Select just the employee's firstName, lastName, and birthDate
+    rainier:Employee empDetails = check rc->/employee/[employeeId]();
+    io:println(empDetails);
+
+    // Select all employees in a department
+    stream<rainier:Employee, error?> empStream = rc->/employee();
+    record {string firstName; string lastName;}[] empInDept = check from var emp in empStream
+        where emp.departmentDeptNo == "d009"
+        select {firstName: emp.firstName, lastName: emp.firstName};
+    io:println(empInDept);
+}
+
+public function inserts() returns error? {
+    rainier:RainierClient rc = new ();
+
+    string[] dept = check rc->/department.post([{
+        deptNo: "d010",
+        deptName: "Customer Service"
+    }]);
+
+    rainier:EmployeeInsert newEmp = {
+        empNo: uuid:createType4AsString(),
+        firstName: "Jack",
+        lastName: "Ryan",
+        birthDate: {year: 1976, month: 4, day: 23},
+        gender: "M",
+        hireDate: {year: 2019, month: 12, day: 23},
+        departmentDeptNo: dept[0],
+        workspaceWorkspaceId: "WS-1234"
     };
-    MedicalItem createdItem = check miClient->create(item);
+    string[] emp = check rc->/employee.post([newEmp]);
+    io:println(emp);
+}
 
+public function updates() returns error? {
+    rainier:RainierClient rc = new ();
 
-    MedicalNeed1 item2 = {
-        needId: 1,
-        period: check time:civilFromString("2021-04-12T23:20:50.520+05:30[Asia/Colombo]"),
-        urgency: "urgent",
-        quantity: 1
-    };
-    MedicalNeed1 createdNeed1 = check mn1Client->create(item2);
-
-    io:println(createdItem);
-    io:println(createdNeed1);
+    string employeeId = "40083df0-5a27-48a9-8e0d-6e70e0d6acbf";
+    _ = check rc->/employee/[employeeId].put({departmentDeptNo: "d010"});
 }

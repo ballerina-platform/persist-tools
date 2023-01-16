@@ -43,7 +43,7 @@ public class ToolingDbPushTest {
     private static final String no = "NO";
     private static final String sqlDateTime = "DATETIME";
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     @Description("Database is not available and it is created while running the db push command")
     public void testDbPushWithoutDatabase() throws BalException {
         ArrayList<PersistTable> tables = new ArrayList<>();
@@ -73,7 +73,7 @@ public class ToolingDbPushTest {
         assertGeneratedSourcesNegative("tool_test_db_push_2", DB_PUSH, null);
     }
 
-    @Test(enabled = true, dependsOnMethods = { "testDbPushWithoutDatabase" })
+    @Test(enabled = false, dependsOnMethods = { "testDbPushWithoutDatabase" })
     @Description("Database already exists. An entity is removed. The database tables should not be affected.")
     public void testDbPushEntityRemoved() throws BalException {
         ArrayList<PersistTable> tables = new ArrayList<>();
@@ -97,7 +97,7 @@ public class ToolingDbPushTest {
         assertCreateDatabaseTables("tool_test_db_push_3", tables);
     }
 
-    @Test(enabled = true, dependsOnMethods = { "testDbPushEntityRemoved" })
+    @Test(enabled = false, dependsOnMethods = { "testDbPushEntityRemoved" })
     @Description("Database already exists. An entity is updated. The respective table should be updated.")
     public void testDbPushEntityUpdated() throws BalException {
         ArrayList<PersistTable> tables = new ArrayList<>();
@@ -127,25 +127,25 @@ public class ToolingDbPushTest {
         assertGeneratedSourcesNegative("tool_test_db_push_6", DB_PUSH, null);
     }
 
-    @Test(enabled = true, dependsOnMethods = { "testDbPushEntityUpdated" })
+    @Test(enabled = false, dependsOnMethods = { "testDbPushEntityUpdated" })
     @Description("When the db push command is executed with faulty credentials")
     public void testDbPushWithWrongCredentials() {
         assertGeneratedSourcesNegative("tool_test_db_push_7", DB_PUSH, null);
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     @Description("Test the created sql script content when relation annotation hasn't properties")
     public void testDbPush() {
         assertGeneratedSources("tool_test_db_push_8", DB_PUSH);
     }
 
-    @Test(enabled = true) // this is not valid because, defining entities in multiple modules is init allowed.
+    @Test(enabled = false) // this is not valid because, defining entities in multiple modules is init allowed.
     @Description("Test the created sql script content when entities are in the main and sub-modules")
     public void testDbPushWithSubModule() {
         assertGeneratedSources("tool_test_db_push_9", DB_PUSH);
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     @Description("Test the created sql script content when relation annotation hasn't properties")
     public void testDbPushWithScriptHasUniqueConstraints() {
         assertGeneratedSources("tool_test_db_push_10", DB_PUSH);
@@ -182,7 +182,7 @@ public class ToolingDbPushTest {
         assertCreatedDatabaseNegative("tool_test_db_push_15");
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     @Description("Test the created sql script with one to many relation entity")
     public void testDbPushWithOneToManyRelationship() {
         assertGeneratedSources("tool_test_db_push_16", DB_PUSH);

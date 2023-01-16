@@ -37,7 +37,7 @@ public class BalSyntaxConstants {
         public static final String ABSTRACT_PERSIST_CLIENT = "AbstractPersistClient";
     }
 
-    public static final String PERSIST_CLIENT = "persistClient";
+    public static final String PERSIST_CLIENTS = "persistClients";
     public static final String RETURN_RECORD_VARIABLE = "return {%s};";
     public static final String RETURN_VARIABLE = "return %s;";
     public static final String RETURN_TRUE = "return true;";
@@ -48,6 +48,7 @@ public class BalSyntaxConstants {
     public static final String APOSTROPHE = "`";
     public static final String EMPTY_STRING = "";
     public static final String SPACE = " ";
+    public static final String NULLABLE = "?";
     public static final String COMMA_SPACE = ", ";
     public static final String FIELD_ACCESSS = ".";
     public static final String ARRAY_TYPE = "[]";
@@ -91,28 +92,29 @@ public class BalSyntaxConstants {
     public static final String TAG_JOIN_METADATA = "joinMetadata";
     public static final String INIT_MYSQL_CLIENT = "mysql:Client|sql:Error dbClient = new (host = host, user = user," +
             " password = password, database = database, port = port);";
-    public static final String INIT_PERSIST_CLIENT = "self.persistClient = check new (dbClient, self.entityName, " +
-            "self.tableName, self.keyFields, self.fieldMetadata);";
-    public static final String INIT_PERSIST_CLIENT_RELATED = "self.persistClient = check " +
-            "new (dbClient, self.entityName, self.tableName, self.keyFields, self.fieldMetadata, self.joinMetadata);";
-    public static final String CREATE_SQL_RESULTS = "sql:ExecutionResult result = check " +
-            "self.persistClient.runInsertQuery(value);";
-    public static final String CREATE_SQL_RESULTS_RELATION = "_ = check " +
-            "self.persistClient.runInsertQuery(value);";
-    public static final String READ_BY_KEY_RETURN = "return <%s> check " +
-            "self.persistClient.runReadByKeyQuery(%s, key);";
+    public static final String INIT_PERSIST_CLIENT = "check new (dbClient, self.metadata.get(\"%s\").entityName, " +
+            "self.metadata.get(\"%s\").tableName, self.metadata.get(\"%s\").keyFields, " +
+            "self.metadata.get(\"%s\").fieldMetadata)";
+    public static final String CREATE_SQL_RESULTS = "_ = check " +
+            "self.persistClients.get(\"%s\").runBatchInsertQuery(data);";
+    public static final String CREATE_SQL_RESULTS_SINGLE_KEY = "return from %s inserted in data " +
+            "select %s";
+    public static final String READ_BY_KEY_RETURN = "return (check " +
+            "self.persistClients.get(\"%s\").runReadByKeyQuery(%s, %s)).cloneWithType(%s);";
     public static final String READ_BY_KEY_RETURN_RELATION = "return <%s> check " +
             "self.persistClient.runReadByKeyQuery(%s, key, include);";
     public static final String READ_RUN_READ_QUERY = "stream<anydata, sql:Error?>|persist:Error result" +
-            " = self.persistClient.runReadQuery(%s);";
+            " = self.persistClients.get(\"%s\").runReadQuery(%s);";
     public static final String READ_RUN_READ_QUERY_RELATED = "stream<anydata, sql:Error?>|persist:Error result" +
             " = self.persistClient.runReadQuery(%s, include);";
     public static final String READ_RETURN_STREAM_WHEN_ERROR = "return new stream<%s, persist:Error?>" +
             "(new %sStream((), result));";
     public static final String READ_RETURN_STREAM_WHEN_NOT_ERROR = "return new stream<%s, persist:Error?>" +
             "(new %sStream(result));";
-    public static final String UPDATE_RUN_UPDATE_QUERY = "_ = check self.persistClient.runUpdateQuery" +
-            "(value);";
+    public static final String UPDATE_RUN_UPDATE_QUERY = "_ = check self.persistClients.get(\"%s\").runUpdateQuery" +
+            "(%s, data);";
+    public static final String UPDATE_RETURN_UPDATE_QUERY = "_ = check self.persistClients.get(\"%s\").runUpdateQuery" +
+            "(%s, data);";
     public static final String DELETE_RUN_DELETE_QUERY = "_ = check self.persistClient.runDeleteQuery(value);";
     public static final String CLOSE_PERSIST_CLIENT = "return self.persistClient.close();";
     public static final String INIT_STREAM_STATEMENT = "self.anydataStream = anydataStream;";
@@ -134,12 +136,10 @@ public class BalSyntaxConstants {
     public static final String CONFIGURABLE_PASSWORD = "configurable string password = ?;";
     public static final String CONFIGURABLE_DATABASE = "configurable string database = ?;";
     public static final String INIT = "init";
-    public static final String READ = "read";
-    public static final String CREATE = "create";
+    public static final String GET = "get";
+    public static final String POST = "post";
     public static final String DELETE = "delete";
-    public static final String EXISTS = "exists";
-    public static final String READ_BY_KEY = "readByKey";
-    public static final String UPDATE = "update";
+    public static final String PUT = "put";
     public static final String CLOSE = "close";
     public static final String NEXT = "next";
 
@@ -152,7 +152,7 @@ public class BalSyntaxConstants {
     public static final String KEYWORD_PARAMETERIZED_QUERY = "ParameterizedQuery";
     public static final String KEYWORD_BOOLEAN = "boolean";
     public static final String KEYWORD_AUTOINCREMENT = "AutoIncrement";
-    public static final String KEYWORD_VALUE = "value";
+    public static final String KEYWORD_VALUE = "data";
     public static final String KEYWORD_STREAM = "Stream";
     public static final String KEYWORD_ERR = "err";
     public static final String KEYWORD_PERSIST_SQL_CLIENT = "persist:SQLClient";
@@ -169,15 +169,16 @@ public class BalSyntaxConstants {
     public static final String KEYWORD_PUBLIC = "public";
     public static final String KEYWORD_ISOLATED = "isolated";
     public static final String KEYWORD_FINAL = "final";
-    public static final String KEYWORD_REMOTE = "remote";
+    public static final String KEYWORD_RESOURCE = "resource";
 
     public static final String GENERATED_SOURCE_DIRECTORY = "generated";
     public static final String PATH_CONFIGURATION_BAL_FILE = "database_configuration.bal";
     public static final String KEYWORD_INT = "int";
     public static final String KEYWORD_TABLE_NAME = "tableName";
     public static final String KEYWORD_STRING = "string";
+    public static final String KEYWORD_READONLY = "readonly";
     public static final String KEYWORD_MYSQL = "mysql";
-    public static final String KEYWORD_TIME = "time";
+    public static final String KEYWORD_TIME_PREFIX = "time";
     public static final String KEYWORD_ENTITY = "Entity";
     public static final String KEYWORD_RELATION = "Relation";
     public static final String KEYWORD_REFERENCE = "reference";
@@ -236,5 +237,8 @@ public class BalSyntaxConstants {
 
     public static final String MYSQL_DRIVER = "mysql.driver";
     public static final String BAL_EXTENTION = ".bal";
+    public static final String INSERT_RECORD_TEMPLATE = "type %sInsert %s;";
+    public static final String UPDATE_RECORD_TEMPLATE = "public type %sUpdate record {| %s |};";
+    public static final String READONLY_RECORD_TEMPLATE = "public type %s readonly & record {| %s |};";
 
 }

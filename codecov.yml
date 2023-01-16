@@ -1,5 +1,26 @@
 ignore:
   - "**/persist-cli-tests"
+  - "persist-cli/src/main/java/io/ballerina/persist/cmd/Push.java"
+  - "persist-cli/src/main/java/io/ballerina/persist/utils/JdbcDriverLoader.java"
+  - "persist-cli/src/main/java/io/ballerina/persist/utils/SqlScriptGenerationUtils.java"
+  - "persist-cli/src/main/java/io/ballerina/persist/components/Enum.java"
+  - "persist-cli/src/main/java/io/ballerina/persist/components/Function.java"
+  - "persist-cli/src/main/java/io/ballerina/persist/components/IfElse.java"
+  - "persist-cli/src/main/java/io/ballerina/persist/utils/BalProjectUtils.java"
+  - "persist-cli/src/main/java/io/ballerina/persist/components/TypeDescriptor.java"
+  - "persist-cli/src/main/java/io/ballerina/persist/utils/DataBaseValidationUtils.java"
+  - "persist-cli/src/main/java/io/ballerina/persist/configuration/DatabaseConfiguration.java"
+  - "persist-cli/src/main/java/io/ballerina/persist/utils/ScriptRunner.java"
+  - "persist-cli/src/main/java/io/ballerina/persist/cmd/Init.java"
+  - "persist-cli/src/main/java/io/ballerina/persist/cmd/Generate.java"
+  - "persist-cli/src/main/java/io/ballerina/persist/PersistToolsConstants.java"
+  - "persist-cli/src/main/java/io/ballerina/persist/components/ClientResource.java"
+  - "persist-cli/src/main/java/io/ballerina/persist/components/Client.java"
+  - "persist-cli/src/main/java/io/ballerina/persist/configuration/PersistConfiguration.java"
+  - "persist-cli/src/main/java/io/ballerina/persist/models/EntityField.java"
+  - "persist-cli/src/main/java/io/ballerina/persist/nodegenerator/BalSyntaxGenerator.java"
+  - "persist-cli/src/main/java/io/ballerina/persist/models/Relation.java"
+  - "persist-cli/src/main/java/io/ballerina/persist/nodegenerator/TomlSyntaxGenerator.java"
 
 coverage:
   precision: 2

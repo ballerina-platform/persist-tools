@@ -125,7 +125,7 @@ public class SqlScriptGenerationUtils {
         for (EntityField entityField : relationFields) {
             sqlScript.append(getRelationScripts(entity.getTableName(), entityField, referenceTables));
         }
-        sqlScript.append(addPrimaryKeyUniqueKey(entity.getKeys(), entity.getUniqueKeys()));
+        sqlScript.append(addPrimaryKey(entity.getKeys()));
         return sqlScript.substring(0, sqlScript.length() - 1);
     }
 
@@ -155,7 +155,7 @@ public class SqlScriptGenerationUtils {
                                              HashMap<String, List<String>> referenceTables) throws BalException {
         StringBuilder relationScripts = new StringBuilder();
         Relation relation = entityField.getRelation();
-        List<String> keyColumns = relation.getKeyColumns();
+        List<Relation.Key> keyColumns = relation.getKeyColumns();
         List<String> references = relation.getReferences();
         String onDelete = relation.getOnDelete();
         String onUpdate = relation.getOnUpdate();
@@ -184,26 +184,27 @@ public class SqlScriptGenerationUtils {
                     break;
                 }
             }
-            String foreignKey = keyColumns.get(i);
+            String foreignKey = keyColumns.get(i).getField();
             String unique = "";
-            Relation.RelationType associatedEntityRelationType = Relation.RelationType.NONE;
-            for (EntityField field: assocEntity.getFields()) {
-                if (field.getFieldType().equals(tableName)) {
-                    associatedEntityRelationType = field.getRelation().getRelationType();
-                    break;
-                }
-            }
-            if (relation.getRelationType().equals(Relation.RelationType.ONE) &&
-                    associatedEntityRelationType.equals(Relation.RelationType.ONE)) {
-                List<String> keys = assocEntity.getKeys();
-                List<List<String>> uniqueConstraints = assocEntity.getUniqueKeys();
-                if ((keys.size() == 1 && keys.get(0).equals(referenceFieldName)) ||
-                        (uniqueConstraints != null && uniqueConstraints.size() == 1 &&
-                                uniqueConstraints.get(0).size() == 1 &&
-                                uniqueConstraints.get(0).get(0).equals(referenceFieldName))) {
-                    unique = UNIQUE;
-                }
-            }
+            // TODO: check whether we need this as we remove unique keys support
+//            Relation.RelationType associatedEntityRelationType = Relation.RelationType.NONE;
+//            for (EntityField field: assocEntity.getFields()) {
+//                if (field.getFieldType().equals(tableName)) {
+//                    associatedEntityRelationType = field.getRelation().getRelationType();
+//                    break;
+//                }
+//            }
+//            if (relation.getRelationType().equals(Relation.RelationType.ONE) &&
+//                    associatedEntityRelationType.equals(Relation.RelationType.ONE)) {
+//                List<String> keys = assocEntity.getKeys();
+//                List<List<String>> uniqueConstraints = assocEntity.getUniqueKeys();
+//                if ((keys.size() == 1 && keys.get(0).equals(referenceFieldName)) ||
+//                        (uniqueConstraints != null && uniqueConstraints.size() == 1 &&
+//                                uniqueConstraints.get(0).size() == 1 &&
+//                                uniqueConstraints.get(0).get(0).equals(referenceFieldName))) {
+//                    unique = UNIQUE;
+//                }
+//            }
             relationScripts.append(MessageFormat.format("{0}{1}{2} {3}{4},", NEW_LINE, TAB, foreignKey,
                     referenceSqlType, unique));
             relationScripts.append(MessageFormat.format("{0}{1}CONSTRAINT FK_{2}_{3}_{4} FOREIGN KEY({5}) " +
@@ -234,24 +235,16 @@ public class SqlScriptGenerationUtils {
         referenceTables.put(tableName, setOfReferenceTables);
     }
 
-    private static String addPrimaryKeyUniqueKey(List<String> primaryKeys,
-                                                        List<List<String>> uniqueConstraints) {
-        StringBuilder keyScripts = new StringBuilder();
-        keyScripts.append(createKeysScript(primaryKeys, PRIMARY_KEY_START_SCRIPT));
-        if (uniqueConstraints != null) {
-            for (List<String> uniqueConstraint : uniqueConstraints) {
-                keyScripts.append(createKeysScript(uniqueConstraint, UNIQUE_KEY_START_SCRIPT));
-            }
-        }
-        return keyScripts.toString();
+    private static String addPrimaryKey(List<EntityField> primaryKeys) {
+        return createKeysScript(primaryKeys);
     }
 
-    private static String createKeysScript(List<String> keys, String keyType) {
+    private static String createKeysScript(List<EntityField> keys) {
         StringBuilder keyScripts = new StringBuilder();
         if (keys.size() > 0) {
-            keyScripts.append(MessageFormat.format("{0}", keyType));
-            for (String key : keys) {
-                keyScripts.append(MessageFormat.format("{0},", key));
+            keyScripts.append(MessageFormat.format("{0}", PRIMARY_KEY_START_SCRIPT));
+            for (EntityField key : keys) {
+                keyScripts.append(MessageFormat.format("{0},", key.getFieldName()));
             }
             keyScripts.deleteCharAt(keyScripts.length() - 1).append("),");
         }
