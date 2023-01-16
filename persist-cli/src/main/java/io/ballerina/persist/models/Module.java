@@ -23,7 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Client containing data related to entities and their respective nodes.
+ * Class containing data related to entities and their respective nodes.
  *
  * @since 0.1.0
  */

@@ -28,6 +28,3 @@ public type MultipleAssociations record {|
 
     Profile profile?;
 |};
-
-
-
