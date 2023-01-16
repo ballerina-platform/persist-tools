@@ -58,7 +58,7 @@ import static io.ballerina.persist.nodegenerator.BalSyntaxGenerator.inferRelatio
 public class BalProjectUtils {
 
     private BalProjectUtils() {}
-
+    // TODO: Remove this function once DB push command migrated.
     public static Module getEntities(io.ballerina.projects.Module module) throws BalException {
         Module.Builder moduleBuilder = Module.newBuilder(module.moduleName().moduleNamePart());
         try {
@@ -93,6 +93,7 @@ public class BalProjectUtils {
         }
     }
 
+    // TODO: Remove this function once DB push command migrated.
     public static BuildProject validateSchemaFile(Path projectPath, boolean skipGeneratedDir) throws BalException {
         BuildProject buildProject = BuildProject.load(projectPath.toAbsolutePath());
         Package currentPackage = buildProject.currentPackage();

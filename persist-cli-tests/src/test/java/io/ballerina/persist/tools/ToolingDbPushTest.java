@@ -67,7 +67,7 @@ public class ToolingDbPushTest {
         assertCreateDatabaseTables("tool_test_db_push_1", tables);
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("When the db push command is executed outside a Ballerina project")
     public void testDbPushOutsideBallerinaProject() {
         assertGeneratedSourcesNegative("tool_test_db_push_2", DB_PUSH, null);
@@ -121,7 +121,7 @@ public class ToolingDbPushTest {
         assertCreateDatabaseTables("tool_test_db_push_5", tables);
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("When the db push command is executed without the persist dir")
     public void testDbPushWithoutPersistDir() {
         assertGeneratedSourcesNegative("tool_test_db_push_6", DB_PUSH, null);
@@ -151,31 +151,31 @@ public class ToolingDbPushTest {
         assertGeneratedSources("tool_test_db_push_10", DB_PUSH);
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("When the db push command is executed with faulty database name containing illegal characters.")
     public void testDbPushWithIllegalCredentials() {
         assertGeneratedSourcesNegative("tool_test_db_push_11", DB_PUSH, null);
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("When the db push command is executed with faulty database name containing illegal characters.")
     public void testDbPushWithIllegalCredentials2() {
         assertGeneratedSourcesNegative("tool_test_db_push_12", DB_PUSH, null);
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("When the db push command is executed with faulty database name containing illegal characters.")
     public void testDbPushWithIllegalCredentials3() {
         assertGeneratedSourcesNegative("tool_test_db_push_13", DB_PUSH, null);
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("When the db push command is executed with empty database name.")
     public void testDbPushWithEmptyCredentials() {
         assertGeneratedSourcesNegative("tool_test_db_push_14", DB_PUSH, null);
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("When the db push command is executed with faulty clients.")
     public void testDbPushWithMissMatchedClients() throws BalException {
         assertGeneratedSourcesNegative("tool_test_db_push_15", DB_PUSH, null);
