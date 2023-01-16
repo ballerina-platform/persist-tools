@@ -31,6 +31,7 @@ public class PersistToolsConstants {
     public static final String COMPONENT_IDENTIFIER = "persist";
 
     public static final String DEFAULT_USER = "root";
+    public static final String DEFAULT_PROVIDER = "mysql";
     public static final String DEFAULT_PORT = "3306";
     public static final String DEFAULT_PASSWORD = "";
     public static final String DEFAULT_DATABASE = "";
@@ -41,6 +42,7 @@ public class PersistToolsConstants {
     public static final String KEY_PASSWORD = "password";
     public static final String KEY_DATABASE = "database";
     public static final String KEY_HOST = "host";
+    public static final String KEY_PROVIDER = "provider";
 
     public static final String CONFIG_SCRIPT_FILE = "Config.toml";
     public static final String PASSWORD = "password";
