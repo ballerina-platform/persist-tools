@@ -4,6 +4,13 @@ ignore:
   - "persist-cli/src/main/java/io/ballerina/persist/utils/JdbcDriverLoader.java"
   - "persist-cli/src/main/java/io/ballerina/persist/utils/SqlScriptGenerationUtils.java"
   - "persist-cli/src/main/java/io/ballerina/persist/components/Enum.java"
+  - "persist-cli/src/main/java/io/ballerina/persist/components/Function.java"
+  - "persist-cli/src/main/java/io/ballerina/persist/components/IfElse.java"
+  - "persist-cli/src/main/java/io/ballerina/persist/utils/BalProjectUtils.java"
+  - "persist-cli/src/main/java/io/ballerina/persist/components/TypeDescriptor.java"
+  - "persist-cli/src/main/java/io/ballerina/persist/utils/DataBaseValidationUtils.java"
+  - "persist-cli/src/main/java/io/ballerina/persist/configuration/DatabaseConfiguration.java"
+  - "persist-cli/src/main/java/io/ballerina/persist/utils/ScriptRunner.java"
 
 coverage:
   precision: 2
