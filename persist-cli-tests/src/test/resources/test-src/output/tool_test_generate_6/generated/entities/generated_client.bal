@@ -11,7 +11,7 @@ public client class EntitiesClient {
     isolated resource function get datatype() returns stream<DataType, persist:Error?> = external;
     isolated resource function get datatype/[int a]() returns DataType|persist:Error = external;
     isolated resource function post datatype(DataTypeInsert[] data) returns int[]|persist:Error = external;
-    isolated resource function put datatype/[int a](DataType value) returns DataType|persist:Error = external;
+    isolated resource function put datatype/[int a](DataTypeUpdate value) returns DataType|persist:Error = external;
     isolated resource function delete datatype/[int a]() returns DataType|persist:Error = external;
 }
 

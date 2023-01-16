@@ -15,7 +15,7 @@ public type MedicalNeed record {|
     string quantity;
 |};
 
-type MedicalNeedInsert MedicalNeed;
+public type MedicalNeedInsert MedicalNeed;
 
 public type MedicalNeedUpdate record {|
     int itemId?;
@@ -33,7 +33,7 @@ public type MedicalItem record {|
     int unit;
 |};
 
-type MedicalItemInsert MedicalItem;
+public type MedicalItemInsert MedicalItem;
 
 public type MedicalItemUpdate record {|
     string name?;

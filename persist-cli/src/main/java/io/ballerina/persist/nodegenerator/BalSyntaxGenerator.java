@@ -615,7 +615,8 @@ public class BalSyntaxGenerator {
         resourcePaths = resourcePaths.add(AbstractNodeFactory.createIdentifierToken(entity.getTableName()));
         create.addRelativeResourcePaths(resourcePaths);
         create.addRequiredParameter(
-                TypeDescriptor.getArrayTypeDescriptorNode(entity.getEntityName() + "Insert"), KEYWORD_VALUE);
+                TypeDescriptor.getArrayTypeDescriptorNode(
+                        String.format("%sInsert", entity.getEntityName())), KEYWORD_VALUE);
         create.addQualifiers(new String[]{KEYWORD_ISOLATED, BalSyntaxConstants.KEYWORD_RESOURCE});
         if (keys.size() == 1) {
             create.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(
@@ -751,7 +752,8 @@ public class BalSyntaxGenerator {
                 TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()),
                 TypeDescriptor.getQualifiedNameReferenceNode(PERSIST_MODULE, SPECIFIC_ERROR)));
         update.addStatement(NodeParser.parseStatement(BalSyntaxConstants.UPDATE_RUN_UPDATE_QUERY));
-        update.addRequiredParameter(TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()), VALUE);
+        update.addRequiredParameter(TypeDescriptor.getSimpleNameReferenceNode(
+                String.format("%sUpdate", entity.getEntityName())), VALUE);
         return update;
     }
 
@@ -899,7 +901,7 @@ public class BalSyntaxGenerator {
             moduleMembers = moduleMembers.add(createEntityRecord(entity));
 
             moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration(
-                    String.format("type %sInsert %s;", entity.getEntityName(),
+                    String.format("public type %sInsert %s;", entity.getEntityName(),
                             entity.getEntityName())));
             moduleMembers = moduleMembers.add(createUpdateRecord(entity));
 

@@ -3,7 +3,7 @@ public type User record {|
     string name;
 |};
 
-type UserInsert User;
+public type UserInsert User;
 
 public type UserUpdate record {|
     string name?;

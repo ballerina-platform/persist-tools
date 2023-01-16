@@ -11,7 +11,7 @@ public client class EntitiesClient {
     isolated resource function get medicalneed() returns stream<MedicalNeed, persist:Error?> = external;
     isolated resource function get medicalneed/[int needId]() returns MedicalNeed|persist:Error = external;
     isolated resource function post medicalneed(MedicalNeedInsert[] data) returns int[]|persist:Error = external;
-    isolated resource function put medicalneed/[int needId](MedicalNeed value) returns MedicalNeed|persist:Error = external;
+    isolated resource function put medicalneed/[int needId](MedicalNeedUpdate value) returns MedicalNeed|persist:Error = external;
     isolated resource function delete medicalneed/[int needId]() returns MedicalNeed|persist:Error = external;
 }
 

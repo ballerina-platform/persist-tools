@@ -5,7 +5,7 @@ public type MultipleAssociations record {|
     int userId;
 |};
 
-type MultipleAssociationsInsert MultipleAssociations;
+public type MultipleAssociationsInsert MultipleAssociations;
 
 public type MultipleAssociationsUpdate record {|
     string name?;
@@ -19,7 +19,7 @@ public type User record {|
     int profileId;
 |};
 
-type UserInsert User;
+public type UserInsert User;
 
 public type UserUpdate record {|
     string name?;
@@ -31,7 +31,7 @@ public type Profile record {|
     string name;
 |};
 
-type ProfileInsert Profile;
+public type ProfileInsert Profile;
 
 public type ProfileUpdate record {|
     string name?;

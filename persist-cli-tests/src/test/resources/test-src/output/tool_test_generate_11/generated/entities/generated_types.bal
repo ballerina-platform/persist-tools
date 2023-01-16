@@ -14,7 +14,7 @@ public type MedicalNeed record {|
     int quantity;
 |};
 
-type MedicalNeedInsert MedicalNeed;
+public type MedicalNeedInsert MedicalNeed;
 
 public type MedicalNeedUpdate record {|
     int itemId?;

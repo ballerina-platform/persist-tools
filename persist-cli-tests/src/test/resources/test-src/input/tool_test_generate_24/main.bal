@@ -15,7 +15,6 @@
 // under the License.
 import ballerina/uuid;
 import ballerina/io;
-import ballerina/time;
 import foo/persist_generate_24.rainier;
 
 public function main() returns error? {

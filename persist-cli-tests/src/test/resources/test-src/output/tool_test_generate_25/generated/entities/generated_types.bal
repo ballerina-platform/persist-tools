@@ -4,7 +4,7 @@ public type Vehicle record {|
     int employeeId;
 |};
 
-type VehicleInsert Vehicle;
+public type VehicleInsert Vehicle;
 
 public type VehicleUpdate record {|
     string name?;
@@ -16,7 +16,7 @@ public type Company record {|
     string name;
 |};
 
-type CompanyInsert Company;
+public type CompanyInsert Company;
 
 public type CompanyUpdate record {|
     string name?;
@@ -28,7 +28,7 @@ public type Employee record {|
     int companyId;
 |};
 
-type EmployeeInsert Employee;
+public type EmployeeInsert Employee;
 
 public type EmployeeUpdate record {|
     string name?;

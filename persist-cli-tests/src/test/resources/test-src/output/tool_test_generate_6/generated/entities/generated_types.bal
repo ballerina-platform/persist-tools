@@ -18,7 +18,7 @@ public type DataType record {|
     time:TimeOfDay m1;
 |};
 
-type DataTypeInsert DataType;
+public type DataTypeInsert DataType;
 
 public type DataTypeUpdate record {|
     string b1?;

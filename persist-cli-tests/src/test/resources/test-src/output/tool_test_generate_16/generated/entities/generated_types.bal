@@ -3,7 +3,7 @@ public type Company record {|
     string name;
 |};
 
-type CompanyInsert Company;
+public type CompanyInsert Company;
 
 public type CompanyUpdate record {|
     string name?;
@@ -15,7 +15,7 @@ public type Employee record {|
     int companyId;
 |};
 
-type EmployeeInsert Employee;
+public type EmployeeInsert Employee;
 
 public type EmployeeUpdate record {|
     string name?;

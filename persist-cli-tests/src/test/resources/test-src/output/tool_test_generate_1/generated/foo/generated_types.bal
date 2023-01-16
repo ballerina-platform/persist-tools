@@ -13,7 +13,7 @@ public type Building record {|
     string postalCode;
 |};
 
-type BuildingInsert Building;
+public type BuildingInsert Building;
 
 public type BuildingUpdate record {|
     string city?;
@@ -27,7 +27,7 @@ public type Department record {|
     string deptName;
 |};
 
-type DepartmentInsert Department;
+public type DepartmentInsert Department;
 
 public type DepartmentUpdate record {|
     string deptName?;
@@ -44,7 +44,7 @@ public type Employee record {|
     string workspaceWorkspaceId;
 |};
 
-type EmployeeInsert Employee;
+public type EmployeeInsert Employee;
 
 public type EmployeeUpdate record {|
     string firstName?;
@@ -62,7 +62,7 @@ public type Workspace record {|
     string buildingBuildingCode;
 |};
 
-type WorkspaceInsert Workspace;
+public type WorkspaceInsert Workspace;
 
 public type WorkspaceUpdate record {|
     string workspaceType?;

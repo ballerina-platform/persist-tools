@@ -14,7 +14,7 @@ public type MedicalNeed record {|
     int aidpackageorderitemId;
 |};
 
-type MedicalNeedInsert MedicalNeed;
+public type MedicalNeedInsert MedicalNeed;
 
 public type MedicalNeedUpdate record {|
     int beneficiaryId?;
@@ -30,7 +30,7 @@ public type AidPackageOrderItem record {|
     int totalAmount;
 |};
 
-type AidPackageOrderItemInsert AidPackageOrderItem;
+public type AidPackageOrderItemInsert AidPackageOrderItem;
 
 public type AidPackageOrderItemUpdate record {|
     int quantity?;
