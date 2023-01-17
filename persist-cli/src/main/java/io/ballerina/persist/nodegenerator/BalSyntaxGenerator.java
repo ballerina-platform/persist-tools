@@ -912,7 +912,6 @@ public class BalSyntaxGenerator {
         NodeList<ModuleMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
         MinutiaeList commentMinutiaeList = createCommentMinutiaeList(String.format(
                 AUTO_GENERATED_COMMENT_WITH_REASON, entityModule.getModuleName()));
-        boolean timeImport = false;
 
         for (String modulePrefix : entityModule.getImportModulePrefixes()) {
             if (imports.isEmpty()) {
