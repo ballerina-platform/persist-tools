@@ -20,7 +20,9 @@ package io.ballerina.persist.models;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Class containing data related to entities and their respective nodes.
@@ -32,14 +34,22 @@ public class Module {
     private final String moduleName;
     private final String clientName;
 
-    private Module(String moduleName, String clientName, Map<String, Entity> entityMap) {
+    private Set<String> importModulePrefixes;
+
+    private Module(String moduleName, String clientName, Set<String> importModulePrefixes,
+                   Map<String, Entity> entityMap) {
         this.moduleName = moduleName;
         this.clientName = clientName;
+        this.importModulePrefixes = importModulePrefixes;
         this.entityMap = entityMap;
     }
 
     public Map<String, Entity> getEntityMap() {
         return entityMap;
+    }
+
+    public Set<String> getImportModulePrefixes() {
+        return importModulePrefixes;
     }
 
     public String getModuleName() {
@@ -62,6 +72,8 @@ public class Module {
         String moduleName;
         Map<String, Entity> entityMap = new HashMap<>();
 
+        private Set<String> importModulePrefixes = new HashSet<>();
+
         private Builder(String moduleName) {
             this.moduleName = moduleName;
         }
@@ -70,9 +82,13 @@ public class Module {
             this.entityMap.put(key, entity);
         }
 
+        public void addImportModulePrefix(String modulePrefix) {
+            this.importModulePrefixes.add(modulePrefix);
+        }
+
         public Module build() {
             String clientName = convertTitleCase(moduleName) + SUFFIX_CLIENT;
-            return new Module(moduleName, clientName, entityMap);
+            return new Module(moduleName, clientName, importModulePrefixes, entityMap);
         }
 
         private String convertTitleCase(String moduleName) {
