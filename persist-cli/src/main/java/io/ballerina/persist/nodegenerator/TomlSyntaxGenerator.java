@@ -46,11 +46,13 @@ import static io.ballerina.persist.PersistToolsConstants.DEFAULT_DATABASE;
 import static io.ballerina.persist.PersistToolsConstants.DEFAULT_HOST;
 import static io.ballerina.persist.PersistToolsConstants.DEFAULT_PASSWORD;
 import static io.ballerina.persist.PersistToolsConstants.DEFAULT_PORT;
+import static io.ballerina.persist.PersistToolsConstants.DEFAULT_PROVIDER;
 import static io.ballerina.persist.PersistToolsConstants.DEFAULT_USER;
 import static io.ballerina.persist.PersistToolsConstants.KEY_DATABASE;
 import static io.ballerina.persist.PersistToolsConstants.KEY_HOST;
 import static io.ballerina.persist.PersistToolsConstants.KEY_PASSWORD;
 import static io.ballerina.persist.PersistToolsConstants.KEY_PORT;
+import static io.ballerina.persist.PersistToolsConstants.KEY_PROVIDER;
 import static io.ballerina.persist.PersistToolsConstants.KEY_USER;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_DB_PROVIDERS;
@@ -76,7 +78,7 @@ public class TomlSyntaxGenerator {
         NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
         for (String schema : schemas) {
             moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(packageName + "." + schema, null));
-            moduleMembers = populateConfigNodeList(moduleMembers);
+            moduleMembers = populateConfigNodeList(moduleMembers, false);
             moduleMembers = addNewLine(moduleMembers, 1);
         }
         Token eofToken = AbstractNodeFactory.createIdentifierToken("");
@@ -168,7 +170,7 @@ public class TomlSyntaxGenerator {
                     }
                     moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(PERSIST_DIRECTORY + "."
                             + schema, null));
-                    moduleMembers = populateConfigNodeList(moduleMembers);
+                    moduleMembers = populateConfigNodeList(moduleMembers, true);
                 }
             }
         }
@@ -216,7 +218,7 @@ public class TomlSyntaxGenerator {
                     }
                     moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(packageName + "."
                             + schema, null));
-                    moduleMembers = populateConfigNodeList(moduleMembers);
+                    moduleMembers = populateConfigNodeList(moduleMembers, false);
                 }
             }
         }
@@ -227,7 +229,10 @@ public class TomlSyntaxGenerator {
     }
 
     private static NodeList<DocumentMemberDeclarationNode> populateConfigNodeList(
-            NodeList<DocumentMemberDeclarationNode> moduleMembers) {
+            NodeList<DocumentMemberDeclarationNode> moduleMembers, boolean includeProvider) {
+        if (includeProvider) {
+            moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_PROVIDER, DEFAULT_PROVIDER, null));
+        }
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_HOST, DEFAULT_HOST, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createNumericKV(KEY_PORT, DEFAULT_PORT, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_USER, DEFAULT_USER, null));
