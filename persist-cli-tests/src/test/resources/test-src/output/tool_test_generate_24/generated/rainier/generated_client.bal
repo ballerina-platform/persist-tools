@@ -1,6 +1,6 @@
 // AUTO-GENERATED FILE. DO NOT MODIFY.
 
-// This file is an auto-generated file by Ballerina persistence layer for rainier.
+// This file is an auto-generated file by Ballerina persistence layer for foo.
 // It should not be modified by hand.
 
 import ballerina/persist;
@@ -32,4 +32,3 @@ public client class RainierClient {
     isolated resource function put workspace/[string workspaceId](WorkspaceUpdate value) returns Workspace|persist:Error = external;
     isolated resource function delete workspace/[string workspaceId]() returns Workspace|persist:Error = external;
 }
-
