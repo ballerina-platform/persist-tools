@@ -28,6 +28,7 @@ import io.ballerina.compiler.syntax.tree.IfElseStatementNode;
 import io.ballerina.compiler.syntax.tree.Node;
 import io.ballerina.compiler.syntax.tree.NodeFactory;
 import io.ballerina.compiler.syntax.tree.NodeList;
+import io.ballerina.compiler.syntax.tree.NodeParser;
 import io.ballerina.compiler.syntax.tree.ReturnTypeDescriptorNode;
 import io.ballerina.compiler.syntax.tree.StatementNode;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
@@ -57,6 +58,7 @@ public class Function {
     }
 
     private final SyntaxKind kind;
+    private final boolean returnError;
     private NodeList<Token> qualifierList;
     private final Token finalKeyWord = AbstractNodeFactory.createIdentifierToken(ComponentConstants.TAG_FUNCTION);
     private final IdentifierToken functionName;
@@ -65,13 +67,14 @@ public class Function {
     private ReturnTypeDescriptorNode returnTypeDescriptorNode;
     private NodeList<StatementNode> statements;
 
-    public Function(String name, SyntaxKind kind) {
+    public Function(String name, SyntaxKind kind, boolean returnError) {
         qualifierList = AbstractNodeFactory.createEmptyNodeList();
         functionName = AbstractNodeFactory.createIdentifierToken(name + " ");
         relativeResourcePath = AbstractNodeFactory.createEmptyNodeList();
         parameters = new ArrayList<>();
         statements = NodeFactory.createEmptyNodeList();
         this.kind = kind;
+        this.returnError = returnError;
     }
 
     public FunctionDefinitionNode getFunctionDefinitionNode() {
@@ -158,24 +161,33 @@ public class Function {
     }
 
     private FunctionBodyNode getFunctionBody() {
-//        return NodeFactory.createFunctionBodyBlockNode(
-//                SyntaxTokenConstants.SYNTAX_TREE_OPEN_BRACE,
-//                null,
-//                statements,
-//                SyntaxTokenConstants.SYNTAX_TREE_CLOSE_BRACE,
-//                null
-//        );
-        NodeList<AnnotationNode> annotations = NodeFactory.createEmptyNodeList();
-        return NodeFactory.createExternalFunctionBodyNode(
-                NodeFactory.createToken(SyntaxKind.EQUAL_TOKEN,
-                        AbstractNodeFactory.createEmptyMinutiaeList(),
-                        NodeFactory.createMinutiaeList(AbstractNodeFactory.createWhitespaceMinutiae(" "))),
-                annotations,
-                NodeFactory.createToken(SyntaxKind.EXTERNAL_KEYWORD),
-                NodeFactory.createToken(SyntaxKind.SEMICOLON_TOKEN,
-                        AbstractNodeFactory.createEmptyMinutiaeList(),
-                        NodeFactory.createMinutiaeList(AbstractNodeFactory.createEndOfLineMinutiae("\n")))
+        NodeList<StatementNode> tempStatements = NodeFactory.createEmptyNodeList();;
+        if (this.returnError) {
+            tempStatements = tempStatements.add(NodeParser.parseStatement(
+                    "return error persist:Error(\"unsupported operation\");"));
+        } else {
+            tempStatements = tempStatements.add(NodeParser.parseStatement(
+                    "return new();"));
+        }
+
+        return NodeFactory.createFunctionBodyBlockNode(
+                SyntaxTokenConstants.SYNTAX_TREE_OPEN_BRACE,
+                null,
+                tempStatements,
+                SyntaxTokenConstants.SYNTAX_TREE_CLOSE_BRACE,
+                null
         );
+//        NodeList<AnnotationNode> annotations = NodeFactory.createEmptyNodeList();
+//        return NodeFactory.createExternalFunctionBodyNode(
+//                NodeFactory.createToken(SyntaxKind.EQUAL_TOKEN,
+//                        AbstractNodeFactory.createEmptyMinutiaeList(),
+//                        NodeFactory.createMinutiaeList(AbstractNodeFactory.createWhitespaceMinutiae(" "))),
+//                annotations,
+//                NodeFactory.createToken(SyntaxKind.EXTERNAL_KEYWORD),
+//                NodeFactory.createToken(SyntaxKind.SEMICOLON_TOKEN,
+//                        AbstractNodeFactory.createEmptyMinutiaeList(),
+//                        NodeFactory.createMinutiaeList(AbstractNodeFactory.createEndOfLineMinutiae("\n")))
+//        );
     }
 
     public void addStatement(StatementNode node) {

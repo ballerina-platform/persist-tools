@@ -488,7 +488,7 @@ public class BalSyntaxGenerator {
 //        ));
 
 
-        Function read = createGetFunction(entity);
+        Function read = createGetFunction(entity, false);
         resource.addFunction(read.getFunctionDefinitionNode(), true);
 
         Function readByKey = createGetByKeyFunction(entity, keys);
@@ -516,7 +516,7 @@ public class BalSyntaxGenerator {
         clientStream.addMember(NodeParser.parseStatement(ANYDATA_STREAM_STATEMENT), false);
         clientStream.addMember(NodeParser.parseStatement(NULLABLE_ERROR_STATEMENT), false);
 
-        Function initStream = new Function(BalSyntaxConstants.INIT, SyntaxKind.OBJECT_METHOD_DEFINITION);
+        Function initStream = new Function(BalSyntaxConstants.INIT, SyntaxKind.OBJECT_METHOD_DEFINITION, true);
         initStream.addQualifiers(new String[]{BalSyntaxConstants.KEYWORD_PUBLIC, KEYWORD_ISOLATED});
         initStream.addStatement(NodeParser.parseStatement(BalSyntaxConstants.INIT_STREAM_STATEMENT));
         initStream.addStatement(NodeParser.parseStatement(SELF_ERR));
@@ -525,7 +525,7 @@ public class BalSyntaxGenerator {
                 PERSIST_ERROR), KEYWORD_ERR, Function.Bracket.PAREN);
         clientStream.addMember(initStream.getFunctionDefinitionNode(), true);
 
-        Function nextStream = new Function(BalSyntaxConstants.NEXT, SyntaxKind.OBJECT_METHOD_DEFINITION);
+        Function nextStream = new Function(BalSyntaxConstants.NEXT, SyntaxKind.OBJECT_METHOD_DEFINITION, true);
         nextStream.addQualifiers(new String[]{BalSyntaxConstants.KEYWORD_PUBLIC, KEYWORD_ISOLATED});
         nextStream.addReturns(NodeParser.parseTypeDescriptor(String.format(
                 BalSyntaxConstants.NEXT_STREAM_RETURN_TYPE, entity.getEntityName())));
@@ -555,7 +555,7 @@ public class BalSyntaxGenerator {
         nextStream.addIfElseStatement(errorCheck.getIfElseStatementNode());
         clientStream.addMember(nextStream.getFunctionDefinitionNode(), true);
 
-        Function closeStream = new Function(BalSyntaxConstants.CLOSE, SyntaxKind.OBJECT_METHOD_DEFINITION);
+        Function closeStream = new Function(BalSyntaxConstants.CLOSE, SyntaxKind.OBJECT_METHOD_DEFINITION, true);
         closeStream.addQualifiers(new String[]{BalSyntaxConstants.KEYWORD_PUBLIC, KEYWORD_ISOLATED});
         closeStream.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode(EMPTY_STRING,
                 PERSIST_ERROR));
@@ -571,7 +571,7 @@ public class BalSyntaxGenerator {
     }
 
     private static Function createInitFunction(Collection<Entity> entityArray) {
-        Function init = new Function(BalSyntaxConstants.INIT, SyntaxKind.OBJECT_METHOD_DEFINITION);
+        Function init = new Function(BalSyntaxConstants.INIT, SyntaxKind.OBJECT_METHOD_DEFINITION, true);
         init.addQualifiers(new String[]{BalSyntaxConstants.KEYWORD_PUBLIC});
         init.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode(EMPTY_STRING,
                 PERSIST_ERROR));
@@ -610,7 +610,7 @@ public class BalSyntaxGenerator {
 
     private static Function createPostFunction(Entity entity,
                                                HashMap<String, String> keys) {
-        Function create = new Function(BalSyntaxConstants.POST, SyntaxKind.RESOURCE_ACCESSOR_DEFINITION);
+        Function create = new Function(BalSyntaxConstants.POST, SyntaxKind.RESOURCE_ACCESSOR_DEFINITION, true);
         NodeList<Node> resourcePaths = AbstractNodeFactory.createEmptyNodeList();
         resourcePaths = resourcePaths.add(AbstractNodeFactory.createIdentifierToken(entity.getTableName()));
         create.addRelativeResourcePaths(resourcePaths);
@@ -667,7 +667,7 @@ public class BalSyntaxGenerator {
     }
 
     private static Function createGetByKeyFunction(Entity entity, HashMap<String, String> keys) {
-        Function readByKey = new Function(BalSyntaxConstants.GET, SyntaxKind.RESOURCE_ACCESSOR_DEFINITION);
+        Function readByKey = new Function(BalSyntaxConstants.GET, SyntaxKind.RESOURCE_ACCESSOR_DEFINITION, true);
         NodeList<Node> resourcePaths = AbstractNodeFactory.createEmptyNodeList();
         resourcePaths = resourcePaths.add(AbstractNodeFactory.createIdentifierToken(entity.getTableName()));
 
@@ -699,8 +699,8 @@ public class BalSyntaxGenerator {
         return readByKey;
     }
 
-    private static Function createGetFunction(Entity entity) {
-        Function read = new Function(BalSyntaxConstants.GET, SyntaxKind.RESOURCE_ACCESSOR_DEFINITION);
+    private static Function createGetFunction(Entity entity, boolean includeError) {
+        Function read = new Function(BalSyntaxConstants.GET, SyntaxKind.RESOURCE_ACCESSOR_DEFINITION, includeError);
         read.addQualifiers(new String[]{KEYWORD_ISOLATED, BalSyntaxConstants.KEYWORD_RESOURCE});
         NodeList<Node> resourcePaths = AbstractNodeFactory.createEmptyNodeList();
         resourcePaths = resourcePaths.add(AbstractNodeFactory.createIdentifierToken(entity.getTableName()));
@@ -728,7 +728,7 @@ public class BalSyntaxGenerator {
     }
 
     private static Function createPutFunction(Entity entity, HashMap<String, String> keys) {
-        Function update = new Function(BalSyntaxConstants.PUT, SyntaxKind.RESOURCE_ACCESSOR_DEFINITION);
+        Function update = new Function(BalSyntaxConstants.PUT, SyntaxKind.RESOURCE_ACCESSOR_DEFINITION, true);
         update.addQualifiers(new String[]{KEYWORD_ISOLATED, BalSyntaxConstants.KEYWORD_RESOURCE});
         NodeList<Node> resourcePaths = AbstractNodeFactory.createEmptyNodeList();
         resourcePaths = resourcePaths.add(AbstractNodeFactory.createIdentifierToken(entity.getTableName()));
@@ -758,7 +758,7 @@ public class BalSyntaxGenerator {
     }
 
     private static Function createDeleteFunction(Entity entity, HashMap<String, String> keys) {
-        Function delete = new Function(BalSyntaxConstants.DELETE, SyntaxKind.RESOURCE_ACCESSOR_DEFINITION);
+        Function delete = new Function(BalSyntaxConstants.DELETE, SyntaxKind.RESOURCE_ACCESSOR_DEFINITION, true);
         //delete.addRequiredParameter(TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()), KEYWORD_VALUE);
         delete.addQualifiers(new String[]{KEYWORD_ISOLATED, BalSyntaxConstants.KEYWORD_RESOURCE});
         NodeList<Node> resourcePaths = AbstractNodeFactory.createEmptyNodeList();
@@ -786,7 +786,7 @@ public class BalSyntaxGenerator {
     }
 
     private static Function createCloseFunction() {
-        Function close = new Function(BalSyntaxConstants.CLOSE, SyntaxKind.OBJECT_METHOD_DEFINITION);
+        Function close = new Function(BalSyntaxConstants.CLOSE, SyntaxKind.OBJECT_METHOD_DEFINITION, true);
         close.addQualifiers(new String[]{BalSyntaxConstants.KEYWORD_PUBLIC});
         close.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode(EMPTY_STRING,
                 PERSIST_ERROR));
