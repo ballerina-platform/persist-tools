@@ -930,12 +930,6 @@ public class BalSyntaxGenerator {
                     String.format("public type %sInsert %s;", entity.getEntityName(),
                             entity.getEntityName())));
             moduleMembers = moduleMembers.add(createUpdateRecord(entity));
-
-            // TODO: improve import logic
-//            if (entity.getFields().stream().anyMatch(entityField ->
-//                    entityField.getFieldType().trim().startsWith(BalSyntaxConstants.KEYWORD_TIME_PREFIX))) {
-//                timeImport = true;
-//            }
         }
         Token eofToken = AbstractNodeFactory.createIdentifierToken(EMPTY_STRING);
         ModulePartNode modulePartNode = NodeFactory.createModulePartNode(imports, moduleMembers, eofToken);
