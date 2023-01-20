@@ -193,4 +193,10 @@ public class ToolingDbPushTest {
     public void testDbPushWithOneToManyRelationship() {
         assertGeneratedSources("tool_test_db_push_16", DB_PUSH);
     }
+
+    @Test(enabled = true)
+    @Description("When the db push command is executed with invalid config key in Ballerina.toml.")
+    public void testDbPushWithInvalidConfigKey() {
+        assertGeneratedSourcesNegative("tool_test_db_push_17", DB_PUSH, null);
+    }
 }

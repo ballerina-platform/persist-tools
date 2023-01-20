@@ -34,10 +34,7 @@ public class DatabaseConfiguration {
     private int port;
     private String database;
 
-    private final String modelName;
-
     public DatabaseConfiguration(String modelName, NodeList<KeyValueNode> nodeList) throws BalException {
-        this.modelName = modelName;
 
         for (KeyValueNode member : nodeList) {
             String value = member.value().toSourceCode().replaceAll("\"", "").trim();
@@ -87,7 +84,4 @@ public class DatabaseConfiguration {
         return database;
     }
 
-    public String getModelName() {
-        return modelName;
-    }
 }
