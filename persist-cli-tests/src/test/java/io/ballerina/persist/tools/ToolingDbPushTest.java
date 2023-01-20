@@ -97,6 +97,12 @@ public class ToolingDbPushTest {
         assertCreateDatabaseTables("tool_test_db_push_3", "entities", tables);
     }
 
+    @Test(enabled = true)
+    @Description("When the db push command is executed with empty schema file")
+    public void testDbPushEmptySchemaFile() {
+        assertGeneratedSources("tool_test_db_push_4", DB_PUSH);
+    }
+
     @Test(enabled = true, dependsOnMethods = { "testDbPushEntityRemoved" })
     @Description("Database already exists. An entity is updated. The respective table should be updated.")
     public void testDbPushEntityUpdated() throws BalException {
@@ -139,9 +145,9 @@ public class ToolingDbPushTest {
         assertGeneratedSources("tool_test_db_push_8", DB_PUSH);
     }
 
-    @Test(enabled = true) // this is not valid because, defining entities in multiple modules is init allowed.
-    @Description("Test the created sql script content when entities are in the main and sub-modules")
-    public void testDbPushWithSubModule() {
+    @Test(enabled = true)
+    @Description("Test the created sql script content with out defining any schema files inside persist directory")
+    public void testDbPushWithoutSchemaFile() {
         assertGeneratedSources("tool_test_db_push_9", DB_PUSH);
     }
 

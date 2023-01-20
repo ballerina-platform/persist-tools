@@ -150,11 +150,17 @@ public class Push implements BLauncherCmd {
                 BalProjectUtils.validateSchemaFile(file);
                 entityModule = BalProjectUtils.getEntities(file);
                 ArrayList<Entity> entityArray = new ArrayList<>(entityModule.getEntityMap().values());
+                if (entityArray.isEmpty()) {
+                    errStream.printf("The persist schema file, %s doesn't contain any valid entity%n",
+                            file.getFileName());
+                    return;
+                }
                 String[] sqlScripts = SqlScriptGenerationUtils.generateSqlScript(entityArray);
                 SqlScriptGenerationUtils.writeScriptFile(entityModule.getModuleName(), sqlScripts,
                         Paths.get(this.sourcePath, PERSIST_DIRECTORY));
             } catch (BalException e) {
-                errStream.println("Error occurred while generating SQL schema. " + e.getMessage());
+                errStream.printf("Error occurred while generating SQL schema for persist schema file, %s. "
+                                + e.getMessage() + "%n", file.getFileName());
                 return;
             }
 
@@ -202,7 +208,8 @@ public class Push implements BLauncherCmd {
                 errStream.println("Created tables for entities in the database " +
                         persistConfigurations.getDbConfig().getDatabase() + ".");
             } catch (BalException e) {
-                errStream.println("Error occurred while executing the SQL scripts. " + e.getMessage());
+                errStream.println("Error occurred while executing the SQL script for the persist schema file, "
+                        + file.getFileName() + "." + e.getMessage());
             } catch (IOException e) {
                 errStream.println("Error occurred in database driver loader. " + e.getMessage());
             }
