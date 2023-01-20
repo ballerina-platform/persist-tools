@@ -15,7 +15,9 @@ public client class EntitiesClient {
         return error persist:Error("unsupported operation");
     }
     isolated resource function post medicalneed(MedicalNeedInsert[] data) returns [int, int][]|persist:Error {
-        return error persist:Error("unsupported operation");
+        _ = check self.persistClients.get("medicalneed").runBatchInsertQuery(data);
+        return from MedicalNeedInsert inserted in data
+            select [inserted.needId, inserted.itemId];
     }
     isolated resource function put medicalneed/[int itemId]/[int needId](MedicalNeedUpdate value) returns MedicalNeed|persist:Error {
         return error persist:Error("unsupported operation");
