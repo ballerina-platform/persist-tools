@@ -146,8 +146,8 @@ public class ToolingDbPushTest {
     }
 
     @Test(enabled = true)
-    @Description("Test the created sql script content when relation annotation hasn't properties")
-    public void testDbPushWithScriptHasUniqueConstraints() {
+    @Description("Test DB push without specifying DB driver in database_configurations")
+    public void testDbPushWithoutDriverImport() {
         assertGeneratedSources("tool_test_db_push_10", DB_PUSH);
     }
 
