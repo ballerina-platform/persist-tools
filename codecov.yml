@@ -1,8 +1,5 @@
 ignore:
   - "**/persist-cli-tests"
-  - "persist-cli/src/main/java/io/ballerina/persist/cmd/Push.java"
-  - "persist-cli/src/main/java/io/ballerina/persist/utils/JdbcDriverLoader.java"
-  - "persist-cli/src/main/java/io/ballerina/persist/utils/SqlScriptGenerationUtils.java"
   - "persist-cli/src/main/java/io/ballerina/persist/components/Enum.java"
   - "persist-cli/src/main/java/io/ballerina/persist/components/Function.java"
   - "persist-cli/src/main/java/io/ballerina/persist/components/IfElse.java"
