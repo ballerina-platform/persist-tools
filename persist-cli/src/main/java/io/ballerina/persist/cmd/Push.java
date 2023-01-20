@@ -256,7 +256,7 @@ public class Push implements BLauncherCmd {
     }
 
     private Driver getJdbcDriver (JdbcDriverLoader driverLoader) throws BalException {
-        Driver driver = null;
+        Driver driver;
         try {
             Class<?> drvClass = driverLoader.loadClass(MYSQL_DRIVER_CLASS);
             driver = (Driver) drvClass.getDeclaredConstructor().newInstance();
@@ -319,8 +319,6 @@ public class Push implements BLauncherCmd {
                 }
             }
         }
-        // Unreachable code since the driver jar is pulled from the central and stored in the local cache
-        // when the project is being built prior to this function.
         throw new BalException("Failed to retrieve MySQL driver path in the local cache.");
     }
 }
