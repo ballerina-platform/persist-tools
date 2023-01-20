@@ -44,7 +44,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_ENTITY;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PERSIST_MODULE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxGenerator.inferRelationDetails;
@@ -91,31 +90,6 @@ public class BalProjectUtils {
         } catch (IOException | BalException | RuntimeException e) {
             throw new BalException(e.getMessage());
         }
-    }
-
-    // TODO: Remove this function once DB push command migrated.
-    public static BuildProject validateSchemaFile(Path projectPath, boolean skipGeneratedDir) throws BalException {
-        BuildProject buildProject = BuildProject.load(projectPath.toAbsolutePath());
-        Package currentPackage = buildProject.currentPackage();
-        PackageCompilation compilation = currentPackage.getCompilation();
-        DiagnosticResult diagnosticResult = compilation.diagnosticResult();
-        if (diagnosticResult.hasErrors()) {
-            StringBuilder errorMessage = new StringBuilder();
-            errorMessage.append("Error occurred when validating the project. ");
-            int validErrors = 0;
-            for (Diagnostic diagnostic : diagnosticResult.errors()) {
-                if (!skipGeneratedDir || !diagnostic.location().lineRange().filePath().startsWith(
-                        GENERATED_SOURCE_DIRECTORY)) {
-                    errorMessage.append(System.lineSeparator());
-                    errorMessage.append(diagnostic);
-                    validErrors += 1;
-                }
-            }
-            if (validErrors > 0) {
-                throw new BalException(errorMessage.toString());
-            }
-        }
-        return buildProject;
     }
 
     public static void validateSchemaFile(Path schemaPath) throws BalException {

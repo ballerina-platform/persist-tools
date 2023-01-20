@@ -35,7 +35,7 @@ import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.EMPTY_STRING
 public class Entity {
 
     private final List<EntityField> keys;
-    private final String tableName;
+    private final String resourceName;
 
     private final String entityName;
 
@@ -44,11 +44,11 @@ public class Entity {
     private final List<EntityField> fields;
 
     private Entity(ModuleMemberDeclarationNode node, String entityName, List<EntityField> keys,
-                   String tableName, List<EntityField> fields) {
+                   String resourceName, List<EntityField> fields) {
         this.node = node;
         this.entityName = entityName;
         this.keys = keys;
-        this.tableName = tableName;
+        this.resourceName = resourceName;
         this.fields = fields;
     }
 
@@ -56,8 +56,8 @@ public class Entity {
         return this.keys;
     }
 
-    public String getTableName() {
-        return this.tableName;
+    public String getResourceName() {
+        return this.resourceName;
     }
 
     public String getEntityName() {
@@ -81,7 +81,7 @@ public class Entity {
      */
     public static class Builder {
         String entityName;
-        String tableName = null;
+        String resourceName = null;
         List<EntityField> keys;
 
         List<EntityField> fieldList = null;
@@ -96,8 +96,8 @@ public class Entity {
             this.keys = keys;
         }
 
-        public void setTableName(String tableName) {
-            this.tableName = tableName.replaceAll(DOUBLE_QUOTE, EMPTY_STRING);
+        public void setResourceName(String resourceName) {
+            this.resourceName = resourceName.replaceAll(DOUBLE_QUOTE, EMPTY_STRING);
         }
 
         public void setDeclarationNode(ModuleMemberDeclarationNode node) {
@@ -112,10 +112,10 @@ public class Entity {
         }
 
         public Entity build() {
-            if (tableName == null) {
-                tableName = entityName.toLowerCase(Locale.ENGLISH);
+            if (resourceName == null) {
+                resourceName = entityName.toLowerCase(Locale.ENGLISH);
             }
-            return new Entity(node, entityName, keys, tableName, fieldList);
+            return new Entity(node, entityName, keys, resourceName, fieldList);
         }
     }
 }

@@ -20,7 +20,7 @@ import ballerina/persist as _;
 public type MedicalNeed record {|
     //comment1
     //comment1
-    readonly int needId = -1;
+    readonly int needId;
     //comment1
     int itemId;
     //comment1

@@ -20,14 +20,14 @@ public type Profile record  {|
     readonly int id;
     string name;
     User owner;
-    MultipleAssociations multipleAssociations?;
+    MultipleAssociations multipleAssociations;
 |};
 
 public type User record  {|
     readonly int id;
     string name;
     Profile profile;
-    MultipleAssociations multipleAssociations?;
+    MultipleAssociations multipleAssociations;
 |};
 
 public type MultipleAssociations record {|

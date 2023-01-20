@@ -17,9 +17,5 @@
 import ballerina/io;
 
 public function main() {
-    io:println(port);
-    io:println(user);
-    io:println(host);
-    io:println(password);
-    io:println(database);
+    io:println("hello");
 }

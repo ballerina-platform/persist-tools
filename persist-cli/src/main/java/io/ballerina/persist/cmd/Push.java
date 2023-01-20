@@ -53,25 +53,27 @@ import java.sql.Driver;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static io.ballerina.persist.PersistToolsConstants.BALLERINA_MYSQL_DRIVER_NAME;
+import static io.ballerina.persist.PersistToolsConstants.BALLERINA_TOML_FILE;
 import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 import static io.ballerina.persist.PersistToolsConstants.MYSQL_CONNECTOR_NAME_PREFIX;
 import static io.ballerina.persist.PersistToolsConstants.MYSQL_DRIVER_CLASS;
 import static io.ballerina.persist.PersistToolsConstants.PASSWORD;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
-import static io.ballerina.persist.PersistToolsConstants.PERSIST_TOML_FILE;
 import static io.ballerina.persist.PersistToolsConstants.PLATFORM;
 import static io.ballerina.persist.PersistToolsConstants.PROPERTY_KEY_PATH;
 import static io.ballerina.persist.PersistToolsConstants.USER;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.JDBC_URL_WITHOUT_DATABASE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.JDBC_URL_WITH_DATABASE;
-import static io.ballerina.persist.utils.BalProjectUtils.getEntityModule;
-import static io.ballerina.persist.utils.BalProjectUtils.validateSchemaFile;
+import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
 
 /**
  * Class to implement "persist push" command for ballerina.
@@ -115,73 +117,98 @@ public class Push implements BLauncherCmd {
             return;
         }
 
-        Path projectPath = Paths.get(this.sourcePath).toAbsolutePath();
-        Path persistTomlPath = Paths.get(this.sourcePath, PERSIST_DIRECTORY, PERSIST_TOML_FILE);
-
-        if (!Files.exists(persistTomlPath)) {
-            errStream.println("Persist project is not initiated. Please run `bal persist init` " +
-                    "to initiate the project before the database schema generation. ");
+        Path persistDir = Paths.get(this.sourcePath, PERSIST_DIRECTORY);
+        if (!Files.isDirectory(persistDir, NOFOLLOW_LINKS)) {
+            errStream.println("The persist directory inside the Ballerina project doesn't exist. " +
+                    "Please run `bal persist init` to initiate the project before generation");
             return;
         }
 
-        try {
-            BuildProject buildProject = validateSchemaFile(projectPath, false);
-            io.ballerina.projects.Module module = getEntityModule(buildProject);
-            Module entityModule = BalProjectUtils.getEntities(module);
-            ArrayList<Entity> entityArray = new ArrayList<>(entityModule.getEntityMap().values());
-            String[] sqlScripts = SqlScriptGenerationUtils.generateSqlScript(entityArray);
-            SqlScriptGenerationUtils.writeScriptFile(sqlScripts,
-                    Paths.get(projectPath.toString(), PERSIST_DIRECTORY));
-        } catch (ProjectException | BalException e) {
-            errStream.println("Error occurred while generating SQL schema. " + e.getMessage());
-            return;
-        }
-        Project balProject;
-        PersistConfiguration persistConfigurations;
-        try {
-            balProject = BuildProject.load(projectPath); // refer the value from the project path
-            balProject.currentPackage().getCompilation();
-            persistConfigurations = TomlSyntaxGenerator.readPersistToml(persistTomlPath);
-        } catch (BalException e) {
-            errStream.println("Error occurred while loading db configurations and driver. " + e.getMessage());
-            return;
-        }
-        try (JdbcDriverLoader driverLoader = getJdbcDriverLoader(balProject)) {
-            Driver driver = getJdbcDriver(driverLoader);
-            String query = String.format(CREATE_DATABASE_SQL_FORMAT,
-                    persistConfigurations.getDbConfig().getDatabase());
-            try (Connection connection = getDBConnection(driver, persistConfigurations, false)) {
-                ScriptRunner sr = new ScriptRunner(connection);
-                sr.runQuery(query);
-            } catch (SQLException e) {
-                errStream.println("Error occurred while creating the database, " +
-                        persistConfigurations.getDbConfig().getDatabase() + "." + e.getMessage());
-                return;
-            }
-
-            String sqlFilePath = Paths.get(this.sourcePath,
-                    PERSIST_DIRECTORY, PersistToolsConstants.SQL_SCHEMA_FILE).toAbsolutePath().toString();
-            try (Connection connection = getDBConnection(driver, persistConfigurations, true);
-                 Reader fileReader = new BufferedReader(new FileReader(sqlFilePath,
-                         StandardCharsets.UTF_8))) {
-                ScriptRunner sr = new ScriptRunner(connection);
-                sr.runScript(fileReader);
-            } catch (IOException e) {
-                errStream.println("Error occurred while reading SQL schema file, "
-                        + sqlFilePath + "." + e.getMessage());
-                return;
-            } catch (Exception e) {
-                errStream.println("Error occurred while executing SQL schema file, "
-                        + sqlFilePath + "." + e.getMessage());
-                return;
-            }
-            errStream.println("Created tables for entities in the database " +
-                    persistConfigurations.getDbConfig().getDatabase() + ".");
-        } catch (BalException e) {
-            errStream.println("Error occurred while executing the SQL scripts. " + e.getMessage());
+        List<Path> schemaFilePaths;
+        try (Stream<Path> stream = Files.list(persistDir)) {
+            schemaFilePaths = stream.filter(file -> !Files.isDirectory(file))
+                    .filter(file -> file.toString().toLowerCase(Locale.ENGLISH).endsWith(".bal"))
+                    .collect(Collectors.toList());
         } catch (IOException e) {
-            errStream.println("Error occurred in database driver loader. " + e.getMessage());
+            errStream.println("Error while listing the persist schema files in persist directory. " + e.getMessage());
+            return;
         }
+
+        if (schemaFilePaths.isEmpty()) {
+            errStream.println("The persist directory doesn't contain any schema file. " +
+                    "Please run `bal persist init` to initiate the project before generation");
+            return;
+        }
+
+        // Load Ballerina project to get DB driver path.
+        Path projectPath = Paths.get(this.sourcePath).toAbsolutePath();
+        Project balProject = BuildProject.load(projectPath);
+
+        schemaFilePaths.forEach(file -> {
+            Module entityModule;
+            try {
+                BalProjectUtils.validateSchemaFile(file);
+                entityModule = BalProjectUtils.getEntities(file);
+                ArrayList<Entity> entityArray = new ArrayList<>(entityModule.getEntityMap().values());
+                String[] sqlScripts = SqlScriptGenerationUtils.generateSqlScript(entityArray);
+                SqlScriptGenerationUtils.writeScriptFile(entityModule.getModuleName(), sqlScripts,
+                        Paths.get(this.sourcePath, PERSIST_DIRECTORY));
+            } catch (BalException e) {
+                errStream.println("Error occurred while generating SQL schema. " + e.getMessage());
+                return;
+            }
+
+            PersistConfiguration persistConfigurations;
+            try {
+                Path ballerinaTomlPath = Paths.get(this.sourcePath, BALLERINA_TOML_FILE);
+                persistConfigurations = TomlSyntaxGenerator.readPersistConfigurations(
+                        entityModule.getModuleName(), ballerinaTomlPath);
+            } catch (BalException e) {
+                errStream.printf("Error occurred while loading db configurations for the data model, %s. "
+                        + e.getMessage() + "%n", entityModule.getModuleName());
+                return;
+            }
+
+            try (JdbcDriverLoader driverLoader = getJdbcDriverLoader(balProject)) {
+                Driver driver = getJdbcDriver(driverLoader);
+                String query = String.format(CREATE_DATABASE_SQL_FORMAT,
+                        persistConfigurations.getDbConfig().getDatabase());
+                try (Connection connection = getDBConnection(driver, persistConfigurations, false)) {
+                    ScriptRunner sr = new ScriptRunner(connection);
+                    sr.runQuery(query);
+                } catch (SQLException e) {
+                    errStream.println("Error occurred while creating the database, " +
+                            persistConfigurations.getDbConfig().getDatabase() + "." + e.getMessage());
+                    return;
+                }
+
+                String sqlFilePath = Paths.get(this.sourcePath, PERSIST_DIRECTORY,
+                                String.format(PersistToolsConstants.SQL_SCHEMA_FILE, entityModule.getModuleName()))
+                        .toAbsolutePath().toString();
+                try (Connection connection = getDBConnection(driver, persistConfigurations, true);
+                     Reader fileReader = new BufferedReader(new FileReader(sqlFilePath,
+                             StandardCharsets.UTF_8))) {
+                    ScriptRunner sr = new ScriptRunner(connection);
+                    sr.runScript(fileReader);
+                } catch (IOException e) {
+                    errStream.println("Error occurred while reading SQL schema file, "
+                            + sqlFilePath + "." + e.getMessage());
+                    return;
+                } catch (Exception e) {
+                    errStream.println("Error occurred while executing SQL schema file, "
+                            + sqlFilePath + "." + e.getMessage());
+                    return;
+                }
+                errStream.println("Created tables for entities in the database " +
+                        persistConfigurations.getDbConfig().getDatabase() + ".");
+            } catch (BalException e) {
+                errStream.println("Error occurred while executing the SQL scripts. " + e.getMessage());
+            } catch (IOException e) {
+                errStream.println("Error occurred in database driver loader. " + e.getMessage());
+            }
+        });
+
+
     }
 
     private Connection getDBConnection(Driver driver, PersistConfiguration persistConfigurations, boolean withDB)

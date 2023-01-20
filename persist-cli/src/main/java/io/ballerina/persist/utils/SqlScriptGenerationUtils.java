@@ -69,7 +69,7 @@ public class SqlScriptGenerationUtils {
         HashMap<String, List<String>> tableScripts = new HashMap<>();
         for (Entity entity : entityArray) {
             List<String> tableScript = new ArrayList<>();
-            String tableName = entity.getTableName();
+            String tableName = entity.getEntityName();
             tableScript.add(generateDropTableQuery(tableName));
             tableScript.add(generateCreateTableQuery(entity, referenceTables));
             tableScripts.put(tableName, tableScript);
@@ -77,8 +77,9 @@ public class SqlScriptGenerationUtils {
         return rearrangeScriptsWithReference(tableScripts.keySet(), referenceTables, tableScripts);
     }
 
-    public static void writeScriptFile(String[] sqlScripts, Path filePath) {
-        Path path = Paths.get(String.valueOf(filePath), PersistToolsConstants.SQL_SCHEMA_FILE);
+    public static void writeScriptFile(String moduleName, String[] sqlScripts, Path filePath) {
+        Path path = Paths.get(String.valueOf(filePath),
+                String.format(PersistToolsConstants.SQL_SCHEMA_FILE, moduleName));
         StringBuilder sqlScript = new StringBuilder();
         for (String script : sqlScripts) {
             sqlScript.append(script).append(NEW_LINE);
@@ -110,7 +111,7 @@ public class SqlScriptGenerationUtils {
         }
         String fieldDefinitions = generateFieldsDefinitionSegments(entity, referenceTables);
 
-        return MessageFormat.format("{0}CREATE TABLE {1} ({2}{3}){4};", NEW_LINE, entity.getTableName(),
+        return MessageFormat.format("{0}CREATE TABLE {1} ({2}{3}){4};", NEW_LINE, entity.getEntityName(),
                 fieldDefinitions, NEW_LINE, autoIncrementScript);
     }
 
@@ -123,7 +124,7 @@ public class SqlScriptGenerationUtils {
                 .filter(entityField -> entityField.getRelation() != null && entityField.getRelation().isOwner())
                 .collect(Collectors.toList());
         for (EntityField entityField : relationFields) {
-            sqlScript.append(getRelationScripts(entity.getTableName(), entityField, referenceTables));
+            sqlScript.append(getRelationScripts(entity.getEntityName(), entityField, referenceTables));
         }
         sqlScript.append(addPrimaryKey(entity.getKeys()));
         return sqlScript.substring(0, sqlScript.length() - 1);
@@ -209,9 +210,9 @@ public class SqlScriptGenerationUtils {
                     referenceSqlType, unique));
             relationScripts.append(MessageFormat.format("{0}{1}CONSTRAINT FK_{2}_{3}_{4} FOREIGN KEY({5}) " +
                             "REFERENCES {6}({7}){8}{9},", NEW_LINE, TAB, tableName.toUpperCase(Locale.ENGLISH),
-                    assocEntity.getTableName().toUpperCase(Locale.ENGLISH), i, foreignKey, assocEntity.getTableName(),
+                    assocEntity.getEntityName().toUpperCase(Locale.ENGLISH), i, foreignKey, assocEntity.getEntityName(),
                     referenceFieldName, onDeleteScript, onUpdateScript));
-            updateReferenceTable(tableName, assocEntity.getTableName(), referenceTables);
+            updateReferenceTable(tableName, assocEntity.getEntityName(), referenceTables);
         }
         return relationScripts.toString();
     }

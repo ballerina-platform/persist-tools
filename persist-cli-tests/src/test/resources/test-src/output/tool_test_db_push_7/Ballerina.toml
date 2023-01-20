@@ -6,3 +6,10 @@ distribution = "2201.3.0"
 
 [build-options]
 observabilityIncluded = false
+
+[persist.entities.storage.mysql]
+host = "local"
+port = 3306
+user = "root"
+password = "123456"
+database = "persist"

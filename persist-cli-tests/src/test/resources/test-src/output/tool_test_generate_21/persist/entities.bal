@@ -23,12 +23,12 @@ public type MedicalNeed record {|
     time:Civil period;
     string urgency;
     int quantity;
-    AidPackageOrderItem aidPackageOrderItem?;
+    AidPackageOrderItem aidPackageOrderItem;
 |};
 
 public type AidPackageOrderItem record {|
     readonly int id;
-    MedicalNeed medicalNeed?;
+    MedicalNeed medicalNeed;
 
     int quantity;
     int totalAmount;

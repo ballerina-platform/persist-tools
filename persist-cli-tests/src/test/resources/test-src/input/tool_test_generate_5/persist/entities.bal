@@ -18,7 +18,7 @@ import ballerina/time;
 import ballerina/persist as _;
 
 public type MedicalNeed record {|
-    readonly int needId = -1;
+    readonly int needId;
     int itemId;
     string name;
     int beneficiaryId;

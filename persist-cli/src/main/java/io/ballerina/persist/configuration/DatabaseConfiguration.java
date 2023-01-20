@@ -34,7 +34,11 @@ public class DatabaseConfiguration {
     private int port;
     private String database;
 
-    public DatabaseConfiguration(NodeList<KeyValueNode> nodeList) throws BalException {
+    private final String modelName;
+
+    public DatabaseConfiguration(String modelName, NodeList<KeyValueNode> nodeList) throws BalException {
+        this.modelName = modelName;
+
         for (KeyValueNode member : nodeList) {
             String value = member.value().toSourceCode().replaceAll("\"", "").trim();
             String key = member.identifier().toSourceCode().trim();
@@ -58,46 +62,32 @@ public class DatabaseConfiguration {
                     throw new BalException("invalid database configuration identifier, " + key);
             }
         }
-
+        if (this.database == null) {
+            this.database = DataBaseValidationUtils.validateDatabaseInput(modelName);
+        }
     }
 
     public String getHost() {
         return host;
     }
 
-    public void setHost(String host) {
-        this.host = host;
-    }
-
     public String getUsername() {
         return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
     }
 
     public String getPassword() {
         return password;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
     public int getPort() {
         return port;
-    }
-
-    public void setPort(int port) {
-        this.port = port;
     }
 
     public String getDatabase() {
         return database;
     }
 
-    public void setDatabase(String database) {
-        this.database = database;
+    public String getModelName() {
+        return modelName;
     }
 }

@@ -18,7 +18,7 @@ import ballerina/persist as _;
 import ballerina/time;
 
 public type MedicalNeed record {|
-    readonly int 'record = -1;
+    readonly int 'record;
     MedicalItem item;
 
     int beneficiaryId;
@@ -28,7 +28,7 @@ public type MedicalNeed record {|
 |};
 
 public type MedicalItem record {|
-    readonly int itemId = -1;
+    readonly int itemId;
 
     MedicalNeed need;
     string 'string;
