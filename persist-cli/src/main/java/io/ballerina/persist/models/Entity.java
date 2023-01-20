@@ -24,9 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.DOUBLE_QUOTE;
-import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.EMPTY_STRING;
-
 /**
  * Client to store persist entities.
  *
@@ -94,10 +91,6 @@ public class Entity {
 
         public void setKeys(List<EntityField> keys) {
             this.keys = keys;
-        }
-
-        public void setResourceName(String resourceName) {
-            this.resourceName = resourceName.replaceAll(DOUBLE_QUOTE, EMPTY_STRING);
         }
 
         public void setDeclarationNode(ModuleMemberDeclarationNode node) {
