@@ -44,6 +44,7 @@ public class BalSyntaxConstants {
     public static final String RETURN_FALSE = "return false;";
     public static final String CLOSE_RECORD_VARIABLE = "record {|%s|}";
     public static final String DOUBLE_QUOTE = "\"";
+    public static final String BACK_SLASH = "/";
     public static final String SINGLE_QUOTE = "'";
     public static final String APOSTROPHE = "`";
     public static final String EMPTY_STRING = "";
@@ -97,6 +98,7 @@ public class BalSyntaxConstants {
             "self.metadata.get(\"%s\").fieldMetadata)";
     public static final String CREATE_SQL_RESULTS = "_ = check " +
             "self.persistClients.get(\"%s\").runBatchInsertQuery(data);";
+    public static final String RETURN_CREATED_KEY = "return from  %s inserted in data\n";
     public static final String CREATE_SQL_RESULTS_SINGLE_KEY = "return from %s inserted in data " +
             "select %s";
     public static final String READ_BY_KEY_RETURN = "return (check " +
@@ -113,9 +115,11 @@ public class BalSyntaxConstants {
             "(new %sStream(result));";
     public static final String UPDATE_RUN_UPDATE_QUERY = "_ = check self.persistClients.get(\"%s\").runUpdateQuery" +
             "(%s, data);";
-    public static final String UPDATE_RETURN_UPDATE_QUERY = "_ = check self.persistClients.get(\"%s\").runUpdateQuery" +
-            "(%s, data);";
-    public static final String DELETE_RUN_DELETE_QUERY = "_ = check self.persistClient.runDeleteQuery(value);";
+    public static final String UPDATE_RETURN_UPDATE_QUERY = "return self->%s.get();";
+    public static final String DELETE_RUN_DELETE_QUERY = "_ = check self.persistClients.get(\"%s\")." +
+            "runDeleteQuery(%s);";
+    public static final String RETURN_DELETED_OBJECT = "return 'object;";
+    public static final String GET_OBJECT_QUERY = "%s 'object = check self->%s.get();";
     public static final String CLOSE_PERSIST_CLIENT = "return self.persistClient.close();";
     public static final String INIT_STREAM_STATEMENT = "self.anydataStream = anydataStream;";
     public static final String NEXT_STREAM_RETURN_TYPE = "record {|%s value;|}|persist:Error?";
