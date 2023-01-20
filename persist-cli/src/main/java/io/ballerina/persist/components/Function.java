@@ -28,7 +28,6 @@ import io.ballerina.compiler.syntax.tree.IfElseStatementNode;
 import io.ballerina.compiler.syntax.tree.Node;
 import io.ballerina.compiler.syntax.tree.NodeFactory;
 import io.ballerina.compiler.syntax.tree.NodeList;
-import io.ballerina.compiler.syntax.tree.NodeParser;
 import io.ballerina.compiler.syntax.tree.ReturnTypeDescriptorNode;
 import io.ballerina.compiler.syntax.tree.StatementNode;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
@@ -161,19 +160,10 @@ public class Function {
     }
 
     private FunctionBodyNode getFunctionBody() {
-        NodeList<StatementNode> tempStatements = NodeFactory.createEmptyNodeList();;
-        if (this.returnError) {
-            tempStatements = tempStatements.add(NodeParser.parseStatement(
-                    "return error persist:Error(\"unsupported operation\");"));
-        } else {
-            tempStatements = tempStatements.add(NodeParser.parseStatement(
-                    "return new();"));
-        }
-
         return NodeFactory.createFunctionBodyBlockNode(
                 SyntaxTokenConstants.SYNTAX_TREE_OPEN_BRACE,
                 null,
-                tempStatements,
+                statements,
                 SyntaxTokenConstants.SYNTAX_TREE_CLOSE_BRACE,
                 null
         );
