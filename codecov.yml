@@ -3,7 +3,6 @@ ignore:
   - "persist-cli/src/main/java/io/ballerina/persist/components/Enum.java"
   - "persist-cli/src/main/java/io/ballerina/persist/components/Function.java"
   - "persist-cli/src/main/java/io/ballerina/persist/components/IfElse.java"
-  - "persist-cli/src/main/java/io/ballerina/persist/utils/BalProjectUtils.java"
   - "persist-cli/src/main/java/io/ballerina/persist/components/TypeDescriptor.java"
   - "persist-cli/src/main/java/io/ballerina/persist/utils/ScriptRunner.java"
   - "persist-cli/src/main/java/io/ballerina/persist/cmd/Init.java"
@@ -13,8 +12,6 @@ ignore:
   - "persist-cli/src/main/java/io/ballerina/persist/components/Client.java"
   - "persist-cli/src/main/java/io/ballerina/persist/models/EntityField.java"
   - "persist-cli/src/main/java/io/ballerina/persist/nodegenerator/BalSyntaxGenerator.java"
-  - "persist-cli/src/main/java/io/ballerina/persist/models/Relation.java"
-  - "persist-cli/src/main/java/io/ballerina/persist/nodegenerator/TomlSyntaxGenerator.java"
 
 coverage:
   precision: 2
