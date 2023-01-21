@@ -104,15 +104,9 @@ public class TomlSyntaxGenerator {
                         if (nameParts.length > 3 && SUPPORTED_DB_PROVIDERS.contains(nameParts[3])) {
                             configuration.setProvider(nameParts[3]);
                             dbConfigExists = true;
-                            if (nameParts.length == 5 && "shadow".equals(nameParts[4])) {
-                                DatabaseConfiguration shadowDbConfiguration = new DatabaseConfiguration(
-                                        schemaName, node.fields());
-                                configuration.setShadowDbConfig(shadowDbConfiguration);
-                            } else {
-                                DatabaseConfiguration databaseConfiguration = new DatabaseConfiguration(
-                                        schemaName, node.fields());
-                                configuration.setDbConfig(databaseConfiguration);
-                            }
+                            DatabaseConfiguration databaseConfiguration = new DatabaseConfiguration(
+                                    schemaName, node.fields());
+                            configuration.setDbConfig(databaseConfiguration);
                         } else {
                             throw new BalException("Database is not configured properly\n" +
                                     "You should give the correct database configurations " +

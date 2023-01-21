@@ -46,21 +46,7 @@ public class SqlScriptGenerationUtils {
 
     private static final String NEW_LINE = System.lineSeparator();
     private static final String TAB = "\t";
-    private static final String EMPTY = "";
     private static final String PRIMARY_KEY_START_SCRIPT = NEW_LINE + TAB + "PRIMARY KEY(";
-    private static final String UNIQUE_KEY_START_SCRIPT = NEW_LINE + TAB + "UNIQUE KEY(";
-    private static final String UNIQUE = " UNIQUE";
-    private static final String ON_DELETE_SYNTAX = " ON DELETE";
-    private static final String ON_UPDATE_SYNTAX = " ON UPDATE";
-    private static final String RESTRICT = "persist:RESTRICT";
-    private static final String CASCADE = "persist:CASCADE";
-    private static final String SET_NULL = "persist:SET_NULL";
-    private static final String NO_ACTION = "persist:NO_ACTION";
-    private static final String RESTRICT_SYNTAX = " RESTRICT";
-    private static final String CASCADE_SYNTAX = " CASCADE";
-    private static final String NO_ACTION_SYNTAX = " NO ACTION";
-    private static final String SET_NULL_SYNTAX = " SET NULL";
-    private static final String SET_DEFAULT_SYNTAX = " SET DEFAULT";
 
     private SqlScriptGenerationUtils(){}
 
@@ -146,16 +132,6 @@ public class SqlScriptGenerationUtils {
         Relation relation = entityField.getRelation();
         List<Relation.Key> keyColumns = relation.getKeyColumns();
         List<String> references = relation.getReferences();
-        String onDelete = relation.getOnDelete();
-        String onUpdate = relation.getOnUpdate();
-        String onDeleteScript = "";
-        String onUpdateScript = "";
-        if (onDelete != null && !onDelete.isEmpty()) {
-            onDeleteScript = ON_DELETE_SYNTAX + getReferenceAction(onDelete);
-        }
-        if (onUpdate != null && !onUpdate.isEmpty()) {
-            onUpdateScript = ON_UPDATE_SYNTAX + getReferenceAction(onUpdate);
-        }
         Entity assocEntity = relation.getAssocEntity();
         for (int i = 0; i < references.size(); i++) {
             String referenceSqlType = null;
@@ -174,32 +150,12 @@ public class SqlScriptGenerationUtils {
                 }
             }
             String foreignKey = keyColumns.get(i).getField();
-            String unique = "";
-            // TODO: check whether we need this as we remove unique keys support
-//            Relation.RelationType associatedEntityRelationType = Relation.RelationType.NONE;
-//            for (EntityField field: assocEntity.getFields()) {
-//                if (field.getFieldType().equals(tableName)) {
-//                    associatedEntityRelationType = field.getRelation().getRelationType();
-//                    break;
-//                }
-//            }
-//            if (relation.getRelationType().equals(Relation.RelationType.ONE) &&
-//                    associatedEntityRelationType.equals(Relation.RelationType.ONE)) {
-//                List<String> keys = assocEntity.getKeys();
-//                List<List<String>> uniqueConstraints = assocEntity.getUniqueKeys();
-//                if ((keys.size() == 1 && keys.get(0).equals(referenceFieldName)) ||
-//                        (uniqueConstraints != null && uniqueConstraints.size() == 1 &&
-//                                uniqueConstraints.get(0).size() == 1 &&
-//                                uniqueConstraints.get(0).get(0).equals(referenceFieldName))) {
-//                    unique = UNIQUE;
-//                }
-//            }
-            relationScripts.append(MessageFormat.format("{0}{1}{2} {3}{4},", NEW_LINE, TAB, foreignKey,
-                    referenceSqlType, unique));
+            relationScripts.append(MessageFormat.format("{0}{1}{2} {3},", NEW_LINE, TAB, foreignKey,
+                    referenceSqlType));
             relationScripts.append(MessageFormat.format("{0}{1}CONSTRAINT FK_{2}_{3}_{4} FOREIGN KEY({5}) " +
-                            "REFERENCES {6}({7}){8}{9},", NEW_LINE, TAB, tableName.toUpperCase(Locale.ENGLISH),
+                            "REFERENCES {6}({7}),", NEW_LINE, TAB, tableName.toUpperCase(Locale.ENGLISH),
                     assocEntity.getEntityName().toUpperCase(Locale.ENGLISH), i, foreignKey, assocEntity.getEntityName(),
-                    referenceFieldName, onDeleteScript, onUpdateScript));
+                    referenceFieldName));
             updateReferenceTable(tableName, assocEntity.getEntityName(), referenceTables);
         }
         return relationScripts.toString();
@@ -238,21 +194,6 @@ public class SqlScriptGenerationUtils {
             keyScripts.deleteCharAt(keyScripts.length() - 1).append("),");
         }
         return keyScripts.toString();
-    }
-
-    private static String getReferenceAction(String value) {
-        switch (value) {
-            case RESTRICT:
-                return RESTRICT_SYNTAX;
-            case CASCADE:
-                return CASCADE_SYNTAX;
-            case NO_ACTION:
-                return NO_ACTION_SYNTAX;
-            case SET_NULL:
-                return SET_NULL_SYNTAX;
-            default:
-                return SET_DEFAULT_SYNTAX;
-        }
     }
 
     private static String getType(EntityField field) throws BalException {
