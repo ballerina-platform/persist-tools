@@ -4,13 +4,8 @@ ignore:
   - "persist-cli/src/main/java/io/ballerina/persist/components/Function.java"
   - "persist-cli/src/main/java/io/ballerina/persist/components/IfElse.java"
   - "persist-cli/src/main/java/io/ballerina/persist/components/TypeDescriptor.java"
-  - "persist-cli/src/main/java/io/ballerina/persist/utils/ScriptRunner.java"
-  - "persist-cli/src/main/java/io/ballerina/persist/cmd/Init.java"
-  - "persist-cli/src/main/java/io/ballerina/persist/cmd/Generate.java"
-  - "persist-cli/src/main/java/io/ballerina/persist/PersistToolsConstants.java"
   - "persist-cli/src/main/java/io/ballerina/persist/components/ClientResource.java"
   - "persist-cli/src/main/java/io/ballerina/persist/components/Client.java"
-  - "persist-cli/src/main/java/io/ballerina/persist/models/EntityField.java"
   - "persist-cli/src/main/java/io/ballerina/persist/nodegenerator/BalSyntaxGenerator.java"
 
 coverage:
