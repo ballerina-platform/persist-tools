@@ -217,4 +217,10 @@ public class ToolingGenerateTest {
     public void testGenerateWithEmptySchemaFile() {
         assertGeneratedSources("tool_test_generate_31", GENERATE);
     }
+
+    @Test(enabled = true)
+    @Description("Test the generate command without sub module directory inside generated directory")
+    public void testGenerateWithoutSubmodule() {
+        assertGeneratedSources("tool_test_generate_32", GENERATE);
+    }
 }
