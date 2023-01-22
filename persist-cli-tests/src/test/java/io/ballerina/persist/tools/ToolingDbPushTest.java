@@ -199,4 +199,10 @@ public class ToolingDbPushTest {
     public void testDbPushWithInvalidConfigKey() {
         assertGeneratedSourcesNegative("tool_test_db_push_17", DB_PUSH, null);
     }
+
+    @Test(enabled = true)
+    @Description("When the db push command is executed with faulty database name containing illegal characters.")
+    public void testDbPushWithExceedMaxDBNameLength() {
+        assertGeneratedSourcesNegative("tool_test_db_push_18", DB_PUSH, null);
+    }
 }
