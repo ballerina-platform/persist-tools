@@ -14,6 +14,13 @@ user = "root"
 password = ""
 database = ""
 
+[[arraytable]]
+value = 1
+[[arraytable]]
+value = 2
+
+array = [ [1, 0], [0, 1] ]
+
 [persist.test.storage.mysql]
 host = "localhost"
 port = 3306

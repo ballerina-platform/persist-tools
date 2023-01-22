@@ -205,4 +205,16 @@ public class ToolingDbPushTest {
     public void testDbPushWithExceedMaxDBNameLength() {
         assertGeneratedSourcesNegative("tool_test_db_push_18", DB_PUSH, null);
     }
+
+    @Test(enabled = true)
+    @Description("When the db push command is executed with incorrect DB Config key without provider.")
+    public void testDbPushConfigWithoutProvider() {
+        assertGeneratedSourcesNegative("tool_test_db_push_19", DB_PUSH, null);
+    }
+
+    @Test(enabled = true)
+    @Description("When the db push command is executed with incorrect DB Config.")
+    public void testDbPushWithIncorrectDBConfigKey() {
+        assertGeneratedSourcesNegative("tool_test_db_push_20", DB_PUSH, null);
+    }
 }

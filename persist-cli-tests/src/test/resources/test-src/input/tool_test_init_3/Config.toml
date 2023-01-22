@@ -4,3 +4,10 @@ port = 3306
 user = "root"
 password = ""
 database = ""
+
+[[arraytable]]
+value = 1
+[[arraytable]]
+value = 2
+
+array = [ [1, 0], [0, 1] ]

@@ -1,10 +1,10 @@
-[tool_test_db_push_18.entities]
+[tool_test_db_push_19.entities]
 host = "localhostnew"
 port = 3310
 user = "rootw"
 password = "Test123#"
 database = "persistnew"
 
-[foo.tool_test_db_push_18.entities]
+[foo.tool_test_db_push_19.entities]
 database = "persist"
 root = "root"
