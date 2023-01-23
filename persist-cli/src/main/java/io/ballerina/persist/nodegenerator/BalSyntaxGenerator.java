@@ -392,7 +392,6 @@ public class BalSyntaxGenerator {
         for (Entity entity : entityArray) {
             resourceList.add(createClientResource(entity));
         }
-        // TODO: uncomment the code for the implementation
 
         resourceList.forEach(resource -> {
             resource.getFunctions().forEach(function -> {
@@ -400,7 +399,6 @@ public class BalSyntaxGenerator {
                     });
                 });
 
-        // TODO: uncomment the code for the implementation
         return clientObject;
     }
 
@@ -443,11 +441,11 @@ public class BalSyntaxGenerator {
                 if (keyFields.length() != 0) {
                     keyFields.append(",");
                 }
-                keyFields.append("\"" + key.getFieldName() + "\"");
+                keyFields.append("\"").append(key.getFieldName()).append("\"");
             }
             fieldMetaData.append(COMMA_SPACE);
             entityMetaData.append(String.format(METADATAMAP_KEY_FIELD_TEMPLATE, keyFields));
-            mapBuilder.append(String.format(METADATAMAP_ELEMENT_TEMPLATE, entity.getTableName(), entityMetaData));
+            mapBuilder.append(String.format(METADATAMAP_ELEMENT_TEMPLATE, entity.getResourceName(), entityMetaData));
         }
         return NodeParser.parseObjectMember(String.format(METADATAMAP_TEMPLATE, mapBuilder.toString()));
     }
@@ -455,7 +453,7 @@ public class BalSyntaxGenerator {
 
     private static ClientResource createClientResource(Entity entity) {
         HashMap<String, String> keys = new HashMap<>();
-        ClientResource resource = new ClientResource(entity.getTableName());
+        ClientResource resource = new ClientResource(entity.getResourceName());
         for (EntityField field : entity.getKeys()) {
             keys.put(field.getFieldName(), field.getFieldType());
         }
@@ -554,7 +552,8 @@ public class BalSyntaxGenerator {
                 persistClientMap.append(COMMA_SPACE);
             }
             persistClientMap.append(String.format(PERSIST_CLIENT_MAP_ELEMENT, entity.getResourceName(),
-                    entity.getResourceName(), entity.getResourceName(), entity.getResourceName(), entity.getResourceName()));
+                    entity.getResourceName(), entity.getResourceName(),
+                    entity.getResourceName(), entity.getResourceName()));
         }
         init.addStatement(NodeParser.parseStatement(String.format(PERSIST_CLIENT_TEMPLATE,
                 persistClientMap.toString())));
@@ -667,7 +666,7 @@ public class BalSyntaxGenerator {
             }
             readByKey.addStatement(NodeParser.parseStatement("record{|%s|} = {}"));
             readByKey.addStatement(NodeParser.parseStatement(String.format(READ_BY_KEY_RETURN,
-                    entity.getTableName(), entity.getEntityName(),
+                    entity.getResourceName(), entity.getEntityName(),
                     String.format(BalSyntaxConstants.CLOSE_RECORD_VARIABLE, keyString.toString()),
                     entity.getEntityName())));
         } else {
