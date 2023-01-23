@@ -1,6 +1,6 @@
 // AUTO-GENERATED FILE. DO NOT MODIFY.
 
-// This file is an auto-generated file by Ballerina persistence layer for rainier.
+// This file is an auto-generated file by Ballerina persistence layer for foo.
 // It should not be modified by hand.
 
 import ballerina/time;
@@ -68,4 +68,3 @@ public type WorkspaceUpdate record {|
     string workspaceType?;
     string buildingBuildingCode?;
 |};
-
