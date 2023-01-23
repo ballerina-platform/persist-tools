@@ -26,7 +26,6 @@ public class PersistConfiguration {
 
     private String provider;
     private DatabaseConfiguration dbConfig;
-    private DatabaseConfiguration shadowDbConfig;
 
     public PersistConfiguration() {
     }
@@ -37,14 +36,6 @@ public class PersistConfiguration {
 
     public void setDbConfig(DatabaseConfiguration dbConfig) {
         this.dbConfig = dbConfig;
-    }
-
-    public DatabaseConfiguration getShadowDbConfig() {
-        return shadowDbConfig;
-    }
-
-    public void setShadowDbConfig(DatabaseConfiguration shadowDbConfig) {
-        this.shadowDbConfig = shadowDbConfig;
     }
 
     public String getProvider() {

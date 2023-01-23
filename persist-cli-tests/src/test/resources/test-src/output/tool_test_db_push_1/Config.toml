@@ -1,4 +1,4 @@
-[tool_test_db_push_1]
+[tool_test_db_push_1.entities]
 host = "localhostnew"
 port = 3310
 user = "rootw"

@@ -39,22 +39,21 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
-import static io.ballerina.persist.PersistToolsConstants.DATABASE;
 import static io.ballerina.persist.PersistToolsConstants.DEFAULT_DATABASE;
 import static io.ballerina.persist.PersistToolsConstants.DEFAULT_HOST;
 import static io.ballerina.persist.PersistToolsConstants.DEFAULT_PASSWORD;
 import static io.ballerina.persist.PersistToolsConstants.DEFAULT_PORT;
-import static io.ballerina.persist.PersistToolsConstants.DEFAULT_PROVIDER;
 import static io.ballerina.persist.PersistToolsConstants.DEFAULT_USER;
 import static io.ballerina.persist.PersistToolsConstants.KEY_DATABASE;
 import static io.ballerina.persist.PersistToolsConstants.KEY_HOST;
 import static io.ballerina.persist.PersistToolsConstants.KEY_PASSWORD;
 import static io.ballerina.persist.PersistToolsConstants.KEY_PORT;
-import static io.ballerina.persist.PersistToolsConstants.KEY_PROVIDER;
 import static io.ballerina.persist.PersistToolsConstants.KEY_USER;
-import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
+import static io.ballerina.persist.PersistToolsConstants.PERSIST_CONFIG_PATTERN;
+import static io.ballerina.persist.PersistToolsConstants.PERSIST_CONFIG_PATTERN_WITH_MYSQL;
 import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_DB_PROVIDERS;
 
 
@@ -74,11 +73,11 @@ public class TomlSyntaxGenerator {
      * Method to create a new Config.toml file with database configurations.
      */
 
-    public static SyntaxTree createConfigToml(ArrayList<String> schemas, String packageName) {
+    public static SyntaxTree createConfigToml(List<String> schemas, String packageName) {
         NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
         for (String schema : schemas) {
             moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(packageName + "." + schema, null));
-            moduleMembers = populateConfigNodeList(moduleMembers, false);
+            moduleMembers = populateConfigNodeList(moduleMembers);
             moduleMembers = addNewLine(moduleMembers, 1);
         }
         Token eofToken = AbstractNodeFactory.createIdentifierToken("");
@@ -87,7 +86,8 @@ public class TomlSyntaxGenerator {
         return SyntaxTree.from(textDocument);
     }
 
-    public static PersistConfiguration readPersistToml(Path configPath) throws BalException {
+    public static PersistConfiguration readPersistConfigurations(String schemaName, Path configPath)
+            throws BalException {
         try {
             TextDocument configDocument = TextDocuments.from(Files.readString(configPath));
             SyntaxTree syntaxTree = SyntaxTree.from(configDocument);
@@ -99,18 +99,14 @@ public class TomlSyntaxGenerator {
                 if (member instanceof TableNode) {
                     TableNode node = (TableNode) member;
                     String tableName = node.identifier().toSourceCode().trim();
-                    if (tableName.startsWith(DATABASE)) {
+                    if (tableName.startsWith(String.format(PERSIST_CONFIG_PATTERN, schemaName))) {
                         String[] nameParts = tableName.split(REGEX_TOML_TABLE_NAME_SPLITTER);
-                        if (nameParts.length > 1 && SUPPORTED_DB_PROVIDERS.contains(nameParts[1])) {
-                            configuration.setProvider(nameParts[1]);
+                        if (nameParts.length > 3 && SUPPORTED_DB_PROVIDERS.contains(nameParts[3])) {
+                            configuration.setProvider(nameParts[3]);
                             dbConfigExists = true;
-                            if (nameParts.length == 3 && "shadow".equals(nameParts[2])) {
-                                DatabaseConfiguration shadowDbConfiguration = new DatabaseConfiguration(node.fields());
-                                configuration.setShadowDbConfig(shadowDbConfiguration);
-                            } else {
-                                DatabaseConfiguration databaseConfiguration = new DatabaseConfiguration(node.fields());
-                                configuration.setDbConfig(databaseConfiguration);
-                            }
+                            DatabaseConfiguration databaseConfiguration = new DatabaseConfiguration(
+                                    schemaName, node.fields());
+                            configuration.setDbConfig(databaseConfiguration);
                         } else {
                             throw new BalException("Database is not configured properly\n" +
                                     "You should give the correct database configurations " +
@@ -121,8 +117,8 @@ public class TomlSyntaxGenerator {
                 }
             }
             if (!dbConfigExists) {
-                throw new BalException("The persist tool config doesn't exist in the Persist.toml.\n" +
-                        "You should add [database.<provide>] table with db configurations.");
+                throw new BalException("The persist tool config doesn't exist in the Ballerina.toml.\n" +
+                        "You should add [persist.<model_name>.storage.<provider>] table with db configurations.");
             }
             return configuration;
         } catch (IOException e) {
@@ -133,10 +129,9 @@ public class TomlSyntaxGenerator {
     /**
      * Method to update the Config.toml with database configurations.
      */
-    public static SyntaxTree updateBallerinaToml(Path configPath, ArrayList<String> names) throws IOException {
+    public static SyntaxTree updateBallerinaToml(Path configPath, List<String> names) throws IOException {
 
         ArrayList<String> existingNodes = new ArrayList<>();
-
         NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
         Path fileNamePath = configPath.getFileName();
         TextDocument configDocument = TextDocuments.from(Files.readString(configPath));
@@ -151,8 +146,8 @@ public class TomlSyntaxGenerator {
                 } else if (member instanceof TableNode) {
                     TableNode node = (TableNode) member;
                     for (String schema : names) {
-                        if (node.identifier().toSourceCode().trim().equals(PERSIST_DIRECTORY + "."
-                                + schema)) {
+                        if (node.identifier().toSourceCode().trim().startsWith(
+                                String.format(PERSIST_CONFIG_PATTERN, schema))) {
                             existingNodes.add(schema);
                             break;
                         }
@@ -168,9 +163,9 @@ public class TomlSyntaxGenerator {
                     if (existingNodes.contains(schema)) {
                         continue;
                     }
-                    moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(PERSIST_DIRECTORY + "."
-                            + schema, null));
-                    moduleMembers = populateConfigNodeList(moduleMembers, true);
+                    moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(
+                            String.format(PERSIST_CONFIG_PATTERN_WITH_MYSQL, schema), null));
+                    moduleMembers = populateConfigNodeList(moduleMembers);
                 }
             }
         }
@@ -180,7 +175,7 @@ public class TomlSyntaxGenerator {
         return SyntaxTree.from(textDocument);
     }
 
-    public static SyntaxTree updateConfigToml(Path configPath, ArrayList<String> names, String packageName)
+    public static SyntaxTree updateConfigToml(Path configPath, List<String> names, String packageName)
             throws IOException {
 
         ArrayList<String> existingNodes = new ArrayList<>();
@@ -218,7 +213,7 @@ public class TomlSyntaxGenerator {
                     }
                     moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(packageName + "."
                             + schema, null));
-                    moduleMembers = populateConfigNodeList(moduleMembers, false);
+                    moduleMembers = populateConfigNodeList(moduleMembers);
                 }
             }
         }
@@ -229,10 +224,7 @@ public class TomlSyntaxGenerator {
     }
 
     private static NodeList<DocumentMemberDeclarationNode> populateConfigNodeList(
-            NodeList<DocumentMemberDeclarationNode> moduleMembers, boolean includeProvider) {
-        if (includeProvider) {
-            moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_PROVIDER, DEFAULT_PROVIDER, null));
-        }
+            NodeList<DocumentMemberDeclarationNode> moduleMembers) {
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_HOST, DEFAULT_HOST, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createNumericKV(KEY_PORT, DEFAULT_PORT, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_USER, DEFAULT_USER, null));

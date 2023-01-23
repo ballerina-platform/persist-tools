@@ -440,7 +440,7 @@ public class BalSyntaxGenerator {
 
     private static ClientResource createClientResource(Entity entity) {
         HashMap<String, String> keys = new HashMap<>();
-        ClientResource resource = new ClientResource(entity.getTableName());
+        ClientResource resource = new ClientResource(entity.getResourceName());
         // TODO: uncomment the code for the implementation
 //        resource.addMetadata(NodeFactory.createSpecificFieldNode(null,
 //                AbstractNodeFactory.createIdentifierToken("entityName"),
@@ -607,11 +607,11 @@ public class BalSyntaxGenerator {
                                 NodeFactory.createEmptyMinutiaeList())));
             }
             clients.add(NodeFactory.createSpecificFieldNode(null,
-                    AbstractNodeFactory.createIdentifierToken(entity.getTableName()),
+                    AbstractNodeFactory.createIdentifierToken(entity.getResourceName()),
                     SyntaxTokenConstants.SYNTAX_TREE_COLON,
                     NodeParser.parseExpression(String.format(BalSyntaxConstants.INIT_PERSIST_CLIENT,
-                            entity.getTableName(), entity.getTableName(),
-                            entity.getTableName(), entity.getTableName()))));
+                            entity.getResourceName(), entity.getResourceName(),
+                            entity.getResourceName(), entity.getResourceName()))));
         });
         init.addStatement(NodeFactory.createAssignmentStatementNode(
                 NodeFactory.createFieldAccessExpressionNode(NodeFactory.createSimpleNameReferenceNode(
@@ -630,7 +630,7 @@ public class BalSyntaxGenerator {
                                                HashMap<String, String> keys) {
         Function create = new Function(BalSyntaxConstants.POST, SyntaxKind.RESOURCE_ACCESSOR_DEFINITION, true);
         NodeList<Node> resourcePaths = AbstractNodeFactory.createEmptyNodeList();
-        resourcePaths = resourcePaths.add(AbstractNodeFactory.createIdentifierToken(entity.getTableName()));
+        resourcePaths = resourcePaths.add(AbstractNodeFactory.createIdentifierToken(entity.getResourceName()));
         create.addRelativeResourcePaths(resourcePaths);
         create.addRequiredParameter(
                 TypeDescriptor.getArrayTypeDescriptorNode(
@@ -687,7 +687,7 @@ public class BalSyntaxGenerator {
     private static Function createGetByKeyFunction(Entity entity, HashMap<String, String> keys) {
         Function readByKey = new Function(BalSyntaxConstants.GET, SyntaxKind.RESOURCE_ACCESSOR_DEFINITION, true);
         NodeList<Node> resourcePaths = AbstractNodeFactory.createEmptyNodeList();
-        resourcePaths = resourcePaths.add(AbstractNodeFactory.createIdentifierToken(entity.getTableName()));
+        resourcePaths = resourcePaths.add(AbstractNodeFactory.createIdentifierToken(entity.getResourceName()));
 
         for (Map.Entry<String, String> entry : keys.entrySet()) {
             resourcePaths = resourcePaths.add(AbstractNodeFactory.createToken(SyntaxKind.SLASH_TOKEN));
@@ -711,7 +711,7 @@ public class BalSyntaxGenerator {
         //TODO: Handle composite keys with creating record value
         if (keys.size() == 1) {
             readByKey.addStatement(NodeParser.parseStatement(String.format(READ_BY_KEY_RETURN,
-                    entity.getTableName(), entity.getEntityName(), keys.keySet().stream().findFirst().get(),
+                    entity.getResourceName(), entity.getEntityName(), keys.keySet().stream().findFirst().get(),
                     entity.getEntityName())));
         }
         return readByKey;
@@ -721,7 +721,7 @@ public class BalSyntaxGenerator {
         Function read = new Function(BalSyntaxConstants.GET, SyntaxKind.RESOURCE_ACCESSOR_DEFINITION, includeError);
         read.addQualifiers(new String[]{KEYWORD_ISOLATED, BalSyntaxConstants.KEYWORD_RESOURCE});
         NodeList<Node> resourcePaths = AbstractNodeFactory.createEmptyNodeList();
-        resourcePaths = resourcePaths.add(AbstractNodeFactory.createIdentifierToken(entity.getTableName()));
+        resourcePaths = resourcePaths.add(AbstractNodeFactory.createIdentifierToken(entity.getResourceName()));
         read.addRelativeResourcePaths(resourcePaths);
         read.addReturns(TypeDescriptor.getStreamTypeDescriptorNode(
                 NodeFactory.createSimpleNameReferenceNode(AbstractNodeFactory.createIdentifierToken(
@@ -734,7 +734,7 @@ public class BalSyntaxGenerator {
                                 AbstractNodeFactory.createToken(SyntaxKind.QUESTION_MARK_TOKEN)
                 )));
         read.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.READ_RUN_READ_QUERY,
-                entity.getTableName(), entity.getEntityName())));
+                entity.getResourceName(), entity.getEntityName())));
         IfElse errorCheck = new IfElse(NodeParser.parseExpression(RESULT_IS_ERROR));
         errorCheck.addIfStatement(NodeParser.parseStatement(String.format(
                 BalSyntaxConstants.READ_RETURN_STREAM_WHEN_ERROR, entity.getEntityName(), entity.getEntityName())));
@@ -749,7 +749,7 @@ public class BalSyntaxGenerator {
         Function update = new Function(BalSyntaxConstants.PUT, SyntaxKind.RESOURCE_ACCESSOR_DEFINITION, true);
         update.addQualifiers(new String[]{KEYWORD_ISOLATED, BalSyntaxConstants.KEYWORD_RESOURCE});
         NodeList<Node> resourcePaths = AbstractNodeFactory.createEmptyNodeList();
-        resourcePaths = resourcePaths.add(AbstractNodeFactory.createIdentifierToken(entity.getTableName()));
+        resourcePaths = resourcePaths.add(AbstractNodeFactory.createIdentifierToken(entity.getResourceName()));
 
         for (Map.Entry<String, String> entry : keys.entrySet()) {
             resourcePaths = resourcePaths.add(AbstractNodeFactory.createToken(SyntaxKind.SLASH_TOKEN));
@@ -780,7 +780,7 @@ public class BalSyntaxGenerator {
         //delete.addRequiredParameter(TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()), KEYWORD_VALUE);
         delete.addQualifiers(new String[]{KEYWORD_ISOLATED, BalSyntaxConstants.KEYWORD_RESOURCE});
         NodeList<Node> resourcePaths = AbstractNodeFactory.createEmptyNodeList();
-        resourcePaths = resourcePaths.add(AbstractNodeFactory.createIdentifierToken(entity.getTableName()));
+        resourcePaths = resourcePaths.add(AbstractNodeFactory.createIdentifierToken(entity.getResourceName()));
 
         for (Map.Entry<String, String> entry : keys.entrySet()) {
             resourcePaths = resourcePaths.add(AbstractNodeFactory.createToken(SyntaxKind.SLASH_TOKEN));

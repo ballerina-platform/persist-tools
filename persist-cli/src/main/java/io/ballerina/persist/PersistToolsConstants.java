@@ -31,7 +31,6 @@ public class PersistToolsConstants {
     public static final String COMPONENT_IDENTIFIER = "persist";
 
     public static final String DEFAULT_USER = "root";
-    public static final String DEFAULT_PROVIDER = "mysql";
     public static final String DEFAULT_PORT = "3306";
     public static final String DEFAULT_PASSWORD = "";
     public static final String DEFAULT_DATABASE = "";
@@ -42,32 +41,17 @@ public class PersistToolsConstants {
     public static final String KEY_PASSWORD = "password";
     public static final String KEY_DATABASE = "database";
     public static final String KEY_HOST = "host";
-    public static final String KEY_PROVIDER = "provider";
 
     public static final String CONFIG_SCRIPT_FILE = "Config.toml";
     public static final String PASSWORD = "password";
     public static final String USER = "user";
     public static final String MYSQL_DRIVER_CLASS = "com.mysql.cj.jdbc.Driver";
 
-    public static final String DATABASE = "database";
-    public static final String DATABASE_MYSQL = "database.mysql";
-
-    public static final String AUTO_INCREMENT_WITH_SPACE = " AUTO_INCREMENT";
-    public static final String AUTO_INCREMENT_WITH_TAB = "  AUTO_INCREMENT";
-    public static final String START_VALUE = "startValue";
-    public static final String INCREMENT = "increment";
-    public static final String ON_UPDATE = "onUpdate";
-    public static final String ON_DELETE = "onDelete";
-    public static final String CONSTRAINT = "constraint";
-    public static final String STRING = "String";
-    public static final String LENGTH = "length";
-    public static final String MAX_LENGTH = "maxLength";
-    public static final String SQL_SCHEMA_FILE = "persist_db_scripts.sql";
-    public static final String UNIQUE_CONSTRAINTS = "uniqueConstraints";
+    public static final String PERSIST_CONFIG_PATTERN = "persist.%s.storage";
+    public static final String PERSIST_CONFIG_PATTERN_WITH_MYSQL = "persist.%s.storage.mysql";
+    public static final String SQL_SCHEMA_FILE = "%s_db_scripts.sql";
     public static final String PERSIST_DIRECTORY = "persist";
     public static final String GENERATED_DIRECTORY = "generated";
-    public static final String PERSIST_TOML_FILE = "Persist.toml";
-    public static final String PATH_BALLERINA_TOML = "Ballerina.toml";
     public static final String BALLERINA_MYSQL_DRIVER_NAME = "ballerinax/mysql.driver";
     public static final String PLATFORM = "java11";
     public static final String PROPERTY_KEY_PATH = "path";

@@ -33,9 +33,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Locale;
 
-import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
-import static io.ballerina.persist.PersistToolsConstants.PERSIST_TOML_FILE;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.GENERATED_SOURCES_DIRECTORY;
+import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 
 /**
  * Test util functions related to Push command.
@@ -49,13 +48,14 @@ public class DatabaseTestUtils {
     private static final String autoincrement = "IS_AUTOINCREMENT";
     private static final String nullable = "IS_NULLABLE";
 
-    public static void assertCreateDatabaseTables(String subDir, ArrayList<PersistTable> tables) throws BalException {
+    public static void assertCreateDatabaseTables(String packageName, String modelName,
+                                                  ArrayList<PersistTable> tables) throws BalException {
         String osName = System.getProperty("os.name");
         if (osName.toLowerCase(Locale.getDefault()).contains("windows")) {
             return;
         }
-        PersistConfiguration configuration = TomlSyntaxGenerator.readPersistToml(
-                Paths.get(GENERATED_SOURCES_DIRECTORY, subDir, PERSIST_DIRECTORY, PERSIST_TOML_FILE));
+        PersistConfiguration configuration = TomlSyntaxGenerator.readPersistConfigurations(modelName,
+                Paths.get(GENERATED_SOURCES_DIRECTORY, packageName, BALLERINA_TOML));
         String username = configuration.getDbConfig().getUsername();
         String password = configuration.getDbConfig().getPassword();
         String database = configuration.getDbConfig().getDatabase();
@@ -89,13 +89,13 @@ public class DatabaseTestUtils {
         }
     }
 
-    public static void assertCreatedDatabaseNegative(String subDir) throws BalException {
+    public static void assertCreatedDatabaseNegative(String packageName, String modelName) throws BalException {
         String osName = System.getProperty("os.name");
         if (osName.toLowerCase(Locale.getDefault()).contains("windows")) {
             return;
         }
-        PersistConfiguration configuration = TomlSyntaxGenerator.readPersistToml(
-                Paths.get(GENERATED_SOURCES_DIRECTORY, subDir, PERSIST_DIRECTORY, PERSIST_TOML_FILE));
+        PersistConfiguration configuration = TomlSyntaxGenerator.readPersistConfigurations(modelName,
+                Paths.get(GENERATED_SOURCES_DIRECTORY, packageName, BALLERINA_TOML));
         String username = configuration.getDbConfig().getUsername();
         String password = configuration.getDbConfig().getPassword();
         String database = configuration.getDbConfig().getDatabase();
