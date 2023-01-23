@@ -16,25 +16,6 @@
 import ballerina/time;
 import ballerina/io;
 
-public function main() returns error? {
-    MedicalItemClient miClient = check new ();
-    MedicalNeed1Client mn1Client = check new ();
-    MedicalItem item = {
-        itemId: 1,
-        'type: "type1",
-        unit: "ml"
-    };
-    MedicalItem createdItem = check miClient->create(item);
-
-
-    MedicalNeed1 item2 = {
-        needId: 1,
-        period: check time:civilFromString("2021-04-12T23:20:50.520+05:30[Asia/Colombo]"),
-        urgency: "urgent",
-        quantity: 1
-    };
-    MedicalNeed1 createdNeed1 = check mn1Client->create(item2);
-
-    io:println(createdItem);
-    io:println(createdNeed1);
+public function main() {
+    io:println("hello");
 }

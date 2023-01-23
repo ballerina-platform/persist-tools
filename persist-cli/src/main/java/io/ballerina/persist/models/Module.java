@@ -34,7 +34,7 @@ public class Module {
     private final String moduleName;
     private final String clientName;
 
-    private Set<String> importModulePrefixes;
+    private final Set<String> importModulePrefixes;
 
     private Module(String moduleName, String clientName, Set<String> importModulePrefixes,
                    Map<String, Entity> entityMap) {
@@ -72,7 +72,7 @@ public class Module {
         String moduleName;
         Map<String, Entity> entityMap = new HashMap<>();
 
-        private Set<String> importModulePrefixes = new HashSet<>();
+        private final Set<String> importModulePrefixes = new HashSet<>();
 
         private Builder(String moduleName) {
             this.moduleName = moduleName;
