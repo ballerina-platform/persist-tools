@@ -205,4 +205,22 @@ public class ToolingGenerateTest {
     public void testGenerateWithComments() {
         assertGeneratedSources("tool_test_generate_29", GENERATE);
     }
+
+    @Test(enabled = true)
+    @Description("Test the generate command with out defining any schema files inside persist directory")
+    public void testGenerateWithoutSchemaFile() {
+        assertGeneratedSources("tool_test_generate_30", GENERATE);
+    }
+
+    @Test(enabled = true)
+    @Description("Test the generate command with empty schema file inside persist directory")
+    public void testGenerateWithEmptySchemaFile() {
+        assertGeneratedSources("tool_test_generate_31", GENERATE);
+    }
+
+    @Test(enabled = true)
+    @Description("Test the generate command without sub module directory inside generated directory")
+    public void testGenerateWithoutSubmodule() {
+        assertGeneratedSources("tool_test_generate_32", GENERATE);
+    }
 }

@@ -28,10 +28,10 @@ public type MedicalNeed record {|
 |};
 
 public type MedicalItem record {|
-    readonly int itemId = -1;
+    readonly int itemId;
 
     string 'string;
     string 'type;
     string unit;
-    MedicalNeed medicalNeed?;
+    MedicalNeed medicalNeed;
 |};

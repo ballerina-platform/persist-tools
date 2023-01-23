@@ -5,6 +5,13 @@ user = "root"
 password = ""
 database = ""
 
+[[arraytable]]
+value = 1
+[[arraytable]]
+value = 2
+
+array = [ [1, 0], [0, 1] ]
+
 [perist_init_3.test]
 host = "localhost"
 port = 3306

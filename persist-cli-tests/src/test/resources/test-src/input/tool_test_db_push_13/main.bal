@@ -15,11 +15,12 @@
 // under the License.
 
 import ballerina/io;
+import tool_test_db_push_13.entities;
 
 public function main() {
-    io:println(port);
-    io:println(user);
-    io:println(host);
-    io:println(password);
-    io:println(database);
+    io:println(entities:port);
+    io:println(entities:user);
+    io:println(entities:host);
+    io:println(entities:password);
+    io:println(entities:database);
 }

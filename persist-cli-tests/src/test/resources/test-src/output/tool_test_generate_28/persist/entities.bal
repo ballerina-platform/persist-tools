@@ -28,7 +28,7 @@ public type Company record {|
     string name;
     //comment9
     //comment10
-    Employee[] employees?;
+    Employee[] employees;
 |};
 
 public type Employee record {|
@@ -42,5 +42,5 @@ public type Employee record {|
     //comment18
     //comment19
     //comment20
-    Company company?;
+    Company company;
 |};

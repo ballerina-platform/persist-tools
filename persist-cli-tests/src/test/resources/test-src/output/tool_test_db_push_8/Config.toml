@@ -5,10 +5,9 @@ user = "root"
 password = "Test123#"
 database = "persist"
 
-[tool_test_db_push_8]
+[tool_test_db_push_8.entities]
 host = "localhost"
 port = 3306
 user = "root"
 password = ""
 database = ""
-
