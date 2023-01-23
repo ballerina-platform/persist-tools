@@ -130,7 +130,8 @@ public class Push implements BLauncherCmd {
                     .filter(file -> file.toString().toLowerCase(Locale.ENGLISH).endsWith(".bal"))
                     .collect(Collectors.toList());
         } catch (IOException e) {
-            errStream.println("Error while listing the persist model definition files in persist directory. " + e.getMessage());
+            errStream.println("Error while listing the persist model definition files in persist directory. "
+                    + e.getMessage());
             return;
         }
 
