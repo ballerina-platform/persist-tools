@@ -33,8 +33,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Locale;
 
-import static io.ballerina.persist.PersistToolsConstants.BALLERINA_TOML_FILE;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.GENERATED_SOURCES_DIRECTORY;
+import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 
 /**
  * Test util functions related to Push command.
@@ -55,7 +55,7 @@ public class DatabaseTestUtils {
             return;
         }
         PersistConfiguration configuration = TomlSyntaxGenerator.readPersistConfigurations(modelName,
-                Paths.get(GENERATED_SOURCES_DIRECTORY, packageName, BALLERINA_TOML_FILE));
+                Paths.get(GENERATED_SOURCES_DIRECTORY, packageName, BALLERINA_TOML));
         String username = configuration.getDbConfig().getUsername();
         String password = configuration.getDbConfig().getPassword();
         String database = configuration.getDbConfig().getDatabase();

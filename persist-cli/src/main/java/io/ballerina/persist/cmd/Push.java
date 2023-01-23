@@ -62,7 +62,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static io.ballerina.persist.PersistToolsConstants.BALLERINA_MYSQL_DRIVER_NAME;
-import static io.ballerina.persist.PersistToolsConstants.BALLERINA_TOML_FILE;
 import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 import static io.ballerina.persist.PersistToolsConstants.MYSQL_CONNECTOR_NAME_PREFIX;
 import static io.ballerina.persist.PersistToolsConstants.MYSQL_DRIVER_CLASS;
@@ -73,6 +72,7 @@ import static io.ballerina.persist.PersistToolsConstants.PROPERTY_KEY_PATH;
 import static io.ballerina.persist.PersistToolsConstants.USER;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.JDBC_URL_WITHOUT_DATABASE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.JDBC_URL_WITH_DATABASE;
+import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
 
 /**
@@ -166,7 +166,7 @@ public class Push implements BLauncherCmd {
 
             PersistConfiguration persistConfigurations;
             try {
-                Path ballerinaTomlPath = Paths.get(this.sourcePath, BALLERINA_TOML_FILE);
+                Path ballerinaTomlPath = Paths.get(this.sourcePath, BALLERINA_TOML);
                 persistConfigurations = TomlSyntaxGenerator.readPersistConfigurations(
                         entityModule.getModuleName(), ballerinaTomlPath);
             } catch (BalException e) {

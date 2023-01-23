@@ -40,13 +40,13 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static io.ballerina.persist.PersistToolsConstants.BALLERINA_TOML_FILE;
 import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 import static io.ballerina.persist.PersistToolsConstants.CONFIG_SCRIPT_FILE;
 import static io.ballerina.persist.PersistToolsConstants.GENERATED_DIRECTORY;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.BAL_EXTENTION;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PATH_CONFIGURATION_BAL_FILE;
+import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 
 /**
  * Class to implement "persist init" command for ballerina.
@@ -181,9 +181,9 @@ public class Init implements BLauncherCmd {
     private void updateBallerinaToml(List<String> schemas) throws BalException {
         try {
             SyntaxTree syntaxTree = TomlSyntaxGenerator.updateBallerinaToml(
-                    Paths.get(this.sourcePath, BALLERINA_TOML_FILE), schemas);
+                    Paths.get(this.sourcePath, BALLERINA_TOML), schemas);
             writeOutputSyntaxTree(syntaxTree,
-                    Paths.get(this.sourcePath, BALLERINA_TOML_FILE).toAbsolutePath().toString());
+                    Paths.get(this.sourcePath, BALLERINA_TOML).toAbsolutePath().toString());
         } catch (Exception e) {
             throw new BalException("Error while updating Ballerina.toml with database configurations . " +
                     e.getMessage());
