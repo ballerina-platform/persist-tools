@@ -95,7 +95,7 @@ public class DatabaseTestUtils {
             return;
         }
         PersistConfiguration configuration = TomlSyntaxGenerator.readPersistConfigurations(modelName,
-                Paths.get(GENERATED_SOURCES_DIRECTORY, packageName, BALLERINA_TOML_FILE));
+                Paths.get(GENERATED_SOURCES_DIRECTORY, packageName, BALLERINA_TOML));
         String username = configuration.getDbConfig().getUsername();
         String password = configuration.getDbConfig().getPassword();
         String database = configuration.getDbConfig().getDatabase();
