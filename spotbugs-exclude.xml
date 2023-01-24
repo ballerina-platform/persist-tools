@@ -17,9 +17,6 @@
   -->
 
 <FindBugsFilter>
-<!--    <Match>-->
-<!--        <Class name="io.ballerina.persist.utils.ScriptRunner" />-->
-<!--    </Match>-->
     <Match>
         <Package name="io.ballerina.persist.models.*" />
         <Bug pattern="EI_EXPOSE_REP" />
