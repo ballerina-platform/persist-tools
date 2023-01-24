@@ -69,7 +69,7 @@ test {
 
 
 spotbugsMain {
-    enabled = false
+    enabled = true
     ignoreFailures = true
     effort = "max"
     reportLevel = "low"
