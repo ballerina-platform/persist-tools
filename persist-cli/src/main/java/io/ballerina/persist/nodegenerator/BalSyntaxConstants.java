@@ -48,6 +48,7 @@ public class BalSyntaxConstants {
     public static final String RETURN_NEXT_RECORD = "return nextRecord;";
     public static final String PERSIST_MODULE = "persist";
     public static final String PERSIST_ERROR = "persist:Error";
+    public static final String GENERIC_ERROR = "error";
     public static final String CREATE_SQL_RESULTS = "_ = check " +
             "self.persistClients.get(\"%s\").runBatchInsertQuery(data);";
     public static final String RETURN_CREATED_KEY = "return from  %s inserted in data\n";
