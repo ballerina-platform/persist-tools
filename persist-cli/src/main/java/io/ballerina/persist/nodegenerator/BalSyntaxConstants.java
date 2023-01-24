@@ -51,7 +51,7 @@ public class BalSyntaxConstants {
     public static final String GENERIC_ERROR = "error";
     public static final String CREATE_SQL_RESULTS = "_ = check " +
             "self.persistClients.get(\"%s\").runBatchInsertQuery(data);";
-    public static final String RETURN_CREATED_KEY = "return from  %s inserted in data%n";
+    public static final String RETURN_CREATED_KEY = "return from  %s inserted in data" + System.lineSeparator();
     public static final String READ_BY_KEY_RETURN = "return (check " +
             "self.persistClients.get(%s).runReadByKeyQuery(%s, %s)).cloneWithType(%s);";
     public static final String READ_RUN_READ_QUERY = "stream<record{}, sql:Error?>|persist:Error result" +
@@ -142,15 +142,15 @@ public class BalSyntaxConstants {
     public static final String BAL_EXTENTION = ".bal";
     public static final String INIT_DB_CLIENT = "private final mysql:Client dbClient;";
     public static final String INIT_PERSIST_CLIENT_MAP = "private final map<persist:SQLClient> persistClients;";
-    public static final String METADATARECORD_ENTITY_NAME_TEMPLATE = "entityName: \"%s\", %n";
-    public static final String METADATARECORD_TABLE_NAME_TEMPLATE = "tableName: `%s`, %n";
+    public static final String METADATARECORD_ENTITY_NAME_TEMPLATE = "entityName: \"%s\", " + System.lineSeparator();
+    public static final String METADATARECORD_TABLE_NAME_TEMPLATE = "tableName: `%s`, " + System.lineSeparator();
     public static final String METADATARECORD_FIELD_TEMPLATE = "%s: {columnName: \"%s\", 'type: %s}";
     public static final String METADATARECORD_KEY_FIELD_TEMPLATE = "keyFields: [%s]";
     public static final String METADATARECORD_ELEMENT_TEMPLATE = "\"%s\": {%s}";
     public static final String METADATARECORD_TEMPLATE =
             "private final record {|persist:Metadata...;|} metadata = {%s};";
     public static final String INIT_DBCLIENT = "self.dbClient = check new (host = host, user = user, " +
-            "password = password, database = database, port = port);\n";
+            "password = password, database = database, port = port);" + System.lineSeparator();
     public static final String PERSIST_CLIENT_MAP_ELEMENT = "%s: check new (self.dbClient, self.metadata.get(%s)";
     public static final String PERSIST_CLIENT_TEMPLATE = "self.persistClients = {%s};";
     public static final String PERSIST_CLIENT_CLOSE_STATEMENT = "_ = check self.dbClient.close();";
