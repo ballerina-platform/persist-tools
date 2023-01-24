@@ -13,11 +13,55 @@ public client class FooClient {
 
     private final map<persist:SQLClient> persistClients;
 
-    private final map<persist:Metadata> metadata = {building: {entityName: "Building", tableName: 'Building ', buildingCode: {columnName: "buildingCode", 'type: string}, city: {columnName: "city", 'type: string}, state: {columnName: "state", 'type: string}, country: {columnName: "country", 'type: string}, postalCode: {columnName: "postalCode", 'type: string}, keyFields: ["buildingCode"]}, department: {entityName: "Department", tableName: 'Department ', deptNo: {columnName: "deptNo", 'type: string}, deptName: {columnName: "deptName", 'type: string}, keyFields: ["deptNo"]}, employee: {entityName: "Employee", tableName: 'Employee ', empNo: {columnName: "empNo", 'type: string}, firstName: {columnName: "firstName", 'type: string}, lastName: {columnName: "lastName", 'type: string}, birthDate: {columnName: "birthDate", 'type: time:Date}, gender: {columnName: "gender", 'type: string}, hireDate: {columnName: "hireDate", 'type: time:Date}, departmentDeptNo: {columnName: "departmentDeptNo", 'type: string}, workspaceWorkspaceId: {columnName: "workspaceWorkspaceId", 'type: string} keyFields: ["empNo"]}, workspace: {entityName: "Workspace", tableName: 'Workspace ', workspaceId: {columnName: "workspaceId", 'type: string}, workspaceType: {columnName: "workspaceType", 'type: string}, buildingBuildingCode: {columnName: "buildingBuildingCode", 'type: string}, keyFields: ["workspaceId"]}};
+    private final map<persist:Metadata> metadata = {
+        building: {
+            entityName: "Building",
+            tableName: `Building`,
+            buildingCode: {columnName: "buildingCode", 'type: string},
+            city: {columnName: "city", 'type: string},
+            state: {columnName: "state", 'type: string},
+            country: {columnName: "country", 'type: string},
+            postalCode: {columnName: "postalCode", 'type: string},
+            keyFields: ["buildingCode"]
+        },
+        department: {
+            entityName: "Department",
+            tableName: `Department`,
+            deptNo: {columnName: "deptNo", 'type: string},
+            deptName: {columnName: "deptName", 'type: string},
+            keyFields: ["deptNo"]
+        },
+        employee: {
+            entityName: "Employee",
+            tableName: `Employee`,
+            empNo: {columnName: "empNo", 'type: string},
+            firstName: {columnName: "firstName", 'type: string},
+            lastName: {columnName: "lastName", 'type: string},
+            birthDate: {columnName: "birthDate", 'type: time:Date},
+            gender: {columnName: "gender", 'type: string},
+            hireDate: {columnName: "hireDate", 'type: time:Date},
+            departmentDeptNo: {columnName: "departmentDeptNo", 'type: string},
+            workspaceWorkspaceId: {columnName: "workspaceWorkspaceId", 'type: string},
+            keyFields: ["empNo"]
+        },
+        workspace: {
+            entityName: "Workspace",
+            tableName: `Workspace`,
+            workspaceId: {columnName: "workspaceId", 'type: string},
+            workspaceType: {columnName: "workspaceType", 'type: string},
+            buildingBuildingCode: {columnName: "buildingBuildingCode", 'type: string},
+            keyFields: ["workspaceId"]
+        }
+    };
 
     public function init() returns persist:Error? {
         self.dbClient = check new (host = host, user = user, password = password, database = database, port = port);
-        self.persistClients = {building: check new (self.dbClient, self.metadata.get("building").entityName, self.metadata.get("building").tableName, self.metadata.get("building").keyFields, self.metadata.get("building").fieldMetadata), department: check new (self.dbClient, self.metadata.get("department").entityName, self.metadata.get("department").tableName, self.metadata.get("department").keyFields, self.metadata.get("department").fieldMetadata), employee: check new (self.dbClient, self.metadata.get("employee").entityName, self.metadata.get("employee").tableName, self.metadata.get("employee").keyFields, self.metadata.get("employee").fieldMetadata), workspace: check new (self.dbClient, self.metadata.get("workspace").entityName, self.metadata.get("workspace").tableName, self.metadata.get("workspace").keyFields, self.metadata.get("workspace").fieldMetadata)};
+        self.persistClients = {
+            building: check new (self.dbClient, self.metadata.get("building").entityName, self.metadata.get("building").tableName, self.metadata.get("building").keyFields, self.metadata.get("building").fieldMetadata),
+            department: check new (self.dbClient, self.metadata.get("department").entityName, self.metadata.get("department").tableName, self.metadata.get("department").keyFields, self.metadata.get("department").fieldMetadata),
+            employee: check new (self.dbClient, self.metadata.get("employee").entityName, self.metadata.get("employee").tableName, self.metadata.get("employee").keyFields, self.metadata.get("employee").fieldMetadata),
+            workspace: check new (self.dbClient, self.metadata.get("workspace").entityName, self.metadata.get("workspace").tableName, self.metadata.get("workspace").keyFields, self.metadata.get("workspace").fieldMetadata)
+        };
     }
 
     public function close() returns persist:Error? {

@@ -13,7 +13,19 @@ public client class EntitiesClient {
 
     private final map<persist:SQLClient> persistClients;
 
-    private final map<persist:Metadata> metadata = {medicalneed: {entityName: "MedicalNeed", tableName: 'MedicalNeed ', needId: {columnName: "needId", 'type: int}, itemId: {columnName: "itemId", 'type: int}, beneficiaryId: {columnName: "beneficiaryId", 'type: int}, period: {columnName: "period", 'type: time:Civil}, urgency: {columnName: "urgency", 'type: string}, quantity: {columnName: "quantity", 'type: int} keyFields: ["needId"]}};
+    private final map<persist:Metadata> metadata = {
+        medicalneed: {
+            entityName: "MedicalNeed",
+            tableName: `MedicalNeed`,
+            needId: {columnName: "needId", 'type: int},
+            itemId: {columnName: "itemId", 'type: int},
+            beneficiaryId: {columnName: "beneficiaryId", 'type: int},
+            period: {columnName: "period", 'type: time:Civil},
+            urgency: {columnName: "urgency", 'type: string},
+            quantity: {columnName: "quantity", 'type: int},
+            keyFields: ["needId"]
+        }
+    };
 
     public function init() returns persist:Error? {
         self.dbClient = check new (host = host, user = user, password = password, database = database, port = port);

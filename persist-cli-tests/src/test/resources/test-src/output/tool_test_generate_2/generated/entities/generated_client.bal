@@ -13,11 +13,35 @@ public client class EntitiesClient {
 
     private final map<persist:SQLClient> persistClients;
 
-    private final map<persist:Metadata> metadata = {medicalneed: {entityName: "MedicalNeed", tableName: 'MedicalNeed ', needId: {columnName: "needId", 'type: int}, itemId: {columnName: "itemId", 'type: int}, beneficiaryId: {columnName: "beneficiaryId", 'type: int}, period: {columnName: "period", 'type: time:Civil}, urgency: {columnName: "urgency", 'type: string}, quantity: {columnName: "quantity", 'type: int} keyFields: ["needId"]}, medicalitem: {entityName: "MedicalItem", tableName: 'MedicalItem ', itemId: {columnName: "itemId", 'type: int}, name: {columnName: "name", 'type: string}, 'type: {columnName: "'type", 'type: string}, unit: {columnName: "unit", 'type: string} keyFields: ["itemId"]}};
+    private final map<persist:Metadata> metadata = {
+        medicalneed: {
+            entityName: "MedicalNeed",
+            tableName: `MedicalNeed`,
+            needId: {columnName: "needId", 'type: int},
+            itemId: {columnName: "itemId", 'type: int},
+            beneficiaryId: {columnName: "beneficiaryId", 'type: int},
+            period: {columnName: "period", 'type: time:Civil},
+            urgency: {columnName: "urgency", 'type: string},
+            quantity: {columnName: "quantity", 'type: int},
+            keyFields: ["needId"]
+        },
+        medicalitem: {
+            entityName: "MedicalItem",
+            tableName: `MedicalItem`,
+            itemId: {columnName: "itemId", 'type: int},
+            name: {columnName: "name", 'type: string},
+            'type: {columnName: "'type", 'type: string},
+            unit: {columnName: "unit", 'type: string},
+            keyFields: ["itemId"]
+        }
+    };
 
     public function init() returns persist:Error? {
         self.dbClient = check new (host = host, user = user, password = password, database = database, port = port);
-        self.persistClients = {medicalneed: check new (self.dbClient, self.metadata.get("medicalneed").entityName, self.metadata.get("medicalneed").tableName, self.metadata.get("medicalneed").keyFields, self.metadata.get("medicalneed").fieldMetadata), medicalitem: check new (self.dbClient, self.metadata.get("medicalitem").entityName, self.metadata.get("medicalitem").tableName, self.metadata.get("medicalitem").keyFields, self.metadata.get("medicalitem").fieldMetadata)};
+        self.persistClients = {
+            medicalneed: check new (self.dbClient, self.metadata.get("medicalneed").entityName, self.metadata.get("medicalneed").tableName, self.metadata.get("medicalneed").keyFields, self.metadata.get("medicalneed").fieldMetadata),
+            medicalitem: check new (self.dbClient, self.metadata.get("medicalitem").entityName, self.metadata.get("medicalitem").tableName, self.metadata.get("medicalitem").keyFields, self.metadata.get("medicalitem").fieldMetadata)
+        };
     }
 
     public function close() returns persist:Error? {

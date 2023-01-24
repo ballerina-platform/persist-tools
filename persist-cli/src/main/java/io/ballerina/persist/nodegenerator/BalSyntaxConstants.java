@@ -149,18 +149,18 @@ public class BalSyntaxConstants {
     public static final String BAL_EXTENTION = ".bal";
     public static final String INIT_DB_CLIENT = "private final mysql:Client dbClient;";
     public static final String INIT_PERSIST_CLIENT_MAP = "private final map<persist:SQLClient> persistClients;";
-    public static final String METADATAMAP_ENTITY_NAME_TEMPLATE = "entityName: \"%s\",";
-    public static final String METADATAMAP_TABLE_NAME_TEMPLATE = "tableName: '%s',";
+    public static final String METADATAMAP_ENTITY_NAME_TEMPLATE = "entityName: \"%s\", \n";
+    public static final String METADATAMAP_TABLE_NAME_TEMPLATE = "tableName: `%s`, \n";
     public static final String METADATAMAP_FIELD_TEMPLATE = "%s: {columnName: \"%s\", 'type: %s}";
     public static final String METADATAMAP_KEY_FIELD_TEMPLATE = "keyFields: [%s]";
     public static final String METADATAMAP_ELEMENT_TEMPLATE = "%s: {%s}";
     public static final String METADATAMAP_TEMPLATE = "private final map<persist:Metadata> metadata = {%s};";
     public static final String INIT_DBCLIENT = "self.dbClient = check new (host = host, user = user, " +
             "password = password, database = database, port = port);\n";
-    public static final String PERSIST_CLIENT_MAP_ELEMENT = "%s: check new (self.dbClient," +
-            "self.metadata.get(\"%s\").entityName," +
-            "self.metadata.get(\"%s\").tableName," +
-            "self.metadata.get(\"%s\").keyFields," +
+    public static final String PERSIST_CLIENT_MAP_ELEMENT = "%s: check new (self.dbClient, " +
+            "self.metadata.get(\"%s\").entityName, " +
+            "self.metadata.get(\"%s\").tableName, " +
+            "self.metadata.get(\"%s\").keyFields, " +
             "self.metadata.get(\"%s\").fieldMetadata)";
     public static final String PERSIST_CLIENT_TEMPLATE = "self.persistClients = {%s};";
     public static final String PERSIST_CLIENT_CLOSE_STATEMENT = "sql:Error? e = self.dbClient.close();";

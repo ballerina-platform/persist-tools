@@ -5,8 +5,8 @@
 
 import ballerina/persist;
 import ballerina/sql;
-import ballerinax/mysql;
 import ballerina/time;
+import ballerinax/mysql;
 
 public client class EntitiesClient {
 
@@ -14,11 +14,30 @@ public client class EntitiesClient {
 
     private final map<persist:SQLClient> persistClients;
 
-    private final map<persist:Metadata> metadata = {company: {entityName: "Company", tableName: 'Company ', id: {columnName: "id", 'type: int}, name: {columnName: "name", 'type: string}, keyFields: ["id"]}, employee: {entityName: "Employee", tableName: 'Employee ', id: {columnName: "id", 'type: int}, name: {columnName: "name", 'type: string}, companyId: {columnName: "companyId", 'type: int} keyFields: ["id"]}};
+    private final map<persist:Metadata> metadata = {
+        company: {
+            entityName: "Company",
+            tableName: `Company`,
+            id: {columnName: "id", 'type: int},
+            name: {columnName: "name", 'type: string},
+            keyFields: ["id"]
+        },
+        employee: {
+            entityName: "Employee",
+            tableName: `Employee`,
+            id: {columnName: "id", 'type: int},
+            name: {columnName: "name", 'type: string},
+            companyId: {columnName: "companyId", 'type: int},
+            keyFields: ["id"]
+        }
+    };
 
     public function init() returns persist:Error? {
         self.dbClient = check new (host = host, user = user, password = password, database = database, port = port);
-        self.persistClients = {company: check new (self.dbClient, self.metadata.get("company").entityName, self.metadata.get("company").tableName, self.metadata.get("company").keyFields, self.metadata.get("company").fieldMetadata), employee: check new (self.dbClient, self.metadata.get("employee").entityName, self.metadata.get("employee").tableName, self.metadata.get("employee").keyFields, self.metadata.get("employee").fieldMetadata)};
+        self.persistClients = {
+            company: check new (self.dbClient, self.metadata.get("company").entityName, self.metadata.get("company").tableName, self.metadata.get("company").keyFields, self.metadata.get("company").fieldMetadata),
+            employee: check new (self.dbClient, self.metadata.get("employee").entityName, self.metadata.get("employee").tableName, self.metadata.get("employee").keyFields, self.metadata.get("employee").fieldMetadata)
+        };
     }
 
     public function close() returns persist:Error? {

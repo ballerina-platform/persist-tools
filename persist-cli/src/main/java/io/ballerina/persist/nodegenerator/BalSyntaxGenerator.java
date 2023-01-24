@@ -353,13 +353,12 @@ public class BalSyntaxGenerator {
                 BalSyntaxConstants.PERSIST_MODULE, commentMinutiaeList, null));
         imports = imports.add(getImportDeclarationNode(BalSyntaxConstants.KEYWORD_BALLERINA,
                 KEYWORD_SQL, null));
-        imports = imports.add(getImportDeclarationNode(BalSyntaxConstants.KEYWORD_BALLERINAX,
-                BalSyntaxConstants.KEYWORD_MYSQL, null));
-
         if (importsArray.isEmpty()) {
             imports = imports.add(getImportDeclarationNode(BalSyntaxConstants.KEYWORD_BALLERINA,
                     BalSyntaxConstants.KEYWORD_TIME_PREFIX, null));
         }
+        imports = imports.add(getImportDeclarationNode(BalSyntaxConstants.KEYWORD_BALLERINAX,
+                BalSyntaxConstants.KEYWORD_MYSQL, null));
 
         Client clientObject = createClient(entityModule);
         moduleMembers = moduleMembers.add(clientObject.getClassDefinitionNode());
@@ -410,22 +409,21 @@ public class BalSyntaxGenerator {
 
     private static Node generateMetadataMap(Module entityModule) {
         StringBuilder mapBuilder = new StringBuilder();
-        Set<String> keySet = entityModule.getEntityMap().keySet();
         for (Entity entity : entityModule.getEntityMap().values()) {
             if (mapBuilder.length() != 0) {
-                mapBuilder.append(",");
+                mapBuilder.append(",\n");
             }
             StringBuilder entityMetaData = new StringBuilder();
             entityMetaData.append(String.format(METADATAMAP_ENTITY_NAME_TEMPLATE, entity.getEntityName()));
             entityMetaData.append(String.format(METADATAMAP_TABLE_NAME_TEMPLATE, entity.getEntityName()));
             StringBuilder fieldMetaData = new StringBuilder();
             for (EntityField field : entity.getFields()) {
-                if (fieldMetaData.length() != 0) {
-                    fieldMetaData.append(COMMA_SPACE);
-                }
                 if (field.getRelation() != null) {
                     StringBuilder foreignKeyFields = new StringBuilder();
                     if (field.getRelation().isOwner()) {
+                        if (fieldMetaData.length() != 0) {
+                            fieldMetaData.append(",\n");
+                        }
                         for (Relation.Key key : field.getRelation().getKeyColumns()) {
                             if (foreignKeyFields.length() != 0) {
                                 foreignKeyFields.append(COMMA_SPACE);
@@ -436,11 +434,15 @@ public class BalSyntaxGenerator {
                     }
                     fieldMetaData.append(foreignKeyFields.toString());
                 } else {
+                    if (fieldMetaData.length() != 0) {
+                        fieldMetaData.append(",\n");
+                    }
                     fieldMetaData.append(String.format(METADATAMAP_FIELD_TEMPLATE,
                             field.getFieldName(), field.getFieldName(),
                             field.getFieldType()));
                 }
             }
+            fieldMetaData.append(",\n");
             entityMetaData.append(fieldMetaData.toString());
             StringBuilder keyFields = new StringBuilder();
             for (EntityField key : entity.getKeys()) {
@@ -449,7 +451,6 @@ public class BalSyntaxGenerator {
                 }
                 keyFields.append("\"" + key.getFieldName() + "\"");
             }
-            fieldMetaData.append(COMMA_SPACE);
             entityMetaData.append(String.format(METADATAMAP_KEY_FIELD_TEMPLATE, keyFields));
             mapBuilder.append(String.format(METADATAMAP_ELEMENT_TEMPLATE, entity.getTableName(), entityMetaData));
         }
@@ -555,7 +556,7 @@ public class BalSyntaxGenerator {
         StringBuilder persistClientMap = new StringBuilder();
         for (Entity entity : entityArray) {
             if (persistClientMap.length() != 0) {
-                persistClientMap.append(COMMA_SPACE);
+                persistClientMap.append(",\n");
             }
             persistClientMap.append(String.format(PERSIST_CLIENT_MAP_ELEMENT, entity.getTableName(),
                     entity.getTableName(), entity.getTableName(), entity.getTableName(), entity.getTableName()));

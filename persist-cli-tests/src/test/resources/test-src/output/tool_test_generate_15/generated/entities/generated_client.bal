@@ -5,8 +5,8 @@
 
 import ballerina/persist;
 import ballerina/sql;
-import ballerinax/mysql;
 import ballerina/time;
+import ballerinax/mysql;
 
 public client class EntitiesClient {
 
@@ -14,7 +14,15 @@ public client class EntitiesClient {
 
     private final map<persist:SQLClient> persistClients;
 
-    private final map<persist:Metadata> metadata = {user: {entityName: "User", tableName: 'User ', id: {columnName: "id", 'type: int}, name: {columnName: "name", 'type: string} keyFields: ["id"]}};
+    private final map<persist:Metadata> metadata = {
+        user: {
+            entityName: "User",
+            tableName: `User`,
+            id: {columnName: "id", 'type: int},
+            name: {columnName: "name", 'type: string},
+            keyFields: ["id"]
+        }
+    };
 
     public function init() returns persist:Error? {
         self.dbClient = check new (host = host, user = user, password = password, database = database, port = port);
