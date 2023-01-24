@@ -142,8 +142,8 @@ public class BalSyntaxConstants {
     public static final String BAL_EXTENTION = ".bal";
     public static final String INIT_DB_CLIENT = "private final mysql:Client dbClient;";
     public static final String INIT_PERSIST_CLIENT_MAP = "private final map<persist:SQLClient> persistClients;";
-    public static final String METADATARECORD_ENTITY_NAME_TEMPLATE = "entityName: \"%s\", \n";
-    public static final String METADATARECORD_TABLE_NAME_TEMPLATE = "tableName: `%s`, \n";
+    public static final String METADATARECORD_ENTITY_NAME_TEMPLATE = "entityName: \"%s\", %n";
+    public static final String METADATARECORD_TABLE_NAME_TEMPLATE = "tableName: `%s`, %n";
     public static final String METADATARECORD_FIELD_TEMPLATE = "%s: {columnName: \"%s\", 'type: %s}";
     public static final String METADATARECORD_KEY_FIELD_TEMPLATE = "keyFields: [%s]";
     public static final String METADATARECORD_ELEMENT_TEMPLATE = "\"%s\": {%s}";

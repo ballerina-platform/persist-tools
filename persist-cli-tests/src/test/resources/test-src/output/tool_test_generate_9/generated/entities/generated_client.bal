@@ -43,7 +43,7 @@ public client class EntitiesClient {
         }
     }
     isolated resource function get medicalneed/[int itemId]/[int needId]() returns MedicalNeed|persist:Error {
-        return (check self.persistClients.get(MEDICALNEED).runReadByKeyQuery(MedicalNeed, {        int:        int , int: int} )        ).cloneWithType(MedicalNeed);
+        return (check self.persistClients.get(MEDICALNEED).runReadByKeyQuery(MedicalNeed, {itemId: itemId, needId: needId})).cloneWithType(MedicalNeed);
     }
     isolated resource function post medicalneed(MedicalNeedInsert[] data) returns [int, int][]|persist:Error {
         _ = check self.persistClients.get("medicalneed").runBatchInsertQuery(data);
