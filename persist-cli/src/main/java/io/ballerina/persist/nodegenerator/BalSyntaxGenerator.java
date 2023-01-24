@@ -79,32 +79,37 @@ import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.AUTO_GENERAT
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.AUTO_GENERATED_COMMENT_WITH_REASON;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.BACK_SLASH;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.CAST_ANYDATA_STREAM;
-import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.CHECK_E_FOR_ERRORS;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.CLOSE_BRACE;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.CLOSE_BRACKET;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.CLOSE_ENTITY_STREAM;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.COLON;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.COMMA_SPACE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.COMMENT_SHOULD_NOT_BE_MODIFIED;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.DOUBLE_QUOTE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.EMPTY_STRING;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.ERROR;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.ERR_IS_ERROR;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.INIT_DBCLIENT;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.INIT_DB_CLIENT;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.INIT_PERSIST_CLIENT_MAP;
-import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.IS_SQL_ERROR;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.INSERT_RECORD;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_BALLERINAX;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_ERR;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_ISOLATED;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_SQL;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_STREAM;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_VALUE;
-import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.METADATAMAP_ELEMENT_TEMPLATE;
-import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.METADATAMAP_ENTITY_NAME_TEMPLATE;
-import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.METADATAMAP_FIELD_TEMPLATE;
-import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.METADATAMAP_KEY_FIELD_TEMPLATE;
-import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.METADATAMAP_TABLE_NAME_TEMPLATE;
-import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.METADATAMAP_TEMPLATE;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.METADATARECORD_ELEMENT_TEMPLATE;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.METADATARECORD_ENTITY_NAME_TEMPLATE;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.METADATARECORD_FIELD_TEMPLATE;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.METADATARECORD_KEY_FIELD_TEMPLATE;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.METADATARECORD_TABLE_NAME_TEMPLATE;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.METADATARECORD_TEMPLATE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.MYSQL_DRIVER;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.NULLABLE_ANYDATA_STREAM_TYPE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.NULLABLE_ERROR_STATEMENT;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.OPEN_BRACE;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.OPEN_BRACKET;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PERSIST_CLIENT_CLOSE_STATEMENT;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PERSIST_CLIENT_MAP_ELEMENT;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PERSIST_CLIENT_TEMPLATE;
@@ -116,12 +121,11 @@ import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.READ_BY_KEY_
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.RESULT_IS_ERROR;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.RETURN_CASTED_ERROR;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.RETURN_NILL;
-import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.RETURN_PERSIST_ERROR;
-import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.RETURN_PERSIST_ERROR_CLOSE_STREAM;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.SELF_ERR;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.SEMICOLON;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.SPACE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.SPECIFIC_ERROR;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.UPDATE_RECORD;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.VALUE;
 import static io.ballerina.persist.nodegenerator.SyntaxTokenConstants.SYNTAX_TREE_SEMICOLON;
 
@@ -360,6 +364,11 @@ public class BalSyntaxGenerator {
         imports = imports.add(getImportDeclarationNode(BalSyntaxConstants.KEYWORD_BALLERINAX,
                 BalSyntaxConstants.KEYWORD_MYSQL, null));
 
+        for (Entity entity : entityModule.getEntityMap().values()) {
+            moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration(String.format(
+                    "const %s = \"%s\";", entity.getEntityName().toUpperCase(), entity.getEntityName())));
+        }
+
         Client clientObject = createClient(entityModule);
         moduleMembers = moduleMembers.add(clientObject.getClassDefinitionNode());
 
@@ -382,7 +391,7 @@ public class BalSyntaxGenerator {
         clientObject.addMember(NodeParser.parseObjectMember(INIT_DB_CLIENT), true);
         clientObject.addMember(NodeParser.parseObjectMember(INIT_PERSIST_CLIENT_MAP)
                 , true);
-        clientObject.addMember(generateMetadataMap(entityModule), true);
+        clientObject.addMember(generateMetadataRecord(entityModule), true);
 
         Collection<Entity> entityArray = entityModule.getEntityMap().values();
         if (entityArray.size() == 0) {
@@ -390,32 +399,28 @@ public class BalSyntaxGenerator {
         }
         Function init = createInitFunction(entityArray);
         clientObject.addMember(init.getFunctionDefinitionNode(), true);
-        clientObject.addMember(createClientCloseFunction().getFunctionDefinitionNode(), true);
         List<ClientResource> resourceList = new ArrayList<>();
         for (Entity entity : entityArray) {
             resourceList.add(createClientResource(entity));
         }
-        // TODO: uncomment the code for the implementation
-
         resourceList.forEach(resource -> {
             resource.getFunctions().forEach(function -> {
                 clientObject.addMember(function, false);
                     });
                 });
-
-        // TODO: uncomment the code for the implementation
+        clientObject.addMember(createClientCloseFunction().getFunctionDefinitionNode(), true);
         return clientObject;
     }
 
-    private static Node generateMetadataMap(Module entityModule) {
+    private static Node generateMetadataRecord(Module entityModule) {
         StringBuilder mapBuilder = new StringBuilder();
         for (Entity entity : entityModule.getEntityMap().values()) {
             if (mapBuilder.length() != 0) {
                 mapBuilder.append(",\n");
             }
             StringBuilder entityMetaData = new StringBuilder();
-            entityMetaData.append(String.format(METADATAMAP_ENTITY_NAME_TEMPLATE, entity.getEntityName()));
-            entityMetaData.append(String.format(METADATAMAP_TABLE_NAME_TEMPLATE, entity.getEntityName()));
+            entityMetaData.append(String.format(METADATARECORD_ENTITY_NAME_TEMPLATE, entity.getEntityName()));
+            entityMetaData.append(String.format(METADATARECORD_TABLE_NAME_TEMPLATE, entity.getEntityName()));
             StringBuilder fieldMetaData = new StringBuilder();
             for (EntityField field : entity.getFields()) {
                 if (field.getRelation() != null) {
@@ -428,7 +433,7 @@ public class BalSyntaxGenerator {
                             if (foreignKeyFields.length() != 0) {
                                 foreignKeyFields.append(COMMA_SPACE);
                             }
-                            foreignKeyFields.append(String.format(METADATAMAP_FIELD_TEMPLATE,
+                            foreignKeyFields.append(String.format(METADATARECORD_FIELD_TEMPLATE,
                                     key.getField(), key.getField(), key.getType()));
                         }
                     }
@@ -437,7 +442,7 @@ public class BalSyntaxGenerator {
                     if (fieldMetaData.length() != 0) {
                         fieldMetaData.append(",\n");
                     }
-                    fieldMetaData.append(String.format(METADATAMAP_FIELD_TEMPLATE,
+                    fieldMetaData.append(String.format(METADATARECORD_FIELD_TEMPLATE,
                             field.getFieldName(), field.getFieldName(),
                             field.getFieldType()));
                 }
@@ -451,10 +456,10 @@ public class BalSyntaxGenerator {
                 }
                 keyFields.append("\"" + key.getFieldName() + "\"");
             }
-            entityMetaData.append(String.format(METADATAMAP_KEY_FIELD_TEMPLATE, keyFields));
-            mapBuilder.append(String.format(METADATAMAP_ELEMENT_TEMPLATE, entity.getTableName(), entityMetaData));
+            entityMetaData.append(String.format(METADATARECORD_KEY_FIELD_TEMPLATE, keyFields));
+            mapBuilder.append(String.format(METADATARECORD_ELEMENT_TEMPLATE, entity.getTableName(), entityMetaData));
         }
-        return NodeParser.parseObjectMember(String.format(METADATAMAP_TEMPLATE, mapBuilder.toString()));
+        return NodeParser.parseObjectMember(String.format(METADATARECORD_TEMPLATE, mapBuilder.toString()));
     }
 
 
@@ -536,13 +541,7 @@ public class BalSyntaxGenerator {
         closeStream.addQualifiers(new String[]{BalSyntaxConstants.KEYWORD_PUBLIC, KEYWORD_ISOLATED});
         closeStream.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode(EMPTY_STRING,
                 PERSIST_ERROR));
-        streamCheck = new IfElse(NodeParser.parseExpression(ANYDATASTREAM_IS_STREAM_TYPE));
-        streamCheck.addIfStatement(NodeParser.parseStatement(CAST_ANYDATA_STREAM));
-        streamCheck.addIfStatement(NodeParser.parseStatement(BalSyntaxConstants.CLOSE_STREAM_STATEMENT));
-        IfElse sqlErrorCheck = new IfElse(NodeParser.parseExpression(IS_SQL_ERROR));
-        sqlErrorCheck.addIfStatement(NodeParser.parseStatement(RETURN_PERSIST_ERROR_CLOSE_STREAM));
-        streamCheck.addIfStatement(sqlErrorCheck.getIfElseStatementNode());
-        closeStream.addIfElseStatement(streamCheck.getIfElseStatementNode());
+        closeStream.addStatement(NodeParser.parseStatement(CLOSE_ENTITY_STREAM));
         clientStream.addMember(closeStream.getFunctionDefinitionNode(), true);
         return clientStream;
     }
@@ -559,7 +558,7 @@ public class BalSyntaxGenerator {
                 persistClientMap.append(",\n");
             }
             persistClientMap.append(String.format(PERSIST_CLIENT_MAP_ELEMENT, entity.getTableName(),
-                    entity.getTableName(), entity.getTableName(), entity.getTableName(), entity.getTableName()));
+                    entity.getEntityName().toUpperCase()));
         }
         init.addStatement(NodeParser.parseStatement(String.format(PERSIST_CLIENT_TEMPLATE,
                 persistClientMap.toString())));
@@ -572,15 +571,12 @@ public class BalSyntaxGenerator {
         close.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode(EMPTY_STRING,
                 PERSIST_ERROR));
         close.addStatement(NodeParser.parseStatement(PERSIST_CLIENT_CLOSE_STATEMENT));
-        IfElse errorCheck = new IfElse(NodeParser.parseExpression(CHECK_E_FOR_ERRORS));
-        errorCheck.addIfStatement(NodeParser.parseStatement(RETURN_PERSIST_ERROR));
-        close.addIfElseStatement(errorCheck.getIfElseStatementNode());
         return close;
     }
     
     private static Function createPostFunction(Entity entity) {
         List<EntityField> primaryKeys = entity.getKeys();
-        String parameterType = String.format("%sInsert", entity.getEntityName());
+        String parameterType = String.format(INSERT_RECORD, entity.getEntityName());
 
         Function create = new Function(BalSyntaxConstants.POST, SyntaxKind.RESOURCE_ACCESSOR_DEFINITION, true);
         NodeList<Node> resourcePaths = AbstractNodeFactory.createEmptyNodeList();
@@ -671,13 +667,13 @@ public class BalSyntaxGenerator {
                 keyString.append(String.format(PLACEHOLDER_FOR_TYPE_DEFINITION, entry.getValue(), entry.getKey()));
             }
             readByKey.addStatement(NodeParser.parseStatement(String.format(READ_BY_KEY_RETURN,
-                    entity.getTableName(), entity.getEntityName(),
-                    String.format(BalSyntaxConstants.CLOSE_RECORD_VARIABLE, keyString.toString()),
+                    entity.getEntityName().toUpperCase(), entity.getEntityName(),
+                    String.format(BalSyntaxConstants.RECORD_PLACEHOLDER, record.toString()),
                     entity.getEntityName())));
         } else {
             readByKey.addStatement(NodeParser.parseStatement(String.format(READ_BY_KEY_RETURN,
-                    entity.getTableName(), entity.getEntityName(), keys.keySet().stream().findFirst().get(),
-                    entity.getEntityName())));
+                    entity.getEntityName().toUpperCase(), entity.getEntityName(),
+                    keys.keySet().stream().findFirst().get(), entity.getEntityName())));
         }
         return readByKey;
     }
@@ -693,13 +689,13 @@ public class BalSyntaxGenerator {
                         entity.getEntityName())),
                 NodeFactory.createOptionalTypeDescriptorNode(
                         NodeFactory.createQualifiedNameReferenceNode(
-                                AbstractNodeFactory.createIdentifierToken("persist"),
+                                AbstractNodeFactory.createIdentifierToken(PERSIST_MODULE),
                                 AbstractNodeFactory.createToken(SyntaxKind.COLON_TOKEN),
-                                AbstractNodeFactory.createIdentifierToken("Error")),
+                                AbstractNodeFactory.createIdentifierToken(ERROR)),
                                 AbstractNodeFactory.createToken(SyntaxKind.QUESTION_MARK_TOKEN)
                 )));
         read.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.READ_RUN_READ_QUERY,
-                entity.getTableName(), entity.getEntityName())));
+                entity.getEntityName().toUpperCase(), entity.getEntityName())));
         IfElse errorCheck = new IfElse(NodeParser.parseExpression(RESULT_IS_ERROR));
         errorCheck.addIfStatement(NodeParser.parseStatement(String.format(
                 BalSyntaxConstants.READ_RETURN_STREAM_WHEN_ERROR, entity.getEntityName(), entity.getEntityName())));
@@ -714,9 +710,9 @@ public class BalSyntaxGenerator {
         Function update = new Function(BalSyntaxConstants.PUT, SyntaxKind.RESOURCE_ACCESSOR_DEFINITION, true);
         update.addQualifiers(new String[]{KEYWORD_ISOLATED, BalSyntaxConstants.KEYWORD_RESOURCE});
         update.addRequiredParameter(TypeDescriptor.getSimpleNameReferenceNode(
-                String.format("%sUpdate", entity.getEntityName())), VALUE);
+                String.format(UPDATE_RECORD, entity.getEntityName())), VALUE);
         NodeList<Node> resourcePaths = AbstractNodeFactory.createEmptyNodeList();
-        StringBuilder filterKeys = new StringBuilder("{");
+        StringBuilder filterKeys = new StringBuilder(OPEN_BRACE);
         StringBuilder path = new StringBuilder(BACK_SLASH + entity.getTableName());
         resourcePaths = getResourcePath(resourcePaths, keys, filterKeys, path, entity.getTableName());
         update.addRelativeResourcePaths(resourcePaths);
@@ -724,7 +720,8 @@ public class BalSyntaxGenerator {
                 TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()),
                 TypeDescriptor.getQualifiedNameReferenceNode(PERSIST_MODULE, SPECIFIC_ERROR)));
         update.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.UPDATE_RUN_UPDATE_QUERY,
-                entity.getEntityName().toLowerCase(), filterKeys.substring(0, filterKeys.length() - 1).concat("}"))));
+                entity.getEntityName().toLowerCase(),
+                filterKeys.substring(0, filterKeys.length() - 1).concat(CLOSE_BRACE))));
         update.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.UPDATE_RETURN_UPDATE_QUERY,
                 path)));
         return update;
@@ -735,7 +732,7 @@ public class BalSyntaxGenerator {
         delete.addQualifiers(new String[]{KEYWORD_ISOLATED, BalSyntaxConstants.KEYWORD_RESOURCE});
         NodeList<Node> resourcePaths = AbstractNodeFactory.createEmptyNodeList();
         StringBuilder path = new StringBuilder(BACK_SLASH + entity.getTableName());
-        StringBuilder filterKeys = new StringBuilder("{");
+        StringBuilder filterKeys = new StringBuilder(OPEN_BRACE);
         resourcePaths = getResourcePath(resourcePaths, keys, filterKeys, path, entity.getTableName());
         delete.addRelativeResourcePaths(resourcePaths);
         delete.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(
@@ -745,7 +742,7 @@ public class BalSyntaxGenerator {
                 entity.getEntityName(), path)));
         delete.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.DELETE_RUN_DELETE_QUERY,
                 entity.getEntityName().toLowerCase(),
-                filterKeys.substring(0, filterKeys.length() - 1).concat("}"))));
+                filterKeys.substring(0, filterKeys.length() - 1).concat(CLOSE_BRACE))));
         delete.addStatement(NodeParser.parseStatement(BalSyntaxConstants.RETURN_DELETED_OBJECT));
         return delete;
     }
@@ -764,9 +761,9 @@ public class BalSyntaxGenerator {
                     null,
                     AbstractNodeFactory.createIdentifierToken(entry.getKey()),
                     AbstractNodeFactory.createToken(SyntaxKind.CLOSE_BRACKET_TOKEN)));
-            filterKeys.append(DOUBLE_QUOTE).append(entry.getKey()).append(DOUBLE_QUOTE).append(" : ").
+            filterKeys.append(DOUBLE_QUOTE).append(entry.getKey()).append(DOUBLE_QUOTE).append(COLON).
                     append(entry.getKey()).append(COMMA_SPACE);
-            path.append(BACK_SLASH).append("[").append(entry.getKey()).append("]");
+            path.append(BACK_SLASH).append(OPEN_BRACKET).append(entry.getKey()).append(CLOSE_BRACKET);
         }
         return resourcePaths;
     }
