@@ -110,6 +110,8 @@ import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PERSIST_CLIE
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PERSIST_CLIENT_TEMPLATE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PERSIST_ERROR;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PERSIST_MODULE;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PLACEHOLDER_FOR_MAP_FIELD;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PLACEHOLDER_FOR_TYPE_DEFINITION;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.READ_BY_KEY_RETURN;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.RESULT_IS_ERROR;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.RETURN_CASTED_ERROR;
@@ -117,6 +119,7 @@ import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.RETURN_NILL;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.RETURN_PERSIST_ERROR;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.RETURN_PERSIST_ERROR_CLOSE_STREAM;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.SELF_ERR;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.SEMICOLON;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.SPACE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.SPECIFIC_ERROR;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.VALUE;
@@ -361,9 +364,10 @@ public class BalSyntaxGenerator {
         moduleMembers = moduleMembers.add(clientObject.getClassDefinitionNode());
 
         // TODO: uncomment the code for the implementation
-//        Class clientStream = createClientStreamClass(entity, entity.getEntityName());
-//
-//        moduleMembers = moduleMembers.add(clientStream.getClassDefinitionNode());
+        for (Entity entity : entityModule.getEntityMap().values()) {
+            Client clientStream = createClientStreamClass(entity, entity.getEntityName());
+            moduleMembers = moduleMembers.add(clientStream.getClassDefinitionNode());
+        }
 
         Token eofToken = AbstractNodeFactory.createIdentifierToken(EMPTY_STRING);
         ModulePartNode modulePartNode = NodeFactory.createModulePartNode(imports, moduleMembers, eofToken);
@@ -657,13 +661,12 @@ public class BalSyntaxGenerator {
             StringBuilder record = new StringBuilder();
             for (Map.Entry<String, String> entry : keys.entrySet()) {
                 if (keyString.length() != 0) {
-                    keyString.append(";");
-                    record.append(",");
+                    keyString.append(SEMICOLON);
+                    record.append(COMMA_SPACE);
                 }
-                record.append(String.format("%s:%s", entry.getValue(), entry.getValue()));
-                keyString.append(String.format("%s %s", entry.getValue(), entry.getKey()));
+                record.append(String.format(PLACEHOLDER_FOR_MAP_FIELD, entry.getValue(), entry.getValue()));
+                keyString.append(String.format(PLACEHOLDER_FOR_TYPE_DEFINITION, entry.getValue(), entry.getKey()));
             }
-            readByKey.addStatement(NodeParser.parseStatement("record{|%s|} = {}"));
             readByKey.addStatement(NodeParser.parseStatement(String.format(READ_BY_KEY_RETURN,
                     entity.getResourceName(), entity.getEntityName(),
                     String.format(BalSyntaxConstants.CLOSE_RECORD_VARIABLE, keyString.toString()),

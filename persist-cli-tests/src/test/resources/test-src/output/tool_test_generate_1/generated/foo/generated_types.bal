@@ -68,3 +68,4 @@ public type WorkspaceUpdate record {|
     string workspaceType?;
     string buildingBuildingCode?;
 |};
+
