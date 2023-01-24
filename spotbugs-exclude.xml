@@ -17,17 +17,23 @@
   -->
 
 <FindBugsFilter>
+<!--    <Match>-->
+<!--        <Class name="io.ballerina.persist.utils.ScriptRunner" />-->
+<!--    </Match>-->
     <Match>
-        <Class name="io.ballerina.persist.utils.ScriptRunner" />
+        <Package name="io.ballerina.persist.models.*" />
+        <Bug pattern="EI_EXPOSE_REP" />
     </Match>
     <Match>
-        <Class name="io.ballerina.persist.cmd.Push" />
-        <Method name="execute" />
-        <Bug pattern="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE" />
+        <Package name="io.ballerina.persist.models.*" />
+        <Bug pattern="EI_EXPOSE_REP2" />
     </Match>
     <Match>
-        <Class name="io.ballerina.persist.cmd.Init" />
-        <Method name="execute" />
-        <Bug pattern="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE" />
+        <Package name="io.ballerina.persist.components.*" />
+        <Bug pattern="EI_EXPOSE_REP" />
+    </Match>
+    <Match>
+        <Package name="io.ballerina.persist.components.*" />
+        <Bug pattern="EI_EXPOSE_REP2" />
     </Match>
 </FindBugsFilter>

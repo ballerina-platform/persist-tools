@@ -57,7 +57,6 @@ public class Function {
     }
 
     private final SyntaxKind kind;
-    private final boolean returnError;
     private NodeList<Token> qualifierList;
     private final Token finalKeyWord = AbstractNodeFactory.createIdentifierToken(ComponentConstants.TAG_FUNCTION);
     private final IdentifierToken functionName;
@@ -66,14 +65,13 @@ public class Function {
     private ReturnTypeDescriptorNode returnTypeDescriptorNode;
     private NodeList<StatementNode> statements;
 
-    public Function(String name, SyntaxKind kind, boolean returnError) {
+    public Function(String name, SyntaxKind kind) {
         qualifierList = AbstractNodeFactory.createEmptyNodeList();
         functionName = AbstractNodeFactory.createIdentifierToken(name + " ");
         relativeResourcePath = AbstractNodeFactory.createEmptyNodeList();
         parameters = new ArrayList<>();
         statements = NodeFactory.createEmptyNodeList();
         this.kind = kind;
-        this.returnError = returnError;
     }
 
     public FunctionDefinitionNode getFunctionDefinitionNode() {

@@ -98,7 +98,7 @@ public class BalSyntaxConstants {
             "self.metadata.get(\"%s\").fieldMetadata)";
     public static final String CREATE_SQL_RESULTS = "_ = check " +
             "self.persistClients.get(\"%s\").runBatchInsertQuery(data);";
-    public static final String RETURN_CREATED_KEY = "return from  %s inserted in data\n";
+    public static final String RETURN_CREATED_KEY = "return from  %s inserted in data%n";
     public static final String CREATE_SQL_RESULTS_SINGLE_KEY = "return from %s inserted in data " +
             "select %s";
     public static final String READ_BY_KEY_RETURN = "return (check " +

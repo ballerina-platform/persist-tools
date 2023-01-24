@@ -18,9 +18,8 @@
 
 package io.ballerina.persist.models;
 
-import io.ballerina.compiler.syntax.tree.ModuleMemberDeclarationNode;
-
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -36,17 +35,14 @@ public class Entity {
 
     private final String entityName;
 
-    private final ModuleMemberDeclarationNode node;
-
     private final List<EntityField> fields;
 
-    private Entity(ModuleMemberDeclarationNode node, String entityName, List<EntityField> keys,
+    private Entity(String entityName, List<EntityField> keys,
                    String resourceName, List<EntityField> fields) {
-        this.node = node;
         this.entityName = entityName;
-        this.keys = keys;
+        this.keys = Collections.unmodifiableList(keys);
         this.resourceName = resourceName;
-        this.fields = fields;
+        this.fields = Collections.unmodifiableList(fields);
     }
 
     public List<EntityField> getKeys() {
@@ -65,10 +61,6 @@ public class Entity {
         return this.fields;
     }
 
-    public ModuleMemberDeclarationNode getNode() {
-        return node;
-    }
-
     public static Entity.Builder newBuilder(String entityName) {
         return new Entity.Builder(entityName);
     }
@@ -83,18 +75,12 @@ public class Entity {
 
         List<EntityField> fieldList = null;
 
-        ModuleMemberDeclarationNode node;
-
         private Builder(String entityName) {
             this.entityName = entityName;
         }
 
         public void setKeys(List<EntityField> keys) {
             this.keys = keys;
-        }
-
-        public void setDeclarationNode(ModuleMemberDeclarationNode node) {
-            this.node = node;
         }
 
         public void addField(EntityField field) {
@@ -108,7 +94,7 @@ public class Entity {
             if (resourceName == null) {
                 resourceName = entityName.toLowerCase(Locale.ENGLISH);
             }
-            return new Entity(node, entityName, keys, resourceName, fieldList);
+            return new Entity(entityName, keys, resourceName, fieldList);
         }
     }
 }
