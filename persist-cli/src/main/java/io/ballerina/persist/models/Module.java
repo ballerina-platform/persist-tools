@@ -19,8 +19,10 @@
 package io.ballerina.persist.models;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -34,14 +36,14 @@ public class Module {
     private final String moduleName;
     private final String clientName;
 
-    private Set<String> importModulePrefixes;
+    private final Set<String> importModulePrefixes;
 
     private Module(String moduleName, String clientName, Set<String> importModulePrefixes,
                    Map<String, Entity> entityMap) {
         this.moduleName = moduleName;
         this.clientName = clientName;
-        this.importModulePrefixes = importModulePrefixes;
-        this.entityMap = entityMap;
+        this.importModulePrefixes = Collections.unmodifiableSet(importModulePrefixes);
+        this.entityMap = Collections.unmodifiableMap(entityMap);
     }
 
     public Map<String, Entity> getEntityMap() {
@@ -72,7 +74,7 @@ public class Module {
         String moduleName;
         Map<String, Entity> entityMap = new HashMap<>();
 
-        private Set<String> importModulePrefixes = new HashSet<>();
+        private final Set<String> importModulePrefixes = new HashSet<>();
 
         private Builder(String moduleName) {
             this.moduleName = moduleName;
@@ -95,7 +97,7 @@ public class Module {
             StringBuilder titleBuilder = new StringBuilder();
             String[] moduleParts = moduleName.split(" +");
             Arrays.stream(moduleParts).forEach(modulePart -> {
-                titleBuilder.append(modulePart.substring(0, 1).toUpperCase())
+                titleBuilder.append(modulePart.substring(0, 1).toUpperCase(Locale.ENGLISH))
                         .append(modulePart.substring(1));
             });
             return titleBuilder.toString();

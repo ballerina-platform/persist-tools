@@ -22,8 +22,8 @@ public type Profile record  {|
     //comment2
     string name;
     //comment4
-    User owner?;
-    MultipleAssociations multipleAssociations?;
+    User owner;
+    MultipleAssociations multipleAssociations;
 |};
 
 public type User record  {|
@@ -31,8 +31,8 @@ public type User record  {|
     readonly int id;
     string name;
     //comment6
-    Profile profile?;
-    MultipleAssociations multipleAssociations?;
+    Profile profile;
+    MultipleAssociations multipleAssociations;
 |};
 //comment7
 //comment8
@@ -42,7 +42,7 @@ public type MultipleAssociations record {|
     string name;
     //comment10
     //comment11
-    Profile profile?;
+    Profile profile;
     //comment8
-    User owner?;
+    User owner;
 |};

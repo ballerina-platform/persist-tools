@@ -7,16 +7,21 @@ distribution = "2201.3.0"
 [build-options]
 observabilityIncluded = true
 
-[persist.perist_init_3]
-provider = "mysql"
+[persist.perist_init_3.storage.mysql]
 host = "localhost"
 port = 3306
 user = "root"
 password = ""
 database = ""
 
-[persist.test]
-provider = "mysql"
+[[arraytable]]
+value = 1
+[[arraytable]]
+value = 2
+
+array = [ [1, 0], [0, 1] ]
+
+[persist.test.storage.mysql]
 host = "localhost"
 port = 3306
 user = "root"

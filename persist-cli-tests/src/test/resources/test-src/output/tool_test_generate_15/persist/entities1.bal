@@ -19,12 +19,12 @@ import ballerina/persist as _;
 public type Profile record  {|
     readonly int id;
     string name;
-    MultipleAssociations multipleAssociations?;
+    MultipleAssociations multipleAssociations;
 |};
 
 public type MultipleAssociations record {|
     readonly int id;
     string name;
 
-    Profile profile?;
+    Profile profile;
 |};
