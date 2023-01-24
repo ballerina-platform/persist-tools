@@ -118,6 +118,7 @@ import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.RETURN_CASTE
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.RETURN_NILL;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.RETURN_PERSIST_ERROR;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.RETURN_PERSIST_ERROR_CLOSE_STREAM;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.SELECT_WITH_SPACE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.SELF_ERR;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.SEMICOLON;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.SPACE;
@@ -600,19 +601,26 @@ public class BalSyntaxGenerator {
         );
         NodeList<ArrayDimensionNode> dimensionList = NodeFactory.createNodeList(arrayDimensionNode);
         List<Node> typeTuple = new ArrayList<>();
-        primaryKeys.forEach(primaryKey -> {
-            if (!typeTuple.isEmpty()) {
-                typeTuple.add(NodeFactory.createToken(SyntaxKind.COMMA_TOKEN));
-            }
-            typeTuple.add(NodeFactory.createSimpleNameReferenceNode(
-                    NodeFactory.createIdentifierToken(primaryKey.getFieldType())));
-        });
-        create.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(
-                NodeFactory.createArrayTypeDescriptorNode(NodeFactory.createTupleTypeDescriptorNode(
-                        NodeFactory.createToken(SyntaxKind.OPEN_BRACKET_TOKEN),
-                        NodeFactory.createSeparatedNodeList(typeTuple),
-                        NodeFactory.createToken(SyntaxKind.CLOSE_BRACKET_TOKEN)
-                ), dimensionList), TypeDescriptor.getQualifiedNameReferenceNode(PERSIST_MODULE, SPECIFIC_ERROR)));
+        if (primaryKeys.size() > 1) {
+            primaryKeys.forEach(primaryKey -> {
+                if (!typeTuple.isEmpty()) {
+                    typeTuple.add(NodeFactory.createToken(SyntaxKind.COMMA_TOKEN));
+                }
+                typeTuple.add(NodeFactory.createSimpleNameReferenceNode(
+                        NodeFactory.createIdentifierToken(primaryKey.getFieldType())));
+            });
+            create.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(
+                    NodeFactory.createArrayTypeDescriptorNode(NodeFactory.createTupleTypeDescriptorNode(
+                            NodeFactory.createToken(SyntaxKind.OPEN_BRACKET_TOKEN),
+                            NodeFactory.createSeparatedNodeList(typeTuple),
+                            NodeFactory.createToken(SyntaxKind.CLOSE_BRACKET_TOKEN)
+                    ), dimensionList), TypeDescriptor.getQualifiedNameReferenceNode(PERSIST_MODULE, SPECIFIC_ERROR)));
+        } else {
+            create.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(
+                    TypeDescriptor.getArrayTypeDescriptorNode(primaryKeys.get(0).getFieldType()),
+                    TypeDescriptor.getQualifiedNameReferenceNode(PERSIST_MODULE, SPECIFIC_ERROR)));
+
+        }
     }
 
     private static void addFunctionBodyToPostResource(Function create, List<EntityField> primaryKeys,
@@ -621,14 +629,17 @@ public class BalSyntaxGenerator {
                 tableName)));
         create.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.RETURN_CREATED_KEY,
                 parameterType)));
-        StringBuilder filterKeys = new StringBuilder("\t\t\tselect [");
+        StringBuilder filterKeys = new StringBuilder();
         for (int i = 0;  i < primaryKeys.size(); i++) {
             filterKeys.append("inserted.").append(primaryKeys.get(i).getFieldName());
             if (i < primaryKeys.size() - 1) {
                 filterKeys.append(",");
-            } else {
-                filterKeys.append("];");
             }
+        }
+        if (primaryKeys.size() == 1) {
+            filterKeys = new StringBuilder(SELECT_WITH_SPACE + filterKeys + ";");
+        } else {
+            filterKeys = new StringBuilder(SELECT_WITH_SPACE + "[" + filterKeys + "];");
         }
         create.addStatement(NodeParser.parseStatement(filterKeys.toString()));
     }
@@ -722,7 +733,8 @@ public class BalSyntaxGenerator {
                 TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()),
                 TypeDescriptor.getQualifiedNameReferenceNode(PERSIST_MODULE, SPECIFIC_ERROR)));
         update.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.UPDATE_RUN_UPDATE_QUERY,
-                entity.getEntityName().toLowerCase(), filterKeys.substring(0, filterKeys.length() - 1).concat("}"))));
+                entity.getEntityName().toLowerCase(),
+                filterKeys.substring(0, filterKeys.length() - 2).concat("}"))));
         update.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.UPDATE_RETURN_UPDATE_QUERY,
                 path)));
         return update;
@@ -743,7 +755,7 @@ public class BalSyntaxGenerator {
                 entity.getEntityName(), path)));
         delete.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.DELETE_RUN_DELETE_QUERY,
                 entity.getEntityName().toLowerCase(),
-                filterKeys.substring(0, filterKeys.length() - 1).concat("}"))));
+                filterKeys.substring(0, filterKeys.length() - 2).concat("}"))));
         delete.addStatement(NodeParser.parseStatement(BalSyntaxConstants.RETURN_DELETED_OBJECT));
         return delete;
     }

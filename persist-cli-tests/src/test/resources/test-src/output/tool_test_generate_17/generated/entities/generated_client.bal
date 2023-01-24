@@ -39,18 +39,18 @@ public client class EntitiesClient {
     isolated resource function get vehicle/[int model]() returns Vehicle|persist:Error {
         return (check self.persistClients.get("vehicle").runReadByKeyQuery(Vehicle, model)).cloneWithType(Vehicle);
     }
-    isolated resource function post vehicle(VehicleInsert[] data) returns [int][]|persist:Error {
+    isolated resource function post vehicle(VehicleInsert[] data) returns int[]|persist:Error {
         _ = check self.persistClients.get("vehicle").runBatchInsertQuery(data);
         return from VehicleInsert inserted in data
-            select [inserted.model];
+            select inserted.model;
     }
     isolated resource function put vehicle/[int model](VehicleUpdate value) returns Vehicle|persist:Error {
-        _ = check self.persistClients.get("vehicle").runUpdateQuery({"model": model, }, data);
+        _ = check self.persistClients.get("vehicle").runUpdateQuery({"model": model}, value);
         return self->/vehicle/[model].get();
     }
     isolated resource function delete vehicle/[int model]() returns Vehicle|persist:Error {
         Vehicle 'object = check self->/vehicle/[model].get();
-        _ = check self.persistClients.get("vehicle").runDeleteQuery({"model": model, });
+        _ = check self.persistClients.get("vehicle").runDeleteQuery({"model": model});
         return 'object;
     }
 
@@ -65,18 +65,18 @@ public client class EntitiesClient {
     isolated resource function get company/[int id]() returns Company|persist:Error {
         return (check self.persistClients.get("company").runReadByKeyQuery(Company, id)).cloneWithType(Company);
     }
-    isolated resource function post company(CompanyInsert[] data) returns [int][]|persist:Error {
+    isolated resource function post company(CompanyInsert[] data) returns int[]|persist:Error {
         _ = check self.persistClients.get("company").runBatchInsertQuery(data);
         return from CompanyInsert inserted in data
-            select [inserted.id];
+            select inserted.id;
     }
     isolated resource function put company/[int id](CompanyUpdate value) returns Company|persist:Error {
-        _ = check self.persistClients.get("company").runUpdateQuery({"id": id, }, data);
+        _ = check self.persistClients.get("company").runUpdateQuery({"id": id}, value);
         return self->/company/[id].get();
     }
     isolated resource function delete company/[int id]() returns Company|persist:Error {
         Company 'object = check self->/company/[id].get();
-        _ = check self.persistClients.get("company").runDeleteQuery({"id": id, });
+        _ = check self.persistClients.get("company").runDeleteQuery({"id": id});
         return 'object;
     }
 
@@ -91,18 +91,18 @@ public client class EntitiesClient {
     isolated resource function get employee/[int id]() returns Employee|persist:Error {
         return (check self.persistClients.get("employee").runReadByKeyQuery(Employee, id)).cloneWithType(Employee);
     }
-    isolated resource function post employee(EmployeeInsert[] data) returns [int][]|persist:Error {
+    isolated resource function post employee(EmployeeInsert[] data) returns int[]|persist:Error {
         _ = check self.persistClients.get("employee").runBatchInsertQuery(data);
         return from EmployeeInsert inserted in data
-            select [inserted.id];
+            select inserted.id;
     }
     isolated resource function put employee/[int id](EmployeeUpdate value) returns Employee|persist:Error {
-        _ = check self.persistClients.get("employee").runUpdateQuery({"id": id, }, data);
+        _ = check self.persistClients.get("employee").runUpdateQuery({"id": id}, value);
         return self->/employee/[id].get();
     }
     isolated resource function delete employee/[int id]() returns Employee|persist:Error {
         Employee 'object = check self->/employee/[id].get();
-        _ = check self.persistClients.get("employee").runDeleteQuery({"id": id, });
+        _ = check self.persistClients.get("employee").runDeleteQuery({"id": id});
         return 'object;
     }
 }

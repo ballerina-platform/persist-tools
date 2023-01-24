@@ -57,6 +57,7 @@ public class BalSyntaxConstants {
     public static final String CREATE_SQL_RESULTS = "_ = check " +
             "self.persistClients.get(\"%s\").runBatchInsertQuery(data);";
     public static final String RETURN_CREATED_KEY = "return from  %s inserted in data\n";
+    public static final String SELECT_WITH_SPACE = "\t\t\tselect ";
     public static final String READ_BY_KEY_RETURN = "return (check " +
             "self.persistClients.get(\"%s\").runReadByKeyQuery(%s, %s)).cloneWithType(%s);";
     public static final String READ_RUN_READ_QUERY = "stream<anydata, sql:Error?>|persist:Error result" +
@@ -66,7 +67,7 @@ public class BalSyntaxConstants {
     public static final String READ_RETURN_STREAM_WHEN_NOT_ERROR = "return new stream<%s, persist:Error?>" +
             "(new %sStream(result));";
     public static final String UPDATE_RUN_UPDATE_QUERY = "_ = check self.persistClients.get(\"%s\").runUpdateQuery" +
-            "(%s, data);";
+            "(%s, value);";
     public static final String UPDATE_RETURN_UPDATE_QUERY = "return self->%s.get();";
     public static final String DELETE_RUN_DELETE_QUERY = "_ = check self.persistClients.get(\"%s\")." +
             "runDeleteQuery(%s);";

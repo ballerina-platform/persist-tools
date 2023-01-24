@@ -8,34 +8,36 @@ import ballerina/time;
 public type MedicalNeed record {|
     readonly int needId;
     int itemId;
+    string name;
     int beneficiaryId;
     time:Civil period;
     string urgency;
-    int quantity;
+    string quantity;
 |};
 
-type MedicalNeedInsert MedicalNeed;
+public type MedicalNeedInsert MedicalNeed;
 
 public type MedicalNeedUpdate record {|
     int itemId?;
+    string name?;
     int beneficiaryId?;
     time:Civil period?;
     string urgency?;
-    int quantity?;
+    string quantity?;
 |};
 
 public type MedicalItem record {|
     readonly int itemId;
     string name;
     string 'type;
-    string unit;
+    int unit;
 |};
 
-type MedicalItemInsert MedicalItem;
+public type MedicalItemInsert MedicalItem;
 
 public type MedicalItemUpdate record {|
     string name?;
     string 'type?;
-    string unit?;
+    int unit?;
 |};
 

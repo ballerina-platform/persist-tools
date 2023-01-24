@@ -38,18 +38,18 @@ public client class EntitiesClient {
     isolated resource function get datatype/[int a]() returns DataType|persist:Error {
         return (check self.persistClients.get("datatype").runReadByKeyQuery(DataType, a)).cloneWithType(DataType);
     }
-    isolated resource function post datatype(DataTypeInsert[] data) returns [int][]|persist:Error {
+    isolated resource function post datatype(DataTypeInsert[] data) returns int[]|persist:Error {
         _ = check self.persistClients.get("datatype").runBatchInsertQuery(data);
         return from DataTypeInsert inserted in data
-            select [inserted.a];
+            select inserted.a;
     }
     isolated resource function put datatype/[int a](DataTypeUpdate value) returns DataType|persist:Error {
-        _ = check self.persistClients.get("datatype").runUpdateQuery({"a": a, }, data);
+        _ = check self.persistClients.get("datatype").runUpdateQuery({"a": a}, value);
         return self->/datatype/[a].get();
     }
     isolated resource function delete datatype/[int a]() returns DataType|persist:Error {
         DataType 'object = check self->/datatype/[a].get();
-        _ = check self.persistClients.get("datatype").runDeleteQuery({"a": a, });
+        _ = check self.persistClients.get("datatype").runDeleteQuery({"a": a});
         return 'object;
     }
 }

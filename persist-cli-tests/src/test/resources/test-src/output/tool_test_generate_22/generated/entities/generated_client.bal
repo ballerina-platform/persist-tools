@@ -38,18 +38,18 @@ public client class EntitiesClient {
     isolated resource function get medicalneed/[int 'record]() returns MedicalNeed|persist:Error {
         return (check self.persistClients.get("medicalneed").runReadByKeyQuery(MedicalNeed, 'record)).cloneWithType(MedicalNeed);
     }
-    isolated resource function post medicalneed(MedicalNeedInsert[] data) returns [int][]|persist:Error {
+    isolated resource function post medicalneed(MedicalNeedInsert[] data) returns int[]|persist:Error {
         _ = check self.persistClients.get("medicalneed").runBatchInsertQuery(data);
         return from MedicalNeedInsert inserted in data
-            select [inserted.'record];
+            select inserted.'record;
     }
     isolated resource function put medicalneed/[int 'record](MedicalNeedUpdate value) returns MedicalNeed|persist:Error {
-        _ = check self.persistClients.get("medicalneed").runUpdateQuery({"'record": 'record, }, data);
+        _ = check self.persistClients.get("medicalneed").runUpdateQuery({"'record": 'record}, value);
         return self->/medicalneed/['record].get();
     }
     isolated resource function delete medicalneed/[int 'record]() returns MedicalNeed|persist:Error {
         MedicalNeed 'object = check self->/medicalneed/['record].get();
-        _ = check self.persistClients.get("medicalneed").runDeleteQuery({"'record": 'record, });
+        _ = check self.persistClients.get("medicalneed").runDeleteQuery({"'record": 'record});
         return 'object;
     }
 
@@ -64,18 +64,18 @@ public client class EntitiesClient {
     isolated resource function get medicalitem/[int itemId]() returns MedicalItem|persist:Error {
         return (check self.persistClients.get("medicalitem").runReadByKeyQuery(MedicalItem, itemId)).cloneWithType(MedicalItem);
     }
-    isolated resource function post medicalitem(MedicalItemInsert[] data) returns [int][]|persist:Error {
+    isolated resource function post medicalitem(MedicalItemInsert[] data) returns int[]|persist:Error {
         _ = check self.persistClients.get("medicalitem").runBatchInsertQuery(data);
         return from MedicalItemInsert inserted in data
-            select [inserted.itemId];
+            select inserted.itemId;
     }
     isolated resource function put medicalitem/[int itemId](MedicalItemUpdate value) returns MedicalItem|persist:Error {
-        _ = check self.persistClients.get("medicalitem").runUpdateQuery({"itemId": itemId, }, data);
+        _ = check self.persistClients.get("medicalitem").runUpdateQuery({"itemId": itemId}, value);
         return self->/medicalitem/[itemId].get();
     }
     isolated resource function delete medicalitem/[int itemId]() returns MedicalItem|persist:Error {
         MedicalItem 'object = check self->/medicalitem/[itemId].get();
-        _ = check self.persistClients.get("medicalitem").runDeleteQuery({"itemId": itemId, });
+        _ = check self.persistClients.get("medicalitem").runDeleteQuery({"itemId": itemId});
         return 'object;
     }
 }

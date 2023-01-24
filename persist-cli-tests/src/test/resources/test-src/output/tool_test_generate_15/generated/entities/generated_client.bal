@@ -39,18 +39,18 @@ public client class EntitiesClient {
     isolated resource function get user/[int id]() returns User|persist:Error {
         return (check self.persistClients.get("user").runReadByKeyQuery(User, id)).cloneWithType(User);
     }
-    isolated resource function post user(UserInsert[] data) returns [int][]|persist:Error {
+    isolated resource function post user(UserInsert[] data) returns int[]|persist:Error {
         _ = check self.persistClients.get("user").runBatchInsertQuery(data);
         return from UserInsert inserted in data
-            select [inserted.id];
+            select inserted.id;
     }
     isolated resource function put user/[int id](UserUpdate value) returns User|persist:Error {
-        _ = check self.persistClients.get("user").runUpdateQuery({"id": id, }, data);
+        _ = check self.persistClients.get("user").runUpdateQuery({"id": id}, value);
         return self->/user/[id].get();
     }
     isolated resource function delete user/[int id]() returns User|persist:Error {
         User 'object = check self->/user/[id].get();
-        _ = check self.persistClients.get("user").runDeleteQuery({"id": id, });
+        _ = check self.persistClients.get("user").runDeleteQuery({"id": id});
         return 'object;
     }
 }
