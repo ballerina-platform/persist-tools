@@ -19,16 +19,18 @@ public client class EntitiesClient {
         "datatype": {
             entityName: "DataType",
             tableName: `DataType`,
-            a: {columnName: "a", 'type: int},
-            b1: {columnName: "b1", 'type: string},
-            c1: {columnName: "c1", 'type: int},
-            d1: {columnName: "d1", 'type: boolean},
-            e1: {columnName: "e1", 'type: float},
-            f1: {columnName: "f1", 'type: decimal},
-            j1: {columnName: "j1", 'type: time:Utc},
-            k1: {columnName: "k1", 'type: time:Civil},
-            l1: {columnName: "l1", 'type: time:Date},
-            m1: {columnName: "m1", 'type: time:TimeOfDay},
+            fieldMetadata: {
+                a: {columnName: "a", 'type: int},
+                b1: {columnName: "b1", 'type: string},
+                c1: {columnName: "c1", 'type: int},
+                d1: {columnName: "d1", 'type: boolean},
+                e1: {columnName: "e1", 'type: float},
+                f1: {columnName: "f1", 'type: decimal},
+                j1: {columnName: "j1", 'type: time:Utc},
+                k1: {columnName: "k1", 'type: time:Civil},
+                l1: {columnName: "l1", 'type: time:Date},
+                m1: {columnName: "m1", 'type: time:TimeOfDay}
+            },
             keyFields: ["a"]
         }
     };

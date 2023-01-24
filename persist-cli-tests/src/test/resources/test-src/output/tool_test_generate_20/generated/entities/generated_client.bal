@@ -22,24 +22,30 @@ public client class EntitiesClient {
         "vehicle": {
             entityName: "Vehicle",
             tableName: `Vehicle`,
-            model: {columnName: "model", 'type: int},
-            name: {columnName: "name", 'type: string},
-            employeeId: {columnName: "employeeId", 'type: int},
+            fieldMetadata: {
+                model: {columnName: "model", 'type: int},
+                name: {columnName: "name", 'type: string},
+                employeeId: {columnName: "employeeId", 'type: int}
+            },
             keyFields: ["model"]
         },
         "company": {
             entityName: "Company",
             tableName: `Company`,
-            id: {columnName: "id", 'type: int},
-            name: {columnName: "name", 'type: string},
+            fieldMetadata: {
+                id: {columnName: "id", 'type: int},
+                name: {columnName: "name", 'type: string}
+            },
             keyFields: ["id"]
         },
         "employee": {
             entityName: "Employee",
             tableName: `Employee`,
-            id: {columnName: "id", 'type: int},
-            name: {columnName: "name", 'type: string},
-            companyId: {columnName: "companyId", 'type: int},
+            fieldMetadata: {
+                id: {columnName: "id", 'type: int},
+                name: {columnName: "name", 'type: string},
+                companyId: {columnName: "companyId", 'type: int}
+            },
             keyFields: ["id"]
         }
     };

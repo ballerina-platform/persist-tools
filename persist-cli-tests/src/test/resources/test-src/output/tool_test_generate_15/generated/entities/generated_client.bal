@@ -20,8 +20,10 @@ public client class EntitiesClient {
         "user": {
             entityName: "User",
             tableName: `User`,
-            id: {columnName: "id", 'type: int},
-            name: {columnName: "name", 'type: string},
+            fieldMetadata: {
+                id: {columnName: "id", 'type: int},
+                name: {columnName: "name", 'type: string}
+            },
             keyFields: ["id"]
         }
     };

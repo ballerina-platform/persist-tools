@@ -90,6 +90,7 @@ import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.DOUBLE_QUOTE
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.EMPTY_STRING;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.ERROR;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.ERR_IS_ERROR;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.FIELD_METADATA_TEMPLATE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.INIT_DBCLIENT;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.INIT_DB_CLIENT;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.INIT_PERSIST_CLIENT_MAP;
@@ -445,13 +446,13 @@ public class BalSyntaxGenerator {
                             field.getFieldType()));
                 }
             }
-            fieldMetaData.append(COMMA_WITH_NEWLINE);
-            entityMetaData.append(fieldMetaData.toString());
+            entityMetaData.append(String.format(FIELD_METADATA_TEMPLATE, fieldMetaData.toString()));
+            entityMetaData.append(COMMA_SPACE);
 
             StringBuilder keyFields = new StringBuilder();
             for (EntityField key : entity.getKeys()) {
                 if (keyFields.length() != 0) {
-                    keyFields.append(",");
+                    keyFields.append(COMMA_SPACE);
                 }
                 keyFields.append("\"").append(key.getFieldName()).append("\"");
             }

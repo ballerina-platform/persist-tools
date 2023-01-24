@@ -22,25 +22,31 @@ public client class EntitiesClient {
         "multipleassociations": {
             entityName: "MultipleAssociations",
             tableName: `MultipleAssociations`,
-            id: {columnName: "id", 'type: int},
-            name: {columnName: "name", 'type: string},
-            profileId: {columnName: "profileId", 'type: int},
-            userId: {columnName: "userId", 'type: int},
+            fieldMetadata: {
+                id: {columnName: "id", 'type: int},
+                name: {columnName: "name", 'type: string},
+                profileId: {columnName: "profileId", 'type: int},
+                userId: {columnName: "userId", 'type: int}
+            },
             keyFields: ["id"]
         },
         "user": {
             entityName: "User",
             tableName: `User`,
-            id: {columnName: "id", 'type: int},
-            name: {columnName: "name", 'type: string},
-            profileId: {columnName: "profileId", 'type: int},
+            fieldMetadata: {
+                id: {columnName: "id", 'type: int},
+                name: {columnName: "name", 'type: string},
+                profileId: {columnName: "profileId", 'type: int}
+            },
             keyFields: ["id"]
         },
         "profile": {
             entityName: "Profile",
             tableName: `Profile`,
-            id: {columnName: "id", 'type: int},
-            name: {columnName: "name", 'type: string},
+            fieldMetadata: {
+                id: {columnName: "id", 'type: int},
+                name: {columnName: "name", 'type: string}
+            },
             keyFields: ["id"]
         }
     };
