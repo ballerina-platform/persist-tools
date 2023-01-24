@@ -123,6 +123,7 @@ import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.RETURN_CASTE
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.RETURN_NILL;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.SELECT_WITH_SPACE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.SELF_ERR;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.SEMICOLON;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.SPACE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.SPECIFIC_ERROR;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.UPDATE_RECORD;
@@ -636,9 +637,9 @@ public class BalSyntaxGenerator {
             }
         }
         if (primaryKeys.size() == 1) {
-            filterKeys = new StringBuilder(SELECT_WITH_SPACE + filterKeys + ";");
+            filterKeys = new StringBuilder(SELECT_WITH_SPACE + filterKeys + SEMICOLON);
         } else {
-            filterKeys = new StringBuilder(SELECT_WITH_SPACE + "[" + filterKeys + "];");
+            filterKeys = new StringBuilder(SELECT_WITH_SPACE + OPEN_BRACKET + filterKeys + CLOSE_BRACKET + SEMICOLON);
         }
         create.addStatement(NodeParser.parseStatement(filterKeys.toString()));
     }
