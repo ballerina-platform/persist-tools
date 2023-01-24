@@ -586,7 +586,7 @@ public class BalSyntaxGenerator {
         create.addQualifiers(new String[]{KEYWORD_ISOLATED, BalSyntaxConstants.KEYWORD_RESOURCE});
         addReturnsToPostResourceSignature(create, primaryKeys);
         addFunctionBodyToPostResource(create, primaryKeys,
-                entity.getEntityName().toLowerCase(Locale.ENGLISH), parameterType);
+                entity.getEntityName().toUpperCase(Locale.ENGLISH), parameterType);
         return create;
     }
 
@@ -675,7 +675,7 @@ public class BalSyntaxGenerator {
             }
             readByKey.addStatement(NodeParser.parseStatement(String.format(READ_BY_KEY_RETURN,
                     entity.getResourceName(), entity.getEntityName(),
-                    String.format(BalSyntaxConstants.CLOSE_RECORD_VARIABLE, keyString.toString()),
+                    String.format(BalSyntaxConstants.CLOSE_RECORD_VARIABLE, keyString),
                     entity.getEntityName())));
         } else {
             readByKey.addStatement(NodeParser.parseStatement(String.format(READ_BY_KEY_RETURN,
@@ -727,7 +727,7 @@ public class BalSyntaxGenerator {
                 TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()),
                 TypeDescriptor.getQualifiedNameReferenceNode(PERSIST_MODULE, SPECIFIC_ERROR)));
         update.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.UPDATE_RUN_UPDATE_QUERY,
-                entity.getEntityName().toLowerCase(Locale.ENGLISH),
+                entity.getEntityName().toUpperCase(Locale.ENGLISH),
                 filterKeys.substring(0, filterKeys.length() - 2).concat("}"))));
         update.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.UPDATE_RETURN_UPDATE_QUERY,
                 path)));
@@ -748,7 +748,7 @@ public class BalSyntaxGenerator {
         delete.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.GET_OBJECT_QUERY,
                 entity.getEntityName(), path)));
         delete.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.DELETE_RUN_DELETE_QUERY,
-                entity.getEntityName().toLowerCase(Locale.ENGLISH),
+                entity.getEntityName().toUpperCase(Locale.ENGLISH),
                 filterKeys.substring(0, filterKeys.length() - 2).concat("}"))));
         delete.addStatement(NodeParser.parseStatement(BalSyntaxConstants.RETURN_DELETED_OBJECT));
         return delete;

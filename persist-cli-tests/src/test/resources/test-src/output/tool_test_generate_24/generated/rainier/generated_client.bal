@@ -110,17 +110,17 @@ public client class RainierClient {
         return (check self.persistClients.get("workspace").runReadByKeyQuery(Workspace, workspaceId)).cloneWithType(Workspace);
     }
     isolated resource function post workspace(WorkspaceInsert[] data) returns string[]|persist:Error {
-        _ = check self.persistClients.get("workspace").runBatchInsertQuery(data);
+        _ = check self.persistClients.get(WORKSPACE).runBatchInsertQuery(data);
         return from WorkspaceInsert inserted in data
             select inserted.workspaceId;
     }
     isolated resource function put workspace/[string workspaceId](WorkspaceUpdate value) returns Workspace|persist:Error {
-        _ = check self.persistClients.get("workspace").runUpdateQuery({"workspaceId": workspaceId}, value);
+        _ = check self.persistClients.get(WORKSPACE).runUpdateQuery({"workspaceId": workspaceId}, value);
         return self->/workspace/[workspaceId].get();
     }
     isolated resource function delete workspace/[string workspaceId]() returns Workspace|persist:Error {
         Workspace 'object = check self->/workspace/[workspaceId].get();
-        _ = check self.persistClients.get("workspace").runDeleteQuery({"workspaceId": workspaceId});
+        _ = check self.persistClients.get(WORKSPACE).runDeleteQuery({"workspaceId": workspaceId});
         return 'object;
     }
 
