@@ -20,13 +20,6 @@ public client class FooClient {
         self.persistClients = {building: check new (self.dbClient, self.metadata.get("building").entityName, self.metadata.get("building").tableName, self.metadata.get("building").keyFields, self.metadata.get("building").fieldMetadata), department: check new (self.dbClient, self.metadata.get("department").entityName, self.metadata.get("department").tableName, self.metadata.get("department").keyFields, self.metadata.get("department").fieldMetadata), employee: check new (self.dbClient, self.metadata.get("employee").entityName, self.metadata.get("employee").tableName, self.metadata.get("employee").keyFields, self.metadata.get("employee").fieldMetadata), workspace: check new (self.dbClient, self.metadata.get("workspace").entityName, self.metadata.get("workspace").tableName, self.metadata.get("workspace").keyFields, self.metadata.get("workspace").fieldMetadata)};
     }
 
-    public function close() returns persist:Error? {
-        sql:Error? e = self.dbClient.close();
-        if e is sql:Error {
-            return <persist:Error>error(e.message());
-        }
-    }
-
     isolated resource function get building() returns stream<Building, persist:Error?> {
         stream<anydata, sql:Error?>|persist:Error result = self.persistClients.get("building").runReadQuery(Building);
         if result is persist:Error {
@@ -129,6 +122,13 @@ public client class FooClient {
         Workspace 'object = check self->/workspace/[workspaceId].get();
         _ = check self.persistClients.get("workspace").runDeleteQuery({"workspaceId": workspaceId});
         return 'object;
+    }
+
+    public function close() returns persist:Error? {
+        sql:Error? e = self.dbClient.close();
+        if e is sql:Error {
+            return <persist:Error>error(e.message());
+        }
     }
 }
 

@@ -20,13 +20,6 @@ public client class EntitiesClient {
         self.persistClients = {datatype: check new (self.dbClient, self.metadata.get("datatype").entityName, self.metadata.get("datatype").tableName, self.metadata.get("datatype").keyFields, self.metadata.get("datatype").fieldMetadata)};
     }
 
-    public function close() returns persist:Error? {
-        sql:Error? e = self.dbClient.close();
-        if e is sql:Error {
-            return <persist:Error>error(e.message());
-        }
-    }
-
     isolated resource function get datatype() returns stream<DataType, persist:Error?> {
         stream<anydata, sql:Error?>|persist:Error result = self.persistClients.get("datatype").runReadQuery(DataType);
         if result is persist:Error {
@@ -51,6 +44,13 @@ public client class EntitiesClient {
         DataType 'object = check self->/datatype/[a].get();
         _ = check self.persistClients.get("datatype").runDeleteQuery({"a": a});
         return 'object;
+    }
+
+    public function close() returns persist:Error? {
+        sql:Error? e = self.dbClient.close();
+        if e is sql:Error {
+            return <persist:Error>error(e.message());
+        }
     }
 }
 

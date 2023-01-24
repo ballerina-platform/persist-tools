@@ -21,13 +21,6 @@ public client class Entities1Client {
         self.persistClients = {multipleassociations: check new (self.dbClient, self.metadata.get("multipleassociations").entityName, self.metadata.get("multipleassociations").tableName, self.metadata.get("multipleassociations").keyFields, self.metadata.get("multipleassociations").fieldMetadata), profile: check new (self.dbClient, self.metadata.get("profile").entityName, self.metadata.get("profile").tableName, self.metadata.get("profile").keyFields, self.metadata.get("profile").fieldMetadata)};
     }
 
-    public function close() returns persist:Error? {
-        sql:Error? e = self.dbClient.close();
-        if e is sql:Error {
-            return <persist:Error>error(e.message());
-        }
-    }
-
     isolated resource function get multipleassociations() returns stream<MultipleAssociations, persist:Error?> {
         stream<anydata, sql:Error?>|persist:Error result = self.persistClients.get("multipleassociations").runReadQuery(MultipleAssociations);
         if result is persist:Error {
@@ -78,6 +71,13 @@ public client class Entities1Client {
         Profile 'object = check self->/profile/[id].get();
         _ = check self.persistClients.get("profile").runDeleteQuery({"id": id});
         return 'object;
+    }
+
+    public function close() returns persist:Error? {
+        sql:Error? e = self.dbClient.close();
+        if e is sql:Error {
+            return <persist:Error>error(e.message());
+        }
     }
 }
 

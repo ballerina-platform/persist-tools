@@ -20,13 +20,6 @@ public client class EntitiesClient {
         self.persistClients = {medicalneed: check new (self.dbClient, self.metadata.get("medicalneed").entityName, self.metadata.get("medicalneed").tableName, self.metadata.get("medicalneed").keyFields, self.metadata.get("medicalneed").fieldMetadata), aidpackageorderitem: check new (self.dbClient, self.metadata.get("aidpackageorderitem").entityName, self.metadata.get("aidpackageorderitem").tableName, self.metadata.get("aidpackageorderitem").keyFields, self.metadata.get("aidpackageorderitem").fieldMetadata)};
     }
 
-    public function close() returns persist:Error? {
-        sql:Error? e = self.dbClient.close();
-        if e is sql:Error {
-            return <persist:Error>error(e.message());
-        }
-    }
-
     isolated resource function get medicalneed() returns stream<MedicalNeed, persist:Error?> {
         stream<anydata, sql:Error?>|persist:Error result = self.persistClients.get("medicalneed").runReadQuery(MedicalNeed);
         if result is persist:Error {
@@ -77,6 +70,13 @@ public client class EntitiesClient {
         AidPackageOrderItem 'object = check self->/aidpackageorderitem/[id].get();
         _ = check self.persistClients.get("aidpackageorderitem").runDeleteQuery({"id": id});
         return 'object;
+    }
+
+    public function close() returns persist:Error? {
+        sql:Error? e = self.dbClient.close();
+        if e is sql:Error {
+            return <persist:Error>error(e.message());
+        }
     }
 }
 

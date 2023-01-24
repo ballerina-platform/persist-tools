@@ -392,7 +392,6 @@ public class BalSyntaxGenerator {
         }
         Function init = createInitFunction(entityArray);
         clientObject.addMember(init.getFunctionDefinitionNode(), true);
-        clientObject.addMember(createClientCloseFunction().getFunctionDefinitionNode(), true);
         List<ClientResource> resourceList = new ArrayList<>();
         for (Entity entity : entityArray) {
             resourceList.add(createClientResource(entity));
@@ -403,7 +402,7 @@ public class BalSyntaxGenerator {
                 clientObject.addMember(function, false);
                     });
                 });
-
+        clientObject.addMember(createClientCloseFunction().getFunctionDefinitionNode(), true);
         return clientObject;
     }
 

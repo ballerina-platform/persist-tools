@@ -21,13 +21,6 @@ public client class EntitiesClient {
         self.persistClients = {user: check new (self.dbClient, self.metadata.get("user").entityName, self.metadata.get("user").tableName, self.metadata.get("user").keyFields, self.metadata.get("user").fieldMetadata)};
     }
 
-    public function close() returns persist:Error? {
-        sql:Error? e = self.dbClient.close();
-        if e is sql:Error {
-            return <persist:Error>error(e.message());
-        }
-    }
-
     isolated resource function get user() returns stream<User, persist:Error?> {
         stream<anydata, sql:Error?>|persist:Error result = self.persistClients.get("user").runReadQuery(User);
         if result is persist:Error {
@@ -52,6 +45,13 @@ public client class EntitiesClient {
         User 'object = check self->/user/[id].get();
         _ = check self.persistClients.get("user").runDeleteQuery({"id": id});
         return 'object;
+    }
+
+    public function close() returns persist:Error? {
+        sql:Error? e = self.dbClient.close();
+        if e is sql:Error {
+            return <persist:Error>error(e.message());
+        }
     }
 }
 
