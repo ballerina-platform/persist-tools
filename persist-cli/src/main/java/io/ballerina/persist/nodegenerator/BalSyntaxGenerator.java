@@ -87,8 +87,8 @@ import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.COMMA_SPACE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.COMMENT_SHOULD_NOT_BE_MODIFIED;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.DOUBLE_QUOTE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.EMPTY_STRING;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.ERROR;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.ERR_IS_ERROR;
-import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.GENERIC_ERROR;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.INIT_DBCLIENT;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.INIT_DB_CLIENT;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.INIT_PERSIST_CLIENT_MAP;
@@ -653,7 +653,7 @@ public class BalSyntaxGenerator {
         readByKey.addQualifiers(new String[]{KEYWORD_ISOLATED, BalSyntaxConstants.KEYWORD_RESOURCE});
         readByKey.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(
                 TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()),
-                TypeDescriptor.getSimpleNameReferenceNode(GENERIC_ERROR)));
+                TypeDescriptor.getQualifiedNameReferenceNode(PERSIST_MODULE, SPECIFIC_ERROR)));
 
         if (keys.size() > 1) {
             StringBuilder keyString = new StringBuilder();
@@ -688,8 +688,10 @@ public class BalSyntaxGenerator {
                 NodeFactory.createSimpleNameReferenceNode(AbstractNodeFactory.createIdentifierToken(
                         entity.getEntityName())),
                 NodeFactory.createOptionalTypeDescriptorNode(
-                        NodeFactory.createSimpleNameReferenceNode(AbstractNodeFactory.createToken(
-                                SyntaxKind.ERROR_KEYWORD)),
+                        NodeFactory.createQualifiedNameReferenceNode(
+                                AbstractNodeFactory.createIdentifierToken(PERSIST_MODULE),
+                                AbstractNodeFactory.createToken(SyntaxKind.COLON_TOKEN),
+                                AbstractNodeFactory.createIdentifierToken(ERROR)),
                                 AbstractNodeFactory.createToken(SyntaxKind.QUESTION_MARK_TOKEN)
                 )));
         read.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.READ_RUN_READ_QUERY,
