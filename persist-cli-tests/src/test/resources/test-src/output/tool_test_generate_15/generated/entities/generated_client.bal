@@ -31,7 +31,7 @@ public client class EntitiesClient {
         self.persistClients = {user: check new (self.dbClient, self.metadata.get(USER)};
     }
 
-    isolated resource function get user() returns stream<User, persist:Error?> {
+    isolated resource function get user() returns stream<User, error?> {
         stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(USER).runReadQuery(User);
         if result is persist:Error {
             return new stream<User, persist:Error?>(new UserStream((), result));
@@ -39,7 +39,7 @@ public client class EntitiesClient {
             return new stream<User, persist:Error?>(new UserStream(result));
         }
     }
-    isolated resource function get user/[int id]() returns User|persist:Error {
+    isolated resource function get user/[int id]() returns User|error {
         return (check self.persistClients.get(USER).runReadByKeyQuery(User, id)).cloneWithType(User);
     }
     isolated resource function post user(UserInsert[] data) returns [int][]|persist:Error {

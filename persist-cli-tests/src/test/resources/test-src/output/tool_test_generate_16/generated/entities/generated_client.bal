@@ -42,7 +42,7 @@ public client class EntitiesClient {
             employee: check new (self.dbClient, self.metadata.get(EMPLOYEE)        };
     }
 
-    isolated resource function get company() returns stream<Company, persist:Error?> {
+    isolated resource function get company() returns stream<Company, error?> {
         stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(COMPANY).runReadQuery(Company);
         if result is persist:Error {
             return new stream<Company, persist:Error?>(new CompanyStream((), result));
@@ -50,7 +50,7 @@ public client class EntitiesClient {
             return new stream<Company, persist:Error?>(new CompanyStream(result));
         }
     }
-    isolated resource function get company/[int id]() returns Company|persist:Error {
+    isolated resource function get company/[int id]() returns Company|error {
         return (check self.persistClients.get(COMPANY).runReadByKeyQuery(Company, id)).cloneWithType(Company);
     }
     isolated resource function post company(CompanyInsert[] data) returns [int][]|persist:Error {
@@ -68,7 +68,7 @@ public client class EntitiesClient {
         return 'object;
     }
 
-    isolated resource function get employee() returns stream<Employee, persist:Error?> {
+    isolated resource function get employee() returns stream<Employee, error?> {
         stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(EMPLOYEE).runReadQuery(Employee);
         if result is persist:Error {
             return new stream<Employee, persist:Error?>(new EmployeeStream((), result));
@@ -76,7 +76,7 @@ public client class EntitiesClient {
             return new stream<Employee, persist:Error?>(new EmployeeStream(result));
         }
     }
-    isolated resource function get employee/[int id]() returns Employee|persist:Error {
+    isolated resource function get employee/[int id]() returns Employee|error {
         return (check self.persistClients.get(EMPLOYEE).runReadByKeyQuery(Employee, id)).cloneWithType(Employee);
     }
     isolated resource function post employee(EmployeeInsert[] data) returns [int][]|persist:Error {

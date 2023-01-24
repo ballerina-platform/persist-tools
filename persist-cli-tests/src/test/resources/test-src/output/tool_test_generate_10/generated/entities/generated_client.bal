@@ -34,7 +34,7 @@ public client class EntitiesClient {
         self.persistClients = {medicalneed: check new (self.dbClient, self.metadata.get(MEDICALNEED)};
     }
 
-    isolated resource function get medicalneed() returns stream<MedicalNeed, persist:Error?> {
+    isolated resource function get medicalneed() returns stream<MedicalNeed, error?> {
         stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(MEDICALNEED).runReadQuery(MedicalNeed);
         if result is persist:Error {
             return new stream<MedicalNeed, persist:Error?>(new MedicalNeedStream((), result));
@@ -42,7 +42,7 @@ public client class EntitiesClient {
             return new stream<MedicalNeed, persist:Error?>(new MedicalNeedStream(result));
         }
     }
-    isolated resource function get medicalneed/[int itemId]/[int needId]() returns MedicalNeed|persist:Error {
+    isolated resource function get medicalneed/[int itemId]/[int needId]() returns MedicalNeed|error {
         return (check self.persistClients.get(MEDICALNEED).runReadByKeyQuery(MedicalNeed, {        int:        int , int: int} )        ).cloneWithType(MedicalNeed);
     }
     isolated resource function post medicalneed(MedicalNeedInsert[] data) returns [int, int][]|persist:Error {

@@ -47,7 +47,7 @@ public client class EntitiesClient {
             medicalitem: check new (self.dbClient, self.metadata.get(MEDICALITEM)        };
     }
 
-    isolated resource function get medicalneed() returns stream<MedicalNeed, persist:Error?> {
+    isolated resource function get medicalneed() returns stream<MedicalNeed, error?> {
         stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(MEDICALNEED).runReadQuery(MedicalNeed);
         if result is persist:Error {
             return new stream<MedicalNeed, persist:Error?>(new MedicalNeedStream((), result));
@@ -55,7 +55,7 @@ public client class EntitiesClient {
             return new stream<MedicalNeed, persist:Error?>(new MedicalNeedStream(result));
         }
     }
-    isolated resource function get medicalneed/[int needId]() returns MedicalNeed|persist:Error {
+    isolated resource function get medicalneed/[int needId]() returns MedicalNeed|error {
         return (check self.persistClients.get(MEDICALNEED).runReadByKeyQuery(MedicalNeed, needId)).cloneWithType(MedicalNeed);
     }
     isolated resource function post medicalneed(MedicalNeedInsert[] data) returns [int][]|persist:Error {
@@ -73,7 +73,7 @@ public client class EntitiesClient {
         return 'object;
     }
 
-    isolated resource function get medicalitem() returns stream<MedicalItem, persist:Error?> {
+    isolated resource function get medicalitem() returns stream<MedicalItem, error?> {
         stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(MEDICALITEM).runReadQuery(MedicalItem);
         if result is persist:Error {
             return new stream<MedicalItem, persist:Error?>(new MedicalItemStream((), result));
@@ -81,7 +81,7 @@ public client class EntitiesClient {
             return new stream<MedicalItem, persist:Error?>(new MedicalItemStream(result));
         }
     }
-    isolated resource function get medicalitem/[int itemId]() returns MedicalItem|persist:Error {
+    isolated resource function get medicalitem/[int itemId]() returns MedicalItem|error {
         return (check self.persistClients.get(MEDICALITEM).runReadByKeyQuery(MedicalItem, itemId)).cloneWithType(MedicalItem);
     }
     isolated resource function post medicalitem(MedicalItemInsert[] data) returns [int][]|persist:Error {

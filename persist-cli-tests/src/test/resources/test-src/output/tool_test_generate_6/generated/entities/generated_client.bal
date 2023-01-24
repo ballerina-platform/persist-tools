@@ -38,7 +38,7 @@ public client class EntitiesClient {
         self.persistClients = {datatype: check new (self.dbClient, self.metadata.get(DATATYPE)};
     }
 
-    isolated resource function get datatype() returns stream<DataType, persist:Error?> {
+    isolated resource function get datatype() returns stream<DataType, error?> {
         stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(DATATYPE).runReadQuery(DataType);
         if result is persist:Error {
             return new stream<DataType, persist:Error?>(new DataTypeStream((), result));
@@ -46,7 +46,7 @@ public client class EntitiesClient {
             return new stream<DataType, persist:Error?>(new DataTypeStream(result));
         }
     }
-    isolated resource function get datatype/[int a]() returns DataType|persist:Error {
+    isolated resource function get datatype/[int a]() returns DataType|error {
         return (check self.persistClients.get(DATATYPE).runReadByKeyQuery(DataType, a)).cloneWithType(DataType);
     }
     isolated resource function post datatype(DataTypeInsert[] data) returns [int][]|persist:Error {

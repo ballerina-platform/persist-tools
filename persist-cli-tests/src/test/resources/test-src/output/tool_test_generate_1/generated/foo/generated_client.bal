@@ -68,7 +68,7 @@ public client class FooClient {
             workspace: check new (self.dbClient, self.metadata.get(WORKSPACE)        };
     }
 
-    isolated resource function get building() returns stream<Building, persist:Error?> {
+    isolated resource function get building() returns stream<Building, error?> {
         stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(BUILDING).runReadQuery(Building);
         if result is persist:Error {
             return new stream<Building, persist:Error?>(new BuildingStream((), result));
@@ -76,7 +76,7 @@ public client class FooClient {
             return new stream<Building, persist:Error?>(new BuildingStream(result));
         }
     }
-    isolated resource function get building/[string buildingCode]() returns Building|persist:Error {
+    isolated resource function get building/[string buildingCode]() returns Building|error {
         return (check self.persistClients.get(BUILDING).runReadByKeyQuery(Building, buildingCode)).cloneWithType(Building);
     }
     isolated resource function post building(BuildingInsert[] data) returns [string][]|persist:Error {
@@ -94,7 +94,7 @@ public client class FooClient {
         return 'object;
     }
 
-    isolated resource function get department() returns stream<Department, persist:Error?> {
+    isolated resource function get department() returns stream<Department, error?> {
         stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(DEPARTMENT).runReadQuery(Department);
         if result is persist:Error {
             return new stream<Department, persist:Error?>(new DepartmentStream((), result));
@@ -102,7 +102,7 @@ public client class FooClient {
             return new stream<Department, persist:Error?>(new DepartmentStream(result));
         }
     }
-    isolated resource function get department/[string deptNo]() returns Department|persist:Error {
+    isolated resource function get department/[string deptNo]() returns Department|error {
         return (check self.persistClients.get(DEPARTMENT).runReadByKeyQuery(Department, deptNo)).cloneWithType(Department);
     }
     isolated resource function post department(DepartmentInsert[] data) returns [string][]|persist:Error {
@@ -120,7 +120,7 @@ public client class FooClient {
         return 'object;
     }
 
-    isolated resource function get employee() returns stream<Employee, persist:Error?> {
+    isolated resource function get employee() returns stream<Employee, error?> {
         stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(EMPLOYEE).runReadQuery(Employee);
         if result is persist:Error {
             return new stream<Employee, persist:Error?>(new EmployeeStream((), result));
@@ -128,7 +128,7 @@ public client class FooClient {
             return new stream<Employee, persist:Error?>(new EmployeeStream(result));
         }
     }
-    isolated resource function get employee/[string empNo]() returns Employee|persist:Error {
+    isolated resource function get employee/[string empNo]() returns Employee|error {
         return (check self.persistClients.get(EMPLOYEE).runReadByKeyQuery(Employee, empNo)).cloneWithType(Employee);
     }
     isolated resource function post employee(EmployeeInsert[] data) returns [string][]|persist:Error {
@@ -146,7 +146,7 @@ public client class FooClient {
         return 'object;
     }
 
-    isolated resource function get workspace() returns stream<Workspace, persist:Error?> {
+    isolated resource function get workspace() returns stream<Workspace, error?> {
         stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(WORKSPACE).runReadQuery(Workspace);
         if result is persist:Error {
             return new stream<Workspace, persist:Error?>(new WorkspaceStream((), result));
@@ -154,7 +154,7 @@ public client class FooClient {
             return new stream<Workspace, persist:Error?>(new WorkspaceStream(result));
         }
     }
-    isolated resource function get workspace/[string workspaceId]() returns Workspace|persist:Error {
+    isolated resource function get workspace/[string workspaceId]() returns Workspace|error {
         return (check self.persistClients.get(WORKSPACE).runReadByKeyQuery(Workspace, workspaceId)).cloneWithType(Workspace);
     }
     isolated resource function post workspace(WorkspaceInsert[] data) returns [string][]|persist:Error {
