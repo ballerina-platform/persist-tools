@@ -20,21 +20,25 @@ public client class EntitiesClient {
         "medicalneed": {
             entityName: "MedicalNeed",
             tableName: `MedicalNeed`,
-            needId: {columnName: "needId", 'type: int},
-            itemId: {columnName: "itemId", 'type: int},
-            beneficiaryId: {columnName: "beneficiaryId", 'type: int},
-            period: {columnName: "period", 'type: time:Civil},
-            urgency: {columnName: "urgency", 'type: string},
-            quantity: {columnName: "quantity", 'type: int},
+            fieldMetadata: {
+                needId: {columnName: "needId", 'type: int},
+                itemId: {columnName: "itemId", 'type: int},
+                beneficiaryId: {columnName: "beneficiaryId", 'type: int},
+                period: {columnName: "period", 'type: time:Civil},
+                urgency: {columnName: "urgency", 'type: string},
+                quantity: {columnName: "quantity", 'type: int}
+            },
             keyFields: ["needId"]
         },
         "medicalitem": {
             entityName: "MedicalItem",
             tableName: `MedicalItem`,
-            itemId: {columnName: "itemId", 'type: int},
-            name: {columnName: "name", 'type: string},
-            'type: {columnName: "'type", 'type: string},
-            unit: {columnName: "unit", 'type: string},
+            fieldMetadata: {
+                itemId: {columnName: "itemId", 'type: int},
+                name: {columnName: "name", 'type: string},
+                'type: {columnName: "'type", 'type: string},
+                unit: {columnName: "unit", 'type: string}
+            },
             keyFields: ["itemId"]
         }
     };

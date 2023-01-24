@@ -20,20 +20,24 @@ public client class EntitiesClient {
         "medicalneed": {
             entityName: "MedicalNeed",
             tableName: `MedicalNeed`,
-            needId: {columnName: "needId", 'type: int},
-            beneficiaryId: {columnName: "beneficiaryId", 'type: int},
-            period: {columnName: "period", 'type: time:Civil},
-            urgency: {columnName: "urgency", 'type: string},
-            quantity: {columnName: "quantity", 'type: int},
-            aidpackageorderitemId: {columnName: "aidpackageorderitemId", 'type: int},
+            fieldMetadata: {
+                needId: {columnName: "needId", 'type: int},
+                beneficiaryId: {columnName: "beneficiaryId", 'type: int},
+                period: {columnName: "period", 'type: time:Civil},
+                urgency: {columnName: "urgency", 'type: string},
+                quantity: {columnName: "quantity", 'type: int},
+                aidpackageorderitemId: {columnName: "aidpackageorderitemId", 'type: int}
+            },
             keyFields: ["needId"]
         },
         "aidpackageorderitem": {
             entityName: "AidPackageOrderItem",
             tableName: `AidPackageOrderItem`,
-            id: {columnName: "id", 'type: int},
-            quantity: {columnName: "quantity", 'type: int},
-            totalAmount: {columnName: "totalAmount", 'type: int},
+            fieldMetadata: {
+                id: {columnName: "id", 'type: int},
+                quantity: {columnName: "quantity", 'type: int},
+                totalAmount: {columnName: "totalAmount", 'type: int}
+            },
             keyFields: ["id"]
         }
     };

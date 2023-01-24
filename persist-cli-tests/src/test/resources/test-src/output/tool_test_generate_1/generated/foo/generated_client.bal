@@ -22,39 +22,47 @@ public client class FooClient {
         "building": {
             entityName: "Building",
             tableName: `Building`,
-            buildingCode: {columnName: "buildingCode", 'type: string},
-            city: {columnName: "city", 'type: string},
-            state: {columnName: "state", 'type: string},
-            country: {columnName: "country", 'type: string},
-            postalCode: {columnName: "postalCode", 'type: string},
+            fieldMetadata: {
+                buildingCode: {columnName: "buildingCode", 'type: string},
+                city: {columnName: "city", 'type: string},
+                state: {columnName: "state", 'type: string},
+                country: {columnName: "country", 'type: string},
+                postalCode: {columnName: "postalCode", 'type: string}
+            },
             keyFields: ["buildingCode"]
         },
         "department": {
             entityName: "Department",
             tableName: `Department`,
-            deptNo: {columnName: "deptNo", 'type: string},
-            deptName: {columnName: "deptName", 'type: string},
+            fieldMetadata: {
+                deptNo: {columnName: "deptNo", 'type: string},
+                deptName: {columnName: "deptName", 'type: string}
+            },
             keyFields: ["deptNo"]
         },
         "employee": {
             entityName: "Employee",
             tableName: `Employee`,
-            empNo: {columnName: "empNo", 'type: string},
-            firstName: {columnName: "firstName", 'type: string},
-            lastName: {columnName: "lastName", 'type: string},
-            birthDate: {columnName: "birthDate", 'type: time:Date},
-            gender: {columnName: "gender", 'type: string},
-            hireDate: {columnName: "hireDate", 'type: time:Date},
-            departmentDeptNo: {columnName: "departmentDeptNo", 'type: string},
-            workspaceWorkspaceId: {columnName: "workspaceWorkspaceId", 'type: string},
+            fieldMetadata: {
+                empNo: {columnName: "empNo", 'type: string},
+                firstName: {columnName: "firstName", 'type: string},
+                lastName: {columnName: "lastName", 'type: string},
+                birthDate: {columnName: "birthDate", 'type: time:Date},
+                gender: {columnName: "gender", 'type: string},
+                hireDate: {columnName: "hireDate", 'type: time:Date},
+                departmentDeptNo: {columnName: "departmentDeptNo", 'type: string},
+                workspaceWorkspaceId: {columnName: "workspaceWorkspaceId", 'type: string}
+            },
             keyFields: ["empNo"]
         },
         "workspace": {
             entityName: "Workspace",
             tableName: `Workspace`,
-            workspaceId: {columnName: "workspaceId", 'type: string},
-            workspaceType: {columnName: "workspaceType", 'type: string},
-            buildingBuildingCode: {columnName: "buildingBuildingCode", 'type: string},
+            fieldMetadata: {
+                workspaceId: {columnName: "workspaceId", 'type: string},
+                workspaceType: {columnName: "workspaceType", 'type: string},
+                buildingBuildingCode: {columnName: "buildingBuildingCode", 'type: string}
+            },
             keyFields: ["workspaceId"]
         }
     };

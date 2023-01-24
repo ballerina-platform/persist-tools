@@ -21,16 +21,20 @@ public client class Entities1Client {
         "multipleassociations": {
             entityName: "MultipleAssociations",
             tableName: `MultipleAssociations`,
-            id: {columnName: "id", 'type: int},
-            name: {columnName: "name", 'type: string},
-            profileId: {columnName: "profileId", 'type: int},
+            fieldMetadata: {
+                id: {columnName: "id", 'type: int},
+                name: {columnName: "name", 'type: string},
+                profileId: {columnName: "profileId", 'type: int}
+            },
             keyFields: ["id"]
         },
         "profile": {
             entityName: "Profile",
             tableName: `Profile`,
-            id: {columnName: "id", 'type: int},
-            name: {columnName: "name", 'type: string},
+            fieldMetadata: {
+                id: {columnName: "id", 'type: int},
+                name: {columnName: "name", 'type: string}
+            },
             keyFields: ["id"]
         }
     };

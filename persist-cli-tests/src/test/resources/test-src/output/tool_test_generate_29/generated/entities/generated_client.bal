@@ -19,12 +19,14 @@ public client class EntitiesClient {
         "medicalneed": {
             entityName: "MedicalNeed",
             tableName: `MedicalNeed`,
-            needId: {columnName: "needId", 'type: int},
-            itemId: {columnName: "itemId", 'type: int},
-            beneficiaryId: {columnName: "beneficiaryId", 'type: int},
-            period: {columnName: "period", 'type: time:Civil},
-            urgency: {columnName: "urgency", 'type: string},
-            quantity: {columnName: "quantity", 'type: int},
+            fieldMetadata: {
+                needId: {columnName: "needId", 'type: int},
+                itemId: {columnName: "itemId", 'type: int},
+                beneficiaryId: {columnName: "beneficiaryId", 'type: int},
+                period: {columnName: "period", 'type: time:Civil},
+                urgency: {columnName: "urgency", 'type: string},
+                quantity: {columnName: "quantity", 'type: int}
+            },
             keyFields: ["needId"]
         }
     };

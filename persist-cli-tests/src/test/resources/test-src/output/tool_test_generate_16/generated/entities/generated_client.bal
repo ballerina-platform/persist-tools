@@ -21,16 +21,20 @@ public client class EntitiesClient {
         "company": {
             entityName: "Company",
             tableName: `Company`,
-            id: {columnName: "id", 'type: int},
-            name: {columnName: "name", 'type: string},
+            fieldMetadata: {
+                id: {columnName: "id", 'type: int},
+                name: {columnName: "name", 'type: string}
+            },
             keyFields: ["id"]
         },
         "employee": {
             entityName: "Employee",
             tableName: `Employee`,
-            id: {columnName: "id", 'type: int},
-            name: {columnName: "name", 'type: string},
-            companyId: {columnName: "companyId", 'type: int},
+            fieldMetadata: {
+                id: {columnName: "id", 'type: int},
+                name: {columnName: "name", 'type: string},
+                companyId: {columnName: "companyId", 'type: int}
+            },
             keyFields: ["id"]
         }
     };
