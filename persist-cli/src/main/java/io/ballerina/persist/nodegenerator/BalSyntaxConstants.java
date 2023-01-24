@@ -145,6 +145,7 @@ public class BalSyntaxConstants {
     public static final String METADATARECORD_ENTITY_NAME_TEMPLATE = "entityName: \"%s\", " + System.lineSeparator();
     public static final String METADATARECORD_TABLE_NAME_TEMPLATE = "tableName: `%s`, " + System.lineSeparator();
     public static final String METADATARECORD_FIELD_TEMPLATE = "%s: {columnName: \"%s\", 'type: %s}";
+    public static final String FIELD_METADATA_TEMPLATE = "fieldMetadata: {%s}";
     public static final String METADATARECORD_KEY_FIELD_TEMPLATE = "keyFields: [%s]";
     public static final String METADATARECORD_ELEMENT_TEMPLATE = "\"%s\": {%s}";
     public static final String METADATARECORD_TEMPLATE =
