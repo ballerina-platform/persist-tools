@@ -110,7 +110,6 @@ import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PERSIST_CLIE
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PERSIST_CLIENT_TEMPLATE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PERSIST_ERROR;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PERSIST_MODULE;
-import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PLACEHOLDER_FOR_MAP_FIELD;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PLACEHOLDER_FOR_TYPE_DEFINITION;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.READ_BY_KEY_RETURN;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.RESULT_IS_ERROR;
@@ -658,13 +657,10 @@ public class BalSyntaxGenerator {
 
         if (keys.size() > 1) {
             StringBuilder keyString = new StringBuilder();
-            StringBuilder record = new StringBuilder();
             for (Map.Entry<String, String> entry : keys.entrySet()) {
                 if (keyString.length() != 0) {
                     keyString.append(SEMICOLON);
-                    record.append(COMMA_SPACE);
                 }
-                record.append(String.format(PLACEHOLDER_FOR_MAP_FIELD, entry.getValue(), entry.getValue()));
                 keyString.append(String.format(PLACEHOLDER_FOR_TYPE_DEFINITION, entry.getValue(), entry.getKey()));
             }
             readByKey.addStatement(NodeParser.parseStatement(String.format(READ_BY_KEY_RETURN,

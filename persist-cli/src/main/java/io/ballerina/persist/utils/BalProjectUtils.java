@@ -46,13 +46,13 @@ public class BalProjectUtils {
     private BalProjectUtils() {}
 
     public static Module getEntities(Path schemaFile) throws BalException {
-        String schemaFilename;
-        if (schemaFile != null && schemaFile.getFileName() != null) {
-            schemaFilename = schemaFile.getFileName().toString();
+        Path schemaFilename = schemaFile.getFileName();
+        String moduleName;
+        if (schemaFilename != null) {
+            moduleName = schemaFilename.toString().substring(0, schemaFilename.toString().lastIndexOf('.'));
         } else {
             throw new BalException("schema file is null or empty");
         }
-        String moduleName = schemaFilename.substring(0, schemaFilename.lastIndexOf('.'));
         Module.Builder moduleBuilder = Module.newBuilder(moduleName);
 
         try {
