@@ -5,6 +5,7 @@
 
 import ballerina/persist;
 import ballerina/sql;
+import ballerina/time;
 import ballerinax/mysql;
 
 const DATATYPE = "DataType";
@@ -19,23 +20,29 @@ public client class EntitiesClient {
         "datatype": {
             entityName: "DataType",
             tableName: `DataType`,
-            a: {columnName: "a", 'type: int},
-            b1: {columnName: "b1", 'type: string},
-            c1: {columnName: "c1", 'type: int},
-            d1: {columnName: "d1", 'type: boolean},
-            e1: {columnName: "e1", 'type: float},
-            f1: {columnName: "f1", 'type: decimal},
-            j1: {columnName: "j1", 'type: time:Utc},
-            k1: {columnName: "k1", 'type: time:Civil},
-            l1: {columnName: "l1", 'type: time:Date},
-            m1: {columnName: "m1", 'type: time:TimeOfDay},
+            fieldMetadata: {
+                a: {columnName: "a", 'type: int},
+                b1: {columnName: "b1", 'type: string},
+                c1: {columnName: "c1", 'type: int},
+                d1: {columnName: "d1", 'type: boolean},
+                e1: {columnName: "e1", 'type: float},
+                f1: {columnName: "f1", 'type: decimal},
+                j1: {columnName: "j1", 'type: time:Utc},
+                k1: {columnName: "k1", 'type: time:Civil},
+                l1: {columnName: "l1", 'type: time:Date},
+                m1: {columnName: "m1", 'type: time:TimeOfDay}
+            },
             keyFields: ["a"]
         }
     };
 
     public function init() returns persist:Error? {
-        self.dbClient = check new (host = host, user = user, password = password, database = database, port = port);
-        self.persistClients = {datatype: check new (self.dbClient, self.metadata.get(DATATYPE)};
+        mysql:Client|error dbClient = new (host = host, user = user, password = password, database = database, port = port);
+        if dbClient is error {
+            return <persist:Error>error(dbClient.message());
+        }
+        self.dbClient = dbClient;
+        self.persistClients = {datatype: check new (self.dbClient, self.metadata.get(DATATYPE))};
     }
 
     isolated resource function get datatype() returns stream<DataType, persist:Error?> {
@@ -47,7 +54,11 @@ public client class EntitiesClient {
         }
     }
     isolated resource function get datatype/[int a]() returns DataType|persist:Error {
-        return (check self.persistClients.get(DATATYPE).runReadByKeyQuery(DataType, a)).cloneWithType(DataType);
+        DataType|error result = (check self.persistClients.get(DATATYPE).runReadByKeyQuery(DataType, a)).cloneWithType(DataType);
+        if result is error {
+            return <persist:Error>error(result.message());
+        }
+        return result;
     }
     isolated resource function post datatype(DataTypeInsert[] data) returns int[]|persist:Error {
         _ = check self.persistClients.get(DATATYPE).runBatchInsertQuery(data);
@@ -65,7 +76,11 @@ public client class EntitiesClient {
     }
 
     public function close() returns persist:Error? {
-        _ = check self.dbClient.close();
+        error? result = self.dbClient.close();
+        if result is error {
+            return <persist:Error>error(result.message());
+        }
+        return result;
     }
 }
 
@@ -90,7 +105,11 @@ public class DataTypeStream {
             } else if (streamValue is sql:Error) {
                 return <persist:Error>error(streamValue.message());
             } else {
-                record {|DataType value;|} nextRecord = {value: check streamValue.value.cloneWithType(DataType)};
+                DataType|error value = streamValue.value.cloneWithType(DataType);
+                if value is error {
+                    return <persist:Error>error(value.message());
+                }
+                record {|DataType value;|} nextRecord = {value: value};
                 return nextRecord;
             }
         } else {
@@ -99,7 +118,7 @@ public class DataTypeStream {
     }
 
     public isolated function close() returns persist:Error? {
-        check closeEntityStream(self.anydataStream);
+        check persist:closeEntityStream(self.anydataStream);
     }
 }
 

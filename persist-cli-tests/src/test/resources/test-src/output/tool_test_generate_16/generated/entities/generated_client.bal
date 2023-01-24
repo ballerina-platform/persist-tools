@@ -5,7 +5,6 @@
 
 import ballerina/persist;
 import ballerina/sql;
-import ballerina/time;
 import ballerinax/mysql;
 
 const COMPANY = "Company";
@@ -21,25 +20,34 @@ public client class EntitiesClient {
         "company": {
             entityName: "Company",
             tableName: `Company`,
-            id: {columnName: "id", 'type: int},
-            name: {columnName: "name", 'type: string},
+            fieldMetadata: {
+                id: {columnName: "id", 'type: int},
+                name: {columnName: "name", 'type: string}
+            },
             keyFields: ["id"]
         },
         "employee": {
             entityName: "Employee",
             tableName: `Employee`,
-            id: {columnName: "id", 'type: int},
-            name: {columnName: "name", 'type: string},
-            companyId: {columnName: "companyId", 'type: int},
+            fieldMetadata: {
+                id: {columnName: "id", 'type: int},
+                name: {columnName: "name", 'type: string},
+                companyId: {columnName: "companyId", 'type: int}
+            },
             keyFields: ["id"]
         }
     };
 
     public function init() returns persist:Error? {
-        self.dbClient = check new (host = host, user = user, password = password, database = database, port = port);
+        mysql:Client|error dbClient = new (host = host, user = user, password = password, database = database, port = port);
+        if dbClient is error {
+            return <persist:Error>error(dbClient.message());
+        }
+        self.dbClient = dbClient;
         self.persistClients = {
-            company: check new (self.dbClient, self.metadata.get(COMPANY),
-            employee: check new (self.dbClient, self.metadata.get(EMPLOYEE)        };
+            company: check new (self.dbClient, self.metadata.get(COMPANY)),
+            employee: check new (self.dbClient, self.metadata.get(EMPLOYEE))
+        };
     }
 
     isolated resource function get company() returns stream<Company, persist:Error?> {
@@ -51,7 +59,11 @@ public client class EntitiesClient {
         }
     }
     isolated resource function get company/[int id]() returns Company|persist:Error {
-        return (check self.persistClients.get(COMPANY).runReadByKeyQuery(Company, id)).cloneWithType(Company);
+        Company|error result = (check self.persistClients.get(COMPANY).runReadByKeyQuery(Company, id)).cloneWithType(Company);
+        if result is error {
+            return <persist:Error>error(result.message());
+        }
+        return result;
     }
     isolated resource function post company(CompanyInsert[] data) returns int[]|persist:Error {
         _ = check self.persistClients.get(COMPANY).runBatchInsertQuery(data);
@@ -77,7 +89,11 @@ public client class EntitiesClient {
         }
     }
     isolated resource function get employee/[int id]() returns Employee|persist:Error {
-        return (check self.persistClients.get(EMPLOYEE).runReadByKeyQuery(Employee, id)).cloneWithType(Employee);
+        Employee|error result = (check self.persistClients.get(EMPLOYEE).runReadByKeyQuery(Employee, id)).cloneWithType(Employee);
+        if result is error {
+            return <persist:Error>error(result.message());
+        }
+        return result;
     }
     isolated resource function post employee(EmployeeInsert[] data) returns int[]|persist:Error {
         _ = check self.persistClients.get(EMPLOYEE).runBatchInsertQuery(data);
@@ -95,7 +111,11 @@ public client class EntitiesClient {
     }
 
     public function close() returns persist:Error? {
-        _ = check self.dbClient.close();
+        error? result = self.dbClient.close();
+        if result is error {
+            return <persist:Error>error(result.message());
+        }
+        return result;
     }
 }
 
@@ -120,7 +140,11 @@ public class CompanyStream {
             } else if (streamValue is sql:Error) {
                 return <persist:Error>error(streamValue.message());
             } else {
-                record {|Company value;|} nextRecord = {value: check streamValue.value.cloneWithType(Company)};
+                Company|error value = streamValue.value.cloneWithType(Company);
+                if value is error {
+                    return <persist:Error>error(value.message());
+                }
+                record {|Company value;|} nextRecord = {value: value};
                 return nextRecord;
             }
         } else {
@@ -129,7 +153,7 @@ public class CompanyStream {
     }
 
     public isolated function close() returns persist:Error? {
-        check closeEntityStream(self.anydataStream);
+        check persist:closeEntityStream(self.anydataStream);
     }
 }
 
@@ -154,7 +178,11 @@ public class EmployeeStream {
             } else if (streamValue is sql:Error) {
                 return <persist:Error>error(streamValue.message());
             } else {
-                record {|Employee value;|} nextRecord = {value: check streamValue.value.cloneWithType(Employee)};
+                Employee|error value = streamValue.value.cloneWithType(Employee);
+                if value is error {
+                    return <persist:Error>error(value.message());
+                }
+                record {|Employee value;|} nextRecord = {value: value};
                 return nextRecord;
             }
         } else {
@@ -163,7 +191,7 @@ public class EmployeeStream {
     }
 
     public isolated function close() returns persist:Error? {
-        check closeEntityStream(self.anydataStream);
+        check persist:closeEntityStream(self.anydataStream);
     }
 }
 

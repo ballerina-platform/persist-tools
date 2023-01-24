@@ -5,7 +5,6 @@
 
 import ballerina/persist;
 import ballerina/sql;
-import ballerina/time;
 import ballerinax/mysql;
 
 const USER = "User";
@@ -20,15 +19,21 @@ public client class EntitiesClient {
         "user": {
             entityName: "User",
             tableName: `User`,
-            id: {columnName: "id", 'type: int},
-            name: {columnName: "name", 'type: string},
+            fieldMetadata: {
+                id: {columnName: "id", 'type: int},
+                name: {columnName: "name", 'type: string}
+            },
             keyFields: ["id"]
         }
     };
 
     public function init() returns persist:Error? {
-        self.dbClient = check new (host = host, user = user, password = password, database = database, port = port);
-        self.persistClients = {user: check new (self.dbClient, self.metadata.get(USER)};
+        mysql:Client|error dbClient = new (host = host, user = user, password = password, database = database, port = port);
+        if dbClient is error {
+            return <persist:Error>error(dbClient.message());
+        }
+        self.dbClient = dbClient;
+        self.persistClients = {user: check new (self.dbClient, self.metadata.get(USER))};
     }
 
     isolated resource function get user() returns stream<User, persist:Error?> {
@@ -40,7 +45,11 @@ public client class EntitiesClient {
         }
     }
     isolated resource function get user/[int id]() returns User|persist:Error {
-        return (check self.persistClients.get(USER).runReadByKeyQuery(User, id)).cloneWithType(User);
+        User|error result = (check self.persistClients.get(USER).runReadByKeyQuery(User, id)).cloneWithType(User);
+        if result is error {
+            return <persist:Error>error(result.message());
+        }
+        return result;
     }
     isolated resource function post user(UserInsert[] data) returns int[]|persist:Error {
         _ = check self.persistClients.get(USER).runBatchInsertQuery(data);
@@ -58,7 +67,11 @@ public client class EntitiesClient {
     }
 
     public function close() returns persist:Error? {
-        _ = check self.dbClient.close();
+        error? result = self.dbClient.close();
+        if result is error {
+            return <persist:Error>error(result.message());
+        }
+        return result;
     }
 }
 
@@ -83,7 +96,11 @@ public class UserStream {
             } else if (streamValue is sql:Error) {
                 return <persist:Error>error(streamValue.message());
             } else {
-                record {|User value;|} nextRecord = {value: check streamValue.value.cloneWithType(User)};
+                User|error value = streamValue.value.cloneWithType(User);
+                if value is error {
+                    return <persist:Error>error(value.message());
+                }
+                record {|User value;|} nextRecord = {value: value};
                 return nextRecord;
             }
         } else {
@@ -92,7 +109,7 @@ public class UserStream {
     }
 
     public isolated function close() returns persist:Error? {
-        check closeEntityStream(self.anydataStream);
+        check persist:closeEntityStream(self.anydataStream);
     }
 }
 

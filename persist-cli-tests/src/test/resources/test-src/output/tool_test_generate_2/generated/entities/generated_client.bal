@@ -5,6 +5,7 @@
 
 import ballerina/persist;
 import ballerina/sql;
+import ballerina/time;
 import ballerinax/mysql;
 
 const MEDICALNEED = "MedicalNeed";
@@ -20,30 +21,39 @@ public client class EntitiesClient {
         "medicalneed": {
             entityName: "MedicalNeed",
             tableName: `MedicalNeed`,
-            needId: {columnName: "needId", 'type: int},
-            itemId: {columnName: "itemId", 'type: int},
-            beneficiaryId: {columnName: "beneficiaryId", 'type: int},
-            period: {columnName: "period", 'type: time:Civil},
-            urgency: {columnName: "urgency", 'type: string},
-            quantity: {columnName: "quantity", 'type: int},
+            fieldMetadata: {
+                needId: {columnName: "needId", 'type: int},
+                itemId: {columnName: "itemId", 'type: int},
+                beneficiaryId: {columnName: "beneficiaryId", 'type: int},
+                period: {columnName: "period", 'type: time:Civil},
+                urgency: {columnName: "urgency", 'type: string},
+                quantity: {columnName: "quantity", 'type: int}
+            },
             keyFields: ["needId"]
         },
         "medicalitem": {
             entityName: "MedicalItem",
             tableName: `MedicalItem`,
-            itemId: {columnName: "itemId", 'type: int},
-            name: {columnName: "name", 'type: string},
-            'type: {columnName: "'type", 'type: string},
-            unit: {columnName: "unit", 'type: string},
+            fieldMetadata: {
+                itemId: {columnName: "itemId", 'type: int},
+                name: {columnName: "name", 'type: string},
+                'type: {columnName: "'type", 'type: string},
+                unit: {columnName: "unit", 'type: string}
+            },
             keyFields: ["itemId"]
         }
     };
 
     public function init() returns persist:Error? {
-        self.dbClient = check new (host = host, user = user, password = password, database = database, port = port);
+        mysql:Client|error dbClient = new (host = host, user = user, password = password, database = database, port = port);
+        if dbClient is error {
+            return <persist:Error>error(dbClient.message());
+        }
+        self.dbClient = dbClient;
         self.persistClients = {
-            medicalneed: check new (self.dbClient, self.metadata.get(MEDICALNEED),
-            medicalitem: check new (self.dbClient, self.metadata.get(MEDICALITEM)        };
+            medicalneed: check new (self.dbClient, self.metadata.get(MEDICALNEED)),
+            medicalitem: check new (self.dbClient, self.metadata.get(MEDICALITEM))
+        };
     }
 
     isolated resource function get medicalneed() returns stream<MedicalNeed, persist:Error?> {
@@ -55,7 +65,11 @@ public client class EntitiesClient {
         }
     }
     isolated resource function get medicalneed/[int needId]() returns MedicalNeed|persist:Error {
-        return (check self.persistClients.get(MEDICALNEED).runReadByKeyQuery(MedicalNeed, needId)).cloneWithType(MedicalNeed);
+        MedicalNeed|error result = (check self.persistClients.get(MEDICALNEED).runReadByKeyQuery(MedicalNeed, needId)).cloneWithType(MedicalNeed);
+        if result is error {
+            return <persist:Error>error(result.message());
+        }
+        return result;
     }
     isolated resource function post medicalneed(MedicalNeedInsert[] data) returns int[]|persist:Error {
         _ = check self.persistClients.get(MEDICALNEED).runBatchInsertQuery(data);
@@ -81,7 +95,11 @@ public client class EntitiesClient {
         }
     }
     isolated resource function get medicalitem/[int itemId]() returns MedicalItem|persist:Error {
-        return (check self.persistClients.get(MEDICALITEM).runReadByKeyQuery(MedicalItem, itemId)).cloneWithType(MedicalItem);
+        MedicalItem|error result = (check self.persistClients.get(MEDICALITEM).runReadByKeyQuery(MedicalItem, itemId)).cloneWithType(MedicalItem);
+        if result is error {
+            return <persist:Error>error(result.message());
+        }
+        return result;
     }
     isolated resource function post medicalitem(MedicalItemInsert[] data) returns int[]|persist:Error {
         _ = check self.persistClients.get(MEDICALITEM).runBatchInsertQuery(data);
@@ -99,7 +117,11 @@ public client class EntitiesClient {
     }
 
     public function close() returns persist:Error? {
-        _ = check self.dbClient.close();
+        error? result = self.dbClient.close();
+        if result is error {
+            return <persist:Error>error(result.message());
+        }
+        return result;
     }
 }
 
@@ -124,7 +146,11 @@ public class MedicalNeedStream {
             } else if (streamValue is sql:Error) {
                 return <persist:Error>error(streamValue.message());
             } else {
-                record {|MedicalNeed value;|} nextRecord = {value: check streamValue.value.cloneWithType(MedicalNeed)};
+                MedicalNeed|error value = streamValue.value.cloneWithType(MedicalNeed);
+                if value is error {
+                    return <persist:Error>error(value.message());
+                }
+                record {|MedicalNeed value;|} nextRecord = {value: value};
                 return nextRecord;
             }
         } else {
@@ -133,7 +159,7 @@ public class MedicalNeedStream {
     }
 
     public isolated function close() returns persist:Error? {
-        check closeEntityStream(self.anydataStream);
+        check persist:closeEntityStream(self.anydataStream);
     }
 }
 
@@ -158,7 +184,11 @@ public class MedicalItemStream {
             } else if (streamValue is sql:Error) {
                 return <persist:Error>error(streamValue.message());
             } else {
-                record {|MedicalItem value;|} nextRecord = {value: check streamValue.value.cloneWithType(MedicalItem)};
+                MedicalItem|error value = streamValue.value.cloneWithType(MedicalItem);
+                if value is error {
+                    return <persist:Error>error(value.message());
+                }
+                record {|MedicalItem value;|} nextRecord = {value: value};
                 return nextRecord;
             }
         } else {
@@ -167,7 +197,7 @@ public class MedicalItemStream {
     }
 
     public isolated function close() returns persist:Error? {
-        check closeEntityStream(self.anydataStream);
+        check persist:closeEntityStream(self.anydataStream);
     }
 }
 

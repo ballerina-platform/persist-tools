@@ -5,6 +5,7 @@
 
 import ballerina/persist;
 import ballerina/sql;
+import ballerina/time;
 import ballerinax/mysql;
 
 const MEDICALNEED = "MedicalNeed";
@@ -20,29 +21,38 @@ public client class EntitiesClient {
         "medicalneed": {
             entityName: "MedicalNeed",
             tableName: `MedicalNeed`,
-            needId: {columnName: "needId", 'type: int},
-            beneficiaryId: {columnName: "beneficiaryId", 'type: int},
-            period: {columnName: "period", 'type: time:Civil},
-            urgency: {columnName: "urgency", 'type: string},
-            quantity: {columnName: "quantity", 'type: int},
-            aidpackageorderitemId: {columnName: "aidpackageorderitemId", 'type: int},
+            fieldMetadata: {
+                needId: {columnName: "needId", 'type: int},
+                beneficiaryId: {columnName: "beneficiaryId", 'type: int},
+                period: {columnName: "period", 'type: time:Civil},
+                urgency: {columnName: "urgency", 'type: string},
+                quantity: {columnName: "quantity", 'type: int},
+                aidpackageorderitemId: {columnName: "aidpackageorderitemId", 'type: int}
+            },
             keyFields: ["needId"]
         },
         "aidpackageorderitem": {
             entityName: "AidPackageOrderItem",
             tableName: `AidPackageOrderItem`,
-            id: {columnName: "id", 'type: int},
-            quantity: {columnName: "quantity", 'type: int},
-            totalAmount: {columnName: "totalAmount", 'type: int},
+            fieldMetadata: {
+                id: {columnName: "id", 'type: int},
+                quantity: {columnName: "quantity", 'type: int},
+                totalAmount: {columnName: "totalAmount", 'type: int}
+            },
             keyFields: ["id"]
         }
     };
 
     public function init() returns persist:Error? {
-        self.dbClient = check new (host = host, user = user, password = password, database = database, port = port);
+        mysql:Client|error dbClient = new (host = host, user = user, password = password, database = database, port = port);
+        if dbClient is error {
+            return <persist:Error>error(dbClient.message());
+        }
+        self.dbClient = dbClient;
         self.persistClients = {
-            medicalneed: check new (self.dbClient, self.metadata.get(MEDICALNEED),
-            aidpackageorderitem: check new (self.dbClient, self.metadata.get(AIDPACKAGEORDERITEM)        };
+            medicalneed: check new (self.dbClient, self.metadata.get(MEDICALNEED)),
+            aidpackageorderitem: check new (self.dbClient, self.metadata.get(AIDPACKAGEORDERITEM))
+        };
     }
 
     isolated resource function get medicalneed() returns stream<MedicalNeed, persist:Error?> {
@@ -54,7 +64,11 @@ public client class EntitiesClient {
         }
     }
     isolated resource function get medicalneed/[int needId]() returns MedicalNeed|persist:Error {
-        return (check self.persistClients.get(MEDICALNEED).runReadByKeyQuery(MedicalNeed, needId)).cloneWithType(MedicalNeed);
+        MedicalNeed|error result = (check self.persistClients.get(MEDICALNEED).runReadByKeyQuery(MedicalNeed, needId)).cloneWithType(MedicalNeed);
+        if result is error {
+            return <persist:Error>error(result.message());
+        }
+        return result;
     }
     isolated resource function post medicalneed(MedicalNeedInsert[] data) returns int[]|persist:Error {
         _ = check self.persistClients.get(MEDICALNEED).runBatchInsertQuery(data);
@@ -80,7 +94,11 @@ public client class EntitiesClient {
         }
     }
     isolated resource function get aidpackageorderitem/[int id]() returns AidPackageOrderItem|persist:Error {
-        return (check self.persistClients.get(AIDPACKAGEORDERITEM).runReadByKeyQuery(AidPackageOrderItem, id)).cloneWithType(AidPackageOrderItem);
+        AidPackageOrderItem|error result = (check self.persistClients.get(AIDPACKAGEORDERITEM).runReadByKeyQuery(AidPackageOrderItem, id)).cloneWithType(AidPackageOrderItem);
+        if result is error {
+            return <persist:Error>error(result.message());
+        }
+        return result;
     }
     isolated resource function post aidpackageorderitem(AidPackageOrderItemInsert[] data) returns int[]|persist:Error {
         _ = check self.persistClients.get(AIDPACKAGEORDERITEM).runBatchInsertQuery(data);
@@ -98,7 +116,11 @@ public client class EntitiesClient {
     }
 
     public function close() returns persist:Error? {
-        _ = check self.dbClient.close();
+        error? result = self.dbClient.close();
+        if result is error {
+            return <persist:Error>error(result.message());
+        }
+        return result;
     }
 }
 
@@ -123,7 +145,11 @@ public class MedicalNeedStream {
             } else if (streamValue is sql:Error) {
                 return <persist:Error>error(streamValue.message());
             } else {
-                record {|MedicalNeed value;|} nextRecord = {value: check streamValue.value.cloneWithType(MedicalNeed)};
+                MedicalNeed|error value = streamValue.value.cloneWithType(MedicalNeed);
+                if value is error {
+                    return <persist:Error>error(value.message());
+                }
+                record {|MedicalNeed value;|} nextRecord = {value: value};
                 return nextRecord;
             }
         } else {
@@ -132,7 +158,7 @@ public class MedicalNeedStream {
     }
 
     public isolated function close() returns persist:Error? {
-        check closeEntityStream(self.anydataStream);
+        check persist:closeEntityStream(self.anydataStream);
     }
 }
 
@@ -157,7 +183,11 @@ public class AidPackageOrderItemStream {
             } else if (streamValue is sql:Error) {
                 return <persist:Error>error(streamValue.message());
             } else {
-                record {|AidPackageOrderItem value;|} nextRecord = {value: check streamValue.value.cloneWithType(AidPackageOrderItem)};
+                AidPackageOrderItem|error value = streamValue.value.cloneWithType(AidPackageOrderItem);
+                if value is error {
+                    return <persist:Error>error(value.message());
+                }
+                record {|AidPackageOrderItem value;|} nextRecord = {value: value};
                 return nextRecord;
             }
         } else {
@@ -166,7 +196,7 @@ public class AidPackageOrderItemStream {
     }
 
     public isolated function close() returns persist:Error? {
-        check closeEntityStream(self.anydataStream);
+        check persist:closeEntityStream(self.anydataStream);
     }
 }
 

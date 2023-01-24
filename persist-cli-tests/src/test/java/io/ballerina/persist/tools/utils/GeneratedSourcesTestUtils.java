@@ -76,14 +76,14 @@ public class GeneratedSourcesTestUtils {
         }
 //        if (!(subDir.equals("tool_test_generate_4") || subDir.equals("tool_test_generate_26") ||
 //                subDir.equals("tool_test_generate_18"))) {
-
+//
 //            BuildProject buildProject = BuildProject.load(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)
 //                    .toAbsolutePath());
 //            Package currentPackage = buildProject.currentPackage();
 //            PackageCompilation compilation = currentPackage.getCompilation();
 //            Assert.assertFalse(compilation.diagnosticResult().hasErrors());
+//        }
     }
-//    }
 
     public static void assertGeneratedSourcesNegative(String subDir, Command cmd, String[] relativeFilepaths) {
         Path sourceDirPath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);
