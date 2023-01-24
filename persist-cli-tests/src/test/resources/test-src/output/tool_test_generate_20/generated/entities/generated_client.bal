@@ -52,7 +52,7 @@ public client class EntitiesClient {
             employee: check new (self.dbClient, self.metadata.get(EMPLOYEE)        };
     }
 
-    isolated resource function get vehicle() returns stream<Vehicle, error?> {
+    isolated resource function get vehicle() returns stream<Vehicle, persist:Error?> {
         stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(VEHICLE).runReadQuery(Vehicle);
         if result is persist:Error {
             return new stream<Vehicle, persist:Error?>(new VehicleStream((), result));
@@ -60,7 +60,7 @@ public client class EntitiesClient {
             return new stream<Vehicle, persist:Error?>(new VehicleStream(result));
         }
     }
-    isolated resource function get vehicle/[int model]() returns Vehicle|error {
+    isolated resource function get vehicle/[int model]() returns Vehicle|persist:Error {
         return (check self.persistClients.get(VEHICLE).runReadByKeyQuery(Vehicle, model)).cloneWithType(Vehicle);
     }
     isolated resource function post vehicle(VehicleInsert[] data) returns [int][]|persist:Error {
@@ -78,7 +78,7 @@ public client class EntitiesClient {
         return 'object;
     }
 
-    isolated resource function get company() returns stream<Company, error?> {
+    isolated resource function get company() returns stream<Company, persist:Error?> {
         stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(COMPANY).runReadQuery(Company);
         if result is persist:Error {
             return new stream<Company, persist:Error?>(new CompanyStream((), result));
@@ -86,7 +86,7 @@ public client class EntitiesClient {
             return new stream<Company, persist:Error?>(new CompanyStream(result));
         }
     }
-    isolated resource function get company/[int id]() returns Company|error {
+    isolated resource function get company/[int id]() returns Company|persist:Error {
         return (check self.persistClients.get(COMPANY).runReadByKeyQuery(Company, id)).cloneWithType(Company);
     }
     isolated resource function post company(CompanyInsert[] data) returns [int][]|persist:Error {
@@ -104,7 +104,7 @@ public client class EntitiesClient {
         return 'object;
     }
 
-    isolated resource function get employee() returns stream<Employee, error?> {
+    isolated resource function get employee() returns stream<Employee, persist:Error?> {
         stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(EMPLOYEE).runReadQuery(Employee);
         if result is persist:Error {
             return new stream<Employee, persist:Error?>(new EmployeeStream((), result));
@@ -112,7 +112,7 @@ public client class EntitiesClient {
             return new stream<Employee, persist:Error?>(new EmployeeStream(result));
         }
     }
-    isolated resource function get employee/[int id]() returns Employee|error {
+    isolated resource function get employee/[int id]() returns Employee|persist:Error {
         return (check self.persistClients.get(EMPLOYEE).runReadByKeyQuery(Employee, id)).cloneWithType(Employee);
     }
     isolated resource function post employee(EmployeeInsert[] data) returns [int][]|persist:Error {

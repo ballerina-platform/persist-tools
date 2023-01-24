@@ -45,7 +45,7 @@ public client class EntitiesClient {
             aidpackageorderitem: check new (self.dbClient, self.metadata.get(AIDPACKAGEORDERITEM)        };
     }
 
-    isolated resource function get medicalneed() returns stream<MedicalNeed, error?> {
+    isolated resource function get medicalneed() returns stream<MedicalNeed, persist:Error?> {
         stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(MEDICALNEED).runReadQuery(MedicalNeed);
         if result is persist:Error {
             return new stream<MedicalNeed, persist:Error?>(new MedicalNeedStream((), result));
@@ -53,7 +53,7 @@ public client class EntitiesClient {
             return new stream<MedicalNeed, persist:Error?>(new MedicalNeedStream(result));
         }
     }
-    isolated resource function get medicalneed/[int needId]() returns MedicalNeed|error {
+    isolated resource function get medicalneed/[int needId]() returns MedicalNeed|persist:Error {
         return (check self.persistClients.get(MEDICALNEED).runReadByKeyQuery(MedicalNeed, needId)).cloneWithType(MedicalNeed);
     }
     isolated resource function post medicalneed(MedicalNeedInsert[] data) returns [int][]|persist:Error {
@@ -71,7 +71,7 @@ public client class EntitiesClient {
         return 'object;
     }
 
-    isolated resource function get aidpackageorderitem() returns stream<AidPackageOrderItem, error?> {
+    isolated resource function get aidpackageorderitem() returns stream<AidPackageOrderItem, persist:Error?> {
         stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(AIDPACKAGEORDERITEM).runReadQuery(AidPackageOrderItem);
         if result is persist:Error {
             return new stream<AidPackageOrderItem, persist:Error?>(new AidPackageOrderItemStream((), result));
@@ -79,7 +79,7 @@ public client class EntitiesClient {
             return new stream<AidPackageOrderItem, persist:Error?>(new AidPackageOrderItemStream(result));
         }
     }
-    isolated resource function get aidpackageorderitem/[int id]() returns AidPackageOrderItem|error {
+    isolated resource function get aidpackageorderitem/[int id]() returns AidPackageOrderItem|persist:Error {
         return (check self.persistClients.get(AIDPACKAGEORDERITEM).runReadByKeyQuery(AidPackageOrderItem, id)).cloneWithType(AidPackageOrderItem);
     }
     isolated resource function post aidpackageorderitem(AidPackageOrderItemInsert[] data) returns [int][]|persist:Error {

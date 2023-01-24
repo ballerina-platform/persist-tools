@@ -42,7 +42,7 @@ public client class Entities1Client {
             profile: check new (self.dbClient, self.metadata.get(PROFILE)        };
     }
 
-    isolated resource function get multipleassociations() returns stream<MultipleAssociations, error?> {
+    isolated resource function get multipleassociations() returns stream<MultipleAssociations, persist:Error?> {
         stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(MULTIPLEASSOCIATIONS).runReadQuery(MultipleAssociations);
         if result is persist:Error {
             return new stream<MultipleAssociations, persist:Error?>(new MultipleAssociationsStream((), result));
@@ -50,7 +50,7 @@ public client class Entities1Client {
             return new stream<MultipleAssociations, persist:Error?>(new MultipleAssociationsStream(result));
         }
     }
-    isolated resource function get multipleassociations/[int id]() returns MultipleAssociations|error {
+    isolated resource function get multipleassociations/[int id]() returns MultipleAssociations|persist:Error {
         return (check self.persistClients.get(MULTIPLEASSOCIATIONS).runReadByKeyQuery(MultipleAssociations, id)).cloneWithType(MultipleAssociations);
     }
     isolated resource function post multipleassociations(MultipleAssociationsInsert[] data) returns [int][]|persist:Error {
@@ -68,7 +68,7 @@ public client class Entities1Client {
         return 'object;
     }
 
-    isolated resource function get profile() returns stream<Profile, error?> {
+    isolated resource function get profile() returns stream<Profile, persist:Error?> {
         stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(PROFILE).runReadQuery(Profile);
         if result is persist:Error {
             return new stream<Profile, persist:Error?>(new ProfileStream((), result));
@@ -76,7 +76,7 @@ public client class Entities1Client {
             return new stream<Profile, persist:Error?>(new ProfileStream(result));
         }
     }
-    isolated resource function get profile/[int id]() returns Profile|error {
+    isolated resource function get profile/[int id]() returns Profile|persist:Error {
         return (check self.persistClients.get(PROFILE).runReadByKeyQuery(Profile, id)).cloneWithType(Profile);
     }
     isolated resource function post profile(ProfileInsert[] data) returns [int][]|persist:Error {
