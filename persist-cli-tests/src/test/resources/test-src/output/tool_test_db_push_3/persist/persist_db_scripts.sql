@@ -1,8 +1,0 @@
-DROP TABLE IF EXISTS MedicalItem;
-CREATE TABLE MedicalItem (
-	itemId INT NOT NULL,
-	name VARCHAR(191) NOT NULL,
-	type VARCHAR(191) NOT NULL,
-	unit VARCHAR(191) NOT NULL,
-	PRIMARY KEY(itemId)
-);

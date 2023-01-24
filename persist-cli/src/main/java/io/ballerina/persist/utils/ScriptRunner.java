@@ -19,7 +19,6 @@
 package io.ballerina.persist.utils;
 
 import java.io.BufferedReader;
-import java.io.PrintStream;
 import java.io.Reader;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -32,8 +31,6 @@ import java.sql.Statement;
 public class ScriptRunner {
 
     private static final String LINE_SEPARATOR = System.lineSeparator();
-
-    private final PrintStream errStream = System.err;
 
     private static final String DEFAULT_DELIMITER = ";";
 

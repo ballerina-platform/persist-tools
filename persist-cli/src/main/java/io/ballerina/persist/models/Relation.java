@@ -18,6 +18,7 @@
 
 package io.ballerina.persist.models;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -42,19 +43,14 @@ public class Relation {
 
     private final boolean owner;
     private RelationType relationType;
-    private final String onDelete;
-    private final String onUpdate;
-
     private Entity assocEntity;
 
 
     private Relation(List<Key> keyColumns,
-                     List<String> references, String onDelete, String onUpdate, RelationType relationType,
+                     List<String> references, RelationType relationType,
                      Entity assocEntity, boolean owner) {
-        this.keyColumns = keyColumns;
-        this.references = references;
-        this.onDelete = onDelete;
-        this.onUpdate = onUpdate;
+        this.keyColumns = Collections.unmodifiableList(keyColumns);
+        this.references = Collections.unmodifiableList(references);
         this.relationType = relationType;
         this.assocEntity = assocEntity;
         this.owner = owner;
@@ -66,14 +62,6 @@ public class Relation {
 
     public List<String> getReferences() {
         return references;
-    }
-
-    public String getOnDelete() {
-        return onDelete;
-    }
-
-    public String getOnUpdate() {
-        return onUpdate;
     }
 
     public boolean isOwner() {
@@ -114,8 +102,6 @@ public class Relation {
     public static class Builder {
         List<Key> keys = null;
         List<String> references = null;
-        String onDeleteAction;
-        String onUpdateAction;
         Entity assocEntity = null;
 
         RelationType relationType = RelationType.ONE;
@@ -128,14 +114,6 @@ public class Relation {
 
         public void setReferences(List<String> references) {
             this.references = references;
-        }
-
-        public void setOnDeleteAction(String onDeleteAction) {
-            this.onDeleteAction = onDeleteAction;
-        }
-
-        public void setOnUpdateAction(String onUpdateAction) {
-            this.onUpdateAction = onUpdateAction;
         }
 
         public void setOwner(boolean owner) {
@@ -151,7 +129,7 @@ public class Relation {
         }
 
         public Relation build() {
-            return new Relation(keys, references, onDeleteAction, onUpdateAction, relationType, assocEntity, owner);
+            return new Relation(keys, references, relationType, assocEntity, owner);
         }
     }
 

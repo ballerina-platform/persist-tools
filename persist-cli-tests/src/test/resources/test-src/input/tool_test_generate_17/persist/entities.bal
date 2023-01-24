@@ -19,20 +19,20 @@ import ballerina/persist as _;
 public type Company record {|
     readonly int id;
     string name;
-    Employee[] employee?;
+    Employee[] employee;
 |};
 
 public type Employee record {|
     readonly int id;
     string name;
 
-    Company company?;
-    Vehicle[] vehicles?;
+    Company company;
+    Vehicle[] vehicles;
 |};
 
 public type Vehicle record {|
     readonly int model;
     string name;
 
-    Employee employee?;
+    Employee employee;
 |};
