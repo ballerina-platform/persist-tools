@@ -18,6 +18,7 @@
 
 package io.ballerina.persist.models;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -48,8 +49,8 @@ public class Relation {
     private Relation(List<Key> keyColumns,
                      List<String> references, RelationType relationType,
                      Entity assocEntity, boolean owner) {
-        this.keyColumns = keyColumns;
-        this.references = references;
+        this.keyColumns = Collections.unmodifiableList(keyColumns);
+        this.references = Collections.unmodifiableList(references);
         this.relationType = relationType;
         this.assocEntity = assocEntity;
         this.owner = owner;

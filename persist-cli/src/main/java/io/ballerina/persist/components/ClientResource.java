@@ -26,6 +26,7 @@ import io.ballerina.compiler.syntax.tree.SyntaxKind;
 import io.ballerina.compiler.syntax.tree.Token;
 import io.ballerina.persist.nodegenerator.SyntaxTokenConstants;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.COMMA_SPACE;
@@ -37,7 +38,7 @@ public class ClientResource {
 
     private final Token resourceName;
 
-    private List<Node> metadata;
+    private final List<Node> metadata = new ArrayList<>();
 
     private NodeList<Node> functions = NodeFactory.createEmptyNodeList();
 

@@ -56,8 +56,8 @@ public class BalSyntaxConstants {
     public static final String PERSIST_ERROR = "persist:Error";
     public static final String CREATE_SQL_RESULTS = "_ = check " +
             "self.persistClients.get(\"%s\").runBatchInsertQuery(data);";
-    public static final String RETURN_CREATED_KEY = "return from  %s inserted in data\n";
     public static final String SELECT_WITH_SPACE = "\t\t\tselect ";
+    public static final String RETURN_CREATED_KEY = "return from  %s inserted in data%n";
     public static final String READ_BY_KEY_RETURN = "return (check " +
             "self.persistClients.get(\"%s\").runReadByKeyQuery(%s, %s)).cloneWithType(%s);";
     public static final String READ_RUN_READ_QUERY = "stream<anydata, sql:Error?>|persist:Error result" +
