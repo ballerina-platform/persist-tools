@@ -161,6 +161,7 @@ public class BalSyntaxConstants {
     public static final String CLOSE_BRACE = "}";
     public static final String OPEN_BRACKET = "[";
     public static final String CLOSE_BRACKET = "]";
+    public static final String COMMA_WITH_NEWLINE = "," + System.lineSeparator();
 
 }
 
