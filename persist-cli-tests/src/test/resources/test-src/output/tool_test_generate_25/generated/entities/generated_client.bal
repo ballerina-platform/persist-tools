@@ -5,8 +5,12 @@
 
 import ballerina/persist;
 import ballerina/sql;
-import ballerinax/mysql;
 import ballerina/time;
+import ballerinax/mysql;
+
+const VEHICLE = "Vehicle";
+const COMPANY = "Company";
+const EMPLOYEE = "Employee";
 
 public client class EntitiesClient {
 
@@ -14,15 +18,42 @@ public client class EntitiesClient {
 
     private final map<persist:SQLClient> persistClients;
 
-    private final map<persist:Metadata> metadata = {vehicle: {entityName: "Vehicle", tableName: 'Vehicle ', model: {columnName: "model", 'type: int}, name: {columnName: "name", 'type: string}, employeeId: {columnName: "employeeId", 'type: int} keyFields: ["model"]}, company: {entityName: "Company", tableName: 'Company ', id: {columnName: "id", 'type: int}, name: {columnName: "name", 'type: string}, keyFields: ["id"]}, employee: {entityName: "Employee", tableName: 'Employee ', id: {columnName: "id", 'type: int}, name: {columnName: "name", 'type: string}, companyId: {columnName: "companyId", 'type: int}, keyFields: ["id"]}};
+    private final record {|persist:Metadata...;|} metadata = {
+        "vehicle": {
+            entityName: "Vehicle",
+            tableName: `Vehicle`,
+            model: {columnName: "model", 'type: int},
+            name: {columnName: "name", 'type: string},
+            employeeId: {columnName: "employeeId", 'type: int},
+            keyFields: ["model"]
+        },
+        "company": {
+            entityName: "Company",
+            tableName: `Company`,
+            id: {columnName: "id", 'type: int},
+            name: {columnName: "name", 'type: string},
+            keyFields: ["id"]
+        },
+        "employee": {
+            entityName: "Employee",
+            tableName: `Employee`,
+            id: {columnName: "id", 'type: int},
+            name: {columnName: "name", 'type: string},
+            companyId: {columnName: "companyId", 'type: int},
+            keyFields: ["id"]
+        }
+    };
 
     public function init() returns persist:Error? {
         self.dbClient = check new (host = host, user = user, password = password, database = database, port = port);
-        self.persistClients = {vehicle: check new (self.dbClient, self.metadata.get("vehicle").entityName, self.metadata.get("vehicle").tableName, self.metadata.get("vehicle").keyFields, self.metadata.get("vehicle").fieldMetadata), company: check new (self.dbClient, self.metadata.get("company").entityName, self.metadata.get("company").tableName, self.metadata.get("company").keyFields, self.metadata.get("company").fieldMetadata), employee: check new (self.dbClient, self.metadata.get("employee").entityName, self.metadata.get("employee").tableName, self.metadata.get("employee").keyFields, self.metadata.get("employee").fieldMetadata)};
+        self.persistClients = {
+            vehicle: check new (self.dbClient, self.metadata.get(VEHICLE),
+            company: check new (self.dbClient, self.metadata.get(COMPANY),
+            employee: check new (self.dbClient, self.metadata.get(EMPLOYEE)        };
     }
 
     isolated resource function get vehicle() returns stream<Vehicle, persist:Error?> {
-        stream<anydata, sql:Error?>|persist:Error result = self.persistClients.get("vehicle").runReadQuery(Vehicle);
+        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(VEHICLE).runReadQuery(Vehicle);
         if result is persist:Error {
             return new stream<Vehicle, persist:Error?>(new VehicleStream((), result));
         } else {
@@ -30,25 +61,25 @@ public client class EntitiesClient {
         }
     }
     isolated resource function get vehicle/[int model]() returns Vehicle|persist:Error {
-        return (check self.persistClients.get("vehicle").runReadByKeyQuery(Vehicle, model)).cloneWithType(Vehicle);
+        return (check self.persistClients.get(VEHICLE).runReadByKeyQuery(Vehicle, model)).cloneWithType(Vehicle);
     }
     isolated resource function post vehicle(VehicleInsert[] data) returns int[]|persist:Error {
-        _ = check self.persistClients.get("VEHICLE").runBatchInsertQuery(data);
+        _ = check self.persistClients.get(VEHICLE).runBatchInsertQuery(data);
         return from VehicleInsert inserted in data
             select inserted.model;
     }
     isolated resource function put vehicle/[int model](VehicleUpdate value) returns Vehicle|persist:Error {
-        _ = check self.persistClients.get("VEHICLE").runUpdateQuery({"model": model}, value);
+        _ = check self.persistClients.get(VEHICLE).runUpdateQuery({"model": model}, value);
         return self->/vehicle/[model].get();
     }
     isolated resource function delete vehicle/[int model]() returns Vehicle|persist:Error {
         Vehicle 'object = check self->/vehicle/[model].get();
-        _ = check self.persistClients.get("VEHICLE").runDeleteQuery({"model": model});
+        _ = check self.persistClients.get(VEHICLE).runDeleteQuery({"model": model});
         return 'object;
     }
 
     isolated resource function get company() returns stream<Company, persist:Error?> {
-        stream<anydata, sql:Error?>|persist:Error result = self.persistClients.get("company").runReadQuery(Company);
+        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(COMPANY).runReadQuery(Company);
         if result is persist:Error {
             return new stream<Company, persist:Error?>(new CompanyStream((), result));
         } else {
@@ -56,25 +87,25 @@ public client class EntitiesClient {
         }
     }
     isolated resource function get company/[int id]() returns Company|persist:Error {
-        return (check self.persistClients.get("company").runReadByKeyQuery(Company, id)).cloneWithType(Company);
+        return (check self.persistClients.get(COMPANY).runReadByKeyQuery(Company, id)).cloneWithType(Company);
     }
     isolated resource function post company(CompanyInsert[] data) returns int[]|persist:Error {
-        _ = check self.persistClients.get("COMPANY").runBatchInsertQuery(data);
+        _ = check self.persistClients.get(COMPANY).runBatchInsertQuery(data);
         return from CompanyInsert inserted in data
             select inserted.id;
     }
     isolated resource function put company/[int id](CompanyUpdate value) returns Company|persist:Error {
-        _ = check self.persistClients.get("COMPANY").runUpdateQuery({"id": id}, value);
+        _ = check self.persistClients.get(COMPANY).runUpdateQuery({"id": id}, value);
         return self->/company/[id].get();
     }
     isolated resource function delete company/[int id]() returns Company|persist:Error {
         Company 'object = check self->/company/[id].get();
-        _ = check self.persistClients.get("COMPANY").runDeleteQuery({"id": id});
+        _ = check self.persistClients.get(COMPANY).runDeleteQuery({"id": id});
         return 'object;
     }
 
     isolated resource function get employee() returns stream<Employee, persist:Error?> {
-        stream<anydata, sql:Error?>|persist:Error result = self.persistClients.get("employee").runReadQuery(Employee);
+        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(EMPLOYEE).runReadQuery(Employee);
         if result is persist:Error {
             return new stream<Employee, persist:Error?>(new EmployeeStream((), result));
         } else {
@@ -82,28 +113,25 @@ public client class EntitiesClient {
         }
     }
     isolated resource function get employee/[int id]() returns Employee|persist:Error {
-        return (check self.persistClients.get("employee").runReadByKeyQuery(Employee, id)).cloneWithType(Employee);
+        return (check self.persistClients.get(EMPLOYEE).runReadByKeyQuery(Employee, id)).cloneWithType(Employee);
     }
     isolated resource function post employee(EmployeeInsert[] data) returns int[]|persist:Error {
-        _ = check self.persistClients.get("EMPLOYEE").runBatchInsertQuery(data);
+        _ = check self.persistClients.get(EMPLOYEE).runBatchInsertQuery(data);
         return from EmployeeInsert inserted in data
             select inserted.id;
     }
     isolated resource function put employee/[int id](EmployeeUpdate value) returns Employee|persist:Error {
-        _ = check self.persistClients.get("EMPLOYEE").runUpdateQuery({"id": id}, value);
+        _ = check self.persistClients.get(EMPLOYEE).runUpdateQuery({"id": id}, value);
         return self->/employee/[id].get();
     }
     isolated resource function delete employee/[int id]() returns Employee|persist:Error {
         Employee 'object = check self->/employee/[id].get();
-        _ = check self.persistClients.get("EMPLOYEE").runDeleteQuery({"id": id});
+        _ = check self.persistClients.get(EMPLOYEE).runDeleteQuery({"id": id});
         return 'object;
     }
 
     public function close() returns persist:Error? {
-        sql:Error? e = self.dbClient.close();
-        if e is sql:Error {
-            return <persist:Error>error(e.message());
-        }
+        _ = check self.dbClient.close();
     }
 }
 
@@ -137,13 +165,7 @@ public class VehicleStream {
     }
 
     public isolated function close() returns persist:Error? {
-        if self.anydataStream is stream<anydata, sql:Error?> {
-            var anydataStream = <stream<anydata, sql:Error?>>self.anydataStream;
-            sql:Error? e = anydataStream.close();
-            if e is sql:Error {
-                return <persist:Error>error(e.message());
-            }
-        }
+        check closeEntityStream(self.anydataStream);
     }
 }
 
@@ -177,13 +199,7 @@ public class CompanyStream {
     }
 
     public isolated function close() returns persist:Error? {
-        if self.anydataStream is stream<anydata, sql:Error?> {
-            var anydataStream = <stream<anydata, sql:Error?>>self.anydataStream;
-            sql:Error? e = anydataStream.close();
-            if e is sql:Error {
-                return <persist:Error>error(e.message());
-            }
-        }
+        check closeEntityStream(self.anydataStream);
     }
 }
 
@@ -217,13 +233,7 @@ public class EmployeeStream {
     }
 
     public isolated function close() returns persist:Error? {
-        if self.anydataStream is stream<anydata, sql:Error?> {
-            var anydataStream = <stream<anydata, sql:Error?>>self.anydataStream;
-            sql:Error? e = anydataStream.close();
-            if e is sql:Error {
-                return <persist:Error>error(e.message());
-            }
-        }
+        check closeEntityStream(self.anydataStream);
     }
 }
 

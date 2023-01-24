@@ -36,13 +36,7 @@ public class BalSyntaxConstants {
         public static final String PERSIST_MODULE_NAME = "persist";
         public static final String ABSTRACT_PERSIST_CLIENT = "AbstractPersistClient";
     }
-
-    public static final String PERSIST_CLIENTS = "persistClients";
-    public static final String RETURN_RECORD_VARIABLE = "return {%s};";
-    public static final String RETURN_VARIABLE = "return %s;";
-    public static final String RETURN_TRUE = "return true;";
-    public static final String RETURN_FALSE = "return false;";
-    public static final String CLOSE_RECORD_VARIABLE = "record {|%s|}";
+    public static final String RECORD_PLACEHOLDER = "{%s}";
     public static final String DOUBLE_QUOTE = "\"";
     public static final String BACK_SLASH = "/";
     public static final String EMPTY_STRING = "";
@@ -54,22 +48,23 @@ public class BalSyntaxConstants {
     public static final String RETURN_NEXT_RECORD = "return nextRecord;";
     public static final String PERSIST_MODULE = "persist";
     public static final String PERSIST_ERROR = "persist:Error";
+    public static final String GENERIC_ERROR = "error";
     public static final String CREATE_SQL_RESULTS = "_ = check " +
-            "self.persistClients.get(\"%s\").runBatchInsertQuery(data);";
+            "self.persistClients.get(%s).runBatchInsertQuery(data);";
+    public static final String RETURN_CREATED_KEY = "return from  %s inserted in data" + System.lineSeparator();
     public static final String SELECT_WITH_SPACE = "\t\t\tselect ";
-    public static final String RETURN_CREATED_KEY = "return from  %s inserted in data%n";
     public static final String READ_BY_KEY_RETURN = "return (check " +
-            "self.persistClients.get(\"%s\").runReadByKeyQuery(%s, %s)).cloneWithType(%s);";
-    public static final String READ_RUN_READ_QUERY = "stream<anydata, sql:Error?>|persist:Error result" +
-            " = self.persistClients.get(\"%s\").runReadQuery(%s);";
+            "self.persistClients.get(%s).runReadByKeyQuery(%s, %s)).cloneWithType(%s);";
+    public static final String READ_RUN_READ_QUERY = "stream<record{}, sql:Error?>|persist:Error result" +
+            " = self.persistClients.get(%s).runReadQuery(%s);";
     public static final String READ_RETURN_STREAM_WHEN_ERROR = "return new stream<%s, persist:Error?>" +
             "(new %sStream((), result));";
     public static final String READ_RETURN_STREAM_WHEN_NOT_ERROR = "return new stream<%s, persist:Error?>" +
             "(new %sStream(result));";
-    public static final String UPDATE_RUN_UPDATE_QUERY = "_ = check self.persistClients.get(\"%s\").runUpdateQuery" +
+    public static final String UPDATE_RUN_UPDATE_QUERY = "_ = check self.persistClients.get(%s).runUpdateQuery" +
             "(%s, value);";
     public static final String UPDATE_RETURN_UPDATE_QUERY = "return self->%s.get();";
-    public static final String DELETE_RUN_DELETE_QUERY = "_ = check self.persistClients.get(\"%s\")." +
+    public static final String DELETE_RUN_DELETE_QUERY = "_ = check self.persistClients.get(%s)." +
             "runDeleteQuery(%s);";
     public static final String RETURN_DELETED_OBJECT = "return 'object;";
     public static final String GET_OBJECT_QUERY = "%s 'object = check self->%s.get();";
@@ -83,8 +78,6 @@ public class BalSyntaxConstants {
             "return <persist:Error>error(streamValue.message());";
     public static final String NEXT_STREAM_ELSE_STATEMENT = "record {|%s value;|} nextRecord = " +
             "{value: check streamValue.value.cloneWithType(%s)};";
-    public static final String RELATION_ENUM_ARRAY_CHECK = "self.include is %sRelations[]";
-    public static final String CLOSE_STREAM_STATEMENT = "sql:Error? e = anydataStream.close();";
 
     public static final String CONFIGURABLE_PORT = "configurable int port = ?;";
     public static final String CONFIGURABLE_HOST = "configurable string host = ?;";
@@ -92,13 +85,15 @@ public class BalSyntaxConstants {
     public static final String CONFIGURABLE_PASSWORD = "configurable string password = ?;";
     public static final String CONFIGURABLE_DATABASE = "configurable string database = ?;";
     public static final String INIT = "init";
+    public static final String ERROR = "Error";
     public static final String GET = "get";
     public static final String POST = "post";
     public static final String DELETE = "delete";
     public static final String PUT = "put";
     public static final String CLOSE = "close";
     public static final String NEXT = "next";
-
+    public static final String INSERT_RECORD = "%sInsert";
+    public static final String UPDATE_RECORD = "%sUpdate";
     public static final String SPECIFIC_ERROR = "Error";
     public static final String RETURN_NILL = "return ();";
     public static final String KEYWORD_BALLERINA = "ballerina";
@@ -133,8 +128,6 @@ public class BalSyntaxConstants {
     public static final String ANYDATA_STREAM_NEXT = "var streamValue = anydataStream.next();";
     public static final String RESULT_IS_ERROR = "result is persist:Error";
     public static final String NULLABLE_ANYDATA_STREAM_TYPE = "stream<anydata, sql:Error?>?";
-    public static final String IS_SQL_ERROR = "e is sql:Error";
-    public static final String RETURN_PERSIST_ERROR_CLOSE_STREAM = "return <persist:Error>error(e.message());";
     public static final String AUTOGENERATED_FILE_COMMENT = "// AUTO-GENERATED FILE. DO NOT MODIFY.";
 
     public static final String AUTO_GENERATED_COMMENT =
@@ -150,25 +143,26 @@ public class BalSyntaxConstants {
     public static final String BAL_EXTENTION = ".bal";
     public static final String INIT_DB_CLIENT = "private final mysql:Client dbClient;";
     public static final String INIT_PERSIST_CLIENT_MAP = "private final map<persist:SQLClient> persistClients;";
-    public static final String METADATAMAP_ENTITY_NAME_TEMPLATE = "entityName: \"%s\",";
-    public static final String METADATAMAP_TABLE_NAME_TEMPLATE = "tableName: '%s',";
-    public static final String METADATAMAP_FIELD_TEMPLATE = "%s: {columnName: \"%s\", 'type: %s}";
-    public static final String METADATAMAP_KEY_FIELD_TEMPLATE = "keyFields: [%s]";
-    public static final String METADATAMAP_ELEMENT_TEMPLATE = "%s: {%s}";
-    public static final String METADATAMAP_TEMPLATE = "private final map<persist:Metadata> metadata = {%s};";
+    public static final String METADATARECORD_ENTITY_NAME_TEMPLATE = "entityName: \"%s\", " + System.lineSeparator();
+    public static final String METADATARECORD_TABLE_NAME_TEMPLATE = "tableName: `%s`, " + System.lineSeparator();
+    public static final String METADATARECORD_FIELD_TEMPLATE = "%s: {columnName: \"%s\", 'type: %s}";
+    public static final String METADATARECORD_KEY_FIELD_TEMPLATE = "keyFields: [%s]";
+    public static final String METADATARECORD_ELEMENT_TEMPLATE = "\"%s\": {%s}";
+    public static final String METADATARECORD_TEMPLATE =
+            "private final record {|persist:Metadata...;|} metadata = {%s};";
     public static final String INIT_DBCLIENT = "self.dbClient = check new (host = host, user = user, " +
-            "password = password, database = database, port = port);\n";
-    public static final String PERSIST_CLIENT_MAP_ELEMENT = "%s: check new (self.dbClient," +
-            "self.metadata.get(\"%s\").entityName," +
-            "self.metadata.get(\"%s\").tableName," +
-            "self.metadata.get(\"%s\").keyFields," +
-            "self.metadata.get(\"%s\").fieldMetadata)";
+            "password = password, database = database, port = port);" + System.lineSeparator();
+    public static final String PERSIST_CLIENT_MAP_ELEMENT = "%s: check new (self.dbClient, self.metadata.get(%s)";
     public static final String PERSIST_CLIENT_TEMPLATE = "self.persistClients = {%s};";
-    public static final String PERSIST_CLIENT_CLOSE_STATEMENT = "sql:Error? e = self.dbClient.close();";
-    public static final String CHECK_E_FOR_ERRORS = "e is sql:Error";
-    public static final String RETURN_PERSIST_ERROR = "return <persist:Error>error(e.message());";
+    public static final String PERSIST_CLIENT_CLOSE_STATEMENT = "_ = check self.dbClient.close();";
+    public static final String CLOSE_ENTITY_STREAM = "check closeEntityStream(self.anydataStream);";
     public static final String PLACEHOLDER_FOR_MAP_FIELD = "%s:%s";
     public static final String PLACEHOLDER_FOR_TYPE_DEFINITION = "%s %s";
+    public static final String OPEN_BRACE = "{";
+    public static final String CLOSE_BRACE = "}";
+    public static final String OPEN_BRACKET = "[";
+    public static final String CLOSE_BRACKET = "]";
+    public static final String COMMA_WITH_NEWLINE = "," + System.lineSeparator();
 
 }
 
