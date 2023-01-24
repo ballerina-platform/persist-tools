@@ -7,14 +7,16 @@ import ballerina/persist;
 import ballerina/sql;
 import ballerinax/mysql;
 
+const MEDICALNEED = "MedicalNeed";
+
 public client class EntitiesClient {
 
     private final mysql:Client dbClient;
 
     private final map<persist:SQLClient> persistClients;
 
-    private final map<persist:Metadata> metadata = {
-        medicalneed: {
+    private final record {|persist:Metadata...;|} metadata = {
+        "medicalneed": {
             entityName: "MedicalNeed",
             tableName: `MedicalNeed`,
             needId: {columnName: "needId", 'type: int},
@@ -29,18 +31,11 @@ public client class EntitiesClient {
 
     public function init() returns persist:Error? {
         self.dbClient = check new (host = host, user = user, password = password, database = database, port = port);
-        self.persistClients = {medicalneed: check new (self.dbClient, self.metadata.get("medicalneed").entityName, self.metadata.get("medicalneed").tableName, self.metadata.get("medicalneed").keyFields, self.metadata.get("medicalneed").fieldMetadata)};
-    }
-
-    public function close() returns persist:Error? {
-        sql:Error? e = self.dbClient.close();
-        if e is sql:Error {
-            return <persist:Error>error(e.message());
-        }
+        self.persistClients = {medicalneed: check new (self.dbClient, self.metadata.get(MEDICALNEED)};
     }
 
     isolated resource function get medicalneed() returns stream<MedicalNeed, persist:Error?> {
-        stream<anydata, sql:Error?>|persist:Error result = self.persistClients.get("medicalneed").runReadQuery(MedicalNeed);
+        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(MEDICALNEED).runReadQuery(MedicalNeed);
         if result is persist:Error {
             return new stream<MedicalNeed, persist:Error?>(new MedicalNeedStream((), result));
         } else {
@@ -48,7 +43,7 @@ public client class EntitiesClient {
         }
     }
     isolated resource function get medicalneed/[int itemId]/[int needId]() returns MedicalNeed|persist:Error {
-        return (check self.persistClients.get("medicalneed").runReadByKeyQuery(MedicalNeed, record {|int itemId; int needId|})).cloneWithType(MedicalNeed);
+        return (check self.persistClients.get(MEDICALNEED).runReadByKeyQuery(MedicalNeed, {        int:        int , int: int} )        ).cloneWithType(MedicalNeed);
     }
     isolated resource function post medicalneed(MedicalNeedInsert[] data) returns [int, int][]|persist:Error {
         _ = check self.persistClients.get("medicalneed").runBatchInsertQuery(data);
@@ -63,6 +58,10 @@ public client class EntitiesClient {
         MedicalNeed 'object = check self->/medicalneed/[itemId]/[needId].get();
         _ = check self.persistClients.get("medicalneed").runDeleteQuery({"itemId": itemId, "needId": needId, });
         return 'object;
+    }
+
+    public function close() returns persist:Error? {
+        _ = check self.dbClient.close();
     }
 }
 
@@ -96,13 +95,7 @@ public class MedicalNeedStream {
     }
 
     public isolated function close() returns persist:Error? {
-        if self.anydataStream is stream<anydata, sql:Error?> {
-            var anydataStream = <stream<anydata, sql:Error?>>self.anydataStream;
-            sql:Error? e = anydataStream.close();
-            if e is sql:Error {
-                return <persist:Error>error(e.message());
-            }
-        }
+        check closeEntityStream(self.anydataStream);
     }
 }
 

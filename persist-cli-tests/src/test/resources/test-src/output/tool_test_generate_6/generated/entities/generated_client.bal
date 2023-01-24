@@ -7,14 +7,16 @@ import ballerina/persist;
 import ballerina/sql;
 import ballerinax/mysql;
 
+const DATATYPE = "DataType";
+
 public client class EntitiesClient {
 
     private final mysql:Client dbClient;
 
     private final map<persist:SQLClient> persistClients;
 
-    private final map<persist:Metadata> metadata = {
-        datatype: {
+    private final record {|persist:Metadata...;|} metadata = {
+        "datatype": {
             entityName: "DataType",
             tableName: `DataType`,
             a: {columnName: "a", 'type: int},
@@ -33,18 +35,11 @@ public client class EntitiesClient {
 
     public function init() returns persist:Error? {
         self.dbClient = check new (host = host, user = user, password = password, database = database, port = port);
-        self.persistClients = {datatype: check new (self.dbClient, self.metadata.get("datatype").entityName, self.metadata.get("datatype").tableName, self.metadata.get("datatype").keyFields, self.metadata.get("datatype").fieldMetadata)};
-    }
-
-    public function close() returns persist:Error? {
-        sql:Error? e = self.dbClient.close();
-        if e is sql:Error {
-            return <persist:Error>error(e.message());
-        }
+        self.persistClients = {datatype: check new (self.dbClient, self.metadata.get(DATATYPE)};
     }
 
     isolated resource function get datatype() returns stream<DataType, persist:Error?> {
-        stream<anydata, sql:Error?>|persist:Error result = self.persistClients.get("datatype").runReadQuery(DataType);
+        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(DATATYPE).runReadQuery(DataType);
         if result is persist:Error {
             return new stream<DataType, persist:Error?>(new DataTypeStream((), result));
         } else {
@@ -52,7 +47,7 @@ public client class EntitiesClient {
         }
     }
     isolated resource function get datatype/[int a]() returns DataType|persist:Error {
-        return (check self.persistClients.get("datatype").runReadByKeyQuery(DataType, a)).cloneWithType(DataType);
+        return (check self.persistClients.get(DATATYPE).runReadByKeyQuery(DataType, a)).cloneWithType(DataType);
     }
     isolated resource function post datatype(DataTypeInsert[] data) returns [int][]|persist:Error {
         _ = check self.persistClients.get("datatype").runBatchInsertQuery(data);
@@ -67,6 +62,10 @@ public client class EntitiesClient {
         DataType 'object = check self->/datatype/[a].get();
         _ = check self.persistClients.get("datatype").runDeleteQuery({"a": a, });
         return 'object;
+    }
+
+    public function close() returns persist:Error? {
+        _ = check self.dbClient.close();
     }
 }
 
@@ -100,13 +99,7 @@ public class DataTypeStream {
     }
 
     public isolated function close() returns persist:Error? {
-        if self.anydataStream is stream<anydata, sql:Error?> {
-            var anydataStream = <stream<anydata, sql:Error?>>self.anydataStream;
-            sql:Error? e = anydataStream.close();
-            if e is sql:Error {
-                return <persist:Error>error(e.message());
-            }
-        }
+        check closeEntityStream(self.anydataStream);
     }
 }
 

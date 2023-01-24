@@ -8,14 +8,16 @@ import ballerina/sql;
 import ballerina/time;
 import ballerinax/mysql;
 
+const USER = "User";
+
 public client class EntitiesClient {
 
     private final mysql:Client dbClient;
 
     private final map<persist:SQLClient> persistClients;
 
-    private final map<persist:Metadata> metadata = {
-        user: {
+    private final record {|persist:Metadata...;|} metadata = {
+        "user": {
             entityName: "User",
             tableName: `User`,
             id: {columnName: "id", 'type: int},
@@ -26,18 +28,11 @@ public client class EntitiesClient {
 
     public function init() returns persist:Error? {
         self.dbClient = check new (host = host, user = user, password = password, database = database, port = port);
-        self.persistClients = {user: check new (self.dbClient, self.metadata.get("user").entityName, self.metadata.get("user").tableName, self.metadata.get("user").keyFields, self.metadata.get("user").fieldMetadata)};
-    }
-
-    public function close() returns persist:Error? {
-        sql:Error? e = self.dbClient.close();
-        if e is sql:Error {
-            return <persist:Error>error(e.message());
-        }
+        self.persistClients = {user: check new (self.dbClient, self.metadata.get(USER)};
     }
 
     isolated resource function get user() returns stream<User, persist:Error?> {
-        stream<anydata, sql:Error?>|persist:Error result = self.persistClients.get("user").runReadQuery(User);
+        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(USER).runReadQuery(User);
         if result is persist:Error {
             return new stream<User, persist:Error?>(new UserStream((), result));
         } else {
@@ -45,7 +40,7 @@ public client class EntitiesClient {
         }
     }
     isolated resource function get user/[int id]() returns User|persist:Error {
-        return (check self.persistClients.get("user").runReadByKeyQuery(User, id)).cloneWithType(User);
+        return (check self.persistClients.get(USER).runReadByKeyQuery(User, id)).cloneWithType(User);
     }
     isolated resource function post user(UserInsert[] data) returns [int][]|persist:Error {
         _ = check self.persistClients.get("user").runBatchInsertQuery(data);
@@ -60,6 +55,10 @@ public client class EntitiesClient {
         User 'object = check self->/user/[id].get();
         _ = check self.persistClients.get("user").runDeleteQuery({"id": id, });
         return 'object;
+    }
+
+    public function close() returns persist:Error? {
+        _ = check self.dbClient.close();
     }
 }
 
@@ -93,13 +92,7 @@ public class UserStream {
     }
 
     public isolated function close() returns persist:Error? {
-        if self.anydataStream is stream<anydata, sql:Error?> {
-            var anydataStream = <stream<anydata, sql:Error?>>self.anydataStream;
-            sql:Error? e = anydataStream.close();
-            if e is sql:Error {
-                return <persist:Error>error(e.message());
-            }
-        }
+        check closeEntityStream(self.anydataStream);
     }
 }
 
