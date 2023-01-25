@@ -19,8 +19,10 @@
 package io.ballerina.persist.models;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -40,8 +42,8 @@ public class Module {
                    Map<String, Entity> entityMap) {
         this.moduleName = moduleName;
         this.clientName = clientName;
-        this.importModulePrefixes = importModulePrefixes;
-        this.entityMap = entityMap;
+        this.importModulePrefixes = Collections.unmodifiableSet(importModulePrefixes);
+        this.entityMap = Collections.unmodifiableMap(entityMap);
     }
 
     public Map<String, Entity> getEntityMap() {
@@ -95,7 +97,7 @@ public class Module {
             StringBuilder titleBuilder = new StringBuilder();
             String[] moduleParts = moduleName.split(" +");
             Arrays.stream(moduleParts).forEach(modulePart -> {
-                titleBuilder.append(modulePart.substring(0, 1).toUpperCase())
+                titleBuilder.append(modulePart.substring(0, 1).toUpperCase(Locale.ENGLISH))
                         .append(modulePart.substring(1));
             });
             return titleBuilder.toString();

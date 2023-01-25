@@ -8,7 +8,7 @@ import ballerina/sql;
 import ballerina/time;
 import ballerinax/mysql;
 
-const MEDICAL_NEED = "medicalneed";
+const MEDICAL_NEED = "MedicalNeed";
 
 public client class EntitiesClient {
     *persist:AbstractPersistClient;
@@ -71,9 +71,9 @@ public client class EntitiesClient {
     }
 
     isolated resource function delete medicalneed/[string needId]() returns MedicalNeed|persist:Error {
-        MedicalNeed result = check self->/medicalneed/[needId].get();
+        MedicalNeed 'object = check self->/medicalneed/[needId].get();
         _ = check self.persistClients.get(MEDICAL_NEED).runDeleteQuery({"needId": needId});
-        return result;
+        return 'object;
     }
 
     public function close() returns persist:Error? {

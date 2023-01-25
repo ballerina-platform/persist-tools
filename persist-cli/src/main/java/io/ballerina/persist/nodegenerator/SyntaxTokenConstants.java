@@ -45,7 +45,8 @@ public class SyntaxTokenConstants {
     public static final Token SYNTAX_TREE_SLASH = AbstractNodeFactory.createToken(SyntaxKind.SLASH_TOKEN);
     public static final Token SYNTAX_TREE_COMMA = AbstractNodeFactory.createToken(SyntaxKind.COMMA_TOKEN);
 
-    public static final Token SYNTAX_TREE_BLANK_LINE = AbstractNodeFactory.createIdentifierToken("\n\n");
+    public static final Token SYNTAX_TREE_BLANK_LINE = AbstractNodeFactory.createIdentifierToken(
+            System.lineSeparator() +  System.lineSeparator());
 
     public static final Token SYNTAX_TREE_KEYWORD_IMPORT = AbstractNodeFactory.createToken(SyntaxKind.IMPORT_KEYWORD,
             AbstractNodeFactory.createEmptyMinutiaeList(),

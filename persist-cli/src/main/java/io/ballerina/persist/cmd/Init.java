@@ -104,9 +104,10 @@ public class Init implements BLauncherCmd {
         List<String> schemaFiles;
         try (Stream<Path> stream = Files.list(persistDirPath)) {
             schemaFiles = stream.filter(file -> !Files.isDirectory(file))
+                    .map(Path::getFileName)
+                    .filter(Objects::nonNull)
                     .filter(file -> file.toString().toLowerCase(Locale.ENGLISH).endsWith(BAL_EXTENTION))
-                    .filter(file -> file.getFileName() != null)
-                    .map(file -> file.getFileName().toString().replace(BAL_EXTENTION, ""))
+                    .map(file -> file.toString().replace(BAL_EXTENTION, ""))
                     .collect(Collectors.toList());
         } catch (IOException e) {
             errStream.println("Error while listing the persist schema files in persist directory. " + e.getMessage());
