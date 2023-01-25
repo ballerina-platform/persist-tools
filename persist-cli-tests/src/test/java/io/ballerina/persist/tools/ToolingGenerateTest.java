@@ -223,4 +223,10 @@ public class ToolingGenerateTest {
     public void testGenerateWithoutSubmodule() {
         assertGeneratedSources("tool_test_generate_32", GENERATE);
     }
+
+    @Test(enabled = true)
+    @Description("Test the generate command without persist import in schema file")
+    public void testGenerateWithoutPersistImport() {
+        assertGeneratedSources("tool_test_generate_33", GENERATE);
+    }
 }

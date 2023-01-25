@@ -46,6 +46,7 @@ dependencies {
     implementation group: 'org.ballerinalang', name: 'ballerina-parser', version: "${ballerinaLangVersion}"
     implementation group: 'org.ballerinalang', name: 'toml-parser', version: "${ballerinaLangVersion}"
     implementation group: 'org.ballerinalang', name: 'formatter-core', version: "${ballerinaLangVersion}"
+    implementation group: 'org.atteo', name: 'evo-inflector', version: '1.3'
 }
 
 test {

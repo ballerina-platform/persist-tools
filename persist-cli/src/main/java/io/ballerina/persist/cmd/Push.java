@@ -88,7 +88,7 @@ public class Push implements BLauncherCmd {
 
     private static final String CREATE_DATABASE_SQL_FORMAT = "CREATE DATABASE IF NOT EXISTS %s";
     private final PrintStream errStream = System.err;
-    private static final String COMMAND_IDENTIFIER = "persist-db-push";
+    private static final String COMMAND_IDENTIFIER = "persist-push";
     private final String sourcePath;
     @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
     private boolean helpFlag;

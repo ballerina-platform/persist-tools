@@ -130,7 +130,7 @@ public class Generate implements BLauncherCmd {
                 generateClientBalFile(entityModule, generatedSourceDirPath);
             } catch (BalException e) {
                 errStream.println("Error while generating types and client for the schema in "
-                        + file + " file . " + e.getMessage());
+                        + file.getFileName() + " file. " + e.getMessage());
             }
         });
     }
@@ -141,6 +141,8 @@ public class Generate implements BLauncherCmd {
         SyntaxTree balTree = generateClientSyntaxTree(entityModule);
         try {
             writeOutputFile(balTree, clientPath);
+            errStream.printf("Generated Ballerina client object for the `%s` data model" +
+                    " inside the generated directory.%n", entityModule.getModuleName());
         } catch (IOException | FormatterException e) {
             throw new BalException(String.format("Failed to write the client code for the %s data model " +
                     "to the generated_types.bal file.", entityModule.getModuleName()) + e.getMessage());
