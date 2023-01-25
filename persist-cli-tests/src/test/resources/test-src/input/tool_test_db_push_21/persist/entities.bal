@@ -20,7 +20,7 @@ public type Profile record  {|
     readonly int id;
     string name;
     string? gender;
-    User? owner;
+    User owner;
 |};
 
 public type User record  {|
