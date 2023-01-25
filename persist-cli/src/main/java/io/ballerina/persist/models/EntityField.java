@@ -32,14 +32,16 @@ public class EntityField {
     private final String fieldName;
     private final String fieldType;
     private final boolean arrayType;
+    private final boolean optionalType;
     private Relation relation;
 
     private final int maxLength;
 
-    private EntityField(String fieldName, String fieldType, boolean arrayType, int maxLength) {
+    private EntityField(String fieldName, String fieldType, boolean arrayType, boolean optionalType, int maxLength) {
         this.fieldName = fieldName;
         this.fieldType = fieldType;
         this.arrayType = arrayType;
+        this.optionalType = optionalType;
         this.maxLength = maxLength;
     }
 
@@ -63,6 +65,10 @@ public class EntityField {
         return arrayType;
     }
 
+    public boolean isOptionalType() {
+        return optionalType;
+    }
+
     public int getMaxLength() {
         return maxLength;
     }
@@ -80,6 +86,7 @@ public class EntityField {
         int maxLength = 191;
 
         boolean arrayType = false;
+        boolean optionalType = false;
 
         private Builder(String fieldName) {
             this.fieldName = fieldName;
@@ -92,12 +99,17 @@ public class EntityField {
             this.fieldType = fieldType;
         }
 
+
         public void setArrayType(boolean arrayType) {
             this.arrayType = arrayType;
         }
 
+        public void setOptionalType(boolean optionalType) {
+            this.optionalType = optionalType;
+        }
+
         public EntityField build() {
-            return new EntityField(fieldName, fieldType, arrayType, maxLength);
+            return new EntityField(fieldName, fieldType, arrayType, optionalType, maxLength);
         }
     }
 }

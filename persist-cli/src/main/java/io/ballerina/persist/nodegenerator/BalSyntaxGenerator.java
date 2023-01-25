@@ -33,6 +33,7 @@ import io.ballerina.compiler.syntax.tree.Node;
 import io.ballerina.compiler.syntax.tree.NodeFactory;
 import io.ballerina.compiler.syntax.tree.NodeList;
 import io.ballerina.compiler.syntax.tree.NodeParser;
+import io.ballerina.compiler.syntax.tree.OptionalTypeDescriptorNode;
 import io.ballerina.compiler.syntax.tree.QualifiedNameReferenceNode;
 import io.ballerina.compiler.syntax.tree.RecordFieldNode;
 import io.ballerina.compiler.syntax.tree.RecordFieldWithDefaultValueNode;
@@ -69,6 +70,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static io.ballerina.compiler.syntax.tree.SyntaxKind.OPTIONAL_TYPE_DESC;
 import static io.ballerina.compiler.syntax.tree.SyntaxKind.QUALIFIED_NAME_REFERENCE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.ANYDATASTREAM_IS_STREAM_TYPE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.ANYDATA_KEYWORD;
@@ -202,6 +204,7 @@ public class BalSyntaxGenerator {
                     fType = getType(type, fieldNode.fieldName().text().trim());
                     qualifiedNamePrefix = getQualifiedModulePrefix(type);
                     fieldBuilder.setType(fType);
+                    fieldBuilder.setOptionalType(fieldNode.typeName().kind().equals(SyntaxKind.OPTIONAL_TYPE_DESC));
                     EntityField entityField = fieldBuilder.build();
                     entityBuilder.addField(entityField);
                     if (fieldNode.readonlyKeyword().isPresent()) {
@@ -234,6 +237,9 @@ public class BalSyntaxGenerator {
                 return modulePrefix + COLON + identifier;
             case SIMPLE_NAME_REFERENCE:
                 return ((SimpleNameReferenceNode) typeDesc).name().text();
+            case OPTIONAL_TYPE_DESC:
+                return getType((TypeDescriptorNode) ((OptionalTypeDescriptorNode) typeDesc).typeDescriptor(),
+                        fieldName);
             default:
                 throw new BalException(String.format("Unsupported data type found for the field `%s`", fieldName));
         }
@@ -266,7 +272,7 @@ public class BalSyntaxGenerator {
                                             throw new RuntimeException("Unsupported many to many relation between " +
                                                     entity.getEntityName() + " and " + assocEntity.getEntityName());
                                         }
-                                        if (field.isArrayType()) {
+                                        if (field.isArrayType() || field.isOptionalType()) {
                                             // one-to-many relation. associated entity is the owner.
                                             field.setRelation(computeRelation(entity, assocEntity, false));
                                             assocfield.setRelation(computeRelation(assocEntity, entity, true));
@@ -931,7 +937,7 @@ public class BalSyntaxGenerator {
                     }
                 }
             } else {
-                recordFields.append(field.getFieldType());
+                recordFields.append(field.isOptionalType() ? field.getFieldType() + "?" : field.getFieldType());
                 recordFields.append(" ");
                 recordFields.append(field.getFieldName());
                 recordFields.append("; ");
@@ -968,7 +974,7 @@ public class BalSyntaxGenerator {
                         }
                     }
                 } else {
-                    recordFields.append(field.getFieldType());
+                    recordFields.append(field.isOptionalType() ? field.getFieldType() + "?" : field.getFieldType());
                     recordFields.append(" ");
                     recordFields.append(field.getFieldName());
                     recordFields.append("?; ");

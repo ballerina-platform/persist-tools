@@ -73,7 +73,7 @@ public class BalProjectUtils {
         DiagnosticResult diagnosticResult = compilation.diagnosticResult();
         if (diagnosticResult.hasErrors()) {
             StringBuilder errorMessage = new StringBuilder();
-            errorMessage.append("Error occurred when validating the project. ");
+            errorMessage.append("Error occurred when validating the model definition file. ");
             int validErrors = 0;
             for (Diagnostic diagnostic : diagnosticResult.errors()) {
                 errorMessage.append(System.lineSeparator());

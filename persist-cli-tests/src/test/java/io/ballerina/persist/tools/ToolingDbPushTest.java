@@ -217,4 +217,10 @@ public class ToolingDbPushTest {
     public void testDbPushWithIncorrectDBConfigKey() {
         assertGeneratedSourcesNegative("tool_test_db_push_20", DB_PUSH, null);
     }
+
+    @Test(enabled = true)
+    @Description("Test the created sql script with optional type fields")
+    public void testDbPushWithOptionalTypeFields() {
+        assertGeneratedSources("tool_test_db_push_21", DB_PUSH);
+    }
 }
