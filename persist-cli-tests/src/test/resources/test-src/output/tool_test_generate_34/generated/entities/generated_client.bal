@@ -24,17 +24,15 @@ public client class EntitiesClient {
             fieldMetadata: {
                 id: {columnName: "id", 'type: int},
                 name: {columnName: "name", 'type: string},
-                gender: {columnName: "gender", 'type: string}
+                gender: {columnName: "gender", 'type: string},
+                userId: {columnName: "userId", 'type: int}
             },
             keyFields: ["id"]
         },
         "user": {
             entityName: "User",
             tableName: `User`,
-            fieldMetadata: {
-                id: {columnName: "id", 'type: int},
-                profileId: {columnName: "profileId", 'type: int}
-            },
+            fieldMetadata: {id: {columnName: "id", 'type: int}},
             keyFields: ["id"]
         }
     };

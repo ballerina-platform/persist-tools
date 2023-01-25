@@ -7,6 +7,7 @@ public type Profile record {|
     readonly int id;
     string name;
     string? gender;
+    int userId;
 |};
 
 public type ProfileInsert Profile;
@@ -14,16 +15,15 @@ public type ProfileInsert Profile;
 public type ProfileUpdate record {|
     string name?;
     string? gender?;
+    int userId?;
 |};
 
 public type User record {|
     readonly int id;
-    int profileId;
 |};
 
 public type UserInsert User;
 
 public type UserUpdate record {|
-    int profileId?;
 |};
 

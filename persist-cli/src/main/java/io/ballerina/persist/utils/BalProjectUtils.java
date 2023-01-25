@@ -51,7 +51,7 @@ public class BalProjectUtils {
         if (schemaFilename != null) {
             moduleName = schemaFilename.toString().substring(0, schemaFilename.toString().lastIndexOf('.'));
         } else {
-            throw new BalException("schema file is null or empty");
+            throw new BalException("The model definition file name is invalid.");
         }
         Module.Builder moduleBuilder = Module.newBuilder(moduleName);
 
@@ -73,7 +73,7 @@ public class BalProjectUtils {
         DiagnosticResult diagnosticResult = compilation.diagnosticResult();
         if (diagnosticResult.hasErrors()) {
             StringBuilder errorMessage = new StringBuilder();
-            errorMessage.append("Error occurred when validating the model definition file. ");
+            errorMessage.append(String.format("The model definition file(%s) has errors.", schemaPath.getFileName()));
             int validErrors = 0;
             for (Diagnostic diagnostic : diagnosticResult.errors()) {
                 errorMessage.append(System.lineSeparator());

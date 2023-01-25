@@ -136,8 +136,9 @@ public class Push implements BLauncherCmd {
         }
 
         if (schemaFilePaths.isEmpty()) {
-            errStream.println("The persist directory doesn't contain any schema file. " +
-                    "Please run `bal persist init` to initiate the project before generation");
+            errStream.println("The persist directory doesn't contain any model definition file. " +
+                    "Please run `bal persist init` to initiate the project before generation or " +
+                    "manually add a model definition file to the persist directory");
             return;
         }
 
@@ -152,7 +153,7 @@ public class Push implements BLauncherCmd {
                 entityModule = BalProjectUtils.getEntities(file);
                 ArrayList<Entity> entityArray = new ArrayList<>(entityModule.getEntityMap().values());
                 if (entityArray.isEmpty()) {
-                    errStream.printf("The persist schema file, %s doesn't contain any valid entity%n",
+                    errStream.printf("The model definition file(%s) doesn't contain any valid entity%n",
                             file.getFileName());
                     return;
                 }
@@ -188,6 +189,7 @@ public class Push implements BLauncherCmd {
                             persistConfigurations.getDbConfig().getDatabase() + "." + e.getMessage());
                     return;
                 }
+                errStream.println("Created database `" + persistConfigurations.getDbConfig().getDatabase() + "`.");
 
                 String sqlFilePath = Paths.get(this.sourcePath, PERSIST_DIRECTORY,
                                 String.format(PersistToolsConstants.SQL_SCHEMA_FILE, entityModule.getModuleName()))
@@ -206,8 +208,8 @@ public class Push implements BLauncherCmd {
                             + sqlFilePath + "." + e.getMessage());
                     return;
                 }
-                errStream.println("Created tables for entities in the database " +
-                        persistConfigurations.getDbConfig().getDatabase() + ".");
+                errStream.println("Created tables for definition in " + file.getFileName() + " in the database `" +
+                        persistConfigurations.getDbConfig().getDatabase() + "`.");
             } catch (BalException e) {
                 errStream.println("Error occurred while executing the SQL script for the persist schema file, "
                         + file.getFileName() + "." + e.getMessage());
