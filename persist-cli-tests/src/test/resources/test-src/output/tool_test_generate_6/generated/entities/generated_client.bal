@@ -8,7 +8,7 @@ import ballerina/sql;
 import ballerina/time;
 import ballerinax/mysql;
 
-const DATATYPE = "DataType";
+const DATA_TYPE = "DataType";
 
 public client class EntitiesClient {
 
@@ -42,11 +42,11 @@ public client class EntitiesClient {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
-        self.persistClients = {datatype: check new (self.dbClient, self.metadata.get(DATATYPE))};
+        self.persistClients = {datatype: check new (self.dbClient, self.metadata.get(DATA_TYPE))};
     }
 
     isolated resource function get datatype() returns stream<DataType, persist:Error?> {
-        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(DATATYPE).runReadQuery(DataType);
+        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(DATA_TYPE).runReadQuery(DataType);
         if result is persist:Error {
             return new stream<DataType, persist:Error?>(new DataTypeStream((), result));
         } else {
@@ -54,24 +54,24 @@ public client class EntitiesClient {
         }
     }
     isolated resource function get datatype/[int a]() returns DataType|persist:Error {
-        DataType|error result = (check self.persistClients.get(DATATYPE).runReadByKeyQuery(DataType, a)).cloneWithType(DataType);
+        DataType|error result = (check self.persistClients.get(DATA_TYPE).runReadByKeyQuery(DataType, a)).cloneWithType(DataType);
         if result is error {
             return <persist:Error>error(result.message());
         }
         return result;
     }
     isolated resource function post datatype(DataTypeInsert[] data) returns int[]|persist:Error {
-        _ = check self.persistClients.get(DATATYPE).runBatchInsertQuery(data);
+        _ = check self.persistClients.get(DATA_TYPE).runBatchInsertQuery(data);
         return from DataTypeInsert inserted in data
             select inserted.a;
     }
     isolated resource function put datatype/[int a](DataTypeUpdate value) returns DataType|persist:Error {
-        _ = check self.persistClients.get(DATATYPE).runUpdateQuery({"a": a}, value);
+        _ = check self.persistClients.get(DATA_TYPE).runUpdateQuery({"a": a}, value);
         return self->/datatype/[a].get();
     }
     isolated resource function delete datatype/[int a]() returns DataType|persist:Error {
         DataType 'object = check self->/datatype/[a].get();
-        _ = check self.persistClients.get(DATATYPE).runDeleteQuery({"a": a});
+        _ = check self.persistClients.get(DATA_TYPE).runDeleteQuery({"a": a});
         return 'object;
     }
 

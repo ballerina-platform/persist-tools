@@ -7,7 +7,7 @@ import ballerina/persist;
 import ballerina/sql;
 import ballerinax/mysql;
 
-const MULTIPLEASSOCIATIONS = "MultipleAssociations";
+const MULTIPLE_ASSOCIATIONS = "MultipleAssociations";
 const USER = "User";
 const PROFILE = "Profile";
 
@@ -57,14 +57,14 @@ public client class EntitiesClient {
         }
         self.dbClient = dbClient;
         self.persistClients = {
-            multipleassociations: check new (self.dbClient, self.metadata.get(MULTIPLEASSOCIATIONS)),
+            multipleassociations: check new (self.dbClient, self.metadata.get(MULTIPLE_ASSOCIATIONS)),
             user: check new (self.dbClient, self.metadata.get(USER)),
             profile: check new (self.dbClient, self.metadata.get(PROFILE))
         };
     }
 
     isolated resource function get multipleassociations() returns stream<MultipleAssociations, persist:Error?> {
-        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(MULTIPLEASSOCIATIONS).runReadQuery(MultipleAssociations);
+        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(MULTIPLE_ASSOCIATIONS).runReadQuery(MultipleAssociations);
         if result is persist:Error {
             return new stream<MultipleAssociations, persist:Error?>(new MultipleAssociationsStream((), result));
         } else {
@@ -72,24 +72,24 @@ public client class EntitiesClient {
         }
     }
     isolated resource function get multipleassociations/[int id]() returns MultipleAssociations|persist:Error {
-        MultipleAssociations|error result = (check self.persistClients.get(MULTIPLEASSOCIATIONS).runReadByKeyQuery(MultipleAssociations, id)).cloneWithType(MultipleAssociations);
+        MultipleAssociations|error result = (check self.persistClients.get(MULTIPLE_ASSOCIATIONS).runReadByKeyQuery(MultipleAssociations, id)).cloneWithType(MultipleAssociations);
         if result is error {
             return <persist:Error>error(result.message());
         }
         return result;
     }
     isolated resource function post multipleassociations(MultipleAssociationsInsert[] data) returns int[]|persist:Error {
-        _ = check self.persistClients.get(MULTIPLEASSOCIATIONS).runBatchInsertQuery(data);
+        _ = check self.persistClients.get(MULTIPLE_ASSOCIATIONS).runBatchInsertQuery(data);
         return from MultipleAssociationsInsert inserted in data
             select inserted.id;
     }
     isolated resource function put multipleassociations/[int id](MultipleAssociationsUpdate value) returns MultipleAssociations|persist:Error {
-        _ = check self.persistClients.get(MULTIPLEASSOCIATIONS).runUpdateQuery({"id": id}, value);
+        _ = check self.persistClients.get(MULTIPLE_ASSOCIATIONS).runUpdateQuery({"id": id}, value);
         return self->/multipleassociations/[id].get();
     }
     isolated resource function delete multipleassociations/[int id]() returns MultipleAssociations|persist:Error {
         MultipleAssociations 'object = check self->/multipleassociations/[id].get();
-        _ = check self.persistClients.get(MULTIPLEASSOCIATIONS).runDeleteQuery({"id": id});
+        _ = check self.persistClients.get(MULTIPLE_ASSOCIATIONS).runDeleteQuery({"id": id});
         return 'object;
     }
 
