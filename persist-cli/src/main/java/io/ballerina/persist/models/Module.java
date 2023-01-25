@@ -20,8 +20,8 @@ package io.ballerina.persist.models;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -72,7 +72,7 @@ public class Module {
     public static class Builder {
         private static final String SUFFIX_CLIENT = "Client";
         String moduleName;
-        Map<String, Entity> entityMap = new LinkedHashMap<>();
+        Map<String, Entity> entityMap = new HashMap<>();
 
         private final Set<String> importModulePrefixes = new HashSet<>();
 
