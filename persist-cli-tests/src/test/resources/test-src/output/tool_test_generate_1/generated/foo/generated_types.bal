@@ -22,6 +22,21 @@ public type BuildingUpdate record {|
     string postalCode?;
 |};
 
+public type Workspace record {|
+    readonly string workspaceId;
+    string workspaceType;
+    string buildingBuildingCode;
+    string employeeEmpNo;
+|};
+
+public type WorkspaceInsert Workspace;
+
+public type WorkspaceUpdate record {|
+    string workspaceType?;
+    string buildingBuildingCode?;
+    string employeeEmpNo?;
+|};
+
 public type Department record {|
     readonly string deptNo;
     string deptName;
@@ -41,7 +56,6 @@ public type Employee record {|
     string gender;
     time:Date hireDate;
     string departmentDeptNo;
-    string workspaceWorkspaceId;
 |};
 
 public type EmployeeInsert Employee;
@@ -53,19 +67,4 @@ public type EmployeeUpdate record {|
     string gender?;
     time:Date hireDate?;
     string departmentDeptNo?;
-    string workspaceWorkspaceId?;
 |};
-
-public type Workspace record {|
-    readonly string workspaceId;
-    string workspaceType;
-    string buildingBuildingCode;
-|};
-
-public type WorkspaceInsert Workspace;
-
-public type WorkspaceUpdate record {|
-    string workspaceType?;
-    string buildingBuildingCode?;
-|};
-

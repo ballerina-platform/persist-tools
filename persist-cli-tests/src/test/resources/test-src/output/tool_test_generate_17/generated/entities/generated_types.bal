@@ -1,20 +1,7 @@
-// AUTO-GENERATED FILE. DO NOT MODIFY.
+/ AUTO-GENERATED FILE. DO NOT MODIFY.
 
 // This file is an auto-generated file by Ballerina persistence layer for entities.
 // It should not be modified by hand.
-
-public type Vehicle record {|
-    readonly int model;
-    string name;
-    int employeeId;
-|};
-
-public type VehicleInsert Vehicle;
-
-public type VehicleUpdate record {|
-    string name?;
-    int employeeId?;
-|};
 
 public type Company record {|
     readonly int id;
@@ -40,3 +27,15 @@ public type EmployeeUpdate record {|
     int companyId?;
 |};
 
+public type Vehicle record {|
+    readonly int model;
+    string name;
+    int employeeId;
+|};
+
+public type VehicleInsert Vehicle;
+
+public type VehicleUpdate record {|
+    string name?;
+    int employeeId?;
+|};
