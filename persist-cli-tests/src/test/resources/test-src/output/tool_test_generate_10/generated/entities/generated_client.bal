@@ -71,9 +71,9 @@ public client class EntitiesClient {
     }
 
     isolated resource function delete medicalneed/[int itemId]/[int needId]() returns MedicalNeed|persist:Error {
-        MedicalNeed 'object = check self->/medicalneed/[itemId]/[needId].get();
+        MedicalNeed result = check self->/medicalneed/[itemId]/[needId].get();
         _ = check self.persistClients.get(MEDICAL_NEED).runDeleteQuery({"itemId": itemId, "needId": needId});
-        return 'object;
+        return result;
     }
 
     public function close() returns persist:Error? {

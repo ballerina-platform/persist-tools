@@ -80,9 +80,9 @@ public client class EntitiesClient {
     }
 
     isolated resource function delete company/[int id]() returns Company|persist:Error {
-        Company 'object = check self->/company/[id].get();
+        Company result = check self->/company/[id].get();
         _ = check self.persistClients.get(COMPANY).runDeleteQuery({"id": id});
-        return 'object;
+        return result;
     }
 
     isolated resource function get employee() returns stream<Employee, persist:Error?> {
@@ -114,9 +114,9 @@ public client class EntitiesClient {
     }
 
     isolated resource function delete employee/[int id]() returns Employee|persist:Error {
-        Employee 'object = check self->/employee/[id].get();
+        Employee result = check self->/employee/[id].get();
         _ = check self.persistClients.get(EMPLOYEE).runDeleteQuery({"id": id});
-        return 'object;
+        return result;
     }
 
     public function close() returns persist:Error? {

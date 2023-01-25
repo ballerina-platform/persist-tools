@@ -80,9 +80,9 @@ public client class Entities1Client {
     }
 
     isolated resource function delete multipleassociations/[int id]() returns MultipleAssociations|persist:Error {
-        MultipleAssociations 'object = check self->/multipleassociations/[id].get();
+        MultipleAssociations result = check self->/multipleassociations/[id].get();
         _ = check self.persistClients.get(MULTIPLE_ASSOCIATIONS).runDeleteQuery({"id": id});
-        return 'object;
+        return result;
     }
 
     isolated resource function get profile() returns stream<Profile, persist:Error?> {
@@ -114,9 +114,9 @@ public client class Entities1Client {
     }
 
     isolated resource function delete profile/[int id]() returns Profile|persist:Error {
-        Profile 'object = check self->/profile/[id].get();
+        Profile result = check self->/profile/[id].get();
         _ = check self.persistClients.get(PROFILE).runDeleteQuery({"id": id});
-        return 'object;
+        return result;
     }
 
     public function close() returns persist:Error? {

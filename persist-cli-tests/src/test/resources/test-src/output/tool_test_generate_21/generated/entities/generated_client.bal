@@ -85,9 +85,9 @@ public client class EntitiesClient {
     }
 
     isolated resource function delete medicalneed/[int needId]() returns MedicalNeed|persist:Error {
-        MedicalNeed 'object = check self->/medicalneed/[needId].get();
+        MedicalNeed result = check self->/medicalneed/[needId].get();
         _ = check self.persistClients.get(MEDICAL_NEED).runDeleteQuery({"needId": needId});
-        return 'object;
+        return result;
     }
 
     isolated resource function get aidpackageorderitem() returns stream<AidPackageOrderItem, persist:Error?> {
@@ -119,9 +119,9 @@ public client class EntitiesClient {
     }
 
     isolated resource function delete aidpackageorderitem/[int id]() returns AidPackageOrderItem|persist:Error {
-        AidPackageOrderItem 'object = check self->/aidpackageorderitem/[id].get();
+        AidPackageOrderItem result = check self->/aidpackageorderitem/[id].get();
         _ = check self.persistClients.get(AID_PACKAGE_ORDER_ITEM).runDeleteQuery({"id": id});
-        return 'object;
+        return result;
     }
 
     public function close() returns persist:Error? {
