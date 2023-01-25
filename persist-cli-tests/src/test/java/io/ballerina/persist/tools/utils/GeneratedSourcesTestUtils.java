@@ -22,6 +22,9 @@ import io.ballerina.persist.cmd.Generate;
 import io.ballerina.persist.cmd.Init;
 import io.ballerina.persist.cmd.PersistCmd;
 import io.ballerina.persist.cmd.Push;
+import io.ballerina.projects.Package;
+import io.ballerina.projects.PackageCompilation;
+import io.ballerina.projects.directory.BuildProject;
 import org.testng.Assert;
 
 import java.io.IOException;
@@ -74,16 +77,16 @@ public class GeneratedSourcesTestUtils {
             Assert.assertTrue(Files.exists(actualOutputFile));
             Assert.assertEquals(readContent(actualOutputFile), readContent(expectedOutputFile));
         }
-//        if (!(subDir.equals("tool_test_generate_4") || subDir.equals("tool_test_generate_26") ||
-//                subDir.equals("tool_test_generate_18"))) {
+        if (!(subDir.equals("tool_test_generate_4") || subDir.equals("tool_test_generate_26") ||
+                subDir.equals("tool_test_generate_18"))) {
 
-//            BuildProject buildProject = BuildProject.load(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)
-//                    .toAbsolutePath());
-//            Package currentPackage = buildProject.currentPackage();
-//            PackageCompilation compilation = currentPackage.getCompilation();
-//            Assert.assertFalse(compilation.diagnosticResult().hasErrors());
+            BuildProject buildProject = BuildProject.load(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)
+                    .toAbsolutePath());
+            Package currentPackage = buildProject.currentPackage();
+            PackageCompilation compilation = currentPackage.getCompilation();
+            Assert.assertFalse(compilation.diagnosticResult().hasErrors());
+        }
     }
-//    }
 
     public static void assertGeneratedSourcesNegative(String subDir, Command cmd, String[] relativeFilepaths) {
         Path sourceDirPath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);

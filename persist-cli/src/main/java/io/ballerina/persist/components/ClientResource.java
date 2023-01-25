@@ -57,12 +57,9 @@ public class ClientResource {
     }
 
     public void addFunction(Node function, boolean newLine) {
-        if (functions.isEmpty()) {
-            if (newLine) {
-                functions = functions.add(SyntaxTokenConstants.SYNTAX_TREE_BLANK_LINE);
-            }
+        if (newLine) {
+            functions = functions.add(SyntaxTokenConstants.SYNTAX_TREE_BLANK_LINE);
         }
-
         functions = functions.add(function);
     }
 
