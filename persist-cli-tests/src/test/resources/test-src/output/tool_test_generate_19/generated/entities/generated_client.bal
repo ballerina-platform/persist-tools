@@ -8,7 +8,7 @@ import ballerina/sql;
 import ballerina/time;
 import ballerinax/mysql;
 
-const MULTIPLEASSOCIATIONS = "MultipleAssociations";
+const MULTIPLE_ASSOCIATIONS = "MultipleAssociations";
 const USER = "User";
 const PROFILE = "Profile";
 
@@ -54,13 +54,13 @@ public client class EntitiesClient {
     public function init() returns persist:Error? {
         self.dbClient = check new (host = host, user = user, password = password, database = database, port = port);
         self.persistClients = {
-            multipleassociations: check new (self.dbClient, self.metadata.get(MULTIPLEASSOCIATIONS),
+            multipleassociations: check new (self.dbClient, self.metadata.get(MULTIPLE_ASSOCIATIONS),
             user: check new (self.dbClient, self.metadata.get(USER),
             profile: check new (self.dbClient, self.metadata.get(PROFILE)        };
     }
 
     isolated resource function get multipleassociations() returns stream<MultipleAssociations, persist:Error?> {
-        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(MULTIPLEASSOCIATIONS).runReadQuery(MultipleAssociations);
+        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(MULTIPLE_ASSOCIATIONS).runReadQuery(MultipleAssociations);
         if result is persist:Error {
             return new stream<MultipleAssociations, persist:Error?>(new MultipleAssociationsStream((), result));
         } else {
@@ -68,7 +68,7 @@ public client class EntitiesClient {
         }
     }
     isolated resource function get multipleassociations/[int id]() returns MultipleAssociations|persist:Error {
-        return (check self.persistClients.get(MULTIPLEASSOCIATIONS).runReadByKeyQuery(MultipleAssociations, id)).cloneWithType(MultipleAssociations);
+        return (check self.persistClients.get(MULTIPLE_ASSOCIATIONS).runReadByKeyQuery(MultipleAssociations, id)).cloneWithType(MultipleAssociations);
     }
     isolated resource function post multipleassociations(MultipleAssociationsInsert[] data) returns [int][]|persist:Error {
         _ = check self.persistClients.get("multipleassociations").runBatchInsertQuery(data);

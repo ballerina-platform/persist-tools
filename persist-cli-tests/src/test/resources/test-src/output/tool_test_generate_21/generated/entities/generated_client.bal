@@ -7,8 +7,8 @@ import ballerina/persist;
 import ballerina/sql;
 import ballerinax/mysql;
 
-const MEDICALNEED = "MedicalNeed";
-const AIDPACKAGEORDERITEM = "AidPackageOrderItem";
+const MEDICAL_NEED = "MedicalNeed";
+const AID_PACKAGE_ORDER_ITEM = "AidPackageOrderItem";
 
 public client class EntitiesClient {
 
@@ -45,12 +45,12 @@ public client class EntitiesClient {
     public function init() returns persist:Error? {
         self.dbClient = check new (host = host, user = user, password = password, database = database, port = port);
         self.persistClients = {
-            medicalneed: check new (self.dbClient, self.metadata.get(MEDICALNEED),
-            aidpackageorderitem: check new (self.dbClient, self.metadata.get(AIDPACKAGEORDERITEM)        };
+            medicalneed: check new (self.dbClient, self.metadata.get(MEDICAL_NEED),
+            aidpackageorderitem: check new (self.dbClient, self.metadata.get(AID_PACKAGE_ORDER_ITEM)        };
     }
 
     isolated resource function get medicalneed() returns stream<MedicalNeed, persist:Error?> {
-        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(MEDICALNEED).runReadQuery(MedicalNeed);
+        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(MEDICAL_NEED).runReadQuery(MedicalNeed);
         if result is persist:Error {
             return new stream<MedicalNeed, persist:Error?>(new MedicalNeedStream((), result));
         } else {
@@ -58,7 +58,7 @@ public client class EntitiesClient {
         }
     }
     isolated resource function get medicalneed/[int needId]() returns MedicalNeed|persist:Error {
-        return (check self.persistClients.get(MEDICALNEED).runReadByKeyQuery(MedicalNeed, needId)).cloneWithType(MedicalNeed);
+        return (check self.persistClients.get(MEDICAL_NEED).runReadByKeyQuery(MedicalNeed, needId)).cloneWithType(MedicalNeed);
     }
     isolated resource function post medicalneed(MedicalNeedInsert[] data) returns [int][]|persist:Error {
         _ = check self.persistClients.get("medicalneed").runBatchInsertQuery(data);
@@ -76,7 +76,7 @@ public client class EntitiesClient {
     }
 
     isolated resource function get aidpackageorderitem() returns stream<AidPackageOrderItem, persist:Error?> {
-        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(AIDPACKAGEORDERITEM).runReadQuery(AidPackageOrderItem);
+        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(AID_PACKAGE_ORDER_ITEM).runReadQuery(AidPackageOrderItem);
         if result is persist:Error {
             return new stream<AidPackageOrderItem, persist:Error?>(new AidPackageOrderItemStream((), result));
         } else {
@@ -84,7 +84,7 @@ public client class EntitiesClient {
         }
     }
     isolated resource function get aidpackageorderitem/[int id]() returns AidPackageOrderItem|persist:Error {
-        return (check self.persistClients.get(AIDPACKAGEORDERITEM).runReadByKeyQuery(AidPackageOrderItem, id)).cloneWithType(AidPackageOrderItem);
+        return (check self.persistClients.get(AID_PACKAGE_ORDER_ITEM).runReadByKeyQuery(AidPackageOrderItem, id)).cloneWithType(AidPackageOrderItem);
     }
     isolated resource function post aidpackageorderitem(AidPackageOrderItemInsert[] data) returns [int][]|persist:Error {
         _ = check self.persistClients.get("aidpackageorderitem").runBatchInsertQuery(data);
