@@ -5,12 +5,14 @@
 
 import ballerina/persist;
 import ballerina/sql;
+import ballerina/time;
 import ballerinax/mysql;
 
 const MEDICAL_NEED = "medicalneed";
 const AID_PACKAGE_ORDER_ITEM = "aidpackageorderitem";
 
 public client class EntitiesClient {
+    *persist:AbstractPersistClient;
 
     private final mysql:Client dbClient;
 
@@ -43,10 +45,15 @@ public client class EntitiesClient {
     };
 
     public function init() returns persist:Error? {
-        self.dbClient = check new (host = host, user = user, password = password, database = database, port = port);
+        mysql:Client|error dbClient = new (host = host, user = user, password = password, database = database, port = port);
+        if dbClient is error {
+            return <persist:Error>error(dbClient.message());
+        }
+        self.dbClient = dbClient;
         self.persistClients = {
-            medicalneed: check new (self.dbClient, self.metadata.get(MEDICAL_NEED),
-            aidpackageorderitem: check new (self.dbClient, self.metadata.get(AID_PACKAGE_ORDER_ITEM)        };
+            medicalneed: check new (self.dbClient, self.metadata.get(MEDICAL_NEED)),
+            aidpackageorderitem: check new (self.dbClient, self.metadata.get(AID_PACKAGE_ORDER_ITEM))
+        };
     }
 
     isolated resource function get medicalneed() returns stream<MedicalNeed, persist:Error?> {
@@ -57,21 +64,29 @@ public client class EntitiesClient {
             return new stream<MedicalNeed, persist:Error?>(new MedicalNeedStream(result));
         }
     }
+
     isolated resource function get medicalneed/[int needId]() returns MedicalNeed|persist:Error {
-        return (check self.persistClients.get(MEDICAL_NEED).runReadByKeyQuery(MedicalNeed, needId)).cloneWithType(MedicalNeed);
+        MedicalNeed|error result = (check self.persistClients.get(MEDICAL_NEED).runReadByKeyQuery(MedicalNeed, needId)).cloneWithType(MedicalNeed);
+        if result is error {
+            return <persist:Error>error(result.message());
+        }
+        return result;
     }
-    isolated resource function post medicalneed(MedicalNeedInsert[] data) returns [int][]|persist:Error {
-        _ = check self.persistClients.get("medicalneed").runBatchInsertQuery(data);
+
+    isolated resource function post medicalneed(MedicalNeedInsert[] data) returns int[]|persist:Error {
+        _ = check self.persistClients.get(MEDICAL_NEED).runBatchInsertQuery(data);
         return from MedicalNeedInsert inserted in data
-            select [inserted.needId];
+            select inserted.needId;
     }
+
     isolated resource function put medicalneed/[int needId](MedicalNeedUpdate value) returns MedicalNeed|persist:Error {
-        _ = check self.persistClients.get("medicalneed").runUpdateQuery({"needId": needId, }, data);
+        _ = check self.persistClients.get(MEDICAL_NEED).runUpdateQuery({"needId": needId}, value);
         return self->/medicalneed/[needId].get();
     }
+
     isolated resource function delete medicalneed/[int needId]() returns MedicalNeed|persist:Error {
         MedicalNeed 'object = check self->/medicalneed/[needId].get();
-        _ = check self.persistClients.get("medicalneed").runDeleteQuery({"needId": needId, });
+        _ = check self.persistClients.get(MEDICAL_NEED).runDeleteQuery({"needId": needId});
         return 'object;
     }
 
@@ -83,26 +98,38 @@ public client class EntitiesClient {
             return new stream<AidPackageOrderItem, persist:Error?>(new AidPackageOrderItemStream(result));
         }
     }
+
     isolated resource function get aidpackageorderitem/[int id]() returns AidPackageOrderItem|persist:Error {
-        return (check self.persistClients.get(AID_PACKAGE_ORDER_ITEM).runReadByKeyQuery(AidPackageOrderItem, id)).cloneWithType(AidPackageOrderItem);
+        AidPackageOrderItem|error result = (check self.persistClients.get(AID_PACKAGE_ORDER_ITEM).runReadByKeyQuery(AidPackageOrderItem, id)).cloneWithType(AidPackageOrderItem);
+        if result is error {
+            return <persist:Error>error(result.message());
+        }
+        return result;
     }
-    isolated resource function post aidpackageorderitem(AidPackageOrderItemInsert[] data) returns [int][]|persist:Error {
-        _ = check self.persistClients.get("aidpackageorderitem").runBatchInsertQuery(data);
+
+    isolated resource function post aidpackageorderitem(AidPackageOrderItemInsert[] data) returns int[]|persist:Error {
+        _ = check self.persistClients.get(AID_PACKAGE_ORDER_ITEM).runBatchInsertQuery(data);
         return from AidPackageOrderItemInsert inserted in data
-            select [inserted.id];
+            select inserted.id;
     }
+
     isolated resource function put aidpackageorderitem/[int id](AidPackageOrderItemUpdate value) returns AidPackageOrderItem|persist:Error {
-        _ = check self.persistClients.get("aidpackageorderitem").runUpdateQuery({"id": id, }, data);
+        _ = check self.persistClients.get(AID_PACKAGE_ORDER_ITEM).runUpdateQuery({"id": id}, value);
         return self->/aidpackageorderitem/[id].get();
     }
+
     isolated resource function delete aidpackageorderitem/[int id]() returns AidPackageOrderItem|persist:Error {
         AidPackageOrderItem 'object = check self->/aidpackageorderitem/[id].get();
-        _ = check self.persistClients.get("aidpackageorderitem").runDeleteQuery({"id": id, });
+        _ = check self.persistClients.get(AID_PACKAGE_ORDER_ITEM).runDeleteQuery({"id": id});
         return 'object;
     }
 
     public function close() returns persist:Error? {
-        _ = check self.dbClient.close();
+        error? result = self.dbClient.close();
+        if result is error {
+            return <persist:Error>error(result.message());
+        }
+        return result;
     }
 }
 
@@ -127,7 +154,11 @@ public class MedicalNeedStream {
             } else if (streamValue is sql:Error) {
                 return <persist:Error>error(streamValue.message());
             } else {
-                record {|MedicalNeed value;|} nextRecord = {value: check streamValue.value.cloneWithType(MedicalNeed)};
+                MedicalNeed|error value = streamValue.value.cloneWithType(MedicalNeed);
+                if value is error {
+                    return <persist:Error>error(value.message());
+                }
+                record {|MedicalNeed value;|} nextRecord = {value: value};
                 return nextRecord;
             }
         } else {
@@ -136,7 +167,7 @@ public class MedicalNeedStream {
     }
 
     public isolated function close() returns persist:Error? {
-        check closeEntityStream(self.anydataStream);
+        check persist:closeEntityStream(self.anydataStream);
     }
 }
 
@@ -161,7 +192,11 @@ public class AidPackageOrderItemStream {
             } else if (streamValue is sql:Error) {
                 return <persist:Error>error(streamValue.message());
             } else {
-                record {|AidPackageOrderItem value;|} nextRecord = {value: check streamValue.value.cloneWithType(AidPackageOrderItem)};
+                AidPackageOrderItem|error value = streamValue.value.cloneWithType(AidPackageOrderItem);
+                if value is error {
+                    return <persist:Error>error(value.message());
+                }
+                record {|AidPackageOrderItem value;|} nextRecord = {value: value};
                 return nextRecord;
             }
         } else {
@@ -170,7 +205,7 @@ public class AidPackageOrderItemStream {
     }
 
     public isolated function close() returns persist:Error? {
-        check closeEntityStream(self.anydataStream);
+        check persist:closeEntityStream(self.anydataStream);
     }
 }
 
