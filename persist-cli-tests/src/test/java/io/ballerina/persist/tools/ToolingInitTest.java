@@ -31,50 +31,50 @@ import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertG
  */
 public class ToolingInitTest {
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("When the project is not initiated")
     public void testInit() {
         assertGeneratedSources("tool_test_init_1", INIT);
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("When there is an already initiated configs and there is an uninitiated schema")
     public void testInitUpdateConfigWithNewDbConfigurations() {
         assertGeneratedSources("tool_test_init_2", INIT);
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("When there is a database config files inside the directories and there are missing database " +
             "configurations")
     public void testsInitUpdateConfigWithPartialyInitiatedFiles() {
         assertGeneratedSources("tool_test_init_3", INIT);
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("When the init command is executed outside a Ballerina project")
     public void testsInitOutsideBalProject() {
         assertGeneratedSourcesNegative("tool_test_init_4", INIT, new String[]{"Config.toml"});
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("When the configs are already updated")
     public void testsInitUpdateConfigWithUpdatedDbConfigurations() {
         assertGeneratedSources("tool_test_init_5", INIT);
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("Test the auxiliary functions of the class")
     public void testAuxiliaryFunctions() {
         assertAuxiliaryFunctions();
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("Running init on a already initialized project")
     public void testInitAlreadyInitializedProject() {
         assertGeneratedSources("tool_test_init_6", INIT);
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("Running init on a already initialized project with database configurations missing")
     public void testInitAlreadyInitializedProjectWithOutDatabaseConfiguration() {
         assertGeneratedSources("tool_test_init_7", INIT);
