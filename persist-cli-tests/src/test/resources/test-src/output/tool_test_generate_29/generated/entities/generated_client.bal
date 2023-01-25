@@ -11,6 +11,7 @@ import ballerinax/mysql;
 const MEDICAL_NEED = "medicalneed";
 
 public client class EntitiesClient {
+    *persist:AbstractPersistClient;
 
     private final mysql:Client dbClient;
 
@@ -49,6 +50,7 @@ public client class EntitiesClient {
             return new stream<MedicalNeed, persist:Error?>(new MedicalNeedStream(result));
         }
     }
+
     isolated resource function get medicalneed/[int needId]() returns MedicalNeed|persist:Error {
         MedicalNeed|error result = (check self.persistClients.get(MEDICAL_NEED).runReadByKeyQuery(MedicalNeed, needId)).cloneWithType(MedicalNeed);
         if result is error {
@@ -56,15 +58,18 @@ public client class EntitiesClient {
         }
         return result;
     }
+
     isolated resource function post medicalneed(MedicalNeedInsert[] data) returns int[]|persist:Error {
         _ = check self.persistClients.get(MEDICAL_NEED).runBatchInsertQuery(data);
         return from MedicalNeedInsert inserted in data
             select inserted.needId;
     }
+
     isolated resource function put medicalneed/[int needId](MedicalNeedUpdate value) returns MedicalNeed|persist:Error {
         _ = check self.persistClients.get(MEDICAL_NEED).runUpdateQuery({"needId": needId}, value);
         return self->/medicalneed/[needId].get();
     }
+
     isolated resource function delete medicalneed/[int needId]() returns MedicalNeed|persist:Error {
         MedicalNeed 'object = check self->/medicalneed/[needId].get();
         _ = check self.persistClients.get(MEDICAL_NEED).runDeleteQuery({"needId": needId});

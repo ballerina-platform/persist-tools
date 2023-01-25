@@ -395,6 +395,16 @@ public class BalSyntaxGenerator {
     private static Client createClient(Module entityModule) throws BalException {
         Client clientObject = new Client(entityModule.getClientName(), true);
         clientObject.addQualifiers(new String[]{BalSyntaxConstants.KEYWORD_CLIENT});
+        clientObject.addMember(NodeFactory.createTypeReferenceNode(
+                AbstractNodeFactory.createToken(SyntaxKind.ASTERISK_TOKEN),
+                NodeFactory.createQualifiedNameReferenceNode(
+                        NodeFactory.createIdentifierToken(
+                                BalSyntaxConstants.InheritedTypeReferenceConstants.PERSIST_MODULE_NAME),
+                        AbstractNodeFactory.createToken(SyntaxKind.COLON_TOKEN),
+                        NodeFactory.createIdentifierToken(
+                                BalSyntaxConstants.InheritedTypeReferenceConstants.ABSTRACT_PERSIST_CLIENT)
+                ),
+                AbstractNodeFactory.createToken(SyntaxKind.SEMICOLON_TOKEN)), false);
         clientObject.addMember(NodeParser.parseObjectMember(INIT_DB_CLIENT), true);
         clientObject.addMember(NodeParser.parseObjectMember(INIT_PERSIST_CLIENT_MAP)
                 , true);

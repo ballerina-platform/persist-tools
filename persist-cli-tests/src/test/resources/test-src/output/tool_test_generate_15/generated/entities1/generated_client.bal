@@ -11,6 +11,7 @@ const MULTIPLE_ASSOCIATIONS = "multipleassociations";
 const PROFILE = "profile";
 
 public client class Entities1Client {
+    *persist:AbstractPersistClient;
 
     private final mysql:Client dbClient;
 
@@ -58,6 +59,7 @@ public client class Entities1Client {
             return new stream<MultipleAssociations, persist:Error?>(new MultipleAssociationsStream(result));
         }
     }
+
     isolated resource function get multipleassociations/[int id]() returns MultipleAssociations|persist:Error {
         MultipleAssociations|error result = (check self.persistClients.get(MULTIPLE_ASSOCIATIONS).runReadByKeyQuery(MultipleAssociations, id)).cloneWithType(MultipleAssociations);
         if result is error {
@@ -65,15 +67,18 @@ public client class Entities1Client {
         }
         return result;
     }
+
     isolated resource function post multipleassociations(MultipleAssociationsInsert[] data) returns int[]|persist:Error {
         _ = check self.persistClients.get(MULTIPLE_ASSOCIATIONS).runBatchInsertQuery(data);
         return from MultipleAssociationsInsert inserted in data
             select inserted.id;
     }
+
     isolated resource function put multipleassociations/[int id](MultipleAssociationsUpdate value) returns MultipleAssociations|persist:Error {
         _ = check self.persistClients.get(MULTIPLE_ASSOCIATIONS).runUpdateQuery({"id": id}, value);
         return self->/multipleassociations/[id].get();
     }
+
     isolated resource function delete multipleassociations/[int id]() returns MultipleAssociations|persist:Error {
         MultipleAssociations 'object = check self->/multipleassociations/[id].get();
         _ = check self.persistClients.get(MULTIPLE_ASSOCIATIONS).runDeleteQuery({"id": id});
@@ -88,6 +93,7 @@ public client class Entities1Client {
             return new stream<Profile, persist:Error?>(new ProfileStream(result));
         }
     }
+
     isolated resource function get profile/[int id]() returns Profile|persist:Error {
         Profile|error result = (check self.persistClients.get(PROFILE).runReadByKeyQuery(Profile, id)).cloneWithType(Profile);
         if result is error {
@@ -95,15 +101,18 @@ public client class Entities1Client {
         }
         return result;
     }
+
     isolated resource function post profile(ProfileInsert[] data) returns int[]|persist:Error {
         _ = check self.persistClients.get(PROFILE).runBatchInsertQuery(data);
         return from ProfileInsert inserted in data
             select inserted.id;
     }
+
     isolated resource function put profile/[int id](ProfileUpdate value) returns Profile|persist:Error {
         _ = check self.persistClients.get(PROFILE).runUpdateQuery({"id": id}, value);
         return self->/profile/[id].get();
     }
+
     isolated resource function delete profile/[int id]() returns Profile|persist:Error {
         Profile 'object = check self->/profile/[id].get();
         _ = check self.persistClients.get(PROFILE).runDeleteQuery({"id": id});

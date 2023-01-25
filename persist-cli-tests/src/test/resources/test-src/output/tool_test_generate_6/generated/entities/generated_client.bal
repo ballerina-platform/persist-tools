@@ -11,6 +11,7 @@ import ballerinax/mysql;
 const DATA_TYPE = "datatype";
 
 public client class EntitiesClient {
+    *persist:AbstractPersistClient;
 
     private final mysql:Client dbClient;
 
@@ -53,6 +54,7 @@ public client class EntitiesClient {
             return new stream<DataType, persist:Error?>(new DataTypeStream(result));
         }
     }
+
     isolated resource function get datatype/[int a]() returns DataType|persist:Error {
         DataType|error result = (check self.persistClients.get(DATA_TYPE).runReadByKeyQuery(DataType, a)).cloneWithType(DataType);
         if result is error {
@@ -60,15 +62,18 @@ public client class EntitiesClient {
         }
         return result;
     }
+
     isolated resource function post datatype(DataTypeInsert[] data) returns int[]|persist:Error {
         _ = check self.persistClients.get(DATA_TYPE).runBatchInsertQuery(data);
         return from DataTypeInsert inserted in data
             select inserted.a;
     }
+
     isolated resource function put datatype/[int a](DataTypeUpdate value) returns DataType|persist:Error {
         _ = check self.persistClients.get(DATA_TYPE).runUpdateQuery({"a": a}, value);
         return self->/datatype/[a].get();
     }
+
     isolated resource function delete datatype/[int a]() returns DataType|persist:Error {
         DataType 'object = check self->/datatype/[a].get();
         _ = check self.persistClients.get(DATA_TYPE).runDeleteQuery({"a": a});
