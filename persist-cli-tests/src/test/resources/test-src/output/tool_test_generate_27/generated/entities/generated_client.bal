@@ -8,9 +8,9 @@ import ballerina/sql;
 import ballerina/time;
 import ballerinax/mysql;
 
-const MULTIPLE_ASSOCIATIONS = "MultipleAssociations";
-const USER = "User";
-const PROFILE = "Profile";
+const MULTIPLE_ASSOCIATIONS = "multipleassociations";
+const USER = "user";
+const PROFILE = "profile";
 
 public client class EntitiesClient {
 

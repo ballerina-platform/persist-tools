@@ -7,7 +7,7 @@ import ballerina/persist;
 import ballerina/sql;
 import ballerinax/mysql;
 
-const MEDICAL_NEED = "MedicalNeed";
+const MEDICAL_NEED = "medicalneed";
 
 public client class EntitiesClient {
 

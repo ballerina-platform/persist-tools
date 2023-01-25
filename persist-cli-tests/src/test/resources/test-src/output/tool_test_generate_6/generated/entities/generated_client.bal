@@ -7,7 +7,7 @@ import ballerina/persist;
 import ballerina/sql;
 import ballerinax/mysql;
 
-const DATA_TYPE = "DataType";
+const DATA_TYPE = "datatype";
 
 public client class EntitiesClient {
 
