@@ -66,9 +66,9 @@ public client class EntitiesClient {
     }
 
     isolated resource function delete user/[int id]() returns User|persist:Error {
-        User 'object = check self->/user/[id].get();
+        User result = check self->/user/[id].get();
         _ = check self.persistClients.get(USER).runDeleteQuery({"id": id});
-        return 'object;
+        return result;
     }
 
     public function close() returns persist:Error? {

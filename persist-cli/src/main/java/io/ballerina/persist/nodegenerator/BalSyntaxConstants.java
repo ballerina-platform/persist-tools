@@ -67,8 +67,8 @@ public class BalSyntaxConstants {
     public static final String UPDATE_RETURN_UPDATE_QUERY = "return self->%s.get();";
     public static final String DELETE_RUN_DELETE_QUERY = "_ = check self.persistClients.get(%s)." +
             "runDeleteQuery(%s);";
-    public static final String RETURN_DELETED_OBJECT = "return 'object;";
-    public static final String GET_OBJECT_QUERY = "%s 'object = check self->%s.get();";
+    public static final String RETURN_DELETED_OBJECT = "return result;";
+    public static final String GET_OBJECT_QUERY = "%s result = check self->%s.get();";
     public static final String INIT_STREAM_STATEMENT = "self.anydataStream = anydataStream;";
     public static final String NEXT_STREAM_RETURN_TYPE = "record {|%s value;|}|persist:Error?";
 
