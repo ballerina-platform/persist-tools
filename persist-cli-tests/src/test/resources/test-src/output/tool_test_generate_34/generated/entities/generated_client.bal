@@ -7,8 +7,8 @@ import ballerina/persist;
 import ballerina/sql;
 import ballerinax/mysql;
 
-const USER = "user";
 const PROFILE = "profile";
+const USER = "user";
 
 public client class EntitiesClient {
     *persist:AbstractPersistClient;
@@ -18,15 +18,6 @@ public client class EntitiesClient {
     private final map<persist:SQLClient> persistClients;
 
     private final record {|persist:Metadata...;|} metadata = {
-        "user": {
-            entityName: "User",
-            tableName: `User`,
-            fieldMetadata: {
-                id: {columnName: "id", 'type: int},
-                profileId: {columnName: "profileId", 'type: int}
-            },
-            keyFields: ["id"]
-        },
         "profile": {
             entityName: "Profile",
             tableName: `Profile`,
@@ -34,6 +25,15 @@ public client class EntitiesClient {
                 id: {columnName: "id", 'type: int},
                 name: {columnName: "name", 'type: string},
                 gender: {columnName: "gender", 'type: string}
+            },
+            keyFields: ["id"]
+        },
+        "user": {
+            entityName: "User",
+            tableName: `User`,
+            fieldMetadata: {
+                id: {columnName: "id", 'type: int},
+                profileId: {columnName: "profileId", 'type: int}
             },
             keyFields: ["id"]
         }
@@ -46,43 +46,9 @@ public client class EntitiesClient {
         }
         self.dbClient = dbClient;
         self.persistClients = {
-            user: check new (self.dbClient, self.metadata.get(USER)),
-            profile: check new (self.dbClient, self.metadata.get(PROFILE))
+            profile: check new (self.dbClient, self.metadata.get(PROFILE)),
+            user: check new (self.dbClient, self.metadata.get(USER))
         };
-    }
-
-    isolated resource function get user() returns stream<User, persist:Error?> {
-        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(USER).runReadQuery(User);
-        if result is persist:Error {
-            return new stream<User, persist:Error?>(new UserStream((), result));
-        } else {
-            return new stream<User, persist:Error?>(new UserStream(result));
-        }
-    }
-
-    isolated resource function get user/[int id]() returns User|persist:Error {
-        User|error result = (check self.persistClients.get(USER).runReadByKeyQuery(User, id)).cloneWithType(User);
-        if result is error {
-            return <persist:Error>error(result.message());
-        }
-        return result;
-    }
-
-    isolated resource function post user(UserInsert[] data) returns int[]|persist:Error {
-        _ = check self.persistClients.get(USER).runBatchInsertQuery(data);
-        return from UserInsert inserted in data
-            select inserted.id;
-    }
-
-    isolated resource function put user/[int id](UserUpdate value) returns User|persist:Error {
-        _ = check self.persistClients.get(USER).runUpdateQuery({"id": id}, value);
-        return self->/user/[id].get();
-    }
-
-    isolated resource function delete user/[int id]() returns User|persist:Error {
-        User 'object = check self->/user/[id].get();
-        _ = check self.persistClients.get(USER).runDeleteQuery({"id": id});
-        return 'object;
     }
 
     isolated resource function get profile() returns stream<Profile, persist:Error?> {
@@ -114,9 +80,43 @@ public client class EntitiesClient {
     }
 
     isolated resource function delete profile/[int id]() returns Profile|persist:Error {
-        Profile 'object = check self->/profile/[id].get();
+        Profile result = check self->/profile/[id].get();
         _ = check self.persistClients.get(PROFILE).runDeleteQuery({"id": id});
-        return 'object;
+        return result;
+    }
+
+    isolated resource function get user() returns stream<User, persist:Error?> {
+        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(USER).runReadQuery(User);
+        if result is persist:Error {
+            return new stream<User, persist:Error?>(new UserStream((), result));
+        } else {
+            return new stream<User, persist:Error?>(new UserStream(result));
+        }
+    }
+
+    isolated resource function get user/[int id]() returns User|persist:Error {
+        User|error result = (check self.persistClients.get(USER).runReadByKeyQuery(User, id)).cloneWithType(User);
+        if result is error {
+            return <persist:Error>error(result.message());
+        }
+        return result;
+    }
+
+    isolated resource function post user(UserInsert[] data) returns int[]|persist:Error {
+        _ = check self.persistClients.get(USER).runBatchInsertQuery(data);
+        return from UserInsert inserted in data
+            select inserted.id;
+    }
+
+    isolated resource function put user/[int id](UserUpdate value) returns User|persist:Error {
+        _ = check self.persistClients.get(USER).runUpdateQuery({"id": id}, value);
+        return self->/user/[id].get();
+    }
+
+    isolated resource function delete user/[int id]() returns User|persist:Error {
+        User result = check self->/user/[id].get();
+        _ = check self.persistClients.get(USER).runDeleteQuery({"id": id});
+        return result;
     }
 
     public function close() returns persist:Error? {
@@ -125,6 +125,44 @@ public client class EntitiesClient {
             return <persist:Error>error(result.message());
         }
         return result;
+    }
+}
+
+public class ProfileStream {
+
+    private stream<anydata, sql:Error?>? anydataStream;
+    private persist:Error? err;
+
+    public isolated function init(stream<anydata, sql:Error?>? anydataStream, persist:Error? err = ()) {
+        self.anydataStream = anydataStream;
+        self.err = err;
+    }
+
+    public isolated function next() returns record {|Profile value;|}|persist:Error? {
+        if self.err is persist:Error {
+            return <persist:Error>self.err;
+        } else if self.anydataStream is stream<anydata, sql:Error?> {
+            var anydataStream = <stream<anydata, sql:Error?>>self.anydataStream;
+            var streamValue = anydataStream.next();
+            if streamValue is () {
+                return streamValue;
+            } else if (streamValue is sql:Error) {
+                return <persist:Error>error(streamValue.message());
+            } else {
+                Profile|error value = streamValue.value.cloneWithType(Profile);
+                if value is error {
+                    return <persist:Error>error(value.message());
+                }
+                record {|Profile value;|} nextRecord = {value: value};
+                return nextRecord;
+            }
+        } else {
+            return ();
+        }
+    }
+
+    public isolated function close() returns persist:Error? {
+        check persist:closeEntityStream(self.anydataStream);
     }
 }
 
@@ -166,40 +204,3 @@ public class UserStream {
     }
 }
 
-public class ProfileStream {
-
-    private stream<anydata, sql:Error?>? anydataStream;
-    private persist:Error? err;
-
-    public isolated function init(stream<anydata, sql:Error?>? anydataStream, persist:Error? err = ()) {
-        self.anydataStream = anydataStream;
-        self.err = err;
-    }
-
-    public isolated function next() returns record {|Profile value;|}|persist:Error? {
-        if self.err is persist:Error {
-            return <persist:Error>self.err;
-        } else if self.anydataStream is stream<anydata, sql:Error?> {
-            var anydataStream = <stream<anydata, sql:Error?>>self.anydataStream;
-            var streamValue = anydataStream.next();
-            if streamValue is () {
-                return streamValue;
-            } else if (streamValue is sql:Error) {
-                return <persist:Error>error(streamValue.message());
-            } else {
-                Profile|error value = streamValue.value.cloneWithType(Profile);
-                if value is error {
-                    return <persist:Error>error(value.message());
-                }
-                record {|Profile value;|} nextRecord = {value: value};
-                return nextRecord;
-            }
-        } else {
-            return ();
-        }
-    }
-
-    public isolated function close() returns persist:Error? {
-        check persist:closeEntityStream(self.anydataStream);
-    }
-}

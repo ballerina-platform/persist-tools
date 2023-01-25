@@ -1,4 +1,4 @@
-/ AUTO-GENERATED FILE. DO NOT MODIFY.
+// AUTO-GENERATED FILE. DO NOT MODIFY.
 
 // This file is an auto-generated file by Ballerina persistence layer for entities.
 // It should not be modified by hand.
@@ -39,3 +39,4 @@ public type VehicleUpdate record {|
     string name?;
     int employeeId?;
 |};
+
