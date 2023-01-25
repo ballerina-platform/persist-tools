@@ -112,9 +112,9 @@ public client class RainierClient {
     }
 
     isolated resource function delete building/[string buildingCode]() returns Building|persist:Error {
-        Building 'object = check self->/building/[buildingCode].get();
+        Building result = check self->/building/[buildingCode].get();
         _ = check self.persistClients.get(BUILDING).runDeleteQuery({"buildingCode": buildingCode});
-        return 'object;
+        return result;
     }
 
     isolated resource function get department() returns stream<Department, persist:Error?> {
@@ -146,9 +146,9 @@ public client class RainierClient {
     }
 
     isolated resource function delete department/[string deptNo]() returns Department|persist:Error {
-        Department 'object = check self->/department/[deptNo].get();
+        Department result = check self->/department/[deptNo].get();
         _ = check self.persistClients.get(DEPARTMENT).runDeleteQuery({"deptNo": deptNo});
-        return 'object;
+        return result;
     }
 
     isolated resource function get employee() returns stream<Employee, persist:Error?> {
@@ -180,9 +180,9 @@ public client class RainierClient {
     }
 
     isolated resource function delete employee/[string empNo]() returns Employee|persist:Error {
-        Employee 'object = check self->/employee/[empNo].get();
+        Employee result = check self->/employee/[empNo].get();
         _ = check self.persistClients.get(EMPLOYEE).runDeleteQuery({"empNo": empNo});
-        return 'object;
+        return result;
     }
 
     isolated resource function get workspace() returns stream<Workspace, persist:Error?> {
@@ -214,9 +214,9 @@ public client class RainierClient {
     }
 
     isolated resource function delete workspace/[string workspaceId]() returns Workspace|persist:Error {
-        Workspace 'object = check self->/workspace/[workspaceId].get();
+        Workspace result = check self->/workspace/[workspaceId].get();
         _ = check self.persistClients.get(WORKSPACE).runDeleteQuery({"workspaceId": workspaceId});
-        return 'object;
+        return result;
     }
 
     public function close() returns persist:Error? {

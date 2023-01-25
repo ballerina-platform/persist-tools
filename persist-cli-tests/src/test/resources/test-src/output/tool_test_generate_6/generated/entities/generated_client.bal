@@ -75,9 +75,9 @@ public client class EntitiesClient {
     }
 
     isolated resource function delete datatype/[int a]() returns DataType|persist:Error {
-        DataType 'object = check self->/datatype/[a].get();
+        DataType result = check self->/datatype/[a].get();
         _ = check self.persistClients.get(DATA_TYPE).runDeleteQuery({"a": a});
-        return 'object;
+        return result;
     }
 
     public function close() returns persist:Error? {
