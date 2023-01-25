@@ -7,7 +7,7 @@ import ballerina/persist;
 import ballerina/sql;
 import ballerinax/mysql;
 
-const USER = "User";
+const USER = "user";
 
 public client class EntitiesClient {
 

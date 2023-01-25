@@ -8,8 +8,8 @@ import ballerina/sql;
 import ballerina/time;
 import ballerinax/mysql;
 
-const MEDICAL_NEED = "MedicalNeed";
-const AID_PACKAGE_ORDER_ITEM = "AidPackageOrderItem";
+const MEDICAL_NEED = "medicalneed";
+const AID_PACKAGE_ORDER_ITEM = "aidpackageorderitem";
 
 public client class EntitiesClient {
 

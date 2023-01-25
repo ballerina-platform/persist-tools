@@ -8,10 +8,10 @@ import ballerina/sql;
 import ballerina/time;
 import ballerinax/mysql;
 
-const BUILDING = "Building";
-const DEPARTMENT = "Department";
-const EMPLOYEE = "Employee";
-const WORKSPACE = "Workspace";
+const BUILDING = "building";
+const DEPARTMENT = "department";
+const EMPLOYEE = "employee";
+const WORKSPACE = "workspace";
 
 public client class FooClient {
 

@@ -7,8 +7,8 @@ import ballerina/persist;
 import ballerina/sql;
 import ballerinax/mysql;
 
-const MULTIPLE_ASSOCIATIONS = "MultipleAssociations";
-const PROFILE = "Profile";
+const MULTIPLE_ASSOCIATIONS = "multipleassociations";
+const PROFILE = "profile";
 
 public client class Entities1Client {
 
