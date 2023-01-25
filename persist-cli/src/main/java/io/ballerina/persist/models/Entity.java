@@ -18,6 +18,8 @@
 
 package io.ballerina.persist.models;
 
+import org.atteo.evo.inflector.English;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -92,7 +94,7 @@ public class Entity {
 
         public Entity build() {
             if (resourceName == null) {
-                resourceName = entityName.toLowerCase(Locale.ENGLISH);
+                resourceName = English.plural(entityName.toLowerCase(Locale.ENGLISH));
             }
             return new Entity(entityName, keys, resourceName, fieldList);
         }
