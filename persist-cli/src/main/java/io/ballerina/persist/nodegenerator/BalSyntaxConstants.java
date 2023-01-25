@@ -41,6 +41,7 @@ public class BalSyntaxConstants {
     public static final String BACK_SLASH = "/";
     public static final String EMPTY_STRING = "";
     public static final String SPACE = " ";
+    public static final String UNDERSCORE = "_";
     public static final String COMMA_SPACE = ", ";
     public static final String COLON = ":";
     public static final String SEMICOLON = ";";
@@ -158,6 +159,7 @@ public class BalSyntaxConstants {
     public static final String CLOSE_ENTITY_STREAM = "check closeEntityStream(self.anydataStream);";
     public static final String PLACEHOLDER_FOR_MAP_FIELD = "%s:%s";
     public static final String PLACEHOLDER_FOR_TYPE_DEFINITION = "%s %s";
+    public static final String REGEX_FOR_SPLIT_BY_CAPITOL_LETTER = "(?=\\p{Upper})";
     public static final String OPEN_BRACE = "{";
     public static final String CLOSE_BRACE = "}";
     public static final String OPEN_BRACKET = "[";

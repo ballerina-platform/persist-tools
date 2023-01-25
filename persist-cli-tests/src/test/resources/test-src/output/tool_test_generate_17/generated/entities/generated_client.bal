@@ -8,9 +8,9 @@ import ballerina/sql;
 import ballerina/time;
 import ballerinax/mysql;
 
-const VEHICLE = "Vehicle";
-const COMPANY = "Company";
-const EMPLOYEE = "Employee";
+const VEHICLE = "vehicle";
+const COMPANY = "company";
+const EMPLOYEE = "employee";
 
 public client class EntitiesClient {
 
