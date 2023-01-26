@@ -13,7 +13,7 @@ const WORKSPACE = "workspace";
 const DEPARTMENT = "department";
 const EMPLOYEE = "employee";
 
-public client class Persist_generate_35Client {
+public client class PersistGenerate35Client {
     *persist:AbstractPersistClient;
 
     private final mysql:Client dbClient;

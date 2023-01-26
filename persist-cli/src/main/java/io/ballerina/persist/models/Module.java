@@ -95,7 +95,7 @@ public class Module {
 
         private String convertTitleCase(String moduleName) {
             StringBuilder titleBuilder = new StringBuilder();
-            String[] moduleParts = moduleName.split(" +");
+            String[] moduleParts = moduleName.split("[\\s@&.?$+_-]+");
             Arrays.stream(moduleParts).forEach(modulePart -> {
                 titleBuilder.append(modulePart.substring(0, 1).toUpperCase(Locale.ENGLISH))
                         .append(modulePart.substring(1));

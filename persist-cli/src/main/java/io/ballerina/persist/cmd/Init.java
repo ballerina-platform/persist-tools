@@ -24,6 +24,7 @@ import io.ballerina.persist.nodegenerator.TomlSyntaxGenerator;
 import io.ballerina.projects.ProjectException;
 import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.projects.directory.ProjectLoader;
+import io.ballerina.projects.util.ProjectUtils;
 import io.ballerina.toml.syntax.tree.SyntaxTree;
 import picocli.CommandLine;
 
@@ -137,6 +138,15 @@ public class Init implements BLauncherCmd {
             }
         }
         for (String file : schemaFiles) {
+            if (!ProjectUtils.validateModuleName(file)) {
+                errStream.println("Invalid definition file name : '" + file + "' :\n" +
+                        "File name can only contain alphanumerics, underscores and periods");
+                return;
+            } else if (!ProjectUtils.validateNameLength(file)) {
+                errStream.println("Invalid definition file name : '" + file + "' :\n" +
+                        "Maximum length of file name is 256 characters");
+                return;
+            }
             Path schemaDirPath;
             if (file.equals(packageName)) {
                 schemaDirPath = generatedSourceDirPath;
