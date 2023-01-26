@@ -91,4 +91,10 @@ public class ToolingInitTest {
     public void testInitWithManuallyCreatedDefinitionFile() {
         assertGeneratedSources("tool_test_init_9", INIT);
     }
+
+    @Test(enabled = true)
+    @Description("Running init on a project with invalid definition filename")
+    public void testInitWithInvalidDefinitionFileName() {
+        assertGeneratedSources("tool_test_init_10", INIT);
+    }
 }
