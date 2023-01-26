@@ -9,9 +9,9 @@ import ballerina/time;
 import ballerinax/mysql;
 
 const BUILDING = "building";
+const WORKSPACE = "workspace";
 const DEPARTMENT = "department";
 const EMPLOYEE = "employee";
-const WORKSPACE = "workspace";
 
 public client class FooClient {
     *persist:AbstractPersistClient;
@@ -33,6 +33,17 @@ public client class FooClient {
             },
             keyFields: ["buildingCode"]
         },
+        "workspace": {
+            entityName: "Workspace",
+            tableName: `Workspace`,
+            fieldMetadata: {
+                workspaceId: {columnName: "workspaceId", 'type: string},
+                workspaceType: {columnName: "workspaceType", 'type: string},
+                buildingBuildingCode: {columnName: "buildingBuildingCode", 'type: string},
+                employeeEmpNo: {columnName: "employeeEmpNo", 'type: string}
+            },
+            keyFields: ["workspaceId"]
+        },
         "department": {
             entityName: "Department",
             tableName: `Department`,
@@ -52,20 +63,9 @@ public client class FooClient {
                 birthDate: {columnName: "birthDate", 'type: time:Date},
                 gender: {columnName: "gender", 'type: string},
                 hireDate: {columnName: "hireDate", 'type: time:Date},
-                departmentDeptNo: {columnName: "departmentDeptNo", 'type: string},
-                workspaceWorkspaceId: {columnName: "workspaceWorkspaceId", 'type: string}
+                departmentDeptNo: {columnName: "departmentDeptNo", 'type: string}
             },
             keyFields: ["empNo"]
-        },
-        "workspace": {
-            entityName: "Workspace",
-            tableName: `Workspace`,
-            fieldMetadata: {
-                workspaceId: {columnName: "workspaceId", 'type: string},
-                workspaceType: {columnName: "workspaceType", 'type: string},
-                buildingBuildingCode: {columnName: "buildingBuildingCode", 'type: string}
-            },
-            keyFields: ["workspaceId"]
         }
     };
 
@@ -77,9 +77,9 @@ public client class FooClient {
         self.dbClient = dbClient;
         self.persistClients = {
             building: check new (self.dbClient, self.metadata.get(BUILDING)),
+            workspace: check new (self.dbClient, self.metadata.get(WORKSPACE)),
             department: check new (self.dbClient, self.metadata.get(DEPARTMENT)),
-            employee: check new (self.dbClient, self.metadata.get(EMPLOYEE)),
-            workspace: check new (self.dbClient, self.metadata.get(WORKSPACE))
+            employee: check new (self.dbClient, self.metadata.get(EMPLOYEE))
         };
     }
 
@@ -114,6 +114,40 @@ public client class FooClient {
     isolated resource function delete building/[string buildingCode]() returns Building|persist:Error {
         Building result = check self->/building/[buildingCode].get();
         _ = check self.persistClients.get(BUILDING).runDeleteQuery({"buildingCode": buildingCode});
+        return result;
+    }
+
+    isolated resource function get workspace() returns stream<Workspace, persist:Error?> {
+        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(WORKSPACE).runReadQuery(Workspace);
+        if result is persist:Error {
+            return new stream<Workspace, persist:Error?>(new WorkspaceStream((), result));
+        } else {
+            return new stream<Workspace, persist:Error?>(new WorkspaceStream(result));
+        }
+    }
+
+    isolated resource function get workspace/[string workspaceId]() returns Workspace|persist:Error {
+        Workspace|error result = (check self.persistClients.get(WORKSPACE).runReadByKeyQuery(Workspace, workspaceId)).cloneWithType(Workspace);
+        if result is error {
+            return <persist:Error>error(result.message());
+        }
+        return result;
+    }
+
+    isolated resource function post workspace(WorkspaceInsert[] data) returns string[]|persist:Error {
+        _ = check self.persistClients.get(WORKSPACE).runBatchInsertQuery(data);
+        return from WorkspaceInsert inserted in data
+            select inserted.workspaceId;
+    }
+
+    isolated resource function put workspace/[string workspaceId](WorkspaceUpdate value) returns Workspace|persist:Error {
+        _ = check self.persistClients.get(WORKSPACE).runUpdateQuery({"workspaceId": workspaceId}, value);
+        return self->/workspace/[workspaceId].get();
+    }
+
+    isolated resource function delete workspace/[string workspaceId]() returns Workspace|persist:Error {
+        Workspace result = check self->/workspace/[workspaceId].get();
+        _ = check self.persistClients.get(WORKSPACE).runDeleteQuery({"workspaceId": workspaceId});
         return result;
     }
 
@@ -185,40 +219,6 @@ public client class FooClient {
         return result;
     }
 
-    isolated resource function get workspace() returns stream<Workspace, persist:Error?> {
-        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(WORKSPACE).runReadQuery(Workspace);
-        if result is persist:Error {
-            return new stream<Workspace, persist:Error?>(new WorkspaceStream((), result));
-        } else {
-            return new stream<Workspace, persist:Error?>(new WorkspaceStream(result));
-        }
-    }
-
-    isolated resource function get workspace/[string workspaceId]() returns Workspace|persist:Error {
-        Workspace|error result = (check self.persistClients.get(WORKSPACE).runReadByKeyQuery(Workspace, workspaceId)).cloneWithType(Workspace);
-        if result is error {
-            return <persist:Error>error(result.message());
-        }
-        return result;
-    }
-
-    isolated resource function post workspace(WorkspaceInsert[] data) returns string[]|persist:Error {
-        _ = check self.persistClients.get(WORKSPACE).runBatchInsertQuery(data);
-        return from WorkspaceInsert inserted in data
-            select inserted.workspaceId;
-    }
-
-    isolated resource function put workspace/[string workspaceId](WorkspaceUpdate value) returns Workspace|persist:Error {
-        _ = check self.persistClients.get(WORKSPACE).runUpdateQuery({"workspaceId": workspaceId}, value);
-        return self->/workspace/[workspaceId].get();
-    }
-
-    isolated resource function delete workspace/[string workspaceId]() returns Workspace|persist:Error {
-        Workspace result = check self->/workspace/[workspaceId].get();
-        _ = check self.persistClients.get(WORKSPACE).runDeleteQuery({"workspaceId": workspaceId});
-        return result;
-    }
-
     public function close() returns persist:Error? {
         error? result = self.dbClient.close();
         if result is error {
@@ -254,6 +254,44 @@ public class BuildingStream {
                     return <persist:Error>error(value.message());
                 }
                 record {|Building value;|} nextRecord = {value: value};
+                return nextRecord;
+            }
+        } else {
+            return ();
+        }
+    }
+
+    public isolated function close() returns persist:Error? {
+        check persist:closeEntityStream(self.anydataStream);
+    }
+}
+
+public class WorkspaceStream {
+
+    private stream<anydata, sql:Error?>? anydataStream;
+    private persist:Error? err;
+
+    public isolated function init(stream<anydata, sql:Error?>? anydataStream, persist:Error? err = ()) {
+        self.anydataStream = anydataStream;
+        self.err = err;
+    }
+
+    public isolated function next() returns record {|Workspace value;|}|persist:Error? {
+        if self.err is persist:Error {
+            return <persist:Error>self.err;
+        } else if self.anydataStream is stream<anydata, sql:Error?> {
+            var anydataStream = <stream<anydata, sql:Error?>>self.anydataStream;
+            var streamValue = anydataStream.next();
+            if streamValue is () {
+                return streamValue;
+            } else if (streamValue is sql:Error) {
+                return <persist:Error>error(streamValue.message());
+            } else {
+                Workspace|error value = streamValue.value.cloneWithType(Workspace);
+                if value is error {
+                    return <persist:Error>error(value.message());
+                }
+                record {|Workspace value;|} nextRecord = {value: value};
                 return nextRecord;
             }
         } else {
@@ -330,44 +368,6 @@ public class EmployeeStream {
                     return <persist:Error>error(value.message());
                 }
                 record {|Employee value;|} nextRecord = {value: value};
-                return nextRecord;
-            }
-        } else {
-            return ();
-        }
-    }
-
-    public isolated function close() returns persist:Error? {
-        check persist:closeEntityStream(self.anydataStream);
-    }
-}
-
-public class WorkspaceStream {
-
-    private stream<anydata, sql:Error?>? anydataStream;
-    private persist:Error? err;
-
-    public isolated function init(stream<anydata, sql:Error?>? anydataStream, persist:Error? err = ()) {
-        self.anydataStream = anydataStream;
-        self.err = err;
-    }
-
-    public isolated function next() returns record {|Workspace value;|}|persist:Error? {
-        if self.err is persist:Error {
-            return <persist:Error>self.err;
-        } else if self.anydataStream is stream<anydata, sql:Error?> {
-            var anydataStream = <stream<anydata, sql:Error?>>self.anydataStream;
-            var streamValue = anydataStream.next();
-            if streamValue is () {
-                return streamValue;
-            } else if (streamValue is sql:Error) {
-                return <persist:Error>error(streamValue.message());
-            } else {
-                Workspace|error value = streamValue.value.cloneWithType(Workspace);
-                if value is error {
-                    return <persist:Error>error(value.message());
-                }
-                record {|Workspace value;|} nextRecord = {value: value};
                 return nextRecord;
             }
         } else {

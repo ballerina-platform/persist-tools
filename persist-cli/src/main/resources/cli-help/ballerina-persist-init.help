@@ -1,7 +1,17 @@
 NAME
-       Initialize the persistence layer in the Ballerina project.
+       bal persist init - Initialize the persistence layer in the Ballerina project.
 
 SYNOPSIS
-       bal persist init
+       bal persist init [<-h> | <--help>]
 
+DESCRIPTION
+         This command will create a new directory named 'persist' in the project directory. The 'persist' directory will
+         contain empty model definition file which can be used to define the data model of the Ballerina project.
+         This will also add tooling configuration to the Ballerina.toml file and runtime configuration to the Config.toml file.
 
+EXAMPLES
+       Print the usage details of the `bal persist init` command.
+          $ bal persist init --help
+
+       Initialize the persistence layer in the Ballerina project.
+          $ bal persist init

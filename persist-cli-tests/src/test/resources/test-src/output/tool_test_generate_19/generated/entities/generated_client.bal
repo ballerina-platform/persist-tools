@@ -7,9 +7,9 @@ import ballerina/persist;
 import ballerina/sql;
 import ballerinax/mysql;
 
-const MULTIPLE_ASSOCIATIONS = "multipleassociations";
-const USER = "user";
 const PROFILE = "profile";
+const USER = "user";
+const MULTIPLE_ASSOCIATIONS = "multipleassociations";
 
 public client class EntitiesClient {
     *persist:AbstractPersistClient;
@@ -19,14 +19,14 @@ public client class EntitiesClient {
     private final map<persist:SQLClient> persistClients;
 
     private final record {|persist:Metadata...;|} metadata = {
-        "multipleassociations": {
-            entityName: "MultipleAssociations",
-            tableName: `MultipleAssociations`,
+        "profile": {
+            entityName: "Profile",
+            tableName: `Profile`,
             fieldMetadata: {
                 id: {columnName: "id", 'type: int},
                 name: {columnName: "name", 'type: string},
-                profileId: {columnName: "profileId", 'type: int},
-                userId: {columnName: "userId", 'type: int}
+                userId: {columnName: "userId", 'type: int},
+                multipleassociationsId: {columnName: "multipleassociationsId", 'type: int}
             },
             keyFields: ["id"]
         },
@@ -36,13 +36,13 @@ public client class EntitiesClient {
             fieldMetadata: {
                 id: {columnName: "id", 'type: int},
                 name: {columnName: "name", 'type: string},
-                profileId: {columnName: "profileId", 'type: int}
+                multipleassociationsId: {columnName: "multipleassociationsId", 'type: int}
             },
             keyFields: ["id"]
         },
-        "profile": {
-            entityName: "Profile",
-            tableName: `Profile`,
+        "multipleassociations": {
+            entityName: "MultipleAssociations",
+            tableName: `MultipleAssociations`,
             fieldMetadata: {
                 id: {columnName: "id", 'type: int},
                 name: {columnName: "name", 'type: string}
@@ -58,43 +58,43 @@ public client class EntitiesClient {
         }
         self.dbClient = dbClient;
         self.persistClients = {
-            multipleassociations: check new (self.dbClient, self.metadata.get(MULTIPLE_ASSOCIATIONS)),
+            profile: check new (self.dbClient, self.metadata.get(PROFILE)),
             user: check new (self.dbClient, self.metadata.get(USER)),
-            profile: check new (self.dbClient, self.metadata.get(PROFILE))
+            multipleassociations: check new (self.dbClient, self.metadata.get(MULTIPLE_ASSOCIATIONS))
         };
     }
 
-    isolated resource function get multipleassociations() returns stream<MultipleAssociations, persist:Error?> {
-        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(MULTIPLE_ASSOCIATIONS).runReadQuery(MultipleAssociations);
+    isolated resource function get profile() returns stream<Profile, persist:Error?> {
+        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(PROFILE).runReadQuery(Profile);
         if result is persist:Error {
-            return new stream<MultipleAssociations, persist:Error?>(new MultipleAssociationsStream((), result));
+            return new stream<Profile, persist:Error?>(new ProfileStream((), result));
         } else {
-            return new stream<MultipleAssociations, persist:Error?>(new MultipleAssociationsStream(result));
+            return new stream<Profile, persist:Error?>(new ProfileStream(result));
         }
     }
 
-    isolated resource function get multipleassociations/[int id]() returns MultipleAssociations|persist:Error {
-        MultipleAssociations|error result = (check self.persistClients.get(MULTIPLE_ASSOCIATIONS).runReadByKeyQuery(MultipleAssociations, id)).cloneWithType(MultipleAssociations);
+    isolated resource function get profile/[int id]() returns Profile|persist:Error {
+        Profile|error result = (check self.persistClients.get(PROFILE).runReadByKeyQuery(Profile, id)).cloneWithType(Profile);
         if result is error {
             return <persist:Error>error(result.message());
         }
         return result;
     }
 
-    isolated resource function post multipleassociations(MultipleAssociationsInsert[] data) returns int[]|persist:Error {
-        _ = check self.persistClients.get(MULTIPLE_ASSOCIATIONS).runBatchInsertQuery(data);
-        return from MultipleAssociationsInsert inserted in data
+    isolated resource function post profile(ProfileInsert[] data) returns int[]|persist:Error {
+        _ = check self.persistClients.get(PROFILE).runBatchInsertQuery(data);
+        return from ProfileInsert inserted in data
             select inserted.id;
     }
 
-    isolated resource function put multipleassociations/[int id](MultipleAssociationsUpdate value) returns MultipleAssociations|persist:Error {
-        _ = check self.persistClients.get(MULTIPLE_ASSOCIATIONS).runUpdateQuery({"id": id}, value);
-        return self->/multipleassociations/[id].get();
+    isolated resource function put profile/[int id](ProfileUpdate value) returns Profile|persist:Error {
+        _ = check self.persistClients.get(PROFILE).runUpdateQuery({"id": id}, value);
+        return self->/profile/[id].get();
     }
 
-    isolated resource function delete multipleassociations/[int id]() returns MultipleAssociations|persist:Error {
-        MultipleAssociations result = check self->/multipleassociations/[id].get();
-        _ = check self.persistClients.get(MULTIPLE_ASSOCIATIONS).runDeleteQuery({"id": id});
+    isolated resource function delete profile/[int id]() returns Profile|persist:Error {
+        Profile result = check self->/profile/[id].get();
+        _ = check self.persistClients.get(PROFILE).runDeleteQuery({"id": id});
         return result;
     }
 
@@ -132,37 +132,37 @@ public client class EntitiesClient {
         return result;
     }
 
-    isolated resource function get profile() returns stream<Profile, persist:Error?> {
-        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(PROFILE).runReadQuery(Profile);
+    isolated resource function get multipleassociations() returns stream<MultipleAssociations, persist:Error?> {
+        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(MULTIPLE_ASSOCIATIONS).runReadQuery(MultipleAssociations);
         if result is persist:Error {
-            return new stream<Profile, persist:Error?>(new ProfileStream((), result));
+            return new stream<MultipleAssociations, persist:Error?>(new MultipleAssociationsStream((), result));
         } else {
-            return new stream<Profile, persist:Error?>(new ProfileStream(result));
+            return new stream<MultipleAssociations, persist:Error?>(new MultipleAssociationsStream(result));
         }
     }
 
-    isolated resource function get profile/[int id]() returns Profile|persist:Error {
-        Profile|error result = (check self.persistClients.get(PROFILE).runReadByKeyQuery(Profile, id)).cloneWithType(Profile);
+    isolated resource function get multipleassociations/[int id]() returns MultipleAssociations|persist:Error {
+        MultipleAssociations|error result = (check self.persistClients.get(MULTIPLE_ASSOCIATIONS).runReadByKeyQuery(MultipleAssociations, id)).cloneWithType(MultipleAssociations);
         if result is error {
             return <persist:Error>error(result.message());
         }
         return result;
     }
 
-    isolated resource function post profile(ProfileInsert[] data) returns int[]|persist:Error {
-        _ = check self.persistClients.get(PROFILE).runBatchInsertQuery(data);
-        return from ProfileInsert inserted in data
+    isolated resource function post multipleassociations(MultipleAssociationsInsert[] data) returns int[]|persist:Error {
+        _ = check self.persistClients.get(MULTIPLE_ASSOCIATIONS).runBatchInsertQuery(data);
+        return from MultipleAssociationsInsert inserted in data
             select inserted.id;
     }
 
-    isolated resource function put profile/[int id](ProfileUpdate value) returns Profile|persist:Error {
-        _ = check self.persistClients.get(PROFILE).runUpdateQuery({"id": id}, value);
-        return self->/profile/[id].get();
+    isolated resource function put multipleassociations/[int id](MultipleAssociationsUpdate value) returns MultipleAssociations|persist:Error {
+        _ = check self.persistClients.get(MULTIPLE_ASSOCIATIONS).runUpdateQuery({"id": id}, value);
+        return self->/multipleassociations/[id].get();
     }
 
-    isolated resource function delete profile/[int id]() returns Profile|persist:Error {
-        Profile result = check self->/profile/[id].get();
-        _ = check self.persistClients.get(PROFILE).runDeleteQuery({"id": id});
+    isolated resource function delete multipleassociations/[int id]() returns MultipleAssociations|persist:Error {
+        MultipleAssociations result = check self->/multipleassociations/[id].get();
+        _ = check self.persistClients.get(MULTIPLE_ASSOCIATIONS).runDeleteQuery({"id": id});
         return result;
     }
 
@@ -175,7 +175,7 @@ public client class EntitiesClient {
     }
 }
 
-public class MultipleAssociationsStream {
+public class ProfileStream {
 
     private stream<anydata, sql:Error?>? anydataStream;
     private persist:Error? err;
@@ -185,7 +185,7 @@ public class MultipleAssociationsStream {
         self.err = err;
     }
 
-    public isolated function next() returns record {|MultipleAssociations value;|}|persist:Error? {
+    public isolated function next() returns record {|Profile value;|}|persist:Error? {
         if self.err is persist:Error {
             return <persist:Error>self.err;
         } else if self.anydataStream is stream<anydata, sql:Error?> {
@@ -196,11 +196,11 @@ public class MultipleAssociationsStream {
             } else if (streamValue is sql:Error) {
                 return <persist:Error>error(streamValue.message());
             } else {
-                MultipleAssociations|error value = streamValue.value.cloneWithType(MultipleAssociations);
+                Profile|error value = streamValue.value.cloneWithType(Profile);
                 if value is error {
                     return <persist:Error>error(value.message());
                 }
-                record {|MultipleAssociations value;|} nextRecord = {value: value};
+                record {|Profile value;|} nextRecord = {value: value};
                 return nextRecord;
             }
         } else {
@@ -251,7 +251,7 @@ public class UserStream {
     }
 }
 
-public class ProfileStream {
+public class MultipleAssociationsStream {
 
     private stream<anydata, sql:Error?>? anydataStream;
     private persist:Error? err;
@@ -261,7 +261,7 @@ public class ProfileStream {
         self.err = err;
     }
 
-    public isolated function next() returns record {|Profile value;|}|persist:Error? {
+    public isolated function next() returns record {|MultipleAssociations value;|}|persist:Error? {
         if self.err is persist:Error {
             return <persist:Error>self.err;
         } else if self.anydataStream is stream<anydata, sql:Error?> {
@@ -272,11 +272,11 @@ public class ProfileStream {
             } else if (streamValue is sql:Error) {
                 return <persist:Error>error(streamValue.message());
             } else {
-                Profile|error value = streamValue.value.cloneWithType(Profile);
+                MultipleAssociations|error value = streamValue.value.cloneWithType(MultipleAssociations);
                 if value is error {
                     return <persist:Error>error(value.message());
                 }
-                record {|Profile value;|} nextRecord = {value: value};
+                record {|MultipleAssociations value;|} nextRecord = {value: value};
                 return nextRecord;
             }
         } else {

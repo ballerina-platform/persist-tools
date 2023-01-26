@@ -1,5 +1,16 @@
 NAME
-       Generate SQL script for the defined entities and execute the script against the Database.
+       bal persist push - Generate SQL script for the entities defined in the model definition file and execute the script against the Database.
 
 SYNOPSIS
-       bal persist push
+       bal persist push [<-h> | <--help>]
+
+DESCRIPTION
+       This command generates the SQL script for the entities defined in the model definition file and executes the script
+       against the Database specified in the `Ballerina.toml` file.
+
+EXAMPLES
+       Print the usage details of the `bal persist push` command.
+          $ bal persist push --help
+
+       Generate SQL script for entities defined in the model definition file and execute the script against the Database.
+          $ bal persist push

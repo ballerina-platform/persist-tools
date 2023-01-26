@@ -120,8 +120,13 @@ public class SqlScriptGenerationUtils {
                 sqlType += "(" + entityField.getMaxLength() + ")";
             }
             String fieldName = removeSingleQuote(entityField.getFieldName());
-            columnScript.append(MessageFormat.format("{0}{1}{2} {3}{4},",
-                    NEW_LINE, TAB, fieldName, sqlType, " NOT NULL"));
+            if (entityField.isOptionalType()) {
+                columnScript.append(MessageFormat.format("{0}{1}{2} {3},",
+                        NEW_LINE, TAB, fieldName, sqlType));
+            } else {
+                columnScript.append(MessageFormat.format("{0}{1}{2} {3}{4},",
+                        NEW_LINE, TAB, fieldName, sqlType, " NOT NULL"));
+            }
         }
         return columnScript.toString();
     }
@@ -150,8 +155,8 @@ public class SqlScriptGenerationUtils {
                 }
             }
             String foreignKey = keyColumns.get(i).getField();
-            relationScripts.append(MessageFormat.format("{0}{1}{2} {3},", NEW_LINE, TAB, foreignKey,
-                    referenceSqlType));
+            relationScripts.append(MessageFormat.format("{0}{1}{2} {3}{4},", NEW_LINE, TAB, foreignKey,
+                    referenceSqlType, " NOT NULL"));
             relationScripts.append(MessageFormat.format("{0}{1}CONSTRAINT FK_{2}_{3}_{4} FOREIGN KEY({5}) " +
                             "REFERENCES {6}({7}),", NEW_LINE, TAB, tableName.toUpperCase(Locale.ENGLISH),
                     assocEntity.getEntityName().toUpperCase(Locale.ENGLISH), i, foreignKey, assocEntity.getEntityName(),

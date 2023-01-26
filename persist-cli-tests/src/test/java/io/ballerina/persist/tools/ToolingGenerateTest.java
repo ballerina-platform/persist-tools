@@ -110,9 +110,8 @@ public class ToolingGenerateTest {
     }
 
     @Test(enabled = true)
-    @Description("There are three entities with one to one associations between each other with one parent entity " +
-            "in sub module")
-    public void testGenerateWithDifferentEntities() {
+    @Description("Three is an invalid message definition in the schema with optional fields")
+    public void testGenerateWithInvalidMessageDefinition() {
         assertGeneratedSources("tool_test_generate_14", GENERATE);
     }
 
@@ -222,5 +221,17 @@ public class ToolingGenerateTest {
     @Description("Test the generate command without sub module directory inside generated directory")
     public void testGenerateWithoutSubmodule() {
         assertGeneratedSources("tool_test_generate_32", GENERATE);
+    }
+
+    @Test(enabled = true)
+    @Description("Test the generate command without persist import in schema file")
+    public void testGenerateWithoutPersistImport() {
+        assertGeneratedSources("tool_test_generate_33", GENERATE);
+    }
+
+    @Test(enabled = true)
+    @Description("Test the generate command with optional type in schema file")
+    public void testGenerateWithOptionalType() {
+        assertGeneratedSources("tool_test_generate_34", GENERATE);
     }
 }

@@ -1,6 +1,18 @@
 NAME
-       Generate client objects for the defined entities inside the Ballerina project
+       bal persist generate - Generate client objects for the model definition file inside persist directory.
 
 SYNOPSIS
-       bal persist generate
+       bal persist generate [<-h> | <--help>]
+
+DESCRIPTION
+       Generate client objects for the model definition file inside persist directory.
+       The model definition filename is the name of the submodule in which the client is generated.
+       All entities in the model definition file are mapped to resources in the generated client.
+
+EXAMPLES
+       Print the usage details of the `bal persist generate` command.
+          $ bal persist generate --help
+
+       Generate client objects for the model definition file inside persist directory.
+          $ bal persist generate
 

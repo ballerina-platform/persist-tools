@@ -103,6 +103,7 @@ public class BalSyntaxConstants {
     public static final String KEYWORD_STREAM = "Stream";
     public static final String KEYWORD_ERR = "err";
     public static final String KEYWORD_SQL = "sql";
+    public static final String KEYWORD_PERSIST = "persist";
     public static final String KEYWORD_BALLERINAX = "ballerinax";
     public static final String KEYWORD_CLIENT = "client";
     public static final String KEYWORD_PUBLIC = "public";

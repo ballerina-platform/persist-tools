@@ -96,6 +96,7 @@ public class Init implements BLauncherCmd {
         if (!Files.exists(persistDirPath)) {
             try {
                 Files.createDirectory(persistDirPath.toAbsolutePath());
+                errStream.println("Created persist directory in the Ballerina project.");
             } catch (IOException e) {
                 errStream.println("Error while creating the persist directory. " + e.getMessage());
                 return;
@@ -110,7 +111,7 @@ public class Init implements BLauncherCmd {
                     .map(file -> file.toString().replace(BAL_EXTENTION, ""))
                     .collect(Collectors.toList());
         } catch (IOException e) {
-            errStream.println("Error while listing the persist schema files in persist directory. " + e.getMessage());
+            errStream.println("Error while listing the model definition files in persist directory. " + e.getMessage());
             return;
         }
 
@@ -118,8 +119,11 @@ public class Init implements BLauncherCmd {
             schemaFiles.add(packageName);
             try {
                 generateSchemaBalFile(persistDirPath, packageName);
+                errStream.printf("Created model definition file(%s) in persist directory.%n",
+                        packageName + BAL_EXTENTION);
             } catch (BalException e) {
-                errStream.println("Error while creating the schemas in persist directory. " + e.getMessage());
+                errStream.println("Error while creating the model definition file in persist directory. "
+                        + e.getMessage());
                 return;
             }
         }
@@ -138,6 +142,9 @@ public class Init implements BLauncherCmd {
             if (!Files.exists(databaseConfigPath)) {
                 try {
                     generateConfigurationBalFile(schemaDirPath);
+                    errStream.printf(
+                            "Created database_configurations.bal file inside %s module in generated directory.%n",
+                            file);
                 } catch (BalException e) {
                     errStream.println("Error while generating the database_configurations.bal file. " + e.getMessage());
                     return;
@@ -163,8 +170,7 @@ public class Init implements BLauncherCmd {
             writeOutputString(configTree, generatedSourcePath.resolve(PATH_CONFIGURATION_BAL_FILE)
                     .toAbsolutePath().toString());
         } catch (Exception e) {
-            throw new BalException("Error while adding database_configuration.bal file inside the client sub module. " +
-                    e.getMessage());
+            throw new BalException(e.getMessage());
         }
     }
 
@@ -174,8 +180,7 @@ public class Init implements BLauncherCmd {
             writeOutputString(configTree, persistPath.resolve(packageName + BAL_EXTENTION)
                     .toAbsolutePath().toString());
         } catch (Exception e) {
-            throw new BalException("Error while adding schema file inside the persist directory. " +
-                    e.getMessage());
+            throw new BalException(e.getMessage());
         }
     }
 
@@ -185,6 +190,7 @@ public class Init implements BLauncherCmd {
                     Paths.get(this.sourcePath, BALLERINA_TOML), schemas);
             writeOutputSyntaxTree(syntaxTree,
                     Paths.get(this.sourcePath, BALLERINA_TOML).toAbsolutePath().toString());
+            errStream.println("Updated Ballerina.toml with database configurations.");
         } catch (Exception e) {
             throw new BalException("Error while updating Ballerina.toml with database configurations . " +
                     e.getMessage());
@@ -196,6 +202,7 @@ public class Init implements BLauncherCmd {
             Path configPath = Paths.get(this.sourcePath, CONFIG_SCRIPT_FILE).toAbsolutePath();
             SyntaxTree syntaxTree = TomlSyntaxGenerator.createConfigToml(schemas, packageName);
             writeOutputSyntaxTree(syntaxTree, configPath.toString());
+            errStream.println("Created Config.toml file inside the Ballerina project.");
         } catch (Exception e) {
             throw new BalException("Error while adding Config.toml file inside the Ballerina project. " +
                     e.getMessage());
@@ -207,6 +214,7 @@ public class Init implements BLauncherCmd {
             Path configPath = Paths.get(this.sourcePath, CONFIG_SCRIPT_FILE).toAbsolutePath();
             SyntaxTree syntaxTree = TomlSyntaxGenerator.updateConfigToml(configPath, schemas, packageName);
             writeOutputSyntaxTree(syntaxTree, configPath.toString());
+            errStream.println("Updated Config.toml file inside the Ballerina project.");
         } catch (Exception e) {
             throw new BalException("Error while updating Config.toml file inside the Ballerina project. " +
                     e.getMessage());
@@ -220,8 +228,9 @@ public class Init implements BLauncherCmd {
             try {
                 Files.createDirectories(parentDirectory);
             } catch (IOException e) {
-                throw new BalException("Error while creating a new file. " +
-                        e.getMessage());
+                throw new BalException(
+                        String.format("Failed to create the parent directories of output path %s. %s",
+                                parentDirectory, e.getMessage()));
             }
             content = syntaxTree.toSourceCode();
             try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8.name())) {
@@ -237,8 +246,9 @@ public class Init implements BLauncherCmd {
                 try {
                     Files.createDirectories(parentDirectory);
                 } catch (IOException e) {
-                    throw new BalException("Error while creating a new file. " +
-                            e.getMessage());
+                    throw new BalException(
+                            String.format("Failed to create the parent directories of output path %s. %s",
+                                    parentDirectory, e.getMessage()));
                 }
             }
             try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8.name())) {

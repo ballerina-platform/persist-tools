@@ -108,13 +108,15 @@ public class Generate implements BLauncherCmd {
                     .filter(file -> file.toString().toLowerCase(Locale.ENGLISH).endsWith(".bal"))
                     .collect(Collectors.toList());
         } catch (IOException e) {
-            errStream.println("Error while listing the persist schema files in persist directory. " + e.getMessage());
+            errStream.println("Error while listing the persist model definition files in persist directory. "
+                    + e.getMessage());
             return;
         }
 
         if (schemaFilePaths.isEmpty()) {
-            errStream.println("The persist directory doesn't contain any schema file. " +
-                    "Please run `bal persist init` to initiate the project before generation");
+            errStream.println("The persist directory doesn't contain any model definition file. " +
+                    "Please run `bal persist init` to initiate the project before generation or " +
+                    "manually add a model definition file to the persist directory");
             return;
         }
 
@@ -129,8 +131,8 @@ public class Generate implements BLauncherCmd {
                 generateDataTypes(entityModule, generatedSourceDirPath);
                 generateClientBalFile(entityModule, generatedSourceDirPath);
             } catch (BalException e) {
-                errStream.println("Error while generating types and client for the schema in "
-                        + file + " file . " + e.getMessage());
+                errStream.printf("Error while generating types and client for the definition file(%s). %s%n",
+                        file.getFileName(), e.getMessage());
             }
         });
     }
@@ -141,6 +143,8 @@ public class Generate implements BLauncherCmd {
         SyntaxTree balTree = generateClientSyntaxTree(entityModule);
         try {
             writeOutputFile(balTree, clientPath);
+            errStream.printf("Generated Ballerina client object for the `%s` data model" +
+                    " inside the generated directory.%n", entityModule.getModuleName());
         } catch (IOException | FormatterException e) {
             throw new BalException(String.format("Failed to write the client code for the %s data model " +
                     "to the generated_types.bal file.", entityModule.getModuleName()) + e.getMessage());
