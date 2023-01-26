@@ -234,4 +234,10 @@ public class ToolingGenerateTest {
     public void testGenerateWithOptionalType() {
         assertGeneratedSources("tool_test_generate_34", GENERATE);
     }
+
+    @Test(enabled = true)
+    @Description("Test the generate command in default Ballerina package")
+    public void testGenerateInDefaultPackage() {
+        assertGeneratedSources("tool_test_generate_35", GENERATE);
+    }
 }

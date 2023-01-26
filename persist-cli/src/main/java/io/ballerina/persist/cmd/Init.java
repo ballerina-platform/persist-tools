@@ -137,14 +137,19 @@ public class Init implements BLauncherCmd {
             }
         }
         for (String file : schemaFiles) {
-            Path schemaDirPath = generatedSourceDirPath.resolve(file);
+            Path schemaDirPath;
+            if (file.equals(packageName)) {
+                schemaDirPath = generatedSourceDirPath;
+            } else {
+                schemaDirPath = generatedSourceDirPath.resolve(file);
+            }
             Path databaseConfigPath = schemaDirPath.resolve(PATH_CONFIGURATION_BAL_FILE);
             if (!Files.exists(databaseConfigPath)) {
                 try {
                     generateConfigurationBalFile(schemaDirPath);
                     errStream.printf(
-                            "Created database_configurations.bal file inside %s module in generated directory.%n",
-                            file);
+                            "Created database_configurations.bal file inside `%s` module in generated directory.%n",
+                            file.equals(packageName) ? "default" : file);
                 } catch (BalException e) {
                     errStream.println("Error while generating the database_configurations.bal file. " + e.getMessage());
                     return;

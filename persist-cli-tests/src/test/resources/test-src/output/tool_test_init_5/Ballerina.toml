@@ -1,13 +1,13 @@
 [package]
 org = "foo"
-name = "perist_init_5"
+name = "persist_init_5"
 version = "0.1.0"
 distribution = "2201.3.0"
 
 [build-options]
 observabilityIncluded = true
 
-[persist.perist_init_5.storage.mysql]
+[persist.persist_init_5.storage.mysql]
 host = "localhost"
 port = 3307
 user = "root"

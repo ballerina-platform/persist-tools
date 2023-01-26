@@ -76,7 +76,11 @@ public class TomlSyntaxGenerator {
     public static SyntaxTree createConfigToml(List<String> schemas, String packageName) {
         NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
         for (String schema : schemas) {
-            moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(packageName + "." + schema, null));
+            if (!schema.equals(packageName)) {
+                moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(packageName + "." + schema, null));
+            } else {
+                moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(packageName, null));
+            }
             moduleMembers = populateConfigNodeList(moduleMembers);
             moduleMembers = addNewLine(moduleMembers, 1);
         }
@@ -194,7 +198,11 @@ public class TomlSyntaxGenerator {
                 } else if (member instanceof TableNode) {
                     TableNode node = (TableNode) member;
                     for (String schema : names) {
-                        if (node.identifier().toSourceCode().trim().equals(packageName + "."
+                        if (schema.equals(packageName) && node.identifier().toSourceCode().trim().equals(
+                                packageName)) {
+                            existingNodes.add(schema);
+                            break;
+                        } else if (node.identifier().toSourceCode().trim().equals(packageName + "."
                                 + schema)) {
                             existingNodes.add(schema);
                             break;
@@ -211,8 +219,12 @@ public class TomlSyntaxGenerator {
                     if (existingNodes.contains(schema)) {
                         continue;
                     }
-                    moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(packageName + "."
-                            + schema, null));
+                    if (!schema.equals(packageName)) {
+                        moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(
+                                packageName + "." + schema, null));
+                    } else {
+                        moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(packageName, null));
+                    }
                     moduleMembers = populateConfigNodeList(moduleMembers);
                 }
             }
