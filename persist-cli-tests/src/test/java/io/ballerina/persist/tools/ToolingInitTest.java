@@ -85,4 +85,16 @@ public class ToolingInitTest {
     public void testInitWithSyntaxErrors() {
         assertGeneratedSourcesNegative("tool_test_init_8", INIT, new String[]{});
     }
+
+    @Test(enabled = true)
+    @Description("Running init on a project with manually created definition file")
+    public void testInitWithManuallyCreatedDefinitionFile() {
+        assertGeneratedSources("tool_test_init_9", INIT);
+    }
+
+    @Test(enabled = true)
+    @Description("Running init on a project with invalid definition filename")
+    public void testInitWithInvalidDefinitionFileName() {
+        assertGeneratedSources("tool_test_init_10", INIT);
+    }
 }

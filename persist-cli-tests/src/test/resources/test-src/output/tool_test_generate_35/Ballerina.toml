@@ -1,0 +1,16 @@
+[package]
+org = "foo"
+name = "persist_generate_35"
+version = "0.1.0"
+distribution = "2201.3.0"
+
+[build-options]
+observabilityIncluded = false
+
+[persist.persist_generate_35]
+provider = "mysql"
+host = ""
+port = 3307
+user = ""
+password = ""
+# database = "foo"

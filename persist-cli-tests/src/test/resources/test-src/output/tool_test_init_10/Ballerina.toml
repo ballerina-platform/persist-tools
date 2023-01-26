@@ -1,0 +1,15 @@
+[package]
+org = "foo"
+name = "persist_init_10"
+version = "0.1.0"
+distribution = "2201.3.0"
+
+[build-options]
+observabilityIncluded = true
+
+[[arraytable]]
+value = 1
+[[arraytable]]
+value = 2
+
+array = [ [1, 0], [0, 1] ]

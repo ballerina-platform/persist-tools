@@ -1,11 +1,11 @@
-[perist_init_2.perist_init_2]
+[persist_init_2]
 host = "localhost"
 port = 3306
 user = "root"
 password = ""
 database = ""
 
-[perist_init_2.test]
+[persist_init_2.test]
 host = "localhost"
 port = 3306
 user = "root"

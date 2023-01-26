@@ -27,6 +27,7 @@ import io.ballerina.persist.nodegenerator.BalSyntaxConstants;
 import io.ballerina.persist.nodegenerator.BalSyntaxGenerator;
 import io.ballerina.persist.utils.BalProjectUtils;
 import io.ballerina.projects.ProjectException;
+import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.projects.directory.ProjectLoader;
 import org.ballerinalang.formatter.core.Formatter;
 import org.ballerinalang.formatter.core.FormatterException;
@@ -94,7 +95,8 @@ public class Generate implements BLauncherCmd {
                     "You should run this command inside a Ballerina project. ");
             return;
         }
-
+        BuildProject buildProject = BuildProject.load(projectPath.toAbsolutePath());
+        String packageName = buildProject.currentPackage().packageName().value();
         Path persistDir = Paths.get(this.sourcePath, PERSIST_DIRECTORY);
         if (!Files.isDirectory(persistDir, NOFOLLOW_LINKS)) {
             errStream.println("The persist directory inside the Ballerina project doesn't exist. " +
@@ -126,8 +128,17 @@ public class Generate implements BLauncherCmd {
             try {
                 BalProjectUtils.validateSchemaFile(file);
                 entityModule = BalProjectUtils.getEntities(file);
-                generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY,
-                        entityModule.getModuleName());
+                if (entityModule.getEntityMap().isEmpty()) {
+                    errStream.printf("The model definition file(%s) doesn't contain any entity definition.%n",
+                            file.getFileName());
+                    return;
+                }
+                if (entityModule.getModuleName().equals(packageName)) {
+                    generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);
+                } else {
+                    generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY,
+                            entityModule.getModuleName());
+                }
                 generateDataTypes(entityModule, generatedSourceDirPath);
                 generateClientBalFile(entityModule, generatedSourceDirPath);
             } catch (BalException e) {
@@ -146,7 +157,7 @@ public class Generate implements BLauncherCmd {
             errStream.printf("Generated Ballerina client object for the `%s` data model" +
                     " inside the generated directory.%n", entityModule.getModuleName());
         } catch (IOException | FormatterException e) {
-            throw new BalException(String.format("Failed to write the client code for the %s data model " +
+            throw new BalException(String.format("Failed to write the client code for the `%s` data model " +
                     "to the generated_types.bal file.", entityModule.getModuleName()) + e.getMessage());
         }
     }

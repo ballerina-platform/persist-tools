@@ -1,4 +1,4 @@
-[perist_init_2.perist_init_2]
+[persist_init_2]
 host = "localhost"
 port = 3306
 user = "root"

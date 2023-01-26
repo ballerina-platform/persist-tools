@@ -24,6 +24,7 @@ import io.ballerina.persist.nodegenerator.TomlSyntaxGenerator;
 import io.ballerina.projects.ProjectException;
 import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.projects.directory.ProjectLoader;
+import io.ballerina.projects.util.ProjectUtils;
 import io.ballerina.toml.syntax.tree.SyntaxTree;
 import picocli.CommandLine;
 
@@ -137,14 +138,28 @@ public class Init implements BLauncherCmd {
             }
         }
         for (String file : schemaFiles) {
-            Path schemaDirPath = generatedSourceDirPath.resolve(file);
+            if (!ProjectUtils.validateModuleName(file)) {
+                errStream.println("Invalid definition file name : '" + file + "' :\n" +
+                        "File name can only contain alphanumerics, underscores and periods");
+                return;
+            } else if (!ProjectUtils.validateNameLength(file)) {
+                errStream.println("Invalid definition file name : '" + file + "' :\n" +
+                        "Maximum length of file name is 256 characters");
+                return;
+            }
+            Path schemaDirPath;
+            if (file.equals(packageName)) {
+                schemaDirPath = generatedSourceDirPath;
+            } else {
+                schemaDirPath = generatedSourceDirPath.resolve(file);
+            }
             Path databaseConfigPath = schemaDirPath.resolve(PATH_CONFIGURATION_BAL_FILE);
             if (!Files.exists(databaseConfigPath)) {
                 try {
                     generateConfigurationBalFile(schemaDirPath);
                     errStream.printf(
-                            "Created database_configurations.bal file inside %s module in generated directory.%n",
-                            file);
+                            "Created database_configurations.bal file inside `%s` module in generated directory.%n",
+                            file.equals(packageName) ? "default" : file);
                 } catch (BalException e) {
                     errStream.println("Error while generating the database_configurations.bal file. " + e.getMessage());
                     return;
