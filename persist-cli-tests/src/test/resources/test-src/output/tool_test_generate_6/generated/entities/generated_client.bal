@@ -70,13 +70,13 @@ public client class EntitiesClient {
     }
 
     isolated resource function put datatype/[int a](DataTypeUpdate value) returns DataType|persist:Error {
-        _ = check self.persistClients.get(DATA_TYPE).runUpdateQuery({"a": a}, value);
+        _ = check self.persistClients.get(DATA_TYPE).runUpdateQuery(a, value);
         return self->/datatype/[a].get();
     }
 
     isolated resource function delete datatype/[int a]() returns DataType|persist:Error {
         DataType result = check self->/datatype/[a].get();
-        _ = check self.persistClients.get(DATA_TYPE).runDeleteQuery({"a": a});
+        _ = check self.persistClients.get(DATA_TYPE).runDeleteQuery(a);
         return result;
     }
 
