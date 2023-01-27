@@ -141,7 +141,8 @@ public class SqlScriptGenerationUtils {
         Entity assocEntity = relation.getAssocEntity();
         StringBuilder foreignKey = new StringBuilder();
         StringBuilder referenceFieldName = new StringBuilder();
-        for (int i = 0; i < references.size(); i++) {
+        int noOfReferencesKey = references.size();
+        for (int i = 0; i < noOfReferencesKey; i++) {
             String referenceSqlType = null;
             for (EntityField assocField : assocEntity.getFields()) {
                 if (assocField.getRelation() != null) {
@@ -157,7 +158,7 @@ public class SqlScriptGenerationUtils {
             }
             foreignKey.append(keyColumns.get(i).getField());
             referenceFieldName.append(removeSingleQuote(references.get(i)));
-            if (i < references.size() - 1) {
+            if (i < noOfReferencesKey - 1) {
                 foreignKey.append(COMMA_WITH_SPACE);
                 referenceFieldName.append(COMMA_WITH_SPACE);
             }
