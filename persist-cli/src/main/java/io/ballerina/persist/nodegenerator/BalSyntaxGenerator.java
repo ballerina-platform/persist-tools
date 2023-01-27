@@ -346,8 +346,8 @@ public class BalSyntaxGenerator {
             List<Relation.Key> keyColumns = assocEntity.getKeys().stream().map(key ->
                     new Relation.Key(assocEntity.getEntityName().toLowerCase(Locale.ENGLISH)
                             + stripEscapeCharacter(key.getFieldName()).substring(0, 1).toUpperCase(Locale.ENGLISH)
-                            + stripEscapeCharacter(key.getFieldName()).substring(1), key.getFieldName(), key.getFieldType()
-                            )).collect(Collectors.toList());
+                            + stripEscapeCharacter(key.getFieldName()).substring(1), key.getFieldName(),
+                            key.getFieldType())).collect(Collectors.toList());
             relBuilder.setOwner(true);
             relBuilder.setRelationType(Relation.RelationType.ONE);
             relBuilder.setKeys(keyColumns);
@@ -833,8 +833,8 @@ public class BalSyntaxGenerator {
                     null,
                     AbstractNodeFactory.createIdentifierToken(entry.getKey()),
                     AbstractNodeFactory.createToken(SyntaxKind.CLOSE_BRACKET_TOKEN)));
-            filterKeys.append(DOUBLE_QUOTE).append(stripEscapeCharacter(entry.getKey())).append(DOUBLE_QUOTE).append(COLON).
-                    append(entry.getKey()).append(COMMA_SPACE);
+            filterKeys.append(DOUBLE_QUOTE).append(stripEscapeCharacter(entry.getKey()))
+                    .append(DOUBLE_QUOTE).append(COLON).append(entry.getKey()).append(COMMA_SPACE);
             path.append(BACK_SLASH).append(OPEN_BRACKET).append(entry.getKey()).append(CLOSE_BRACKET);
         }
         return resourcePaths;
