@@ -61,13 +61,13 @@ public client class EntitiesClient {
     }
 
     isolated resource function put user/[int id](UserUpdate value) returns User|persist:Error {
-        _ = check self.persistClients.get(USER).runUpdateQuery({"id": id}, value);
+        _ = check self.persistClients.get(USER).runUpdateQuery(id, value);
         return self->/user/[id].get();
     }
 
     isolated resource function delete user/[int id]() returns User|persist:Error {
         User result = check self->/user/[id].get();
-        _ = check self.persistClients.get(USER).runDeleteQuery({"id": id});
+        _ = check self.persistClients.get(USER).runDeleteQuery(id);
         return result;
     }
 

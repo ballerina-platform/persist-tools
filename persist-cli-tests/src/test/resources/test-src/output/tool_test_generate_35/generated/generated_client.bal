@@ -107,13 +107,13 @@ public client class PersistGenerate35Client {
     }
 
     isolated resource function put building/[string buildingCode](BuildingUpdate value) returns Building|persist:Error {
-        _ = check self.persistClients.get(BUILDING).runUpdateQuery({"buildingCode": buildingCode}, value);
+        _ = check self.persistClients.get(BUILDING).runUpdateQuery(buildingCode, value);
         return self->/building/[buildingCode].get();
     }
 
     isolated resource function delete building/[string buildingCode]() returns Building|persist:Error {
         Building result = check self->/building/[buildingCode].get();
-        _ = check self.persistClients.get(BUILDING).runDeleteQuery({"buildingCode": buildingCode});
+        _ = check self.persistClients.get(BUILDING).runDeleteQuery(buildingCode);
         return result;
     }
 
@@ -141,13 +141,13 @@ public client class PersistGenerate35Client {
     }
 
     isolated resource function put workspace/[string workspaceId](WorkspaceUpdate value) returns Workspace|persist:Error {
-        _ = check self.persistClients.get(WORKSPACE).runUpdateQuery({"workspaceId": workspaceId}, value);
+        _ = check self.persistClients.get(WORKSPACE).runUpdateQuery(workspaceId, value);
         return self->/workspace/[workspaceId].get();
     }
 
     isolated resource function delete workspace/[string workspaceId]() returns Workspace|persist:Error {
         Workspace result = check self->/workspace/[workspaceId].get();
-        _ = check self.persistClients.get(WORKSPACE).runDeleteQuery({"workspaceId": workspaceId});
+        _ = check self.persistClients.get(WORKSPACE).runDeleteQuery(workspaceId);
         return result;
     }
 
@@ -175,13 +175,13 @@ public client class PersistGenerate35Client {
     }
 
     isolated resource function put department/[string deptNo](DepartmentUpdate value) returns Department|persist:Error {
-        _ = check self.persistClients.get(DEPARTMENT).runUpdateQuery({"deptNo": deptNo}, value);
+        _ = check self.persistClients.get(DEPARTMENT).runUpdateQuery(deptNo, value);
         return self->/department/[deptNo].get();
     }
 
     isolated resource function delete department/[string deptNo]() returns Department|persist:Error {
         Department result = check self->/department/[deptNo].get();
-        _ = check self.persistClients.get(DEPARTMENT).runDeleteQuery({"deptNo": deptNo});
+        _ = check self.persistClients.get(DEPARTMENT).runDeleteQuery(deptNo);
         return result;
     }
 
@@ -209,13 +209,13 @@ public client class PersistGenerate35Client {
     }
 
     isolated resource function put employee/[string empNo](EmployeeUpdate value) returns Employee|persist:Error {
-        _ = check self.persistClients.get(EMPLOYEE).runUpdateQuery({"empNo": empNo}, value);
+        _ = check self.persistClients.get(EMPLOYEE).runUpdateQuery(empNo, value);
         return self->/employee/[empNo].get();
     }
 
     isolated resource function delete employee/[string empNo]() returns Employee|persist:Error {
         Employee result = check self->/employee/[empNo].get();
-        _ = check self.persistClients.get(EMPLOYEE).runDeleteQuery({"empNo": empNo});
+        _ = check self.persistClients.get(EMPLOYEE).runDeleteQuery(empNo);
         return result;
     }
 
