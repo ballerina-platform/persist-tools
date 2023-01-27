@@ -223,4 +223,10 @@ public class ToolingDbPushTest {
     public void testDbPushWithOptionalTypeFields() {
         assertGeneratedSources("tool_test_db_push_21", DB_PUSH);
     }
+
+    @Test(enabled = true)
+    @Description("Test the created sql script with composite reference keys")
+    public void testDbPushWithCompositeReferenceKeys() {
+        assertGeneratedSources("tool_test_db_push_22", DB_PUSH);
+    }
 }
