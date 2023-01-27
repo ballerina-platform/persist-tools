@@ -776,9 +776,15 @@ public class BalSyntaxGenerator {
         update.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(
                 TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()),
                 TypeDescriptor.getQualifiedNameReferenceNode(PERSIST_MODULE, SPECIFIC_ERROR)));
-        update.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.UPDATE_RUN_UPDATE_QUERY,
-                getEntityNameConstant(entity.getEntityName()),
-                filterKeys.substring(0, filterKeys.length() - 2).concat(CLOSE_BRACE))));
+        if (entity.getKeys().size() > 1) {
+            update.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.UPDATE_RUN_UPDATE_QUERY,
+                    getEntityNameConstant(entity.getEntityName()),
+                    filterKeys.substring(0, filterKeys.length() - 2).concat(CLOSE_BRACE))));
+        } else {
+            update.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.UPDATE_RUN_UPDATE_QUERY,
+                    getEntityNameConstant(entity.getEntityName()), entity.getKeys().stream().findFirst().get()
+                            .getFieldName())));
+        }
         update.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.UPDATE_RETURN_UPDATE_QUERY,
                 path)));
         return update;
@@ -797,9 +803,15 @@ public class BalSyntaxGenerator {
                 TypeDescriptor.getQualifiedNameReferenceNode(PERSIST_MODULE, SPECIFIC_ERROR)));
         delete.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.GET_OBJECT_QUERY,
                 entity.getEntityName(), path)));
-        delete.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.DELETE_RUN_DELETE_QUERY,
-                getEntityNameConstant(entity.getEntityName()),
-                filterKeys.substring(0, filterKeys.length() - 2).concat(CLOSE_BRACE))));
+        if (entity.getKeys().size() > 1) {
+            delete.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.DELETE_RUN_DELETE_QUERY,
+                    getEntityNameConstant(entity.getEntityName()),
+                    filterKeys.substring(0, filterKeys.length() - 2).concat(CLOSE_BRACE))));
+        } else {
+            delete.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.DELETE_RUN_DELETE_QUERY,
+                    getEntityNameConstant(entity.getEntityName()), entity.getKeys().stream().findFirst().get()
+                            .getFieldName())));
+        }
         delete.addStatement(NodeParser.parseStatement(BalSyntaxConstants.RETURN_DELETED_OBJECT));
         return delete;
     }
