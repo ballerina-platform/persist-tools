@@ -39,7 +39,7 @@ public client class EntitiesClient {
             fieldMetadata: {
                 itemId: {columnName: "itemId", 'type: int},
                 name: {columnName: "name", 'type: string},
-                'type: {columnName: "'type", 'type: string},
+                'type: {columnName: "type", 'type: string},
                 unit: {columnName: "unit", 'type: int}
             },
             keyFields: ["itemId"]
