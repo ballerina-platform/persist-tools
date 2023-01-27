@@ -46,6 +46,7 @@ public class SqlScriptGenerationUtils {
 
     private static final String NEW_LINE = System.lineSeparator();
     private static final String TAB = "\t";
+    private static final String COMMA_WITH_SPACE = ", ";
     private static final String PRIMARY_KEY_START_SCRIPT = NEW_LINE + TAB + "PRIMARY KEY(";
 
     private SqlScriptGenerationUtils(){}
@@ -138,9 +139,11 @@ public class SqlScriptGenerationUtils {
         List<Relation.Key> keyColumns = relation.getKeyColumns();
         List<String> references = relation.getReferences();
         Entity assocEntity = relation.getAssocEntity();
-        for (int i = 0; i < references.size(); i++) {
+        StringBuilder foreignKey = new StringBuilder();
+        StringBuilder referenceFieldName = new StringBuilder();
+        int noOfReferencesKey = references.size();
+        for (int i = 0; i < noOfReferencesKey; i++) {
             String referenceSqlType = null;
-            String referenceFieldName = null;
             for (EntityField assocField : assocEntity.getFields()) {
                 if (assocField.getRelation() != null) {
                     continue;
@@ -150,19 +153,23 @@ public class SqlScriptGenerationUtils {
                     if (referenceSqlType.equals(PersistToolsConstants.SqlTypes.VARCHAR)) {
                         referenceSqlType += "(" + entityField.getMaxLength() + ")";
                     }
-                    referenceFieldName = removeSingleQuote(references.get(i));
                     break;
                 }
             }
-            String foreignKey = keyColumns.get(i).getField();
-            relationScripts.append(MessageFormat.format("{0}{1}{2} {3}{4},", NEW_LINE, TAB, foreignKey,
-                    referenceSqlType, " NOT NULL"));
-            relationScripts.append(MessageFormat.format("{0}{1}CONSTRAINT FK_{2}_{3}_{4} FOREIGN KEY({5}) " +
-                            "REFERENCES {6}({7}),", NEW_LINE, TAB, tableName.toUpperCase(Locale.ENGLISH),
-                    assocEntity.getEntityName().toUpperCase(Locale.ENGLISH), i, foreignKey, assocEntity.getEntityName(),
-                    referenceFieldName));
-            updateReferenceTable(tableName, assocEntity.getEntityName(), referenceTables);
+            foreignKey.append(keyColumns.get(i).getField());
+            referenceFieldName.append(removeSingleQuote(references.get(i)));
+            if (i < noOfReferencesKey - 1) {
+                foreignKey.append(COMMA_WITH_SPACE);
+                referenceFieldName.append(COMMA_WITH_SPACE);
+            }
+            relationScripts.append(MessageFormat.format("{0}{1}{2} {3}{4},", NEW_LINE, TAB,
+                    keyColumns.get(i).getField(), referenceSqlType, " NOT NULL"));
         }
+        relationScripts.append(MessageFormat.format("{0}{1}CONSTRAINT FK_{2}_{3} FOREIGN KEY({4}) " +
+                        "REFERENCES {5}({6}),", NEW_LINE, TAB, tableName.toUpperCase(Locale.ENGLISH),
+                assocEntity.getEntityName().toUpperCase(Locale.ENGLISH), foreignKey, assocEntity.getEntityName(),
+                referenceFieldName));
+        updateReferenceTable(tableName, assocEntity.getEntityName(), referenceTables);
         return relationScripts.toString();
     }
 
@@ -247,8 +254,8 @@ public class SqlScriptGenerationUtils {
                 List<String> referenceTableNames = referenceTables.get(entry.getKey());
                 for (String referenceTableName: referenceTableNames) {
                     int index = tableOrder.indexOf(referenceTableName);
-                    if ((firstIndex == 0 || index > firstIndex) && index > 0) {
-                        firstIndex = index;
+                    if ((firstIndex == 0 || index > firstIndex) && index >= 0) {
+                        firstIndex = index + 1;
                     }
                 }
                 tableOrder.add(firstIndex, entry.getKey());
