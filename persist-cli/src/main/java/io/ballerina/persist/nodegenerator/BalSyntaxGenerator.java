@@ -834,7 +834,7 @@ public class BalSyntaxGenerator {
                     null,
                     AbstractNodeFactory.createIdentifierToken(entry.getKey()),
                     AbstractNodeFactory.createToken(SyntaxKind.CLOSE_BRACKET_TOKEN)));
-            filterKeys.append(DOUBLE_QUOTE).append(entry.getKey()).append(DOUBLE_QUOTE).append(COLON).
+            filterKeys.append(DOUBLE_QUOTE).append(formatFieldName(entry.getKey())).append(DOUBLE_QUOTE).append(COLON).
                     append(entry.getKey()).append(COMMA_SPACE);
             path.append(BACK_SLASH).append(OPEN_BRACKET).append(entry.getKey()).append(CLOSE_BRACKET);
         }
