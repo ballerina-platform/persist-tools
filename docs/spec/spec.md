@@ -8,7 +8,7 @@ _Edition_: Swan Lake
 
 ## Introduction
 
-This is the specification for the Persist Tools of [Ballerina language](https://ballerina.io/), which supports several operations on the Ballerina Persistent Layer. Ballerina Persistent Layer provides functionality to store and query data conveniently through a data model instead of SQL query language.
+This is the specification for the Persist Tools of [Ballerina language](https://ballerina.io/), which supports several operations on the Ballerina Persistence Layer. Ballerina Persistent Layer provides functionality to store and query data conveniently through a data model instead of SQL query language.
 
 The Persist Tools specification has evolved and may continue to evolve in the future. The released versions of the specification can be found under the relevant GitHub tag.
 
@@ -20,7 +20,7 @@ The conforming implementation of the specification is released and included in t
 
 1. [Overview](#1-overview)
 2. [Initializing Persistence Layer in Bal Project](#2-initializing-the-bal-project-with-persistence-layer)
-3. [Generating Persistent Derived Types and Clients](#3-generating-persistent-derived-types-and-clients)
+3. [Generating Persistence Derived Types and Clients](#3-generating-persistence-derived-types-and-clients)
 4. [Push Persistence Schema to the Data Provider](#4-push-persistence-schema-to-the-data-provider)
 
 ## 1. Overview
@@ -86,7 +86,7 @@ Behaviour of the `init` command,
 - User should invoke the command within a bal project
 - If the user invokes the command twice, it will not fail. It will execute the steps once again.
 
-## 3. Generating Persistent Derived Types and Clients
+## 3. Generating Persistence Derived Types and Clients
 
 ```bash
 bal persist generate
@@ -126,7 +126,7 @@ It will add generated files under the conventions,
 
 Behaviour of the `generate` command,
 - User should invoke the command within a bal project
-- The user should have initiated the persistent layer with the latest set of definition files
+- The user should have initiated the persistence layer with the latest set of definition files
 - All model definition files should contain the `persist` module import (`import ballerina/persist as _;`)
 - The Model definition file should contain at least one entity
 - If the user invokes the command twice, it will not fail. It will generate the files once again.
@@ -160,7 +160,7 @@ The database schema will create,
 
 Behaviour of the `push` command,
 - User should invoke the command within a bal project
-- The user should have initiated the persistent layer with the latest set of definition files
+- The user should have initiated the persistence layer with the latest set of definition files
 - All model definition files should contain the `persist` module import (`import ballerina/persist as _;`)
 - The Model definition file should contain at least one entity
 - If the user invokes the command twice, it will not fail. It will generate the schema once again.
