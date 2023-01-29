@@ -82,7 +82,7 @@ medical-center
 └── main.bal
 ```
 
-Prerequisites for the `init` command,
+Behaviour of the `init` command,
 - User should invoke the command within a bal project
 - If the user invokes the command twice, it will not fail. It will execute the steps once again.
 
@@ -124,7 +124,7 @@ It will add generated files under the conventions,
    └── main.bal
    ```
 
-Prerequisites for the `generate` command,
+Behaviour of the `generate` command,
 - User should invoke the command within a bal project
 - The user should have initiated the persistent layer with the latest set of definition files
 - All model definition files should contain the `persist` module import (`import ballerina/persist as _;`)
@@ -158,7 +158,7 @@ The database schema will create,
 1. Tables for each entity with defined primary keys
 2. Create foreign key associations between tables if the model has defined associations between entities
 
-Prerequisites for the `push` command,
+Behaviour of the `push` command,
 - User should invoke the command within a bal project
 - The user should have initiated the persistent layer with the latest set of definition files
 - All model definition files should contain the `persist` module import (`import ballerina/persist as _;`)
