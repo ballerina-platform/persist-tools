@@ -1,219 +1,166 @@
 # Specification: Ballerina Persist Tools
 
-_Owners_: @daneshk @MadhukaHarith92 @sahanHe  
+_Owners_: @daneshk @sahanHe  
 _Reviewers_: @daneshk  
 _Created_: 2022/07/26   
-_Updated_: 2022/08/17  
+_Updated_: 2022/01/29  
 _Edition_: Swan Lake  
 
 ## Introduction
-This is the specification for the Persist Tools of [Ballerina language](https://ballerina.io/), which supports several operations on Ballerina Persistent Layer on top of Ballerina SQL modules and allow performing DB operations easily without writing any SQL statements.
+
+This is the specification for the Persist Tools of [Ballerina language](https://ballerina.io/), which supports several operations on the Ballerina Persistent Layer. Ballerina Persistent Layer provides functionality to store and query data conveniently through a data model instead of SQL query language.
 
 The Persist Tools specification has evolved and may continue to evolve in the future. The released versions of the specification can be found under the relevant GitHub tag.
 
-If you have any feedback or suggestions about the tool, start a discussion via a [GitHub issue](https://github.com/ballerina-platform/ballerina-standard-library/issues) or in the [Discrod server](https://discord.gg/ballerinalang). Based on the outcome of the discussion, the specification and implementation can be updated. Community feedback is always welcome. Any accepted proposal, which affects the specification is stored under `/docs/proposals`. Proposals under discussion can be found with the label `type/proposal` in GitHub.
+If you have any feedback or suggestions about the tool, start a discussion via a [GitHub issue](https://github.com/ballerina-platform/ballerina-standard-library/issues) or in the [Discord server](https://discord.gg/ballerinalang). Based on the outcome of the discussion, the specification and implementation can be updated. Community feedback is always welcome. Any accepted proposal, which affects the specification is stored under `/docs/proposals`. Proposals under discussion can be found with the label `type/proposal` in GitHub.
 
 The conforming implementation of the specification is released and included in the distribution. Any deviation from the specification is considered a bug.
 
 ## Contents
 
 1. [Overview](#1-overview)
-2. [Generating Database Configurations](#2-generating-database-configurations)
-3. [Generating Client Objects](#3-generating-client-objects)
-4. [Create database tables](#4-creating-database-tables)
+2. [Initializing Persistence Layer in Bal Project](#2-initializing-the-bal-project-with-persistence-layer)
+3. [Generating Persistent Derived Types and Clients](#3-generating-persistent-derived-types-and-clients)
+4. [Push Persistence Schema to the Data Provider](#4-push-persistence-schema-to-the-data-provider)
 
 ## 1. Overview
-This specification elaborates on the operations available in the CLI Tool.
+This specification elaborates on the `Persist CLI Tool` commands.
 
-## 2. Generating Database Configurations
-The first step is to create database configurations. Users can do this by executing `bal persist init` command inside a Ballerina project. This will add the following entry to the `Config.toml` file inside the project.
+## 2. Initializing the Bal Project with Persistence Layer
 
-```ballerina
-[orgname.modulename]
-host = "localhost"
-port = 3306
-user = "root"
-password = ""
-database = ""
+```bash
+bal persist init
 ```
 
-Users can then update the above entry with their database configurations.
+The command initializes the bal project with the persistence layer. This command includes the following steps,
 
-- The `bal persist init` command should be executed inside a valid Ballerina project. If not, an error will be thrown.
-- If there isn't a `Config.toml` file inside the project root directory, a new `Config.toml` file will get created with the aforementioned configuration.
-- If there already is a `Config.toml` file inside the project root directory and there is no entry as `ballerina.persist`, a new entry will be added to the existing `Config.toml` file.
-- If there already is a `Config.toml` file inside the project root directory and there already is an entry as `ballerina.persist`, it will be overridden with the above values.
+1. Create persist directory
+   This directory should contain all data model definition files. This file will define the required entities as per the [`persist` specification](https://github.com/ballerina-platform/module-ballerina-persist/blob/main/docs/spec/spec.md#2-data-model-definition)
+2. Create a model definition file in persist directory
+   It will create a file with same name as the package name if no files are present in the `persist` directory. It will create an empty file with required imports(`import ballerina/persist as _;`).
+3. Create database_configurations.bal file inside the `default` module in generated directory
+   This file contains configuration variables to initialize the data stores
+    ```ballerina
+    import ballerinax/mysql.driver as _;
 
-## 3. Generating Client Objects
-Users can define database entities in their Ballerina projects. They can generate client objects corresponding to these entities by executing `bal persist generate` command. Users can then use these client objects to perform database operations programmatically without having to write SQL statements.
+    configurable int port = ?;
+    configurable string host = ?;
+    configurable string user = ?;
+    configurable string database = ?;
+    configurable string password = ?;
+   ```
+4. Update Ballerina.toml with database configurations.
+   It will update the Ballerina.toml file with the configurations needed for the `bal persist push` command to work.
+    ```ballerina
+    [persist.<package name>.storage.mysql]
+    host = "localhost"
+    port = 3306
+    user = "root"
+    password = ""
+    database = "" 
+   ```
+5. Create(Update) Config.toml file inside the Ballerina project.
+   It will create(update) `Config.toml` file with configurables used to initialize variables in Step 3.
+    ```ballerina
+    [<package name>]
+    host = "localhost"
+    port = 3306
+    user = "root"
+    password = ""
+    database = ""
+    ```
 
-Consider the following Ballerina project named `medical-center`.
+The directory structure will be,
 ```
 medical-center
+├── generated
+         └── database_configuration.bal
+├── persist
+         └── medical-center.bal
 ├── Ballerina.toml
-├── entities.bal
+├── Config.toml
 └── main.bal
 ```
 
-Inside the Ballerina project, users can define `Entity` records as follows.
+Prerequisites for the `init` command,
+- User should invoke the command within a bal project
+- If the user invokes the command twice, it will not fail. It will execute the steps once again.
 
-```ballerina
-import ballerina/time;
-import ballerina/persist;
+## 3. Generating Persistent Derived Types and Clients
 
-@persist:Entity {
-    key: ["needId"],
-    tableName: "MedicalNeeds"
-}
-public type MedicalNeed record {|
-    @persist:AutoIncrement
-    readonly int needId = -1;
-
-    int itemId;
-    int beneficiaryId;
-    time:Civil period;
-    string urgency;
-    int quantity;
-|};
+```bash
+bal persist generate
 ```
 
-In this example, `MedicalNeed` is an entity with the attributes `itemId`, `beneficiaryId`, `period`, `urgency`, and `quantity`. When users execute `bal persist generate` inside a Ballerina project, a new module named `clients` will be created. Inside the `clients` module, Ballerina files will be generated encapsulating the client object with respect to each entity defined in the project. The following is the project structure after the command execution.
+The command will generate [Derived Entity Types and Persist Clients](https://github.com/ballerina-platform/module-ballerina-persist/blob/main/docs/spec/spec.md#3-derived-entity-types-and-persist-clients)
+as per the `persist` specification.
+
+It will add generated files under the conventions,
+1. If the file name is the same as the package name, it will generate the files under the `default` module.
+   ```
+   medical-center
+   ├── generated
+         ├── database_configuration.bal
+         ├── generated_client.bal
+         └── generated_types.bal
+   ├── persist
+         └── medical-center.bal
+   ├── Ballerina.toml
+   ├── Config.toml
+   └── main.bal
+   ```
+2. If the file name is different to the package name, it will generate the files under a new submodule with the same name as the file.
+   ```
+   medical-center
+   ├── generated
+        └── medical-item
+              ├── database_configuration.bal
+              ├── generated_client.bal
+              └── generated_types.bal
+   ├── persist
+        └── medical-item.bal
+   ├── Ballerina.toml
+   ├── Config.toml
+   └── main.bal
+   ```
+
+Prerequisites for the `generate` command,
+- User should invoke the command within a bal project
+- The user should have initiated the persistent layer with the latest set of definition files
+- All model definition files should contain the `persist` module import (`import ballerina/persist as _;`)
+- The Model definition file should contain at least one entity
+- If the user invokes the command twice, it will not fail. It will generate the files once again.
+
+## 4. Push Persistence Schema to the Data Provider
+
+```bash
+bal persist push
+```
+
+This command will create the database schema associated with the data model definition. 
 ```
 medical-center
+├── generated
+     ├── database_configuration.bal
+     ├── generated_client.bal
+     └── generated_types.bal
+├── persist
+     ├── medical-center_db_script.sql
+     └── medical-center.bal
 ├── Ballerina.toml
-├── entities.bal
-├── main.bal
-└── modules
-    └── clients
-        └── medicalneed_client.bal
+├── Config.toml
+└── main.bal
 ```
 
-When users execute `bal persist generate` inside the project, the following client object is generated inside the `medicalneed_client.bal`.
+Additionally, this will run the schema against the database defined in  the `Ballerina.toml` file under the heading ([persist.<definition file name>.storage.mysql])
 
-```ballerina
-import ballerina/sql;
-import ballerinax/mysql;
-import ballerina/time;
-import ballerina/persist;
-import foo/persist_generate_1 as entities;
+The database schema will create,
+1. Tables for each entity with defined primary keys
+2. Create foreign key associations between tables if the model has defined associations between entities
 
-public client class MedicalNeedClient {
-    *persist:AbstractPersistClient;
-
-    private final string entityName = "MedicalNeed";
-    private final sql:ParameterizedQuery tableName = `MedicalNeeds`;
-
-    private final map<persist:FieldMetadata> fieldMetadata = {
-        needId: {columnName: "needId", 'type: int, autoGenerated: true},
-        itemId: {columnName: "itemId", 'type: int},
-        beneficiaryId: {columnName: "beneficiaryId", 'type: int},
-        period: {columnName: "period", 'type: time:Civil},
-        urgency: {columnName: "urgency", 'type: string},
-        quantity: {columnName: "quantity", 'type: int}
-    };
-    private string[] keyFields = ["needId"];
-
-    private persist:SQLClient persistClient;
-
-    public function init() returns error? {
-        mysql:Client dbClient = check new (host = host, user = user, password = password, database = database, port = port);
-        self.persistClient = check new (dbClient, self.entityName, self.tableName, self.keyFields, self.fieldMetadata);
-    }
-
-    remote function create(entities:MedicalNeed value) returns entities:MedicalNeed|error? {
-        sql:ExecutionResult result = check self.persistClient.runInsertQuery(value);
-        return {needId: <int>result.lastInsertId, itemId: value.itemId, beneficiaryId: value.beneficiaryId, period: value.period, urgency: value.urgency, quantity: value.quantity};
-    }
-
-    remote function readByKey(int key) returns entities:MedicalNeed|error {
-        return (check self.persistClient.runReadByKeyQuery(entities:MedicalNeed, key)).cloneWithType(entities:MedicalNeed);
-    }
-
-    remote function read(map<anydata>? filter = ()) returns stream<entities:MedicalNeed, error?>|error {
-        stream<anydata, error?> result = check self.persistClient.runReadQuery(entities:MedicalNeed, filter);
-        return new stream<entities:MedicalNeed, error?>(new MedicalNeedStream(result));
-    }
-
-    remote function update(record {} 'object, map<anydata> filter) returns error? {
-        _ = check self.persistClient.runUpdateQuery('object, filter);
-    }
-
-    remote function delete(map<anydata> filter) returns error? {
-        _ = check self.persistClient.runDeleteQuery(filter);
-    }
-
-    function close() returns error? {
-        return self.persistClient.close();
-    }
-}
-
-public class MedicalNeedStream {
-
-    private stream<anydata, error?> anydataStream;
-
-    public isolated function init(stream<anydata, error?> anydataStream) {
-        self.anydataStream = anydataStream;
-    }
-
-    public isolated function next() returns record {|entities:MedicalNeed value;|}|error? {
-        var streamValue = self.anydataStream.next();
-        if streamValue is () {
-            return streamValue;
-        } else if (streamValue is error) {
-            return streamValue;
-        } else {
-            record {|entities:MedicalNeed value;|} nextRecord = {value: check streamValue.value.cloneWithType(entities:MedicalNeed)};
-            return nextRecord;
-        }
-    }
-
-    public isolated function close() returns error? {
-        return self.anydataStream.close();
-    }
-}
-```
-
-In addition, a `database_configuration.bal` file will be generated in the same directory with the configurable variables related to database configurations as follows.
-```ballerina
-configurable int port = ?;
-configurable string host = ?;
-configurable string user = ?;
-configurable string database = ?;
-configurable string password = ?;
-```
-
-## 4. Creating Database Tables
-Users can define database entities in their Ballerina projects. They can create database tables corresponding to these entities by executing `bal persist push` command. Users can then use the generated client objects to perform operations on these tables programmatically without having to write SQL statements.
-
-Consider the following entity record inside the Ballerina project.
-```ballerina
-import ballerina/time;
-import ballerina/persist;
-
-@persist:Entity {
-    key: ["needId"],
-    tableName: "MedicalNeeds"
-}
-public type MedicalNeed record {|
-    @persist:AutoIncrement
-    readonly int needId = -1;
-
-    int itemId;
-    int beneficiaryId;
-    time:Civil period;
-    string urgency;
-    int quantity;
-|};
-```
-
-Suppose the user has defined database configurations in the `Config.toml` file as follows.
-```
-[foo.bar]
-host = "localhost"
-port = 3306
-user = "root"
-password = "Test123#"
-database = "medicals"
-```
-
-When the user executes `bal persist push` command, `MedicalNeeds` table will be created in the `medicals` database with `needId` as the primary key. 
+Prerequisites for the `push` command,
+- User should invoke the command within a bal project
+- The user should have initiated the persistent layer with the latest set of definition files
+- All model definition files should contain the `persist` module import (`import ballerina/persist as _;`)
+- The Model definition file should contain at least one entity
+- If the user invokes the command twice, it will not fail. It will generate the schema once again.
