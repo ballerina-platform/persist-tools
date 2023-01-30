@@ -5,7 +5,11 @@ Ballerina Persist Tools
 [![GitHub Last Commit](https://img.shields.io/github/last-commit/ballerina-platform/persist-tools.svg)](https://github.com/ballerina-platform/persist-tools/commits/main)
 [![codecov](https://codecov.io/gh/ballerina-platform/persist-tools/branch/main/graph/badge.svg)](https://codecov.io/gh/ballerina-platform/persist-tools)
 
-The Persist Tool supports database operations on Ballerina Persistent Layer on top of Ballerina SQL modules without having to write any SQL statements.
+The Ballerina `persist` Tool which supports several operations on the Ballerina Persistence Layer. Ballerina Persistent Layer provides functionality to store and query data conveniently.
+
+The `persist` commands will make it easy to enable Ballerina Persistence Layer in a bal project. With this support, users need not worry about the persistence layer in a project. Users can define an entity data model, validate the model and generate `persist` clients, which provide convenient APIs to store and query data in a data store.
+
+For more information, see [`persist` API Documentation](https://lib.ballerina.io/ballerina/persist/latest).
 
 ## Issues and projects
 
