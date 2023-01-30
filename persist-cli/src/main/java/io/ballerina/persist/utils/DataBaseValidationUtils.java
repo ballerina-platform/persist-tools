@@ -41,7 +41,7 @@ public class DataBaseValidationUtils {
         }
         String database = databaseName.trim();
         if (database.length() > 64) {
-            throw new BalException("database name should be less than or equal 64 characters");
+            throw new BalException("database name should be less than or equal to 64 characters");
         } else {
             Pattern regex = Pattern.compile(REGEX_DB_NAME_PATTERN);
             Matcher matcher = regex.matcher(database);
