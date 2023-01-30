@@ -32,8 +32,12 @@ import io.ballerina.tools.text.TextDocuments;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 import static io.ballerina.persist.nodegenerator.BalSyntaxGenerator.inferRelationDetails;
+import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 
 /**
  * This Class implements the utility methods for persist tool.
@@ -51,7 +55,7 @@ public class BalProjectUtils {
         if (schemaFilename != null) {
             moduleName = schemaFilename.toString().substring(0, schemaFilename.toString().lastIndexOf('.'));
         } else {
-            throw new BalException("The model definition file name is invalid.");
+            throw new BalException("the model definition file name is invalid.");
         }
         Module.Builder moduleBuilder = Module.newBuilder(moduleName);
 
@@ -73,7 +77,7 @@ public class BalProjectUtils {
         DiagnosticResult diagnosticResult = compilation.diagnosticResult();
         if (diagnosticResult.hasErrors()) {
             StringBuilder errorMessage = new StringBuilder();
-            errorMessage.append(String.format("The model definition file(%s) has errors.", schemaPath.getFileName()));
+            errorMessage.append(String.format("the model definition file(%s) has errors.", schemaPath.getFileName()));
             int validErrors = 0;
             for (Diagnostic diagnostic : diagnosticResult.errors()) {
                 errorMessage.append(System.lineSeparator());
@@ -83,6 +87,24 @@ public class BalProjectUtils {
             if (validErrors > 0) {
                 throw new BalException(errorMessage.toString());
             }
+        }
+    }
+
+    public static void validateBallerinaProject(Path projectPath) throws BalException {
+        Optional<Path> ballerinaToml;
+        try (Stream<Path> stream = Files.list(projectPath)) {
+            ballerinaToml = stream.filter(file -> !Files.isDirectory(file))
+                    .map(Path::getFileName)
+                    .filter(Objects::nonNull)
+                    .filter(file -> BALLERINA_TOML.equals(file.toString()))
+                    .findFirst();
+        } catch (IOException e) {
+            throw new BalException(String.format("invalid Ballerina package directory: %s, " +
+                    "%s.%n", projectPath, e.getMessage()));
+        }
+        if (ballerinaToml.isEmpty()) {
+            throw new BalException(String.format("invalid Ballerina package directory: %s, " +
+                    "cannot find 'Ballerina.toml' file.%n", projectPath));
         }
     }
 }

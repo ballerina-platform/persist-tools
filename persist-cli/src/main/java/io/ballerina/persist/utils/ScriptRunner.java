@@ -73,7 +73,7 @@ public class ScriptRunner {
                 connection.commit();
             }
         } catch (Throwable t) {
-            throw new Exception("Could not commit transaction. Message: " + t.getMessage(), t);
+            throw new Exception("could not commit transaction. Message: " + t.getMessage(), t);
         }
     }
 
@@ -89,7 +89,7 @@ public class ScriptRunner {
 
     private void checkForMissingLineTerminator(StringBuilder command) throws Exception {
         if (command != null && command.toString().trim().length() > 0) {
-            throw new Exception("Line missing end-of-line terminator (" + DEFAULT_DELIMITER + ") => " + command);
+            throw new Exception("line missing end-of-line terminator (" + DEFAULT_DELIMITER + ") => " + command);
         }
     }
 

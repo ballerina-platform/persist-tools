@@ -26,9 +26,7 @@ import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.BalSyntaxConstants;
 import io.ballerina.persist.nodegenerator.BalSyntaxGenerator;
 import io.ballerina.persist.utils.BalProjectUtils;
-import io.ballerina.projects.ProjectException;
 import io.ballerina.projects.directory.BuildProject;
-import io.ballerina.projects.directory.ProjectLoader;
 import org.ballerinalang.formatter.core.Formatter;
 import org.ballerinalang.formatter.core.FormatterException;
 import picocli.CommandLine;
@@ -48,6 +46,7 @@ import java.util.stream.Stream;
 
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.nodegenerator.BalSyntaxGenerator.generateClientSyntaxTree;
+import static io.ballerina.persist.utils.BalProjectUtils.validateBallerinaProject;
 import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
 
 
@@ -89,18 +88,18 @@ public class Generate implements BLauncherCmd {
         }
         Path projectPath = Paths.get(sourcePath);
         try {
-            ProjectLoader.loadProject(projectPath);
-        } catch (ProjectException e) {
-            errStream.println("Not a Ballerina project (or any parent up to mount point)\n" +
-                    "You should run this command inside a Ballerina project. ");
+            validateBallerinaProject(projectPath);
+        } catch (BalException e) {
+            errStream.println(e.getMessage());
             return;
         }
+
         BuildProject buildProject = BuildProject.load(projectPath.toAbsolutePath());
         String packageName = buildProject.currentPackage().packageName().value();
         Path persistDir = Paths.get(this.sourcePath, PERSIST_DIRECTORY);
         if (!Files.isDirectory(persistDir, NOFOLLOW_LINKS)) {
-            errStream.println("The persist directory inside the Ballerina project doesn't exist. " +
-                    "Please run `bal persist init` to initiate the project before generation");
+            errStream.println("the persist directory inside the Ballerina project doesn't exist. " +
+                    "run `bal persist init` to initiate the project before generation");
             return;
         }
 
@@ -110,15 +109,14 @@ public class Generate implements BLauncherCmd {
                     .filter(file -> file.toString().toLowerCase(Locale.ENGLISH).endsWith(".bal"))
                     .collect(Collectors.toList());
         } catch (IOException e) {
-            errStream.println("Error while listing the persist model definition files in persist directory. "
+            errStream.println("error while listing the persist model definition files in persist directory. "
                     + e.getMessage());
             return;
         }
 
         if (schemaFilePaths.isEmpty()) {
-            errStream.println("The persist directory doesn't contain any model definition file. " +
-                    "Please run `bal persist init` to initiate the project before generation or " +
-                    "manually add a model definition file to the persist directory");
+            errStream.println("the persist directory doesn't contain any model definition file. " +
+                    "run `bal persist init` to initiate the project before generation.");
             return;
         }
 
@@ -129,7 +127,7 @@ public class Generate implements BLauncherCmd {
                 BalProjectUtils.validateSchemaFile(file);
                 entityModule = BalProjectUtils.getEntities(file);
                 if (entityModule.getEntityMap().isEmpty()) {
-                    errStream.printf("The model definition file(%s) doesn't contain any entity definition.%n",
+                    errStream.printf("the model definition file(%s) doesn't contain any entity definition.%n",
                             file.getFileName());
                     return;
                 }
@@ -139,10 +137,17 @@ public class Generate implements BLauncherCmd {
                     generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY,
                             entityModule.getModuleName());
                 }
+
+                if (!Files.exists(generatedSourceDirPath)) {
+                    errStream.printf("the generated source directory: %s doesn't exist. " +
+                                    "run `bal persist init` to initiate the project before generation.%n",
+                            generatedSourceDirPath);
+                    return;
+                }
                 generateDataTypes(entityModule, generatedSourceDirPath);
                 generateClientBalFile(entityModule, generatedSourceDirPath);
             } catch (BalException e) {
-                errStream.printf("Error while generating types and client for the definition file(%s). %s%n",
+                errStream.printf("error while generating types and client for the definition file(%s). %s%n",
                         file.getFileName(), e.getMessage());
             }
         });
@@ -157,7 +162,7 @@ public class Generate implements BLauncherCmd {
             errStream.printf("Generated Ballerina client object for the `%s` data model" +
                     " inside the generated directory.%n", entityModule.getModuleName());
         } catch (IOException | FormatterException e) {
-            throw new BalException(String.format("Failed to write the client code for the `%s` data model " +
+            throw new BalException(String.format("failed to write the client code for the `%s` data model " +
                     "to the generated_types.bal file.", entityModule.getModuleName()) + e.getMessage());
         }
     }
@@ -179,7 +184,7 @@ public class Generate implements BLauncherCmd {
             writeOutputFile(generatedTypes, generatedTypesPath);
         } catch (IOException | FormatterException e) {
             throw new BalException(String.format(
-                    "Failed to write the types for the %s data model to the generated_types.bal file. ",
+                    "failed to write the types for the %s data model to the generated_types.bal file. ",
                     entityModule.getModuleName()) + e.getMessage());
         }
     }

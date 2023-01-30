@@ -31,10 +31,8 @@ import io.ballerina.persist.utils.SqlScriptGenerationUtils;
 import io.ballerina.projects.DependencyGraph;
 import io.ballerina.projects.Package;
 import io.ballerina.projects.Project;
-import io.ballerina.projects.ProjectException;
 import io.ballerina.projects.ResolvedPackageDependency;
 import io.ballerina.projects.directory.BuildProject;
-import io.ballerina.projects.directory.ProjectLoader;
 import picocli.CommandLine;
 
 import java.io.BufferedReader;
@@ -72,6 +70,7 @@ import static io.ballerina.persist.PersistToolsConstants.PROPERTY_KEY_PATH;
 import static io.ballerina.persist.PersistToolsConstants.USER;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.JDBC_URL_WITHOUT_DATABASE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.JDBC_URL_WITH_DATABASE;
+import static io.ballerina.persist.utils.BalProjectUtils.validateBallerinaProject;
 import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
 
@@ -110,17 +109,16 @@ public class Push implements BLauncherCmd {
         }
 
         try {
-            ProjectLoader.loadProject(Paths.get(this.sourcePath));
-        } catch (ProjectException e) {
-            errStream.println("Not a Ballerina project (or any parent up to mount point)\n" +
-                    "You should run this command inside a Ballerina project.");
+            validateBallerinaProject(Paths.get(this.sourcePath));
+        } catch (BalException e) {
+            errStream.println(e.getMessage());
             return;
         }
 
         Path persistDir = Paths.get(this.sourcePath, PERSIST_DIRECTORY);
         if (!Files.isDirectory(persistDir, NOFOLLOW_LINKS)) {
-            errStream.println("The persist directory inside the Ballerina project doesn't exist. " +
-                    "Please run `bal persist init` to initiate the project before generation");
+            errStream.println("the persist directory inside the Ballerina project doesn't exist. " +
+                    "run `bal persist init` to initiate the project before generation");
             return;
         }
 
@@ -130,15 +128,14 @@ public class Push implements BLauncherCmd {
                     .filter(file -> file.toString().toLowerCase(Locale.ENGLISH).endsWith(".bal"))
                     .collect(Collectors.toList());
         } catch (IOException e) {
-            errStream.println("Error while listing the persist model definition files in persist directory. "
+            errStream.println("error while listing the persist model definition files in persist directory. "
                     + e.getMessage());
             return;
         }
 
         if (schemaFilePaths.isEmpty()) {
-            errStream.println("The persist directory doesn't contain any model definition file. " +
-                    "Please run `bal persist init` to initiate the project before generation or " +
-                    "manually add a model definition file to the persist directory");
+            errStream.println("the persist directory doesn't contain any model definition file. " +
+                    "run `bal persist init` to initiate the project before generation.");
             return;
         }
 
@@ -153,7 +150,7 @@ public class Push implements BLauncherCmd {
                 entityModule = BalProjectUtils.getEntities(file);
                 ArrayList<Entity> entityArray = new ArrayList<>(entityModule.getEntityMap().values());
                 if (entityArray.isEmpty()) {
-                    errStream.printf("The model definition file(%s) doesn't contain any valid entity%n",
+                    errStream.printf("the model definition file(%s) doesn't contain any valid entity%n",
                             file.getFileName());
                     return;
                 }
@@ -161,8 +158,8 @@ public class Push implements BLauncherCmd {
                 SqlScriptGenerationUtils.writeScriptFile(entityModule.getModuleName(), sqlScripts,
                         Paths.get(this.sourcePath, PERSIST_DIRECTORY));
             } catch (BalException e) {
-                errStream.printf("Error occurred while generating SQL schema for persist schema file, %s. "
-                                + e.getMessage() + "%n", file.getFileName());
+                errStream.printf("error occurred while generating SQL schema for persist schema file, %s. "
+                        + e.getMessage() + "%n", file.getFileName());
                 return;
             }
 
@@ -172,7 +169,7 @@ public class Push implements BLauncherCmd {
                 persistConfigurations = TomlSyntaxGenerator.readPersistConfigurations(
                         entityModule.getModuleName(), ballerinaTomlPath);
             } catch (BalException e) {
-                errStream.printf("Error occurred while loading db configurations for the data model, %s. "
+                errStream.printf("error occurred while loading db configurations for the data model, %s. "
                         + e.getMessage() + "%n", entityModule.getModuleName());
                 return;
             }
@@ -185,8 +182,8 @@ public class Push implements BLauncherCmd {
                     ScriptRunner sr = new ScriptRunner(connection);
                     sr.runQuery(query);
                 } catch (SQLException e) {
-                    errStream.println("Error occurred while creating the database, " +
-                            persistConfigurations.getDbConfig().getDatabase() + "." + e.getMessage());
+                    errStream.println("error occurred while creating the database, " +
+                            persistConfigurations.getDbConfig().getDatabase() + ". " + e.getMessage());
                     return;
                 }
                 errStream.println("Created database `" + persistConfigurations.getDbConfig().getDatabase() + "`.");
@@ -200,21 +197,21 @@ public class Push implements BLauncherCmd {
                     ScriptRunner sr = new ScriptRunner(connection);
                     sr.runScript(fileReader);
                 } catch (IOException e) {
-                    errStream.println("Error occurred while reading SQL schema file, "
-                            + sqlFilePath + "." + e.getMessage());
+                    errStream.println("error occurred while reading SQL schema file, "
+                            + sqlFilePath + ". " + e.getMessage());
                     return;
                 } catch (Exception e) {
-                    errStream.println("Error occurred while executing SQL schema file, "
-                            + sqlFilePath + "." + e.getMessage());
+                    errStream.println("error occurred while executing SQL schema file, "
+                            + sqlFilePath + ". " + e.getMessage());
                     return;
                 }
                 errStream.println("Created tables for definition in " + file.getFileName() + " in the database `" +
                         persistConfigurations.getDbConfig().getDatabase() + "`.");
             } catch (BalException e) {
-                errStream.println("Error occurred while executing the SQL script for the persist schema file, "
-                        + file.getFileName() + "." + e.getMessage());
+                errStream.println("error occurred while executing the SQL script for the persist schema file, "
+                        + file.getFileName() + ". " + e.getMessage());
             } catch (IOException e) {
-                errStream.println("Error occurred in database driver loader. " + e.getMessage());
+                errStream.println("error occurred in database driver loader. " + e.getMessage());
             }
         });
 
@@ -252,26 +249,26 @@ public class Push implements BLauncherCmd {
             try {
                 driverLoader = new JdbcDriverLoader(urls, driverPath);
             } catch (IOException e) {
-                throw new BalException("Couldn't load the driver from the driver path. " + e.getMessage());
+                throw new BalException("couldn't load the driver from the driver path. " + e.getMessage());
             }
         }
         return driverLoader;
     }
 
-    private Driver getJdbcDriver (JdbcDriverLoader driverLoader) throws BalException {
+    private Driver getJdbcDriver(JdbcDriverLoader driverLoader) throws BalException {
         Driver driver;
         try {
             Class<?> drvClass = driverLoader.loadClass(MYSQL_DRIVER_CLASS);
             driver = (Driver) drvClass.getDeclaredConstructor().newInstance();
         } catch (ClassNotFoundException e) {
-            throw new BalException("Required database driver class not found. " + e.getMessage());
+            throw new BalException("required database driver class not found. " + e.getMessage());
         } catch (InstantiationException | InvocationTargetException e) {
-            throw new BalException("The database driver instantiation is failed. " + e.getMessage());
+            throw new BalException("the database driver instantiation is failed. " + e.getMessage());
         } catch (IllegalAccessException e) {
-            throw new BalException("Access denied while trying to instantiation the database driver. " +
+            throw new BalException("access denied while trying to instantiation the database driver. " +
                     e.getMessage());
         } catch (NoSuchMethodException e) {
-            throw new BalException("Method not found while trying to instantiate jdbc driver. "
+            throw new BalException("method not found while trying to instantiate jdbc driver. "
                     + e.getMessage());
         }
         return driver;
@@ -322,6 +319,6 @@ public class Push implements BLauncherCmd {
                 }
             }
         }
-        throw new BalException("Failed to retrieve MySQL driver path in the local cache.");
+        throw new BalException("failed to retrieve MySQL driver path in the local cache.");
     }
 }

@@ -160,8 +160,8 @@ public class BalSyntaxGenerator {
         rootNote.imports().stream().filter(importNode -> importNode.orgName().isPresent() && importNode.orgName().get()
                 .orgName().text().equals(KEYWORD_BALLERINA) &&
                         importNode.moduleName().stream().anyMatch(node -> node.text().equals(KEYWORD_PERSIST)))
-                .findFirst().orElseThrow(() -> new BalException("No import for ballerina/persist found in the file. " +
-                        "Please add the import and try again."));
+                .findFirst().orElseThrow(() -> new BalException("no import for ballerina/persist found in the file. " +
+                        "add the import and try again."));
 
         Entity.Builder entityBuilder;
         for (ModuleMemberDeclarationNode moduleNode : nodeList) {
@@ -248,7 +248,7 @@ public class BalSyntaxGenerator {
                 return getType((TypeDescriptorNode) ((OptionalTypeDescriptorNode) typeDesc).typeDescriptor(),
                         fieldName);
             default:
-                throw new BalException(String.format("Unsupported data type found for the field `%s`", fieldName));
+                throw new BalException(String.format("unsupported data type found for the field `%s`", fieldName));
         }
     }
 
@@ -276,7 +276,7 @@ public class BalSyntaxGenerator {
                                     .filter(assocfield -> assocfield.getRelation() == null).forEach(assocfield -> {
                                         // one-to-many or many-to-many with no relation annotations
                                         if (field.isArrayType() && assocfield.isArrayType()) {
-                                            throw new RuntimeException("Unsupported many to many relation between " +
+                                            throw new RuntimeException("unsupported many to many relation between " +
                                                     entity.getEntityName() + " and " + assocEntity.getEntityName());
                                         }
                                         if (field.isArrayType() || field.isOptionalType()) {
@@ -428,7 +428,7 @@ public class BalSyntaxGenerator {
 
         Collection<Entity> entityArray = entityModule.getEntityMap().values();
         if (entityArray.size() == 0) {
-            throw new BalException("No entities found in the schema file.");
+            throw new BalException("data definition file() does not contain any entities.");
         }
         Function init = createInitFunction(entityArray);
         clientObject.addMember(init.getFunctionDefinitionNode(), true);

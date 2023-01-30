@@ -49,7 +49,7 @@ public class JdbcDriverLoader extends URLClassLoader {
         try (Stream<Path> walk = Files.walk(path)) {
             return walk != null ? walk.filter(Files::isRegularFile).collect(Collectors.toList()) : new ArrayList<>();
         } catch (IOException e) {
-            throw new BalException("Error occurred while loading JDBC driver : " + e.getMessage());
+            throw new BalException("failed to load JDBC driver : " + e.getMessage());
         }
     }
 }
