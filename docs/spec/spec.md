@@ -38,7 +38,7 @@ The command initializes the bal project with the persistence layer. This command
    This directory should contain all data model definition files. This file will define the required entities as per the [`persist` specification](https://github.com/ballerina-platform/module-ballerina-persist/blob/main/docs/spec/spec.md#2-data-model-definition)
 2. Create a model definition file in persist directory
    It will create a file with same name as the package name if no files are present in the `persist` directory. It will create an empty file with required imports(`import ballerina/persist as _;`).
-3. Create database_configurations.bal file inside the `default` module in generated directory
+3. Create database_configurations.bal file inside the `default` module in the generated directory if the definition filename inside the `persist` directory is the same as the Ballerina package name. If not, create the bal file inside the submodule named as the definition file name.
    This file contains configuration variables to initialize the data stores
     ```ballerina
     import ballerinax/mysql.driver as _;
@@ -52,7 +52,7 @@ The command initializes the bal project with the persistence layer. This command
 4. Update Ballerina.toml with database configurations.
    It will update the Ballerina.toml file with the configurations needed for the `bal persist push` command to work.
     ```ballerina
-    [persist.<package name>.storage.mysql]
+    [persist.<data model name(definition filename)>.storage.mysql]
     host = "localhost"
     port = 3306
     user = "root"
@@ -62,7 +62,7 @@ The command initializes the bal project with the persistence layer. This command
 5. Create(Update) Config.toml file inside the Ballerina project.
    It will create(update) `Config.toml` file with configurables used to initialize variables in Step 3.
     ```ballerina
-    [<package name>]
+    [<data model name(definition filename>]
     host = "localhost"
     port = 3306
     user = "root"
@@ -84,7 +84,7 @@ medical-center
 
 Behaviour of the `init` command,
 - User should invoke the command within a bal project
-- If the user invokes the command twice, it will not fail. It will execute the steps once again.
+- If the user invokes the command twice, it will not fail. It will verify that all the configurations are in place for the definition files defined inside the `persist` directory. If not, add missing configurations and files.
 
 ## 3. Generating Persistence Derived Types and Clients
 
@@ -109,7 +109,7 @@ It will add generated files under the conventions,
    ├── Config.toml
    └── main.bal
    ```
-2. If the file name is different to the package name, it will generate the files under a new submodule with the same name as the file.
+2. If the file name is different from the package name, it will generate the files under a new submodule with the same name as the file.
    ```
    medical-center
    ├── generated
