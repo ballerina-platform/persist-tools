@@ -32,8 +32,12 @@ import io.ballerina.tools.text.TextDocuments;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 import static io.ballerina.persist.nodegenerator.BalSyntaxGenerator.inferRelationDetails;
+import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 
 /**
  * This Class implements the utility methods for persist tool.
@@ -83,6 +87,24 @@ public class BalProjectUtils {
             if (validErrors > 0) {
                 throw new BalException(errorMessage.toString());
             }
+        }
+    }
+
+    public static void validateBallerinaProject(Path projectPath) throws BalException {
+        Optional<Path> ballerinaToml;
+        try (Stream<Path> stream = Files.list(projectPath)) {
+            ballerinaToml = stream.filter(file -> !Files.isDirectory(file))
+                    .map(Path::getFileName)
+                    .filter(Objects::nonNull)
+                    .filter(file -> BALLERINA_TOML.equals(file.toString()))
+                    .findFirst();
+        } catch (IOException e) {
+            throw new BalException(String.format("ballerina: Invalid Ballerina package directory: %s, " +
+                    "%s.%n", projectPath, e.getMessage()));
+        }
+        if (ballerinaToml.isEmpty()) {
+            throw new BalException(String.format("ballerina: Invalid Ballerina package directory: %s, " +
+                    "cannot find 'Ballerina.toml' file.%n", projectPath));
         }
     }
 }

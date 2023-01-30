@@ -26,9 +26,7 @@ import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.BalSyntaxConstants;
 import io.ballerina.persist.nodegenerator.BalSyntaxGenerator;
 import io.ballerina.persist.utils.BalProjectUtils;
-import io.ballerina.projects.ProjectException;
 import io.ballerina.projects.directory.BuildProject;
-import io.ballerina.projects.directory.ProjectLoader;
 import org.ballerinalang.formatter.core.Formatter;
 import org.ballerinalang.formatter.core.FormatterException;
 import picocli.CommandLine;
@@ -48,6 +46,7 @@ import java.util.stream.Stream;
 
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.nodegenerator.BalSyntaxGenerator.generateClientSyntaxTree;
+import static io.ballerina.persist.utils.BalProjectUtils.validateBallerinaProject;
 import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
 
 
@@ -89,12 +88,12 @@ public class Generate implements BLauncherCmd {
         }
         Path projectPath = Paths.get(sourcePath);
         try {
-            ProjectLoader.loadProject(projectPath);
-        } catch (ProjectException e) {
-            errStream.println("Not a Ballerina project (or any parent up to mount point)\n" +
-                    "You should run this command inside a Ballerina project. ");
+            validateBallerinaProject(projectPath);
+        } catch (BalException e) {
+            errStream.println(e.getMessage());
             return;
         }
+
         BuildProject buildProject = BuildProject.load(projectPath.toAbsolutePath());
         String packageName = buildProject.currentPackage().packageName().value();
         Path persistDir = Paths.get(this.sourcePath, PERSIST_DIRECTORY);
@@ -117,8 +116,7 @@ public class Generate implements BLauncherCmd {
 
         if (schemaFilePaths.isEmpty()) {
             errStream.println("The persist directory doesn't contain any model definition file. " +
-                    "Please run `bal persist init` to initiate the project before generation or " +
-                    "manually add a model definition file to the persist directory");
+                    "Please run `bal persist init` to initiate the project before generation.");
             return;
         }
 
@@ -138,6 +136,12 @@ public class Generate implements BLauncherCmd {
                 } else {
                     generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY,
                             entityModule.getModuleName());
+                }
+
+                if (!Files.exists(generatedSourceDirPath)) {
+                    errStream.println("The generated source directory: %s doesn't exist. " +
+                            "Please run `bal persist init` to initiate the project before generation.");
+                    return;
                 }
                 generateDataTypes(entityModule, generatedSourceDirPath);
                 generateClientBalFile(entityModule, generatedSourceDirPath);
