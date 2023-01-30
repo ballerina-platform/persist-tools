@@ -428,7 +428,7 @@ public class BalSyntaxGenerator {
 
         Collection<Entity> entityArray = entityModule.getEntityMap().values();
         if (entityArray.size() == 0) {
-            throw new BalException("no entities found in the schema file.");
+            throw new BalException("data definition file() does not contain any entities.");
         }
         Function init = createInitFunction(entityArray);
         clientObject.addMember(init.getFunctionDefinitionNode(), true);
