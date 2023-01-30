@@ -98,7 +98,7 @@ public class Init implements BLauncherCmd {
                 Files.createDirectory(persistDirPath.toAbsolutePath());
                 errStream.println("Created persist directory in the Ballerina project.");
             } catch (IOException e) {
-                errStream.println("Error while creating the persist directory. " + e.getMessage());
+                errStream.println("error while creating the persist directory. " + e.getMessage());
                 return;
             }
         }
@@ -111,7 +111,7 @@ public class Init implements BLauncherCmd {
                     .map(file -> file.toString().replace(BAL_EXTENTION, ""))
                     .collect(Collectors.toList());
         } catch (IOException e) {
-            errStream.println("Error while listing the model definition files in persist directory. " + e.getMessage());
+            errStream.println("error while listing the model definition files in persist directory. " + e.getMessage());
             return;
         }
 
@@ -122,7 +122,7 @@ public class Init implements BLauncherCmd {
                 errStream.printf("Created model definition file(%s) in persist directory.%n",
                         packageName + BAL_EXTENTION);
             } catch (BalException e) {
-                errStream.println("Error while creating the model definition file in persist directory. "
+                errStream.println("error while creating the model definition file in persist directory. "
                         + e.getMessage());
                 return;
             }
@@ -132,18 +132,18 @@ public class Init implements BLauncherCmd {
             try {
                 Files.createDirectory(generatedSourceDirPath.toAbsolutePath());
             } catch (IOException e) {
-                errStream.println("Error while creating the generated directory. " + e.getMessage());
+                errStream.println("error while creating the generated directory. " + e.getMessage());
                 return;
             }
         }
         for (String file : schemaFiles) {
             if (!ProjectUtils.validateModuleName(file)) {
-                errStream.println("Invalid definition file name : '" + file + "' :\n" +
-                        "File name can only contain alphanumerics, underscores and periods");
+                errStream.println("invalid definition file name : '" + file + "' :\n" +
+                        "file name can only contain alphanumerics, underscores and periods");
                 return;
             } else if (!ProjectUtils.validateNameLength(file)) {
-                errStream.println("Invalid definition file name : '" + file + "' :\n" +
-                        "Maximum length of file name is 256 characters");
+                errStream.println("invalid definition file name : '" + file + "' :\n" +
+                        "maximum length of file name is 256 characters");
                 return;
             }
             Path schemaDirPath;
@@ -160,7 +160,7 @@ public class Init implements BLauncherCmd {
                             "Created database_configurations.bal file inside `%s` module in generated directory.%n",
                             file.equals(packageName) ? "default" : file);
                 } catch (BalException e) {
-                    errStream.println("Error while generating the database_configurations.bal file. " + e.getMessage());
+                    errStream.println("error while generating the database_configurations.bal file. " + e.getMessage());
                     return;
                 }
             }
@@ -174,7 +174,7 @@ public class Init implements BLauncherCmd {
                 updateConfigTomlFile(schemaFiles, packageName);
             }
         } catch (BalException e) {
-            errStream.println("Error while adding database configurations. " + e.getMessage());
+            errStream.println("error while adding database configurations. " + e.getMessage());
         }
     }
 
@@ -206,7 +206,7 @@ public class Init implements BLauncherCmd {
                     Paths.get(this.sourcePath, BALLERINA_TOML).toAbsolutePath().toString());
             errStream.println("Updated Ballerina.toml with database configurations.");
         } catch (Exception e) {
-            throw new BalException("Error while updating Ballerina.toml with database configurations . " +
+            throw new BalException("failed to Ballerina.toml with database configurations . " +
                     e.getMessage());
         }
     }
@@ -218,7 +218,7 @@ public class Init implements BLauncherCmd {
             writeOutputSyntaxTree(syntaxTree, configPath.toString());
             errStream.println("Created Config.toml file inside the Ballerina project.");
         } catch (Exception e) {
-            throw new BalException("Error while adding Config.toml file inside the Ballerina project. " +
+            throw new BalException("failed to add Config.toml file inside the Ballerina project. " +
                     e.getMessage());
         }
     }
@@ -230,7 +230,7 @@ public class Init implements BLauncherCmd {
             writeOutputSyntaxTree(syntaxTree, configPath.toString());
             errStream.println("Updated Config.toml file inside the Ballerina project.");
         } catch (Exception e) {
-            throw new BalException("Error while updating Config.toml file inside the Ballerina project. " +
+            throw new BalException("failed to update Config.toml file inside the Ballerina project. " +
                     e.getMessage());
         }
     }
@@ -243,7 +243,7 @@ public class Init implements BLauncherCmd {
                 Files.createDirectories(parentDirectory);
             } catch (IOException e) {
                 throw new BalException(
-                        String.format("Failed to create the parent directories of output path %s. %s",
+                        String.format("failed to create the parent directories of output path %s. %s",
                                 parentDirectory, e.getMessage()));
             }
             content = syntaxTree.toSourceCode();

@@ -98,8 +98,8 @@ public class Generate implements BLauncherCmd {
         String packageName = buildProject.currentPackage().packageName().value();
         Path persistDir = Paths.get(this.sourcePath, PERSIST_DIRECTORY);
         if (!Files.isDirectory(persistDir, NOFOLLOW_LINKS)) {
-            errStream.println("The persist directory inside the Ballerina project doesn't exist. " +
-                    "Please run `bal persist init` to initiate the project before generation");
+            errStream.println("the persist directory inside the Ballerina project doesn't exist. " +
+                    "run `bal persist init` to initiate the project before generation");
             return;
         }
 
@@ -109,14 +109,14 @@ public class Generate implements BLauncherCmd {
                     .filter(file -> file.toString().toLowerCase(Locale.ENGLISH).endsWith(".bal"))
                     .collect(Collectors.toList());
         } catch (IOException e) {
-            errStream.println("Error while listing the persist model definition files in persist directory. "
+            errStream.println("error while listing the persist model definition files in persist directory. "
                     + e.getMessage());
             return;
         }
 
         if (schemaFilePaths.isEmpty()) {
-            errStream.println("The persist directory doesn't contain any model definition file. " +
-                    "Please run `bal persist init` to initiate the project before generation.");
+            errStream.println("the persist directory doesn't contain any model definition file. " +
+                    "run `bal persist init` to initiate the project before generation.");
             return;
         }
 
@@ -127,7 +127,7 @@ public class Generate implements BLauncherCmd {
                 BalProjectUtils.validateSchemaFile(file);
                 entityModule = BalProjectUtils.getEntities(file);
                 if (entityModule.getEntityMap().isEmpty()) {
-                    errStream.printf("The model definition file(%s) doesn't contain any entity definition.%n",
+                    errStream.printf("the model definition file(%s) doesn't contain any entity definition.%n",
                             file.getFileName());
                     return;
                 }
@@ -139,15 +139,15 @@ public class Generate implements BLauncherCmd {
                 }
 
                 if (!Files.exists(generatedSourceDirPath)) {
-                    errStream.printf("The generated source directory: %s doesn't exist. " +
-                                    "Please run `bal persist init` to initiate the project before generation.%n",
+                    errStream.printf("the generated source directory: %s doesn't exist. " +
+                                    "run `bal persist init` to initiate the project before generation.%n",
                             generatedSourceDirPath);
                     return;
                 }
                 generateDataTypes(entityModule, generatedSourceDirPath);
                 generateClientBalFile(entityModule, generatedSourceDirPath);
             } catch (BalException e) {
-                errStream.printf("Error while generating types and client for the definition file(%s). %s%n",
+                errStream.printf("error while generating types and client for the definition file(%s). %s%n",
                         file.getFileName(), e.getMessage());
             }
         });
@@ -162,7 +162,7 @@ public class Generate implements BLauncherCmd {
             errStream.printf("Generated Ballerina client object for the `%s` data model" +
                     " inside the generated directory.%n", entityModule.getModuleName());
         } catch (IOException | FormatterException e) {
-            throw new BalException(String.format("Failed to write the client code for the `%s` data model " +
+            throw new BalException(String.format("failed to write the client code for the `%s` data model " +
                     "to the generated_types.bal file.", entityModule.getModuleName()) + e.getMessage());
         }
     }
@@ -184,7 +184,7 @@ public class Generate implements BLauncherCmd {
             writeOutputFile(generatedTypes, generatedTypesPath);
         } catch (IOException | FormatterException e) {
             throw new BalException(String.format(
-                    "Failed to write the types for the %s data model to the generated_types.bal file. ",
+                    "failed to write the types for the %s data model to the generated_types.bal file. ",
                     entityModule.getModuleName()) + e.getMessage());
         }
     }

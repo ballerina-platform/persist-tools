@@ -37,17 +37,17 @@ public class DataBaseValidationUtils {
 
     public static String validateDatabaseInput(String databaseName) throws BalException {
         if (databaseName == null || databaseName.isEmpty() || databaseName.isBlank()) {
-            throw new BalException("Database name cannot be empty");
+            throw new BalException("database name cannot be empty");
         }
         String database = databaseName.trim();
         if (database.length() > 64) {
-            throw new BalException("Database name should be less than or equal 64 characters");
+            throw new BalException("database name should be less than or equal 64 characters");
         } else {
             Pattern regex = Pattern.compile(REGEX_DB_NAME_PATTERN);
             Matcher matcher = regex.matcher(database);
             boolean illegalCharExists = matcher.find();
             if (illegalCharExists) {
-                throw new BalException("Database name contains illegal characters. "); // Add illegal character here.
+                throw new BalException("database name contains illegal characters. "); // Add illegal character here.
             }
             return database;
         }

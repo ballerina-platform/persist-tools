@@ -231,13 +231,13 @@ public class SqlScriptGenerationUtils {
                 case PersistToolsConstants.BallerinaTypes.STRING:
                     return PersistToolsConstants.SqlTypes.VARCHAR;
                 default:
-                    throw new BalException("Couldn't find equivalent SQL type for the field type: " + fieldType);
+                    throw new BalException("couldn't find equivalent SQL type for the field type: " + fieldType);
             }
         } else {
             if (PersistToolsConstants.BallerinaTypes.BYTE.equals(field.getFieldType())) {
                 return PersistToolsConstants.SqlTypes.BINARY;
             }
-            throw new BalException("Couldn't find equivalent SQL type for the field type: " + fieldType);
+            throw new BalException("couldn't find equivalent SQL type for the field type: " + fieldType);
         }
     }
 
