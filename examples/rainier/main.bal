@@ -186,7 +186,7 @@ public function main() returns error? {
     stream<rainier:Building, error?> buildingStream = rainierClient->/building.get();
     rainier:Building[] buildings = check from rainier:Building building_temp in buildingStream
         select building_temp;
-    buildingRetrieved = check rainierClient->/building/[building1.buildingCode].put({
+    rainier:Building buildingUpdated = check rainierClient->/building/[building1.buildingCode].put({
         city: "Galle",
         state: "Southern Province",
         postalCode: "10890",
@@ -202,7 +202,7 @@ public function main() returns error? {
     if buildingRetrievedError !is persist:Error {
         panic error("Error expected");
     }
-    buildingRetrieved = check rainierClient->/building/[building1.buildingCode].delete();
+    rainier:Building buildingDeleted = check rainierClient->/building/[building1.buildingCode].delete();
     stream<rainier:Building, error?> buildingStream2 = rainierClient->/building.get();
     rainier:Building[] buildingSet = check from rainier:Building building_temp2 in buildingStream2
         select building_temp2;
@@ -215,8 +215,8 @@ public function main() returns error? {
     departmentRetrieved = check rainierClient->/department/[department2.deptNo].get();
     departmentRetrieved = check rainierClient->/department/[department3.deptNo].get();
     departmentRetrieved = check rainierClient->/department/[department1.deptNo].get();
-    rainier:Department|error departmentRetrievedError = rainierClient->/department/["invalid-department-id"].get();
-    if departmentRetrievedError !is persist:Error {
+    rainier:Department|error departmentError = rainierClient->/department/["invalid-department-id"].get();
+    if departmentError !is persist:Error {
         panic error("Error expected");
     }
 
@@ -224,26 +224,26 @@ public function main() returns error? {
     rainier:Department[] departments = check from rainier:Department department_temp in departmentStream
         select department_temp;
 
-    departmentRetrieved = check rainierClient->/department/[department1.deptNo].put({
+    rainier:Department departmentUpdated = check rainierClient->/department/[department1.deptNo].put({
         deptName: "Finance & Legalities"
     });
 
     departmentRetrieved = check rainierClient->/department/[department1.deptNo].get();
 
-    departmentRetrievedError = rainierClient->/department/["invalid-department-id"].put({
+    departmentError = rainierClient->/department/["invalid-department-id"].put({
         deptName: "Human Resources"
     });
-    if departmentRetrievedError !is persist:Error {
+    if departmentError !is persist:Error {
         panic error("Error expected");
     }
-    departmentRetrieved = check rainierClient->/department/[department1.deptNo].delete();
+    rainier:Department departmentDeleted = check rainierClient->/department/[department1.deptNo].delete();
 
     stream<rainier:Department, error?> departmentStream2 = rainierClient->/department.get();
     departments = check from rainier:Department department_Temp2 in departmentStream2
         select department_Temp2;
 
-    departmentRetrievedError = rainierClient->/department/[department1.deptNo].delete();
-    if departmentRetrievedError !is persist:Error {
+    departmentError = rainierClient->/department/[department1.deptNo].delete();
+    if departmentError !is persist:Error {
         panic error("Error expected");
     }
     io:println("Department examples successfuly executed!");
@@ -254,30 +254,30 @@ public function main() returns error? {
     workspaceRetrieved = check rainierClient->/workspace/[workspace2.workspaceId].get();
     workspaceRetrieved = check rainierClient->/workspace/[workspace3.workspaceId].get();
     workspaceRetrieved = check rainierClient->/workspace/[workspace1.workspaceId].get();
-    rainier:Workspace|error workspaceRetrievedError = rainierClient->/workspace/["invalid-workspace-id"].get();
-    if workspaceRetrievedError !is persist:Error {
+    rainier:Workspace|error workspaceError = rainierClient->/workspace/["invalid-workspace-id"].get();
+    if workspaceError !is persist:Error {
         panic error("Error expected");
     }
     stream<rainier:Workspace, error?> workspaceStream = rainierClient->/workspace.get();
     rainier:Workspace[] workspaces = check from rainier:Workspace workspace_temp in workspaceStream
         select workspace_temp;
-    workspaceRetrievedError = check rainierClient->/workspace/[workspace1.workspaceId].put({
+    rainier:Workspace workspaceUpdated = check rainierClient->/workspace/[workspace1.workspaceId].put({
         workspaceType: "large"
     });
     workspaceRetrieved = check rainierClient->/workspace/[workspace1.workspaceId].get();
 
-    workspaceRetrievedError = rainierClient->/workspace/["invalid-workspace-id"].put({
+    workspaceError = rainierClient->/workspace/["invalid-workspace-id"].put({
         workspaceType: "large"
     });
 
-    workspaceRetrieved = check rainierClient->/workspace/[workspace1.workspaceId].delete();
+    rainier:Workspace workspaceDeleted = check rainierClient->/workspace/[workspace1.workspaceId].delete();
 
     stream<rainier:Workspace, error?> workspaceStream2 = rainierClient->/workspace.get();
     workspaces = check from rainier:Workspace workspace_temp2 in workspaceStream2
         select workspace_temp2;
 
-    workspaceRetrievedError = rainierClient->/workspace/[workspace1.workspaceId].delete();
-    if workspaceRetrievedError !is persist:Error {
+    workspaceError = rainierClient->/workspace/[workspace1.workspaceId].delete();
+    if workspaceError !is persist:Error {
         panic error("Error expected");
     }
 
@@ -292,32 +292,32 @@ public function main() returns error? {
 
     employeeRetrieved = check rainierClient->/employee/[employee3.empNo].get();
     employeeRetrieved = check rainierClient->/employee/[employee1.empNo].get();
-    rainier:Employee|error employeeRetrievedError = rainierClient->/employee/["invalid-employee-id"].get();
+    rainier:Employee|error employeeError = rainierClient->/employee/["invalid-employee-id"].get();
     stream<rainier:Employee, error?> employeeStream = rainierClient->/employee.get();
     rainier:Employee[] employees = check from rainier:Employee employee in employeeStream
         select employee;
 
-    employeeRetrieved = check rainierClient->/employee/[employee1.empNo].put({
+    rainier:Employee employeeUpdated = check rainierClient->/employee/[employee1.empNo].put({
         lastName: "Jones",
         departmentDeptNo: "department-3",
         birthDate: {year: 1994, month: 11, day: 13}
     });
     employeeRetrieved = check rainierClient->/employee/[employee1.empNo].get();
-    employeeRetrievedError = rainierClient->/employee/["invalid-employee-id"].put({
+    employeeError = rainierClient->/employee/["invalid-employee-id"].put({
         lastName: "Jones"
     });
 
-    employeeRetrievedError = rainierClient->/employee/[employee1.empNo].put({
+    employeeError = rainierClient->/employee/[employee1.empNo].put({
         workspaceWorkspaceId: "invalid-workspaceWorkspaceId"
     });
 
-    employeeRetrieved = check rainierClient->/employee/[employee1.empNo].delete();
+    rainier:Employee employeeDeleted = check rainierClient->/employee/[employee1.empNo].delete();
 
     stream<rainier:Employee, error?> employeeStream2 = rainierClient->/employee.get();
     employees = check from rainier:Employee employee_temp2 in employeeStream2
         select employee_temp2;
-    employeeRetrievedError = rainierClient->/employee/[employee1.empNo].get();
-    if employeeRetrievedError !is persist:Error {
+    employeeError = rainierClient->/employee/[employee1.empNo].get();
+    if employeeError !is persist:Error {
         panic error("Error expected");
     }
 
@@ -336,7 +336,7 @@ public function main() returns error? {
     rainier:OrderItem orderItem = check rainierClient->/orderitem/[orderItem1.itemId]/[orderItem1.orderId].get();
     rainier:OrderItem|error orderItemError = rainierClient->/orderitem/["invalid-order-id"]/[orderItem1.itemId].get();
     orderItemError = rainierClient->/orderitem/[orderItem1.orderId]/["invalid-item-id"].get();
-    orderItem = check rainierClient->/orderitem/[orderItem2.itemId]/[orderItem2.orderId].put({
+    rainier:OrderItem orderItemUpdated = check rainierClient->/orderitem/[orderItem2.itemId]/[orderItem2.orderId].put({
         quantity: orderItem2Updated.quantity,
         notes: orderItem2Updated.notes
     });
@@ -345,7 +345,7 @@ public function main() returns error? {
         quantity: 239,
         notes: "updated notes"
     });
-    orderItem = check rainierClient->/orderitem/[orderItem2.itemId]/[orderItem2.orderId].delete();
+    rainier:OrderItem orderItemDeleted = check rainierClient->/orderitem/[orderItem2.itemId]/[orderItem2.orderId].delete();
     orderItemError = rainierClient->/orderitem/[orderItem2.itemId]/[orderItem2.orderId].get();
     if orderItemError !is persist:Error {
         panic error("Error expected");

@@ -1,6 +1,6 @@
-// Copyright (c) 2022 WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+// Copyright (c) 2023 WSO2 LLC. (http://www.wso2.org) All Rights Reserved.
 //
-// WSO2 Inc. licenses this file to you under the Apache License,
+// WSO2 LLC. licenses this file to you under the Apache License,
 // Version 2.0 (the "License"); you may not use this file except
 // in compliance with the License.
 // You may obtain a copy of the License at
@@ -15,39 +15,37 @@
 // under the License.
 
 import ballerina/io;
-import foo/medical_center.entity;
+import foo/medical_center.entities;
 
 public function main() returns error? {
-    entity:EntityClient mcClient = check new ();
-    entity:MedicalItemInsert item = {
+    entities:EntitiesClient mcClient = check new ();
+    entities:MedicalItemInsert item = {
         itemId: 1,
         name: "item name",
         itemType: "type1",
         unit: "ml"
     };
-    io:println("1");
     int[] itemIds = check mcClient->/medicalitem.post([item]);
     io:println("Created item id: ", itemIds[0]);
-    io:println("1");
-    entity:MedicalItem retrievedItem = check mcClient->/medicalitem/[itemIds[0]].get();
+    entities:MedicalItem retrievedItem = check mcClient->/medicalitem/[itemIds[0]].get();
     io:println("Retrieved item: ", retrievedItem);
 
-    entity:MedicalItem|error itemError = mcClient->/medicalitem/[5].get();
+    entities:MedicalItem|error itemError = mcClient->/medicalitem/[5];
     io:println("Retrieved non-existence item: ", itemError);
 
-    entity:MedicalItem item2 = {
+    entities:MedicalItem item2 = {
         itemId: 2,
         name: "item2 name",
         itemType: "type1",
         unit: "ml"
     };
-    entity:MedicalItem item3 = {
+    entities:MedicalItem item3 = {
         itemId: 3,
         name: "item2 name",
         itemType: "type2",
         unit: "ml"
     };
-     entity:MedicalItem item4 = {
+     entities:MedicalItem item4 = {
         itemId: 4,
         name: "item2 name",
         itemType: "type2",
@@ -56,14 +54,14 @@ public function main() returns error? {
     _ = check mcClient->/medicalitem.post([item2, item3, item4]);
 
     io:println("\n========== type1 ==========");
-    _ = check from entity:MedicalItem itemx in mcClient->/medicalitem.get()
+    _ = check from entities:MedicalItem itemx in mcClient->/medicalitem.get()
         where itemx.itemType == "type1"
         do {
             io:println(itemx);
         };
 
     io:println("\n========== type2 ==========");
-    _ = check from entity:MedicalItem itemx in mcClient->/medicalitem.get()
+    _ = check from entities:MedicalItem itemx in mcClient->/medicalitem.get()
         where itemx.itemType == "type2"
         order by itemx.itemId
         limit 2
@@ -72,34 +70,34 @@ public function main() returns error? {
         };
 
     io:println("\n========== update type2's unit to kg ==========");
-    _ = check from entity:MedicalItem itemx in mcClient->/medicalitem.get()
+    _ = check from entities:MedicalItem itemx in mcClient->/medicalitem.get()
         where itemx.itemType == "type2"
         do {
-            entity:MedicalItemUpdate updatex = {unit: "kg"};
+            entities:MedicalItemUpdate updatex = {unit: "kg"};
             // TODO: remove comment after issue is resolved (https://github.com/ballerina-platform/ballerina-standard-library/issues/3951)
             //_ = check mcClient->/medicalitem/[itemx.itemId].put(updatex);
         };
 
-    _ = check from entity:MedicalItem itemx in mcClient->/medicalitem.get()
+    _ = check from entities:MedicalItem itemx in mcClient->/medicalitem.get()
         do {
             io:println(itemx);
         };
 
     io:println("\n========== delete type2 ==========");
-    _ = check from entity:MedicalItem itemx in mcClient->/medicalitem.get()
+    _ = check from entities:MedicalItem itemx in mcClient->/medicalitem.get()
         where itemx.itemType == "type2"
         do {
             // TODO: remove comment after issue is resolved (https://github.com/ballerina-platform/ballerina-standard-library/issues/3951)
             //_ = check mcClient->/medicalitem/[itemx.itemId].delete();
         };
 
-    _ = check from entity:MedicalItem itemx in mcClient->/medicalitem.get()
+    _ = check from entities:MedicalItem itemx in mcClient->/medicalitem.get()
         do {
             io:println(itemx);
         };
 
     io:println("\n========== create medical needs ==========");
-    entity:MedicalNeed mnItem = {
+    entities:MedicalNeed mnItem = {
         needId: 1,
         itemId: 1,
         beneficiaryId: 1,
@@ -110,7 +108,7 @@ public function main() returns error? {
     int[] needIds = check mcClient->/medicalneed.post([mnItem]);
     io:println("Created need id: ", needIds[0]);
 
-    entity:MedicalNeed mnItem2 = {
+    entities:MedicalNeed mnItem2 = {
         needId: 2,
         itemId: 2,
         beneficiaryId: 2,

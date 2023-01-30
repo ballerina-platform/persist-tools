@@ -7,7 +7,7 @@ distribution = "2201.4.0"
 [build-options]
 observabilityIncluded = false
 
-[persist.entity.storage.mysql]
+[persist.entities.storage.mysql]
 host = "localhost"
 port = 3308
 user = "root"
