@@ -118,7 +118,7 @@ public class Push implements BLauncherCmd {
         Path persistDir = Paths.get(this.sourcePath, PERSIST_DIRECTORY);
         if (!Files.isDirectory(persistDir, NOFOLLOW_LINKS)) {
             errStream.println("the persist directory inside the Ballerina project doesn't exist. " +
-                    "Please run `bal persist init` to initiate the project before generation");
+                    "run `bal persist init` to initiate the project before generation");
             return;
         }
 

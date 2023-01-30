@@ -112,21 +112,21 @@ public class TomlSyntaxGenerator {
                                     schemaName, node.fields());
                             configuration.setDbConfig(databaseConfiguration);
                         } else {
-                            throw new BalException("Database is not configured properly\n" +
-                                    "You should give the correct database configurations " +
-                                    "with database name to create tables.");
+                            throw new BalException("database is not configured properly. " +
+                                    "give correct database configurations with " +
+                                    "database name to create tables.");
                         }
                     }
 
                 }
             }
             if (!dbConfigExists) {
-                throw new BalException("The persist tool config doesn't exist in the Ballerina.toml.\n" +
-                        "You should add [persist.<model_name>.storage.<provider>] table with db configurations.");
+                throw new BalException("the persist tool config doesn't exist in the Ballerina.toml. " +
+                        "add [persist.<model_name>.storage.<provider>] table with db configurations.");
             }
             return configuration;
         } catch (IOException e) {
-            throw new BalException("Error while reading configurations. " + e.getMessage());
+            throw new BalException("error while reading configurations. " + e.getMessage());
         }
     }
 
