@@ -83,7 +83,6 @@ public class Init implements BLauncherCmd {
             return;
         }
         Path projectPath = Paths.get(sourcePath);
-
         try {
             validateBallerinaProject(projectPath);
         } catch (BalException e) {
