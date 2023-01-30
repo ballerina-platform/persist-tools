@@ -87,13 +87,13 @@ public client class EntitiesClient {
     }
 
     isolated resource function put company/[int id](CompanyUpdate value) returns Company|persist:Error {
-        _ = check self.persistClients.get(COMPANY).runUpdateQuery({"id": id}, value);
+        _ = check self.persistClients.get(COMPANY).runUpdateQuery(id, value);
         return self->/company/[id].get();
     }
 
     isolated resource function delete company/[int id]() returns Company|persist:Error {
         Company result = check self->/company/[id].get();
-        _ = check self.persistClients.get(COMPANY).runDeleteQuery({"id": id});
+        _ = check self.persistClients.get(COMPANY).runDeleteQuery(id);
         return result;
     }
 
@@ -121,13 +121,13 @@ public client class EntitiesClient {
     }
 
     isolated resource function put employee/[int id](EmployeeUpdate value) returns Employee|persist:Error {
-        _ = check self.persistClients.get(EMPLOYEE).runUpdateQuery({"id": id}, value);
+        _ = check self.persistClients.get(EMPLOYEE).runUpdateQuery(id, value);
         return self->/employee/[id].get();
     }
 
     isolated resource function delete employee/[int id]() returns Employee|persist:Error {
         Employee result = check self->/employee/[id].get();
-        _ = check self.persistClients.get(EMPLOYEE).runDeleteQuery({"id": id});
+        _ = check self.persistClients.get(EMPLOYEE).runDeleteQuery(id);
         return result;
     }
 
@@ -155,13 +155,13 @@ public client class EntitiesClient {
     }
 
     isolated resource function put vehicle/[int model](VehicleUpdate value) returns Vehicle|persist:Error {
-        _ = check self.persistClients.get(VEHICLE).runUpdateQuery({"model": model}, value);
+        _ = check self.persistClients.get(VEHICLE).runUpdateQuery(model, value);
         return self->/vehicle/[model].get();
     }
 
     isolated resource function delete vehicle/[int model]() returns Vehicle|persist:Error {
         Vehicle result = check self->/vehicle/[model].get();
-        _ = check self.persistClients.get(VEHICLE).runDeleteQuery({"model": model});
+        _ = check self.persistClients.get(VEHICLE).runDeleteQuery(model);
         return result;
     }
 

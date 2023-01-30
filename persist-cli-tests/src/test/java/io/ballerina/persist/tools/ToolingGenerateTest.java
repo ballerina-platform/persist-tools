@@ -240,4 +240,10 @@ public class ToolingGenerateTest {
     public void testGenerateInDefaultPackage() {
         assertGeneratedSources("tool_test_generate_35", GENERATE);
     }
+
+    @Test(enabled = true)
+    @Description("Test the generate command in default Ballerina package")
+    public void testGenerateRelationsWithSingleQuote() {
+        assertGeneratedSources("tool_test_generate_36", GENERATE);
+    }
 }

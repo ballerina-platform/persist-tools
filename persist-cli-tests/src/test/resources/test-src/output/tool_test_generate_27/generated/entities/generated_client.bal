@@ -88,13 +88,13 @@ public client class EntitiesClient {
     }
 
     isolated resource function put profile/[int id](ProfileUpdate value) returns Profile|persist:Error {
-        _ = check self.persistClients.get(PROFILE).runUpdateQuery({"id": id}, value);
+        _ = check self.persistClients.get(PROFILE).runUpdateQuery(id, value);
         return self->/profile/[id].get();
     }
 
     isolated resource function delete profile/[int id]() returns Profile|persist:Error {
         Profile result = check self->/profile/[id].get();
-        _ = check self.persistClients.get(PROFILE).runDeleteQuery({"id": id});
+        _ = check self.persistClients.get(PROFILE).runDeleteQuery(id);
         return result;
     }
 
@@ -122,13 +122,13 @@ public client class EntitiesClient {
     }
 
     isolated resource function put user/[int id](UserUpdate value) returns User|persist:Error {
-        _ = check self.persistClients.get(USER).runUpdateQuery({"id": id}, value);
+        _ = check self.persistClients.get(USER).runUpdateQuery(id, value);
         return self->/user/[id].get();
     }
 
     isolated resource function delete user/[int id]() returns User|persist:Error {
         User result = check self->/user/[id].get();
-        _ = check self.persistClients.get(USER).runDeleteQuery({"id": id});
+        _ = check self.persistClients.get(USER).runDeleteQuery(id);
         return result;
     }
 
@@ -156,13 +156,13 @@ public client class EntitiesClient {
     }
 
     isolated resource function put multipleassociations/[int id](MultipleAssociationsUpdate value) returns MultipleAssociations|persist:Error {
-        _ = check self.persistClients.get(MULTIPLE_ASSOCIATIONS).runUpdateQuery({"id": id}, value);
+        _ = check self.persistClients.get(MULTIPLE_ASSOCIATIONS).runUpdateQuery(id, value);
         return self->/multipleassociations/[id].get();
     }
 
     isolated resource function delete multipleassociations/[int id]() returns MultipleAssociations|persist:Error {
         MultipleAssociations result = check self->/multipleassociations/[id].get();
-        _ = check self.persistClients.get(MULTIPLE_ASSOCIATIONS).runDeleteQuery({"id": id});
+        _ = check self.persistClients.get(MULTIPLE_ASSOCIATIONS).runDeleteQuery(id);
         return result;
     }
 

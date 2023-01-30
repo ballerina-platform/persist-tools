@@ -70,7 +70,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static io.ballerina.compiler.syntax.tree.SyntaxKind.OPTIONAL_TYPE_DESC;
 import static io.ballerina.compiler.syntax.tree.SyntaxKind.QUALIFIED_NAME_REFERENCE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.ANYDATASTREAM_IS_STREAM_TYPE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.ANYDATA_KEYWORD;
@@ -299,8 +298,9 @@ public class BalSyntaxGenerator {
                             if (keyColumns == null || keyColumns.size() == 0) {
                                 keyColumns = assocEntity.getKeys().stream().map(key ->
                                         new Relation.Key(assocEntity.getEntityName().toLowerCase(Locale.ENGLISH)
-                                                + key.getFieldName().substring(0, 1).toUpperCase(Locale.ENGLISH)
-                                                + key.getFieldName().substring(1),
+                                                + stripEscapeCharacter(key.getFieldName()).substring(0, 1)
+                                                .toUpperCase(Locale.ENGLISH)
+                                                + stripEscapeCharacter(key.getFieldName()).substring(1),
                                                 key.getFieldName(), key.getFieldType())).collect(Collectors.toList());
                                 field.getRelation().setKeyColumns(keyColumns);
                             }
@@ -319,8 +319,10 @@ public class BalSyntaxGenerator {
                             List<Relation.Key> assockeyColumns = assocEntity.getKeys().stream().map(key ->
                                     new Relation.Key(key.getFieldName(),
                                             assocEntity.getEntityName().toLowerCase(Locale.ENGLISH)
-                                                    + key.getFieldName().substring(0, 1).toUpperCase(Locale.ENGLISH)
-                                                    + key.getFieldName().substring(1), key.getFieldType()))
+                                                    + stripEscapeCharacter(key.getFieldName()).substring(0, 1)
+                                                    .toUpperCase(Locale.ENGLISH)
+                                                    + stripEscapeCharacter(key.getFieldName()).substring(1),
+                                            key.getFieldType()))
                                     .collect(Collectors.toList());
                             assocRelBuilder.setKeys(assockeyColumns);
                             assocRelBuilder.setReferences(assockeyColumns.stream().map(Relation.Key::getReference)
@@ -343,9 +345,9 @@ public class BalSyntaxGenerator {
         if (isOwner) {
             List<Relation.Key> keyColumns = assocEntity.getKeys().stream().map(key ->
                     new Relation.Key(assocEntity.getEntityName().toLowerCase(Locale.ENGLISH)
-                            + key.getFieldName().substring(0, 1).toUpperCase(Locale.ENGLISH)
-                            + key.getFieldName().substring(1), key.getFieldName(), key.getFieldType()
-                            )).collect(Collectors.toList());
+                            + stripEscapeCharacter(key.getFieldName()).substring(0, 1).toUpperCase(Locale.ENGLISH)
+                            + stripEscapeCharacter(key.getFieldName()).substring(1), key.getFieldName(),
+                            key.getFieldType())).collect(Collectors.toList());
             relBuilder.setOwner(true);
             relBuilder.setRelationType(Relation.RelationType.ONE);
             relBuilder.setKeys(keyColumns);
@@ -355,8 +357,9 @@ public class BalSyntaxGenerator {
             List<Relation.Key> keyColumns = entity.getKeys().stream().map(key ->
                     new Relation.Key(key.getFieldName(),
                             entity.getEntityName().toLowerCase(Locale.ENGLISH)
-                            + key.getFieldName().substring(0, 1).toUpperCase(Locale.ENGLISH)
-                            + key.getFieldName().substring(1), key.getFieldType())).collect(Collectors.toList());
+                            + stripEscapeCharacter(key.getFieldName()).substring(0, 1).toUpperCase(Locale.ENGLISH)
+                            + stripEscapeCharacter(key.getFieldName()).substring(1), key.getFieldType()))
+                    .collect(Collectors.toList());
             relBuilder.setOwner(false);
             relBuilder.setRelationType(Relation.RelationType.MANY);
             relBuilder.setKeys(keyColumns);
@@ -473,7 +476,7 @@ public class BalSyntaxGenerator {
                         fieldMetaData.append(COMMA_WITH_NEWLINE);
                     }
                     fieldMetaData.append(String.format(METADATARECORD_FIELD_TEMPLATE,
-                            field.getFieldName(), field.getFieldName(),
+                            field.getFieldName(), stripEscapeCharacter(field.getFieldName()),
                             field.getFieldType()));
                 }
             }
@@ -485,7 +488,7 @@ public class BalSyntaxGenerator {
                 if (keyFields.length() != 0) {
                     keyFields.append(COMMA_SPACE);
                 }
-                keyFields.append("\"").append(key.getFieldName()).append("\"");
+                keyFields.append("\"").append(stripEscapeCharacter(key.getFieldName())).append("\"");
             }
             entityMetaData.append(String.format(METADATARECORD_KEY_FIELD_TEMPLATE, keyFields));
             mapBuilder.append(String.format(METADATARECORD_ELEMENT_TEMPLATE,
@@ -776,9 +779,15 @@ public class BalSyntaxGenerator {
         update.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(
                 TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()),
                 TypeDescriptor.getQualifiedNameReferenceNode(PERSIST_MODULE, SPECIFIC_ERROR)));
-        update.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.UPDATE_RUN_UPDATE_QUERY,
-                getEntityNameConstant(entity.getEntityName()),
-                filterKeys.substring(0, filterKeys.length() - 2).concat(CLOSE_BRACE))));
+        if (entity.getKeys().size() > 1) {
+            update.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.UPDATE_RUN_UPDATE_QUERY,
+                    getEntityNameConstant(entity.getEntityName()),
+                    filterKeys.substring(0, filterKeys.length() - 2).concat(CLOSE_BRACE))));
+        } else {
+            update.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.UPDATE_RUN_UPDATE_QUERY,
+                    getEntityNameConstant(entity.getEntityName()), entity.getKeys().stream().findFirst().get()
+                            .getFieldName())));
+        }
         update.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.UPDATE_RETURN_UPDATE_QUERY,
                 path)));
         return update;
@@ -797,9 +806,15 @@ public class BalSyntaxGenerator {
                 TypeDescriptor.getQualifiedNameReferenceNode(PERSIST_MODULE, SPECIFIC_ERROR)));
         delete.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.GET_OBJECT_QUERY,
                 entity.getEntityName(), path)));
-        delete.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.DELETE_RUN_DELETE_QUERY,
-                getEntityNameConstant(entity.getEntityName()),
-                filterKeys.substring(0, filterKeys.length() - 2).concat(CLOSE_BRACE))));
+        if (entity.getKeys().size() > 1) {
+            delete.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.DELETE_RUN_DELETE_QUERY,
+                    getEntityNameConstant(entity.getEntityName()),
+                    filterKeys.substring(0, filterKeys.length() - 2).concat(CLOSE_BRACE))));
+        } else {
+            delete.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.DELETE_RUN_DELETE_QUERY,
+                    getEntityNameConstant(entity.getEntityName()), entity.getKeys().stream().findFirst().get()
+                            .getFieldName())));
+        }
         delete.addStatement(NodeParser.parseStatement(BalSyntaxConstants.RETURN_DELETED_OBJECT));
         return delete;
     }
@@ -818,8 +833,8 @@ public class BalSyntaxGenerator {
                     null,
                     AbstractNodeFactory.createIdentifierToken(entry.getKey()),
                     AbstractNodeFactory.createToken(SyntaxKind.CLOSE_BRACKET_TOKEN)));
-            filterKeys.append(DOUBLE_QUOTE).append(entry.getKey()).append(DOUBLE_QUOTE).append(COLON).
-                    append(entry.getKey()).append(COMMA_SPACE);
+            filterKeys.append(DOUBLE_QUOTE).append(stripEscapeCharacter(entry.getKey()))
+                    .append(DOUBLE_QUOTE).append(COLON).append(entry.getKey()).append(COMMA_SPACE);
             path.append(BACK_SLASH).append(OPEN_BRACKET).append(entry.getKey()).append(CLOSE_BRACKET);
         }
         return resourcePaths;
@@ -1041,5 +1056,9 @@ public class BalSyntaxGenerator {
             outputString.append(splitedString.toUpperCase(Locale.ENGLISH));
         }
         return outputString.toString();
+    }
+
+    private static String stripEscapeCharacter(String fieldName) {
+        return fieldName.startsWith("'") ? fieldName.substring(1) : fieldName;
     }
 }
