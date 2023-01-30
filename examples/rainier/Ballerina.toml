@@ -1,15 +1,16 @@
 [package]
 org = "foo"
-name = "medical_center"
+name = "association"
 version = "0.1.0"
-distribution = "2201.4.0"
+distribution = "2201.3.0"
 
 [build-options]
 observabilityIncluded = false
 
-[persist.entity.storage.mysql]
+[persist.rainier.storage.mysql]
 host = "localhost"
 port = 3308
 user = "root"
 password = "Test123#"
-database = "medical_center_db"
+database = "rainier_db"
+

@@ -1,6 +1,6 @@
-// Copyright (c) 2023 WSO2 LLC. (http://www.wso2.org) All Rights Reserved.
+// Copyright (c) 2022 WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
 //
-// WSO2 LLC. licenses this file to you under the Apache License,
+// WSO2 Inc. licenses this file to you under the Apache License,
 // Version 2.0 (the "License"); you may not use this file except
 // in compliance with the License.
 // You may obtain a copy of the License at
@@ -15,53 +15,56 @@
 // under the License.
 
 import ballerina/io;
+import foo/medical_center.entity;
 
 public function main() returns error? {
-    MedicalItemClient miClient = check new ();
-    MedicalItem item = {
+    entity:EntityClient mcClient = check new ();
+    entity:MedicalItemInsert item = {
         itemId: 1,
         name: "item name",
-        'type: "type1",
+        itemType: "type1",
         unit: "ml"
     };
-    MedicalItem createdItem = check miClient->create(item);
-    io:println("Created item id: ", createdItem.itemId);
-
-    MedicalItem retrievedItem = check miClient->readByKey(1);
+    io:println("1");
+    int[] itemIds = check mcClient->/medicalitem.post([item]);
+    io:println("Created item id: ", itemIds[0]);
+    io:println("1");
+    entity:MedicalItem retrievedItem = check mcClient->/medicalitem/[itemIds[0]].get();
     io:println("Retrieved item: ", retrievedItem);
 
-    MedicalItem|error itemError = miClient->readByKey(20);
+    entity:MedicalItem|error itemError = mcClient->/medicalitem/[5].get();
     io:println("Retrieved non-existence item: ", itemError);
 
-    _ = check miClient->create({
+    entity:MedicalItem item2 = {
         itemId: 2,
         name: "item2 name",
-        'type: "type1",
+        itemType: "type1",
         unit: "ml"
-    });
-    _ = check miClient->create({
+    };
+    entity:MedicalItem item3 = {
         itemId: 3,
         name: "item2 name",
-        'type: "type2",
+        itemType: "type2",
         unit: "ml"
-    });
-    _ = check miClient->create({
+    };
+     entity:MedicalItem item4 = {
         itemId: 4,
         name: "item2 name",
-        'type: "type2",
+        itemType: "type2",
         unit: "kg"
-    });
+    };
+    _ = check mcClient->/medicalitem.post([item2, item3, item4]);
 
     io:println("\n========== type1 ==========");
-    _ = check from MedicalItem itemx in miClient->read()
-        where itemx.'type == "type1"
+    _ = check from entity:MedicalItem itemx in mcClient->/medicalitem.get()
+        where itemx.itemType == "type1"
         do {
             io:println(itemx);
         };
 
     io:println("\n========== type2 ==========");
-    _ = check from MedicalItem itemx in miClient->read()
-        where itemx.'type == "type2"
+    _ = check from entity:MedicalItem itemx in mcClient->/medicalitem.get()
+        where itemx.itemType == "type2"
         order by itemx.itemId
         limit 2
         do {
@@ -69,48 +72,54 @@ public function main() returns error? {
         };
 
     io:println("\n========== update type2's unit to kg ==========");
-    _ = check from MedicalItem itemx in miClient->read()
-        where itemx.'type == "type2"
+    _ = check from entity:MedicalItem itemx in mcClient->/medicalitem.get()
+        where itemx.itemType == "type2"
         do {
-            itemx.unit = "kg";
-            check miClient->update(itemx);
+            entity:MedicalItemUpdate updatex = {unit: "kg"};
+            // TODO: remove comment after issue is resolved (https://github.com/ballerina-platform/ballerina-standard-library/issues/3951)
+            //_ = check mcClient->/medicalitem/[itemx.itemId].put(updatex);
         };
 
-    _ = check from MedicalItem itemx in miClient->read()
+    _ = check from entity:MedicalItem itemx in mcClient->/medicalitem.get()
         do {
             io:println(itemx);
         };
 
     io:println("\n========== delete type2 ==========");
-    _ = check from MedicalItem itemx in miClient->read()
-        where itemx.'type == "type2"
+    _ = check from entity:MedicalItem itemx in mcClient->/medicalitem.get()
+        where itemx.itemType == "type2"
         do {
-            _ = check miClient->delete(itemx);
+            // TODO: remove comment after issue is resolved (https://github.com/ballerina-platform/ballerina-standard-library/issues/3951)
+            //_ = check mcClient->/medicalitem/[itemx.itemId].delete();
         };
 
-    _ = check from MedicalItem itemx in miClient->read()
+    _ = check from entity:MedicalItem itemx in mcClient->/medicalitem.get()
         do {
             io:println(itemx);
         };
 
-    check miClient.close();
-
     io:println("\n========== create medical needs ==========");
-    MedicalNeedClient mnClient = check new ();
-    MedicalNeed mnItem = check mnClient->create({
+    entity:MedicalNeed mnItem = {
+        needId: 1,
         itemId: 1,
         beneficiaryId: 1,
         period: {year: 2022, month: 10, day: 10, hour: 1, minute: 2, second: 3},
         urgency: "URGENT",
         quantity: 5
-    });
-    io:println("Created need id: ", mnItem.needId);
-    MedicalNeed mnItem2 = check mnClient->create({
+    };
+    int[] needIds = check mcClient->/medicalneed.post([mnItem]);
+    io:println("Created need id: ", needIds[0]);
+
+    entity:MedicalNeed mnItem2 = {
+        needId: 2,
         itemId: 2,
         beneficiaryId: 2,
         period: {year: 2021, month: 10, day: 10, hour: 1, minute: 2, second: 3},
         urgency: "NOT URGENT",
         quantity: 5
-    });
-    io:println("Created need id: ", mnItem2.needId);
+    };
+    needIds = check mcClient->/medicalneed.post([mnItem2]);
+    io:println("Created need id: ", needIds[0]);
+
+    check mcClient.close();
 }
