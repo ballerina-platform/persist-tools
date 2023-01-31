@@ -65,8 +65,8 @@ public class SqlScriptGenerationUtils {
     }
 
     public static void writeScriptFile(String moduleName, String[] sqlScripts, Path filePath) {
-        Path path = Paths.get(String.valueOf(filePath),
-                String.format(PersistToolsConstants.SQL_SCHEMA_FILE, moduleName));
+        String fileName = String.format(PersistToolsConstants.SQL_SCHEMA_FILE, moduleName);
+        Path path = Paths.get(String.valueOf(filePath), fileName);
         StringBuilder sqlScript = new StringBuilder();
         for (String script : sqlScripts) {
             sqlScript.append(script).append(NEW_LINE);
@@ -77,7 +77,7 @@ public class SqlScriptGenerationUtils {
             Files.writeString(path, sqlScript);
         } catch (IOException e) {
             PrintStream errStream = System.err;
-            errStream.println("Error while updating the SQL script file (persist_db_push.sql) in the project " +
+            errStream.println("Error while updating the SQL script file (" + fileName + ") in the project " +
                     "persist directory: " + e.getMessage());
         }
     }
