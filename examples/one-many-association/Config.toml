@@ -1,6 +1,0 @@
-[one_many_association]
-host = "localhost"
-port = 3308
-user = "root"
-password = "Test123#"
-database = "medical_center_db"
