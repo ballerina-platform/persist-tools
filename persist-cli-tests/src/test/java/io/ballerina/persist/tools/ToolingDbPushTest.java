@@ -229,4 +229,10 @@ public class ToolingDbPushTest {
     public void testDbPushWithCompositeReferenceKeys() {
         assertGeneratedSources("tool_test_db_push_22", DB_PUSH);
     }
+
+    @Test(enabled = true)
+    @Description("Test the created sql script without DB config in Ballerina.toml")
+    public void testDbPushWithoutDBConfig() {
+        assertGeneratedSources("tool_test_db_push_23", DB_PUSH);
+    }
 }
