@@ -159,7 +159,7 @@ public class TomlSyntaxGenerator {
             }
             throw new BalException("Error while reading Ballerina.toml. Package name could not be read. ");
         } catch (IOException e) {
-            throw new BalException("error while Ballerina.toml. " + e.getMessage());
+            throw new BalException("Error while Ballerina.toml. " + e.getMessage());
         }
     }
 
