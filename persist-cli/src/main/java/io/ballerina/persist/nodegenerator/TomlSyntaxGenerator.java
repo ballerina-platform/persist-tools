@@ -38,6 +38,7 @@ import io.ballerina.tools.text.TextDocuments;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -47,6 +48,8 @@ import static io.ballerina.persist.PersistToolsConstants.DEFAULT_HOST;
 import static io.ballerina.persist.PersistToolsConstants.DEFAULT_PASSWORD;
 import static io.ballerina.persist.PersistToolsConstants.DEFAULT_PORT;
 import static io.ballerina.persist.PersistToolsConstants.DEFAULT_USER;
+import static io.ballerina.persist.PersistToolsConstants.KEYWORD_NAME;
+import static io.ballerina.persist.PersistToolsConstants.KEYWORD_PACKAGE;
 import static io.ballerina.persist.PersistToolsConstants.KEY_DATABASE;
 import static io.ballerina.persist.PersistToolsConstants.KEY_HOST;
 import static io.ballerina.persist.PersistToolsConstants.KEY_PASSWORD;
@@ -55,6 +58,7 @@ import static io.ballerina.persist.PersistToolsConstants.KEY_USER;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_CONFIG_PATTERN;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_CONFIG_PATTERN_WITH_MYSQL;
 import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_DB_PROVIDERS;
+import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 
 
 /**
@@ -127,6 +131,35 @@ public class TomlSyntaxGenerator {
             return configuration;
         } catch (IOException e) {
             throw new BalException("error while reading configurations. " + e.getMessage());
+        }
+    }
+
+
+    public static String readPackageName(String sourcePath) throws BalException {
+        try {
+            TextDocument configDocument = TextDocuments.from(Files.readString(Paths.get(sourcePath, BALLERINA_TOML)));
+            SyntaxTree syntaxTree = SyntaxTree.from(configDocument);
+            DocumentNode rootNote = syntaxTree.rootNode();
+            NodeList<DocumentMemberDeclarationNode> nodeList = rootNote.members();
+            for (DocumentMemberDeclarationNode member : nodeList) {
+                if (member instanceof TableNode) {
+                    TableNode node = (TableNode) member;
+                    String tableName = node.identifier().toSourceCode().trim();
+                    if (tableName.equals(KEYWORD_PACKAGE)) {
+                        NodeList<KeyValueNode> fields = node.fields();
+                        for (KeyValueNode field : fields) {
+                            if (field.identifier().toSourceCode().trim()
+                                    .equals(KEYWORD_NAME)) {
+                                return field.value().toSourceCode().trim().replaceAll("\"", "");
+                            }
+                        }
+                    }
+
+                }
+            }
+            throw new BalException("Error while reading Ballerina.toml. Package name could not be read. ");
+        } catch (IOException e) {
+            throw new BalException("error while Ballerina.toml. " + e.getMessage());
         }
     }
 
