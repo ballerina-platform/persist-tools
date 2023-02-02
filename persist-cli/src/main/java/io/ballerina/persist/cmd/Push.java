@@ -235,8 +235,12 @@ public class Push implements BLauncherCmd {
             url = String.format(JDBC_URL_WITHOUT_DATABASE, provider, host, port);
         }
         Properties props = new Properties();
-        props.put(USER, user);
-        props.put(PASSWORD, password);
+        if (user != null) {
+            props.put(USER, user);
+        }
+        if (password != null) {
+            props.put(PASSWORD, password);
+        }
         return driver.connect(url, props);
     }
 

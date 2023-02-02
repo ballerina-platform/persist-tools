@@ -141,7 +141,7 @@ public class Generate implements BLauncherCmd {
                 if (!Files.exists(generatedSourceDirPath)) {
                     errStream.printf("the generated source directory: %s doesn't exist. " +
                                     "run `bal persist init` to initiate the project before generation.%n",
-                            generatedSourceDirPath);
+                            generatedSourceDirPath.toAbsolutePath());
                     return;
                 }
                 generateDataTypes(entityModule, generatedSourceDirPath);
