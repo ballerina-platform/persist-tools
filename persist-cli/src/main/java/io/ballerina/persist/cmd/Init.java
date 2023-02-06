@@ -111,7 +111,8 @@ public class Init implements BLauncherCmd {
                     .map(file -> file.toString().replace(BAL_EXTENTION, ""))
                     .collect(Collectors.toList());
         } catch (IOException e) {
-            errStream.println("ERROR: failed to list model definition files in the persist directory. " + e.getMessage());
+            errStream.println("ERROR: failed to list model definition files in the persist directory. "
+                    + e.getMessage());
             return;
         }
 
