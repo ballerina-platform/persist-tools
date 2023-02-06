@@ -26,7 +26,6 @@ import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.BalSyntaxConstants;
 import io.ballerina.persist.nodegenerator.BalSyntaxGenerator;
 import io.ballerina.persist.utils.BalProjectUtils;
-import io.ballerina.projects.directory.BuildProject;
 import org.ballerinalang.formatter.core.Formatter;
 import org.ballerinalang.formatter.core.FormatterException;
 import picocli.CommandLine;
@@ -46,6 +45,7 @@ import java.util.stream.Stream;
 
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.nodegenerator.BalSyntaxGenerator.generateClientSyntaxTree;
+import static io.ballerina.persist.nodegenerator.TomlSyntaxGenerator.readPackageName;
 import static io.ballerina.persist.utils.BalProjectUtils.validateBallerinaProject;
 import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
 
@@ -94,8 +94,6 @@ public class Generate implements BLauncherCmd {
             return;
         }
 
-        BuildProject buildProject = BuildProject.load(projectPath.toAbsolutePath());
-        String packageName = buildProject.currentPackage().packageName().value();
         Path persistDir = Paths.get(this.sourcePath, PERSIST_DIRECTORY);
         if (!Files.isDirectory(persistDir, NOFOLLOW_LINKS)) {
             errStream.println("ERROR: the persist directory inside the Ballerina project does not exist. " +
@@ -123,6 +121,7 @@ public class Generate implements BLauncherCmd {
         schemaFilePaths.forEach(file -> {
             Module entityModule;
             Path generatedSourceDirPath;
+
             try {
                 BalProjectUtils.validateSchemaFile(file);
                 entityModule = BalProjectUtils.getEntities(file);
@@ -131,13 +130,13 @@ public class Generate implements BLauncherCmd {
                             file.getFileName());
                     return;
                 }
+                String packageName = readPackageName(this.sourcePath);
                 if (entityModule.getModuleName().equals(packageName)) {
                     generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);
                 } else {
                     generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY,
                             entityModule.getModuleName());
                 }
-
                 if (!Files.exists(generatedSourceDirPath)) {
                     errStream.printf("ERROR: the generated source directory: %s does not exist. " +
                                     "run `bal persist init` to initiate the project before generation.%n",
