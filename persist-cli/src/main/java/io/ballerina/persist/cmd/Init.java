@@ -208,7 +208,7 @@ public class Init implements BLauncherCmd {
                     Paths.get(this.sourcePath, BALLERINA_TOML).toAbsolutePath().toString());
             errStream.println("Updated Ballerina.toml with database configurations.");
         } catch (Exception e) {
-            throw new BalException("couldn't update the Ballerina.toml with database configurations . " +
+            throw new BalException("could not update the Ballerina.toml with database configurations . " +
                     e.getMessage());
         }
     }
@@ -220,7 +220,7 @@ public class Init implements BLauncherCmd {
             writeOutputSyntaxTree(syntaxTree, configPath.toString());
             errStream.println("Created Config.toml file inside the Ballerina project.");
         } catch (Exception e) {
-            throw new BalException("couldn't add Config.toml file inside the Ballerina project. " +
+            throw new BalException("could not add Config.toml file inside the Ballerina project. " +
                     e.getMessage());
         }
     }
@@ -232,7 +232,7 @@ public class Init implements BLauncherCmd {
             writeOutputSyntaxTree(syntaxTree, configPath.toString());
             errStream.println("Updated Config.toml file inside the Ballerina project.");
         } catch (Exception e) {
-            throw new BalException("couldn't update Config.toml file inside the Ballerina project. " +
+            throw new BalException("could not update Config.toml file inside the Ballerina project. " +
                     e.getMessage());
         }
     }
@@ -245,7 +245,7 @@ public class Init implements BLauncherCmd {
                 Files.createDirectories(parentDirectory);
             } catch (IOException e) {
                 throw new BalException(
-                        String.format("couldn't create the parent directories of output path %s. %s",
+                        String.format("could not create the parent directories of output path %s. %s",
                                 parentDirectory, e.getMessage()));
             }
             content = syntaxTree.toSourceCode();
@@ -263,7 +263,7 @@ public class Init implements BLauncherCmd {
                     Files.createDirectories(parentDirectory);
                 } catch (IOException e) {
                     throw new BalException(
-                            String.format("couldn't create the parent directories of output path %s. %s",
+                            String.format("could not create the parent directories of output path %s. %s",
                                     parentDirectory, e.getMessage()));
                 }
             }

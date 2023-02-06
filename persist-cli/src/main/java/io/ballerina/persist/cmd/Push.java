@@ -117,7 +117,7 @@ public class Push implements BLauncherCmd {
 
         Path persistDir = Paths.get(this.sourcePath, PERSIST_DIRECTORY);
         if (!Files.isDirectory(persistDir, NOFOLLOW_LINKS)) {
-            errStream.println("ERROR: the persist directory inside the Ballerina project doesn't exist. " +
+            errStream.println("ERROR: the persist directory inside the Ballerina project does not exist. " +
                     "run `bal persist init` to initiate the project before generation");
             return;
         }
@@ -134,7 +134,7 @@ public class Push implements BLauncherCmd {
         }
 
         if (schemaFilePaths.isEmpty()) {
-            errStream.println("ERROR: the persist directory doesn't contain any model definition file. " +
+            errStream.println("ERROR: the persist directory does not contain any model definition file. " +
                     "run `bal persist init` to initiate the project before generation.");
             return;
         }
@@ -150,7 +150,7 @@ public class Push implements BLauncherCmd {
                 entityModule = BalProjectUtils.getEntities(file);
                 ArrayList<Entity> entityArray = new ArrayList<>(entityModule.getEntityMap().values());
                 if (entityArray.isEmpty()) {
-                    errStream.printf("ERROR: the model definition file(%s) doesn't contain any valid entity%n",
+                    errStream.printf("ERROR: the model definition file(%s) does not contain any valid entity%n",
                             file.getFileName());
                     return;
                 }
@@ -253,7 +253,7 @@ public class Push implements BLauncherCmd {
             try {
                 driverLoader = new JdbcDriverLoader(urls, driverPath);
             } catch (IOException e) {
-                throw new BalException("couldn't load the driver from the driver path. " + e.getMessage());
+                throw new BalException("could not load the driver from the driver path. " + e.getMessage());
             }
         }
         return driverLoader;
