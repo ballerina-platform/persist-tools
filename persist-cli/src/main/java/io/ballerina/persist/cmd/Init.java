@@ -21,7 +21,6 @@ import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.nodegenerator.BalSyntaxGenerator;
 import io.ballerina.persist.nodegenerator.TomlSyntaxGenerator;
-import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.projects.util.ProjectUtils;
 import io.ballerina.toml.syntax.tree.SyntaxTree;
 import picocli.CommandLine;
@@ -45,6 +44,7 @@ import static io.ballerina.persist.PersistToolsConstants.GENERATED_DIRECTORY;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.BAL_EXTENTION;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PATH_CONFIGURATION_BAL_FILE;
+import static io.ballerina.persist.nodegenerator.TomlSyntaxGenerator.readPackageName;
 import static io.ballerina.persist.utils.BalProjectUtils.validateBallerinaProject;
 import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 
@@ -83,15 +83,15 @@ public class Init implements BLauncherCmd {
             return;
         }
         Path projectPath = Paths.get(sourcePath);
+        String packageName;
         try {
+            packageName = readPackageName(this.sourcePath);
             validateBallerinaProject(projectPath);
         } catch (BalException e) {
             errStream.println(e.getMessage());
             return;
         }
 
-        BuildProject buildProject = BuildProject.load(projectPath.toAbsolutePath());
-        String packageName = buildProject.currentPackage().packageName().value();
         Path persistDirPath = Paths.get(this.sourcePath, PERSIST_DIRECTORY);
         if (!Files.exists(persistDirPath)) {
             try {
