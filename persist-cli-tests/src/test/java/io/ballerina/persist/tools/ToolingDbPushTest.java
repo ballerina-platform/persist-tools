@@ -233,6 +233,6 @@ public class ToolingDbPushTest {
     @Test(enabled = true)
     @Description("When the db push command is executed without init.")
     public void testDbPushWithoutInit() {
-        assertGeneratedSourcesNegative("tool_test_db_push_23", DB_PUSH, null);
+        assertGeneratedSourcesNegative("tool_test_db_push_24", DB_PUSH, null);
     }
 }
