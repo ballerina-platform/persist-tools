@@ -157,9 +157,9 @@ public class TomlSyntaxGenerator {
 
                 }
             }
-            throw new BalException("couldn't find the package name in Ballerina.toml file.");
+            throw new BalException("ERROR: couldn't find the package name in Ballerina.toml file.");
         } catch (IOException e) {
-            throw new BalException("couldn't read the Ballerina.toml file. " + e.getMessage());
+            throw new BalException("ERROR: couldn't read the Ballerina.toml file. " + e.getMessage());
         }
     }
 
