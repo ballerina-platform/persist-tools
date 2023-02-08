@@ -99,12 +99,12 @@ public class BalProjectUtils {
                     .filter(file -> BALLERINA_TOML.equals(file.toString()))
                     .findFirst();
         } catch (IOException e) {
-            throw new BalException(String.format("invalid Ballerina package directory: %s, " +
-                    "%s.%n", projectPath, e.getMessage()));
+            throw new BalException(String.format("ERROR: invalid Ballerina package directory: %s, " +
+                    "%s.%n", projectPath.toAbsolutePath(), e.getMessage()));
         }
         if (ballerinaToml.isEmpty()) {
-            throw new BalException(String.format("invalid Ballerina package directory: %s, " +
-                    "cannot find 'Ballerina.toml' file.%n", projectPath));
+            throw new BalException(String.format("ERROR: invalid Ballerina package directory: %s, " +
+                    "cannot find 'Ballerina.toml' file.%n", projectPath.toAbsolutePath()));
         }
     }
 }

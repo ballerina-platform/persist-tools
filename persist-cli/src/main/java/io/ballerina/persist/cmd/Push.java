@@ -117,7 +117,7 @@ public class Push implements BLauncherCmd {
 
         Path persistDir = Paths.get(this.sourcePath, PERSIST_DIRECTORY);
         if (!Files.isDirectory(persistDir, NOFOLLOW_LINKS)) {
-            errStream.println("the persist directory inside the Ballerina project doesn't exist. " +
+            errStream.println("ERROR: the persist directory inside the Ballerina project does not exist. " +
                     "run `bal persist init` to initiate the project before generation");
             return;
         }
@@ -128,13 +128,13 @@ public class Push implements BLauncherCmd {
                     .filter(file -> file.toString().toLowerCase(Locale.ENGLISH).endsWith(".bal"))
                     .collect(Collectors.toList());
         } catch (IOException e) {
-            errStream.println("error while listing the persist model definition files in persist directory. "
+            errStream.println("ERROR: failed to list the model definition files in the persist directory. "
                     + e.getMessage());
             return;
         }
 
         if (schemaFilePaths.isEmpty()) {
-            errStream.println("the persist directory doesn't contain any model definition file. " +
+            errStream.println("ERROR: the persist directory does not contain any model definition file. " +
                     "run `bal persist init` to initiate the project before generation.");
             return;
         }
@@ -150,7 +150,7 @@ public class Push implements BLauncherCmd {
                 entityModule = BalProjectUtils.getEntities(file);
                 ArrayList<Entity> entityArray = new ArrayList<>(entityModule.getEntityMap().values());
                 if (entityArray.isEmpty()) {
-                    errStream.printf("the model definition file(%s) doesn't contain any valid entity%n",
+                    errStream.printf("ERROR: the model definition file(%s) does not contain any valid entity%n",
                             file.getFileName());
                     return;
                 }
@@ -158,7 +158,7 @@ public class Push implements BLauncherCmd {
                 SqlScriptGenerationUtils.writeScriptFile(entityModule.getModuleName(), sqlScripts,
                         Paths.get(this.sourcePath, PERSIST_DIRECTORY));
             } catch (BalException e) {
-                errStream.printf("error occurred while generating SQL schema for persist schema file, %s. "
+                errStream.printf("ERROR: failed to generate SQL schema for the definition file(%s). "
                         + e.getMessage() + "%n", file.getFileName());
                 return;
             }
@@ -169,7 +169,7 @@ public class Push implements BLauncherCmd {
                 persistConfigurations = TomlSyntaxGenerator.readPersistConfigurations(
                         entityModule.getModuleName(), ballerinaTomlPath);
             } catch (BalException e) {
-                errStream.printf("error occurred while loading db configurations for the data model, %s. "
+                errStream.printf("ERROR: failed to load db configurations for the data model(%s). "
                         + e.getMessage() + "%n", entityModule.getModuleName());
                 return;
             }
@@ -182,8 +182,8 @@ public class Push implements BLauncherCmd {
                     ScriptRunner sr = new ScriptRunner(connection);
                     sr.runQuery(query);
                 } catch (SQLException e) {
-                    errStream.println("error occurred while creating the database, " +
-                            persistConfigurations.getDbConfig().getDatabase() + ". " + e.getMessage());
+                    errStream.println("ERROR: failed to create the database(" +
+                            persistConfigurations.getDbConfig().getDatabase() + "). " + e.getMessage());
                     return;
                 }
                 errStream.println("Created database `" + persistConfigurations.getDbConfig().getDatabase() + "`.");
@@ -201,17 +201,17 @@ public class Push implements BLauncherCmd {
                             + sqlFilePath + ". " + e.getMessage());
                     return;
                 } catch (Exception e) {
-                    errStream.println("error occurred while executing SQL schema file, "
-                            + sqlFilePath + ". " + e.getMessage());
+                    errStream.println("ERROR: failed to read the SQL schema file("
+                            + sqlFilePath + "). " + e.getMessage());
                     return;
                 }
                 errStream.println("Created tables for definition in " + file.getFileName() + " in the database `" +
                         persistConfigurations.getDbConfig().getDatabase() + "`.");
             } catch (BalException e) {
-                errStream.println("error occurred while executing the SQL script for the persist schema file, "
-                        + file.getFileName() + ". " + e.getMessage());
+                errStream.println("ERROR: failed to execute the SQL scripts for the definition file("
+                        + file.getFileName() + "). " + e.getMessage());
             } catch (IOException e) {
-                errStream.println("error occurred in database driver loader. " + e.getMessage());
+                errStream.println("ERROR: failed to load the database driver. " + e.getMessage());
             }
         });
 
@@ -235,8 +235,12 @@ public class Push implements BLauncherCmd {
             url = String.format(JDBC_URL_WITHOUT_DATABASE, provider, host, port);
         }
         Properties props = new Properties();
-        props.put(USER, user);
-        props.put(PASSWORD, password);
+        if (user != null) {
+            props.put(USER, user);
+        }
+        if (password != null) {
+            props.put(PASSWORD, password);
+        }
         return driver.connect(url, props);
     }
 
@@ -249,7 +253,7 @@ public class Push implements BLauncherCmd {
             try {
                 driverLoader = new JdbcDriverLoader(urls, driverPath);
             } catch (IOException e) {
-                throw new BalException("couldn't load the driver from the driver path. " + e.getMessage());
+                throw new BalException("could not load the driver from the driver path. " + e.getMessage());
             }
         }
         return driverLoader;

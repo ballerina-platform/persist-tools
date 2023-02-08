@@ -41,6 +41,8 @@ public class PersistToolsConstants {
     public static final String KEY_PASSWORD = "password";
     public static final String KEY_DATABASE = "database";
     public static final String KEY_HOST = "host";
+    public static final String KEYWORD_PACKAGE = "package";
+    public static final String KEYWORD_NAME = "name";
 
     public static final String CONFIG_SCRIPT_FILE = "Config.toml";
     public static final String PASSWORD = "password";

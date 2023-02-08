@@ -160,8 +160,8 @@ public class BalSyntaxGenerator {
         rootNote.imports().stream().filter(importNode -> importNode.orgName().isPresent() && importNode.orgName().get()
                 .orgName().text().equals(KEYWORD_BALLERINA) &&
                         importNode.moduleName().stream().anyMatch(node -> node.text().equals(KEYWORD_PERSIST)))
-                .findFirst().orElseThrow(() -> new BalException("no import for ballerina/persist found in the file. " +
-                        "add the import and try again."));
+                .findFirst().orElseThrow(() -> new BalException(
+                        "no `import ballerina/persist as _;` statement found.."));
 
         Entity.Builder entityBuilder;
         for (ModuleMemberDeclarationNode moduleNode : nodeList) {
