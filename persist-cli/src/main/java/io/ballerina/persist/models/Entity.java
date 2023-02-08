@@ -18,6 +18,8 @@
 
 package io.ballerina.persist.models;
 
+import io.ballerina.persist.pluralize.Pluralize;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -34,6 +36,7 @@ public class Entity {
     private final String resourceName;
 
     private final String entityName;
+    private final String entityNameInPlural;
 
     private final List<EntityField> fields;
 
@@ -43,6 +46,7 @@ public class Entity {
         this.keys = Collections.unmodifiableList(keys);
         this.resourceName = resourceName;
         this.fields = Collections.unmodifiableList(fields);
+        this.entityNameInPlural = Pluralize.getResourceNameInPlural(resourceName);
     }
 
     public List<EntityField> getKeys() {
@@ -51,6 +55,9 @@ public class Entity {
 
     public String getResourceName() {
         return this.resourceName;
+    }
+    public String getResourceNameInPlural() {
+        return this.entityNameInPlural;
     }
 
     public String getEntityName() {

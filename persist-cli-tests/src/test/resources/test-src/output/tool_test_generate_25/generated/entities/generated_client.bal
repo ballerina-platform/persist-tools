@@ -63,7 +63,7 @@ public client class EntitiesClient {
         };
     }
 
-    isolated resource function get company() returns stream<Company, persist:Error?> {
+    isolated resource function get companies() returns stream<Company, persist:Error?> {
         stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(COMPANY).runReadQuery(Company);
         if result is persist:Error {
             return new stream<Company, persist:Error?>(new CompanyStream((), result));
@@ -72,7 +72,7 @@ public client class EntitiesClient {
         }
     }
 
-    isolated resource function get company/[int id]() returns Company|persist:Error {
+    isolated resource function get companies/[int id]() returns Company|persist:Error {
         Company|error result = (check self.persistClients.get(COMPANY).runReadByKeyQuery(Company, id)).cloneWithType(Company);
         if result is error {
             return <persist:Error>error(result.message());
@@ -80,24 +80,24 @@ public client class EntitiesClient {
         return result;
     }
 
-    isolated resource function post company(CompanyInsert[] data) returns int[]|persist:Error {
+    isolated resource function post companies(CompanyInsert[] data) returns int[]|persist:Error {
         _ = check self.persistClients.get(COMPANY).runBatchInsertQuery(data);
         return from CompanyInsert inserted in data
             select inserted.id;
     }
 
-    isolated resource function put company/[int id](CompanyUpdate value) returns Company|persist:Error {
+    isolated resource function put companies/[int id](CompanyUpdate value) returns Company|persist:Error {
         _ = check self.persistClients.get(COMPANY).runUpdateQuery(id, value);
-        return self->/company/[id].get();
+        return self->/companies/[id].get();
     }
 
-    isolated resource function delete company/[int id]() returns Company|persist:Error {
-        Company result = check self->/company/[id].get();
+    isolated resource function delete companies/[int id]() returns Company|persist:Error {
+        Company result = check self->/companies/[id].get();
         _ = check self.persistClients.get(COMPANY).runDeleteQuery(id);
         return result;
     }
 
-    isolated resource function get employee() returns stream<Employee, persist:Error?> {
+    isolated resource function get employees() returns stream<Employee, persist:Error?> {
         stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(EMPLOYEE).runReadQuery(Employee);
         if result is persist:Error {
             return new stream<Employee, persist:Error?>(new EmployeeStream((), result));
@@ -106,7 +106,7 @@ public client class EntitiesClient {
         }
     }
 
-    isolated resource function get employee/[int id]() returns Employee|persist:Error {
+    isolated resource function get employees/[int id]() returns Employee|persist:Error {
         Employee|error result = (check self.persistClients.get(EMPLOYEE).runReadByKeyQuery(Employee, id)).cloneWithType(Employee);
         if result is error {
             return <persist:Error>error(result.message());
@@ -114,24 +114,24 @@ public client class EntitiesClient {
         return result;
     }
 
-    isolated resource function post employee(EmployeeInsert[] data) returns int[]|persist:Error {
+    isolated resource function post employees(EmployeeInsert[] data) returns int[]|persist:Error {
         _ = check self.persistClients.get(EMPLOYEE).runBatchInsertQuery(data);
         return from EmployeeInsert inserted in data
             select inserted.id;
     }
 
-    isolated resource function put employee/[int id](EmployeeUpdate value) returns Employee|persist:Error {
+    isolated resource function put employees/[int id](EmployeeUpdate value) returns Employee|persist:Error {
         _ = check self.persistClients.get(EMPLOYEE).runUpdateQuery(id, value);
-        return self->/employee/[id].get();
+        return self->/employees/[id].get();
     }
 
-    isolated resource function delete employee/[int id]() returns Employee|persist:Error {
-        Employee result = check self->/employee/[id].get();
+    isolated resource function delete employees/[int id]() returns Employee|persist:Error {
+        Employee result = check self->/employees/[id].get();
         _ = check self.persistClients.get(EMPLOYEE).runDeleteQuery(id);
         return result;
     }
 
-    isolated resource function get vehicle() returns stream<Vehicle, persist:Error?> {
+    isolated resource function get vehicles() returns stream<Vehicle, persist:Error?> {
         stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(VEHICLE).runReadQuery(Vehicle);
         if result is persist:Error {
             return new stream<Vehicle, persist:Error?>(new VehicleStream((), result));
@@ -140,7 +140,7 @@ public client class EntitiesClient {
         }
     }
 
-    isolated resource function get vehicle/[int model]() returns Vehicle|persist:Error {
+    isolated resource function get vehicles/[int model]() returns Vehicle|persist:Error {
         Vehicle|error result = (check self.persistClients.get(VEHICLE).runReadByKeyQuery(Vehicle, model)).cloneWithType(Vehicle);
         if result is error {
             return <persist:Error>error(result.message());
@@ -148,19 +148,19 @@ public client class EntitiesClient {
         return result;
     }
 
-    isolated resource function post vehicle(VehicleInsert[] data) returns int[]|persist:Error {
+    isolated resource function post vehicles(VehicleInsert[] data) returns int[]|persist:Error {
         _ = check self.persistClients.get(VEHICLE).runBatchInsertQuery(data);
         return from VehicleInsert inserted in data
             select inserted.model;
     }
 
-    isolated resource function put vehicle/[int model](VehicleUpdate value) returns Vehicle|persist:Error {
+    isolated resource function put vehicles/[int model](VehicleUpdate value) returns Vehicle|persist:Error {
         _ = check self.persistClients.get(VEHICLE).runUpdateQuery(model, value);
-        return self->/vehicle/[model].get();
+        return self->/vehicles/[model].get();
     }
 
-    isolated resource function delete vehicle/[int model]() returns Vehicle|persist:Error {
-        Vehicle result = check self->/vehicle/[model].get();
+    isolated resource function delete vehicles/[int model]() returns Vehicle|persist:Error {
+        Vehicle result = check self->/vehicles/[model].get();
         _ = check self.persistClients.get(VEHICLE).runDeleteQuery(model);
         return result;
     }
