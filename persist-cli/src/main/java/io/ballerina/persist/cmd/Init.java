@@ -83,9 +83,7 @@ public class Init implements BLauncherCmd {
             return;
         }
         Path projectPath = Paths.get(sourcePath);
-        String packageName;
         try {
-            packageName = readPackageName(this.sourcePath);
             validateBallerinaProject(projectPath);
         } catch (BalException e) {
             errStream.println(e.getMessage());
@@ -116,6 +114,13 @@ public class Init implements BLauncherCmd {
             return;
         }
 
+        String packageName;
+        try {
+            packageName = readPackageName(this.sourcePath);
+        } catch (BalException e) {
+            errStream.println(e.getMessage());
+            return;
+        }
         if (schemaFiles.size() == 0) {
             schemaFiles.add(packageName);
             try {
