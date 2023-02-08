@@ -234,5 +234,12 @@ public class ToolingDbPushTest {
     @Description("Test the created sql script without DB config in Ballerina.toml")
     public void testDbPushWithoutDBConfig() {
         assertGeneratedSources("tool_test_db_push_23", DB_PUSH);
+
+    }
+    
+    @Test(enabled = true)
+    @Description("When the db push command is executed without init.")
+    public void testDbPushWithoutInit() {
+        assertGeneratedSourcesNegative("tool_test_db_push_24", DB_PUSH, null);
     }
 }
