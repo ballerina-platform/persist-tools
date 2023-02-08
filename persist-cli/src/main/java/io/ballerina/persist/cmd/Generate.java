@@ -118,6 +118,13 @@ public class Generate implements BLauncherCmd {
             return;
         }
 
+        String packageName;
+        try {
+            packageName = readPackageName(this.sourcePath);
+        } catch (BalException e) {
+            errStream.println(e.getMessage());
+            return;
+        }
         schemaFilePaths.forEach(file -> {
             Module entityModule;
             Path generatedSourceDirPath;
@@ -130,7 +137,6 @@ public class Generate implements BLauncherCmd {
                             file.getFileName());
                     return;
                 }
-                String packageName = readPackageName(this.sourcePath);
                 if (entityModule.getModuleName().equals(packageName)) {
                     generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);
                 } else {
