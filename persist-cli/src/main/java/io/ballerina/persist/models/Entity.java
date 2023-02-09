@@ -20,6 +20,7 @@ package io.ballerina.persist.models;
 
 import io.ballerina.persist.pluralize.Pluralize;
 
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -36,7 +37,6 @@ public class Entity {
     private final String resourceName;
 
     private final String entityName;
-    private final String entityNameInPlural;
 
     private final List<EntityField> fields;
 
@@ -46,7 +46,6 @@ public class Entity {
         this.keys = Collections.unmodifiableList(keys);
         this.resourceName = resourceName;
         this.fields = Collections.unmodifiableList(fields);
-        this.entityNameInPlural = Pluralize.getResourceNameInPlural(resourceName);
     }
 
     public List<EntityField> getKeys() {
@@ -56,10 +55,6 @@ public class Entity {
     public String getResourceName() {
         return this.resourceName;
     }
-    public String getResourceNameInPlural() {
-        return this.entityNameInPlural;
-    }
-
     public String getEntityName() {
         return this.entityName;
     }
@@ -101,6 +96,20 @@ public class Entity {
             if (resourceName == null) {
                 resourceName = entityName.toLowerCase(Locale.ENGLISH);
             }
+            resourceName = Pluralize.pluralize(resourceName);
+            PrintStream asd = System.out;
+            asd.println("sheep: " + Pluralize.pluralize("sheep"));
+            asd.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            asd.println("canvas: " + Pluralize.pluralize("canvas"));
+            asd.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            asd.println("bus: " + Pluralize.pluralize("bus"));
+            asd.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            asd.println("____________________________");
+            asd.println("adulthood: " + Pluralize.pluralize("adulthood"));
+            asd.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            asd.println("i: " + Pluralize.pluralize("i"));
+            asd.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            asd.println("babies: " + Pluralize.pluralize("babies"));
             return new Entity(entityName, keys, resourceName, fieldList);
         }
     }

@@ -1,6 +1,6 @@
 // AUTO-GENERATED FILE. DO NOT MODIFY.
 
-// This file is an auto-generated file by Ballerina persistence layer for entity.
+// This file is an auto-generated file by Ballerina persistence layer for entities.
 // It should not be modified by hand.
 
 import ballerina/persist;
@@ -11,7 +11,7 @@ import ballerinax/mysql;
 const MEDICAL_ITEM = "medicalitem";
 const MEDICAL_NEED = "medicalneed";
 
-public client class EntityClient {
+public client class EntitiesClient {
     *persist:AbstractPersistClient;
 
     private final mysql:Client dbClient;
@@ -57,7 +57,7 @@ public client class EntityClient {
         };
     }
 
-    isolated resource function get medicalitem() returns stream<MedicalItem, persist:Error?> {
+    isolated resource function get medicalitems() returns stream<MedicalItem, persist:Error?> {
         stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(MEDICAL_ITEM).runReadQuery(MedicalItem);
         if result is persist:Error {
             return new stream<MedicalItem, persist:Error?>(new MedicalItemStream((), result));
@@ -66,7 +66,7 @@ public client class EntityClient {
         }
     }
 
-    isolated resource function get medicalitem/[int itemId]() returns MedicalItem|persist:Error {
+    isolated resource function get medicalitems/[int itemId]() returns MedicalItem|persist:Error {
         MedicalItem|error result = (check self.persistClients.get(MEDICAL_ITEM).runReadByKeyQuery(MedicalItem, itemId)).cloneWithType(MedicalItem);
         if result is error {
             return <persist:Error>error(result.message());
@@ -74,24 +74,24 @@ public client class EntityClient {
         return result;
     }
 
-    isolated resource function post medicalitem(MedicalItemInsert[] data) returns int[]|persist:Error {
+    isolated resource function post medicalitems(MedicalItemInsert[] data) returns int[]|persist:Error {
         _ = check self.persistClients.get(MEDICAL_ITEM).runBatchInsertQuery(data);
         return from MedicalItemInsert inserted in data
             select inserted.itemId;
     }
 
-    isolated resource function put medicalitem/[int itemId](MedicalItemUpdate value) returns MedicalItem|persist:Error {
-        _ = check self.persistClients.get(MEDICAL_ITEM).runUpdateQuery({"itemId": itemId}, value);
-        return self->/medicalitem/[itemId].get();
+    isolated resource function put medicalitems/[int itemId](MedicalItemUpdate value) returns MedicalItem|persist:Error {
+        _ = check self.persistClients.get(MEDICAL_ITEM).runUpdateQuery(itemId, value);
+        return self->/medicalitems/[itemId].get();
     }
 
-    isolated resource function delete medicalitem/[int itemId]() returns MedicalItem|persist:Error {
-        MedicalItem result = check self->/medicalitem/[itemId].get();
-        _ = check self.persistClients.get(MEDICAL_ITEM).runDeleteQuery({"itemId": itemId});
+    isolated resource function delete medicalitems/[int itemId]() returns MedicalItem|persist:Error {
+        MedicalItem result = check self->/medicalitems/[itemId].get();
+        _ = check self.persistClients.get(MEDICAL_ITEM).runDeleteQuery(itemId);
         return result;
     }
 
-    isolated resource function get medicalneed() returns stream<MedicalNeed, persist:Error?> {
+    isolated resource function get medicalneeds() returns stream<MedicalNeed, persist:Error?> {
         stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(MEDICAL_NEED).runReadQuery(MedicalNeed);
         if result is persist:Error {
             return new stream<MedicalNeed, persist:Error?>(new MedicalNeedStream((), result));
@@ -100,7 +100,7 @@ public client class EntityClient {
         }
     }
 
-    isolated resource function get medicalneed/[int needId]() returns MedicalNeed|persist:Error {
+    isolated resource function get medicalneeds/[int needId]() returns MedicalNeed|persist:Error {
         MedicalNeed|error result = (check self.persistClients.get(MEDICAL_NEED).runReadByKeyQuery(MedicalNeed, needId)).cloneWithType(MedicalNeed);
         if result is error {
             return <persist:Error>error(result.message());
@@ -108,20 +108,20 @@ public client class EntityClient {
         return result;
     }
 
-    isolated resource function post medicalneed(MedicalNeedInsert[] data) returns int[]|persist:Error {
+    isolated resource function post medicalneeds(MedicalNeedInsert[] data) returns int[]|persist:Error {
         _ = check self.persistClients.get(MEDICAL_NEED).runBatchInsertQuery(data);
         return from MedicalNeedInsert inserted in data
             select inserted.needId;
     }
 
-    isolated resource function put medicalneed/[int needId](MedicalNeedUpdate value) returns MedicalNeed|persist:Error {
-        _ = check self.persistClients.get(MEDICAL_NEED).runUpdateQuery({"needId": needId}, value);
-        return self->/medicalneed/[needId].get();
+    isolated resource function put medicalneeds/[int needId](MedicalNeedUpdate value) returns MedicalNeed|persist:Error {
+        _ = check self.persistClients.get(MEDICAL_NEED).runUpdateQuery(needId, value);
+        return self->/medicalneeds/[needId].get();
     }
 
-    isolated resource function delete medicalneed/[int needId]() returns MedicalNeed|persist:Error {
-        MedicalNeed result = check self->/medicalneed/[needId].get();
-        _ = check self.persistClients.get(MEDICAL_NEED).runDeleteQuery({"needId": needId});
+    isolated resource function delete medicalneeds/[int needId]() returns MedicalNeed|persist:Error {
+        MedicalNeed result = check self->/medicalneeds/[needId].get();
+        _ = check self.persistClients.get(MEDICAL_NEED).runDeleteQuery(needId);
         return result;
     }
 

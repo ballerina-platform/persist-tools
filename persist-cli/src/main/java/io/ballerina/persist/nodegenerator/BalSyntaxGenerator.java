@@ -390,7 +390,8 @@ public class BalSyntaxGenerator {
 
         for (Entity entity : entityModule.getEntityMap().values()) {
             moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration(String.format(
-                    "const %s = \"%s\";", getEntityNameConstant(entity.getEntityName()), entity.getResourceName())));
+                    "const %s = \"%s\";", getEntityNameConstant(entity.getEntityName()), 
+                    entity.getEntityName().toLowerCase(Locale.ENGLISH))));
         }
 
         Client clientObject = createClient(entityModule);
@@ -492,7 +493,7 @@ public class BalSyntaxGenerator {
             }
             entityMetaData.append(String.format(METADATARECORD_KEY_FIELD_TEMPLATE, keyFields));
             mapBuilder.append(String.format(METADATARECORD_ELEMENT_TEMPLATE,
-                    entity.getResourceName(), entityMetaData));
+                    entity.getEntityName().toLowerCase(Locale.ENGLISH), entityMetaData));
         }
         return NodeParser.parseObjectMember(String.format(METADATARECORD_TEMPLATE, mapBuilder));
     }
@@ -500,7 +501,7 @@ public class BalSyntaxGenerator {
 
     private static ClientResource createClientResource(Entity entity) {
         HashMap<String, String> keys = new HashMap<>();
-        ClientResource resource = new ClientResource(entity.getResourceNameInPlural());
+        ClientResource resource = new ClientResource(entity.getResourceName());
         for (EntityField field : entity.getKeys()) {
             keys.put(field.getFieldName(), field.getFieldType());
         }
@@ -602,8 +603,8 @@ public class BalSyntaxGenerator {
             if (persistClientMap.length() != 0) {
                 persistClientMap.append(COMMA_WITH_NEWLINE);
             }
-            persistClientMap.append(String.format(PERSIST_CLIENT_MAP_ELEMENT, entity.getResourceName(),
-                    getEntityNameConstant(entity.getEntityName())));
+            persistClientMap.append(String.format(PERSIST_CLIENT_MAP_ELEMENT, 
+                    entity.getEntityName().toLowerCase(Locale.ENGLISH), getEntityNameConstant(entity.getEntityName())));
         }
         init.addStatement(NodeParser.parseStatement(String.format(PERSIST_CLIENT_TEMPLATE, persistClientMap)));
         return init;
@@ -628,7 +629,7 @@ public class BalSyntaxGenerator {
 
         Function create = new Function(BalSyntaxConstants.POST, SyntaxKind.RESOURCE_ACCESSOR_DEFINITION);
         NodeList<Node> resourcePaths = AbstractNodeFactory.createEmptyNodeList();
-        resourcePaths = resourcePaths.add(AbstractNodeFactory.createIdentifierToken(entity.getResourceNameInPlural()));
+        resourcePaths = resourcePaths.add(AbstractNodeFactory.createIdentifierToken(entity.getResourceName()));
         create.addRelativeResourcePaths(resourcePaths);
         create.addRequiredParameter(
                 TypeDescriptor.getArrayTypeDescriptorNode(parameterType), KEYWORD_VALUE);
@@ -693,7 +694,7 @@ public class BalSyntaxGenerator {
     private static Function createGetByKeyFunction(Entity entity, HashMap<String, String> keys) {
         Function readByKey = new Function(BalSyntaxConstants.GET, SyntaxKind.RESOURCE_ACCESSOR_DEFINITION);
         NodeList<Node> resourcePaths = AbstractNodeFactory.createEmptyNodeList();
-        resourcePaths = resourcePaths.add(AbstractNodeFactory.createIdentifierToken(entity.getResourceNameInPlural()));
+        resourcePaths = resourcePaths.add(AbstractNodeFactory.createIdentifierToken(entity.getResourceName()));
 
         for (Map.Entry<String, String> entry : keys.entrySet()) {
             resourcePaths = resourcePaths.add(AbstractNodeFactory.createToken(SyntaxKind.SLASH_TOKEN));
@@ -742,7 +743,7 @@ public class BalSyntaxGenerator {
         Function read = new Function(BalSyntaxConstants.GET, SyntaxKind.RESOURCE_ACCESSOR_DEFINITION);
         read.addQualifiers(new String[]{KEYWORD_ISOLATED, BalSyntaxConstants.KEYWORD_RESOURCE});
         NodeList<Node> resourcePaths = AbstractNodeFactory.createEmptyNodeList();
-        resourcePaths = resourcePaths.add(AbstractNodeFactory.createIdentifierToken(entity.getResourceNameInPlural()));
+        resourcePaths = resourcePaths.add(AbstractNodeFactory.createIdentifierToken(entity.getResourceName()));
         read.addRelativeResourcePaths(resourcePaths);
         read.addReturns(TypeDescriptor.getStreamTypeDescriptorNode(
                 NodeFactory.createSimpleNameReferenceNode(AbstractNodeFactory.createIdentifierToken(
@@ -773,8 +774,8 @@ public class BalSyntaxGenerator {
                 String.format(UPDATE_RECORD, entity.getEntityName())), VALUE);
         NodeList<Node> resourcePaths = AbstractNodeFactory.createEmptyNodeList();
         StringBuilder filterKeys = new StringBuilder(OPEN_BRACE);
-        StringBuilder path = new StringBuilder(BACK_SLASH + entity.getResourceNameInPlural());
-        resourcePaths = getResourcePath(resourcePaths, keys, filterKeys, path, entity.getResourceNameInPlural());
+        StringBuilder path = new StringBuilder(BACK_SLASH + entity.getResourceName());
+        resourcePaths = getResourcePath(resourcePaths, keys, filterKeys, path, entity.getResourceName());
         update.addRelativeResourcePaths(resourcePaths);
         update.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(
                 TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()),
@@ -797,9 +798,9 @@ public class BalSyntaxGenerator {
         Function delete = new Function(BalSyntaxConstants.DELETE, SyntaxKind.RESOURCE_ACCESSOR_DEFINITION);
         delete.addQualifiers(new String[]{KEYWORD_ISOLATED, BalSyntaxConstants.KEYWORD_RESOURCE});
         NodeList<Node> resourcePaths = AbstractNodeFactory.createEmptyNodeList();
-        StringBuilder path = new StringBuilder(BACK_SLASH + entity.getResourceNameInPlural());
+        StringBuilder path = new StringBuilder(BACK_SLASH + entity.getResourceName());
         StringBuilder filterKeys = new StringBuilder(OPEN_BRACE);
-        resourcePaths = getResourcePath(resourcePaths, keys, filterKeys, path, entity.getResourceNameInPlural());
+        resourcePaths = getResourcePath(resourcePaths, keys, filterKeys, path, entity.getResourceName());
         delete.addRelativeResourcePaths(resourcePaths);
         delete.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(
                 TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()),
