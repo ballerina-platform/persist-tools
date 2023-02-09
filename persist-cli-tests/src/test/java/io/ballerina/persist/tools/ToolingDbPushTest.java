@@ -140,7 +140,7 @@ public class ToolingDbPushTest {
     }
 
     @Test(enabled = true)
-    @Description("Test the created sql script content when relation annotation hasn't properties")
+    @Description("Test the created sql script content when relation annotation hasn't contain properties")
     public void testDbPush() {
         assertGeneratedSources("tool_test_db_push_8", DB_PUSH);
     }
