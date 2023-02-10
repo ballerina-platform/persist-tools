@@ -15,15 +15,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.ballerina.persist.pluralize;
+package io.ballerina.persist.plural;
 
 import java.util.Arrays;
 import java.util.List;
 
 /**
- * Rules for Singular to Plural.
+ * Rules for singular to plural.
  */
 public class Rules {
+
+    private Rules(){}
+
     // Irregular rules.
     static final String[][] IRREGULAR_RULES = (new String[][] {
             {"i", "we"},
@@ -52,7 +55,6 @@ public class Rules {
             {"volcano", "volcanoes"},
             {"tornado", "tornadoes"},
             {"torpedo", "torpedoes"},
-            {"mango", "mangoes"},
             // Ends with `us`.
             {"genus", "genera"},
             {"viscus", "viscera"},

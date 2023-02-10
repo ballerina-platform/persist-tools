@@ -15,7 +15,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.ballerina.persist.pluralize;
+package io.ballerina.persist.plural;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -23,7 +23,9 @@ import java.util.regex.Pattern;
 /**
  * Transforms english words from singular to plural form.
  */
-public class Pluralize {
+public class Pluralizer {
+
+    private Pluralizer(){}
 
     public static String pluralize(String word) {
         for (String rule : Rules.UNCOUNTABLE_RULES) {

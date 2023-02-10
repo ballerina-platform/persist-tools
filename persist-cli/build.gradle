@@ -33,7 +33,6 @@ configurations {
 }
 
 dependencies {
-    testImplementation 'org.testng:testng:7.1.0'
     checkstyle project(':checkstyle')
     checkstyle "com.puppycrawl.tools:checkstyle:${checkstylePluginVersion}"
 
