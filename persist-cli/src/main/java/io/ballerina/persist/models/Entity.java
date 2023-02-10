@@ -20,7 +20,6 @@ package io.ballerina.persist.models;
 
 import io.ballerina.persist.pluralize.Pluralize;
 
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -97,19 +96,6 @@ public class Entity {
                 resourceName = entityName.toLowerCase(Locale.ENGLISH);
             }
             resourceName = Pluralize.pluralize(resourceName);
-            PrintStream asd = System.out;
-            asd.println("sheep: " + Pluralize.pluralize("sheep"));
-            asd.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-            asd.println("canvas: " + Pluralize.pluralize("canvas"));
-            asd.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-            asd.println("bus: " + Pluralize.pluralize("bus"));
-            asd.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-            asd.println("____________________________");
-            asd.println("adulthood: " + Pluralize.pluralize("adulthood"));
-            asd.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-            asd.println("i: " + Pluralize.pluralize("i"));
-            asd.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-            asd.println("babies: " + Pluralize.pluralize("babies"));
             return new Entity(entityName, keys, resourceName, fieldList);
         }
     }

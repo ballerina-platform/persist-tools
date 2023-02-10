@@ -26,7 +26,7 @@ import java.util.List;
 public class Rules {
     // Irregular rules.
     static final String[][] IRREGULAR_RULES = (new String[][] {
-            {"I", "we"},
+            {"i", "we"},
             {"me", "us"},
             {"he", "they"},
             {"she", "they"},
@@ -52,6 +52,7 @@ public class Rules {
             {"volcano", "volcanoes"},
             {"tornado", "tornadoes"},
             {"torpedo", "torpedoes"},
+            {"mango", "mangoes"},
             // Ends with `us`.
             {"genus", "genera"},
             {"viscus", "viscera"},

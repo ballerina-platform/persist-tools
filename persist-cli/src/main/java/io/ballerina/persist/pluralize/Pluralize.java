@@ -17,9 +17,6 @@
  */
 package io.ballerina.persist.pluralize;
 
-import java.io.PrintStream;
-import java.util.Locale;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,55 +26,25 @@ import java.util.regex.Pattern;
 public class Pluralize {
 
     public static String pluralize(String word) {
-        PrintStream asd = System.out;
-        asd.println();
-        long startTime = System.nanoTime();
-        long endTime;
-        asd.println(System.nanoTime());
         for (String rule : Rules.UNCOUNTABLE_RULES) {
-            if (Pattern.matches(rule.toLowerCase(Locale.ENGLISH), word)) {
-                endTime = System.nanoTime();
-                asd.println(endTime);
-                long elapsedTime = endTime - startTime;
-//                double elapsedTimeInSecond = (double) (endTime - startTime) / 1_000_000_000;
-                asd.println("total time: " + TimeUnit.MICROSECONDS.convert(elapsedTime, TimeUnit.NANOSECONDS));
+            if (Pattern.matches(rule, word)) {
                 return word;
             }
         }
         for (String[] irregularRule: Rules.IRREGULAR_RULES) {
-            if (irregularRule[1].equalsIgnoreCase(word)) {
-                endTime = System.nanoTime();
-                asd.println(endTime);
-                long elapsedTime = endTime - startTime;
-//                double elapsedTimeInSecond = (double) (endTime - startTime) / 1_000_000_000;
-                asd.println("total time: " + TimeUnit.MICROSECONDS.convert(elapsedTime, TimeUnit.NANOSECONDS));
+            if (irregularRule[1].equals(word)) {
                 return word;
             }
-            if (irregularRule[0].equalsIgnoreCase(word)) {
-                endTime = System.nanoTime();
-                asd.println(endTime);
-                long elapsedTime = endTime - startTime;
-//                double elapsedTimeInSecond = (double) (endTime - startTime) / 1_000_000_000;
-                asd.println("total time: " + TimeUnit.MICROSECONDS.convert(elapsedTime, TimeUnit.NANOSECONDS));
+            if (irregularRule[0].equals(word)) {
                 return irregularRule[1];
             }
         }
         for (String[] pluralizationRule: Rules.PLURALIZATION_RULES) {
             Matcher matcher = Pattern.compile(pluralizationRule[0]).matcher(word);
             if (matcher.find()) {
-                endTime = System.nanoTime();
-                asd.println(endTime);
-                long elapsedTime = endTime - startTime;
-//                double elapsedTimeInSecond = (double) (endTime - startTime) / 1_000_000_000;
-                asd.println("total time: " + TimeUnit.MICROSECONDS.convert(elapsedTime, TimeUnit.NANOSECONDS));
                 return matcher.replaceFirst(pluralizationRule[1]);
             }
         }
-        endTime = System.nanoTime();
-        asd.println(endTime);
-        long elapsedTime = endTime - startTime;
-//                double elapsedTimeInSecond = (double) (endTime - startTime) / 1_000_000_000;
-        asd.println("total time: " + TimeUnit.MICROSECONDS.convert(elapsedTime, TimeUnit.NANOSECONDS));
         return word;
     }
 }
