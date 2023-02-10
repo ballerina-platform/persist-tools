@@ -66,7 +66,7 @@ public class UnitTest {
             outputs.add(Pluralizer.pluralize(word));
         }
         long endTime = System.nanoTime();
-        // todo: Total time in milliseconds with initial implementation : 62 - 74
+        // todo: Total time in milliseconds with initial implementation : 62 - 66
         print.println("Total time in milliseconds which takes to convert 100 words to plural: " +
                 TimeUnit.MILLISECONDS.convert(endTime - startTime, TimeUnit.NANOSECONDS));
         for (int i = 0; i < outputs.size(); i++) {
