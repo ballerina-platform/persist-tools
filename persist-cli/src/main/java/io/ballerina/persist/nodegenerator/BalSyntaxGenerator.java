@@ -132,6 +132,7 @@ import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.RETURN_NILL;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.SELECT_WITH_SPACE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.SELF_ERR;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.SEMICOLON;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.SINGLE_QUOTE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.SPACE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.SPECIFIC_ERROR;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.STREAM_VALUE;
@@ -390,7 +391,8 @@ public class BalSyntaxGenerator {
 
         for (Entity entity : entityModule.getEntityMap().values()) {
             moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration(String.format(
-                    "const %s = \"%s\";", getEntityNameConstant(entity.getEntityName()), entity.getResourceName())));
+                    "const %s = \"%s\";", getEntityNameConstant(entity.getEntityName()),
+                    stripEscapeCharacter(entity.getResourceName()))));
         }
 
         Client clientObject = createClient(entityModule);
@@ -452,8 +454,10 @@ public class BalSyntaxGenerator {
                 mapBuilder.append(COMMA_WITH_NEWLINE);
             }
             StringBuilder entityMetaData = new StringBuilder();
-            entityMetaData.append(String.format(METADATARECORD_ENTITY_NAME_TEMPLATE, entity.getEntityName()));
-            entityMetaData.append(String.format(METADATARECORD_TABLE_NAME_TEMPLATE, entity.getEntityName()));
+            entityMetaData.append(String.format(METADATARECORD_ENTITY_NAME_TEMPLATE,
+                    stripEscapeCharacter(entity.getEntityName())));
+            entityMetaData.append(String.format(METADATARECORD_TABLE_NAME_TEMPLATE,
+                    stripEscapeCharacter(entity.getEntityName())));
             StringBuilder fieldMetaData = new StringBuilder();
             for (EntityField field : entity.getFields()) {
                 if (field.getRelation() != null) {
@@ -467,7 +471,8 @@ public class BalSyntaxGenerator {
                                 foreignKeyFields.append(COMMA_SPACE);
                             }
                             foreignKeyFields.append(String.format(METADATARECORD_FIELD_TEMPLATE,
-                                    key.getField(), key.getField(), key.getType()));
+                                    key.getField(), stripEscapeCharacter(key.getField()),
+                                    stripEscapeCharacter(key.getType())));
                         }
                     }
                     fieldMetaData.append(foreignKeyFields);
@@ -477,7 +482,7 @@ public class BalSyntaxGenerator {
                     }
                     fieldMetaData.append(String.format(METADATARECORD_FIELD_TEMPLATE,
                             field.getFieldName(), stripEscapeCharacter(field.getFieldName()),
-                            field.getFieldType()));
+                            stripEscapeCharacter(field.getFieldType())));
                 }
             }
             entityMetaData.append(String.format(FIELD_METADATA_TEMPLATE, fieldMetaData));
@@ -492,7 +497,7 @@ public class BalSyntaxGenerator {
             }
             entityMetaData.append(String.format(METADATARECORD_KEY_FIELD_TEMPLATE, keyFields));
             mapBuilder.append(String.format(METADATARECORD_ELEMENT_TEMPLATE,
-                    entity.getResourceName(), entityMetaData));
+                    stripEscapeCharacter(entity.getResourceName()), entityMetaData));
         }
         return NodeParser.parseObjectMember(String.format(METADATARECORD_TEMPLATE, mapBuilder));
     }
@@ -1048,17 +1053,20 @@ public class BalSyntaxGenerator {
 
     private static String getEntityNameConstant(String entityName) {
         StringBuilder outputString = new StringBuilder();
-        String[] splitedStrings = entityName.split(REGEX_FOR_SPLIT_BY_CAPITOL_LETTER);
+        String[] splitedStrings = stripEscapeCharacter(entityName).split(REGEX_FOR_SPLIT_BY_CAPITOL_LETTER);
         for (String splitedString : splitedStrings) {
             if (outputString.length() != 0) {
                 outputString.append(UNDERSCORE);
             }
             outputString.append(splitedString.toUpperCase(Locale.ENGLISH));
         }
+        if (entityName.startsWith(SINGLE_QUOTE)) {
+            return SINGLE_QUOTE + outputString.toString();
+        }
         return outputString.toString();
     }
 
-    private static String stripEscapeCharacter(String fieldName) {
-        return fieldName.startsWith("'") ? fieldName.substring(1) : fieldName;
+    public static String stripEscapeCharacter(String fieldName) {
+        return fieldName.startsWith(SINGLE_QUOTE) ? fieldName.substring(1) : fieldName;
     }
 }
