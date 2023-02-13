@@ -1066,7 +1066,7 @@ public class BalSyntaxGenerator {
         return outputString.toString();
     }
 
-    public static String stripEscapeCharacter(String fieldName) {
+    private static String stripEscapeCharacter(String fieldName) {
         return fieldName.startsWith(SINGLE_QUOTE) ? fieldName.substring(1) : fieldName;
     }
 }
