@@ -207,7 +207,7 @@ public class SqlScriptGenerationUtils {
         if (keys.size() > 0) {
             keyScripts.append(MessageFormat.format("{0}", PRIMARY_KEY_START_SCRIPT));
             for (EntityField key : keys) {
-                keyScripts.append(MessageFormat.format("{0},", key.getFieldName()));
+                keyScripts.append(MessageFormat.format("{0},", removeSingleQuote(key.getFieldName())));
             }
             keyScripts.deleteCharAt(keyScripts.length() - 1).append("),");
         }
