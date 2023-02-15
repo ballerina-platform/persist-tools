@@ -11,6 +11,7 @@ public type Building record {|
     string state;
     string country;
     string postalCode;
+    string 'type;
 |};
 
 public type BuildingInsert Building;
@@ -20,21 +21,7 @@ public type BuildingUpdate record {|
     string state?;
     string country?;
     string postalCode?;
-|};
-
-public type Workspace record {|
-    readonly string workspaceId;
-    string workspaceType;
-    string buildingBuildingCode;
-    string employeeEmpNo;
-|};
-
-public type WorkspaceInsert Workspace;
-
-public type WorkspaceUpdate record {|
-    string workspaceType?;
-    string buildingBuildingCode?;
-    string employeeEmpNo?;
+    string 'type?;
 |};
 
 public type Department record {|
@@ -56,6 +43,7 @@ public type Employee record {|
     string gender;
     time:Date hireDate;
     string departmentDeptNo;
+    string workspaceWorkspaceId;
 |};
 
 public type EmployeeInsert Employee;
@@ -67,6 +55,7 @@ public type EmployeeUpdate record {|
     string gender?;
     time:Date hireDate?;
     string departmentDeptNo?;
+    string workspaceWorkspaceId?;
 |};
 
 public type OrderItem record {|
@@ -81,5 +70,18 @@ public type OrderItemInsert OrderItem;
 public type OrderItemUpdate record {|
     int quantity?;
     string notes?;
+|};
+
+public type Workspace record {|
+    readonly string workspaceId;
+    string workspaceType;
+    string buildingBuildingCode;
+|};
+
+public type WorkspaceInsert Workspace;
+
+public type WorkspaceUpdate record {|
+    string workspaceType?;
+    string buildingBuildingCode?;
 |};
 
