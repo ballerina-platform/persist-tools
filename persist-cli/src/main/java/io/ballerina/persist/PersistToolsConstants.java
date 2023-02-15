@@ -100,6 +100,5 @@ public class PersistToolsConstants {
         public static final int VARCHAR_LENGTH = 191;
         public static final int DECIMAL_PRECISION = 65;
         public static final int DECIMAL_SCALE = 30;
-
     }
 }
