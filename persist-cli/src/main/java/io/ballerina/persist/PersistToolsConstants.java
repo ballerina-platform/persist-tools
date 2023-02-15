@@ -65,6 +65,9 @@ public class PersistToolsConstants {
      * Constants related to Ballerina types.
      */
     public static final class BallerinaTypes {
+
+        private BallerinaTypes() {}
+
         public static final String INT = "int";
         public static final String STRING = "string";
         public static final String BOOLEAN = "boolean";
@@ -81,6 +84,8 @@ public class PersistToolsConstants {
      * Constants related to SQL types.
      */
     public static final class SqlTypes {
+        private SqlTypes() {}
+
         public static final String INT = "INT";
         public static final String BOOLEAN = "BOOLEAN";
         public static final String DECIMAL = "DECIMAL";
@@ -97,6 +102,9 @@ public class PersistToolsConstants {
      * Constants related to the length of SQL types.
      */
     public static final class DefaultMaxLength {
+
+        private DefaultMaxLength() {}
+
         public static final int VARCHAR_LENGTH = 191;
         public static final int DECIMAL_PRECISION = 65;
         public static final int DECIMAL_SCALE = 30;

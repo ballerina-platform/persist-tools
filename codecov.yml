@@ -1,7 +1,6 @@
 ignore:
   - "**/persist-cli-tests"
   - "persist-cli/src/main/java/io/ballerina/persist/components/Enum.java"
-  - "persist-cli/src/main/java/io/ballerina/persist/PersistToolsConstants.java"
 
 coverage:
   precision: 2
