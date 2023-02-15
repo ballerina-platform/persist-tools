@@ -35,14 +35,11 @@ public class EntityField {
     private final boolean optionalType;
     private Relation relation;
 
-    private final int maxLength;
-
-    private EntityField(String fieldName, String fieldType, boolean arrayType, boolean optionalType, int maxLength) {
+    private EntityField(String fieldName, String fieldType, boolean arrayType, boolean optionalType) {
         this.fieldName = fieldName;
         this.fieldType = fieldType;
         this.arrayType = arrayType;
         this.optionalType = optionalType;
-        this.maxLength = maxLength;
     }
 
     public String getFieldName() {
@@ -69,10 +66,6 @@ public class EntityField {
         return optionalType;
     }
 
-    public int getMaxLength() {
-        return maxLength;
-    }
-
     public static EntityField.Builder newBuilder(String fieldName) {
         return new EntityField.Builder(fieldName);
     }
@@ -83,7 +76,6 @@ public class EntityField {
     public static class Builder {
         String fieldName;
         String fieldType;
-        int maxLength = 191;
 
         boolean arrayType = false;
         boolean optionalType = false;
@@ -109,7 +101,7 @@ public class EntityField {
         }
 
         public EntityField build() {
-            return new EntityField(fieldName, fieldType, arrayType, optionalType, maxLength);
+            return new EntityField(fieldName, fieldType, arrayType, optionalType);
         }
     }
 }

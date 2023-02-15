@@ -84,12 +84,22 @@ public class PersistToolsConstants {
         public static final String INT = "INT";
         public static final String BOOLEAN = "BOOLEAN";
         public static final String DECIMAL = "DECIMAL";
-        public static final String FLOAT = "FLOAT";
+        public static final String DOUBLE = "DOUBLE";
         public static final String VARCHAR = "VARCHAR";
         public static final String DATE = "DATE";
         public static final String TIME = "TIME";
         public static final String TIME_STAMP = "TIMESTAMP";
         public static final String DATE_TIME = "DATETIME";
         public static final String BINARY = "BINARY";
+    }
+
+    /**
+     * Constants related to the length of SQL types.
+     */
+    public static final class DefaultMaxLength {
+        public static final int VARCHAR_LENGTH = 191;
+        public static final int DECIMAL_PRECISION = 65;
+        public static final int DECIMAL_SCALE = 30;
+
     }
 }
