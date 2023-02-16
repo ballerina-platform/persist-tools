@@ -117,9 +117,6 @@ public class SqlScriptGenerationUtils {
             }
             String sqlType = getType(entityField);
             assert sqlType != null;
-            if (sqlType.equals(PersistToolsConstants.SqlTypes.VARCHAR)) {
-                sqlType += "(" + entityField.getMaxLength() + ")";
-            }
             String fieldName = removeSingleQuote(entityField.getFieldName());
             if (entityField.isOptionalType()) {
                 columnScript.append(MessageFormat.format("{0}{1}{2} {3},",
@@ -150,9 +147,6 @@ public class SqlScriptGenerationUtils {
                 }
                 if (assocField.getFieldName().equals(references.get(i))) {
                     referenceSqlType = getType(assocField);
-                    if (referenceSqlType.equals(PersistToolsConstants.SqlTypes.VARCHAR)) {
-                        referenceSqlType += "(" + entityField.getMaxLength() + ")";
-                    }
                     break;
                 }
             }
@@ -217,9 +211,11 @@ public class SqlScriptGenerationUtils {
                 case PersistToolsConstants.BallerinaTypes.BOOLEAN:
                     return PersistToolsConstants.SqlTypes.BOOLEAN;
                 case PersistToolsConstants.BallerinaTypes.DECIMAL:
-                    return PersistToolsConstants.SqlTypes.DECIMAL;
+                    return PersistToolsConstants.SqlTypes.DECIMAL + String.format("(%s,%s)",
+                        PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION,
+                        PersistToolsConstants.DefaultMaxLength.DECIMAL_SCALE);
                 case PersistToolsConstants.BallerinaTypes.FLOAT:
-                    return PersistToolsConstants.SqlTypes.FLOAT;
+                    return PersistToolsConstants.SqlTypes.DOUBLE;
                 case PersistToolsConstants.BallerinaTypes.DATE:
                     return PersistToolsConstants.SqlTypes.DATE;
                 case PersistToolsConstants.BallerinaTypes.TIME_OF_DAY:
@@ -229,7 +225,8 @@ public class SqlScriptGenerationUtils {
                 case PersistToolsConstants.BallerinaTypes.CIVIL:
                     return PersistToolsConstants.SqlTypes.DATE_TIME;
                 case PersistToolsConstants.BallerinaTypes.STRING:
-                    return PersistToolsConstants.SqlTypes.VARCHAR;
+                    return PersistToolsConstants.SqlTypes.VARCHAR + String.format("(%s)",
+                            PersistToolsConstants.DefaultMaxLength.VARCHAR_LENGTH);
                 default:
                     throw new BalException("couldn't find equivalent SQL type for the field type: " + fieldType);
             }
