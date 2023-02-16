@@ -1,0 +1,21 @@
+DROP TABLE IF EXISTS MedicalNeed;
+DROP TABLE IF EXISTS MedicalItem;
+
+CREATE TABLE MedicalItem (
+	itemId INT NOT NULL,
+	name VARCHAR(191) NOT NULL,
+	type VARCHAR(191) NOT NULL,
+	unit INT NOT NULL,
+	PRIMARY KEY(itemId)
+);
+
+CREATE TABLE MedicalNeed (
+	needId INT NOT NULL,
+	itemId INT NOT NULL,
+	name VARCHAR(191) NOT NULL,
+	beneficiaryId INT NOT NULL,
+	period DATETIME NOT NULL,
+	urgency VARCHAR(191) NOT NULL,
+	quantity VARCHAR(191) NOT NULL,
+	PRIMARY KEY(needId)
+);

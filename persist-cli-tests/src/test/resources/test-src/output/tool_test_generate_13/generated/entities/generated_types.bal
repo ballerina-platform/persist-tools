@@ -41,3 +41,4 @@ public type MultipleAssociationsInsert MultipleAssociations;
 public type MultipleAssociationsUpdate record {|
     string name?;
 |};
+

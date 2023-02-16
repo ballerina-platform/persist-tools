@@ -68,3 +68,4 @@ public type EmployeeUpdate record {|
     time:Date hireDate?;
     string departmentDeptNo?;
 |};
+

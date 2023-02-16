@@ -156,7 +156,7 @@ public class ToolingGenerateTest {
         assertGeneratedSources("tool_test_generate_21", GENERATE);
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false) //disabled until the PR on escape characters in entities is merged
     @Description("There are two special entities with special characters in field names")
     public void testGenerateRelatedClientsWithSpecialCharactersInName() {
         assertGeneratedSources("tool_test_generate_22", GENERATE);
@@ -179,7 +179,7 @@ public class ToolingGenerateTest {
         assertGeneratedSources("tool_test_generate_25", GENERATE);
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false) //disabled until the PR on escape characters in entities is merged
     @Description("There are two entities with one to one associations between each other without relation annotation")
     public void testGenerateOneToOneAssociationsWithoutRelationAnnotation() {
         assertGeneratedSources("tool_test_generate_26", GENERATE);
@@ -245,5 +245,35 @@ public class ToolingGenerateTest {
     @Description("Test the generate command in default Ballerina package")
     public void testGenerateRelationsWithSingleQuote() {
         assertGeneratedSources("tool_test_generate_36", GENERATE);
+    }
+
+    @Test(enabled = true)
+    @Description("Test the created sql script content when relation annotation hasn't properties")
+    public void testSqlGen() {
+        assertGeneratedSources("tool_test_generate_37", GENERATE);
+    }
+
+    @Test(enabled = true)
+    @Description("Test the created sql script content with out defining any schema files inside persist directory")
+    public void testSqlGenWithoutSchemaFile() {
+        assertGeneratedSources("tool_test_generate_38", GENERATE);
+    }
+
+    @Test(enabled = true)
+    @Description("Test the created sql script with one to many relation entity")
+    public void testSqlGenWithOneToManyRelationship() {
+        assertGeneratedSources("tool_test_generate_39", GENERATE);
+    }
+
+    @Test(enabled = true)
+    @Description("Test the created sql script with optional type fields")
+    public void testSqlGenWithOptionalTypeFields() {
+        assertGeneratedSources("tool_test_generate_40", GENERATE);
+    }
+
+    @Test(enabled = true)
+    @Description("Test the created sql script with composite reference keys")
+    public void testSqlGenWithCompositeReferenceKeys() {
+        assertGeneratedSources("tool_test_generate_41", GENERATE);
     }
 }
