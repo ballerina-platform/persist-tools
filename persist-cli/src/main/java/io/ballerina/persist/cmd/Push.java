@@ -205,7 +205,7 @@ public class Push implements BLauncherCmd {
                     ScriptRunner sr = new ScriptRunner(connection);
                     sr.runScript(fileReader);
                 } catch (IOException e) {
-                    errStream.println("error occurred while reading SQL schema file, "
+                    errStream.println("Eerror occurred while reading SQL schema file, "
                             + sqlFilePath + ". " + e.getMessage());
                     return;
                 } catch (Exception e) {

@@ -1,0 +1,10 @@
+[tool_test_db_push_25]
+host = "localhostnew"
+port = 3310
+user = "rootw"
+password = "Test123#"
+database = "persistnewdb"
+
+[foo.tool_test_db_push_1]
+database = "persist"
+root = "root"

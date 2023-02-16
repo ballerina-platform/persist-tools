@@ -242,4 +242,11 @@ public class ToolingDbPushTest {
     public void testDbPushWithoutInit() {
         assertGeneratedSourcesNegative("tool_test_db_push_24", DB_PUSH, null);
     }
+
+    @Test(enabled = true, dependsOnMethods = { "testDbPushEntityUpdated" })
+    @Description("Database is not available and it is created while running the db push command inside " +
+            "a project with default entity structure")
+    public void testDbPushWithoutDatabaseWithDefaultEntityStructure() throws BalException {
+        assertGeneratedSources("tool_test_db_push_25", DB_PUSH);
+    }
 }
