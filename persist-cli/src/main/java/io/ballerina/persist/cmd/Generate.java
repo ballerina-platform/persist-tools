@@ -165,8 +165,8 @@ public class Generate implements BLauncherCmd {
                 SqlScriptGenerationUtils.writeScriptFile(entityModule.getModuleName(), sqlScripts,
                         generatedSourceDirPath);
             } catch (BalException e) {
-                errStream.printf("ERROR: failed to generate SQL schema for the definition file(%s). "
-                        + e.getMessage() + "%n", file.getFileName());
+                errStream.printf("ERROR: failed to generate SQL schema for the definition file(%s). %s%n",
+                        file.getFileName(), e.getMessage());
             }
         });
     }

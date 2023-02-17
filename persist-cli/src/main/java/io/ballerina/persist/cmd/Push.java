@@ -127,8 +127,8 @@ public class Push implements BLauncherCmd {
                     .filter(file -> file.toString().toLowerCase(Locale.ENGLISH).endsWith(".bal"))
                     .collect(Collectors.toList());
         } catch (IOException e) {
-            errStream.println("ERROR: failed to list the model definition files in the persist directory. "
-                    + e.getMessage());
+            errStream.printf("ERROR: failed to list the model definition files in the persist directory. %s%n",
+                    e.getMessage());
             return;
         }
 
@@ -162,13 +162,12 @@ public class Push implements BLauncherCmd {
                             entityModule.getModuleName());
                 }
                 if (entityModule.getEntityMap().isEmpty()) {
-                    errStream.printf("ERROR: the model definition file(%s) does not contain any valid entity%n",
+                    errStream.printf("ERROR: the model definition file(%s) does not contain any valid entity.%n",
                             file.getFileName());
                     return;
                 }
             } catch (BalException e) {
-                errStream.printf("ERROR: failed to read entity definitions. "
-                        + e.getMessage() + "%n");
+                errStream.printf("ERROR: failed to read entity definitions. %s%n", e.getMessage());
                 return;
             }
 
@@ -178,8 +177,8 @@ public class Push implements BLauncherCmd {
                 persistConfigurations = TomlSyntaxGenerator.readPersistConfigurations(
                         entityModule.getModuleName(), ballerinaTomlPath);
             } catch (BalException e) {
-                errStream.printf("ERROR: failed to load db configurations for the data model(%s). "
-                        + e.getMessage() + "%n", entityModule.getModuleName());
+                errStream.printf("ERROR: failed to load db configurations for the data model(%s). %s%n ",
+                        entityModule.getModuleName(), e.getMessage());
                 return;
             }
 
@@ -191,11 +190,11 @@ public class Push implements BLauncherCmd {
                     ScriptRunner sr = new ScriptRunner(connection);
                     sr.runQuery(query);
                 } catch (SQLException e) {
-                    errStream.println("ERROR: failed to create the database(" +
-                            persistConfigurations.getDbConfig().getDatabase() + "). " + e.getMessage());
+                    errStream.printf("ERROR: failed to create the database(%s). %s%n",
+                            persistConfigurations.getDbConfig().getDatabase(), e.getMessage());
                     return;
                 }
-                errStream.println("Created database `" + persistConfigurations.getDbConfig().getDatabase() + "`.");
+                errStream.printf("Created database '%s'.", persistConfigurations.getDbConfig().getDatabase());
 
                 String sqlFilePath = generatedSourceDirPath.resolve(String.format(PersistToolsConstants.SQL_SCHEMA_FILE,
                                 entityModule.getModuleName())).toAbsolutePath().toString();
@@ -205,21 +204,21 @@ public class Push implements BLauncherCmd {
                     ScriptRunner sr = new ScriptRunner(connection);
                     sr.runScript(fileReader);
                 } catch (IOException e) {
-                    errStream.println("Error occurred while reading SQL schema file, "
-                            + sqlFilePath + ". " + e.getMessage());
+                    errStream.printf("ERROR: failed to read SQL schema file(%s). %s%n. ",
+                            sqlFilePath, e.getMessage());
                     return;
                 } catch (Exception e) {
-                    errStream.println("ERROR: failed to read the SQL schema file("
-                            + sqlFilePath + "). " + e.getMessage());
+                    errStream.printf("ERROR: failed to read the SQL schema file(%s). %s%n.", sqlFilePath,
+                            e.getMessage());
                     return;
                 }
-                errStream.println("Created tables for definition in " + file.getFileName() + " in the database `" +
-                        persistConfigurations.getDbConfig().getDatabase() + "`.");
+                errStream.printf("Created tables for definition in %s in the database '%s'. ", file.getFileName(),
+                        persistConfigurations.getDbConfig().getDatabase());
             } catch (BalException e) {
-                errStream.println("ERROR: failed to execute the SQL scripts for the definition file("
-                        + file.getFileName() + "). " + e.getMessage());
+                errStream.printf("ERROR: failed to execute the SQL scripts for the definition file(%s). %s%n",
+                        file.getFileName(), e.getMessage());
             } catch (IOException e) {
-                errStream.println("ERROR: failed to load the database driver. " + e.getMessage());
+                errStream.printf("ERROR: failed to load the database driver. %s%n", e.getMessage());
             }
         });
 
