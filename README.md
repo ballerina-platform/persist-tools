@@ -2,8 +2,8 @@ Ballerina Persist Tools
 ===================
 
 [![Build](https://github.com/ballerina-platform/persist-tools/actions/workflows/build-timestamped-master.yml/badge.svg)](https://github.com/ballerina-platform/persist-tools/actions/workflows/build-timestamped-master.yml)
-[![GitHub Last Commit](https://img.shields.io/github/last-commit/ballerina-platform/persist-tools.svg)](https://github.com/ballerina-platform/persist-tools/commits/main)
 [![codecov](https://codecov.io/gh/ballerina-platform/persist-tools/branch/main/graph/badge.svg)](https://codecov.io/gh/ballerina-platform/persist-tools)
+[![GitHub Last Commit](https://img.shields.io/github/last-commit/ballerina-platform/persist-tools.svg)](https://github.com/ballerina-platform/persist-tools/commits/main)
 
 The Ballerina `persist` Tool which supports several operations on the Ballerina Persistence Layer. Ballerina Persistent Layer provides functionality to store and query data conveniently.
 
@@ -29,8 +29,8 @@ This repository only contains the source code for the package.
       > **Note:** Set the JAVA_HOME environment variable to the path name of the directory into which you installed JDK.
 2. Export Github Personal access token with read package permissions as follows,
 
-              export packageUser=<Username>
-              export packagePAT=<Personal access token>
+        export packageUser=<Username>
+        export packagePAT=<Personal access token>
 
 ### Build the source
 
