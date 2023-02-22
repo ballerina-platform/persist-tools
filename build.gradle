@@ -25,6 +25,8 @@ plugins {
     id "net.researchgate.release" version "${researchgateReleaseVersion}"
 }
 
+ext.testngVersion = project.testngVersion
+
 allprojects {
     group = project.group
     version = project.version

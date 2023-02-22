@@ -42,7 +42,7 @@ public client class EntitiesClient {
         self.persistClients = {medicalneed: check new (self.dbClient, self.metadata.get(MEDICAL_NEED))};
     }
 
-    isolated resource function get medicalneed() returns stream<MedicalNeed, persist:Error?> {
+    isolated resource function get medicalneeds() returns stream<MedicalNeed, persist:Error?> {
         stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(MEDICAL_NEED).runReadQuery(MedicalNeed);
         if result is persist:Error {
             return new stream<MedicalNeed, persist:Error?>(new MedicalNeedStream((), result));
@@ -51,7 +51,7 @@ public client class EntitiesClient {
         }
     }
 
-    isolated resource function get medicalneed/[int needId]() returns MedicalNeed|persist:Error {
+    isolated resource function get medicalneeds/[int needId]() returns MedicalNeed|persist:Error {
         MedicalNeed|error result = (check self.persistClients.get(MEDICAL_NEED).runReadByKeyQuery(MedicalNeed, needId)).cloneWithType(MedicalNeed);
         if result is error {
             return <persist:Error>error(result.message());
@@ -59,19 +59,19 @@ public client class EntitiesClient {
         return result;
     }
 
-    isolated resource function post medicalneed(MedicalNeedInsert[] data) returns int[]|persist:Error {
+    isolated resource function post medicalneeds(MedicalNeedInsert[] data) returns int[]|persist:Error {
         _ = check self.persistClients.get(MEDICAL_NEED).runBatchInsertQuery(data);
         return from MedicalNeedInsert inserted in data
             select inserted.needId;
     }
 
-    isolated resource function put medicalneed/[int needId](MedicalNeedUpdate value) returns MedicalNeed|persist:Error {
+    isolated resource function put medicalneeds/[int needId](MedicalNeedUpdate value) returns MedicalNeed|persist:Error {
         _ = check self.persistClients.get(MEDICAL_NEED).runUpdateQuery(needId, value);
-        return self->/medicalneed/[needId].get();
+        return self->/medicalneeds/[needId].get();
     }
 
-    isolated resource function delete medicalneed/[int needId]() returns MedicalNeed|persist:Error {
-        MedicalNeed result = check self->/medicalneed/[needId].get();
+    isolated resource function delete medicalneeds/[int needId]() returns MedicalNeed|persist:Error {
+        MedicalNeed result = check self->/medicalneeds/[needId].get();
         _ = check self.persistClients.get(MEDICAL_NEED).runDeleteQuery(needId);
         return result;
     }
