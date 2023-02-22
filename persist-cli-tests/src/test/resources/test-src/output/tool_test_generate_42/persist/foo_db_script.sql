@@ -1,0 +1,7 @@
+DROP TABLE IF EXISTS ByteTest;
+
+CREATE TABLE ByteTest (
+	id INT NOT NULL,
+	binary1 BINARY NOT NULL,
+	PRIMARY KEY(id)
+);

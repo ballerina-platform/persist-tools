@@ -246,4 +246,10 @@ public class ToolingGenerateTest {
     public void testGenerateRelationsWithSingleQuote() {
         assertGeneratedSources("tool_test_generate_36", GENERATE);
     }
+
+    @Test(enabled = true)
+    @Description("Test the generate command with entities containing byte[] fields")
+    public void testGenerateWithByteArrays() {
+        assertGeneratedSources("tool_test_generate_42", GENERATE);
+    }
 }
