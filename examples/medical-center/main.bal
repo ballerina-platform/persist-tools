@@ -23,7 +23,9 @@ public function main() returns error? {
         itemId: 1,
         name: "item name",
         itemType: "type1",
-        unit: "ml"
+        unit: "ml",
+        price: 1.34345133,
+        quantity: 2.0040043
     };
     int[] itemIds = check mcClient->/medicalitem.post([item]);
     io:println("Created item id: ", itemIds[0]);
@@ -37,19 +39,25 @@ public function main() returns error? {
         itemId: 2,
         name: "item2 name",
         itemType: "type1",
-        unit: "ml"
+        unit: "ml",
+        price: 120.2345,
+        quantity: 25.125
     };
     entities:MedicalItem item3 = {
         itemId: 3,
         name: "item2 name",
         itemType: "type2",
-        unit: "ml"
+        unit: "ml",
+        price: 570.00004,
+        quantity: 124.987
     };
      entities:MedicalItem item4 = {
         itemId: 4,
         name: "item2 name",
         itemType: "type2",
-        unit: "kg"
+        unit: "kg",
+        price: 1200.2345,
+        quantity: 13421.456
     };
     _ = check mcClient->/medicalitem.post([item2, item3, item4]);
 

@@ -7,8 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+## [0.1.0] - 2023-02-21
+
+### Added
+ 
 - Support to for `bal persist init` command
 - Support to for `bal persist generate` command
 - Support to for `bal persist push` command
-
-### Changed
