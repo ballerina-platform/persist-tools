@@ -26,7 +26,9 @@ public client class EntitiesClient {
                 itemId: {columnName: "itemId", 'type: int},
                 name: {columnName: "name", 'type: string},
                 itemType: {columnName: "itemType", 'type: string},
-                unit: {columnName: "unit", 'type: string}
+                unit: {columnName: "unit", 'type: string},
+                quantity: {columnName: "quantity", 'type: float},
+                price: {columnName: "price", 'type: decimal}
             },
             keyFields: ["itemId"]
         },

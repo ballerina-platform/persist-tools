@@ -224,7 +224,7 @@ public client class RainierClient {
 
     isolated resource function put orderitems/[string itemId]/[string orderId](OrderItemUpdate value) returns OrderItem|persist:Error {
         _ = check self.persistClients.get(ORDER_ITEM).runUpdateQuery({"itemId": itemId, "orderId": orderId}, value);
-        return self->/orderitems/[itemId]/[orderId].get();
+        return self->/orderitem/[itemId]/[orderId].get();
     }
 
     isolated resource function delete orderitems/[string itemId]/[string orderId]() returns OrderItem|persist:Error {

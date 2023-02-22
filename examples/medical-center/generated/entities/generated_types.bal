@@ -10,6 +10,8 @@ public type MedicalItem record {|
     string name;
     string itemType;
     string unit;
+    float quantity;
+    decimal price;
 |};
 
 public type MedicalItemInsert MedicalItem;
@@ -18,6 +20,8 @@ public type MedicalItemUpdate record {|
     string name?;
     string itemType?;
     string unit?;
+    float quantity?;
+    decimal price?;
 |};
 
 public type MedicalNeed record {|
