@@ -38,7 +38,7 @@ public client class FooClient {
         self.persistClients = {bytetest: check new (self.dbClient, self.metadata.get(BYTE_TEST))};
     }
 
-    isolated resource function get bytetest() returns stream<ByteTest, persist:Error?> {
+    isolated resource function get bytetests() returns stream<ByteTest, persist:Error?> {
         stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(BYTE_TEST).runReadQuery(ByteTest);
         if result is persist:Error {
             return new stream<ByteTest, persist:Error?>(new ByteTestStream((), result));
@@ -47,7 +47,7 @@ public client class FooClient {
         }
     }
 
-    isolated resource function get bytetest/[int id]() returns ByteTest|persist:Error {
+    isolated resource function get bytetests/[int id]() returns ByteTest|persist:Error {
         ByteTest|error result = (check self.persistClients.get(BYTE_TEST).runReadByKeyQuery(ByteTest, id)).cloneWithType(ByteTest);
         if result is error {
             return <persist:Error>error(result.message());
@@ -55,19 +55,19 @@ public client class FooClient {
         return result;
     }
 
-    isolated resource function post bytetest(ByteTestInsert[] data) returns int[]|persist:Error {
+    isolated resource function post bytetests(ByteTestInsert[] data) returns int[]|persist:Error {
         _ = check self.persistClients.get(BYTE_TEST).runBatchInsertQuery(data);
         return from ByteTestInsert inserted in data
             select inserted.id;
     }
 
-    isolated resource function put bytetest/[int id](ByteTestUpdate value) returns ByteTest|persist:Error {
+    isolated resource function put bytetests/[int id](ByteTestUpdate value) returns ByteTest|persist:Error {
         _ = check self.persistClients.get(BYTE_TEST).runUpdateQuery(id, value);
-        return self->/bytetest/[id].get();
+        return self->/bytetests/[id].get();
     }
 
-    isolated resource function delete bytetest/[int id]() returns ByteTest|persist:Error {
-        ByteTest result = check self->/bytetest/[id].get();
+    isolated resource function delete bytetests/[int id]() returns ByteTest|persist:Error {
+        ByteTest result = check self->/bytetests/[id].get();
         _ = check self.persistClients.get(BYTE_TEST).runDeleteQuery(id);
         return result;
     }
