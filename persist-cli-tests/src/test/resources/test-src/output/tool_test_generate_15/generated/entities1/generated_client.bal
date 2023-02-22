@@ -8,7 +8,7 @@ import ballerina/sql;
 import ballerinax/mysql;
 
 const MULTIPLE_ASSOCIATIONS = "multipleassociations";
-const PROFILES = "profiles";
+const PROFILE = "profile";
 
 public client class Entities1Client {
     *persist:AbstractPersistClient;
@@ -24,11 +24,11 @@ public client class Entities1Client {
             fieldMetadata: {
                 id: {columnName: "id", 'type: int},
                 name: {columnName: "name", 'type: string},
-                profilesId: {columnName: "profilesId", 'type: int}
+                profileId: {columnName: "profileId", 'type: int}
             },
             keyFields: ["id"]
         },
-        "profiles": {
+        "profile": {
             entityName: "Profile",
             tableName: `Profile`,
             fieldMetadata: {
@@ -47,7 +47,7 @@ public client class Entities1Client {
         self.dbClient = dbClient;
         self.persistClients = {
             multipleassociations: check new (self.dbClient, self.metadata.get(MULTIPLE_ASSOCIATIONS)),
-            profiles: check new (self.dbClient, self.metadata.get(PROFILES))
+            profile: check new (self.dbClient, self.metadata.get(PROFILE))
         };
     }
 
@@ -85,8 +85,8 @@ public client class Entities1Client {
         return result;
     }
 
-    isolated resource function get profiles() returns stream<Profile, persist:Error?> {
-        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(PROFILES).runReadQuery(Profile);
+    isolated resource function get profile() returns stream<Profile, persist:Error?> {
+        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(PROFILE).runReadQuery(Profile);
         if result is persist:Error {
             return new stream<Profile, persist:Error?>(new ProfileStream((), result));
         } else {
@@ -94,28 +94,28 @@ public client class Entities1Client {
         }
     }
 
-    isolated resource function get profiles/[int id]() returns Profile|persist:Error {
-        Profile|error result = (check self.persistClients.get(PROFILES).runReadByKeyQuery(Profile, id)).cloneWithType(Profile);
+    isolated resource function get profile/[int id]() returns Profile|persist:Error {
+        Profile|error result = (check self.persistClients.get(PROFILE).runReadByKeyQuery(Profile, id)).cloneWithType(Profile);
         if result is error {
             return <persist:Error>error(result.message());
         }
         return result;
     }
 
-    isolated resource function post profiles(ProfileInsert[] data) returns int[]|persist:Error {
-        _ = check self.persistClients.get(PROFILES).runBatchInsertQuery(data);
+    isolated resource function post profile(ProfileInsert[] data) returns int[]|persist:Error {
+        _ = check self.persistClients.get(PROFILE).runBatchInsertQuery(data);
         return from ProfileInsert inserted in data
             select inserted.id;
     }
 
-    isolated resource function put profiles/[int id](ProfileUpdate value) returns Profile|persist:Error {
-        _ = check self.persistClients.get(PROFILES).runUpdateQuery({"id": id}, value);
-        return self->/profiles/[id].get();
+    isolated resource function put profile/[int id](ProfileUpdate value) returns Profile|persist:Error {
+        _ = check self.persistClients.get(PROFILE).runUpdateQuery({"id": id}, value);
+        return self->/profile/[id].get();
     }
 
-    isolated resource function delete profiles/[int id]() returns Profile|persist:Error {
-        Profile result = check self->/profiles/[id].get();
-        _ = check self.persistClients.get(PROFILES).runDeleteQuery({"id": id});
+    isolated resource function delete profile/[int id]() returns Profile|persist:Error {
+        Profile result = check self->/profile/[id].get();
+        _ = check self.persistClients.get(PROFILE).runDeleteQuery({"id": id});
         return result;
     }
 
