@@ -405,7 +405,8 @@ public class BalSyntaxGenerator {
 
         for (Entity entity : entityModule.getEntityMap().values()) {
             moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration(String.format(
-                    "const %s = \"%s\";", getEntityNameConstant(entity.getEntityName()), entity.getResourceName())));
+                    "const %s = \"%s\";", getEntityNameConstant(entity.getEntityName()), 
+                    entity.getEntityName().toLowerCase(Locale.ENGLISH))));
         }
 
         Client clientObject = createClient(entityModule);
@@ -507,7 +508,7 @@ public class BalSyntaxGenerator {
             }
             entityMetaData.append(String.format(METADATARECORD_KEY_FIELD_TEMPLATE, keyFields));
             mapBuilder.append(String.format(METADATARECORD_ELEMENT_TEMPLATE,
-                    entity.getResourceName(), entityMetaData));
+                    entity.getEntityName().toLowerCase(Locale.ENGLISH), entityMetaData));
         }
         return NodeParser.parseObjectMember(String.format(METADATARECORD_TEMPLATE, mapBuilder));
     }
@@ -617,8 +618,8 @@ public class BalSyntaxGenerator {
             if (persistClientMap.length() != 0) {
                 persistClientMap.append(COMMA_WITH_NEWLINE);
             }
-            persistClientMap.append(String.format(PERSIST_CLIENT_MAP_ELEMENT, entity.getResourceName(),
-                    getEntityNameConstant(entity.getEntityName())));
+            persistClientMap.append(String.format(PERSIST_CLIENT_MAP_ELEMENT, 
+                    entity.getEntityName().toLowerCase(Locale.ENGLISH), getEntityNameConstant(entity.getEntityName())));
         }
         init.addStatement(NodeParser.parseStatement(String.format(PERSIST_CLIENT_TEMPLATE, persistClientMap)));
         return init;
