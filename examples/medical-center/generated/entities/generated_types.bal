@@ -1,6 +1,6 @@
 // AUTO-GENERATED FILE. DO NOT MODIFY.
 
-// This file is an auto-generated file by Ballerina persistence layer for entity.
+// This file is an auto-generated file by Ballerina persistence layer for entities.
 // It should not be modified by hand.
 
 import ballerina/time;
@@ -10,6 +10,8 @@ public type MedicalItem record {|
     string name;
     string itemType;
     string unit;
+    float quantity;
+    decimal price;
 |};
 
 public type MedicalItemInsert MedicalItem;
@@ -18,6 +20,8 @@ public type MedicalItemUpdate record {|
     string name?;
     string itemType?;
     string unit?;
+    float quantity?;
+    decimal price?;
 |};
 
 public type MedicalNeed record {|

@@ -2,8 +2,8 @@ Ballerina Persist Tools
 ===================
 
 [![Build](https://github.com/ballerina-platform/persist-tools/actions/workflows/build-timestamped-master.yml/badge.svg)](https://github.com/ballerina-platform/persist-tools/actions/workflows/build-timestamped-master.yml)
-[![GitHub Last Commit](https://img.shields.io/github/last-commit/ballerina-platform/persist-tools.svg)](https://github.com/ballerina-platform/persist-tools/commits/main)
 [![codecov](https://codecov.io/gh/ballerina-platform/persist-tools/branch/main/graph/badge.svg)](https://codecov.io/gh/ballerina-platform/persist-tools)
+[![GitHub Last Commit](https://img.shields.io/github/last-commit/ballerina-platform/persist-tools.svg)](https://github.com/ballerina-platform/persist-tools/commits/main)
 
 The Ballerina `persist` Tool which supports several operations on the Ballerina Persistence Layer. Ballerina Persistent Layer provides functionality to store and query data conveniently.
 
@@ -29,8 +29,8 @@ This repository only contains the source code for the package.
       > **Note:** Set the JAVA_HOME environment variable to the path name of the directory into which you installed JDK.
 2. Export Github Personal access token with read package permissions as follows,
 
-              export packageUser=<Username>
-              export packagePAT=<Personal access token>
+        export packageUser=<Username>
+        export packagePAT=<Personal access token>
 
 ### Build the source
 
@@ -65,19 +65,17 @@ Execute the commands below to build from source.
     ./gradlew clean build -PbalJavaDebug=<port>
     ```
 
-## Contribute to Ballerina
+## Contributing to Ballerina
 
-As an open source project, Ballerina welcomes contributions from the community.
+As an open source project, Ballerina welcomes contributions from the community. 
 
-For more information, go to the [contribution guidelines](https://github.com/ballerina-platform/ballerina-lang/blob/main/CONTRIBUTING.md).
+For more information, go to the [contribution guidelines](https://github.com/ballerina-platform/ballerina-lang/blob/master/CONTRIBUTING.md).
 
 ## Code of conduct
 
-All contributors are encouraged to read the [Ballerina Code of Conduct](https://ballerina.io/code-of-conduct).
+All contributors are encouraged to read the [Ballerina code of conduct](https://ballerina.io/code-of-conduct).
 
 ## Useful links
 
 * Chat live with us via our [Discord server](https://discord.gg/ballerinalang).
 * Post all technical questions on Stack Overflow with the [#ballerina](https://stackoverflow.com/questions/tagged/ballerina) tag.
-* View the [Ballerina performance test results](https://github.com/ballerina-platform/ballerina-lang/blob/main/performance/benchmarks/summary.md).
-* For example demonstrations of the usage, go to [Ballerina By Examples](https://ballerina.io/learn/by-example/).
