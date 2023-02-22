@@ -22,6 +22,7 @@ import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.BalSyntaxGenerator;
+import io.ballerina.projects.BuildOptions;
 import io.ballerina.projects.DiagnosticResult;
 import io.ballerina.projects.Package;
 import io.ballerina.projects.PackageCompilation;
@@ -71,7 +72,10 @@ public class BalProjectUtils {
     }
 
     public static void validateSchemaFile(Path schemaPath) throws BalException {
-        SingleFileProject buildProject = SingleFileProject.load(schemaPath.toAbsolutePath());
+        BuildOptions.BuildOptionsBuilder buildOptionsBuilder = BuildOptions.builder();
+        buildOptionsBuilder.setOffline(true);
+        SingleFileProject buildProject = SingleFileProject.load(schemaPath.toAbsolutePath(),
+                buildOptionsBuilder.build());
         Package currentPackage = buildProject.currentPackage();
         PackageCompilation compilation = currentPackage.getCompilation();
         DiagnosticResult diagnosticResult = compilation.diagnosticResult();
