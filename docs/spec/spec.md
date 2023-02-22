@@ -20,7 +20,7 @@ The conforming implementation of the specification is released and included in t
 
 1. [Overview](#1-overview)
 2. [Initializing Persistence Layer in Bal Project](#2-initializing-the-bal-project-with-persistence-layer)
-3. [Generating Persistence Derived Types and Clients](#3-generating-persistence-derived-types-and-clients)
+3. [Generating Persistence Derived Types, Clients, and Database Schema](#3-generating-persistence-derived-types-and-clients)
 4. [Push Persistence Schema to the Data Provider](#4-push-persistence-schema-to-the-data-provider)
 
 ## 1. Overview
@@ -86,7 +86,7 @@ Behaviour of the `init` command,
 - User should invoke the command within a bal project
 - If the user invokes the command twice, it will not fail. It will verify that all the configurations are in place for the definition files defined inside the `persist` directory. If not, add missing configurations and files.
 
-## 3. Generating Persistence Derived Types and Clients
+## 3. Generating Persistence Derived Types, Clients, and Database Schema
 
 ```bash
 bal persist generate
@@ -94,12 +94,14 @@ bal persist generate
 
 The command will generate [Derived Entity Types and Persist Clients](https://github.com/ballerina-platform/module-ballerina-persist/blob/main/docs/spec/spec.md#3-derived-entity-types-and-persist-clients)
 as per the `persist` specification.
+Additionally, this command will create the database schema associated with the data model definition.
 
-It will add generated files under the conventions,
+It will add generated files under the conventions, 
 1. If the file name is the same as the package name, it will generate the files under the `default` module.
    ```
    medical-center
    ├── generated
+         ├── medical-item_db_script.sql
          ├── database_configuration.bal
          ├── generated_client.bal
          └── generated_types.bal
@@ -114,6 +116,7 @@ It will add generated files under the conventions,
    medical-center
    ├── generated
         └── medical-item
+              ├── medical-item_db_script.sql
               ├── database_configuration.bal
               ├── generated_client.bal
               └── generated_types.bal
@@ -123,6 +126,9 @@ It will add generated files under the conventions,
    ├── Config.toml
    └── main.bal
    ```
+The database schema will contain the code to create,
+1. Tables for each entity with defined primary keys
+2. Create foreign key associations between tables if the model has defined associations between entities
 
 Behaviour of the `generate` command,
 - User should invoke the command within a bal project
@@ -137,7 +143,7 @@ Behaviour of the `generate` command,
 bal persist push
 ```
 
-This command will create the database schema associated with the data model definition. 
+This command will run the schema against the database defined in  the `Ballerina.toml` file under the heading ([persist.<definition file name>.storage.mysql]). 
 ```
 medical-center
 ├── generated
@@ -145,16 +151,13 @@ medical-center
      ├── generated_client.bal
      └── generated_types.bal
 ├── persist
-     ├── medical-center_db_script.sql
      └── medical-center.bal
 ├── Ballerina.toml
 ├── Config.toml
 └── main.bal
 ```
 
-Additionally, this will run the schema against the database defined in  the `Ballerina.toml` file under the heading ([persist.<definition file name>.storage.mysql])
-
-The database schema will create,
+Running the database schema will create,
 1. Tables for each entity with defined primary keys
 2. Create foreign key associations between tables if the model has defined associations between entities
 
@@ -163,4 +166,4 @@ Behaviour of the `push` command,
 - The user should have initiated the persistence layer with the latest set of definition files
 - All model definition files should contain the `persist` module import (`import ballerina/persist as _;`)
 - The Model definition file should contain at least one entity
-- If the user invokes the command twice, it will not fail. It will generate the schema once again.
+- If the user invokes the command twice, it will not fail. It will run the schema once again.
