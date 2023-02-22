@@ -7,8 +7,8 @@ import ballerina/persist;
 import ballerina/sql;
 import ballerinax/mysql;
 
-const COMPANY = "company";
-const EMPLOYEE = "employee";
+const COMPANIES = "companies";
+const EMPLOYEES = "employees";
 
 public client class EntitiesClient {
     *persist:AbstractPersistClient;
@@ -18,7 +18,7 @@ public client class EntitiesClient {
     private final map<persist:SQLClient> persistClients;
 
     private final record {|persist:Metadata...;|} metadata = {
-        "company": {
+        "companies": {
             entityName: "Company",
             tableName: `Company`,
             fieldMetadata: {
@@ -28,7 +28,7 @@ public client class EntitiesClient {
             },
             keyFields: ["id"]
         },
-        "employee": {
+        "employees": {
             entityName: "Employee",
             tableName: `Employee`,
             fieldMetadata: {
@@ -48,13 +48,13 @@ public client class EntitiesClient {
         }
         self.dbClient = dbClient;
         self.persistClients = {
-            company: check new (self.dbClient, self.metadata.get(COMPANY)),
-            employee: check new (self.dbClient, self.metadata.get(EMPLOYEE))
+            companies: check new (self.dbClient, self.metadata.get(COMPANIES)),
+            employees: check new (self.dbClient, self.metadata.get(EMPLOYEES))
         };
     }
 
     isolated resource function get companies() returns stream<Company, persist:Error?> {
-        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(COMPANY).runReadQuery(Company);
+        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(COMPANIES).runReadQuery(Company);
         if result is persist:Error {
             return new stream<Company, persist:Error?>(new CompanyStream((), result));
         } else {
@@ -63,7 +63,7 @@ public client class EntitiesClient {
     }
 
     isolated resource function get companies/[int 'id]() returns Company|persist:Error {
-        Company|error result = (check self.persistClients.get(COMPANY).runReadByKeyQuery(Company, 'id)).cloneWithType(Company);
+        Company|error result = (check self.persistClients.get(COMPANIES).runReadByKeyQuery(Company, 'id)).cloneWithType(Company);
         if result is error {
             return <persist:Error>error(result.message());
         }
@@ -71,24 +71,24 @@ public client class EntitiesClient {
     }
 
     isolated resource function post companies(CompanyInsert[] data) returns int[]|persist:Error {
-        _ = check self.persistClients.get(COMPANY).runBatchInsertQuery(data);
+        _ = check self.persistClients.get(COMPANIES).runBatchInsertQuery(data);
         return from CompanyInsert inserted in data
             select inserted.'id;
     }
 
     isolated resource function put companies/[int 'id](CompanyUpdate value) returns Company|persist:Error {
-        _ = check self.persistClients.get(COMPANY).runUpdateQuery('id, value);
+        _ = check self.persistClients.get(COMPANIES).runUpdateQuery('id, value);
         return self->/companies/['id].get();
     }
 
     isolated resource function delete companies/[int 'id]() returns Company|persist:Error {
         Company result = check self->/companies/['id].get();
-        _ = check self.persistClients.get(COMPANY).runDeleteQuery('id);
+        _ = check self.persistClients.get(COMPANIES).runDeleteQuery('id);
         return result;
     }
 
     isolated resource function get employees() returns stream<Employee, persist:Error?> {
-        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(EMPLOYEE).runReadQuery(Employee);
+        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(EMPLOYEES).runReadQuery(Employee);
         if result is persist:Error {
             return new stream<Employee, persist:Error?>(new EmployeeStream((), result));
         } else {
@@ -97,7 +97,7 @@ public client class EntitiesClient {
     }
 
     isolated resource function get employees/[int 'id]() returns Employee|persist:Error {
-        Employee|error result = (check self.persistClients.get(EMPLOYEE).runReadByKeyQuery(Employee, 'id)).cloneWithType(Employee);
+        Employee|error result = (check self.persistClients.get(EMPLOYEES).runReadByKeyQuery(Employee, 'id)).cloneWithType(Employee);
         if result is error {
             return <persist:Error>error(result.message());
         }
@@ -105,19 +105,19 @@ public client class EntitiesClient {
     }
 
     isolated resource function post employees(EmployeeInsert[] data) returns int[]|persist:Error {
-        _ = check self.persistClients.get(EMPLOYEE).runBatchInsertQuery(data);
+        _ = check self.persistClients.get(EMPLOYEES).runBatchInsertQuery(data);
         return from EmployeeInsert inserted in data
             select inserted.'id;
     }
 
     isolated resource function put employees/[int 'id](EmployeeUpdate value) returns Employee|persist:Error {
-        _ = check self.persistClients.get(EMPLOYEE).runUpdateQuery('id, value);
+        _ = check self.persistClients.get(EMPLOYEES).runUpdateQuery('id, value);
         return self->/employees/['id].get();
     }
 
     isolated resource function delete employees/[int 'id]() returns Employee|persist:Error {
         Employee result = check self->/employees/['id].get();
-        _ = check self.persistClients.get(EMPLOYEE).runDeleteQuery('id);
+        _ = check self.persistClients.get(EMPLOYEES).runDeleteQuery('id);
         return result;
     }
 

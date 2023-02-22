@@ -8,10 +8,10 @@ import ballerina/sql;
 import ballerina/time;
 import ballerinax/mysql;
 
-const BUILDING = "building";
-const DEPARTMENT = "department";
-const EMPLOYEE = "employee";
-const WORKSPACE = "workspace";
+const BUILDINGS = "buildings";
+const DEPARTMENTS = "departments";
+const DEPARTMENTS = "employees";
+const WORKSPACES = "workspaces";
 
 public client class RainierClient {
     *persist:AbstractPersistClient;
@@ -21,7 +21,7 @@ public client class RainierClient {
     private final map<persist:SQLClient> persistClients;
 
     private final record {|persist:Metadata...;|} metadata = {
-        "building": {
+        "buildings": {
             entityName: "Building",
             tableName: `Building`,
             fieldMetadata: {
@@ -33,7 +33,7 @@ public client class RainierClient {
             },
             keyFields: ["buildingCode"]
         },
-        "department": {
+        "departments": {
             entityName: "Department",
             tableName: `Department`,
             fieldMetadata: {
@@ -42,7 +42,7 @@ public client class RainierClient {
             },
             keyFields: ["deptNo"]
         },
-        "employee": {
+        "employees": {
             entityName: "Employee",
             tableName: `Employee`,
             fieldMetadata: {
@@ -57,7 +57,7 @@ public client class RainierClient {
             },
             keyFields: ["empNo"]
         },
-        "workspace": {
+        "workspaces": {
             entityName: "Workspace",
             tableName: `Workspace`,
             fieldMetadata: {
@@ -76,15 +76,15 @@ public client class RainierClient {
         }
         self.dbClient = dbClient;
         self.persistClients = {
-            building: check new (self.dbClient, self.metadata.get(BUILDING)),
-            department: check new (self.dbClient, self.metadata.get(DEPARTMENT)),
-            employee: check new (self.dbClient, self.metadata.get(EMPLOYEE)),
-            workspace: check new (self.dbClient, self.metadata.get(WORKSPACE))
+            buildings: check new (self.dbClient, self.metadata.get(BUILDINGS)),
+            departments: check new (self.dbClient, self.metadata.get(DEPARTMENTS)),
+            employees: check new (self.dbClient, self.metadata.get(DEPARTMENTS)),
+            workspaces: check new (self.dbClient, self.metadata.get(WORKSPACES))
         };
     }
 
     isolated resource function get building() returns stream<Building, persist:Error?> {
-        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(BUILDING).runReadQuery(Building);
+        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(BUILDINGS).runReadQuery(Building);
         if result is persist:Error {
             return new stream<Building, persist:Error?>(new BuildingStream((), result));
         } else {
@@ -93,7 +93,7 @@ public client class RainierClient {
     }
 
     isolated resource function get building/[string buildingCode]() returns Building|persist:Error {
-        Building|error result = (check self.persistClients.get(BUILDING).runReadByKeyQuery(Building, buildingCode)).cloneWithType(Building);
+        Building|error result = (check self.persistClients.get(BUILDINGS).runReadByKeyQuery(Building, buildingCode)).cloneWithType(Building);
         if result is error {
             return <persist:Error>error(result.message());
         }
@@ -101,24 +101,24 @@ public client class RainierClient {
     }
 
     isolated resource function post building(BuildingInsert[] data) returns string[]|persist:Error {
-        _ = check self.persistClients.get(BUILDING).runBatchInsertQuery(data);
+        _ = check self.persistClients.get(BUILDINGS).runBatchInsertQuery(data);
         return from BuildingInsert inserted in data
             select inserted.buildingCode;
     }
 
     isolated resource function put building/[string buildingCode](BuildingUpdate value) returns Building|persist:Error {
-        _ = check self.persistClients.get(BUILDING).runUpdateQuery({"buildingCode": buildingCode}, value);
+        _ = check self.persistClients.get(BUILDINGS).runUpdateQuery({"buildingCode": buildingCode}, value);
         return self->/building/[buildingCode].get();
     }
 
     isolated resource function delete building/[string buildingCode]() returns Building|persist:Error {
         Building result = check self->/building/[buildingCode].get();
-        _ = check self.persistClients.get(BUILDING).runDeleteQuery({"buildingCode": buildingCode});
+        _ = check self.persistClients.get(BUILDINGS).runDeleteQuery({"buildingCode": buildingCode});
         return result;
     }
 
     isolated resource function get department() returns stream<Department, persist:Error?> {
-        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(DEPARTMENT).runReadQuery(Department);
+        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(DEPARTMENTS).runReadQuery(Department);
         if result is persist:Error {
             return new stream<Department, persist:Error?>(new DepartmentStream((), result));
         } else {
@@ -127,7 +127,7 @@ public client class RainierClient {
     }
 
     isolated resource function get department/[string deptNo]() returns Department|persist:Error {
-        Department|error result = (check self.persistClients.get(DEPARTMENT).runReadByKeyQuery(Department, deptNo)).cloneWithType(Department);
+        Department|error result = (check self.persistClients.get(DEPARTMENTS).runReadByKeyQuery(Department, deptNo)).cloneWithType(Department);
         if result is error {
             return <persist:Error>error(result.message());
         }
@@ -135,24 +135,24 @@ public client class RainierClient {
     }
 
     isolated resource function post department(DepartmentInsert[] data) returns string[]|persist:Error {
-        _ = check self.persistClients.get(DEPARTMENT).runBatchInsertQuery(data);
+        _ = check self.persistClients.get(DEPARTMENTS).runBatchInsertQuery(data);
         return from DepartmentInsert inserted in data
             select inserted.deptNo;
     }
 
     isolated resource function put department/[string deptNo](DepartmentUpdate value) returns Department|persist:Error {
-        _ = check self.persistClients.get(DEPARTMENT).runUpdateQuery({"deptNo": deptNo}, value);
+        _ = check self.persistClients.get(DEPARTMENTS).runUpdateQuery({"deptNo": deptNo}, value);
         return self->/department/[deptNo].get();
     }
 
     isolated resource function delete department/[string deptNo]() returns Department|persist:Error {
         Department result = check self->/department/[deptNo].get();
-        _ = check self.persistClients.get(DEPARTMENT).runDeleteQuery({"deptNo": deptNo});
+        _ = check self.persistClients.get(DEPARTMENTS).runDeleteQuery({"deptNo": deptNo});
         return result;
     }
 
     isolated resource function get employee() returns stream<Employee, persist:Error?> {
-        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(EMPLOYEE).runReadQuery(Employee);
+        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(DEPARTMENTS).runReadQuery(Employee);
         if result is persist:Error {
             return new stream<Employee, persist:Error?>(new EmployeeStream((), result));
         } else {
@@ -161,7 +161,7 @@ public client class RainierClient {
     }
 
     isolated resource function get employee/[string empNo]() returns Employee|persist:Error {
-        Employee|error result = (check self.persistClients.get(EMPLOYEE).runReadByKeyQuery(Employee, empNo)).cloneWithType(Employee);
+        Employee|error result = (check self.persistClients.get(DEPARTMENTS).runReadByKeyQuery(Employee, empNo)).cloneWithType(Employee);
         if result is error {
             return <persist:Error>error(result.message());
         }
@@ -169,24 +169,24 @@ public client class RainierClient {
     }
 
     isolated resource function post employee(EmployeeInsert[] data) returns string[]|persist:Error {
-        _ = check self.persistClients.get(EMPLOYEE).runBatchInsertQuery(data);
+        _ = check self.persistClients.get(DEPARTMENTS).runBatchInsertQuery(data);
         return from EmployeeInsert inserted in data
             select inserted.empNo;
     }
 
     isolated resource function put employee/[string empNo](EmployeeUpdate value) returns Employee|persist:Error {
-        _ = check self.persistClients.get(EMPLOYEE).runUpdateQuery({"empNo": empNo}, value);
+        _ = check self.persistClients.get(DEPARTMENTS).runUpdateQuery({"empNo": empNo}, value);
         return self->/employee/[empNo].get();
     }
 
     isolated resource function delete employee/[string empNo]() returns Employee|persist:Error {
         Employee result = check self->/employee/[empNo].get();
-        _ = check self.persistClients.get(EMPLOYEE).runDeleteQuery({"empNo": empNo});
+        _ = check self.persistClients.get(DEPARTMENTS).runDeleteQuery({"empNo": empNo});
         return result;
     }
 
     isolated resource function get workspace() returns stream<Workspace, persist:Error?> {
-        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(WORKSPACE).runReadQuery(Workspace);
+        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(WORKSPACES).runReadQuery(Workspace);
         if result is persist:Error {
             return new stream<Workspace, persist:Error?>(new WorkspaceStream((), result));
         } else {
@@ -195,7 +195,7 @@ public client class RainierClient {
     }
 
     isolated resource function get workspace/[string workspaceId]() returns Workspace|persist:Error {
-        Workspace|error result = (check self.persistClients.get(WORKSPACE).runReadByKeyQuery(Workspace, workspaceId)).cloneWithType(Workspace);
+        Workspace|error result = (check self.persistClients.get(WORKSPACES).runReadByKeyQuery(Workspace, workspaceId)).cloneWithType(Workspace);
         if result is error {
             return <persist:Error>error(result.message());
         }
@@ -203,19 +203,19 @@ public client class RainierClient {
     }
 
     isolated resource function post workspace(WorkspaceInsert[] data) returns string[]|persist:Error {
-        _ = check self.persistClients.get(WORKSPACE).runBatchInsertQuery(data);
+        _ = check self.persistClients.get(WORKSPACES).runBatchInsertQuery(data);
         return from WorkspaceInsert inserted in data
             select inserted.workspaceId;
     }
 
     isolated resource function put workspace/[string workspaceId](WorkspaceUpdate value) returns Workspace|persist:Error {
-        _ = check self.persistClients.get(WORKSPACE).runUpdateQuery({"workspaceId": workspaceId}, value);
+        _ = check self.persistClients.get(WORKSPACES).runUpdateQuery({"workspaceId": workspaceId}, value);
         return self->/workspace/[workspaceId].get();
     }
 
     isolated resource function delete workspace/[string workspaceId]() returns Workspace|persist:Error {
         Workspace result = check self->/workspace/[workspaceId].get();
-        _ = check self.persistClients.get(WORKSPACE).runDeleteQuery({"workspaceId": workspaceId});
+        _ = check self.persistClients.get(WORKSPACES).runDeleteQuery({"workspaceId": workspaceId});
         return result;
     }
 

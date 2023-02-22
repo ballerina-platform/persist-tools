@@ -55,6 +55,7 @@ import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.models.Relation;
+import io.ballerina.persist.plural.Pluralizer;
 import io.ballerina.tools.text.TextDocument;
 import io.ballerina.tools.text.TextDocuments;
 import org.ballerinalang.formatter.core.Formatter;
@@ -390,8 +391,7 @@ public class BalSyntaxGenerator {
 
         for (Entity entity : entityModule.getEntityMap().values()) {
             moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration(String.format(
-                    "const %s = \"%s\";", getEntityNameConstant(entity.getEntityName()), 
-                    entity.getEntityName().toLowerCase(Locale.ENGLISH))));
+                    "const %s = \"%s\";", getEntityNameConstant(entity.getEntityName()), entity.getResourceName())));
         }
 
         Client clientObject = createClient(entityModule);
@@ -493,7 +493,7 @@ public class BalSyntaxGenerator {
             }
             entityMetaData.append(String.format(METADATARECORD_KEY_FIELD_TEMPLATE, keyFields));
             mapBuilder.append(String.format(METADATARECORD_ELEMENT_TEMPLATE,
-                    entity.getEntityName().toLowerCase(Locale.ENGLISH), entityMetaData));
+                    entity.getResourceName(), entityMetaData));
         }
         return NodeParser.parseObjectMember(String.format(METADATARECORD_TEMPLATE, mapBuilder));
     }
@@ -604,7 +604,7 @@ public class BalSyntaxGenerator {
                 persistClientMap.append(COMMA_WITH_NEWLINE);
             }
             persistClientMap.append(String.format(PERSIST_CLIENT_MAP_ELEMENT, 
-                    entity.getEntityName().toLowerCase(Locale.ENGLISH), getEntityNameConstant(entity.getEntityName())));
+                    entity.getResourceName(), getEntityNameConstant(entity.getEntityName())));
         }
         init.addStatement(NodeParser.parseStatement(String.format(PERSIST_CLIENT_TEMPLATE, persistClientMap)));
         return init;
@@ -1054,9 +1054,9 @@ public class BalSyntaxGenerator {
             if (outputString.length() != 0) {
                 outputString.append(UNDERSCORE);
             }
-            outputString.append(splitedString.toUpperCase(Locale.ENGLISH));
+            outputString.append(splitedString);
         }
-        return outputString.toString();
+        return Pluralizer.pluralize(String.valueOf(outputString)).toUpperCase(Locale.ENGLISH);
     }
 
     private static String stripEscapeCharacter(String fieldName) {

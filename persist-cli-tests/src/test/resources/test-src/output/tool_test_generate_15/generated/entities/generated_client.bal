@@ -7,7 +7,7 @@ import ballerina/persist;
 import ballerina/sql;
 import ballerinax/mysql;
 
-const USER = "user";
+const USERS = "users";
 
 public client class EntitiesClient {
     *persist:AbstractPersistClient;
@@ -17,7 +17,7 @@ public client class EntitiesClient {
     private final map<persist:SQLClient> persistClients;
 
     private final record {|persist:Metadata...;|} metadata = {
-        "user": {
+        "users": {
             entityName: "User",
             tableName: `User`,
             fieldMetadata: {
@@ -34,11 +34,11 @@ public client class EntitiesClient {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
-        self.persistClients = {user: check new (self.dbClient, self.metadata.get(USER))};
+        self.persistClients = {users: check new (self.dbClient, self.metadata.get(USERS))};
     }
 
     isolated resource function get user() returns stream<User, persist:Error?> {
-        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(USER).runReadQuery(User);
+        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(USERS).runReadQuery(User);
         if result is persist:Error {
             return new stream<User, persist:Error?>(new UserStream((), result));
         } else {
@@ -47,7 +47,7 @@ public client class EntitiesClient {
     }
 
     isolated resource function get user/[int id]() returns User|persist:Error {
-        User|error result = (check self.persistClients.get(USER).runReadByKeyQuery(User, id)).cloneWithType(User);
+        User|error result = (check self.persistClients.get(USERS).runReadByKeyQuery(User, id)).cloneWithType(User);
         if result is error {
             return <persist:Error>error(result.message());
         }
@@ -55,19 +55,19 @@ public client class EntitiesClient {
     }
 
     isolated resource function post user(UserInsert[] data) returns int[]|persist:Error {
-        _ = check self.persistClients.get(USER).runBatchInsertQuery(data);
+        _ = check self.persistClients.get(USERS).runBatchInsertQuery(data);
         return from UserInsert inserted in data
             select inserted.id;
     }
 
     isolated resource function put user/[int id](UserUpdate value) returns User|persist:Error {
-        _ = check self.persistClients.get(USER).runUpdateQuery(id, value);
+        _ = check self.persistClients.get(USERS).runUpdateQuery(id, value);
         return self->/user/[id].get();
     }
 
     isolated resource function delete user/[int id]() returns User|persist:Error {
         User result = check self->/user/[id].get();
-        _ = check self.persistClients.get(USER).runDeleteQuery(id);
+        _ = check self.persistClients.get(USERS).runDeleteQuery(id);
         return result;
     }
 
