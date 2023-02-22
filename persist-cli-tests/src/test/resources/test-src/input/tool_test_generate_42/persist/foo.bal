@@ -19,4 +19,5 @@ import ballerina/persist as _;
 type ByteTest record {|
     readonly int id;
     byte[] binary1;
+    byte[]? binaryOptional;
 |};

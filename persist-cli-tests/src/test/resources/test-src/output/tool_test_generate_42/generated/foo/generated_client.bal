@@ -22,7 +22,8 @@ public client class FooClient {
             tableName: `ByteTest`,
             fieldMetadata: {
                 id: {columnName: "id", 'type: int},
-                binary1: {columnName: "binary1", 'type: byte}
+                binary1: {columnName: "binary1", 'type: byte},
+                binaryOptional: {columnName: "binaryOptional", 'type: byte}
             },
             keyFields: ["id"]
         }
