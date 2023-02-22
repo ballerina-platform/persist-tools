@@ -208,6 +208,16 @@ public class BalSyntaxGenerator {
                     if (fieldNode.typeName().kind().equals(SyntaxKind.ARRAY_TYPE_DESC)) {
                         type = ((ArrayTypeDescriptorNode) fieldNode.typeName()).memberTypeDesc();
                         fieldBuilder.setArrayType(true);
+                    } else if (fieldNode.typeName().kind().equals(SyntaxKind.OPTIONAL_TYPE_DESC)) {
+                        if (((OptionalTypeDescriptorNode) fieldNode.typeName()).typeDescriptor().kind()
+                                .equals(SyntaxKind.ARRAY_TYPE_DESC)) {
+                            type = ((ArrayTypeDescriptorNode) ((OptionalTypeDescriptorNode) fieldNode.typeName())
+                                    .typeDescriptor()).memberTypeDesc();
+                            fieldBuilder.setArrayType(true);
+                            fieldBuilder.setOptionalType(true);
+                        } else {
+                            type = (TypeDescriptorNode) fieldNode.typeName();
+                        }
                     } else {
                         type = (TypeDescriptorNode) fieldNode.typeName();
                     }
