@@ -56,7 +56,7 @@ public client class EntitiesClient {
         };
     }
 
-    isolated resource function get medicalneed() returns stream<MedicalNeed, persist:Error?> {
+    isolated resource function get medicalneeds() returns stream<MedicalNeed, persist:Error?> {
         stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(MEDICAL_NEED).runReadQuery(MedicalNeed);
         if result is persist:Error {
             return new stream<MedicalNeed, persist:Error?>(new MedicalNeedStream((), result));
@@ -65,7 +65,7 @@ public client class EntitiesClient {
         }
     }
 
-    isolated resource function get medicalneed/[int needId]() returns MedicalNeed|persist:Error {
+    isolated resource function get medicalneeds/[int needId]() returns MedicalNeed|persist:Error {
         MedicalNeed|error result = (check self.persistClients.get(MEDICAL_NEED).runReadByKeyQuery(MedicalNeed, needId)).cloneWithType(MedicalNeed);
         if result is error {
             return <persist:Error>error(result.message());
@@ -73,24 +73,24 @@ public client class EntitiesClient {
         return result;
     }
 
-    isolated resource function post medicalneed(MedicalNeedInsert[] data) returns int[]|persist:Error {
+    isolated resource function post medicalneeds(MedicalNeedInsert[] data) returns int[]|persist:Error {
         _ = check self.persistClients.get(MEDICAL_NEED).runBatchInsertQuery(data);
         return from MedicalNeedInsert inserted in data
             select inserted.needId;
     }
 
-    isolated resource function put medicalneed/[int needId](MedicalNeedUpdate value) returns MedicalNeed|persist:Error {
+    isolated resource function put medicalneeds/[int needId](MedicalNeedUpdate value) returns MedicalNeed|persist:Error {
         _ = check self.persistClients.get(MEDICAL_NEED).runUpdateQuery(needId, value);
-        return self->/medicalneed/[needId].get();
+        return self->/medicalneeds/[needId].get();
     }
 
-    isolated resource function delete medicalneed/[int needId]() returns MedicalNeed|persist:Error {
-        MedicalNeed result = check self->/medicalneed/[needId].get();
+    isolated resource function delete medicalneeds/[int needId]() returns MedicalNeed|persist:Error {
+        MedicalNeed result = check self->/medicalneeds/[needId].get();
         _ = check self.persistClients.get(MEDICAL_NEED).runDeleteQuery(needId);
         return result;
     }
 
-    isolated resource function get aidpackageorderitem() returns stream<AidPackageOrderItem, persist:Error?> {
+    isolated resource function get aidpackageorderitems() returns stream<AidPackageOrderItem, persist:Error?> {
         stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(AID_PACKAGE_ORDER_ITEM).runReadQuery(AidPackageOrderItem);
         if result is persist:Error {
             return new stream<AidPackageOrderItem, persist:Error?>(new AidPackageOrderItemStream((), result));
@@ -99,7 +99,7 @@ public client class EntitiesClient {
         }
     }
 
-    isolated resource function get aidpackageorderitem/[int id]() returns AidPackageOrderItem|persist:Error {
+    isolated resource function get aidpackageorderitems/[int id]() returns AidPackageOrderItem|persist:Error {
         AidPackageOrderItem|error result = (check self.persistClients.get(AID_PACKAGE_ORDER_ITEM).runReadByKeyQuery(AidPackageOrderItem, id)).cloneWithType(AidPackageOrderItem);
         if result is error {
             return <persist:Error>error(result.message());
@@ -107,19 +107,19 @@ public client class EntitiesClient {
         return result;
     }
 
-    isolated resource function post aidpackageorderitem(AidPackageOrderItemInsert[] data) returns int[]|persist:Error {
+    isolated resource function post aidpackageorderitems(AidPackageOrderItemInsert[] data) returns int[]|persist:Error {
         _ = check self.persistClients.get(AID_PACKAGE_ORDER_ITEM).runBatchInsertQuery(data);
         return from AidPackageOrderItemInsert inserted in data
             select inserted.id;
     }
 
-    isolated resource function put aidpackageorderitem/[int id](AidPackageOrderItemUpdate value) returns AidPackageOrderItem|persist:Error {
+    isolated resource function put aidpackageorderitems/[int id](AidPackageOrderItemUpdate value) returns AidPackageOrderItem|persist:Error {
         _ = check self.persistClients.get(AID_PACKAGE_ORDER_ITEM).runUpdateQuery(id, value);
-        return self->/aidpackageorderitem/[id].get();
+        return self->/aidpackageorderitems/[id].get();
     }
 
-    isolated resource function delete aidpackageorderitem/[int id]() returns AidPackageOrderItem|persist:Error {
-        AidPackageOrderItem result = check self->/aidpackageorderitem/[id].get();
+    isolated resource function delete aidpackageorderitems/[int id]() returns AidPackageOrderItem|persist:Error {
+        AidPackageOrderItem result = check self->/aidpackageorderitems/[id].get();
         _ = check self.persistClients.get(AID_PACKAGE_ORDER_ITEM).runDeleteQuery(id);
         return result;
     }

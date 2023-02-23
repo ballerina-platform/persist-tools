@@ -18,6 +18,8 @@
 
 package io.ballerina.persist.models;
 
+import io.ballerina.persist.plural.Pluralizer;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -52,7 +54,6 @@ public class Entity {
     public String getResourceName() {
         return this.resourceName;
     }
-
     public String getEntityName() {
         return this.entityName;
     }
@@ -94,6 +95,7 @@ public class Entity {
             if (resourceName == null) {
                 resourceName = entityName.toLowerCase(Locale.ENGLISH);
             }
+            resourceName = Pluralizer.pluralize(resourceName);
             return new Entity(entityName, keys, resourceName, fieldList);
         }
     }
