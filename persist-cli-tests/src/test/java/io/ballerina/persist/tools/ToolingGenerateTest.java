@@ -167,9 +167,9 @@ public class ToolingGenerateTest {
         assertGeneratedSourcesNegative ("tool_test_generate_23", GENERATE, new String[]{});
     }
 
-    @Test(enabled = false) // Disabled due to windows build failure
-    @Description("Generate is executed with clients already initailized in main.bal")
-    public void testGenerateUpdateClientsWithAlreadyInitializedClients() {
+    @Test(enabled = true)
+    @Description("Test the generate command with entities containing byte[] fields")
+    public void testGenerateWithByteArrays() {
         assertGeneratedSources("tool_test_generate_24", GENERATE);
     }
 
@@ -247,9 +247,4 @@ public class ToolingGenerateTest {
         assertGeneratedSources("tool_test_generate_36", GENERATE);
     }
 
-    @Test(enabled = true)
-    @Description("Test the generate command with entities containing byte[] fields")
-    public void testGenerateWithByteArrays() {
-        assertGeneratedSources("tool_test_generate_42", GENERATE);
-    }
 }
