@@ -42,8 +42,8 @@ public type 'Employee record {|
     time:Date birthDate;
     string gender;
     time:Date hireDate;
-    string 'departmentDeptNo;
-    string 'workspaceWorkspaceId;
+    string departmentDeptNo;
+    string workspaceWorkspaceId;
 |};
 
 public type 'EmployeeInsert 'Employee;
@@ -54,8 +54,8 @@ public type 'EmployeeUpdate record {|
     time:Date birthDate?;
     string gender?;
     time:Date hireDate?;
-    string 'departmentDeptNo?;
-    string 'workspaceWorkspaceId?;
+    string departmentDeptNo?;
+    string workspaceWorkspaceId?;
 |};
 
 public type 'OrderItem record {|
@@ -75,13 +75,13 @@ public type 'OrderItemUpdate record {|
 public type 'Workspace record {|
     readonly string workspaceId;
     string workspaceType;
-    'string 'buildingBuildingCode;
+    'string buildingBuildingCode;
 |};
 
 public type 'WorkspaceInsert 'Workspace;
 
 public type 'WorkspaceUpdate record {|
     string workspaceType?;
-    'string 'buildingBuildingCode?;
+    'string buildingBuildingCode?;
 |};
 

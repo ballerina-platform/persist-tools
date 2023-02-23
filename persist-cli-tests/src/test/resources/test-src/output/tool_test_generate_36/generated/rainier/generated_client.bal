@@ -54,8 +54,8 @@ public client class RainierClient {
                 birthDate: {columnName: "birthDate", 'type: time:Date},
                 gender: {columnName: "gender", 'type: string},
                 hireDate: {columnName: "hireDate", 'type: time:Date},
-                'departmentDeptNo: {columnName: "departmentDeptNo", 'type: string},
-                'workspaceWorkspaceId: {columnName: "workspaceWorkspaceId", 'type: string}
+                departmentDeptNo: {columnName: "departmentDeptNo", 'type: string},
+                workspaceWorkspaceId: {columnName: "workspaceWorkspaceId", 'type: string}
             },
             keyFields: ["empNo"]
         },
@@ -76,7 +76,7 @@ public client class RainierClient {
             fieldMetadata: {
                 workspaceId: {columnName: "workspaceId", 'type: string},
                 workspaceType: {columnName: "workspaceType", 'type: string},
-                'buildingBuildingCode: {columnName: "buildingBuildingCode", 'type: string}
+                buildingBuildingCode: {columnName: "buildingBuildingCode", 'type: string}
             },
             keyFields: ["workspaceId"]
         }

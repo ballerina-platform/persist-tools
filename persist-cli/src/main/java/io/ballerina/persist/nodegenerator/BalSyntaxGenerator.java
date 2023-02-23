@@ -345,7 +345,7 @@ public class BalSyntaxGenerator {
         relBuilder.setAssocEntity(assocEntity);
         if (isOwner) {
             List<Relation.Key> keyColumns = assocEntity.getKeys().stream().map(key ->
-                    new Relation.Key(assocEntity.getEntityName().toLowerCase(Locale.ENGLISH)
+                    new Relation.Key(stripEscapeCharacter(assocEntity.getEntityName().toLowerCase(Locale.ENGLISH))
                             + stripEscapeCharacter(key.getFieldName()).substring(0, 1).toUpperCase(Locale.ENGLISH)
                             + stripEscapeCharacter(key.getFieldName()).substring(1), key.getFieldName(),
                             key.getFieldType())).collect(Collectors.toList());
