@@ -46,7 +46,7 @@ public client class EntitiesClient {
         self.persistClients = {datatype: check new (self.dbClient, self.metadata.get(DATA_TYPE))};
     }
 
-    isolated resource function get datatype() returns stream<DataType, persist:Error?> {
+    isolated resource function get datatypes() returns stream<DataType, persist:Error?> {
         stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(DATA_TYPE).runReadQuery(DataType);
         if result is persist:Error {
             return new stream<DataType, persist:Error?>(new DataTypeStream((), result));
@@ -55,7 +55,7 @@ public client class EntitiesClient {
         }
     }
 
-    isolated resource function get datatype/[int a]() returns DataType|persist:Error {
+    isolated resource function get datatypes/[int a]() returns DataType|persist:Error {
         DataType|error result = (check self.persistClients.get(DATA_TYPE).runReadByKeyQuery(DataType, a)).cloneWithType(DataType);
         if result is error {
             return <persist:Error>error(result.message());
@@ -63,19 +63,19 @@ public client class EntitiesClient {
         return result;
     }
 
-    isolated resource function post datatype(DataTypeInsert[] data) returns int[]|persist:Error {
+    isolated resource function post datatypes(DataTypeInsert[] data) returns int[]|persist:Error {
         _ = check self.persistClients.get(DATA_TYPE).runBatchInsertQuery(data);
         return from DataTypeInsert inserted in data
             select inserted.a;
     }
 
-    isolated resource function put datatype/[int a](DataTypeUpdate value) returns DataType|persist:Error {
+    isolated resource function put datatypes/[int a](DataTypeUpdate value) returns DataType|persist:Error {
         _ = check self.persistClients.get(DATA_TYPE).runUpdateQuery(a, value);
-        return self->/datatype/[a].get();
+        return self->/datatypes/[a].get();
     }
 
-    isolated resource function delete datatype/[int a]() returns DataType|persist:Error {
-        DataType result = check self->/datatype/[a].get();
+    isolated resource function delete datatypes/[int a]() returns DataType|persist:Error {
+        DataType result = check self->/datatypes/[a].get();
         _ = check self.persistClients.get(DATA_TYPE).runDeleteQuery(a);
         return result;
     }
