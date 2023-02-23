@@ -19,8 +19,9 @@ jobs:
           packagePAT: ${{ secrets.GITHUB_TOKEN }}
         run: ./gradlew build
       - name: Generate CodeCov Report
-        if: github.event_name == 'pull_request'
         uses: codecov/codecov-action@v2
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   windows-build:
     name: Build on Windows
