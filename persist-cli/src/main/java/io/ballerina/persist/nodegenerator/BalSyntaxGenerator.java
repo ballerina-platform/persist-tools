@@ -182,24 +182,7 @@ public class BalSyntaxGenerator {
                 String qualifiedNamePrefix = null;
                 if (node.kind() == SyntaxKind.RECORD_FIELD_WITH_DEFAULT_VALUE) {
                     RecordFieldWithDefaultValueNode fieldNode = (RecordFieldWithDefaultValueNode) node;
-
-                    fieldBuilder = EntityField.newBuilder(fieldNode.fieldName().text().trim());
-                    String fType;
-                    TypeDescriptorNode type;
-                    if (fieldNode.typeName().kind().equals(SyntaxKind.ARRAY_TYPE_DESC)) {
-                        type = ((ArrayTypeDescriptorNode) fieldNode.typeName()).memberTypeDesc();
-                        fieldBuilder.setArrayType(true);
-                    } else {
-                        type = (TypeDescriptorNode) fieldNode.typeName();
-                    }
-                    fType = getType(type, fieldNode.fieldName().text().trim());
-                    qualifiedNamePrefix = getQualifiedModulePrefix(type);
-                    fieldBuilder.setType(fType);
-                    EntityField entityField = fieldBuilder.build();
-                    entityBuilder.addField(entityField);
-                    if (fieldNode.readonlyKeyword().isPresent()) {
-                        keyArray.add(entityField);
-                    }
+                    throw new BalException(String.format("unsupported record field(%s).", fieldNode.fieldName()));
                 } else if (node.kind() == SyntaxKind.RECORD_FIELD) {
                     RecordFieldNode fieldNode = (RecordFieldNode) node;
                     fieldBuilder = EntityField.newBuilder(fieldNode.fieldName().text().trim());
