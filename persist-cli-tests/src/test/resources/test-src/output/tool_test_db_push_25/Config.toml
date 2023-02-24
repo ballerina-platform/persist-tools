@@ -1,6 +1,6 @@
-[tool_test_generate_36.rainier]
+[tool_test_db_push_25.rainier]
 host = "localhost"
 port = 3307
 user = "root"
 password = "Test123#"
-database = "persist"
+database = "persistdb"

@@ -242,4 +242,11 @@ public class ToolingDbPushTest {
     public void testDbPushWithoutInit() {
         assertGeneratedSourcesNegative("tool_test_db_push_24", DB_PUSH, null);
     }
+
+    @Test(enabled = true)
+    @Description("Test the created sql script with escape character in entity name and fields")
+    public void testDbPushWithEscapeCharacter() {
+        assertGeneratedSources("tool_test_db_push_25", DB_PUSH);
+
+    }
 }
