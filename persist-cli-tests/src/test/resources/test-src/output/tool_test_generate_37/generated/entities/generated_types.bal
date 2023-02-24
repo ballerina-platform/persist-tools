@@ -9,7 +9,7 @@ public type Profile record {|
     boolean isAdult;
     float salary;
     decimal age;
-    byte isRegistered;
+    byte[] isRegistered;
     int userId;
 |};
 
@@ -20,7 +20,7 @@ public type ProfileUpdate record {|
     boolean isAdult?;
     float salary?;
     decimal age?;
-    byte isRegistered?;
+    byte[] isRegistered?;
     int userId?;
 |};
 

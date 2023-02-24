@@ -246,7 +246,7 @@ public class ToolingGenerateTest {
     public void testGenerateRelationsWithSingleQuote() {
         assertGeneratedSources("tool_test_generate_36", GENERATE);
     }
-    
+
     @Test(enabled = true)
     @Description("Test the created sql script content when relation annotation hasn't properties")
     public void testSqlGen() {

@@ -1,0 +1,15 @@
+[package]
+org = "foo"
+name = "persist_db_push_27"
+version = "0.1.0"
+distribution = "2201.3.0"
+
+[build-options]
+observabilityIncluded = false
+
+[persist.foo.storage.mysql]
+host = "localhost"
+port = 3307
+user = "root"
+password = "Test123#"
+database = "persistdbdefault"
