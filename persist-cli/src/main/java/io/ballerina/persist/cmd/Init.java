@@ -43,7 +43,6 @@ import static io.ballerina.persist.PersistToolsConstants.CONFIG_SCRIPT_FILE;
 import static io.ballerina.persist.PersistToolsConstants.GENERATED_DIRECTORY;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.BAL_EXTENTION;
-import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PATH_CONFIGURATION_BAL_FILE;
 import static io.ballerina.persist.nodegenerator.TomlSyntaxGenerator.readPackageName;
 import static io.ballerina.persist.utils.BalProjectUtils.validateBallerinaProject;
 import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
@@ -113,7 +112,10 @@ public class Init implements BLauncherCmd {
                     + e.getMessage());
             return;
         }
-
+        if (schemaFiles.size() > 1) {
+            errStream.println("ERROR: persist directory contains multiple schema files. ");
+            return;
+        }
         String packageName;
         try {
             packageName = readPackageName(this.sourcePath);
@@ -142,37 +144,16 @@ public class Init implements BLauncherCmd {
                 return;
             }
         }
-        for (String file : schemaFiles) {
-            if (!ProjectUtils.validateModuleName(file)) {
-                errStream.println("ERROR: invalid definition file name : '" + file + "' :\n" +
-                        "file name can only contain alphanumerics, underscores and periods");
-                return;
-            } else if (!ProjectUtils.validateNameLength(file)) {
-                errStream.println("ERROR: invalid definition file name : '" + file + "' :\n" +
-                        "maximum length of file name is 256 characters");
-                return;
-            }
-            Path schemaDirPath;
-            if (file.equals(packageName)) {
-                schemaDirPath = generatedSourceDirPath;
-            } else {
-                schemaDirPath = generatedSourceDirPath.resolve(file);
-            }
-            Path databaseConfigPath = schemaDirPath.resolve(PATH_CONFIGURATION_BAL_FILE);
-            if (!Files.exists(databaseConfigPath)) {
-                try {
-                    generateConfigurationBalFile(schemaDirPath);
-                    errStream.printf(
-                            "Created database_configurations.bal file inside `%s` module in generated directory.%n",
-                            file.equals(packageName) ? "default" : file);
-                } catch (BalException e) {
-                    errStream.println("ERROR: failed to generate the database_configurations.bal file. "
-                            + e.getMessage());
-                    return;
-                }
-            }
+        String fileName = schemaFiles.get(0);
+        if (!ProjectUtils.validateModuleName(fileName)) {
+            errStream.println("ERROR: invalid definition file name : '" + fileName + "' :\n" +
+                    "file name can only contain alphanumerics, underscores and periods");
+            return;
+        } else if (!ProjectUtils.validateNameLength(fileName)) {
+            errStream.println("ERROR: invalid definition file name : '" + fileName + "' :\n" +
+                    "maximum length of file name is 256 characters");
+            return;
         }
-
         try {
             updateBallerinaToml(schemaFiles);
             if (!Files.exists(Paths.get(this.sourcePath, CONFIG_SCRIPT_FILE).toAbsolutePath())) {
@@ -182,16 +163,6 @@ public class Init implements BLauncherCmd {
             }
         } catch (BalException e) {
             errStream.println("ERROR: failed to add database configurations in the toml file. " + e.getMessage());
-        }
-    }
-
-    private void generateConfigurationBalFile(Path generatedSourcePath) throws BalException {
-        try {
-            String configTree = BalSyntaxGenerator.generateDatabaseConfigSyntaxTree();
-            writeOutputString(configTree, generatedSourcePath.resolve(PATH_CONFIGURATION_BAL_FILE)
-                    .toAbsolutePath().toString());
-        } catch (Exception e) {
-            throw new BalException(e.getMessage());
         }
     }
 

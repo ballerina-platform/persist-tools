@@ -27,6 +27,7 @@ import io.ballerina.persist.nodegenerator.BalSyntaxConstants;
 import io.ballerina.persist.nodegenerator.BalSyntaxGenerator;
 import io.ballerina.persist.utils.BalProjectUtils;
 import io.ballerina.persist.utils.SqlScriptGenerationUtils;
+import io.ballerina.projects.util.ProjectUtils;
 import org.ballerinalang.formatter.core.Formatter;
 import org.ballerinalang.formatter.core.FormatterException;
 import picocli.CommandLine;
@@ -46,6 +47,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PATH_CONFIGURATION_BAL_FILE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxGenerator.generateClientSyntaxTree;
 import static io.ballerina.persist.nodegenerator.TomlSyntaxGenerator.readPackageName;
 import static io.ballerina.persist.utils.BalProjectUtils.validateBallerinaProject;
@@ -134,16 +136,41 @@ public class Generate implements BLauncherCmd {
             try {
                 BalProjectUtils.validateSchemaFile(file);
                 entityModule = BalProjectUtils.getEntities(file);
-                if (entityModule.getEntityMap().isEmpty()) {
-                    errStream.printf("ERROR: the model definition file(%s) does not contain any entity definition.%n",
-                            file.getFileName());
+                String fileName = entityModule.getModuleName();
+                if (!ProjectUtils.validateModuleName(fileName)) {
+                    errStream.println("ERROR: invalid definition file name : '" + fileName + "' :\n" +
+                            "file name can only contain alphanumerics, underscores and periods");
+                    return;
+                } else if (!ProjectUtils.validateNameLength(fileName)) {
+                    errStream.println("ERROR: invalid definition file name : '" + fileName + "' :\n" +
+                            "maximum length of file name is 256 characters");
                     return;
                 }
+
                 if (entityModule.getModuleName().equals(packageName)) {
                     generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);
                 } else {
                     generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY,
                             entityModule.getModuleName());
+                }
+                Path databaseConfigPath = generatedSourceDirPath.resolve(PATH_CONFIGURATION_BAL_FILE);
+                if (!Files.exists(databaseConfigPath)) {
+                    try {
+                        generateConfigurationBalFile(generatedSourceDirPath);
+                        errStream.printf(
+                                "Created database_configurations.bal file inside `%s` module in generated directory.%n",
+                                fileName.equals(packageName) ? "default" : file);
+                    } catch (BalException e) {
+                        errStream.println("ERROR: failed to generate the database_configurations.bal file. "
+                                + e.getMessage());
+                        return;
+                    }
+                }
+
+                if (entityModule.getEntityMap().isEmpty()) {
+                    errStream.printf("ERROR: the model definition file(%s) does not contain any entity definition.%n",
+                            file.getFileName());
+                    return;
                 }
                 if (!Files.exists(generatedSourceDirPath)) {
                     errStream.printf("ERROR: the generated source directory: %s does not exist. " +
@@ -169,6 +196,48 @@ public class Generate implements BLauncherCmd {
                         file.getFileName(), e.getMessage());
             }
         });
+
+//        for (Path filePath : schemaFilePaths) {
+//            String file = filePath.getFileName().toString().replace(BAL_EXTENTION, "");
+//            if (!ProjectUtils.validateModuleName(filePath.getFileName().toString().replace(BAL_EXTENTION, ""))) {
+//                errStream.println("ERROR: invalid definition file name : '" + file + "' :\n" +
+//                        "file name can only contain alphanumerics, underscores and periods");
+//                return;
+//            } else if (!ProjectUtils.validateNameLength(file)) {
+//                errStream.println("ERROR: invalid definition file name : '" + file + "' :\n" +
+//                        "maximum length of file name is 256 characters");
+//                return;
+//            }
+//            Path schemaDirPath;
+//            if (file.equals(packageName)) {
+//                schemaDirPath = generatedSourceDirPath;
+//            } else {
+//                schemaDirPath = generatedSourceDirPath.resolve(file);
+//            }
+//            Path databaseConfigPath = schemaDirPath.resolve(PATH_CONFIGURATION_BAL_FILE);
+//            if (!Files.exists(databaseConfigPath)) {
+//                try {
+//                    generateConfigurationBalFile(schemaDirPath);
+//                    errStream.printf(
+//                            "Created database_configurations.bal file inside `%s` module in generated directory.%n",
+//                            file.equals(packageName) ? "default" : file);
+//                } catch (BalException e) {
+//                    errStream.println("ERROR: failed to generate the database_configurations.bal file. "
+//                            + e.getMessage());
+//                    return;
+//                }
+//            }
+//        }
+    }
+
+    private void generateConfigurationBalFile(Path generatedSourcePath) throws BalException {
+        try {
+            SyntaxTree configTree = BalSyntaxGenerator.generateDatabaseConfigSyntaxTree();
+            writeOutputFile(configTree, generatedSourcePath.resolve(PATH_CONFIGURATION_BAL_FILE)
+                    .toAbsolutePath().toString());
+        } catch (Exception e) {
+            throw new BalException(e.getMessage());
+        }
     }
 
     private static void generateClientBalFile(Module entityModule, Path outputPath) throws BalException {
