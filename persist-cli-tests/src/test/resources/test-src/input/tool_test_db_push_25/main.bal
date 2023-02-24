@@ -14,19 +14,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import ballerina/persist as _;
+import ballerina/io;
 
-public type Company record {|
-    readonly int 'id;
-    string name;
-    string 'type;
-    Employee[] 'employees;
-|};
-
-public type Employee record {|
-    readonly int 'id;
-    string name;
-    string 'type;
-
-    Company 'company;
-|};
+public function main() {
+    io:println("hello");
+}

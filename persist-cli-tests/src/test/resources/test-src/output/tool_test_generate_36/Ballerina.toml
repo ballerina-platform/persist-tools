@@ -7,7 +7,7 @@ distribution = "2201.3.0"
 [build-options]
 observabilityIncluded = false
 
-[persist.entities]
+[persist.rainier]
 provider = "mysql"
 host = ""
 port = 3307
