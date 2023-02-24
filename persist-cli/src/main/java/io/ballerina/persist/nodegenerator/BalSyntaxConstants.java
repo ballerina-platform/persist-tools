@@ -174,7 +174,7 @@ public class BalSyntaxConstants {
     public static final String OPEN_BRACKET = "[";
     public static final String CLOSE_BRACKET = "]";
     public static final String ARRAY = "[]";
-    public static final String PUNCTUATION = "?";
+    public static final String QUESTION_MARK = "?";
     public static final String COMMA_WITH_NEWLINE = "," + System.lineSeparator();
 
 }

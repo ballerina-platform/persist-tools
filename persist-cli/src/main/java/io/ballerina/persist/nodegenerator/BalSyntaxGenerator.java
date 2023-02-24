@@ -123,7 +123,7 @@ import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PERSIST_CLIE
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PERSIST_ERROR;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PERSIST_MODULE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PLACEHOLDER_FOR_MAP_FIELD;
-import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PUNCTUATION;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.QUESTION_MARK;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.READ_BY_KEY_RETURN;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.REGEX_FOR_SPLIT_BY_CAPITOL_LETTER;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.RESULT;
@@ -181,21 +181,16 @@ public class BalSyntaxGenerator {
                 RecordFieldNode fieldNode = (RecordFieldNode) node;
                 fieldBuilder = EntityField.newBuilder(fieldNode.fieldName().text().trim());
                 TypeDescriptorNode type;
-                if (fieldNode.typeName().kind().equals(SyntaxKind.ARRAY_TYPE_DESC)) {
-                    type = ((ArrayTypeDescriptorNode) fieldNode.typeName()).memberTypeDesc();
+                Node fieldType = fieldNode.typeName();
+                if (fieldType instanceof OptionalTypeDescriptorNode) {
+                    fieldBuilder.setOptionalType(true);
+                    fieldType = ((OptionalTypeDescriptorNode) fieldType).typeDescriptor();
+                }
+                if (fieldType instanceof ArrayTypeDescriptorNode) {
+                    type = ((ArrayTypeDescriptorNode) fieldType).memberTypeDesc();
                     fieldBuilder.setArrayType(true);
-                } else if (fieldNode.typeName().kind().equals(SyntaxKind.OPTIONAL_TYPE_DESC)) {
-                    if (((OptionalTypeDescriptorNode) fieldNode.typeName()).typeDescriptor().kind()
-                            .equals(SyntaxKind.ARRAY_TYPE_DESC)) {
-                        type = ((ArrayTypeDescriptorNode) ((OptionalTypeDescriptorNode) fieldNode.typeName())
-                                .typeDescriptor()).memberTypeDesc();
-                        fieldBuilder.setArrayType(true);
-                        fieldBuilder.setOptionalType(true);
-                    } else {
-                        type = (TypeDescriptorNode) fieldNode.typeName();
-                    }
                 } else {
-                    type = (TypeDescriptorNode) fieldNode.typeName();
+                    type = (TypeDescriptorNode) fieldType;
                 }
                 String fType = getType(type, fieldNode.fieldName().text().trim());
                 String qualifiedNamePrefix = getQualifiedModulePrefix(type);
@@ -995,7 +990,7 @@ public class BalSyntaxGenerator {
                 }
             } else {
                 recordFields.append(field.isOptionalType() ? field.getFieldType() + (field.isArrayType() ? ARRAY : "")
-                        + PUNCTUATION : field.getFieldType() + (field.isArrayType() ? ARRAY : ""));
+                        + QUESTION_MARK : field.getFieldType() + (field.isArrayType() ? ARRAY : ""));
                 recordFields.append(SPACE);
                 recordFields.append(field.getFieldName());
                 recordFields.append(SEMICOLON);
@@ -1029,18 +1024,18 @@ public class BalSyntaxGenerator {
                             recordFields.append(key.getType());
                             recordFields.append(" ");
                             recordFields.append(key.getField());
-                            recordFields.append(PUNCTUATION);
+                            recordFields.append(QUESTION_MARK);
                             recordFields.append(SEMICOLON);
                             recordFields.append(SPACE);
                         }
                     }
                 } else {
                     recordFields.append(field.isOptionalType()
-                            ? field.getFieldType() + (field.isArrayType() ? ARRAY : "") + PUNCTUATION
+                            ? field.getFieldType() + (field.isArrayType() ? ARRAY : "") + QUESTION_MARK
                             : field.getFieldType() + (field.isArrayType() ? ARRAY : ""));
                     recordFields.append(SPACE);
                     recordFields.append(field.getFieldName());
-                    recordFields.append(PUNCTUATION);
+                    recordFields.append(QUESTION_MARK);
                     recordFields.append(SEMICOLON);
                     recordFields.append(SPACE);
                 }
