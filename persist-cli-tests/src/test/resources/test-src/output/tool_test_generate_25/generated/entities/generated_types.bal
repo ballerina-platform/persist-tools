@@ -39,3 +39,4 @@ public type VehicleUpdate record {|
     string name?;
     int employeeId?;
 |};
+

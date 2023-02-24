@@ -26,6 +26,7 @@ import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.BalSyntaxConstants;
 import io.ballerina.persist.nodegenerator.BalSyntaxGenerator;
 import io.ballerina.persist.utils.BalProjectUtils;
+import io.ballerina.persist.utils.SqlScriptGenerationUtils;
 import org.ballerinalang.formatter.core.Formatter;
 import org.ballerinalang.formatter.core.FormatterException;
 import picocli.CommandLine;
@@ -37,6 +38,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -153,6 +155,17 @@ public class Generate implements BLauncherCmd {
                 generateClientBalFile(entityModule, generatedSourceDirPath);
             } catch (BalException e) {
                 errStream.printf("ERROR: failed to generate types and client for the definition file(%s). %s%n",
+                        file.getFileName(), e.getMessage());
+                return;
+            }
+
+            try {
+                ArrayList<Entity> entityArray = new ArrayList<>(entityModule.getEntityMap().values());
+                String[] sqlScripts = SqlScriptGenerationUtils.generateSqlScript(entityArray);
+                SqlScriptGenerationUtils.writeScriptFile(entityModule.getModuleName(), sqlScripts,
+                        generatedSourceDirPath);
+            } catch (BalException e) {
+                errStream.printf("ERROR: failed to generate SQL schema for the definition file(%s). %s%n",
                         file.getFileName(), e.getMessage());
             }
         });

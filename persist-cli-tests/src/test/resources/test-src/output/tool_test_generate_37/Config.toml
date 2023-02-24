@@ -1,0 +1,13 @@
+[foo.tool_test_generate_37]
+host = "localhost"
+port = 3307
+user = "root"
+password = "Test123#"
+database = "persist"
+
+[tool_test_generate_37.entities]
+host = "localhost"
+port = 3307
+user = "root"
+password = "Test123#"
+database = "persisttemp2"
