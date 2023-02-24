@@ -14,8 +14,10 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import ballerina/io;
+import ballerina/persist as _;
 
-public function main() {
-    io:println("hello");
-}
+type ByteTest record {|
+    readonly int id;
+    byte[] binary1;
+    byte[]? binaryOptional;
+|};
