@@ -115,7 +115,7 @@ public class BalSyntaxConstants {
     public static final String PATH_CONFIGURATION_BAL_FILE = "database_configuration.bal";
     public static final String KEYWORD_MYSQL = "mysql";
     public static final String KEYWORD_TIME_PREFIX = "time";
-    public static final String KEYWORD_ENTITY = "Entity";
+    public static final String KEYWORD_READONLY = "readonly";
     public static final String JDBC_URL_WITHOUT_DATABASE = "jdbc:%s://%s:%s";
     public static final String JDBC_URL_WITH_DATABASE = "jdbc:%s://%s:%s/%s";
     public static final String ANYDATA_STREAM_STATEMENT = "private stream<anydata, sql:Error?>? anydataStream;";
@@ -174,6 +174,8 @@ public class BalSyntaxConstants {
     public static final String CLOSE_BRACE = "}";
     public static final String OPEN_BRACKET = "[";
     public static final String CLOSE_BRACKET = "]";
+    public static final String ARRAY = "[]";
+    public static final String QUESTION_MARK = "?";
     public static final String COMMA_WITH_NEWLINE = "," + System.lineSeparator();
 
 }
