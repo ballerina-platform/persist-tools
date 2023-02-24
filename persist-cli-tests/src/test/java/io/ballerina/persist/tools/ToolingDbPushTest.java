@@ -248,5 +248,11 @@ public class ToolingDbPushTest {
             "a project with default entity structure")
     public void testDbPushWithoutDatabaseWithDefaultEntityStructure() throws BalException {
         assertGeneratedSources("tool_test_db_push_26", DB_PUSH);
+
+    @Test(enabled = true)
+    @Description("Test the created sql script with escape character in entity name and fields")
+    public void testDbPushWithEscapeCharacter() {
+        assertGeneratedSources("tool_test_db_push_25", DB_PUSH);
+
     }
 }

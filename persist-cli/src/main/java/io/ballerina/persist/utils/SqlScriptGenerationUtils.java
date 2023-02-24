@@ -56,7 +56,7 @@ public class SqlScriptGenerationUtils {
         HashMap<String, List<String>> tableScripts = new HashMap<>();
         for (Entity entity : entityArray) {
             List<String> tableScript = new ArrayList<>();
-            String tableName = entity.getEntityName();
+            String tableName = removeSingleQuote(entity.getEntityName());
             tableScript.add(generateDropTableQuery(tableName));
             tableScript.add(generateCreateTableQuery(entity, referenceTables));
             tableScripts.put(tableName, tableScript);
@@ -90,7 +90,8 @@ public class SqlScriptGenerationUtils {
 
         String fieldDefinitions = generateFieldsDefinitionSegments(entity, referenceTables);
 
-        return MessageFormat.format("{0}CREATE TABLE {1} ({2}{3});", NEW_LINE, entity.getEntityName(),
+        return MessageFormat.format("{0}CREATE TABLE {1} ({2}{3});", NEW_LINE, removeSingleQuote(
+                entity.getEntityName()),
                 fieldDefinitions, NEW_LINE);
     }
 
@@ -103,7 +104,8 @@ public class SqlScriptGenerationUtils {
                 .filter(entityField -> entityField.getRelation() != null && entityField.getRelation().isOwner())
                 .collect(Collectors.toList());
         for (EntityField entityField : relationFields) {
-            sqlScript.append(getRelationScripts(entity.getEntityName(), entityField, referenceTables));
+            sqlScript.append(getRelationScripts(removeSingleQuote(entity.getEntityName()),
+                    entityField, referenceTables));
         }
         sqlScript.append(addPrimaryKey(entity.getKeys()));
         return sqlScript.substring(0, sqlScript.length() - 1);
@@ -157,11 +159,14 @@ public class SqlScriptGenerationUtils {
                 referenceFieldName.append(COMMA_WITH_SPACE);
             }
             relationScripts.append(MessageFormat.format("{0}{1}{2} {3}{4},", NEW_LINE, TAB,
-                    keyColumns.get(i).getField(), referenceSqlType, " NOT NULL"));
+                    removeSingleQuote(keyColumns.get(i).getField()), referenceSqlType, " NOT NULL"));
         }
         relationScripts.append(MessageFormat.format("{0}{1}CONSTRAINT FK_{2}_{3} FOREIGN KEY({4}) " +
-                        "REFERENCES {5}({6}),", NEW_LINE, TAB, tableName.toUpperCase(Locale.ENGLISH),
-                assocEntity.getEntityName().toUpperCase(Locale.ENGLISH), foreignKey, assocEntity.getEntityName(),
+                        "REFERENCES {5}({6}),", NEW_LINE, TAB, removeSingleQuote(tableName)
+                        .toUpperCase(Locale.ENGLISH),
+                removeSingleQuote(assocEntity.getEntityName()).toUpperCase(Locale.ENGLISH),
+                removeSingleQuote(foreignKey.toString()),
+                removeSingleQuote(assocEntity.getEntityName()),
                 referenceFieldName));
         updateReferenceTable(tableName, assocEntity.getEntityName(), referenceTables);
         return relationScripts.toString();
@@ -195,7 +200,7 @@ public class SqlScriptGenerationUtils {
         if (keys.size() > 0) {
             keyScripts.append(MessageFormat.format("{0}", PRIMARY_KEY_START_SCRIPT));
             for (EntityField key : keys) {
-                keyScripts.append(MessageFormat.format("{0},", key.getFieldName()));
+                keyScripts.append(MessageFormat.format("{0},", removeSingleQuote(key.getFieldName())));
             }
             keyScripts.deleteCharAt(keyScripts.length() - 1).append("),");
         }
@@ -203,7 +208,7 @@ public class SqlScriptGenerationUtils {
     }
 
     private static String getType(EntityField field) throws BalException {
-        String fieldType = field.getFieldType();
+        String fieldType = removeSingleQuote(field.getFieldType());
         if (!field.isArrayType()) {
             switch (fieldType) {
                 case PersistToolsConstants.BallerinaTypes.INT:
@@ -245,7 +250,7 @@ public class SqlScriptGenerationUtils {
 
         for (Map.Entry<String, List<String>> entry : referenceTables.entrySet()) {
             if (tableOrder.isEmpty()) {
-                tableOrder.add(entry.getKey());
+                tableOrder.add(removeSingleQuote(entry.getKey()));
             } else {
                 int firstIndex = 0;
                 List<String> referenceTableNames = referenceTables.get(entry.getKey());
@@ -255,7 +260,7 @@ public class SqlScriptGenerationUtils {
                         firstIndex = index + 1;
                     }
                 }
-                tableOrder.add(firstIndex, entry.getKey());
+                tableOrder.add(firstIndex, removeSingleQuote(entry.getKey()));
             }
         }
         for (String tableName : tables) {
@@ -267,7 +272,7 @@ public class SqlScriptGenerationUtils {
         int size = tableOrder.size();
         String[] tableScriptsInOrder = new String[length];
         for (int i = 0; i <= tableOrder.size() - 1; i++) {
-            List<String> script =  tableScripts.get(tableOrder.get(size - (i + 1)));
+            List<String> script =  tableScripts.get(removeSingleQuote(tableOrder.get(size - (i + 1))));
             tableScriptsInOrder[i] = script.get(0);
             tableScriptsInOrder[length - (i + 1)] = script.get(1);
         }

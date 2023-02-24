@@ -242,7 +242,7 @@ public class ToolingGenerateTest {
     }
 
     @Test(enabled = true)
-    @Description("Test the generate command in default Ballerina package")
+    @Description("Test the generate command with escape character in entity fields, and names")
     public void testGenerateRelationsWithSingleQuote() {
         assertGeneratedSources("tool_test_generate_36", GENERATE);
     }
