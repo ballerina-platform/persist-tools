@@ -194,7 +194,7 @@ public class Push implements BLauncherCmd {
                             persistConfigurations.getDbConfig().getDatabase(), e.getMessage());
                     return;
                 }
-                errStream.printf("Created database '%s'.", persistConfigurations.getDbConfig().getDatabase());
+                errStream.printf("Created database '%s'.%n", persistConfigurations.getDbConfig().getDatabase());
 
                 String sqlFilePath = generatedSourceDirPath.resolve(String.format(PersistToolsConstants.SQL_SCHEMA_FILE,
                                 entityModule.getModuleName())).toAbsolutePath().toString();
@@ -204,15 +204,15 @@ public class Push implements BLauncherCmd {
                     ScriptRunner sr = new ScriptRunner(connection);
                     sr.runScript(fileReader);
                 } catch (IOException e) {
-                    errStream.printf("ERROR: failed to read SQL schema file(%s). %s%n. ",
+                    errStream.printf("ERROR: failed to read SQL schema file(%s). %s%n ",
                             sqlFilePath, e.getMessage());
                     return;
                 } catch (Exception e) {
-                    errStream.printf("ERROR: failed to read the SQL schema file(%s). %s%n.", sqlFilePath,
+                    errStream.printf("ERROR: failed to read the SQL schema file(%s). %s%n", sqlFilePath,
                             e.getMessage());
                     return;
                 }
-                errStream.printf("Created tables for definition in %s in the database '%s'. ", file.getFileName(),
+                errStream.printf("Created tables for definition in %s in the database '%s'. %n", file.getFileName(),
                         persistConfigurations.getDbConfig().getDatabase());
             } catch (BalException e) {
                 errStream.printf("ERROR: failed to execute the SQL scripts for the definition file(%s). %s%n",
