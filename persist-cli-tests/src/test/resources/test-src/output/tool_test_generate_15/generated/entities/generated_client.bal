@@ -37,7 +37,7 @@ public client class EntitiesClient {
         self.persistClients = {user: check new (self.dbClient, self.metadata.get(USER))};
     }
 
-    isolated resource function get user() returns stream<User, persist:Error?> {
+    isolated resource function get users() returns stream<User, persist:Error?> {
         stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(USER).runReadQuery(User);
         if result is persist:Error {
             return new stream<User, persist:Error?>(new UserStream((), result));
@@ -46,7 +46,7 @@ public client class EntitiesClient {
         }
     }
 
-    isolated resource function get user/[int id]() returns User|persist:Error {
+    isolated resource function get users/[int id]() returns User|persist:Error {
         User|error result = (check self.persistClients.get(USER).runReadByKeyQuery(User, id)).cloneWithType(User);
         if result is error {
             return <persist:Error>error(result.message());
@@ -54,19 +54,19 @@ public client class EntitiesClient {
         return result;
     }
 
-    isolated resource function post user(UserInsert[] data) returns int[]|persist:Error {
+    isolated resource function post users(UserInsert[] data) returns int[]|persist:Error {
         _ = check self.persistClients.get(USER).runBatchInsertQuery(data);
         return from UserInsert inserted in data
             select inserted.id;
     }
 
-    isolated resource function put user/[int id](UserUpdate value) returns User|persist:Error {
+    isolated resource function put users/[int id](UserUpdate value) returns User|persist:Error {
         _ = check self.persistClients.get(USER).runUpdateQuery(id, value);
-        return self->/user/[id].get();
+        return self->/users/[id].get();
     }
 
-    isolated resource function delete user/[int id]() returns User|persist:Error {
-        User result = check self->/user/[id].get();
+    isolated resource function delete users/[int id]() returns User|persist:Error {
+        User result = check self->/users/[id].get();
         _ = check self.persistClients.get(USER).runDeleteQuery(id);
         return result;
     }
