@@ -1,3 +1,8 @@
+-- AUTO-GENERATED FILE.
+
+-- This file is an auto-generated file by Ballerina persistence layer for entities.
+-- Please verify the generated scripts and execute them against the target DB server.
+
 DROP TABLE IF EXISTS Vehicle;
 DROP TABLE IF EXISTS Employee;
 DROP TABLE IF EXISTS Company;
