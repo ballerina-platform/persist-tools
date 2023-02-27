@@ -39,7 +39,7 @@ The command initializes the bal project with the persistence layer. This command
 2. Create a model definition file in persist directory
    It will create a file with same name as the package name if no files are present in the `persist` directory. It will create an empty file with required imports(`import ballerina/persist as _;`).
 3. Create the generated directory. If the definition filename inside the `persist` directory is different from the Ballerina package name, create a submodule named as the definition file name.
-4. Update Ballerina.toml with database configurations.
+4. Update Ballerina.toml with persist module configurations.
    It will update the Ballerina.toml file with the configurations needed for the `bal persist push` command to work.
     ```ballerina
     [persist.<data model name(definition filename)>.storage.mysql]
