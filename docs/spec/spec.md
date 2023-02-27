@@ -38,17 +38,7 @@ The command initializes the bal project with the persistence layer. This command
    This directory should contain all data model definition files. This file will define the required entities as per the [`persist` specification](https://github.com/ballerina-platform/module-ballerina-persist/blob/main/docs/spec/spec.md#2-data-model-definition)
 2. Create a model definition file in persist directory
    It will create a file with same name as the package name if no files are present in the `persist` directory. It will create an empty file with required imports(`import ballerina/persist as _;`).
-3. Create database_configurations.bal file inside the `default` module in the generated directory if the definition filename inside the `persist` directory is the same as the Ballerina package name. If not, create the bal file inside the submodule named as the definition file name.
-   This file contains configuration variables to initialize the data stores
-    ```ballerina
-    import ballerinax/mysql.driver as _;
-
-    configurable int port = ?;
-    configurable string host = ?;
-    configurable string user = ?;
-    configurable string database = ?;
-    configurable string password = ?;
-   ```
+3. Create the generated directory. If the definition filename inside the `persist` directory is different from the Ballerina package name, create a submodule named as the definition file name.
 4. Update Ballerina.toml with database configurations.
    It will update the Ballerina.toml file with the configurations needed for the `bal persist push` command to work.
     ```ballerina
@@ -74,7 +64,6 @@ The directory structure will be,
 ```
 medical-center
 ├── generated
-         └── database_configuration.bal
 ├── persist
          └── medical-center.bal
 ├── Ballerina.toml
@@ -96,7 +85,7 @@ The command will generate [Derived Entity Types and Persist Clients](https://git
 as per the `persist` specification.
 Additionally, this command will create the database schema associated with the data model definition.
 
-It will add generated files under the conventions, 
+It will add generated files under the conventions,
 1. If the file name is the same as the package name, it will generate the files under the `default` module.
    ```
    medical-center
@@ -126,6 +115,17 @@ It will add generated files under the conventions,
    ├── Config.toml
    └── main.bal
    ```
+`database_configuration.bal` file will contain the configurable variables required for the database access.
+ ```ballerina
+ import ballerinax/mysql.driver as _;
+
+ configurable int port = ?;
+ configurable string host = ?;
+ configurable string user = ?;
+ configurable string database = ?;
+ configurable string password = ?;
+```
+
 The database schema will contain the code to create,
 1. Tables for each entity with defined primary keys
 2. Create foreign key associations between tables if the model has defined associations between entities

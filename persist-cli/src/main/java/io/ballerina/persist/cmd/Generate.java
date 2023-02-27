@@ -197,37 +197,6 @@ public class Generate implements BLauncherCmd {
             }
         });
 
-//        for (Path filePath : schemaFilePaths) {
-//            String file = filePath.getFileName().toString().replace(BAL_EXTENTION, "");
-//            if (!ProjectUtils.validateModuleName(filePath.getFileName().toString().replace(BAL_EXTENTION, ""))) {
-//                errStream.println("ERROR: invalid definition file name : '" + file + "' :\n" +
-//                        "file name can only contain alphanumerics, underscores and periods");
-//                return;
-//            } else if (!ProjectUtils.validateNameLength(file)) {
-//                errStream.println("ERROR: invalid definition file name : '" + file + "' :\n" +
-//                        "maximum length of file name is 256 characters");
-//                return;
-//            }
-//            Path schemaDirPath;
-//            if (file.equals(packageName)) {
-//                schemaDirPath = generatedSourceDirPath;
-//            } else {
-//                schemaDirPath = generatedSourceDirPath.resolve(file);
-//            }
-//            Path databaseConfigPath = schemaDirPath.resolve(PATH_CONFIGURATION_BAL_FILE);
-//            if (!Files.exists(databaseConfigPath)) {
-//                try {
-//                    generateConfigurationBalFile(schemaDirPath);
-//                    errStream.printf(
-//                            "Created database_configurations.bal file inside `%s` module in generated directory.%n",
-//                            file.equals(packageName) ? "default" : file);
-//                } catch (BalException e) {
-//                    errStream.println("ERROR: failed to generate the database_configurations.bal file. "
-//                            + e.getMessage());
-//                    return;
-//                }
-//            }
-//        }
     }
 
     private void generateConfigurationBalFile(Path generatedSourcePath) throws BalException {

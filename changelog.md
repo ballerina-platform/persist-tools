@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - [Fix bug in generated types when there are byte[] typed fields](https://github.com/ballerina-platform/ballerina-standard-library/issues/4075)
 - [Fix bug in supporting optional byte[] type](https://github.com/ballerina-platform/ballerina-standard-library/issues/4074)
+- [Migrate the generation of database_configuration.bal to generate command](https://github.com/ballerina-platform/ballerina-standard-library/issues/4118)
 
 ## [0.1.0] - 2023-02-21
 
