@@ -5,10 +5,9 @@
 
 import ballerina/persist;
 import ballerina/sql;
-import ballerina/time;
 import ballerinax/mysql;
 
-const MEDICAL_NEED = "MedicalNeed";
+const MEDICAL_ITEM = "medicalitem";
 
 public client class EntitiesClient {
     *persist:AbstractPersistClient;
@@ -18,18 +17,16 @@ public client class EntitiesClient {
     private final map<persist:SQLClient> persistClients;
 
     private final record {|persist:Metadata...;|} metadata = {
-        "medicalneed": {
-            entityName: "MedicalNeed",
-            tableName: `MedicalNeed`,
+        "medicalitem": {
+            entityName: "MedicalItem",
+            tableName: `MedicalItem`,
             fieldMetadata: {
-                needId: {columnName: "needId", 'type: string},
                 itemId: {columnName: "itemId", 'type: int},
-                beneficiaryId: {columnName: "beneficiaryId", 'type: int},
-                period: {columnName: "period", 'type: time:Civil},
-                urgency: {columnName: "urgency", 'type: string},
-                quantity: {columnName: "quantity", 'type: int}
+                name: {columnName: "name", 'type: string},
+                'type: {columnName: "type", 'type: string},
+                unit: {columnName: "unit", 'type: string}
             },
-            keyFields: ["needId"]
+            keyFields: ["itemId"]
         }
     };
 
@@ -39,41 +36,41 @@ public client class EntitiesClient {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
-        self.persistClients = {medicalneed: check new (self.dbClient, self.metadata.get(MEDICAL_NEED))};
+        self.persistClients = {medicalitem: check new (self.dbClient, self.metadata.get(MEDICAL_ITEM))};
     }
 
-    isolated resource function get medicalneed() returns stream<MedicalNeed, persist:Error?> {
-        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(MEDICAL_NEED).runReadQuery(MedicalNeed);
+    isolated resource function get medicalitems() returns stream<MedicalItem, persist:Error?> {
+        stream<record {}, sql:Error?>|persist:Error result = self.persistClients.get(MEDICAL_ITEM).runReadQuery(MedicalItem);
         if result is persist:Error {
-            return new stream<MedicalNeed, persist:Error?>(new MedicalNeedStream((), result));
+            return new stream<MedicalItem, persist:Error?>(new MedicalItemStream((), result));
         } else {
-            return new stream<MedicalNeed, persist:Error?>(new MedicalNeedStream(result));
+            return new stream<MedicalItem, persist:Error?>(new MedicalItemStream(result));
         }
     }
 
-    isolated resource function get medicalneed/[string needId]() returns MedicalNeed|persist:Error {
-        MedicalNeed|error result = (check self.persistClients.get(MEDICAL_NEED).runReadByKeyQuery(MedicalNeed, needId)).cloneWithType(MedicalNeed);
+    isolated resource function get medicalitems/[int itemId]() returns MedicalItem|persist:Error {
+        MedicalItem|error result = (check self.persistClients.get(MEDICAL_ITEM).runReadByKeyQuery(MedicalItem, itemId)).cloneWithType(MedicalItem);
         if result is error {
             return <persist:Error>error(result.message());
         }
         return result;
     }
 
-    isolated resource function post medicalneed(MedicalNeedInsert[] data) returns string[]|persist:Error {
-        _ = check self.persistClients.get(MEDICAL_NEED).runBatchInsertQuery(data);
-        return from MedicalNeedInsert inserted in data
-            select inserted.needId;
+    isolated resource function post medicalitems(MedicalItemInsert[] data) returns int[]|persist:Error {
+        _ = check self.persistClients.get(MEDICAL_ITEM).runBatchInsertQuery(data);
+        return from MedicalItemInsert inserted in data
+            select inserted.itemId;
     }
 
-    isolated resource function put medicalneed/[string needId](MedicalNeedUpdate value) returns MedicalNeed|persist:Error {
-        _ = check self.persistClients.get(MEDICAL_NEED).runUpdateQuery({"needId": needId}, value);
-        return self->/medicalneed/[needId].get();
+    isolated resource function put medicalitems/[int itemId](MedicalItemUpdate value) returns MedicalItem|persist:Error {
+        _ = check self.persistClients.get(MEDICAL_ITEM).runUpdateQuery(itemId, value);
+        return self->/medicalitems/[itemId].get();
     }
 
-    isolated resource function delete medicalneed/[string needId]() returns MedicalNeed|persist:Error {
-        MedicalNeed 'object = check self->/medicalneed/[needId].get();
-        _ = check self.persistClients.get(MEDICAL_NEED).runDeleteQuery({"needId": needId});
-        return 'object;
+    isolated resource function delete medicalitems/[int itemId]() returns MedicalItem|persist:Error {
+        MedicalItem result = check self->/medicalitems/[itemId].get();
+        _ = check self.persistClients.get(MEDICAL_ITEM).runDeleteQuery(itemId);
+        return result;
     }
 
     public function close() returns persist:Error? {
@@ -85,7 +82,7 @@ public client class EntitiesClient {
     }
 }
 
-public class MedicalNeedStream {
+public class MedicalItemStream {
 
     private stream<anydata, sql:Error?>? anydataStream;
     private persist:Error? err;
@@ -95,7 +92,7 @@ public class MedicalNeedStream {
         self.err = err;
     }
 
-    public isolated function next() returns record {|MedicalNeed value;|}|persist:Error? {
+    public isolated function next() returns record {|MedicalItem value;|}|persist:Error? {
         if self.err is persist:Error {
             return <persist:Error>self.err;
         } else if self.anydataStream is stream<anydata, sql:Error?> {
@@ -106,11 +103,11 @@ public class MedicalNeedStream {
             } else if (streamValue is sql:Error) {
                 return <persist:Error>error(streamValue.message());
             } else {
-                MedicalNeed|error value = streamValue.value.cloneWithType(MedicalNeed);
+                MedicalItem|error value = streamValue.value.cloneWithType(MedicalItem);
                 if value is error {
                     return <persist:Error>error(value.message());
                 }
-                record {|MedicalNeed value;|} nextRecord = {value: value};
+                record {|MedicalItem value;|} nextRecord = {value: value};
                 return nextRecord;
             }
         } else {
