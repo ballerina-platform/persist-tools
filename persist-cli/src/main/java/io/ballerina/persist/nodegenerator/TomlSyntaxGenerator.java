@@ -56,7 +56,7 @@ import static io.ballerina.persist.PersistToolsConstants.KEY_PASSWORD;
 import static io.ballerina.persist.PersistToolsConstants.KEY_PORT;
 import static io.ballerina.persist.PersistToolsConstants.KEY_USER;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_CONFIG_PATTERN;
-import static io.ballerina.persist.PersistToolsConstants.PERSIST_CONFIG_PATTERN_WITH_MYSQL;
+import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_DB_PROVIDERS;
 import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 
@@ -166,9 +166,10 @@ public class TomlSyntaxGenerator {
     /**
      * Method to update the Config.toml with database configurations.
      */
-    public static SyntaxTree updateBallerinaToml(Path configPath, List<String> names) throws IOException {
+    public static SyntaxTree updateBallerinaToml(Path configPath, List<String> names, String module, String datasource)
+            throws IOException {
 
-        ArrayList<String> existingNodes = new ArrayList<>();
+        boolean configurationExists = false;
         NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
         Path fileNamePath = configPath.getFileName();
         TextDocument configDocument = TextDocuments.from(Files.readString(configPath));
@@ -182,28 +183,19 @@ public class TomlSyntaxGenerator {
                     moduleMembers = moduleMembers.add(member);
                 } else if (member instanceof TableNode) {
                     TableNode node = (TableNode) member;
-                    for (String schema : names) {
-                        if (node.identifier().toSourceCode().trim().startsWith(
-                                String.format(PERSIST_CONFIG_PATTERN, schema))) {
-                            existingNodes.add(schema);
-                            break;
-                        }
+                    if (node.identifier().toSourceCode().trim().equals(PERSIST_DIRECTORY)) {
+                        configurationExists = true;
                     }
                     moduleMembers = moduleMembers.add(member);
                 } else if (member instanceof TableArrayNode) {
                     moduleMembers = moduleMembers.add(member);
                 }
             }
-            if (existingNodes.size() != names.size()) {
-                for (String schema : names) {
-                    moduleMembers = addNewLine(moduleMembers, 1);
-                    if (existingNodes.contains(schema)) {
-                        continue;
-                    }
-                    moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(
-                            String.format(PERSIST_CONFIG_PATTERN_WITH_MYSQL, schema), null));
-                    moduleMembers = populateConfigNodeList(moduleMembers);
-                }
+            if (!configurationExists) {
+                moduleMembers = addNewLine(moduleMembers, 1);
+                moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(
+                        PERSIST_DIRECTORY, null));
+                moduleMembers = populateBallerinaNodeList(moduleMembers, module, datasource);
             }
         }
         Token eofToken = AbstractNodeFactory.createIdentifierToken("");
@@ -275,6 +267,13 @@ public class TomlSyntaxGenerator {
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_USER, DEFAULT_USER, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_PASSWORD, DEFAULT_PASSWORD, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(KEY_DATABASE, DEFAULT_DATABASE, null));
+        return moduleMembers;
+    }
+
+    private static NodeList<DocumentMemberDeclarationNode> populateBallerinaNodeList(
+            NodeList<DocumentMemberDeclarationNode> moduleMembers, String module, String dataStore) {
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("datastore", dataStore, null));
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("module", module, null));
         return moduleMembers;
     }
 

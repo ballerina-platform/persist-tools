@@ -40,7 +40,6 @@ import java.util.stream.Stream;
 
 import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 import static io.ballerina.persist.PersistToolsConstants.CONFIG_SCRIPT_FILE;
-import static io.ballerina.persist.PersistToolsConstants.GENERATED_DIRECTORY;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.BAL_EXTENTION;
 import static io.ballerina.persist.nodegenerator.TomlSyntaxGenerator.readPackageName;
@@ -66,6 +65,12 @@ public class Init implements BLauncherCmd {
     @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
     private boolean helpFlag;
 
+    @CommandLine.Option(names = {"--datastore"})
+    private String datastore;
+
+    @CommandLine.Option(names = {"--module"})
+    private String module;
+
     public Init() {
         this("");
     }
@@ -81,6 +86,14 @@ public class Init implements BLauncherCmd {
             errStream.println(commandUsageInfo);
             return;
         }
+
+        if (datastore == null) {
+            datastore = "mysql";
+        } else if (!datastore.equals("mysql")) {
+            errStream.println("ERROR: only 'mysql' is supported for the datastore.");
+            return;
+        }
+
         Path projectPath = Paths.get(sourcePath);
         try {
             validateBallerinaProject(projectPath);
@@ -123,24 +136,21 @@ public class Init implements BLauncherCmd {
             errStream.println(e.getMessage());
             return;
         }
+        if (module == null) {
+            module = packageName;
+        } else {
+            module = module.replaceAll("\"", "");
+            //module = String.format("%s.%s", packageName.replaceAll("\"", ""), module);
+        }
         if (schemaFiles.size() == 0) {
-            schemaFiles.add(packageName);
+            schemaFiles.add(module);
             try {
-                generateSchemaBalFile(persistDirPath, packageName);
+                generateSchemaBalFile(persistDirPath, schemaFiles.get(0));
                 errStream.printf("Created model definition file(%s) in persist directory.%n",
                         packageName + BAL_EXTENTION);
             } catch (BalException e) {
                 errStream.println("ERROR: failed to create the model definition file in persist directory. "
                         + e.getMessage());
-                return;
-            }
-        }
-        Path generatedSourceDirPath = Paths.get(this.sourcePath, GENERATED_DIRECTORY);
-        if (!Files.exists(generatedSourceDirPath)) {
-            try {
-                Files.createDirectory(generatedSourceDirPath.toAbsolutePath());
-            } catch (IOException e) {
-                errStream.println("ERROR: failed to create the generated directory. " + e.getMessage());
                 return;
             }
         }
@@ -155,7 +165,11 @@ public class Init implements BLauncherCmd {
             return;
         }
         try {
-            updateBallerinaToml(schemaFiles);
+            String moduleName = fileName;
+            if (!moduleName.equals(packageName)) {
+                moduleName = String.format("%s.%s", packageName.replaceAll("\"", ""), fileName);
+            }
+            updateBallerinaToml(schemaFiles, moduleName, datastore);
             if (!Files.exists(Paths.get(this.sourcePath, CONFIG_SCRIPT_FILE).toAbsolutePath())) {
                 createConfigTomlFile(schemaFiles, packageName);
             } else {
@@ -176,10 +190,10 @@ public class Init implements BLauncherCmd {
         }
     }
 
-    private void updateBallerinaToml(List<String> schemas) throws BalException {
+    private void updateBallerinaToml(List<String> schemas, String module, String datastore) throws BalException {
         try {
             SyntaxTree syntaxTree = TomlSyntaxGenerator.updateBallerinaToml(
-                    Paths.get(this.sourcePath, BALLERINA_TOML), schemas);
+                    Paths.get(this.sourcePath, BALLERINA_TOML), schemas, module, datastore);
             writeOutputSyntaxTree(syntaxTree,
                     Paths.get(this.sourcePath, BALLERINA_TOML).toAbsolutePath().toString());
             errStream.println("Updated Ballerina.toml with database configurations.");

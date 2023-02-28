@@ -146,20 +146,33 @@ public class Generate implements BLauncherCmd {
                             "maximum length of file name is 256 characters");
                     return;
                 }
-
-                if (entityModule.getModuleName().equals(packageName)) {
-                    generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);
-                } else {
+                generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);
+                if (!entityModule.getModuleName().equals(packageName)) {
                     generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY,
                             entityModule.getModuleName());
                 }
+                if (!Files.exists(generatedSourceDirPath)) {
+                    try {
+                        if (!entityModule.getModuleName().equals(packageName) && !Files.exists(
+                                Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY))) {
+                            Files.createDirectory(Paths.get(this.sourcePath,
+                                    BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY).toAbsolutePath());
+
+                        }
+                        Files.createDirectory(generatedSourceDirPath.toAbsolutePath());
+                    } catch (IOException e) {
+                        errStream.println("ERROR: failed to create the generated directory. " + e.getMessage());
+                        return;
+                    }
+                }
+
                 Path databaseConfigPath = generatedSourceDirPath.resolve(PATH_CONFIGURATION_BAL_FILE);
                 if (!Files.exists(databaseConfigPath)) {
                     try {
                         generateConfigurationBalFile(generatedSourceDirPath);
                         errStream.printf(
                                 "Created database_configurations.bal file inside `%s` module in generated directory.%n",
-                                fileName.equals(packageName) ? "default" : file);
+                                fileName.equals(packageName) ? "default" : fileName);
                     } catch (BalException e) {
                         errStream.println("ERROR: failed to generate the database_configurations.bal file. "
                                 + e.getMessage());
