@@ -32,12 +32,16 @@ This specification elaborates on the `Persist CLI Tool` commands.
 bal persist init --datastore="datastore" --module="module_name"
 ```
 
+ Following optional environment variables can be used with `bal persist init` command.
+ - datastore : used to indicate the preferred database client. Currently, only 'mysql' is supported.
+ - module : used to indicate the preferred name for the schema file. By default, this will be equal to the package name.
+
 The command initializes the bal project with the persistence layer. This command includes the following steps,
 
 1. Create persist directory
    This directory should contain all data model definition files. This file will define the required entities as per the [`persist` specification](https://github.com/ballerina-platform/module-ballerina-persist/blob/main/docs/spec/spec.md#2-data-model-definition)
 2. Create a model definition file in persist directory
-   It will create a file with same name as the package name if no files are present in the `persist` directory. It will create an empty file with required imports(`import ballerina/persist as _;`).
+   It will create a file with same name as the module environment variable if no files are present in the `persist` directory. It will create an empty file with required imports(`import ballerina/persist as _;`).
 3. Update Ballerina.toml with persist module configurations.
    It will update the Ballerina.toml file with persist configurations.
     ```ballerina
@@ -69,6 +73,7 @@ medical-center
 
 Behaviour of the `init` command,
 - User should invoke the command within a bal project
+- User can use the optional environment variables to indicate the preferred module name and data store, otherwise default values will be used.
 - If the user invokes the command twice, it will not fail. It will verify that all the configurations are in place for the definition files defined inside the `persist` directory. If not, add missing configurations and files.
 
 ## 3. Generating Persistence Derived Types, Clients, and Database Schema
