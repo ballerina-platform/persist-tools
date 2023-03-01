@@ -42,6 +42,7 @@ import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 import static io.ballerina.persist.PersistToolsConstants.CONFIG_SCRIPT_FILE;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.BAL_EXTENTION;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_MYSQL;
 import static io.ballerina.persist.nodegenerator.TomlSyntaxGenerator.readPackageName;
 import static io.ballerina.persist.utils.BalProjectUtils.validateBallerinaProject;
 import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
@@ -88,8 +89,8 @@ public class Init implements BLauncherCmd {
         }
 
         if (datastore == null) {
-            datastore = "mysql";
-        } else if (!datastore.equals("mysql")) {
+            datastore = KEYWORD_MYSQL;
+        } else if (!datastore.equals(KEYWORD_MYSQL)) {
             errStream.println("ERROR: only 'mysql' is supported for the datastore.");
             return;
         }
