@@ -29,7 +29,7 @@ This specification elaborates on the `Persist CLI Tool` commands.
 ## 2. Initializing the Bal Project with Persistence Layer
 
 ```bash
-bal persist init
+bal persist init --datastore="datastore" --module="module_name"
 ```
 
 The command initializes the bal project with the persistence layer. This command includes the following steps,
@@ -38,18 +38,14 @@ The command initializes the bal project with the persistence layer. This command
    This directory should contain all data model definition files. This file will define the required entities as per the [`persist` specification](https://github.com/ballerina-platform/module-ballerina-persist/blob/main/docs/spec/spec.md#2-data-model-definition)
 2. Create a model definition file in persist directory
    It will create a file with same name as the package name if no files are present in the `persist` directory. It will create an empty file with required imports(`import ballerina/persist as _;`).
-3. Create the generated directory. If the definition filename inside the `persist` directory is different from the Ballerina package name, create a submodule named as the definition file name.
-4. Update Ballerina.toml with persist module configurations.
-   It will update the Ballerina.toml file with the configurations needed for the `bal persist push` command to work.
+3. Update Ballerina.toml with persist module configurations.
+   It will update the Ballerina.toml file with persist configurations.
     ```ballerina
-    [persist.<data model name(definition filename)>.storage.mysql]
-    host = "localhost"
-    port = 3306
-    user = "root"
-    password = ""
-    database = "" 
+    [persist]
+    datastore = "datastore"
+    module = "<package_name>.<module_name>"
    ```
-5. Create(Update) Config.toml file inside the Ballerina project.
+4. Create(Update) Config.toml file inside the Ballerina project.
    It will create(update) `Config.toml` file with configurables used to initialize variables in Step 3.
     ```ballerina
     [<data model name(definition filename>]
@@ -143,11 +139,22 @@ Behaviour of the `generate` command,
 bal persist push
 ```
 
-This command will run the schema against the database defined in  the `Ballerina.toml` file under the heading ([persist.<definition file name>.storage.mysql]). 
+This command will run the schema against the database defined in  the `Ballerina.toml` file under the heading ([persist.<definition file name>.storage.mysql]).
+Database configuration in Ballerina.toml should look like following,
+```
+[persist.<definition file name>.storage.mysql]
+host = "localhost"
+port = 3306
+user = "root"
+password = "Test123#"
+database = "persist"
+```
+The file structure of the project should be similar to the following before running the command.
 ```
 medical-center
 ├── generated
      ├── database_configuration.bal
+     ├── medical-center_db_script.sql
      ├── generated_client.bal
      └── generated_types.bal
 ├── persist
@@ -163,6 +170,7 @@ Running the database schema will create,
 
 Behaviour of the `push` command,
 - User should invoke the command within a bal project
+- User should add the relevant configuration to the Ballerina.toml file.
 - The user should have initiated the persistence layer with the latest set of definition files
 - All model definition files should contain the `persist` module import (`import ballerina/persist as _;`)
 - The Model definition file should contain at least one entity
