@@ -40,6 +40,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
@@ -139,43 +140,40 @@ public class TomlSyntaxGenerator {
         }
     }
 
+    public static HashMap readPersistConfigurations(Path configPath)
+            throws BalException {
+        try {
+            TextDocument configDocument = TextDocuments.from(Files.readString(configPath));
+            SyntaxTree syntaxTree = SyntaxTree.from(configDocument);
+            DocumentNode rootNote = syntaxTree.rootNode();
+            NodeList<DocumentMemberDeclarationNode> nodeList = rootNote.members();
+            boolean dbConfigExists = false;
+            HashMap<String, String> persistConfig = new HashMap<String, String>();
+            for (DocumentMemberDeclarationNode member : nodeList) {
+                if (member instanceof TableNode) {
+                    TableNode node = (TableNode) member;
+                    String tableName = node.identifier().toSourceCode().trim();
+                    if (tableName.equals(PERSIST_DIRECTORY)) {
+                        dbConfigExists = true;
+                        for (KeyValueNode field : node.fields()) {
+                            persistConfig.put(field.identifier().toSourceCode().trim(),
+                                    field.value().toSourceCode().trim().replaceAll("\"", ""));
+                        }
+                    }
 
-//    public static HashMap readPersistConfigurations(Path configPath)
-//            throws BalException {
-//        try {
-//            TextDocument configDocument = TextDocuments.from(Files.readString(configPath));
-//            SyntaxTree syntaxTree = SyntaxTree.from(configDocument);
-//            DocumentNode rootNote = syntaxTree.rootNode();
-//            NodeList<DocumentMemberDeclarationNode> nodeList = rootNote.members();
-//            boolean dbConfigExists = false;
-//            HashMap<String, String> persistConfig = new HashMap<String, String>();
-//            for (DocumentMemberDeclarationNode member : nodeList) {
-//                if (member instanceof TableNode) {
-//                    TableNode node = (TableNode) member;
-//                    String tableName = node.identifier().toSourceCode().trim();
-//                    if (tableName.equals(PERSIST_DIRECTORY)) {
-//                        dbConfigExists = true;
-//                        for (KeyValueNode field : node.fields()) {
-//                            persistConfig.put(field.identifier().toSourceCode().trim(),
-//                                    field.value().toSourceCode().trim());
-//                        }
-//                    }
-//
-//                }
-//            }
-//            if (!dbConfigExists) {
-//                throw new BalException("the persist config doesn't exist in the Ballerina.toml. " +
-//                        "add [persist] table with persist configurations.");
-//            } else if (!persistConfig.containsKey("module") || !persistConfig.containsKey("datastore")) {
-//                throw new BalException("the persist configurations does not exist under [persist] table.");
-//            }
-//            return persistConfig;
-//        } catch (IOException e) {
-//            throw new BalException("error while reading persist configurations. " + e.getMessage());
-//        }
-//    }
-
-
+                }
+            }
+            if (!dbConfigExists) {
+                throw new BalException("the persist config doesn't exist in the Ballerina.toml. " +
+                        "add [persist] table with persist configurations.");
+            } else if (!persistConfig.containsKey("module") || !persistConfig.containsKey("datastore")) {
+                throw new BalException("the persist configurations does not exist under [persist] table.");
+            }
+            return persistConfig;
+        } catch (IOException e) {
+            throw new BalException("error while reading persist configurations. " + e.getMessage());
+        }
+    }
 
 
     public static String readPackageName(String sourcePath) throws BalException {

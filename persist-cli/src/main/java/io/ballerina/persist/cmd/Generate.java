@@ -42,6 +42,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -53,6 +54,7 @@ import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PATH_CONFIGURATION_BAL_FILE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxGenerator.generateClientSyntaxTree;
 import static io.ballerina.persist.nodegenerator.TomlSyntaxGenerator.readPackageName;
+import static io.ballerina.persist.nodegenerator.TomlSyntaxGenerator.readPersistConfigurations;
 import static io.ballerina.persist.utils.BalProjectUtils.validateBallerinaProject;
 import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
 
@@ -123,6 +125,9 @@ public class Generate implements BLauncherCmd {
             errStream.println("ERROR: the persist directory does not contain any model definition file. " +
                     "run `bal persist init` to initiate the project before generation.");
             return;
+        } else if (schemaFilePaths.size() > 1) {
+            errStream.println("ERROR: persist directory contains multiple schema files. ");
+            return;
         }
 
         String packageName;
@@ -150,15 +155,16 @@ public class Generate implements BLauncherCmd {
                     return;
                 }
                 generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);
-//                HashMap<String, String> persistConfig = readPersistConfigurations(
-//                        Paths.get(this.sourcePath, "Ballerina.toml"));
-                if (!entityModule.getModuleName().equals(packageName)) {
+                HashMap<String, String> persistConfig = readPersistConfigurations(
+                        Paths.get(this.sourcePath, "Ballerina.toml"));
+                if (!persistConfig.get("module").equals(packageName)) {
+                    String submodule = persistConfig.get("module").split("\\.")[1];
                     generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY,
-                            entityModule.getModuleName());
+                            submodule);
                 }
                 if (!Files.exists(generatedSourceDirPath)) {
                     try {
-                        if (!entityModule.getModuleName().equals(packageName) && !Files.exists(
+                        if (!persistConfig.get("module").equals(packageName) && !Files.exists(
                                 Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY))) {
                             Files.createDirectory(Paths.get(this.sourcePath,
                                     BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY).toAbsolutePath());
