@@ -38,7 +38,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
-import static io.ballerina.persist.PersistToolsConstants.CONFIG_SCRIPT_FILE;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.BAL_EXTENTION;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_MYSQL;
@@ -170,11 +169,11 @@ public class Init implements BLauncherCmd {
                 moduleName = String.format("%s.%s", packageName.replaceAll("\"", ""), fileName);
             }
             updateBallerinaToml(schemaFiles, moduleName, datastore);
-            if (!Files.exists(Paths.get(this.sourcePath, CONFIG_SCRIPT_FILE).toAbsolutePath())) {
-                createConfigTomlFile(schemaFiles, packageName);
-            } else {
-                updateConfigTomlFile(schemaFiles, packageName);
-            }
+//            if (!Files.exists(Paths.get(this.sourcePath, CONFIG_SCRIPT_FILE).toAbsolutePath())) {
+//                createConfigTomlFile(schemaFiles, packageName);
+//            } else {
+//                updateConfigTomlFile(schemaFiles, packageName);
+//            }
         } catch (BalException e) {
             errStream.println("ERROR: failed to add database configurations in the toml file. " + e.getMessage());
         }
@@ -204,29 +203,29 @@ public class Init implements BLauncherCmd {
         }
     }
 
-    private void createConfigTomlFile(List<String> schemas, String packageName) throws BalException {
-        try {
-            Path configPath = Paths.get(this.sourcePath, CONFIG_SCRIPT_FILE).toAbsolutePath();
-            String syntaxTree = TomlSyntaxGenerator.createConfigToml(schemas, packageName);
-            writeOutputSyntaxTree(syntaxTree, configPath.toString());
-            errStream.println("Created Config.toml file inside the Ballerina project.");
-        } catch (Exception e) {
-            throw new BalException("could not add Config.toml file inside the Ballerina project. " +
-                    e.getMessage());
-        }
-    }
+//    private void createConfigTomlFile(List<String> schemas, String packageName) throws BalException {
+//        try {
+//            Path configPath = Paths.get(this.sourcePath, CONFIG_SCRIPT_FILE).toAbsolutePath();
+//            String syntaxTree = TomlSyntaxGenerator.createConfigToml(schemas, packageName);
+//            writeOutputSyntaxTree(syntaxTree, configPath.toString());
+//            errStream.println("Created Config.toml file inside the Ballerina project.");
+//        } catch (Exception e) {
+//            throw new BalException("could not add Config.toml file inside the Ballerina project. " +
+//                    e.getMessage());
+//        }
+//    }
 
-    private void updateConfigTomlFile(List<String> schemas, String packageName) throws BalException {
-        try {
-            Path configPath = Paths.get(this.sourcePath, CONFIG_SCRIPT_FILE).toAbsolutePath();
-            String syntaxTree = TomlSyntaxGenerator.updateConfigToml(configPath, schemas, packageName);
-            writeOutputSyntaxTree(syntaxTree, configPath.toString());
-            errStream.println("Updated Config.toml file inside the Ballerina project.");
-        } catch (Exception e) {
-            throw new BalException("could not update Config.toml file inside the Ballerina project. " +
-                    e.getMessage());
-        }
-    }
+//    private void updateConfigTomlFile(List<String> schemas, String packageName) throws BalException {
+//        try {
+//            Path configPath = Paths.get(this.sourcePath, CONFIG_SCRIPT_FILE).toAbsolutePath();
+//            String syntaxTree = TomlSyntaxGenerator.updateConfigToml(configPath, schemas, packageName);
+//            writeOutputSyntaxTree(syntaxTree, configPath.toString());
+//            errStream.println("Updated Config.toml file inside the Ballerina project.");
+//        } catch (Exception e) {
+//            throw new BalException("could not update Config.toml file inside the Ballerina project. " +
+//                    e.getMessage());
+//        }
+//    }
     private void writeOutputSyntaxTree(String syntaxTree, String outPath) throws Exception {
         String content;
         Path pathToFile = Paths.get(outPath);

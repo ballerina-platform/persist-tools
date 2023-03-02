@@ -25,6 +25,7 @@ import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.BalSyntaxConstants;
 import io.ballerina.persist.nodegenerator.BalSyntaxGenerator;
+import io.ballerina.persist.nodegenerator.TomlSyntaxGenerator;
 import io.ballerina.persist.utils.BalProjectUtils;
 import io.ballerina.persist.utils.SqlScriptGenerationUtils;
 import io.ballerina.projects.util.ProjectUtils;
@@ -43,9 +44,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static io.ballerina.persist.PersistToolsConstants.CONFIG_SCRIPT_FILE;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PATH_CONFIGURATION_BAL_FILE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxGenerator.generateClientSyntaxTree;
@@ -147,6 +150,8 @@ public class Generate implements BLauncherCmd {
                     return;
                 }
                 generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);
+//                HashMap<String, String> persistConfig = readPersistConfigurations(
+//                        Paths.get(this.sourcePath, "Ballerina.toml"));
                 if (!entityModule.getModuleName().equals(packageName)) {
                     generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY,
                             entityModule.getModuleName());
@@ -178,6 +183,12 @@ public class Generate implements BLauncherCmd {
                                 + e.getMessage());
                         return;
                     }
+                }
+
+                if (!Files.exists(Paths.get(this.sourcePath, CONFIG_SCRIPT_FILE).toAbsolutePath())) {
+                    createConfigTomlFile(schemaFilePaths, packageName);
+                } else {
+                    updateConfigTomlFile(schemaFilePaths, packageName);
                 }
 
                 if (entityModule.getEntityMap().isEmpty()) {
@@ -215,7 +226,7 @@ public class Generate implements BLauncherCmd {
     private void generateConfigurationBalFile(Path generatedSourcePath) throws BalException {
         try {
             SyntaxTree configTree = BalSyntaxGenerator.generateDatabaseConfigSyntaxTree();
-            writeOutputFile(configTree, generatedSourcePath.resolve(PATH_CONFIGURATION_BAL_FILE)
+            writeOutputSyntaxTree(configTree, generatedSourcePath.resolve(PATH_CONFIGURATION_BAL_FILE)
                     .toAbsolutePath().toString());
         } catch (Exception e) {
             throw new BalException(e.getMessage());
@@ -227,7 +238,7 @@ public class Generate implements BLauncherCmd {
 
         SyntaxTree balTree = generateClientSyntaxTree(entityModule);
         try {
-            writeOutputFile(balTree, clientPath);
+            writeOutputSyntaxTree(balTree, clientPath);
             errStream.printf("Generated Ballerina client object for the `%s` data model" +
                     " inside the generated directory.%n", entityModule.getModuleName());
         } catch (IOException | FormatterException e) {
@@ -250,7 +261,7 @@ public class Generate implements BLauncherCmd {
         SyntaxTree generatedTypes =  BalSyntaxGenerator.generateTypeSyntaxTree(entityModule);
         String generatedTypesPath = outputPath.resolve("generated_types.bal").toAbsolutePath().toString();
         try {
-            writeOutputFile(generatedTypes, generatedTypesPath);
+            writeOutputSyntaxTree(generatedTypes, generatedTypesPath);
         } catch (IOException | FormatterException e) {
             throw new BalException(String.format(
                     "could not write the types for the %s data model to the generated_types.bal file. ",
@@ -258,7 +269,51 @@ public class Generate implements BLauncherCmd {
         }
     }
 
-    private static void writeOutputFile(SyntaxTree syntaxTree, String outPath) throws IOException, FormatterException {
+    private void createConfigTomlFile(List<Path> schemas, String packageName) throws BalException {
+        try {
+            Path configPath = Paths.get(this.sourcePath, CONFIG_SCRIPT_FILE).toAbsolutePath();
+            String syntaxTree = TomlSyntaxGenerator.createConfigToml(schemas, packageName);
+            writeOutputFile(syntaxTree, configPath.toString());
+            errStream.println("Created Config.toml file inside the Ballerina project.");
+        } catch (Exception e) {
+            throw new BalException("could not add Config.toml file inside the Ballerina project. " +
+                    e.getMessage());
+        }
+    }
+
+    private void writeOutputFile(String syntaxTree, String outPath) throws Exception {
+        String content;
+        Path pathToFile = Paths.get(outPath);
+        Path parentDirectory = pathToFile.getParent();
+        if (Objects.nonNull(parentDirectory)) {
+            try {
+                Files.createDirectories(parentDirectory);
+            } catch (IOException e) {
+                throw new BalException(
+                        String.format("could not create the parent directories of output path %s. %s",
+                                parentDirectory, e.getMessage()));
+            }
+            content = syntaxTree;
+            try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8.name())) {
+                writer.println(content);
+            }
+        }
+    }
+
+    private void updateConfigTomlFile(List<Path> schemas, String packageName) throws BalException {
+        try {
+            Path configPath = Paths.get(this.sourcePath, CONFIG_SCRIPT_FILE).toAbsolutePath();
+            String syntaxTree = TomlSyntaxGenerator.updateConfigToml(configPath, schemas, packageName);
+            writeOutputFile(syntaxTree, configPath.toString());
+            errStream.println("Updated Config.toml file inside the Ballerina project.");
+        } catch (Exception e) {
+            throw new BalException("could not update Config.toml file inside the Ballerina project. " +
+                    e.getMessage());
+        }
+    }
+
+    private static void writeOutputSyntaxTree(SyntaxTree syntaxTree, String outPath) throws IOException,
+            FormatterException {
         String content;
         content = Formatter.format(syntaxTree.toSourceCode());
         try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8.name())) {
