@@ -77,13 +77,18 @@ public class TomlSyntaxGenerator {
      * Method to create a new Config.toml file with database configurations.
      */
 
-    public static SyntaxTree createConfigToml(List<String> schemas, String packageName) {
+    public static String createConfigToml(List<Path> schemas, String packageName) {
         NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
-        for (String schema : schemas) {
-            if (!schema.equals(packageName)) {
-                moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(packageName + "." + schema, null));
-            } else {
-                moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(packageName, null));
+        for (Path schemaPath : schemas) {
+            Path schemaFile = schemaPath.getFileName();
+            if (Objects.nonNull(schemaFile)) {
+                String schema = schemaFile.toString().replaceAll(".bal", "");
+                if (!schema.equals(packageName)) {
+                    moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(packageName +
+                            "." + schema, null));
+                } else {
+                    moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(packageName, null));
+                }
             }
             moduleMembers = populateConfigNodeList(moduleMembers);
             moduleMembers = addNewLine(moduleMembers, 1);
@@ -91,10 +96,10 @@ public class TomlSyntaxGenerator {
         Token eofToken = AbstractNodeFactory.createIdentifierToken("");
         DocumentNode documentNode = NodeFactory.createDocumentNode(moduleMembers, eofToken);
         TextDocument textDocument = TextDocuments.from(documentNode.toSourceCode());
-        return SyntaxTree.from(textDocument);
+        return SyntaxTree.from(textDocument).toSourceCode();
     }
 
-    public static PersistConfiguration readPersistConfigurations(String schemaName, Path configPath)
+    public static PersistConfiguration readDatabaseConfigurations(String schemaName, Path configPath)
             throws BalException {
         try {
             TextDocument configDocument = TextDocuments.from(Files.readString(configPath));
@@ -135,6 +140,44 @@ public class TomlSyntaxGenerator {
     }
 
 
+//    public static HashMap readPersistConfigurations(Path configPath)
+//            throws BalException {
+//        try {
+//            TextDocument configDocument = TextDocuments.from(Files.readString(configPath));
+//            SyntaxTree syntaxTree = SyntaxTree.from(configDocument);
+//            DocumentNode rootNote = syntaxTree.rootNode();
+//            NodeList<DocumentMemberDeclarationNode> nodeList = rootNote.members();
+//            boolean dbConfigExists = false;
+//            HashMap<String, String> persistConfig = new HashMap<String, String>();
+//            for (DocumentMemberDeclarationNode member : nodeList) {
+//                if (member instanceof TableNode) {
+//                    TableNode node = (TableNode) member;
+//                    String tableName = node.identifier().toSourceCode().trim();
+//                    if (tableName.equals(PERSIST_DIRECTORY)) {
+//                        dbConfigExists = true;
+//                        for (KeyValueNode field : node.fields()) {
+//                            persistConfig.put(field.identifier().toSourceCode().trim(),
+//                                    field.value().toSourceCode().trim());
+//                        }
+//                    }
+//
+//                }
+//            }
+//            if (!dbConfigExists) {
+//                throw new BalException("the persist config doesn't exist in the Ballerina.toml. " +
+//                        "add [persist] table with persist configurations.");
+//            } else if (!persistConfig.containsKey("module") || !persistConfig.containsKey("datastore")) {
+//                throw new BalException("the persist configurations does not exist under [persist] table.");
+//            }
+//            return persistConfig;
+//        } catch (IOException e) {
+//            throw new BalException("error while reading persist configurations. " + e.getMessage());
+//        }
+//    }
+
+
+
+
     public static String readPackageName(String sourcePath) throws BalException {
         try {
             TextDocument configDocument = TextDocuments.from(Files.readString(Paths.get(sourcePath, BALLERINA_TOML)));
@@ -166,7 +209,7 @@ public class TomlSyntaxGenerator {
     /**
      * Method to update the Config.toml with database configurations.
      */
-    public static SyntaxTree updateBallerinaToml(Path configPath, List<String> names, String module, String datasource)
+    public static String updateBallerinaToml(Path configPath, List<String> names, String module, String datasource)
             throws IOException {
 
         boolean configurationExists = false;
@@ -185,8 +228,13 @@ public class TomlSyntaxGenerator {
                     TableNode node = (TableNode) member;
                     if (node.identifier().toSourceCode().trim().equals(PERSIST_DIRECTORY)) {
                         configurationExists = true;
+                        moduleMembers = addNewLine(moduleMembers, 1);
+                        moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(
+                                PERSIST_DIRECTORY, null));
+                        moduleMembers = populateBallerinaNodeList(moduleMembers, module, datasource);
+                    } else {
+                        moduleMembers = moduleMembers.add(member);
                     }
-                    moduleMembers = moduleMembers.add(member);
                 } else if (member instanceof TableArrayNode) {
                     moduleMembers = moduleMembers.add(member);
                 }
@@ -201,10 +249,10 @@ public class TomlSyntaxGenerator {
         Token eofToken = AbstractNodeFactory.createIdentifierToken("");
         DocumentNode documentNode = NodeFactory.createDocumentNode(moduleMembers, eofToken);
         TextDocument textDocument = TextDocuments.from(documentNode.toSourceCode());
-        return SyntaxTree.from(textDocument);
+        return SyntaxTree.from(textDocument).toSourceCode();
     }
 
-    public static SyntaxTree updateConfigToml(Path configPath, List<String> names, String packageName)
+    public static String updateConfigToml(Path configPath, List<Path> schemaPaths, String packageName)
             throws IOException {
 
         ArrayList<String> existingNodes = new ArrayList<>();
@@ -222,15 +270,19 @@ public class TomlSyntaxGenerator {
                     moduleMembers = moduleMembers.add(member);
                 } else if (member instanceof TableNode) {
                     TableNode node = (TableNode) member;
-                    for (String schema : names) {
-                        if (schema.equals(packageName) && node.identifier().toSourceCode().trim().equals(
-                                packageName)) {
-                            existingNodes.add(schema);
-                            break;
-                        } else if (node.identifier().toSourceCode().trim().equals(packageName + "."
-                                + schema)) {
-                            existingNodes.add(schema);
-                            break;
+                    for (Path schemaPath : schemaPaths) {
+                        Path schemaFile = schemaPath.getFileName();
+                        if (Objects.nonNull(schemaFile)) {
+                            String schema = schemaFile.toString().replaceAll(".bal", "");
+                            if (schema.equals(packageName) && node.identifier().toSourceCode().trim().equals(
+                                    packageName)) {
+                                existingNodes.add(schema);
+                                break;
+                            } else if (node.identifier().toSourceCode().trim().equals(packageName + "."
+                                    + schema)) {
+                                existingNodes.add(schema);
+                                break;
+                            }
                         }
                     }
                     moduleMembers = moduleMembers.add(member);
@@ -238,26 +290,30 @@ public class TomlSyntaxGenerator {
                     moduleMembers = moduleMembers.add(member);
                 }
             }
-            if (existingNodes.size() != names.size()) {
-                for (String schema : names) {
-                    moduleMembers = addNewLine(moduleMembers, 1);
-                    if (existingNodes.contains(schema)) {
-                        continue;
+            if (existingNodes.size() != schemaPaths.size()) {
+                for (Path schemaPath : schemaPaths) {
+                    Path schemaFile = schemaPath.getFileName();
+                    if (Objects.nonNull(schemaFile)) {
+                        String schema = schemaFile.toString().replaceAll(".bal", "");
+                        moduleMembers = addNewLine(moduleMembers, 1);
+                        if (existingNodes.contains(schema)) {
+                            continue;
+                        }
+                        if (!schema.equals(packageName)) {
+                            moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(
+                                    packageName + "." + schema, null));
+                        } else {
+                            moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(packageName, null));
+                        }
+                        moduleMembers = populateConfigNodeList(moduleMembers);
                     }
-                    if (!schema.equals(packageName)) {
-                        moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(
-                                packageName + "." + schema, null));
-                    } else {
-                        moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(packageName, null));
-                    }
-                    moduleMembers = populateConfigNodeList(moduleMembers);
                 }
             }
         }
         Token eofToken = AbstractNodeFactory.createIdentifierToken("");
         DocumentNode documentNode = NodeFactory.createDocumentNode(moduleMembers, eofToken);
         TextDocument textDocument = TextDocuments.from(documentNode.toSourceCode());
-        return SyntaxTree.from(textDocument);
+        return SyntaxTree.from(textDocument).toSourceCode();
     }
 
     private static NodeList<DocumentMemberDeclarationNode> populateConfigNodeList(

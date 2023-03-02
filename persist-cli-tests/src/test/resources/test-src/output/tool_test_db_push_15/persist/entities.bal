@@ -18,7 +18,7 @@ import ballerina/time;
 import ballerina/persist as _;
 
 public type MedicalNeed1 record {|
-    readonly int needId;
+    int needId;
     time:Civil period;
     string urgency;
     int quantity;

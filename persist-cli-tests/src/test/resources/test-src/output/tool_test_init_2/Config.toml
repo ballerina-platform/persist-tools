@@ -4,12 +4,3 @@ port = 3306
 user = "root"
 password = ""
 database = ""
-
-[persist_init_2.test]
-host = "localhost"
-port = 3306
-user = "root"
-password = ""
-database = ""
-
-

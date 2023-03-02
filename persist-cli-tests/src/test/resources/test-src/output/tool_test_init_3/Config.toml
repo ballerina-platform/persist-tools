@@ -11,12 +11,3 @@ value = 1
 value = 2
 
 array = [ [1, 0], [0, 1] ]
-
-[persist_init_3.test]
-host = "localhost"
-port = 3306
-user = "root"
-password = ""
-database = ""
-
-
