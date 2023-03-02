@@ -9,5 +9,5 @@ observabilityIncluded = true
 
 [persist]
 datastore = "mysql"
-module = "persist_init_6"
+module = "persist_init_6_old"
 
