@@ -32,9 +32,11 @@ This specification elaborates on the `Persist CLI Tool` commands.
 bal persist init --datastore="datastore" --module="module_name"
 ```
 
- Following optional environment variables can be used with `bal persist init` command.
- - datastore : used to indicate the preferred database client. Currently, only 'mysql' is supported.
- - module : used to indicate the preferred name for the schema file. By default, this will be equal to the package name.
+| Command Parameter |                                     Description                                     | Mandatory |   Optional    |
+|:-----------------:|:-----------------------------------------------------------------------------------:|:---------:|:-------------:|
+|    --datastore    |used to indicate the preferred database client. Currently, only 'mysql' is supported.|    No     |     mysql     |
+|     --module      |used to indicate the preferred name for the schema file. |    No     |               |
+
 
 The command initializes the bal project with the persistence layer. This command includes the following steps,
 
