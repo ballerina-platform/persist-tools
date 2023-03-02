@@ -13,3 +13,7 @@ port = 3308
 user = "root"
 password = "Test123#"
 database = "medical_center_db"
+
+[persist]
+datastore = "mysql"
+module = "medical_center.entities"
