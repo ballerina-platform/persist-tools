@@ -9,4 +9,4 @@ observabilityIncluded = false
 
 [persist]
 datastore = "mysql"
-module = "tool_test_generate_35"
+module = "persist_generate_35"
