@@ -22,7 +22,6 @@ import io.ballerina.persist.BalException;
 import io.ballerina.persist.nodegenerator.BalSyntaxGenerator;
 import io.ballerina.persist.nodegenerator.TomlSyntaxGenerator;
 import io.ballerina.projects.util.ProjectUtils;
-import io.ballerina.toml.syntax.tree.SyntaxTree;
 import picocli.CommandLine;
 
 import java.io.IOException;
@@ -193,13 +192,14 @@ public class Init implements BLauncherCmd {
 
     private void updateBallerinaToml(List<String> schemas, String module, String datastore) throws BalException {
         try {
-            SyntaxTree syntaxTree = TomlSyntaxGenerator.updateBallerinaToml(
+            String syntaxTree = TomlSyntaxGenerator.updateBallerinaToml(
                     Paths.get(this.sourcePath, BALLERINA_TOML), schemas, module, datastore);
             writeOutputSyntaxTree(syntaxTree,
                     Paths.get(this.sourcePath, BALLERINA_TOML).toAbsolutePath().toString());
-            errStream.println("Updated Ballerina.toml with database configurations.");
+            errStream.println("Updated Ballerina.toml with persist configurations : 'datastore = \"mysql\"', " +
+                    String.format("'module = %s'.", module));
         } catch (Exception e) {
-            throw new BalException("could not update the Ballerina.toml with database configurations . " +
+            throw new BalException("could not update the Ballerina.toml with database configurations. " +
                     e.getMessage());
         }
     }
@@ -207,7 +207,7 @@ public class Init implements BLauncherCmd {
     private void createConfigTomlFile(List<String> schemas, String packageName) throws BalException {
         try {
             Path configPath = Paths.get(this.sourcePath, CONFIG_SCRIPT_FILE).toAbsolutePath();
-            SyntaxTree syntaxTree = TomlSyntaxGenerator.createConfigToml(schemas, packageName);
+            String syntaxTree = TomlSyntaxGenerator.createConfigToml(schemas, packageName);
             writeOutputSyntaxTree(syntaxTree, configPath.toString());
             errStream.println("Created Config.toml file inside the Ballerina project.");
         } catch (Exception e) {
@@ -219,7 +219,7 @@ public class Init implements BLauncherCmd {
     private void updateConfigTomlFile(List<String> schemas, String packageName) throws BalException {
         try {
             Path configPath = Paths.get(this.sourcePath, CONFIG_SCRIPT_FILE).toAbsolutePath();
-            SyntaxTree syntaxTree = TomlSyntaxGenerator.updateConfigToml(configPath, schemas, packageName);
+            String syntaxTree = TomlSyntaxGenerator.updateConfigToml(configPath, schemas, packageName);
             writeOutputSyntaxTree(syntaxTree, configPath.toString());
             errStream.println("Updated Config.toml file inside the Ballerina project.");
         } catch (Exception e) {
@@ -227,7 +227,7 @@ public class Init implements BLauncherCmd {
                     e.getMessage());
         }
     }
-    private void writeOutputSyntaxTree(SyntaxTree syntaxTree, String outPath) throws Exception {
+    private void writeOutputSyntaxTree(String syntaxTree, String outPath) throws Exception {
         String content;
         Path pathToFile = Paths.get(outPath);
         Path parentDirectory = pathToFile.getParent();
@@ -239,7 +239,7 @@ public class Init implements BLauncherCmd {
                         String.format("could not create the parent directories of output path %s. %s",
                                 parentDirectory, e.getMessage()));
             }
-            content = syntaxTree.toSourceCode();
+            content = syntaxTree;
             try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8.name())) {
                 writer.println(content);
             }
