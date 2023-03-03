@@ -75,7 +75,7 @@ medical-center
 
 Behaviour of the `init` command,
 - User should invoke the command within a bal project
-- User can use the optional environment variables to indicate the preferred module name and data store, otherwise default values will be used.
+- User can use the optional command options to indicate the preferred module name and data store, otherwise default values will be used.
 - If the user invokes the command twice, it will not fail. It will verify that all the configurations are in place for the definition files defined inside the `persist` directory. If not, add missing configurations and files.
 
 ## 3. Generating Persistence Derived Types, Clients, and Database Schema
