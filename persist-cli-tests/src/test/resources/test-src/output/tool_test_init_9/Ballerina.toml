@@ -16,5 +16,5 @@ array = [ [1, 0], [0, 1] ]
 
 [persist]
 datastore = "mysql"
-module = "persist_init_9.entities"
+module = "persist_init_9"
 

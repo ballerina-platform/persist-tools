@@ -92,7 +92,7 @@ public class ToolingInitTest {
         assertGeneratedSources("tool_test_init_9", INIT);
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false) //disables as the schema file would have a defined name
     @Description("Running init on a project with invalid definition filename")
     public void testInitWithInvalidDefinitionFileName() {
         assertGeneratedSources("tool_test_init_10", INIT);
