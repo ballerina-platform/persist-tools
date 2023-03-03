@@ -51,16 +51,6 @@ The command initializes the bal project with the persistence layer. This command
     datastore = "mysql"
     module = "<package_name>.<module_name>"
    ```
-4. Create(Update) Config.toml file inside the Ballerina project.
-   It will create(update) `Config.toml` file with configurables used to initialize variables in Step 3.
-    ```ballerina
-    [<data model name(definition filename>]
-    host = "localhost"
-    port = 3306
-    user = "root"
-    password = ""
-    database = ""
-    ```
 
 The directory structure will be,
 ```
@@ -69,13 +59,12 @@ medical-center
 ├── persist
          └── medical-center.bal
 ├── Ballerina.toml
-├── Config.toml
 └── main.bal
 ```
 
 Behaviour of the `init` command,
 - User should invoke the command within a bal project
-- User can use the optional command options to indicate the preferred module name and data store, otherwise default values will be used.
+- User can use the optional arguments to indicate the preferred module name and data store, otherwise default values will be used.
 - If the user invokes the command twice, it will not fail. It will verify that all the configurations are in place for the definition files defined inside the `persist` directory. If not, add missing configurations and files.
 
 ## 3. Generating Persistence Derived Types, Clients, and Database Schema
@@ -85,11 +74,19 @@ bal persist generate
 ```
 
 The command will generate [Derived Entity Types and Persist Clients](https://github.com/ballerina-platform/module-ballerina-persist/blob/main/docs/spec/spec.md#3-derived-entity-types-and-persist-clients)
-as per the `persist` specification.
-Additionally, this command will create the database schema associated with the data model definition.
+as per the `persist` specification and the database schema associated with the data model definition.
+Additionally, this command will create(update) `Config.toml` file with configurables used to initialize variables in `database_configuration.bal`.
+```ballerina
+[<data model name(definition filename>]
+host = "localhost"
+port = 3306
+user = "root"
+password = ""
+database = ""
+```
 
 It will add generated files under the conventions,
-1. If the file name is the same as the package name, it will generate the files under the `default` module.
+1. If the module name is the same as the package name, it will generate the files under the `default` module.
    ```
    medical-center
    ├── generated
@@ -98,12 +95,12 @@ It will add generated files under the conventions,
          ├── generated_client.bal
          └── generated_types.bal
    ├── persist
-         └── medical-center.bal
+         └── model.bal
    ├── Ballerina.toml
    ├── Config.toml
    └── main.bal
    ```
-2. If the file name is different from the package name, it will generate the files under a new submodule with the same name as the file.
+2. If the module name is different from the package name, it will generate the files under a new submodule with the same name as the file.
    ```
    medical-center
    ├── generated
@@ -113,11 +110,12 @@ It will add generated files under the conventions,
               ├── generated_client.bal
               └── generated_types.bal
    ├── persist
-        └── medical-item.bal
+        └── model.bal
    ├── Ballerina.toml
    ├── Config.toml
    └── main.bal
    ```
+   
 `database_configuration.bal` file will contain the configurable variables required for the database access.
  ```ballerina
  import ballerinax/mysql.driver as _;
@@ -143,7 +141,7 @@ Behaviour of the `generate` command,
 ## 4. Push Persistence Schema to the Data Provider
 
 ```bash
-bal persist push
+bal persist push  #The is not supported.
 ```
 
 This command will run the schema against the database defined in  the `Ballerina.toml` file under the heading ([persist.<definition file name>.storage.mysql]).
