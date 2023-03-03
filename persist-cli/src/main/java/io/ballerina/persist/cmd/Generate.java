@@ -151,14 +151,24 @@ public class Generate implements BLauncherCmd {
                     return;
                 } else if (!ProjectUtils.validateNameLength(fileName)) {
                     errStream.println("ERROR: invalid definition file name : '" + fileName + "' :\n" +
-                            "maximum length of file name is 256 characters");
+                            "maximum length of module name is 256 characters");
                     return;
                 }
                 generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);
                 HashMap<String, String> persistConfig = readPersistConfigurations(
                         Paths.get(this.sourcePath, "Ballerina.toml"));
+
                 if (!persistConfig.get("module").equals(packageName)) {
                     String submodule = persistConfig.get("module").split("\\.")[1];
+                    if (!ProjectUtils.validateModuleName(submodule)) {
+                        errStream.println("ERROR: invalid module name : '" + submodule + "' :\n" +
+                                "module name can only contain alphanumerics, underscores and periods");
+                        return;
+                    } else if (!ProjectUtils.validateNameLength(submodule)) {
+                        errStream.println("ERROR: invalid module name : '" + submodule + "' :\n" +
+                                "maximum length of module name is 256 characters");
+                        return;
+                    }
                     generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY,
                             submodule);
                 }
