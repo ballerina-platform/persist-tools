@@ -39,6 +39,7 @@ import java.util.stream.Stream;
 
 import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
+import static io.ballerina.persist.PersistToolsConstants.SCHEMA_FILE_NAME;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.BAL_EXTENTION;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_MYSQL;
 import static io.ballerina.persist.nodegenerator.TomlSyntaxGenerator.readPackageName;
@@ -139,41 +140,33 @@ public class Init implements BLauncherCmd {
             module = packageName;
         } else {
             module = module.replaceAll("\"", "");
-            //module = String.format("%s.%s", packageName.replaceAll("\"", ""), module);
         }
         if (schemaFiles.size() == 0) {
-            schemaFiles.add(module);
+            schemaFiles.add(SCHEMA_FILE_NAME);
             try {
                 generateSchemaBalFile(persistDirPath, schemaFiles.get(0));
-                errStream.printf("Created model definition file(%s) in persist directory.%n",
-                        packageName + BAL_EXTENTION);
+                errStream.printf("Created model definition file(schema.bal) in persist directory.%n");
             } catch (BalException e) {
                 errStream.println("ERROR: failed to create the model definition file in persist directory. "
                         + e.getMessage());
                 return;
             }
         }
-        String fileName = schemaFiles.get(0);
-        if (!ProjectUtils.validateModuleName(fileName)) {
-            errStream.println("ERROR: invalid definition file name : '" + fileName + "' :\n" +
-                    "file name can only contain alphanumerics, underscores and periods");
+        if (!ProjectUtils.validateModuleName(module)) {
+            errStream.println("ERROR: invalid module name : '" + module + "' :\n" +
+                    "module name can only contain alphanumerics, underscores and periods");
             return;
-        } else if (!ProjectUtils.validateNameLength(fileName)) {
-            errStream.println("ERROR: invalid definition file name : '" + fileName + "' :\n" +
-                    "maximum length of file name is 256 characters");
+        } else if (!ProjectUtils.validateNameLength(module)) {
+            errStream.println("ERROR: invalid module name : '" + module + "' :\n" +
+                    "maximum length of module name is 256 characters");
             return;
         }
         try {
-            String moduleName = fileName;
-            if (!moduleName.equals(packageName)) {
-                moduleName = String.format("%s.%s", packageName.replaceAll("\"", ""), fileName);
+            String moduleName = packageName;
+            if (!module.equals(packageName)) {
+                moduleName = String.format("%s.%s", packageName.replaceAll("\"", ""), module);
             }
             updateBallerinaToml(schemaFiles, moduleName, datastore);
-//            if (!Files.exists(Paths.get(this.sourcePath, CONFIG_SCRIPT_FILE).toAbsolutePath())) {
-//                createConfigTomlFile(schemaFiles, packageName);
-//            } else {
-//                updateConfigTomlFile(schemaFiles, packageName);
-//            }
         } catch (BalException e) {
             errStream.println("ERROR: failed to add database configurations in the toml file. " + e.getMessage());
         }
@@ -193,7 +186,7 @@ public class Init implements BLauncherCmd {
         try {
             String syntaxTree = TomlSyntaxGenerator.updateBallerinaToml(
                     Paths.get(this.sourcePath, BALLERINA_TOML), schemas, module, datastore);
-            writeOutputSyntaxTree(syntaxTree,
+            writeOutputString(syntaxTree,
                     Paths.get(this.sourcePath, BALLERINA_TOML).toAbsolutePath().toString());
             errStream.println("Updated Ballerina.toml with persist configurations : 'datastore = \"mysql\"', " +
                     String.format("'module = %s'.", module));
@@ -203,47 +196,6 @@ public class Init implements BLauncherCmd {
         }
     }
 
-//    private void createConfigTomlFile(List<String> schemas, String packageName) throws BalException {
-//        try {
-//            Path configPath = Paths.get(this.sourcePath, CONFIG_SCRIPT_FILE).toAbsolutePath();
-//            String syntaxTree = TomlSyntaxGenerator.createConfigToml(schemas, packageName);
-//            writeOutputSyntaxTree(syntaxTree, configPath.toString());
-//            errStream.println("Created Config.toml file inside the Ballerina project.");
-//        } catch (Exception e) {
-//            throw new BalException("could not add Config.toml file inside the Ballerina project. " +
-//                    e.getMessage());
-//        }
-//    }
-
-//    private void updateConfigTomlFile(List<String> schemas, String packageName) throws BalException {
-//        try {
-//            Path configPath = Paths.get(this.sourcePath, CONFIG_SCRIPT_FILE).toAbsolutePath();
-//            String syntaxTree = TomlSyntaxGenerator.updateConfigToml(configPath, schemas, packageName);
-//            writeOutputSyntaxTree(syntaxTree, configPath.toString());
-//            errStream.println("Updated Config.toml file inside the Ballerina project.");
-//        } catch (Exception e) {
-//            throw new BalException("could not update Config.toml file inside the Ballerina project. " +
-//                    e.getMessage());
-//        }
-//    }
-    private void writeOutputSyntaxTree(String syntaxTree, String outPath) throws Exception {
-        String content;
-        Path pathToFile = Paths.get(outPath);
-        Path parentDirectory = pathToFile.getParent();
-        if (Objects.nonNull(parentDirectory)) {
-            try {
-                Files.createDirectories(parentDirectory);
-            } catch (IOException e) {
-                throw new BalException(
-                        String.format("could not create the parent directories of output path %s. %s",
-                                parentDirectory, e.getMessage()));
-            }
-            content = syntaxTree;
-            try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8.name())) {
-                writer.println(content);
-            }
-        }
-    }
     private void writeOutputString(String content, String outPath) throws Exception {
         Path pathToFile = Paths.get(outPath);
         Path parentDirectory = pathToFile.getParent();
