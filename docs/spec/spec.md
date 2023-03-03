@@ -48,7 +48,7 @@ The command initializes the bal project with the persistence layer. This command
    It will update the Ballerina.toml file with persist configurations.
     ```ballerina
     [persist]
-    datastore = "datastore"
+    datastore = "mysql"
     module = "<package_name>.<module_name>"
    ```
 4. Create(Update) Config.toml file inside the Ballerina project.
