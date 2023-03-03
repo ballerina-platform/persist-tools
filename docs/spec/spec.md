@@ -43,7 +43,7 @@ The command initializes the bal project with the persistence layer. This command
 1. Create persist directory
    This directory should contain all data model definition files. This file will define the required entities as per the [`persist` specification](https://github.com/ballerina-platform/module-ballerina-persist/blob/main/docs/spec/spec.md#2-data-model-definition)
 2. Create a model definition file in persist directory
-   It will create a file with same name as the module environment variable if no files are present in the `persist` directory. It will create an empty file with required imports(`import ballerina/persist as _;`).
+   It will create a file named `model.bal` with required imports(`import ballerina/persist as _;`),  if no files are present in the `persist` directory.
 3. Update Ballerina.toml with persist module configurations.
    It will update the Ballerina.toml file with persist configurations.
     ```ballerina
