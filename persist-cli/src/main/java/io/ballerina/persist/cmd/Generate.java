@@ -175,7 +175,6 @@ public class Generate implements BLauncherCmd {
                                 Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY))) {
                             Files.createDirectory(Paths.get(this.sourcePath,
                                     BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY).toAbsolutePath());
-
                         }
                         Files.createDirectory(generatedSourceDirPath.toAbsolutePath());
                     } catch (IOException e) {
@@ -207,12 +206,6 @@ public class Generate implements BLauncherCmd {
                 if (entityModule.getEntityMap().isEmpty()) {
                     errStream.printf("ERROR: the model definition file(%s) does not contain any entity definition.%n",
                             file.getFileName());
-                    return;
-                }
-                if (!Files.exists(generatedSourceDirPath)) {
-                    errStream.printf("ERROR: the generated source directory: %s does not exist. " +
-                                    "run `bal persist init` to initiate the project before generation.%n",
-                            generatedSourceDirPath.toAbsolutePath());
                     return;
                 }
                 generateDataTypes(entityModule, generatedSourceDirPath);
