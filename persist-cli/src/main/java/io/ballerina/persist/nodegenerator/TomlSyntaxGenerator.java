@@ -39,9 +39,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Objects;
 
 import static io.ballerina.persist.PersistToolsConstants.DEFAULT_DATABASE;
@@ -78,22 +76,11 @@ public class TomlSyntaxGenerator {
      * Method to create a new Config.toml file with database configurations.
      */
 
-    public static String createConfigToml(List<Path> schemas, String packageName) {
+    public static String createConfigToml(String moduleName) {
         NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
-        for (Path schemaPath : schemas) {
-            Path schemaFile = schemaPath.getFileName();
-            if (Objects.nonNull(schemaFile)) {
-                String schema = schemaFile.toString().replaceAll(".bal", "");
-                if (!schema.equals(packageName)) {
-                    moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(packageName +
-                            "." + schema, null));
-                } else {
-                    moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(packageName, null));
-                }
-            }
-            moduleMembers = populateConfigNodeList(moduleMembers);
-            moduleMembers = addNewLine(moduleMembers, 1);
-        }
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(moduleName, null));
+        moduleMembers = populateConfigNodeList(moduleMembers);
+        moduleMembers = addNewLine(moduleMembers, 1);
         Token eofToken = AbstractNodeFactory.createIdentifierToken("");
         DocumentNode documentNode = NodeFactory.createDocumentNode(moduleMembers, eofToken);
         TextDocument textDocument = TextDocuments.from(documentNode.toSourceCode());
@@ -207,7 +194,7 @@ public class TomlSyntaxGenerator {
     /**
      * Method to update the Config.toml with database configurations.
      */
-    public static String updateBallerinaToml(Path configPath, List<String> names, String module, String datasource)
+    public static String updateBallerinaToml(Path configPath, String module, String datasource)
             throws IOException {
 
         boolean configurationExists = false;
@@ -250,11 +237,9 @@ public class TomlSyntaxGenerator {
         return SyntaxTree.from(textDocument).toSourceCode();
     }
 
-    public static String updateConfigToml(Path configPath, List<Path> schemaPaths, String packageName)
+    public static String updateConfigToml(Path configPath, String moduleName)
             throws IOException {
-
-        ArrayList<String> existingNodes = new ArrayList<>();
-
+        boolean configExists = false;
         NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
         Path fileNamePath = configPath.getFileName();
         TextDocument configDocument = TextDocuments.from(Files.readString(configPath));
@@ -268,44 +253,19 @@ public class TomlSyntaxGenerator {
                     moduleMembers = moduleMembers.add(member);
                 } else if (member instanceof TableNode) {
                     TableNode node = (TableNode) member;
-                    for (Path schemaPath : schemaPaths) {
-                        Path schemaFile = schemaPath.getFileName();
-                        if (Objects.nonNull(schemaFile)) {
-                            String schema = schemaFile.toString().replaceAll(".bal", "");
-                            if (schema.equals(packageName) && node.identifier().toSourceCode().trim().equals(
-                                    packageName)) {
-                                existingNodes.add(schema);
-                                break;
-                            } else if (node.identifier().toSourceCode().trim().equals(packageName + "."
-                                    + schema)) {
-                                existingNodes.add(schema);
-                                break;
-                            }
-                        }
-                    }
                     moduleMembers = moduleMembers.add(member);
+                    if (node.identifier().toSourceCode().trim().equals(moduleName)) {
+                        configExists = true;
+                        break;
+                    }
                 } else if (member instanceof TableArrayNode) {
                     moduleMembers = moduleMembers.add(member);
                 }
             }
-            if (existingNodes.size() != schemaPaths.size()) {
-                for (Path schemaPath : schemaPaths) {
-                    Path schemaFile = schemaPath.getFileName();
-                    if (Objects.nonNull(schemaFile)) {
-                        String schema = schemaFile.toString().replaceAll(".bal", "");
-                        moduleMembers = addNewLine(moduleMembers, 1);
-                        if (existingNodes.contains(schema)) {
-                            continue;
-                        }
-                        if (!schema.equals(packageName)) {
-                            moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(
-                                    packageName + "." + schema, null));
-                        } else {
-                            moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(packageName, null));
-                        }
-                        moduleMembers = populateConfigNodeList(moduleMembers);
-                    }
-                }
+            if (!configExists) {
+                moduleMembers = addNewLine(moduleMembers, 1);
+                moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(moduleName, null));
+                moduleMembers = populateConfigNodeList(moduleMembers);
             }
         }
         Token eofToken = AbstractNodeFactory.createIdentifierToken("");

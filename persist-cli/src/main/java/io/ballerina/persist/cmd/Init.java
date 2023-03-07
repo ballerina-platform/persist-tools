@@ -90,7 +90,8 @@ public class Init implements BLauncherCmd {
         if (datastore == null) {
             datastore = KEYWORD_MYSQL;
         } else if (!datastore.equals(KEYWORD_MYSQL)) {
-            errStream.println("ERROR: only 'mysql' is supported for the datastore.");
+            errStream.printf("ERROR: the persist layer supports only " +
+                    "'mysql' datastore. but found '%s' datasource.%n", datastore);
             return;
         }
 
@@ -126,7 +127,8 @@ public class Init implements BLauncherCmd {
             return;
         }
         if (schemaFiles.size() > 1) {
-            errStream.println("ERROR: persist directory contains multiple schema files. ");
+            errStream.println("ERROR: the persist directory allows only one model definition file, " +
+                    "but contains many files.");
             return;
         }
         String packageName;
@@ -142,10 +144,9 @@ public class Init implements BLauncherCmd {
             module = module.replaceAll("\"", "");
         }
         if (schemaFiles.size() == 0) {
-            schemaFiles.add(SCHEMA_FILE_NAME);
             try {
-                generateSchemaBalFile(persistDirPath, schemaFiles.get(0));
-                errStream.printf("Created model definition file(model.bal) in persist directory.%n");
+                generateSchemaBalFile(persistDirPath, SCHEMA_FILE_NAME);
+                errStream.printf("Created model definition file(model.bal) in the persist directory.%n");
             } catch (BalException e) {
                 errStream.println("ERROR: failed to create the model definition file in persist directory. "
                         + e.getMessage());
@@ -166,7 +167,7 @@ public class Init implements BLauncherCmd {
             if (!module.equals(packageName)) {
                 moduleName = String.format("%s.%s", packageName.replaceAll("\"", ""), module);
             }
-            updateBallerinaToml(schemaFiles, moduleName, datastore);
+            updateBallerinaToml(moduleName, datastore);
         } catch (BalException e) {
             errStream.println("ERROR: failed to add database configurations in the toml file. " + e.getMessage());
         }
@@ -182,16 +183,16 @@ public class Init implements BLauncherCmd {
         }
     }
 
-    private void updateBallerinaToml(List<String> schemas, String module, String datastore) throws BalException {
+    private void updateBallerinaToml(String module, String datastore) throws BalException {
         try {
             String syntaxTree = TomlSyntaxGenerator.updateBallerinaToml(
-                    Paths.get(this.sourcePath, BALLERINA_TOML), schemas, module, datastore);
+                    Paths.get(this.sourcePath, BALLERINA_TOML), module, datastore);
             writeOutputString(syntaxTree,
                     Paths.get(this.sourcePath, BALLERINA_TOML).toAbsolutePath().toString());
             errStream.println("Updated Ballerina.toml with persist configurations : 'datastore = \"mysql\"', " +
                     String.format("'module = %s'.", module));
         } catch (Exception e) {
-            throw new BalException("could not update the Ballerina.toml with database configurations. " +
+            throw new BalException("could not update the Ballerina.toml with persist configurations. " +
                     e.getMessage());
         }
     }

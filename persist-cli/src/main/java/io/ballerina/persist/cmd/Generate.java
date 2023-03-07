@@ -51,6 +51,7 @@ import java.util.stream.Stream;
 
 import static io.ballerina.persist.PersistToolsConstants.CONFIG_SCRIPT_FILE;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_MYSQL;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PATH_CONFIGURATION_BAL_FILE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxGenerator.generateClientSyntaxTree;
 import static io.ballerina.persist.nodegenerator.TomlSyntaxGenerator.readPackageName;
@@ -126,7 +127,8 @@ public class Generate implements BLauncherCmd {
                     "run `bal persist init` to initiate the project before generation.");
             return;
         } else if (schemaFilePaths.size() > 1) {
-            errStream.println("ERROR: persist directory contains multiple schema files. ");
+            errStream.println("ERROR: the persist directory allows only one model definition file, " +
+                    "but contains many files.");
             return;
         }
 
@@ -144,22 +146,12 @@ public class Generate implements BLauncherCmd {
             try {
                 BalProjectUtils.validateSchemaFile(file);
                 entityModule = BalProjectUtils.getEntities(file);
-                String fileName = entityModule.getModuleName();
-                if (!ProjectUtils.validateModuleName(fileName)) {
-                    errStream.println("ERROR: invalid definition file name : '" + fileName + "' :\n" +
-                            "file name can only contain alphanumerics, underscores and periods");
-                    return;
-                } else if (!ProjectUtils.validateNameLength(fileName)) {
-                    errStream.println("ERROR: invalid definition file name : '" + fileName + "' :\n" +
-                            "maximum length of module name is 256 characters");
-                    return;
-                }
                 generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);
                 HashMap<String, String> persistConfig = readPersistConfigurations(
                         Paths.get(this.sourcePath, "Ballerina.toml"));
-
+                String submodule = "";
                 if (!persistConfig.get("module").equals(packageName)) {
-                    String submodule = persistConfig.get("module").split("\\.")[1];
+                    submodule = persistConfig.get("module").split("\\.")[1];
                     if (!ProjectUtils.validateModuleName(submodule)) {
                         errStream.println("ERROR: invalid module name : '" + submodule + "' :\n" +
                                 "module name can only contain alphanumerics, underscores and periods");
@@ -169,8 +161,13 @@ public class Generate implements BLauncherCmd {
                                 "maximum length of module name is 256 characters");
                         return;
                     }
-                    generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY,
-                            submodule);
+                    generatedSourceDirPath = generatedSourceDirPath.resolve(submodule);
+                }
+
+                if (!persistConfig.get("datastore").trim().equals(KEYWORD_MYSQL)) {
+                    errStream.printf("ERROR: the persist layer supports only " +
+                            "'mysql' datastore. but found '%s' datasource.%n", persistConfig.get("datastore").trim());
+                    return;
                 }
                 if (!Files.exists(generatedSourceDirPath)) {
                     try {
@@ -193,7 +190,7 @@ public class Generate implements BLauncherCmd {
                         generateConfigurationBalFile(generatedSourceDirPath);
                         errStream.printf(
                                 "Created database_configurations.bal file inside `%s` module in generated directory.%n",
-                                fileName.equals(packageName) ? "default" : fileName);
+                                submodule.equals("") ? "default" : submodule);
                     } catch (BalException e) {
                         errStream.println("ERROR: failed to generate the database_configurations.bal file. "
                                 + e.getMessage());
@@ -202,9 +199,9 @@ public class Generate implements BLauncherCmd {
                 }
 
                 if (!Files.exists(Paths.get(this.sourcePath, CONFIG_SCRIPT_FILE).toAbsolutePath())) {
-                    createConfigTomlFile(schemaFilePaths, packageName);
+                    createConfigTomlFile(persistConfig.get("module").trim());
                 } else {
-                    updateConfigTomlFile(schemaFilePaths, packageName);
+                    updateConfigTomlFile(persistConfig.get("module").trim());
                 }
 
                 if (entityModule.getEntityMap().isEmpty()) {
@@ -285,10 +282,10 @@ public class Generate implements BLauncherCmd {
         }
     }
 
-    private void createConfigTomlFile(List<Path> schemas, String packageName) throws BalException {
+    private void createConfigTomlFile(String moduleName) throws BalException {
         try {
             Path configPath = Paths.get(this.sourcePath, CONFIG_SCRIPT_FILE).toAbsolutePath();
-            String syntaxTree = TomlSyntaxGenerator.createConfigToml(schemas, packageName);
+            String syntaxTree = TomlSyntaxGenerator.createConfigToml(moduleName);
             writeOutputFile(syntaxTree, configPath.toString());
             errStream.println("Created Config.toml file inside the Ballerina project.");
         } catch (Exception e) {
@@ -316,10 +313,10 @@ public class Generate implements BLauncherCmd {
         }
     }
 
-    private void updateConfigTomlFile(List<Path> schemas, String packageName) throws BalException {
+    private void updateConfigTomlFile(String moduleName) throws BalException {
         try {
             Path configPath = Paths.get(this.sourcePath, CONFIG_SCRIPT_FILE).toAbsolutePath();
-            String syntaxTree = TomlSyntaxGenerator.updateConfigToml(configPath, schemas, packageName);
+            String syntaxTree = TomlSyntaxGenerator.updateConfigToml(configPath, moduleName);
             writeOutputFile(syntaxTree, configPath.toString());
             errStream.println("Updated Config.toml file inside the Ballerina project.");
         } catch (Exception e) {
