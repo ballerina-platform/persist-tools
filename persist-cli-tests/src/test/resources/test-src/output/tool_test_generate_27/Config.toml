@@ -1,4 +1,4 @@
-[tool_test_generate_13.entities]
+[persist_generate_13.entities]
 host = "localhost"
 port = 3307
 user = "root"
@@ -11,3 +11,4 @@ port = 3306
 user = "root"
 password = ""
 database = ""
+

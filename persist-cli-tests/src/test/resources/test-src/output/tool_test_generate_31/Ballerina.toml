@@ -1,9 +1,9 @@
 [package]
 org = "foo"
-name = "tool_test_generate_31"
+name = "persist_generate_31"
 version = "0.1.0"
 distribution = "2201.3.0"
 
 [persist]
 datastore = "mysql"
-module = "tool_test_generate_31.entities"
+module = "persist_generate_31.entities"

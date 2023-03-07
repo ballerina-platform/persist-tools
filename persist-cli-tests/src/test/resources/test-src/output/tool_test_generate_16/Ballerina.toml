@@ -1,6 +1,6 @@
 [package]
 org = "foo"
-name = "tool_test_generate_16"
+name = "persist_generate_16"
 version = "0.1.0"
 distribution = "2201.3.0"
 
