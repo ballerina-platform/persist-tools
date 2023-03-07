@@ -151,6 +151,11 @@ public class Generate implements BLauncherCmd {
                         Paths.get(this.sourcePath, "Ballerina.toml"));
                 String submodule = "";
                 if (!persistConfig.get("module").equals(packageName)) {
+                    if (!persistConfig.get("module").startsWith(packageName + ".")) {
+                        errStream.println("ERROR: invalid module name : '" + persistConfig.get("module") + "' :\n" +
+                                "module name should follow the template <package_name>.<module_name>");
+                        return;
+                    }
                     submodule = persistConfig.get("module").split("\\.")[1];
                     if (!ProjectUtils.validateModuleName(submodule)) {
                         errStream.println("ERROR: invalid module name : '" + submodule + "' :\n" +
