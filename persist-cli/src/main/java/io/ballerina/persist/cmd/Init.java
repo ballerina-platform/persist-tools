@@ -145,7 +145,7 @@ public class Init implements BLauncherCmd {
             schemaFiles.add(SCHEMA_FILE_NAME);
             try {
                 generateSchemaBalFile(persistDirPath, schemaFiles.get(0));
-                errStream.printf("Created model definition file(schema.bal) in persist directory.%n");
+                errStream.printf("Created model definition file(model.bal) in persist directory.%n");
             } catch (BalException e) {
                 errStream.println("ERROR: failed to create the model definition file in persist directory. "
                         + e.getMessage());

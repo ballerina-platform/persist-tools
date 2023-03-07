@@ -58,7 +58,7 @@ public class PersistToolsConstants {
     public static final String PLATFORM = "java11";
     public static final String PROPERTY_KEY_PATH = "path";
     public static final String MYSQL_CONNECTOR_NAME_PREFIX = "mysql-connector";
-    public static final String SCHEMA_FILE_NAME = "schema";
+    public static final String SCHEMA_FILE_NAME = "model";
 
     public static final Set<String> SUPPORTED_DB_PROVIDERS = Set.of("mysql");
 
