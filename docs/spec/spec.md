@@ -55,7 +55,6 @@ The command initializes the bal project with the persistence layer. This command
 The directory structure will be,
 ```
 medical-center
-├── generated
 ├── persist
          └── medical-center.bal
 ├── Ballerina.toml
