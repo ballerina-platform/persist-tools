@@ -176,12 +176,7 @@ public class Generate implements BLauncherCmd {
                 }
                 if (!Files.exists(generatedSourceDirPath)) {
                     try {
-                        if (!persistConfig.get("module").equals(packageName) && !Files.exists(
-                                Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY))) {
-                            Files.createDirectory(Paths.get(this.sourcePath,
-                                    BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY).toAbsolutePath());
-                        }
-                        Files.createDirectory(generatedSourceDirPath.toAbsolutePath());
+                        Files.createDirectories(generatedSourceDirPath);
                     } catch (IOException e) {
                         errStream.println("ERROR: failed to create the generated directory. " + e.getMessage());
                         return;
