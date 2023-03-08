@@ -109,7 +109,7 @@ public function main() returns error? {
         gender: "M",
         hireDate: {year: 2022, month: 8, day: 1},
         departmentDeptNo: "department-2",
-        workspaceWorkspaceId: "workspace-2"
+        workspaceWorkspaceId: "workspace-1"
     };
 
     rainier:Employee invalidEmployee = {
@@ -202,12 +202,10 @@ public function main() returns error? {
     if buildingRetrievedError !is persist:Error {
         panic error("Error expected");
     }
-    rainier:Building buildingDeleted = check rainierClient->/buildings/[building1.buildingCode].delete();
     stream<rainier:Building, error?> buildingStream2 = rainierClient->/buildings.get();
     rainier:Building[] buildingSet = check from rainier:Building building_temp2 in buildingStream2
         select building_temp2;
-
-    io:println("Building examples successfuly executed!");
+    io:println("Building examples successfully executed!");
 
     string[] deptNos = check rainierClient->/departments.post([department1]);
     rainier:Department departmentRetrieved = check rainierClient->/departments/[department1.deptNo].get();
@@ -236,17 +234,12 @@ public function main() returns error? {
     if departmentError !is persist:Error {
         panic error("Error expected");
     }
-    rainier:Department departmentDeleted = check rainierClient->/departments/[department1.deptNo].delete();
 
     stream<rainier:Department, error?> departmentStream2 = rainierClient->/departments.get();
     departments = check from rainier:Department department_Temp2 in departmentStream2
         select department_Temp2;
 
-    departmentError = rainierClient->/departments/[department1.deptNo].delete();
-    if departmentError !is persist:Error {
-        panic error("Error expected");
-    }
-    io:println("Department examples successfuly executed!");
+    io:println("Department examples successfully executed!");
 
     string[] workspaceIds = check rainierClient->/workspaces.post([workspace1]);
     rainier:Workspace workspaceRetrieved = check rainierClient->/workspaces/[workspace1.workspaceId].get();
@@ -270,18 +263,11 @@ public function main() returns error? {
         workspaceType: "large"
     });
 
-    rainier:Workspace workspaceDeleted = check rainierClient->/workspaces/[workspace1.workspaceId].delete();
-
     stream<rainier:Workspace, error?> workspaceStream2 = rainierClient->/workspaces.get();
     workspaces = check from rainier:Workspace workspace_temp2 in workspaceStream2
         select workspace_temp2;
 
-    workspaceError = rainierClient->/workspaces/[workspace1.workspaceId].delete();
-    if workspaceError !is persist:Error {
-        panic error("Error expected");
-    }
-
-    io:println("Workspace examples successfuly executed!");
+    io:println("Workspace examples successfully executed!");
 
     string[] empNos = check rainierClient->/employees.post([employee1]);
 
@@ -311,17 +297,11 @@ public function main() returns error? {
         workspaceWorkspaceId: "invalid-workspaceWorkspaceId"
     });
 
-    rainier:Employee employeeDeleted = check rainierClient->/employees/[employee1.empNo].delete();
-
     stream<rainier:Employee, error?> employeeStream2 = rainierClient->/employees.get();
     employees = check from rainier:Employee employee_temp2 in employeeStream2
         select employee_temp2;
-    employeeError = rainierClient->/employees/[employee1.empNo].get();
-    if employeeError !is persist:Error {
-        panic error("Error expected");
-    }
 
-    io:println("Employee examples successfuly executed!");
+    io:println("Employee examples successfully executed!");
 
     [string, string][] ids = check rainierClient->/orderitems.post([orderItem1, orderItem2]);
 
@@ -354,8 +334,20 @@ public function main() returns error? {
     if orderItemError !is persist:Error {
         panic error("Error expected");
     }
-    io:println("OrderItem examples successfuly executed!");
+    io:println("OrderItem examples successfully executed!");
 
+    io:println("\n========== Delete employee ==========");
+    rainier:Employee employeeDeleted = check rainierClient->/employees/[employee1.empNo].delete();
+
+    io:println("\n========== Delete building==========");
+    rainier:Building buildingDeleted = check rainierClient->/buildings/[building1.buildingCode].delete();
+
+    io:println("\n========== Delete  workspace==========");
+    rainier:Workspace workspaceDeleted = check rainierClient->/workspaces/[workspace1.workspaceId].delete();
+
+    io:println("\n========== Delete department==========");
+    rainier:Department departmentDeleted = check rainierClient->/departments/[department1.deptNo].delete();
+    
     io:println("\n========== Building ==========");
     _ = check from rainier:Building building in rainierClient->/buildings.get()
         do {
