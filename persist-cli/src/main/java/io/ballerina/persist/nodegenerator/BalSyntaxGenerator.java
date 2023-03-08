@@ -424,8 +424,10 @@ public class BalSyntaxGenerator {
                     stripEscapeCharacter(entity.getEntityName())));
             StringBuilder fieldMetaData = new StringBuilder();
             StringBuilder associateFieldMEtaData = new StringBuilder();
+            boolean relationsExists = false;
             for (EntityField field : entity.getFields()) {
                 if (field.getRelation() != null) {
+                    relationsExists = true;
                     StringBuilder foreignKeyFields = new StringBuilder();
                     if (field.getRelation().isOwner()) {
                         if (fieldMetaData.length() != 0) {
@@ -446,7 +448,8 @@ public class BalSyntaxGenerator {
                             if (associateFieldMEtaData.length() != 0) {
                                 associateFieldMEtaData.append(COMMA_WITH_NEWLINE);
                             }
-                            associateFieldMEtaData.append(String.format("\"%s.%s\": {" +
+                            associateFieldMEtaData.append(String.format((field.isArrayType() ? "\"%s[]" : "\"%s") +
+                                            ".%s\": {" +
                                     "relation: {entityName: \"%s\", refField: \"%s\"}}", field.getFieldName(),
                                     associatedEntityField.getFieldName(), field.getFieldName(),
                                     associatedEntityField.getFieldName()));
@@ -456,7 +459,8 @@ public class BalSyntaxGenerator {
                                     associateFieldMEtaData.append(COMMA_WITH_NEWLINE);
                                 }
                                 for (Relation.Key key : field.getRelation().getKeyColumns()) {
-                                    associateFieldMEtaData.append(String.format("\"%s.%s\": {" +
+                                    associateFieldMEtaData.append(String.format((field.isArrayType() ?
+                                                    "\"%s[]" : "\"%s") + ".%s\": {" +
                                                     "relation: {entityName: \"%s\", refField: \"%s\"}}",
                                             field.getFieldName(), key.getField(), field.getFieldName(),
                                             key.getField()));
@@ -488,10 +492,59 @@ public class BalSyntaxGenerator {
                 keyFields.append("\"").append(stripEscapeCharacter(key.getFieldName())).append("\"");
             }
             entityMetaData.append(String.format(METADATARECORD_KEY_FIELD_TEMPLATE, keyFields));
+            if (relationsExists) {
+                entityMetaData.append(COMMA_SPACE);
+                String joinMetaData = getJoinMetaData(entity, entityModule);
+                entityMetaData.append(String.format("joinMetadata: {%s}", joinMetaData));
+            }
+
             mapBuilder.append(String.format(METADATARECORD_ELEMENT_TEMPLATE,
                     entity.getEntityName().toLowerCase(Locale.ENGLISH), entityMetaData));
         }
         return NodeParser.parseObjectMember(String.format(METADATARECORD_TEMPLATE, mapBuilder));
+    }
+
+    private static String getJoinMetaData(Entity entity, Module entityModule) {
+        StringBuilder joinMetaData = new StringBuilder();
+        StringBuilder refColumns = new StringBuilder();
+        StringBuilder joinColumns = new StringBuilder();
+        for (EntityField entityField : entity.getFields()) {
+            if (entityField.getRelation() != null) {
+                String relationType = "ONE_TO_ONE";
+                Entity associatedEntity = entityField.getRelation().getAssocEntity();
+                for (EntityField associatedEntityField : associatedEntity.getFields()) {
+                    if (associatedEntityField.getFieldType().equals(entity.getEntityName())) {
+                        if (associatedEntityField.isArrayType() && !entityField.isArrayType()) {
+                            relationType = "ONE_TO_MANY";
+                        } else if (!associatedEntityField.isArrayType() && entityField.isArrayType()) {
+                            relationType = "MANY_TO_ONE";
+                        } else if (associatedEntityField.isArrayType() && entityField.isArrayType()) {
+                            relationType = "MANY_TO_MANY";
+                        }
+                    }
+                }
+            if (joinMetaData.length() > 0) {
+                joinMetaData.append(",");
+            }
+            for (Relation.Key key : entityField.getRelation().getKeyColumns()) {
+                if (joinColumns.length() > 0) {
+                    joinColumns.append(",");
+                }
+                if (refColumns.length() > 0) {
+                    refColumns.append(",");
+                }
+                refColumns.append(String.format("\"%s\"", key.getReference()));
+                joinColumns.append(String.format("\"%s\"", key.getField()));
+            }
+            joinMetaData.append(String.format(
+                    "%s: {entity: %s, fieldName: \"%s\", " +
+                            "refTable: \"%s\", refColumns: [%s], " +
+                            "joinColumns: [%s], 'type: %s}", entityField.getFieldName(), entityField.getFieldType(),
+                    entityField.getFieldName(), entityField.getFieldType(), refColumns.toString(),
+                    joinColumns.toString(), relationType));
+            }
+        }
+        return joinMetaData.toString();
     }
 
     private static ClientResource createClientResource(Entity entity) {
@@ -674,7 +727,6 @@ public class BalSyntaxGenerator {
         read.addQualifiers(new String[] { KEYWORD_ISOLATED, BalSyntaxConstants.KEYWORD_RESOURCE });
         read.addRequiredParameterWithDefault(TypeDescriptor.getSimpleNameReferenceNode(String.format("%sTargetType",
                 entity.getEntityName())), "targetType", Function.Bracket.ANGLE);
-        read.addReturns();
 //        NodeList<Node> resourcePaths = AbstractNodeFactory.createEmptyNodeList();
 //        resourcePaths = resourcePaths.add(AbstractNodeFactory.createIdentifierToken(entity.getResourceName()));
 //        read.addRelativeResourcePaths(resourcePaths);
