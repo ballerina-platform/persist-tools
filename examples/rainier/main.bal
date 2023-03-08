@@ -120,7 +120,7 @@ public function main() returns error? {
         gender: "M",
         hireDate: {year: 2022, month: 8, day: 1},
         departmentDeptNo: "department-2",
-        workspaceWorkspaceId: "workspace-1"
+        workspaceWorkspaceId: "workspace-2"
     };
 
     rainier:Employee employee2 = {
