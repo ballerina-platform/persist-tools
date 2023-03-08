@@ -255,7 +255,7 @@ public class BalSyntaxGenerator {
                         String fieldType = field.getFieldType();
                         Entity assocEntity = entityMap.get(fieldType);
                         if (field.getRelation() == null) {
-                            // this branch only handles one-to-many or many-to-many with no relation
+                            // this branch only handles one-to-one or one-to-many or many-to-many with no relation
                             // annotations
                             assocEntity.getFields().stream().filter(assocfield -> assocfield.getFieldType()
                                     .equals(entity.getEntityName()))
@@ -265,17 +265,29 @@ public class BalSyntaxGenerator {
                                             throw new RuntimeException("unsupported many to many relation between " +
                                                     entity.getEntityName() + " and " + assocEntity.getEntityName());
                                         }
-                                        if (field.isArrayType() || field.isOptionalType()) {
-                                            // one-to-many relation. associated entity is the owner.
-                                            field.setRelation(computeRelation(entity, assocEntity, false));
-                                            assocfield.setRelation(computeRelation(assocEntity, entity, true));
-                                        } else if (field.isArrayType() || field.getFieldType().equals("byte")) {
-                                            field.setRelation(null);
+                                        // one-to-one
+                                        if (!field.isArrayType() && !assocfield.isArrayType()) {
+                                            field.setRelation(computeRelation(entity, assocEntity, true,
+                                                    Relation.RelationType.ONE));
+                                            assocfield.setRelation(computeRelation(assocEntity, entity, false,
+                                                    Relation.RelationType.ONE));
                                         } else {
-                                            // one-to-many relation. entity is the owner.
-                                            // one-to-one relation. entity is the owner.
-                                            field.setRelation(computeRelation(entity, assocEntity, true));
-                                            assocfield.setRelation(computeRelation(assocEntity, entity, false));
+                                            if (field.isArrayType() && field.isOptionalType()) {
+                                                // one-to-many relation. associated entity is the owner.
+                                                field.setRelation(computeRelation(entity, assocEntity, false,
+                                                        Relation.RelationType.MANY));
+                                                assocfield.setRelation(computeRelation(assocEntity, entity, true,
+                                                        Relation.RelationType.ONE));
+                                            } else if (field.isArrayType() || field.getFieldType().equals("byte")) {
+                                                field.setRelation(null);
+                                            } else {
+                                                // one-to-many relation. entity is the owner.
+                                                // one-to-one relation. entity is the owner.
+                                                field.setRelation(computeRelation(entity, assocEntity, true,
+                                                        Relation.RelationType.ONE));
+                                                assocfield.setRelation(computeRelation(assocEntity, entity,
+                                                        false, Relation.RelationType.MANY));
+                                            }
                                         }
                                     });
                         } else if (field.getRelation() != null && field.getRelation().isOwner()) {
@@ -330,7 +342,8 @@ public class BalSyntaxGenerator {
         }
     }
 
-    private static Relation computeRelation(Entity entity, Entity assocEntity, boolean isOwner) {
+    private static Relation computeRelation(Entity entity, Entity assocEntity, boolean isOwner,
+                                            Relation.RelationType relationType) {
         Relation.Builder relBuilder = new Relation.Builder();
         relBuilder.setAssocEntity(assocEntity);
         if (isOwner) {
@@ -340,7 +353,7 @@ public class BalSyntaxGenerator {
                             + stripEscapeCharacter(key.getFieldName()).substring(1), key.getFieldName(),
                             key.getFieldType())).collect(Collectors.toList());
             relBuilder.setOwner(true);
-            relBuilder.setRelationType(Relation.RelationType.ONE);
+            relBuilder.setRelationType(relationType);
             relBuilder.setKeys(keyColumns);
             relBuilder.setReferences(assocEntity.getKeys().stream().map(EntityField::getFieldName)
                     .collect(Collectors.toList()));
@@ -352,7 +365,7 @@ public class BalSyntaxGenerator {
                     key.getFieldType()))
                     .collect(Collectors.toList());
             relBuilder.setOwner(false);
-            relBuilder.setRelationType(Relation.RelationType.MANY);
+            relBuilder.setRelationType(relationType);
             relBuilder.setKeys(keyColumns);
             relBuilder.setReferences(keyColumns.stream().map(Relation.Key::getReference).collect(Collectors.toList()));
         }

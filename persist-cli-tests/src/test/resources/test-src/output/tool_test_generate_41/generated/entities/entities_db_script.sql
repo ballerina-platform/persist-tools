@@ -43,6 +43,7 @@ CREATE TABLE Employee (
 	CONSTRAINT FK_EMPLOYEE_DEPARTMENT FOREIGN KEY(departmentDeptNo) REFERENCES Department(deptNo),
 	orderitemOrderId VARCHAR(191) NOT NULL,
 	orderitemItemId VARCHAR(191) NOT NULL,
+	UNIQUE (orderitemOrderId, orderitemItemId),
 	CONSTRAINT FK_EMPLOYEE_ORDERITEM FOREIGN KEY(orderitemOrderId, orderitemItemId) REFERENCES OrderItem(orderId, itemId),
 	PRIMARY KEY(empNo)
 );
@@ -52,7 +53,7 @@ CREATE TABLE Workspace (
 	workspaceType VARCHAR(191) NOT NULL,
 	buildingBuildingCode VARCHAR(191) NOT NULL,
 	CONSTRAINT FK_WORKSPACE_BUILDING FOREIGN KEY(buildingBuildingCode) REFERENCES Building(buildingCode),
-	employeeEmpNo VARCHAR(191) NOT NULL,
+	employeeEmpNo VARCHAR(191) UNIQUE NOT NULL,
 	CONSTRAINT FK_WORKSPACE_EMPLOYEE FOREIGN KEY(employeeEmpNo) REFERENCES Employee(empNo),
 	PRIMARY KEY(workspaceId)
 );

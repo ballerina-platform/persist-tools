@@ -16,7 +16,7 @@ CREATE TABLE MultipleAssociations (
 CREATE TABLE User (
 	id INT NOT NULL,
 	name VARCHAR(191) NOT NULL,
-	multipleassociationsId INT NOT NULL,
+	multipleassociationsId INT UNIQUE NOT NULL,
 	CONSTRAINT FK_USER_MULTIPLEASSOCIATIONS FOREIGN KEY(multipleassociationsId) REFERENCES MultipleAssociations(id),
 	PRIMARY KEY(id)
 );
@@ -24,9 +24,9 @@ CREATE TABLE User (
 CREATE TABLE Profile (
 	id INT NOT NULL,
 	name VARCHAR(191) NOT NULL,
-	userId INT NOT NULL,
+	userId INT UNIQUE NOT NULL,
 	CONSTRAINT FK_PROFILE_USER FOREIGN KEY(userId) REFERENCES User(id),
-	multipleassociationsId INT NOT NULL,
+	multipleassociationsId INT UNIQUE NOT NULL,
 	CONSTRAINT FK_PROFILE_MULTIPLEASSOCIATIONS FOREIGN KEY(multipleassociationsId) REFERENCES MultipleAssociations(id),
 	PRIMARY KEY(id)
 );
