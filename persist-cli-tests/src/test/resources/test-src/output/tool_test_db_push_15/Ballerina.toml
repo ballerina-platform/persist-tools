@@ -1,6 +1,6 @@
 [package]
 org = "foo"
-name = "perist_db_push_15"
+name = "persist_db_push_15"
 version = "0.1.0"
 distribution = "2201.3.0"
 

@@ -1,6 +1,7 @@
-[tool_test_generate_20.entities]
+[persist_generate_25.entities]
 host = "localhost"
-port = 3307
+port = 3306
 user = "root"
-password = "Test123#"
-database = "persist"
+password = ""
+database = ""
+

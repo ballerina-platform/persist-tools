@@ -1,6 +1,7 @@
-[perist_generate_5.entities]
+[persist_generate_5.entities]
 host = "localhost"
 port = 3306
 user = "root"
 password = ""
 database = ""
+

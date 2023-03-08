@@ -14,3 +14,7 @@ user = "root"
 password = "test123"
 database = "persistdb"
 
+[persist]
+datastore = "mysql"
+module = "persist_init_5"
+

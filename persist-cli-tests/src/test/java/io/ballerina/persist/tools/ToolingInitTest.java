@@ -40,7 +40,7 @@ public class ToolingInitTest {
     @Test(enabled = true)
     @Description("When there is an already initiated configs and there is an uninitiated schema")
     public void testInitUpdateConfigWithNewDbConfigurations() {
-        assertGeneratedSources("tool_test_init_2", INIT);
+        assertGeneratedSourcesNegative("tool_test_init_2", INIT, new String[]{});
     }
 
     @Test(enabled = true)
@@ -92,7 +92,7 @@ public class ToolingInitTest {
         assertGeneratedSources("tool_test_init_9", INIT);
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false) //disables as the schema file would have a defined name
     @Description("Running init on a project with invalid definition filename")
     public void testInitWithInvalidDefinitionFileName() {
         assertGeneratedSources("tool_test_init_10", INIT);

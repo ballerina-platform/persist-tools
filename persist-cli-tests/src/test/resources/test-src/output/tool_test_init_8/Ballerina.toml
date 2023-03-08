@@ -1,6 +1,6 @@
 [package]
 org = "foo"
-name = "perist_init_8"
+name = "persist_init_8"
 version = "0.1.0"
 distribution = "2201.3.0"
 

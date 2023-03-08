@@ -14,3 +14,6 @@ user = "root"
 password = "Test123#"
 database = "rainier_db"
 
+[persist]
+datastore = "mysql"
+module = "association.rainier"

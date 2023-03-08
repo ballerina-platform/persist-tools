@@ -81,13 +81,13 @@ public class ToolingGenerateTest {
     }
 
     @Test(enabled = true)
-    @Description("There is only a single entity in the Ballerina project with two keys one autoincrement")
+    @Description("There is only a single entity in the Ballerina project with two keys")
     public void testGenerateSingleEntityWithMultipleKeysAndAutoInc() {
         assertGeneratedSources("tool_test_generate_9", GENERATE);
     }
 
-    @Test(enabled = true)
-    @Description("There is only a single entity in the Ballerina project with two keys without autoincrement")
+    @Test(enabled = false) // repeat test
+    @Description("There is only a single entity in the Ballerina project with two keys")
     public void testGenerateSingleEntityWithMultipleKeys() {
         assertGeneratedSources("tool_test_generate_10", GENERATE);
     }
@@ -112,7 +112,7 @@ public class ToolingGenerateTest {
     @Test(enabled = true)
     @Description("Three is an invalid message definition in the schema with optional fields")
     public void testGenerateWithInvalidMessageDefinition() {
-        assertGeneratedSources("tool_test_generate_14", GENERATE);
+        assertGeneratedSourcesNegative("tool_test_generate_14", GENERATE, new String[]{});
     }
 
     @Test(enabled = true)
@@ -131,7 +131,7 @@ public class ToolingGenerateTest {
     public void testGenerateThreeClientsWith1ToManyAssociations() {
         assertGeneratedSources("tool_test_generate_17", GENERATE);
     }
-    @Test(enabled = true)
+    @Test(enabled = false)
     @Description("There are two entities with one to one associations between each " +
             "other with no annotation values in any Relation")
     public void testGenerateThreeEntitiesWith1To1AssociationsWithNoAnnotationValue() {

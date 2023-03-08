@@ -254,7 +254,6 @@ public class ToolingDbPushTest {
     public void testDbPushWithEscapeCharacter() {
         assertGeneratedSources("tool_test_db_push_25", DB_PUSH);
     }
-
     @Test(enabled = true)
     @Description("Test the created sql script with byte[] and byte[]? fields")
     public void testDbPushWithByteArray() {

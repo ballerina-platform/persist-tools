@@ -829,7 +829,7 @@ public class BalSyntaxGenerator {
         return resourcePaths;
     }
 
-    public static String generateDatabaseConfigSyntaxTree() throws FormatterException {
+    public static SyntaxTree generateDatabaseConfigSyntaxTree() throws FormatterException {
         NodeList<ImportDeclarationNode> imports = AbstractNodeFactory.createEmptyNodeList();
         NodeList<ModuleMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
 
@@ -854,9 +854,7 @@ public class BalSyntaxGenerator {
         TextDocument textDocument = TextDocuments.from(EMPTY_STRING);
         SyntaxTree balTree = SyntaxTree.from(textDocument);
 
-        // output cannot be SyntaxTree as it will overlap with Toml Syntax Tree in Init
-        // Command
-        return Formatter.format(balTree.modifyWith(modulePartNode).toSourceCode());
+        return balTree.modifyWith(modulePartNode);
     }
 
     public static String generateSchemaSyntaxTree() throws FormatterException {

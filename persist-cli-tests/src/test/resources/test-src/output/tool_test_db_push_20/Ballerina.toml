@@ -12,4 +12,4 @@ host = "localhost"
 port = 3307
 user = "root"
 password = "Test123#"
-database = "TEST"
+database = "abcdefghijklmnopqrstuvwxyz1234567890zxcvbnmasdfghjklqwertyuiop1234567890"
