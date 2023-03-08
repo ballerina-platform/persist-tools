@@ -119,14 +119,12 @@ task codeCoverageReport(type: JacocoReport) {
 }
 
 task createProperties(dependsOn: processResources) {
-    System.setProperty("user.dir", "$project.rootDir/build-config/resources/version.properties")
-    println  "  project dir:  "+ System.getProperty("path.properties");
     doLast {
         new File("$project.rootDir/persist-cli/src/main/resources/version.properties").withWriter { w ->
-            Properties p = new Properties()
-            p['version'] = "${project.version}".toString()
-            p['persistVersion'] = stdlibPersistVersion.toString()
-            p.store w, null
+            Properties properties = new Properties()
+            properties['version'] = '${project.version}'
+            properties['persistVersion'] = stdlibPersistVersion.toString()
+            properties.store w, null
         }
     }
 }

@@ -22,7 +22,7 @@ plugins {
 }
 
 description = 'Ballerina - Persist-CLI Java Native'
-System.setProperty("path.properties", "$project.rootDir/build-config/resources/version.properties")
+
 repositories {
     mavenCentral()
 }

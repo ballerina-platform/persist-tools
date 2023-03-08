@@ -194,7 +194,7 @@ public class TomlSyntaxGenerator {
     }
 
     /**
-     * Method to update the Ballerina.toml with database configurations.
+     * Method to update the Ballerina.toml with database configurations and persist dependency.
      */
     public static String updateBallerinaToml(Path configPath, String module, String datasource) throws IOException,
             BalException {
