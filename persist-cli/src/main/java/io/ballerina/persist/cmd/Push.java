@@ -174,7 +174,7 @@ public class Push implements BLauncherCmd {
             PersistConfiguration persistConfigurations;
             try {
                 Path ballerinaTomlPath = Paths.get(this.sourcePath, BALLERINA_TOML);
-                persistConfigurations = TomlSyntaxGenerator.readPersistConfigurations(
+                persistConfigurations = TomlSyntaxGenerator.readDatabaseConfigurations(
                         entityModule.getModuleName(), ballerinaTomlPath);
             } catch (BalException e) {
                 errStream.printf("ERROR: failed to load db configurations for the data model(%s). %s%n ",

@@ -1,12 +1,9 @@
 [package]
 org = "foo"
-name = "tool_test_generate_32"
+name = "persist_generate_32"
 version = "0.1.0"
 distribution = "2201.3.0"
 
-[persist.entities.storage.mysql]
-host = "localhost"
-port = 3307
-user = "root"
-password = "Test123#"
-database = "persist"
+[persist]
+datastore = "mysql"
+module = "persist_generate_32.entities"

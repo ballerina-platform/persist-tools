@@ -1,17 +1,13 @@
 [package]
 org = "foo"
-name = "perist_generate_2"
+name = "persist_generate_2"
 version = "0.1.0"
 distribution = "2201.3.0"
 
 [build-options]
 observabilityIncluded = false
 
-[persist.entities]
-provider = "mysql"
-host = ""
-port = 3307
-user = ""
-password = ""
-# database = "entities"
+[persist]
+datastore = "mysql"
+module = "persist_generate_2.entities"
 
