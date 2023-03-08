@@ -21,7 +21,7 @@ include ':examples'
 project(':checkstyle').projectDir = file("build-config${File.separator}checkstyle")
 project(':persist-cli').projectDir = file('persist-cli')
 project(':persist-cli-tests').projectDir = file('persist-cli-tests')
-project(':examples').projectDir = file('examples')
+//project(':examples').projectDir = file('examples')
 
 gradleEnterprise {
     buildScan {
