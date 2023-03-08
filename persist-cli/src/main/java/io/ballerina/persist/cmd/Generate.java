@@ -176,7 +176,7 @@ public class Generate implements BLauncherCmd {
                 }
                 if (!Files.exists(generatedSourceDirPath)) {
                     try {
-                        Files.createDirectories(generatedSourceDirPath);
+                        Files.createDirectories(generatedSourceDirPath.toAbsolutePath());
                     } catch (IOException e) {
                         errStream.println("ERROR: failed to create the generated directory. " + e.getMessage());
                         return;
