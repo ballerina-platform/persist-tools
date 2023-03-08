@@ -36,11 +36,13 @@ import io.ballerina.tools.text.TextDocument;
 import io.ballerina.tools.text.TextDocuments;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.Properties;
 
 import static io.ballerina.persist.PersistToolsConstants.DEFAULT_DATABASE;
 import static io.ballerina.persist.PersistToolsConstants.DEFAULT_HOST;
@@ -192,11 +194,10 @@ public class TomlSyntaxGenerator {
     }
 
     /**
-     * Method to update the Config.toml with database configurations.
+     * Method to update the Ballerina.toml with database configurations.
      */
-    public static String updateBallerinaToml(Path configPath, String module, String datasource)
-            throws IOException {
-
+    public static String updateBallerinaToml(Path configPath, String module, String datasource) throws IOException,
+            BalException {
         boolean configurationExists = false;
         NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
         Path fileNamePath = configPath.getFileName();
@@ -230,6 +231,10 @@ public class TomlSyntaxGenerator {
                         PERSIST_DIRECTORY, null));
                 moduleMembers = populateBallerinaNodeList(moduleMembers, module, datasource);
             }
+            moduleMembers = addNewLine(moduleMembers, 1);
+            moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray(
+                    BalSyntaxConstants.PERSIST_DEPENDENCY, null));
+            moduleMembers = populatePersistDependency(moduleMembers);
         }
         Token eofToken = AbstractNodeFactory.createIdentifierToken("");
         DocumentNode documentNode = NodeFactory.createDocumentNode(moduleMembers, eofToken);
@@ -288,6 +293,24 @@ public class TomlSyntaxGenerator {
             NodeList<DocumentMemberDeclarationNode> moduleMembers, String module, String dataStore) {
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("datastore", dataStore, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("module", module, null));
+        return moduleMembers;
+    }
+
+    private static NodeList<DocumentMemberDeclarationNode> populatePersistDependency (
+            NodeList<DocumentMemberDeclarationNode> moduleMembers) throws BalException {
+        ClassLoader classloader = Thread.currentThread().getContextClassLoader();
+        try (InputStream inputStream = classloader.getResourceAsStream(BalSyntaxConstants.FILE_NAME)) {
+            Properties properties = new Properties();
+            properties.load(inputStream);
+            moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(BalSyntaxConstants.GROUP_ID,
+                    BalSyntaxConstants.PERSIST_GROUP_ID, null));
+            moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(BalSyntaxConstants.ARTIFACT_ID,
+                    BalSyntaxConstants.PERSIST_ARTIFACT_ID, null));
+            moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(BalSyntaxConstants.VERSION,
+                    properties.get(BalSyntaxConstants.PERSIST_VERSION).toString(), null));
+        } catch (IOException e) {
+            throw new BalException("ERROR: couldn't read the version.properties file. " + e.getMessage());
+        }
         return moduleMembers;
     }
 
