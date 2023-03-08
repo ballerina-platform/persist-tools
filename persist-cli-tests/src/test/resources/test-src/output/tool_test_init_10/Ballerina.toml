@@ -15,6 +15,6 @@ value = 2
 array = [ [1, 0], [0, 1] ]
 
 [[platform.java11.dependency]]
-groupId = "io.ballerina.persist"
+groupId = "io.ballerina.stdlib"
 artifactId = "persist-native"
 version = "0.1.0"

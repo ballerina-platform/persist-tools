@@ -15,6 +15,6 @@ password = ""
 database = ""
 
 [[platform.java11.dependency]]
-groupId = "io.ballerina.persist"
+groupId = "io.ballerina.stdlib"
 artifactId = "persist-native"
 version = "0.1.0"

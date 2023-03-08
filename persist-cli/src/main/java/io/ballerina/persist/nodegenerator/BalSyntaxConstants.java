@@ -115,7 +115,7 @@ public class BalSyntaxConstants {
     public static final String PATH_CONFIGURATION_BAL_FILE = "database_configuration.bal";
     public static final String FILE_NAME = "version.properties";
     public static final String GROUP_ID = "groupId";
-    public static final String PERSIST_GROUP_ID = "io.ballerina.persist";
+    public static final String PERSIST_GROUP_ID = "io.ballerina.stdlib";
     public static final String ARTIFACT_ID = "artifactId";
     public static final String PERSIST_ARTIFACT_ID = "persist-native";
     public static final String PERSIST_VERSION = "persistVersion";
