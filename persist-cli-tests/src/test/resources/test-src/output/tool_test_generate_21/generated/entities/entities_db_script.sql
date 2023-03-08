@@ -19,7 +19,7 @@ CREATE TABLE MedicalNeed (
 	period DATETIME NOT NULL,
 	urgency VARCHAR(191) NOT NULL,
 	quantity INT NOT NULL,
-	aidpackageorderitemId INT NOT NULL,
+	aidpackageorderitemId INT UNIQUE NOT NULL,
 	CONSTRAINT FK_MEDICALNEED_AIDPACKAGEORDERITEM FOREIGN KEY(aidpackageorderitemId) REFERENCES AidPackageOrderItem(id),
 	PRIMARY KEY(needId)
 );

@@ -29,7 +29,7 @@ CREATE TABLE Customer (
 	id INT NOT NULL,
 	name VARCHAR(191) NOT NULL,
 	age INT NOT NULL,
-	multipleassociationsId INT NOT NULL,
+	multipleassociationsId INT UNIQUE NOT NULL,
 	CONSTRAINT FK_CUSTOMER_MULTIPLEASSOCIATIONS FOREIGN KEY(multipleassociationsId) REFERENCES MultipleAssociations(id),
 	PRIMARY KEY(id)
 );
@@ -37,7 +37,7 @@ CREATE TABLE Customer (
 CREATE TABLE Dept (
 	id INT NOT NULL,
 	name VARCHAR(191) NOT NULL,
-	multipleassociationsId INT NOT NULL,
+	multipleassociationsId INT UNIQUE NOT NULL,
 	CONSTRAINT FK_DEPT_MULTIPLEASSOCIATIONS FOREIGN KEY(multipleassociationsId) REFERENCES MultipleAssociations(id),
 	PRIMARY KEY(id)
 );
@@ -45,7 +45,7 @@ CREATE TABLE Dept (
 CREATE TABLE User (
 	id INT NOT NULL,
 	name VARCHAR(191) NOT NULL,
-	multipleassociationsId INT NOT NULL,
+	multipleassociationsId INT UNIQUE NOT NULL,
 	CONSTRAINT FK_USER_MULTIPLEASSOCIATIONS FOREIGN KEY(multipleassociationsId) REFERENCES MultipleAssociations(id),
 	PRIMARY KEY(id)
 );
@@ -57,7 +57,7 @@ CREATE TABLE Profile (
 	salary DOUBLE NOT NULL,
 	age DECIMAL(65,30) NOT NULL,
 	isRegistered BINARY NOT NULL,
-	userId INT NOT NULL,
+	userId INT UNIQUE NOT NULL,
 	CONSTRAINT FK_PROFILE_USER FOREIGN KEY(userId) REFERENCES User(id),
 	PRIMARY KEY(id)
 );

@@ -146,6 +146,7 @@ public class SqlScriptGenerationUtils {
         Entity assocEntity = relation.getAssocEntity();
         StringBuilder foreignKey = new StringBuilder();
         StringBuilder referenceFieldName = new StringBuilder();
+        Relation.RelationType associatedEntityRelationType = Relation.RelationType.NONE;
         int noOfReferencesKey = references.size();
         for (int i = 0; i < noOfReferencesKey; i++) {
             String referenceSqlType = null;
@@ -158,6 +159,16 @@ public class SqlScriptGenerationUtils {
                     break;
                 }
             }
+            for (EntityField field: assocEntity.getFields()) {
+                if (removeSingleQuote(field.getFieldType()).equals(tableName)) {
+                    associatedEntityRelationType = field.getRelation().getRelationType();
+                    break;
+                }
+            }
+            if (relation.getRelationType().equals(Relation.RelationType.ONE) &&
+                    associatedEntityRelationType.equals(Relation.RelationType.ONE) && noOfReferencesKey == 1) {
+                referenceSqlType += " UNIQUE";
+            }
             foreignKey.append(keyColumns.get(i).getField());
             referenceFieldName.append(removeSingleQuote(references.get(i)));
             if (i < noOfReferencesKey - 1) {
@@ -167,9 +178,12 @@ public class SqlScriptGenerationUtils {
             relationScripts.append(MessageFormat.format("{0}{1}{2} {3}{4},", NEW_LINE, TAB,
                     removeSingleQuote(keyColumns.get(i).getField()), referenceSqlType, " NOT NULL"));
         }
+        if (noOfReferencesKey > 1 && relation.getRelationType().equals(Relation.RelationType.ONE) &&
+                associatedEntityRelationType.equals(Relation.RelationType.ONE)) {
+            relationScripts.append(MessageFormat.format("{0}{1}UNIQUE ({2}),", NEW_LINE, TAB, foreignKey));
+        }
         relationScripts.append(MessageFormat.format("{0}{1}CONSTRAINT FK_{2}_{3} FOREIGN KEY({4}) " +
-                        "REFERENCES {5}({6}),", NEW_LINE, TAB, removeSingleQuote(tableName)
-                        .toUpperCase(Locale.ENGLISH),
+                        "REFERENCES {5}({6}),", NEW_LINE, TAB, tableName.toUpperCase(Locale.ENGLISH),
                 removeSingleQuote(assocEntity.getEntityName()).toUpperCase(Locale.ENGLISH),
                 removeSingleQuote(foreignKey.toString()),
                 removeSingleQuote(assocEntity.getEntityName()),

@@ -15,7 +15,7 @@ CREATE TABLE MedicalNeed (
 	time DATETIME NOT NULL,
 	urgency VARCHAR(191) NOT NULL,
 	quantity INT NOT NULL,
-	medicalitemItemId INT NOT NULL,
+	medicalitemItemId INT UNIQUE NOT NULL,
 	CONSTRAINT FK_MEDICALNEED_MEDICALITEM FOREIGN KEY(medicalitemItemId) REFERENCES MedicalItem(itemId),
 	PRIMARY KEY(record)
 );

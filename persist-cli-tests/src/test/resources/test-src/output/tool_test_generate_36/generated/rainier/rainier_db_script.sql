@@ -50,7 +50,7 @@ CREATE TABLE Employee (
 	hireDate DATE NOT NULL,
 	departmentDeptNo VARCHAR(191) NOT NULL,
 	CONSTRAINT FK_EMPLOYEE_DEPARTMENT FOREIGN KEY(departmentDeptNo) REFERENCES Department(deptNo),
-	workspaceWorkspaceId VARCHAR(191) NOT NULL,
+	workspaceWorkspaceId VARCHAR(191) UNIQUE NOT NULL,
 	CONSTRAINT FK_EMPLOYEE_WORKSPACE FOREIGN KEY(workspaceWorkspaceId) REFERENCES Workspace(workspaceId),
 	PRIMARY KEY(empNo)
 );

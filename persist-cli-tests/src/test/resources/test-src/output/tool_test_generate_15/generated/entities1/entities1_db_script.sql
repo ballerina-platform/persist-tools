@@ -15,7 +15,7 @@ CREATE TABLE MultipleAssociations (
 CREATE TABLE Profile (
 	id INT NOT NULL,
 	name VARCHAR(191) NOT NULL,
-	multipleassociationsId INT NOT NULL,
+	multipleassociationsId INT UNIQUE NOT NULL,
 	CONSTRAINT FK_PROFILE_MULTIPLEASSOCIATIONS FOREIGN KEY(multipleassociationsId) REFERENCES MultipleAssociations(id),
 	PRIMARY KEY(id)
 );
