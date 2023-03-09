@@ -80,7 +80,7 @@ subprojects {
 }
 
 def moduleVersion = project.version.replace("-SNAPSHOT", "")
-def stdlibPersistSnapshotVersion = "${stdlibPersistSnaptshotVersion}"
+def persistNativeVersion = "${persistNativeVersion}"
 
 release {
     versionPropertyFile = 'gradle.properties'
@@ -123,7 +123,7 @@ task createProperties(dependsOn: processResources) {
         new File("$project.rootDir/persist-cli/src/main/resources/version.properties").withWriter { w ->
             Properties properties = new Properties()
             properties['version'] = '${project.version}'
-            properties['persistVersion'] = stdlibPersistSnapshotVersion.toString()
+            properties['persistVersion'] = persistNativeVersion.toString()
             properties.store w, null
         }
     }
