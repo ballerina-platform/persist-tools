@@ -190,7 +190,7 @@ public class BalSyntaxConstants {
             + "'class: \"io.ballerina.stdlib.persist.QueryProcessor\"," + System.lineSeparator() +
              " name: \"query\"} external;";
 
-    public static final String EXTERNAL_GET_METHOD_TEMPLATE = "isolated resource function get %s/[%s](" +
+    public static final String EXTERNAL_GET_METHOD_TEMPLATE = "isolated resource function get %s(" +
             "%sTargetType targetType = <>) returns stream<targetType, Error?> = @java:Method {" + System.lineSeparator()
             + "'class: \"io.ballerina.stdlib.persist.QueryProcessor\"," + System.lineSeparator() +
             " name: \"query\"} external;";
