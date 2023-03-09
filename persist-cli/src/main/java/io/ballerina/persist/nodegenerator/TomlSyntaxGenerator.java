@@ -19,6 +19,7 @@
 package io.ballerina.persist.nodegenerator;
 
 import io.ballerina.persist.BalException;
+import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.configuration.DatabaseConfiguration;
 import io.ballerina.persist.configuration.PersistConfiguration;
 import io.ballerina.toml.syntax.tree.AbstractNodeFactory;
@@ -226,8 +227,10 @@ public class TomlSyntaxGenerator {
                     NodeList<KeyValueNode> fields = ((TableArrayNode) member).fields();
                     for (KeyValueNode field : fields) {
                         String value = field.value().toSourceCode().trim();
-                        if (field.identifier().toSourceCode().trim().equals(BalSyntaxConstants.KEYWORD_ARTIFACT_ID) &&
-                                (value).substring(1, value.length() - 1).equals(BalSyntaxConstants.ARTIFACT_ID)) {
+                        if (field.identifier().toSourceCode().trim().equals(
+                                PersistToolsConstants.TomlFileConstants.KEYWORD_ARTIFACT_ID) &&
+                                (value).substring(1, value.length() - 1).equals(
+                                        PersistToolsConstants.TomlFileConstants.ARTIFACT_ID)) {
                             moduleMembers = moduleMembers.remove(member);
                             dependencyExists = true;
                             break;
@@ -311,21 +314,25 @@ public class TomlSyntaxGenerator {
 
     private static NodeList<DocumentMemberDeclarationNode> populatePersistDependency(
             NodeList<DocumentMemberDeclarationNode> moduleMembers) throws BalException {
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(BalSyntaxConstants.KEYWORD_GROUP_ID,
-                BalSyntaxConstants.PERSIST_GROUP_ID, null));
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(BalSyntaxConstants.KEYWORD_ARTIFACT_ID,
-                BalSyntaxConstants.ARTIFACT_ID, null));
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(BalSyntaxConstants.KEYWORD_VERSION,
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
+                PersistToolsConstants.TomlFileConstants.KEYWORD_GROUP_ID,
+                PersistToolsConstants.TomlFileConstants.PERSIST_GROUP_ID, null));
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
+                PersistToolsConstants.TomlFileConstants.KEYWORD_ARTIFACT_ID,
+                PersistToolsConstants.TomlFileConstants.ARTIFACT_ID, null));
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
+                PersistToolsConstants.TomlFileConstants.KEYWORD_VERSION,
                 getPersistVersion(), null));
         return moduleMembers;
     }
 
     private static String getPersistVersion() throws BalException {
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-        try (InputStream inputStream = classloader.getResourceAsStream(BalSyntaxConstants.VERSION_PROPERTIES_FILE)) {
+        try (InputStream inputStream = classloader.getResourceAsStream(
+                PersistToolsConstants.TomlFileConstants.VERSION_PROPERTIES_FILE)) {
             Properties properties = new Properties();
             properties.load(inputStream);
-            return properties.get(BalSyntaxConstants.PERSIST_VERSION).toString();
+            return properties.get(PersistToolsConstants.TomlFileConstants.PERSIST_VERSION).toString();
         } catch (IOException e) {
             throw new BalException("ERROR: couldn't read the version.properties file. " + e.getMessage());
         }
