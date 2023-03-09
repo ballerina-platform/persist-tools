@@ -190,7 +190,7 @@ public class BalSyntaxConstants {
             "%sTargetType targetType = <>) returns targetType|persist:Error = @java:Method {"
             + System.lineSeparator()
             + "'class: \"io.ballerina.stdlib.persist.QueryProcessor\"," + System.lineSeparator() +
-             " name: \"query\"} external;";
+             " name: \"queryOne\"} external;";
 
     public static final String EXTERNAL_GET_METHOD_TEMPLATE = "isolated resource function get %s(" +
             "%sTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {"
