@@ -22,6 +22,7 @@ import io.ballerina.compiler.syntax.tree.AbstractNodeFactory;
 import io.ballerina.compiler.syntax.tree.ArrayDimensionNode;
 import io.ballerina.compiler.syntax.tree.ArrayTypeDescriptorNode;
 import io.ballerina.compiler.syntax.tree.BuiltinSimpleNameReferenceNode;
+import io.ballerina.compiler.syntax.tree.FunctionDefinitionNode;
 import io.ballerina.compiler.syntax.tree.IdentifierToken;
 import io.ballerina.compiler.syntax.tree.ImportDeclarationNode;
 import io.ballerina.compiler.syntax.tree.ImportOrgNameNode;
@@ -110,9 +111,7 @@ import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PERSIST_CLIE
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PERSIST_CLIENT_TEMPLATE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PERSIST_ERROR;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PERSIST_MODULE;
-import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PLACEHOLDER_FOR_MAP_FIELD;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.QUESTION_MARK;
-import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.READ_BY_KEY_RETURN;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.REGEX_FOR_SPLIT_BY_CAPITOL_LETTER;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.RESULT;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.RESULT_IS_BALLERINA_ERROR;
@@ -524,7 +523,7 @@ public class BalSyntaxGenerator {
                     }
                 }
             if (joinMetaData.length() > 0) {
-                joinMetaData.append(",");
+                joinMetaData.append(",\n");
             }
             for (Relation.Key key : entityField.getRelation().getKeyColumns()) {
                 if (joinColumns.length() > 0) {
@@ -553,12 +552,9 @@ public class BalSyntaxGenerator {
         for (EntityField field : entity.getKeys()) {
             keys.put(field.getFieldName(), field.getFieldType());
         }
+        resource.addFunction(createGetFunction(entity), true);
 
-        Function read = createGetFunction(entity);
-        resource.addFunction(read.getFunctionDefinitionNode(), true);
-
-        Function readByKey = createGetByKeyFunction(entity, keys);
-        resource.addFunction(readByKey.getFunctionDefinitionNode(), true);
+        resource.addFunction(createGetByKeyFunction(entity, keys), true);
 
         Function create = createPostFunction(entity);
         resource.addFunction(create.getFunctionDefinitionNode(), true);
@@ -674,82 +670,30 @@ public class BalSyntaxGenerator {
         create.addStatement(NodeParser.parseStatement(filterKeys.toString()));
     }
 
-    private static Function createGetByKeyFunction(Entity entity, HashMap<String, String> keys) {
-        Function readByKey = new Function(BalSyntaxConstants.GET, SyntaxKind.RESOURCE_ACCESSOR_DEFINITION);
-        NodeList<Node> resourcePaths = AbstractNodeFactory.createEmptyNodeList();
-        resourcePaths = resourcePaths.add(AbstractNodeFactory.createIdentifierToken(entity.getResourceName()));
-
-        for (Map.Entry<String, String> entry : keys.entrySet()) {
-            resourcePaths = resourcePaths.add(AbstractNodeFactory.createToken(SyntaxKind.SLASH_TOKEN));
-            resourcePaths = resourcePaths.add(NodeFactory.createResourcePathParameterNode(
-                    SyntaxKind.RESOURCE_PATH_SEGMENT_PARAM,
-                    AbstractNodeFactory.createToken(SyntaxKind.OPEN_BRACKET_TOKEN),
-                    AbstractNodeFactory.createEmptyNodeList(),
-                    NodeFactory.createBuiltinSimpleNameReferenceNode(SyntaxKind.STRING_TYPE_DESC,
-                            AbstractNodeFactory.createIdentifierToken(entry.getValue() + " ")),
-                    null,
-                    AbstractNodeFactory.createIdentifierToken(entry.getKey()),
-                    AbstractNodeFactory.createToken(SyntaxKind.CLOSE_BRACKET_TOKEN)));
-
-        }
-        readByKey.addRelativeResourcePaths(resourcePaths);
-        readByKey.addQualifiers(new String[] { KEYWORD_ISOLATED, BalSyntaxConstants.KEYWORD_RESOURCE });
-        readByKey.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(
-                TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()),
-                TypeDescriptor.getQualifiedNameReferenceNode(PERSIST_MODULE, SPECIFIC_ERROR)));
-        String entityName = entity.getEntityName();
-        if (keys.size() > 1) {
-            StringBuilder keyString = new StringBuilder();
-            for (Map.Entry<String, String> entry : keys.entrySet()) {
-                if (keyString.length() != 0) {
-                    keyString.append(COMMA_SPACE);
-                }
-                keyString.append(String.format(PLACEHOLDER_FOR_MAP_FIELD, entry.getKey(), entry.getKey()));
+    private static FunctionDefinitionNode createGetByKeyFunction(Entity entity, HashMap<String, String> keys) {
+        StringBuilder keyBuilder = new StringBuilder();
+        for (Map.Entry<String, String> key : keys.entrySet()) {
+            if (keyBuilder.length() > 0) {
+                keyBuilder.append(COMMA_SPACE);
             }
-            readByKey.addStatement(NodeParser.parseStatement(String.format(READ_BY_KEY_RETURN, entityName,
-                    getEntityNameConstant(entityName), entityName,
-                    String.format(BalSyntaxConstants.RECORD_PLACEHOLDER, keyString),
-                    entityName)));
-        } else {
-            readByKey.addStatement(NodeParser.parseStatement(String.format(READ_BY_KEY_RETURN, entityName,
-                    getEntityNameConstant(entityName), entityName,
-                    keys.keySet().stream().findFirst().get(), entityName)));
+            keyBuilder.append(key.getValue());
+            keyBuilder.append(SPACE);
+            keyBuilder.append(key.getKey());
         }
-        IfElse errorCheck = new IfElse(NodeParser.parseExpression(String.format(RESULT_IS_BALLERINA_ERROR, RESULT)));
-        errorCheck.addIfStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.RETURN_ERROR, RESULT)));
-        readByKey.addIfElseStatement(errorCheck.getIfElseStatementNode());
-        readByKey.addStatement(NodeParser.parseStatement(BalSyntaxConstants.RETURN_RESULT));
-        return readByKey;
+
+        return (FunctionDefinitionNode) NodeParser.parseObjectMember(
+                String.format("isolated resource function get %s/[%s](" +
+                                "%sTargetType targetType = <>) returns stream<targetType, Error?> = @java:Method { %n" +
+                                "'class: \"io.ballerina.stdlib.persist.QueryProcessor\",%n name: \"query\"} external;",
+                        entity.getResourceName(), keyBuilder.toString(), entity.getEntityName()));
     }
 
-    private static Function createGetFunction(Entity entity) {
-        Function read = new Function(BalSyntaxConstants.GET, SyntaxKind.RESOURCE_ACCESSOR_DEFINITION);
-        read.addQualifiers(new String[] { KEYWORD_ISOLATED, BalSyntaxConstants.KEYWORD_RESOURCE });
-        read.addRequiredParameterWithDefault(TypeDescriptor.getSimpleNameReferenceNode(String.format("%sTargetType",
-                entity.getEntityName())), "targetType", Function.Bracket.ANGLE);
-//        NodeList<Node> resourcePaths = AbstractNodeFactory.createEmptyNodeList();
-//        resourcePaths = resourcePaths.add(AbstractNodeFactory.createIdentifierToken(entity.getResourceName()));
-//        read.addRelativeResourcePaths(resourcePaths);
-//        read.addReturns(TypeDescriptor.getStreamTypeDescriptorNode(
-//                NodeFactory.createSimpleNameReferenceNode(AbstractNodeFactory.createIdentifierToken(
-//                        entity.getEntityName())),
-//                NodeFactory.createOptionalTypeDescriptorNode(
-//                        NodeFactory.createQualifiedNameReferenceNode(
-//                                AbstractNodeFactory.createIdentifierToken(PERSIST_MODULE),
-//                                AbstractNodeFactory.createToken(SyntaxKind.COLON_TOKEN),
-//                                AbstractNodeFactory.createIdentifierToken(ERROR)),
-//                        AbstractNodeFactory.createToken(SyntaxKind.QUESTION_MARK_TOKEN))));
-//        read.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.READ_RUN_READ_QUERY,
-//                getEntityNameConstant(entity.getEntityName()), entity.getEntityName())));
-//        IfElse errorCheck = new IfElse(NodeParser.parseExpression(RESULT_IS_ERROR));
-//        errorCheck.addIfStatement(NodeParser.parseStatement(String.format(
-//                BalSyntaxConstants.READ_RETURN_STREAM_WHEN_ERROR, entity.getEntityName(), entity.getEntityName())));
-//        errorCheck.addElseStatement(NodeParser.parseStatement(String.format(
-//                BalSyntaxConstants.READ_RETURN_STREAM_WHEN_NOT_ERROR, entity.getEntityName(),
-//                entity.getEntityName())));
-
-//        read.addIfElseStatement(errorCheck.getIfElseStatementNode());
-        return read;
+    private static FunctionDefinitionNode createGetFunction(Entity entity) {
+        return (FunctionDefinitionNode) NodeParser.parseObjectMember(
+                String.format("isolated resource function get %s(" +
+                "%sTargetType targetType = <>) returns stream<targetType, Error?> = @java:Method {%n" +
+                "'class: \"io.ballerina.stdlib.persist.QueryProcessor\",%n name: \"query\"} external;",
+                        entity.getResourceName(), entity.getEntityName()));
     }
 
     private static Function createPutFunction(Entity entity, HashMap<String, String> keys) {
