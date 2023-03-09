@@ -187,7 +187,7 @@ public class BalSyntaxConstants {
     public static final String COMMA_WITH_NEWLINE = "," + System.lineSeparator();
 
     public static final String EXTERNAL_GET_BY_KEY_METHOD_TEMPLATE = "isolated resource function get %s/[%s](" +
-            "%sTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {"
+            "%sTargetType targetType = <>) returns targetType|persist:Error = @java:Method {"
             + System.lineSeparator()
             + "'class: \"io.ballerina.stdlib.persist.QueryProcessor\"," + System.lineSeparator() +
              " name: \"query\"} external;";

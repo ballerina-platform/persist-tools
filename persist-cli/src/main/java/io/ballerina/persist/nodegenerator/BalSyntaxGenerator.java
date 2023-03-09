@@ -518,16 +518,16 @@ public class BalSyntaxGenerator {
         StringBuilder joinColumns = new StringBuilder();
         for (EntityField entityField : entity.getFields()) {
             if (entityField.getRelation() != null) {
-                String relationType = "ONE_TO_ONE";
+                String relationType = "persist:ONE_TO_ONE";
                 Entity associatedEntity = entityField.getRelation().getAssocEntity();
                 for (EntityField associatedEntityField : associatedEntity.getFields()) {
                     if (associatedEntityField.getFieldType().equals(entity.getEntityName())) {
                         if (associatedEntityField.isArrayType() && !entityField.isArrayType()) {
-                            relationType = "ONE_TO_MANY";
+                            relationType = "persist:ONE_TO_MANY";
                         } else if (!associatedEntityField.isArrayType() && entityField.isArrayType()) {
-                            relationType = "MANY_TO_ONE";
+                            relationType = "persist:MANY_TO_ONE";
                         } else if (associatedEntityField.isArrayType() && entityField.isArrayType()) {
-                            relationType = "MANY_TO_MANY";
+                            relationType = "persist:MANY_TO_MANY";
                         }
                     }
                 }
