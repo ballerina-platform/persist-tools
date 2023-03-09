@@ -16,7 +16,7 @@ rootProject.name = 'persist-tools'
 include ':checkstyle'
 include ':persist-cli'
 include ':persist-cli-tests'
-include ':examples'
+//include ':examples'
 
 project(':checkstyle').projectDir = file("build-config${File.separator}checkstyle")
 project(':persist-cli').projectDir = file('persist-cli')
