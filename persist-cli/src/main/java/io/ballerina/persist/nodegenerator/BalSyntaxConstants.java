@@ -116,6 +116,7 @@ public class BalSyntaxConstants {
     public static final String PERSIST_DEPENDENCY = "platform.java11.dependency";
     public static final String KEYWORD_MYSQL = "mysql";
     public static final String KEYWORD_TIME_PREFIX = "time";
+    public static final String KEYWORD_JBALLERINA_JAVA_PREFIX = "jballerina.java";
     public static final String KEYWORD_READONLY = "readonly";
     public static final String JDBC_URL_WITHOUT_DATABASE = "jdbc:%s://%s:%s";
     public static final String JDBC_URL_WITH_DATABASE = "jdbc:%s://%s:%s/%s";
@@ -187,12 +188,14 @@ public class BalSyntaxConstants {
     public static final String COMMA_WITH_NEWLINE = "," + System.lineSeparator();
 
     public static final String EXTERNAL_GET_BY_KEY_METHOD_TEMPLATE = "isolated resource function get %s/[%s](" +
-            "%sTargetType targetType = <>) returns stream<targetType, Error?> = @java:Method {" + System.lineSeparator()
+            "%sTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {"
+            + System.lineSeparator()
             + "'class: \"io.ballerina.stdlib.persist.QueryProcessor\"," + System.lineSeparator() +
              " name: \"query\"} external;";
 
     public static final String EXTERNAL_GET_METHOD_TEMPLATE = "isolated resource function get %s(" +
-            "%sTargetType targetType = <>) returns stream<targetType, Error?> = @java:Method {" + System.lineSeparator()
+            "%sTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {"
+            + System.lineSeparator()
             + "'class: \"io.ballerina.stdlib.persist.QueryProcessor\"," + System.lineSeparator() +
             " name: \"query\"} external;";
 

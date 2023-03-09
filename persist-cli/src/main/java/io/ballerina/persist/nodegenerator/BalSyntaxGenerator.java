@@ -99,6 +99,7 @@ import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.JOIN_METADAT
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_BALLERINA;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_BALLERINAX;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_ISOLATED;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_JBALLERINA_JAVA_PREFIX;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_PERSIST;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_READONLY;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_SQL;
@@ -375,6 +376,8 @@ public class BalSyntaxGenerator {
             imports = imports.add(getImportDeclarationNode(KEYWORD_BALLERINA,
                     BalSyntaxConstants.KEYWORD_TIME_PREFIX, null));
         }
+        imports = imports.add(getImportDeclarationNode(BalSyntaxConstants.KEYWORD_BALLERINA,
+                KEYWORD_JBALLERINA_JAVA_PREFIX, null));
         imports = imports.add(getImportDeclarationNode(BalSyntaxConstants.KEYWORD_BALLERINAX,
                 BalSyntaxConstants.KEYWORD_MYSQL, null));
 
@@ -1024,7 +1027,7 @@ public class BalSyntaxGenerator {
         recordFields.append(String.format("*%sOptionalized;", entity.getEntityName()));
         for (EntityField field : entity.getFields()) {
             if (field.getRelation() != null) {
-                recordFields.append(String.format("%sOptionalized", field.getFieldName()));
+                recordFields.append(String.format("%sOptionalized", field.getFieldType()));
                 if (field.isArrayType()) {
                     recordFields.append("[]");
                 }
