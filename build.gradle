@@ -120,11 +120,10 @@ task codeCoverageReport(type: JacocoReport) {
 
 task createProperties(dependsOn: processResources) {
     doLast {
-        new File("$project.rootDir/persist-cli/src/main/resources/version.properties").withWriter { w ->
-            Properties properties = new Properties()
-            properties['version'] = '${project.version}'
-            properties['persistVersion'] = persistNativeVersion.toString()
-            properties.store w, null
+        def file = new File("$project.rootDir/persist-cli/src/main/resources/version.properties")
+        file.withWriter('UTF-8') {
+            it.writeLine 'version = ${project.version}'
+            it.writeLine 'persistVersion = ' + persistNativeVersion.toString()
         }
     }
 }
