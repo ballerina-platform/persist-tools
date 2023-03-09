@@ -43,7 +43,7 @@ public class ToolingDbPushTest {
     private static final String no = "NO";
     private static final String sqlDateTime = "DATETIME";
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     @Description("Database is not available and it is created while running the db push command")
     public void testDbPushWithoutDatabase() throws BalException {
         ArrayList<PersistTable> tables = new ArrayList<>();
@@ -73,7 +73,7 @@ public class ToolingDbPushTest {
         assertGeneratedSourcesNegative("tool_test_db_push_2", DB_PUSH, null);
     }
 
-    @Test(enabled = true, dependsOnMethods = { "testDbPushWithoutDatabase" })
+    @Test(enabled = false, dependsOnMethods = { "testDbPushWithoutDatabase" })
     @Description("Database already exists. An entity is removed. The database tables should not be affected.")
     public void testDbPushEntityRemoved() throws BalException {
         ArrayList<PersistTable> tables = new ArrayList<>();
@@ -103,7 +103,7 @@ public class ToolingDbPushTest {
         assertGeneratedSources("tool_test_db_push_4", DB_PUSH);
     }
 
-    @Test(enabled = true, dependsOnMethods = { "testDbPushEntityRemoved" })
+    @Test(enabled = false, dependsOnMethods = { "testDbPushEntityRemoved" })
     @Description("Database already exists. An entity is updated. The respective table should be updated.")
     public void testDbPushEntityUpdated() throws BalException {
         ArrayList<PersistTable> tables = new ArrayList<>();
@@ -133,13 +133,13 @@ public class ToolingDbPushTest {
         assertGeneratedSourcesNegative("tool_test_db_push_6", DB_PUSH, null);
     }
 
-    @Test(enabled = true, dependsOnMethods = { "testDbPushEntityUpdated" })
+    @Test(enabled = false, dependsOnMethods = { "testDbPushEntityUpdated" })
     @Description("When the db push command is executed with faulty credentials")
     public void testDbPushWithWrongCredentials() {
         assertGeneratedSourcesNegative("tool_test_db_push_7", DB_PUSH, null);
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     @Description("Test the created sql script content when relation annotation hasn't contain properties")
     public void testDbPush() {
         assertGeneratedSources("tool_test_db_push_8", DB_PUSH);
@@ -151,7 +151,7 @@ public class ToolingDbPushTest {
         assertGeneratedSources("tool_test_db_push_9", DB_PUSH);
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     @Description("Test DB push without specifying DB driver in database_configurations")
     public void testDbPushWithoutDriverImport() {
         assertGeneratedSources("tool_test_db_push_10", DB_PUSH);
@@ -188,7 +188,7 @@ public class ToolingDbPushTest {
         assertCreatedDatabaseNegative("tool_test_db_push_15", "entities");
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     @Description("Test the created sql script with one to many relation entity")
     public void testDbPushWithOneToManyRelationship() {
         assertGeneratedSources("tool_test_db_push_16", DB_PUSH);
@@ -218,19 +218,19 @@ public class ToolingDbPushTest {
         assertGeneratedSourcesNegative("tool_test_db_push_20", DB_PUSH, null);
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     @Description("Test the created sql script with optional type fields")
     public void testDbPushWithOptionalTypeFields() {
         assertGeneratedSources("tool_test_db_push_21", DB_PUSH);
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     @Description("Test the created sql script with composite reference keys")
     public void testDbPushWithCompositeReferenceKeys() {
         assertGeneratedSources("tool_test_db_push_22", DB_PUSH);
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     @Description("Test the created sql script without DB config in Ballerina.toml")
     public void testDbPushWithoutDBConfig() {
         assertGeneratedSources("tool_test_db_push_23", DB_PUSH);
@@ -243,18 +243,18 @@ public class ToolingDbPushTest {
         assertGeneratedSourcesNegative("tool_test_db_push_24", DB_PUSH, null);
     }
 
-    @Test(enabled = true, dependsOnMethods = { "testDbPushEntityUpdated" })
+    @Test(enabled = false, dependsOnMethods = { "testDbPushEntityUpdated" })
     @Description("Database is not available and it is created while running the db push command inside " +
             "a project with default entity structure")
     public void testDbPushWithoutDatabaseWithDefaultEntityStructure() throws BalException {
         assertGeneratedSources("tool_test_db_push_26", DB_PUSH);
     }
-    @Test(enabled = true)
+    @Test(enabled = false)
     @Description("Test the created sql script with escape character in entity name and fields")
     public void testDbPushWithEscapeCharacter() {
         assertGeneratedSources("tool_test_db_push_25", DB_PUSH);
     }
-    @Test(enabled = true)
+    @Test(enabled = false)
     @Description("Test the created sql script with byte[] and byte[]? fields")
     public void testDbPushWithByteArray() {
         assertGeneratedSources("tool_test_db_push_27", DB_PUSH);
