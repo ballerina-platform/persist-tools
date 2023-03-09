@@ -122,7 +122,6 @@ task createProperties(dependsOn: processResources) {
     doLast {
         new File("$project.rootDir/persist-cli/src/main/resources/version.properties").withWriter { w ->
             Properties properties = new Properties()
-            properties['version'] = '${project.version}'
             properties['persistVersion'] = stdlibPersistVersion.toString()
             properties.store w, null
         }

@@ -299,14 +299,14 @@ public class TomlSyntaxGenerator {
     private static NodeList<DocumentMemberDeclarationNode> populatePersistDependency (
             NodeList<DocumentMemberDeclarationNode> moduleMembers) throws BalException {
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-        try (InputStream inputStream = classloader.getResourceAsStream(BalSyntaxConstants.FILE_NAME)) {
+        try (InputStream inputStream = classloader.getResourceAsStream(BalSyntaxConstants.VERSION_PROPERTIES_FILE)) {
             Properties properties = new Properties();
             properties.load(inputStream);
-            moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(BalSyntaxConstants.GROUP_ID,
+            moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(BalSyntaxConstants.KEYWORD_GROUP_ID,
                     BalSyntaxConstants.PERSIST_GROUP_ID, null));
             moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(BalSyntaxConstants.ARTIFACT_ID,
-                    BalSyntaxConstants.PERSIST_ARTIFACT_ID, null));
-            moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(BalSyntaxConstants.VERSION,
+                    BalSyntaxConstants.KEYWORD_ARTIFACT_ID, null));
+            moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(BalSyntaxConstants.KEYWORD_VERSION,
                     properties.get(BalSyntaxConstants.PERSIST_VERSION).toString(), null));
         } catch (IOException e) {
             throw new BalException("ERROR: couldn't read the version.properties file. " + e.getMessage());
