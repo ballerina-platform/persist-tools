@@ -208,6 +208,7 @@ public class TomlSyntaxGenerator {
             NodeList<DocumentMemberDeclarationNode> nodeList = rootNote.members();
 
             for (DocumentMemberDeclarationNode member : nodeList) {
+                boolean dependencyExists = false;
                 if (member instanceof KeyValueNode) {
                     moduleMembers = moduleMembers.add(member);
                 } else if (member instanceof TableNode) {
@@ -222,7 +223,19 @@ public class TomlSyntaxGenerator {
                         moduleMembers = moduleMembers.add(member);
                     }
                 } else if (member instanceof TableArrayNode) {
-                    moduleMembers = moduleMembers.add(member);
+                    NodeList<KeyValueNode> fields = ((TableArrayNode) member).fields();
+                    for (KeyValueNode field : fields) {
+                        String value = field.value().toSourceCode().trim();
+                        if (field.identifier().toSourceCode().trim().equals(BalSyntaxConstants.KEYWORD_ARTIFACT_ID) &&
+                                (value).substring(1, value.length() - 1).equals(BalSyntaxConstants.ARTIFACT_ID)) {
+                            moduleMembers = moduleMembers.remove(member);
+                            dependencyExists = true;
+                            break;
+                        }
+                    }
+                    if (!dependencyExists) {
+                        moduleMembers = moduleMembers.add(member);
+                    }
                 }
             }
             if (!configurationExists) {
@@ -296,22 +309,26 @@ public class TomlSyntaxGenerator {
         return moduleMembers;
     }
 
-    private static NodeList<DocumentMemberDeclarationNode> populatePersistDependency (
+    private static NodeList<DocumentMemberDeclarationNode> populatePersistDependency(
             NodeList<DocumentMemberDeclarationNode> moduleMembers) throws BalException {
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(BalSyntaxConstants.KEYWORD_GROUP_ID,
+                BalSyntaxConstants.PERSIST_GROUP_ID, null));
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(BalSyntaxConstants.KEYWORD_ARTIFACT_ID,
+                BalSyntaxConstants.ARTIFACT_ID, null));
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(BalSyntaxConstants.KEYWORD_VERSION,
+                getPersistVersion(), null));
+        return moduleMembers;
+    }
+
+    private static String getPersistVersion() throws BalException {
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
         try (InputStream inputStream = classloader.getResourceAsStream(BalSyntaxConstants.VERSION_PROPERTIES_FILE)) {
             Properties properties = new Properties();
             properties.load(inputStream);
-            moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(BalSyntaxConstants.KEYWORD_GROUP_ID,
-                    BalSyntaxConstants.PERSIST_GROUP_ID, null));
-            moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(BalSyntaxConstants.ARTIFACT_ID,
-                    BalSyntaxConstants.KEYWORD_ARTIFACT_ID, null));
-            moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(BalSyntaxConstants.KEYWORD_VERSION,
-                    properties.get(BalSyntaxConstants.PERSIST_VERSION).toString(), null));
+            return properties.get(BalSyntaxConstants.PERSIST_VERSION).toString();
         } catch (IOException e) {
             throw new BalException("ERROR: couldn't read the version.properties file. " + e.getMessage());
         }
-        return moduleMembers;
     }
 
     private static NodeList<DocumentMemberDeclarationNode> addNewLine(NodeList moduleMembers, int n) {

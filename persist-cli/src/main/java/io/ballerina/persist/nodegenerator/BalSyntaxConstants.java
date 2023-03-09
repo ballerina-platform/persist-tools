@@ -116,9 +116,9 @@ public class BalSyntaxConstants {
     public static final String VERSION_PROPERTIES_FILE = "version.properties";
     public static final String KEYWORD_GROUP_ID = "groupId";
     public static final String PERSIST_GROUP_ID = "io.ballerina.stdlib";
-    public static final String ARTIFACT_ID = "artifactId";
-    public static final String KEYWORD_ARTIFACT_ID = "persist-native";
-    public static final String PERSIST_VERSION = "persistVersion";
+    public static final String KEYWORD_ARTIFACT_ID = "artifactId";
+    public static final String ARTIFACT_ID = "persist-native";
+    public static final String PERSIST_VERSION = "persistSnapshotVersion";
     public static final String KEYWORD_VERSION = "version";
     public static final String PERSIST_DEPENDENCY = "platform.java11.dependency";
     public static final String KEYWORD_MYSQL = "mysql";
