@@ -35,6 +35,9 @@ public class SyntaxTokenConstants {
     public static final Token SYNTAX_TREE_COLON = AbstractNodeFactory.createToken(SyntaxKind.COLON_TOKEN);
     public static final Token SYNTAX_TREE_OPEN_BRACE = AbstractNodeFactory.createToken(SyntaxKind.OPEN_BRACE_TOKEN);
     public static final Token SYNTAX_TREE_CLOSE_BRACE = AbstractNodeFactory.createToken(SyntaxKind.CLOSE_BRACE_TOKEN);
+
+    public static final Token SYNTAX_TREE_OPEN_ANGLE = AbstractNodeFactory.createToken(SyntaxKind.LT_TOKEN);
+    public static final Token SYNTAX_TREE_CLOSE_ANGLE = AbstractNodeFactory.createToken(SyntaxKind.GT_TOKEN);
     public static final Token SYNTAX_TREE_OPEN_PAREN = AbstractNodeFactory.createToken(SyntaxKind.OPEN_PAREN_TOKEN);
     public static final Token SYNTAX_TREE_CLOSE_PAREN = AbstractNodeFactory.createToken(SyntaxKind.CLOSE_PAREN_TOKEN);
     public static final Token SYNTAX_TREE_OPEN_BRACKET = AbstractNodeFactory.createToken(SyntaxKind.OPEN_BRACKET_TOKEN);
