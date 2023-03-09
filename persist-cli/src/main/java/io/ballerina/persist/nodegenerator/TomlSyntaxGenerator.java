@@ -231,7 +231,6 @@ public class TomlSyntaxGenerator {
                                 PersistToolsConstants.TomlFileConstants.KEYWORD_ARTIFACT_ID) &&
                                 (value).substring(1, value.length() - 1).equals(
                                         PersistToolsConstants.TomlFileConstants.ARTIFACT_ID)) {
-                            moduleMembers = moduleMembers.remove(member);
                             dependencyExists = true;
                             break;
                         }
