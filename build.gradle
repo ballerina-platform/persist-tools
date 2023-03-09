@@ -80,6 +80,7 @@ subprojects {
 }
 
 def moduleVersion = project.version.replace("-SNAPSHOT", "")
+def persistNativeVersion = "${persistNativeVersion}"
 
 release {
     versionPropertyFile = 'gradle.properties'
@@ -115,6 +116,21 @@ task codeCoverageReport(type: JacocoReport) {
     onlyIf = {
         true
     }
+}
+
+task createProperties(dependsOn: processResources) {
+    doLast {
+        new File("$project.rootDir/persist-cli/src/main/resources/version.properties").withWriter { w ->
+            Properties properties = new Properties()
+            properties['version'] = '${project.version}'
+            properties['persistVersion'] = persistNativeVersion.toString()
+            properties.store w, null
+        }
+    }
+}
+
+classes {
+    dependsOn createProperties
 }
 
 task copyPersitTool(type: Copy) {
