@@ -113,8 +113,10 @@ public class BalSyntaxConstants {
 
     public static final String GENERATED_SOURCE_DIRECTORY = "generated";
     public static final String PATH_CONFIGURATION_BAL_FILE = "database_configuration.bal";
+    public static final String PERSIST_DEPENDENCY = "platform.java11.dependency";
     public static final String KEYWORD_MYSQL = "mysql";
     public static final String KEYWORD_TIME_PREFIX = "time";
+    public static final String KEYWORD_JBALLERINA_JAVA_PREFIX = "jballerina.java";
     public static final String KEYWORD_READONLY = "readonly";
     public static final String JDBC_URL_WITHOUT_DATABASE = "jdbc:%s://%s:%s";
     public static final String JDBC_URL_WITH_DATABASE = "jdbc:%s://%s:%s/%s";
@@ -155,8 +157,15 @@ public class BalSyntaxConstants {
     public static final String INIT_PERSIST_CLIENT_MAP = "private final map<persist:SQLClient> persistClients;";
     public static final String METADATARECORD_ENTITY_NAME_TEMPLATE = "entityName: \"%s\", " + System.lineSeparator();
     public static final String METADATARECORD_TABLE_NAME_TEMPLATE = "tableName: `%s`, " + System.lineSeparator();
-    public static final String METADATARECORD_FIELD_TEMPLATE = "%s: {columnName: \"%s\", 'type: %s}";
+    public static final String METADATARECORD_FIELD_TEMPLATE = "%s: {columnName: \"%s\"}";
+    public static final String ASSOCIATED_FIELD_TEMPLATE = ".%s\": {relation: {entityName: \"%s\", refField: \"%s\"}}";
     public static final String FIELD_METADATA_TEMPLATE = "fieldMetadata: {%s}";
+    public static final String JOIN_METADATA_TEMPLATE = "joinMetadata: {%s}";
+
+    public static final String JOIN_METADATA_FIELD_TEMPLATE =
+            "%s: {entity: %s, fieldName: \"%s\", refTable: \"%s\", refColumns: [%s], joinColumns: [%s], 'type: %s}";
+
+    public static final String COLUMN_ARRAY_ENTRY_TEMPLATE = "\"%s\"";
     public static final String METADATARECORD_KEY_FIELD_TEMPLATE = "keyFields: [%s]";
     public static final String METADATARECORD_ELEMENT_TEMPLATE = "\"%s\": {%s}";
     public static final String METADATARECORD_TEMPLATE =
@@ -177,6 +186,18 @@ public class BalSyntaxConstants {
     public static final String ARRAY = "[]";
     public static final String QUESTION_MARK = "?";
     public static final String COMMA_WITH_NEWLINE = "," + System.lineSeparator();
+
+    public static final String EXTERNAL_GET_BY_KEY_METHOD_TEMPLATE = "isolated resource function get %s/[%s](" +
+            "%sTargetType targetType = <>) returns targetType|persist:Error = @java:Method {"
+            + System.lineSeparator()
+            + "'class: \"io.ballerina.stdlib.persist.QueryProcessor\"," + System.lineSeparator() +
+             " name: \"queryOne\"} external;";
+
+    public static final String EXTERNAL_GET_METHOD_TEMPLATE = "isolated resource function get %s(" +
+            "%sTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {"
+            + System.lineSeparator()
+            + "'class: \"io.ballerina.stdlib.persist.QueryProcessor\"," + System.lineSeparator() +
+            " name: \"query\"} external;";
 
 }
 

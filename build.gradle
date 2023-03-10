@@ -80,6 +80,7 @@ subprojects {
 }
 
 def moduleVersion = project.version.replace("-SNAPSHOT", "")
+def persistNativeVersion = "${persistNativeVersion}"
 
 release {
     versionPropertyFile = 'gradle.properties'
@@ -117,6 +118,20 @@ task codeCoverageReport(type: JacocoReport) {
     }
 }
 
+task createProperties(dependsOn: processResources) {
+    doLast {
+        def file = new File("$project.rootDir/persist-cli/src/main/resources/version.properties")
+        file.withWriter('UTF-8') {
+            it.writeLine 'version = ${project.version}'
+            it.writeLine 'persistVersion = ' + persistNativeVersion.toString()
+        }
+    }
+}
+
+classes {
+    dependsOn createProperties
+}
+
 task copyPersitTool(type: Copy) {
     into "$project.rootDir/target"
     into("ballerina-distribution/bre/lib") {
@@ -127,6 +142,6 @@ task copyPersitTool(type: Copy) {
 copyPersitTool.dependsOn ":persist-cli-tests:build"
 copyPersitTool.dependsOn ":persist-cli:build"
 build.dependsOn copyPersitTool
-build.dependsOn ":examples:build"
+//build.dependsOn ":examples:build"
 
 publish.dependsOn build
