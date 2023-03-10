@@ -112,7 +112,7 @@ public class BalSyntaxConstants {
     public static final String KEYWORD_RESOURCE = "resource";
 
     public static final String GENERATED_SOURCE_DIRECTORY = "generated";
-    public static final String PATH_CONFIGURATION_BAL_FILE = "database_configuration.bal";
+    public static final String PATH_CONFIGURATION_BAL_FILE = "persist_db_config.bal";
     public static final String PERSIST_DEPENDENCY = "platform.java11.dependency";
     public static final String KEYWORD_MYSQL = "mysql";
     public static final String KEYWORD_TIME_PREFIX = "time";
@@ -167,7 +167,7 @@ public class BalSyntaxConstants {
 
     public static final String COLUMN_ARRAY_ENTRY_TEMPLATE = "\"%s\"";
     public static final String METADATARECORD_KEY_FIELD_TEMPLATE = "keyFields: [%s]";
-    public static final String METADATARECORD_ELEMENT_TEMPLATE = "\"%s\": {%s}";
+    public static final String METADATARECORD_ELEMENT_TEMPLATE = "%s: {%s}";
     public static final String METADATARECORD_TEMPLATE =
             "private final record {|persist:Metadata...;|} metadata = {%s};";
     public static final String INIT_DBCLIENT = "mysql:Client|error dbClient = new (host = host, user = user, " +
