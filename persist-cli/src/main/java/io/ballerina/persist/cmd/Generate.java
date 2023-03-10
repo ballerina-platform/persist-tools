@@ -240,7 +240,7 @@ public class Generate implements BLauncherCmd {
     }
 
     private static void generateClientBalFile(Module entityModule, Path outputPath) throws BalException {
-        String clientPath = outputPath.resolve("generated_client.bal").toAbsolutePath().toString();
+        String clientPath = outputPath.resolve("persist_client.bal").toAbsolutePath().toString();
 
         SyntaxTree balTree = generateClientSyntaxTree(entityModule);
         try {
@@ -265,7 +265,7 @@ public class Generate implements BLauncherCmd {
 
     private static void generateTypeBalFile(Module entityModule, Path outputPath) throws BalException {
         SyntaxTree generatedTypes =  BalSyntaxGenerator.generateTypeSyntaxTree(entityModule);
-        String generatedTypesPath = outputPath.resolve("generated_types.bal").toAbsolutePath().toString();
+        String generatedTypesPath = outputPath.resolve("persist_types.bal").toAbsolutePath().toString();
         try {
             writeOutputSyntaxTree(generatedTypes, generatedTypesPath);
         } catch (IOException | FormatterException e) {

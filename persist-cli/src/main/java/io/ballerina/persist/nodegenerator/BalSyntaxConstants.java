@@ -112,7 +112,7 @@ public class BalSyntaxConstants {
     public static final String KEYWORD_RESOURCE = "resource";
 
     public static final String GENERATED_SOURCE_DIRECTORY = "generated";
-    public static final String PATH_CONFIGURATION_BAL_FILE = "database_configuration.bal";
+    public static final String PATH_CONFIGURATION_BAL_FILE = "persist_db_config.bal";
     public static final String KEYWORD_MYSQL = "mysql";
     public static final String KEYWORD_TIME_PREFIX = "time";
     public static final String KEYWORD_JBALLERINA_JAVA_PREFIX = "jballerina.java";

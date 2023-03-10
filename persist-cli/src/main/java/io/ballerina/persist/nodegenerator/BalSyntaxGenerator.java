@@ -385,7 +385,7 @@ public class BalSyntaxGenerator {
     }
 
     private static Client createClient(Module entityModule) throws BalException {
-        Client clientObject = new Client(entityModule.getClientName(), true);
+        Client clientObject = new Client("Client", true);
         clientObject.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_CLIENT });
         clientObject.addMember(NodeFactory.createTypeReferenceNode(
                 AbstractNodeFactory.createToken(SyntaxKind.ASTERISK_TOKEN),

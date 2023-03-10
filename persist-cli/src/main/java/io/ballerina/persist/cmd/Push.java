@@ -19,7 +19,6 @@ package io.ballerina.persist.cmd;
 
 import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.BalException;
-import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.configuration.PersistConfiguration;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.BalSyntaxConstants;
@@ -65,6 +64,7 @@ import static io.ballerina.persist.PersistToolsConstants.PASSWORD;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.PersistToolsConstants.PLATFORM;
 import static io.ballerina.persist.PersistToolsConstants.PROPERTY_KEY_PATH;
+import static io.ballerina.persist.PersistToolsConstants.SQL_SCHEMA_FILE;
 import static io.ballerina.persist.PersistToolsConstants.USER;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.JDBC_URL_WITHOUT_DATABASE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.JDBC_URL_WITH_DATABASE;
@@ -196,8 +196,7 @@ public class Push implements BLauncherCmd {
                 }
                 errStream.printf("Created database '%s'.%n", persistConfigurations.getDbConfig().getDatabase());
 
-                String sqlFilePath = generatedSourceDirPath.resolve(String.format(PersistToolsConstants.SQL_SCHEMA_FILE,
-                                entityModule.getModuleName())).toAbsolutePath().toString();
+                String sqlFilePath = generatedSourceDirPath.resolve(SQL_SCHEMA_FILE).toAbsolutePath().toString();
                 try (Connection connection = getDBConnection(driver, persistConfigurations, true);
                      Reader fileReader = new BufferedReader(new FileReader(sqlFilePath,
                              StandardCharsets.UTF_8))) {
