@@ -166,7 +166,7 @@ public class BalSyntaxConstants {
 
     public static final String COLUMN_ARRAY_ENTRY_TEMPLATE = "\"%s\"";
     public static final String METADATARECORD_KEY_FIELD_TEMPLATE = "keyFields: [%s]";
-    public static final String METADATARECORD_ELEMENT_TEMPLATE = "%s: {%s}";
+    public static final String METADATARECORD_ELEMENT_TEMPLATE = "\"%s\": {%s}";
     public static final String METADATARECORD_TEMPLATE =
             "private final record {|persist:Metadata...;|} metadata = {%s};";
     public static final String INIT_DBCLIENT = "mysql:Client|error dbClient = new (host = host, user = user, " +
