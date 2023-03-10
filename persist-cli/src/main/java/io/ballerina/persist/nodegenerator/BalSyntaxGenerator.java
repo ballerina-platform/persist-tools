@@ -450,8 +450,11 @@ public class BalSyntaxGenerator {
                         }
                     }
                     fieldMetaData.append(foreignKeyFields);
-                    Entity associatedEntity = entityModule.getEntityMap().get(field.getFieldType());
+                    Entity associatedEntity = field.getRelation().getAssocEntity();
                     for (EntityField associatedEntityField : associatedEntity.getFields()) {
+                        if (associatedEntityField.getFieldType().equals(entity.getEntityName())) {
+                            continue;
+                        }
                         if (associatedEntityField.getRelation() == null) {
                             if (associateFieldMEtaData.length() != 0) {
                                 associateFieldMEtaData.append(COMMA_WITH_NEWLINE);
@@ -466,11 +469,11 @@ public class BalSyntaxGenerator {
                                 if (associateFieldMEtaData.length() != 0) {
                                     associateFieldMEtaData.append(COMMA_WITH_NEWLINE);
                                 }
-                                for (Relation.Key key : field.getRelation().getKeyColumns()) {
+                                for (Relation.Key key : associatedEntityField.getRelation().getKeyColumns()) {
                                     associateFieldMEtaData.append(String.format((field.isArrayType() ?
                                                     "\"%s[]" : "\"%s") +
                                                     ASSOCIATED_FIELD_TEMPLATE,
-                                            field.getFieldName(), key.getField(), field.getFieldName(),
+                                            field.getFieldName(), key.getField(), associatedEntityField.getFieldName(),
                                             key.getField()));
                                 }
                             }
