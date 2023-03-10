@@ -6,3 +6,8 @@ distribution = "2201.3.0"
 
 [build-options]
 observabilityIncluded = true
+
+[[platform.java11.dependency]]
+groupId = "io.ballerina.stdlib"
+artifactId = "persist-native"
+version = "0.2.0-SNAPSHOT"

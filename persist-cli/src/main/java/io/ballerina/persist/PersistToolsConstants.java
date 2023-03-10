@@ -124,4 +124,19 @@ public class PersistToolsConstants {
         public static final int DECIMAL_PRECISION = 65;
         public static final int DECIMAL_SCALE = 30;
     }
+
+    /**
+     * Constants related to the ballerina.toml file.
+     */
+    public static final class TomlFileConstants {
+        private TomlFileConstants() {}
+
+        public static final String VERSION_PROPERTIES_FILE = "version.properties";
+        public static final String KEYWORD_GROUP_ID = "groupId";
+        public static final String PERSIST_GROUP_ID = "io.ballerina.stdlib";
+        public static final String KEYWORD_ARTIFACT_ID = "artifactId";
+        public static final String ARTIFACT_ID = "persist-native";
+        public static final String PERSIST_VERSION = "persistVersion";
+        public static final String KEYWORD_VERSION = "version";
+    }
 }
