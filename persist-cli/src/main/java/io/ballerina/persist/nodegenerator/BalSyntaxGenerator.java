@@ -520,7 +520,7 @@ public class BalSyntaxGenerator {
             }
 
             mapBuilder.append(String.format(METADATARECORD_ELEMENT_TEMPLATE,
-                    getEntityNameConstant(entity.getEntityName()), entityMetaData));
+                    entity.getResourceName(), entityMetaData));
         }
         return NodeParser.parseObjectMember(String.format(METADATARECORD_TEMPLATE, mapBuilder));
     }
