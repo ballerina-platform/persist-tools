@@ -59,7 +59,7 @@ public class SqlScriptGenerationUtils {
         for (Entity entity : entityArray) {
             List<String> tableScript = new ArrayList<>();
             String tableName = removeSingleQuote(entity.getEntityName());
-            tableScript.add(generateDropTableQuery(tableName));
+            tableScript.add(generateDropTableQuery(addBackticks(tableName)));
             tableScript.add(generateCreateTableQuery(entity, referenceTables));
             tableScripts.put(tableName, tableScript);
         }
@@ -93,13 +93,12 @@ public class SqlScriptGenerationUtils {
     }
 
     private static String generateCreateTableQuery(Entity entity,
-                                             HashMap<String, List<String>> referenceTables) throws BalException {
+                                                   HashMap<String, List<String>> referenceTables) throws BalException {
 
         String fieldDefinitions = generateFieldsDefinitionSegments(entity, referenceTables);
 
-        return MessageFormat.format("{0}CREATE TABLE {1} ({2}{3});", NEW_LINE, removeSingleQuote(
-                entity.getEntityName()),
-                fieldDefinitions, NEW_LINE);
+        return MessageFormat.format("{0}CREATE TABLE {1} ({2}{3});", NEW_LINE,
+                addBackticks(removeSingleQuote(entity.getEntityName())), fieldDefinitions, NEW_LINE);
     }
 
     private static String generateFieldsDefinitionSegments(Entity entity,
@@ -126,7 +125,7 @@ public class SqlScriptGenerationUtils {
             }
             String sqlType = getType(entityField);
             assert sqlType != null;
-            String fieldName = removeSingleQuote(entityField.getFieldName());
+            String fieldName = addBackticks(removeSingleQuote(entityField.getFieldName()));
             if (entityField.isOptionalType()) {
                 columnScript.append(MessageFormat.format("{0}{1}{2} {3},",
                         NEW_LINE, TAB, fieldName, sqlType));
@@ -161,7 +160,7 @@ public class SqlScriptGenerationUtils {
                 }
             }
             for (EntityField field: assocEntity.getFields()) {
-                if (removeSingleQuote(field.getFieldType()).equals(tableName)) {
+                if (addBackticks(removeSingleQuote(field.getFieldType())).equals(addBackticks(tableName))) {
                     associatedEntityRelationType = field.getRelation().getRelationType();
                     break;
                 }
@@ -170,14 +169,14 @@ public class SqlScriptGenerationUtils {
                     associatedEntityRelationType.equals(Relation.RelationType.ONE) && noOfReferencesKey == 1) {
                 referenceSqlType += " UNIQUE";
             }
-            foreignKey.append(keyColumns.get(i).getField());
-            referenceFieldName.append(removeSingleQuote(references.get(i)));
+            foreignKey.append(addBackticks(removeSingleQuote(keyColumns.get(i).getField())));
+            referenceFieldName.append(addBackticks(removeSingleQuote(references.get(i))));
             if (i < noOfReferencesKey - 1) {
                 foreignKey.append(COMMA_WITH_SPACE);
                 referenceFieldName.append(COMMA_WITH_SPACE);
             }
             relationScripts.append(MessageFormat.format("{0}{1}{2} {3}{4},", NEW_LINE, TAB,
-                    removeSingleQuote(keyColumns.get(i).getField()), referenceSqlType, " NOT NULL"));
+                    addBackticks(removeSingleQuote(keyColumns.get(i).getField())), referenceSqlType, " NOT NULL"));
         }
         if (noOfReferencesKey > 1 && relation.getRelationType().equals(Relation.RelationType.ONE) &&
                 associatedEntityRelationType.equals(Relation.RelationType.ONE)) {
@@ -186,8 +185,8 @@ public class SqlScriptGenerationUtils {
         relationScripts.append(MessageFormat.format("{0}{1}CONSTRAINT FK_{2}_{3} FOREIGN KEY({4}) " +
                         "REFERENCES {5}({6}),", NEW_LINE, TAB, tableName.toUpperCase(Locale.ENGLISH),
                 removeSingleQuote(assocEntity.getEntityName()).toUpperCase(Locale.ENGLISH),
-                removeSingleQuote(foreignKey.toString()),
-                removeSingleQuote(assocEntity.getEntityName()),
+                foreignKey.toString(),
+                addBackticks(removeSingleQuote(assocEntity.getEntityName())),
                 referenceFieldName));
         updateReferenceTable(tableName, assocEntity.getEntityName(), referenceTables);
         return relationScripts.toString();
@@ -221,7 +220,8 @@ public class SqlScriptGenerationUtils {
         if (keys.size() > 0) {
             keyScripts.append(MessageFormat.format("{0}", PRIMARY_KEY_START_SCRIPT));
             for (EntityField key : keys) {
-                keyScripts.append(MessageFormat.format("{0},", removeSingleQuote(key.getFieldName())));
+                keyScripts.append(MessageFormat.format("{0},",
+                        addBackticks(removeSingleQuote(key.getFieldName()))));
             }
             keyScripts.deleteCharAt(keyScripts.length() - 1).append("),");
         }
@@ -298,5 +298,9 @@ public class SqlScriptGenerationUtils {
             tableScriptsInOrder[length - (i + 1)] = script.get(1);
         }
         return tableScriptsInOrder;
+    }
+
+    private static String addBackticks(String name) {
+        return "`" + name + "`";
     }
 }
