@@ -604,7 +604,7 @@ public class BalSyntaxGenerator {
                 persistClientMap.append(COMMA_WITH_NEWLINE);
             }
             persistClientMap.append(String.format(PERSIST_CLIENT_MAP_ELEMENT,
-                    entity.getEntityName().toLowerCase(Locale.ENGLISH), getEntityNameConstant(entity.getEntityName())));
+                    entity.getResourceName(), getEntityNameConstant(entity.getEntityName())));
         }
         init.addStatement(NodeParser.parseStatement(String.format(PERSIST_CLIENT_TEMPLATE, persistClientMap)));
         return init;
@@ -1032,7 +1032,7 @@ public class BalSyntaxGenerator {
                     recordFields.append("[]");
                 }
                 recordFields.append(SPACE);
-                recordFields.append(field.getFieldType().toLowerCase(Locale.ENGLISH));
+                recordFields.append(field.getFieldName());
                 recordFields.append(QUESTION_MARK);
                 recordFields.append(SEMICOLON);
                 recordFields.append(SPACE);

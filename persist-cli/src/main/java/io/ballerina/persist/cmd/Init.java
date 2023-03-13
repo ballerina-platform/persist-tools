@@ -107,7 +107,6 @@ public class Init implements BLauncherCmd {
         if (!Files.exists(persistDirPath)) {
             try {
                 Files.createDirectory(persistDirPath.toAbsolutePath());
-                errStream.println("Created persist directory in the Ballerina project.");
             } catch (IOException e) {
                 errStream.println("ERROR: failed to create the persist directory. " + e.getMessage());
                 return;
@@ -146,7 +145,6 @@ public class Init implements BLauncherCmd {
         if (schemaFiles.size() == 0) {
             try {
                 generateSchemaBalFile(persistDirPath, SCHEMA_FILE_NAME);
-                errStream.printf("Created model definition file(model.bal) in the persist directory.%n");
             } catch (BalException e) {
                 errStream.println("ERROR: failed to create the model definition file in persist directory. "
                         + e.getMessage());
@@ -171,12 +169,21 @@ public class Init implements BLauncherCmd {
         } catch (BalException e) {
             errStream.println("ERROR: failed to add database configurations in the toml file. " + e.getMessage());
         }
+
+        errStream.println("Initialized persistence in your Ballerina project.");
+        errStream.println(System.lineSeparator() + "Your Persist schema is at persist/model.bal.");
+        errStream.println("You can now update it with entity definitions.");
+        errStream.println(System.lineSeparator() + "Next steps:");
+
+        errStream.println("Run bal persist generate to generate the Ballerina Client, Types," +
+                " and Scripts. You can then start querying your database.");
+
     }
 
-    private void generateSchemaBalFile(Path persistPath, String packageName) throws BalException {
+    private void generateSchemaBalFile(Path persistPath, String schemaFile) throws BalException {
         try {
             String configTree = BalSyntaxGenerator.generateSchemaSyntaxTree();
-            writeOutputString(configTree, persistPath.resolve(packageName + BAL_EXTENTION)
+            writeOutputString(configTree, persistPath.resolve(schemaFile + BAL_EXTENTION)
                     .toAbsolutePath().toString());
         } catch (Exception e) {
             throw new BalException(e.getMessage());
@@ -189,8 +196,6 @@ public class Init implements BLauncherCmd {
                     Paths.get(this.sourcePath, BALLERINA_TOML), module, datastore);
             writeOutputString(syntaxTree,
                     Paths.get(this.sourcePath, BALLERINA_TOML).toAbsolutePath().toString());
-            errStream.println("Updated Ballerina.toml with persist configurations : 'datastore = \"mysql\"', " +
-                    String.format("'module = %s'.", module));
         } catch (Exception e) {
             throw new BalException("could not update the Ballerina.toml with persist configurations. " +
                     e.getMessage());
