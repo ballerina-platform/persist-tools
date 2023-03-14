@@ -1,6 +1,7 @@
-[tool_test_generate_16.entities]
+[tool_test_db_push_16.entities]
 host = "localhost"
 port = 3307
 user = "root"
 password = "Test123#"
 database = "persistTemp"
+

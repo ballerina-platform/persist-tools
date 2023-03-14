@@ -10,7 +10,11 @@ name="persist"
 version="0.1.0"
 repository="local"
 
-[persist.entities.storage.mysql]
+[persist]
+datastore = "mysql"
+module = "tool_test_db_push_8.entities"
+
+[persist.model.storage.mysql]
 host = "localhost"
 port = 3307
 user = "root"

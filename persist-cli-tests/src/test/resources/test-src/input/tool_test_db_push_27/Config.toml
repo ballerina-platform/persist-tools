@@ -1,6 +1,14 @@
-[persist_db_push_27.foo]
+[tool_test_db_push_27.foo]
 host = "localhost"
 port = 3306
 user = "root"
 password = ""
 database = ""
+
+[tool_test_db_push_27.rainier]
+host = "localhost"
+port = 3306
+user = "root"
+password = ""
+database = ""
+
