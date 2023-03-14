@@ -33,5 +33,5 @@ public type MedicalItem record {|
     string 'string;
     string 'type;
     string unit;
-    MedicalNeed medicalNeed;
+    MedicalNeed? medicalNeed;
 |};

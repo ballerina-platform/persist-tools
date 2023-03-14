@@ -29,7 +29,7 @@ public type Profile record {|
 public type User record  {|
     readonly int id;
     string name;
-    Profile profile;
+    Profile? profile;
     MultipleAssociations multipleAssociations;
 |};
 
@@ -58,7 +58,7 @@ public type MultipleAssociations record {|
     readonly int id;
     string name;
 
-    User owner;
-    Dept dept;
-    Customer customer;
+    User? owner;
+    Dept? dept;
+    Customer? customer;
 |};

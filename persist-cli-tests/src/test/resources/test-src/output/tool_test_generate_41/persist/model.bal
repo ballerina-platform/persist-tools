@@ -17,25 +17,32 @@
 import ballerina/persist as _;
 import ballerina/time;
 
-type 'Building record {|
-    readonly 'string 'buildingCode;
-    'string 'city;
-    string 'state;
-    string 'country;
-    string 'postalCode;
-    string 'type;
+type Building record {|
+    readonly string buildingCode;
+    string city;
+    string state;
+    string country;
+    string postalCode;
 
-    'Workspace[] workspaces;
+    Workspace[] workspaces;
 |};
 
-type 'Department record {|
+type Workspace record {|
+    readonly string workspaceId;
+    string workspaceType;
+
+    Building location;
+    Employee employee;
+|};
+
+type Department record {|
     readonly string deptNo;
     string deptName;
 
-    'Employee[] employees;
+    Employee[] employees;
 |};
 
-type 'Employee record {|
+type Employee record {|
     readonly string empNo;
     string firstName;
     string lastName;
@@ -43,21 +50,15 @@ type 'Employee record {|
     string gender;
     time:Date hireDate;
 
-    'Department department;
-    'Workspace workspace;
+    Department department;
+    Workspace? workspace;
+    OrderItem orderItem;
 |};
 
-type 'OrderItem record {|
+type OrderItem record {|
     readonly string orderId;
     readonly string itemId;
-    'int quantity;
-    'string notes;
-|};
-
-type 'Workspace record {|
-    readonly string workspaceId;
-    string workspaceType;
-
-    'Building location;
-    'Employee employee;
+    int quantity;
+    string notes;
+    Employee? employee;
 |};

@@ -14,9 +14,10 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import ballerina/persist as _;
 import ballerina/time;
+import ballerina/persist as _;
 
+// Defines the entity type with the entity identity
 type Building record {|
     readonly string buildingCode;
     string city;
@@ -51,14 +52,5 @@ type Employee record {|
     time:Date hireDate;
 
     Department department;
-    Workspace workspace;
-    OrderItem orderItem;
-|};
-
-type OrderItem record {|
-    readonly string orderId;
-    readonly string itemId;
-    int quantity;
-    string notes;
-    Employee employee;
+    Workspace? workspace;
 |};

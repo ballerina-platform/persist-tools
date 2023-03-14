@@ -52,5 +52,5 @@ type Employee record {|
     time:Date hireDate;
 
     Department department;
-    Workspace workspace;
+    Workspace? workspace;
 |};

@@ -1,6 +1,6 @@
 // AUTO-GENERATED FILE. DO NOT MODIFY.
 
-// This file is an auto-generated file by Ballerina persistence layer for entities.
+// This file is an auto-generated file by Ballerina persistence layer for model.
 // It should not be modified by hand.
 
 public type Company record {|

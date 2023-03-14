@@ -30,7 +30,7 @@ public type MedicalNeed record {|
 public type MedicalItem record {|
     readonly int itemId;
 
-    MedicalNeed need;
+    MedicalNeed? need;
     string 'string;
     string 'type;
     string unit;

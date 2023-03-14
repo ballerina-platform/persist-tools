@@ -14,36 +14,28 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import ballerina/time;
 import ballerina/persist as _;
+import ballerina/time;
 
-// Defines the entity type with the entity identity
-type Building record {|
-    readonly string buildingCode;
-    string city;
-    string state;
-    string country;
-    string postalCode;
+type 'Building record {|
+    readonly 'string 'buildingCode;
+    'string 'city;
+    string 'state;
+    string 'country;
+    string 'postalCode;
+    string 'type;
 
-    Workspace[] workspaces;
+    'Workspace[] workspaces;
 |};
 
-type Workspace record {|
-    readonly string workspaceId;
-    string workspaceType;
-
-    Building location;
-    Employee employee;
-|};
-
-type Department record {|
+type 'Department record {|
     readonly string deptNo;
     string deptName;
 
-    Employee[] employees;
+    'Employee[] employees;
 |};
 
-type Employee record {|
+type 'Employee record {|
     readonly string empNo;
     string firstName;
     string lastName;
@@ -51,6 +43,21 @@ type Employee record {|
     string gender;
     time:Date hireDate;
 
-    Department department;
-    Workspace workspace;
+    'Department department;
+    'Workspace workspace;
+|};
+
+type 'OrderItem record {|
+    readonly string orderId;
+    readonly string itemId;
+    'int quantity;
+    'string notes;
+|};
+
+type 'Workspace record {|
+    readonly string workspaceId;
+    string workspaceType;
+
+    'Building location;
+    'Employee? employee;
 |};

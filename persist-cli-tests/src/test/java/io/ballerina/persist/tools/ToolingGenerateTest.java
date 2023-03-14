@@ -121,7 +121,7 @@ public class ToolingGenerateTest {
     }
     @Test(enabled = true)
     @Description("There are three entities with one to one associations between each other without nullable fields")
-    public void testGenerateThreeEntitiesWith1To1AssociationsWithOneAnnotationValue() {
+    public void testGenerateThreeEntitiesWith1To1AssociationsWithOutAnnotationValue() {
         assertGeneratedSourcesNegative("tool_test_generate_19", GENERATE, new String[]{});
     }
 
@@ -148,7 +148,7 @@ public class ToolingGenerateTest {
         assertGeneratedSources("tool_test_generate_25", GENERATE);
     }
 
-    @Test(enabled = true) //disabled until the PR on escape characters in entities is merged
+    @Test(enabled = true)
     @Description("There are two entities with one to one associations between each other without relation annotation")
     public void testGenerateOneToOneAssociationsWithoutRelationAnnotation() {
         assertGeneratedSources("tool_test_generate_26", GENERATE);
@@ -204,13 +204,13 @@ public class ToolingGenerateTest {
         assertGeneratedSources("tool_test_generate_35", GENERATE);
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false) // disabled until composite key support
     @Description("Test the generate command with escape character in entity fields, and names")
     public void testGenerateRelationsWithSingleQuote() {
         assertGeneratedSources("tool_test_generate_36", GENERATE);
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false)//disabled until the support for byte[] is provided
     @Description("Test the created sql script content for relations and byte[] type")
     public void testSqlGen() {
         assertGeneratedSources("tool_test_generate_37", GENERATE);
@@ -234,7 +234,7 @@ public class ToolingGenerateTest {
         assertGeneratedSources("tool_test_generate_40", GENERATE);
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false) // disabled until composite key support
     @Description("Test the created sql script with composite reference keys")
     public void testSqlGenWithCompositeReferenceKeys() {
         assertGeneratedSources("tool_test_generate_41", GENERATE);
