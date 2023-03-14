@@ -383,7 +383,7 @@ public class BalSyntaxGenerator {
         for (Entity entity : entityModule.getEntityMap().values()) {
             moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration(String.format(
                     "const %s = \"%s\";", getEntityNameConstant(entity.getEntityName()),
-                            stripEscapeCharacter(entity.getEntityName().toLowerCase(Locale.ENGLISH)))));
+                            stripEscapeCharacter(entity.getResourceName()))));
         }
 
         Client clientObject = createClient(entityModule);
@@ -397,7 +397,7 @@ public class BalSyntaxGenerator {
     }
 
     private static Client createClient(Module entityModule) throws BalException {
-        Client clientObject = new Client(entityModule.getClientName(), true);
+        Client clientObject = new Client("Client", true);
         clientObject.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_CLIENT });
         clientObject.addMember(NodeFactory.createTypeReferenceNode(
                 AbstractNodeFactory.createToken(SyntaxKind.ASTERISK_TOKEN),
@@ -462,7 +462,7 @@ public class BalSyntaxGenerator {
                         }
                     }
                     fieldMetaData.append(foreignKeyFields);
-                    Entity associatedEntity = entityModule.getEntityMap().get(field.getFieldType());
+                    Entity associatedEntity = field.getRelation().getAssocEntity();
                     for (EntityField associatedEntityField : associatedEntity.getFields()) {
                         if (associatedEntityField.getRelation() == null) {
                             if (associateFieldMEtaData.length() != 0) {
@@ -471,19 +471,20 @@ public class BalSyntaxGenerator {
                             associateFieldMEtaData.append(String.format((field.isArrayType() ? "\"%s[]" : "\"%s") +
                                             ASSOCIATED_FIELD_TEMPLATE,
                                     field.getFieldName(),
-                                    associatedEntityField.getFieldName(), field.getFieldName(),
-                                    associatedEntityField.getFieldName()));
+                                    associatedEntityField.getFieldName(), stripEscapeCharacter(field.getFieldName()),
+                                    stripEscapeCharacter(associatedEntityField.getFieldName())));
                         } else {
                             if (associatedEntityField.getRelation().isOwner()) {
                                 if (associateFieldMEtaData.length() != 0) {
                                     associateFieldMEtaData.append(COMMA_WITH_NEWLINE);
                                 }
-                                for (Relation.Key key : field.getRelation().getKeyColumns()) {
+                                for (Relation.Key key : associatedEntityField.getRelation().getKeyColumns()) {
                                     associateFieldMEtaData.append(String.format((field.isArrayType() ?
                                                     "\"%s[]" : "\"%s") +
                                                     ASSOCIATED_FIELD_TEMPLATE,
-                                            field.getFieldName(), key.getField(), field.getFieldName(),
-                                            key.getField()));
+                                            field.getFieldName(), key.getField(),
+                                            stripEscapeCharacter(associatedEntityField.getFieldName()),
+                                            stripEscapeCharacter(key.getField())));
                                 }
                             }
                         }
@@ -519,7 +520,7 @@ public class BalSyntaxGenerator {
             }
 
             mapBuilder.append(String.format(METADATARECORD_ELEMENT_TEMPLATE,
-                    entity.getEntityName().toLowerCase(Locale.ENGLISH), entityMetaData));
+                    entity.getResourceName(), entityMetaData));
         }
         return NodeParser.parseObjectMember(String.format(METADATARECORD_TEMPLATE, mapBuilder));
     }
@@ -603,7 +604,7 @@ public class BalSyntaxGenerator {
                 persistClientMap.append(COMMA_WITH_NEWLINE);
             }
             persistClientMap.append(String.format(PERSIST_CLIENT_MAP_ELEMENT,
-                    entity.getEntityName().toLowerCase(Locale.ENGLISH), getEntityNameConstant(entity.getEntityName())));
+                    entity.getResourceName(), getEntityNameConstant(entity.getEntityName())));
         }
         init.addStatement(NodeParser.parseStatement(String.format(PERSIST_CLIENT_TEMPLATE, persistClientMap)));
         return init;
@@ -1031,7 +1032,7 @@ public class BalSyntaxGenerator {
                     recordFields.append("[]");
                 }
                 recordFields.append(SPACE);
-                recordFields.append(field.getFieldType().toLowerCase(Locale.ENGLISH));
+                recordFields.append(field.getFieldName());
                 recordFields.append(QUESTION_MARK);
                 recordFields.append(SEMICOLON);
                 recordFields.append(SPACE);
