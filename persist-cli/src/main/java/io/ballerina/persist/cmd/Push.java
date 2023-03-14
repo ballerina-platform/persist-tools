@@ -31,6 +31,7 @@ import io.ballerina.projects.Package;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.ResolvedPackageDependency;
 import io.ballerina.projects.directory.BuildProject;
+import io.ballerina.projects.util.ProjectUtils;
 import picocli.CommandLine;
 
 import java.io.BufferedReader;
@@ -47,6 +48,7 @@ import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -69,6 +71,7 @@ import static io.ballerina.persist.PersistToolsConstants.USER;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.JDBC_URL_WITHOUT_DATABASE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.JDBC_URL_WITH_DATABASE;
 import static io.ballerina.persist.nodegenerator.TomlSyntaxGenerator.readPackageName;
+import static io.ballerina.persist.nodegenerator.TomlSyntaxGenerator.readPersistConfigurations;
 import static io.ballerina.persist.utils.BalProjectUtils.validateBallerinaProject;
 import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
@@ -148,18 +151,33 @@ public class Push implements BLauncherCmd {
         // Load Ballerina project to get DB driver path.
         Path projectPath = Paths.get(this.sourcePath).toAbsolutePath();
         Project balProject = BuildProject.load(projectPath);
-
         schemaFilePaths.forEach(file -> {
+            String submodule = "";
             Module entityModule;
             Path generatedSourceDirPath;
             try {
                 BalProjectUtils.validateSchemaFile(file);
                 entityModule = BalProjectUtils.getEntities(file);
-                if (entityModule.getModuleName().equals(packageName)) {
-                    generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);
-                } else {
-                    generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY,
-                            entityModule.getModuleName());
+                generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);
+                HashMap<String, String> persistConfig = readPersistConfigurations(
+                        Paths.get(this.sourcePath, "Ballerina.toml"));
+                if (!persistConfig.get("module").equals(packageName)) {
+                    if (!persistConfig.get("module").startsWith(packageName + ".")) {
+                        errStream.println("ERROR: invalid module name : '" + persistConfig.get("module") + "' :\n" +
+                                "module name should follow the template <package_name>.<module_name>");
+                        return;
+                    }
+                    submodule = persistConfig.get("module").split("\\.")[1];
+                    if (!ProjectUtils.validateModuleName(submodule)) {
+                        errStream.println("ERROR: invalid module name : '" + submodule + "' :\n" +
+                                "module name can only contain alphanumerics, underscores and periods");
+                        return;
+                    } else if (!ProjectUtils.validateNameLength(submodule)) {
+                        errStream.println("ERROR: invalid module name : '" + submodule + "' :\n" +
+                                "maximum length of module name is 256 characters");
+                        return;
+                    }
+                    generatedSourceDirPath = generatedSourceDirPath.resolve(submodule);
                 }
                 if (entityModule.getEntityMap().isEmpty()) {
                     errStream.printf("ERROR: the model definition file(%s) does not contain any valid entity.%n",
@@ -174,8 +192,7 @@ public class Push implements BLauncherCmd {
             PersistConfiguration persistConfigurations;
             try {
                 Path ballerinaTomlPath = Paths.get(this.sourcePath, BALLERINA_TOML);
-                persistConfigurations = TomlSyntaxGenerator.readDatabaseConfigurations(
-                        entityModule.getModuleName(), ballerinaTomlPath);
+                persistConfigurations = TomlSyntaxGenerator.readDatabaseConfigurations(ballerinaTomlPath);
             } catch (BalException e) {
                 errStream.printf("ERROR: failed to load db configurations for the data model(%s). %s%n ",
                         entityModule.getModuleName(), e.getMessage());
