@@ -86,12 +86,6 @@ public class ToolingGenerateTest {
         assertGeneratedSources("tool_test_generate_9", GENERATE);
     }
 
-    @Test(enabled = false) // repeat test
-    @Description("There is only a single entity in the Ballerina project with two keys")
-    public void testGenerateSingleEntityWithMultipleKeys() {
-        assertGeneratedSources("tool_test_generate_10", GENERATE);
-    }
-
     @Test(enabled = true)
     @Description("There is only a single entity in the Ballerina project and there are errors in the project")
     public void testGenerateSingleEntityWithErrors() {
@@ -107,12 +101,6 @@ public class ToolingGenerateTest {
     @Description("There are three entities with one to one associations between each other")
     public void testGenerateThreeEntitiesWith1To1Associations() {
         assertGeneratedSources("tool_test_generate_13", GENERATE);
-    }
-
-    @Test(enabled = false) //invalid test cases
-    @Description("Three is an invalid message definition in the schema with optional fields")
-    public void testGenerateWithInvalidMessageDefinition() {
-        assertGeneratedSourcesNegative("tool_test_generate_14", GENERATE, new String[]{});
     }
 
     @Test(enabled = true)
@@ -131,28 +119,10 @@ public class ToolingGenerateTest {
     public void testGenerateThreeClientsWith1ToManyAssociations() {
         assertGeneratedSources("tool_test_generate_17", GENERATE);
     }
-    @Test(enabled = false)// not valid
-    @Description("There are two entities with one to one associations between each " +
-            "other with no annotation values in any Relation")
-    public void testGenerateThreeEntitiesWith1To1AssociationsWithNoAnnotationValue() {
-        assertGeneratedSources("tool_test_generate_18", GENERATE);
-    }
     @Test(enabled = true)
     @Description("There are three entities with one to one associations between each other without nullable fields")
     public void testGenerateThreeEntitiesWith1To1AssociationsWithOneAnnotationValue() {
         assertGeneratedSourcesNegative("tool_test_generate_19", GENERATE, new String[]{});
-    }
-    @Test(enabled = false) //invalid test case
-    @Description("There are two entities with one to many associations between each other with zero to " +
-            "one annotations")
-    public void testGenerateThreeEntitiesWith1ToManyAssociationsWithOneToNoAnnotationValue() {
-        assertGeneratedSources("tool_test_generate_20", GENERATE);
-    }
-
-    @Test(enabled = false) //invalid test case
-    @Description("There are two entities and time module is imported through a relation")
-    public void testGenerateClientsWithAdditionsImportsTroughRelations() {
-        assertGeneratedSources("tool_test_generate_21", GENERATE);
     }
 
     @Test(enabled = true)
@@ -214,12 +184,6 @@ public class ToolingGenerateTest {
     @Description("Test the generate command with empty schema file inside persist directory")
     public void testGenerateWithEmptySchemaFile() {
         assertGeneratedSources("tool_test_generate_31", GENERATE);
-    }
-
-    @Test(enabled = false) // invalid
-    @Description("Test the generate command without sub module directory inside generated directory")
-    public void testGenerateWithoutSubmodule() {
-        assertGeneratedSources("tool_test_generate_32", GENERATE);
     }
 
     @Test(enabled = true)

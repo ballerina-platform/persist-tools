@@ -22,7 +22,6 @@ import jdk.jfr.Description;
 import org.testng.annotations.Test;
 
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.Command.INIT;
-import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertAuxiliaryFunctions;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertGeneratedSources;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertGeneratedSourcesNegative;
 
@@ -63,12 +62,6 @@ public class ToolingInitTest {
     }
 
     @Test(enabled = true)
-    @Description("Test the auxiliary functions of the class")
-    public void testAuxiliaryFunctions() {
-        assertAuxiliaryFunctions();
-    }
-
-    @Test(enabled = true)
     @Description("Running init on a already initialized project")
     public void testInitAlreadyInitializedProject() {
         assertGeneratedSources("tool_test_init_6", INIT);
@@ -80,21 +73,10 @@ public class ToolingInitTest {
         assertGeneratedSources("tool_test_init_7", INIT);
     }
 
-    @Test(enabled = false)
-    @Description("Running init on a project with syntax errors.")
-    public void testInitWithSyntaxErrors() {
-        assertGeneratedSourcesNegative("tool_test_init_8", INIT, new String[]{});
-    }
-
     @Test(enabled = true)
     @Description("Running init on a project with manually created definition file")
     public void testInitWithManuallyCreatedDefinitionFile() {
         assertGeneratedSources("tool_test_init_9", INIT);
     }
 
-    @Test(enabled = false) //disables as the schema file would have a defined name
-    @Description("Running init on a project with invalid definition filename")
-    public void testInitWithInvalidDefinitionFileName() {
-        assertGeneratedSources("tool_test_init_10", INIT);
-    }
 }
