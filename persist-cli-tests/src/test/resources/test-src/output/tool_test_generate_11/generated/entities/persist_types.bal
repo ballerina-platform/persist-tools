@@ -15,7 +15,7 @@ public type MedicalNeed record {|
 |};
 
 public type MedicalNeedOptionalized record {|
-    readonly int needId?;
+    int needId?;
     int itemId?;
     int beneficiaryId?;
     time:Civil period?;

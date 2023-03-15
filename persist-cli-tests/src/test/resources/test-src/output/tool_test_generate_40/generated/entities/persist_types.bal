@@ -11,7 +11,7 @@ public type Profile record {|
 |};
 
 public type ProfileOptionalized record {|
-    readonly int id?;
+    int id?;
     string name?;
     string? gender?;
     int userId?;
@@ -37,7 +37,7 @@ public type User record {|
 |};
 
 public type UserOptionalized record {|
-    readonly int id?;
+    int id?;
 |};
 
 public type UserWithRelations record {|

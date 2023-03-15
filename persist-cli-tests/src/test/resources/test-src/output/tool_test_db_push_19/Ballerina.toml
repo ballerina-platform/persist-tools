@@ -11,7 +11,7 @@ observabilityIncluded = false
 datastore = "mysql"
 module = "tool_test_db_push_19.entities"
 
-[persist.model.storage.mysql]
+[persist.model.storage]
 host = "localhost"
 port = 3307
 user = "root"

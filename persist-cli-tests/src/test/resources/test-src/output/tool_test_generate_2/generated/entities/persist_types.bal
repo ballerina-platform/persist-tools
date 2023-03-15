@@ -15,7 +15,7 @@ public type MedicalNeed record {|
 |};
 
 public type MedicalNeedOptionalized record {|
-    readonly int needId?;
+    int needId?;
     int itemId?;
     int beneficiaryId?;
     time:Civil period?;
@@ -43,7 +43,7 @@ public type MedicalItem record {|
 |};
 
 public type MedicalItemOptionalized record {|
-    readonly int itemId?;
+    int itemId?;
     string name?;
     string 'type?;
     string unit?;

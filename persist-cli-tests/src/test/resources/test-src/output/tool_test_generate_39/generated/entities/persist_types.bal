@@ -9,7 +9,7 @@ public type Company record {|
 |};
 
 public type CompanyOptionalized record {|
-    readonly int id?;
+    int id?;
     string name?;
 |};
 
@@ -33,7 +33,7 @@ public type Employee record {|
 |};
 
 public type EmployeeOptionalized record {|
-    readonly int id?;
+    int id?;
     string name?;
     int companyId?;
 |};

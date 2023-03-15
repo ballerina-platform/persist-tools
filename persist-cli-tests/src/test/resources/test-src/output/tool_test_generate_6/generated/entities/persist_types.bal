@@ -20,7 +20,7 @@ public type DataType record {|
 |};
 
 public type DataTypeOptionalized record {|
-    readonly int a?;
+    int a?;
     string b1?;
     int c1?;
     boolean d1?;

@@ -14,7 +14,7 @@ public type Building record {|
 |};
 
 public type BuildingOptionalized record {|
-    readonly string buildingCode?;
+    string buildingCode?;
     string city?;
     string state?;
     string country?;
@@ -45,7 +45,7 @@ public type Workspace record {|
 |};
 
 public type WorkspaceOptionalized record {|
-    readonly string workspaceId?;
+    string workspaceId?;
     string workspaceType?;
     string buildingBuildingCode?;
     string employeeEmpNo?;
@@ -73,7 +73,7 @@ public type Department record {|
 |};
 
 public type DepartmentOptionalized record {|
-    readonly string deptNo?;
+    string deptNo?;
     string deptName?;
 |};
 
@@ -101,7 +101,7 @@ public type Employee record {|
 |};
 
 public type EmployeeOptionalized record {|
-    readonly string empNo?;
+    string empNo?;
     string firstName?;
     string lastName?;
     time:Date birthDate?;

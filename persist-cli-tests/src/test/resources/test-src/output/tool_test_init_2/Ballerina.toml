@@ -13,8 +13,3 @@ port = 3306
 user = "root"
 password = ""
 database = ""
-
-[[platform.java11.dependency]]
-groupId = "io.ballerina.stdlib"
-artifactId = "persist-native"
-version = "0.2.1-SNAPSHOT"

@@ -13,8 +13,3 @@ value = 1
 value = 2
 
 array = [ [1, 0], [0, 1] ]
-
-[[platform.java11.dependency]]
-groupId = "io.ballerina.stdlib"
-artifactId = "persist-native"
-version = "0.2.0-SNAPSHOT"

@@ -10,7 +10,7 @@ public type ByteTest record {|
 |};
 
 public type ByteTestOptionalized record {|
-    readonly int id?;
+    int id?;
     byte[] binary1?;
     byte[]? binaryOptional?;
 |};

@@ -11,7 +11,7 @@ public type Profile record {|
 |};
 
 public type ProfileOptionalized record {|
-    readonly int id?;
+    int id?;
     string name?;
     int userId?;
     int multipleassociationsId?;
@@ -40,7 +40,7 @@ public type User record {|
 |};
 
 public type UserOptionalized record {|
-    readonly int id?;
+    int id?;
     string name?;
     int multipleassociationsId?;
 |};
@@ -66,7 +66,7 @@ public type MultipleAssociations record {|
 |};
 
 public type MultipleAssociationsOptionalized record {|
-    readonly int id?;
+    int id?;
     string name?;
 |};
 
