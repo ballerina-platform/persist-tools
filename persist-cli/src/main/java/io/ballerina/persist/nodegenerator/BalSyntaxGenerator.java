@@ -447,7 +447,7 @@ public class BalSyntaxGenerator {
                         }
                         for (Relation.Key key : field.getRelation().getKeyColumns()) {
                             if (foreignKeyFields.length() != 0) {
-                                foreignKeyFields.append(COMMA_SPACE);
+                                foreignKeyFields.append(COMMA_WITH_NEWLINE);
                             }
                             foreignKeyFields.append(String.format(METADATARECORD_FIELD_TEMPLATE,
                                     key.getField(), stripEscapeCharacter(key.getField())));
@@ -467,10 +467,10 @@ public class BalSyntaxGenerator {
                                     stripEscapeCharacter(associatedEntityField.getFieldName())));
                         } else {
                             if (associatedEntityField.getRelation().isOwner()) {
-                                if (associateFieldMEtaData.length() != 0) {
-                                    associateFieldMEtaData.append(COMMA_WITH_NEWLINE);
-                                }
                                 for (Relation.Key key : associatedEntityField.getRelation().getKeyColumns()) {
+                                    if (associateFieldMEtaData.length() != 0) {
+                                        associateFieldMEtaData.append(COMMA_WITH_NEWLINE);
+                                    }
                                     associateFieldMEtaData.append(String.format((field.isArrayType() ?
                                                     "\"%s[]" : "\"%s") +
                                                     ASSOCIATED_FIELD_TEMPLATE,
@@ -686,11 +686,13 @@ public class BalSyntaxGenerator {
         StringBuilder keyBuilder = new StringBuilder();
         for (Map.Entry<String, String> key : keys.entrySet()) {
             if (keyBuilder.length() > 0) {
-                keyBuilder.append(COMMA_SPACE);
+                keyBuilder.append("/");
             }
+            keyBuilder.append(OPEN_BRACKET);
             keyBuilder.append(key.getValue());
             keyBuilder.append(SPACE);
             keyBuilder.append(key.getKey());
+            keyBuilder.append(CLOSE_BRACKET);
         }
 
         return (FunctionDefinitionNode) NodeParser.parseObjectMember(

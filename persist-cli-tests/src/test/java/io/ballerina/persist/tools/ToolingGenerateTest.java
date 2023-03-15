@@ -80,7 +80,7 @@ public class ToolingGenerateTest {
         assertGeneratedSources("tool_test_generate_8", GENERATE);
     }
 
-    @Test(enabled = false) //removed until support for multiple keys are provided
+    @Test(enabled = true) //removed until support for multiple keys are provided
     @Description("There is only a single entity in the Ballerina project with two keys")
     public void testGenerateSingleEntityWithMultipleKeysAndAutoInc() {
         assertGeneratedSources("tool_test_generate_9", GENERATE);
@@ -204,7 +204,7 @@ public class ToolingGenerateTest {
         assertGeneratedSources("tool_test_generate_35", GENERATE);
     }
 
-    @Test(enabled = false) // disabled until composite key support
+    @Test(enabled = true) // disabled until composite key support
     @Description("Test the generate command with escape character in entity fields, and names")
     public void testGenerateRelationsWithSingleQuote() {
         assertGeneratedSources("tool_test_generate_36", GENERATE);
@@ -234,7 +234,7 @@ public class ToolingGenerateTest {
         assertGeneratedSources("tool_test_generate_40", GENERATE);
     }
 
-    @Test(enabled = false) // disabled until composite key support
+    @Test(enabled = true) // disabled until composite key support
     @Description("Test the created sql script with composite reference keys")
     public void testSqlGenWithCompositeReferenceKeys() {
         assertGeneratedSources("tool_test_generate_41", GENERATE);
