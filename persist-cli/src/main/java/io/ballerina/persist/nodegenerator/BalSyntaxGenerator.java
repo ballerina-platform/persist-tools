@@ -984,19 +984,7 @@ public class BalSyntaxGenerator {
     private static ModuleMemberDeclarationNode createEntityRecordOptionalized(Entity entity) {
         StringBuilder recordFields = new StringBuilder();
         for (EntityField field : entity.getFields()) {
-            if (entity.getKeys().stream().anyMatch(key -> key == field)) {
-                recordFields.append(KEYWORD_READONLY);
-                recordFields.append(SPACE);
-                recordFields.append(field.getFieldType());
-                if (field.isArrayType()) {
-                    recordFields.append(ARRAY);
-                }
-                recordFields.append(SPACE);
-                recordFields.append(field.getFieldName());
-                recordFields.append(QUESTION_MARK);
-                recordFields.append(SEMICOLON);
-                recordFields.append(SPACE);
-            } else if (field.getRelation() != null) {
+            if (field.getRelation() != null) {
                 if (field.getRelation().isOwner()) {
                     for (Relation.Key key : field.getRelation().getKeyColumns()) {
                         recordFields.append(key.getType());
