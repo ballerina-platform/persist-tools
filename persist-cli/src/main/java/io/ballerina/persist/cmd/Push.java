@@ -29,6 +29,7 @@ import io.ballerina.persist.utils.ScriptRunner;
 import io.ballerina.projects.DependencyGraph;
 import io.ballerina.projects.Package;
 import io.ballerina.projects.Project;
+import io.ballerina.projects.ProjectException;
 import io.ballerina.projects.ResolvedPackageDependency;
 import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.projects.util.ProjectUtils;
@@ -149,8 +150,13 @@ public class Push implements BLauncherCmd {
             return;
         }
         // Load Ballerina project to get DB driver path.
-        Path projectPath = Paths.get(this.sourcePath).toAbsolutePath();
-        Project balProject = BuildProject.load(projectPath);
+        Project balProject;
+        try {
+            balProject = BuildProject.load(Paths.get(this.sourcePath).toAbsolutePath());
+        } catch (ProjectException e) {
+            errStream.println("ERROR: failed to load the Ballerina project. " + e.getMessage());
+            return;
+        }
         schemaFilePaths.forEach(file -> {
             String submodule = "";
             Module entityModule;
