@@ -204,7 +204,7 @@ public class ToolingGenerateTest {
         assertGeneratedSources("tool_test_generate_35", GENERATE);
     }
 
-    @Test(enabled = true) // disabled until composite key support
+    @Test(enabled = true)
     @Description("Test the generate command with escape character in entity fields, and names")
     public void testGenerateRelationsWithSingleQuote() {
         assertGeneratedSources("tool_test_generate_36", GENERATE);
@@ -234,7 +234,7 @@ public class ToolingGenerateTest {
         assertGeneratedSources("tool_test_generate_40", GENERATE);
     }
 
-    @Test(enabled = true) // disabled until composite key support
+    @Test(enabled = true)
     @Description("Test the created sql script with composite reference keys")
     public void testSqlGenWithCompositeReferenceKeys() {
         assertGeneratedSources("tool_test_generate_41", GENERATE);
