@@ -210,7 +210,7 @@ public class ToolingGenerateTest {
         assertGeneratedSources("tool_test_generate_36", GENERATE);
     }
 
-    @Test(enabled = false)//disabled until the support for byte[] is provided
+    @Test(enabled = true)
     @Description("Test the created sql script content for relations and byte[] type")
     public void testSqlGen() {
         assertGeneratedSources("tool_test_generate_37", GENERATE);
