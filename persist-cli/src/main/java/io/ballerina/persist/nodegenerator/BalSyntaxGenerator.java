@@ -375,7 +375,7 @@ public class BalSyntaxGenerator {
         for (Entity entity : entityModule.getEntityMap().values()) {
             moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration(String.format(
                     "const %s = \"%s\";", getEntityNameConstant(entity.getEntityName()),
-                            stripEscapeCharacter(entity.getResourceName()))));
+                            entity.getResourceName())));
         }
 
         Client clientObject = createClient(entityModule);

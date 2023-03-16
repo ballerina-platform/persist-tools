@@ -7,11 +7,11 @@ import ballerina/persist;
 import ballerina/jballerina.java;
 import ballerinax/mysql;
 
-const 'BUILDING = "buildings";
-const 'DEPARTMENT = "departments";
-const 'EMPLOYEE = "employees";
-const 'ORDER_ITEM = "orderitems";
-const 'WORKSPACE = "workspaces";
+const 'BUILDING = "'buildings";
+const 'DEPARTMENT = "'departments";
+const 'EMPLOYEE = "'employees";
+const 'ORDER_ITEM = "'orderitems";
+const 'WORKSPACE = "'workspaces";
 
 public client class Client {
     *persist:AbstractPersistClient;
