@@ -35,15 +35,11 @@ public class SyntaxTokenConstants {
     public static final Token SYNTAX_TREE_COLON = AbstractNodeFactory.createToken(SyntaxKind.COLON_TOKEN);
     public static final Token SYNTAX_TREE_OPEN_BRACE = AbstractNodeFactory.createToken(SyntaxKind.OPEN_BRACE_TOKEN);
     public static final Token SYNTAX_TREE_CLOSE_BRACE = AbstractNodeFactory.createToken(SyntaxKind.CLOSE_BRACE_TOKEN);
-
-    public static final Token SYNTAX_TREE_OPEN_ANGLE = AbstractNodeFactory.createToken(SyntaxKind.LT_TOKEN);
-    public static final Token SYNTAX_TREE_CLOSE_ANGLE = AbstractNodeFactory.createToken(SyntaxKind.GT_TOKEN);
     public static final Token SYNTAX_TREE_OPEN_PAREN = AbstractNodeFactory.createToken(SyntaxKind.OPEN_PAREN_TOKEN);
     public static final Token SYNTAX_TREE_CLOSE_PAREN = AbstractNodeFactory.createToken(SyntaxKind.CLOSE_PAREN_TOKEN);
     public static final Token SYNTAX_TREE_OPEN_BRACKET = AbstractNodeFactory.createToken(SyntaxKind.OPEN_BRACKET_TOKEN);
     public static final Token SYNTAX_TREE_CLOSE_BRACKET = AbstractNodeFactory.createToken(
             SyntaxKind.CLOSE_BRACKET_TOKEN);
-    public static final Token SYNTAX_TREE_EQUAL = AbstractNodeFactory.createToken(SyntaxKind.EQUAL_TOKEN);
     public static final Token SYNTAX_TREE_PIPE = AbstractNodeFactory.createToken(SyntaxKind.PIPE_TOKEN);
     public static final Token SYNTAX_TREE_SLASH = AbstractNodeFactory.createToken(SyntaxKind.SLASH_TOKEN);
     public static final Token SYNTAX_TREE_COMMA = AbstractNodeFactory.createToken(SyntaxKind.COMMA_TOKEN);
@@ -58,29 +54,14 @@ public class SyntaxTokenConstants {
             SyntaxKind.RETURNS_KEYWORD,
             AbstractNodeFactory.createEmptyMinutiaeList(),
             NodeFactory.createMinutiaeList(AbstractNodeFactory.createWhitespaceMinutiae(" ")));
-    public static final Token SYNTAX_TREE_KEYWORD_STREAM = AbstractNodeFactory.createToken(SyntaxKind.STREAM_KEYWORD,
-            AbstractNodeFactory.createEmptyMinutiaeList(),
-            NodeFactory.createMinutiaeList(AbstractNodeFactory.createWhitespaceMinutiae(" ")));
     public static final Token SYNTAX_TREE_IT = AbstractNodeFactory.createToken(SyntaxKind.LT_TOKEN);
     public static final Token SYNTAX_TREE_GT = AbstractNodeFactory.createToken(SyntaxKind.GT_TOKEN);
     public static final Token SYNTAX_TREE_QUESTION_MARK = AbstractNodeFactory.createToken(
             SyntaxKind.QUESTION_MARK_TOKEN);
-
-    public static final Token SYNTAX_TREE_KEYWORD_RECORD = AbstractNodeFactory.createToken(SyntaxKind.RECORD_KEYWORD,
-            AbstractNodeFactory.createEmptyMinutiaeList(),
-            NodeFactory.createMinutiaeList(AbstractNodeFactory.createWhitespaceMinutiae(" ")));
     public static final Token SYNTAX_TREE_KEYWORD_IF = AbstractNodeFactory.createToken(SyntaxKind.IF_KEYWORD,
             AbstractNodeFactory.createEmptyMinutiaeList(),
             NodeFactory.createMinutiaeList(AbstractNodeFactory.createWhitespaceMinutiae(" ")));
     public static final Token SYNTAX_TREE_KEYWORD_ELSE = AbstractNodeFactory.createToken(SyntaxKind.ELSE_KEYWORD,
-            AbstractNodeFactory.createEmptyMinutiaeList(),
-            NodeFactory.createMinutiaeList(AbstractNodeFactory.createWhitespaceMinutiae(" ")));
-
-    public static final Token SYNTAX_TREE_KEYWORD_ENUM = AbstractNodeFactory.createToken(SyntaxKind.ENUM_KEYWORD,
-            AbstractNodeFactory.createEmptyMinutiaeList(),
-            NodeFactory.createMinutiaeList(AbstractNodeFactory.createWhitespaceMinutiae(" ")));
-
-    public static final Token SYNTAX_TREE_KEYWORD_CHECK = AbstractNodeFactory.createToken(SyntaxKind.CHECK_KEYWORD,
             AbstractNodeFactory.createEmptyMinutiaeList(),
             NodeFactory.createMinutiaeList(AbstractNodeFactory.createWhitespaceMinutiae(" ")));
 

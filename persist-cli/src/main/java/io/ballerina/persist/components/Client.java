@@ -39,8 +39,6 @@ public class Client {
     private final Token className;
     private NodeList<Node> members;
 
-    private boolean timeImport = false;
-
     public Client(String name, boolean isPublic) {
         if (isPublic) {
             visibilityQualifier = AbstractNodeFactory.createIdentifierToken(ComponentConstants.TAG_PUBLIC);
@@ -74,13 +72,5 @@ public class Client {
         for (String qualifier : qualifiers) {
             classTypeQualifiers = classTypeQualifiers.add(AbstractNodeFactory.createIdentifierToken(qualifier + " "));
         }
-    }
-
-    public boolean isTimeImport() {
-        return timeImport;
-    }
-
-    public void setTimeImport(boolean timeImport) {
-        this.timeImport = timeImport;
     }
 }
