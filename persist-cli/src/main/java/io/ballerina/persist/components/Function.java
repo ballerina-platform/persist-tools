@@ -121,38 +121,6 @@ public class Function {
         );
     }
 
-    public void addRequiredParameterWithDefault(Node typeName, String name, Bracket brkt) {
-        if (parameters.size() > 0) {
-            parameters.add(SyntaxTokenConstants.SYNTAX_TREE_COMMA);
-        }
-        Token open;
-        Token close;
-        if (brkt == Bracket.SQUARE) {
-            open = SyntaxTokenConstants.SYNTAX_TREE_OPEN_BRACKET;
-            close = SyntaxTokenConstants.SYNTAX_TREE_CLOSE_BRACKET;
-        } else if (brkt == Bracket.CURLY) {
-            open = SyntaxTokenConstants.SYNTAX_TREE_OPEN_BRACE;
-            close = SyntaxTokenConstants.SYNTAX_TREE_CLOSE_BRACE;
-        } else {
-            open = SyntaxTokenConstants.SYNTAX_TREE_OPEN_PAREN;
-            close = SyntaxTokenConstants.SYNTAX_TREE_CLOSE_PAREN;
-        }
-        NodeList<AnnotationNode> annotations = NodeFactory.createEmptyNodeList();
-        parameters.add(
-                NodeFactory.createDefaultableParameterNode(
-                        annotations,
-                        typeName,
-                        AbstractNodeFactory.createIdentifierToken(name),
-                        SyntaxTokenConstants.SYNTAX_TREE_EQUAL,
-                        NodeFactory.createListConstructorExpressionNode(
-                                open, AbstractNodeFactory
-                                        .createSeparatedNodeList(NodeFactory.createBasicLiteralNode(
-                                                SyntaxKind.NIL_LITERAL,
-                                                AbstractNodeFactory.createLiteralValueToken(SyntaxKind.NIL_LITERAL,
-                                                        "", NodeFactory.createEmptyMinutiaeList(),
-                                                        NodeFactory.createEmptyMinutiaeList()))), close)));
-    }
-
     public void addReturns(TypeDescriptorNode node) {
         returnTypeDescriptorNode = getReturnTypeDescriptorNode(node);
     }

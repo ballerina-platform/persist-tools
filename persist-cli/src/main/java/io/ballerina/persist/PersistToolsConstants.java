@@ -50,10 +50,8 @@ public class PersistToolsConstants {
     public static final String MYSQL_DRIVER_CLASS = "com.mysql.cj.jdbc.Driver";
 
     public static final String PERSIST_CONFIG_PATTERN = "persist.model.storage";
-    public static final String PERSIST_CONFIG_PATTERN_WITH_MYSQL = "persist.%s.storage.mysql";
     public static final String SQL_SCHEMA_FILE = "script.sql";
     public static final String PERSIST_DIRECTORY = "persist";
-    public static final String GENERATED_DIRECTORY = "generated";
     public static final String BALLERINA_MYSQL_DRIVER_NAME = "ballerinax/mysql.driver";
     public static final String PLATFORM = "java11";
     public static final String PROPERTY_KEY_PATH = "path";
