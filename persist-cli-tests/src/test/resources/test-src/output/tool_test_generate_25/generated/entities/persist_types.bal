@@ -1,0 +1,81 @@
+// AUTO-GENERATED FILE. DO NOT MODIFY.
+
+// This file is an auto-generated file by Ballerina persistence layer for model.
+// It should not be modified by hand.
+
+public type Company record {|
+    readonly int id;
+    string name;
+|};
+
+public type CompanyOptionalized record {|
+    int id?;
+    string name?;
+|};
+
+public type CompanyWithRelations record {|
+    *CompanyOptionalized;
+    EmployeeOptionalized[] employee?;
+|};
+
+public type CompanyTargetType typedesc<CompanyWithRelations>;
+
+public type CompanyInsert Company;
+
+public type CompanyUpdate record {|
+    string name?;
+|};
+
+public type Employee record {|
+    readonly int id;
+    string name;
+    int companyId;
+|};
+
+public type EmployeeOptionalized record {|
+    int id?;
+    string name?;
+    int companyId?;
+|};
+
+public type EmployeeWithRelations record {|
+    *EmployeeOptionalized;
+    CompanyOptionalized company?;
+    VehicleOptionalized[] vehicles?;
+|};
+
+public type EmployeeTargetType typedesc<EmployeeWithRelations>;
+
+public type EmployeeInsert Employee;
+
+public type EmployeeUpdate record {|
+    string name?;
+    int companyId?;
+|};
+
+public type Vehicle record {|
+    readonly int model;
+    string name;
+    int employeeId;
+|};
+
+public type VehicleOptionalized record {|
+    int model?;
+    string name?;
+    int employeeId?;
+|};
+
+public type VehicleWithRelations record {|
+    *VehicleOptionalized;
+    EmployeeOptionalized employee?;
+|};
+
+public type VehicleTargetType typedesc<VehicleWithRelations>;
+
+public type VehicleInsert Vehicle;
+
+public type VehicleUpdate record {|
+    string name?;
+    int employeeId?;
+|};
+

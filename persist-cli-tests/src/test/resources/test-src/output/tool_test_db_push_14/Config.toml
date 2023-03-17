@@ -8,3 +8,11 @@ database = "persistnew"
 [foo.tool_test_db_push_1.entities]
 database = "persist"
 root = "root"
+
+[tool_test_db_push_14.entities]
+host = "localhost"
+port = 3306
+user = "root"
+password = ""
+database = ""
+

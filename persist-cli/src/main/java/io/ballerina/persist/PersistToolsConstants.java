@@ -49,7 +49,7 @@ public class PersistToolsConstants {
     public static final String USER = "user";
     public static final String MYSQL_DRIVER_CLASS = "com.mysql.cj.jdbc.Driver";
 
-    public static final String PERSIST_CONFIG_PATTERN = "persist.%s.storage";
+    public static final String PERSIST_CONFIG_PATTERN = "persist.model.storage";
     public static final String PERSIST_CONFIG_PATTERN_WITH_MYSQL = "persist.%s.storage.mysql";
     public static final String SQL_SCHEMA_FILE = "script.sql";
     public static final String PERSIST_DIRECTORY = "persist";

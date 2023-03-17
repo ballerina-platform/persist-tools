@@ -90,7 +90,7 @@ public class TomlSyntaxGenerator {
         return SyntaxTree.from(textDocument).toSourceCode();
     }
 
-    public static PersistConfiguration readDatabaseConfigurations(String schemaName, Path configPath)
+    public static PersistConfiguration readDatabaseConfigurations(Path configPath)
             throws BalException {
         try {
             TextDocument configDocument = TextDocuments.from(Files.readString(configPath));
@@ -103,13 +103,13 @@ public class TomlSyntaxGenerator {
                 if (member instanceof TableNode) {
                     TableNode node = (TableNode) member;
                     String tableName = node.identifier().toSourceCode().trim();
-                    if (tableName.startsWith(String.format(PERSIST_CONFIG_PATTERN, schemaName))) {
+                    if (tableName.startsWith(PERSIST_CONFIG_PATTERN)) {
                         String[] nameParts = tableName.split(REGEX_TOML_TABLE_NAME_SPLITTER);
                         if (nameParts.length > 3 && SUPPORTED_DB_PROVIDERS.contains(nameParts[3])) {
                             configuration.setProvider(nameParts[3]);
                             dbConfigExists = true;
                             DatabaseConfiguration databaseConfiguration = new DatabaseConfiguration(
-                                    schemaName, node.fields());
+                                    "model", node.fields());
                             configuration.setDbConfig(databaseConfiguration);
                         } else {
                             throw new BalException("database is not configured properly. " +

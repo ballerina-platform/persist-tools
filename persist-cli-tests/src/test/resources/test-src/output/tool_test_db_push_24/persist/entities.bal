@@ -51,7 +51,7 @@ type Employee record {|
     time:Date hireDate;
 
     Department department;
-    Workspace workspace;
+    Workspace? workspace;
     OrderItem orderItem;
 |};
 
@@ -60,5 +60,5 @@ type OrderItem record {|
     readonly string itemId;
     int quantity;
     string notes;
-    Employee employee;
+    Employee? employee;
 |};
