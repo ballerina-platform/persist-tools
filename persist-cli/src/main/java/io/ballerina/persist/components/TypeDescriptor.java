@@ -53,24 +53,6 @@ public class TypeDescriptor {
         );
     }
 
-
-    public static ObjectFieldNode getObjectFieldNode(String visibility, String[] qualifiers, Node typeName,
-                                                     String fieldName, ExpressionNode expression) {
-        NodeList<Token> qualifierList = NodeFactory.createEmptyNodeList();
-        for (String qualifier : qualifiers) {
-            qualifierList = qualifierList.add(AbstractNodeFactory.createIdentifierToken(qualifier + " "));
-        }
-        return NodeFactory.createObjectFieldNode(
-                null,
-                AbstractNodeFactory.createIdentifierToken("\n" + visibility + " "),
-                qualifierList,
-                typeName,
-                AbstractNodeFactory.createIdentifierToken(fieldName),
-                SyntaxTokenConstants.SYNTAX_TREE_EQUAL, expression,
-                SyntaxTokenConstants.SYNTAX_TREE_SEMICOLON
-        );
-    }
-
     public static QualifiedNameReferenceNode getQualifiedNameReferenceNode(String modulePrefix, String identifier) {
         return NodeFactory.createQualifiedNameReferenceNode(
                 AbstractNodeFactory.createIdentifierToken(modulePrefix),

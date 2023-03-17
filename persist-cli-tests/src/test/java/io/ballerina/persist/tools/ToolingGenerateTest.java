@@ -293,4 +293,22 @@ public class ToolingGenerateTest {
         executeCommand("tool_test_generate_42", GENERATE);
         assertGeneratedSources("tool_test_generate_42");
     }
+
+    @Test(enabled = true)
+    public void testInvalidModuleName() {
+        executeCommand("tool_test_generate_43", GENERATE);
+        assertGeneratedSources("tool_test_generate_43");
+    }
+
+    @Test(enabled = true)
+    public void testInvalidModuleName1() {
+        executeCommand("tool_test_generate_44", GENERATE);
+        assertGeneratedSources("tool_test_generate_44");
+    }
+
+    @Test(enabled = true)
+    public void testInvalidModuleName2() {
+        executeCommand("tool_test_generate_45", GENERATE);
+        assertGeneratedSources("tool_test_generate_45");
+    }
 }
