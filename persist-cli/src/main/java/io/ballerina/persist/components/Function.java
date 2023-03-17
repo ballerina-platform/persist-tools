@@ -47,15 +47,6 @@ import static io.ballerina.persist.components.TypeDescriptor.getReturnTypeDescri
  */
 public class Function {
 
-    /**
-     * Represents open and close bracket type.
-     */
-    public enum Bracket {
-        SQUARE,
-        CURLY,
-        PAREN
-    }
-
     private final SyntaxKind kind;
     private NodeList<Token> qualifierList;
     private final Token finalKeyWord = AbstractNodeFactory.createIdentifierToken(ComponentConstants.TAG_FUNCTION);

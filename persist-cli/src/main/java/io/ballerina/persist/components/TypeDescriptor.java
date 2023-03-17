@@ -23,7 +23,6 @@ import io.ballerina.compiler.syntax.tree.AnnotationNode;
 import io.ballerina.compiler.syntax.tree.ArrayDimensionNode;
 import io.ballerina.compiler.syntax.tree.ArrayTypeDescriptorNode;
 import io.ballerina.compiler.syntax.tree.BuiltinSimpleNameReferenceNode;
-import io.ballerina.compiler.syntax.tree.MapTypeDescriptorNode;
 import io.ballerina.compiler.syntax.tree.Node;
 import io.ballerina.compiler.syntax.tree.NodeFactory;
 import io.ballerina.compiler.syntax.tree.NodeList;
@@ -134,14 +133,4 @@ public class TypeDescriptor {
         );
     }
 
-    public static MapTypeDescriptorNode getMapTypeDescriptorNode(TypeDescriptorNode descriptorNode) {
-        return NodeFactory.createMapTypeDescriptorNode(
-                AbstractNodeFactory.createIdentifierToken("map"),
-                NodeFactory.createTypeParameterNode(
-                        SyntaxTokenConstants.SYNTAX_TREE_IT,
-                        descriptorNode,
-                        SyntaxTokenConstants.SYNTAX_TREE_GT
-                )
-        );
-    }
 }

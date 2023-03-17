@@ -18,11 +18,9 @@
 
 package io.ballerina.persist.models;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -34,14 +32,12 @@ import java.util.Set;
 public class Module {
     private final Map<String, Entity> entityMap;
     private final String moduleName;
-    private final String clientName;
 
     private final Set<String> importModulePrefixes;
 
-    private Module(String moduleName, String clientName, Set<String> importModulePrefixes,
+    private Module(String moduleName, Set<String> importModulePrefixes,
                    Map<String, Entity> entityMap) {
         this.moduleName = moduleName;
-        this.clientName = clientName;
         this.importModulePrefixes = Collections.unmodifiableSet(importModulePrefixes);
         this.entityMap = Collections.unmodifiableMap(entityMap);
     }
@@ -58,10 +54,6 @@ public class Module {
         return moduleName;
     }
 
-    public String getClientName() {
-        return clientName;
-    }
-
     public static Module.Builder newBuilder(String moduleName) {
         return new Module.Builder(moduleName);
     }
@@ -70,7 +62,6 @@ public class Module {
      * Module Definition.Builder.
      */
     public static class Builder {
-        private static final String SUFFIX_CLIENT = "Client";
         String moduleName;
         Map<String, Entity> entityMap = new LinkedHashMap<>();
 
@@ -89,18 +80,7 @@ public class Module {
         }
 
         public Module build() {
-            String clientName = convertTitleCase(moduleName) + SUFFIX_CLIENT;
-            return new Module(moduleName, clientName, importModulePrefixes, entityMap);
-        }
-
-        private String convertTitleCase(String moduleName) {
-            StringBuilder titleBuilder = new StringBuilder();
-            String[] moduleParts = moduleName.split("[\\s@&.?$+_-]+");
-            Arrays.stream(moduleParts).forEach(modulePart -> {
-                titleBuilder.append(modulePart.substring(0, 1).toUpperCase(Locale.ENGLISH))
-                        .append(modulePart.substring(1));
-            });
-            return titleBuilder.toString();
+            return new Module(moduleName, importModulePrefixes, entityMap);
         }
     }
 }
