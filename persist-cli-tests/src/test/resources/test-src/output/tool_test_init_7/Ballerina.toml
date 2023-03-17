@@ -11,3 +11,7 @@ observabilityIncluded = true
 datastore = "mysql"
 module = "persist_init_7"
 
+[[platform.java11.dependency]]
+groupId = "io.ballerina.stdlib"
+artifactId = "persist-native"
+version = "0.2.2"

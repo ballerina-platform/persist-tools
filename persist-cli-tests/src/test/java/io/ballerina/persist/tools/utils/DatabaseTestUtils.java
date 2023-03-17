@@ -54,7 +54,7 @@ public class DatabaseTestUtils {
         if (osName.toLowerCase(Locale.getDefault()).contains("windows")) {
             return;
         }
-        PersistConfiguration configuration = TomlSyntaxGenerator.readDatabaseConfigurations(modelName,
+        PersistConfiguration configuration = TomlSyntaxGenerator.readDatabaseConfigurations(
                 Paths.get(GENERATED_SOURCES_DIRECTORY, packageName, BALLERINA_TOML));
         String username = configuration.getDbConfig().getUsername();
         String password = configuration.getDbConfig().getPassword();
@@ -70,7 +70,6 @@ public class DatabaseTestUtils {
         } catch (SQLException e) {
             errStream.println("Failed to create database connection: " + e.getMessage());
         }
-
         try {
             assert connection != null;
             Assert.assertTrue(databaseExists(connection, database));
@@ -94,7 +93,7 @@ public class DatabaseTestUtils {
         if (osName.toLowerCase(Locale.getDefault()).contains("windows")) {
             return;
         }
-        PersistConfiguration configuration = TomlSyntaxGenerator.readDatabaseConfigurations(modelName,
+        PersistConfiguration configuration = TomlSyntaxGenerator.readDatabaseConfigurations(
                 Paths.get(GENERATED_SOURCES_DIRECTORY, packageName, BALLERINA_TOML));
         String username = configuration.getDbConfig().getUsername();
         String password = configuration.getDbConfig().getPassword();

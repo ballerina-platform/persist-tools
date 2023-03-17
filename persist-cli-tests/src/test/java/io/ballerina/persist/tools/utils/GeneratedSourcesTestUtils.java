@@ -67,7 +67,7 @@ public class GeneratedSourcesTestUtils {
         for (Path actualOutputFile: listFiles(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir))) {
             errStream.println(actualOutputFile);
             if ((actualOutputFile.toString().contains("persist_db_scripts.sql") ||
-                    actualOutputFile.toString().contains("entities.bal")) &&
+                    actualOutputFile.toString().contains("model.bal")) &&
                     (subDir.equals("tool_test_generate_7") || subDir.equals("tool_test_generate_14") ||
                             subDir.equals("tool_test_generate_15"))) {
                 continue;

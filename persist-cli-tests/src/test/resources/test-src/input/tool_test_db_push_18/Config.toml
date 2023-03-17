@@ -5,6 +5,3 @@ user = "rootw"
 password = "Test123#"
 database = "persistnew"
 
-[foo.tool_test_db_push_18.entities]
-database = "persist"
-root = "root"

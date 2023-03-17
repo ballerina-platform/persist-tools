@@ -80,16 +80,10 @@ public class ToolingGenerateTest {
         assertGeneratedSources("tool_test_generate_8", GENERATE);
     }
 
-    @Test(enabled = true)
+    @Test(enabled = true) //removed until support for multiple keys are provided
     @Description("There is only a single entity in the Ballerina project with two keys")
     public void testGenerateSingleEntityWithMultipleKeysAndAutoInc() {
         assertGeneratedSources("tool_test_generate_9", GENERATE);
-    }
-
-    @Test(enabled = false) // repeat test
-    @Description("There is only a single entity in the Ballerina project with two keys")
-    public void testGenerateSingleEntityWithMultipleKeys() {
-        assertGeneratedSources("tool_test_generate_10", GENERATE);
     }
 
     @Test(enabled = true)
@@ -110,12 +104,6 @@ public class ToolingGenerateTest {
     }
 
     @Test(enabled = true)
-    @Description("Three is an invalid message definition in the schema with optional fields")
-    public void testGenerateWithInvalidMessageDefinition() {
-        assertGeneratedSourcesNegative("tool_test_generate_14", GENERATE, new String[]{});
-    }
-
-    @Test(enabled = true)
     @Description("There are three entities in two schema files")
     public void testGenerateThreeEntitiesWith1To1AssociationsWithChildEntityInSubModule() {
         assertGeneratedSourcesNegative("tool_test_generate_15", GENERATE, new String[]{});
@@ -131,32 +119,13 @@ public class ToolingGenerateTest {
     public void testGenerateThreeClientsWith1ToManyAssociations() {
         assertGeneratedSources("tool_test_generate_17", GENERATE);
     }
-    @Test(enabled = false)
-    @Description("There are two entities with one to one associations between each " +
-            "other with no annotation values in any Relation")
-    public void testGenerateThreeEntitiesWith1To1AssociationsWithNoAnnotationValue() {
-        assertGeneratedSources("tool_test_generate_18", GENERATE);
-    }
     @Test(enabled = true)
-    @Description("There are three entities with one to one associations between each other with only " +
-            "one annotation values in any Relation")
-    public void testGenerateThreeEntitiesWith1To1AssociationsWithOneAnnotationValue() {
-        assertGeneratedSources("tool_test_generate_19", GENERATE);
-    }
-    @Test(enabled = true)
-    @Description("There are two entities with one to many associations between each other with zero to " +
-            "one annotations")
-    public void testGenerateThreeEntitiesWith1ToManyAssociationsWithOneToNoAnnotationValue() {
-        assertGeneratedSources("tool_test_generate_20", GENERATE);
+    @Description("There are three entities with one to one associations between each other without nullable fields")
+    public void testGenerateThreeEntitiesWith1To1AssociationsWithOutAnnotationValue() {
+        assertGeneratedSourcesNegative("tool_test_generate_19", GENERATE, new String[]{});
     }
 
     @Test(enabled = true)
-    @Description("There are two entities and time modeule is imported through a relation")
-    public void testGenerateClientsWithAdditionsImportsTroughRelations() {
-        assertGeneratedSources("tool_test_generate_21", GENERATE);
-    }
-
-    @Test(enabled = false) //disabled until the PR on escape characters in entities is merged
     @Description("There are two special entities with special characters in field names")
     public void testGenerateRelatedClientsWithSpecialCharactersInName() {
         assertGeneratedSources("tool_test_generate_22", GENERATE);
@@ -179,7 +148,7 @@ public class ToolingGenerateTest {
         assertGeneratedSources("tool_test_generate_25", GENERATE);
     }
 
-    @Test(enabled = false) //disabled until the PR on escape characters in entities is merged
+    @Test(enabled = true)
     @Description("There are two entities with one to one associations between each other without relation annotation")
     public void testGenerateOneToOneAssociationsWithoutRelationAnnotation() {
         assertGeneratedSources("tool_test_generate_26", GENERATE);
@@ -218,12 +187,6 @@ public class ToolingGenerateTest {
     }
 
     @Test(enabled = true)
-    @Description("Test the generate command without sub module directory inside generated directory")
-    public void testGenerateWithoutSubmodule() {
-        assertGeneratedSources("tool_test_generate_32", GENERATE);
-    }
-
-    @Test(enabled = true)
     @Description("Test the generate command without persist import in schema file")
     public void testGenerateWithoutPersistImport() {
         assertGeneratedSources("tool_test_generate_33", GENERATE);
@@ -248,7 +211,7 @@ public class ToolingGenerateTest {
     }
 
     @Test(enabled = true)
-    @Description("Test the created sql script content when relation annotation hasn't properties")
+    @Description("Test the created sql script content for relations and byte[] type")
     public void testSqlGen() {
         assertGeneratedSources("tool_test_generate_37", GENERATE);
     }

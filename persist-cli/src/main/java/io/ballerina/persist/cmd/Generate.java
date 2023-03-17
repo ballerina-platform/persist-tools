@@ -142,6 +142,7 @@ public class Generate implements BLauncherCmd {
         schemaFilePaths.forEach(file -> {
             Module entityModule;
             Path generatedSourceDirPath;
+            String submodule = "";
 
             try {
                 BalProjectUtils.validateSchemaFile(file);
@@ -149,7 +150,6 @@ public class Generate implements BLauncherCmd {
                 generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);
                 HashMap<String, String> persistConfig = readPersistConfigurations(
                         Paths.get(this.sourcePath, "Ballerina.toml"));
-                String submodule = "";
                 if (!persistConfig.get("module").equals(packageName)) {
                     if (!persistConfig.get("module").startsWith(packageName + ".")) {
                         errStream.println("ERROR: invalid module name : '" + persistConfig.get("module") + "' :\n" +
@@ -187,9 +187,6 @@ public class Generate implements BLauncherCmd {
                 if (!Files.exists(databaseConfigPath)) {
                     try {
                         generateConfigurationBalFile(generatedSourceDirPath);
-                        errStream.printf(
-                                "Created database_configurations.bal file inside `%s` module in generated directory.%n",
-                                submodule.equals("") ? "default" : submodule);
                     } catch (BalException e) {
                         errStream.println("ERROR: failed to generate the database_configurations.bal file. "
                                 + e.getMessage());
@@ -210,6 +207,7 @@ public class Generate implements BLauncherCmd {
                 }
                 generateDataTypes(entityModule, generatedSourceDirPath);
                 generateClientBalFile(entityModule, generatedSourceDirPath);
+
             } catch (BalException e) {
                 errStream.printf("ERROR: failed to generate types and client for the definition file(%s). %s%n",
                         file.getFileName(), e.getMessage());
@@ -225,6 +223,18 @@ public class Generate implements BLauncherCmd {
                 errStream.printf("ERROR: failed to generate SQL schema for the definition file(%s). %s%n",
                         file.getFileName(), e.getMessage());
             }
+
+            String modulePath = submodule.equals("") ? "./generated" : "./generated/" + submodule;
+
+            errStream.println(String.format("Generated Ballerina Client, Types, " +
+                    "and Scripts to %s directory.", modulePath));
+            errStream.println("You can now start using Ballerina Client in your code.");
+            errStream.println(System.lineSeparator() + "Next steps:");
+
+            errStream.println(String.format("Set database configurations in Config.toml file to point to " +
+                    "your database. If your database has no tables yet, execute the scripts." +
+                    "sql file at %s directory, in your database to create tables.", modulePath));
+
         });
 
     }
@@ -240,13 +250,11 @@ public class Generate implements BLauncherCmd {
     }
 
     private static void generateClientBalFile(Module entityModule, Path outputPath) throws BalException {
-        String clientPath = outputPath.resolve("generated_client.bal").toAbsolutePath().toString();
+        String clientPath = outputPath.resolve("persist_client.bal").toAbsolutePath().toString();
 
         SyntaxTree balTree = generateClientSyntaxTree(entityModule);
         try {
             writeOutputSyntaxTree(balTree, clientPath);
-            errStream.printf("Generated Ballerina client object for the `%s` data model" +
-                    " inside the generated directory.%n", entityModule.getModuleName());
         } catch (IOException | FormatterException e) {
             throw new BalException(String.format("could not write the client code for the `%s` data model " +
                     "to the generated_types.bal file.", entityModule.getModuleName()) + e.getMessage());
@@ -258,14 +266,12 @@ public class Generate implements BLauncherCmd {
         if (entityArray.size() != 0) {
 
             generateTypeBalFile(entityModule, outputPath);
-            errStream.printf("Generated Ballerina types for the `%s` data model" +
-                    " inside the generated directory.%n", entityModule.getModuleName());
         }
     }
 
     private static void generateTypeBalFile(Module entityModule, Path outputPath) throws BalException {
         SyntaxTree generatedTypes =  BalSyntaxGenerator.generateTypeSyntaxTree(entityModule);
-        String generatedTypesPath = outputPath.resolve("generated_types.bal").toAbsolutePath().toString();
+        String generatedTypesPath = outputPath.resolve("persist_types.bal").toAbsolutePath().toString();
         try {
             writeOutputSyntaxTree(generatedTypes, generatedTypesPath);
         } catch (IOException | FormatterException e) {
@@ -280,7 +286,6 @@ public class Generate implements BLauncherCmd {
             Path configPath = Paths.get(this.sourcePath, CONFIG_SCRIPT_FILE).toAbsolutePath();
             String syntaxTree = TomlSyntaxGenerator.createConfigToml(moduleName);
             writeOutputFile(syntaxTree, configPath.toString());
-            errStream.println("Created Config.toml file inside the Ballerina project.");
         } catch (Exception e) {
             throw new BalException("could not add Config.toml file inside the Ballerina project. " +
                     e.getMessage());
@@ -311,7 +316,6 @@ public class Generate implements BLauncherCmd {
             Path configPath = Paths.get(this.sourcePath, CONFIG_SCRIPT_FILE).toAbsolutePath();
             String syntaxTree = TomlSyntaxGenerator.updateConfigToml(configPath, moduleName);
             writeOutputFile(syntaxTree, configPath.toString());
-            errStream.println("Updated Config.toml file inside the Ballerina project.");
         } catch (Exception e) {
             throw new BalException("could not update Config.toml file inside the Ballerina project. " +
                     e.getMessage());
