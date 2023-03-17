@@ -75,6 +75,7 @@ public class TypeDescriptor {
                 SyntaxTokenConstants.SYNTAX_TREE_SEMICOLON
         );
     }
+
     public static QualifiedNameReferenceNode getQualifiedNameReferenceNode(String modulePrefix, String identifier) {
         return NodeFactory.createQualifiedNameReferenceNode(
                 AbstractNodeFactory.createIdentifierToken(modulePrefix),

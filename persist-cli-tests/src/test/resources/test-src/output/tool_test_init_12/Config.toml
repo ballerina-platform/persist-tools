@@ -1,0 +1,9 @@
+[persist_init_12]
+host = "localhost"
+port = 3307
+user = "root"
+password = "test123"
+database = "persistdb"
+
+
+

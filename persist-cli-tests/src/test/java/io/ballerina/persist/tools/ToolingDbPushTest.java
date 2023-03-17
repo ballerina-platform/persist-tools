@@ -31,6 +31,7 @@ import static io.ballerina.persist.tools.utils.DatabaseTestUtils.assertCreatedDa
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.Command.DB_PUSH;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertGeneratedSources;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertGeneratedSourcesNegative;
+import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.executeCommand;
 
 /**
  * persist tool db push command tests.
@@ -63,7 +64,8 @@ public class ToolingDbPushTest {
                         .addColumn(new PersistTableColumn("type", sqlVarchar, no, no))
                         .addColumn(new PersistTableColumn("unit", sqlVarchar, no, no))
         );
-        assertGeneratedSources("tool_test_db_push_1", DB_PUSH);
+        executeCommand("tool_test_db_push_1", DB_PUSH);
+        assertGeneratedSources("tool_test_db_push_1");
         assertCreateDatabaseTables("tool_test_db_push_1", "entities", tables);
     }
 
@@ -93,14 +95,16 @@ public class ToolingDbPushTest {
                         .addColumn(new PersistTableColumn("type", sqlVarchar, no, no))
                         .addColumn(new PersistTableColumn("unit", sqlVarchar, no, no))
         );
-        assertGeneratedSources("tool_test_db_push_3", DB_PUSH);
+        executeCommand("tool_test_db_push_3", DB_PUSH);
+        assertGeneratedSources("tool_test_db_push_3");
         assertCreateDatabaseTables("tool_test_db_push_3", "entities", tables);
     }
 
     @Test(enabled = true)
     @Description("When the db push command is executed with empty schema file")
     public void testDbPushEmptySchemaFile() {
-        assertGeneratedSources("tool_test_db_push_4", DB_PUSH);
+        executeCommand("tool_test_db_push_4", DB_PUSH);
+        assertGeneratedSources("tool_test_db_push_4");
     }
 
     @Test(enabled = true, dependsOnMethods = { "testDbPushEntityRemoved" })
@@ -123,7 +127,8 @@ public class ToolingDbPushTest {
                         .addColumn(new PersistTableColumn("type", sqlVarchar, no, no))
                         .addColumn(new PersistTableColumn("unit", sqlVarchar, no, no))
         );
-        assertGeneratedSources("tool_test_db_push_5", DB_PUSH);
+        executeCommand("tool_test_db_push_5", DB_PUSH);
+        assertGeneratedSources("tool_test_db_push_5");
         assertCreateDatabaseTables("tool_test_db_push_5", "entities", tables);
     }
 
@@ -142,19 +147,22 @@ public class ToolingDbPushTest {
     @Test(enabled = true) // not valid
     @Description("Test the created sql script content with associations")
     public void testDbPush() {
-        assertGeneratedSources("tool_test_db_push_8", DB_PUSH);
+        executeCommand("tool_test_db_push_8", DB_PUSH);
+        assertGeneratedSources("tool_test_db_push_8");
     }
 
     @Test(enabled = false) //not valid
     @Description("Test the created sql script content with out defining any schema files inside persist directory")
     public void testDbPushWithoutSchemaFile() {
-        assertGeneratedSources("tool_test_db_push_9", DB_PUSH);
+        executeCommand("tool_test_db_push_9", DB_PUSH);
+        assertGeneratedSources("tool_test_db_push_9");
     }
 
     @Test(enabled = true)
     @Description("Test DB push without specifying DB driver in database_configurations")
     public void testDbPushWithoutDriverImport() {
-        assertGeneratedSources("tool_test_db_push_10", DB_PUSH);
+        executeCommand("tool_test_db_push_10", DB_PUSH);
+        assertGeneratedSources("tool_test_db_push_10");
     }
 
     @Test(enabled = true)
@@ -191,7 +199,8 @@ public class ToolingDbPushTest {
     @Test(enabled = true) //not required as this is tested in examples
     @Description("Test the created sql script with one to many relation entity")
     public void testDbPushWithOneToManyRelationship() {
-        assertGeneratedSources("tool_test_db_push_16", DB_PUSH);
+        executeCommand("tool_test_db_push_16", DB_PUSH);
+        assertGeneratedSources("tool_test_db_push_16");
     }
 
     @Test(enabled = true)
@@ -221,13 +230,15 @@ public class ToolingDbPushTest {
     @Test(enabled = true)
     @Description("Test the created sql script with optional type fields")
     public void testDbPushWithOptionalTypeFields() {
-        assertGeneratedSources("tool_test_db_push_21", DB_PUSH);
+        executeCommand("tool_test_db_push_21", DB_PUSH);
+        assertGeneratedSources("tool_test_db_push_21");
     }
 
     @Test(enabled = false) //disabled until the runtime fix is merged
     @Description("Test the created sql script with composite reference keys")
     public void testDbPushWithCompositeReferenceKeys() {
-        assertGeneratedSources("tool_test_db_push_22", DB_PUSH);
+        executeCommand("tool_test_db_push_22", DB_PUSH);
+        assertGeneratedSources("tool_test_db_push_22");
     }
 
     @Test(enabled = true)
@@ -236,7 +247,7 @@ public class ToolingDbPushTest {
         assertGeneratedSourcesNegative("tool_test_db_push_23", DB_PUSH, null);
 
     }
-    
+
     @Test(enabled = true)
     @Description("When the db push command is executed without init.")
     public void testDbPushWithoutInit() {
@@ -247,16 +258,19 @@ public class ToolingDbPushTest {
     @Description("Database is not available and it is created while running the db push command inside " +
             "a project with default entity structure")
     public void testDbPushWithoutDatabaseWithDefaultEntityStructure() throws BalException {
-        assertGeneratedSources("tool_test_db_push_26", DB_PUSH);
+        executeCommand("tool_test_db_push_26", DB_PUSH);
+        assertGeneratedSources("tool_test_db_push_26");
     }
     @Test(enabled = true)
     @Description("Test the created sql script with escape character in entity name and fields")
     public void testDbPushWithEscapeCharacter() {
-        assertGeneratedSources("tool_test_db_push_25", DB_PUSH);
+        executeCommand("tool_test_db_push_25", DB_PUSH);
+        assertGeneratedSources("tool_test_db_push_25");
     }
     @Test(enabled = true)
     @Description("Test the created sql script with byte[] and byte[]? fields")
     public void testDbPushWithByteArray() {
-        assertGeneratedSources("tool_test_db_push_27", DB_PUSH);
+        executeCommand("tool_test_db_push_27", DB_PUSH);
+        assertGeneratedSources("tool_test_db_push_27");
     }
 }
