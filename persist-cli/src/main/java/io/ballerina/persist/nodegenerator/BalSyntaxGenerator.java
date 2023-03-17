@@ -254,26 +254,29 @@ public class BalSyntaxGenerator {
                                         }
                                         // one-to-one
                                         if (!field.isArrayType() && !assocfield.isArrayType()) {
-                                            field.setRelation(computeRelation(entity, assocEntity, true,
-                                                    Relation.RelationType.ONE));
-                                            assocfield.setRelation(computeRelation(assocEntity, entity, false,
-                                                    Relation.RelationType.ONE));
+                                            // first param should be always owner entities field name
+                                            field.setRelation(computeRelation(field.getFieldName(), entity, assocEntity,
+                                                    true, Relation.RelationType.ONE));
+                                            assocfield.setRelation(computeRelation(field.getFieldName(), assocEntity,
+                                                    entity, false, Relation.RelationType.ONE));
                                         } else {
                                             if (field.isArrayType() && field.isOptionalType()) {
                                                 // one-to-many relation. associated entity is the owner.
-                                                field.setRelation(computeRelation(entity, assocEntity, false,
-                                                        Relation.RelationType.MANY));
-                                                assocfield.setRelation(computeRelation(assocEntity, entity, true,
-                                                        Relation.RelationType.ONE));
+                                                // first param should be always owner entities field name
+                                                field.setRelation(computeRelation(assocfield.getFieldName(), entity,
+                                                        assocEntity, false, Relation.RelationType.MANY));
+                                                assocfield.setRelation(computeRelation(assocfield.getFieldName(),
+                                                        assocEntity, entity, true, Relation.RelationType.ONE));
                                             } else if (field.isArrayType() || field.getFieldType().equals("byte")) {
                                                 field.setRelation(null);
                                             } else {
                                                 // one-to-many relation. entity is the owner.
                                                 // one-to-one relation. entity is the owner.
-                                                field.setRelation(computeRelation(entity, assocEntity, true,
-                                                        Relation.RelationType.ONE));
-                                                assocfield.setRelation(computeRelation(assocEntity, entity,
-                                                        false, Relation.RelationType.MANY));
+                                                // first param should be always owner entities field name
+                                                field.setRelation(computeRelation(field.getFieldName(), entity,
+                                                        assocEntity, true, Relation.RelationType.ONE));
+                                                assocfield.setRelation(computeRelation(field.getFieldName(),
+                                                        assocEntity, entity, false, Relation.RelationType.MANY));
                                             }
                                         }
                                     });
@@ -329,13 +332,13 @@ public class BalSyntaxGenerator {
         }
     }
 
-    private static Relation computeRelation(Entity entity, Entity assocEntity, boolean isOwner,
+    private static Relation computeRelation(String fieldName, Entity entity, Entity assocEntity, boolean isOwner,
                                             Relation.RelationType relationType) {
         Relation.Builder relBuilder = new Relation.Builder();
         relBuilder.setAssocEntity(assocEntity);
         if (isOwner) {
             List<Relation.Key> keyColumns = assocEntity.getKeys().stream().map(key ->
-                    new Relation.Key(stripEscapeCharacter(assocEntity.getEntityName().toLowerCase(Locale.ENGLISH))
+                    new Relation.Key(stripEscapeCharacter(fieldName.toLowerCase(Locale.ENGLISH))
                             + stripEscapeCharacter(key.getFieldName()).substring(0, 1).toUpperCase(Locale.ENGLISH)
                             + stripEscapeCharacter(key.getFieldName()).substring(1), key.getFieldName(),
                             key.getFieldType())).collect(Collectors.toList());
@@ -346,7 +349,7 @@ public class BalSyntaxGenerator {
                     .collect(Collectors.toList()));
         } else {
             List<Relation.Key> keyColumns = entity.getKeys().stream().map(key -> new Relation.Key(key.getFieldName(),
-                    entity.getEntityName().toLowerCase(Locale.ENGLISH)
+                            fieldName.toLowerCase(Locale.ENGLISH)
                             + stripEscapeCharacter(key.getFieldName()).substring(0, 1).toUpperCase(Locale.ENGLISH)
                             + stripEscapeCharacter(key.getFieldName()).substring(1),
                     key.getFieldType()))

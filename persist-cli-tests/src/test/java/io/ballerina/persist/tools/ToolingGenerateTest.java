@@ -239,4 +239,10 @@ public class ToolingGenerateTest {
     public void testSqlGenWithCompositeReferenceKeys() {
         assertGeneratedSources("tool_test_generate_41", GENERATE);
     }
+
+    @Test(enabled = true)
+    @Description("Test the generated types for multiple association between same entities")
+    public void testGenerateMultipleAssociationBetweenSameEntities() {
+        assertGeneratedSources("tool_test_generate_42", GENERATE);
+    }
 }

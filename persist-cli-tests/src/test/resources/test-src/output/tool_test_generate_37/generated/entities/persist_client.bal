@@ -32,13 +32,13 @@ public client class Client {
                 salary: {columnName: "salary"},
                 age: {columnName: "age"},
                 isRegistered: {columnName: "isRegistered"},
-                userId: {columnName: "userId"},
+                ownerId: {columnName: "ownerId"},
                 "owner.id": {relation: {entityName: "owner", refField: "id"}},
                 "owner.name": {relation: {entityName: "owner", refField: "name"}},
                 "owner.multipleassociationsId": {relation: {entityName: "multipleAssociations", refField: "multipleassociationsId"}}
             },
             keyFields: ["id"],
-            joinMetadata: {owner: {entity: User, fieldName: "owner", refTable: "User", refColumns: ["id"], joinColumns: ["userId"], 'type: persist:ONE_TO_ONE}}
+            joinMetadata: {owner: {entity: User, fieldName: "owner", refTable: "User", refColumns: ["id"], joinColumns: ["ownerId"], 'type: persist:ONE_TO_ONE}}
         },
         "users": {
             entityName: "User",
@@ -53,14 +53,14 @@ public client class Client {
                 "profile.salary": {relation: {entityName: "profile", refField: "salary"}},
                 "profile.age": {relation: {entityName: "profile", refField: "age"}},
                 "profile.isRegistered": {relation: {entityName: "profile", refField: "isRegistered"}},
-                "profile.userId": {relation: {entityName: "owner", refField: "userId"}},
+                "profile.ownerId": {relation: {entityName: "owner", refField: "ownerId"}},
                 "multipleAssociations.id": {relation: {entityName: "multipleAssociations", refField: "id"}},
                 "multipleAssociations.name": {relation: {entityName: "multipleAssociations", refField: "name"}}
             },
             keyFields: ["id"],
             joinMetadata: {
-                profile: {entity: Profile, fieldName: "profile", refTable: "Profile", refColumns: ["userId"], joinColumns: ["id"], 'type: persist:ONE_TO_ONE},
-                multipleAssociations: {entity: MultipleAssociations, fieldName: "multipleAssociations", refTable: "MultipleAssociations", refColumns: ["userId", "id"], joinColumns: ["id", "multipleassociationsId"], 'type: persist:ONE_TO_ONE}
+                profile: {entity: Profile, fieldName: "profile", refTable: "Profile", refColumns: ["ownerId"], joinColumns: ["id"], 'type: persist:ONE_TO_ONE},
+                multipleAssociations: {entity: MultipleAssociations, fieldName: "multipleAssociations", refTable: "MultipleAssociations", refColumns: ["ownerId", "id"], joinColumns: ["id", "multipleassociationsId"], 'type: persist:ONE_TO_ONE}
             }
         },
         "depts": {

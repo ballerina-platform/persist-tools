@@ -33,10 +33,10 @@ public client class Client {
                 'type: {columnName: "type"},
                 "workspaces[].workspaceId": {relation: {entityName: "workspaces", refField: "workspaceId"}},
                 "workspaces[].workspaceType": {relation: {entityName: "workspaces", refField: "workspaceType"}},
-                "workspaces[].buildingBuildingCode": {relation: {entityName: "location", refField: "buildingBuildingCode"}}
+                "workspaces[].locationBuildingCode": {relation: {entityName: "location", refField: "locationBuildingCode"}}
             },
             keyFields: ["buildingCode"],
-            joinMetadata: {workspaces: {entity: 'Workspace, fieldName: "workspaces", refTable: "'Workspace", refColumns: ["'buildingBuildingCode"], joinColumns: ["'buildingCode"], 'type: persist:MANY_TO_ONE}}
+            joinMetadata: {workspaces: {entity: 'Workspace, fieldName: "workspaces", refTable: "'Workspace", refColumns: ["locationBuildingCode"], joinColumns: ["'buildingCode"], 'type: persist:MANY_TO_ONE}}
         },
         "'departments": {
             entityName: "Department",
@@ -54,7 +54,7 @@ public client class Client {
                 "employees[].workspaceWorkspaceId": {relation: {entityName: "workspace", refField: "workspaceWorkspaceId"}}
             },
             keyFields: ["deptNo"],
-            joinMetadata: {employees: {entity: 'Employee, fieldName: "employees", refTable: "'Employee", refColumns: ["'departmentDeptNo"], joinColumns: ["deptNo"], 'type: persist:MANY_TO_ONE}}
+            joinMetadata: {employees: {entity: 'Employee, fieldName: "employees", refTable: "'Employee", refColumns: ["departmentDeptNo"], joinColumns: ["deptNo"], 'type: persist:MANY_TO_ONE}}
         },
         "'employees": {
             entityName: "Employee",
@@ -72,7 +72,7 @@ public client class Client {
                 "department.deptName": {relation: {entityName: "department", refField: "deptName"}},
                 "workspace.workspaceId": {relation: {entityName: "workspace", refField: "workspaceId"}},
                 "workspace.workspaceType": {relation: {entityName: "workspace", refField: "workspaceType"}},
-                "workspace.buildingBuildingCode": {relation: {entityName: "location", refField: "buildingBuildingCode"}}
+                "workspace.locationBuildingCode": {relation: {entityName: "location", refField: "locationBuildingCode"}}
             },
             keyFields: ["empNo"],
             joinMetadata: {
@@ -97,7 +97,7 @@ public client class Client {
             fieldMetadata: {
                 workspaceId: {columnName: "workspaceId"},
                 workspaceType: {columnName: "workspaceType"},
-                buildingBuildingCode: {columnName: "buildingBuildingCode"},
+                locationBuildingCode: {columnName: "locationBuildingCode"},
                 "location.'buildingCode": {relation: {entityName: "location", refField: "buildingCode"}},
                 "location.'city": {relation: {entityName: "location", refField: "city"}},
                 "location.'state": {relation: {entityName: "location", refField: "state"}},
@@ -115,8 +115,8 @@ public client class Client {
             },
             keyFields: ["workspaceId"],
             joinMetadata: {
-                location: {entity: 'Building, fieldName: "location", refTable: "'Building", refColumns: ["'buildingCode"], joinColumns: ["buildingBuildingCode"], 'type: persist:ONE_TO_MANY},
-                employee: {entity: 'Employee, fieldName: "employee", refTable: "'Employee", refColumns: ["'buildingCode", "'workspaceWorkspaceId"], joinColumns: ["buildingBuildingCode", "workspaceId"], 'type: persist:ONE_TO_ONE}
+                location: {entity: 'Building, fieldName: "location", refTable: "'Building", refColumns: ["'buildingCode"], joinColumns: ["locationBuildingCode"], 'type: persist:ONE_TO_MANY},
+                employee: {entity: 'Employee, fieldName: "employee", refTable: "'Employee", refColumns: ["'buildingCode", "workspaceWorkspaceId"], joinColumns: ["locationBuildingCode", "workspaceId"], 'type: persist:ONE_TO_ONE}
             }
         }
     };
