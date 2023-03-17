@@ -69,18 +69,7 @@ public class IfElse {
         );
     }
 
-    public void addElseBody(IfElse elseBody) {
-        this.elseBody = NodeFactory.createElseBlockNode(
-                SyntaxTokenConstants.SYNTAX_TREE_KEYWORD_ELSE,
-                elseBody.getIfElseStatementNode()
-        );
-    }
-
     public void addIfStatement(StatementNode statement) {
         ifStatements = ifStatements.add(statement);
-    }
-
-    public void addElseStatement(StatementNode statement) {
-        elseStatements = elseStatements.add(statement);
     }
 }

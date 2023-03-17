@@ -23,20 +23,14 @@ import io.ballerina.compiler.syntax.tree.AnnotationNode;
 import io.ballerina.compiler.syntax.tree.ArrayDimensionNode;
 import io.ballerina.compiler.syntax.tree.ArrayTypeDescriptorNode;
 import io.ballerina.compiler.syntax.tree.BuiltinSimpleNameReferenceNode;
-import io.ballerina.compiler.syntax.tree.ExpressionNode;
-import io.ballerina.compiler.syntax.tree.MapTypeDescriptorNode;
 import io.ballerina.compiler.syntax.tree.Node;
 import io.ballerina.compiler.syntax.tree.NodeFactory;
 import io.ballerina.compiler.syntax.tree.NodeList;
-import io.ballerina.compiler.syntax.tree.ObjectFieldNode;
 import io.ballerina.compiler.syntax.tree.OptionalTypeDescriptorNode;
 import io.ballerina.compiler.syntax.tree.QualifiedNameReferenceNode;
-import io.ballerina.compiler.syntax.tree.RecordTypeDescriptorNode;
 import io.ballerina.compiler.syntax.tree.ReturnTypeDescriptorNode;
 import io.ballerina.compiler.syntax.tree.SimpleNameReferenceNode;
-import io.ballerina.compiler.syntax.tree.StreamTypeDescriptorNode;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
-import io.ballerina.compiler.syntax.tree.Token;
 import io.ballerina.compiler.syntax.tree.TypeDescriptorNode;
 import io.ballerina.compiler.syntax.tree.UnionTypeDescriptorNode;
 import io.ballerina.persist.nodegenerator.SyntaxTokenConstants;
@@ -58,6 +52,7 @@ public class TypeDescriptor {
                 type
         );
     }
+
 
     public static ObjectFieldNode getObjectFieldNode(String visibility, String[] qualifiers, Node typeName,
                                                      String fieldName, ExpressionNode expression) {
@@ -128,34 +123,6 @@ public class TypeDescriptor {
         );
     }
 
-    public static RecordTypeDescriptorNode getRecordTypeDescriptorNode() {
-        return NodeFactory.createRecordTypeDescriptorNode(
-                SyntaxTokenConstants.SYNTAX_TREE_KEYWORD_RECORD,
-                SyntaxTokenConstants.SYNTAX_TREE_OPEN_BRACE,
-                NodeFactory.createEmptyNodeList(),
-                null,
-                SyntaxTokenConstants.SYNTAX_TREE_CLOSE_BRACE
-        );
-    }
-
-    public static ObjectFieldNode getObjectFieldNodeWithoutExpression(String visibility, String[] qualifiers,
-                                                                      Node typeName, String fieldName) {
-        NodeList<Token> qualifierList = NodeFactory.createEmptyNodeList();
-        for (String qualifier : qualifiers) {
-            qualifierList = qualifierList.add(AbstractNodeFactory.createIdentifierToken(qualifier + " "));
-        }
-        return NodeFactory.createObjectFieldNode(
-                null,
-                AbstractNodeFactory.createIdentifierToken("\n" + visibility + " "),
-                qualifierList,
-                typeName,
-                AbstractNodeFactory.createIdentifierToken(fieldName),
-                null,
-                null,
-                SyntaxTokenConstants.SYNTAX_TREE_SEMICOLON
-        );
-    }
-
     public static SimpleNameReferenceNode getSimpleNameReferenceNode(String name) {
         return NodeFactory.createSimpleNameReferenceNode(AbstractNodeFactory.createIdentifierToken(name + " "));
     }
@@ -184,37 +151,4 @@ public class TypeDescriptor {
         );
     }
 
-    public static StreamTypeDescriptorNode getStreamTypeDescriptorNode(Node lhs, Node rhs) {
-        Token comma;
-        if (rhs == null) {
-            comma = null;
-        } else {
-            comma = AbstractNodeFactory.createToken(SyntaxKind.COMMA_TOKEN,
-                    AbstractNodeFactory.createEmptyMinutiaeList(),
-                    NodeFactory.createMinutiaeList(AbstractNodeFactory.createWhitespaceMinutiae(" ")));
-        }
-        return NodeFactory.createStreamTypeDescriptorNode(
-                AbstractNodeFactory.createToken(SyntaxKind.STREAM_KEYWORD),
-                NodeFactory.createStreamTypeParamsNode(
-                        AbstractNodeFactory.createToken(SyntaxKind.LT_TOKEN),
-                        lhs,
-                        comma,
-                        rhs,
-                        AbstractNodeFactory.createToken(SyntaxKind.GT_TOKEN,
-                                AbstractNodeFactory.createEmptyMinutiaeList(),
-                                NodeFactory.createMinutiaeList(AbstractNodeFactory.createWhitespaceMinutiae(" ")))
-                )
-        );
-    }
-
-    public static MapTypeDescriptorNode getMapTypeDescriptorNode(TypeDescriptorNode descriptorNode) {
-        return NodeFactory.createMapTypeDescriptorNode(
-                AbstractNodeFactory.createIdentifierToken("map"),
-                NodeFactory.createTypeParameterNode(
-                        SyntaxTokenConstants.SYNTAX_TREE_IT,
-                        descriptorNode,
-                        SyntaxTokenConstants.SYNTAX_TREE_GT
-                )
-        );
-    }
 }
