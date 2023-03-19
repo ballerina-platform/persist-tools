@@ -36,7 +36,7 @@ public client class Client {
             keyFields: ["id"],
             joinMetadata: {
                 owner: {entity: User, fieldName: "owner", refTable: "User", refColumns: ["id"], joinColumns: ["ownerId"], 'type: persist:ONE_TO_ONE},
-                multipleAssociations: {entity: MultipleAssociations, fieldName: "multipleAssociations", refTable: "MultipleAssociations", refColumns: ["id", "id"], joinColumns: ["ownerId", "multipleassociationsId"], 'type: persist:ONE_TO_ONE}
+                multipleAssociations: {entity: MultipleAssociations, fieldName: "multipleAssociations", refTable: "MultipleAssociations", refColumns: ["id"], joinColumns: ["multipleassociationsId"], 'type: persist:ONE_TO_ONE}
             }
         },
         "users": {
@@ -56,7 +56,7 @@ public client class Client {
             keyFields: ["id"],
             joinMetadata: {
                 profile: {entity: Profile, fieldName: "profile", refTable: "Profile", refColumns: ["ownerId"], joinColumns: ["id"], 'type: persist:ONE_TO_ONE},
-                multipleAssociations: {entity: MultipleAssociations, fieldName: "multipleAssociations", refTable: "MultipleAssociations", refColumns: ["ownerId", "id"], joinColumns: ["id", "multipleassociationsId"], 'type: persist:ONE_TO_ONE}
+                multipleAssociations: {entity: MultipleAssociations, fieldName: "multipleAssociations", refTable: "MultipleAssociations", refColumns: ["id"], joinColumns: ["multipleassociationsId"], 'type: persist:ONE_TO_ONE}
             }
         },
         "multipleassociations": {
@@ -76,7 +76,7 @@ public client class Client {
             keyFields: ["id"],
             joinMetadata: {
                 profile: {entity: Profile, fieldName: "profile", refTable: "Profile", refColumns: ["multipleassociationsId"], joinColumns: ["id"], 'type: persist:ONE_TO_ONE},
-                owner: {entity: User, fieldName: "owner", refTable: "User", refColumns: ["multipleassociationsId", "multipleassociationsId"], joinColumns: ["id", "id"], 'type: persist:ONE_TO_ONE}
+                owner: {entity: User, fieldName: "owner", refTable: "User", refColumns: ["multipleassociationsId"], joinColumns: ["id"], 'type: persist:ONE_TO_ONE}
             }
         }
     };

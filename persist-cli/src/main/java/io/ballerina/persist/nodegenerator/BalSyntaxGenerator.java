@@ -247,6 +247,10 @@ public class BalSyntaxGenerator {
                             assocEntity.getFields().stream().filter(assocfield -> assocfield.getFieldType()
                                     .equals(entity.getEntityName()))
                                     .filter(assocfield -> assocfield.getRelation() == null).forEach(assocfield -> {
+                                        // skip if the relation is already set for the entity field.
+                                        if (field.getRelation() != null) {
+                                            return;
+                                        }
                                         // one-to-many or many-to-many with no relation annotations
                                         if (field.isArrayType() && assocfield.isArrayType()) {
                                             throw new RuntimeException("unsupported many to many relation between " +
@@ -522,9 +526,9 @@ public class BalSyntaxGenerator {
 
     private static String getJoinMetaData(Entity entity) {
         StringBuilder joinMetaData = new StringBuilder();
-        StringBuilder refColumns = new StringBuilder();
-        StringBuilder joinColumns = new StringBuilder();
         for (EntityField entityField : entity.getFields()) {
+            StringBuilder refColumns = new StringBuilder();
+            StringBuilder joinColumns = new StringBuilder();
             if (entityField.getRelation() != null) {
                 String relationType = "persist:ONE_TO_ONE";
                 Entity associatedEntity = entityField.getRelation().getAssocEntity();
@@ -539,23 +543,23 @@ public class BalSyntaxGenerator {
                         }
                     }
                 }
-            if (joinMetaData.length() > 0) {
-                joinMetaData.append(COMMA_WITH_NEWLINE);
-            }
-            for (Relation.Key key : entityField.getRelation().getKeyColumns()) {
-                if (joinColumns.length() > 0) {
-                    joinColumns.append(",");
+                if (joinMetaData.length() > 0) {
+                    joinMetaData.append(COMMA_WITH_NEWLINE);
                 }
-                if (refColumns.length() > 0) {
-                    refColumns.append(",");
+                for (Relation.Key key : entityField.getRelation().getKeyColumns()) {
+                    if (joinColumns.length() > 0) {
+                        joinColumns.append(",");
+                    }
+                    if (refColumns.length() > 0) {
+                        refColumns.append(",");
+                    }
+                    refColumns.append(String.format(COLUMN_ARRAY_ENTRY_TEMPLATE, key.getReference()));
+                    joinColumns.append(String.format(COLUMN_ARRAY_ENTRY_TEMPLATE, key.getField()));
                 }
-                refColumns.append(String.format(COLUMN_ARRAY_ENTRY_TEMPLATE, key.getReference()));
-                joinColumns.append(String.format(COLUMN_ARRAY_ENTRY_TEMPLATE, key.getField()));
-            }
-            joinMetaData.append(String.format(JOIN_METADATA_FIELD_TEMPLATE, entityField.getFieldName(),
-                    entityField.getFieldType(),
-                    entityField.getFieldName(), entityField.getFieldType(), refColumns,
-                    joinColumns, relationType));
+                joinMetaData.append(String.format(JOIN_METADATA_FIELD_TEMPLATE, entityField.getFieldName(),
+                        entityField.getFieldType(),
+                        entityField.getFieldName(), entityField.getFieldType(), refColumns,
+                        joinColumns, relationType));
             }
         }
         return joinMetaData.toString();

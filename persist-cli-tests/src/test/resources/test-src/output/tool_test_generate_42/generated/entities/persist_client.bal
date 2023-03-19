@@ -35,11 +35,11 @@ public client class Client {
                 "followers[].id": {relation: {entityName: "followers", refField: "id"}},
                 "followers[].created_date": {relation: {entityName: "followers", refField: "created_date"}},
                 "followers[].leaderId": {relation: {entityName: "leader", refField: "leaderId"}},
-                "followers[].followerId": {relation: {entityName: "followers", refField: "followerId"}},
+                "followers[].followerId": {relation: {entityName: "follower", refField: "followerId"}},
                 "leaders[].id": {relation: {entityName: "leaders", refField: "id"}},
                 "leaders[].created_date": {relation: {entityName: "leaders", refField: "created_date"}},
                 "leaders[].leaderId": {relation: {entityName: "leader", refField: "leaderId"}},
-                "leaders[].followerId": {relation: {entityName: "leaders", refField: "followerId"}}
+                "leaders[].followerId": {relation: {entityName: "follower", refField: "followerId"}}
             },
             keyFields: ["id"],
             joinMetadata: {
@@ -75,17 +75,16 @@ public client class Client {
                 followerId: {columnName: "followerId"},
                 "leader.id": {relation: {entityName: "leader", refField: "id"}},
                 "leader.name": {relation: {entityName: "leader", refField: "name"}},
-                "leader.birthDate": {relation: {entityName: "leader", refField: "birthDate"}}
+                "leader.birthDate": {relation: {entityName: "leader", refField: "birthDate"}},
                 "follower.id": {relation: {entityName: "follower", refField: "id"}},
                 "follower.name": {relation: {entityName: "follower", refField: "name"}},
                 "follower.birthDate": {relation: {entityName: "follower", refField: "birthDate"}}
             },
             keyFields: ["id"],
             joinMetadata: {
-                leader: {entity: User, fieldName: "leader", refTable: "User", refColumns: ["id"], joinColumns: ["leaderId"], 'type: persist:ONE_TO_MANY}
+                leader: {entity: User, fieldName: "leader", refTable: "User", refColumns: ["id"], joinColumns: ["leaderId"], 'type: persist:ONE_TO_MANY},
                 follower: {entity: User, fieldName: "follower", refTable: "User", refColumns: ["id"], joinColumns: ["followerId"], 'type: persist:ONE_TO_MANY}
             }
-
         }
     };
 

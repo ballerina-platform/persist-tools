@@ -85,6 +85,7 @@ public type FollowerOptionalized record {|
 public type FollowerWithRelations record {|
     *FollowerOptionalized;
     UserOptionalized leader?;
+    UserOptionalized follower?;
 |};
 
 public type FollowerTargetType typedesc<FollowerWithRelations>;
