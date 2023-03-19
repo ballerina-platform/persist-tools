@@ -59,9 +59,7 @@ public class GeneratedSourcesTestUtils {
     public static final Path RESOURCES_EXPECTED_OUTPUT = Paths.get("src", "test", "resources", "test-src", "output")
             .toAbsolutePath();
 
-    public static void assertGeneratedSources(String subDir, Command cmd) {
-
-        generateSourceCode(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir), cmd);
+    public static void assertGeneratedSources(String subDir) {
         Assert.assertTrue(directoryContentEquals(Paths.get(RESOURCES_EXPECTED_OUTPUT.toString()).resolve(subDir),
                 Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)));
         for (Path actualOutputFile: listFiles(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir))) {
@@ -90,7 +88,7 @@ public class GeneratedSourcesTestUtils {
 
     public static void assertGeneratedSourcesNegative(String subDir, Command cmd, String[] relativeFilepaths) {
         Path sourceDirPath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);
-        generateSourceCode(sourceDirPath, cmd);
+        executeCommand(subDir, cmd);
         if (cmd == Command.DB_PUSH) {
             Assert.assertFalse(false);
         } else {
@@ -135,9 +133,9 @@ public class GeneratedSourcesTestUtils {
         }
     }
 
-    public static HashMap generateSourceCode(Path sourcePath, Command cmd) {
+    public static HashMap executeCommand(String subDir, Command cmd) {
         Class<?> persistClass;
-
+        Path sourcePath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);
         try {
             if (cmd == Command.INIT) {
                 persistClass = Class.forName("io.ballerina.persist.cmd.Init");

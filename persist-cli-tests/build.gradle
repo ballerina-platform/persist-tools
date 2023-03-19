@@ -40,6 +40,7 @@ dependencies {
 
     testImplementation "org.ballerinalang:ballerina-lang:${ballerinaLangVersion}"
     testImplementation "org.ballerinalang:ballerina-cli:${ballerinaLangVersion}"
+    testImplementation group: 'info.picocli', name: 'picocli', version: '4.7.1'
 
     balTools ("org.ballerinalang:jballerina-tools:${ballerinaLangVersion}") {
         transitive = false

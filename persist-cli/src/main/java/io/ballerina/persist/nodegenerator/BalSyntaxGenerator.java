@@ -567,7 +567,7 @@ public class BalSyntaxGenerator {
 
     private static ClientResource createClientResource(Entity entity) {
         HashMap<String, String> keys = new HashMap<>();
-        ClientResource resource = new ClientResource(entity.getResourceName());
+        ClientResource resource = new ClientResource();
         for (EntityField field : entity.getKeys()) {
             keys.put(field.getFieldName(), field.getFieldType());
         }

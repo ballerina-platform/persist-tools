@@ -18,20 +18,25 @@
 
 package io.ballerina.persist.tools;
 
+import io.ballerina.persist.cmd.Init;
 import jdk.jfr.Description;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import picocli.CommandLine;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
 
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.Command.INIT;
+import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.GENERATED_SOURCES_DIRECTORY;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertGeneratedSources;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertGeneratedSourcesNegative;
+import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.executeCommand;
 
 /**
  * persist tool init command tests.
@@ -57,7 +62,8 @@ public class ToolingInitTest {
     @Description("When the project is not initiated")
     public void testInit() {
         updateOutputBallerinaToml("tool_test_init_1");
-        assertGeneratedSources("tool_test_init_1", INIT);
+        executeCommand("tool_test_init_1", INIT);
+        assertGeneratedSources("tool_test_init_1");
     }
 
     @Test(enabled = true)
@@ -71,7 +77,8 @@ public class ToolingInitTest {
             "configurations")
     public void testsInitUpdateConfigWithPartialyInitiatedFiles() {
         updateOutputBallerinaToml("tool_test_init_3");
-        assertGeneratedSources("tool_test_init_3", INIT);
+        executeCommand("tool_test_init_3", INIT);
+        assertGeneratedSources("tool_test_init_3");
     }
 
     @Test(enabled = true)
@@ -84,28 +91,81 @@ public class ToolingInitTest {
     @Description("When the configs are already updated")
     public void testsInitUpdateConfigWithUpdatedDbConfigurations() {
         updateOutputBallerinaToml("tool_test_init_5");
-        assertGeneratedSources("tool_test_init_5", INIT);
+        executeCommand("tool_test_init_5", INIT);
+        assertGeneratedSources("tool_test_init_5");
     }
 
     @Test(enabled = true)
     @Description("Running init on a already initialized project")
     public void testInitAlreadyInitializedProject() {
         updateOutputBallerinaToml("tool_test_init_6");
-        assertGeneratedSources("tool_test_init_6", INIT);
+        executeCommand("tool_test_init_6", INIT);
+        assertGeneratedSources("tool_test_init_6");
     }
 
     @Test(enabled = true)
     @Description("Running init on a already initialized project with database configurations missing")
     public void testInitAlreadyInitializedProjectWithOutDatabaseConfiguration() {
         updateOutputBallerinaToml("tool_test_init_7");
-        assertGeneratedSources("tool_test_init_7", INIT);
+        executeCommand("tool_test_init_7", INIT);
+        assertGeneratedSources("tool_test_init_7");
     }
-    
+
     @Test(enabled = true)
     @Description("Running init on a project with manually created definition file")
     public void testInitWithManuallyCreatedDefinitionFile() {
         updateOutputBallerinaToml("tool_test_init_9");
-        assertGeneratedSources("tool_test_init_9", INIT);
+        executeCommand("tool_test_init_9", INIT);
+        assertGeneratedSources("tool_test_init_9");
+    }
+
+    @Test(enabled = true)
+    public void testInitArgs() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
+            InstantiationException, IllegalAccessException {
+        Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Init");
+        Init persistCmd = (Init) persistClass.getDeclaredConstructor(String.class).
+                newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, "tool_test_init_11").toAbsolutePath().
+                        toString());
+        new CommandLine(persistCmd).parseArgs("--help");
+        persistCmd.execute();
+        assertGeneratedSources("tool_test_init_11");
+
+        Init persistCmd1 = (Init) persistClass.getDeclaredConstructor(String.class).
+                newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, "tool_test_init_11").toAbsolutePath().
+                        toString());
+        new CommandLine(persistCmd1).parseArgs("--datastore", "");
+        persistCmd1.execute();
+        assertGeneratedSources("tool_test_init_11");
+
+        Init persistCmd2 = (Init) persistClass.getDeclaredConstructor(String.class).
+                newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, "tool_test_init_11").toAbsolutePath().
+                        toString());
+        new CommandLine(persistCmd2).parseArgs("--module", "^db");
+        persistCmd2.execute();
+        assertGeneratedSources("tool_test_init_11");
+
+        Init persistCmd3 = (Init) persistClass.getDeclaredConstructor(String.class).
+                newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, "tool_test_init_11").toAbsolutePath().
+                        toString());
+        new CommandLine(persistCmd3).parseArgs("--module",
+                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" +
+                        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" +
+                        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+        persistCmd3.execute();
+        assertGeneratedSources("tool_test_init_11");
+    }
+
+    @Test(enabled = true)
+    public void testInitWithModuleArg() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
+            InstantiationException, IllegalAccessException {
+        updateOutputBallerinaToml("tool_test_init_12");
+        Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Init");
+        Init persistCmd = (Init) persistClass.getDeclaredConstructor(String.class).
+                newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, "tool_test_init_12").toAbsolutePath().
+                        toString());
+        new CommandLine(persistCmd).parseArgs("--module", "test");
+        persistCmd.execute();
+        assertGeneratedSources("tool_test_init_12");
     }
 
     private void updateOutputBallerinaToml(String fileName) {
