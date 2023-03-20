@@ -36,7 +36,7 @@ public client class Client {
                 "workspace.workspaceId": {relation: {entityName: "workspace", refField: "workspaceId"}},
                 "workspace.workspaceType": {relation: {entityName: "workspace", refField: "workspaceType"}},
                 "workspace.locationBuildingCode": {relation: {entityName: "location", refField: "locationBuildingCode"}},
-                "workspace.employeeEmpNo": {relation: {entityName: "employee", refField: "employeeEmpNo"}}
+                "workspace.workspaceEmpNo": {relation: {entityName: "employee", refField: "workspaceEmpNo"}}
             },
             keyFields: ["empNo"],
             joinMetadata: {
@@ -51,7 +51,7 @@ public client class Client {
                 workspaceId: {columnName: "workspaceId"},
                 workspaceType: {columnName: "workspaceType"},
                 locationBuildingCode: {columnName: "locationBuildingCode"},
-                employeeEmpNo: {columnName: "employeeEmpNo"},
+                workspaceEmpNo: {columnName: "workspaceEmpNo"},
                 "location.buildingCode": {relation: {entityName: "location", refField: "buildingCode"}},
                 "location.city": {relation: {entityName: "location", refField: "city"}},
                 "location.state": {relation: {entityName: "location", refField: "state"}},
@@ -68,7 +68,7 @@ public client class Client {
             keyFields: ["workspaceId"],
             joinMetadata: {
                 location: {entity: Building, fieldName: "location", refTable: "Building", refColumns: ["buildingCode"], joinColumns: ["locationBuildingCode"], 'type: persist:ONE_TO_MANY},
-                employee: {entity: Employee, fieldName: "employee", refTable: "Employee", refColumns: ["empNo"], joinColumns: ["employeeEmpNo"], 'type: persist:ONE_TO_ONE}
+                employee: {entity: Employee, fieldName: "employee", refTable: "Employee", refColumns: ["empNo"], joinColumns: ["workspaceEmpNo"], 'type: persist:ONE_TO_ONE}
             }
         },
         "buildings": {
@@ -83,7 +83,7 @@ public client class Client {
                 "workspaces[].workspaceId": {relation: {entityName: "workspaces", refField: "workspaceId"}},
                 "workspaces[].workspaceType": {relation: {entityName: "workspaces", refField: "workspaceType"}},
                 "workspaces[].locationBuildingCode": {relation: {entityName: "location", refField: "locationBuildingCode"}},
-                "workspaces[].employeeEmpNo": {relation: {entityName: "employee", refField: "employeeEmpNo"}}
+                "workspaces[].workspaceEmpNo": {relation: {entityName: "employee", refField: "workspaceEmpNo"}}
             },
             keyFields: ["buildingCode"],
             joinMetadata: {workspaces: {entity: Workspace, fieldName: "workspaces", refTable: "Workspace", refColumns: ["locationBuildingCode"], joinColumns: ["buildingCode"], 'type: persist:MANY_TO_ONE}}
