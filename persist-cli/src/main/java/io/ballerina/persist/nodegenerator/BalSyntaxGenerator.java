@@ -482,7 +482,7 @@ public class BalSyntaxGenerator {
                                                     "\"%s[]" : "\"%s") +
                                                     ASSOCIATED_FIELD_TEMPLATE,
                                             field.getFieldName(), key.getField(),
-                                            stripEscapeCharacter(associatedEntityField.getFieldName()),
+                                            stripEscapeCharacter(field.getFieldName()),
                                             stripEscapeCharacter(key.getField())));
                                 }
                             }
@@ -519,7 +519,7 @@ public class BalSyntaxGenerator {
             }
 
             mapBuilder.append(String.format(METADATARECORD_ELEMENT_TEMPLATE,
-                    entity.getResourceName(), entityMetaData));
+                    getEntityNameConstant(entity.getEntityName()), entityMetaData));
         }
         return NodeParser.parseObjectMember(String.format(METADATARECORD_TEMPLATE, mapBuilder));
     }
@@ -573,7 +573,7 @@ public class BalSyntaxGenerator {
         }
         resource.addFunction(createGetFunction(entity), true);
 
-        resource.addFunction(createGetByKeyFunction(entity, keys), true);
+        resource.addFunction(createGetByKeyFunction(entity), true);
 
         Function create = createPostFunction(entity);
         resource.addFunction(create.getFunctionDefinitionNode(), true);
@@ -689,16 +689,16 @@ public class BalSyntaxGenerator {
         create.addStatement(NodeParser.parseStatement(filterKeys.toString()));
     }
 
-    private static FunctionDefinitionNode createGetByKeyFunction(Entity entity, HashMap<String, String> keys) {
+    private static FunctionDefinitionNode createGetByKeyFunction(Entity entity) {
         StringBuilder keyBuilder = new StringBuilder();
-        for (Map.Entry<String, String> key : keys.entrySet()) {
+        for (EntityField keyField : entity.getKeys()) {
             if (keyBuilder.length() > 0) {
                 keyBuilder.append("/");
             }
             keyBuilder.append(OPEN_BRACKET);
-            keyBuilder.append(key.getValue());
+            keyBuilder.append(keyField.getFieldType());
             keyBuilder.append(SPACE);
-            keyBuilder.append(key.getKey());
+            keyBuilder.append(keyField.getFieldName());
             keyBuilder.append(CLOSE_BRACKET);
         }
 

@@ -125,7 +125,7 @@ public class BalSyntaxConstants {
 
     public static final String COLUMN_ARRAY_ENTRY_TEMPLATE = "\"%s\"";
     public static final String METADATARECORD_KEY_FIELD_TEMPLATE = "keyFields: [%s]";
-    public static final String METADATARECORD_ELEMENT_TEMPLATE = "\"%s\": {%s}";
+    public static final String METADATARECORD_ELEMENT_TEMPLATE = "[%s]: {%s}";
     public static final String METADATARECORD_TEMPLATE =
             "private final record {|persist:Metadata...;|} metadata = {%s};";
     public static final String INIT_DBCLIENT = "mysql:Client|error dbClient = new (host = host, user = user, " +
@@ -145,13 +145,13 @@ public class BalSyntaxConstants {
     public static final String EXTERNAL_GET_BY_KEY_METHOD_TEMPLATE = "isolated resource function get %s/%s(" +
             "%sTargetType targetType = <>) returns targetType|persist:Error = @java:Method {"
             + System.lineSeparator()
-            + "'class: \"io.ballerina.stdlib.persist.QueryProcessor\"," + System.lineSeparator() +
+            + "'class: \"io.ballerina.stdlib.persist.datastore.MySQLProcessor\"," + System.lineSeparator() +
              " name: \"queryOne\"} external;";
 
     public static final String EXTERNAL_GET_METHOD_TEMPLATE = "isolated resource function get %s(" +
             "%sTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {"
             + System.lineSeparator()
-            + "'class: \"io.ballerina.stdlib.persist.QueryProcessor\"," + System.lineSeparator() +
+            + "'class: \"io.ballerina.stdlib.persist.datastore.MySQLProcessor\"," + System.lineSeparator() +
             " name: \"query\"} external;";
 
 }
