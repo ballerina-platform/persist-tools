@@ -1,17 +1,30 @@
 NAME
-       bal persist init - Initialize the persistence layer in the Ballerina project.
+       bal persist init - Initialize the Ballerina package for persistence.
 
 SYNOPSIS
-       bal persist init [<-h> | <--help>]
+       bal persist init [--module <module name>]
+                        [--datastore <store type>]
+                        [<-h> | <--help>]
 
 DESCRIPTION
          This command will create a new directory named 'persist' in the project directory. The 'persist' directory will
          contain empty model definition file which can be used to define the data model of the Ballerina project.
-         This will also add tooling configuration to the Ballerina.toml file and runtime configuration to the Config.toml file.
+         This will also add persist configuration to the Ballerina.toml file.
+
+OPTIONS
+       --module <module name>
+              The name of the module to initialize the persistence layer. If not specified, the default module will be used.
+       --datastore <store type>
+              The type of the datastore to be used for persistence. Only 'mysql' is supported at the moment.
+       -h, --help
+           Print the usage details of all commands.
 
 EXAMPLES
        Print the usage details of the `bal persist init` command.
           $ bal persist init --help
 
-       Initialize the persistence layer in the Ballerina project.
+       Initialize the Ballerina package for persistence with the default module.
           $ bal persist init
+
+       Initialize the Ballerina package for persistence with the 'db' module.
+          $ bal persist init --module db
