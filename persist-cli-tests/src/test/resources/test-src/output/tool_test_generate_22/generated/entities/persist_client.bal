@@ -23,7 +23,7 @@ public client class Client {
             tableName: `MedicalNeed`,
             fieldMetadata: {
                 'record: {columnName: "record"},
-                medicalitemItemId: {columnName: "medicalitemItemId"},
+                itemItemId: {columnName: "itemItemId"},
                 beneficiaryId: {columnName: "beneficiaryId"},
                 'time: {columnName: "time"},
                 urgency: {columnName: "urgency"},
@@ -34,7 +34,7 @@ public client class Client {
                 "item.unit": {relation: {entityName: "item", refField: "unit"}}
             },
             keyFields: ["record"],
-            joinMetadata: {item: {entity: MedicalItem, fieldName: "item", refTable: "MedicalItem", refColumns: ["itemId"], joinColumns: ["medicalitemItemId"], 'type: persist:ONE_TO_ONE}}
+            joinMetadata: {item: {entity: MedicalItem, fieldName: "item", refTable: "MedicalItem", refColumns: ["itemId"], joinColumns: ["itemItemId"], 'type: persist:ONE_TO_ONE}}
         },
         "medicalitems": {
             entityName: "MedicalItem",
@@ -45,14 +45,14 @@ public client class Client {
                 'type: {columnName: "type"},
                 unit: {columnName: "unit"},
                 "medicalNeed.'record": {relation: {entityName: "medicalNeed", refField: "record"}},
-                "medicalNeed.medicalitemItemId": {relation: {entityName: "item", refField: "medicalitemItemId"}},
+                "medicalNeed.itemItemId": {relation: {entityName: "item", refField: "itemItemId"}},
                 "medicalNeed.beneficiaryId": {relation: {entityName: "medicalNeed", refField: "beneficiaryId"}},
                 "medicalNeed.'time": {relation: {entityName: "medicalNeed", refField: "time"}},
                 "medicalNeed.urgency": {relation: {entityName: "medicalNeed", refField: "urgency"}},
                 "medicalNeed.quantity": {relation: {entityName: "medicalNeed", refField: "quantity"}}
             },
             keyFields: ["itemId"],
-            joinMetadata: {medicalNeed: {entity: MedicalNeed, fieldName: "medicalNeed", refTable: "MedicalNeed", refColumns: ["medicalitemItemId"], joinColumns: ["itemId"], 'type: persist:ONE_TO_ONE}}
+            joinMetadata: {medicalNeed: {entity: MedicalNeed, fieldName: "medicalNeed", refTable: "MedicalNeed", refColumns: ["itemItemId"], joinColumns: ["itemId"], 'type: persist:ONE_TO_ONE}}
         }
     };
 

@@ -25,7 +25,7 @@ public client class Client {
             fieldMetadata: {
                 id: {columnName: "id"},
                 name: {columnName: "name"},
-                userId: {columnName: "userId"},
+                ownerId: {columnName: "ownerId"},
                 multipleassociationsId: {columnName: "multipleassociationsId"},
                 "owner.id": {relation: {entityName: "owner", refField: "id"}},
                 "owner.name": {relation: {entityName: "owner", refField: "name"}},
@@ -35,8 +35,8 @@ public client class Client {
             },
             keyFields: ["id"],
             joinMetadata: {
-                owner: {entity: User, fieldName: "owner", refTable: "User", refColumns: ["id"], joinColumns: ["userId"], 'type: persist:ONE_TO_ONE},
-                multipleAssociations: {entity: MultipleAssociations, fieldName: "multipleAssociations", refTable: "MultipleAssociations", refColumns: ["id", "id"], joinColumns: ["userId", "multipleassociationsId"], 'type: persist:ONE_TO_ONE}
+                owner: {entity: User, fieldName: "owner", refTable: "User", refColumns: ["id"], joinColumns: ["ownerId"], 'type: persist:ONE_TO_ONE},
+                multipleAssociations: {entity: MultipleAssociations, fieldName: "multipleAssociations", refTable: "MultipleAssociations", refColumns: ["id"], joinColumns: ["multipleassociationsId"], 'type: persist:ONE_TO_ONE}
             }
         },
         "users": {
@@ -48,15 +48,15 @@ public client class Client {
                 multipleassociationsId: {columnName: "multipleassociationsId"},
                 "profile.id": {relation: {entityName: "profile", refField: "id"}},
                 "profile.name": {relation: {entityName: "profile", refField: "name"}},
-                "profile.userId": {relation: {entityName: "owner", refField: "userId"}},
+                "profile.ownerId": {relation: {entityName: "owner", refField: "ownerId"}},
                 "profile.multipleassociationsId": {relation: {entityName: "multipleAssociations", refField: "multipleassociationsId"}},
                 "multipleAssociations.id": {relation: {entityName: "multipleAssociations", refField: "id"}},
                 "multipleAssociations.name": {relation: {entityName: "multipleAssociations", refField: "name"}}
             },
             keyFields: ["id"],
             joinMetadata: {
-                profile: {entity: Profile, fieldName: "profile", refTable: "Profile", refColumns: ["userId"], joinColumns: ["id"], 'type: persist:ONE_TO_ONE},
-                multipleAssociations: {entity: MultipleAssociations, fieldName: "multipleAssociations", refTable: "MultipleAssociations", refColumns: ["userId", "id"], joinColumns: ["id", "multipleassociationsId"], 'type: persist:ONE_TO_ONE}
+                profile: {entity: Profile, fieldName: "profile", refTable: "Profile", refColumns: ["ownerId"], joinColumns: ["id"], 'type: persist:ONE_TO_ONE},
+                multipleAssociations: {entity: MultipleAssociations, fieldName: "multipleAssociations", refTable: "MultipleAssociations", refColumns: ["id"], joinColumns: ["multipleassociationsId"], 'type: persist:ONE_TO_ONE}
             }
         },
         "multipleassociations": {
@@ -67,7 +67,7 @@ public client class Client {
                 name: {columnName: "name"},
                 "profile.id": {relation: {entityName: "profile", refField: "id"}},
                 "profile.name": {relation: {entityName: "profile", refField: "name"}},
-                "profile.userId": {relation: {entityName: "owner", refField: "userId"}},
+                "profile.ownerId": {relation: {entityName: "owner", refField: "ownerId"}},
                 "profile.multipleassociationsId": {relation: {entityName: "multipleAssociations", refField: "multipleassociationsId"}},
                 "owner.id": {relation: {entityName: "owner", refField: "id"}},
                 "owner.name": {relation: {entityName: "owner", refField: "name"}},
@@ -76,7 +76,7 @@ public client class Client {
             keyFields: ["id"],
             joinMetadata: {
                 profile: {entity: Profile, fieldName: "profile", refTable: "Profile", refColumns: ["multipleassociationsId"], joinColumns: ["id"], 'type: persist:ONE_TO_ONE},
-                owner: {entity: User, fieldName: "owner", refTable: "User", refColumns: ["multipleassociationsId", "multipleassociationsId"], joinColumns: ["id", "id"], 'type: persist:ONE_TO_ONE}
+                owner: {entity: User, fieldName: "owner", refTable: "User", refColumns: ["multipleassociationsId"], joinColumns: ["id"], 'type: persist:ONE_TO_ONE}
             }
         }
     };

@@ -25,11 +25,11 @@ public client class Client {
                 id: {columnName: "id"},
                 name: {columnName: "name"},
                 gender: {columnName: "gender"},
-                userId: {columnName: "userId"},
+                ownerId: {columnName: "ownerId"},
                 "owner.id": {relation: {entityName: "owner", refField: "id"}}
             },
             keyFields: ["id"],
-            joinMetadata: {owner: {entity: User, fieldName: "owner", refTable: "User", refColumns: ["id"], joinColumns: ["userId"], 'type: persist:ONE_TO_ONE}}
+            joinMetadata: {owner: {entity: User, fieldName: "owner", refTable: "User", refColumns: ["id"], joinColumns: ["ownerId"], 'type: persist:ONE_TO_ONE}}
         },
         "users": {
             entityName: "User",
@@ -39,10 +39,10 @@ public client class Client {
                 "profile.id": {relation: {entityName: "profile", refField: "id"}},
                 "profile.name": {relation: {entityName: "profile", refField: "name"}},
                 "profile.gender": {relation: {entityName: "profile", refField: "gender"}},
-                "profile.userId": {relation: {entityName: "owner", refField: "userId"}}
+                "profile.ownerId": {relation: {entityName: "owner", refField: "ownerId"}}
             },
             keyFields: ["id"],
-            joinMetadata: {profile: {entity: Profile, fieldName: "profile", refTable: "Profile", refColumns: ["userId"], joinColumns: ["id"], 'type: persist:ONE_TO_ONE}}
+            joinMetadata: {profile: {entity: Profile, fieldName: "profile", refTable: "Profile", refColumns: ["ownerId"], joinColumns: ["id"], 'type: persist:ONE_TO_ONE}}
         }
     };
 

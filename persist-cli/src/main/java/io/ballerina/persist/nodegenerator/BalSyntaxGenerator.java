@@ -247,6 +247,10 @@ public class BalSyntaxGenerator {
                             assocEntity.getFields().stream().filter(assocfield -> assocfield.getFieldType()
                                     .equals(entity.getEntityName()))
                                     .filter(assocfield -> assocfield.getRelation() == null).forEach(assocfield -> {
+                                        // skip if the relation is already set for the entity field.
+                                        if (field.getRelation() != null) {
+                                            return;
+                                        }
                                         // one-to-many or many-to-many with no relation annotations
                                         if (field.isArrayType() && assocfield.isArrayType()) {
                                             throw new RuntimeException("unsupported many to many relation between " +
@@ -255,15 +259,15 @@ public class BalSyntaxGenerator {
                                         // one-to-one
                                         if (!field.isArrayType() && !assocfield.isArrayType()) {
                                             if (!field.isOptionalType() && assocfield.isOptionalType()) {
-                                                field.setRelation(computeRelation(entity, assocEntity, true,
-                                                        Relation.RelationType.ONE));
-                                                assocfield.setRelation(computeRelation(assocEntity, entity, false,
-                                                        Relation.RelationType.ONE));
+                                                field.setRelation(computeRelation(field.getFieldName(), entity, 
+                                                        assocEntity, true, Relation.RelationType.ONE));
+                                                assocfield.setRelation(computeRelation(field.getFieldName(), 
+                                                        assocEntity, entity, false, Relation.RelationType.ONE));
                                             } else if (field.isOptionalType() && !assocfield.isOptionalType()) {
-                                                field.setRelation(computeRelation(entity, assocEntity, false,
-                                                        Relation.RelationType.ONE));
-                                                assocfield.setRelation(computeRelation(assocEntity, entity, true,
-                                                        Relation.RelationType.ONE));
+                                                field.setRelation(computeRelation(field.getFieldName(), entity, 
+                                                        assocEntity, false, Relation.RelationType.ONE));
+                                                assocfield.setRelation(computeRelation(field.getFieldName(), 
+                                                        assocEntity, entity, true, Relation.RelationType.ONE));
                                             } else {
                                                 throw new RuntimeException("unsupported ownership annotation " +
                                                         "in the relation between " + entity.getEntityName() +
@@ -272,19 +276,21 @@ public class BalSyntaxGenerator {
                                         } else {
                                             if (field.isArrayType() && field.isOptionalType()) {
                                                 // one-to-many relation. associated entity is the owner.
-                                                field.setRelation(computeRelation(entity, assocEntity, false,
-                                                        Relation.RelationType.MANY));
-                                                assocfield.setRelation(computeRelation(assocEntity, entity, true,
-                                                        Relation.RelationType.ONE));
+                                                // first param should be always owner entities field name
+                                                field.setRelation(computeRelation(assocfield.getFieldName(), entity,
+                                                        assocEntity, false, Relation.RelationType.MANY));
+                                                assocfield.setRelation(computeRelation(assocfield.getFieldName(),
+                                                        assocEntity, entity, true, Relation.RelationType.ONE));
                                             } else if (field.isArrayType() || field.getFieldType().equals("byte")) {
                                                 field.setRelation(null);
                                             } else {
                                                 // one-to-many relation. entity is the owner.
                                                 // one-to-one relation. entity is the owner.
-                                                field.setRelation(computeRelation(entity, assocEntity, true,
-                                                        Relation.RelationType.ONE));
-                                                assocfield.setRelation(computeRelation(assocEntity, entity,
-                                                        false, Relation.RelationType.MANY));
+                                                // first param should be always owner entities field name
+                                                field.setRelation(computeRelation(field.getFieldName(), entity,
+                                                        assocEntity, true, Relation.RelationType.ONE));
+                                                assocfield.setRelation(computeRelation(field.getFieldName(),
+                                                        assocEntity, entity, false, Relation.RelationType.MANY));
                                             }
                                         }
                                     });
@@ -340,13 +346,13 @@ public class BalSyntaxGenerator {
         }
     }
 
-    private static Relation computeRelation(Entity entity, Entity assocEntity, boolean isOwner,
+    private static Relation computeRelation(String fieldName, Entity entity, Entity assocEntity, boolean isOwner,
                                             Relation.RelationType relationType) {
         Relation.Builder relBuilder = new Relation.Builder();
         relBuilder.setAssocEntity(assocEntity);
         if (isOwner) {
             List<Relation.Key> keyColumns = assocEntity.getKeys().stream().map(key ->
-                    new Relation.Key(stripEscapeCharacter(assocEntity.getEntityName().toLowerCase(Locale.ENGLISH))
+                    new Relation.Key(stripEscapeCharacter(fieldName.toLowerCase(Locale.ENGLISH))
                             + stripEscapeCharacter(key.getFieldName()).substring(0, 1).toUpperCase(Locale.ENGLISH)
                             + stripEscapeCharacter(key.getFieldName()).substring(1), key.getFieldName(),
                             key.getFieldType())).collect(Collectors.toList());
@@ -357,7 +363,7 @@ public class BalSyntaxGenerator {
                     .collect(Collectors.toList()));
         } else {
             List<Relation.Key> keyColumns = entity.getKeys().stream().map(key -> new Relation.Key(key.getFieldName(),
-                    entity.getEntityName().toLowerCase(Locale.ENGLISH)
+                            fieldName.toLowerCase(Locale.ENGLISH)
                             + stripEscapeCharacter(key.getFieldName()).substring(0, 1).toUpperCase(Locale.ENGLISH)
                             + stripEscapeCharacter(key.getFieldName()).substring(1),
                     key.getFieldType()))
@@ -530,9 +536,9 @@ public class BalSyntaxGenerator {
 
     private static String getJoinMetaData(Entity entity) {
         StringBuilder joinMetaData = new StringBuilder();
-        StringBuilder refColumns = new StringBuilder();
-        StringBuilder joinColumns = new StringBuilder();
         for (EntityField entityField : entity.getFields()) {
+            StringBuilder refColumns = new StringBuilder();
+            StringBuilder joinColumns = new StringBuilder();
             if (entityField.getRelation() != null) {
                 String relationType = "persist:ONE_TO_ONE";
                 Entity associatedEntity = entityField.getRelation().getAssocEntity();
@@ -547,23 +553,23 @@ public class BalSyntaxGenerator {
                         }
                     }
                 }
-            if (joinMetaData.length() > 0) {
-                joinMetaData.append(COMMA_WITH_NEWLINE);
-            }
-            for (Relation.Key key : entityField.getRelation().getKeyColumns()) {
-                if (joinColumns.length() > 0) {
-                    joinColumns.append(",");
+                if (joinMetaData.length() > 0) {
+                    joinMetaData.append(COMMA_WITH_NEWLINE);
                 }
-                if (refColumns.length() > 0) {
-                    refColumns.append(",");
+                for (Relation.Key key : entityField.getRelation().getKeyColumns()) {
+                    if (joinColumns.length() > 0) {
+                        joinColumns.append(",");
+                    }
+                    if (refColumns.length() > 0) {
+                        refColumns.append(",");
+                    }
+                    refColumns.append(String.format(COLUMN_ARRAY_ENTRY_TEMPLATE, key.getReference()));
+                    joinColumns.append(String.format(COLUMN_ARRAY_ENTRY_TEMPLATE, key.getField()));
                 }
-                refColumns.append(String.format(COLUMN_ARRAY_ENTRY_TEMPLATE, key.getReference()));
-                joinColumns.append(String.format(COLUMN_ARRAY_ENTRY_TEMPLATE, key.getField()));
-            }
-            joinMetaData.append(String.format(JOIN_METADATA_FIELD_TEMPLATE, entityField.getFieldName(),
-                    entityField.getFieldType(),
-                    entityField.getFieldName(), entityField.getFieldType(), refColumns,
-                    joinColumns, relationType));
+                joinMetaData.append(String.format(JOIN_METADATA_FIELD_TEMPLATE, entityField.getFieldName(),
+                        entityField.getFieldType(),
+                        entityField.getFieldName(), entityField.getFieldType(), refColumns,
+                        joinColumns, relationType));
             }
         }
         return joinMetaData.toString();

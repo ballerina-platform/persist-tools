@@ -7,7 +7,7 @@ import ballerina/time;
 
 public type MedicalNeed record {|
     readonly int 'record;
-    int medicalitemItemId;
+    int itemItemId;
     int beneficiaryId;
     time:Civil 'time;
     string urgency;
@@ -16,7 +16,7 @@ public type MedicalNeed record {|
 
 public type MedicalNeedOptionalized record {|
     int 'record?;
-    int medicalitemItemId?;
+    int itemItemId?;
     int beneficiaryId?;
     time:Civil 'time?;
     string urgency?;
@@ -33,7 +33,7 @@ public type MedicalNeedTargetType typedesc<MedicalNeedWithRelations>;
 public type MedicalNeedInsert MedicalNeed;
 
 public type MedicalNeedUpdate record {|
-    int medicalitemItemId?;
+    int itemItemId?;
     int beneficiaryId?;
     time:Civil 'time?;
     string urgency?;
