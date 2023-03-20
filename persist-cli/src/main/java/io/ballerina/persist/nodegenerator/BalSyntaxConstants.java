@@ -130,7 +130,7 @@ public class BalSyntaxConstants {
             "private final record {|persist:Metadata...;|} metadata = {%s};";
     public static final String INIT_DBCLIENT = "mysql:Client|error dbClient = new (host = host, user = user, " +
             "password = password, database = database, port = port);" + System.lineSeparator();
-    public static final String PERSIST_CLIENT_MAP_ELEMENT = "%s: check new (self.dbClient, self.metadata.get(%s))";
+    public static final String PERSIST_CLIENT_MAP_ELEMENT = "[%s]: check new (self.dbClient, self.metadata.get(%s))";
     public static final String PERSIST_CLIENT_TEMPLATE = "self.persistClients = {%s};";
     public static final String PERSIST_CLIENT_CLOSE_STATEMENT = "error? result = self.dbClient.close();";
     public static final String REGEX_FOR_SPLIT_BY_CAPITOL_LETTER = "(?=\\p{Upper})";
