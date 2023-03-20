@@ -142,15 +142,6 @@ public class Init implements BLauncherCmd {
         } else {
             module = module.replaceAll("\"", "");
         }
-        if (schemaFiles.size() == 0) {
-            try {
-                generateSchemaBalFile(persistDirPath, SCHEMA_FILE_NAME);
-            } catch (BalException e) {
-                errStream.println("ERROR: failed to create the model definition file in persist directory. "
-                        + e.getMessage());
-                return;
-            }
-        }
         if (!ProjectUtils.validateModuleName(module)) {
             errStream.println("ERROR: invalid module name : '" + module + "' :\n" +
                     "module name can only contain alphanumerics, underscores and periods");
@@ -167,7 +158,17 @@ public class Init implements BLauncherCmd {
             }
             updateBallerinaToml(moduleName, datastore);
         } catch (BalException e) {
-            errStream.println("ERROR: failed to add database configurations in the toml file. " + e.getMessage());
+            errStream.println("ERROR: failed to add persist configurations in the toml file. " + e.getMessage());
+            return;
+        }
+        if (schemaFiles.size() == 0) {
+            try {
+                generateSchemaBalFile(persistDirPath, SCHEMA_FILE_NAME);
+            } catch (BalException e) {
+                errStream.println("ERROR: failed to create the model definition file in persist directory. "
+                        + e.getMessage());
+                return;
+            }
         }
 
         errStream.println("Initialized persistence in your Ballerina project.");
