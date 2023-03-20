@@ -17,7 +17,7 @@ public client class Client {
     private final map<persist:SQLClient> persistClients;
 
     private final record {|persist:Metadata...;|} metadata = {
-        "bytetests": {
+        [BYTE_TEST] : {
             entityName: "ByteTest",
             tableName: `ByteTest`,
             fieldMetadata: {
@@ -35,16 +35,16 @@ public client class Client {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
-        self.persistClients = {bytetests: check new (self.dbClient, self.metadata.get(BYTE_TEST))};
+        self.persistClients = {[BYTE_TEST] : check new (self.dbClient, self.metadata.get(BYTE_TEST))};
     }
 
     isolated resource function get bytetests(ByteTestTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get bytetests/[int id](ByteTestTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
