@@ -21,7 +21,7 @@ public client class Client {
     private final map<persist:SQLClient> persistClients;
 
     private final record {|persist:Metadata...;|} metadata = {
-        "'buildings": {
+        ['BUILDING] : {
             entityName: "Building",
             tableName: `Building`,
             fieldMetadata: {
@@ -33,12 +33,12 @@ public client class Client {
                 'type: {columnName: "type"},
                 "workspaces[].workspaceId": {relation: {entityName: "workspaces", refField: "workspaceId"}},
                 "workspaces[].workspaceType": {relation: {entityName: "workspaces", refField: "workspaceType"}},
-                "workspaces[].locationBuildingCode": {relation: {entityName: "location", refField: "locationBuildingCode"}}
+                "workspaces[].locationBuildingCode": {relation: {entityName: "workspaces", refField: "locationBuildingCode"}}
             },
             keyFields: ["buildingCode"],
             joinMetadata: {workspaces: {entity: 'Workspace, fieldName: "workspaces", refTable: "'Workspace", refColumns: ["locationBuildingCode"], joinColumns: ["'buildingCode"], 'type: persist:MANY_TO_ONE}}
         },
-        "'departments": {
+        ['DEPARTMENT] : {
             entityName: "Department",
             tableName: `Department`,
             fieldMetadata: {
@@ -50,13 +50,13 @@ public client class Client {
                 "employees[].birthDate": {relation: {entityName: "employees", refField: "birthDate"}},
                 "employees[].gender": {relation: {entityName: "employees", refField: "gender"}},
                 "employees[].hireDate": {relation: {entityName: "employees", refField: "hireDate"}},
-                "employees[].departmentDeptNo": {relation: {entityName: "department", refField: "departmentDeptNo"}},
-                "employees[].workspaceWorkspaceId": {relation: {entityName: "workspace", refField: "workspaceWorkspaceId"}}
+                "employees[].departmentDeptNo": {relation: {entityName: "employees", refField: "departmentDeptNo"}},
+                "employees[].workspaceWorkspaceId": {relation: {entityName: "employees", refField: "workspaceWorkspaceId"}}
             },
             keyFields: ["deptNo"],
             joinMetadata: {employees: {entity: 'Employee, fieldName: "employees", refTable: "'Employee", refColumns: ["departmentDeptNo"], joinColumns: ["deptNo"], 'type: persist:MANY_TO_ONE}}
         },
-        "'employees": {
+        ['EMPLOYEE] : {
             entityName: "Employee",
             tableName: `Employee`,
             fieldMetadata: {
@@ -72,7 +72,7 @@ public client class Client {
                 "department.deptName": {relation: {entityName: "department", refField: "deptName"}},
                 "workspace.workspaceId": {relation: {entityName: "workspace", refField: "workspaceId"}},
                 "workspace.workspaceType": {relation: {entityName: "workspace", refField: "workspaceType"}},
-                "workspace.locationBuildingCode": {relation: {entityName: "location", refField: "locationBuildingCode"}}
+                "workspace.locationBuildingCode": {relation: {entityName: "workspace", refField: "locationBuildingCode"}}
             },
             keyFields: ["empNo"],
             joinMetadata: {
@@ -80,7 +80,7 @@ public client class Client {
                 workspace: {entity: 'Workspace, fieldName: "workspace", refTable: "'Workspace", refColumns: ["workspaceId"], joinColumns: ["workspaceWorkspaceId"], 'type: persist:ONE_TO_ONE}
             }
         },
-        "'orderitems": {
+        ['ORDER_ITEM] : {
             entityName: "OrderItem",
             tableName: `OrderItem`,
             fieldMetadata: {
@@ -91,7 +91,7 @@ public client class Client {
             },
             keyFields: ["orderId", "itemId"]
         },
-        "'workspaces": {
+        ['WORKSPACE] : {
             entityName: "Workspace",
             tableName: `Workspace`,
             fieldMetadata: {
@@ -110,8 +110,8 @@ public client class Client {
                 "employee.birthDate": {relation: {entityName: "employee", refField: "birthDate"}},
                 "employee.gender": {relation: {entityName: "employee", refField: "gender"}},
                 "employee.hireDate": {relation: {entityName: "employee", refField: "hireDate"}},
-                "employee.departmentDeptNo": {relation: {entityName: "department", refField: "departmentDeptNo"}},
-                "employee.workspaceWorkspaceId": {relation: {entityName: "workspace", refField: "workspaceWorkspaceId"}}
+                "employee.departmentDeptNo": {relation: {entityName: "employee", refField: "departmentDeptNo"}},
+                "employee.workspaceWorkspaceId": {relation: {entityName: "employee", refField: "workspaceWorkspaceId"}}
             },
             keyFields: ["workspaceId"],
             joinMetadata: {
@@ -128,21 +128,21 @@ public client class Client {
         }
         self.dbClient = dbClient;
         self.persistClients = {
-            'buildings: check new (self.dbClient, self.metadata.get('BUILDING)),
-            'departments: check new (self.dbClient, self.metadata.get('DEPARTMENT)),
-            'employees: check new (self.dbClient, self.metadata.get('EMPLOYEE)),
-            'orderitems: check new (self.dbClient, self.metadata.get('ORDER_ITEM)),
-            'workspaces: check new (self.dbClient, self.metadata.get('WORKSPACE))
+            ['BUILDING] : check new (self.dbClient, self.metadata.get('BUILDING)),
+            ['DEPARTMENT] : check new (self.dbClient, self.metadata.get('DEPARTMENT)),
+            ['EMPLOYEE] : check new (self.dbClient, self.metadata.get('EMPLOYEE)),
+            ['ORDER_ITEM] : check new (self.dbClient, self.metadata.get('ORDER_ITEM)),
+            ['WORKSPACE] : check new (self.dbClient, self.metadata.get('WORKSPACE))
         };
     }
 
     isolated resource function get 'buildings('BuildingTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get 'buildings/['string 'buildingCode]('BuildingTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
@@ -164,12 +164,12 @@ public client class Client {
     }
 
     isolated resource function get 'departments('DepartmentTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get 'departments/[string deptNo]('DepartmentTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
@@ -191,12 +191,12 @@ public client class Client {
     }
 
     isolated resource function get 'employees('EmployeeTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get 'employees/[string empNo]('EmployeeTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
@@ -218,12 +218,12 @@ public client class Client {
     }
 
     isolated resource function get 'orderitems('OrderItemTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "query"
     } external;
 
-    isolated resource function get 'orderitems/[string itemId]/[string orderId]('OrderItemTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+    isolated resource function get 'orderitems/[string orderId]/[string itemId]('OrderItemTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
@@ -233,24 +233,24 @@ public client class Client {
             select [inserted.orderId, inserted.itemId];
     }
 
-    isolated resource function put 'orderitems/[string itemId]/[string orderId]('OrderItemUpdate value) returns 'OrderItem|persist:Error {
-        _ = check self.persistClients.get('ORDER_ITEM).runUpdateQuery({"itemId": itemId, "orderId": orderId}, value);
-        return self->/'orderitems/[itemId]/[orderId].get();
+    isolated resource function put 'orderitems/[string orderId]/[string itemId]('OrderItemUpdate value) returns 'OrderItem|persist:Error {
+        _ = check self.persistClients.get('ORDER_ITEM).runUpdateQuery({"orderId": orderId, "itemId": itemId}, value);
+        return self->/'orderitems/[orderId]/[itemId].get();
     }
 
-    isolated resource function delete 'orderitems/[string itemId]/[string orderId]() returns 'OrderItem|persist:Error {
-        'OrderItem result = check self->/'orderitems/[itemId]/[orderId].get();
-        _ = check self.persistClients.get('ORDER_ITEM).runDeleteQuery({"itemId": itemId, "orderId": orderId});
+    isolated resource function delete 'orderitems/[string orderId]/[string itemId]() returns 'OrderItem|persist:Error {
+        'OrderItem result = check self->/'orderitems/[orderId]/[itemId].get();
+        _ = check self.persistClients.get('ORDER_ITEM).runDeleteQuery({"orderId": orderId, "itemId": itemId});
         return result;
     }
 
     isolated resource function get 'workspaces('WorkspaceTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get 'workspaces/[string workspaceId]('WorkspaceTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
