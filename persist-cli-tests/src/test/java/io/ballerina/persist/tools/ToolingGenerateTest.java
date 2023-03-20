@@ -311,4 +311,11 @@ public class ToolingGenerateTest {
         executeCommand("tool_test_generate_45", GENERATE);
         assertGeneratedSources("tool_test_generate_45");
     }
+
+    @Test(enabled = true)
+    @Description("Test the generated types for multiple association between same entities")
+    public void testGenerateMultipleAssociationBetweenSameEntities() {
+        executeCommand("tool_test_generate_46", GENERATE);
+        assertGeneratedSources("tool_test_generate_46");
+    }
 }

@@ -48,7 +48,7 @@ public client class Client {
             keyFields: ["id"],
             joinMetadata: {
                 company: {entity: Company, fieldName: "company", refTable: "Company", refColumns: ["id"], joinColumns: ["companyId"], 'type: persist:ONE_TO_MANY},
-                vehicles: {entity: Vehicle, fieldName: "vehicles", refTable: "Vehicle", refColumns: ["id", "employeeId"], joinColumns: ["companyId", "id"], 'type: persist:MANY_TO_ONE}
+                vehicles: {entity: Vehicle, fieldName: "vehicles", refTable: "Vehicle", refColumns: ["employeeId"], joinColumns: ["id"], 'type: persist:MANY_TO_ONE}
             }
         },
         "vehicles": {

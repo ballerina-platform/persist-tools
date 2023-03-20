@@ -131,13 +131,13 @@ public type 'OrderItemUpdate record {|
 public type 'Workspace record {|
     readonly string workspaceId;
     string workspaceType;
-    'string buildingBuildingCode;
+    'string locationBuildingCode;
 |};
 
 public type 'WorkspaceOptionalized record {|
     string workspaceId?;
     string workspaceType?;
-    'string buildingBuildingCode?;
+    'string locationBuildingCode?;
 |};
 
 public type 'WorkspaceWithRelations record {|
@@ -152,6 +152,6 @@ public type 'WorkspaceInsert 'Workspace;
 
 public type 'WorkspaceUpdate record {|
     string workspaceType?;
-    'string buildingBuildingCode?;
+    'string locationBuildingCode?;
 |};
 
