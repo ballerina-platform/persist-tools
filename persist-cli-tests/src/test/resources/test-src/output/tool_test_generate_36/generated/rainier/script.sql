@@ -36,8 +36,8 @@ CREATE TABLE `Building` (
 CREATE TABLE `Workspace` (
 	`workspaceId` VARCHAR(191) NOT NULL,
 	`workspaceType` VARCHAR(191) NOT NULL,
-	`buildingBuildingCode` VARCHAR(191) NOT NULL,
-	CONSTRAINT FK_WORKSPACE_BUILDING FOREIGN KEY(`buildingBuildingCode`) REFERENCES `Building`(`buildingCode`),
+	`locationBuildingCode` VARCHAR(191) NOT NULL,
+	CONSTRAINT FK_WORKSPACE_BUILDING FOREIGN KEY(`locationBuildingCode`) REFERENCES `Building`(`buildingCode`),
 	PRIMARY KEY(`workspaceId`)
 );
 

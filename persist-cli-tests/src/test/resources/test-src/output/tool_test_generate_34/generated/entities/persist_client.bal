@@ -18,20 +18,20 @@ public client class Client {
     private final map<persist:SQLClient> persistClients;
 
     private final record {|persist:Metadata...;|} metadata = {
-        "profiles": {
+        [PROFILE] : {
             entityName: "Profile",
             tableName: `Profile`,
             fieldMetadata: {
                 id: {columnName: "id"},
                 name: {columnName: "name"},
                 gender: {columnName: "gender"},
-                userId: {columnName: "userId"},
+                ownerId: {columnName: "ownerId"},
                 "owner.id": {relation: {entityName: "owner", refField: "id"}}
             },
             keyFields: ["id"],
-            joinMetadata: {owner: {entity: User, fieldName: "owner", refTable: "User", refColumns: ["id"], joinColumns: ["userId"], 'type: persist:ONE_TO_ONE}}
+            joinMetadata: {owner: {entity: User, fieldName: "owner", refTable: "User", refColumns: ["id"], joinColumns: ["ownerId"], 'type: persist:ONE_TO_ONE}}
         },
-        "users": {
+        [USER] : {
             entityName: "User",
             tableName: `User`,
             fieldMetadata: {
@@ -39,10 +39,10 @@ public client class Client {
                 "profile.id": {relation: {entityName: "profile", refField: "id"}},
                 "profile.name": {relation: {entityName: "profile", refField: "name"}},
                 "profile.gender": {relation: {entityName: "profile", refField: "gender"}},
-                "profile.userId": {relation: {entityName: "owner", refField: "userId"}}
+                "profile.ownerId": {relation: {entityName: "profile", refField: "ownerId"}}
             },
             keyFields: ["id"],
-            joinMetadata: {profile: {entity: Profile, fieldName: "profile", refTable: "Profile", refColumns: ["userId"], joinColumns: ["id"], 'type: persist:ONE_TO_ONE}}
+            joinMetadata: {profile: {entity: Profile, fieldName: "profile", refTable: "Profile", refColumns: ["ownerId"], joinColumns: ["id"], 'type: persist:ONE_TO_ONE}}
         }
     };
 
@@ -53,18 +53,18 @@ public client class Client {
         }
         self.dbClient = dbClient;
         self.persistClients = {
-            profiles: check new (self.dbClient, self.metadata.get(PROFILE)),
-            users: check new (self.dbClient, self.metadata.get(USER))
+            [PROFILE] : check new (self.dbClient, self.metadata.get(PROFILE)),
+            [USER] : check new (self.dbClient, self.metadata.get(USER))
         };
     }
 
     isolated resource function get profiles(ProfileTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get profiles/[int id](ProfileTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
@@ -86,12 +86,12 @@ public client class Client {
     }
 
     isolated resource function get users(UserTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get users/[int id](UserTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 

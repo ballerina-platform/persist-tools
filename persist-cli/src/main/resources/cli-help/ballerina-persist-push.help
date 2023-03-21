@@ -1,12 +1,21 @@
 NAME
-       bal persist push - Generate SQL script for the entities defined in the model definition file and execute the script against the Database.
+       bal persist push - Execute the SQL script against the Database.
 
 SYNOPSIS
        bal persist push [<-h> | <--help>]
 
 DESCRIPTION
-       This command generates the SQL script for the entities defined in the model definition file and executes the script
-       against the Database specified in the `Ballerina.toml` file.
+       This command executes the script against the Database specified in the `Ballerina.toml` file. Before executing the command, you need to add the Database
+         configuration in the `Ballerina.toml` file as shown below.
+
+         ```
+         [persist.model.storage.mysql]
+         host = "<db_host_name>"
+         port = <db_port>
+         user = "<db_user_name>"
+         password = "<db_password>"
+         database = "<db_name>"
+         ```
 
 EXAMPLES
        Print the usage details of the `bal persist push` command.

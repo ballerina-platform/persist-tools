@@ -18,12 +18,12 @@ public client class Client {
     private final map<persist:SQLClient> persistClients;
 
     private final record {|persist:Metadata...;|} metadata = {
-        "medicalneeds": {
+        [MEDICAL_NEED] : {
             entityName: "MedicalNeed",
             tableName: `MedicalNeed`,
             fieldMetadata: {
                 'record: {columnName: "record"},
-                medicalitemItemId: {columnName: "medicalitemItemId"},
+                itemItemId: {columnName: "itemItemId"},
                 beneficiaryId: {columnName: "beneficiaryId"},
                 'time: {columnName: "time"},
                 urgency: {columnName: "urgency"},
@@ -34,9 +34,9 @@ public client class Client {
                 "item.unit": {relation: {entityName: "item", refField: "unit"}}
             },
             keyFields: ["record"],
-            joinMetadata: {item: {entity: MedicalItem, fieldName: "item", refTable: "MedicalItem", refColumns: ["itemId"], joinColumns: ["medicalitemItemId"], 'type: persist:ONE_TO_ONE}}
+            joinMetadata: {item: {entity: MedicalItem, fieldName: "item", refTable: "MedicalItem", refColumns: ["itemId"], joinColumns: ["itemItemId"], 'type: persist:ONE_TO_ONE}}
         },
-        "medicalitems": {
+        [MEDICAL_ITEM] : {
             entityName: "MedicalItem",
             tableName: `MedicalItem`,
             fieldMetadata: {
@@ -45,14 +45,14 @@ public client class Client {
                 'type: {columnName: "type"},
                 unit: {columnName: "unit"},
                 "medicalNeed.'record": {relation: {entityName: "medicalNeed", refField: "record"}},
-                "medicalNeed.medicalitemItemId": {relation: {entityName: "item", refField: "medicalitemItemId"}},
+                "medicalNeed.itemItemId": {relation: {entityName: "medicalNeed", refField: "itemItemId"}},
                 "medicalNeed.beneficiaryId": {relation: {entityName: "medicalNeed", refField: "beneficiaryId"}},
                 "medicalNeed.'time": {relation: {entityName: "medicalNeed", refField: "time"}},
                 "medicalNeed.urgency": {relation: {entityName: "medicalNeed", refField: "urgency"}},
                 "medicalNeed.quantity": {relation: {entityName: "medicalNeed", refField: "quantity"}}
             },
             keyFields: ["itemId"],
-            joinMetadata: {medicalNeed: {entity: MedicalNeed, fieldName: "medicalNeed", refTable: "MedicalNeed", refColumns: ["medicalitemItemId"], joinColumns: ["itemId"], 'type: persist:ONE_TO_ONE}}
+            joinMetadata: {medicalNeed: {entity: MedicalNeed, fieldName: "medicalNeed", refTable: "MedicalNeed", refColumns: ["itemItemId"], joinColumns: ["itemId"], 'type: persist:ONE_TO_ONE}}
         }
     };
 
@@ -63,18 +63,18 @@ public client class Client {
         }
         self.dbClient = dbClient;
         self.persistClients = {
-            medicalneeds: check new (self.dbClient, self.metadata.get(MEDICAL_NEED)),
-            medicalitems: check new (self.dbClient, self.metadata.get(MEDICAL_ITEM))
+            [MEDICAL_NEED] : check new (self.dbClient, self.metadata.get(MEDICAL_NEED)),
+            [MEDICAL_ITEM] : check new (self.dbClient, self.metadata.get(MEDICAL_ITEM))
         };
     }
 
     isolated resource function get medicalneeds(MedicalNeedTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get medicalneeds/[int 'record](MedicalNeedTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
@@ -96,12 +96,12 @@ public client class Client {
     }
 
     isolated resource function get medicalitems(MedicalItemTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get medicalitems/[int itemId](MedicalItemTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 

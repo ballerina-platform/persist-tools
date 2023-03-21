@@ -38,9 +38,9 @@ CREATE TABLE `Employee` (
 CREATE TABLE `Workspace` (
 	`workspaceId` VARCHAR(191) NOT NULL,
 	`workspaceType` VARCHAR(191) NOT NULL,
-	`buildingBuildingCode` VARCHAR(191) NOT NULL,
-	CONSTRAINT FK_WORKSPACE_BUILDING FOREIGN KEY(`buildingBuildingCode`) REFERENCES `Building`(`buildingCode`),
-	`employeeEmpNo` VARCHAR(191) UNIQUE NOT NULL,
-	CONSTRAINT FK_WORKSPACE_EMPLOYEE FOREIGN KEY(`employeeEmpNo`) REFERENCES `Employee`(`empNo`),
+	`locationBuildingCode` VARCHAR(191) NOT NULL,
+	CONSTRAINT FK_WORKSPACE_BUILDING FOREIGN KEY(`locationBuildingCode`) REFERENCES `Building`(`buildingCode`),
+	`workspaceEmpNo` VARCHAR(191) UNIQUE NOT NULL,
+	CONSTRAINT FK_WORKSPACE_EMPLOYEE FOREIGN KEY(`workspaceEmpNo`) REFERENCES `Employee`(`empNo`),
 	PRIMARY KEY(`workspaceId`)
 );

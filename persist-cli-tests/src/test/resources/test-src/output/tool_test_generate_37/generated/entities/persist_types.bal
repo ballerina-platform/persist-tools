@@ -10,7 +10,7 @@ public type Profile record {|
     float salary;
     decimal age;
     byte[] isRegistered;
-    int userId;
+    int ownerId;
 |};
 
 public type ProfileOptionalized record {|
@@ -20,7 +20,7 @@ public type ProfileOptionalized record {|
     float salary?;
     decimal age?;
     byte[] isRegistered?;
-    int userId?;
+    int ownerId?;
 |};
 
 public type ProfileWithRelations record {|
@@ -38,7 +38,7 @@ public type ProfileUpdate record {|
     float salary?;
     decimal age?;
     byte[] isRegistered?;
-    int userId?;
+    int ownerId?;
 |};
 
 public type User record {|

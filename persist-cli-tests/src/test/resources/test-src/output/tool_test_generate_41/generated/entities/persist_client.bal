@@ -21,7 +21,7 @@ public client class Client {
     private final map<persist:SQLClient> persistClients;
 
     private final record {|persist:Metadata...;|} metadata = {
-        "buildings": {
+        [BUILDING] : {
             entityName: "Building",
             tableName: `Building`,
             fieldMetadata: {
@@ -32,19 +32,19 @@ public client class Client {
                 postalCode: {columnName: "postalCode"},
                 "workspaces[].workspaceId": {relation: {entityName: "workspaces", refField: "workspaceId"}},
                 "workspaces[].workspaceType": {relation: {entityName: "workspaces", refField: "workspaceType"}},
-                "workspaces[].buildingBuildingCode": {relation: {entityName: "location", refField: "buildingBuildingCode"}},
-                "workspaces[].employeeEmpNo": {relation: {entityName: "employee", refField: "employeeEmpNo"}}
+                "workspaces[].locationBuildingCode": {relation: {entityName: "workspaces", refField: "locationBuildingCode"}},
+                "workspaces[].employeeEmpNo": {relation: {entityName: "workspaces", refField: "employeeEmpNo"}}
             },
             keyFields: ["buildingCode"],
-            joinMetadata: {workspaces: {entity: Workspace, fieldName: "workspaces", refTable: "Workspace", refColumns: ["buildingBuildingCode"], joinColumns: ["buildingCode"], 'type: persist:MANY_TO_ONE}}
+            joinMetadata: {workspaces: {entity: Workspace, fieldName: "workspaces", refTable: "Workspace", refColumns: ["locationBuildingCode"], joinColumns: ["buildingCode"], 'type: persist:MANY_TO_ONE}}
         },
-        "workspaces": {
+        [WORKSPACE] : {
             entityName: "Workspace",
             tableName: `Workspace`,
             fieldMetadata: {
                 workspaceId: {columnName: "workspaceId"},
                 workspaceType: {columnName: "workspaceType"},
-                buildingBuildingCode: {columnName: "buildingBuildingCode"},
+                locationBuildingCode: {columnName: "locationBuildingCode"},
                 employeeEmpNo: {columnName: "employeeEmpNo"},
                 "location.buildingCode": {relation: {entityName: "location", refField: "buildingCode"}},
                 "location.city": {relation: {entityName: "location", refField: "city"}},
@@ -57,17 +57,17 @@ public client class Client {
                 "employee.birthDate": {relation: {entityName: "employee", refField: "birthDate"}},
                 "employee.gender": {relation: {entityName: "employee", refField: "gender"}},
                 "employee.hireDate": {relation: {entityName: "employee", refField: "hireDate"}},
-                "employee.departmentDeptNo": {relation: {entityName: "department", refField: "departmentDeptNo"}},
-                "employee.orderitemOrderId": {relation: {entityName: "orderItem", refField: "orderitemOrderId"}},
-                "employee.orderitemItemId": {relation: {entityName: "orderItem", refField: "orderitemItemId"}}
+                "employee.departmentDeptNo": {relation: {entityName: "employee", refField: "departmentDeptNo"}},
+                "employee.orderitemOrderId": {relation: {entityName: "employee", refField: "orderitemOrderId"}},
+                "employee.orderitemItemId": {relation: {entityName: "employee", refField: "orderitemItemId"}}
             },
             keyFields: ["workspaceId"],
             joinMetadata: {
-                location: {entity: Building, fieldName: "location", refTable: "Building", refColumns: ["buildingCode"], joinColumns: ["buildingBuildingCode"], 'type: persist:ONE_TO_MANY},
-                employee: {entity: Employee, fieldName: "employee", refTable: "Employee", refColumns: ["buildingCode", "empNo"], joinColumns: ["buildingBuildingCode", "employeeEmpNo"], 'type: persist:ONE_TO_ONE}
+                location: {entity: Building, fieldName: "location", refTable: "Building", refColumns: ["buildingCode"], joinColumns: ["locationBuildingCode"], 'type: persist:ONE_TO_MANY},
+                employee: {entity: Employee, fieldName: "employee", refTable: "Employee", refColumns: ["empNo"], joinColumns: ["employeeEmpNo"], 'type: persist:ONE_TO_ONE}
             }
         },
-        "departments": {
+        [DEPARTMENT] : {
             entityName: "Department",
             tableName: `Department`,
             fieldMetadata: {
@@ -79,14 +79,14 @@ public client class Client {
                 "employees[].birthDate": {relation: {entityName: "employees", refField: "birthDate"}},
                 "employees[].gender": {relation: {entityName: "employees", refField: "gender"}},
                 "employees[].hireDate": {relation: {entityName: "employees", refField: "hireDate"}},
-                "employees[].departmentDeptNo": {relation: {entityName: "department", refField: "departmentDeptNo"}},
-                "employees[].orderitemOrderId": {relation: {entityName: "orderItem", refField: "orderitemOrderId"}},
-                "employees[].orderitemItemId": {relation: {entityName: "orderItem", refField: "orderitemItemId"}}
+                "employees[].departmentDeptNo": {relation: {entityName: "employees", refField: "departmentDeptNo"}},
+                "employees[].orderitemOrderId": {relation: {entityName: "employees", refField: "orderitemOrderId"}},
+                "employees[].orderitemItemId": {relation: {entityName: "employees", refField: "orderitemItemId"}}
             },
             keyFields: ["deptNo"],
             joinMetadata: {employees: {entity: Employee, fieldName: "employees", refTable: "Employee", refColumns: ["departmentDeptNo"], joinColumns: ["deptNo"], 'type: persist:MANY_TO_ONE}}
         },
-        "employees": {
+        [EMPLOYEE] : {
             entityName: "Employee",
             tableName: `Employee`,
             fieldMetadata: {
@@ -103,8 +103,8 @@ public client class Client {
                 "department.deptName": {relation: {entityName: "department", refField: "deptName"}},
                 "workspace.workspaceId": {relation: {entityName: "workspace", refField: "workspaceId"}},
                 "workspace.workspaceType": {relation: {entityName: "workspace", refField: "workspaceType"}},
-                "workspace.buildingBuildingCode": {relation: {entityName: "location", refField: "buildingBuildingCode"}},
-                "workspace.employeeEmpNo": {relation: {entityName: "employee", refField: "employeeEmpNo"}},
+                "workspace.locationBuildingCode": {relation: {entityName: "workspace", refField: "locationBuildingCode"}},
+                "workspace.employeeEmpNo": {relation: {entityName: "workspace", refField: "employeeEmpNo"}},
                 "orderItem.orderId": {relation: {entityName: "orderItem", refField: "orderId"}},
                 "orderItem.itemId": {relation: {entityName: "orderItem", refField: "itemId"}},
                 "orderItem.quantity": {relation: {entityName: "orderItem", refField: "quantity"}},
@@ -113,11 +113,11 @@ public client class Client {
             keyFields: ["empNo"],
             joinMetadata: {
                 department: {entity: Department, fieldName: "department", refTable: "Department", refColumns: ["deptNo"], joinColumns: ["departmentDeptNo"], 'type: persist:ONE_TO_MANY},
-                workspace: {entity: Workspace, fieldName: "workspace", refTable: "Workspace", refColumns: ["deptNo", "employeeEmpNo"], joinColumns: ["departmentDeptNo", "empNo"], 'type: persist:ONE_TO_ONE},
-                orderItem: {entity: OrderItem, fieldName: "orderItem", refTable: "OrderItem", refColumns: ["deptNo", "employeeEmpNo", "orderId", "itemId"], joinColumns: ["departmentDeptNo", "empNo", "orderitemOrderId", "orderitemItemId"], 'type: persist:ONE_TO_ONE}
+                workspace: {entity: Workspace, fieldName: "workspace", refTable: "Workspace", refColumns: ["employeeEmpNo"], joinColumns: ["empNo"], 'type: persist:ONE_TO_ONE},
+                orderItem: {entity: OrderItem, fieldName: "orderItem", refTable: "OrderItem", refColumns: ["orderId", "itemId"], joinColumns: ["orderitemOrderId", "orderitemItemId"], 'type: persist:ONE_TO_ONE}
             }
         },
-        "orderitems": {
+        [ORDER_ITEM] : {
             entityName: "OrderItem",
             tableName: `OrderItem`,
             fieldMetadata: {
@@ -131,9 +131,9 @@ public client class Client {
                 "employee.birthDate": {relation: {entityName: "employee", refField: "birthDate"}},
                 "employee.gender": {relation: {entityName: "employee", refField: "gender"}},
                 "employee.hireDate": {relation: {entityName: "employee", refField: "hireDate"}},
-                "employee.departmentDeptNo": {relation: {entityName: "department", refField: "departmentDeptNo"}},
-                "employee.orderitemOrderId": {relation: {entityName: "orderItem", refField: "orderitemOrderId"}},
-                "employee.orderitemItemId": {relation: {entityName: "orderItem", refField: "orderitemItemId"}}
+                "employee.departmentDeptNo": {relation: {entityName: "employee", refField: "departmentDeptNo"}},
+                "employee.orderitemOrderId": {relation: {entityName: "employee", refField: "orderitemOrderId"}},
+                "employee.orderitemItemId": {relation: {entityName: "employee", refField: "orderitemItemId"}}
             },
             keyFields: ["orderId", "itemId"],
             joinMetadata: {employee: {entity: Employee, fieldName: "employee", refTable: "Employee", refColumns: ["orderitemOrderId", "orderitemItemId"], joinColumns: ["orderId", "itemId"], 'type: persist:ONE_TO_ONE}}
@@ -147,21 +147,21 @@ public client class Client {
         }
         self.dbClient = dbClient;
         self.persistClients = {
-            buildings: check new (self.dbClient, self.metadata.get(BUILDING)),
-            workspaces: check new (self.dbClient, self.metadata.get(WORKSPACE)),
-            departments: check new (self.dbClient, self.metadata.get(DEPARTMENT)),
-            employees: check new (self.dbClient, self.metadata.get(EMPLOYEE)),
-            orderitems: check new (self.dbClient, self.metadata.get(ORDER_ITEM))
+            [BUILDING] : check new (self.dbClient, self.metadata.get(BUILDING)),
+            [WORKSPACE] : check new (self.dbClient, self.metadata.get(WORKSPACE)),
+            [DEPARTMENT] : check new (self.dbClient, self.metadata.get(DEPARTMENT)),
+            [EMPLOYEE] : check new (self.dbClient, self.metadata.get(EMPLOYEE)),
+            [ORDER_ITEM] : check new (self.dbClient, self.metadata.get(ORDER_ITEM))
         };
     }
 
     isolated resource function get buildings(BuildingTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get buildings/[string buildingCode](BuildingTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
@@ -183,12 +183,12 @@ public client class Client {
     }
 
     isolated resource function get workspaces(WorkspaceTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get workspaces/[string workspaceId](WorkspaceTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
@@ -210,12 +210,12 @@ public client class Client {
     }
 
     isolated resource function get departments(DepartmentTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get departments/[string deptNo](DepartmentTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
@@ -237,12 +237,12 @@ public client class Client {
     }
 
     isolated resource function get employees(EmployeeTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get employees/[string empNo](EmployeeTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
@@ -264,12 +264,12 @@ public client class Client {
     }
 
     isolated resource function get orderitems(OrderItemTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "query"
     } external;
 
-    isolated resource function get orderitems/[string itemId]/[string orderId](OrderItemTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+    isolated resource function get orderitems/[string orderId]/[string itemId](OrderItemTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
@@ -279,14 +279,14 @@ public client class Client {
             select [inserted.orderId, inserted.itemId];
     }
 
-    isolated resource function put orderitems/[string itemId]/[string orderId](OrderItemUpdate value) returns OrderItem|persist:Error {
-        _ = check self.persistClients.get(ORDER_ITEM).runUpdateQuery({"itemId": itemId, "orderId": orderId}, value);
-        return self->/orderitems/[itemId]/[orderId].get();
+    isolated resource function put orderitems/[string orderId]/[string itemId](OrderItemUpdate value) returns OrderItem|persist:Error {
+        _ = check self.persistClients.get(ORDER_ITEM).runUpdateQuery({"orderId": orderId, "itemId": itemId}, value);
+        return self->/orderitems/[orderId]/[itemId].get();
     }
 
-    isolated resource function delete orderitems/[string itemId]/[string orderId]() returns OrderItem|persist:Error {
-        OrderItem result = check self->/orderitems/[itemId]/[orderId].get();
-        _ = check self.persistClients.get(ORDER_ITEM).runDeleteQuery({"itemId": itemId, "orderId": orderId});
+    isolated resource function delete orderitems/[string orderId]/[string itemId]() returns OrderItem|persist:Error {
+        OrderItem result = check self->/orderitems/[orderId]/[itemId].get();
+        _ = check self.persistClients.get(ORDER_ITEM).runDeleteQuery({"orderId": orderId, "itemId": itemId});
         return result;
     }
 

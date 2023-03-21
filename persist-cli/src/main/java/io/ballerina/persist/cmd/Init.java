@@ -102,6 +102,37 @@ public class Init implements BLauncherCmd {
             errStream.println(e.getMessage());
             return;
         }
+        String packageName;
+        try {
+            packageName = readPackageName(this.sourcePath);
+        } catch (BalException e) {
+            errStream.println(e.getMessage());
+            return;
+        }
+        if (module == null) {
+            module = packageName;
+        } else {
+            module = module.replaceAll("\"", "");
+        }
+        if (!ProjectUtils.validateModuleName(module)) {
+            errStream.println("ERROR: invalid module name : '" + module + "' :\n" +
+                    "module name can only contain alphanumerics, underscores and periods");
+            return;
+        } else if (!ProjectUtils.validateNameLength(module)) {
+            errStream.println("ERROR: invalid module name : '" + module + "' :\n" +
+                    "maximum length of module name is 256 characters");
+            return;
+        }
+        try {
+            String moduleName = packageName;
+            if (!module.equals(packageName)) {
+                moduleName = String.format("%s.%s", packageName.replaceAll("\"", ""), module);
+            }
+            updateBallerinaToml(moduleName, datastore);
+        } catch (BalException e) {
+            errStream.println("ERROR: failed to add persist configurations in the toml file. " + e.getMessage());
+            return;
+        }
 
         Path persistDirPath = Paths.get(this.sourcePath, PERSIST_DIRECTORY);
         if (!Files.exists(persistDirPath)) {
@@ -130,18 +161,6 @@ public class Init implements BLauncherCmd {
                     "but contains many files.");
             return;
         }
-        String packageName;
-        try {
-            packageName = readPackageName(this.sourcePath);
-        } catch (BalException e) {
-            errStream.println(e.getMessage());
-            return;
-        }
-        if (module == null) {
-            module = packageName;
-        } else {
-            module = module.replaceAll("\"", "");
-        }
         if (schemaFiles.size() == 0) {
             try {
                 generateSchemaBalFile(persistDirPath, SCHEMA_FILE_NAME);
@@ -150,24 +169,6 @@ public class Init implements BLauncherCmd {
                         + e.getMessage());
                 return;
             }
-        }
-        if (!ProjectUtils.validateModuleName(module)) {
-            errStream.println("ERROR: invalid module name : '" + module + "' :\n" +
-                    "module name can only contain alphanumerics, underscores and periods");
-            return;
-        } else if (!ProjectUtils.validateNameLength(module)) {
-            errStream.println("ERROR: invalid module name : '" + module + "' :\n" +
-                    "maximum length of module name is 256 characters");
-            return;
-        }
-        try {
-            String moduleName = packageName;
-            if (!module.equals(packageName)) {
-                moduleName = String.format("%s.%s", packageName.replaceAll("\"", ""), module);
-            }
-            updateBallerinaToml(moduleName, datastore);
-        } catch (BalException e) {
-            errStream.println("ERROR: failed to add database configurations in the toml file. " + e.getMessage());
         }
 
         errStream.println("Initialized persistence in your Ballerina project.");

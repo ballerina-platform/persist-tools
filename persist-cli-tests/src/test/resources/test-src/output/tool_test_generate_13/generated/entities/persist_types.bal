@@ -6,14 +6,14 @@
 public type Profile record {|
     readonly int id;
     string name;
-    int userId;
+    int ownerId;
     int multipleassociationsId;
 |};
 
 public type ProfileOptionalized record {|
     int id?;
     string name?;
-    int userId?;
+    int ownerId?;
     int multipleassociationsId?;
 |};
 
@@ -29,7 +29,7 @@ public type ProfileInsert Profile;
 
 public type ProfileUpdate record {|
     string name?;
-    int userId?;
+    int ownerId?;
     int multipleassociationsId?;
 |};
 

@@ -18,7 +18,7 @@ public client class Client {
     private final map<persist:SQLClient> persistClients;
 
     private final record {|persist:Metadata...;|} metadata = {
-        "companies": {
+        [COMPANY] : {
             entityName: "Company",
             tableName: `Company`,
             fieldMetadata: {
@@ -26,12 +26,12 @@ public client class Client {
                 name: {columnName: "name"},
                 "employees[].id": {relation: {entityName: "employees", refField: "id"}},
                 "employees[].name": {relation: {entityName: "employees", refField: "name"}},
-                "employees[].companyId": {relation: {entityName: "company", refField: "companyId"}}
+                "employees[].companyId": {relation: {entityName: "employees", refField: "companyId"}}
             },
             keyFields: ["id"],
             joinMetadata: {employees: {entity: Employee, fieldName: "employees", refTable: "Employee", refColumns: ["companyId"], joinColumns: ["id"], 'type: persist:MANY_TO_ONE}}
         },
-        "employees": {
+        [EMPLOYEE] : {
             entityName: "Employee",
             tableName: `Employee`,
             fieldMetadata: {
@@ -53,18 +53,18 @@ public client class Client {
         }
         self.dbClient = dbClient;
         self.persistClients = {
-            companies: check new (self.dbClient, self.metadata.get(COMPANY)),
-            employees: check new (self.dbClient, self.metadata.get(EMPLOYEE))
+            [COMPANY] : check new (self.dbClient, self.metadata.get(COMPANY)),
+            [EMPLOYEE] : check new (self.dbClient, self.metadata.get(EMPLOYEE))
         };
     }
 
     isolated resource function get companies(CompanyTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get companies/[int id](CompanyTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
@@ -86,12 +86,12 @@ public client class Client {
     }
 
     isolated resource function get employees(EmployeeTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get employees/[int id](EmployeeTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 

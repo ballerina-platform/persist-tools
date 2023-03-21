@@ -215,11 +215,8 @@ public class TomlSyntaxGenerator {
                 } else if (member instanceof TableNode) {
                     TableNode node = (TableNode) member;
                     if (node.identifier().toSourceCode().trim().equals(PERSIST_DIRECTORY)) {
-                        configurationExists = true;
-                        moduleMembers = addNewLine(moduleMembers, 1);
-                        moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(
-                                PERSIST_DIRECTORY, null));
-                        moduleMembers = populateBallerinaNodeList(moduleMembers, module, datasource);
+                        throw new BalException("persist configuration already exists in the Ballerina.toml. " +
+                                "remove the existing configuration and try again.");
                     } else {
                         moduleMembers = moduleMembers.add(member);
                     }
@@ -240,12 +237,10 @@ public class TomlSyntaxGenerator {
                     }
                 }
             }
-            if (!configurationExists) {
-                moduleMembers = addNewLine(moduleMembers, 1);
-                moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(
-                        PERSIST_DIRECTORY, null));
-                moduleMembers = populateBallerinaNodeList(moduleMembers, module, datasource);
-            }
+            moduleMembers = addNewLine(moduleMembers, 1);
+            moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(
+                    PERSIST_DIRECTORY, null));
+            moduleMembers = populateBallerinaNodeList(moduleMembers, module, datasource);
             moduleMembers = addNewLine(moduleMembers, 1);
             moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray(
                     BalSyntaxConstants.PERSIST_DEPENDENCY, null));
