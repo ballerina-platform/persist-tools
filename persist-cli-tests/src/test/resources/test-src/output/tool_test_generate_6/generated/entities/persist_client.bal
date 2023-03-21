@@ -17,7 +17,7 @@ public client class Client {
     private final map<persist:SQLClient> persistClients;
 
     private final record {|persist:Metadata...;|} metadata = {
-        "datatypes": {
+        [DATA_TYPE] : {
             entityName: "DataType",
             tableName: `DataType`,
             fieldMetadata: {
@@ -43,16 +43,16 @@ public client class Client {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
-        self.persistClients = {datatypes: check new (self.dbClient, self.metadata.get(DATA_TYPE))};
+        self.persistClients = {[DATA_TYPE] : check new (self.dbClient, self.metadata.get(DATA_TYPE))};
     }
 
     isolated resource function get datatypes(DataTypeTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get datatypes/[int a](DataTypeTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 

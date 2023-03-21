@@ -19,7 +19,7 @@ public client class Client {
     private final map<persist:SQLClient> persistClients;
 
     private final record {|persist:Metadata...;|} metadata = {
-        "users": {
+        [USER] : {
             entityName: "User",
             tableName: `User`,
             fieldMetadata: {
@@ -31,15 +31,15 @@ public client class Client {
                 "posts[].tags": {relation: {entityName: "posts", refField: "tags"}},
                 "posts[].category": {relation: {entityName: "posts", refField: "category"}},
                 "posts[].created_date": {relation: {entityName: "posts", refField: "created_date"}},
-                "posts[].userId": {relation: {entityName: "user", refField: "userId"}},
+                "posts[].userId": {relation: {entityName: "posts", refField: "userId"}},
                 "followers[].id": {relation: {entityName: "followers", refField: "id"}},
                 "followers[].created_date": {relation: {entityName: "followers", refField: "created_date"}},
-                "followers[].leaderId": {relation: {entityName: "leader", refField: "leaderId"}},
-                "followers[].followerId": {relation: {entityName: "follower", refField: "followerId"}},
+                "followers[].leaderId": {relation: {entityName: "followers", refField: "leaderId"}},
+                "followers[].followerId": {relation: {entityName: "followers", refField: "followerId"}},
                 "leaders[].id": {relation: {entityName: "leaders", refField: "id"}},
                 "leaders[].created_date": {relation: {entityName: "leaders", refField: "created_date"}},
-                "leaders[].leaderId": {relation: {entityName: "leader", refField: "leaderId"}},
-                "leaders[].followerId": {relation: {entityName: "follower", refField: "followerId"}}
+                "leaders[].leaderId": {relation: {entityName: "leaders", refField: "leaderId"}},
+                "leaders[].followerId": {relation: {entityName: "leaders", refField: "followerId"}}
             },
             keyFields: ["id"],
             joinMetadata: {
@@ -48,7 +48,7 @@ public client class Client {
                 leaders: {entity: Follower, fieldName: "leaders", refTable: "Follower", refColumns: ["followerId"], joinColumns: ["id"], 'type: persist:MANY_TO_ONE}
             }
         },
-        "posts": {
+        [POST] : {
             entityName: "Post",
             tableName: `Post`,
             fieldMetadata: {
@@ -65,7 +65,7 @@ public client class Client {
             keyFields: ["id"],
             joinMetadata: {user: {entity: User, fieldName: "user", refTable: "User", refColumns: ["id"], joinColumns: ["userId"], 'type: persist:ONE_TO_MANY}}
         },
-        "followers": {
+        [FOLLOWER] : {
             entityName: "Follower",
             tableName: `Follower`,
             fieldMetadata: {
@@ -95,19 +95,19 @@ public client class Client {
         }
         self.dbClient = dbClient;
         self.persistClients = {
-            users: check new (self.dbClient, self.metadata.get(USER)),
-            posts: check new (self.dbClient, self.metadata.get(POST)),
-            followers: check new (self.dbClient, self.metadata.get(FOLLOWER))
+            [USER] : check new (self.dbClient, self.metadata.get(USER)),
+            [POST] : check new (self.dbClient, self.metadata.get(POST)),
+            [FOLLOWER] : check new (self.dbClient, self.metadata.get(FOLLOWER))
         };
     }
 
     isolated resource function get users(UserTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get users/[int id](UserTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
@@ -129,12 +129,12 @@ public client class Client {
     }
 
     isolated resource function get posts(PostTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get posts/[int id](PostTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
@@ -156,12 +156,12 @@ public client class Client {
     }
 
     isolated resource function get followers(FollowerTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get followers/[int id](FollowerTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
