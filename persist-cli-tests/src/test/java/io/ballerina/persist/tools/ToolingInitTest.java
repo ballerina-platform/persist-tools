@@ -98,14 +98,13 @@ public class ToolingInitTest {
     @Test(enabled = true)
     @Description("Running init on a already initialized project")
     public void testInitAlreadyInitializedProject() {
-        updateOutputBallerinaToml("tool_test_init_6");
         executeCommand("tool_test_init_6", INIT);
         assertGeneratedSources("tool_test_init_6");
     }
 
     @Test(enabled = true)
     @Description("Running init on a already initialized project with database configurations missing")
-    public void testInitAlreadyInitializedProjectWithOutDatabaseConfiguration() {
+    public void testInitAlreadyInitializedProjectWithOutPersistConfiguration() {
         updateOutputBallerinaToml("tool_test_init_7");
         executeCommand("tool_test_init_7", INIT);
         assertGeneratedSources("tool_test_init_7");
