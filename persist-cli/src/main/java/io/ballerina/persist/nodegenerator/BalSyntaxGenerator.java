@@ -257,11 +257,21 @@ public class BalSyntaxGenerator {
                                         }
                                         // one-to-one
                                         if (!field.isArrayType() && !assocfield.isArrayType()) {
-                                            // first param should be always owner entities field name
-                                            field.setRelation(computeRelation(field.getFieldName(), entity, assocEntity,
-                                                    true, Relation.RelationType.ONE));
-                                            assocfield.setRelation(computeRelation(field.getFieldName(), assocEntity,
-                                                    entity, false, Relation.RelationType.ONE));
+                                            if (!field.isOptionalType() && assocfield.isOptionalType()) {
+                                                field.setRelation(computeRelation(field.getFieldName(), entity, 
+                                                        assocEntity, true, Relation.RelationType.ONE));
+                                                assocfield.setRelation(computeRelation(field.getFieldName(), 
+                                                        assocEntity, entity, false, Relation.RelationType.ONE));
+                                            } else if (field.isOptionalType() && !assocfield.isOptionalType()) {
+                                                field.setRelation(computeRelation(field.getFieldName(), entity, 
+                                                        assocEntity, false, Relation.RelationType.ONE));
+                                                assocfield.setRelation(computeRelation(field.getFieldName(), 
+                                                        assocEntity, entity, true, Relation.RelationType.ONE));
+                                            } else {
+                                                throw new RuntimeException("unsupported ownership annotation " +
+                                                        "in the relation between " + entity.getEntityName() +
+                                                        " and " + assocEntity.getEntityName());
+                                            }
                                         } else {
                                             if (field.isArrayType() && field.isOptionalType()) {
                                                 // one-to-many relation. associated entity is the owner.

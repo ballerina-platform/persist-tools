@@ -40,7 +40,7 @@ CREATE TABLE `Workspace` (
 	`workspaceType` VARCHAR(191) NOT NULL,
 	`locationBuildingCode` VARCHAR(191) NOT NULL,
 	CONSTRAINT FK_WORKSPACE_BUILDING FOREIGN KEY(`locationBuildingCode`) REFERENCES `Building`(`buildingCode`),
-	`employeeEmpNo` VARCHAR(191) UNIQUE NOT NULL,
-	CONSTRAINT FK_WORKSPACE_EMPLOYEE FOREIGN KEY(`employeeEmpNo`) REFERENCES `Employee`(`empNo`),
+	`workspaceEmpNo` VARCHAR(191) UNIQUE NOT NULL,
+	CONSTRAINT FK_WORKSPACE_EMPLOYEE FOREIGN KEY(`workspaceEmpNo`) REFERENCES `Employee`(`empNo`),
 	PRIMARY KEY(`workspaceId`)
 );
