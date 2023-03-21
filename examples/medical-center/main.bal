@@ -18,7 +18,7 @@ import ballerina/io;
 import foo/medical_center.entities;
 
 public function main() returns error? {
-    entities:EntitiesClient mcClient = check new ();
+    entities:Client mcClient = check new ();
     entities:MedicalItemInsert item = {
         itemId: 1,
         name: "item name",
@@ -62,14 +62,14 @@ public function main() returns error? {
     _ = check mcClient->/medicalitems.post([item2, item3, item4]);
 
     io:println("\n========== type1 ==========");
-    _ = check from entities:MedicalItem itemx in mcClient->/medicalitems.get()
+    _ = check from entities:MedicalItem itemx in mcClient->/medicalitems.get(entities:MedicalItem)
         where itemx.itemType == "type1"
         do {
             io:println(itemx);
         };
 
     io:println("\n========== type2 ==========");
-    _ = check from entities:MedicalItem itemx in mcClient->/medicalitems.get()
+    _ = check from entities:MedicalItem itemx in mcClient->/medicalitems.get(entities:MedicalItem)
         where itemx.itemType == "type2"
         order by itemx.itemId
         limit 2
@@ -78,7 +78,7 @@ public function main() returns error? {
         };
 
     io:println("\n========== update type2's unit to kg ==========");
-    _ = check from entities:MedicalItem itemx in mcClient->/medicalitems.get()
+    _ = check from entities:MedicalItem itemx in mcClient->/medicalitems.get(entities:MedicalItem)
         where itemx.itemType == "type2"
         do {
             entities:MedicalItemUpdate updatex = {unit: "kg"};
@@ -86,20 +86,20 @@ public function main() returns error? {
             //_ = check mcClient->/medicalitems/[itemx.itemId].put(updatex);
         };
 
-    _ = check from entities:MedicalItem itemx in mcClient->/medicalitems.get()
+    _ = check from entities:MedicalItem itemx in mcClient->/medicalitems.get(entities:MedicalItem)
         do {
             io:println(itemx);
         };
 
     io:println("\n========== delete type2 ==========");
-    _ = check from entities:MedicalItem itemx in mcClient->/medicalitems.get()
+    _ = check from entities:MedicalItem itemx in mcClient->/medicalitems.get(entities:MedicalItem)
         where itemx.itemType == "type2"
         do {
             // TODO: remove comment after issue is resolved (https://github.com/ballerina-platform/ballerina-standard-library/issues/3951)
             //_ = check mcClient->/medicalitems/[itemx.itemId].delete();
         };
 
-    _ = check from entities:MedicalItem itemx in mcClient->/medicalitems.get()
+    _ = check from entities:MedicalItem itemx in mcClient->/medicalitems.get(entities:MedicalItem)
         do {
             io:println(itemx);
         };
