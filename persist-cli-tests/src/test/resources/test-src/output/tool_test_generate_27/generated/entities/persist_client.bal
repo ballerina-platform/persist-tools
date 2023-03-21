@@ -19,7 +19,7 @@ public client class Client {
     private final map<persist:SQLClient> persistClients;
 
     private final record {|persist:Metadata...;|} metadata = {
-        "profiles": {
+        [PROFILE] : {
             entityName: "Profile",
             tableName: `Profile`,
             fieldMetadata: {
@@ -29,7 +29,7 @@ public client class Client {
                 multipleassociationsId: {columnName: "multipleassociationsId"},
                 "owner.id": {relation: {entityName: "owner", refField: "id"}},
                 "owner.name": {relation: {entityName: "owner", refField: "name"}},
-                "owner.multipleassociationsId": {relation: {entityName: "multipleAssociations", refField: "multipleassociationsId"}},
+                "owner.multipleassociationsId": {relation: {entityName: "owner", refField: "multipleassociationsId"}},
                 "multipleAssociations.id": {relation: {entityName: "multipleAssociations", refField: "id"}},
                 "multipleAssociations.name": {relation: {entityName: "multipleAssociations", refField: "name"}}
             },
@@ -39,7 +39,7 @@ public client class Client {
                 multipleAssociations: {entity: MultipleAssociations, fieldName: "multipleAssociations", refTable: "MultipleAssociations", refColumns: ["id"], joinColumns: ["multipleassociationsId"], 'type: persist:ONE_TO_ONE}
             }
         },
-        "users": {
+        [USER] : {
             entityName: "User",
             tableName: `User`,
             fieldMetadata: {
@@ -48,8 +48,8 @@ public client class Client {
                 multipleassociationsId: {columnName: "multipleassociationsId"},
                 "profile.id": {relation: {entityName: "profile", refField: "id"}},
                 "profile.name": {relation: {entityName: "profile", refField: "name"}},
-                "profile.ownerId": {relation: {entityName: "owner", refField: "ownerId"}},
-                "profile.multipleassociationsId": {relation: {entityName: "multipleAssociations", refField: "multipleassociationsId"}},
+                "profile.ownerId": {relation: {entityName: "profile", refField: "ownerId"}},
+                "profile.multipleassociationsId": {relation: {entityName: "profile", refField: "multipleassociationsId"}},
                 "multipleAssociations.id": {relation: {entityName: "multipleAssociations", refField: "id"}},
                 "multipleAssociations.name": {relation: {entityName: "multipleAssociations", refField: "name"}}
             },
@@ -59,7 +59,7 @@ public client class Client {
                 multipleAssociations: {entity: MultipleAssociations, fieldName: "multipleAssociations", refTable: "MultipleAssociations", refColumns: ["id"], joinColumns: ["multipleassociationsId"], 'type: persist:ONE_TO_ONE}
             }
         },
-        "multipleassociations": {
+        [MULTIPLE_ASSOCIATIONS] : {
             entityName: "MultipleAssociations",
             tableName: `MultipleAssociations`,
             fieldMetadata: {
@@ -67,11 +67,11 @@ public client class Client {
                 name: {columnName: "name"},
                 "profile.id": {relation: {entityName: "profile", refField: "id"}},
                 "profile.name": {relation: {entityName: "profile", refField: "name"}},
-                "profile.ownerId": {relation: {entityName: "owner", refField: "ownerId"}},
-                "profile.multipleassociationsId": {relation: {entityName: "multipleAssociations", refField: "multipleassociationsId"}},
+                "profile.ownerId": {relation: {entityName: "profile", refField: "ownerId"}},
+                "profile.multipleassociationsId": {relation: {entityName: "profile", refField: "multipleassociationsId"}},
                 "owner.id": {relation: {entityName: "owner", refField: "id"}},
                 "owner.name": {relation: {entityName: "owner", refField: "name"}},
-                "owner.multipleassociationsId": {relation: {entityName: "multipleAssociations", refField: "multipleassociationsId"}}
+                "owner.multipleassociationsId": {relation: {entityName: "owner", refField: "multipleassociationsId"}}
             },
             keyFields: ["id"],
             joinMetadata: {
@@ -88,19 +88,19 @@ public client class Client {
         }
         self.dbClient = dbClient;
         self.persistClients = {
-            profiles: check new (self.dbClient, self.metadata.get(PROFILE)),
-            users: check new (self.dbClient, self.metadata.get(USER)),
-            multipleassociations: check new (self.dbClient, self.metadata.get(MULTIPLE_ASSOCIATIONS))
+            [PROFILE] : check new (self.dbClient, self.metadata.get(PROFILE)),
+            [USER] : check new (self.dbClient, self.metadata.get(USER)),
+            [MULTIPLE_ASSOCIATIONS] : check new (self.dbClient, self.metadata.get(MULTIPLE_ASSOCIATIONS))
         };
     }
 
     isolated resource function get profiles(ProfileTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get profiles/[int id](ProfileTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
@@ -122,12 +122,12 @@ public client class Client {
     }
 
     isolated resource function get users(UserTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get users/[int id](UserTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
@@ -149,12 +149,12 @@ public client class Client {
     }
 
     isolated resource function get multipleassociations(MultipleAssociationsTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get multipleassociations/[int id](MultipleAssociationsTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
@@ -183,3 +183,4 @@ public client class Client {
         return result;
     }
 }
+

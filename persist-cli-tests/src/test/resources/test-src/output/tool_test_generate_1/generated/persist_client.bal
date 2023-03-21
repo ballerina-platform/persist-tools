@@ -20,23 +20,19 @@ public client class Client {
     private final map<persist:SQLClient> persistClients;
 
     private final record {|persist:Metadata...;|} metadata = {
-        "employees": {
-            entityName: "Employee",
-            tableName: `Employee`,
+        [BUILDING] : {
+            entityName: "Building",
+            tableName: `Building`,
             fieldMetadata: {
-                empNo: {columnName: "empNo"},
-                firstName: {columnName: "firstName"},
-                lastName: {columnName: "lastName"},
-                birthDate: {columnName: "birthDate"},
-                gender: {columnName: "gender"},
-                hireDate: {columnName: "hireDate"},
-                departmentDeptNo: {columnName: "departmentDeptNo"},
-                "department.deptNo": {relation: {entityName: "department", refField: "deptNo"}},
-                "department.deptName": {relation: {entityName: "department", refField: "deptName"}},
-                "workspace.workspaceId": {relation: {entityName: "workspace", refField: "workspaceId"}},
-                "workspace.workspaceType": {relation: {entityName: "workspace", refField: "workspaceType"}},
-                "workspace.locationBuildingCode": {relation: {entityName: "location", refField: "locationBuildingCode"}},
-                "workspace.workspaceEmpNo": {relation: {entityName: "employee", refField: "workspaceEmpNo"}}
+                buildingCode: {columnName: "buildingCode"},
+                city: {columnName: "city"},
+                state: {columnName: "state"},
+                country: {columnName: "country"},
+                postalCode: {columnName: "postalCode"},
+                "workspaces[].workspaceId": {relation: {entityName: "workspaces", refField: "workspaceId"}},
+                "workspaces[].workspaceType": {relation: {entityName: "workspaces", refField: "workspaceType"}},
+                "workspaces[].locationBuildingCode": {relation: {entityName: "workspaces", refField: "locationBuildingCode"}},
+                "workspaces[].employeeEmpNo": {relation: {entityName: "workspaces", refField: "employeeEmpNo"}}
             },
             keyFields: ["empNo"],
             joinMetadata: {
@@ -44,7 +40,7 @@ public client class Client {
                 workspace: {entity: Workspace, fieldName: "workspace", refTable: "Workspace", refColumns: ["employeeEmpNo"], joinColumns: ["empNo"], 'type: persist:ONE_TO_ONE}
             }
         },
-        "workspaces": {
+        [WORKSPACE] : {
             entityName: "Workspace",
             tableName: `Workspace`,
             fieldMetadata: {
@@ -63,7 +59,7 @@ public client class Client {
                 "employee.birthDate": {relation: {entityName: "employee", refField: "birthDate"}},
                 "employee.gender": {relation: {entityName: "employee", refField: "gender"}},
                 "employee.hireDate": {relation: {entityName: "employee", refField: "hireDate"}},
-                "employee.departmentDeptNo": {relation: {entityName: "department", refField: "departmentDeptNo"}}
+                "employee.departmentDeptNo": {relation: {entityName: "employee", refField: "departmentDeptNo"}}
             },
             keyFields: ["workspaceId"],
             joinMetadata: {
@@ -71,24 +67,7 @@ public client class Client {
                 employee: {entity: Employee, fieldName: "employee", refTable: "Employee", refColumns: ["empNo"], joinColumns: ["workspaceEmpNo"], 'type: persist:ONE_TO_ONE}
             }
         },
-        "buildings": {
-            entityName: "Building",
-            tableName: `Building`,
-            fieldMetadata: {
-                buildingCode: {columnName: "buildingCode"},
-                city: {columnName: "city"},
-                state: {columnName: "state"},
-                country: {columnName: "country"},
-                postalCode: {columnName: "postalCode"},
-                "workspaces[].workspaceId": {relation: {entityName: "workspaces", refField: "workspaceId"}},
-                "workspaces[].workspaceType": {relation: {entityName: "workspaces", refField: "workspaceType"}},
-                "workspaces[].locationBuildingCode": {relation: {entityName: "location", refField: "locationBuildingCode"}},
-                "workspaces[].workspaceEmpNo": {relation: {entityName: "employee", refField: "workspaceEmpNo"}}
-            },
-            keyFields: ["buildingCode"],
-            joinMetadata: {workspaces: {entity: Workspace, fieldName: "workspaces", refTable: "Workspace", refColumns: ["locationBuildingCode"], joinColumns: ["buildingCode"], 'type: persist:MANY_TO_ONE}}
-        },
-        "departments": {
+        [DEPARTMENT] : {
             entityName: "Department",
             tableName: `Department`,
             fieldMetadata: {
@@ -100,10 +79,34 @@ public client class Client {
                 "employees[].birthDate": {relation: {entityName: "employees", refField: "birthDate"}},
                 "employees[].gender": {relation: {entityName: "employees", refField: "gender"}},
                 "employees[].hireDate": {relation: {entityName: "employees", refField: "hireDate"}},
-                "employees[].departmentDeptNo": {relation: {entityName: "department", refField: "departmentDeptNo"}}
+                "employees[].departmentDeptNo": {relation: {entityName: "employees", refField: "departmentDeptNo"}}
             },
             keyFields: ["deptNo"],
             joinMetadata: {employees: {entity: Employee, fieldName: "employees", refTable: "Employee", refColumns: ["departmentDeptNo"], joinColumns: ["deptNo"], 'type: persist:MANY_TO_ONE}}
+        },
+        [EMPLOYEE] : {
+            entityName: "Employee",
+            tableName: `Employee`,
+            fieldMetadata: {
+                empNo: {columnName: "empNo"},
+                firstName: {columnName: "firstName"},
+                lastName: {columnName: "lastName"},
+                birthDate: {columnName: "birthDate"},
+                gender: {columnName: "gender"},
+                hireDate: {columnName: "hireDate"},
+                departmentDeptNo: {columnName: "departmentDeptNo"},
+                "department.deptNo": {relation: {entityName: "department", refField: "deptNo"}},
+                "department.deptName": {relation: {entityName: "department", refField: "deptName"}},
+                "workspace.workspaceId": {relation: {entityName: "workspace", refField: "workspaceId"}},
+                "workspace.workspaceType": {relation: {entityName: "workspace", refField: "workspaceType"}},
+                "workspace.locationBuildingCode": {relation: {entityName: "workspace", refField: "locationBuildingCode"}},
+                "workspace.employeeEmpNo": {relation: {entityName: "workspace", refField: "employeeEmpNo"}}
+            },
+            keyFields: ["empNo"],
+            joinMetadata: {
+                department: {entity: Department, fieldName: "department", refTable: "Department", refColumns: ["deptNo"], joinColumns: ["departmentDeptNo"], 'type: persist:ONE_TO_MANY},
+                workspace: {entity: Workspace, fieldName: "workspace", refTable: "Workspace", refColumns: ["employeeEmpNo"], joinColumns: ["empNo"], 'type: persist:ONE_TO_ONE}
+            }
         }
     };
 
@@ -114,20 +117,20 @@ public client class Client {
         }
         self.dbClient = dbClient;
         self.persistClients = {
-            employees: check new (self.dbClient, self.metadata.get(EMPLOYEE)),
-            workspaces: check new (self.dbClient, self.metadata.get(WORKSPACE)),
-            buildings: check new (self.dbClient, self.metadata.get(BUILDING)),
-            departments: check new (self.dbClient, self.metadata.get(DEPARTMENT))
+            [BUILDING] : check new (self.dbClient, self.metadata.get(BUILDING)),
+            [WORKSPACE] : check new (self.dbClient, self.metadata.get(WORKSPACE)),
+            [DEPARTMENT] : check new (self.dbClient, self.metadata.get(DEPARTMENT)),
+            [EMPLOYEE] : check new (self.dbClient, self.metadata.get(EMPLOYEE))
         };
     }
 
-    isolated resource function get employees(EmployeeTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+    isolated resource function get buildings(BuildingTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "query"
     } external;
 
-    isolated resource function get employees/[string empNo](EmployeeTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+    isolated resource function get buildings/[string buildingCode](BuildingTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
@@ -149,12 +152,12 @@ public client class Client {
     }
 
     isolated resource function get workspaces(WorkspaceTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get workspaces/[string workspaceId](WorkspaceTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
@@ -203,12 +206,12 @@ public client class Client {
     }
 
     isolated resource function get departments(DepartmentTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get departments/[string deptNo](DepartmentTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
@@ -229,6 +232,32 @@ public client class Client {
         return result;
     }
 
+    isolated resource function get employees(EmployeeTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
+        name: "query"
+    } external;
+
+    isolated resource function get employees/[string empNo](EmployeeTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
+        name: "queryOne"
+    } external;
+
+    isolated resource function post employees(EmployeeInsert[] data) returns string[]|persist:Error {
+        _ = check self.persistClients.get(EMPLOYEE).runBatchInsertQuery(data);
+        return from EmployeeInsert inserted in data
+            select inserted.empNo;
+    }
+
+    isolated resource function put employees/[string empNo](EmployeeUpdate value) returns Employee|persist:Error {
+        _ = check self.persistClients.get(EMPLOYEE).runUpdateQuery(empNo, value);
+        return self->/employees/[empNo].get();
+    }
+
+    isolated resource function delete employees/[string empNo]() returns Employee|persist:Error {
+        Employee result = check self->/employees/[empNo].get();
+        _ = check self.persistClients.get(EMPLOYEE).runDeleteQuery(empNo);
+        return result;
+    }
     public function close() returns persist:Error? {
         error? result = self.dbClient.close();
         if result is error {

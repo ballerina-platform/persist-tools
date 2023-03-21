@@ -63,7 +63,6 @@ import org.ballerinalang.formatter.core.FormatterException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -492,7 +491,7 @@ public class BalSyntaxGenerator {
                                                     "\"%s[]" : "\"%s") +
                                                     ASSOCIATED_FIELD_TEMPLATE,
                                             field.getFieldName(), key.getField(),
-                                            stripEscapeCharacter(associatedEntityField.getFieldName()),
+                                            stripEscapeCharacter(field.getFieldName()),
                                             stripEscapeCharacter(key.getField())));
                                 }
                             }
@@ -529,7 +528,7 @@ public class BalSyntaxGenerator {
             }
 
             mapBuilder.append(String.format(METADATARECORD_ELEMENT_TEMPLATE,
-                    entity.getResourceName(), entityMetaData));
+                    getEntityNameConstant(entity.getEntityName()), entityMetaData));
         }
         return NodeParser.parseObjectMember(String.format(METADATARECORD_TEMPLATE, mapBuilder));
     }
@@ -576,22 +575,18 @@ public class BalSyntaxGenerator {
     }
 
     private static ClientResource createClientResource(Entity entity) {
-        HashMap<String, String> keys = new HashMap<>();
         ClientResource resource = new ClientResource();
-        for (EntityField field : entity.getKeys()) {
-            keys.put(field.getFieldName(), field.getFieldType());
-        }
         resource.addFunction(createGetFunction(entity), true);
 
-        resource.addFunction(createGetByKeyFunction(entity, keys), true);
+        resource.addFunction(createGetByKeyFunction(entity), true);
 
         Function create = createPostFunction(entity);
         resource.addFunction(create.getFunctionDefinitionNode(), true);
 
-        Function update = createPutFunction(entity, keys);
+        Function update = createPutFunction(entity);
         resource.addFunction(update.getFunctionDefinitionNode(), true);
 
-        Function delete = createDeleteFunction(entity, keys);
+        Function delete = createDeleteFunction(entity);
         resource.addFunction(delete.getFunctionDefinitionNode(), true);
 
         return resource;
@@ -613,7 +608,7 @@ public class BalSyntaxGenerator {
                 persistClientMap.append(COMMA_WITH_NEWLINE);
             }
             persistClientMap.append(String.format(PERSIST_CLIENT_MAP_ELEMENT,
-                    entity.getResourceName(), getEntityNameConstant(entity.getEntityName())));
+                   getEntityNameConstant(entity.getEntityName()), getEntityNameConstant(entity.getEntityName())));
         }
         init.addStatement(NodeParser.parseStatement(String.format(PERSIST_CLIENT_TEMPLATE, persistClientMap)));
         return init;
@@ -699,16 +694,16 @@ public class BalSyntaxGenerator {
         create.addStatement(NodeParser.parseStatement(filterKeys.toString()));
     }
 
-    private static FunctionDefinitionNode createGetByKeyFunction(Entity entity, HashMap<String, String> keys) {
+    private static FunctionDefinitionNode createGetByKeyFunction(Entity entity) {
         StringBuilder keyBuilder = new StringBuilder();
-        for (Map.Entry<String, String> key : keys.entrySet()) {
+        for (EntityField keyField : entity.getKeys()) {
             if (keyBuilder.length() > 0) {
                 keyBuilder.append("/");
             }
             keyBuilder.append(OPEN_BRACKET);
-            keyBuilder.append(key.getValue());
+            keyBuilder.append(keyField.getFieldType());
             keyBuilder.append(SPACE);
-            keyBuilder.append(key.getKey());
+            keyBuilder.append(keyField.getFieldName());
             keyBuilder.append(CLOSE_BRACKET);
         }
 
@@ -723,7 +718,7 @@ public class BalSyntaxGenerator {
                         entity.getResourceName(), entity.getEntityName()));
     }
 
-    private static Function createPutFunction(Entity entity, HashMap<String, String> keys) {
+    private static Function createPutFunction(Entity entity) {
         Function update = new Function(BalSyntaxConstants.PUT, SyntaxKind.RESOURCE_ACCESSOR_DEFINITION);
         update.addQualifiers(new String[] { KEYWORD_ISOLATED, BalSyntaxConstants.KEYWORD_RESOURCE });
         update.addRequiredParameter(TypeDescriptor.getSimpleNameReferenceNode(
@@ -731,7 +726,7 @@ public class BalSyntaxGenerator {
         NodeList<Node> resourcePaths = AbstractNodeFactory.createEmptyNodeList();
         StringBuilder filterKeys = new StringBuilder(OPEN_BRACE);
         StringBuilder path = new StringBuilder(BACK_SLASH + entity.getResourceName());
-        resourcePaths = getResourcePath(resourcePaths, keys, filterKeys, path, entity.getResourceName());
+        resourcePaths = getResourcePath(resourcePaths, entity.getKeys(), filterKeys, path, entity.getResourceName());
         update.addRelativeResourcePaths(resourcePaths);
         update.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(
                 TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()),
@@ -750,13 +745,13 @@ public class BalSyntaxGenerator {
         return update;
     }
 
-    private static Function createDeleteFunction(Entity entity, HashMap<String, String> keys) {
+    private static Function createDeleteFunction(Entity entity) {
         Function delete = new Function(BalSyntaxConstants.DELETE, SyntaxKind.RESOURCE_ACCESSOR_DEFINITION);
         delete.addQualifiers(new String[] { KEYWORD_ISOLATED, BalSyntaxConstants.KEYWORD_RESOURCE });
         NodeList<Node> resourcePaths = AbstractNodeFactory.createEmptyNodeList();
         StringBuilder path = new StringBuilder(BACK_SLASH + entity.getResourceName());
         StringBuilder filterKeys = new StringBuilder(OPEN_BRACE);
-        resourcePaths = getResourcePath(resourcePaths, keys, filterKeys, path, entity.getResourceName());
+        resourcePaths = getResourcePath(resourcePaths, entity.getKeys(), filterKeys, path, entity.getResourceName());
         delete.addRelativeResourcePaths(resourcePaths);
         delete.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(
                 TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()),
@@ -776,23 +771,23 @@ public class BalSyntaxGenerator {
         return delete;
     }
 
-    private static NodeList<Node> getResourcePath(NodeList<Node> resourcePaths, HashMap<String, String> keys,
+    private static NodeList<Node> getResourcePath(NodeList<Node> resourcePaths, List<EntityField> keys,
             StringBuilder filterKeys, StringBuilder path, String tableName) {
         resourcePaths = resourcePaths.add(AbstractNodeFactory.createIdentifierToken(tableName));
-        for (Map.Entry<String, String> entry : keys.entrySet()) {
+        for (EntityField entry : keys) {
             resourcePaths = resourcePaths.add(AbstractNodeFactory.createToken(SyntaxKind.SLASH_TOKEN));
             resourcePaths = resourcePaths.add(NodeFactory.createResourcePathParameterNode(
                     SyntaxKind.RESOURCE_PATH_SEGMENT_PARAM,
                     AbstractNodeFactory.createToken(SyntaxKind.OPEN_BRACKET_TOKEN),
                     AbstractNodeFactory.createEmptyNodeList(),
                     NodeFactory.createBuiltinSimpleNameReferenceNode(SyntaxKind.STRING_TYPE_DESC,
-                            AbstractNodeFactory.createIdentifierToken(entry.getValue() + SPACE)),
+                            AbstractNodeFactory.createIdentifierToken(entry.getFieldType() + SPACE)),
                     null,
-                    AbstractNodeFactory.createIdentifierToken(entry.getKey()),
+                    AbstractNodeFactory.createIdentifierToken(entry.getFieldName()),
                     AbstractNodeFactory.createToken(SyntaxKind.CLOSE_BRACKET_TOKEN)));
-            filterKeys.append(DOUBLE_QUOTE).append(stripEscapeCharacter(entry.getKey()))
-                    .append(DOUBLE_QUOTE).append(COLON).append(entry.getKey()).append(COMMA_SPACE);
-            path.append(BACK_SLASH).append(OPEN_BRACKET).append(entry.getKey()).append(CLOSE_BRACKET);
+            filterKeys.append(DOUBLE_QUOTE).append(stripEscapeCharacter(entry.getFieldName()))
+                    .append(DOUBLE_QUOTE).append(COLON).append(entry.getFieldName()).append(COMMA_SPACE);
+            path.append(BACK_SLASH).append(OPEN_BRACKET).append(entry.getFieldName()).append(CLOSE_BRACKET);
         }
         return resourcePaths;
     }
