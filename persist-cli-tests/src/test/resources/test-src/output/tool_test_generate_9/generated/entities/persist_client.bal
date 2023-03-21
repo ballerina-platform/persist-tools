@@ -17,7 +17,7 @@ public client class Client {
     private final map<persist:SQLClient> persistClients;
 
     private final record {|persist:Metadata...;|} metadata = {
-        "medicalneeds": {
+        [MEDICAL_NEED] : {
             entityName: "MedicalNeed",
             tableName: `MedicalNeed`,
             fieldMetadata: {
@@ -38,16 +38,16 @@ public client class Client {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
-        self.persistClients = {medicalneeds: check new (self.dbClient, self.metadata.get(MEDICAL_NEED))};
+        self.persistClients = {[MEDICAL_NEED] : check new (self.dbClient, self.metadata.get(MEDICAL_NEED))};
     }
 
     isolated resource function get medicalneeds(MedicalNeedTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "query"
     } external;
 
-    isolated resource function get medicalneeds/[int itemId]/[int needId](MedicalNeedTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+    isolated resource function get medicalneeds/[int needId]/[int itemId](MedicalNeedTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
@@ -57,14 +57,14 @@ public client class Client {
             select [inserted.needId, inserted.itemId];
     }
 
-    isolated resource function put medicalneeds/[int itemId]/[int needId](MedicalNeedUpdate value) returns MedicalNeed|persist:Error {
-        _ = check self.persistClients.get(MEDICAL_NEED).runUpdateQuery({"itemId": itemId, "needId": needId}, value);
-        return self->/medicalneeds/[itemId]/[needId].get();
+    isolated resource function put medicalneeds/[int needId]/[int itemId](MedicalNeedUpdate value) returns MedicalNeed|persist:Error {
+        _ = check self.persistClients.get(MEDICAL_NEED).runUpdateQuery({"needId": needId, "itemId": itemId}, value);
+        return self->/medicalneeds/[needId]/[itemId].get();
     }
 
-    isolated resource function delete medicalneeds/[int itemId]/[int needId]() returns MedicalNeed|persist:Error {
-        MedicalNeed result = check self->/medicalneeds/[itemId]/[needId].get();
-        _ = check self.persistClients.get(MEDICAL_NEED).runDeleteQuery({"itemId": itemId, "needId": needId});
+    isolated resource function delete medicalneeds/[int needId]/[int itemId]() returns MedicalNeed|persist:Error {
+        MedicalNeed result = check self->/medicalneeds/[needId]/[itemId].get();
+        _ = check self.persistClients.get(MEDICAL_NEED).runDeleteQuery({"needId": needId, "itemId": itemId});
         return result;
     }
 

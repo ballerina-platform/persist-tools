@@ -22,7 +22,7 @@ public client class Client {
     private final map<persist:SQLClient> persistClients;
 
     private final record {|persist:Metadata...;|} metadata = {
-        "profiles": {
+        [PROFILE] : {
             entityName: "Profile",
             tableName: `Profile`,
             fieldMetadata: {
@@ -35,12 +35,12 @@ public client class Client {
                 ownerId: {columnName: "ownerId"},
                 "owner.id": {relation: {entityName: "owner", refField: "id"}},
                 "owner.name": {relation: {entityName: "owner", refField: "name"}},
-                "owner.multipleassociationsId": {relation: {entityName: "multipleAssociations", refField: "multipleassociationsId"}}
+                "owner.multipleassociationsId": {relation: {entityName: "owner", refField: "multipleassociationsId"}}
             },
             keyFields: ["id"],
             joinMetadata: {owner: {entity: User, fieldName: "owner", refTable: "User", refColumns: ["id"], joinColumns: ["ownerId"], 'type: persist:ONE_TO_ONE}}
         },
-        "users": {
+        [USER] : {
             entityName: "User",
             tableName: `User`,
             fieldMetadata: {
@@ -53,7 +53,7 @@ public client class Client {
                 "profile.salary": {relation: {entityName: "profile", refField: "salary"}},
                 "profile.age": {relation: {entityName: "profile", refField: "age"}},
                 "profile.isRegistered": {relation: {entityName: "profile", refField: "isRegistered"}},
-                "profile.ownerId": {relation: {entityName: "owner", refField: "ownerId"}},
+                "profile.ownerId": {relation: {entityName: "profile", refField: "ownerId"}},
                 "multipleAssociations.id": {relation: {entityName: "multipleAssociations", refField: "id"}},
                 "multipleAssociations.name": {relation: {entityName: "multipleAssociations", refField: "name"}}
             },
@@ -63,7 +63,7 @@ public client class Client {
                 multipleAssociations: {entity: MultipleAssociations, fieldName: "multipleAssociations", refTable: "MultipleAssociations", refColumns: ["id"], joinColumns: ["multipleassociationsId"], 'type: persist:ONE_TO_ONE}
             }
         },
-        "depts": {
+        [DEPT] : {
             entityName: "Dept",
             tableName: `Dept`,
             fieldMetadata: {
@@ -76,7 +76,7 @@ public client class Client {
             keyFields: ["id"],
             joinMetadata: {multipleAssociations: {entity: MultipleAssociations, fieldName: "multipleAssociations", refTable: "MultipleAssociations", refColumns: ["id"], joinColumns: ["multipleassociationsId"], 'type: persist:ONE_TO_ONE}}
         },
-        "customers": {
+        [CUSTOMER] : {
             entityName: "Customer",
             tableName: `Customer`,
             fieldMetadata: {
@@ -90,7 +90,7 @@ public client class Client {
             keyFields: ["id"],
             joinMetadata: {multipleAssociations: {entity: MultipleAssociations, fieldName: "multipleAssociations", refTable: "MultipleAssociations", refColumns: ["id"], joinColumns: ["multipleassociationsId"], 'type: persist:ONE_TO_ONE}}
         },
-        "students": {
+        [STUDENT] : {
             entityName: "Student",
             tableName: `Student`,
             fieldMetadata: {
@@ -102,7 +102,7 @@ public client class Client {
             },
             keyFields: ["id", "firstName"]
         },
-        "multipleassociations": {
+        [MULTIPLE_ASSOCIATIONS] : {
             entityName: "MultipleAssociations",
             tableName: `MultipleAssociations`,
             fieldMetadata: {
@@ -110,14 +110,14 @@ public client class Client {
                 name: {columnName: "name"},
                 "owner.id": {relation: {entityName: "owner", refField: "id"}},
                 "owner.name": {relation: {entityName: "owner", refField: "name"}},
-                "owner.multipleassociationsId": {relation: {entityName: "multipleAssociations", refField: "multipleassociationsId"}},
+                "owner.multipleassociationsId": {relation: {entityName: "owner", refField: "multipleassociationsId"}},
                 "dept.id": {relation: {entityName: "dept", refField: "id"}},
                 "dept.name": {relation: {entityName: "dept", refField: "name"}},
-                "dept.multipleassociationsId": {relation: {entityName: "multipleAssociations", refField: "multipleassociationsId"}},
+                "dept.multipleassociationsId": {relation: {entityName: "dept", refField: "multipleassociationsId"}},
                 "customer.id": {relation: {entityName: "customer", refField: "id"}},
                 "customer.name": {relation: {entityName: "customer", refField: "name"}},
                 "customer.age": {relation: {entityName: "customer", refField: "age"}},
-                "customer.multipleassociationsId": {relation: {entityName: "multipleAssociations", refField: "multipleassociationsId"}}
+                "customer.multipleassociationsId": {relation: {entityName: "customer", refField: "multipleassociationsId"}}
             },
             keyFields: ["id"],
             joinMetadata: {
@@ -135,22 +135,22 @@ public client class Client {
         }
         self.dbClient = dbClient;
         self.persistClients = {
-            profiles: check new (self.dbClient, self.metadata.get(PROFILE)),
-            users: check new (self.dbClient, self.metadata.get(USER)),
-            depts: check new (self.dbClient, self.metadata.get(DEPT)),
-            customers: check new (self.dbClient, self.metadata.get(CUSTOMER)),
-            students: check new (self.dbClient, self.metadata.get(STUDENT)),
-            multipleassociations: check new (self.dbClient, self.metadata.get(MULTIPLE_ASSOCIATIONS))
+            [PROFILE] : check new (self.dbClient, self.metadata.get(PROFILE)),
+            [USER] : check new (self.dbClient, self.metadata.get(USER)),
+            [DEPT] : check new (self.dbClient, self.metadata.get(DEPT)),
+            [CUSTOMER] : check new (self.dbClient, self.metadata.get(CUSTOMER)),
+            [STUDENT] : check new (self.dbClient, self.metadata.get(STUDENT)),
+            [MULTIPLE_ASSOCIATIONS] : check new (self.dbClient, self.metadata.get(MULTIPLE_ASSOCIATIONS))
         };
     }
 
     isolated resource function get profiles(ProfileTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get profiles/[int id](ProfileTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
@@ -172,12 +172,12 @@ public client class Client {
     }
 
     isolated resource function get users(UserTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get users/[int id](UserTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
@@ -199,12 +199,12 @@ public client class Client {
     }
 
     isolated resource function get depts(DeptTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get depts/[int id](DeptTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
@@ -226,12 +226,12 @@ public client class Client {
     }
 
     isolated resource function get customers(CustomerTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get customers/[int id](CustomerTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
@@ -253,12 +253,12 @@ public client class Client {
     }
 
     isolated resource function get students(StudentTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "query"
     } external;
 
-    isolated resource function get students/[string firstName]/[int id](StudentTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+    isolated resource function get students/[int id]/[string firstName](StudentTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
@@ -268,24 +268,24 @@ public client class Client {
             select [inserted.id, inserted.firstName];
     }
 
-    isolated resource function put students/[string firstName]/[int id](StudentUpdate value) returns Student|persist:Error {
-        _ = check self.persistClients.get(STUDENT).runUpdateQuery({"firstName": firstName, "id": id}, value);
-        return self->/students/[firstName]/[id].get();
+    isolated resource function put students/[int id]/[string firstName](StudentUpdate value) returns Student|persist:Error {
+        _ = check self.persistClients.get(STUDENT).runUpdateQuery({"id": id, "firstName": firstName}, value);
+        return self->/students/[id]/[firstName].get();
     }
 
-    isolated resource function delete students/[string firstName]/[int id]() returns Student|persist:Error {
-        Student result = check self->/students/[firstName]/[id].get();
-        _ = check self.persistClients.get(STUDENT).runDeleteQuery({"firstName": firstName, "id": id});
+    isolated resource function delete students/[int id]/[string firstName]() returns Student|persist:Error {
+        Student result = check self->/students/[id]/[firstName].get();
+        _ = check self.persistClients.get(STUDENT).runDeleteQuery({"id": id, "firstName": firstName});
         return result;
     }
 
     isolated resource function get multipleassociations(MultipleAssociationsTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get multipleassociations/[int id](MultipleAssociationsTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.QueryProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
@@ -314,3 +314,4 @@ public client class Client {
         return result;
     }
 }
+
