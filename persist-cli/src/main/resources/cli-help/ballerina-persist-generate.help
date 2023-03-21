@@ -5,8 +5,9 @@ SYNOPSIS
        bal persist generate [<-h> | <--help>]
 
 DESCRIPTION
-       Generate the client API based on the data model defined in the `persist` directory.
+       Generate the client API and SQL script based on the data model defined in the `persist` directory.
        The generated API can be used to query and manipulate the persistent data in the application.
+       The generated SQL script can be used to create the database tables.
 
 EXAMPLES
        Print the usage details of the `bal persist generate` command.
