@@ -1,13 +1,13 @@
 NAME
-       bal persist generate - Generate client objects for the model definition file inside persist directory.
+       bal persist generate - Generate the client API based on the data model.
 
 SYNOPSIS
        bal persist generate [<-h> | <--help>]
 
 DESCRIPTION
-       Generate client objects for the model definition file inside persist directory.
-       The model definition filename is the name of the submodule in which the client is generated.
-       All entities in the model definition file are mapped to resources in the generated client.
+       Generate the client API and SQL script based on the data model defined in the `persist` directory.
+       The generated API can be used to query and manipulate the persistent data in the application.
+       The generated SQL script can be used to create the database tables.
 
 EXAMPLES
        Print the usage details of the `bal persist generate` command.
