@@ -13,7 +13,3 @@ value = 1
 value = 2
 
 array = [ [1, 0], [0, 1] ]
-
-[persist]
-datastore = "mysql"
-module = "persist_init_9.entities"

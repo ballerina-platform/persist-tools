@@ -18,30 +18,6 @@ import ballerina/time;
 import ballerina/persist as _;
 
 // Defines the entity type with the entity identity
-type Building record {|
-    readonly string buildingCode;
-    string city;
-    string state;
-    string country;
-    string postalCode;
-
-    Workspace[] workspaces;
-|};
-
-type Workspace record {|
-    readonly string workspaceId;
-    string workspaceType;
-
-    Building location;
-    Employee employee;
-|};
-
-type Department record {|
-    readonly string deptNo;
-    string deptName;
-
-    Employee[] employees;
-|};
 
 type Employee record {|
     readonly string empNo;
@@ -53,4 +29,29 @@ type Employee record {|
 
     Department department;
     Workspace? workspace;
+|};
+
+type Workspace record {|
+    readonly string workspaceId;
+    string workspaceType;
+
+    Building location;
+    Employee employee;
+|};
+
+type Building record {|
+    readonly string buildingCode;
+    string city;
+    string state;
+    string country;
+    string postalCode;
+
+    Workspace[] workspaces;
+|};
+
+type Department record {|
+    readonly string deptNo;
+    string deptName;
+
+    Employee[] employees;
 |};
