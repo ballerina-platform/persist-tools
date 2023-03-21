@@ -102,34 +102,6 @@ public class Init implements BLauncherCmd {
             errStream.println(e.getMessage());
             return;
         }
-
-        Path persistDirPath = Paths.get(this.sourcePath, PERSIST_DIRECTORY);
-        if (!Files.exists(persistDirPath)) {
-            try {
-                Files.createDirectory(persistDirPath.toAbsolutePath());
-            } catch (IOException e) {
-                errStream.println("ERROR: failed to create the persist directory. " + e.getMessage());
-                return;
-            }
-        }
-        List<String> schemaFiles;
-        try (Stream<Path> stream = Files.list(persistDirPath)) {
-            schemaFiles = stream.filter(file -> !Files.isDirectory(file))
-                    .map(Path::getFileName)
-                    .filter(Objects::nonNull)
-                    .filter(file -> file.toString().toLowerCase(Locale.ENGLISH).endsWith(BAL_EXTENTION))
-                    .map(file -> file.toString().replace(BAL_EXTENTION, ""))
-                    .collect(Collectors.toList());
-        } catch (IOException e) {
-            errStream.println("ERROR: failed to list model definition files in the persist directory. "
-                    + e.getMessage());
-            return;
-        }
-        if (schemaFiles.size() > 1) {
-            errStream.println("ERROR: the persist directory allows only one model definition file, " +
-                    "but contains many files.");
-            return;
-        }
         String packageName;
         try {
             packageName = readPackageName(this.sourcePath);
@@ -159,6 +131,34 @@ public class Init implements BLauncherCmd {
             updateBallerinaToml(moduleName, datastore);
         } catch (BalException e) {
             errStream.println("ERROR: failed to add persist configurations in the toml file. " + e.getMessage());
+            return;
+        }
+
+        Path persistDirPath = Paths.get(this.sourcePath, PERSIST_DIRECTORY);
+        if (!Files.exists(persistDirPath)) {
+            try {
+                Files.createDirectory(persistDirPath.toAbsolutePath());
+            } catch (IOException e) {
+                errStream.println("ERROR: failed to create the persist directory. " + e.getMessage());
+                return;
+            }
+        }
+        List<String> schemaFiles;
+        try (Stream<Path> stream = Files.list(persistDirPath)) {
+            schemaFiles = stream.filter(file -> !Files.isDirectory(file))
+                    .map(Path::getFileName)
+                    .filter(Objects::nonNull)
+                    .filter(file -> file.toString().toLowerCase(Locale.ENGLISH).endsWith(BAL_EXTENTION))
+                    .map(file -> file.toString().replace(BAL_EXTENTION, ""))
+                    .collect(Collectors.toList());
+        } catch (IOException e) {
+            errStream.println("ERROR: failed to list model definition files in the persist directory. "
+                    + e.getMessage());
+            return;
+        }
+        if (schemaFiles.size() > 1) {
+            errStream.println("ERROR: the persist directory allows only one model definition file, " +
+                    "but contains many files.");
             return;
         }
         if (schemaFiles.size() == 0) {
