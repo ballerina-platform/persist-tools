@@ -16,7 +16,7 @@
 
 import ballerina/io;
 import ballerina/persist;
-import foo/association.rainier;
+import foo/association.entities as rainier;
 
 function checkBuilding(rainier:Client rainierClient) returns error? {
     rainier:Building building1 = {
