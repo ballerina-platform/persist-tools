@@ -139,6 +139,8 @@ function checkWorkspace(rainier:Client rainierClient) returns error? {
         select workspace_temp2;
     rainier:Workspace workspaceDeleted = check rainierClient->/workspaces/[workspace1.workspaceId].delete();
 
+    workspaceIds = check rainierClient->/workspaces.post([workspace1]);
+
     io:println("Workspace examples successfully executed!");
 
 }
@@ -255,7 +257,6 @@ function checkEmployee(rainier:Client rainierClient) returns error? {
     };
 
     string[] empNos = check rainierClient->/employees.post([employee1]);
-    io:println("1");
 
     rainier:Employee employeeRetrieved = check rainierClient->/employees/[employee1.empNo].get();
 
@@ -275,17 +276,14 @@ function checkEmployee(rainier:Client rainierClient) returns error? {
         departmentDeptNo: "department-3",
         birthDate: {year: 1994, month: 11, day: 13}
     });
-    io:println("2");
     employeeRetrieved = check rainierClient->/employees/[employee1.empNo].get();
     employeeError = rainierClient->/employees/["invalid-employee-id"].put({
         lastName: "Jones"
     });
-    io:println("3");
 
     employeeError = rainierClient->/employees/[employee1.empNo].put({
         workspaceWorkspaceId: "invalid-workspaceWorkspaceId"
     });
-    io:println("4");
 
     stream<rainier:Employee, error?> employeeStream2 = rainierClient->/employees.get();
     employees = check from rainier:Employee employee_temp2 in employeeStream2
@@ -317,32 +315,32 @@ function checkOrderItem(rainier:Client rainierClient) returns error? {
 
     [string, string][] ids = check rainierClient->/orderitems.post([orderItem1, orderItem2]);
 
-    rainier:OrderItem orderItemRetrieved = check rainierClient->/orderitems/[orderItem1.itemId]/[orderItem1.orderId].get();
+    rainier:OrderItem orderItemRetrieved = check rainierClient->/orderitems/[orderItem1.orderId]/[orderItem1.itemId].get();
 
-    orderItemRetrieved = check rainierClient->/orderitems/[orderItem2.itemId]/[orderItem2.orderId].get();
+    orderItemRetrieved = check rainierClient->/orderitems/[orderItem2.orderId]/[orderItem2.itemId].get();
 
     [string, string][]|error idsError = rainierClient->/orderitems.post([orderItem1]);
     stream<rainier:OrderItem, error?> orderItemStream = rainierClient->/orderitems.get();
     rainier:OrderItem[] orderitems = check from rainier:OrderItem orderItemTemp in orderItemStream
         select orderItemTemp;
-    rainier:OrderItem orderItem = check rainierClient->/orderitems/[orderItem1.itemId]/[orderItem1.orderId].get();
+    rainier:OrderItem orderItem = check rainierClient->/orderitems/[orderItem1.orderId]/[orderItem1.itemId].get();
     rainier:OrderItem|error orderItemError = rainierClient->/orderitems/["invalid-order-id"]/[orderItem1.itemId].get();
-    orderItemError = rainierClient->/orderitems/[orderItem1.orderId]/["invalid-item-id"].get();
-    rainier:OrderItem orderItemUpdated = check rainierClient->/orderitems/[orderItem2.itemId]/[orderItem2.orderId].put({
+    orderItemError = rainierClient->/orderitems/[orderItem1.itemId]/["invalid-order-id"].get();
+    rainier:OrderItem orderItemUpdated = check rainierClient->/orderitems/[orderItem2.orderId]/[orderItem2.itemId].put({
         quantity: orderItem2Updated.quantity,
         notes: orderItem2Updated.notes
     });
-    orderItem = check rainierClient->/orderitems/[orderItem2.itemId]/[orderItem2.orderId].get();
-    orderItemError = rainierClient->/orderitems/[orderItem1.itemId]/[orderItem2.orderId].put({
+    orderItem = check rainierClient->/orderitems/[orderItem2.orderId]/[orderItem2.itemId].get();
+    orderItemError = rainierClient->/orderitems/[orderItem2.orderId]/[orderItem2.itemId].put({
         quantity: 239,
         notes: "updated notes"
     });
-    rainier:OrderItem orderItemDeleted = check rainierClient->/orderitems/[orderItem2.itemId]/[orderItem2.orderId].delete();
-    orderItemError = rainierClient->/orderitems/[orderItem2.itemId]/[orderItem2.orderId].get();
+    rainier:OrderItem orderItemDeleted = check rainierClient->/orderitems/[orderItem2.orderId]/[orderItem2.itemId].delete();
+    orderItemError = rainierClient->/orderitems/[orderItem2.orderId]/[orderItem2.itemId].get();
     if orderItemError !is persist:Error {
         panic error("Error expected");
     }
-    orderItemError = rainierClient->/orderitems/["invalid-item-id"]/[orderItem2.orderId].delete();
+    orderItemError = rainierClient->/orderitems/["invalid-order-id"]/[orderItem2.itemId].delete();
     if orderItemError !is persist:Error {
         panic error("Error expected");
     }
@@ -354,8 +352,8 @@ public function main() returns error? {
     rainier:Client rainierClient = check new ();
 
     check checkBuilding(rainierClient);
-    check checkWorkspace(rainierClient);
     check checkDepartment(rainierClient);
+    check checkWorkspace(rainierClient);
     check checkEmployee(rainierClient);
     check checkOrderItem(rainierClient);
     
