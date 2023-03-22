@@ -59,5 +59,5 @@ type Workspace record {|
     string workspaceType;
 
     Building location;
-    Employee employee;
+    Employee? employee;
 |};

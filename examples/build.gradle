@@ -118,6 +118,27 @@ task copyTestResources(type: Copy) {
     }
 }
 
+task initExamples {
+    doLast {
+        examples.each { example ->
+            try {
+                exec {
+                    workingDir "${project.projectDir}/build/generated-examples/${example}"
+                    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist init --module=entities"
+                    } else {
+                        commandLine 'cmd','slmgr /dlv'
+                        println('\n' + "Windows Instance detected")
+                    }
+                }
+            } catch (Exception e) {
+                println("Example '${example}' Generation failed: " + e.message)
+                throw e
+            }
+        }
+    }
+}
+
 task generateExamples {
     doLast {
         examples.each { example ->
@@ -254,7 +275,8 @@ task testExamples {
 copyPersitTool.dependsOn ":persist-cli-tests:build"
 copyPersitTool.dependsOn ":persist-cli:build"
 copyTestResources.dependsOn copyPersitTool
-generateExamples.dependsOn copyTestResources
+initExamples.dependsOn copyTestResources
+generateExamples.dependsOn initExamples
 pushExamples.dependsOn generateExamples
 testExamples.dependsOn pushExamples
 
