@@ -122,7 +122,7 @@ public class TomlSyntaxGenerator {
             }
             if (!dbConfigExists) {
                 throw new BalException("the persist tool config doesn't exist in the Ballerina.toml. " +
-                        "add [persist.<model_name>.storage.<provider>] table with db configurations.");
+                        "add [persist.model.storage.<provider>] table with db configurations.");
             }
             return configuration;
         } catch (IOException e) {
