@@ -136,5 +136,7 @@ public class PersistToolsConstants {
         public static final String ARTIFACT_ID = "persist-native";
         public static final String PERSIST_VERSION = "persistVersion";
         public static final String KEYWORD_VERSION = "version";
+
+        public static final String MYSQL = "mysql";
     }
 }

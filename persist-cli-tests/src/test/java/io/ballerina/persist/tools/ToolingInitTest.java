@@ -26,6 +26,7 @@ import picocli.CommandLine;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,10 +34,8 @@ import java.nio.file.Paths;
 import java.util.Properties;
 
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.Command.INIT;
-import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.GENERATED_SOURCES_DIRECTORY;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertGeneratedSources;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertGeneratedSourcesNegative;
-import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.executeCommand;
 
 /**
  * persist tool init command tests.
@@ -44,6 +43,8 @@ import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.execute
 public class ToolingInitTest {
 
     private String version;
+    private static final PrintStream errStream = System.err;
+    public static final String GENERATED_SOURCES_DIRECTORY = Paths.get("build", "generated-sources").toString();
 
     @BeforeClass
     public void findLatestPersistVersion() {
@@ -62,7 +63,7 @@ public class ToolingInitTest {
     @Description("When the project is not initiated")
     public void testInit() {
         updateOutputBallerinaToml("tool_test_init_1");
-        executeCommand("tool_test_init_1", INIT);
+        executeCommand("tool_test_init_1");
         assertGeneratedSources("tool_test_init_1");
     }
 
@@ -77,7 +78,7 @@ public class ToolingInitTest {
             "configurations")
     public void testsInitUpdateConfigWithPartialyInitiatedFiles() {
         updateOutputBallerinaToml("tool_test_init_3");
-        executeCommand("tool_test_init_3", INIT);
+        executeCommand("tool_test_init_3");
         assertGeneratedSources("tool_test_init_3");
     }
 
@@ -91,14 +92,14 @@ public class ToolingInitTest {
     @Description("When the configs are already updated")
     public void testsInitUpdateConfigWithUpdatedDbConfigurations() {
         updateOutputBallerinaToml("tool_test_init_5");
-        executeCommand("tool_test_init_5", INIT);
+        executeCommand("tool_test_init_5");
         assertGeneratedSources("tool_test_init_5");
     }
 
     @Test(enabled = true)
     @Description("Running init on a already initialized project")
     public void testInitAlreadyInitializedProject() {
-        executeCommand("tool_test_init_6", INIT);
+        executeCommand("tool_test_init_6");
         assertGeneratedSources("tool_test_init_6");
     }
 
@@ -106,7 +107,7 @@ public class ToolingInitTest {
     @Description("Running init on a already initialized project with database configurations missing")
     public void testInitAlreadyInitializedProjectWithOutPersistConfiguration() {
         updateOutputBallerinaToml("tool_test_init_7");
-        executeCommand("tool_test_init_7", INIT);
+        executeCommand("tool_test_init_7");
         assertGeneratedSources("tool_test_init_7");
     }
 
@@ -114,7 +115,7 @@ public class ToolingInitTest {
     @Description("Running init on a project with manually created definition file")
     public void testInitWithManuallyCreatedDefinitionFile() {
         updateOutputBallerinaToml("tool_test_init_9");
-        executeCommand("tool_test_init_9", INIT);
+        executeCommand("tool_test_init_9");
         assertGeneratedSources("tool_test_init_9");
     }
 
@@ -180,6 +181,21 @@ public class ToolingInitTest {
             } catch (IOException e) {
                 // ignore
             }
+        }
+    }
+
+    private void executeCommand(String subDir) {
+        Class<?> persistClass;
+        Path sourcePath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);
+        try {
+            persistClass = Class.forName("io.ballerina.persist.cmd.Init");
+            Init persistCmd = (Init) persistClass.getDeclaredConstructor(String.class)
+                    .newInstance(sourcePath.toAbsolutePath().toString());
+            new CommandLine(persistCmd).parseArgs("--datastore", "mysql");
+            persistCmd.execute();
+        } catch (ClassNotFoundException | IllegalAccessException | InstantiationException |
+                 NoSuchMethodException | InvocationTargetException e) {
+            errStream.println(e.getMessage());
         }
     }
 }

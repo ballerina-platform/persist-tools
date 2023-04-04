@@ -41,6 +41,7 @@ import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.PersistToolsConstants.SCHEMA_FILE_NAME;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.BAL_EXTENTION;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_IN_MEMORY_TABLE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_MYSQL;
 import static io.ballerina.persist.nodegenerator.TomlSyntaxGenerator.readPackageName;
 import static io.ballerina.persist.utils.BalProjectUtils.validateBallerinaProject;
@@ -88,10 +89,10 @@ public class Init implements BLauncherCmd {
         }
 
         if (datastore == null) {
-            datastore = KEYWORD_MYSQL;
-        } else if (!datastore.equals(KEYWORD_MYSQL)) {
+            datastore = KEYWORD_IN_MEMORY_TABLE;
+        } else if (!datastore.equals(KEYWORD_MYSQL) && !datastore.equals(KEYWORD_IN_MEMORY_TABLE)) {
             errStream.printf("ERROR: the persist layer supports only " +
-                    "'mysql' datastore. but found '%s' datasource.%n", datastore);
+                    "'mysql' or 'inMemory' datastore. but found '%s' datasource.%n", datastore);
             return;
         }
 
@@ -163,7 +164,7 @@ public class Init implements BLauncherCmd {
         }
         if (schemaFiles.size() == 0) {
             try {
-                generateSchemaBalFile(persistDirPath, SCHEMA_FILE_NAME);
+                generateSchemaBalFile(persistDirPath);
             } catch (BalException e) {
                 errStream.println("ERROR: failed to create the model definition file in persist directory. "
                         + e.getMessage());
@@ -181,10 +182,10 @@ public class Init implements BLauncherCmd {
 
     }
 
-    private void generateSchemaBalFile(Path persistPath, String schemaFile) throws BalException {
+    private void generateSchemaBalFile(Path persistPath) throws BalException {
         try {
             String configTree = BalSyntaxGenerator.generateSchemaSyntaxTree();
-            writeOutputString(configTree, persistPath.resolve(schemaFile + BAL_EXTENTION)
+            writeOutputString(configTree, persistPath.resolve(SCHEMA_FILE_NAME + BAL_EXTENTION)
                     .toAbsolutePath().toString());
         } catch (Exception e) {
             throw new BalException(e.getMessage());
@@ -216,7 +217,7 @@ public class Init implements BLauncherCmd {
                                     parentDirectory, e.getMessage()));
                 }
             }
-            try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8.name())) {
+            try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8)) {
                 writer.println(content);
             }
         }

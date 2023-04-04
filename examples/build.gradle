@@ -125,7 +125,7 @@ task initExamples {
                 exec {
                     workingDir "${project.projectDir}/build/generated-examples/${example}"
                     if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist init --module=entities"
+                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist init --module=entities --datastore=mysql"
                     } else {
                         commandLine 'cmd','slmgr /dlv'
                         println('\n' + "Windows Instance detected")
