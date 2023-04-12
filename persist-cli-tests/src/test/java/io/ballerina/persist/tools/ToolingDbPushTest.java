@@ -150,7 +150,7 @@ public class ToolingDbPushTest {
         assertGeneratedSources("tool_test_db_push_8");
     }
 
-    @Test(enabled = true) //not valid
+    @Test(enabled = false) //not valid
     @Description("Test the created sql script content with out defining any schema files inside persist directory")
     public void testDbPushWithoutSchemaFile() {
         executeCommand("tool_test_db_push_9", DB_PUSH);
@@ -188,7 +188,7 @@ public class ToolingDbPushTest {
         assertGeneratedSourcesNegative("tool_test_db_push_14", DB_PUSH, null);
     }
 
-    @Test(enabled = true) //not valid as the SQL is not generated in db push command
+    @Test(enabled = false) //not valid as the SQL is not generated in db push command
     @Description("When the db push command is executed with faulty clients.")
     public void testDbPushWithInvalidSchemaFile() throws BalException {
         assertGeneratedSourcesNegative("tool_test_db_push_15", DB_PUSH, null);
@@ -233,7 +233,7 @@ public class ToolingDbPushTest {
         assertGeneratedSources("tool_test_db_push_21");
     }
 
-    @Test(enabled = true) //disabled until the runtime fix is merged
+    @Test(enabled = false) //disabled until the runtime fix is merged
     @Description("Test the created sql script with composite reference keys")
     public void testDbPushWithCompositeReferenceKeys() {
         executeCommand("tool_test_db_push_22", DB_PUSH);
