@@ -46,6 +46,7 @@ import io.ballerina.compiler.syntax.tree.Token;
 import io.ballerina.compiler.syntax.tree.TypeDefinitionNode;
 import io.ballerina.compiler.syntax.tree.TypeDescriptorNode;
 import io.ballerina.persist.BalException;
+import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.components.Client;
 import io.ballerina.persist.components.ClientResource;
 import io.ballerina.persist.components.Function;
@@ -323,7 +324,7 @@ public class BalSyntaxGenerator {
     public static SyntaxTree generateDbClientSyntaxTree(Module entityModule) throws BalException {
         NodeList<ImportDeclarationNode> imports = addImport(entityModule);
         imports = imports.add(getImportDeclarationNode(BalSyntaxConstants.KEYWORD_BALLERINAX,
-                BalSyntaxConstants.KEYWORD_MYSQL, null));
+                PersistToolsConstants.SupportDataSources.MYSQL_DB, null));
 
         NodeList<ModuleMemberDeclarationNode> moduleMembers = addConstantVariables(entityModule);
 
