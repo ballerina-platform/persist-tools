@@ -41,7 +41,7 @@ import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.PersistToolsConstants.SCHEMA_FILE_NAME;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.BAL_EXTENTION;
-import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_IN_MEMORY_TABLE;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_IN_MEMORY;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_MYSQL;
 import static io.ballerina.persist.nodegenerator.TomlSyntaxGenerator.readPackageName;
 import static io.ballerina.persist.utils.BalProjectUtils.validateBallerinaProject;
@@ -89,8 +89,8 @@ public class Init implements BLauncherCmd {
         }
 
         if (datastore == null) {
-            datastore = KEYWORD_IN_MEMORY_TABLE;
-        } else if (!datastore.equals(KEYWORD_MYSQL) && !datastore.equals(KEYWORD_IN_MEMORY_TABLE)) {
+            datastore = KEYWORD_IN_MEMORY;
+        } else if (!datastore.equals(KEYWORD_MYSQL) && !datastore.equals(KEYWORD_IN_MEMORY)) {
             errStream.printf("ERROR: the persist layer supports only " +
                     "'mysql' or 'inMemory' datastore. but found '%s' datasource.%n", datastore);
             return;

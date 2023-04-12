@@ -51,9 +51,11 @@ import java.util.stream.Stream;
 
 import static io.ballerina.persist.PersistToolsConstants.CONFIG_SCRIPT_FILE;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
+import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_IN_MEMORY;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_MYSQL;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PATH_CONFIGURATION_BAL_FILE;
-import static io.ballerina.persist.nodegenerator.BalSyntaxGenerator.generateClientSyntaxTree;
+import static io.ballerina.persist.nodegenerator.BalSyntaxGenerator.generateDbClientSyntaxTree;
+import static io.ballerina.persist.nodegenerator.BalSyntaxGenerator.generateInMemoryClientSyntaxTree;
 import static io.ballerina.persist.nodegenerator.TomlSyntaxGenerator.readPackageName;
 import static io.ballerina.persist.nodegenerator.TomlSyntaxGenerator.readPersistConfigurations;
 import static io.ballerina.persist.utils.BalProjectUtils.validateBallerinaProject;
@@ -143,7 +145,7 @@ public class Generate implements BLauncherCmd {
             Module entityModule;
             Path generatedSourceDirPath;
             String submodule = "";
-
+            String dataStore;
             try {
                 BalProjectUtils.validateSchemaFile(file);
                 entityModule = BalProjectUtils.getEntities(file);
@@ -168,10 +170,11 @@ public class Generate implements BLauncherCmd {
                     }
                     generatedSourceDirPath = generatedSourceDirPath.resolve(submodule);
                 }
-
-                if (!persistConfig.get("datastore").trim().equals(KEYWORD_MYSQL)) {
+                dataStore = persistConfig.get("datastore").trim();
+                if (!dataStore.equals(KEYWORD_MYSQL) && !dataStore.equals(KEYWORD_IN_MEMORY)) {
                     errStream.printf("ERROR: the persist layer supports only " +
-                            "'mysql' datastore. but found '%s' datasource.%n", persistConfig.get("datastore").trim());
+                                    "'mysql' or 'inMemory' datastore. but found '%s' datasource.%n",
+                            persistConfig.get("datastore").trim());
                     return;
                 }
                 if (!Files.exists(generatedSourceDirPath)) {
@@ -182,22 +185,23 @@ public class Generate implements BLauncherCmd {
                         return;
                     }
                 }
-
-                Path databaseConfigPath = generatedSourceDirPath.resolve(PATH_CONFIGURATION_BAL_FILE);
-                if (!Files.exists(databaseConfigPath)) {
-                    try {
-                        generateConfigurationBalFile(generatedSourceDirPath);
-                    } catch (BalException e) {
-                        errStream.println("ERROR: failed to generate the database_configurations.bal file. "
-                                + e.getMessage());
-                        return;
+                if (dataStore.equals(KEYWORD_MYSQL)) {
+                    Path databaseConfigPath = generatedSourceDirPath.resolve(PATH_CONFIGURATION_BAL_FILE);
+                    if (!Files.exists(databaseConfigPath)) {
+                        try {
+                            generateConfigurationBalFile(generatedSourceDirPath);
+                        } catch (BalException e) {
+                            errStream.println("ERROR: failed to generate the database_configurations.bal file. "
+                                    + e.getMessage());
+                            return;
+                        }
                     }
-                }
 
-                if (!Files.exists(Paths.get(this.sourcePath, CONFIG_SCRIPT_FILE).toAbsolutePath())) {
-                    createConfigTomlFile(persistConfig.get("module").trim());
-                } else {
-                    updateConfigTomlFile(persistConfig.get("module").trim());
+                    if (!Files.exists(Paths.get(this.sourcePath, CONFIG_SCRIPT_FILE).toAbsolutePath())) {
+                        createConfigTomlFile(persistConfig.get("module").trim());
+                    } else {
+                        updateConfigTomlFile(persistConfig.get("module").trim());
+                    }
                 }
 
                 if (entityModule.getEntityMap().isEmpty()) {
@@ -206,34 +210,35 @@ public class Generate implements BLauncherCmd {
                     return;
                 }
                 generateDataTypes(entityModule, generatedSourceDirPath);
-                generateClientBalFile(entityModule, generatedSourceDirPath);
+                generateClientBalFile(entityModule, generatedSourceDirPath, dataStore);
 
             } catch (BalException e) {
                 errStream.printf("ERROR: failed to generate types and client for the definition file(%s). %s%n",
                         file.getFileName(), e.getMessage());
                 return;
             }
-
-            try {
-                ArrayList<Entity> entityArray = new ArrayList<>(entityModule.getEntityMap().values());
-                String[] sqlScripts = SqlScriptGenerationUtils.generateSqlScript(entityArray);
-                SqlScriptGenerationUtils.writeScriptFile(entityModule.getModuleName(), sqlScripts,
-                        generatedSourceDirPath);
-            } catch (BalException e) {
-                errStream.printf("ERROR: failed to generate SQL schema for the definition file(%s). %s%n",
-                        file.getFileName(), e.getMessage());
+            if (dataStore.equals(KEYWORD_MYSQL)) {
+                try {
+                    ArrayList<Entity> entityArray = new ArrayList<>(entityModule.getEntityMap().values());
+                    String[] sqlScripts = SqlScriptGenerationUtils.generateSqlScript(entityArray);
+                    SqlScriptGenerationUtils.writeScriptFile(entityModule.getModuleName(), sqlScripts,
+                            generatedSourceDirPath);
+                } catch (BalException e) {
+                    errStream.printf("ERROR: failed to generate SQL schema for the definition file(%s). %s%n",
+                            file.getFileName(), e.getMessage());
+                }
             }
 
             String modulePath = submodule.equals("") ? "./generated" : "./generated/" + submodule;
 
-            errStream.println(String.format("Generated Ballerina Client, Types, " +
-                    "and Scripts to %s directory.", modulePath));
+            errStream.printf("Generated Ballerina Client, Types, " +
+                    "and Scripts to %s directory.%n", modulePath);
             errStream.println("You can now start using Ballerina Client in your code.");
             errStream.println(System.lineSeparator() + "Next steps:");
 
-            errStream.println(String.format("Set database configurations in Config.toml file to point to " +
+            errStream.printf("Set database configurations in Config.toml file to point to " +
                     "your database. If your database has no tables yet, execute the scripts." +
-                    "sql file at %s directory, in your database to create tables.", modulePath));
+                    "sql file at %s directory, in your database to create tables.%n", modulePath);
 
         });
 
@@ -249,10 +254,15 @@ public class Generate implements BLauncherCmd {
         }
     }
 
-    private static void generateClientBalFile(Module entityModule, Path outputPath) throws BalException {
+    private static void generateClientBalFile(Module entityModule, Path outputPath, String dataStore)
+            throws BalException {
         String clientPath = outputPath.resolve("persist_client.bal").toAbsolutePath().toString();
-
-        SyntaxTree balTree = generateClientSyntaxTree(entityModule);
+        SyntaxTree balTree;
+        if (dataStore.equals(KEYWORD_MYSQL)) {
+            balTree = generateDbClientSyntaxTree(entityModule);
+        } else {
+            balTree = generateInMemoryClientSyntaxTree(entityModule);
+        }
         try {
             writeOutputSyntaxTree(balTree, clientPath);
         } catch (IOException | FormatterException e) {
@@ -264,7 +274,6 @@ public class Generate implements BLauncherCmd {
     public static void generateDataTypes(Module entityModule, Path outputPath) throws BalException {
         Collection<Entity> entityArray = entityModule.getEntityMap().values();
         if (entityArray.size() != 0) {
-
             generateTypeBalFile(entityModule, outputPath);
         }
     }
@@ -305,7 +314,7 @@ public class Generate implements BLauncherCmd {
                                 parentDirectory, e.getMessage()));
             }
             content = syntaxTree;
-            try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8.name())) {
+            try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8)) {
                 writer.println(content);
             }
         }
@@ -326,7 +335,7 @@ public class Generate implements BLauncherCmd {
             FormatterException {
         String content;
         content = Formatter.format(syntaxTree.toSourceCode());
-        try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8.name())) {
+        try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8)) {
             writer.println(content);
         }
     }

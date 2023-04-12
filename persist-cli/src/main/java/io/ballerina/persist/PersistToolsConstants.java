@@ -136,7 +136,15 @@ public class PersistToolsConstants {
         public static final String ARTIFACT_ID = "persist-native";
         public static final String PERSIST_VERSION = "persistVersion";
         public static final String KEYWORD_VERSION = "version";
+    }
 
-        public static final String MYSQL = "mysql";
+    /**
+     * Constants related to the data sources.
+     */
+    public static final class SupportDataSources {
+        private SupportDataSources() {}
+
+        public static final String MYSQL_DB = "mysql";
+        public static final String IN_MEMORY_TABLE = "in-memory";
     }
 }
