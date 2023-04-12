@@ -8,5 +8,5 @@ distribution = "2201.3.0"
 observabilityIncluded = false
 
 [persist]
-datastore = "inMemory"
+datastore = "in-memory"
 module = "persist_generate_47.entities"

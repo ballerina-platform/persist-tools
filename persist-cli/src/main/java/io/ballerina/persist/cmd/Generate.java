@@ -170,8 +170,8 @@ public class Generate implements BLauncherCmd {
                     }
                     generatedSourceDirPath = generatedSourceDirPath.resolve(submodule);
                 }
-
-                if (!SUPPORTED_DB_PROVIDERS.contains(persistConfig.get("datastore").trim())) {
+                dataStore = persistConfig.get("datastore").trim();
+                if (!SUPPORTED_DB_PROVIDERS.contains(dataStore)) {
                     errStream.printf("ERROR: the persist layer supports one of data stores: %s" +
                             ". but found '%s' datasource.%n", Arrays.toString(SUPPORTED_DB_PROVIDERS.toArray()),
                             persistConfig.get("datastore").trim());
@@ -185,7 +185,7 @@ public class Generate implements BLauncherCmd {
                         return;
                     }
                 }
-                if (dataStore.equals(KEYWORD_MYSQL)) {
+                if (dataStore.equals(PersistToolsConstants.SupportDataSources.MYSQL_DB)) {
                     Path databaseConfigPath = generatedSourceDirPath.resolve(PATH_CONFIGURATION_BAL_FILE);
                     if (!Files.exists(databaseConfigPath)) {
                         try {
@@ -217,7 +217,7 @@ public class Generate implements BLauncherCmd {
                         file.getFileName(), e.getMessage());
                 return;
             }
-            if (dataStore.equals(KEYWORD_MYSQL)) {
+            if (dataStore.equals(PersistToolsConstants.SupportDataSources.MYSQL_DB)) {
                 try {
                     ArrayList<Entity> entityArray = new ArrayList<>(entityModule.getEntityMap().values());
                     String[] sqlScripts = SqlScriptGenerationUtils.generateSqlScript(entityArray);
@@ -258,7 +258,7 @@ public class Generate implements BLauncherCmd {
             throws BalException {
         String clientPath = outputPath.resolve("persist_client.bal").toAbsolutePath().toString();
         SyntaxTree balTree;
-        if (dataStore.equals(KEYWORD_MYSQL)) {
+        if (dataStore.equals(PersistToolsConstants.SupportDataSources.MYSQL_DB)) {
             balTree = generateDbClientSyntaxTree(entityModule);
         } else {
             balTree = generateInMemoryClientSyntaxTree(entityModule);

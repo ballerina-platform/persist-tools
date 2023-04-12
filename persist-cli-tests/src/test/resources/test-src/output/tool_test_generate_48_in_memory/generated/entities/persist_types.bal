@@ -5,48 +5,6 @@
 
 import ballerina/time;
 
-public type Employee record {|
-    readonly string empNo;
-    string firstName;
-    string lastName;
-    time:Date birthDate;
-    string gender;
-    time:Date hireDate;
-    string departmentDeptNo;
-    string workspaceWorkspaceId;
-|};
-
-public type EmployeeOptionalized record {|
-    string empNo?;
-    string firstName?;
-    string lastName?;
-    time:Date birthDate?;
-    string gender?;
-    time:Date hireDate?;
-    string departmentDeptNo?;
-    string workspaceWorkspaceId?;
-|};
-
-public type EmployeeWithRelations record {|
-    *EmployeeOptionalized;
-    DepartmentOptionalized department?;
-    WorkspaceOptionalized workspace?;
-|};
-
-public type EmployeeTargetType typedesc<EmployeeWithRelations>;
-
-public type EmployeeInsert Employee;
-
-public type EmployeeUpdate record {|
-    string firstName?;
-    string lastName?;
-    time:Date birthDate?;
-    string gender?;
-    time:Date hireDate?;
-    string departmentDeptNo?;
-    string workspaceWorkspaceId?;
-|};
-
 public type Workspace record {|
     readonly string workspaceId;
     string workspaceType;
@@ -154,3 +112,46 @@ public type OrderItemUpdate record {|
     int quantity?;
     string notes?;
 |};
+
+public type Employee record {|
+    readonly string empNo;
+    string firstName;
+    string lastName;
+    time:Date birthDate;
+    string gender;
+    time:Date hireDate;
+    string departmentDeptNo;
+    string workspaceWorkspaceId;
+|};
+
+public type EmployeeOptionalized record {|
+    string empNo?;
+    string firstName?;
+    string lastName?;
+    time:Date birthDate?;
+    string gender?;
+    time:Date hireDate?;
+    string departmentDeptNo?;
+    string workspaceWorkspaceId?;
+|};
+
+public type EmployeeWithRelations record {|
+    *EmployeeOptionalized;
+    DepartmentOptionalized department?;
+    WorkspaceOptionalized workspace?;
+|};
+
+public type EmployeeTargetType typedesc<EmployeeWithRelations>;
+
+public type EmployeeInsert Employee;
+
+public type EmployeeUpdate record {|
+    string firstName?;
+    string lastName?;
+    time:Date birthDate?;
+    string gender?;
+    time:Date hireDate?;
+    string departmentDeptNo?;
+    string workspaceWorkspaceId?;
+|};
+

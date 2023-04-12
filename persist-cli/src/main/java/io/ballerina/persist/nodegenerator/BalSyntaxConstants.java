@@ -36,7 +36,6 @@ public class BalSyntaxConstants {
         public static final String PERSIST_MODULE_NAME = "persist";
         public static final String ABSTRACT_PERSIST_CLIENT = "AbstractPersistClient";
     }
-    public static final String RECORD_PLACEHOLDER = "{%s}";
     public static final String DOUBLE_QUOTE = "\"";
     public static final String BACK_SLASH = "/";
     public static final String EMPTY_STRING = "";
@@ -184,7 +183,7 @@ public class BalSyntaxConstants {
     public static final String METADATA_RECORD_KEY_FIELD_TEMPLATE = "keyFields: [%s]";
     public static final String METADATA_RECORD_ELEMENT_TEMPLATE = "[%s]: {%s}";
     public static final String METADATA_RECORD_TEMPLATE =
-            "private final record {|persist:Metadata...;|} metadata = {%s};";
+            "private final record {|persist:SQLMetadata...;|} metadata = {%s};";
     public static final String IN_MEMORY_METADATA_MAP_TEMPLATE =
             "final map<persist:TableMetadata> metadata = {%s};";
     public static final String IN_MEMORY_ASSOC_METHODS_TEMPLATE = "associationsMethods: {%s}";
