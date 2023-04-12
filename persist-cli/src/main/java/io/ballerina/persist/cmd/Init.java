@@ -19,6 +19,7 @@ package io.ballerina.persist.cmd;
 
 import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.BalException;
+import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.nodegenerator.BalSyntaxGenerator;
 import io.ballerina.persist.nodegenerator.TomlSyntaxGenerator;
 import io.ballerina.projects.util.ProjectUtils;
@@ -31,6 +32,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -40,9 +42,8 @@ import java.util.stream.Stream;
 import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.PersistToolsConstants.SCHEMA_FILE_NAME;
+import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_DB_PROVIDERS;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.BAL_EXTENTION;
-import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_IN_MEMORY_TABLE;
-import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_MYSQL;
 import static io.ballerina.persist.nodegenerator.TomlSyntaxGenerator.readPackageName;
 import static io.ballerina.persist.utils.BalProjectUtils.validateBallerinaProject;
 import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
@@ -89,10 +90,10 @@ public class Init implements BLauncherCmd {
         }
 
         if (datastore == null) {
-            datastore = KEYWORD_IN_MEMORY_TABLE;
-        } else if (!datastore.equals(KEYWORD_MYSQL) && !datastore.equals(KEYWORD_IN_MEMORY_TABLE)) {
-            errStream.printf("ERROR: the persist layer supports only " +
-                    "'mysql' or 'inMemory' datastore. but found '%s' datasource.%n", datastore);
+            datastore = PersistToolsConstants.SupportDataSources.IN_MEMORY_TABLE;
+        } else if (!SUPPORTED_DB_PROVIDERS.contains(datastore)) {
+            errStream.printf("ERROR: the persist layer supports one of data stores: %s" +
+                    ". but found '%s' datasource.%n", Arrays.toString(SUPPORTED_DB_PROVIDERS.toArray()), datastore);
             return;
         }
 
