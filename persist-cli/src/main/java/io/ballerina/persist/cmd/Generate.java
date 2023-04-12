@@ -41,6 +41,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -51,7 +52,7 @@ import java.util.stream.Stream;
 
 import static io.ballerina.persist.PersistToolsConstants.CONFIG_SCRIPT_FILE;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
-import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_MYSQL;
+import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_DB_PROVIDERS;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PATH_CONFIGURATION_BAL_FILE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxGenerator.generateClientSyntaxTree;
 import static io.ballerina.persist.nodegenerator.TomlSyntaxGenerator.readPackageName;
@@ -169,9 +170,10 @@ public class Generate implements BLauncherCmd {
                     generatedSourceDirPath = generatedSourceDirPath.resolve(submodule);
                 }
 
-                if (!persistConfig.get("datastore").trim().equals(KEYWORD_MYSQL)) {
-                    errStream.printf("ERROR: the persist layer supports only " +
-                            "'mysql' datastore. but found '%s' datasource.%n", persistConfig.get("datastore").trim());
+                if (!SUPPORTED_DB_PROVIDERS.contains(persistConfig.get("datastore").trim())) {
+                    errStream.printf("ERROR: the persist layer supports one of data stores: %s" +
+                            ". but found '%s' datasource.%n", Arrays.toString(SUPPORTED_DB_PROVIDERS.toArray()),
+                            persistConfig.get("datastore").trim());
                     return;
                 }
                 if (!Files.exists(generatedSourceDirPath)) {

@@ -19,6 +19,7 @@ package io.ballerina.persist.cmd;
 
 import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.BalException;
+import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.nodegenerator.BalSyntaxGenerator;
 import io.ballerina.persist.nodegenerator.TomlSyntaxGenerator;
 import io.ballerina.projects.util.ProjectUtils;
@@ -31,6 +32,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -40,8 +42,8 @@ import java.util.stream.Stream;
 import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.PersistToolsConstants.SCHEMA_FILE_NAME;
+import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_DB_PROVIDERS;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.BAL_EXTENTION;
-import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.KEYWORD_MYSQL;
 import static io.ballerina.persist.nodegenerator.TomlSyntaxGenerator.readPackageName;
 import static io.ballerina.persist.utils.BalProjectUtils.validateBallerinaProject;
 import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
@@ -88,10 +90,10 @@ public class Init implements BLauncherCmd {
         }
 
         if (datastore == null) {
-            datastore = KEYWORD_MYSQL;
-        } else if (!datastore.equals(KEYWORD_MYSQL)) {
-            errStream.printf("ERROR: the persist layer supports only " +
-                    "'mysql' datastore. but found '%s' datasource.%n", datastore);
+            datastore = PersistToolsConstants.SupportDataSources.IN_MEMORY_TABLE;
+        } else if (!SUPPORTED_DB_PROVIDERS.contains(datastore)) {
+            errStream.printf("ERROR: the persist layer supports one of data stores: %s" +
+                    ". but found '%s' datasource.%n", Arrays.toString(SUPPORTED_DB_PROVIDERS.toArray()), datastore);
             return;
         }
 
@@ -163,7 +165,7 @@ public class Init implements BLauncherCmd {
         }
         if (schemaFiles.size() == 0) {
             try {
-                generateSchemaBalFile(persistDirPath, SCHEMA_FILE_NAME);
+                generateSchemaBalFile(persistDirPath);
             } catch (BalException e) {
                 errStream.println("ERROR: failed to create the model definition file in persist directory. "
                         + e.getMessage());
@@ -181,10 +183,10 @@ public class Init implements BLauncherCmd {
 
     }
 
-    private void generateSchemaBalFile(Path persistPath, String schemaFile) throws BalException {
+    private void generateSchemaBalFile(Path persistPath) throws BalException {
         try {
             String configTree = BalSyntaxGenerator.generateSchemaSyntaxTree();
-            writeOutputString(configTree, persistPath.resolve(schemaFile + BAL_EXTENTION)
+            writeOutputString(configTree, persistPath.resolve(SCHEMA_FILE_NAME + BAL_EXTENTION)
                     .toAbsolutePath().toString());
         } catch (Exception e) {
             throw new BalException(e.getMessage());
@@ -216,7 +218,7 @@ public class Init implements BLauncherCmd {
                                     parentDirectory, e.getMessage()));
                 }
             }
-            try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8.name())) {
+            try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8)) {
                 writer.println(content);
             }
         }

@@ -199,7 +199,6 @@ public class TomlSyntaxGenerator {
      */
     public static String updateBallerinaToml(Path configPath, String module, String datasource) throws IOException,
             BalException {
-        boolean configurationExists = false;
         NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
         Path fileNamePath = configPath.getFileName();
         TextDocument configDocument = TextDocuments.from(Files.readString(configPath));

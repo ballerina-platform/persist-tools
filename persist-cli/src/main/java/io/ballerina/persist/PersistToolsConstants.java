@@ -58,7 +58,7 @@ public class PersistToolsConstants {
     public static final String MYSQL_CONNECTOR_NAME_PREFIX = "mysql-connector";
     public static final String SCHEMA_FILE_NAME = "model";
 
-    public static final Set<String> SUPPORTED_DB_PROVIDERS = Set.of("mysql");
+    public static final Set<String> SUPPORTED_DB_PROVIDERS = Set.of("mysql", "in-memory");
 
     /**
      * Constants related to Ballerina types.
@@ -136,5 +136,15 @@ public class PersistToolsConstants {
         public static final String ARTIFACT_ID = "persist-native";
         public static final String PERSIST_VERSION = "persistVersion";
         public static final String KEYWORD_VERSION = "version";
+    }
+
+    /**
+     * Constants related to the data source.
+     */
+    public static final class SupportDataSources {
+        private SupportDataSources() {}
+
+        public static final String MYSQL_DB = "mysql";
+        public static final String IN_MEMORY_TABLE = "in-memory";
     }
 }
