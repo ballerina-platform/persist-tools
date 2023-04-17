@@ -69,11 +69,13 @@ public type BuildingUpdate record {|
 public type Department record {|
     readonly string deptNo;
     readonly string deptName;
+    string location;
 |};
 
 public type DepartmentOptionalized record {|
     string deptNo?;
     string deptName?;
+    string location?;
 |};
 
 public type DepartmentWithRelations record {|
@@ -86,6 +88,7 @@ public type DepartmentTargetType typedesc<DepartmentWithRelations>;
 public type DepartmentInsert Department;
 
 public type DepartmentUpdate record {|
+    string location?;
 |};
 
 public type OrderItem record {|
@@ -157,3 +160,4 @@ public type EmployeeUpdate record {|
     string workspaceWorkspaceId?;
     string workspaceWorkspaceType?;
 |};
+

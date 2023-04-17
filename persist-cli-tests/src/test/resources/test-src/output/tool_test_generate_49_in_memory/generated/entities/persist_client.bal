@@ -5,7 +5,6 @@
 
 import ballerina/persist;
 import ballerina/jballerina.java;
-import ballerina/time;
 
 const WORKSPACE = "workspaces";
 const BUILDING = "buildings";
@@ -96,6 +95,9 @@ public client class Client {
             return <persist:InvalidKeyError>error("Not found: " + [workspaceId, workspaceType].toString());
         }
         Workspace workspace = self.workspaces.get([workspaceId, workspaceType]);
+        foreach string key in value.keys() {
+            workspace[key] = value[key];
+        }
         self.workspaces.put(workspace);
         return workspace;
     }
@@ -158,20 +160,8 @@ public client class Client {
             return <persist:InvalidKeyError>error("Not found: " + buildingCode.toString());
         }
         Building building = self.buildings.get(buildingCode);
-        if value.city != () {
-            building.city = <string>value.city;
-        }
-        if value.state != () {
-            building.state = <string>value.state;
-        }
-        if value.country != () {
-            building.country = <string>value.country;
-        }
-        if value.postalCode != () {
-            building.postalCode = <string>value.postalCode;
-        }
-        if value.'type != () {
-            building.'type = <string>value.'type;
+        foreach string key in value.keys() {
+            building[key] = value[key];
         }
         self.buildings.put(building);
         return building;
@@ -229,6 +219,9 @@ public client class Client {
             return <persist:InvalidKeyError>error("Not found: " + [deptNo, deptName].toString());
         }
         Department department = self.departments.get([deptNo, deptName]);
+        foreach string key in value.keys() {
+            department[key] = value[key];
+        }
         self.departments.put(department);
         return department;
     }
@@ -285,11 +278,8 @@ public client class Client {
             return <persist:InvalidKeyError>error("Not found: " + [orderId, itemId].toString());
         }
         OrderItem orderitem = self.orderitems.get([orderId, itemId]);
-        if value.quantity != () {
-            orderitem.quantity = <int>value.quantity;
-        }
-        if value.notes != () {
-            orderitem.notes = <string>value.notes;
+        foreach string key in value.keys() {
+            orderitem[key] = value[key];
         }
         self.orderitems.put(orderitem);
         return orderitem;
@@ -347,17 +337,8 @@ public client class Client {
             return <persist:InvalidKeyError>error("Not found: " + [empNo, firstName].toString());
         }
         Employee employee = self.employees.get([empNo, firstName]);
-        if value.lastName != () {
-            employee.lastName = <string>value.lastName;
-        }
-        if value.birthDate != () {
-            employee.birthDate = <time:Date>value.birthDate;
-        }
-        if value.gender != () {
-            employee.gender = <string>value.gender;
-        }
-        if value.hireDate != () {
-            employee.hireDate = <time:Date>value.hireDate;
+        foreach string key in value.keys() {
+            employee[key] = value[key];
         }
         self.employees.put(employee);
         return employee;

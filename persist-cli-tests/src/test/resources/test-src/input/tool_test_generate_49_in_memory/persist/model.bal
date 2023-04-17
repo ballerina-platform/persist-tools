@@ -39,6 +39,7 @@ type Building record {|
 type Department record {|
     readonly string deptNo;
     readonly string deptName;
+    string location;
 
     Employee[] employees;
 |};

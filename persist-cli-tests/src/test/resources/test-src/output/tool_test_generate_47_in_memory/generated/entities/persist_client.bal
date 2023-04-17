@@ -5,7 +5,6 @@
 
 import ballerina/persist;
 import ballerina/jballerina.java;
-import ballerina/time;
 
 const MEDICAL_NEED = "medicalneeds";
 const MEDICAL_ITEM = "medicalitems";
@@ -66,23 +65,8 @@ public client class Client {
             return <persist:InvalidKeyError>error("Not found: " + needId.toString());
         }
         MedicalNeed medicalneed = self.medicalneeds.get(needId);
-        if value.itemId != () {
-            medicalneed.itemId = <int>value.itemId;
-        }
-        if value.name != () {
-            medicalneed.name = <string>value.name;
-        }
-        if value.beneficiaryId != () {
-            medicalneed.beneficiaryId = <int>value.beneficiaryId;
-        }
-        if value.period != () {
-            medicalneed.period = <time:Civil>value.period;
-        }
-        if value.urgency != () {
-            medicalneed.urgency = <string>value.urgency;
-        }
-        if value.quantity != () {
-            medicalneed.quantity = <string>value.quantity;
+        foreach string key in value.keys() {
+            medicalneed[key] = value[key];
         }
         self.medicalneeds.put(medicalneed);
         return medicalneed;
@@ -140,14 +124,8 @@ public client class Client {
             return <persist:InvalidKeyError>error("Not found: " + itemId.toString());
         }
         MedicalItem medicalitem = self.medicalitems.get(itemId);
-        if value.name != () {
-            medicalitem.name = <string>value.name;
-        }
-        if value.'type != () {
-            medicalitem.'type = <string>value.'type;
-        }
-        if value.unit != () {
-            medicalitem.unit = <int>value.unit;
+        foreach string key in value.keys() {
+            medicalitem[key] = value[key];
         }
         self.medicalitems.put(medicalitem);
         return medicalitem;

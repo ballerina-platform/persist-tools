@@ -68,7 +68,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static io.ballerina.compiler.syntax.tree.SyntaxKind.QUALIFIED_NAME_REFERENCE;
@@ -335,13 +334,6 @@ public class BalSyntaxGenerator {
 
     public static SyntaxTree generateInMemoryClientSyntaxTree(Module entityModule) throws BalException {
         NodeList<ImportDeclarationNode> imports = addImport(entityModule);
-        Set<String> importModulePrefix = entityModule.getImportModulePrefixes();
-        if (importModulePrefix != null && !importModulePrefix.isEmpty()) {
-            for (String entry : importModulePrefix) {
-                imports = imports.add(getImportDeclarationNode(BalSyntaxConstants.KEYWORD_BALLERINA,
-                        entry, null));
-            }
-        }
 
         NodeList<ModuleMemberDeclarationNode> moduleMembers = addConstantVariables(entityModule);
 
@@ -1011,17 +1003,8 @@ public class BalSyntaxGenerator {
         String entityNameInLowerCase = entity.getEntityName().toLowerCase(Locale.ENGLISH);
         update.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.GET_UPDATE_RECORD,
                 entity.getEntityName(), entityNameInLowerCase, entity.getResourceName(), primaryKeys)));
-        for (EntityField field : entity.getFields()) {
-            String fieldName = field.getFieldName();
-            if (field.getRelation() == null && !entity.getKeys().contains(field)) {
-                IfElse nilCheck = new IfElse(NodeParser.parseExpression(String.format(BalSyntaxConstants.NIL_CHECK,
-                        fieldName)));
-                nilCheck.addIfStatement(NodeParser.parseStatement(
-                        String.format(BalSyntaxConstants.UPDATE_RECORD_FIELD_VALUE, entityNameInLowerCase, fieldName,
-                                field.getFieldType(), fieldName)));
-                update.addIfElseStatement(nilCheck.getIfElseStatementNode());
-            }
-        }
+        update.addStatement(NodeParser.parseStatement(
+                String.format(BalSyntaxConstants.UPDATE_RECORD_FIELD_VALUE, entityNameInLowerCase)));
         update.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.PUT_VALUE_TO_MAP,
                 entity.getResourceName(), entityNameInLowerCase)));
         update.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.RETURN_STATEMENT,
