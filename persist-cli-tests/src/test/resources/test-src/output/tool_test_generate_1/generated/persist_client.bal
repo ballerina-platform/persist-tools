@@ -19,7 +19,7 @@ public client class Client {
 
     private final map<persist:SQLClient> persistClients;
 
-    private final record {|persist:Metadata...;|} metadata = {
+    private final record {|persist:SQLMetadata...;|} metadata = {
         [EMPLOYEE] : {
             entityName: "Employee",
             tableName: `Employee`,

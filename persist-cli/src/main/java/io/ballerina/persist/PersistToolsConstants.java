@@ -139,7 +139,7 @@ public class PersistToolsConstants {
     }
 
     /**
-     * Constants related to the data source.
+     * Constants related to the data sources.
      */
     public static final class SupportDataSources {
         private SupportDataSources() {}

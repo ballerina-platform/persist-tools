@@ -62,7 +62,6 @@ import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_DB_PROVIDERS;
 import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 
-
 /**
  * Class to create syntax tree for Config.toml.
  *
@@ -130,7 +129,7 @@ public class TomlSyntaxGenerator {
         }
     }
 
-    public static HashMap readPersistConfigurations(Path configPath)
+    public static HashMap<String, String> readPersistConfigurations(Path configPath)
             throws BalException {
         try {
             TextDocument configDocument = TextDocuments.from(Files.readString(configPath));
@@ -138,7 +137,7 @@ public class TomlSyntaxGenerator {
             DocumentNode rootNote = syntaxTree.rootNode();
             NodeList<DocumentMemberDeclarationNode> nodeList = rootNote.members();
             boolean dbConfigExists = false;
-            HashMap<String, String> persistConfig = new HashMap<String, String>();
+            HashMap<String, String> persistConfig = new HashMap<>();
             for (DocumentMemberDeclarationNode member : nodeList) {
                 if (member instanceof TableNode) {
                     TableNode node = (TableNode) member;
@@ -220,15 +219,18 @@ public class TomlSyntaxGenerator {
                         moduleMembers = moduleMembers.add(member);
                     }
                 } else if (member instanceof TableArrayNode) {
-                    NodeList<KeyValueNode> fields = ((TableArrayNode) member).fields();
-                    for (KeyValueNode field : fields) {
-                        String value = field.value().toSourceCode().trim();
-                        if (field.identifier().toSourceCode().trim().equals(
-                                PersistToolsConstants.TomlFileConstants.KEYWORD_ARTIFACT_ID) &&
-                                (value).substring(1, value.length() - 1).equals(
-                                        PersistToolsConstants.TomlFileConstants.ARTIFACT_ID)) {
-                            dependencyExists = true;
-                            break;
+                    TableArrayNode tableArray = (TableArrayNode) member;
+                    if (tableArray.identifier().toSourceCode().trim().equals("platform.java11.dependency")) {
+                        NodeList<KeyValueNode> fields = ((TableArrayNode) member).fields();
+                        for (KeyValueNode field : fields) {
+                            String value = field.value().toSourceCode().trim();
+                            if (field.identifier().toSourceCode().trim().equals(
+                                    PersistToolsConstants.TomlFileConstants.KEYWORD_ARTIFACT_ID) &&
+                                    (value).substring(1, value.length() - 1).equals(
+                                            PersistToolsConstants.TomlFileConstants.ARTIFACT_ID)) {
+                                dependencyExists = true;
+                                break;
+                            }
                         }
                     }
                     if (!dependencyExists) {

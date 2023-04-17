@@ -68,7 +68,6 @@ public class ToolingGenerateTest {
 
     @Test(enabled = true)
     @Description("There is a generated client object and the corresponding entity is updated")
-
     public void testGenerateUpdateEntity() {
         executeCommand("tool_test_generate_5", GENERATE);
         assertGeneratedSources("tool_test_generate_5");
@@ -317,5 +316,26 @@ public class ToolingGenerateTest {
     public void testGenerateMultipleAssociationBetweenSameEntities() {
         executeCommand("tool_test_generate_46", GENERATE);
         assertGeneratedSources("tool_test_generate_46");
+    }
+
+    @Test(enabled = true)
+    @Description("There is a generated client object with in memory data source")
+    public void testInMemoryEntity() {
+        executeCommand("tool_test_generate_47_in_memory", GENERATE);
+        assertGeneratedSources("tool_test_generate_47_in_memory");
+    }
+
+    @Test(enabled = true)
+    @Description("There is a generated client object with in memory data source")
+    public void testInMemoryWithAssociatedEntity() {
+        executeCommand("tool_test_generate_48_in_memory", GENERATE);
+        assertGeneratedSources("tool_test_generate_48_in_memory");
+    }
+
+    @Test(enabled = true)
+    @Description("There is a generated client object with in memory data source")
+    public void testInMemoryWithCompositeKeys() {
+        executeCommand("tool_test_generate_49_in_memory", GENERATE);
+        assertGeneratedSources("tool_test_generate_49_in_memory");
     }
 }

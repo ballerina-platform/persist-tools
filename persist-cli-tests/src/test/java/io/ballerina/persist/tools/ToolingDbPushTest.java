@@ -40,7 +40,6 @@ public class ToolingDbPushTest {
 
     private static final String sqlInt = "INT";
     private static final String sqlVarchar = "VARCHAR";
-    private static final String yes = "YES";
     private static final String no = "NO";
     private static final String sqlDateTime = "DATETIME";
 

@@ -14,4 +14,4 @@ module = "persist_init_12.test"
 [[platform.java11.dependency]]
 groupId = "io.ballerina.stdlib"
 artifactId = "persist-native"
-version = "0.3.0"
+version = "0.3.1-SNAPSHOT"
