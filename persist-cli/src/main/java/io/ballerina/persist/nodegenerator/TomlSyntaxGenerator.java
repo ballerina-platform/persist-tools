@@ -219,15 +219,18 @@ public class TomlSyntaxGenerator {
                         moduleMembers = moduleMembers.add(member);
                     }
                 } else if (member instanceof TableArrayNode) {
-                    NodeList<KeyValueNode> fields = ((TableArrayNode) member).fields();
-                    for (KeyValueNode field : fields) {
-                        String value = field.value().toSourceCode().trim();
-                        if (field.identifier().toSourceCode().trim().equals(
-                                PersistToolsConstants.TomlFileConstants.KEYWORD_ARTIFACT_ID) &&
-                                (value).substring(1, value.length() - 1).equals(
-                                        PersistToolsConstants.TomlFileConstants.ARTIFACT_ID)) {
-                            dependencyExists = true;
-                            break;
+                    TableArrayNode tableArray = (TableArrayNode) member;
+                    if (tableArray.identifier().toSourceCode().trim().equals("platform.java11.dependency")) {
+                        NodeList<KeyValueNode> fields = ((TableArrayNode) member).fields();
+                        for (KeyValueNode field : fields) {
+                            String value = field.value().toSourceCode().trim();
+                            if (field.identifier().toSourceCode().trim().equals(
+                                    PersistToolsConstants.TomlFileConstants.KEYWORD_ARTIFACT_ID) &&
+                                    (value).substring(1, value.length() - 1).equals(
+                                            PersistToolsConstants.TomlFileConstants.ARTIFACT_ID)) {
+                                dependencyExists = true;
+                                break;
+                            }
                         }
                     }
                     if (!dependencyExists) {

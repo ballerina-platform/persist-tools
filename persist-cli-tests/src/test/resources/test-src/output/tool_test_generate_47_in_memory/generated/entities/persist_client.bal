@@ -40,12 +40,12 @@ public client class Client {
     }
 
     isolated resource function get medicalneeds(MedicalNeedTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.InMemoryProcessor",
         name: "query"
     } external;
 
     isolated resource function get medicalneeds/[int needId](MedicalNeedTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.InMemoryProcessor",
         name: "queryOne"
     } external;
 
@@ -114,12 +114,12 @@ public client class Client {
     }
 
     isolated resource function get medicalitems(MedicalItemTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.InMemoryProcessor",
         name: "query"
     } external;
 
     isolated resource function get medicalitems/[int itemId](MedicalItemTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
+        'class: "io.ballerina.stdlib.persist.datastore.InMemoryProcessor",
         name: "queryOne"
     } external;
 

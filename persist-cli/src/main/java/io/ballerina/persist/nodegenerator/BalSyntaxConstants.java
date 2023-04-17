@@ -165,12 +165,16 @@ public class BalSyntaxConstants {
             "    };";
     public static final String RETURN_STATEMENT_FOR_RELATIONAL_ENTITY = "return from record{} 'object in self.%s" +
             System.lineSeparator() +
-            "            where 'object.%s == value[\"%s\"]" + System.lineSeparator() +
+            "            where %s" + System.lineSeparator() +
             "            select persist:filterRecord({" + System.lineSeparator() +
             "                ...'object" + System.lineSeparator() +
             "            }, fields);";
-    public static final String QUERY_EQUALS = "'object.%s equals %s?.%s";
-    public static final String AND = " and ";
+    public static final String OBJECT_FIELD = "'object.%s";
+    public static final String VALUES = "%s?.%s";
+    public static final String EQUALS = " equals ";
+    public static final String AND = " && ";
+    public static final String COMMA = ", ";
+    public static final String CONDITION_STATEMENT = "'object.%s == value[\"%s\"] ";
     public static final String VARIABLE = "\"%s\": %s,";
     public static final String ASSOCIATED_FIELD_TEMPLATE = ".%s\": {relation: {entityName: \"%s\", refField: \"%s\"}}";
     public static final String FIELD_METADATA_TEMPLATE = "fieldMetadata: {%s}";
@@ -206,13 +210,13 @@ public class BalSyntaxConstants {
     public static final String EXTERNAL_GET_BY_KEY_METHOD_TEMPLATE = "isolated resource function get %s/%s(" +
             "%sTargetType targetType = <>) returns targetType|persist:Error = @java:Method {"
             + System.lineSeparator()
-            + "'class: \"io.ballerina.stdlib.persist.datastore.MySQLProcessor\"," + System.lineSeparator() +
+            + "'class: \"io.ballerina.stdlib.persist.datastore.%s\"," + System.lineSeparator() +
              " name: \"queryOne\"} external;";
 
     public static final String EXTERNAL_GET_METHOD_TEMPLATE = "isolated resource function get %s(" +
             "%sTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {"
             + System.lineSeparator()
-            + "'class: \"io.ballerina.stdlib.persist.datastore.MySQLProcessor\"," + System.lineSeparator() +
+            + "'class: \"io.ballerina.stdlib.persist.datastore.%s\"," + System.lineSeparator() +
             " name: \"query\"} external;";
 
 }

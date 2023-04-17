@@ -12,27 +12,27 @@ const BUILDING = "buildings";
 const DEPARTMENT = "departments";
 const ORDER_ITEM = "orderitems";
 const EMPLOYEE = "employees";
-table<Workspace> key(workspaceId) workspaces = table [];
+table<Workspace> key(workspaceId, workspaceType) workspaces = table [];
 table<Building> key(buildingCode) buildings = table [];
-table<Department> key(deptNo) departments = table [];
+table<Department> key(deptNo, deptName) departments = table [];
 table<OrderItem> key(orderId, itemId) orderitems = table [];
-table<Employee> key(empNo) employees = table [];
+table<Employee> key(empNo, firstName) employees = table [];
 
 public client class Client {
     *persist:AbstractPersistClient;
 
     private final map<persist:InMemoryClient> persistClients;
 
-    table<Workspace> key(workspaceId) workspaces = workspaces;
+    table<Workspace> key(workspaceId, workspaceType) workspaces = workspaces;
     table<Building> key(buildingCode) buildings = buildings;
-    table<Department> key(deptNo) departments = departments;
+    table<Department> key(deptNo, deptName) departments = departments;
     table<OrderItem> key(orderId, itemId) orderitems = orderitems;
-    table<Employee> key(empNo) employees = employees;
+    table<Employee> key(empNo, firstName) employees = employees;
 
     public function init() returns persist:Error? {
         final map<persist:TableMetadata> metadata = {
             [WORKSPACE] : {
-                keyFields: ["workspaceId"],
+                keyFields: ["workspaceId", "workspaceType"],
                 query: self.queryWorkspaces,
                 queryOne: self.queryOneWorkspaces,
                 associationsMethods: {"employees": self.queryWorkspacesEmployees}
@@ -44,7 +44,7 @@ public client class Client {
                 associationsMethods: {"workspaces": self.queryBuildingsWorkspaces}
             },
             [DEPARTMENT] : {
-                keyFields: ["deptNo"],
+                keyFields: ["deptNo", "deptName"],
                 query: self.queryDepartments,
                 queryOne: self.queryOneDepartments,
                 associationsMethods: {"employees": self.queryDepartmentsEmployees}
@@ -55,7 +55,7 @@ public client class Client {
                 queryOne: self.queryOneOrderitems
             },
             [EMPLOYEE] : {
-                keyFields: ["empNo"],
+                keyFields: ["empNo", "firstName"],
                 query: self.queryEmployees,
                 queryOne: self.queryOneEmployees
             }
@@ -74,40 +74,37 @@ public client class Client {
         name: "query"
     } external;
 
-    isolated resource function get workspaces/[string workspaceId](WorkspaceTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
+    isolated resource function get workspaces/[string workspaceId]/[string workspaceType](WorkspaceTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.datastore.InMemoryProcessor",
         name: "queryOne"
     } external;
 
-    isolated resource function post workspaces(WorkspaceInsert[] data) returns string[]|persist:Error {
-        string[] keys = [];
+    isolated resource function post workspaces(WorkspaceInsert[] data) returns [string, string][]|persist:Error {
+        [string, string][] keys = [];
         foreach WorkspaceInsert value in data {
-            if self.workspaces.hasKey(value.workspaceId) {
-                return <persist:DuplicateKeyError>error("Duplicate key: " + value.workspaceId.toString());
+            if self.workspaces.hasKey([value.workspaceId, value.workspaceType]) {
+                return <persist:DuplicateKeyError>error("Duplicate key: " + [value.workspaceId, value.workspaceType].toString());
             }
             self.workspaces.put(value);
-            keys.push(value.workspaceId);
+            keys.push([value.workspaceId, value.workspaceType]);
         }
         return keys;
     }
 
-    isolated resource function put workspaces/[string workspaceId](WorkspaceUpdate value) returns Workspace|persist:Error {
-        if !self.workspaces.hasKey(workspaceId) {
-            return <persist:InvalidKeyError>error("Not found: " + workspaceId.toString());
+    isolated resource function put workspaces/[string workspaceId]/[string workspaceType](WorkspaceUpdate value) returns Workspace|persist:Error {
+        if !self.workspaces.hasKey([workspaceId, workspaceType]) {
+            return <persist:InvalidKeyError>error("Not found: " + [workspaceId, workspaceType].toString());
         }
-        Workspace workspace = self.workspaces.get(workspaceId);
-        if value.workspaceType != () {
-            workspace.workspaceType = <string>value.workspaceType;
-        }
+        Workspace workspace = self.workspaces.get([workspaceId, workspaceType]);
         self.workspaces.put(workspace);
         return workspace;
     }
 
-    isolated resource function delete workspaces/[string workspaceId]() returns Workspace|persist:Error {
-        if !self.workspaces.hasKey(workspaceId) {
-            return <persist:InvalidKeyError>error("Not found: " + workspaceId.toString());
+    isolated resource function delete workspaces/[string workspaceId]/[string workspaceType]() returns Workspace|persist:Error {
+        if !self.workspaces.hasKey([workspaceId, workspaceType]) {
+            return <persist:InvalidKeyError>error("Not found: " + [workspaceId, workspaceType].toString());
         }
-        return self.workspaces.remove(workspaceId);
+        return self.workspaces.remove([workspaceId, workspaceType]);
     }
 
     public function queryWorkspaces(string[] fields) returns stream<record {}, persist:Error?> {
@@ -210,40 +207,37 @@ public client class Client {
         name: "query"
     } external;
 
-    isolated resource function get departments/[string deptNo](DepartmentTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
+    isolated resource function get departments/[string deptNo]/[string deptName](DepartmentTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.datastore.InMemoryProcessor",
         name: "queryOne"
     } external;
 
-    isolated resource function post departments(DepartmentInsert[] data) returns string[]|persist:Error {
-        string[] keys = [];
+    isolated resource function post departments(DepartmentInsert[] data) returns [string, string][]|persist:Error {
+        [string, string][] keys = [];
         foreach DepartmentInsert value in data {
-            if self.departments.hasKey(value.deptNo) {
-                return <persist:DuplicateKeyError>error("Duplicate key: " + value.deptNo.toString());
+            if self.departments.hasKey([value.deptNo, value.deptName]) {
+                return <persist:DuplicateKeyError>error("Duplicate key: " + [value.deptNo, value.deptName].toString());
             }
             self.departments.put(value);
-            keys.push(value.deptNo);
+            keys.push([value.deptNo, value.deptName]);
         }
         return keys;
     }
 
-    isolated resource function put departments/[string deptNo](DepartmentUpdate value) returns Department|persist:Error {
-        if !self.departments.hasKey(deptNo) {
-            return <persist:InvalidKeyError>error("Not found: " + deptNo.toString());
+    isolated resource function put departments/[string deptNo]/[string deptName](DepartmentUpdate value) returns Department|persist:Error {
+        if !self.departments.hasKey([deptNo, deptName]) {
+            return <persist:InvalidKeyError>error("Not found: " + [deptNo, deptName].toString());
         }
-        Department department = self.departments.get(deptNo);
-        if value.deptName != () {
-            department.deptName = <string>value.deptName;
-        }
+        Department department = self.departments.get([deptNo, deptName]);
         self.departments.put(department);
         return department;
     }
 
-    isolated resource function delete departments/[string deptNo]() returns Department|persist:Error {
-        if !self.departments.hasKey(deptNo) {
-            return <persist:InvalidKeyError>error("Not found: " + deptNo.toString());
+    isolated resource function delete departments/[string deptNo]/[string deptName]() returns Department|persist:Error {
+        if !self.departments.hasKey([deptNo, deptName]) {
+            return <persist:InvalidKeyError>error("Not found: " + [deptNo, deptName].toString());
         }
-        return self.departments.remove(deptNo);
+        return self.departments.remove([deptNo, deptName]);
     }
 
     public function queryDepartments(string[] fields) returns stream<record {}, persist:Error?> {
@@ -331,31 +325,28 @@ public client class Client {
         name: "query"
     } external;
 
-    isolated resource function get employees/[string empNo](EmployeeTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
+    isolated resource function get employees/[string empNo]/[string firstName](EmployeeTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.datastore.InMemoryProcessor",
         name: "queryOne"
     } external;
 
-    isolated resource function post employees(EmployeeInsert[] data) returns string[]|persist:Error {
-        string[] keys = [];
+    isolated resource function post employees(EmployeeInsert[] data) returns [string, string][]|persist:Error {
+        [string, string][] keys = [];
         foreach EmployeeInsert value in data {
-            if self.employees.hasKey(value.empNo) {
-                return <persist:DuplicateKeyError>error("Duplicate key: " + value.empNo.toString());
+            if self.employees.hasKey([value.empNo, value.firstName]) {
+                return <persist:DuplicateKeyError>error("Duplicate key: " + [value.empNo, value.firstName].toString());
             }
             self.employees.put(value);
-            keys.push(value.empNo);
+            keys.push([value.empNo, value.firstName]);
         }
         return keys;
     }
 
-    isolated resource function put employees/[string empNo](EmployeeUpdate value) returns Employee|persist:Error {
-        if !self.employees.hasKey(empNo) {
-            return <persist:InvalidKeyError>error("Not found: " + empNo.toString());
+    isolated resource function put employees/[string empNo]/[string firstName](EmployeeUpdate value) returns Employee|persist:Error {
+        if !self.employees.hasKey([empNo, firstName]) {
+            return <persist:InvalidKeyError>error("Not found: " + [empNo, firstName].toString());
         }
-        Employee employee = self.employees.get(empNo);
-        if value.firstName != () {
-            employee.firstName = <string>value.firstName;
-        }
+        Employee employee = self.employees.get([empNo, firstName]);
         if value.lastName != () {
             employee.lastName = <string>value.lastName;
         }
@@ -372,17 +363,17 @@ public client class Client {
         return employee;
     }
 
-    isolated resource function delete employees/[string empNo]() returns Employee|persist:Error {
-        if !self.employees.hasKey(empNo) {
-            return <persist:InvalidKeyError>error("Not found: " + empNo.toString());
+    isolated resource function delete employees/[string empNo]/[string firstName]() returns Employee|persist:Error {
+        if !self.employees.hasKey([empNo, firstName]) {
+            return <persist:InvalidKeyError>error("Not found: " + [empNo, firstName].toString());
         }
-        return self.employees.remove(empNo);
+        return self.employees.remove([empNo, firstName]);
     }
 
     public function queryEmployees(string[] fields) returns stream<record {}, persist:Error?> {
         return from record {} 'object in self.employees
-            outer join var department in self.departments on ['object.departmentDeptNo] equals [department?.deptNo]
-            outer join var workspace in self.workspaces on ['object.workspaceWorkspaceId] equals [workspace?.workspaceId]
+            outer join var department in self.departments on ['object.departmentDeptNo, 'object.departmentDeptName] equals [department?.deptNo, department?.deptName]
+            outer join var workspace in self.workspaces on ['object.workspaceWorkspaceId, 'object.workspaceWorkspaceType] equals [workspace?.workspaceId, workspace?.workspaceType]
 
             select persist:filterRecord({
                 ...'object,
@@ -394,8 +385,8 @@ public client class Client {
     public function queryOneEmployees(anydata key) returns record {}|persist:InvalidKeyError {
         from record {} 'object in self.employees
         where self.persistClients.get(EMPLOYEE).getKey('object) == key
-        outer join var department in self.departments on ['object.departmentDeptNo] equals [department?.deptNo]
-        outer join var workspace in self.workspaces on ['object.workspaceWorkspaceId] equals [workspace?.workspaceId]
+        outer join var department in self.departments on ['object.departmentDeptNo, 'object.departmentDeptName] equals [department?.deptNo, department?.deptName]
+        outer join var workspace in self.workspaces on ['object.workspaceWorkspaceId, 'object.workspaceWorkspaceType] equals [workspace?.workspaceId, workspace?.workspaceType]
 
         do {
             return {
@@ -409,7 +400,7 @@ public client class Client {
 
     public function queryDepartmentsEmployees(record {} value, string[] fields) returns record {}[] {
         return from record {} 'object in self.employees
-            where 'object.departmentDeptNo == value["deptNo"]
+            where 'object.departmentDeptNo == value["deptNo"] && 'object.departmentDeptName == value["deptName"]
             select persist:filterRecord({
                 ...'object
             }, fields);
@@ -425,7 +416,7 @@ public client class Client {
 
     public function queryWorkspacesEmployees(record {} value, string[] fields) returns record {}[] {
         return from record {} 'object in self.employees
-            where 'object.workspaceWorkspaceId == value["workspaceId"]
+            where 'object.workspaceWorkspaceId == value["workspaceId"] && 'object.workspaceWorkspaceType == value["workspaceType"]
             select persist:filterRecord({
                 ...'object
             }, fields);
@@ -435,4 +426,3 @@ public client class Client {
         return ();
     }
 }
-

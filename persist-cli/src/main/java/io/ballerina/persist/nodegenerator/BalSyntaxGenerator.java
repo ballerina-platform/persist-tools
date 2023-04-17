@@ -453,8 +453,9 @@ public class BalSyntaxGenerator {
     private static ClientResource createInMemoryClientResource(Entity entity) {
         ClientResource resource = new ClientResource();
         StringBuilder filterKeys = new StringBuilder();
-        resource.addFunction(createGetFunction(entity), true);
-        resource.addFunction(createGetByKeyFunction(entity), true);
+        String className = "InMemoryProcessor";
+        resource.addFunction(createGetFunction(entity, className), true);
+        resource.addFunction(createGetByKeyFunction(entity, className), true);
 
         Function create = createInMemoryPostFunction(entity);
         resource.addFunction(create.getFunctionDefinitionNode(), true);
@@ -632,9 +633,10 @@ public class BalSyntaxGenerator {
 
     private static ClientResource createClientResource(Entity entity) {
         ClientResource resource = new ClientResource();
-        resource.addFunction(createGetFunction(entity), true);
+        String className = "MySQLProcessor";
+        resource.addFunction(createGetFunction(entity, className), true);
 
-        resource.addFunction(createGetByKeyFunction(entity), true);
+        resource.addFunction(createGetByKeyFunction(entity, className), true);
 
         Function create = createPostFunction(entity);
         resource.addFunction(create.getFunctionDefinitionNode(), true);
@@ -735,11 +737,20 @@ public class BalSyntaxGenerator {
                                         BalSyntaxConstants.METADATA_ASSOCIATIONS_METHODS_TEMPLATE,
                                         "\"" + associateEntityName + "\"", finalResourceName.concat(
                                                 associateEntityNameCamelCase)));
-                                queryMethodStatement.put(
-                                        "query" + finalResourceName.concat(associateEntityNameCamelCase),
+                                int referenceIndex = 0;
+                                StringBuilder conditionStatement = new StringBuilder();
+                                for (String reference : relation.getReferences()) {
+                                    if (conditionStatement.length() > 1) {
+                                        conditionStatement.append(BalSyntaxConstants.AND);
+                                    }
+                                    conditionStatement.append(String.format(BalSyntaxConstants.CONDITION_STATEMENT,
+                                            reference, entity.getKeys().get(referenceIndex).getFieldName()));
+                                    referenceIndex++;
+                                }
+                                queryMethodStatement.put("query" +
+                                                finalResourceName.concat(associateEntityNameCamelCase),
                                         String.format(BalSyntaxConstants.RETURN_STATEMENT_FOR_RELATIONAL_ENTITY,
-                                                associateEntityName, relation.getReferences().get(0),
-                                                entity.getKeys().get(0).getFieldName())
+                                                associateEntityName, conditionStatement)
                              );
                                 break;
                             }
@@ -928,7 +939,7 @@ public class BalSyntaxGenerator {
         create.addStatement(NodeParser.parseStatement(filterKeys.toString()));
     }
 
-    private static FunctionDefinitionNode createGetByKeyFunction(Entity entity) {
+    private static FunctionDefinitionNode createGetByKeyFunction(Entity entity, String className) {
         StringBuilder keyBuilder = new StringBuilder();
         for (EntityField keyField : entity.getKeys()) {
             if (keyBuilder.length() > 0) {
@@ -943,13 +954,13 @@ public class BalSyntaxGenerator {
 
         return (FunctionDefinitionNode) NodeParser.parseObjectMember(
                 String.format(BalSyntaxConstants.EXTERNAL_GET_BY_KEY_METHOD_TEMPLATE,
-                        entity.getResourceName(), keyBuilder, entity.getEntityName()));
+                        entity.getResourceName(), keyBuilder, entity.getEntityName(), className));
     }
 
-    private static FunctionDefinitionNode createGetFunction(Entity entity) {
+    private static FunctionDefinitionNode createGetFunction(Entity entity, String className) {
         return (FunctionDefinitionNode) NodeParser.parseObjectMember(
                 String.format(BalSyntaxConstants.EXTERNAL_GET_METHOD_TEMPLATE,
-                        entity.getResourceName(), entity.getEntityName()));
+                        entity.getResourceName(), entity.getEntityName(), className));
     }
 
     private static Function createPutFunction(Entity entity) {
@@ -1127,20 +1138,28 @@ public class BalSyntaxGenerator {
                             assocEntityName.toLowerCase(Locale.ENGLISH),
                             assocEntityName.toLowerCase(Locale.ENGLISH)));
                     int i = 0;
+                    StringBuilder arrayFields = new StringBuilder();
+                    StringBuilder arrayValues = new StringBuilder();
+                    arrayFields.append(BalSyntaxConstants.OPEN_BRACKET);
+                    arrayValues.append(BalSyntaxConstants.OPEN_BRACKET);
                     for (String references: relation.getReferences()) {
                         if (i > 0) {
-                            queryBuilder.append(BalSyntaxConstants.AND);
-                            queryOneBuilder.append(BalSyntaxConstants.AND);
+                            arrayFields.append(BalSyntaxConstants.COMMA);
+                            arrayValues.append(BalSyntaxConstants.COMMA);
                         }
-                        queryBuilder.append(String.format(BalSyntaxConstants.QUERY_EQUALS,
-                                relation.getKeyColumns().get(i).getField(),
+                        arrayFields.append(String.format(BalSyntaxConstants.OBJECT_FIELD,
+                                relation.getKeyColumns().get(i).getField()));
+                        arrayValues.append(String.format(BalSyntaxConstants.VALUES,
                                 assocEntityName.toLowerCase(Locale.ENGLISH), references));
-                        queryOneBuilder.append(String.format(BalSyntaxConstants.QUERY_EQUALS,
-                                relation.getKeyColumns().get(i).getField() ,
-                                assocEntityName.toLowerCase(Locale.ENGLISH),
-                                references));
                         i++;
                     }
+                    queryBuilder.append(arrayFields.append(BalSyntaxConstants.CLOSE_BRACKET));
+                    queryBuilder.append(BalSyntaxConstants.EQUALS);
+                    queryBuilder.append(arrayValues.append(BalSyntaxConstants.CLOSE_BRACKET)).
+                            append(System.lineSeparator());
+                    queryOneBuilder.append(arrayFields);
+                    queryOneBuilder.append(BalSyntaxConstants.EQUALS);
+                    queryOneBuilder.append(arrayValues).append(System.lineSeparator());
                 }
             }
         }

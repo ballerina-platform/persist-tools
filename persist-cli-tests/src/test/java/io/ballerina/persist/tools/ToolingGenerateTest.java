@@ -331,4 +331,11 @@ public class ToolingGenerateTest {
         executeCommand("tool_test_generate_48_in_memory", GENERATE);
         assertGeneratedSources("tool_test_generate_48_in_memory");
     }
+
+    @Test(enabled = true)
+    @Description("There is a generated client object with in memory data source")
+    public void testInMemoryWithCompositeKeys() {
+        executeCommand("tool_test_generate_49_in_memory", GENERATE);
+        assertGeneratedSources("tool_test_generate_49_in_memory");
+    }
 }
