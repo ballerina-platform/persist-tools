@@ -21,6 +21,8 @@ import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
+import io.ballerina.persist.components.syntax.DbClient;
+import io.ballerina.persist.components.syntax.InMemoryClient;
 import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.BalSyntaxConstants;
@@ -54,8 +56,6 @@ import static io.ballerina.persist.PersistToolsConstants.CONFIG_SCRIPT_FILE;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_DB_PROVIDERS;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PATH_CONFIGURATION_BAL_FILE;
-import static io.ballerina.persist.nodegenerator.BalSyntaxGenerator.generateDbClientSyntaxTree;
-import static io.ballerina.persist.nodegenerator.BalSyntaxGenerator.generateInMemoryClientSyntaxTree;
 import static io.ballerina.persist.nodegenerator.TomlSyntaxGenerator.readPackageName;
 import static io.ballerina.persist.nodegenerator.TomlSyntaxGenerator.readPersistConfigurations;
 import static io.ballerina.persist.utils.BalProjectUtils.validateBallerinaProject;
@@ -234,11 +234,13 @@ public class Generate implements BLauncherCmd {
             errStream.printf("Generated Ballerina Client, Types, " +
                     "and Scripts to %s directory.%n", modulePath);
             errStream.println("You can now start using Ballerina Client in your code.");
-            errStream.println(System.lineSeparator() + "Next steps:");
+            if (dataStore.equals(PersistToolsConstants.SupportDataSources.MYSQL_DB)) {
+                errStream.println(System.lineSeparator() + "Next steps:");
 
-            errStream.printf("Set database configurations in Config.toml file to point to " +
-                    "your database. If your database has no tables yet, execute the scripts." +
-                    "sql file at %s directory, in your database to create tables.%n", modulePath);
+                errStream.printf("Set database configurations in Config.toml file to point to " +
+                        "your database. If your database has no tables yet, execute the scripts." +
+                        "sql file at %s directory, in your database to create tables.%n", modulePath);
+            }
 
         });
 
@@ -259,9 +261,11 @@ public class Generate implements BLauncherCmd {
         String clientPath = outputPath.resolve("persist_client.bal").toAbsolutePath().toString();
         SyntaxTree balTree;
         if (dataStore.equals(PersistToolsConstants.SupportDataSources.MYSQL_DB)) {
-            balTree = generateDbClientSyntaxTree(entityModule);
+            DbClient dbClient = new DbClient(entityModule);
+            balTree = dbClient.getClientSyntax();
         } else {
-            balTree = generateInMemoryClientSyntaxTree(entityModule);
+            InMemoryClient inMemoryClient = new InMemoryClient(entityModule);
+            balTree = inMemoryClient.getClientSyntax();
         }
         try {
             writeOutputSyntaxTree(balTree, clientPath);

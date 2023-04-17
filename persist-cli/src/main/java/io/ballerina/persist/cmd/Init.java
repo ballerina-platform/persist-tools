@@ -177,9 +177,12 @@ public class Init implements BLauncherCmd {
         errStream.println(System.lineSeparator() + "Your Persist schema is at persist/model.bal.");
         errStream.println("You can now update it with entity definitions.");
         errStream.println(System.lineSeparator() + "Next steps:");
-
-        errStream.println("Run bal persist generate to generate the Ballerina Client, Types," +
-                " and Scripts. You can then start querying your database.");
+        String value = "Client, Types";
+        if (datastore.equals(PersistToolsConstants.SupportDataSources.IN_MEMORY_TABLE)) {
+            value += ", Scripts";
+        }
+        errStream.printf("Run bal persist generate to generate the Ballerina %s. " +
+                "You can then start querying your data store." + System.lineSeparator(), value);
 
     }
 

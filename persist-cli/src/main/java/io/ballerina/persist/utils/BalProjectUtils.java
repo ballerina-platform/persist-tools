@@ -45,7 +45,6 @@ import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
  *
  * @since 0.1.0
  */
-
 public class BalProjectUtils {
 
     private BalProjectUtils() {}
