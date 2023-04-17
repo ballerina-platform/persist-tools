@@ -23,6 +23,7 @@ import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.components.syntax.DbClient;
 import io.ballerina.persist.components.syntax.InMemoryClient;
+import io.ballerina.persist.components.syntax.SyntaxGenerator;
 import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.BalSyntaxConstants;
@@ -260,14 +261,14 @@ public class Generate implements BLauncherCmd {
             throws BalException {
         String clientPath = outputPath.resolve("persist_client.bal").toAbsolutePath().toString();
         SyntaxTree balTree;
+        SyntaxGenerator dbClient;
         if (dataStore.equals(PersistToolsConstants.SupportDataSources.MYSQL_DB)) {
-            DbClient dbClient = new DbClient(entityModule);
-            balTree = dbClient.getClientSyntax();
+            dbClient = new DbClient(entityModule);
         } else {
-            InMemoryClient inMemoryClient = new InMemoryClient(entityModule);
-            balTree = inMemoryClient.getClientSyntax();
+            dbClient = new InMemoryClient(entityModule);
         }
         try {
+            balTree = dbClient.getClientSyntax();
             writeOutputSyntaxTree(balTree, clientPath);
         } catch (IOException | FormatterException e) {
             throw new BalException(String.format("could not write the client code for the `%s` data model " +
