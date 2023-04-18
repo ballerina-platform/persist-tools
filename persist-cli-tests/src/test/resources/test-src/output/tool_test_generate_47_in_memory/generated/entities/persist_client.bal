@@ -65,8 +65,8 @@ public client class Client {
             return <persist:InvalidKeyError>error("Not found: " + needId.toString());
         }
         MedicalNeed medicalneed = self.medicalneeds.get(needId);
-        foreach string key in value.keys() {
-            medicalneed[key] = value[key];
+        foreach var [k, v] in value.entries() {
+            medicalneed[k] = v;
         }
         self.medicalneeds.put(medicalneed);
         return medicalneed;
@@ -124,8 +124,8 @@ public client class Client {
             return <persist:InvalidKeyError>error("Not found: " + itemId.toString());
         }
         MedicalItem medicalitem = self.medicalitems.get(itemId);
-        foreach string key in value.keys() {
-            medicalitem[key] = value[key];
+        foreach var [k, v] in value.entries() {
+            medicalitem[k] = v;
         }
         self.medicalitems.put(medicalitem);
         return medicalitem;

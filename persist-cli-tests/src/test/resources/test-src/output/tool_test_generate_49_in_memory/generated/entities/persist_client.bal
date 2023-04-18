@@ -95,8 +95,8 @@ public client class Client {
             return <persist:InvalidKeyError>error("Not found: " + [workspaceId, workspaceType].toString());
         }
         Workspace workspace = self.workspaces.get([workspaceId, workspaceType]);
-        foreach string key in value.keys() {
-            workspace[key] = value[key];
+        foreach var [k, v] in value.entries() {
+            workspace[k] = v;
         }
         self.workspaces.put(workspace);
         return workspace;
@@ -160,8 +160,8 @@ public client class Client {
             return <persist:InvalidKeyError>error("Not found: " + buildingCode.toString());
         }
         Building building = self.buildings.get(buildingCode);
-        foreach string key in value.keys() {
-            building[key] = value[key];
+        foreach var [k, v] in value.entries() {
+            building[k] = v;
         }
         self.buildings.put(building);
         return building;
@@ -219,8 +219,8 @@ public client class Client {
             return <persist:InvalidKeyError>error("Not found: " + [deptNo, deptName].toString());
         }
         Department department = self.departments.get([deptNo, deptName]);
-        foreach string key in value.keys() {
-            department[key] = value[key];
+        foreach var [k, v] in value.entries() {
+            department[k] = v;
         }
         self.departments.put(department);
         return department;
@@ -278,8 +278,8 @@ public client class Client {
             return <persist:InvalidKeyError>error("Not found: " + [orderId, itemId].toString());
         }
         OrderItem orderitem = self.orderitems.get([orderId, itemId]);
-        foreach string key in value.keys() {
-            orderitem[key] = value[key];
+        foreach var [k, v] in value.entries() {
+            orderitem[k] = v;
         }
         self.orderitems.put(orderitem);
         return orderitem;
@@ -337,8 +337,8 @@ public client class Client {
             return <persist:InvalidKeyError>error("Not found: " + [empNo, firstName].toString());
         }
         Employee employee = self.employees.get([empNo, firstName]);
-        foreach string key in value.keys() {
-            employee[key] = value[key];
+        foreach var [k, v] in value.entries() {
+            employee[k] = v;
         }
         self.employees.put(employee);
         return employee;
