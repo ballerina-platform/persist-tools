@@ -338,4 +338,11 @@ public class ToolingGenerateTest {
         executeCommand("tool_test_generate_49_in_memory", GENERATE);
         assertGeneratedSources("tool_test_generate_49_in_memory");
     }
+
+    @Test(enabled = true)
+    @Description("Test the generated sql script for multiple association within same entities")
+    public void testMultipleAssociationWithinSameEntities() {
+        executeCommand("tool_test_generate_50", GENERATE);
+        assertGeneratedSources("tool_test_generate_50");
+    }
 }
