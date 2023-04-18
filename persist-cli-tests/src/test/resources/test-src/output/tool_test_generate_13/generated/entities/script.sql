@@ -17,7 +17,7 @@ CREATE TABLE `User` (
 	`id` INT NOT NULL,
 	`name` VARCHAR(191) NOT NULL,
 	`multipleassociationsId` INT UNIQUE NOT NULL,
-	CONSTRAINT FK_USER_MULTIPLEASSOCIATIONS_MULTIPLE_ASSOCIATIONS FOREIGN KEY(`multipleassociationsId`) REFERENCES `MultipleAssociations`(`id`),
+	CONSTRAINT FK_MULTIPLE_ASSOCIATIONS FOREIGN KEY(`multipleassociationsId`) REFERENCES `MultipleAssociations`(`id`),
 	PRIMARY KEY(`id`)
 );
 
@@ -27,6 +27,6 @@ CREATE TABLE `Profile` (
 	`ownerId` INT UNIQUE NOT NULL,
 	CONSTRAINT FK_PROFILE_USER_OWNER FOREIGN KEY(`ownerId`) REFERENCES `User`(`id`),
 	`multipleassociationsId` INT UNIQUE NOT NULL,
-	CONSTRAINT FK_PROFILE_MULTIPLEASSOCIATIONS_MULTIPLE_ASSOCIATIONS FOREIGN KEY(`multipleassociationsId`) REFERENCES `MultipleAssociations`(`id`),
+	CONSTRAINT FK_MULTIPLE_ASSOCIATIONS FOREIGN KEY(`multipleassociationsId`) REFERENCES `MultipleAssociations`(`id`),
 	PRIMARY KEY(`id`)
 );
