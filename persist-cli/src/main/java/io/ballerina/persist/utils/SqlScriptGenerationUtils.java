@@ -183,8 +183,8 @@ public class SqlScriptGenerationUtils {
                 associatedEntityRelationType.equals(Relation.RelationType.ONE)) {
             relationScripts.append(MessageFormat.format("{0}{1}UNIQUE ({2}),", NEW_LINE, TAB, foreignKey));
         }
-        relationScripts.append(MessageFormat.format("{0}{1}CONSTRAINT FK_{2} FOREIGN KEY({5}) " +
-                        "REFERENCES {6}({7}),", NEW_LINE, TAB,
+        relationScripts.append(MessageFormat.format("{0}{1}CONSTRAINT FK_{2} FOREIGN KEY({3}) " +
+                        "REFERENCES {4}({5}),", NEW_LINE, TAB,
                 BalSyntaxGenerator.getStringWithUnderScore(entityField.getFieldName()).toUpperCase(Locale.ENGLISH),
                 foreignKey.toString(),
                 addBackticks(removeSingleQuote(assocEntity.getEntityName())), referenceFieldName));

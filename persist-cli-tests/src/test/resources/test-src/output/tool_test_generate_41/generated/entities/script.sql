@@ -52,7 +52,7 @@ CREATE TABLE `Workspace` (
 	`workspaceId` VARCHAR(191) NOT NULL,
 	`workspaceType` VARCHAR(191) NOT NULL,
 	`locationBuildingCode` VARCHAR(191) NOT NULL,
-	CONSTRAINT FKLOCATION FOREIGN KEY(`locationBuildingCode`) REFERENCES `Building`(`buildingCode`),
+	CONSTRAINT FK_LOCATION FOREIGN KEY(`locationBuildingCode`) REFERENCES `Building`(`buildingCode`),
 	`employeeEmpNo` VARCHAR(191) UNIQUE NOT NULL,
 	CONSTRAINT FK_EMPLOYEE FOREIGN KEY(`employeeEmpNo`) REFERENCES `Employee`(`empNo`),
 	PRIMARY KEY(`workspaceId`)
