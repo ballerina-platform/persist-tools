@@ -1,8 +1,8 @@
 [package]
 org = "foo"
-name = "medical_center"
+name = "association"
 version = "0.1.0"
-distribution = "2201.5.0"
+distribution = "2201.3.0"
 
 [build-options]
 observabilityIncluded = false
@@ -12,7 +12,7 @@ host = "localhost"
 port = 3308
 user = "root"
 password = "Test123#"
-database = "medical_center_db"
+database = "rainier_db"
 
 [[platform.java11.repository]]
 id="wso2-nexus"
