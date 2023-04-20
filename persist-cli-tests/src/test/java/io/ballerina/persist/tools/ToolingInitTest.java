@@ -67,13 +67,13 @@ public class ToolingInitTest {
         assertGeneratedSources("tool_test_init_1");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("When there is an already initiated configs and there is an uninitiated schema")
     public void testInitUpdateConfigWithNewDbConfigurations() {
         assertGeneratedSourcesNegative("tool_test_init_2", INIT, new String[]{});
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("When there is a database config files inside the directories and there are missing database " +
             "configurations")
     public void testsInitUpdateConfigWithPartialyInitiatedFiles() {
@@ -82,13 +82,13 @@ public class ToolingInitTest {
         assertGeneratedSources("tool_test_init_3");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("When the init command is executed outside a Ballerina project")
     public void testsInitOutsideBalProject() {
         assertGeneratedSourcesNegative("tool_test_init_4", INIT, new String[]{"Config.toml"});
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("When the configs are already updated")
     public void testsInitUpdateConfigWithUpdatedDbConfigurations() {
         updateOutputBallerinaToml("tool_test_init_5");
@@ -96,14 +96,14 @@ public class ToolingInitTest {
         assertGeneratedSources("tool_test_init_5");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("Running init on a already initialized project")
     public void testInitAlreadyInitializedProject() {
         executeCommand("tool_test_init_6");
         assertGeneratedSources("tool_test_init_6");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("Running init on a already initialized project with database configurations missing")
     public void testInitAlreadyInitializedProjectWithOutPersistConfiguration() {
         updateOutputBallerinaToml("tool_test_init_7");
@@ -111,7 +111,7 @@ public class ToolingInitTest {
         assertGeneratedSources("tool_test_init_7");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("Running init on a project with manually created definition file")
     public void testInitWithManuallyCreatedDefinitionFile() {
         updateOutputBallerinaToml("tool_test_init_9");
@@ -119,7 +119,7 @@ public class ToolingInitTest {
         assertGeneratedSources("tool_test_init_9");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     public void testInitArgs() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
             InstantiationException, IllegalAccessException {
         Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Init");
@@ -155,7 +155,7 @@ public class ToolingInitTest {
         assertGeneratedSources("tool_test_init_11");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     public void testInitWithModuleArg() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
             InstantiationException, IllegalAccessException {
         updateOutputBallerinaToml("tool_test_init_12");

@@ -372,7 +372,7 @@ public class BalSyntaxGenerator {
         NodeList<ModuleMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
         for (Entity entity : entityModule.getEntityMap().values()) {
             moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration(String.format(
-                    "const %s = \"%s\";", getEntityNameConstant(entity.getEntityName()),
+                    "const %s = \"%s\";", getStringWithUnderScore(entity.getEntityName()),
                     entity.getResourceName())));
         }
         return moduleMembers;
@@ -567,7 +567,7 @@ public class BalSyntaxGenerator {
             }
 
             mapBuilder.append(String.format(BalSyntaxConstants.METADATA_RECORD_ELEMENT_TEMPLATE,
-                    getEntityNameConstant(entity.getEntityName()), entityMetaData));
+                    getStringWithUnderScore(entity.getEntityName()), entityMetaData));
         }
         return NodeParser.parseObjectMember(String.format(BalSyntaxConstants.METADATA_RECORD_TEMPLATE, mapBuilder));
     }
@@ -660,7 +660,7 @@ public class BalSyntaxGenerator {
                 persistClientMap.append(BalSyntaxConstants.COMMA_WITH_NEWLINE);
             }
             persistClientMap.append(String.format(BalSyntaxConstants.PERSIST_CLIENT_MAP_ELEMENT,
-                    getEntityNameConstant(entity.getEntityName()), getEntityNameConstant(entity.getEntityName())));
+                    getStringWithUnderScore(entity.getEntityName()), getStringWithUnderScore(entity.getEntityName())));
         }
         init.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.PERSIST_CLIENT_TEMPLATE,
                 persistClientMap)));
@@ -682,7 +682,7 @@ public class BalSyntaxGenerator {
                 persistClientMap.append(BalSyntaxConstants.COMMA_WITH_NEWLINE);
             }
             persistClientMap.append(String.format(BalSyntaxConstants.PERSIST_IN_MEMORY_CLIENT_MAP_ELEMENT,
-                    getEntityNameConstant(entity.getEntityName()), getEntityNameConstant(entity.getEntityName())));
+                    getStringWithUnderScore(entity.getEntityName()), getStringWithUnderScore(entity.getEntityName())));
         }
         init.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.PERSIST_CLIENT_TEMPLATE,
                 persistClientMap)));
@@ -760,7 +760,7 @@ public class BalSyntaxGenerator {
                 entityMetaData.append(queryOne);
             }
             mapBuilder.append(String.format(BalSyntaxConstants.METADATA_RECORD_ELEMENT_TEMPLATE,
-                    getEntityNameConstant(entity.getEntityName()), entityMetaData));
+                    getStringWithUnderScore(entity.getEntityName()), entityMetaData));
         }
         return String.format(BalSyntaxConstants.IN_MEMORY_METADATA_MAP_TEMPLATE, mapBuilder);
     }
@@ -818,7 +818,7 @@ public class BalSyntaxGenerator {
         String parameterType = String.format(BalSyntaxConstants.INSERT_RECORD, entity.getEntityName());
         List<EntityField> primaryKeys = entity.getKeys();
         Function create = createPostSignature(entity, primaryKeys, parameterType);
-        addFunctionBodyToPostResource(create, primaryKeys, getEntityNameConstant(entity.getEntityName()),
+        addFunctionBodyToPostResource(create, primaryKeys, getStringWithUnderScore(entity.getEntityName()),
                 parameterType);
         return create;
     }
@@ -961,11 +961,11 @@ public class BalSyntaxGenerator {
         Function update = createPutSignature(entity, path, filterKeys);
         if (entity.getKeys().size() > 1) {
             update.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.UPDATE_RUN_UPDATE_QUERY,
-                    getEntityNameConstant(entity.getEntityName()),
+                    getStringWithUnderScore(entity.getEntityName()),
                     filterKeys.substring(0, filterKeys.length() - 2).concat(BalSyntaxConstants.CLOSE_BRACE))));
         } else {
             update.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.UPDATE_RUN_UPDATE_QUERY,
-                    getEntityNameConstant(entity.getEntityName()), entity.getKeys().stream().findFirst().get()
+                    getStringWithUnderScore(entity.getEntityName()), entity.getKeys().stream().findFirst().get()
                             .getFieldName())));
         }
         update.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.UPDATE_RETURN_UPDATE_QUERY,
@@ -1035,11 +1035,11 @@ public class BalSyntaxGenerator {
                 entity.getEntityName(), path)));
         if (entity.getKeys().size() > 1) {
             delete.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.DELETE_RUN_DELETE_QUERY,
-                    getEntityNameConstant(entity.getEntityName()),
+                    getStringWithUnderScore(entity.getEntityName()),
                     filterKeys.substring(0, filterKeys.length() - 2).concat(BalSyntaxConstants.CLOSE_BRACE))));
         } else {
             delete.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.DELETE_RUN_DELETE_QUERY,
-                    getEntityNameConstant(entity.getEntityName()), entity.getKeys().stream().findFirst().get()
+                    getStringWithUnderScore(entity.getEntityName()), entity.getKeys().stream().findFirst().get()
                             .getFieldName())));
         }
         delete.addStatement(NodeParser.parseStatement(BalSyntaxConstants.RETURN_DELETED_OBJECT));
@@ -1087,7 +1087,7 @@ public class BalSyntaxGenerator {
         StringBuilder queryOneBuilder = new StringBuilder(String.format(BalSyntaxConstants.QUERY_ONE_FROM_STATEMENT,
                 resourceName));
         queryOneBuilder.append(String.format(BalSyntaxConstants.QUERY_ONE_WHERE_CLAUSE,
-                getEntityNameConstant(entity.getEntityName())));
+                getStringWithUnderScore(entity.getEntityName())));
         Function queryOne = new Function(String.format(BalSyntaxConstants.QUERY_ONE, nameInCamelCase),
                 SyntaxKind.OBJECT_METHOD_DEFINITION);
         queryOne.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PUBLIC });
@@ -1473,7 +1473,7 @@ public class BalSyntaxGenerator {
                 entity.getEntityName().trim(), recordFields));
     }
 
-    private static String getEntityNameConstant(String entityName) {
+    public static String getStringWithUnderScore(String entityName) {
         StringBuilder outputString = new StringBuilder();
         String[] splitedStrings = stripEscapeCharacter(entityName).split(
                 BalSyntaxConstants.REGEX_FOR_SPLIT_BY_CAPITOL_LETTER);
