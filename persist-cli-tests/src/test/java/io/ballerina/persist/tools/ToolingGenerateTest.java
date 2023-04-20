@@ -111,7 +111,6 @@ public class ToolingGenerateTest {
     public void testGenerateSingleEntityWithWrongImport() {
         assertGeneratedSourcesNegative("tool_test_generate_12", GENERATE, new String[]{});
     }
-
     @Test(enabled = true)
     @Description("There are three entities with one to one associations between each other")
     public void testGenerateThreeEntitiesWith1To1Associations() {
