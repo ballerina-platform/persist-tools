@@ -430,7 +430,7 @@ public class BalSyntaxGenerator {
 
         for (Map.Entry<String, String> entry : queryMethodStatement.entrySet()) {
             Function query = new Function(entry.getKey(), SyntaxKind.OBJECT_METHOD_DEFINITION);
-            query.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PUBLIC });
+            query.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PRIVATE });
             query.addReturns(TypeDescriptor.getSimpleNameReferenceNode("record{}[]"));
             query.addRequiredParameter(TypeDescriptor.getSimpleNameReferenceNode("record{}"), "value");
             query.addRequiredParameter(TypeDescriptor.getArrayTypeDescriptorNode("string"),
@@ -868,7 +868,7 @@ public class BalSyntaxGenerator {
         forEachStmt.append(String.format(BalSyntaxConstants.HAS_KEY_ERROR, filterKeys));
 
         forEachStmt.append(String.format("\t" + BalSyntaxConstants.PUT_VALUE_TO_MAP, entity.getResourceName(),
-                "value"));
+                "value.clone()"));
         forEachStmt.append(String.format(BalSyntaxConstants.PUSH_VALUES, filterKeys)).append("}");
         create.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.CREATE_ARRAY_VAR,
                 variableArrayType)));
@@ -1079,7 +1079,7 @@ public class BalSyntaxGenerator {
         StringBuilder queryBuilder = new StringBuilder(String.format(BalSyntaxConstants.QUERY_STATEMENT, resourceName));
         Function query = new Function(String.format(BalSyntaxConstants.QUERY, nameInCamelCase),
                 SyntaxKind.OBJECT_METHOD_DEFINITION);
-        query.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PUBLIC });
+        query.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PRIVATE });
         query.addReturns(TypeDescriptor.getSimpleNameReferenceNode(BalSyntaxConstants.QUERY_RETURN));
         query.addRequiredParameter(TypeDescriptor.getArrayTypeDescriptorNode("string"),
                 BalSyntaxConstants.KEYWORD_FIELDS);
@@ -1090,7 +1090,7 @@ public class BalSyntaxGenerator {
                 getStringWithUnderScore(entity.getEntityName())));
         Function queryOne = new Function(String.format(BalSyntaxConstants.QUERY_ONE, nameInCamelCase),
                 SyntaxKind.OBJECT_METHOD_DEFINITION);
-        queryOne.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PUBLIC });
+        queryOne.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PRIVATE });
         queryOne.addReturns(TypeDescriptor.getSimpleNameReferenceNode(BalSyntaxConstants.QUERY_ONE_RETURN));
         queryOne.addRequiredParameter(TypeDescriptor.getSimpleNameReferenceNode("anydata"),
                 BalSyntaxConstants.KEYWORD_KEY);

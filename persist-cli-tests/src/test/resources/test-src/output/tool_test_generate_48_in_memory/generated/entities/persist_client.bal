@@ -84,7 +84,7 @@ public client class Client {
             if self.workspaces.hasKey(value.workspaceId) {
                 return <persist:DuplicateKeyError>error("Duplicate key: " + value.workspaceId.toString());
             }
-            self.workspaces.put(value);
+            self.workspaces.put(value.clone());
             keys.push(value.workspaceId);
         }
         return keys;
@@ -109,7 +109,7 @@ public client class Client {
         return self.workspaces.remove(workspaceId);
     }
 
-    public function queryWorkspaces(string[] fields) returns stream<record {}, persist:Error?> {
+    private function queryWorkspaces(string[] fields) returns stream<record {}, persist:Error?> {
         return from record {} 'object in self.workspaces
             outer join var building in self.buildings on ['object.locationBuildingCode] equals [building?.buildingCode]
 
@@ -119,7 +119,7 @@ public client class Client {
             }, fields);
     }
 
-    public function queryOneWorkspaces(anydata key) returns record {}|persist:InvalidKeyError {
+    private function queryOneWorkspaces(anydata key) returns record {}|persist:InvalidKeyError {
         from record {} 'object in self.workspaces
         where self.persistClients.get(WORKSPACE).getKey('object) == key
         outer join var building in self.buildings on ['object.locationBuildingCode] equals [building?.buildingCode]
@@ -149,7 +149,7 @@ public client class Client {
             if self.buildings.hasKey(value.buildingCode) {
                 return <persist:DuplicateKeyError>error("Duplicate key: " + value.buildingCode.toString());
             }
-            self.buildings.put(value);
+            self.buildings.put(value.clone());
             keys.push(value.buildingCode);
         }
         return keys;
@@ -174,14 +174,14 @@ public client class Client {
         return self.buildings.remove(buildingCode);
     }
 
-    public function queryBuildings(string[] fields) returns stream<record {}, persist:Error?> {
+    private function queryBuildings(string[] fields) returns stream<record {}, persist:Error?> {
         return from record {} 'object in self.buildings
             select persist:filterRecord({
                 ...'object
             }, fields);
     }
 
-    public function queryOneBuildings(anydata key) returns record {}|persist:InvalidKeyError {
+    private function queryOneBuildings(anydata key) returns record {}|persist:InvalidKeyError {
         from record {} 'object in self.buildings
         where self.persistClients.get(BUILDING).getKey('object) == key
         do {
@@ -208,7 +208,7 @@ public client class Client {
             if self.departments.hasKey(value.deptNo) {
                 return <persist:DuplicateKeyError>error("Duplicate key: " + value.deptNo.toString());
             }
-            self.departments.put(value);
+            self.departments.put(value.clone());
             keys.push(value.deptNo);
         }
         return keys;
@@ -233,14 +233,14 @@ public client class Client {
         return self.departments.remove(deptNo);
     }
 
-    public function queryDepartments(string[] fields) returns stream<record {}, persist:Error?> {
+    private function queryDepartments(string[] fields) returns stream<record {}, persist:Error?> {
         return from record {} 'object in self.departments
             select persist:filterRecord({
                 ...'object
             }, fields);
     }
 
-    public function queryOneDepartments(anydata key) returns record {}|persist:InvalidKeyError {
+    private function queryOneDepartments(anydata key) returns record {}|persist:InvalidKeyError {
         from record {} 'object in self.departments
         where self.persistClients.get(DEPARTMENT).getKey('object) == key
         do {
@@ -267,7 +267,7 @@ public client class Client {
             if self.orderitems.hasKey([value.orderId, value.itemId]) {
                 return <persist:DuplicateKeyError>error("Duplicate key: " + [value.orderId, value.itemId].toString());
             }
-            self.orderitems.put(value);
+            self.orderitems.put(value.clone());
             keys.push([value.orderId, value.itemId]);
         }
         return keys;
@@ -292,14 +292,14 @@ public client class Client {
         return self.orderitems.remove([orderId, itemId]);
     }
 
-    public function queryOrderitems(string[] fields) returns stream<record {}, persist:Error?> {
+    private function queryOrderitems(string[] fields) returns stream<record {}, persist:Error?> {
         return from record {} 'object in self.orderitems
             select persist:filterRecord({
                 ...'object
             }, fields);
     }
 
-    public function queryOneOrderitems(anydata key) returns record {}|persist:InvalidKeyError {
+    private function queryOneOrderitems(anydata key) returns record {}|persist:InvalidKeyError {
         from record {} 'object in self.orderitems
         where self.persistClients.get(ORDER_ITEM).getKey('object) == key
         do {
@@ -326,7 +326,7 @@ public client class Client {
             if self.employees.hasKey(value.empNo) {
                 return <persist:DuplicateKeyError>error("Duplicate key: " + value.empNo.toString());
             }
-            self.employees.put(value);
+            self.employees.put(value.clone());
             keys.push(value.empNo);
         }
         return keys;
@@ -351,7 +351,7 @@ public client class Client {
         return self.employees.remove(empNo);
     }
 
-    public function queryEmployees(string[] fields) returns stream<record {}, persist:Error?> {
+    private function queryEmployees(string[] fields) returns stream<record {}, persist:Error?> {
         return from record {} 'object in self.employees
             outer join var department in self.departments on ['object.departmentDeptNo] equals [department?.deptNo]
             outer join var workspace in self.workspaces on ['object.workspaceWorkspaceId] equals [workspace?.workspaceId]
@@ -363,7 +363,7 @@ public client class Client {
             }, fields);
     }
 
-    public function queryOneEmployees(anydata key) returns record {}|persist:InvalidKeyError {
+    private function queryOneEmployees(anydata key) returns record {}|persist:InvalidKeyError {
         from record {} 'object in self.employees
         where self.persistClients.get(EMPLOYEE).getKey('object) == key
         outer join var department in self.departments on ['object.departmentDeptNo] equals [department?.deptNo]
@@ -379,7 +379,7 @@ public client class Client {
         return <persist:InvalidKeyError>error("Invalid key: " + key.toString());
     }
 
-    public function queryDepartmentsEmployees(record {} value, string[] fields) returns record {}[] {
+    private function queryDepartmentsEmployees(record {} value, string[] fields) returns record {}[] {
         return from record {} 'object in self.employees
             where 'object.departmentDeptNo == value["deptNo"]
             select persist:filterRecord({
@@ -387,7 +387,7 @@ public client class Client {
             }, fields);
     }
 
-    public function queryBuildingsWorkspaces(record {} value, string[] fields) returns record {}[] {
+    private function queryBuildingsWorkspaces(record {} value, string[] fields) returns record {}[] {
         return from record {} 'object in self.workspaces
             where 'object.locationBuildingCode == value["buildingCode"]
             select persist:filterRecord({
@@ -395,7 +395,7 @@ public client class Client {
             }, fields);
     }
 
-    public function queryWorkspacesEmployees(record {} value, string[] fields) returns record {}[] {
+    private function queryWorkspacesEmployees(record {} value, string[] fields) returns record {}[] {
         return from record {} 'object in self.employees
             where 'object.workspaceWorkspaceId == value["workspaceId"]
             select persist:filterRecord({
