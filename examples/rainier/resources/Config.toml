@@ -1,7 +1,6 @@
-[medical_center.entities]
+[association.entities]
 host = "localhost"
 port = 3308
 user = "root"
 password = "Test123#"
-database = "medical_center_db"
-
+database = "rainier_db"

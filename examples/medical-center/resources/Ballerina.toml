@@ -7,6 +7,13 @@ distribution = "2201.5.0"
 [build-options]
 observabilityIncluded = false
 
+[persist.model.storage.mysql]
+host = "localhost"
+port = 3308
+user = "root"
+password = "Test123#"
+database = "medical_center_db"
+
 [[platform.java11.repository]]
 id="wso2-nexus"
 url = "https://maven.wso2.org/nexus/content/groups/public/"

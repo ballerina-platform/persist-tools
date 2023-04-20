@@ -123,6 +123,11 @@ task initDbExamples {
         examples.each { example ->
             try {
                 exec {
+                    copy {
+                        from(file("${project.projectDir}/build/generated-examples/${example}/resources"))
+                        into("${project.projectDir}/build/generated-examples/${example}")
+                    }
+                    delete "${project.projectDir}/build/generated-examples/${example}/generated"
                     workingDir "${project.projectDir}/build/generated-examples/${example}"
                     if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
                         commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist init --module=entities --datastore=mysql"
@@ -339,14 +344,16 @@ task testInMemoryExamples {
 copyPersitTool.dependsOn ":persist-cli-tests:build"
 copyPersitTool.dependsOn ":persist-cli:build"
 copyTestResources.dependsOn copyPersitTool
-initDbExamples.dependsOn copyTestResources
-generateDbExamples.dependsOn initDbExamples
-pushExamples.dependsOn generateDbExamples
-testDbExamples.dependsOn pushExamples
-initInMemoryExamples.dependsOn testDbExamples
+
+initInMemoryExamples.dependsOn copyTestResources
 generateInMemoryExamples.dependsOn initInMemoryExamples
 testInMemoryExamples.dependsOn generateInMemoryExamples
 
-build.dependsOn testDbExamples
+initDbExamples.dependsOn testInMemoryExamples
+generateDbExamples.dependsOn initDbExamples
+pushExamples.dependsOn generateDbExamples
+testDbExamples.dependsOn pushExamples
+
 build.dependsOn testInMemoryExamples
+build.dependsOn testDbExamples
 build.finalizedBy stopTestDockerContainer
