@@ -57,8 +57,8 @@ public class BalSyntaxConstants {
     public static final String FIELD = "value.%s";
     public static final String FOREACH_STMT_START = "foreach %s value in data {" + System.lineSeparator();
     public static final String HAS_NOT_KEY = "!self.%s.hasKey(%s)";
-    public static final String UPDATE_RECORD_FIELD_VALUE = "foreach var [k, v] in value.entries() {\n" +
-            System.lineSeparator() + "        %s[k] = v;\n" + System.lineSeparator() +
+    public static final String UPDATE_RECORD_FIELD_VALUE = "foreach var [k, v] in value.entries() {" +
+            System.lineSeparator() + "        %s[k] = v;" + System.lineSeparator() +
             "    }" + System.lineSeparator();
 
     public static final String HAS_KEY_ERROR = "\t\treturn <persist:DuplicateKeyError>error(\"Duplicate key: \" + " +
@@ -104,6 +104,7 @@ public class BalSyntaxConstants {
     public static final String KEYWORD_BALLERINAX = "ballerinax";
     public static final String KEYWORD_CLIENT = "client";
     public static final String KEYWORD_PUBLIC = "public";
+    public static final String KEYWORD_PRIVATE = "private";
     public static final String KEYWORD_ISOLATED = "isolated";
     public static final String KEYWORD_RESOURCE = "resource";
 

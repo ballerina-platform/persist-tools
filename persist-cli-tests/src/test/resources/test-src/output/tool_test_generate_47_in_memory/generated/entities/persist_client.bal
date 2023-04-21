@@ -54,7 +54,7 @@ public client class Client {
             if self.medicalneeds.hasKey(value.needId) {
                 return <persist:DuplicateKeyError>error("Duplicate key: " + value.needId.toString());
             }
-            self.medicalneeds.put(value);
+            self.medicalneeds.put(value.clone());
             keys.push(value.needId);
         }
         return keys;
@@ -79,14 +79,14 @@ public client class Client {
         return self.medicalneeds.remove(needId);
     }
 
-    public function queryMedicalneeds(string[] fields) returns stream<record {}, persist:Error?> {
+    private function queryMedicalneeds(string[] fields) returns stream<record {}, persist:Error?> {
         return from record {} 'object in self.medicalneeds
             select persist:filterRecord({
                 ...'object
             }, fields);
     }
 
-    public function queryOneMedicalneeds(anydata key) returns record {}|persist:InvalidKeyError {
+    private function queryOneMedicalneeds(anydata key) returns record {}|persist:InvalidKeyError {
         from record {} 'object in self.medicalneeds
         where self.persistClients.get(MEDICAL_NEED).getKey('object) == key
         do {
@@ -113,7 +113,7 @@ public client class Client {
             if self.medicalitems.hasKey(value.itemId) {
                 return <persist:DuplicateKeyError>error("Duplicate key: " + value.itemId.toString());
             }
-            self.medicalitems.put(value);
+            self.medicalitems.put(value.clone());
             keys.push(value.itemId);
         }
         return keys;
@@ -138,14 +138,14 @@ public client class Client {
         return self.medicalitems.remove(itemId);
     }
 
-    public function queryMedicalitems(string[] fields) returns stream<record {}, persist:Error?> {
+    private function queryMedicalitems(string[] fields) returns stream<record {}, persist:Error?> {
         return from record {} 'object in self.medicalitems
             select persist:filterRecord({
                 ...'object
             }, fields);
     }
 
-    public function queryOneMedicalitems(anydata key) returns record {}|persist:InvalidKeyError {
+    private function queryOneMedicalitems(anydata key) returns record {}|persist:InvalidKeyError {
         from record {} 'object in self.medicalitems
         where self.persistClients.get(MEDICAL_ITEM).getKey('object) == key
         do {
