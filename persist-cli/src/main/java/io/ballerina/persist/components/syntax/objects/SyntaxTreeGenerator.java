@@ -40,6 +40,4 @@ public interface SyntaxTreeGenerator {
     SyntaxTree getConfigTomlSyntax(String moduleName);
 
     SyntaxTree getUpdateConfigTomlSyntax(Path configPath, String moduleName) throws IOException;
-
-    String[] getScriptSyntax(Module entityModule) throws BalException;
 }

@@ -128,11 +128,6 @@ public class InMemorySyntaxTree implements SyntaxTreeGenerator {
         return null;
     }
 
-    @Override
-    public String[] getScriptSyntax(Module entityModule) {
-        return new String[0];
-    }
-
     private static FunctionDefinitionNode[] createQueryFunction(Entity entity) {
         String resourceName = entity.getResourceName();
         String nameInCamelCase = resourceName.substring(0, 1).toUpperCase(Locale.ENGLISH) + resourceName.substring(1);

@@ -20,6 +20,7 @@ package io.ballerina.persist.components.syntax;
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
+import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.BalSyntaxConstants;
 import io.ballerina.persist.utils.SqlScriptGenerationUtils;
@@ -32,6 +33,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Objects;
 
 /**
@@ -60,8 +62,9 @@ public class SourceGenerator {
                     generatedSourceDirPath.resolve(persistTypesBal).toAbsolutePath(), moduleName);
             addClientFile(dbSyntaxTree.getClientSyntax(entityModule),
                     generatedSourceDirPath.resolve(persistClientBal).toAbsolutePath(), moduleName);
+            ArrayList<Entity> entityArray = new ArrayList<>(entityModule.getEntityMap().values());
             SqlScriptGenerationUtils.writeScriptFile(entityModule.getModuleName(),
-                    dbSyntaxTree.getScriptSyntax(entityModule), generatedSourceDirPath);
+                    SqlScriptGenerationUtils.generateSqlScript(entityArray), generatedSourceDirPath);
         } catch (BalException e) {
             throw new BalException(e.getMessage());
         }
@@ -115,8 +118,8 @@ public class SourceGenerator {
 
     private void addDataTypesFile(SyntaxTree syntaxTree, Path path, String moduleName) throws BalException {
         try {
-            writeBallerinaSyntaxFile(syntaxTree, path);
-        } catch (BalException e) {
+            writeOutputFile(Formatter.format(syntaxTree.toSourceCode()), path);
+        } catch (FormatterException | IOException e) {
             throw new BalException(String.format("could not write the client code for the `%s` data model " +
                     "to the generated_types.bal file.", moduleName) + e.getMessage());
         }
@@ -124,8 +127,8 @@ public class SourceGenerator {
 
     private void addClientFile(SyntaxTree syntaxTree, Path path, String moduleName) throws BalException {
         try {
-            writeBallerinaSyntaxFile(syntaxTree, path);
-        } catch (BalException e) {
+            writeOutputFile(Formatter.format(syntaxTree.toSourceCode()), path);
+        } catch (FormatterException | IOException e) {
             throw new BalException(String.format("could not write the client code for the `%s` data model " +
                     "to the generated_types.bal file.", moduleName) + e.getMessage());
         }
@@ -147,15 +150,4 @@ public class SourceGenerator {
             writer.println(syntaxTree);
         }
     }
-
-    private void writeBallerinaSyntaxFile(SyntaxTree syntaxTree, Path outPath) throws BalException {
-        try {
-            try (PrintWriter writer = new PrintWriter(outPath.toString(), StandardCharsets.UTF_8)) {
-                writer.println(Formatter.format(syntaxTree.toSourceCode()));
-            }
-        } catch (IOException | FormatterException e) {
-            throw new BalException(e.getMessage());
-        }
-    }
-    
 }
