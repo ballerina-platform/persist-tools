@@ -15,7 +15,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.ballerina.persist.components.syntax;
+package io.ballerina.persist.nodegenerator.syntax;
 
 import io.ballerina.compiler.syntax.tree.AbstractNodeFactory;
 import io.ballerina.compiler.syntax.tree.IdentifierToken;
@@ -36,9 +36,8 @@ import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.components.Client;
 import io.ballerina.persist.components.ClientResource;
-import io.ballerina.persist.components.syntax.client.CommonSyntax;
-import io.ballerina.persist.components.syntax.client.DbClientSyntax;
-import io.ballerina.persist.components.syntax.objects.SyntaxTreeGenerator;
+import io.ballerina.persist.nodegenerator.syntax.client.DbClientSyntax;
+import io.ballerina.persist.nodegenerator.syntax.objects.SyntaxTreeGenerator;
 import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.BalSyntaxConstants;
@@ -46,20 +45,13 @@ import io.ballerina.persist.nodegenerator.SyntaxTokenConstants;
 import io.ballerina.persist.utils.BalProjectUtils;
 import io.ballerina.toml.syntax.tree.DocumentMemberDeclarationNode;
 import io.ballerina.toml.syntax.tree.DocumentNode;
-import io.ballerina.toml.syntax.tree.KeyValueNode;
-import io.ballerina.toml.syntax.tree.TableArrayNode;
-import io.ballerina.toml.syntax.tree.TableNode;
 import io.ballerina.toml.validator.SampleNodeGenerator;
 import io.ballerina.tools.text.TextDocument;
 import io.ballerina.tools.text.TextDocuments;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * This class is used to generate the syntax tree for database.
@@ -104,7 +96,7 @@ public class DbSyntaxTree implements SyntaxTreeGenerator {
     public SyntaxTree getDataTypesSyntax(Module entityModule) {
         Collection<Entity> entityArray = entityModule.getEntityMap().values();
         if (entityArray.size() != 0) {
-            return Utils.generateTypeSyntaxTree(entityModule);
+            return CommonSyntax.generateTypeSyntaxTree(entityModule);
         }
         return null;
     }
@@ -114,7 +106,7 @@ public class DbSyntaxTree implements SyntaxTreeGenerator {
         NodeList<ImportDeclarationNode> imports = AbstractNodeFactory.createEmptyNodeList();
         NodeList<ModuleMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
 
-        MinutiaeList commentMinutiaeList = Utils.createCommentMinutiaeList(String.
+        MinutiaeList commentMinutiaeList = createCommentMinutiaeList(String.
                 format(BalSyntaxConstants.AUTO_GENERATED_COMMENT));
         ImportPrefixNode prefix = NodeFactory.createImportPrefixNode(SyntaxTokenConstants.SYNTAX_TREE_AS,
                 AbstractNodeFactory.createToken(SyntaxKind.UNDERSCORE_KEYWORD));
@@ -135,9 +127,7 @@ public class DbSyntaxTree implements SyntaxTreeGenerator {
         ModulePartNode modulePartNode = NodeFactory.createModulePartNode(imports, moduleMembers, eofToken);
         TextDocument textDocument = TextDocuments.from(BalSyntaxConstants.EMPTY_STRING);
         SyntaxTree balTree = SyntaxTree.from(textDocument);
-
         return balTree.modifyWith(modulePartNode);
-
     }
 
     @Override
@@ -153,48 +143,6 @@ public class DbSyntaxTree implements SyntaxTreeGenerator {
                 moduleMembers, eofToken);
         TextDocument textDocument = TextDocuments.from(documentNode.toSourceCode());
         return SyntaxTree.from(textDocument);
-    }
-
-    @Override
-    public SyntaxTree getUpdateConfigTomlSyntax(Path configPath, String moduleName) throws IOException {
-        boolean configExists = false;
-        io.ballerina.toml.syntax.tree.NodeList<DocumentMemberDeclarationNode> moduleMembers =
-                io.ballerina.toml.syntax.tree.AbstractNodeFactory.createEmptyNodeList();
-        Path fileNamePath = configPath.getFileName();
-        TextDocument configDocument = TextDocuments.from(Files.readString(configPath));
-        if (Objects.nonNull(fileNamePath)) {
-            io.ballerina.toml.syntax.tree.SyntaxTree syntaxTree = io.ballerina.toml.syntax.tree.SyntaxTree.from(
-                    configDocument, fileNamePath.toString());
-            DocumentNode rootNote = syntaxTree.rootNode();
-            io.ballerina.toml.syntax.tree.NodeList<DocumentMemberDeclarationNode> nodeList = rootNote.members();
-
-            for (DocumentMemberDeclarationNode member : nodeList) {
-                if (member instanceof KeyValueNode) {
-                    moduleMembers = moduleMembers.add(member);
-                } else if (member instanceof TableNode) {
-                    TableNode node = (TableNode) member;
-                    moduleMembers = moduleMembers.add(member);
-                    if (node.identifier().toSourceCode().trim().equals(moduleName)) {
-                        configExists = true;
-                        break;
-                    }
-                } else if (member instanceof TableArrayNode) {
-                    moduleMembers = moduleMembers.add(member);
-                }
-            }
-            if (!configExists) {
-                moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
-                moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(moduleName, null));
-                moduleMembers = populateConfigNodeList(moduleMembers);
-            }
-        }
-        io.ballerina.toml.syntax.tree.Token eofToken = io.ballerina.toml.syntax.tree.AbstractNodeFactory.
-                createIdentifierToken("");
-        DocumentNode documentNode = io.ballerina.toml.syntax.tree.NodeFactory.createDocumentNode(
-                moduleMembers, eofToken);
-        TextDocument textDocument = TextDocuments.from(documentNode.toSourceCode());
-        return SyntaxTree.from(textDocument);
-
     }
 
     private static ImportDeclarationNode getImportDeclarationNodeWithAutogeneratedComment(
@@ -230,5 +178,17 @@ public class DbSyntaxTree implements SyntaxTreeGenerator {
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(PersistToolsConstants.KEY_DATABASE,
                 PersistToolsConstants.DEFAULT_DATABASE, null));
         return moduleMembers;
+    }
+
+    protected static MinutiaeList createCommentMinutiaeList(String comment) {
+        return NodeFactory.createMinutiaeList(
+                AbstractNodeFactory.createCommentMinutiae(BalSyntaxConstants.AUTOGENERATED_FILE_COMMENT),
+                AbstractNodeFactory.createEndOfLineMinutiae(System.lineSeparator()),
+                AbstractNodeFactory.createEndOfLineMinutiae(System.lineSeparator()),
+                AbstractNodeFactory.createCommentMinutiae(comment),
+                AbstractNodeFactory.createEndOfLineMinutiae(System.lineSeparator()),
+                AbstractNodeFactory.createCommentMinutiae(BalSyntaxConstants.COMMENT_SHOULD_NOT_BE_MODIFIED),
+                AbstractNodeFactory.createEndOfLineMinutiae(System.lineSeparator()),
+                AbstractNodeFactory.createEndOfLineMinutiae(System.lineSeparator()));
     }
 }

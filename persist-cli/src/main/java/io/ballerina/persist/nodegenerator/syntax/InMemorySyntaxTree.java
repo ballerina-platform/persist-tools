@@ -15,7 +15,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.ballerina.persist.components.syntax;
+package io.ballerina.persist.nodegenerator.syntax;
 
 import io.ballerina.compiler.syntax.tree.FunctionDefinitionNode;
 import io.ballerina.compiler.syntax.tree.ImportDeclarationNode;
@@ -29,16 +29,14 @@ import io.ballerina.persist.components.Client;
 import io.ballerina.persist.components.ClientResource;
 import io.ballerina.persist.components.Function;
 import io.ballerina.persist.components.TypeDescriptor;
-import io.ballerina.persist.components.syntax.client.CommonSyntax;
-import io.ballerina.persist.components.syntax.client.InMemoryClientSyntax;
-import io.ballerina.persist.components.syntax.objects.SyntaxTreeGenerator;
+import io.ballerina.persist.nodegenerator.syntax.client.InMemoryClientSyntax;
+import io.ballerina.persist.nodegenerator.syntax.objects.SyntaxTreeGenerator;
 import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.models.Relation;
 import io.ballerina.persist.nodegenerator.BalSyntaxConstants;
 
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -60,7 +58,7 @@ public class InMemorySyntaxTree implements SyntaxTreeGenerator {
         for (Entity entity : entityModule.getEntityMap().values()) {
             moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration(
                     String.format(BalSyntaxConstants.TABLE_PARAMETER_INIT_TEMPLATE, entity.getEntityName(),
-                            Utils.getPrimaryKeys(entity, false), entity.getResourceName(), "table[]")));
+                            getPrimaryKeys(entity, false), entity.getResourceName(), "table[]")));
         }
         Client clientObject = dbClientSyntax.getClient(entityModule);
         Collection<Entity> entityArray = entityModule.getEntityMap().values();
@@ -108,24 +106,19 @@ public class InMemorySyntaxTree implements SyntaxTreeGenerator {
     public SyntaxTree getDataTypesSyntax(Module entityModule) throws BalException {
         Collection<Entity> entityArray = entityModule.getEntityMap().values();
         if (entityArray.size() != 0) {
-            return Utils.generateTypeSyntaxTree(entityModule);
+            return CommonSyntax.generateTypeSyntaxTree(entityModule);
         }
         return null;
     }
 
     @Override
     public SyntaxTree getDataStoreConfigSyntax() {
-        return null;
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public SyntaxTree getConfigTomlSyntax(String moduleName) {
-        return null;
-    }
-
-    @Override
-    public SyntaxTree getUpdateConfigTomlSyntax(Path configPath, String moduleName) {
-        return null;
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     private static FunctionDefinitionNode[] createQueryFunction(Entity entity) {
@@ -142,7 +135,7 @@ public class InMemorySyntaxTree implements SyntaxTreeGenerator {
         StringBuilder queryOneBuilder = new StringBuilder(String.format(BalSyntaxConstants.QUERY_ONE_FROM_STATEMENT,
                 resourceName));
         queryOneBuilder.append(String.format(BalSyntaxConstants.QUERY_ONE_WHERE_CLAUSE,
-                Utils.getStringWithUnderScore(entity.getEntityName())));
+                CommonSyntax.getStringWithUnderScore(entity.getEntityName())));
         Function queryOne = new Function(String.format(BalSyntaxConstants.QUERY_ONE, nameInCamelCase),
                 SyntaxKind.OBJECT_METHOD_DEFINITION);
         queryOne.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PRIVATE });
@@ -210,7 +203,22 @@ public class InMemorySyntaxTree implements SyntaxTreeGenerator {
             queryBuilder.append(String.format(BalSyntaxConstants.SELECT_QUERY, ""));
             queryOneBuilder.append(String.format(BalSyntaxConstants.DO_QUERY, ""));
         }
-
         return new StringBuilder[]{queryBuilder, queryOneBuilder};
     }
+
+    public static String getPrimaryKeys(Entity entity, boolean addDoubleQuotes) {
+        StringBuilder keyFields = new StringBuilder();
+        for (EntityField key : entity.getKeys()) {
+            if (keyFields.length() != 0) {
+                keyFields.append(BalSyntaxConstants.COMMA_SPACE);
+            }
+            if (addDoubleQuotes) {
+                keyFields.append("\"").append(CommonSyntax.stripEscapeCharacter(key.getFieldName())).append("\"");
+            } else {
+                keyFields.append(CommonSyntax.stripEscapeCharacter(key.getFieldName()));
+            }
+        }
+        return keyFields.toString();
+    }
+
 }

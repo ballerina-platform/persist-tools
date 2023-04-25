@@ -20,7 +20,7 @@ package io.ballerina.persist.cmd;
 import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
-import io.ballerina.persist.components.syntax.SourceGenerator;
+import io.ballerina.persist.nodegenerator.syntax.SourceGenerator;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.BalSyntaxConstants;
 import io.ballerina.persist.nodegenerator.TomlSyntaxGenerator;
@@ -121,9 +121,9 @@ public class Generate implements BLauncherCmd {
             return;
         }
         Path generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);
-        String subModule = "";
+        String moduleName = "";
         String dataStore;
-        String moduleName;
+        String packageNameInToml;
         Module entityModule;
         try {
             BalProjectUtils.validateSchemaFile(schemaFilePath);
@@ -143,25 +143,24 @@ public class Generate implements BLauncherCmd {
         try {
             HashMap<String, String> ballerinaTomlConfig = TomlSyntaxGenerator.readBallerinaTomlConfig(
                     Paths.get(this.sourcePath, "Ballerina.toml"));
-            moduleName = ballerinaTomlConfig.get("module").trim();
-            if (!moduleName.equals(packageName)) {
-                if (!moduleName.startsWith(packageName + ".")) {
+            packageNameInToml = ballerinaTomlConfig.get("module").trim();
+            if (!packageNameInToml.equals(packageName)) {
+                if (!packageNameInToml.startsWith(packageName + ".")) {
                     errStream.println("ERROR: invalid module name : '" + ballerinaTomlConfig.get("module") + "' :\n" +
                             "module name should follow the template <package_name>.<module_name>");
                     return;
                 }
-                subModule = moduleName.split("\\.")[1];
-                if (!ProjectUtils.validateModuleName(subModule)) {
-                    errStream.println("ERROR: invalid module name : '" + subModule + "' :\n" +
+                moduleName = packageNameInToml.split("\\.")[1];
+                if (!ProjectUtils.validateModuleName(moduleName)) {
+                    errStream.println("ERROR: invalid module name : '" + moduleName + "' :\n" +
                             "module name can only contain alphanumerics, underscores and periods");
                     return;
-                } else if (!ProjectUtils.validateNameLength(subModule)) {
-                    errStream.println("ERROR: invalid module name : '" + subModule + "' :\n" +
+                } else if (!ProjectUtils.validateNameLength(moduleName)) {
+                    errStream.println("ERROR: invalid module name : '" + moduleName + "' :\n" +
                             "maximum length of module name is 256 characters");
                     return;
                 }
-                generatedSourceDirPath = generatedSourceDirPath.resolve(subModule);
-
+                generatedSourceDirPath = generatedSourceDirPath.resolve(moduleName);
             }
             dataStore = ballerinaTomlConfig.get("datastore").trim();
             if (!PersistToolsConstants.SUPPORTED_DB_PROVIDERS.contains(dataStore)) {
@@ -185,29 +184,30 @@ public class Generate implements BLauncherCmd {
                 return;
             }
         }
-        SourceGenerator sourceCreator = new SourceGenerator();
-        String modulePath = subModule.equals("") ? "./generated" : "./generated/" + subModule;
+        SourceGenerator sourceCreator = new SourceGenerator(sourcePath, generatedSourceDirPath, packageNameInToml,
+                entityModule);
         if (dataStore.equals(PersistToolsConstants.SupportDataSources.MYSQL_DB)) {
             try {
-            sourceCreator.createDbSources(sourcePath, subModule, moduleName, entityModule);
+                sourceCreator.createDbSources();
             } catch (BalException e) {
                 errStream.printf(e.getMessage());
                 return;
             }
-            errStream.printf("Generated Ballerina Client, Types, " + "and Scripts to %s directory.%n", modulePath);
+            errStream.printf("Generated Ballerina Client, Types, " + "and Scripts to %s directory.%n",
+                    generatedSourceDirPath);
             errStream.println("You can now start using Ballerina Client in your code.");
             errStream.println(System.lineSeparator() + "Next steps:");
             errStream.printf("Set database configurations in Config.toml file to point to " +
                     "your database. If your database has no tables yet, execute the scripts." +
-                    "sql file at %s directory, in your database to create tables.%n", modulePath);
+                    "sql file at %s directory, in your database to create tables.%n", generatedSourceDirPath);
         } else {
             try {
-                sourceCreator.createInMemorySources(sourcePath, subModule, moduleName, entityModule);
+                sourceCreator.createInMemorySources();
             } catch (BalException e) {
                 errStream.printf(e.getMessage());
                 return;
             }
-            errStream.printf("Generated Ballerina Client, Types, " + "and Scripts to %s directory.%n", modulePath);
+            errStream.printf("Generated Ballerina Client, and Types to %s directory.%n", generatedSourceDirPath);
             errStream.println("You can now start using Ballerina Client in your code.");
         }
     }

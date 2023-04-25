@@ -15,14 +15,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.ballerina.persist.components.syntax.objects;
+package io.ballerina.persist.nodegenerator.syntax.objects;
 
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.models.Module;
-
-import java.io.IOException;
-import java.nio.file.Path;
 
 /**
  * This interface is used to generate the syntax tree for data stores.
@@ -38,6 +35,4 @@ public interface SyntaxTreeGenerator {
     SyntaxTree getDataStoreConfigSyntax();
 
     SyntaxTree getConfigTomlSyntax(String moduleName);
-
-    SyntaxTree getUpdateConfigTomlSyntax(Path configPath, String moduleName) throws IOException;
 }

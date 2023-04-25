@@ -134,7 +134,6 @@ public class TomlSyntaxGenerator {
         }
     }
 
-
     public static String readPackageName(String sourcePath) throws BalException {
         try {
             TextDocument configDocument = TextDocuments.from(Files.readString(Paths.get(sourcePath,

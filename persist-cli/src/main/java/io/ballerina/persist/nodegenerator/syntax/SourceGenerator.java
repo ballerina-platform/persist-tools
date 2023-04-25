@@ -1,0 +1,224 @@
+/*
+ * Copyright (c) 2023, WSO2 LLC. (https://www.wso2.com) All Rights Reserved.
+ *
+ * WSO2 LLC. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package io.ballerina.persist.nodegenerator.syntax;
+
+import io.ballerina.compiler.syntax.tree.SyntaxTree;
+import io.ballerina.persist.BalException;
+import io.ballerina.persist.PersistToolsConstants;
+import io.ballerina.persist.models.Module;
+import io.ballerina.persist.nodegenerator.BalSyntaxConstants;
+import io.ballerina.toml.syntax.tree.DocumentMemberDeclarationNode;
+import io.ballerina.toml.syntax.tree.DocumentNode;
+import io.ballerina.toml.syntax.tree.KeyValueNode;
+import io.ballerina.toml.syntax.tree.TableArrayNode;
+import io.ballerina.toml.syntax.tree.TableNode;
+import io.ballerina.tools.text.TextDocument;
+import io.ballerina.tools.text.TextDocuments;
+import org.ballerinalang.formatter.core.Formatter;
+import org.ballerinalang.formatter.core.FormatterException;
+
+import java.io.IOException;
+import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Objects;
+
+import static io.ballerina.persist.PersistToolsConstants.SQL_SCHEMA_FILE;
+
+/**
+ * This class is used to generate the all files to data source type.
+ *
+ * @since 0.3.1
+ */
+public class SourceGenerator {
+
+    private static final String persistTypesBal = "persist_types.bal";
+    private static final String persistClientBal = "persist_client.bal";
+    private static final String NEW_LINE = System.lineSeparator();
+    private final String sourcePath;
+    private final String packageName;
+    private final Path generatedSourceDirPath;
+    private final Module entityModule;
+
+    public SourceGenerator(String sourcePath, Path generatedSourceDirPath, String packageName, Module entityModule) {
+        this.sourcePath = sourcePath;
+        this.packageName = packageName;
+        this.entityModule = entityModule;
+        this.generatedSourceDirPath = generatedSourceDirPath;
+    }
+
+    public void createDbSources() throws BalException {
+        DbSyntaxTree dbSyntaxTree = new DbSyntaxTree();
+        try {
+            addDbConfigBalFile(this.generatedSourceDirPath, dbSyntaxTree.getDataStoreConfigSyntax());
+            addConfigTomlFile(this.sourcePath, dbSyntaxTree.getConfigTomlSyntax(this.packageName), this.packageName);
+            addDataTypesBalFile(dbSyntaxTree.getDataTypesSyntax(entityModule),
+                    this.generatedSourceDirPath.resolve(persistTypesBal).toAbsolutePath(), this.packageName);
+            addClientFile(dbSyntaxTree.getClientSyntax(entityModule),
+                    this.generatedSourceDirPath.resolve(persistClientBal).toAbsolutePath(), this.packageName);
+            addSqlScriptFile(this.entityModule.getModuleName(),
+                    SqlScriptGenerator.generateSqlScript(this.entityModule.getEntityMap().values()),
+                    generatedSourceDirPath);
+        } catch (BalException e) {
+            throw new BalException(e.getMessage());
+        }
+    }
+
+    public void createInMemorySources() throws BalException {
+        InMemorySyntaxTree inMemorySyntaxTree = new InMemorySyntaxTree();
+        try {
+            createGeneratedDirectory(this.generatedSourceDirPath);
+            addDataTypesBalFile(inMemorySyntaxTree.getDataTypesSyntax(this.entityModule),
+                    this.generatedSourceDirPath.resolve(persistTypesBal).toAbsolutePath(), this.packageName);
+            addClientFile(inMemorySyntaxTree.getClientSyntax(this.entityModule),
+                    this.generatedSourceDirPath.resolve(persistClientBal).toAbsolutePath(), this.packageName);
+        } catch (BalException e) {
+            throw new BalException(e.getMessage());
+        }
+    }
+    
+    private void addDbConfigBalFile(Path generatedSourceDirPath, SyntaxTree syntaxTree) throws BalException {
+        Path databaseConfigPath = generatedSourceDirPath.resolve(BalSyntaxConstants.PATH_CONFIGURATION_BAL_FILE);
+        if (!Files.exists(databaseConfigPath)) {
+            try {
+                writeOutputFile(syntaxTree.toSourceCode(), databaseConfigPath.toAbsolutePath());
+            } catch (Exception e) {
+                throw new BalException("ERROR: failed to generate the database_configurations.bal file. "
+                        + e.getMessage());
+            }
+        }
+    }
+
+    private void addConfigTomlFile(String sourcePath, SyntaxTree syntaxTree, String moduleName)
+            throws BalException {
+        Path configPath = Paths.get(sourcePath, PersistToolsConstants.CONFIG_SCRIPT_FILE).toAbsolutePath();
+        try {
+            if (!Files.exists(configPath.toAbsolutePath())) {
+                writeOutputFile(syntaxTree.toSourceCode(), configPath);
+            } else {
+                writeOutputFile(getUpdateConfigTomlSyntax(configPath, moduleName, syntaxTree).toSourceCode(),
+                        configPath);
+            }
+        } catch (IOException e) {
+            throw new BalException("could not update Config.toml file inside the Ballerina project. " + e.getMessage());
+        }
+    }
+
+    private void addDataTypesBalFile(SyntaxTree syntaxTree, Path path, String moduleName) throws BalException {
+        try {
+            writeOutputFile(Formatter.format(syntaxTree.toSourceCode()), path);
+        } catch (FormatterException | IOException e) {
+            throw new BalException(String.format("could not write the client code for the `%s` data model " +
+                    "to the generated_types.bal file.", moduleName) + e.getMessage());
+        }
+    }
+
+    private void addClientFile(SyntaxTree syntaxTree, Path path, String moduleName) throws BalException {
+        try {
+            writeOutputFile(Formatter.format(syntaxTree.toSourceCode()), path);
+        } catch (FormatterException | IOException e) {
+            throw new BalException(String.format("could not write the client code for the `%s` data model " +
+                    "to the generated_types.bal file.", moduleName) + e.getMessage());
+        }
+    }
+    
+    private void createGeneratedDirectory(Path path) throws BalException {
+        if (Objects.nonNull(path)) {
+            try {
+                Files.createDirectories(path);
+            } catch (IOException e) {
+                throw new BalException(String.format("could not create the parent directories of output path %s. %s",
+                                path, e.getMessage()));
+            }
+        }
+    }
+
+    private void writeOutputFile(String syntaxTree, Path outPath) throws IOException {
+        try (PrintWriter writer = new PrintWriter(outPath.toString(), StandardCharsets.UTF_8)) {
+            writer.println(syntaxTree);
+        }
+    }
+
+    private static void addSqlScriptFile(String moduleName, String[] sqlScripts, Path filePath) {
+        Path path = Paths.get(String.valueOf(filePath), SQL_SCHEMA_FILE);
+        StringBuilder sqlScript = new StringBuilder();
+        sqlScript.append(PersistToolsConstants.SqlScriptComments.AUTOGENERATED_FILE_COMMENT).append(NEW_LINE)
+                .append(NEW_LINE);
+        sqlScript.append(String.format(PersistToolsConstants.SqlScriptComments.AUTO_GENERATED_COMMENT_WITH_REASON,
+                moduleName)).append(NEW_LINE);
+        sqlScript.append(PersistToolsConstants.SqlScriptComments.COMMENT_SHOULD_BE_VERIFIED_AND_EXECUTED)
+                .append(NEW_LINE).append(NEW_LINE);
+        for (String script : sqlScripts) {
+            sqlScript.append(script).append(NEW_LINE);
+        }
+        try {
+            Files.deleteIfExists(path);
+            Files.createFile(path);
+            Files.writeString(path, sqlScript);
+        } catch (IOException e) {
+            PrintStream errStream = System.err;
+            errStream.println("Error while updating the SQL script file (" + SQL_SCHEMA_FILE + ") in the project " +
+                    "persist directory: " + e.getMessage());
+        }
+    }
+
+    private SyntaxTree getUpdateConfigTomlSyntax(Path configPath, String moduleName, SyntaxTree newConfigSyntaxTree)
+            throws IOException {
+        boolean configExists = false;
+        io.ballerina.toml.syntax.tree.NodeList<DocumentMemberDeclarationNode> moduleMembers =
+                io.ballerina.toml.syntax.tree.AbstractNodeFactory.createEmptyNodeList();
+        Path fileNamePath = configPath.getFileName();
+        TextDocument configDocument = TextDocuments.from(Files.readString(configPath));
+        if (Objects.nonNull(fileNamePath)) {
+            io.ballerina.toml.syntax.tree.SyntaxTree syntaxTree = io.ballerina.toml.syntax.tree.SyntaxTree.from(
+                    configDocument, fileNamePath.toString());
+            DocumentNode rootNote = syntaxTree.rootNode();
+            io.ballerina.toml.syntax.tree.NodeList<DocumentMemberDeclarationNode> nodeList = rootNote.members();
+
+            for (DocumentMemberDeclarationNode member : nodeList) {
+                if (member instanceof KeyValueNode) {
+                    moduleMembers = moduleMembers.add(member);
+                } else if (member instanceof TableNode) {
+                    TableNode node = (TableNode) member;
+                    moduleMembers = moduleMembers.add(member);
+                    if (node.identifier().toSourceCode().trim().equals(moduleName)) {
+                        configExists = true;
+                        break;
+                    }
+                } else if (member instanceof TableArrayNode) {
+                    moduleMembers = moduleMembers.add(member);
+                }
+            }
+        }
+        io.ballerina.toml.syntax.tree.Token eofToken = io.ballerina.toml.syntax.tree.AbstractNodeFactory.
+                createIdentifierToken("");
+        DocumentNode documentNode = io.ballerina.toml.syntax.tree.NodeFactory.createDocumentNode(
+                moduleMembers, eofToken);
+        TextDocument textDocument;
+        if (!configExists) {
+            textDocument = TextDocuments.from(documentNode.toSourceCode() + NEW_LINE +
+                    newConfigSyntaxTree.toSourceCode());
+        } else {
+            textDocument = TextDocuments.from(documentNode.toSourceCode());
+        }
+        return SyntaxTree.from(textDocument);
+    }
+}
