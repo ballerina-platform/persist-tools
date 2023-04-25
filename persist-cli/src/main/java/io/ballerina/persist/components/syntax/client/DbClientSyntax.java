@@ -15,30 +15,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.ballerina.persist.components.syntax;
+package io.ballerina.persist.components.syntax.client;
 
+import io.ballerina.compiler.syntax.tree.FunctionDefinitionNode;
 import io.ballerina.compiler.syntax.tree.ImportDeclarationNode;
 import io.ballerina.compiler.syntax.tree.ModuleMemberDeclarationNode;
 import io.ballerina.compiler.syntax.tree.Node;
 import io.ballerina.compiler.syntax.tree.NodeList;
 import io.ballerina.compiler.syntax.tree.NodeParser;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
-import io.ballerina.compiler.syntax.tree.SyntaxTree;
-import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.components.Client;
-import io.ballerina.persist.components.ClientResource;
 import io.ballerina.persist.components.Function;
 import io.ballerina.persist.components.IfElse;
 import io.ballerina.persist.components.TypeDescriptor;
+import io.ballerina.persist.components.syntax.Utils;
+import io.ballerina.persist.components.syntax.objects.ClientSyntaxGenerator;
 import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.models.Relation;
 import io.ballerina.persist.nodegenerator.BalSyntaxConstants;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -46,55 +44,36 @@ import java.util.List;
  *
  * @since 0.3.1
  */
-public class DbClient implements SyntaxGenerator {
+public class DbClientSyntax implements ClientSyntaxGenerator {
 
     private final Module entityModule;
 
-    public DbClient(Module entityModule) {
+    public DbClientSyntax(Module entityModule) {
         this.entityModule = entityModule;
     }
 
-    @Override
-    public SyntaxTree getClientSyntax() throws BalException {
+    public NodeList<ImportDeclarationNode> getImports() {
         NodeList<ImportDeclarationNode> imports = CommonSyntax.generateImport(entityModule);
         imports = imports.add(Utils.getImportDeclarationNode(BalSyntaxConstants.KEYWORD_BALLERINAX,
                 PersistToolsConstants.SupportDataSources.MYSQL_DB, null));
+        return imports;
+    }
 
-        NodeList<ModuleMemberDeclarationNode> moduleMembers = CommonSyntax.generateConstantVariables(entityModule);
-
-        Client clientObject = generateClient(entityModule);
-        moduleMembers = moduleMembers.add(clientObject.getClassDefinitionNode());
-        return CommonSyntax.generateSyntaxTree(imports, moduleMembers);
+    public NodeList<ModuleMemberDeclarationNode> getConstantVariables() {
+        return CommonSyntax.generateConstantVariables(entityModule);
     }
 
     @Override
-    public Client generateClient(Module entityModule) throws BalException {
+    public Client getClient(Module entityModule) {
         Client clientObject = CommonSyntax.generateClientSignature();
         clientObject.addMember(NodeParser.parseObjectMember(BalSyntaxConstants.INIT_DB_CLIENT), true);
         clientObject.addMember(NodeParser.parseObjectMember(BalSyntaxConstants.INIT_DB_CLIENT_MAP), true);
         clientObject.addMember(generateMetadataRecord(entityModule), true);
-
-        Collection<Entity> entityArray = entityModule.getEntityMap().values();
-        if (entityArray.size() == 0) {
-            throw new BalException("data definition file() does not contain any entities.");
-        }
-        Function init = generateInitFunction(entityModule);
-        clientObject.addMember(init.getFunctionDefinitionNode(), true);
-        List<ClientResource> resourceList = new ArrayList<>();
-        for (Entity entity : entityArray) {
-            resourceList.add(generateClientResource(entity));
-        }
-        resourceList.forEach(resource -> {
-            resource.getFunctions().forEach(function -> {
-                clientObject.addMember(function, false);
-            });
-        });
-        clientObject.addMember(generateCloseFunction().getFunctionDefinitionNode(), true);
         return clientObject;
     }
 
     @Override
-    public Function generateInitFunction(Module entityModule) {
+    public FunctionDefinitionNode getInitFunction(Module entityModule) {
         Function init = new Function(BalSyntaxConstants.INIT, SyntaxKind.OBJECT_METHOD_DEFINITION);
         init.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PUBLIC });
         init.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode(BalSyntaxConstants.EMPTY_STRING,
@@ -112,32 +91,26 @@ public class DbClient implements SyntaxGenerator {
                 persistClientMap.append(BalSyntaxConstants.COMMA_WITH_NEWLINE);
             }
             persistClientMap.append(String.format(BalSyntaxConstants.PERSIST_CLIENT_MAP_ELEMENT,
-                    Utils.getEntityNameConstant(entity.getEntityName()),
-                    Utils.getEntityNameConstant(entity.getEntityName())));
+                    Utils.getStringWithUnderScore(entity.getEntityName()),
+                    Utils.getStringWithUnderScore(entity.getEntityName())));
         }
         init.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.PERSIST_CLIENT_TEMPLATE,
                 persistClientMap)));
-        return init;
+        return init.getFunctionDefinitionNode();
     }
 
     @Override
-    public ClientResource generateClientResource(Entity entity) {
-        String className = "MySQLProcessor";
-        ClientResource resource  = CommonSyntax.generateClientResource(entity, className);
-
-        Function create = generatePostFunction(entity);
-        resource.addFunction(create.getFunctionDefinitionNode(), true);
-
-        Function update = generatePutFunction(entity);
-        resource.addFunction(update.getFunctionDefinitionNode(), true);
-
-        Function delete = generateDeleteFunction(entity);
-        resource.addFunction(delete.getFunctionDefinitionNode(), true);
-        return resource;
+    public FunctionDefinitionNode getGetFunction(Entity entity) {
+        return CommonSyntax.generateGetFunction(entity, "MySQLProcessor");
     }
 
     @Override
-    public Function generateCloseFunction() {
+    public FunctionDefinitionNode getGetByKeyFunction(Entity entity) {
+        return CommonSyntax.generateGetByKeyFunction(entity, "MySQLProcessor");
+    }
+
+    @Override
+    public FunctionDefinitionNode getCloseFunction() {
         Function close = CommonSyntax.generateCloseFunction();
         close.addStatement(NodeParser.parseStatement(BalSyntaxConstants.PERSIST_CLIENT_CLOSE_STATEMENT));
         IfElse errorCheck = new IfElse(NodeParser.parseExpression(String.format(
@@ -146,40 +119,40 @@ public class DbClient implements SyntaxGenerator {
                 BalSyntaxConstants.RESULT)));
         close.addIfElseStatement(errorCheck.getIfElseStatementNode());
         close.addStatement(NodeParser.parseStatement(BalSyntaxConstants.RETURN_RESULT));
-        return close;
+        return close.getFunctionDefinitionNode();
     }
 
     @Override
-    public Function generatePostFunction(Entity entity) {
+    public FunctionDefinitionNode getPostFunction(Entity entity) {
         String parameterType = String.format(BalSyntaxConstants.INSERT_RECORD, entity.getEntityName());
         List<EntityField> primaryKeys = entity.getKeys();
         Function create = CommonSyntax.generatePostFunction(entity, primaryKeys, parameterType);
-        addFunctionBodyToPostResource(create, primaryKeys, Utils.getEntityNameConstant(entity.getEntityName()),
+        addFunctionBodyToPostResource(create, primaryKeys, Utils.getStringWithUnderScore(entity.getEntityName()),
                 parameterType);
-        return create;
+        return create.getFunctionDefinitionNode();
     }
 
     @Override
-    public Function generatePutFunction(Entity entity) {
+    public FunctionDefinitionNode getPutFunction(Entity entity) {
         StringBuilder filterKeys = new StringBuilder(BalSyntaxConstants.OPEN_BRACE);
         StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH + entity.getResourceName());
         Function update = CommonSyntax.generatePutFunction(entity, filterKeys, path);
         if (entity.getKeys().size() > 1) {
             update.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.UPDATE_RUN_UPDATE_QUERY,
-                    Utils.getEntityNameConstant(entity.getEntityName()),
+                    Utils.getStringWithUnderScore(entity.getEntityName()),
                     filterKeys.substring(0, filterKeys.length() - 2).concat(BalSyntaxConstants.CLOSE_BRACE))));
         } else {
             update.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.UPDATE_RUN_UPDATE_QUERY,
-                    Utils.getEntityNameConstant(entity.getEntityName()), entity.getKeys().stream().findFirst().get()
+                    Utils.getStringWithUnderScore(entity.getEntityName()), entity.getKeys().stream().findFirst().get()
                             .getFieldName())));
         }
         update.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.UPDATE_RETURN_UPDATE_QUERY,
                 path)));
-        return update;
+        return update.getFunctionDefinitionNode();
     }
 
     @Override
-    public Function generateDeleteFunction(Entity entity) {
+    public FunctionDefinitionNode getDeleteFunction(Entity entity) {
         StringBuilder filterKeys = new StringBuilder(BalSyntaxConstants.OPEN_BRACE);
         StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH + entity.getResourceName());
         Function delete = CommonSyntax.generateDeleteFunction(entity, filterKeys, path);
@@ -187,15 +160,15 @@ public class DbClient implements SyntaxGenerator {
                 entity.getEntityName(), path)));
         if (entity.getKeys().size() > 1) {
             delete.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.DELETE_RUN_DELETE_QUERY,
-                    Utils.getEntityNameConstant(entity.getEntityName()),
+                    Utils.getStringWithUnderScore(entity.getEntityName()),
                     filterKeys.substring(0, filterKeys.length() - 2).concat(BalSyntaxConstants.CLOSE_BRACE))));
         } else {
             delete.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.DELETE_RUN_DELETE_QUERY,
-                    Utils.getEntityNameConstant(entity.getEntityName()), entity.getKeys().stream().findFirst().get()
+                    Utils.getStringWithUnderScore(entity.getEntityName()), entity.getKeys().stream().findFirst().get()
                             .getFieldName())));
         }
         delete.addStatement(NodeParser.parseStatement(BalSyntaxConstants.RETURN_DELETED_OBJECT));
-        return delete;
+        return delete.getFunctionDefinitionNode();
     }
 
     private static Node generateMetadataRecord(Module entityModule) {
@@ -286,7 +259,7 @@ public class DbClient implements SyntaxGenerator {
             }
 
             mapBuilder.append(String.format(BalSyntaxConstants.METADATA_RECORD_ELEMENT_TEMPLATE,
-                    Utils.getEntityNameConstant(entity.getEntityName()), entityMetaData));
+                    Utils.getStringWithUnderScore(entity.getEntityName()), entityMetaData));
         }
         return NodeParser.parseObjectMember(String.format(BalSyntaxConstants.METADATA_RECORD_TEMPLATE, mapBuilder));
     }

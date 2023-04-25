@@ -71,8 +71,8 @@ import static io.ballerina.persist.PersistToolsConstants.SQL_SCHEMA_FILE;
 import static io.ballerina.persist.PersistToolsConstants.USER;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.JDBC_URL_WITHOUT_DATABASE;
 import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.JDBC_URL_WITH_DATABASE;
+import static io.ballerina.persist.nodegenerator.TomlSyntaxGenerator.readBallerinaTomlConfig;
 import static io.ballerina.persist.nodegenerator.TomlSyntaxGenerator.readPackageName;
-import static io.ballerina.persist.nodegenerator.TomlSyntaxGenerator.readPersistConfigurations;
 import static io.ballerina.persist.utils.BalProjectUtils.validateBallerinaProject;
 import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
@@ -165,7 +165,7 @@ public class Push implements BLauncherCmd {
                 BalProjectUtils.validateSchemaFile(file);
                 entityModule = BalProjectUtils.getEntities(file);
                 generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);
-                HashMap<String, String> persistConfig = readPersistConfigurations(
+                HashMap<String, String> persistConfig = readBallerinaTomlConfig(
                         Paths.get(this.sourcePath, "Ballerina.toml"));
                 if (!persistConfig.get("module").equals(packageName)) {
                     if (!persistConfig.get("module").startsWith(packageName + ".")) {

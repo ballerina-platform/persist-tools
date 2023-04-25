@@ -15,7 +15,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.ballerina.persist.components.syntax;
+package io.ballerina.persist.components.syntax.client;
 
 import io.ballerina.compiler.syntax.tree.AbstractNodeFactory;
 import io.ballerina.compiler.syntax.tree.ArrayDimensionNode;
@@ -35,9 +35,9 @@ import io.ballerina.compiler.syntax.tree.SyntaxKind;
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.compiler.syntax.tree.Token;
 import io.ballerina.persist.components.Client;
-import io.ballerina.persist.components.ClientResource;
 import io.ballerina.persist.components.Function;
 import io.ballerina.persist.components.TypeDescriptor;
+import io.ballerina.persist.components.syntax.Utils;
 import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.Module;
@@ -48,8 +48,6 @@ import io.ballerina.tools.text.TextDocuments;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static io.ballerina.persist.nodegenerator.SyntaxTokenConstants.SYNTAX_TREE_SEMICOLON;
 
 /**
  * This class is used to generate the common syntax tree for the client.
@@ -73,7 +71,7 @@ public class CommonSyntax {
         NodeList<ModuleMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
         for (Entity entity : entityModule.getEntityMap().values()) {
             moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration(String.format(
-                    "const %s = \"%s\";", Utils.getEntityNameConstant(entity.getEntityName()),
+                    "const %s = \"%s\";", Utils.getStringWithUnderScore(entity.getEntityName()),
                     entity.getResourceName())));
         }
         return moduleMembers;
@@ -109,13 +107,6 @@ public class CommonSyntax {
         close.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode(BalSyntaxConstants.EMPTY_STRING,
                 BalSyntaxConstants.PERSIST_ERROR));
         return close;
-    }
-
-    public static ClientResource generateClientResource(Entity entity, String className) {
-        ClientResource resource = new ClientResource();
-        resource.addFunction(generateGetFunction(entity, className), true);
-        resource.addFunction(generateGetByKeyFunction(entity, className), true);
-        return resource;
     }
 
     public static FunctionDefinitionNode generateGetFunction(Entity entity, String className) {
@@ -211,7 +202,7 @@ public class CommonSyntax {
                 importOrgNameNode,
                 moduleNodeList,
                 null,
-                SYNTAX_TREE_SEMICOLON);
+                SyntaxTokenConstants.SYNTAX_TREE_SEMICOLON);
     }
 
     private static String stripEscapeCharacter(String fieldName) {

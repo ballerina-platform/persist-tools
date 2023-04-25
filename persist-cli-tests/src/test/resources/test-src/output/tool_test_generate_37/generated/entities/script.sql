@@ -30,7 +30,7 @@ CREATE TABLE `Customer` (
 	`name` VARCHAR(191) NOT NULL,
 	`age` INT NOT NULL,
 	`multipleassociationsId` INT UNIQUE NOT NULL,
-	CONSTRAINT FK_CUSTOMER_MULTIPLEASSOCIATIONS FOREIGN KEY(`multipleassociationsId`) REFERENCES `MultipleAssociations`(`id`),
+	CONSTRAINT FK_MULTIPLE_ASSOCIATIONS FOREIGN KEY(`multipleassociationsId`) REFERENCES `MultipleAssociations`(`id`),
 	PRIMARY KEY(`id`)
 );
 
@@ -38,7 +38,7 @@ CREATE TABLE `Dept` (
 	`id` INT NOT NULL,
 	`name` VARCHAR(191) NOT NULL,
 	`multipleassociationsId` INT UNIQUE NOT NULL,
-	CONSTRAINT FK_DEPT_MULTIPLEASSOCIATIONS FOREIGN KEY(`multipleassociationsId`) REFERENCES `MultipleAssociations`(`id`),
+	CONSTRAINT FK_MULTIPLE_ASSOCIATIONS FOREIGN KEY(`multipleassociationsId`) REFERENCES `MultipleAssociations`(`id`),
 	PRIMARY KEY(`id`)
 );
 
@@ -46,7 +46,7 @@ CREATE TABLE `User` (
 	`id` INT NOT NULL,
 	`name` VARCHAR(191) NOT NULL,
 	`multipleassociationsId` INT UNIQUE NOT NULL,
-	CONSTRAINT FK_USER_MULTIPLEASSOCIATIONS FOREIGN KEY(`multipleassociationsId`) REFERENCES `MultipleAssociations`(`id`),
+	CONSTRAINT FK_MULTIPLE_ASSOCIATIONS FOREIGN KEY(`multipleassociationsId`) REFERENCES `MultipleAssociations`(`id`),
 	PRIMARY KEY(`id`)
 );
 
@@ -58,6 +58,6 @@ CREATE TABLE `Profile` (
 	`age` DECIMAL(65,30) NOT NULL,
 	`isRegistered` BINARY NOT NULL,
 	`ownerId` INT UNIQUE NOT NULL,
-	CONSTRAINT FK_PROFILE_USER FOREIGN KEY(`ownerId`) REFERENCES `User`(`id`),
+	CONSTRAINT FK_OWNER FOREIGN KEY(`ownerId`) REFERENCES `User`(`id`),
 	PRIMARY KEY(`id`)
 );

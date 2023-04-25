@@ -19,6 +19,7 @@ package io.ballerina.persist.utils;
 
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
+import io.ballerina.persist.components.syntax.Utils;
 import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.Relation;
@@ -182,12 +183,11 @@ public class SqlScriptGenerationUtils {
                 associatedEntityRelationType.equals(Relation.RelationType.ONE)) {
             relationScripts.append(MessageFormat.format("{0}{1}UNIQUE ({2}),", NEW_LINE, TAB, foreignKey));
         }
-        relationScripts.append(MessageFormat.format("{0}{1}CONSTRAINT FK_{2}_{3} FOREIGN KEY({4}) " +
-                        "REFERENCES {5}({6}),", NEW_LINE, TAB, tableName.toUpperCase(Locale.ENGLISH),
-                removeSingleQuote(assocEntity.getEntityName()).toUpperCase(Locale.ENGLISH),
+        relationScripts.append(MessageFormat.format("{0}{1}CONSTRAINT FK_{2} FOREIGN KEY({3}) " +
+                        "REFERENCES {4}({5}),", NEW_LINE, TAB,
+                Utils.getStringWithUnderScore(entityField.getFieldName()).toUpperCase(Locale.ENGLISH),
                 foreignKey.toString(),
-                addBackticks(removeSingleQuote(assocEntity.getEntityName())),
-                referenceFieldName));
+                addBackticks(removeSingleQuote(assocEntity.getEntityName())), referenceFieldName));
         updateReferenceTable(tableName, assocEntity.getEntityName(), referenceTables);
         return relationScripts.toString();
     }

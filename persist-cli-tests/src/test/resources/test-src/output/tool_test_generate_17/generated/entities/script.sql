@@ -17,7 +17,7 @@ CREATE TABLE `Employee` (
 	`id` INT NOT NULL,
 	`name` VARCHAR(191) NOT NULL,
 	`companyId` INT NOT NULL,
-	CONSTRAINT FK_EMPLOYEE_COMPANY FOREIGN KEY(`companyId`) REFERENCES `Company`(`id`),
+	CONSTRAINT FK_COMPANY FOREIGN KEY(`companyId`) REFERENCES `Company`(`id`),
 	PRIMARY KEY(`id`)
 );
 
@@ -25,6 +25,6 @@ CREATE TABLE `Vehicle` (
 	`model` INT NOT NULL,
 	`name` VARCHAR(191) NOT NULL,
 	`employeeId` INT NOT NULL,
-	CONSTRAINT FK_VEHICLE_EMPLOYEE FOREIGN KEY(`employeeId`) REFERENCES `Employee`(`id`),
+	CONSTRAINT FK_EMPLOYEE FOREIGN KEY(`employeeId`) REFERENCES `Employee`(`id`),
 	PRIMARY KEY(`model`)
 );

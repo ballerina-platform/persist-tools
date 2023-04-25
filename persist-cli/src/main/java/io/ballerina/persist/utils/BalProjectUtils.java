@@ -27,6 +27,9 @@ import io.ballerina.projects.DiagnosticResult;
 import io.ballerina.projects.Package;
 import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.directory.SingleFileProject;
+import io.ballerina.toml.syntax.tree.AbstractNodeFactory;
+import io.ballerina.toml.syntax.tree.DocumentMemberDeclarationNode;
+import io.ballerina.toml.syntax.tree.NodeList;
 import io.ballerina.tools.diagnostics.Diagnostic;
 import io.ballerina.tools.text.TextDocuments;
 
@@ -109,5 +112,12 @@ public class BalProjectUtils {
             throw new BalException(String.format("ERROR: invalid Ballerina package directory: %s, " +
                     "cannot find 'Ballerina.toml' file.%n", projectPath.toAbsolutePath()));
         }
+    }
+
+    public static NodeList<DocumentMemberDeclarationNode> addNewLine(NodeList moduleMembers, int n) {
+        for (int i = 0; i < n; i++) {
+            moduleMembers = moduleMembers.add(AbstractNodeFactory.createIdentifierToken(System.lineSeparator()));
+        }
+        return moduleMembers;
     }
 }

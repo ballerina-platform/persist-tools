@@ -15,36 +15,31 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.ballerina.persist.components.syntax;
+package io.ballerina.persist.components.syntax.objects;
 
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.persist.BalException;
-import io.ballerina.persist.components.Client;
-import io.ballerina.persist.components.ClientResource;
-import io.ballerina.persist.components.Function;
-import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.Module;
 
+import java.io.IOException;
+import java.nio.file.Path;
+
 /**
- * This interface is used to generate the syntax tree for the client.
+ * This interface is used to generate the syntax tree for data stores.
  *
  * @since 0.3.1
  */
-public interface SyntaxGenerator {
+public interface SyntaxTreeGenerator {
 
-    SyntaxTree getClientSyntax() throws BalException;
+    SyntaxTree getClientSyntax(Module entityModule) throws BalException;
 
-    Client generateClient(Module entityModule) throws BalException;
+    SyntaxTree getDataTypesSyntax(Module entityModule) throws BalException;
 
-    Function generateInitFunction(Module entityModule);
+    SyntaxTree getDataStoreConfigSyntax();
 
-    ClientResource generateClientResource(Entity entity);
+    SyntaxTree getConfigTomlSyntax(String moduleName);
 
-    Function generateCloseFunction();
+    SyntaxTree getUpdateConfigTomlSyntax(Path configPath, String moduleName) throws IOException;
 
-    Function generatePostFunction(Entity entity);
-
-    Function generatePutFunction(Entity entity);
-
-    Function generateDeleteFunction(Entity entity);
+    String[] getScriptSyntax(Module entityModule) throws BalException;
 }

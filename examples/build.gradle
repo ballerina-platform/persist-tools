@@ -118,11 +118,16 @@ task copyTestResources(type: Copy) {
     }
 }
 
-task initExamples {
+task initDbExamples {
     doLast {
         examples.each { example ->
             try {
                 exec {
+                    copy {
+                        from(file("${project.projectDir}/build/generated-examples/${example}/resources"))
+                        into("${project.projectDir}/build/generated-examples/${example}")
+                    }
+                    delete "${project.projectDir}/build/generated-examples/${example}/generated"
                     workingDir "${project.projectDir}/build/generated-examples/${example}"
                     if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
                         commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist init --module=entities --datastore=mysql"
@@ -139,7 +144,28 @@ task initExamples {
     }
 }
 
-task generateExamples {
+task initInMemoryExamples {
+    doLast {
+        examples.each { example ->
+            try {
+                exec {
+                    workingDir "${project.projectDir}/build/generated-examples/${example}"
+                    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist init --module=entities"
+                    } else {
+                        commandLine 'cmd','slmgr /dlv'
+                        println('\n' + "Windows Instance detected")
+                    }
+                }
+            } catch (Exception e) {
+                println("Example '${example}' Generation failed: " + e.message)
+                throw e
+            }
+        }
+    }
+}
+
+task generateDbExamples {
     doLast {
         examples.each { example ->
             try {
@@ -159,6 +185,28 @@ task generateExamples {
         }
     }
 }
+
+task generateInMemoryExamples {
+    doLast {
+        examples.each { example ->
+            try {
+                exec {
+                    workingDir "${project.projectDir}/build/generated-examples/${example}"
+                    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate"
+                    } else {
+                        commandLine 'cmd','slmgr /dlv'
+                        println('\n' + "Windows Instance detected")
+                    }
+                }
+            } catch (Exception e) {
+                println("Example '${example}' Generation failed: " + e.message)
+                throw e
+            }
+        }
+    }
+}
+
 
 def checkTestDockerContainerStatus(dockerName) {
     if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
@@ -251,7 +299,28 @@ task pushExamples {
     }
 }
 
-task testExamples {
+task testDbExamples {
+    doLast {
+        examples.each { example ->
+            try {
+                exec {
+                    workingDir "${project.projectDir}/build/generated-examples/${example}"
+                    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal run --offline"
+                    } else {
+                        commandLine 'cmd','slmgr /dlv'
+                        println('\n' + "Windows Instance detected")
+                    }
+                }
+            } catch (Exception e) {
+                println("Example '${example}' test failed: " + e.message)
+                throw e
+            }
+        }
+    }
+}
+
+task testInMemoryExamples {
     doLast {
         examples.each { example ->
             try {
@@ -275,10 +344,16 @@ task testExamples {
 copyPersitTool.dependsOn ":persist-cli-tests:build"
 copyPersitTool.dependsOn ":persist-cli:build"
 copyTestResources.dependsOn copyPersitTool
-initExamples.dependsOn copyTestResources
-generateExamples.dependsOn initExamples
-pushExamples.dependsOn generateExamples
-testExamples.dependsOn pushExamples
 
-build.dependsOn testExamples
+initInMemoryExamples.dependsOn copyTestResources
+generateInMemoryExamples.dependsOn initInMemoryExamples
+testInMemoryExamples.dependsOn generateInMemoryExamples
+
+initDbExamples.dependsOn testInMemoryExamples
+generateDbExamples.dependsOn initDbExamples
+pushExamples.dependsOn generateDbExamples
+testDbExamples.dependsOn pushExamples
+
+build.dependsOn testInMemoryExamples
+build.dependsOn testDbExamples
 build.finalizedBy stopTestDockerContainer

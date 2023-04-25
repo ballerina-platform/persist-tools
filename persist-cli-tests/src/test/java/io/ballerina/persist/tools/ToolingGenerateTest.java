@@ -103,7 +103,7 @@ public class ToolingGenerateTest {
     @Test(enabled = true)
     @Description("There is only a single entity in the Ballerina project and there are errors in the project")
     public void testGenerateSingleEntityWithErrors() {
-        assertGeneratedSourcesNegative("tool_test_generate_11", GENERATE,  new String[]{});
+        assertGeneratedSourcesNegative("tool_test_generate_11", GENERATE, new String[]{});
     }
 
     @Test(enabled = true)
@@ -123,6 +123,7 @@ public class ToolingGenerateTest {
     public void testGenerateThreeEntitiesWith1To1AssociationsWithChildEntityInSubModule() {
         assertGeneratedSourcesNegative("tool_test_generate_15", GENERATE, new String[]{});
     }
+
     @Test(enabled = true)
     @Description("There are two entities with one to many associations between each other")
     public void testGenerateClientsWith1ToManyAssociations() {
@@ -136,6 +137,7 @@ public class ToolingGenerateTest {
         executeCommand("tool_test_generate_17", GENERATE);
         assertGeneratedSources("tool_test_generate_17");
     }
+
     @Test(enabled = true)
     @Description("There are three entities with one to one associations between each other without nullable fields")
     public void testGenerateThreeEntitiesWith1To1AssociationsWithOutAnnotationValue() {
@@ -148,10 +150,11 @@ public class ToolingGenerateTest {
         executeCommand("tool_test_generate_22", GENERATE);
         assertGeneratedSources("tool_test_generate_22");
     }
+
     @Test(enabled = true)
     @Description("Negative test case where init command was not run before generate command")
     public void testGenerateWithoutInit() {
-        assertGeneratedSourcesNegative ("tool_test_generate_23", GENERATE, new String[]{});
+        assertGeneratedSourcesNegative("tool_test_generate_23", GENERATE, new String[]{});
     }
 
     @Test(enabled = true)
