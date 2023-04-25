@@ -203,7 +203,6 @@ public class Utils {
                 entity.getEntityName().trim(), recordFields));
     }
 
-
     private static ModuleMemberDeclarationNode createEntityRecordOptionalized(Entity entity) {
         StringBuilder recordFields = new StringBuilder();
         for (EntityField field : entity.getFields()) {

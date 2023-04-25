@@ -188,8 +188,6 @@ public class InMemoryClientSyntax implements ClientSyntaxGenerator {
         }
     }
 
-
-
     private static StringBuilder addFunctionBodyToInMemoryPostResource(Function create, List<EntityField> primaryKeys,
                                                                        Entity entity, String parameterType) {
         StringBuilder forEachStmt = new StringBuilder();

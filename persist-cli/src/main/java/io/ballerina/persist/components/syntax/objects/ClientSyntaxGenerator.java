@@ -33,7 +33,9 @@ import io.ballerina.persist.models.Module;
 public interface ClientSyntaxGenerator {
 
     NodeList<ImportDeclarationNode> getImports();
+
     NodeList<ModuleMemberDeclarationNode> getConstantVariables();
+
     Client getClient(Module entityModule);
 
     FunctionDefinitionNode getInitFunction(Module entityModule);
