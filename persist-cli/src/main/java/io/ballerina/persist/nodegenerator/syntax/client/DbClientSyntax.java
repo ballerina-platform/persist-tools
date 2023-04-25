@@ -29,13 +29,13 @@ import io.ballerina.persist.components.Client;
 import io.ballerina.persist.components.Function;
 import io.ballerina.persist.components.IfElse;
 import io.ballerina.persist.components.TypeDescriptor;
-import io.ballerina.persist.nodegenerator.syntax.CommonSyntax;
-import io.ballerina.persist.nodegenerator.syntax.objects.ClientSyntaxGenerator;
 import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.models.Relation;
 import io.ballerina.persist.nodegenerator.BalSyntaxConstants;
+import io.ballerina.persist.nodegenerator.syntax.CommonSyntax;
+import io.ballerina.persist.nodegenerator.syntax.objects.ClientSyntaxGenerator;
 
 import java.util.List;
 
