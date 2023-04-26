@@ -73,13 +73,12 @@ public class Generate implements BLauncherCmd {
     @Override
     public void execute() {
         Path generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);
-        String moduleName;
         String dataStore;
-        String packageNameInModuleName;
         Module entityModule;
         List<Path> schemaFilePaths;
         Path schemaFilePath;
         String packageName;
+        String moduleNameWithPackageName;
         if (helpFlag) {
             String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMMAND_IDENTIFIER);
             errStream.println(commandUsageInfo);
@@ -139,18 +138,17 @@ public class Generate implements BLauncherCmd {
                     schemaFilePath.getFileName(), e.getMessage());
             return;
         }
-
         try {
             HashMap<String, String> ballerinaTomlConfig = TomlSyntaxUtils.readBallerinaTomlConfig(
                     Paths.get(this.sourcePath, "Ballerina.toml"));
-            packageNameInModuleName = ballerinaTomlConfig.get("module").trim();
-            if (!packageNameInModuleName.equals(packageName)) {
-                if (!packageNameInModuleName.startsWith(packageName + ".")) {
+            moduleNameWithPackageName = ballerinaTomlConfig.get("module").trim();
+            if (!moduleNameWithPackageName.equals(packageName)) {
+                if (!moduleNameWithPackageName.startsWith(packageName + ".")) {
                     errStream.println("ERROR: invalid module name : '" + ballerinaTomlConfig.get("module") + "' :\n" +
                             "module name should follow the template <package_name>.<module_name>");
                     return;
                 }
-                moduleName = packageNameInModuleName.split("\\.")[1];
+                String moduleName = moduleNameWithPackageName.split("\\.")[1];
                 if (!ProjectUtils.validateModuleName(moduleName)) {
                     errStream.println("ERROR: invalid module name : '" + moduleName + "' :\n" +
                             "module name can only contain alphanumerics, underscores and periods");
@@ -183,8 +181,8 @@ public class Generate implements BLauncherCmd {
                 return;
             }
         }
-        SourceGenerator sourceCreator = new SourceGenerator(sourcePath, generatedSourceDirPath, packageNameInModuleName,
-                entityModule);
+        SourceGenerator sourceCreator = new SourceGenerator(sourcePath, generatedSourceDirPath,
+                moduleNameWithPackageName, entityModule);
         if (dataStore.equals(PersistToolsConstants.SupportDataSources.MYSQL_DB)) {
             try {
                 sourceCreator.createDbSources();

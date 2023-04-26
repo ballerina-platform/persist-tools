@@ -58,13 +58,14 @@ public class SourceGenerator {
     private static final String NEW_LINE = System.lineSeparator();
     private static final PrintStream errStream = System.err;
     private final String sourcePath;
-    private final String packageName;
+    private final String moduleNameWithPackageName;
     private final Path generatedSourceDirPath;
     private final Module entityModule;
 
-    public SourceGenerator(String sourcePath, Path generatedSourceDirPath, String packageName, Module entityModule) {
+    public SourceGenerator(String sourcePath, Path generatedSourceDirPath, String moduleNameWithPackageName,
+                           Module entityModule) {
         this.sourcePath = sourcePath;
-        this.packageName = packageName;
+        this.moduleNameWithPackageName = moduleNameWithPackageName;
         this.entityModule = entityModule;
         this.generatedSourceDirPath = generatedSourceDirPath;
     }
@@ -73,11 +74,14 @@ public class SourceGenerator {
         DbSyntaxTree dbSyntaxTree = new DbSyntaxTree();
         try {
             addDbConfigBalFile(this.generatedSourceDirPath, dbSyntaxTree.getDataStoreConfigSyntax());
-            addConfigTomlFile(this.sourcePath, dbSyntaxTree.getConfigTomlSyntax(this.packageName), this.packageName);
+            addConfigTomlFile(this.sourcePath, dbSyntaxTree.getConfigTomlSyntax(this.moduleNameWithPackageName),
+                    this.moduleNameWithPackageName);
             addDataTypesBalFile(dbSyntaxTree.getDataTypesSyntax(entityModule),
-                    this.generatedSourceDirPath.resolve(persistTypesBal).toAbsolutePath(), this.packageName);
+                    this.generatedSourceDirPath.resolve(persistTypesBal).toAbsolutePath(),
+                    this.moduleNameWithPackageName);
             addClientFile(dbSyntaxTree.getClientSyntax(entityModule),
-                    this.generatedSourceDirPath.resolve(persistClientBal).toAbsolutePath(), this.packageName);
+                    this.generatedSourceDirPath.resolve(persistClientBal).toAbsolutePath(),
+                    this.moduleNameWithPackageName);
             addSqlScriptFile(this.entityModule.getModuleName(),
                     SqlScriptUtils.generateSqlScript(this.entityModule.getEntityMap().values()),
                     generatedSourceDirPath);
@@ -98,9 +102,11 @@ public class SourceGenerator {
         try {
             createGeneratedDirectory(this.generatedSourceDirPath);
             addDataTypesBalFile(inMemorySyntaxTree.getDataTypesSyntax(this.entityModule),
-                    this.generatedSourceDirPath.resolve(persistTypesBal).toAbsolutePath(), this.packageName);
+                    this.generatedSourceDirPath.resolve(persistTypesBal).toAbsolutePath(),
+                    this.moduleNameWithPackageName);
             addClientFile(inMemorySyntaxTree.getClientSyntax(this.entityModule),
-                    this.generatedSourceDirPath.resolve(persistClientBal).toAbsolutePath(), this.packageName);
+                    this.generatedSourceDirPath.resolve(persistClientBal).toAbsolutePath(),
+                    this.moduleNameWithPackageName);
             errStream.printf("Generated Ballerina Client, and Types to %s directory.%n", generatedSourceDirPath);
             errStream.println("You can now start using Ballerina Client in your code.");
         } catch (BalException e) {
