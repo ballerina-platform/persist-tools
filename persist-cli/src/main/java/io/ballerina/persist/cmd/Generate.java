@@ -186,14 +186,25 @@ public class Generate implements BLauncherCmd {
         if (dataStore.equals(PersistToolsConstants.SupportDataSources.MYSQL_DB)) {
             try {
                 sourceCreator.createDbSources();
+                errStream.printf("Generated Ballerina Client, Types, " + "and Scripts to %s directory.%n",
+                        generatedSourceDirPath);
+                errStream.println("You can now start using Ballerina Client in your code.");
+                errStream.println(System.lineSeparator() + "Next steps:");
+                errStream.printf("Set database configurations in Config.toml file to point to " +
+                        "your database. If your database has no tables yet, execute the scripts." +
+                        "sql file at %s directory, in your database to create tables.%n", generatedSourceDirPath);
             } catch (BalException e) {
-                errStream.printf("ERROR: failed to generate source file/s for the database. %s%n", e.getMessage());
+                errStream.printf("ERROR: failed to generate/update source file/s for the database. %s%n",
+                        e.getMessage());
             }
         } else {
             try {
                 sourceCreator.createInMemorySources();
+                errStream.printf("Generated Ballerina Client, and Types to %s directory.%n", generatedSourceDirPath);
+                errStream.println("You can now start using Ballerina Client in your code.");
             } catch (BalException e) {
-                errStream.printf("ERROR: failed to generate source file/s for the in-memory. %s%n", e.getMessage());
+                errStream.printf("ERROR: failed to generate/update source file/s for the in-memory. %s%n",
+                        e.getMessage());
             }
         }
     }
