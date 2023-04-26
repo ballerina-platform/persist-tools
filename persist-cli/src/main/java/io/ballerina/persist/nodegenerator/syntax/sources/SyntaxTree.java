@@ -15,9 +15,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.ballerina.persist.nodegenerator.syntax.objects;
+package io.ballerina.persist.nodegenerator.syntax.sources;
 
-import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.models.Module;
 
@@ -26,13 +25,13 @@ import io.ballerina.persist.models.Module;
  *
  * @since 0.3.1
  */
-public interface SyntaxTreeGenerator {
+public interface SyntaxTree {
 
-    SyntaxTree getClientSyntax(Module entityModule) throws BalException;
+    io.ballerina.compiler.syntax.tree.SyntaxTree getClientSyntax(Module entityModule) throws BalException;
 
-    SyntaxTree getDataTypesSyntax(Module entityModule) throws BalException;
+    io.ballerina.compiler.syntax.tree.SyntaxTree getDataTypesSyntax(Module entityModule) throws BalException;
 
-    SyntaxTree getDataStoreConfigSyntax();
+    io.ballerina.compiler.syntax.tree.SyntaxTree getDataStoreConfigSyntax();
 
-    SyntaxTree getConfigTomlSyntax(String moduleName);
+    io.ballerina.compiler.syntax.tree.SyntaxTree getConfigTomlSyntax(String moduleName);
 }

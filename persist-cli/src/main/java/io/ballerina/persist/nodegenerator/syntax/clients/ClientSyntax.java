@@ -15,7 +15,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.ballerina.persist.nodegenerator.syntax.objects;
+package io.ballerina.persist.nodegenerator.syntax.clients;
 
 import io.ballerina.compiler.syntax.tree.FunctionDefinitionNode;
 import io.ballerina.compiler.syntax.tree.ImportDeclarationNode;
@@ -30,13 +30,13 @@ import io.ballerina.persist.models.Module;
  *
  * @since 0.3.1
  */
-public interface ClientSyntaxGenerator {
+public interface ClientSyntax {
 
     NodeList<ImportDeclarationNode> getImports();
 
     NodeList<ModuleMemberDeclarationNode> getConstantVariables();
 
-    Client getClient(Module entityModule);
+    Client getClientObject(Module entityModule);
 
     FunctionDefinitionNode getInitFunction(Module entityModule);
 

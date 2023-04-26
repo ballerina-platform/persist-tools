@@ -18,11 +18,24 @@
 package io.ballerina.persist.cmd;
 
 import io.ballerina.cli.BLauncherCmd;
+import io.ballerina.compiler.syntax.tree.AbstractNodeFactory;
+import io.ballerina.compiler.syntax.tree.ImportDeclarationNode;
+import io.ballerina.compiler.syntax.tree.ModuleMemberDeclarationNode;
+import io.ballerina.compiler.syntax.tree.ModulePartNode;
+import io.ballerina.compiler.syntax.tree.NodeFactory;
+import io.ballerina.compiler.syntax.tree.NodeList;
+import io.ballerina.compiler.syntax.tree.NodeParser;
+import io.ballerina.compiler.syntax.tree.SyntaxTree;
+import io.ballerina.compiler.syntax.tree.Token;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
-import io.ballerina.persist.nodegenerator.BalSyntaxGenerator;
-import io.ballerina.persist.nodegenerator.TomlSyntaxGenerator;
+import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
+import io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils;
 import io.ballerina.projects.util.ProjectUtils;
+import io.ballerina.tools.text.TextDocument;
+import io.ballerina.tools.text.TextDocuments;
+import org.ballerinalang.formatter.core.Formatter;
+import org.ballerinalang.formatter.core.FormatterException;
 import picocli.CommandLine;
 
 import java.io.IOException;
@@ -43,8 +56,8 @@ import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.PersistToolsConstants.SCHEMA_FILE_NAME;
 import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_DB_PROVIDERS;
-import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.BAL_EXTENTION;
-import static io.ballerina.persist.nodegenerator.TomlSyntaxGenerator.readPackageName;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.BAL_EXTENTION;
+import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.readPackageName;
 import static io.ballerina.persist.utils.BalProjectUtils.validateBallerinaProject;
 import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 
@@ -185,7 +198,7 @@ public class Init implements BLauncherCmd {
 
     private void generateSchemaBalFile(Path persistPath) throws BalException {
         try {
-            String configTree = BalSyntaxGenerator.generateSchemaSyntaxTree();
+            String configTree = generateSchemaSyntaxTree();
             writeOutputString(configTree, persistPath.resolve(SCHEMA_FILE_NAME + BAL_EXTENTION)
                     .toAbsolutePath().toString());
         } catch (Exception e) {
@@ -195,7 +208,7 @@ public class Init implements BLauncherCmd {
 
     private void updateBallerinaToml(String module, String datastore) throws BalException {
         try {
-            String syntaxTree = TomlSyntaxGenerator.updateBallerinaToml(
+            String syntaxTree = TomlSyntaxUtils.updateBallerinaToml(
                     Paths.get(this.sourcePath, BALLERINA_TOML), module, datastore);
             writeOutputString(syntaxTree,
                     Paths.get(this.sourcePath, BALLERINA_TOML).toAbsolutePath().toString());
@@ -242,5 +255,20 @@ public class Init implements BLauncherCmd {
     public void printUsage(StringBuilder stringBuilder) {
         stringBuilder.append("  ballerina " + COMPONENT_IDENTIFIER +
                 " init").append(System.lineSeparator());
+    }
+
+    private static String generateSchemaSyntaxTree() throws FormatterException {
+        NodeList<ImportDeclarationNode> imports = AbstractNodeFactory.createEmptyNodeList();
+        NodeList<ModuleMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
+
+        imports = imports.add(NodeParser.parseImportDeclaration("import ballerina/persist as _;"));
+        Token eofToken = AbstractNodeFactory.createIdentifierToken(BalSyntaxConstants.EMPTY_STRING);
+        ModulePartNode modulePartNode = NodeFactory.createModulePartNode(imports, moduleMembers, eofToken);
+        TextDocument textDocument = TextDocuments.from(BalSyntaxConstants.EMPTY_STRING);
+        SyntaxTree balTree = SyntaxTree.from(textDocument);
+
+        // output cannot be SyntaxTree as it will overlap with Toml Syntax Tree in Init
+        // Command
+        return Formatter.format(balTree.modifyWith(modulePartNode).toSourceCode());
     }
 }

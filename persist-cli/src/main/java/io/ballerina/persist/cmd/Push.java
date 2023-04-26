@@ -21,8 +21,8 @@ import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.configuration.PersistConfiguration;
 import io.ballerina.persist.models.Module;
-import io.ballerina.persist.nodegenerator.BalSyntaxConstants;
-import io.ballerina.persist.nodegenerator.TomlSyntaxGenerator;
+import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
+import io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils;
 import io.ballerina.persist.utils.BalProjectUtils;
 import io.ballerina.persist.utils.JdbcDriverLoader;
 import io.ballerina.persist.utils.ScriptRunner;
@@ -69,10 +69,10 @@ import static io.ballerina.persist.PersistToolsConstants.PLATFORM;
 import static io.ballerina.persist.PersistToolsConstants.PROPERTY_KEY_PATH;
 import static io.ballerina.persist.PersistToolsConstants.SQL_SCHEMA_FILE;
 import static io.ballerina.persist.PersistToolsConstants.USER;
-import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.JDBC_URL_WITHOUT_DATABASE;
-import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.JDBC_URL_WITH_DATABASE;
-import static io.ballerina.persist.nodegenerator.TomlSyntaxGenerator.readBallerinaTomlConfig;
-import static io.ballerina.persist.nodegenerator.TomlSyntaxGenerator.readPackageName;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.JDBC_URL_WITHOUT_DATABASE;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.JDBC_URL_WITH_DATABASE;
+import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.readBallerinaTomlConfig;
+import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.readPackageName;
 import static io.ballerina.persist.utils.BalProjectUtils.validateBallerinaProject;
 import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
@@ -198,7 +198,7 @@ public class Push implements BLauncherCmd {
             PersistConfiguration persistConfigurations;
             try {
                 Path ballerinaTomlPath = Paths.get(this.sourcePath, BALLERINA_TOML);
-                persistConfigurations = TomlSyntaxGenerator.readDatabaseConfigurations(ballerinaTomlPath);
+                persistConfigurations = TomlSyntaxUtils.readDatabaseConfigurations(ballerinaTomlPath);
             } catch (BalException e) {
                 errStream.printf("ERROR: failed to load db configurations for the data model(%s). %s%n ",
                         entityModule.getModuleName(), e.getMessage());

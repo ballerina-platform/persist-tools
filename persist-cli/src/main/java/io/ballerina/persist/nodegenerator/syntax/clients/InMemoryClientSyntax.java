@@ -15,7 +15,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.ballerina.persist.nodegenerator.syntax.client;
+package io.ballerina.persist.nodegenerator.syntax.clients;
 
 import io.ballerina.compiler.syntax.tree.FunctionDefinitionNode;
 import io.ballerina.compiler.syntax.tree.ImportDeclarationNode;
@@ -31,9 +31,8 @@ import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.models.Relation;
-import io.ballerina.persist.nodegenerator.BalSyntaxConstants;
-import io.ballerina.persist.nodegenerator.syntax.CommonSyntax;
-import io.ballerina.persist.nodegenerator.syntax.objects.ClientSyntaxGenerator;
+import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
+import io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -46,7 +45,7 @@ import java.util.Map;
  *
  * @since 0.3.1
  */
-public class InMemoryClientSyntax implements ClientSyntaxGenerator {
+public class InMemoryClientSyntax implements ClientSyntax {
 
     public final Map<String, String> queryMethodStatement = new HashMap<>();
     private StringBuilder primaryKeys = new StringBuilder();
@@ -58,17 +57,17 @@ public class InMemoryClientSyntax implements ClientSyntaxGenerator {
 
     @Override
     public NodeList<ImportDeclarationNode> getImports() {
-        return CommonSyntax.generateImport(this.entityModule);
+        return BalSyntaxUtils.generateImport(this.entityModule);
     }
 
     @Override
     public NodeList<ModuleMemberDeclarationNode> getConstantVariables() {
-        return CommonSyntax.generateConstantVariables(entityModule);
+        return BalSyntaxUtils.generateConstantVariables(entityModule);
     }
 
     @Override
-    public Client getClient(Module entityModule) {
-        Client clientObject = CommonSyntax.generateClientSignature();
+    public Client getClientObject(Module entityModule) {
+        Client clientObject = BalSyntaxUtils.generateClientSignature();
         clientObject.addMember(NodeParser.parseObjectMember(BalSyntaxConstants.INIT_IN_MEMORY_CLIENT), true);
         clientObject.addMember(NodeParser.parseObjectMember(""), true);
         addTableParameterInit(entityModule, clientObject);
@@ -90,8 +89,8 @@ public class InMemoryClientSyntax implements ClientSyntaxGenerator {
                 persistClientMap.append(BalSyntaxConstants.COMMA_WITH_NEWLINE);
             }
             persistClientMap.append(String.format(BalSyntaxConstants.PERSIST_IN_MEMORY_CLIENT_MAP_ELEMENT,
-                    CommonSyntax.getStringWithUnderScore(entity.getEntityName()),
-                    CommonSyntax.getStringWithUnderScore(entity.getEntityName())));
+                    BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()),
+                    BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName())));
         }
         init.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.PERSIST_CLIENT_TEMPLATE,
                 persistClientMap)));
@@ -100,16 +99,16 @@ public class InMemoryClientSyntax implements ClientSyntaxGenerator {
 
     @Override
     public FunctionDefinitionNode getGetFunction(Entity entity) {
-        return CommonSyntax.generateGetFunction(entity, "InMemoryProcessor");
+        return BalSyntaxUtils.generateGetFunction(entity, "InMemoryProcessor");
     }
 
     @Override
     public FunctionDefinitionNode getGetByKeyFunction(Entity entity) {
-        return CommonSyntax.generateGetByKeyFunction(entity, "InMemoryProcessor");
+        return BalSyntaxUtils.generateGetByKeyFunction(entity, "InMemoryProcessor");
     }
 
     public FunctionDefinitionNode getCloseFunction() {
-        Function close = CommonSyntax.generateCloseFunction();
+        Function close = BalSyntaxUtils.generateCloseFunction();
         close.addStatement(NodeParser.parseStatement(BalSyntaxConstants.RETURN_NIL));
         return close.getFunctionDefinitionNode();
     }
@@ -118,7 +117,7 @@ public class InMemoryClientSyntax implements ClientSyntaxGenerator {
     public FunctionDefinitionNode getPostFunction(Entity entity) {
         String parameterType = String.format(BalSyntaxConstants.INSERT_RECORD, entity.getEntityName());
         List<EntityField> primaryKeys = entity.getKeys();
-        Function create = CommonSyntax.generatePostFunction(entity, primaryKeys, parameterType);
+        Function create = BalSyntaxUtils.generatePostFunction(entity, primaryKeys, parameterType);
         addFunctionBodyToInMemoryPostResource(create, primaryKeys, entity, parameterType);
         return create.getFunctionDefinitionNode();
     }
@@ -145,7 +144,7 @@ public class InMemoryClientSyntax implements ClientSyntaxGenerator {
             }
             primaryKeys.append(BalSyntaxConstants.CLOSE_BRACKET);
         }
-        Function update = CommonSyntax.generatePutFunction(entity, path, filterKeys);
+        Function update = BalSyntaxUtils.generatePutFunction(entity, path, filterKeys);
         IfElse hasCheck = new IfElse(NodeParser.parseExpression(String.format(BalSyntaxConstants.HAS_NOT_KEY,
                 entity.getResourceName(),
                 primaryKeys)));
@@ -168,7 +167,7 @@ public class InMemoryClientSyntax implements ClientSyntaxGenerator {
     public FunctionDefinitionNode getDeleteFunction(Entity entity) {
         StringBuilder filterKeys = new StringBuilder(BalSyntaxConstants.OPEN_BRACE);
         StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH + entity.getResourceName());
-        Function delete = CommonSyntax.generateDeleteFunction(entity, path, filterKeys);
+        Function delete = BalSyntaxUtils.generateDeleteFunction(entity, path, filterKeys);
         IfElse hasCheck = new IfElse(NodeParser.parseExpression(String.format(BalSyntaxConstants.HAS_NOT_KEY,
                 entity.getResourceName(), primaryKeys)));
         hasCheck.addIfStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.HAS_NOT_KEY_ERROR,
@@ -241,7 +240,7 @@ public class InMemoryClientSyntax implements ClientSyntaxGenerator {
             StringBuilder entityMetaData = new StringBuilder();
             entityMetaData.append(String.format(BalSyntaxConstants.METADATA_KEY_FIELDS_TEMPLATE,
                     getPrimaryKeys(entity, true)));
-            String resourceName = CommonSyntax.stripEscapeCharacter(entity.getResourceName());
+            String resourceName = BalSyntaxUtils.stripEscapeCharacter(entity.getResourceName());
             resourceName = resourceName.substring(0, 1).toUpperCase(Locale.ENGLISH) +
                     resourceName.substring(1).toLowerCase(Locale.ENGLISH);
             entityMetaData.append(String.format(BalSyntaxConstants.METADATA_QUERY_TEMPLATE, resourceName));
@@ -261,7 +260,7 @@ public class InMemoryClientSyntax implements ClientSyntaxGenerator {
                                 if (associationsMethods.length() != 0) {
                                     associationsMethods.append(BalSyntaxConstants.COMMA_WITH_NEWLINE);
                                 }
-                                String associateEntityName = CommonSyntax.stripEscapeCharacter(relation.
+                                String associateEntityName = BalSyntaxUtils.stripEscapeCharacter(relation.
                                         getAssocEntity().getResourceName());
                                 String associateEntityNameCamelCase = associateEntityName.substring(0, 1).
                                         toUpperCase(Locale.ENGLISH) + associateEntityName.substring(1).
@@ -301,7 +300,7 @@ public class InMemoryClientSyntax implements ClientSyntaxGenerator {
                 entityMetaData.append(queryOne);
             }
             mapBuilder.append(String.format(BalSyntaxConstants.METADATA_RECORD_ELEMENT_TEMPLATE,
-                    CommonSyntax.getStringWithUnderScore(entity.getEntityName()), entityMetaData));
+                    BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()), entityMetaData));
         }
         return String.format(BalSyntaxConstants.IN_MEMORY_METADATA_MAP_TEMPLATE, mapBuilder);
     }
@@ -313,9 +312,9 @@ public class InMemoryClientSyntax implements ClientSyntaxGenerator {
                 keyFields.append(BalSyntaxConstants.COMMA_SPACE);
             }
             if (addDoubleQuotes) {
-                keyFields.append("\"").append(CommonSyntax.stripEscapeCharacter(key.getFieldName())).append("\"");
+                keyFields.append("\"").append(BalSyntaxUtils.stripEscapeCharacter(key.getFieldName())).append("\"");
             } else {
-                keyFields.append(CommonSyntax.stripEscapeCharacter(key.getFieldName()));
+                keyFields.append(BalSyntaxUtils.stripEscapeCharacter(key.getFieldName()));
             }
         }
         return keyFields.toString();

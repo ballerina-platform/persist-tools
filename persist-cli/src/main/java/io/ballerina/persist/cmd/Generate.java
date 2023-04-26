@@ -21,9 +21,9 @@ import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.models.Module;
-import io.ballerina.persist.nodegenerator.BalSyntaxConstants;
-import io.ballerina.persist.nodegenerator.TomlSyntaxGenerator;
-import io.ballerina.persist.nodegenerator.syntax.SourceGenerator;
+import io.ballerina.persist.nodegenerator.SourceGenerator;
+import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
+import io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils;
 import io.ballerina.persist.utils.BalProjectUtils;
 import io.ballerina.projects.util.ProjectUtils;
 import picocli.CommandLine;
@@ -72,6 +72,14 @@ public class Generate implements BLauncherCmd {
 
     @Override
     public void execute() {
+        Path generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);
+        String moduleName;
+        String dataStore;
+        String packageNameInModuleName;
+        Module entityModule;
+        List<Path> schemaFilePaths;
+        Path schemaFilePath;
+        String packageName;
         if (helpFlag) {
             String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMMAND_IDENTIFIER);
             errStream.println(commandUsageInfo);
@@ -91,8 +99,6 @@ public class Generate implements BLauncherCmd {
                     "run `bal persist init` to initiate the project before generation");
             return;
         }
-
-        List<Path> schemaFilePaths;
         try (Stream<Path> stream = Files.list(persistDir)) {
             schemaFilePaths = stream.filter(file -> !Files.isDirectory(file))
                     .filter(file -> file.toString().toLowerCase(Locale.ENGLISH).endsWith(".bal"))
@@ -112,19 +118,13 @@ public class Generate implements BLauncherCmd {
                     "but contains many files.");
             return;
         }
-        Path schemaFilePath = schemaFilePaths.get(0);
-        String packageName;
+        schemaFilePath = schemaFilePaths.get(0);
         try {
-            packageName = TomlSyntaxGenerator.readPackageName(this.sourcePath);
+            packageName = TomlSyntaxUtils.readPackageName(this.sourcePath);
         } catch (BalException e) {
             errStream.println(e.getMessage());
             return;
         }
-        Path generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);
-        String moduleName = "";
-        String dataStore;
-        String packageNameInToml;
-        Module entityModule;
         try {
             BalProjectUtils.validateSchemaFile(schemaFilePath);
             Module module = BalProjectUtils.getEntities(schemaFilePath);
@@ -141,16 +141,16 @@ public class Generate implements BLauncherCmd {
         }
 
         try {
-            HashMap<String, String> ballerinaTomlConfig = TomlSyntaxGenerator.readBallerinaTomlConfig(
+            HashMap<String, String> ballerinaTomlConfig = TomlSyntaxUtils.readBallerinaTomlConfig(
                     Paths.get(this.sourcePath, "Ballerina.toml"));
-            packageNameInToml = ballerinaTomlConfig.get("module").trim();
-            if (!packageNameInToml.equals(packageName)) {
-                if (!packageNameInToml.startsWith(packageName + ".")) {
+            packageNameInModuleName = ballerinaTomlConfig.get("module").trim();
+            if (!packageNameInModuleName.equals(packageName)) {
+                if (!packageNameInModuleName.startsWith(packageName + ".")) {
                     errStream.println("ERROR: invalid module name : '" + ballerinaTomlConfig.get("module") + "' :\n" +
                             "module name should follow the template <package_name>.<module_name>");
                     return;
                 }
-                moduleName = packageNameInToml.split("\\.")[1];
+                moduleName = packageNameInModuleName.split("\\.")[1];
                 if (!ProjectUtils.validateModuleName(moduleName)) {
                     errStream.println("ERROR: invalid module name : '" + moduleName + "' :\n" +
                             "module name can only contain alphanumerics, underscores and periods");
@@ -166,8 +166,7 @@ public class Generate implements BLauncherCmd {
             if (!PersistToolsConstants.SUPPORTED_DB_PROVIDERS.contains(dataStore)) {
                 errStream.printf("ERROR: the persist layer supports one of data stores: %s" +
                                 ". but found '%s' datasource.%n",
-                        Arrays.toString(PersistToolsConstants.SUPPORTED_DB_PROVIDERS.toArray()),
-                        ballerinaTomlConfig.get("datastore").trim());
+                        Arrays.toString(PersistToolsConstants.SUPPORTED_DB_PROVIDERS.toArray()), dataStore);
                 return;
             }
         } catch (BalException e) {
@@ -184,31 +183,20 @@ public class Generate implements BLauncherCmd {
                 return;
             }
         }
-        SourceGenerator sourceCreator = new SourceGenerator(sourcePath, generatedSourceDirPath, packageNameInToml,
+        SourceGenerator sourceCreator = new SourceGenerator(sourcePath, generatedSourceDirPath, packageNameInModuleName,
                 entityModule);
         if (dataStore.equals(PersistToolsConstants.SupportDataSources.MYSQL_DB)) {
             try {
                 sourceCreator.createDbSources();
             } catch (BalException e) {
-                errStream.printf(e.getMessage());
-                return;
+                errStream.printf("ERROR: failed to generate source file/s for the database. %s%n", e.getMessage());
             }
-            errStream.printf("Generated Ballerina Client, Types, " + "and Scripts to %s directory.%n",
-                    generatedSourceDirPath);
-            errStream.println("You can now start using Ballerina Client in your code.");
-            errStream.println(System.lineSeparator() + "Next steps:");
-            errStream.printf("Set database configurations in Config.toml file to point to " +
-                    "your database. If your database has no tables yet, execute the scripts." +
-                    "sql file at %s directory, in your database to create tables.%n", generatedSourceDirPath);
         } else {
             try {
                 sourceCreator.createInMemorySources();
             } catch (BalException e) {
-                errStream.printf(e.getMessage());
-                return;
+                errStream.printf("ERROR: failed to generate source file/s for the in-memory. %s%n", e.getMessage());
             }
-            errStream.printf("Generated Ballerina Client, and Types to %s directory.%n", generatedSourceDirPath);
-            errStream.println("You can now start using Ballerina Client in your code.");
         }
     }
 

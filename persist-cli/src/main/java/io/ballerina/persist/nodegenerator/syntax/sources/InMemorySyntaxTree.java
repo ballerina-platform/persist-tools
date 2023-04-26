@@ -15,7 +15,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.ballerina.persist.nodegenerator.syntax;
+package io.ballerina.persist.nodegenerator.syntax.sources;
 
 import io.ballerina.compiler.syntax.tree.FunctionDefinitionNode;
 import io.ballerina.compiler.syntax.tree.ImportDeclarationNode;
@@ -23,7 +23,6 @@ import io.ballerina.compiler.syntax.tree.ModuleMemberDeclarationNode;
 import io.ballerina.compiler.syntax.tree.NodeList;
 import io.ballerina.compiler.syntax.tree.NodeParser;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
-import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.components.Client;
 import io.ballerina.persist.components.ClientResource;
@@ -33,9 +32,9 @@ import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.models.Relation;
-import io.ballerina.persist.nodegenerator.BalSyntaxConstants;
-import io.ballerina.persist.nodegenerator.syntax.client.InMemoryClientSyntax;
-import io.ballerina.persist.nodegenerator.syntax.objects.SyntaxTreeGenerator;
+import io.ballerina.persist.nodegenerator.syntax.clients.InMemoryClientSyntax;
+import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
+import io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -48,10 +47,10 @@ import java.util.Map;
  *
  * @since 0.3.1
  */
-public class InMemorySyntaxTree implements SyntaxTreeGenerator {
+public class InMemorySyntaxTree implements SyntaxTree {
 
     @Override
-    public SyntaxTree getClientSyntax(Module entityModule) throws BalException {
+    public io.ballerina.compiler.syntax.tree.SyntaxTree getClientSyntax(Module entityModule) throws BalException {
         InMemoryClientSyntax dbClientSyntax = new InMemoryClientSyntax(entityModule);
         NodeList<ImportDeclarationNode> imports = dbClientSyntax.getImports();
         NodeList<ModuleMemberDeclarationNode> moduleMembers = dbClientSyntax.getConstantVariables();
@@ -60,7 +59,7 @@ public class InMemorySyntaxTree implements SyntaxTreeGenerator {
                     String.format(BalSyntaxConstants.TABLE_PARAMETER_INIT_TEMPLATE, entity.getEntityName(),
                             getPrimaryKeys(entity, false), entity.getResourceName(), "table[]")));
         }
-        Client clientObject = dbClientSyntax.getClient(entityModule);
+        Client clientObject = dbClientSyntax.getClientObject(entityModule);
         Collection<Entity> entityArray = entityModule.getEntityMap().values();
         if (entityArray.size() == 0) {
             throw new BalException("data definition file() does not contain any entities.");
@@ -99,25 +98,25 @@ public class InMemorySyntaxTree implements SyntaxTreeGenerator {
         }
         clientObject.addMember(dbClientSyntax.getCloseFunction(), true);
         moduleMembers = moduleMembers.add(clientObject.getClassDefinitionNode());
-        return CommonSyntax.generateSyntaxTree(imports, moduleMembers);
+        return BalSyntaxUtils.generateSyntaxTree(imports, moduleMembers);
     }
 
     @Override
-    public SyntaxTree getDataTypesSyntax(Module entityModule) throws BalException {
+    public io.ballerina.compiler.syntax.tree.SyntaxTree getDataTypesSyntax(Module entityModule) throws BalException {
         Collection<Entity> entityArray = entityModule.getEntityMap().values();
         if (entityArray.size() != 0) {
-            return CommonSyntax.generateTypeSyntaxTree(entityModule);
+            return BalSyntaxUtils.generateTypeSyntaxTree(entityModule);
         }
         return null;
     }
 
     @Override
-    public SyntaxTree getDataStoreConfigSyntax() {
+    public io.ballerina.compiler.syntax.tree.SyntaxTree getDataStoreConfigSyntax() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public SyntaxTree getConfigTomlSyntax(String moduleName) {
+    public io.ballerina.compiler.syntax.tree.SyntaxTree getConfigTomlSyntax(String moduleName) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -135,7 +134,7 @@ public class InMemorySyntaxTree implements SyntaxTreeGenerator {
         StringBuilder queryOneBuilder = new StringBuilder(String.format(BalSyntaxConstants.QUERY_ONE_FROM_STATEMENT,
                 resourceName));
         queryOneBuilder.append(String.format(BalSyntaxConstants.QUERY_ONE_WHERE_CLAUSE,
-                CommonSyntax.getStringWithUnderScore(entity.getEntityName())));
+                BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName())));
         Function queryOne = new Function(String.format(BalSyntaxConstants.QUERY_ONE, nameInCamelCase),
                 SyntaxKind.OBJECT_METHOD_DEFINITION);
         queryOne.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PRIVATE });
@@ -213,9 +212,9 @@ public class InMemorySyntaxTree implements SyntaxTreeGenerator {
                 keyFields.append(BalSyntaxConstants.COMMA_SPACE);
             }
             if (addDoubleQuotes) {
-                keyFields.append("\"").append(CommonSyntax.stripEscapeCharacter(key.getFieldName())).append("\"");
+                keyFields.append("\"").append(BalSyntaxUtils.stripEscapeCharacter(key.getFieldName())).append("\"");
             } else {
-                keyFields.append(CommonSyntax.stripEscapeCharacter(key.getFieldName()));
+                keyFields.append(BalSyntaxUtils.stripEscapeCharacter(key.getFieldName()));
             }
         }
         return keyFields.toString();

@@ -33,7 +33,7 @@ import io.ballerina.compiler.syntax.tree.StatementNode;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
 import io.ballerina.compiler.syntax.tree.Token;
 import io.ballerina.compiler.syntax.tree.TypeDescriptorNode;
-import io.ballerina.persist.nodegenerator.SyntaxTokenConstants;
+import io.ballerina.persist.nodegenerator.syntax.constants.SyntaxTokenConstants;
 
 import java.util.ArrayList;
 import java.util.List;

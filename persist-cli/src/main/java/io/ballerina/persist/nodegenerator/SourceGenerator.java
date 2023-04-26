@@ -15,13 +15,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.ballerina.persist.nodegenerator.syntax;
+package io.ballerina.persist.nodegenerator;
 
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.models.Module;
-import io.ballerina.persist.nodegenerator.BalSyntaxConstants;
+import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
+import io.ballerina.persist.nodegenerator.syntax.sources.DbSyntaxTree;
+import io.ballerina.persist.nodegenerator.syntax.sources.InMemorySyntaxTree;
+import io.ballerina.persist.nodegenerator.syntax.utils.SqlScriptUtils;
 import io.ballerina.toml.syntax.tree.DocumentMemberDeclarationNode;
 import io.ballerina.toml.syntax.tree.DocumentNode;
 import io.ballerina.toml.syntax.tree.KeyValueNode;
@@ -53,6 +56,7 @@ public class SourceGenerator {
     private static final String persistTypesBal = "persist_types.bal";
     private static final String persistClientBal = "persist_client.bal";
     private static final String NEW_LINE = System.lineSeparator();
+    private static final PrintStream errStream = System.err;
     private final String sourcePath;
     private final String packageName;
     private final Path generatedSourceDirPath;
@@ -75,8 +79,15 @@ public class SourceGenerator {
             addClientFile(dbSyntaxTree.getClientSyntax(entityModule),
                     this.generatedSourceDirPath.resolve(persistClientBal).toAbsolutePath(), this.packageName);
             addSqlScriptFile(this.entityModule.getModuleName(),
-                    SqlScriptGenerator.generateSqlScript(this.entityModule.getEntityMap().values()),
+                    SqlScriptUtils.generateSqlScript(this.entityModule.getEntityMap().values()),
                     generatedSourceDirPath);
+            errStream.printf("Generated Ballerina Client, Types, " + "and Scripts to %s directory.%n",
+                    generatedSourceDirPath);
+            errStream.println("You can now start using Ballerina Client in your code.");
+            errStream.println(System.lineSeparator() + "Next steps:");
+            errStream.printf("Set database configurations in Config.toml file to point to " +
+                    "your database. If your database has no tables yet, execute the scripts." +
+                    "sql file at %s directory, in your database to create tables.%n", generatedSourceDirPath);
         } catch (BalException e) {
             throw new BalException(e.getMessage());
         }
@@ -90,6 +101,8 @@ public class SourceGenerator {
                     this.generatedSourceDirPath.resolve(persistTypesBal).toAbsolutePath(), this.packageName);
             addClientFile(inMemorySyntaxTree.getClientSyntax(this.entityModule),
                     this.generatedSourceDirPath.resolve(persistClientBal).toAbsolutePath(), this.packageName);
+            errStream.printf("Generated Ballerina Client, and Types to %s directory.%n", generatedSourceDirPath);
+            errStream.println("You can now start using Ballerina Client in your code.");
         } catch (BalException e) {
             throw new BalException(e.getMessage());
         }

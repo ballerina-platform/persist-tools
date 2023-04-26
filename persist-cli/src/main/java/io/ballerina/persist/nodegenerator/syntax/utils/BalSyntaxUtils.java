@@ -15,7 +15,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.ballerina.persist.nodegenerator.syntax;
+package io.ballerina.persist.nodegenerator.syntax.utils;
 
 import io.ballerina.compiler.syntax.tree.AbstractNodeFactory;
 import io.ballerina.compiler.syntax.tree.ArrayDimensionNode;
@@ -42,8 +42,8 @@ import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.models.Relation;
-import io.ballerina.persist.nodegenerator.BalSyntaxConstants;
-import io.ballerina.persist.nodegenerator.SyntaxTokenConstants;
+import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
+import io.ballerina.persist.nodegenerator.syntax.constants.SyntaxTokenConstants;
 import io.ballerina.tools.text.TextDocument;
 import io.ballerina.tools.text.TextDocuments;
 
@@ -56,7 +56,7 @@ import java.util.Locale;
  *
  * @since 0.3.1
  */
-public class CommonSyntax {
+public class BalSyntaxUtils {
 
     public static NodeList<ImportDeclarationNode> generateImport(Module entityModule) {
         NodeList<ImportDeclarationNode> imports = AbstractNodeFactory.createEmptyNodeList();

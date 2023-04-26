@@ -15,7 +15,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.ballerina.persist.nodegenerator.syntax;
+package io.ballerina.persist.nodegenerator.syntax.sources;
 
 import io.ballerina.compiler.syntax.tree.AbstractNodeFactory;
 import io.ballerina.compiler.syntax.tree.IdentifierToken;
@@ -30,7 +30,6 @@ import io.ballerina.compiler.syntax.tree.NodeList;
 import io.ballerina.compiler.syntax.tree.NodeParser;
 import io.ballerina.compiler.syntax.tree.SeparatedNodeList;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
-import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.compiler.syntax.tree.Token;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
@@ -38,10 +37,10 @@ import io.ballerina.persist.components.Client;
 import io.ballerina.persist.components.ClientResource;
 import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.Module;
-import io.ballerina.persist.nodegenerator.BalSyntaxConstants;
-import io.ballerina.persist.nodegenerator.SyntaxTokenConstants;
-import io.ballerina.persist.nodegenerator.syntax.client.DbClientSyntax;
-import io.ballerina.persist.nodegenerator.syntax.objects.SyntaxTreeGenerator;
+import io.ballerina.persist.nodegenerator.syntax.clients.DbClientSyntax;
+import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
+import io.ballerina.persist.nodegenerator.syntax.constants.SyntaxTokenConstants;
+import io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils;
 import io.ballerina.persist.utils.BalProjectUtils;
 import io.ballerina.toml.syntax.tree.DocumentMemberDeclarationNode;
 import io.ballerina.toml.syntax.tree.DocumentNode;
@@ -58,15 +57,15 @@ import java.util.List;
  *
  * @since 0.3.1
  */
-public class DbSyntaxTree implements SyntaxTreeGenerator {
+public class DbSyntaxTree implements SyntaxTree {
 
     @Override
-    public SyntaxTree getClientSyntax(Module entityModule) throws BalException {
+    public io.ballerina.compiler.syntax.tree.SyntaxTree getClientSyntax(Module entityModule) throws BalException {
         DbClientSyntax dbClientSyntax = new DbClientSyntax(entityModule);
         NodeList<ImportDeclarationNode> imports = dbClientSyntax.getImports();
         NodeList<ModuleMemberDeclarationNode> moduleMembers = dbClientSyntax.getConstantVariables();
 
-        Client clientObject = dbClientSyntax.getClient(entityModule);
+        Client clientObject = dbClientSyntax.getClientObject(entityModule);
         Collection<Entity> entityArray = entityModule.getEntityMap().values();
         if (entityArray.size() == 0) {
             throw new BalException("data definition file() does not contain any entities.");
@@ -89,20 +88,20 @@ public class DbSyntaxTree implements SyntaxTreeGenerator {
         });
         clientObject.addMember(dbClientSyntax.getCloseFunction(), true);
         moduleMembers = moduleMembers.add(clientObject.getClassDefinitionNode());
-        return CommonSyntax.generateSyntaxTree(imports, moduleMembers);
+        return BalSyntaxUtils.generateSyntaxTree(imports, moduleMembers);
     }
 
     @Override
-    public SyntaxTree getDataTypesSyntax(Module entityModule) {
+    public io.ballerina.compiler.syntax.tree.SyntaxTree getDataTypesSyntax(Module entityModule) {
         Collection<Entity> entityArray = entityModule.getEntityMap().values();
         if (entityArray.size() != 0) {
-            return CommonSyntax.generateTypeSyntaxTree(entityModule);
+            return BalSyntaxUtils.generateTypeSyntaxTree(entityModule);
         }
         return null;
     }
 
     @Override
-    public SyntaxTree getDataStoreConfigSyntax() {
+    public io.ballerina.compiler.syntax.tree.SyntaxTree getDataStoreConfigSyntax() {
         NodeList<ImportDeclarationNode> imports = AbstractNodeFactory.createEmptyNodeList();
         NodeList<ModuleMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
 
@@ -126,12 +125,13 @@ public class DbSyntaxTree implements SyntaxTreeGenerator {
         Token eofToken = AbstractNodeFactory.createIdentifierToken(BalSyntaxConstants.EMPTY_STRING);
         ModulePartNode modulePartNode = NodeFactory.createModulePartNode(imports, moduleMembers, eofToken);
         TextDocument textDocument = TextDocuments.from(BalSyntaxConstants.EMPTY_STRING);
-        SyntaxTree balTree = SyntaxTree.from(textDocument);
+        io.ballerina.compiler.syntax.tree.SyntaxTree balTree =
+                io.ballerina.compiler.syntax.tree.SyntaxTree.from(textDocument);
         return balTree.modifyWith(modulePartNode);
     }
 
     @Override
-    public SyntaxTree getConfigTomlSyntax(String moduleName) {
+    public io.ballerina.compiler.syntax.tree.SyntaxTree getConfigTomlSyntax(String moduleName) {
         io.ballerina.toml.syntax.tree.NodeList<DocumentMemberDeclarationNode> moduleMembers =
                 io.ballerina.toml.syntax.tree.AbstractNodeFactory.createEmptyNodeList();
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(moduleName, null));
@@ -142,7 +142,7 @@ public class DbSyntaxTree implements SyntaxTreeGenerator {
         DocumentNode documentNode = io.ballerina.toml.syntax.tree.NodeFactory.createDocumentNode(
                 moduleMembers, eofToken);
         TextDocument textDocument = TextDocuments.from(documentNode.toSourceCode());
-        return SyntaxTree.from(textDocument);
+        return io.ballerina.compiler.syntax.tree.SyntaxTree.from(textDocument);
     }
 
     private static ImportDeclarationNode getImportDeclarationNodeWithAutogeneratedComment(

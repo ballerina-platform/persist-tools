@@ -16,12 +16,13 @@
  *  under the License.
  */
 
-package io.ballerina.persist.nodegenerator;
+package io.ballerina.persist.nodegenerator.syntax.utils;
 
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.configuration.DatabaseConfiguration;
 import io.ballerina.persist.configuration.PersistConfiguration;
+import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
 import io.ballerina.persist.utils.BalProjectUtils;
 import io.ballerina.projects.util.ProjectConstants;
 import io.ballerina.toml.syntax.tree.AbstractNodeFactory;
@@ -52,11 +53,11 @@ import java.util.Properties;
  *
  * @since 0.1.0
  */
-public class TomlSyntaxGenerator {
+public class TomlSyntaxUtils {
 
     public static final String REGEX_TOML_TABLE_NAME_SPLITTER = "\\.";
 
-    private TomlSyntaxGenerator() {
+    private TomlSyntaxUtils() {
     }
 
     public static PersistConfiguration readDatabaseConfigurations(Path configPath)

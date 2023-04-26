@@ -15,7 +15,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.ballerina.persist.nodegenerator.syntax;
+package io.ballerina.persist.nodegenerator.syntax.utils;
 
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
@@ -38,14 +38,14 @@ import java.util.stream.Collectors;
  *
  * @since 0.1.0
  */
-public class SqlScriptGenerator {
+public class SqlScriptUtils {
 
     private static final String NEW_LINE = System.lineSeparator();
     private static final String TAB = "\t";
     private static final String COMMA_WITH_SPACE = ", ";
     private static final String PRIMARY_KEY_START_SCRIPT = NEW_LINE + TAB + "PRIMARY KEY(";
 
-    private SqlScriptGenerator(){}
+    private SqlScriptUtils(){}
 
     public static String[] generateSqlScript(Collection<Entity> entities) throws BalException {
         HashMap<String, List<String>> referenceTables = new HashMap<>();
@@ -155,7 +155,7 @@ public class SqlScriptGenerator {
         }
         relationScripts.append(MessageFormat.format("{0}{1}CONSTRAINT FK_{2} FOREIGN KEY({3}) " +
                         "REFERENCES {4}({5}),", NEW_LINE, TAB,
-                CommonSyntax.getStringWithUnderScore(entityField.getFieldName()).toUpperCase(Locale.ENGLISH),
+                BalSyntaxUtils.getStringWithUnderScore(entityField.getFieldName()).toUpperCase(Locale.ENGLISH),
                 foreignKey.toString(),
                 addBackticks(removeSingleQuote(assocEntity.getEntityName())), referenceFieldName));
         updateReferenceTable(tableName, assocEntity.getEntityName(), referenceTables);
