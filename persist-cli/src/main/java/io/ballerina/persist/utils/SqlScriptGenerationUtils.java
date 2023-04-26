@@ -258,7 +258,7 @@ public class SqlScriptGenerationUtils {
             }
         } else {
             if (PersistToolsConstants.BallerinaTypes.BYTE.equals(field.getFieldType())) {
-                return PersistToolsConstants.SqlTypes.BINARY;
+                return PersistToolsConstants.SqlTypes.LONG_BLOB;
             }
             throw new BalException("couldn't find equivalent SQL type for the field type: " + fieldType);
         }
