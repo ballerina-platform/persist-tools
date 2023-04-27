@@ -36,7 +36,6 @@ import org.ballerinalang.formatter.core.Formatter;
 import org.ballerinalang.formatter.core.FormatterException;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -56,7 +55,6 @@ public class SourceGenerator {
     private static final String persistTypesBal = "persist_types.bal";
     private static final String persistClientBal = "persist_client.bal";
     private static final String NEW_LINE = System.lineSeparator();
-    private static final PrintStream errStream = System.err;
     private final String sourcePath;
     private final String moduleNameWithPackageName;
     private final Path generatedSourceDirPath;
@@ -109,7 +107,7 @@ public class SourceGenerator {
         Path databaseConfigPath = generatedSourceDirPath.resolve(BalSyntaxConstants.PATH_CONFIGURATION_BAL_FILE);
         if (!Files.exists(databaseConfigPath)) {
             try {
-                writeOutputFile(syntaxTree.toSourceCode(), databaseConfigPath.toAbsolutePath());
+                writeOutputFile(Formatter.format(syntaxTree.toSourceCode()), databaseConfigPath.toAbsolutePath());
             } catch (Exception e) {
                 throw new BalException("failed to generate the database_configurations.bal file. "
                         + e.getMessage());
