@@ -15,7 +15,7 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-package io.ballerina.persist.nodegenerator;
+package io.ballerina.persist.nodegenerator.syntax.constants;
 
 /**
  * Class encapsulating all the syntax/code lines related to generation scripts.

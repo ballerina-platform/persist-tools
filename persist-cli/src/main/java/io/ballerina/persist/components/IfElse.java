@@ -24,7 +24,7 @@ import io.ballerina.compiler.syntax.tree.Node;
 import io.ballerina.compiler.syntax.tree.NodeFactory;
 import io.ballerina.compiler.syntax.tree.NodeList;
 import io.ballerina.compiler.syntax.tree.StatementNode;
-import io.ballerina.persist.nodegenerator.SyntaxTokenConstants;
+import io.ballerina.persist.nodegenerator.syntax.constants.SyntaxTokenConstants;
 
 /**
  * Class representing IfElseStatementNode.

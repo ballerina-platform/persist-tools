@@ -33,7 +33,7 @@ import io.ballerina.compiler.syntax.tree.SimpleNameReferenceNode;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
 import io.ballerina.compiler.syntax.tree.TypeDescriptorNode;
 import io.ballerina.compiler.syntax.tree.UnionTypeDescriptorNode;
-import io.ballerina.persist.nodegenerator.SyntaxTokenConstants;
+import io.ballerina.persist.nodegenerator.syntax.constants.SyntaxTokenConstants;
 
 /**
  * Class representing different types of TypeDescriptorNodes.

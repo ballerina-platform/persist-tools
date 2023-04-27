@@ -16,7 +16,7 @@
  *  under the License.
  */
 
-package io.ballerina.persist.nodegenerator;
+package io.ballerina.persist.nodegenerator.syntax.constants;
 
 import io.ballerina.compiler.syntax.tree.AbstractNodeFactory;
 import io.ballerina.compiler.syntax.tree.NodeFactory;

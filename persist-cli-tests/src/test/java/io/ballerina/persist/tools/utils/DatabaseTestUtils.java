@@ -20,7 +20,7 @@ package io.ballerina.persist.tools.utils;
 
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.configuration.PersistConfiguration;
-import io.ballerina.persist.nodegenerator.TomlSyntaxGenerator;
+import io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils;
 import org.testng.Assert;
 
 import java.io.PrintStream;
@@ -54,7 +54,7 @@ public class DatabaseTestUtils {
         if (osName.toLowerCase(Locale.getDefault()).contains("windows")) {
             return;
         }
-        PersistConfiguration configuration = TomlSyntaxGenerator.readDatabaseConfigurations(
+        PersistConfiguration configuration = TomlSyntaxUtils.readDatabaseConfigurations(
                 Paths.get(GENERATED_SOURCES_DIRECTORY, packageName, BALLERINA_TOML));
         String username = configuration.getDbConfig().getUsername();
         String password = configuration.getDbConfig().getPassword();
@@ -93,7 +93,7 @@ public class DatabaseTestUtils {
         if (osName.toLowerCase(Locale.getDefault()).contains("windows")) {
             return;
         }
-        PersistConfiguration configuration = TomlSyntaxGenerator.readDatabaseConfigurations(
+        PersistConfiguration configuration = TomlSyntaxUtils.readDatabaseConfigurations(
                 Paths.get(GENERATED_SOURCES_DIRECTORY, packageName, BALLERINA_TOML));
         String username = configuration.getDbConfig().getUsername();
         String password = configuration.getDbConfig().getPassword();
