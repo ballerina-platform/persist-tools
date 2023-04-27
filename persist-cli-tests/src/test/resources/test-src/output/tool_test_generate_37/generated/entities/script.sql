@@ -56,7 +56,7 @@ CREATE TABLE `Profile` (
 	`isAdult` BOOLEAN NOT NULL,
 	`salary` DOUBLE NOT NULL,
 	`age` DECIMAL(65,30) NOT NULL,
-	`isRegistered` BINARY NOT NULL,
+	`isRegistered` LONGBLOB NOT NULL,
 	`ownerId` INT UNIQUE NOT NULL,
 	CONSTRAINT FK_OWNER FOREIGN KEY(`ownerId`) REFERENCES `User`(`id`),
 	PRIMARY KEY(`id`)

@@ -94,7 +94,7 @@ public class PersistToolsConstants {
         public static final String TIME = "TIME";
         public static final String TIME_STAMP = "TIMESTAMP";
         public static final String DATE_TIME = "DATETIME";
-        public static final String BINARY = "BINARY";
+        public static final String LONG_BLOB = "LONGBLOB";
     }
 
     /**
