@@ -18,49 +18,28 @@
 package io.ballerina.persist.cmd;
 
 import io.ballerina.cli.BLauncherCmd;
-import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
-import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.Module;
-import io.ballerina.persist.nodegenerator.BalSyntaxConstants;
-import io.ballerina.persist.nodegenerator.BalSyntaxGenerator;
-import io.ballerina.persist.nodegenerator.TomlSyntaxGenerator;
+import io.ballerina.persist.nodegenerator.SourceGenerator;
+import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
+import io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils;
 import io.ballerina.persist.utils.BalProjectUtils;
-import io.ballerina.persist.utils.SqlScriptGenerationUtils;
 import io.ballerina.projects.util.ProjectUtils;
-import org.ballerinalang.formatter.core.Formatter;
-import org.ballerinalang.formatter.core.FormatterException;
 import picocli.CommandLine;
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static io.ballerina.persist.PersistToolsConstants.CONFIG_SCRIPT_FILE;
-import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
-import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_DB_PROVIDERS;
-import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.PATH_CONFIGURATION_BAL_FILE;
-import static io.ballerina.persist.nodegenerator.BalSyntaxGenerator.generateDbClientSyntaxTree;
-import static io.ballerina.persist.nodegenerator.BalSyntaxGenerator.generateInMemoryClientSyntaxTree;
-import static io.ballerina.persist.nodegenerator.TomlSyntaxGenerator.readPackageName;
-import static io.ballerina.persist.nodegenerator.TomlSyntaxGenerator.readPersistConfigurations;
-import static io.ballerina.persist.utils.BalProjectUtils.validateBallerinaProject;
-import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
-
 
 /**
  * This Class implements the `persist generate` command in Ballerina persist-tool.
@@ -93,6 +72,13 @@ public class Generate implements BLauncherCmd {
 
     @Override
     public void execute() {
+        Path generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);
+        String dataStore;
+        Module entityModule;
+        List<Path> schemaFilePaths;
+        Path schemaFilePath;
+        String packageName;
+        String moduleNameWithPackageName;
         if (helpFlag) {
             String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMMAND_IDENTIFIER);
             errStream.println(commandUsageInfo);
@@ -100,20 +86,18 @@ public class Generate implements BLauncherCmd {
         }
         Path projectPath = Paths.get(sourcePath);
         try {
-            validateBallerinaProject(projectPath);
+            BalProjectUtils.validateBallerinaProject(projectPath);
         } catch (BalException e) {
             errStream.println(e.getMessage());
             return;
         }
 
-        Path persistDir = Paths.get(this.sourcePath, PERSIST_DIRECTORY);
-        if (!Files.isDirectory(persistDir, NOFOLLOW_LINKS)) {
+        Path persistDir = Paths.get(this.sourcePath, PersistToolsConstants.PERSIST_DIRECTORY);
+        if (!Files.isDirectory(persistDir, LinkOption.NOFOLLOW_LINKS)) {
             errStream.println("ERROR: the persist directory inside the Ballerina project does not exist. " +
                     "run `bal persist init` to initiate the project before generation");
             return;
         }
-
-        List<Path> schemaFilePaths;
         try (Stream<Path> stream = Files.list(persistDir)) {
             schemaFilePaths = stream.filter(file -> !Files.isDirectory(file))
                     .filter(file -> file.toString().toLowerCase(Locale.ENGLISH).endsWith(".bal"))
@@ -133,210 +117,95 @@ public class Generate implements BLauncherCmd {
                     "but contains many files.");
             return;
         }
-
-        String packageName;
+        schemaFilePath = schemaFilePaths.get(0);
         try {
-            packageName = readPackageName(this.sourcePath);
+            packageName = TomlSyntaxUtils.readPackageName(this.sourcePath);
         } catch (BalException e) {
             errStream.println(e.getMessage());
             return;
         }
-        schemaFilePaths.forEach(file -> {
-            Module entityModule;
-            Path generatedSourceDirPath;
-            String submodule = "";
-            String dataStore;
-            try {
-                BalProjectUtils.validateSchemaFile(file);
-                entityModule = BalProjectUtils.getEntities(file);
-                generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);
-                HashMap<String, String> persistConfig = readPersistConfigurations(
-                        Paths.get(this.sourcePath, "Ballerina.toml"));
-                if (!persistConfig.get("module").equals(packageName)) {
-                    if (!persistConfig.get("module").startsWith(packageName + ".")) {
-                        errStream.println("ERROR: invalid module name : '" + persistConfig.get("module") + "' :\n" +
-                                "module name should follow the template <package_name>.<module_name>");
-                        return;
-                    }
-                    submodule = persistConfig.get("module").split("\\.")[1];
-                    if (!ProjectUtils.validateModuleName(submodule)) {
-                        errStream.println("ERROR: invalid module name : '" + submodule + "' :\n" +
-                                "module name can only contain alphanumerics, underscores and periods");
-                        return;
-                    } else if (!ProjectUtils.validateNameLength(submodule)) {
-                        errStream.println("ERROR: invalid module name : '" + submodule + "' :\n" +
-                                "maximum length of module name is 256 characters");
-                        return;
-                    }
-                    generatedSourceDirPath = generatedSourceDirPath.resolve(submodule);
-                }
-                dataStore = persistConfig.get("datastore").trim();
-                if (!SUPPORTED_DB_PROVIDERS.contains(dataStore)) {
-                    errStream.printf("ERROR: the persist layer supports one of data stores: %s" +
-                            ". but found '%s' datasource.%n", Arrays.toString(SUPPORTED_DB_PROVIDERS.toArray()),
-                            persistConfig.get("datastore").trim());
-                    return;
-                }
-                if (!Files.exists(generatedSourceDirPath)) {
-                    try {
-                        Files.createDirectories(generatedSourceDirPath.toAbsolutePath());
-                    } catch (IOException e) {
-                        errStream.println("ERROR: failed to create the generated directory. " + e.getMessage());
-                        return;
-                    }
-                }
-                if (dataStore.equals(PersistToolsConstants.SupportDataSources.MYSQL_DB)) {
-                    Path databaseConfigPath = generatedSourceDirPath.resolve(PATH_CONFIGURATION_BAL_FILE);
-                    if (!Files.exists(databaseConfigPath)) {
-                        try {
-                            generateConfigurationBalFile(generatedSourceDirPath);
-                        } catch (BalException e) {
-                            errStream.println("ERROR: failed to generate the database_configurations.bal file. "
-                                    + e.getMessage());
-                            return;
-                        }
-                    }
-
-                    if (!Files.exists(Paths.get(this.sourcePath, CONFIG_SCRIPT_FILE).toAbsolutePath())) {
-                        createConfigTomlFile(persistConfig.get("module").trim());
-                    } else {
-                        updateConfigTomlFile(persistConfig.get("module").trim());
-                    }
-                }
-
-                if (entityModule.getEntityMap().isEmpty()) {
-                    errStream.printf("ERROR: the model definition file(%s) does not contain any entity definition.%n",
-                            file.getFileName());
-                    return;
-                }
-                generateDataTypes(entityModule, generatedSourceDirPath);
-                generateClientBalFile(entityModule, generatedSourceDirPath, dataStore);
-
-            } catch (BalException e) {
-                errStream.printf("ERROR: failed to generate types and client for the definition file(%s). %s%n",
-                        file.getFileName(), e.getMessage());
+        try {
+            BalProjectUtils.validateSchemaFile(schemaFilePath);
+            Module module = BalProjectUtils.getEntities(schemaFilePath);
+            if (module.getEntityMap().isEmpty()) {
+                errStream.printf("ERROR: the model definition file(%s) does not contain any entity definition.%n",
+                        schemaFilePath.getFileName());
                 return;
             }
-            if (dataStore.equals(PersistToolsConstants.SupportDataSources.MYSQL_DB)) {
-                try {
-                    ArrayList<Entity> entityArray = new ArrayList<>(entityModule.getEntityMap().values());
-                    String[] sqlScripts = SqlScriptGenerationUtils.generateSqlScript(entityArray);
-                    SqlScriptGenerationUtils.writeScriptFile(entityModule.getModuleName(), sqlScripts,
-                            generatedSourceDirPath);
-                } catch (BalException e) {
-                    errStream.printf("ERROR: failed to generate SQL schema for the definition file(%s). %s%n",
-                            file.getFileName(), e.getMessage());
+            entityModule = module;
+        } catch (BalException e) {
+            errStream.printf("ERROR: failed to generate types and client for the definition file(%s). %s%n",
+                    schemaFilePath.getFileName(), e.getMessage());
+            return;
+        }
+        try {
+            HashMap<String, String> ballerinaTomlConfig = TomlSyntaxUtils.readBallerinaTomlConfig(
+                    Paths.get(this.sourcePath, "Ballerina.toml"));
+            moduleNameWithPackageName = ballerinaTomlConfig.get("module").trim();
+            if (!moduleNameWithPackageName.equals(packageName)) {
+                if (!moduleNameWithPackageName.startsWith(packageName + ".")) {
+                    errStream.println("ERROR: invalid module name : '" + ballerinaTomlConfig.get("module") + "' :\n" +
+                            "module name should follow the template <package_name>.<module_name>");
+                    return;
                 }
+                String moduleName = moduleNameWithPackageName.split("\\.")[1];
+                if (!ProjectUtils.validateModuleName(moduleName)) {
+                    errStream.println("ERROR: invalid module name : '" + moduleName + "' :\n" +
+                            "module name can only contain alphanumerics, underscores and periods");
+                    return;
+                } else if (!ProjectUtils.validateNameLength(moduleName)) {
+                    errStream.println("ERROR: invalid module name : '" + moduleName + "' :\n" +
+                            "maximum length of module name is 256 characters");
+                    return;
+                }
+                generatedSourceDirPath = generatedSourceDirPath.resolve(moduleName);
             }
-
-            String modulePath = submodule.equals("") ? "./generated" : "./generated/" + submodule;
-
-            errStream.printf("Generated Ballerina Client, Types, " +
-                    "and Scripts to %s directory.%n", modulePath);
-            errStream.println("You can now start using Ballerina Client in your code.");
-            errStream.println(System.lineSeparator() + "Next steps:");
-
-            errStream.printf("Set database configurations in Config.toml file to point to " +
-                    "your database. If your database has no tables yet, execute the scripts." +
-                    "sql file at %s directory, in your database to create tables.%n", modulePath);
-
-        });
-
-    }
-
-    private void generateConfigurationBalFile(Path generatedSourcePath) throws BalException {
-        try {
-            SyntaxTree configTree = BalSyntaxGenerator.generateDatabaseConfigSyntaxTree();
-            writeOutputSyntaxTree(configTree, generatedSourcePath.resolve(PATH_CONFIGURATION_BAL_FILE)
-                    .toAbsolutePath().toString());
-        } catch (Exception e) {
-            throw new BalException(e.getMessage());
+            dataStore = ballerinaTomlConfig.get("datastore").trim();
+            if (!PersistToolsConstants.SUPPORTED_DB_PROVIDERS.contains(dataStore)) {
+                errStream.printf("ERROR: the persist layer supports one of data stores: %s" +
+                                ". but found '%s' datasource.%n",
+                        Arrays.toString(PersistToolsConstants.SUPPORTED_DB_PROVIDERS.toArray()), dataStore);
+                return;
+            }
+        } catch (BalException e) {
+            errStream.printf("ERROR: failed to generate types and client for the definition file(%s). %s%n",
+                    "Ballerina.toml", e.getMessage());
+            return;
         }
-    }
 
-    private static void generateClientBalFile(Module entityModule, Path outputPath, String dataStore)
-            throws BalException {
-        String clientPath = outputPath.resolve("persist_client.bal").toAbsolutePath().toString();
-        SyntaxTree balTree;
-        if (dataStore.equals(PersistToolsConstants.SupportDataSources.MYSQL_DB)) {
-            balTree = generateDbClientSyntaxTree(entityModule);
-        } else {
-            balTree = generateInMemoryClientSyntaxTree(entityModule);
-        }
-        try {
-            writeOutputSyntaxTree(balTree, clientPath);
-        } catch (IOException | FormatterException e) {
-            throw new BalException(String.format("could not write the client code for the `%s` data model " +
-                    "to the generated_types.bal file.", entityModule.getModuleName()) + e.getMessage());
-        }
-    }
-
-    public static void generateDataTypes(Module entityModule, Path outputPath) throws BalException {
-        Collection<Entity> entityArray = entityModule.getEntityMap().values();
-        if (entityArray.size() != 0) {
-            generateTypeBalFile(entityModule, outputPath);
-        }
-    }
-
-    private static void generateTypeBalFile(Module entityModule, Path outputPath) throws BalException {
-        SyntaxTree generatedTypes =  BalSyntaxGenerator.generateTypeSyntaxTree(entityModule);
-        String generatedTypesPath = outputPath.resolve("persist_types.bal").toAbsolutePath().toString();
-        try {
-            writeOutputSyntaxTree(generatedTypes, generatedTypesPath);
-        } catch (IOException | FormatterException e) {
-            throw new BalException(String.format(
-                    "could not write the types for the %s data model to the generated_types.bal file. ",
-                    entityModule.getModuleName()) + e.getMessage());
-        }
-    }
-
-    private void createConfigTomlFile(String moduleName) throws BalException {
-        try {
-            Path configPath = Paths.get(this.sourcePath, CONFIG_SCRIPT_FILE).toAbsolutePath();
-            String syntaxTree = TomlSyntaxGenerator.createConfigToml(moduleName);
-            writeOutputFile(syntaxTree, configPath.toString());
-        } catch (Exception e) {
-            throw new BalException("could not add Config.toml file inside the Ballerina project. " +
-                    e.getMessage());
-        }
-    }
-
-    private void writeOutputFile(String syntaxTree, String outPath) throws Exception {
-        String content;
-        Path pathToFile = Paths.get(outPath);
-        Path parentDirectory = pathToFile.getParent();
-        if (Objects.nonNull(parentDirectory)) {
+        if (!Files.exists(generatedSourceDirPath)) {
             try {
-                Files.createDirectories(parentDirectory);
+                Files.createDirectories(generatedSourceDirPath.toAbsolutePath());
             } catch (IOException e) {
-                throw new BalException(
-                        String.format("could not create the parent directories of output path %s. %s",
-                                parentDirectory, e.getMessage()));
-            }
-            content = syntaxTree;
-            try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8)) {
-                writer.println(content);
+                errStream.println("ERROR: failed to create the generated directory. " + e.getMessage());
+                return;
             }
         }
-    }
-
-    private void updateConfigTomlFile(String moduleName) throws BalException {
-        try {
-            Path configPath = Paths.get(this.sourcePath, CONFIG_SCRIPT_FILE).toAbsolutePath();
-            String syntaxTree = TomlSyntaxGenerator.updateConfigToml(configPath, moduleName);
-            writeOutputFile(syntaxTree, configPath.toString());
-        } catch (Exception e) {
-            throw new BalException("could not update Config.toml file inside the Ballerina project. " +
-                    e.getMessage());
-        }
-    }
-
-    private static void writeOutputSyntaxTree(SyntaxTree syntaxTree, String outPath) throws IOException,
-            FormatterException {
-        String content;
-        content = Formatter.format(syntaxTree.toSourceCode());
-        try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8)) {
-            writer.println(content);
+        SourceGenerator sourceCreator = new SourceGenerator(sourcePath, generatedSourceDirPath,
+                moduleNameWithPackageName, entityModule);
+        if (dataStore.equals(PersistToolsConstants.SupportDataSources.MYSQL_DB)) {
+            try {
+                sourceCreator.createDbSources();
+                errStream.printf("Generated Ballerina Client, Types, " + "and Scripts to %s directory.%n",
+                        generatedSourceDirPath);
+                errStream.println("You can now start using Ballerina Client in your code.");
+                errStream.println(System.lineSeparator() + "Next steps:");
+                errStream.printf("Set database configurations in Config.toml file to point to " +
+                        "your database. If your database has no tables yet, execute the scripts." +
+                        "sql file at %s directory, in your database to create tables.%n", generatedSourceDirPath);
+            } catch (BalException e) {
+                errStream.printf("ERROR: failed to generate/update source file/s for the database. %s%n",
+                        e.getMessage());
+            }
+        } else {
+            try {
+                sourceCreator.createInMemorySources();
+                errStream.printf("Generated Ballerina Client, and Types to %s directory.%n", generatedSourceDirPath);
+                errStream.println("You can now start using Ballerina Client in your code.");
+            } catch (BalException e) {
+                errStream.printf("ERROR: failed to generate/update source file/s for the in-memory. %s%n",
+                        e.getMessage());
+            }
         }
     }
 

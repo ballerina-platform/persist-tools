@@ -18,7 +18,7 @@
 
 package io.ballerina.persist.models;
 
-import static io.ballerina.persist.nodegenerator.BalSyntaxConstants.COLON;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.COLON;
 
 /**
  * Client Entity fieldMetaData class.
