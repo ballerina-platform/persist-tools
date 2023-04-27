@@ -17,10 +17,13 @@
  */
 package io.ballerina.persist.nodegenerator.syntax.clients;
 
+import io.ballerina.compiler.syntax.tree.AbstractNodeFactory;
 import io.ballerina.compiler.syntax.tree.FunctionDefinitionNode;
 import io.ballerina.compiler.syntax.tree.ImportDeclarationNode;
+import io.ballerina.compiler.syntax.tree.ImportPrefixNode;
 import io.ballerina.compiler.syntax.tree.ModuleMemberDeclarationNode;
 import io.ballerina.compiler.syntax.tree.Node;
+import io.ballerina.compiler.syntax.tree.NodeFactory;
 import io.ballerina.compiler.syntax.tree.NodeList;
 import io.ballerina.compiler.syntax.tree.NodeParser;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
@@ -34,6 +37,7 @@ import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.models.Relation;
 import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
+import io.ballerina.persist.nodegenerator.syntax.constants.SyntaxTokenConstants;
 import io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils;
 
 import java.util.List;
@@ -55,6 +59,10 @@ public class DbClientSyntax implements ClientSyntax {
         NodeList<ImportDeclarationNode> imports = BalSyntaxUtils.generateImport(entityModule);
         imports = imports.add(BalSyntaxUtils.getImportDeclarationNode(BalSyntaxConstants.KEYWORD_BALLERINAX,
                 PersistToolsConstants.SupportDataSources.MYSQL_DB, null));
+        ImportPrefixNode prefix = NodeFactory.createImportPrefixNode(SyntaxTokenConstants.SYNTAX_TREE_AS,
+                AbstractNodeFactory.createToken(SyntaxKind.UNDERSCORE_KEYWORD));
+        imports = imports.add(BalSyntaxUtils.getImportDeclarationNode(BalSyntaxConstants.KEYWORD_BALLERINAX,
+                BalSyntaxConstants.MYSQL_DRIVER, prefix));
         return imports;
     }
 

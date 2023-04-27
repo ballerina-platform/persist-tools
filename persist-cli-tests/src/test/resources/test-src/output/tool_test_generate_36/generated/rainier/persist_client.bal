@@ -6,6 +6,7 @@
 import ballerina/persist;
 import ballerina/jballerina.java;
 import ballerinax/mysql;
+import ballerinax/mysql.driver as _;
 
 const 'BUILDING = "'buildings";
 const 'DEPARTMENT = "'departments";
@@ -122,7 +123,7 @@ public client class Client {
     };
 
     public function init() returns persist:Error? {
-        mysql:Client|error dbClient = new (host = host, user = user, password = password, database = database, port = port);
+        mysql:Client|error dbClient = new (host = host, user = user, password = password, database = database, port = port, options = connectionOptions);
         if dbClient is error {
             return <persist:Error>error(dbClient.message());
         }

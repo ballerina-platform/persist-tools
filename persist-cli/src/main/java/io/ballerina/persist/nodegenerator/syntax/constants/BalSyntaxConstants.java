@@ -86,6 +86,7 @@ public class BalSyntaxConstants {
     public static final String CONFIGURABLE_USER = "configurable string user = ?;";
     public static final String CONFIGURABLE_PASSWORD = "configurable string password = ?;";
     public static final String CONFIGURABLE_DATABASE = "configurable string database = ?;";
+    public static final String CONFIGURABLE_OPTIONS = "configurable mysql:Options connectionOptions = {};";
     public static final String INIT = "init";
     public static final String POST = "post";
     public static final String DELETE = "delete";
@@ -195,7 +196,8 @@ public class BalSyntaxConstants {
             "final map<persist:TableMetadata> metadata = {%s};";
     public static final String IN_MEMORY_ASSOC_METHODS_TEMPLATE = "associationsMethods: {%s}";
     public static final String INIT_DB_CLIENT_WITH_PARAMS = "mysql:Client|error dbClient = new (host = host, " +
-            "user = user, password = password, database = database, port = port);" + System.lineSeparator();
+            "user = user, password = password, database = database, port = port, options = connectionOptions);" +
+            System.lineSeparator();
     public static final String TABLE_PARAMETER_INIT_TEMPLATE = "table<%s> key(%s) %s = %s;";
     public static final String PERSIST_CLIENT_MAP_ELEMENT = "[%s]: check new (self.dbClient, self.metadata.get(%s))";
     public static final String PERSIST_IN_MEMORY_CLIENT_MAP_ELEMENT = "[%s]: check new (metadata.get(%s))";
