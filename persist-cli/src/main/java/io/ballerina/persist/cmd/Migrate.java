@@ -38,16 +38,16 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 /**
  * This Class implements the `persist migrate` command in Ballerina
@@ -160,45 +160,80 @@ public class Migrate implements BLauncherCmd {
                 }
 
             } else {
-                try {
-                    // Migrate with the latest bal file in the migrations directory
-                    migrateWithTimestamp(migrationsDir, migrationName, balFilePath,
-                            getLatestBalFile(migrationsDir.toString()));
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+                // Migrate with the latest bal file in the migrations directory
+                migrateWithTimestamp(migrationsDir, migrationName, balFilePath,
+                        findLatestBalFile(getSubfolderNames(migrationsDir.toString())));
             }
         }
     }
 
-    // Get the latest bal file in the migrations directory
-    private static Path getLatestBalFile(String migrationsDir) throws IOException {
+    // Get a list of all timestamp folders in the migrations directory
+    private static List<String> getSubfolderNames(String folderPath) {
+        List<String> subfolderNames = new ArrayList<>();
+        File folder = new File(folderPath);
 
-        File migrationsFolder = new File(migrationsDir);
-        List<File> balFiles = new ArrayList<>();
-        try (Stream<Path> walk = Files.walk(migrationsFolder.toPath())) {
-            walk.filter(path -> path.toString().endsWith(".bal"))
-                    .forEach(path -> balFiles.add(path.toFile()));
-        } catch (IOException e) {
-            errStream.println("Error occurred while walking the directory: " + e.getMessage());
-            throw e;
+        if (folder.exists() && folder.isDirectory()) {
+            File[] subfolders = folder.listFiles(File::isDirectory);
+
+            if (subfolders != null) {
+                for (File subfolder : subfolders) {
+                    subfolderNames.add(subfolder.getName());
+                }
+            }
         }
-        if (balFiles.isEmpty()) {
-            return null;
+
+        return subfolderNames;
+    }
+
+    // Get the path of the latest .bal file in the migrations directory
+    private static Path findLatestBalFile(List<String> folderNames) {
+        if (folderNames.size() == 1) {
+            return findBalFileInFolder(folderNames.get(0));
         }
-        balFiles.sort(Comparator.comparingLong(File::lastModified));
-        return balFiles.get(balFiles.size() - 1).toPath().toAbsolutePath();
+    
+        String latestTimestamp = "";
+        ZonedDateTime latestDateTime = ZonedDateTime.ofInstant(Instant.MIN, ZoneOffset.UTC);
+    
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss").withZone(ZoneOffset.UTC);
+    
+        for (String folderName : folderNames) {
+            String timestamp = folderName.split("_")[0];
+            ZonedDateTime dateTime = ZonedDateTime.parse(timestamp, formatter);
+    
+            if (dateTime.isAfter(latestDateTime)) {
+                latestDateTime = dateTime;
+                latestTimestamp = folderName;
+            }
+        }
+    
+        return findBalFileInFolder(latestTimestamp);
+    }
+    
+    // Find the .bal file in the given folder
+    private static Path findBalFileInFolder(String folderName) {
+        File folder = new File(folderName);
+        File[] files = folder.listFiles();
+
+        if (files != null) {
+            for (File file : files) {
+                if (file.isFile() && file.getName().endsWith(".bal")) {
+                    return file.toPath().toAbsolutePath(); // Return the Path object of the .bal file
+                }
+            }
+        }
+
+        return null; // No .bal file found
     }
 
     private static void migrateWithTimestamp(File migrationsDir, String migrationName, Path currentModelPath,
             Path previousModelPath) {
-        LocalDateTime currentTime = LocalDateTime.now();
+        Instant currentTime = Instant.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss");
-        String timestamp = currentTime.format(formatter);
+        String timestamp = formatter.format(ZonedDateTime.ofInstant(currentTime, ZoneOffset.UTC));
         List<String> queries = new ArrayList<>();
 
         // Create the directory with the current timestamp
-        String newMigration = migrationsDir + "/" + timestamp + "_" + migrationName;
+        String newMigration = migrationsDir + File.pathSeparator + timestamp + "_" + migrationName;
         File newMigrateDirectory = new File(newMigration);
         if (!newMigrateDirectory.exists()) {
             boolean isDirectoryCreated = newMigrateDirectory.mkdirs();
@@ -215,7 +250,7 @@ public class Migrate implements BLauncherCmd {
             queries = findDifferences(previousModel, currentModel);
 
             // Write queries to file
-            if (queries.size() != 0) {
+            if (!queries.isEmpty()) {
                 String filePath = newMigrationPath + "/migration.sql";
                 try (FileOutputStream fStream = new FileOutputStream(filePath);
                         OutputStreamWriter oStream = new OutputStreamWriter(fStream, StandardCharsets.UTF_8);
