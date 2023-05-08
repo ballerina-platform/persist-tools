@@ -38,8 +38,8 @@ import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.execute
 public class ToolingGenerateTest {
 
     @Test(enabled = true)
-    @Description("There is only a single entity in the Ballerina project")
-    public void testGenerateSingleEntity() {
+    @Description("There is multiple entities with associations in the Ballerina project")
+    public void testGenerateAssociatedEntities() {
 
         executeCommand("tool_test_generate_1", GENERATE);
         assertGeneratedSources("tool_test_generate_1");
@@ -340,5 +340,13 @@ public class ToolingGenerateTest {
     public void testInMemoryWithCompositeKeys() {
         executeCommand("tool_test_generate_49_in_memory", GENERATE);
         assertGeneratedSources("tool_test_generate_49_in_memory");
+    }
+
+    @Test(enabled = true)
+    @Description("There is multiple entities with associations in the Ballerina project")
+    public void testGenerateAssociatedEntitiesWithGoogleSheetsSupport() {
+
+        executeCommand("tool_test_generate_50_gsheets", GENERATE);
+        assertGeneratedSources("tool_test_generate_50_gsheets");
     }
 }
