@@ -16,12 +16,6 @@
  * under the License.
  */
 
-/**
- * Javascript script generator.
- *
- * @since 1.0.0
- */
-
 package io.ballerina.persist.nodegenerator.syntax.utils;
 
 import io.ballerina.persist.BalException;
@@ -30,7 +24,6 @@ import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.Relation;
 
 import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -48,9 +41,9 @@ import static io.ballerina.persist.nodegenerator.syntax.constants.ScriptConstant
 import static io.ballerina.persist.nodegenerator.syntax.constants.ScriptConstants.VAR;
 
 /**
- * JavaScript script generator.
+ * google AppScript script generator.
  *
- * @since 0.1.0
+ * @since 1.0.0
  */
 
 public class AppScriptUtils {
@@ -59,29 +52,29 @@ public class AppScriptUtils {
 
     private AppScriptUtils(){}
 
-    public static String[] generateJavaScriptFile(Collection<Entity> entities) throws BalException {
+    public static String generateJavaScriptFile(Collection<Entity> entities) throws BalException {
         boolean initialized = false;
-        List<String> tableScript = new ArrayList<>();
-        tableScript.add(FUNCTION_HEADER);
+        StringBuilder tableScript = new StringBuilder();
+        tableScript.append(FUNCTION_HEADER).append(NEW_LINE);
         for (Entity entity : entities) {
             String tableName = removeSingleQuote(entity.getEntityName());
             if (!initialized) {
                 initialized = true;
-                tableScript.add(TAB + generateGetActiveScript());
-                tableScript.add(TAB + VAR + generateGetSheetByName(tableName));
+                tableScript.append(TAB).append(generateGetActiveScript()).append(NEW_LINE);
+                tableScript.append(TAB).append(VAR).append(generateGetSheetByName(tableName)).append(NEW_LINE);
             } else {
-                tableScript.add(TAB + generateGetSheetByName(tableName));
+                tableScript.append(TAB).append(generateGetSheetByName(tableName)).append(NEW_LINE);
             }
-            tableScript.add(generateIfExistDelete());
-            tableScript.add(TAB + generateInsertSheet());
-            tableScript.add(TAB + generateSetName(tableName));
-            tableScript.add(TAB + generateAppendRow(entity.getFields()));
-            tableScript.add(NEW_LINE);
+            tableScript.append(generateIfExistDelete()).append(NEW_LINE);
+            tableScript.append(TAB).append(generateInsertSheet()).append(NEW_LINE);
+            tableScript.append(TAB).append(generateSetName(tableName)).append(NEW_LINE);
+            tableScript.append(TAB).append(generateAppendRow(entity.getFields())).append(NEW_LINE);
+            tableScript.append(NEW_LINE);
         }
-        tableScript.add(TAB + generateGetSheetByName("Sheet1"));
-        tableScript.add(generateIfExistDelete());
-        tableScript.add(FUNCTION_CLOSE);
-        return tableScript.toArray(new String[]{});
+        tableScript.append(TAB).append(generateGetSheetByName("Sheet1")).append(NEW_LINE);
+        tableScript.append(generateIfExistDelete()).append(NEW_LINE);
+        tableScript.append(FUNCTION_CLOSE).append(NEW_LINE);
+        return tableScript.toString();
     }
 
     private static String removeSingleQuote(String fieldName) {
