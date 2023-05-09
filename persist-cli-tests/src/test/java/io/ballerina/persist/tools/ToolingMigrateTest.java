@@ -39,11 +39,19 @@ public class ToolingMigrateTest {
     private static final PrintStream errStream = System.err;
 
     @Test(enabled = true)
-    @Description("Placeholder description: First test case")
+    @Description("There has been 1 previous migration")
     public void testFirstMigrateTest() {
 
         executeCommand("tool_test_migrate_1");
         assertGeneratedSources("tool_test_migrate_1");
+    }
+
+    @Test(enabled = true)
+    @Description("There has been no previous migrations")
+    public void testSecondMigrateTest() {
+
+        executeCommand("tool_test_migrate_2");
+        assertGeneratedSources("tool_test_migrate_2");
     }
 
     private void executeCommand(String subDir) {

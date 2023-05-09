@@ -43,11 +43,12 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * This Class implements the `persist migrate` command in Ballerina
@@ -110,21 +111,19 @@ public class Migrate implements BLauncherCmd {
 
         String migrationName = argList.get(0);
 
-        migrate(migrationName, projectPath.toString(), this.sourcePath);
+        // Returns the path of the bal file in the persist directory
+        Path schemaFilePath = BalProjectUtils.getSchemaFilePath(this.sourcePath);
+
+        migrate(migrationName, projectPath, this.sourcePath, schemaFilePath);
 
     }
 
-    private static void migrate(String migrationName, String projectDirName, String sourcePath) {
-        String balFile = getBalFilePath(projectDirName);
-
-        if (balFile != null) { // todo add validation in execute
-            Path balFilePath = Paths.get(balFile);
-
-            // todo FIX WITH FILE SEPERATOR + keep as path variable
-            String persistDirPath = projectDirName + "/persist";
+    private static void migrate(String migrationName, Path projectDirName, String sourcePath, Path schemaFilePath) {
+        if (schemaFilePath != null) {
+            Path persistDirPath = Paths.get(projectDirName.toString(), "persist");
 
             // Create a File object for the persist directory
-            File persistDir = new File(persistDirPath);
+            File persistDir = new File(persistDirPath.toString());
 
             // Create a File object for the migrations directory
             File migrationsDir = new File(persistDir, "migrations");
@@ -151,7 +150,7 @@ public class Migrate implements BLauncherCmd {
                 }
 
                 // Migrate with the blankFile.bal
-                migrateWithTimestamp(migrationsDir, migrationName, balFilePath, blankFilePath);
+                migrateWithTimestamp(migrationsDir, migrationName, schemaFilePath, blankFilePath);
 
                 // Delete the blankFile.bal
                 try {
@@ -162,33 +161,42 @@ public class Migrate implements BLauncherCmd {
 
             } else {
                 // Migrate with the latest bal file in the migrations directory
-                migrateWithTimestamp(migrationsDir, migrationName, balFilePath,
-                        findLatestBalFile(getSubfolderNames(migrationsDir.toString()), sourcePath));
+                migrateWithTimestamp(migrationsDir, migrationName, schemaFilePath,
+                        findLatestBalFile(getDirectoryPaths(migrationsDir.toString()), sourcePath));
             }
         }
     }
 
     // Get a list of all timestamp folders in the migrations directory
-    private static List<String> getSubfolderNames(String folderPath) { // todo change to getdirectorypaths
-        List<String> subfolderNames = new ArrayList<>();
-        File folder = new File(folderPath);
+    private static List<String> getDirectoryPaths(String folder) {
+        List<String> directoryNames = new ArrayList<>();
+        Path folderPath = Path.of(folder);
 
-        if (folder.exists() && folder.isDirectory()) {
-            File[] subFolders = folder.listFiles(File::isDirectory);
+        if (Files.exists(folderPath) && Files.isDirectory(folderPath)) {
+            try {
+                List<Path> directories = Files.list(folderPath)
+                        .filter(Files::isDirectory)
+                        .collect(Collectors.toList());
 
-            if (subFolders != null) {
-                for (File subfolder : subFolders) {
-                    subfolderNames.add(subfolder.getName());
+                for (Path directory : directories) {
+                    Path fileName = directory.getFileName();
+                    if (fileName != null) {
+                        directoryNames.add(fileName.toString());
+                    } else {
+                        errStream.println("Error: Found a directory with a null file name.");
+                    }
                 }
+            } catch (IOException e) {
+                errStream.println("Error: An error occurred while retrieving"
+                        + " the directory paths: " + e.getMessage());
             }
         }
 
-        return subfolderNames;
+        return directoryNames;
     }
 
     // Get the path of the latest .bal file in the migrations directory
     private static Path findLatestBalFile(List<String> folderNames, String sourcePath) {
-        // todo change to get list of paths + (use comparator class?)
         if (folderNames.size() == 1) {
             return findBalFileInFolder(folderNames.get(0), sourcePath);
         }
@@ -216,14 +224,18 @@ public class Migrate implements BLauncherCmd {
         Path folderPath = Paths.get(sourcePath).resolve("persist")
                 .resolve("migrations").resolve(folderName).toAbsolutePath();
         File folder = folderPath.toFile();
-        File[] files = folder.listFiles(); // todo add validation
+        File[] files = folder.listFiles();
 
-        if (files != null) { // todo use lamda function
-            for (File file : files) {
-                if (file.isFile() && file.getName().endsWith(".bal")) {
-                    // Return the Path object of the .bal file
-                    return file.toPath().toAbsolutePath();
-                }
+        if (files != null) {
+            // Use lambda function to filter the files and find the one ending with ".bal"
+            File balFile = Arrays.stream(files)
+                    .filter(file -> file.isFile() && file.getName().endsWith(".bal"))
+                    .findFirst()
+                    .orElse(null);
+
+            if (balFile != null) {
+                // Return the Path object of the .bal file
+                return balFile.toPath().toAbsolutePath();
             }
         }
 
@@ -257,7 +269,7 @@ public class Migrate implements BLauncherCmd {
 
             // Write queries to file
             if (!queries.isEmpty()) {
-                String filePath = newMigrationPath + "/migration.sql";
+                String filePath = Paths.get(newMigrationPath.toString(), "migration.sql").toString();
                 try (FileOutputStream fStream = new FileOutputStream(filePath);
                         OutputStreamWriter oStream = new OutputStreamWriter(fStream, StandardCharsets.UTF_8);
                         BufferedWriter writer = new BufferedWriter(oStream)) {
@@ -300,49 +312,6 @@ public class Migrate implements BLauncherCmd {
                 }
             }
         }
-    }
-
-    // Returns the path of the bal file in the persist directory
-    private static String getBalFilePath(String projectDirName) {
-        // todo rename to getSchemaFilePath,
-        // input should be path and return path (in pr issues)
-        // put in balprojectutils from generate
-        // ^all 3 one comment
-        String persistDirName = "persist";
-        String balFileExtension = ".bal";
-
-        // Create a file object representing the project directory
-        File projectDir = new File(projectDirName);
-
-        // Check if the project directory exists
-        if (!projectDir.exists() || !projectDir.isDirectory()) {
-            errStream.println("Error: Project directory not found: " + projectDirName);
-            return null;
-        }
-
-        // Create a file object representing the 'persist' directory
-        File persistDir = new File(projectDir, persistDirName);
-
-        // Check if the persist directory exists
-        if (!persistDir.exists() || !persistDir.isDirectory()) {
-            errStream.println("Error: Persist directory not found in project directory: " + projectDirName);
-            return null;
-        }
-
-        // Check if a .bal file exists in the persist directory
-        File[] balFiles = persistDir
-                .listFiles((dir, name) -> name.toLowerCase(Locale.ENGLISH).endsWith(balFileExtension));
-        if (balFiles == null || balFiles.length == 0) {
-            errStream.println("Error: Bal file not found in persist directory: " + projectDirName);
-            return null;
-        }
-
-        // Get the first .bal file found in the persist directory
-        File balFile = balFiles[0];
-        Path balFilePath = balFile.toPath();
-
-        // Return the path to the .bal file
-        return balFilePath.toString();
     }
 
     private static List<String> findDifferences(Module previousModel, Module currentModel) {
