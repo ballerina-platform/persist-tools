@@ -112,7 +112,6 @@ public client class Client {
     private function queryWorkspaces(string[] fields) returns stream<record {}, persist:Error?> {
         return from record {} 'object in self.workspaces
             outer join var building in self.buildings on ['object.locationBuildingCode] equals [building?.buildingCode]
-
             select persist:filterRecord({
                 ...'object,
                 "building": building
@@ -123,7 +122,6 @@ public client class Client {
         from record {} 'object in self.workspaces
         where self.persistClients.get(WORKSPACE).getKey('object) == key
         outer join var building in self.buildings on ['object.locationBuildingCode] equals [building?.buildingCode]
-
         do {
             return {
                 ...'object,
@@ -355,7 +353,6 @@ public client class Client {
         return from record {} 'object in self.employees
             outer join var department in self.departments on ['object.departmentDeptNo, 'object.departmentDeptName] equals [department?.deptNo, department?.deptName]
             outer join var workspace in self.workspaces on ['object.workspaceWorkspaceId, 'object.workspaceWorkspaceType] equals [workspace?.workspaceId, workspace?.workspaceType]
-
             select persist:filterRecord({
                 ...'object,
                 "department": department,
@@ -368,7 +365,6 @@ public client class Client {
         where self.persistClients.get(EMPLOYEE).getKey('object) == key
         outer join var department in self.departments on ['object.departmentDeptNo, 'object.departmentDeptName] equals [department?.deptNo, department?.deptName]
         outer join var workspace in self.workspaces on ['object.workspaceWorkspaceId, 'object.workspaceWorkspaceType] equals [workspace?.workspaceId, workspace?.workspaceType]
-
         do {
             return {
                 ...'object,

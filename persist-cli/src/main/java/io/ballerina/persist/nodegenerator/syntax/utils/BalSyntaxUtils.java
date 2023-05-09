@@ -255,7 +255,7 @@ public class BalSyntaxUtils {
                     AbstractNodeFactory.createToken(SyntaxKind.CLOSE_BRACKET_TOKEN)));
             filterKeys.append(BalSyntaxConstants.DOUBLE_QUOTE).append(stripEscapeCharacter(entry.getFieldName()))
                     .append(BalSyntaxConstants.DOUBLE_QUOTE).append(BalSyntaxConstants.COLON).
-                    append(entry.getFieldName()).append(BalSyntaxConstants.COMMA_SPACE);
+                    append(entry.getFieldName()).append(BalSyntaxConstants.COMMA_WITH_SPACE);
             path.append(BalSyntaxConstants.BACK_SLASH).append(BalSyntaxConstants.OPEN_BRACKET).
                     append(entry.getFieldName()).append(BalSyntaxConstants.CLOSE_BRACKET);
         }
@@ -522,5 +522,20 @@ public class BalSyntaxUtils {
                 moduleNodeList,
                 prefix,
                 SyntaxTokenConstants.SYNTAX_TREE_SEMICOLON);
+    }
+
+    public static String getPrimaryKeys(Entity entity, boolean addDoubleQuotes) {
+        StringBuilder keyFields = new StringBuilder();
+        for (EntityField key : entity.getKeys()) {
+            if (keyFields.length() != 0) {
+                keyFields.append(BalSyntaxConstants.COMMA_WITH_SPACE);
+            }
+            if (addDoubleQuotes) {
+                keyFields.append("\"").append(BalSyntaxUtils.stripEscapeCharacter(key.getFieldName())).append("\"");
+            } else {
+                keyFields.append(BalSyntaxUtils.stripEscapeCharacter(key.getFieldName()));
+            }
+        }
+        return keyFields.toString();
     }
 }

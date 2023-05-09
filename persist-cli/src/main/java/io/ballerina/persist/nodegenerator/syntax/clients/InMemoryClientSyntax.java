@@ -107,6 +107,7 @@ public class InMemoryClientSyntax implements ClientSyntax {
         return BalSyntaxUtils.generateGetByKeyFunction(entity, "InMemoryProcessor");
     }
 
+    @Override
     public FunctionDefinitionNode getCloseFunction() {
         Function close = BalSyntaxUtils.generateCloseFunction();
         close.addStatement(NodeParser.parseStatement(BalSyntaxConstants.RETURN_NIL));
@@ -137,7 +138,7 @@ public class InMemoryClientSyntax implements ClientSyntax {
             int iterator = 0;
             for (EntityField field : keys) {
                 if (iterator > 0) {
-                    primaryKeys.append(BalSyntaxConstants.COMMA_SPACE);
+                    primaryKeys.append(BalSyntaxConstants.COMMA_WITH_SPACE);
                 }
                 primaryKeys.append(String.format("%s", field.getFieldName()));
                 iterator++;
@@ -182,8 +183,8 @@ public class InMemoryClientSyntax implements ClientSyntax {
         for (Entity entity : entityModule.getEntityMap().values()) {
             clientObject.addMember(NodeParser.parseObjectMember(String.format(
                     BalSyntaxConstants.TABLE_PARAMETER_INIT_TEMPLATE,
-                    entity.getEntityName(), getPrimaryKeys(entity, false), entity.getResourceName(),
-                    entity.getResourceName())), false);
+                    entity.getEntityName(), BalSyntaxUtils.getPrimaryKeys(entity, false),
+                    entity.getResourceName(), entity.getResourceName())), false);
         }
     }
 
@@ -205,8 +206,8 @@ public class InMemoryClientSyntax implements ClientSyntax {
             int iterator = 0;
             for (EntityField field : primaryKeys) {
                 if (iterator > 0) {
-                    filterKeys.append(BalSyntaxConstants.COMMA_SPACE);
-                    variableType.append(BalSyntaxConstants.COMMA_SPACE);
+                    filterKeys.append(BalSyntaxConstants.COMMA_WITH_SPACE);
+                    variableType.append(BalSyntaxConstants.COMMA_WITH_SPACE);
                 }
                 filterKeys.append(String.format(BalSyntaxConstants.FIELD, field.getFieldName()));
                 variableType.append(field.getFieldType());
@@ -239,7 +240,7 @@ public class InMemoryClientSyntax implements ClientSyntax {
 
             StringBuilder entityMetaData = new StringBuilder();
             entityMetaData.append(String.format(BalSyntaxConstants.METADATA_KEY_FIELDS_TEMPLATE,
-                    getPrimaryKeys(entity, true)));
+                    BalSyntaxUtils.getPrimaryKeys(entity, true)));
             String resourceName = BalSyntaxUtils.stripEscapeCharacter(entity.getResourceName());
             resourceName = resourceName.substring(0, 1).toUpperCase(Locale.ENGLISH) +
                     resourceName.substring(1).toLowerCase(Locale.ENGLISH);
@@ -282,7 +283,7 @@ public class InMemoryClientSyntax implements ClientSyntax {
                                 queryMethodStatement.put("query" +
                                                 finalResourceName.concat(associateEntityNameCamelCase),
                                         String.format(BalSyntaxConstants.RETURN_STATEMENT_FOR_RELATIONAL_ENTITY,
-                                                associateEntityName, conditionStatement)
+                                                BalSyntaxConstants.SELF, associateEntityName, conditionStatement)
                                 );
                                 break;
                             }
@@ -303,20 +304,5 @@ public class InMemoryClientSyntax implements ClientSyntax {
                     BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()), entityMetaData));
         }
         return String.format(BalSyntaxConstants.IN_MEMORY_METADATA_MAP_TEMPLATE, mapBuilder);
-    }
-
-    public static String getPrimaryKeys(Entity entity, boolean addDoubleQuotes) {
-        StringBuilder keyFields = new StringBuilder();
-        for (EntityField key : entity.getKeys()) {
-            if (keyFields.length() != 0) {
-                keyFields.append(BalSyntaxConstants.COMMA_SPACE);
-            }
-            if (addDoubleQuotes) {
-                keyFields.append("\"").append(BalSyntaxUtils.stripEscapeCharacter(key.getFieldName())).append("\"");
-            } else {
-                keyFields.append(BalSyntaxUtils.stripEscapeCharacter(key.getFieldName()));
-            }
-        }
-        return keyFields.toString();
     }
 }

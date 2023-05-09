@@ -245,22 +245,22 @@ public class DbClientSyntax implements ClientSyntax {
                 }
             }
             if (associateFieldMEtaData.length() > 1) {
-                fieldMetaData.append(",");
+                fieldMetaData.append(BalSyntaxConstants.COMMA);
                 fieldMetaData.append(associateFieldMEtaData);
             }
             entityMetaData.append(String.format(BalSyntaxConstants.FIELD_METADATA_TEMPLATE, fieldMetaData));
-            entityMetaData.append(BalSyntaxConstants.COMMA_SPACE);
+            entityMetaData.append(BalSyntaxConstants.COMMA_WITH_SPACE);
 
             StringBuilder keyFields = new StringBuilder();
             for (EntityField key : entity.getKeys()) {
                 if (keyFields.length() != 0) {
-                    keyFields.append(BalSyntaxConstants.COMMA_SPACE);
+                    keyFields.append(BalSyntaxConstants.COMMA_WITH_SPACE);
                 }
                 keyFields.append("\"").append(BalSyntaxUtils.stripEscapeCharacter(key.getFieldName())).append("\"");
             }
             entityMetaData.append(String.format(BalSyntaxConstants.METADATA_RECORD_KEY_FIELD_TEMPLATE, keyFields));
             if (relationsExists) {
-                entityMetaData.append(BalSyntaxConstants.COMMA_SPACE);
+                entityMetaData.append(BalSyntaxConstants.COMMA_WITH_SPACE);
                 String joinMetaData = getJoinMetaData(entity);
                 entityMetaData.append(String.format(BalSyntaxConstants.JOIN_METADATA_TEMPLATE, joinMetaData));
             }
@@ -295,10 +295,10 @@ public class DbClientSyntax implements ClientSyntax {
                 }
                 for (Relation.Key key : entityField.getRelation().getKeyColumns()) {
                     if (joinColumns.length() > 0) {
-                        joinColumns.append(",");
+                        joinColumns.append(BalSyntaxConstants.COMMA);
                     }
                     if (refColumns.length() > 0) {
-                        refColumns.append(",");
+                        refColumns.append(BalSyntaxConstants.COMMA);
                     }
                     refColumns.append(String.format(BalSyntaxConstants.COLUMN_ARRAY_ENTRY_TEMPLATE,
                             key.getReference()));
@@ -313,8 +313,8 @@ public class DbClientSyntax implements ClientSyntax {
         return joinMetaData.toString();
     }
 
-    private static void addFunctionBodyToPostResource(Function create, List<EntityField> primaryKeys,
-                                                      String tableName, String parameterType) {
+    protected static void addFunctionBodyToPostResource(Function create, List<EntityField> primaryKeys,
+                                              String tableName, String parameterType) {
         create.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.CREATE_SQL_RESULTS,
                 tableName)));
         create.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.RETURN_CREATED_KEY,
@@ -323,7 +323,7 @@ public class DbClientSyntax implements ClientSyntax {
         for (int i = 0; i < primaryKeys.size(); i++) {
             filterKeys.append("inserted.").append(primaryKeys.get(i).getFieldName());
             if (i < primaryKeys.size() - 1) {
-                filterKeys.append(",");
+                filterKeys.append(BalSyntaxConstants.COMMA);
             }
         }
         if (primaryKeys.size() == 1) {

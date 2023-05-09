@@ -123,7 +123,8 @@ public class InMemorySyntaxTree implements SyntaxTree {
     private static FunctionDefinitionNode[] createQueryFunction(Entity entity) {
         String resourceName = entity.getResourceName();
         String nameInCamelCase = resourceName.substring(0, 1).toUpperCase(Locale.ENGLISH) + resourceName.substring(1);
-        StringBuilder queryBuilder = new StringBuilder(String.format(BalSyntaxConstants.QUERY_STATEMENT, resourceName));
+        StringBuilder queryBuilder = new StringBuilder(String.format(BalSyntaxConstants.QUERY_STATEMENT,
+                "return", BalSyntaxConstants.SELF, resourceName));
         Function query = new Function(String.format(BalSyntaxConstants.QUERY, nameInCamelCase),
                 SyntaxKind.OBJECT_METHOD_DEFINITION);
         query.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PRIVATE });
@@ -138,8 +139,9 @@ public class InMemorySyntaxTree implements SyntaxTree {
         Function queryOne = new Function(String.format(BalSyntaxConstants.QUERY_ONE, nameInCamelCase),
                 SyntaxKind.OBJECT_METHOD_DEFINITION);
         queryOne.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PRIVATE });
-        queryOne.addReturns(TypeDescriptor.getSimpleNameReferenceNode(BalSyntaxConstants.QUERY_ONE_RETURN));
-        queryOne.addRequiredParameter(TypeDescriptor.getSimpleNameReferenceNode("anydata"),
+        queryOne.addReturns(TypeDescriptor.getSimpleNameReferenceNode(String.format(BalSyntaxConstants.QUERY_ONE_RETURN,
+                BalSyntaxConstants.INVALID_KEY_ERROR)));
+        queryOne.addRequiredParameter(TypeDescriptor.getSimpleNameReferenceNode(BalSyntaxConstants.ANY_DATA),
                 BalSyntaxConstants.KEYWORD_KEY);
 
         createQuery(entity, queryBuilder, queryOneBuilder);
@@ -152,6 +154,7 @@ public class InMemorySyntaxTree implements SyntaxTree {
     private static StringBuilder[] createQuery(Entity entity, StringBuilder queryBuilder,
                                                StringBuilder queryOneBuilder) {
         StringBuilder relationalRecordFields = new StringBuilder();
+
         for (EntityField fields : entity.getFields()) {
             if (fields.getRelation() != null) {
                 Relation relation = fields.getRelation();
@@ -159,10 +162,10 @@ public class InMemorySyntaxTree implements SyntaxTree {
                     Entity assocEntity = relation.getAssocEntity();
                     String assocEntityName = assocEntity.getEntityName();
                     queryBuilder.append(String.format(BalSyntaxConstants.QUERY_OUTER_JOIN, assocEntityName.
-                            toLowerCase(Locale.ENGLISH), assocEntity.getResourceName()));
+                            toLowerCase(Locale.ENGLISH), BalSyntaxConstants.SELF, assocEntity.getResourceName()));
                     queryBuilder.append(BalSyntaxConstants.ON);
                     queryOneBuilder.append(String.format(BalSyntaxConstants.QUERY_OUTER_JOIN, assocEntityName.
-                            toLowerCase(Locale.ENGLISH), assocEntity.getResourceName()));
+                            toLowerCase(Locale.ENGLISH), BalSyntaxConstants.SELF, assocEntity.getResourceName()));
                     queryOneBuilder.append(BalSyntaxConstants.ON);
                     relationalRecordFields.append(String.format(BalSyntaxConstants.VARIABLE,
                             assocEntityName.toLowerCase(Locale.ENGLISH),
@@ -174,8 +177,8 @@ public class InMemorySyntaxTree implements SyntaxTree {
                     arrayValues.append(BalSyntaxConstants.OPEN_BRACKET);
                     for (String references: relation.getReferences()) {
                         if (i > 0) {
-                            arrayFields.append(BalSyntaxConstants.COMMA);
-                            arrayValues.append(BalSyntaxConstants.COMMA);
+                            arrayFields.append(BalSyntaxConstants.COMMA_WITH_SPACE);
+                            arrayValues.append(BalSyntaxConstants.COMMA_WITH_SPACE);
                         }
                         arrayFields.append(String.format(BalSyntaxConstants.OBJECT_FIELD,
                                 relation.getKeyColumns().get(i).getField()));
@@ -194,13 +197,15 @@ public class InMemorySyntaxTree implements SyntaxTree {
             }
         }
         if (relationalRecordFields.length() > 0) {
-            queryBuilder.append(String.format(BalSyntaxConstants.SELECT_QUERY, "," + System.lineSeparator() +
-                    relationalRecordFields.substring(0, relationalRecordFields.length() - 1)));
-            queryOneBuilder.append(String.format(BalSyntaxConstants.DO_QUERY, "," + System.lineSeparator() +
-                    relationalRecordFields.substring(0, relationalRecordFields.length() - 1)));
+            queryBuilder.append(String.format(BalSyntaxConstants.SELECT_QUERY, BalSyntaxConstants.COMMA +
+                    System.lineSeparator() + relationalRecordFields.substring(0, relationalRecordFields.length() - 1)));
+            queryOneBuilder.append(String.format(BalSyntaxConstants.DO_QUERY, BalSyntaxConstants.COMMA  +
+                    System.lineSeparator() + relationalRecordFields.substring(0, relationalRecordFields.length() - 1)));
         } else {
-            queryBuilder.append(String.format(BalSyntaxConstants.SELECT_QUERY, ""));
-            queryOneBuilder.append(String.format(BalSyntaxConstants.DO_QUERY, ""));
+            queryBuilder.append(String.format(System.lineSeparator() + BalSyntaxConstants.SELECT_QUERY,
+                    BalSyntaxConstants.EMPTY_STRING));
+            queryOneBuilder.append(String.format(System.lineSeparator() + BalSyntaxConstants.DO_QUERY,
+                    BalSyntaxConstants.EMPTY_STRING));
         }
         return new StringBuilder[]{queryBuilder, queryOneBuilder};
     }
@@ -209,7 +214,7 @@ public class InMemorySyntaxTree implements SyntaxTree {
         StringBuilder keyFields = new StringBuilder();
         for (EntityField key : entity.getKeys()) {
             if (keyFields.length() != 0) {
-                keyFields.append(BalSyntaxConstants.COMMA_SPACE);
+                keyFields.append(BalSyntaxConstants.COMMA_WITH_SPACE);
             }
             if (addDoubleQuotes) {
                 keyFields.append("\"").append(BalSyntaxUtils.stripEscapeCharacter(key.getFieldName())).append("\"");

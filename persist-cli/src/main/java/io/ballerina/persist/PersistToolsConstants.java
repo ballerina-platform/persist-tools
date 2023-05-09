@@ -32,8 +32,7 @@ public class PersistToolsConstants {
 
     public static final String DEFAULT_USER = "root";
     public static final String DEFAULT_PORT = "3306";
-    public static final String DEFAULT_PASSWORD = "";
-    public static final String DEFAULT_DATABASE = "";
+    public static final String EMPTY_VALUE = "";
     public static final String DEFAULT_HOST = "localhost";
 
     public static final String KEY_USER = "user";
@@ -43,6 +42,13 @@ public class PersistToolsConstants {
     public static final String KEY_HOST = "host";
     public static final String KEYWORD_PACKAGE = "package";
     public static final String KEYWORD_NAME = "name";
+    public static final String KEYWORD_SHEET_ID = "spreadsheetId";
+    public static final String KEYWORD_REFRESH_URL = "refreshUrl";
+    public static final String KEYWORD_CLIENT_ID = "clientId";
+    public static final String KEYWORD_CLIENT_SECRET = "clientSecret";
+    public static final String KEYWORD_REFRESH_TOKEN = "refreshToken";
+    public static final String SPREAD_SHEET = "SpreadSheet";
+    public static final String KEYWORD_WORK_SHEET_NAME = "worksheetName";
 
     public static final String CONFIG_SCRIPT_FILE = "Config.toml";
     public static final String PASSWORD = "password";
@@ -58,7 +64,7 @@ public class PersistToolsConstants {
     public static final String MYSQL_CONNECTOR_NAME_PREFIX = "mysql-connector";
     public static final String SCHEMA_FILE_NAME = "model";
 
-    public static final Set<String> SUPPORTED_DB_PROVIDERS = Set.of("mysql", "in-memory");
+    public static final Set<String> SUPPORTED_DB_PROVIDERS = Set.of("mysql", "in-memory", "google-sheets");
 
     /**
      * Constants related to Ballerina types.
@@ -146,5 +152,6 @@ public class PersistToolsConstants {
 
         public static final String MYSQL_DB = "mysql";
         public static final String IN_MEMORY_TABLE = "in-memory";
+        public static final String GOOGLE_SHEETS = "google-sheets";
     }
 }
