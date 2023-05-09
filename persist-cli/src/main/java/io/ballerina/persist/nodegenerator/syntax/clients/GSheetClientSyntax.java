@@ -201,7 +201,7 @@ public class GSheetClientSyntax implements ClientSyntax {
             StringBuilder entityMetaData = new StringBuilder();
             entityMetaData.append(String.format(BalSyntaxConstants.METADATA_RECORD_ENTITY_NAME_TEMPLATE,
                     BalSyntaxUtils.stripEscapeCharacter(entityName)));
-            entityMetaData.append(String.format(BalSyntaxConstants.METADATA_RECORD_TABLE_NAME_TEMPLATE,
+            entityMetaData.append(String.format(BalSyntaxConstants.TABLE_NAME_TEMPLATE,
                     BalSyntaxUtils.stripEscapeCharacter(entityName)));
             entityMetaData.append(String.format(BalSyntaxConstants.METADATA_KEY_FIELDS_TEMPLATE,
                     BalSyntaxUtils.getPrimaryKeys(entity, true)));
@@ -222,12 +222,15 @@ public class GSheetClientSyntax implements ClientSyntax {
                         String fieldName;
                         if (fieldMetaData.length() != 0) {
                             fieldMetaData.append(BalSyntaxConstants.COMMA_WITH_NEWLINE);
+                            fieldType.append(BalSyntaxConstants.COMMA_WITH_NEWLINE);
                         }
                         for (Relation.Key reference : relation.getKeyColumns()) {
                             fieldName = reference.getField();
                             endRange = getEndRange(++index);
                             fieldMetaData.append(String.format(BalSyntaxConstants.G_SHEET_FIELD_METADATA_TEMPLATE,
                                     fieldName, BalSyntaxUtils.stripEscapeCharacter(fieldName), endRange));
+                            fieldType.append(String.format(BalSyntaxConstants.FIELD_TYPE, fieldName,
+                                    reference.getType()));
                         }
                     } else if (relation.getRelationType().equals(Relation.RelationType.MANY)) {
                         Entity assEntity = relation.getAssocEntity();

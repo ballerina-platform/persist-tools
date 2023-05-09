@@ -27,7 +27,7 @@ public client class Client {
         final record {|persist:SheetMetadata...;|} metadata = {
             [EMPLOYEE] : {
                 entityName: "Employee",
-                tableName: `Employee`,
+                tableName: "Employee",
                 keyFields: ["empNo"],
                 range: "A:H",
                 query: self.queryEmployees,
@@ -38,7 +38,9 @@ public client class Client {
                     lastName: "string",
                     birthDate: "time:Date",
                     gender: "string",
-                    hireDate: "time:Date"
+                    hireDate: "time:Date",
+                    departmentDeptNo: "string",
+                    workspaceWorkspaceId: "string"
                 },
                 fieldMetadata: {
                     empNo: {columnName: "empNo", columnId: "A"},
@@ -53,14 +55,15 @@ public client class Client {
             },
             [WORKSPACE] : {
                 entityName: "Workspace",
-                tableName: `Workspace`,
+                tableName: "Workspace",
                 keyFields: ["workspaceId"],
                 range: "A:C",
                 query: self.queryWorkspaces,
                 queryOne: self.queryOneWorkspaces,
                 dataTypes: {
                     workspaceId: "string",
-                    workspaceType: "string"
+                    workspaceType: "string",
+                    locationBuildingCode: "string"
                 },
                 fieldMetadata: {
                     workspaceId: {columnName: "workspaceId", columnId: "A"},
@@ -71,7 +74,7 @@ public client class Client {
             },
             [BUILDING] : {
                 entityName: "Building",
-                tableName: `Building`,
+                tableName: "Building",
                 keyFields: ["buildingCode"],
                 range: "A:F",
                 query: self.queryBuildings,
@@ -96,7 +99,7 @@ public client class Client {
             },
             [DEPARTMENT] : {
                 entityName: "Department",
-                tableName: `Department`,
+                tableName: "Department",
                 keyFields: ["deptNo"],
                 range: "A:B",
                 query: self.queryDepartments,
@@ -113,7 +116,7 @@ public client class Client {
             },
             [ORDER_ITEM] : {
                 entityName: "OrderItem",
-                tableName: `OrderItem`,
+                tableName: "OrderItem",
                 keyFields: ["orderId", "itemId"],
                 range: "A:D",
                 query: self.queryOrderitems,
@@ -160,11 +163,11 @@ public client class Client {
         self.httpClient = httpClient;
         map<int> sheetIds = check persist:getSheetIds(self.googleSheetClient, metadata, spreadsheetId);
         self.persistClients = {
-            [EMPLOYEE] : check new (self.googleSheetClient, self.httpClient, self.metadata.get(EMPLOYEE), spreadsheetId, sheetIds.get(EMPLOYEE)),
-            [WORKSPACE] : check new (self.googleSheetClient, self.httpClient, self.metadata.get(WORKSPACE), spreadsheetId, sheetIds.get(WORKSPACE)),
-            [BUILDING] : check new (self.googleSheetClient, self.httpClient, self.metadata.get(BUILDING), spreadsheetId, sheetIds.get(BUILDING)),
-            [DEPARTMENT] : check new (self.googleSheetClient, self.httpClient, self.metadata.get(DEPARTMENT), spreadsheetId, sheetIds.get(DEPARTMENT)),
-            [ORDER_ITEM] : check new (self.googleSheetClient, self.httpClient, self.metadata.get(ORDER_ITEM), spreadsheetId, sheetIds.get(ORDER_ITEM))
+            [EMPLOYEE] : check new (self.googleSheetClient, self.httpClient, metadata.get(EMPLOYEE), spreadsheetId, sheetIds.get(EMPLOYEE)),
+            [WORKSPACE] : check new (self.googleSheetClient, self.httpClient, metadata.get(WORKSPACE), spreadsheetId, sheetIds.get(WORKSPACE)),
+            [BUILDING] : check new (self.googleSheetClient, self.httpClient, metadata.get(BUILDING), spreadsheetId, sheetIds.get(BUILDING)),
+            [DEPARTMENT] : check new (self.googleSheetClient, self.httpClient, metadata.get(DEPARTMENT), spreadsheetId, sheetIds.get(DEPARTMENT)),
+            [ORDER_ITEM] : check new (self.googleSheetClient, self.httpClient, metadata.get(ORDER_ITEM), spreadsheetId, sheetIds.get(ORDER_ITEM))
         };
     }
 
@@ -195,7 +198,7 @@ public client class Client {
         return result;
     }
 
-    private function queryEmployees(string[] fields) returns stream<record {}, persist:Error?> {
+    private function queryEmployees(string[] fields) returns stream<record {}, persist:Error?>|error {
         stream<Employee, error?> employeesStream = self.queryEmployeesStream();
         stream<Department, error?> departmentsStream = self.queryDepartmentsStream();
         stream<Workspace, error?> workspacesStream = self.queryWorkspacesStream();
@@ -262,7 +265,7 @@ public client class Client {
         return result;
     }
 
-    private function queryWorkspaces(string[] fields) returns stream<record {}, persist:Error?> {
+    private function queryWorkspaces(string[] fields) returns stream<record {}, persist:Error?>|error {
         stream<Workspace, error?> workspacesStream = self.queryWorkspacesStream();
         stream<Building, error?> buildingsStream = self.queryBuildingsStream();
         record {}[] outputArray = check from record {} 'object in workspacesStream
@@ -323,7 +326,7 @@ public client class Client {
         return result;
     }
 
-    private function queryBuildings(string[] fields) returns stream<record {}, persist:Error?> {
+    private function queryBuildings(string[] fields) returns stream<record {}, persist:Error?>|error {
         stream<Building, error?> buildingsStream = self.queryBuildingsStream();
         record {}[] outputArray = check from record {} 'object in buildingsStream
             select persist:filterRecord({
@@ -378,7 +381,7 @@ public client class Client {
         return result;
     }
 
-    private function queryDepartments(string[] fields) returns stream<record {}, persist:Error?> {
+    private function queryDepartments(string[] fields) returns stream<record {}, persist:Error?>|error {
         stream<Department, error?> departmentsStream = self.queryDepartmentsStream();
         record {}[] outputArray = check from record {} 'object in departmentsStream
             select persist:filterRecord({
@@ -433,7 +436,7 @@ public client class Client {
         return result;
     }
 
-    private function queryOrderitems(string[] fields) returns stream<record {}, persist:Error?> {
+    private function queryOrderitems(string[] fields) returns stream<record {}, persist:Error?>|error {
         stream<OrderItem, error?> orderitemsStream = self.queryOrderitemsStream();
         record {}[] outputArray = check from record {} 'object in orderitemsStream
             select persist:filterRecord({

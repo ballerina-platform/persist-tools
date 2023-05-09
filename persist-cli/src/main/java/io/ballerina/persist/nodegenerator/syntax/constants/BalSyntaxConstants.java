@@ -161,6 +161,7 @@ public class BalSyntaxConstants {
     public static final String INIT_IN_MEMORY_CLIENT = "private final map<persist:InMemoryClient> persistClients;";
     public static final String METADATA_RECORD_ENTITY_NAME_TEMPLATE = "entityName: \"%s\", " + System.lineSeparator();
     public static final String METADATA_RECORD_TABLE_NAME_TEMPLATE = "tableName: `%s`, " + System.lineSeparator();
+    public static final String TABLE_NAME_TEMPLATE = "tableName: \"%s\", " + System.lineSeparator();
     public static final String METADATA_RECORD_FIELD_TEMPLATE = "%s: {columnName: \"%s\"}";
     public static final String METADATA_KEY_FIELDS_TEMPLATE = "keyFields: [%s], " + System.lineSeparator();
     public static final String G_SHEET_FIELD_METADATA_TEMPLATE = "%s: {columnName: \"%s\", columnId: \"%s\"}";
@@ -261,7 +262,7 @@ public class BalSyntaxConstants {
     public static final String TABLE_PARAMETER_INIT_TEMPLATE = "table<%s> key(%s) %s = %s;";
     public static final String PERSIST_CLIENT_MAP_ELEMENT = "[%s]: check new (self.dbClient, self.metadata.get(%s))";
     public static final String GOOGLE_SHEET_CLIENT_MAP = "[%s]: check new (self.googleSheetClient, self.httpClient, " +
-            "self.metadata.get(%s), spreadsheetId, sheetIds.get(%s))";
+            "metadata.get(%s), spreadsheetId, sheetIds.get(%s))";
     public static final String PERSIST_IN_MEMORY_CLIENT_MAP_ELEMENT = "[%s]: check new (metadata.get(%s))";
     public static final String PERSIST_CLIENT_TEMPLATE = "self.persistClients = {%s};";
     public static final String PERSIST_CLIENT_CLOSE_STATEMENT = "error? result = self.dbClient.close();";
