@@ -87,7 +87,7 @@ public class Migrate implements BLauncherCmd {
             return;
         }
 
-        Path projectPath = Paths.get(sourcePath);
+        Path projectPath = Paths.get(sourcePath).toAbsolutePath();
         try {
             BalProjectUtils.validateBallerinaProject(projectPath);
         } catch (BalException e) {
@@ -110,16 +110,17 @@ public class Migrate implements BLauncherCmd {
 
         String migrationName = argList.get(0);
 
-        migrate(migrationName, projectPath.toString());
+        migrate(migrationName, projectPath.toString(), this.sourcePath);
 
     }
 
-    private static void migrate(String migrationName, String projectDirName) {
+    private static void migrate(String migrationName, String projectDirName, String sourcePath) {
         String balFile = getBalFilePath(projectDirName);
 
         if (balFile != null) { // todo add validation in execute
             Path balFilePath = Paths.get(balFile);
 
+            // todo FIX WITH FILE SEPERATOR + keep as path variable
             String persistDirPath = projectDirName + "/persist";
 
             // Create a File object for the persist directory
@@ -162,21 +163,21 @@ public class Migrate implements BLauncherCmd {
             } else {
                 // Migrate with the latest bal file in the migrations directory
                 migrateWithTimestamp(migrationsDir, migrationName, balFilePath,
-                        findLatestBalFile(getSubfolderNames(migrationsDir.toString())));
+                        findLatestBalFile(getSubfolderNames(migrationsDir.toString()), sourcePath));
             }
         }
     }
 
     // Get a list of all timestamp folders in the migrations directory
-    private static List<String> getSubfolderNames(String folderPath) {
+    private static List<String> getSubfolderNames(String folderPath) { // todo change to getdirectorypaths
         List<String> subfolderNames = new ArrayList<>();
         File folder = new File(folderPath);
 
         if (folder.exists() && folder.isDirectory()) {
-            File[] subfolders = folder.listFiles(File::isDirectory);
+            File[] subFolders = folder.listFiles(File::isDirectory);
 
-            if (subfolders != null) {
-                for (File subfolder : subfolders) {
+            if (subFolders != null) {
+                for (File subfolder : subFolders) {
                     subfolderNames.add(subfolder.getName());
                 }
             }
@@ -186,43 +187,48 @@ public class Migrate implements BLauncherCmd {
     }
 
     // Get the path of the latest .bal file in the migrations directory
-    private static Path findLatestBalFile(List<String> folderNames) {
+    private static Path findLatestBalFile(List<String> folderNames, String sourcePath) {
+        // todo change to get list of paths + (use comparator class?)
         if (folderNames.size() == 1) {
-            return findBalFileInFolder(folderNames.get(0));
+            return findBalFileInFolder(folderNames.get(0), sourcePath);
         }
-    
+
         String latestTimestamp = "";
-        ZonedDateTime latestDateTime = ZonedDateTime.ofInstant(Instant.MIN, ZoneOffset.UTC);
-    
+        ZonedDateTime latestDateTime = ZonedDateTime.ofInstant(Instant.EPOCH, ZoneOffset.UTC);
+
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss").withZone(ZoneOffset.UTC);
-    
+
         for (String folderName : folderNames) {
             String timestamp = folderName.split("_")[0];
             ZonedDateTime dateTime = ZonedDateTime.parse(timestamp, formatter);
-    
+
             if (dateTime.isAfter(latestDateTime)) {
                 latestDateTime = dateTime;
                 latestTimestamp = folderName;
             }
         }
-    
-        return findBalFileInFolder(latestTimestamp);
-    }
-    
-    // Find the .bal file in the given folder
-    private static Path findBalFileInFolder(String folderName) {
-        File folder = new File(folderName);
-        File[] files = folder.listFiles();
 
-        if (files != null) {
+        return findBalFileInFolder(latestTimestamp, sourcePath);
+    }
+
+    // Find the .bal file in the given folder
+    private static Path findBalFileInFolder(String folderName, String sourcePath) {
+        Path folderPath = Paths.get(sourcePath).resolve("persist")
+                .resolve("migrations").resolve(folderName).toAbsolutePath();
+        File folder = folderPath.toFile();
+        File[] files = folder.listFiles(); // todo add validation
+
+        if (files != null) { // todo use lamda function
             for (File file : files) {
                 if (file.isFile() && file.getName().endsWith(".bal")) {
-                    return file.toPath().toAbsolutePath(); // Return the Path object of the .bal file
+                    // Return the Path object of the .bal file
+                    return file.toPath().toAbsolutePath();
                 }
             }
         }
 
-        return null; // No .bal file found
+        // No .bal file found
+        return null;
     }
 
     private static void migrateWithTimestamp(File migrationsDir, String migrationName, Path currentModelPath,
@@ -233,7 +239,7 @@ public class Migrate implements BLauncherCmd {
         List<String> queries = new ArrayList<>();
 
         // Create the directory with the current timestamp
-        String newMigration = migrationsDir + File.pathSeparator + timestamp + "_" + migrationName;
+        String newMigration = migrationsDir + File.separator + timestamp + "_" + migrationName;
         File newMigrateDirectory = new File(newMigration);
         if (!newMigrateDirectory.exists()) {
             boolean isDirectoryCreated = newMigrateDirectory.mkdirs();
@@ -298,6 +304,10 @@ public class Migrate implements BLauncherCmd {
 
     // Returns the path of the bal file in the persist directory
     private static String getBalFilePath(String projectDirName) {
+        // todo rename to getSchemaFilePath,
+        // input should be path and return path (in pr issues)
+        // put in balprojectutils from generate
+        // ^all 3 one comment
         String persistDirName = "persist";
         String balFileExtension = ".bal";
 
@@ -412,6 +422,7 @@ public class Migrate implements BLauncherCmd {
             Entity previousModelEntity = previousModel.getEntityMap().get(currentModelEntity.getEntityName());
 
             if (previousModelEntity == null) {
+                addedEntities.add(currentModelEntity.getEntityName());
                 for (EntityField field : currentModelEntity.getFields()) {
                     if (field.getRelation() == null) {
                         if (currentModelEntity.getKeys().contains(field)) {
@@ -677,7 +688,7 @@ public class Migrate implements BLauncherCmd {
     }
 
     // Convert Java data type to MySQL data type
-    private static String getDataType(String dataType) {
+    private static String getDataType(String dataType) { // todo replace whole function with kalai get type
         String resultType;
 
         switch (dataType) {
@@ -706,7 +717,7 @@ public class Migrate implements BLauncherCmd {
                 break;
 
             case "boolean":
-                resultType = "TINYINT(1)";
+                resultType = "BOOLEAN";
                 break;
 
             case "Date":
@@ -718,18 +729,12 @@ public class Migrate implements BLauncherCmd {
                 resultType = "TIME";
                 break;
 
-            case "LocalDateTime":
             case "time:Civil":
                 resultType = "DATETIME";
                 break;
 
-            case "Blob":
             case "byte[]":
-                resultType = "BLOB";
-                break;
-
-            case "Clob":
-                resultType = "CLOB";
+                resultType = "LONGBLOB";
                 break;
 
             default:
