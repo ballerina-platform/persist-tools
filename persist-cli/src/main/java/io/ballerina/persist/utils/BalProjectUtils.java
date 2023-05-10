@@ -20,6 +20,7 @@ package io.ballerina.persist.utils;
 
 import io.ballerina.compiler.syntax.tree.ArrayTypeDescriptorNode;
 import io.ballerina.compiler.syntax.tree.BuiltinSimpleNameReferenceNode;
+import io.ballerina.compiler.syntax.tree.MetadataNode;
 import io.ballerina.compiler.syntax.tree.ModuleMemberDeclarationNode;
 import io.ballerina.compiler.syntax.tree.ModulePartNode;
 import io.ballerina.compiler.syntax.tree.Node;
@@ -187,6 +188,8 @@ public class BalProjectUtils {
                 String qualifiedNamePrefix = getQualifiedModulePrefix(type);
                 fieldBuilder.setType(fType);
                 fieldBuilder.setOptionalType(fieldNode.typeName().kind().equals(SyntaxKind.OPTIONAL_TYPE_DESC));
+                Optional<MetadataNode> metadataNode = fieldNode.metadata();
+                metadataNode.ifPresent(value -> fieldBuilder.setAnnotation(value.annotations()));
                 EntityField entityField = fieldBuilder.build();
                 entityBuilder.addField(entityField);
                 if (fieldNode.readonlyKeyword().isPresent()) {

@@ -223,6 +223,9 @@ public class BalSyntaxConstants {
             + System.lineSeparator()
             + "'class: \"io.ballerina.stdlib.persist.datastore.%s\"," + System.lineSeparator() +
             " name: \"query\"} external;";
-
+    public static final String CONSTRAINT_STRING = "constraint:String";
+    public static final String LENGTH = "length";
+    public static final String MAX_LENGTH = "maxLength";
+    public static final String VARCHAR_LENGTH = "191";
 }
 
