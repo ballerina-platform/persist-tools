@@ -86,7 +86,12 @@ public class Generate implements BLauncherCmd {
             return;
         }
 
-        schemaFilePath =  BalProjectUtils.getSchemaFilePath(this.sourcePath);
+        try {
+            schemaFilePath =  BalProjectUtils.getSchemaFilePath(this.sourcePath);
+        } catch (BalException e) {
+            errStream.println(e.getMessage());
+            return;
+        }
 
         if (schemaFilePath == null) {
             errStream.println("ERROR: failed to generate types and client for the definition file." +

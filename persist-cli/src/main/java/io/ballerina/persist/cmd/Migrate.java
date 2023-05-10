@@ -114,7 +114,13 @@ public class Migrate implements BLauncherCmd {
         String migrationName = argList.get(0);
 
         // Returns the path of the bal file in the persist directory
-        Path schemaFilePath = BalProjectUtils.getSchemaFilePath(this.sourcePath);
+        Path schemaFilePath;
+        try {
+            schemaFilePath = BalProjectUtils.getSchemaFilePath(this.sourcePath);
+        } catch (BalException e) {
+            errStream.println(e.getMessage());
+            return;
+        }
 
         migrate(migrationName, projectPath, this.sourcePath, schemaFilePath);
 
@@ -144,6 +150,7 @@ public class Migrate implements BLauncherCmd {
                     model = BalProjectUtils.getEntities(schemaFilePath);
                 } catch (BalException e) {
                     errStream.println("Error getting entities: " + e.getMessage());
+                    return;
                 }
 
                 String newMigration = createTimestampFolder(migrationName, migrationsDir);
@@ -160,6 +167,7 @@ public class Migrate implements BLauncherCmd {
                                 newMigrationPath);
                     } catch (BalException e) {
                         errStream.println("ERROR: Failed to generate SQL script " + e.getMessage());
+                        return;
                     }
 
                     try {
@@ -167,6 +175,7 @@ public class Migrate implements BLauncherCmd {
                         Files.copy(schemaFilePath, newMigrationPath.resolve(schemaFilePath.getFileName()));
                     } catch (IOException e) {
                         errStream.println("Error: Copying file failed: " + e.getMessage());
+                        return;
                     }
                 } else {
                     errStream.println("ERROR: Could not find any entities in the schema file");
@@ -283,11 +292,13 @@ public class Migrate implements BLauncherCmd {
                     }
                 } catch (IOException e) {
                     errStream.println("Error: An error occurred while writing to file: " + e.getMessage());
+                    return;
                 }
             }
 
         } catch (BalException e) {
             errStream.println("Error getting entities: " + e.getMessage());
+            return;
         }
 
         if (!queries.isEmpty()) {
@@ -296,6 +307,7 @@ public class Migrate implements BLauncherCmd {
                 Files.copy(currentModelPath, newMigrationPath.resolve(currentModelPath.getFileName()));
             } catch (IOException e) {
                 errStream.println("Error: Copying file failed: " + e.getMessage());
+                return;
             }
         } else {
             // Delete the newMigrateDirectory
@@ -312,6 +324,7 @@ public class Migrate implements BLauncherCmd {
                         Files.delete(migrationsDir.toPath());
                     } catch (IOException e) {
                         errStream.println("Error: Failed to delete migration folder: " + e.getMessage());
+                        return;
                     }
                 }
             }
@@ -572,6 +585,7 @@ public class Migrate implements BLauncherCmd {
                     }
                 } catch (BalException e) {
                     errStream.println("ERROR: data type conversion failed: " + e.getMessage());
+                    return;
                 }
 
                 StringBuilder query = new StringBuilder(
@@ -589,6 +603,7 @@ public class Migrate implements BLauncherCmd {
                             }
                         } catch (BalException e) {
                             errStream.println("ERROR: data type conversion failed: " + e.getMessage());
+                            return;
                         }
 
                         query.append(String.format(addFieldTemplate, field.getName(), addField));
@@ -668,6 +683,7 @@ public class Migrate implements BLauncherCmd {
                                 }
                             } catch (BalException e) {
                                 errStream.println("ERROR: data type conversion failed: " + e.getMessage());
+                                return;
                             }
                             String addFieldTemplate = "ALTER TABLE %s%nADD COLUMN %s %s;";
 
@@ -691,6 +707,7 @@ public class Migrate implements BLauncherCmd {
                             }
                         } catch (BalException e) {
                             errStream.println("ERROR: data type conversion failed: " + e.getMessage());
+                            return;
                         }
                         String changeTypeTemplate = "ALTER TABLE %s%nMODIFY COLUMN %s %s;";
 
