@@ -562,7 +562,7 @@ public class Migrate implements BLauncherCmd {
         if (Objects.requireNonNull(type) == QueryTypes.ADD_TABLE) {
             for (String entity : addedEntities) {
                 FieldMetadata primaryKey = addedReadOnly.get(entity).get(0);
-                String addTableTemplate = "CREATE TABLE %s (%s %s PRIMARY KEY";
+                String addTableTemplate = "CREATE TABLE %s (%n    %s %s PRIMARY KEY";
 
                 try {
                     if (!primaryKey.isArrayType()) {
@@ -577,7 +577,7 @@ public class Migrate implements BLauncherCmd {
                 StringBuilder query = new StringBuilder(
                         String.format(addTableTemplate, entity, primaryKey.getName(), pKField));
 
-                String addFieldTemplate = ", %s %s";
+                String addFieldTemplate = ",%n    %s %s";
 
                 if (addedFields.get(entity) != null) {
                     for (FieldMetadata field : addedFields.get(entity)) {
@@ -595,7 +595,8 @@ public class Migrate implements BLauncherCmd {
                     }
                 }
 
-                queries.add(query + ");");
+                query.append("\n);");
+                queries.add(query.toString());
             }
         }
     }
