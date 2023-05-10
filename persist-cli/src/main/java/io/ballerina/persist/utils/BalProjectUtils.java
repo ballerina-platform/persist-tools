@@ -20,6 +20,7 @@ package io.ballerina.persist.utils;
 
 import io.ballerina.compiler.syntax.tree.ArrayTypeDescriptorNode;
 import io.ballerina.compiler.syntax.tree.BuiltinSimpleNameReferenceNode;
+import io.ballerina.compiler.syntax.tree.ImportDeclarationNode;
 import io.ballerina.compiler.syntax.tree.MetadataNode;
 import io.ballerina.compiler.syntax.tree.ModuleMemberDeclarationNode;
 import io.ballerina.compiler.syntax.tree.ModulePartNode;
@@ -156,7 +157,13 @@ public class BalProjectUtils {
                                 BalSyntaxConstants.KEYWORD_PERSIST)))
                 .findFirst().orElseThrow(() -> new BalException(
                         "no `import ballerina/persist as _;` statement found.."));
-
+        for (ImportDeclarationNode importDeclarationNode: rootNote.imports()) {
+            if (importDeclarationNode.moduleName().get(0).text().equals(BalSyntaxConstants.CONSTRAINT) &&
+                    importDeclarationNode.orgName().isPresent() && importDeclarationNode.orgName().get()
+                    .orgName().text().equals(BalSyntaxConstants.KEYWORD_BALLERINA)) {
+                moduleBuilder.addImportModulePrefix(BalSyntaxConstants.CONSTRAINT);
+            }
+        }
         Entity.Builder entityBuilder;
         for (ModuleMemberDeclarationNode moduleNode : nodeList) {
             if (moduleNode.kind() != SyntaxKind.TYPE_DEFINITION) {
