@@ -25,6 +25,7 @@ import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.FieldMetadata;
 import io.ballerina.persist.models.ForeignKey;
 import io.ballerina.persist.models.Module;
+import io.ballerina.persist.nodegenerator.SourceGenerator;
 import io.ballerina.persist.nodegenerator.syntax.utils.SqlScriptUtils;
 import io.ballerina.persist.utils.BalProjectUtils;
 import picocli.CommandLine;
@@ -138,26 +139,37 @@ public class Migrate implements BLauncherCmd {
                     return;
                 }
 
-                // Create a blankFile.bal file that contains the line "boom"
-                Path blankFilePath = Paths.get(persistDirPath + "/blankFile.bal");
+                Module model = null;
                 try {
-                    Files.createFile(blankFilePath);
-                    try (BufferedWriter buffWriter = Files.newBufferedWriter(blankFilePath, StandardCharsets.UTF_8)) {
-                        buffWriter.write("import ballerina/persist as _;\n");
-                    }
-                } catch (IOException e) {
-                    errStream.println("Error: Failed to create blankFile.bal: " + e.getMessage());
-                    return;
+                    model = BalProjectUtils.getEntities(schemaFilePath);
+                } catch (BalException e) {
+                    errStream.println("Error getting entities: " + e.getMessage());
                 }
 
-                // Migrate with the blankFile.bal
-                migrateWithTimestamp(migrationsDir, migrationName, schemaFilePath, blankFilePath);
+                String newMigration = createTimestampFolder(migrationName, migrationsDir);
 
-                // Delete the blankFile.bal
-                try {
-                    Files.delete(blankFilePath);
-                } catch (IOException e) {
-                    errStream.println("Error: Failed to delete blankFile.bal: " + e.getMessage());
+                createTimestampDirectory(newMigration);
+
+                Path newMigrationPath = Paths.get(newMigration);
+
+                if (model != null) {
+                    try {
+                        // Generate the SQL script
+                        SourceGenerator.addSqlScriptFile("the migrate command",
+                                SqlScriptUtils.generateSqlScript(model.getEntityMap().values()),
+                                newMigrationPath);
+                    } catch (BalException e) {
+                        errStream.println("ERROR: Failed to generate SQL script " + e.getMessage());
+                    }
+
+                    try {
+                        // Copy the source file to the destination folder
+                        Files.copy(schemaFilePath, newMigrationPath.resolve(schemaFilePath.getFileName()));
+                    } catch (IOException e) {
+                        errStream.println("Error: Copying file failed: " + e.getMessage());
+                    }
+                } else {
+                    errStream.println("ERROR: Could not find any entities in the schema file");
                 }
 
             } else {
@@ -246,20 +258,11 @@ public class Migrate implements BLauncherCmd {
 
     private static void migrateWithTimestamp(File migrationsDir, String migrationName, Path currentModelPath,
             Path previousModelPath) {
-        Instant currentTime = Instant.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss");
-        String timestamp = formatter.format(ZonedDateTime.ofInstant(currentTime, ZoneOffset.UTC));
         List<String> queries = new ArrayList<>();
 
-        // Create the directory with the current timestamp
-        String newMigration = migrationsDir + File.separator + timestamp + "_" + migrationName;
-        File newMigrateDirectory = new File(newMigration);
-        if (!newMigrateDirectory.exists()) {
-            boolean isDirectoryCreated = newMigrateDirectory.mkdirs();
-            if (!isDirectoryCreated) {
-                errStream.println("Error: Failed to create directory: " + newMigrateDirectory.getAbsolutePath());
-            }
-        }
+        String newMigration = createTimestampFolder(migrationName, migrationsDir);
+
+        File newMigrateDirectory = getTimestampDirectory(newMigration);
 
         Path newMigrationPath = Paths.get(newMigration);
         try {
@@ -270,7 +273,7 @@ public class Migrate implements BLauncherCmd {
 
             // Write queries to file
             if (!queries.isEmpty()) {
-                String filePath = Paths.get(newMigrationPath.toString(), "migration.sql").toString();
+                String filePath = Paths.get(newMigrationPath.toString(), "script.sql").toString();
                 try (FileOutputStream fStream = new FileOutputStream(filePath);
                         OutputStreamWriter oStream = new OutputStreamWriter(fStream, StandardCharsets.UTF_8);
                         BufferedWriter writer = new BufferedWriter(oStream)) {
@@ -311,6 +314,45 @@ public class Migrate implements BLauncherCmd {
                         errStream.println("Error: Failed to delete migration folder: " + e.getMessage());
                     }
                 }
+            }
+        }
+    }
+
+    // Create a timestamp folder name
+    private static String createTimestampFolder(String migrationName, File migrationsDir) {
+        Instant currentTime = Instant.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss");
+        String timestamp = formatter.format(ZonedDateTime.ofInstant(currentTime, ZoneOffset.UTC));
+
+        String newMigration = migrationsDir + File.separator + timestamp + "_" + migrationName;
+
+        return newMigration;
+    }
+
+    // Create the timestamp directory
+    private static File getTimestampDirectory(String newMigration) {
+        File newMigrateDirectory = new File(newMigration);
+
+        if (!newMigrateDirectory.exists()) {
+            boolean isDirectoryCreated = newMigrateDirectory.mkdirs();
+            if (!isDirectoryCreated) {
+                errStream.println("Error: Failed to create directory: " + newMigrateDirectory.getAbsolutePath());
+            } else {
+                return newMigrateDirectory;
+            }
+        }
+
+        return null;
+    }
+
+    // Create the timestamp directory without returning the directory
+    private static void createTimestampDirectory(String newMigration) {
+        File newMigrateDirectory = new File(newMigration);
+
+        if (!newMigrateDirectory.exists()) {
+            boolean isDirectoryCreated = newMigrateDirectory.mkdirs();
+            if (!isDirectoryCreated) {
+                errStream.println("Error: Failed to create directory: " + newMigrateDirectory.getAbsolutePath());
             }
         }
     }
