@@ -159,7 +159,7 @@ public class Migrate implements BLauncherCmd {
 
                 Path newMigrationPath = Paths.get(newMigration);
 
-                if (model != null) {
+                if (!model.getEntityMap().isEmpty()) {
                     try {
                         // Generate the SQL script
                         SourceGenerator.addSqlScriptFile("the migrate command",
@@ -267,7 +267,7 @@ public class Migrate implements BLauncherCmd {
 
     private static void migrateWithTimestamp(File migrationsDir, String migrationName, Path currentModelPath,
             Path previousModelPath) {
-        List<String> queries = new ArrayList<>();
+        List<String> queries;
 
         String newMigration = createTimestampFolder(migrationName, migrationsDir);
 
@@ -610,7 +610,7 @@ public class Migrate implements BLauncherCmd {
                     }
                 }
 
-                query.append("\n);");
+                query.append("\n);\n");
                 queries.add(query.toString());
             }
         }
@@ -620,7 +620,7 @@ public class Migrate implements BLauncherCmd {
     private static void convertListToQuery(QueryTypes type, List<String> entities, List<String> queries) {
         if (Objects.requireNonNull(type) == QueryTypes.REMOVE_TABLE) {
             for (String entity : entities) {
-                String removeTableTemplate = "DROP TABLE %s;";
+                String removeTableTemplate = "DROP TABLE %s;%n";
                 queries.add(String.format(removeTableTemplate, entity));
             }
         }
@@ -633,7 +633,7 @@ public class Migrate implements BLauncherCmd {
                 for (Map.Entry<String, List<String>> entry : map.entrySet()) {
                     String entity = entry.getKey();
                     for (String field : entry.getValue()) {
-                        String removeFieldTemplate = "ALTER TABLE %s%nDROP COLUMN %s;";
+                        String removeFieldTemplate = "ALTER TABLE %s%nDROP COLUMN %s;%n";
                         queries.add(String.format(removeFieldTemplate, entity, field));
                     }
                 }
@@ -642,7 +642,7 @@ public class Migrate implements BLauncherCmd {
             case REMOVE_READONLY:
                 for (Map.Entry<String, List<String>> entry : map.entrySet()) {
                     String entity = entry.getKey();
-                    String removeReadOnlyTemplate = "ALTER TABLE %s%nDROP PRIMARY KEY;";
+                    String removeReadOnlyTemplate = "ALTER TABLE %s%nDROP PRIMARY KEY;%n";
                     queries.add(String.format(removeReadOnlyTemplate, entity));
                 }
                 break;
@@ -653,7 +653,7 @@ public class Migrate implements BLauncherCmd {
                     for (String field : entry.getValue()) {
                         String[] fieldData = field.split(",");
                         String foreignKeyName = fieldData[0];
-                        String removeForeignKeyTemplate = "ALTER TABLE %s%nDROP FOREIGN KEY %s;";
+                        String removeForeignKeyTemplate = "ALTER TABLE %s%nDROP FOREIGN KEY %s;%n";
                         queries.add(String.format(removeForeignKeyTemplate, entity, foreignKeyName));
                     }
                 }
@@ -685,7 +685,7 @@ public class Migrate implements BLauncherCmd {
                                 errStream.println("ERROR: data type conversion failed: " + e.getMessage());
                                 return;
                             }
-                            String addFieldTemplate = "ALTER TABLE %s%nADD COLUMN %s %s;";
+                            String addFieldTemplate = "ALTER TABLE %s%nADD COLUMN %s %s;%n";
 
                             queries.add(String.format(addFieldTemplate, entity, fieldName, fieldType));
                         }
@@ -709,7 +709,7 @@ public class Migrate implements BLauncherCmd {
                             errStream.println("ERROR: data type conversion failed: " + e.getMessage());
                             return;
                         }
-                        String changeTypeTemplate = "ALTER TABLE %s%nMODIFY COLUMN %s %s;";
+                        String changeTypeTemplate = "ALTER TABLE %s%nMODIFY COLUMN %s %s;%n";
 
                         queries.add(String.format(changeTypeTemplate, entity, fieldName, fieldType));
                     }
@@ -722,7 +722,7 @@ public class Migrate implements BLauncherCmd {
                     if (!addedEntities.contains(entity)) {
                         for (FieldMetadata field : entry.getValue()) {
                             String primaryKey = field.getName();
-                            String addReadOnlyTemplate = "ALTER TABLE %s%nADD PRIMARY KEY (%s);";
+                            String addReadOnlyTemplate = "ALTER TABLE %s%nADD PRIMARY KEY (%s);%n";
 
                             queries.add(String.format(addReadOnlyTemplate, entity, primaryKey));
                         }
@@ -746,7 +746,7 @@ public class Migrate implements BLauncherCmd {
                     String childColumnName = foreignKey.getColumnName();
                     String referenceTableName = foreignKey.getReferenceTable();
                     String referenceColumnName = foreignKey.getReferenceColumn();
-                    String addFKTemplate = "ALTER TABLE %s%nADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s(%s);";
+                    String addFKTemplate = "ALTER TABLE %s%nADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s(%s);%n";
 
                     queries.add(String.format(addFKTemplate, entity, foreignKeyName, childColumnName,
                             referenceTableName, referenceColumnName));

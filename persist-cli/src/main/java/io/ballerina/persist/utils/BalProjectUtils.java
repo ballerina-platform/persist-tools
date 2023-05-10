@@ -51,7 +51,6 @@ import io.ballerina.tools.diagnostics.Diagnostic;
 import io.ballerina.tools.text.TextDocuments;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
