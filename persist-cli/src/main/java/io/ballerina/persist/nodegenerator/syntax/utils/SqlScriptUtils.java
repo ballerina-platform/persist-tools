@@ -90,11 +90,17 @@ public class SqlScriptUtils {
 
     private static String getColumnsScript(Entity entity) throws BalException {
         StringBuilder columnScript = new StringBuilder();
+        String sqlType;
         for (EntityField entityField :entity.getFields()) {
             if (entityField.getRelation() != null) {
                 continue;
             }
-            String sqlType = getType(entityField);
+            if (!entityField.isArrayType()) {
+                String field = removeSingleQuote(entityField.getFieldType());
+                sqlType = getTypeArray(field);
+            } else {
+                sqlType = getTypeNonArray(entityField);
+            }
             assert sqlType != null;
             String fieldName = addBackticks(removeSingleQuote(entityField.getFieldName()));
             if (entityField.isOptionalType()) {
@@ -126,7 +132,12 @@ public class SqlScriptUtils {
                     continue;
                 }
                 if (assocField.getFieldName().equals(references.get(i))) {
-                    referenceSqlType = getType(assocField);
+                    if (!assocField.isArrayType()) {
+                        String field = removeSingleQuote(assocField.getFieldType());
+                        referenceSqlType = getTypeArray(field);
+                    } else {
+                        referenceSqlType = getTypeNonArray(assocField);
+                    }
                     break;
                 }
             }
@@ -198,40 +209,40 @@ public class SqlScriptUtils {
         return keyScripts.toString();
     }
 
-    private static String getType(EntityField field) throws BalException {
-        String fieldType = removeSingleQuote(field.getFieldType());
-        if (!field.isArrayType()) {
-            switch (fieldType) {
-                case PersistToolsConstants.BallerinaTypes.INT:
-                    return PersistToolsConstants.SqlTypes.INT;
-                case PersistToolsConstants.BallerinaTypes.BOOLEAN:
-                    return PersistToolsConstants.SqlTypes.BOOLEAN;
-                case PersistToolsConstants.BallerinaTypes.DECIMAL:
-                    return PersistToolsConstants.SqlTypes.DECIMAL + String.format("(%s,%s)",
-                        PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION,
-                        PersistToolsConstants.DefaultMaxLength.DECIMAL_SCALE);
-                case PersistToolsConstants.BallerinaTypes.FLOAT:
-                    return PersistToolsConstants.SqlTypes.DOUBLE;
-                case PersistToolsConstants.BallerinaTypes.DATE:
-                    return PersistToolsConstants.SqlTypes.DATE;
-                case PersistToolsConstants.BallerinaTypes.TIME_OF_DAY:
-                    return PersistToolsConstants.SqlTypes.TIME;
-                case PersistToolsConstants.BallerinaTypes.UTC:
-                    return PersistToolsConstants.SqlTypes.TIME_STAMP;
-                case PersistToolsConstants.BallerinaTypes.CIVIL:
-                    return PersistToolsConstants.SqlTypes.DATE_TIME;
-                case PersistToolsConstants.BallerinaTypes.STRING:
-                    return PersistToolsConstants.SqlTypes.VARCHAR + String.format("(%s)",
-                            PersistToolsConstants.DefaultMaxLength.VARCHAR_LENGTH);
-                default:
-                    throw new BalException("couldn't find equivalent SQL type for the field type: " + fieldType);
-            }
-        } else {
-            if (PersistToolsConstants.BallerinaTypes.BYTE.equals(field.getFieldType())) {
-                return PersistToolsConstants.SqlTypes.LONG_BLOB;
-            }
-            throw new BalException("couldn't find equivalent SQL type for the field type: " + fieldType);
+    public static String getTypeArray(String field) throws BalException {
+        switch (field) {
+            case PersistToolsConstants.BallerinaTypes.INT:
+                return PersistToolsConstants.SqlTypes.INT;
+            case PersistToolsConstants.BallerinaTypes.BOOLEAN:
+                return PersistToolsConstants.SqlTypes.BOOLEAN;
+            case PersistToolsConstants.BallerinaTypes.DECIMAL:
+                return PersistToolsConstants.SqlTypes.DECIMAL + String.format("(%s,%s)",
+                    PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION,
+                    PersistToolsConstants.DefaultMaxLength.DECIMAL_SCALE);
+            case PersistToolsConstants.BallerinaTypes.FLOAT:
+                return PersistToolsConstants.SqlTypes.DOUBLE;
+            case PersistToolsConstants.BallerinaTypes.DATE:
+                return PersistToolsConstants.SqlTypes.DATE;
+            case PersistToolsConstants.BallerinaTypes.TIME_OF_DAY:
+                return PersistToolsConstants.SqlTypes.TIME;
+            case PersistToolsConstants.BallerinaTypes.UTC:
+                return PersistToolsConstants.SqlTypes.TIME_STAMP;
+            case PersistToolsConstants.BallerinaTypes.CIVIL:
+                return PersistToolsConstants.SqlTypes.DATE_TIME;
+            case PersistToolsConstants.BallerinaTypes.STRING:
+                return PersistToolsConstants.SqlTypes.VARCHAR + String.format("(%s)",
+                        PersistToolsConstants.DefaultMaxLength.VARCHAR_LENGTH);
+            default:
+                throw new BalException("couldn't find equivalent SQL type for the field type: " + field);
         }
+    }
+
+    public static String getTypeNonArray(EntityField field) throws BalException {
+        String fieldType = removeSingleQuote(field.getFieldType());
+        if (PersistToolsConstants.BallerinaTypes.BYTE.equals(field.getFieldType())) {
+            return PersistToolsConstants.SqlTypes.LONG_BLOB;
+        }
+        throw new BalException("couldn't find equivalent SQL type for the field type: " + fieldType);
     }
 
     private static String[] rearrangeScriptsWithReference(Set<String> tables,

@@ -25,6 +25,7 @@ import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.FieldMetadata;
 import io.ballerina.persist.models.ForeignKey;
 import io.ballerina.persist.models.Module;
+import io.ballerina.persist.nodegenerator.syntax.utils.SqlScriptUtils;
 import io.ballerina.persist.utils.BalProjectUtils;
 import picocli.CommandLine;
 
@@ -513,6 +514,8 @@ public class Migrate implements BLauncherCmd {
     // Convert Create Table List to Query
     private static void convertCreateTableToQuery(QueryTypes type, List<String> addedEntities, List<String> queries,
             HashMap<String, List<FieldMetadata>> addedReadOnly, HashMap<String, List<FieldMetadata>> addedFields) {
+        String addField = "";
+        String pKField = "";
         if (Objects.requireNonNull(type) == QueryTypes.ADD_TABLE) {
             for (String entity : addedEntities) {
                 FieldMetadata primaryKey = addedReadOnly.get(entity).get(0);
@@ -520,15 +523,26 @@ public class Migrate implements BLauncherCmd {
                 String primaryKeyType = primaryKey.getDataType();
                 String addTableTemplate = "CREATE TABLE %s (%s %s PRIMARY KEY";
 
+                try {
+                    pKField = SqlScriptUtils.getTypeArray(primaryKeyType);
+                } catch (BalException e) {
+                    errStream.println("ERROR: data type conversion failed: " + e.getMessage());
+                }
+
                 StringBuilder query = new StringBuilder(
-                        String.format(addTableTemplate, entity, primaryKeyName, getDataType(primaryKeyType)));
+                        String.format(addTableTemplate, entity, primaryKeyName, pKField));
 
                 String addFieldTemplate = ", %s %s";
 
                 if (addedFields.get(entity) != null) {
                     for (FieldMetadata field : addedFields.get(entity)) {
-                        query.append(
-                                String.format(addFieldTemplate, field.getName(), getDataType(field.getDataType())));
+                        try {
+                            addField = SqlScriptUtils.getTypeArray(field.getDataType());
+                        } catch (BalException e) {
+                            errStream.println("ERROR: data type conversion failed: " + e.getMessage());
+                        }
+
+                        query.append(String.format(addFieldTemplate, field.getName(), addField));
                     }
                 }
 
@@ -595,7 +609,12 @@ public class Migrate implements BLauncherCmd {
                     if (!addedEntities.contains(entity)) {
                         for (FieldMetadata field : entry.getValue()) {
                             String fieldName = field.getName();
-                            String fieldType = getDataType(field.getDataType());
+                            String fieldType = "";
+                            try {
+                                fieldType = SqlScriptUtils.getTypeArray(field.getDataType());
+                            } catch (BalException e) {
+                                errStream.println("ERROR: data type conversion failed: " + e.getMessage());
+                            }
                             String addFieldTemplate = "ALTER TABLE %s ADD COLUMN %s %s;";
 
                             queries.add(String.format(addFieldTemplate, entity, fieldName, fieldType));
@@ -609,7 +628,12 @@ public class Migrate implements BLauncherCmd {
                     String entity = entry.getKey();
                     for (FieldMetadata field : entry.getValue()) {
                         String fieldName = field.getName();
-                        String fieldType = getDataType(field.getDataType());
+                        String fieldType = "";
+                        try {
+                            fieldType = SqlScriptUtils.getTypeArray(field.getDataType());
+                        } catch (BalException e) {
+                            errStream.println("ERROR: data type conversion failed: " + e.getMessage());
+                        }
                         String changeTypeTemplate = "ALTER TABLE %s MODIFY COLUMN %s %s;";
 
                         queries.add(String.format(changeTypeTemplate, entity, fieldName, fieldType));
@@ -654,65 +678,6 @@ public class Migrate implements BLauncherCmd {
                 }
             }
         }
-    }
-
-    // Convert Java data type to MySQL data type
-    private static String getDataType(String dataType) { // todo replace whole function with kalai get type
-        String resultType;
-
-        switch (dataType) {
-            case "string":
-                resultType = "VARCHAR(191)";
-                break;
-
-            case "int":
-                resultType = "INT";
-                break;
-
-            case "long":
-                resultType = "BIGINT";
-                break;
-
-            case "decimal":
-                resultType = "DECIMAL";
-                break;
-
-            case "float":
-                resultType = "FLOAT";
-                break;
-
-            case "double":
-                resultType = "DOUBLE";
-                break;
-
-            case "boolean":
-                resultType = "BOOLEAN";
-                break;
-
-            case "Date":
-            case "LocalDate":
-                resultType = "DATE";
-                break;
-
-            case "LocalTime":
-                resultType = "TIME";
-                break;
-
-            case "time:Civil":
-                resultType = "DATETIME";
-                break;
-
-            case "byte[]":
-                resultType = "LONGBLOB";
-                break;
-
-            default:
-                resultType = "ERROR: VARIABLE NOT FOUND";
-                break;
-        }
-
-        return resultType;
-
     }
 
     // Types of MySQL queries
