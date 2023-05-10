@@ -618,7 +618,7 @@ public class Migrate implements BLauncherCmd {
                 for (Map.Entry<String, List<String>> entry : map.entrySet()) {
                     String entity = entry.getKey();
                     for (String field : entry.getValue()) {
-                        String removeFieldTemplate = "ALTER TABLE %s DROP COLUMN %s;";
+                        String removeFieldTemplate = "ALTER TABLE %s%nDROP COLUMN %s;";
                         queries.add(String.format(removeFieldTemplate, entity, field));
                     }
                 }
@@ -627,7 +627,7 @@ public class Migrate implements BLauncherCmd {
             case REMOVE_READONLY:
                 for (Map.Entry<String, List<String>> entry : map.entrySet()) {
                     String entity = entry.getKey();
-                    String removeReadOnlyTemplate = "ALTER TABLE %s DROP PRIMARY KEY;";
+                    String removeReadOnlyTemplate = "ALTER TABLE %s%nDROP PRIMARY KEY;";
                     queries.add(String.format(removeReadOnlyTemplate, entity));
                 }
                 break;
@@ -638,7 +638,7 @@ public class Migrate implements BLauncherCmd {
                     for (String field : entry.getValue()) {
                         String[] fieldData = field.split(",");
                         String foreignKeyName = fieldData[0];
-                        String removeForeignKeyTemplate = "ALTER TABLE %s DROP FOREIGN KEY %s;";
+                        String removeForeignKeyTemplate = "ALTER TABLE %s%nDROP FOREIGN KEY %s;";
                         queries.add(String.format(removeForeignKeyTemplate, entity, foreignKeyName));
                     }
                 }
@@ -669,7 +669,7 @@ public class Migrate implements BLauncherCmd {
                             } catch (BalException e) {
                                 errStream.println("ERROR: data type conversion failed: " + e.getMessage());
                             }
-                            String addFieldTemplate = "ALTER TABLE %s ADD COLUMN %s %s;";
+                            String addFieldTemplate = "ALTER TABLE %s%nADD COLUMN %s %s;";
 
                             queries.add(String.format(addFieldTemplate, entity, fieldName, fieldType));
                         }
@@ -692,7 +692,7 @@ public class Migrate implements BLauncherCmd {
                         } catch (BalException e) {
                             errStream.println("ERROR: data type conversion failed: " + e.getMessage());
                         }
-                        String changeTypeTemplate = "ALTER TABLE %s MODIFY COLUMN %s %s;";
+                        String changeTypeTemplate = "ALTER TABLE %s%nMODIFY COLUMN %s %s;";
 
                         queries.add(String.format(changeTypeTemplate, entity, fieldName, fieldType));
                     }
@@ -705,7 +705,7 @@ public class Migrate implements BLauncherCmd {
                     if (!addedEntities.contains(entity)) {
                         for (FieldMetadata field : entry.getValue()) {
                             String primaryKey = field.getName();
-                            String addReadOnlyTemplate = "ALTER TABLE %s ADD PRIMARY KEY (%s);";
+                            String addReadOnlyTemplate = "ALTER TABLE %s%nADD PRIMARY KEY (%s);";
 
                             queries.add(String.format(addReadOnlyTemplate, entity, primaryKey));
                         }
@@ -729,7 +729,7 @@ public class Migrate implements BLauncherCmd {
                     String childColumnName = foreignKey.getColumnName();
                     String referenceTableName = foreignKey.getReferenceTable();
                     String referenceColumnName = foreignKey.getReferenceColumn();
-                    String addFKTemplate = "ALTER TABLE %s ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s(%s);";
+                    String addFKTemplate = "ALTER TABLE %s%nADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s(%s);";
 
                     queries.add(String.format(addFKTemplate, entity, foreignKeyName, childColumnName,
                             referenceTableName, referenceColumnName));
