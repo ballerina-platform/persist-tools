@@ -483,7 +483,8 @@ public class Migrate implements BLauncherCmd {
     }
 
     private static void addToMapWithType(Entity entity, EntityField field, Map<String, List<FieldMetadata>> map) {
-        FieldMetadata fieldMetadata = new FieldMetadata(field.getFieldName(), field.getFieldType());
+        FieldMetadata fieldMetadata = new FieldMetadata(field.getFieldName(), field.getFieldType(),
+                field.isArrayType());
 
         if (!map.containsKey(entity.getEntityName())) {
             List<FieldMetadata> initialData = new ArrayList<>();
@@ -498,7 +499,7 @@ public class Migrate implements BLauncherCmd {
 
     private static void addToMapNewEntityFK(Entity entity, EntityField field, Map<String, List<FieldMetadata>> map) {
         FieldMetadata fieldMetadata = new FieldMetadata(field.getRelation().getKeyColumns().get(0).getField(),
-                field.getRelation().getKeyColumns().get(0).getType());
+                field.getRelation().getKeyColumns().get(0).getType(), field.isArrayType());
 
         if (!map.containsKey(entity.getEntityName())) {
             List<FieldMetadata> initialData = new ArrayList<>();
@@ -519,25 +520,31 @@ public class Migrate implements BLauncherCmd {
         if (Objects.requireNonNull(type) == QueryTypes.ADD_TABLE) {
             for (String entity : addedEntities) {
                 FieldMetadata primaryKey = addedReadOnly.get(entity).get(0);
-                String primaryKeyName = primaryKey.getName();
-                String primaryKeyType = primaryKey.getDataType();
                 String addTableTemplate = "CREATE TABLE %s (%s %s PRIMARY KEY";
 
                 try {
-                    pKField = SqlScriptUtils.getTypeArray(primaryKeyType);
+                    if (!primaryKey.isArrayType()) {
+                        pKField = SqlScriptUtils.getTypeNonArray(primaryKey.getDataType());
+                    } else {
+                        pKField = SqlScriptUtils.getTypeArray(primaryKey.getDataType());
+                    }
                 } catch (BalException e) {
                     errStream.println("ERROR: data type conversion failed: " + e.getMessage());
                 }
 
                 StringBuilder query = new StringBuilder(
-                        String.format(addTableTemplate, entity, primaryKeyName, pKField));
+                        String.format(addTableTemplate, entity, primaryKey.getName(), pKField));
 
                 String addFieldTemplate = ", %s %s";
 
                 if (addedFields.get(entity) != null) {
                     for (FieldMetadata field : addedFields.get(entity)) {
                         try {
-                            addField = SqlScriptUtils.getTypeArray(field.getDataType());
+                            if (!field.isArrayType()) {
+                                addField = SqlScriptUtils.getTypeNonArray(field.getDataType());
+                            } else {
+                                addField = SqlScriptUtils.getTypeArray(field.getDataType());
+                            }
                         } catch (BalException e) {
                             errStream.println("ERROR: data type conversion failed: " + e.getMessage());
                         }
@@ -611,7 +618,11 @@ public class Migrate implements BLauncherCmd {
                             String fieldName = field.getName();
                             String fieldType = "";
                             try {
-                                fieldType = SqlScriptUtils.getTypeArray(field.getDataType());
+                                if (!field.isArrayType()) {
+                                    fieldType = SqlScriptUtils.getTypeNonArray(field.getDataType());
+                                } else {
+                                    fieldType = SqlScriptUtils.getTypeArray(field.getDataType());
+                                }
                             } catch (BalException e) {
                                 errStream.println("ERROR: data type conversion failed: " + e.getMessage());
                             }
@@ -630,7 +641,11 @@ public class Migrate implements BLauncherCmd {
                         String fieldName = field.getName();
                         String fieldType = "";
                         try {
-                            fieldType = SqlScriptUtils.getTypeArray(field.getDataType());
+                            if (!field.isArrayType()) {
+                                fieldType = SqlScriptUtils.getTypeNonArray(field.getDataType());
+                            } else {
+                                fieldType = SqlScriptUtils.getTypeArray(field.getDataType());
+                            }
                         } catch (BalException e) {
                             errStream.println("ERROR: data type conversion failed: " + e.getMessage());
                         }

@@ -25,10 +25,12 @@ package io.ballerina.persist.models;
 public class FieldMetadata {
     private String name;
     private String dataType;
+    private Boolean arrayType;
 
-    public FieldMetadata(String name, String dataType) {
+    public FieldMetadata(String name, String dataType, Boolean arrayType) {
         this.name = name;
         this.dataType = dataType;
+        this.arrayType = arrayType;
     }
 
     public FieldMetadata(String name) {
@@ -43,11 +45,19 @@ public class FieldMetadata {
         return dataType;
     }
 
+    public Boolean isArrayType() {
+        return arrayType;
+    }
+
     public void setName(String name) {
         this.name = name;
     }
 
     public void setDataType(String dataType) {
         this.dataType = dataType;
+    }
+
+    public void setArrayType(Boolean arrayType) {
+        this.arrayType = arrayType;
     }
 }

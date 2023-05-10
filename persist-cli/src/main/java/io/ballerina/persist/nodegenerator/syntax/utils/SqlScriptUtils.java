@@ -95,11 +95,11 @@ public class SqlScriptUtils {
             if (entityField.getRelation() != null) {
                 continue;
             }
+            String field = removeSingleQuote(entityField.getFieldType());
             if (!entityField.isArrayType()) {
-                String field = removeSingleQuote(entityField.getFieldType());
-                sqlType = getTypeArray(field);
+                sqlType = getTypeNonArray(field);
             } else {
-                sqlType = getTypeNonArray(entityField);
+                sqlType = getTypeArray(field);
             }
             assert sqlType != null;
             String fieldName = addBackticks(removeSingleQuote(entityField.getFieldName()));
@@ -132,11 +132,11 @@ public class SqlScriptUtils {
                     continue;
                 }
                 if (assocField.getFieldName().equals(references.get(i))) {
+                    String field = removeSingleQuote(assocField.getFieldType());
                     if (!assocField.isArrayType()) {
-                        String field = removeSingleQuote(assocField.getFieldType());
-                        referenceSqlType = getTypeArray(field);
+                        referenceSqlType = getTypeNonArray(field);
                     } else {
-                        referenceSqlType = getTypeNonArray(assocField);
+                        referenceSqlType = getTypeArray(field);
                     }
                     break;
                 }
@@ -209,7 +209,7 @@ public class SqlScriptUtils {
         return keyScripts.toString();
     }
 
-    public static String getTypeArray(String field) throws BalException {
+    public static String getTypeNonArray(String field) throws BalException {
         switch (field) {
             case PersistToolsConstants.BallerinaTypes.INT:
                 return PersistToolsConstants.SqlTypes.INT;
@@ -237,12 +237,11 @@ public class SqlScriptUtils {
         }
     }
 
-    public static String getTypeNonArray(EntityField field) throws BalException {
-        String fieldType = removeSingleQuote(field.getFieldType());
-        if (PersistToolsConstants.BallerinaTypes.BYTE.equals(field.getFieldType())) {
+    public static String getTypeArray(String field) throws BalException {
+        if (PersistToolsConstants.BallerinaTypes.BYTE.equals(field)) {
             return PersistToolsConstants.SqlTypes.LONG_BLOB;
         }
-        throw new BalException("couldn't find equivalent SQL type for the field type: " + fieldType);
+        throw new BalException("couldn't find equivalent SQL type for the field type: " + field);
     }
 
     private static String[] rearrangeScriptsWithReference(Set<String> tables,
