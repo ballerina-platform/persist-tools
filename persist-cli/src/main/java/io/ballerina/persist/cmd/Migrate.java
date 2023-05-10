@@ -286,6 +286,9 @@ public class Migrate implements BLauncherCmd {
                 try (FileOutputStream fStream = new FileOutputStream(filePath);
                         OutputStreamWriter oStream = new OutputStreamWriter(fStream, StandardCharsets.UTF_8);
                         BufferedWriter writer = new BufferedWriter(oStream)) {
+                    writer.write("-- AUTO-GENERATED FILE.\n-- This file is an auto-generated file by Ballerina " +
+                            "persistence layer for the migrate command.\n-- Please verify the generated scripts and " +
+                            "execute them against the target DB server.\n\n");
                     for (String query : queries) {
                         writer.write(query);
                         writer.newLine();
