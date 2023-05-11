@@ -395,12 +395,12 @@ public class BalSyntaxUtils {
         for (int i = 0; i < enumValue.getMembers().size(); i++) {
             EnumMember member = enumValue.getMembers().get(i);
             enumMembers.append(member.getIdentifier());
-            if (member.getValue().isPresent()) {
+            if (member.getValue() != null) {
                 enumMembers.append(BalSyntaxConstants.SPACE);
                 enumMembers.append(BalSyntaxConstants.EQUAL);
                 enumMembers.append(BalSyntaxConstants.SPACE);
                 enumMembers.append(BalSyntaxConstants.DOUBLE_QUOTE);
-                enumMembers.append(member.getValue().get());
+                enumMembers.append(member.getValue());
                 enumMembers.append(BalSyntaxConstants.DOUBLE_QUOTE);
             }
 

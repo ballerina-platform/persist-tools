@@ -28,9 +28,9 @@ import java.util.Optional;
 
 public class EnumMember {
     private final String identifier;
-    private final Optional<String> value;
+    private final String value;
 
-    public EnumMember(String identifier, Optional<String> value) {
+    public EnumMember(String identifier, String value) {
         this.identifier = identifier;
         this.value = value;
     }
@@ -39,7 +39,7 @@ public class EnumMember {
         return identifier;
     }
 
-    public Optional<String> getValue() {
+    public String getValue() {
         return value;
     }
 }

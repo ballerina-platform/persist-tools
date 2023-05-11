@@ -53,7 +53,7 @@ public class Enum {
      * Enum definition builder.
      */
     public static class Builder {
-        private String enumName;
+        private final String enumName;
         private List<EnumMember> members;
 
         private Builder(String enumName) {

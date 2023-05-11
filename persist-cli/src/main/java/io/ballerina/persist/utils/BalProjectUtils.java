@@ -233,9 +233,9 @@ public class BalProjectUtils {
                     if (value.startsWith("\"") && value.endsWith("\"")) {
                         value = value.substring(1, value.length() - 1);
                     }
-                    enumMember = new EnumMember(enumMemberNode.identifier().text().trim(), Optional.of(value));
+                    enumMember = new EnumMember(enumMemberNode.identifier().text().trim(), value);
                 } else {
-                    enumMember = new EnumMember(enumMemberNode.identifier().text().trim(), Optional.empty());
+                    enumMember = new EnumMember(enumMemberNode.identifier().text().trim(), null);
                 }
                 enumBuilder.addMember(enumMember);
             }

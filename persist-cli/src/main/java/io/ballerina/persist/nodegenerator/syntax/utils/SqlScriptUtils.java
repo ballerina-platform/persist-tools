@@ -256,8 +256,8 @@ public class SqlScriptUtils {
             stringBuilder.append(SINGLE_QUOTE);
 
             EnumMember member = members.get(i);
-            if (member.getValue().isPresent()) {
-                stringBuilder.append(member.getValue().get());
+            if (member.getValue() != null) {
+                stringBuilder.append(member.getValue());
             } else {
                 stringBuilder.append(member.getIdentifier());
             }
