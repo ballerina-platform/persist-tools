@@ -54,14 +54,14 @@ public class SqlScriptUtils {
 
     private SqlScriptUtils(){}
 
-    public static String[] generateSqlScript(Collection<Entity> entities, Collection<Enum> enums) throws BalException {
+    public static String[] generateSqlScript(Collection<Entity> entities) throws BalException {
         HashMap<String, List<String>> referenceTables = new HashMap<>();
         HashMap<String, List<String>> tableScripts = new HashMap<>();
         for (Entity entity : entities) {
             List<String> tableScript = new ArrayList<>();
             String tableName = removeSingleQuote(entity.getEntityName());
             tableScript.add(generateDropTableQuery(addBackticks(tableName)));
-            tableScript.add(generateCreateTableQuery(entity, referenceTables, enums));
+            tableScript.add(generateCreateTableQuery(entity, referenceTables));
             tableScripts.put(tableName, tableScript);
         }
         return rearrangeScriptsWithReference(tableScripts.keySet(), referenceTables, tableScripts);
@@ -70,17 +70,16 @@ public class SqlScriptUtils {
         return MessageFormat.format("DROP TABLE IF EXISTS {0};", tableName);
     }
 
-    private static String generateCreateTableQuery(Entity entity, HashMap<String, List<String>> referenceTables,
-                                                   Collection<Enum> enums) throws BalException {
+    private static String generateCreateTableQuery(Entity entity, HashMap<String, List<String>> referenceTables)
+            throws BalException {
 
-        String fieldDefinitions = generateFieldsDefinitionSegments(entity, referenceTables, enums);
+        String fieldDefinitions = generateFieldsDefinitionSegments(entity, referenceTables);
 
         return MessageFormat.format("{0}CREATE TABLE {1} ({2}{3});", NEW_LINE,
                 addBackticks(removeSingleQuote(entity.getEntityName())), fieldDefinitions, NEW_LINE);
     }
 
-    private static String generateFieldsDefinitionSegments(Entity entity, HashMap<String, List<String>> referenceTables,
-                                                           Collection<Enum> enums)
+    private static String generateFieldsDefinitionSegments(Entity entity, HashMap<String, List<String>> referenceTables)
             throws BalException {
         StringBuilder sqlScript = new StringBuilder();
         sqlScript.append(getColumnsScript(entity));
