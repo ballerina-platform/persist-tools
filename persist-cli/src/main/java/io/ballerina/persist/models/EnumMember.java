@@ -18,8 +18,6 @@
 
 package io.ballerina.persist.models;
 
-import java.util.Optional;
-
 /**
  * Enum member class.
  *

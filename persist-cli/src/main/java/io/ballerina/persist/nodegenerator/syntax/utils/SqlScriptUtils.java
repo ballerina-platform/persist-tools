@@ -35,8 +35,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.SINGLE_QUOTE;
-
 /**
  * Sql script generator.
  *
@@ -51,6 +49,7 @@ public class SqlScriptUtils {
     private static final String ENUM_START_SCRIPT = "ENUM(";
     private static final String ENUM_END_SCRIPT = ")";
 
+    private static final String SINGLE_QUOTE = "'";
 
     private SqlScriptUtils(){}
 
@@ -103,10 +102,10 @@ public class SqlScriptUtils {
 
             String sqlType;
             Enum enumValue = entityField.getEnum();
-            if (enumValue != null) {
-                sqlType = getEnumType(enumValue);
-            } else {
+            if (enumValue == null) {
                 sqlType = getType(entityField);
+            } else {
+                sqlType = getEnumType(enumValue);
             }
             assert sqlType != null;
             String fieldName = addBackticks(removeSingleQuote(entityField.getFieldName()));

@@ -148,9 +148,6 @@ public class BalProjectUtils {
         return moduleMembers;
     }
 
-    /**
-     * method to read ballerina files.
-     */
     public static void populateEntities(Module.Builder moduleBuilder, SyntaxTree balSyntaxTree) throws IOException,
             BalException {
         ModulePartNode rootNote = balSyntaxTree.rootNode();
@@ -201,9 +198,6 @@ public class BalProjectUtils {
         }
     }
 
-    /**
-     * method to read ballerina files.
-     */
     public static void populateEnums(Module.Builder moduleBuilder, SyntaxTree balSyntaxTree) throws IOException,
             BalException {
         ModulePartNode rootNote = balSyntaxTree.rootNode();
