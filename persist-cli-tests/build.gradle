@@ -248,7 +248,7 @@ test {
     dependsOn(copyTestPack)
     systemProperty "ballerina.home", ballerinaDist
     dependsOn(copyTestResources)
-//    dependsOn(startTestDockerContainer)
+    dependsOn(startTestDockerContainer)
     systemProperty "ballerina.offline.flag", "true"
     useTestNG() {
         suites 'src/test/resources/testng.xml'
@@ -282,7 +282,7 @@ jacocoTestReport {
 }
 
 test.dependsOn ":persist-cli:build"
-//test.finalizedBy stopTestDockerContainer
+test.finalizedBy stopTestDockerContainer
 
 build.dependsOn ":persist-cli:build"
 build.dependsOn copyTestPack
