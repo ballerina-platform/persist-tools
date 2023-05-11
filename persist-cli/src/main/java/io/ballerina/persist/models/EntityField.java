@@ -34,8 +34,9 @@ public class EntityField {
     private final boolean arrayType;
     private final boolean optionalType;
     private Relation relation;
+    private Enum enumValue;
 
-    private EntityField(String fieldName, String fieldType, boolean arrayType, boolean optionalType) {
+    EntityField(String fieldName, String fieldType, boolean arrayType, boolean optionalType) {
         this.fieldName = fieldName;
         this.fieldType = fieldType;
         this.arrayType = arrayType;
@@ -56,6 +57,14 @@ public class EntityField {
 
     public void setRelation(Relation relation) {
         this.relation = relation;
+    }
+
+    public void setEnum(Enum enumValue) {
+        this.enumValue = enumValue;
+    }
+
+    public Enum getEnum() {
+        return enumValue;
     }
 
     public boolean isArrayType() {
@@ -80,7 +89,7 @@ public class EntityField {
         boolean arrayType = false;
         boolean optionalType = false;
 
-        private Builder(String fieldName) {
+        Builder(String fieldName) {
             this.fieldName = fieldName;
         }
 

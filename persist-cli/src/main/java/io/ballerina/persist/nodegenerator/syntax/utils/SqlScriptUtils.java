@@ -21,6 +21,8 @@ import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.EntityField;
+import io.ballerina.persist.models.Enum;
+import io.ballerina.persist.models.EnumMember;
 import io.ballerina.persist.models.Relation;
 
 import java.text.MessageFormat;
@@ -33,6 +35,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.SINGLE_QUOTE;
+
 /**
  * Sql script generator.
  *
@@ -44,17 +48,20 @@ public class SqlScriptUtils {
     private static final String TAB = "\t";
     private static final String COMMA_WITH_SPACE = ", ";
     private static final String PRIMARY_KEY_START_SCRIPT = NEW_LINE + TAB + "PRIMARY KEY(";
+    private static final String ENUM_START_SCRIPT = "ENUM(";
+    private static final String ENUM_END_SCRIPT = ")";
+
 
     private SqlScriptUtils(){}
 
-    public static String[] generateSqlScript(Collection<Entity> entities) throws BalException {
+    public static String[] generateSqlScript(Collection<Entity> entities, Collection<Enum> enums) throws BalException {
         HashMap<String, List<String>> referenceTables = new HashMap<>();
         HashMap<String, List<String>> tableScripts = new HashMap<>();
         for (Entity entity : entities) {
             List<String> tableScript = new ArrayList<>();
             String tableName = removeSingleQuote(entity.getEntityName());
             tableScript.add(generateDropTableQuery(addBackticks(tableName)));
-            tableScript.add(generateCreateTableQuery(entity, referenceTables));
+            tableScript.add(generateCreateTableQuery(entity, referenceTables, enums));
             tableScripts.put(tableName, tableScript);
         }
         return rearrangeScriptsWithReference(tableScripts.keySet(), referenceTables, tableScripts);
@@ -63,17 +70,17 @@ public class SqlScriptUtils {
         return MessageFormat.format("DROP TABLE IF EXISTS {0};", tableName);
     }
 
-    private static String generateCreateTableQuery(Entity entity,
-                                                   HashMap<String, List<String>> referenceTables) throws BalException {
+    private static String generateCreateTableQuery(Entity entity, HashMap<String, List<String>> referenceTables,
+                                                   Collection<Enum> enums) throws BalException {
 
-        String fieldDefinitions = generateFieldsDefinitionSegments(entity, referenceTables);
+        String fieldDefinitions = generateFieldsDefinitionSegments(entity, referenceTables, enums);
 
         return MessageFormat.format("{0}CREATE TABLE {1} ({2}{3});", NEW_LINE,
                 addBackticks(removeSingleQuote(entity.getEntityName())), fieldDefinitions, NEW_LINE);
     }
 
-    private static String generateFieldsDefinitionSegments(Entity entity,
-                                                           HashMap<String, List<String>> referenceTables)
+    private static String generateFieldsDefinitionSegments(Entity entity, HashMap<String, List<String>> referenceTables,
+                                                           Collection<Enum> enums)
             throws BalException {
         StringBuilder sqlScript = new StringBuilder();
         sqlScript.append(getColumnsScript(entity));
@@ -94,7 +101,14 @@ public class SqlScriptUtils {
             if (entityField.getRelation() != null) {
                 continue;
             }
-            String sqlType = getType(entityField);
+
+            String sqlType;
+            Enum enumValue = entityField.getEnum();
+            if (enumValue != null) {
+                sqlType = getEnumType(enumValue);
+            } else {
+                sqlType = getType(entityField);
+            }
             assert sqlType != null;
             String fieldName = addBackticks(removeSingleQuote(entityField.getFieldName()));
             if (entityField.isOptionalType()) {
@@ -232,6 +246,32 @@ public class SqlScriptUtils {
             }
             throw new BalException("couldn't find equivalent SQL type for the field type: " + fieldType);
         }
+    }
+
+    private static String getEnumType(Enum enumValue) {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(ENUM_START_SCRIPT);
+
+        List<EnumMember> members = enumValue.getMembers();
+        for (int i = 0; i < members.size(); i++) {
+            stringBuilder.append(SINGLE_QUOTE);
+
+            EnumMember member = members.get(i);
+            if (member.getValue().isPresent()) {
+                stringBuilder.append(member.getValue().get());
+            } else {
+                stringBuilder.append(member.getIdentifier());
+            }
+
+            stringBuilder.append(SINGLE_QUOTE);
+
+            if (i < members.size() - 1) {
+                stringBuilder.append(COMMA_WITH_SPACE);
+            }
+        }
+
+        stringBuilder.append(ENUM_END_SCRIPT);
+        return stringBuilder.toString();
     }
 
     private static String[] rearrangeScriptsWithReference(Set<String> tables,

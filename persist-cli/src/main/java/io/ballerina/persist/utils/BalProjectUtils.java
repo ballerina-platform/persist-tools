@@ -20,6 +20,8 @@ package io.ballerina.persist.utils;
 
 import io.ballerina.compiler.syntax.tree.ArrayTypeDescriptorNode;
 import io.ballerina.compiler.syntax.tree.BuiltinSimpleNameReferenceNode;
+import io.ballerina.compiler.syntax.tree.EnumDeclarationNode;
+import io.ballerina.compiler.syntax.tree.EnumMemberNode;
 import io.ballerina.compiler.syntax.tree.ModuleMemberDeclarationNode;
 import io.ballerina.compiler.syntax.tree.ModulePartNode;
 import io.ballerina.compiler.syntax.tree.Node;
@@ -35,6 +37,8 @@ import io.ballerina.compiler.syntax.tree.TypeDescriptorNode;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.EntityField;
+import io.ballerina.persist.models.Enum;
+import io.ballerina.persist.models.EnumMember;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.models.Relation;
 import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
@@ -85,8 +89,10 @@ public class BalProjectUtils {
 
         try {
             SyntaxTree balSyntaxTree = SyntaxTree.from(TextDocuments.from(Files.readString(schemaFile)));
+            populateEnums(moduleBuilder, balSyntaxTree);
             populateEntities(moduleBuilder, balSyntaxTree);
             Module entityModule = moduleBuilder.build();
+            inferEnumDetails(entityModule);
             inferRelationDetails(entityModule);
             return entityModule;
         } catch (IOException | BalException | RuntimeException e) {
@@ -149,21 +155,13 @@ public class BalProjectUtils {
             BalException {
         ModulePartNode rootNote = balSyntaxTree.rootNode();
         io.ballerina.compiler.syntax.tree.NodeList<ModuleMemberDeclarationNode> nodeList = rootNote.members();
-        rootNote.imports().stream().filter(importNode -> importNode.orgName().isPresent() && importNode.orgName().get()
-                        .orgName().text().equals(BalSyntaxConstants.KEYWORD_BALLERINA) &&
-                        importNode.moduleName().stream().anyMatch(node -> node.text().equals(
-                                BalSyntaxConstants.KEYWORD_PERSIST)))
-                .findFirst().orElseThrow(() -> new BalException(
-                        "no `import ballerina/persist as _;` statement found.."));
 
-        Entity.Builder entityBuilder;
         for (ModuleMemberDeclarationNode moduleNode : nodeList) {
             if (moduleNode.kind() != SyntaxKind.TYPE_DEFINITION) {
                 continue;
             }
             TypeDefinitionNode typeDefinitionNode = (TypeDefinitionNode) moduleNode;
-            entityBuilder = Entity.newBuilder(typeDefinitionNode.typeName().text().trim());
-
+            Entity.Builder entityBuilder = Entity.newBuilder(typeDefinitionNode.typeName().text().trim());
             List<EntityField> keyArray = new ArrayList<>();
             RecordTypeDescriptorNode recordDesc = (RecordTypeDescriptorNode) ((TypeDefinitionNode) moduleNode)
                     .typeDescriptor();
@@ -200,6 +198,49 @@ public class BalProjectUtils {
             entityBuilder.setKeys(keyArray);
             Entity entity = entityBuilder.build();
             moduleBuilder.addEntity(entity.getEntityName(), entity);
+        }
+    }
+
+    /**
+     * method to read ballerina files.
+     */
+    public static void populateEnums(Module.Builder moduleBuilder, SyntaxTree balSyntaxTree) throws IOException,
+            BalException {
+        ModulePartNode rootNote = balSyntaxTree.rootNode();
+        io.ballerina.compiler.syntax.tree.NodeList<ModuleMemberDeclarationNode> nodeList = rootNote.members();
+        rootNote.imports().stream().filter(importNode -> importNode.orgName().isPresent() && importNode.orgName().get()
+                        .orgName().text().equals(BalSyntaxConstants.KEYWORD_BALLERINA) &&
+                        importNode.moduleName().stream().anyMatch(node -> node.text().equals(
+                                BalSyntaxConstants.KEYWORD_PERSIST)))
+                .findFirst().orElseThrow(() -> new BalException(
+                        "no `import ballerina/persist as _;` statement found."));
+
+        for (ModuleMemberDeclarationNode moduleNode : nodeList) {
+            if (moduleNode.kind() != SyntaxKind.ENUM_DECLARATION) {
+                continue;
+            }
+            EnumDeclarationNode enumDeclarationNode = (EnumDeclarationNode) moduleNode;
+            Enum.Builder enumBuilder = Enum.newBuilder(enumDeclarationNode.identifier().text().trim());
+
+            for (Node node: enumDeclarationNode.enumMemberList()) {
+                if (!(node instanceof EnumMemberNode)) {
+                    continue;
+                }
+                EnumMemberNode enumMemberNode = (EnumMemberNode) node;
+                EnumMember enumMember;
+                if (enumMemberNode.constExprNode().isPresent()) {
+                    String value = enumMemberNode.constExprNode().get().toSourceCode().trim();
+                    if (value.startsWith("\"") && value.endsWith("\"")) {
+                        value = value.substring(1, value.length() - 1);
+                    }
+                    enumMember = new EnumMember(enumMemberNode.identifier().text().trim(), Optional.of(value));
+                } else {
+                    enumMember = new EnumMember(enumMemberNode.identifier().text().trim(), Optional.empty());
+                }
+                enumBuilder.addMember(enumMember);
+            }
+            Enum enumValue = enumBuilder.build();
+            moduleBuilder.addEnum(enumValue.getEnumName(), enumValue);
         }
     }
 
@@ -346,6 +387,18 @@ public class BalProjectUtils {
                                     });
                         }
                     });
+        }
+    }
+
+    public static void inferEnumDetails(Module entityModule) {
+        Map<String, Enum> enumMap = entityModule.getEnumMap();
+
+        for (Entity entity: entityModule.getEntityMap().values()) {
+            for (EntityField field: entity.getFields()) {
+                if (enumMap.containsKey(field.getFieldType())) {
+                    field.setEnum(enumMap.get(field.getFieldType()));
+                }
+            }
         }
     }
 
