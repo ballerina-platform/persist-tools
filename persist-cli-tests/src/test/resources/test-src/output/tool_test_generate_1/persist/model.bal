@@ -16,6 +16,7 @@
 
 import ballerina/time;
 import ballerina/persist as _;
+import ballerina/constraint;
 
 // Defines the entity type with the entity identity
 
@@ -50,6 +51,9 @@ type Building record {|
 |};
 
 type Department record {|
+    @constraint:String {
+        maxLength: 10
+    }
     readonly string deptNo;
     string deptName;
 
