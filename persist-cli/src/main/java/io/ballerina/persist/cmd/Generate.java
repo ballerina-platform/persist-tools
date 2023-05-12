@@ -93,12 +93,6 @@ public class Generate implements BLauncherCmd {
             return;
         }
 
-        if (schemaFilePath == null) {
-            errStream.println("ERROR: failed to generate types and client for the definition file." +
-                    " No schema file found in the project.");
-            return;
-        }
-
         try {
             packageName = TomlSyntaxUtils.readPackageName(this.sourcePath);
         } catch (BalException e) {

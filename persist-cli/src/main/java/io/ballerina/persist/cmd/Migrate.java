@@ -126,9 +126,9 @@ public class Migrate implements BLauncherCmd {
 
     }
 
-    private static void migrate(String migrationName, Path projectDirName, String sourcePath, Path schemaFilePath) {
+    private static void migrate(String migrationName, Path projectDirPath, String sourcePath, Path schemaFilePath) {
         if (schemaFilePath != null) {
-            Path persistDirPath = Paths.get(projectDirName.toString(), "persist");
+            Path persistDirPath = Paths.get(projectDirPath.toString(), "persist");
 
             // Create a File object for the persist directory
             File persistDir = new File(persistDirPath.toString());
@@ -141,7 +141,7 @@ public class Migrate implements BLauncherCmd {
                 // Create the migrations directory
                 boolean created = migrationsDir.mkdir();
                 if (!created) {
-                    errStream.println("Failed to create migrations directory");
+                    errStream.println("Error: failed to create migrations directory inside the persist directory");
                     return;
                 }
 
@@ -166,7 +166,7 @@ public class Migrate implements BLauncherCmd {
                                 SqlScriptUtils.generateSqlScript(model.getEntityMap().values()),
                                 newMigrationPath);
                     } catch (BalException e) {
-                        errStream.println("ERROR: Failed to generate SQL script " + e.getMessage());
+                        errStream.println("ERROR: failed to generate SQL script " + e.getMessage());
                         return;
                     }
 
