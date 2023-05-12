@@ -40,7 +40,6 @@ public class ToolingGenerateTest {
     @Test(enabled = true)
     @Description("There is only a single entity in the Ballerina project")
     public void testGenerateSingleEntity() {
-
         executeCommand("tool_test_generate_1", GENERATE);
         assertGeneratedSources("tool_test_generate_1");
     }

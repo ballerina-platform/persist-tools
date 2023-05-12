@@ -12,12 +12,12 @@ const USER = "users";
 const POST = "posts";
 const FOLLOWER = "followers";
 
-public client class Client {
+public isolated client class Client {
     *persist:AbstractPersistClient;
 
     private final mysql:Client dbClient;
 
-    private final map<persist:SQLClient> persistClients;
+    private final map<persist:SQLClient> persistClients = {};
 
     private final record {|persist:SQLMetadata...;|} metadata = {
         [USER] : {
@@ -95,11 +95,11 @@ public client class Client {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
-        self.persistClients = {
-            [USER] : check new (self.dbClient, self.metadata.get(USER)),
-            [POST] : check new (self.dbClient, self.metadata.get(POST)),
-            [FOLLOWER] : check new (self.dbClient, self.metadata.get(FOLLOWER))
-        };
+        lock {
+            self.persistClients[USER] = check new (self.dbClient, self.metadata.get(USER));
+            self.persistClients[POST] = check new (self.dbClient, self.metadata.get(POST));
+            self.persistClients[FOLLOWER] = check new (self.dbClient, self.metadata.get(FOLLOWER));
+        }
     }
 
     isolated resource function get users(UserTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -113,19 +113,25 @@ public client class Client {
     } external;
 
     isolated resource function post users(UserInsert[] data) returns int[]|persist:Error {
-        _ = check self.persistClients.get(USER).runBatchInsertQuery(data);
+        lock {
+            _ = check self.persistClients.get(USER).runBatchInsertQuery(data.clone());
+        }
         return from UserInsert inserted in data
             select inserted.id;
     }
 
     isolated resource function put users/[int id](UserUpdate value) returns User|persist:Error {
-        _ = check self.persistClients.get(USER).runUpdateQuery(id, value);
+        lock {
+            _ = check self.persistClients.get(USER).runUpdateQuery(id, value.clone());
+        }
         return self->/users/[id].get();
     }
 
     isolated resource function delete users/[int id]() returns User|persist:Error {
         User result = check self->/users/[id].get();
-        _ = check self.persistClients.get(USER).runDeleteQuery(id);
+        lock {
+            _ = check self.persistClients.get(USER).runDeleteQuery(id);
+        }
         return result;
     }
 
@@ -140,19 +146,25 @@ public client class Client {
     } external;
 
     isolated resource function post posts(PostInsert[] data) returns int[]|persist:Error {
-        _ = check self.persistClients.get(POST).runBatchInsertQuery(data);
+        lock {
+            _ = check self.persistClients.get(POST).runBatchInsertQuery(data.clone());
+        }
         return from PostInsert inserted in data
             select inserted.id;
     }
 
     isolated resource function put posts/[int id](PostUpdate value) returns Post|persist:Error {
-        _ = check self.persistClients.get(POST).runUpdateQuery(id, value);
+        lock {
+            _ = check self.persistClients.get(POST).runUpdateQuery(id, value.clone());
+        }
         return self->/posts/[id].get();
     }
 
     isolated resource function delete posts/[int id]() returns Post|persist:Error {
         Post result = check self->/posts/[id].get();
-        _ = check self.persistClients.get(POST).runDeleteQuery(id);
+        lock {
+            _ = check self.persistClients.get(POST).runDeleteQuery(id);
+        }
         return result;
     }
 
@@ -167,19 +179,25 @@ public client class Client {
     } external;
 
     isolated resource function post followers(FollowerInsert[] data) returns int[]|persist:Error {
-        _ = check self.persistClients.get(FOLLOWER).runBatchInsertQuery(data);
+        lock {
+            _ = check self.persistClients.get(FOLLOWER).runBatchInsertQuery(data.clone());
+        }
         return from FollowerInsert inserted in data
             select inserted.id;
     }
 
     isolated resource function put followers/[int id](FollowerUpdate value) returns Follower|persist:Error {
-        _ = check self.persistClients.get(FOLLOWER).runUpdateQuery(id, value);
+        lock {
+            _ = check self.persistClients.get(FOLLOWER).runUpdateQuery(id, value.clone());
+        }
         return self->/followers/[id].get();
     }
 
     isolated resource function delete followers/[int id]() returns Follower|persist:Error {
         Follower result = check self->/followers/[id].get();
-        _ = check self.persistClients.get(FOLLOWER).runDeleteQuery(id);
+        lock {
+            _ = check self.persistClients.get(FOLLOWER).runDeleteQuery(id);
+        }
         return result;
     }
 

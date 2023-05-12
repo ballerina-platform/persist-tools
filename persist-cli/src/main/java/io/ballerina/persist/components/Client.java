@@ -39,10 +39,8 @@ public class Client {
     private final Token className;
     private NodeList<Node> members;
 
-    public Client(String name, boolean isPublic) {
-        if (isPublic) {
-            visibilityQualifier = AbstractNodeFactory.createIdentifierToken(ComponentConstants.TAG_PUBLIC);
-        }
+    public Client(String name) {
+        visibilityQualifier = AbstractNodeFactory.createIdentifierToken(ComponentConstants.TAG_PUBLIC);
         classTypeQualifiers = AbstractNodeFactory.createEmptyNodeList();
         className = AbstractNodeFactory.createIdentifierToken(name + " ");
         members = NodeFactory.createEmptyNodeList();

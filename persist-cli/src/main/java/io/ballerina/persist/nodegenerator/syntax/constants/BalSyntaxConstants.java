@@ -49,7 +49,7 @@ public class BalSyntaxConstants {
     public static final String PERSIST_MODULE = "persist";
     public static final String PERSIST_ERROR = "persist:Error";
     public static final String CREATE_SQL_RESULTS = "_ = check " +
-            "self.persistClients.get(%s).runBatchInsertQuery(data);";
+            "self.persistClients.get(%s).runBatchInsertQuery(data.clone());";
     public static final String CREATE_ARRAY_VAR = "%s keys = [];";
     public static final String POST_RETURN = "return keys;";
     public static final String HAS_KEY = "\tif self.%s.hasKey(%s) {";
@@ -73,7 +73,7 @@ public class BalSyntaxConstants {
     public static final String RETURN_CREATED_KEY = "return from  %s inserted in data" + System.lineSeparator();
     public static final String SELECT_WITH_SPACE = "\t\t\tselect ";
     public static final String UPDATE_RUN_UPDATE_QUERY = "_ = check self.persistClients.get(%s).runUpdateQuery" +
-            "(%s, value);";
+            "(%s, value.clone());";
     public static final String UPDATE_RETURN_UPDATE_QUERY = "return self->%s.get();";
     public static final String DELETE_RUN_DELETE_QUERY = "_ = check self.persistClients.get(%s)." +
             "runDeleteQuery(%s);";
@@ -137,7 +137,7 @@ public class BalSyntaxConstants {
     public static final String MYSQL_DRIVER = "mysql.driver";
     public static final String BAL_EXTENTION = ".bal";
     public static final String INIT_DB_CLIENT = "private final mysql:Client dbClient;";
-    public static final String INIT_DB_CLIENT_MAP = "private final map<persist:SQLClient> persistClients;";
+    public static final String INIT_DB_CLIENT_MAP = "private final map<persist:SQLClient> persistClients = {};";
     public static final String INIT_IN_MEMORY_CLIENT = "private final map<persist:InMemoryClient> persistClients;";
     public static final String METADATA_RECORD_ENTITY_NAME_TEMPLATE = "entityName: \"%s\", " + System.lineSeparator();
     public static final String METADATA_RECORD_TABLE_NAME_TEMPLATE = "tableName: `%s`, " + System.lineSeparator();
@@ -199,9 +199,12 @@ public class BalSyntaxConstants {
             "user = user, password = password, database = database, port = port, options = connectionOptions);" +
             System.lineSeparator();
     public static final String TABLE_PARAMETER_INIT_TEMPLATE = "table<%s> key(%s) %s = %s;";
-    public static final String PERSIST_CLIENT_MAP_ELEMENT = "[%s]: check new (self.dbClient, self.metadata.get(%s))";
+    public static final String PERSIST_CLIENT_MAP_ELEMENT =
+            "self.persistClients[%s] = check new (self.dbClient, self.metadata.get(%s));";
     public static final String PERSIST_IN_MEMORY_CLIENT_MAP_ELEMENT = "[%s]: check new (metadata.get(%s))";
     public static final String PERSIST_CLIENT_TEMPLATE = "self.persistClients = {%s};";
+    public static final String LOCK_TEMPLATE = "lock {%s}";
+
     public static final String PERSIST_CLIENT_CLOSE_STATEMENT = "error? result = self.dbClient.close();";
     public static final String REGEX_FOR_SPLIT_BY_CAPITOL_LETTER = "(?=\\p{Upper})";
     public static final String OPEN_BRACE = "{";
@@ -211,6 +214,8 @@ public class BalSyntaxConstants {
     public static final String ARRAY = "[]";
     public static final String QUESTION_MARK = "?";
     public static final String COMMA_WITH_NEWLINE = "," + System.lineSeparator();
+    public static final String NEWLINE = System.lineSeparator();
+
 
     public static final String EXTERNAL_GET_BY_KEY_METHOD_TEMPLATE = "isolated resource function get %s/%s(" +
             "%sTargetType targetType = <>) returns targetType|persist:Error = @java:Method {"

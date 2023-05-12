@@ -11,3 +11,4 @@ configurable string user = ?;
 configurable string database = ?;
 configurable string password = ?;
 configurable mysql:Options connectionOptions = {};
+

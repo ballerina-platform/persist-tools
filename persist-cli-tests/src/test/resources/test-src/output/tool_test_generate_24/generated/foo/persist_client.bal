@@ -10,12 +10,12 @@ import ballerinax/mysql.driver as _;
 
 const BYTE_TEST = "bytetests";
 
-public client class Client {
+public isolated client class Client {
     *persist:AbstractPersistClient;
 
     private final mysql:Client dbClient;
 
-    private final map<persist:SQLClient> persistClients;
+    private final map<persist:SQLClient> persistClients = {};
 
     private final record {|persist:SQLMetadata...;|} metadata = {
         [BYTE_TEST] : {
@@ -36,7 +36,9 @@ public client class Client {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
-        self.persistClients = {[BYTE_TEST] : check new (self.dbClient, self.metadata.get(BYTE_TEST))};
+        lock {
+            self.persistClients[BYTE_TEST] = check new (self.dbClient, self.metadata.get(BYTE_TEST));
+        }
     }
 
     isolated resource function get bytetests(ByteTestTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -50,19 +52,25 @@ public client class Client {
     } external;
 
     isolated resource function post bytetests(ByteTestInsert[] data) returns int[]|persist:Error {
-        _ = check self.persistClients.get(BYTE_TEST).runBatchInsertQuery(data);
+        lock {
+            _ = check self.persistClients.get(BYTE_TEST).runBatchInsertQuery(data.clone());
+        }
         return from ByteTestInsert inserted in data
             select inserted.id;
     }
 
     isolated resource function put bytetests/[int id](ByteTestUpdate value) returns ByteTest|persist:Error {
-        _ = check self.persistClients.get(BYTE_TEST).runUpdateQuery(id, value);
+        lock {
+            _ = check self.persistClients.get(BYTE_TEST).runUpdateQuery(id, value.clone());
+        }
         return self->/bytetests/[id].get();
     }
 
     isolated resource function delete bytetests/[int id]() returns ByteTest|persist:Error {
         ByteTest result = check self->/bytetests/[id].get();
-        _ = check self.persistClients.get(BYTE_TEST).runDeleteQuery(id);
+        lock {
+            _ = check self.persistClients.get(BYTE_TEST).runDeleteQuery(id);
+        }
         return result;
     }
 

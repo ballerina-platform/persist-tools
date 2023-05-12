@@ -12,12 +12,12 @@ const COMPANY = "companies";
 const EMPLOYEE = "employees";
 const VEHICLE = "vehicles";
 
-public client class Client {
+public isolated client class Client {
     *persist:AbstractPersistClient;
 
     private final mysql:Client dbClient;
 
-    private final map<persist:SQLClient> persistClients;
+    private final map<persist:SQLClient> persistClients = {};
 
     private final record {|persist:SQLMetadata...;|} metadata = {
         [COMPANY] : {
@@ -74,11 +74,11 @@ public client class Client {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
-        self.persistClients = {
-            [COMPANY] : check new (self.dbClient, self.metadata.get(COMPANY)),
-            [EMPLOYEE] : check new (self.dbClient, self.metadata.get(EMPLOYEE)),
-            [VEHICLE] : check new (self.dbClient, self.metadata.get(VEHICLE))
-        };
+        lock {
+            self.persistClients[COMPANY] = check new (self.dbClient, self.metadata.get(COMPANY));
+            self.persistClients[EMPLOYEE] = check new (self.dbClient, self.metadata.get(EMPLOYEE));
+            self.persistClients[VEHICLE] = check new (self.dbClient, self.metadata.get(VEHICLE));
+        }
     }
 
     isolated resource function get companies(CompanyTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -92,19 +92,25 @@ public client class Client {
     } external;
 
     isolated resource function post companies(CompanyInsert[] data) returns int[]|persist:Error {
-        _ = check self.persistClients.get(COMPANY).runBatchInsertQuery(data);
+        lock {
+            _ = check self.persistClients.get(COMPANY).runBatchInsertQuery(data.clone());
+        }
         return from CompanyInsert inserted in data
             select inserted.id;
     }
 
     isolated resource function put companies/[int id](CompanyUpdate value) returns Company|persist:Error {
-        _ = check self.persistClients.get(COMPANY).runUpdateQuery(id, value);
+        lock {
+            _ = check self.persistClients.get(COMPANY).runUpdateQuery(id, value.clone());
+        }
         return self->/companies/[id].get();
     }
 
     isolated resource function delete companies/[int id]() returns Company|persist:Error {
         Company result = check self->/companies/[id].get();
-        _ = check self.persistClients.get(COMPANY).runDeleteQuery(id);
+        lock {
+            _ = check self.persistClients.get(COMPANY).runDeleteQuery(id);
+        }
         return result;
     }
 
@@ -119,19 +125,25 @@ public client class Client {
     } external;
 
     isolated resource function post employees(EmployeeInsert[] data) returns int[]|persist:Error {
-        _ = check self.persistClients.get(EMPLOYEE).runBatchInsertQuery(data);
+        lock {
+            _ = check self.persistClients.get(EMPLOYEE).runBatchInsertQuery(data.clone());
+        }
         return from EmployeeInsert inserted in data
             select inserted.id;
     }
 
     isolated resource function put employees/[int id](EmployeeUpdate value) returns Employee|persist:Error {
-        _ = check self.persistClients.get(EMPLOYEE).runUpdateQuery(id, value);
+        lock {
+            _ = check self.persistClients.get(EMPLOYEE).runUpdateQuery(id, value.clone());
+        }
         return self->/employees/[id].get();
     }
 
     isolated resource function delete employees/[int id]() returns Employee|persist:Error {
         Employee result = check self->/employees/[id].get();
-        _ = check self.persistClients.get(EMPLOYEE).runDeleteQuery(id);
+        lock {
+            _ = check self.persistClients.get(EMPLOYEE).runDeleteQuery(id);
+        }
         return result;
     }
 
@@ -146,19 +158,25 @@ public client class Client {
     } external;
 
     isolated resource function post vehicles(VehicleInsert[] data) returns int[]|persist:Error {
-        _ = check self.persistClients.get(VEHICLE).runBatchInsertQuery(data);
+        lock {
+            _ = check self.persistClients.get(VEHICLE).runBatchInsertQuery(data.clone());
+        }
         return from VehicleInsert inserted in data
             select inserted.model;
     }
 
     isolated resource function put vehicles/[int model](VehicleUpdate value) returns Vehicle|persist:Error {
-        _ = check self.persistClients.get(VEHICLE).runUpdateQuery(model, value);
+        lock {
+            _ = check self.persistClients.get(VEHICLE).runUpdateQuery(model, value.clone());
+        }
         return self->/vehicles/[model].get();
     }
 
     isolated resource function delete vehicles/[int model]() returns Vehicle|persist:Error {
         Vehicle result = check self->/vehicles/[model].get();
-        _ = check self.persistClients.get(VEHICLE).runDeleteQuery(model);
+        lock {
+            _ = check self.persistClients.get(VEHICLE).runDeleteQuery(model);
+        }
         return result;
     }
 
