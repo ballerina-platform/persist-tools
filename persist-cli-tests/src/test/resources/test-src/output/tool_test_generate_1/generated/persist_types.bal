@@ -3,6 +3,7 @@
 // This file is an auto-generated file by Ballerina persistence layer for model.
 // It should not be modified by hand.
 
+import ballerina/constraint;
 import ballerina/time;
 
 public type Employee record {|
@@ -12,6 +13,9 @@ public type Employee record {|
     time:Date birthDate;
     string gender;
     time:Date hireDate;
+    @constraint:String {
+        maxLength: 10
+    }
     string departmentDeptNo;
 |};
 
@@ -22,6 +26,9 @@ public type EmployeeOptionalized record {|
     time:Date birthDate?;
     string gender?;
     time:Date hireDate?;
+    @constraint:String {
+        maxLength: 10
+    }
     string departmentDeptNo?;
 |};
 
@@ -41,6 +48,9 @@ public type EmployeeUpdate record {|
     time:Date birthDate?;
     string gender?;
     time:Date hireDate?;
+    @constraint:String {
+        maxLength: 10
+    }
     string departmentDeptNo?;
 |};
 
@@ -107,11 +117,17 @@ public type BuildingUpdate record {|
 |};
 
 public type Department record {|
+    @constraint:String {
+        maxLength: 10
+    }
     readonly string deptNo;
     string deptName;
 |};
 
 public type DepartmentOptionalized record {|
+    @constraint:String {
+        maxLength: 10
+    }
     string deptNo?;
     string deptName?;
 |};
@@ -128,4 +144,3 @@ public type DepartmentInsert Department;
 public type DepartmentUpdate record {|
     string deptName?;
 |};
-

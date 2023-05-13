@@ -17,11 +17,17 @@
  */
 package io.ballerina.persist.nodegenerator.syntax.utils;
 
+import io.ballerina.compiler.syntax.tree.AnnotationNode;
+import io.ballerina.compiler.syntax.tree.ExpressionNode;
+import io.ballerina.compiler.syntax.tree.MappingConstructorExpressionNode;
+import io.ballerina.compiler.syntax.tree.MappingFieldNode;
+import io.ballerina.compiler.syntax.tree.SpecificFieldNode;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.Relation;
+import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -30,6 +36,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -95,13 +102,7 @@ public class SqlScriptUtils {
             if (entityField.getRelation() != null) {
                 continue;
             }
-            String field = removeSingleQuote(entityField.getFieldType());
-            if (!entityField.isArrayType()) {
-                sqlType = getTypeNonArray(field);
-            } else {
-                sqlType = getTypeArray(field);
-            }
-            assert sqlType != null;
+            String sqlType = getSqlType(entityField);
             String fieldName = addBackticks(removeSingleQuote(entityField.getFieldName()));
             if (entityField.isOptionalType()) {
                 columnScript.append(MessageFormat.format("{0}{1}{2} {3},",
@@ -132,12 +133,7 @@ public class SqlScriptUtils {
                     continue;
                 }
                 if (assocField.getFieldName().equals(references.get(i))) {
-                    String field = removeSingleQuote(assocField.getFieldType());
-                    if (!assocField.isArrayType()) {
-                        referenceSqlType = getTypeNonArray(field);
-                    } else {
-                        referenceSqlType = getTypeArray(field);
-                    }
+                    referenceSqlType = getSqlType(assocField);
                     break;
                 }
             }
@@ -207,6 +203,45 @@ public class SqlScriptUtils {
             keyScripts.deleteCharAt(keyScripts.length() - 1).append("),");
         }
         return keyScripts.toString();
+    }
+  
+    private static String getSqlType(EntityField field) throws BalException {
+        String sqlType;
+        if (!entityField.isArrayType()) {
+            sqlType = getTypeNonArray(field);
+        } else {
+            sqlType = getTypeArray(field);
+        }
+        if (!sqlType.equals(PersistToolsConstants.SqlTypes.VARCHAR)) {
+            return sqlType;
+        }
+        String length = BalSyntaxConstants.VARCHAR_LENGTH;
+        if (field.getAnnotation() != null) {
+            for (AnnotationNode annotationNode : field.getAnnotation()) {
+                String annotationName = annotationNode.annotReference().toSourceCode().trim();
+                if (annotationName.equals(BalSyntaxConstants.CONSTRAINT_STRING)) {
+                    Optional<MappingConstructorExpressionNode> annotationFieldNode = annotationNode.annotValue();
+                    if (annotationFieldNode.isPresent()) {
+                        for (MappingFieldNode mappingFieldNode : annotationFieldNode.get().fields()) {
+                            SpecificFieldNode specificFieldNode = (SpecificFieldNode) mappingFieldNode;
+                            String fieldName = specificFieldNode.fieldName().toSourceCode().trim();
+                            if (fieldName.equals(BalSyntaxConstants.MAX_LENGTH)) {
+                                Optional<ExpressionNode> valueExpr = specificFieldNode.valueExpr();
+                                if (valueExpr.isPresent()) {
+                                    length = valueExpr.get().toSourceCode().trim();
+                                }
+                            } else if (fieldName.equals(BalSyntaxConstants.LENGTH)) {
+                                Optional<ExpressionNode> valueExpr = specificFieldNode.valueExpr();
+                                if (valueExpr.isPresent()) {
+                                    length = valueExpr.get().toSourceCode().trim();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return sqlType + (String.format("(%s)", length));
     }
 
     public static String getTypeNonArray(String field) throws BalException {
