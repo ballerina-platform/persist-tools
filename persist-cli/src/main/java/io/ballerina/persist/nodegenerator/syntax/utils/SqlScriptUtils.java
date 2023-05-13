@@ -97,7 +97,6 @@ public class SqlScriptUtils {
 
     private static String getColumnsScript(Entity entity) throws BalException {
         StringBuilder columnScript = new StringBuilder();
-        String sqlType;
         for (EntityField entityField :entity.getFields()) {
             if (entityField.getRelation() != null) {
                 continue;
@@ -205,19 +204,19 @@ public class SqlScriptUtils {
         return keyScripts.toString();
     }
   
-    private static String getSqlType(EntityField field) throws BalException {
+    private static String getSqlType(EntityField entityField) throws BalException {
         String sqlType;
         if (!entityField.isArrayType()) {
-            sqlType = getTypeNonArray(field);
+            sqlType = getTypeNonArray(entityField.getFieldType());
         } else {
-            sqlType = getTypeArray(field);
+            sqlType = getTypeArray(entityField.getFieldType());
         }
         if (!sqlType.equals(PersistToolsConstants.SqlTypes.VARCHAR)) {
             return sqlType;
         }
         String length = BalSyntaxConstants.VARCHAR_LENGTH;
-        if (field.getAnnotation() != null) {
-            for (AnnotationNode annotationNode : field.getAnnotation()) {
+        if (entityField.getAnnotation() != null) {
+            for (AnnotationNode annotationNode : entityField.getAnnotation()) {
                 String annotationName = annotationNode.annotReference().toSourceCode().trim();
                 if (annotationName.equals(BalSyntaxConstants.CONSTRAINT_STRING)) {
                     Optional<MappingConstructorExpressionNode> annotationFieldNode = annotationNode.annotValue();
@@ -245,7 +244,7 @@ public class SqlScriptUtils {
     }
 
     public static String getTypeNonArray(String field) throws BalException {
-        switch (field) {
+        switch (removeSingleQuote(field)) {
             case PersistToolsConstants.BallerinaTypes.INT:
                 return PersistToolsConstants.SqlTypes.INT;
             case PersistToolsConstants.BallerinaTypes.BOOLEAN:
@@ -265,8 +264,7 @@ public class SqlScriptUtils {
             case PersistToolsConstants.BallerinaTypes.CIVIL:
                 return PersistToolsConstants.SqlTypes.DATE_TIME;
             case PersistToolsConstants.BallerinaTypes.STRING:
-                return PersistToolsConstants.SqlTypes.VARCHAR + String.format("(%s)",
-                        PersistToolsConstants.DefaultMaxLength.VARCHAR_LENGTH);
+                return PersistToolsConstants.SqlTypes.VARCHAR;
             default:
                 throw new BalException("couldn't find equivalent SQL type for the field type: " + field);
         }
