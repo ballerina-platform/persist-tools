@@ -31,19 +31,26 @@ import java.util.Set;
  */
 public class Module {
     private final Map<String, Entity> entityMap;
+    private final Map<String, Enum> enumMap;
+
     private final String moduleName;
 
     private final Set<String> importModulePrefixes;
 
     private Module(String moduleName, Set<String> importModulePrefixes,
-                   Map<String, Entity> entityMap) {
+                   Map<String, Entity> entityMap, Map<String, Enum> enumMap) {
         this.moduleName = moduleName;
         this.importModulePrefixes = Collections.unmodifiableSet(importModulePrefixes);
         this.entityMap = Collections.unmodifiableMap(entityMap);
+        this.enumMap = Collections.unmodifiableMap(enumMap);
     }
 
     public Map<String, Entity> getEntityMap() {
         return entityMap;
+    }
+
+    public Map<String, Enum> getEnumMap() {
+        return enumMap;
     }
 
     public Set<String> getImportModulePrefixes() {
@@ -64,6 +71,7 @@ public class Module {
     public static class Builder {
         String moduleName;
         Map<String, Entity> entityMap = new LinkedHashMap<>();
+        Map<String, Enum> enumMap = new LinkedHashMap<>();
 
         private final Set<String> importModulePrefixes = new HashSet<>();
 
@@ -75,12 +83,20 @@ public class Module {
             this.entityMap.put(key, entity);
         }
 
+        public void addEnum(String key, Enum enumValue) {
+            this.enumMap.put(key, enumValue);
+        }
+
+        public Map<String, Enum> getEnumsMap() {
+            return enumMap;
+        }
+
         public void addImportModulePrefix(String modulePrefix) {
             this.importModulePrefixes.add(modulePrefix);
         }
 
         public Module build() {
-            return new Module(moduleName, importModulePrefixes, entityMap);
+            return new Module(moduleName, importModulePrefixes, entityMap, enumMap);
         }
     }
 }
