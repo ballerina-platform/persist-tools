@@ -35,6 +35,7 @@ import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.compiler.syntax.tree.TypeDefinitionNode;
 import io.ballerina.compiler.syntax.tree.TypeDescriptorNode;
 import io.ballerina.persist.BalException;
+import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.Module;
@@ -53,7 +54,9 @@ import io.ballerina.tools.text.TextDocuments;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -391,5 +394,33 @@ public class BalProjectUtils {
 
     private static String stripEscapeCharacter(String fieldName) {
         return fieldName.startsWith(BalSyntaxConstants.SINGLE_QUOTE) ? fieldName.substring(1) : fieldName;
+    }
+
+    public static Path getSchemaFilePath(String sourcePath) throws BalException {
+        List<Path> schemaFilePaths;
+
+        Path persistDir = Paths.get(sourcePath, PersistToolsConstants.PERSIST_DIRECTORY);
+        if (!Files.isDirectory(persistDir, LinkOption.NOFOLLOW_LINKS)) {
+            throw new BalException("ERROR: the persist directory inside the Ballerina project does not exist. " +
+                    "run `bal persist init` to initiate the project before generation");
+        }
+        try (Stream<Path> stream = Files.list(persistDir)) {
+            schemaFilePaths = stream.filter(file -> !Files.isDirectory(file))
+                    .filter(file -> file.toString().toLowerCase(Locale.ENGLISH).endsWith(".bal"))
+                    .collect(Collectors.toList());
+        } catch (IOException e) {
+            throw new BalException("ERROR: failed to list the model definition files in the persist directory. "
+                    + e.getMessage());
+        }
+
+        if (schemaFilePaths.isEmpty()) {
+            throw new BalException("ERROR: the persist directory does not contain any model definition file. " +
+                    "run `bal persist init` to initiate the project before generation.");
+        } else if (schemaFilePaths.size() > 1) {
+            throw new BalException("ERROR: the persist directory allows only one model definition file, " +
+                    "but contains many files.");
+        }
+        
+        return schemaFilePaths.get(0);
     }
 }
