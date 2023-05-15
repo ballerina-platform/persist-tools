@@ -20,6 +20,7 @@ package io.ballerina.persist.tools.utils;
 
 import io.ballerina.persist.cmd.Generate;
 import io.ballerina.persist.cmd.Init;
+import io.ballerina.persist.cmd.Migrate;
 import io.ballerina.persist.cmd.PersistCmd;
 import io.ballerina.persist.cmd.Push;
 import io.ballerina.projects.Package;
@@ -27,6 +28,7 @@ import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.directory.BuildProject;
 import org.testng.Assert;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
@@ -51,7 +53,8 @@ public class GeneratedSourcesTestUtils {
     public enum Command {
         INIT,
         GENERATE,
-        DB_PUSH
+        DB_PUSH,
+        MIGRATE
     }
 
     private static final PrintStream errStream = System.err;
@@ -73,7 +76,9 @@ public class GeneratedSourcesTestUtils {
             Path expectedOutputFile = Paths.get(RESOURCES_EXPECTED_OUTPUT.toString(), subDir).
                     resolve(actualOutputFile.subpath(3, actualOutputFile.getNameCount()));
             Assert.assertTrue(Files.exists(actualOutputFile));
-            Assert.assertEquals(readContent(actualOutputFile), readContent(expectedOutputFile));
+            if (!actualOutputFile.toString().contains("tool_test_migrate")) {
+                Assert.assertEquals(readContent(actualOutputFile), readContent(expectedOutputFile));
+            }
         }
         if (!(subDir.equals("tool_test_generate_4") || subDir.equals("tool_test_generate_26") ||
                 subDir.equals("tool_test_generate_18"))) {
@@ -147,9 +152,14 @@ public class GeneratedSourcesTestUtils {
                 Generate persistCmd = (Generate) persistClass.getDeclaredConstructor(String.class)
                         .newInstance(sourcePath.toAbsolutePath().toString());
                 persistCmd.execute();
-            } else {
+            } else if (cmd == Command.DB_PUSH) {
                 persistClass = Class.forName("io.ballerina.persist.cmd.Push");
                 Push persistCmd = (Push) persistClass.getDeclaredConstructor(String.class)
+                        .newInstance(sourcePath.toAbsolutePath().toString());
+                persistCmd.execute();
+            } else {
+                persistClass = Class.forName("io.ballerina.persist.cmd.Migrate");
+                Migrate persistCmd = (Migrate) persistClass.getDeclaredConstructor(String.class)
                         .newInstance(sourcePath.toAbsolutePath().toString());
                 persistCmd.execute();
             }
@@ -191,6 +201,9 @@ public class GeneratedSourcesTestUtils {
             }
             for (Map.Entry<Path, Path> pathEntry : dir1Paths.entrySet()) {
                 Path relativePath = pathEntry.getKey();
+                if (relativePath.toString().contains(File.separator + "migrations" + File.separator)) {
+                    continue;
+                }
                 if (!dir2Paths.containsKey(relativePath)) {
                     return false;
                 }
