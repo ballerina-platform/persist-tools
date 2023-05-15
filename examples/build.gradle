@@ -72,28 +72,8 @@ task unpackStdLibs() {
     }
 }
 
-
-task pullGSheetsDependency() {
-    println("Pulling Google Sheets dependency")
-    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-        return exec {
-            ignoreExitValue true
-            String distributionBinPath = "${project.buildDir}/ballerina-distribution/bin"
-            commandLine 'sh', '-c', "$distributionBinPath/bal pull ballerinax/googleapis.sheets"
-        }.exitValue
-    } else {
-        return exec {
-            ignoreExitValue true
-            String distributionBinPath = "${project.buildDir}/ballerina-distribution/bin"
-            println(distributionBinPath)
-            commandLine 'cmd', '/c', "$distributionBinPath/bal.bat pull ballerinax/googleapis.sheets"
-        }.exitValue
-    }
-}
-
 task copyStdlibs() {
     dependsOn(unpackStdLibs)
-    dependsOn(pullGSheetsDependency)
     println("Copying standard libraries to the distribution")
     /* Standard Libraries */
     doLast {
