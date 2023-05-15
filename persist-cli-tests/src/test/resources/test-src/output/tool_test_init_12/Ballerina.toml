@@ -8,7 +8,7 @@ distribution = "2201.3.0"
 observabilityIncluded = true
 
 [persist]
-datastore = "in-memory"
+datastore = "inmemory"
 module = "persist_init_12.test"
 
 [[platform.java11.dependency]]
