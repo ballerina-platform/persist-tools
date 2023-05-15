@@ -97,6 +97,11 @@ subprojects {
         ballerinaStdLibs "io.ballerina.stdlib:sql-ballerina:${stdlibSqlVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:persist-ballerina:${stdlibPersistVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:mysql-ballerina:${testStdlibMysqlVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:log-ballerina:${testStdlibLogVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:file-ballerina:${testStdlibFileVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:mime-ballerina:${testStdlibMimeVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:auth-ballerina:${testStdlibAuthVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:jwt-ballerina:${testStdlibJwtVersion}"
 
         ballerinaStdLibs "io.ballerina.stdlib:mime-ballerina:${stdlibMimeVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:file-ballerina:${stdlibFileVersion}"
