@@ -208,6 +208,25 @@ task stopTestDockerContainer() {
     }
 }
 
+task pullGoogleSheetsDependency(type: Exec) {
+    ignoreExitValue(true)
+    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+        try {
+            String distributionBinPath = project.projectDir.absolutePath + "/build/jballerina-tools-${project.extensions.ballerina.langVersion}/bin"
+            commandLine 'sh', '-c', "$distributionBinPath/bal pull ballerinax/googleapis.sheets"
+        } catch (all) {
+            return 1
+        }
+    } else {
+        try {
+            String distributionBinPath = project.projectDir.absolutePath + "/build/jballerina-tools-${project.extensions.ballerina.langVersion}/bin"
+            commandLine 'cmd', '/c', "$distributionBinPath/bal.bat pull ballerinax/googleapis.sheets"
+        } catch (all) {
+            return 1
+        }
+    }
+}
+
 checkstyle {
     toolVersion "${project.checkstylePluginVersion}"
     configFile rootProject.file("build-config/checkstyle/build/checkstyle.xml")
@@ -284,5 +303,8 @@ jacocoTestReport {
 test.dependsOn ":persist-cli:build"
 test.finalizedBy stopTestDockerContainer
 
+pullGoogleSheetsDependency.dependsOn unpackStdLibs
+
 build.dependsOn ":persist-cli:build"
+build.dependsOn pullGoogleSheetsDependency
 build.dependsOn copyTestPack

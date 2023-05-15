@@ -16,8 +16,6 @@
  * under the License.
  */
 
-import org.apache.tools.ant.taskdefs.condition.Os
-
 plugins {
     id 'java'
     id 'jacoco'
@@ -65,25 +63,6 @@ allprojects {
     }
 }
 
-task pullGoogleSheetsDependency(type: Exec) {
-    ignoreExitValue(true)
-    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-        try {
-            String distributionBinPath = project.projectDir.absolutePath + "/build/jballerina-tools-${project.extensions.ballerina.langVersion}/bin"
-            commandLine 'sh', '-c', "$distributionBinPath/bal pull ballerinax/googleapis.sheets"
-        } catch (all) {
-            return 1
-        }
-    } else {
-        try {
-            String distributionBinPath = project.projectDir.absolutePath + "/build/jballerina-tools-${project.extensions.ballerina.langVersion}/bin"
-            commandLine 'cmd', '/c', "$distributionBinPath/bal.bat pull ballerinax/googleapis.sheets"
-        } catch (all) {
-            return 1
-        }
-    }
-}
-
 subprojects {
     apply plugin: 'java'
     configurations {
@@ -97,11 +76,6 @@ subprojects {
         ballerinaStdLibs "io.ballerina.stdlib:sql-ballerina:${stdlibSqlVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:persist-ballerina:${stdlibPersistVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:mysql-ballerina:${testStdlibMysqlVersion}"
-        ballerinaStdLibs "io.ballerina.stdlib:log-ballerina:${testStdlibLogVersion}"
-        ballerinaStdLibs "io.ballerina.stdlib:file-ballerina:${testStdlibFileVersion}"
-        ballerinaStdLibs "io.ballerina.stdlib:mime-ballerina:${testStdlibMimeVersion}"
-        ballerinaStdLibs "io.ballerina.stdlib:auth-ballerina:${testStdlibAuthVersion}"
-        ballerinaStdLibs "io.ballerina.stdlib:jwt-ballerina:${testStdlibJwtVersion}"
 
         ballerinaStdLibs "io.ballerina.stdlib:mime-ballerina:${stdlibMimeVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:file-ballerina:${stdlibFileVersion}"
@@ -111,6 +85,13 @@ subprojects {
         ballerinaStdLibs "io.ballerina.stdlib:oauth2-ballerina:${stdlibOAuth2Version}"
         ballerinaStdLibs "io.ballerina.stdlib:http-ballerina:${stdlibHttpVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:constraint-ballerina:${stdlibConstraintVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:os-ballerina:${stdlibOsVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:crypto-ballerina:${stdlibCryptoVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:cache-ballerina:${stdlibCacheVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:task-ballerina:${stdlibTaskVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:observe-ballerina:${stdlibObserveVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:url-ballerina:${stdlibUrlVersion}"
+//        ballerinaStdLibs "io.ballerina:googleapis.sheets-ballerina:${stdlibGoogleSheetVersion}"
     }
 }
 
@@ -176,8 +157,8 @@ task copyPersitTool(type: Copy) {
 
 copyPersitTool.dependsOn ":persist-cli-tests:build"
 copyPersitTool.dependsOn ":persist-cli:build"
-pullGoogleSheetsDependency.dependsOn copyPersitTool
-build.dependsOn pullGoogleSheetsDependency
+
+build.dependsOn copyPersitTool
 build.dependsOn ":examples:build"
 
 publish.dependsOn build
