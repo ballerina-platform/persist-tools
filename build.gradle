@@ -91,7 +91,6 @@ subprojects {
         ballerinaStdLibs "io.ballerina.stdlib:task-ballerina:${stdlibTaskVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:observe-ballerina:${stdlibObserveVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:url-ballerina:${stdlibUrlVersion}"
-//        ballerinaStdLibs "io.ballerina:googleapis.sheets-ballerina:${stdlibGoogleSheetVersion}"
     }
 }
 
@@ -148,17 +147,17 @@ classes {
     dependsOn createProperties
 }
 
-task copyPersitTool(type: Copy) {
+task copyPersistTool(type: Copy) {
     into "$project.rootDir/target"
     into("ballerina-distribution/bre/lib") {
         from "$project.rootDir/persist-cli/build/libs/persist-cli-${project.version}.jar"
     }
 }
 
-copyPersitTool.dependsOn ":persist-cli-tests:build"
-copyPersitTool.dependsOn ":persist-cli:build"
+copyPersistTool.dependsOn ":persist-cli-tests:build"
+copyPersistTool.dependsOn ":persist-cli:build"
 
-build.dependsOn copyPersitTool
+build.dependsOn copyPersistTool
 build.dependsOn ":examples:build"
 
 publish.dependsOn build
