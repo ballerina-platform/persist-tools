@@ -170,7 +170,6 @@ public class BalProjectUtils {
                 moduleBuilder.addImportModulePrefix(BalSyntaxConstants.CONSTRAINT);
             }
         }
-        Entity.Builder entityBuilder;
         for (ModuleMemberDeclarationNode moduleNode : nodeList) {
             if (moduleNode.kind() != SyntaxKind.TYPE_DEFINITION) {
                 continue;
