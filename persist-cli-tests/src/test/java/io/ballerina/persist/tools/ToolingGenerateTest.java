@@ -346,6 +346,7 @@ public class ToolingGenerateTest {
     public void testGoogleSheet() {
         executeCommand("tool_test_generate_51_gsheet", GENERATE);
         assertGeneratedSources("tool_test_generate_51_gsheet");
+    }
     
     @Test(enabled = true)
     @Description("There is multiple entities with multiple enums and no imports")

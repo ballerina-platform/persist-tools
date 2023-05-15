@@ -413,7 +413,7 @@ public class BalSyntaxUtils {
             }
 
             if (i != enumValue.getMembers().size() - 1) {
-                enumMembers.append(BalSyntaxConstants.COMMA_SPACE);
+                enumMembers.append(BalSyntaxConstants.COMMA_WITH_SPACE);
             }
             enumMembers.append(System.lineSeparator());
         }
