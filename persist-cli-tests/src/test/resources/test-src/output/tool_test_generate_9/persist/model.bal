@@ -16,12 +16,16 @@
 
 import ballerina/time;
 import ballerina/persist as _;
+import ballerina/constraint;
 
 public type MedicalNeed record {|
     readonly int needId;
     readonly int itemId;
     int beneficiaryId;
     time:Civil period;
+    @constraint:String {
+        maxLength: 10
+    }
     string urgency;
     int quantity;
 |};

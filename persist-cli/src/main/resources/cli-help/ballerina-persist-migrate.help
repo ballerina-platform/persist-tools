@@ -1,0 +1,25 @@
+NAME
+       bal persist migrate - Generate migration scripts to update the database based on the Ballerina schema changes.
+
+SYNOPSIS
+       bal persist migrate [<migration label>]
+                           [<-h> | <--help>]
+
+DESCRIPTION
+       Generates a new migration script by comparing the current schema file with the last migrated schema file. 
+       The generated SQL script updates the database to the state of the current schema file. If there is no 
+       previous migration, the current schema file is considered as the first migration and initializes the 
+       migrations folder.
+
+OPTIONS
+       <migration label>
+            The label for the current migration.
+       -h, --help
+           Print the usage details of all commands.
+
+EXAMPLES
+       Print the usage details of the `bal persist migrate` command.
+          $ bal persist migrate --help
+
+       Generate migration script based on the Ballerina schema changes. The generated script updates the database to the state of the current schema.
+          $ bal persist migrate <migration label>

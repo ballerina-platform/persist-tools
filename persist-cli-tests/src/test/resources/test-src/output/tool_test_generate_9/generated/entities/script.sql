@@ -10,7 +10,7 @@ CREATE TABLE `MedicalNeed` (
 	`itemId` INT NOT NULL,
 	`beneficiaryId` INT NOT NULL,
 	`period` DATETIME NOT NULL,
-	`urgency` VARCHAR(191) NOT NULL,
+	`urgency` VARCHAR(10) NOT NULL,
 	`quantity` INT NOT NULL,
 	PRIMARY KEY(`needId`,`itemId`)
 );

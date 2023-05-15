@@ -20,6 +20,8 @@ package io.ballerina.persist.utils;
 
 import io.ballerina.compiler.syntax.tree.ArrayTypeDescriptorNode;
 import io.ballerina.compiler.syntax.tree.BuiltinSimpleNameReferenceNode;
+import io.ballerina.compiler.syntax.tree.ImportDeclarationNode;
+import io.ballerina.compiler.syntax.tree.MetadataNode;
 import io.ballerina.compiler.syntax.tree.ModuleMemberDeclarationNode;
 import io.ballerina.compiler.syntax.tree.ModulePartNode;
 import io.ballerina.compiler.syntax.tree.Node;
@@ -33,6 +35,7 @@ import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.compiler.syntax.tree.TypeDefinitionNode;
 import io.ballerina.compiler.syntax.tree.TypeDescriptorNode;
 import io.ballerina.persist.BalException;
+import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.Module;
@@ -51,7 +54,9 @@ import io.ballerina.tools.text.TextDocuments;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -155,7 +160,13 @@ public class BalProjectUtils {
                                 BalSyntaxConstants.KEYWORD_PERSIST)))
                 .findFirst().orElseThrow(() -> new BalException(
                         "no `import ballerina/persist as _;` statement found.."));
-
+        for (ImportDeclarationNode importDeclarationNode: rootNote.imports()) {
+            if (importDeclarationNode.moduleName().get(0).text().equals(BalSyntaxConstants.CONSTRAINT) &&
+                    importDeclarationNode.orgName().isPresent() && importDeclarationNode.orgName().get()
+                    .orgName().text().equals(BalSyntaxConstants.KEYWORD_BALLERINA)) {
+                moduleBuilder.addImportModulePrefix(BalSyntaxConstants.CONSTRAINT);
+            }
+        }
         Entity.Builder entityBuilder;
         for (ModuleMemberDeclarationNode moduleNode : nodeList) {
             if (moduleNode.kind() != SyntaxKind.TYPE_DEFINITION) {
@@ -187,6 +198,8 @@ public class BalProjectUtils {
                 String qualifiedNamePrefix = getQualifiedModulePrefix(type);
                 fieldBuilder.setType(fType);
                 fieldBuilder.setOptionalType(fieldNode.typeName().kind().equals(SyntaxKind.OPTIONAL_TYPE_DESC));
+                Optional<MetadataNode> metadataNode = fieldNode.metadata();
+                metadataNode.ifPresent(value -> fieldBuilder.setAnnotation(value.annotations()));
                 EntityField entityField = fieldBuilder.build();
                 entityBuilder.addField(entityField);
                 if (fieldNode.readonlyKeyword().isPresent()) {
@@ -381,5 +394,33 @@ public class BalProjectUtils {
 
     private static String stripEscapeCharacter(String fieldName) {
         return fieldName.startsWith(BalSyntaxConstants.SINGLE_QUOTE) ? fieldName.substring(1) : fieldName;
+    }
+
+    public static Path getSchemaFilePath(String sourcePath) throws BalException {
+        List<Path> schemaFilePaths;
+
+        Path persistDir = Paths.get(sourcePath, PersistToolsConstants.PERSIST_DIRECTORY);
+        if (!Files.isDirectory(persistDir, LinkOption.NOFOLLOW_LINKS)) {
+            throw new BalException("ERROR: the persist directory inside the Ballerina project does not exist. " +
+                    "run `bal persist init` to initiate the project before generation");
+        }
+        try (Stream<Path> stream = Files.list(persistDir)) {
+            schemaFilePaths = stream.filter(file -> !Files.isDirectory(file))
+                    .filter(file -> file.toString().toLowerCase(Locale.ENGLISH).endsWith(".bal"))
+                    .collect(Collectors.toList());
+        } catch (IOException e) {
+            throw new BalException("ERROR: failed to list the model definition files in the persist directory. "
+                    + e.getMessage());
+        }
+
+        if (schemaFilePaths.isEmpty()) {
+            throw new BalException("ERROR: the persist directory does not contain any model definition file. " +
+                    "run `bal persist init` to initiate the project before generation.");
+        } else if (schemaFilePaths.size() > 1) {
+            throw new BalException("ERROR: the persist directory allows only one model definition file, " +
+                    "but contains many files.");
+        }
+        
+        return schemaFilePaths.get(0);
     }
 }

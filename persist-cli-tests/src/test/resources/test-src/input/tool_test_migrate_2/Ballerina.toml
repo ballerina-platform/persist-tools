@@ -1,0 +1,18 @@
+[package]
+org = "wso2"
+name = "persistTest6"
+version = "0.1.0"
+distribution = "2201.5.0"
+
+[build-options]
+observabilityIncluded = true
+
+[persist]
+datastore = "mysql"
+module = "persistTest6"
+
+[[platform.java11.dependency]]
+groupId = "io.ballerina.stdlib"
+artifactId = "persist-native"
+version = "0.3.0"
+
