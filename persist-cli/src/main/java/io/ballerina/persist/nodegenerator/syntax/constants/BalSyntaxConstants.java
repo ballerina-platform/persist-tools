@@ -180,7 +180,7 @@ public class BalSyntaxConstants {
     public static final String QUERY_ONE_FROM_STATEMENT = "from record{} 'object in self.%s";
     public static final String QUERY_ONE_WHERE_CLAUSE = "    where self.persistClients.get(%s).getKey('object) == key";
     public static final String QUERY_OUTER_JOIN = "    outer join var %s in %s%s";
-    public static final String STREAM_PARAM_INIT = "stream<%s, error?> %sStream = self.query%sStream();";
+    public static final String STREAM_PARAM_INIT = "stream<%s, persist:Error?> %sStream = self.query%sStream();";
     public static final String ON = " on ";
     public static final  String SELF = "self.";
     public static final String SELECT_QUERY = "select persist:filterRecord({" +
@@ -189,7 +189,7 @@ public class BalSyntaxConstants {
             "      %s" + System.lineSeparator() +
             "   }, fields);";
     public static final String IF_STATEMENT = "if unionResult is error {" + System.lineSeparator() +
-            "            return <persist:Error>error(unionResult.message());" + System.lineSeparator() +
+            "            return <persist:InvalidKeyError>error(unionResult.message());" + System.lineSeparator() +
             "        }" + System.lineSeparator();
 
     public static final String DO_QUERY = "do {" + System.lineSeparator() +
@@ -212,6 +212,9 @@ public class BalSyntaxConstants {
     public static final String CONDITION_STATEMENT = "'object.%s == value[\"%s\"] ";
     public static final String VARIABLE = "\"%s\": %s,";
     public static final String ASSOCIATED_FIELD_TEMPLATE = ".%s\": {relation: {entityName: \"%s\", refField: \"%s\"}}";
+    public static final String CONSTRAINT_ANNOTATION = "@constraint:String {" + System.lineSeparator() +
+            "        %s" + System.lineSeparator() +
+            "    }";
     public static final String FIELD_METADATA_TEMPLATE = "fieldMetadata: {%s}";
     public static final String JOIN_METADATA_TEMPLATE = "joinMetadata: {%s}";
 
@@ -288,11 +291,15 @@ public class BalSyntaxConstants {
             " name: \"query\"} external;";
     public static final String EXTERNAL_QUERY_STREAM_METHOD_TEMPLATE =
             "private isolated function query%sStream(%sTargetType targetType = <>) returns " +
-                    "stream<targetType, error?> = @java:Method {" + System.lineSeparator() +
+                    "stream<targetType, persist:Error?> = @java:Method {" + System.lineSeparator() +
             "        'class: \"io.ballerina.stdlib.persist.datastore.GoogleSheetsProcessor\"," +
                     System.lineSeparator() +
             "        name: \"queryStream\"" + System.lineSeparator() +
             "    } external;";
-
+    public static final String CONSTRAINT_STRING = "constraint:String";
+    public static final String CONSTRAINT = "constraint";
+    public static final String LENGTH = "length";
+    public static final String MAX_LENGTH = "maxLength";
+    public static final String VARCHAR_LENGTH = "191";
 }
 

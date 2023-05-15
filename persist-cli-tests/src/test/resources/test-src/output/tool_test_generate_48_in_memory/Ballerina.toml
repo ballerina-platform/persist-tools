@@ -2,11 +2,11 @@
 org = "foo"
 name = "persist_generate_48"
 version = "0.1.0"
-distribution = "2201.3.0"
+distribution = "2201.5.0"
 
 [build-options]
 observabilityIncluded = false
 
 [persist]
-datastore = "in-memory"
+datastore = "inmemory"
 module = "persist_generate_48.entities"

@@ -64,7 +64,7 @@ public class PersistToolsConstants {
     public static final String MYSQL_CONNECTOR_NAME_PREFIX = "mysql-connector";
     public static final String SCHEMA_FILE_NAME = "model";
 
-    public static final Set<String> SUPPORTED_DB_PROVIDERS = Set.of("mysql", "in-memory", "google-sheets");
+    public static final Set<String> SUPPORTED_DB_PROVIDERS = Set.of("mysql", "inmemory", "googlesheets");
 
     /**
      * Constants related to Ballerina types.
@@ -151,7 +151,7 @@ public class PersistToolsConstants {
         private SupportDataSources() {}
 
         public static final String MYSQL_DB = "mysql";
-        public static final String IN_MEMORY_TABLE = "in-memory";
-        public static final String GOOGLE_SHEETS = "google-sheets";
+        public static final String IN_MEMORY_TABLE = "inmemory";
+        public static final String GOOGLE_SHEETS = "googlesheets";
     }
 }

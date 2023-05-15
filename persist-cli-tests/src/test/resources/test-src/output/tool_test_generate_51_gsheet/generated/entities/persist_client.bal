@@ -198,10 +198,10 @@ public client class Client {
         return result;
     }
 
-    private function queryEmployees(string[] fields) returns stream<record {}, persist:Error?>|error {
-        stream<Employee, error?> employeesStream = self.queryEmployeesStream();
-        stream<Department, error?> departmentsStream = self.queryDepartmentsStream();
-        stream<Workspace, error?> workspacesStream = self.queryWorkspacesStream();
+    private function queryEmployees(string[] fields) returns stream<record {}, persist:Error?>|persist:Error {
+        stream<Employee, persist:Error?> employeesStream = self.queryEmployeesStream();
+        stream<Department, persist:Error?> departmentsStream = self.queryDepartmentsStream();
+        stream<Workspace, persist:Error?> workspacesStream = self.queryWorkspacesStream();
         record {}[] outputArray = check from record {} 'object in employeesStream
             outer join var department in departmentsStream on ['object.departmentDeptNo] equals [department?.deptNo]
             outer join var workspace in workspacesStream on ['object.workspaceWorkspaceId] equals [workspace?.workspaceId]
@@ -213,10 +213,10 @@ public client class Client {
         return outputArray.toStream();
     }
 
-    private function queryOneEmployees(anydata key) returns record {}|error {
-        stream<Employee, error?> employeesStream = self.queryEmployeesStream();
-        stream<Department, error?> departmentsStream = self.queryDepartmentsStream();
-        stream<Workspace, error?> workspacesStream = self.queryWorkspacesStream();
+    private function queryOneEmployees(anydata key) returns record {}|persist:InvalidKeyError {
+        stream<Employee, persist:Error?> employeesStream = self.queryEmployeesStream();
+        stream<Department, persist:Error?> departmentsStream = self.queryDepartmentsStream();
+        stream<Workspace, persist:Error?> workspacesStream = self.queryWorkspacesStream();
         error? unionResult = from record {} 'object in employeesStream
             outer join var department in departmentsStream on ['object.departmentDeptNo] equals [department?.deptNo]
             outer join var workspace in workspacesStream on ['object.workspaceWorkspaceId] equals [workspace?.workspaceId]
@@ -228,12 +228,12 @@ public client class Client {
                 };
             };
         if unionResult is error {
-            return <persist:Error>error(unionResult.message());
+            return <persist:InvalidKeyError>error(unionResult.message());
         }
         return <persist:InvalidKeyError>error("Invalid key: " + key.toString());
     }
 
-    private isolated function queryEmployeesStream(EmployeeTargetType targetType = <>) returns stream<targetType, error?> = @java:Method {
+    private isolated function queryEmployeesStream(EmployeeTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.datastore.GoogleSheetsProcessor",
         name: "queryStream"
     } external;
@@ -265,9 +265,9 @@ public client class Client {
         return result;
     }
 
-    private function queryWorkspaces(string[] fields) returns stream<record {}, persist:Error?>|error {
-        stream<Workspace, error?> workspacesStream = self.queryWorkspacesStream();
-        stream<Building, error?> buildingsStream = self.queryBuildingsStream();
+    private function queryWorkspaces(string[] fields) returns stream<record {}, persist:Error?>|persist:Error {
+        stream<Workspace, persist:Error?> workspacesStream = self.queryWorkspacesStream();
+        stream<Building, persist:Error?> buildingsStream = self.queryBuildingsStream();
         record {}[] outputArray = check from record {} 'object in workspacesStream
             outer join var building in buildingsStream on ['object.locationBuildingCode] equals [building?.buildingCode]
             select persist:filterRecord({
@@ -277,9 +277,9 @@ public client class Client {
         return outputArray.toStream();
     }
 
-    private function queryOneWorkspaces(anydata key) returns record {}|error {
-        stream<Workspace, error?> workspacesStream = self.queryWorkspacesStream();
-        stream<Building, error?> buildingsStream = self.queryBuildingsStream();
+    private function queryOneWorkspaces(anydata key) returns record {}|persist:InvalidKeyError {
+        stream<Workspace, persist:Error?> workspacesStream = self.queryWorkspacesStream();
+        stream<Building, persist:Error?> buildingsStream = self.queryBuildingsStream();
         error? unionResult = from record {} 'object in workspacesStream
             outer join var building in buildingsStream on ['object.locationBuildingCode] equals [building?.buildingCode]
             do {
@@ -289,12 +289,12 @@ public client class Client {
                 };
             };
         if unionResult is error {
-            return <persist:Error>error(unionResult.message());
+            return <persist:InvalidKeyError>error(unionResult.message());
         }
         return <persist:InvalidKeyError>error("Invalid key: " + key.toString());
     }
 
-    private isolated function queryWorkspacesStream(WorkspaceTargetType targetType = <>) returns stream<targetType, error?> = @java:Method {
+    private isolated function queryWorkspacesStream(WorkspaceTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.datastore.GoogleSheetsProcessor",
         name: "queryStream"
     } external;
@@ -326,8 +326,8 @@ public client class Client {
         return result;
     }
 
-    private function queryBuildings(string[] fields) returns stream<record {}, persist:Error?>|error {
-        stream<Building, error?> buildingsStream = self.queryBuildingsStream();
+    private function queryBuildings(string[] fields) returns stream<record {}, persist:Error?>|persist:Error {
+        stream<Building, persist:Error?> buildingsStream = self.queryBuildingsStream();
         record {}[] outputArray = check from record {} 'object in buildingsStream
             select persist:filterRecord({
                 ...'object
@@ -335,8 +335,8 @@ public client class Client {
         return outputArray.toStream();
     }
 
-    private function queryOneBuildings(anydata key) returns record {}|error {
-        stream<Building, error?> buildingsStream = self.queryBuildingsStream();
+    private function queryOneBuildings(anydata key) returns record {}|persist:InvalidKeyError {
+        stream<Building, persist:Error?> buildingsStream = self.queryBuildingsStream();
         error? unionResult = from record {} 'object in buildingsStream
             do {
                 return {
@@ -344,12 +344,12 @@ public client class Client {
                 };
             };
         if unionResult is error {
-            return <persist:Error>error(unionResult.message());
+            return <persist:InvalidKeyError>error(unionResult.message());
         }
         return <persist:InvalidKeyError>error("Invalid key: " + key.toString());
     }
 
-    private isolated function queryBuildingsStream(BuildingTargetType targetType = <>) returns stream<targetType, error?> = @java:Method {
+    private isolated function queryBuildingsStream(BuildingTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.datastore.GoogleSheetsProcessor",
         name: "queryStream"
     } external;
@@ -381,8 +381,8 @@ public client class Client {
         return result;
     }
 
-    private function queryDepartments(string[] fields) returns stream<record {}, persist:Error?>|error {
-        stream<Department, error?> departmentsStream = self.queryDepartmentsStream();
+    private function queryDepartments(string[] fields) returns stream<record {}, persist:Error?>|persist:Error {
+        stream<Department, persist:Error?> departmentsStream = self.queryDepartmentsStream();
         record {}[] outputArray = check from record {} 'object in departmentsStream
             select persist:filterRecord({
                 ...'object
@@ -390,8 +390,8 @@ public client class Client {
         return outputArray.toStream();
     }
 
-    private function queryOneDepartments(anydata key) returns record {}|error {
-        stream<Department, error?> departmentsStream = self.queryDepartmentsStream();
+    private function queryOneDepartments(anydata key) returns record {}|persist:InvalidKeyError {
+        stream<Department, persist:Error?> departmentsStream = self.queryDepartmentsStream();
         error? unionResult = from record {} 'object in departmentsStream
             do {
                 return {
@@ -399,12 +399,12 @@ public client class Client {
                 };
             };
         if unionResult is error {
-            return <persist:Error>error(unionResult.message());
+            return <persist:InvalidKeyError>error(unionResult.message());
         }
         return <persist:InvalidKeyError>error("Invalid key: " + key.toString());
     }
 
-    private isolated function queryDepartmentsStream(DepartmentTargetType targetType = <>) returns stream<targetType, error?> = @java:Method {
+    private isolated function queryDepartmentsStream(DepartmentTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.datastore.GoogleSheetsProcessor",
         name: "queryStream"
     } external;
@@ -436,8 +436,8 @@ public client class Client {
         return result;
     }
 
-    private function queryOrderitems(string[] fields) returns stream<record {}, persist:Error?>|error {
-        stream<OrderItem, error?> orderitemsStream = self.queryOrderitemsStream();
+    private function queryOrderitems(string[] fields) returns stream<record {}, persist:Error?>|persist:Error {
+        stream<OrderItem, persist:Error?> orderitemsStream = self.queryOrderitemsStream();
         record {}[] outputArray = check from record {} 'object in orderitemsStream
             select persist:filterRecord({
                 ...'object
@@ -445,8 +445,8 @@ public client class Client {
         return outputArray.toStream();
     }
 
-    private function queryOneOrderitems(anydata key) returns record {}|error {
-        stream<OrderItem, error?> orderitemsStream = self.queryOrderitemsStream();
+    private function queryOneOrderitems(anydata key) returns record {}|persist:InvalidKeyError {
+        stream<OrderItem, persist:Error?> orderitemsStream = self.queryOrderitemsStream();
         error? unionResult = from record {} 'object in orderitemsStream
             do {
                 return {
@@ -454,18 +454,18 @@ public client class Client {
                 };
             };
         if unionResult is error {
-            return <persist:Error>error(unionResult.message());
+            return <persist:InvalidKeyError>error(unionResult.message());
         }
         return <persist:InvalidKeyError>error("Invalid key: " + key.toString());
     }
 
-    private isolated function queryOrderitemsStream(OrderItemTargetType targetType = <>) returns stream<targetType, error?> = @java:Method {
+    private isolated function queryOrderitemsStream(OrderItemTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.datastore.GoogleSheetsProcessor",
         name: "queryStream"
     } external;
 
-    private function queryDepartmentsEmployees(record {} value, string[] fields) returns record {}[]|error {
-        stream<Employee, error?> employeesStream = self.queryEmployeesStream();
+    private function queryDepartmentsEmployees(record {} value, string[] fields) returns record {}[]|persist:Error {
+        stream<Employee, persist:Error?> employeesStream = self.queryEmployeesStream();
         return from record {} 'object in employeesStream
             where 'object.departmentDeptNo == value["deptNo"]
             select persist:filterRecord({
@@ -473,8 +473,8 @@ public client class Client {
             }, fields);
     }
 
-    private function queryBuildingsWorkspaces(record {} value, string[] fields) returns record {}[]|error {
-        stream<Workspace, error?> workspacesStream = self.queryWorkspacesStream();
+    private function queryBuildingsWorkspaces(record {} value, string[] fields) returns record {}[]|persist:Error {
+        stream<Workspace, persist:Error?> workspacesStream = self.queryWorkspacesStream();
         return from record {} 'object in workspacesStream
             where 'object.locationBuildingCode == value["buildingCode"]
             select persist:filterRecord({
@@ -482,8 +482,8 @@ public client class Client {
             }, fields);
     }
 
-    private function queryWorkspacesEmployees(record {} value, string[] fields) returns record {}[]|error {
-        stream<Employee, error?> employeesStream = self.queryEmployeesStream();
+    private function queryWorkspacesEmployees(record {} value, string[] fields) returns record {}[]|persist:Error {
+        stream<Employee, persist:Error?> employeesStream = self.queryEmployeesStream();
         return from record {} 'object in employeesStream
             where 'object.workspaceWorkspaceId == value["workspaceId"]
             select persist:filterRecord({

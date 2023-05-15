@@ -94,7 +94,7 @@ public class GSheetSyntaxTree implements SyntaxTree {
         for (Map.Entry<String, String> entry : gSheetClientSyntax.queryMethodStatement.entrySet()) {
             Function query = new Function(entry.getKey(), SyntaxKind.OBJECT_METHOD_DEFINITION);
             query.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PRIVATE });
-            query.addReturns(TypeDescriptor.getSimpleNameReferenceNode("record{}[]|error"));
+            query.addReturns(TypeDescriptor.getSimpleNameReferenceNode("record{}[]|persist:Error"));
             query.addRequiredParameter(TypeDescriptor.getSimpleNameReferenceNode("record{}"), "value");
             query.addRequiredParameter(TypeDescriptor.getArrayTypeDescriptorNode("string"),
                     BalSyntaxConstants.KEYWORD_FIELDS);
@@ -177,7 +177,7 @@ public class GSheetSyntaxTree implements SyntaxTree {
                 SyntaxKind.OBJECT_METHOD_DEFINITION);
         query.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PRIVATE });
         query.addReturns(TypeDescriptor.getSimpleNameReferenceNode(BalSyntaxConstants.QUERY_RETURN + "|" +
-                BalSyntaxConstants.ERROR));
+                BalSyntaxConstants.PERSIST_ERROR));
         query.addRequiredParameter(TypeDescriptor.getArrayTypeDescriptorNode("string"),
                 BalSyntaxConstants.KEYWORD_FIELDS);
 
@@ -185,7 +185,7 @@ public class GSheetSyntaxTree implements SyntaxTree {
                 SyntaxKind.OBJECT_METHOD_DEFINITION);
         queryOne.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PRIVATE });
         queryOne.addReturns(TypeDescriptor.getSimpleNameReferenceNode(String.format(BalSyntaxConstants.QUERY_ONE_RETURN,
-                BalSyntaxConstants.ERROR)));
+                BalSyntaxConstants.INVALID_KEY_ERROR)));
         queryOne.addRequiredParameter(TypeDescriptor.getSimpleNameReferenceNode(BalSyntaxConstants.ANY_DATA),
                 BalSyntaxConstants.KEYWORD_KEY);
         createQuery(entity, queryBuilder, queryOneBuilder);

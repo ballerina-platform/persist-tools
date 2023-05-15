@@ -31,15 +31,10 @@ import picocli.CommandLine;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * This Class implements the `persist generate` command in Ballerina persist-tool.
@@ -75,7 +70,6 @@ public class Generate implements BLauncherCmd {
         Path generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);
         String dataStore;
         Module entityModule;
-        List<Path> schemaFilePaths;
         Path schemaFilePath;
         String packageName;
         String moduleNameWithPackageName;
@@ -92,32 +86,13 @@ public class Generate implements BLauncherCmd {
             return;
         }
 
-        Path persistDir = Paths.get(this.sourcePath, PersistToolsConstants.PERSIST_DIRECTORY);
-        if (!Files.isDirectory(persistDir, LinkOption.NOFOLLOW_LINKS)) {
-            errStream.println("ERROR: the persist directory inside the Ballerina project does not exist. " +
-                    "run `bal persist init` to initiate the project before generation");
-            return;
-        }
-        try (Stream<Path> stream = Files.list(persistDir)) {
-            schemaFilePaths = stream.filter(file -> !Files.isDirectory(file))
-                    .filter(file -> file.toString().toLowerCase(Locale.ENGLISH).endsWith(".bal"))
-                    .collect(Collectors.toList());
-        } catch (IOException e) {
-            errStream.println("ERROR: failed to list the model definition files in the persist directory. "
-                    + e.getMessage());
+        try {
+            schemaFilePath =  BalProjectUtils.getSchemaFilePath(this.sourcePath);
+        } catch (BalException e) {
+            errStream.println(e.getMessage());
             return;
         }
 
-        if (schemaFilePaths.isEmpty()) {
-            errStream.println("ERROR: the persist directory does not contain any model definition file. " +
-                    "run `bal persist init` to initiate the project before generation.");
-            return;
-        } else if (schemaFilePaths.size() > 1) {
-            errStream.println("ERROR: the persist directory allows only one model definition file, " +
-                    "but contains many files.");
-            return;
-        }
-        schemaFilePath = schemaFilePaths.get(0);
         try {
             packageName = TomlSyntaxUtils.readPackageName(this.sourcePath);
         } catch (BalException e) {
