@@ -1,6 +1,6 @@
 [package]
 org = "foo"
-name = "persist_generate_48"
+name = "persist_generate_52"
 version = "0.1.0"
 distribution = "2201.3.0"
 
@@ -9,4 +9,4 @@ observabilityIncluded = false
 
 [persist]
 datastore = "inmemory"
-module = "persist_generate_48.entities"
+module = "persist_generate_52.entities"

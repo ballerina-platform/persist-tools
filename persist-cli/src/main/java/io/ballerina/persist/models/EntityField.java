@@ -37,9 +37,10 @@ public class EntityField {
     private final boolean arrayType;
     private final boolean optionalType;
     private Relation relation;
+    private Enum enumValue;
     private final NodeList<AnnotationNode> annotationNodes;
 
-    private EntityField(String fieldName, String fieldType, boolean arrayType, boolean optionalType,
+    EntityField(String fieldName, String fieldType, boolean arrayType, boolean optionalType,
                         NodeList<AnnotationNode> annotationNodes) {
         this.fieldName = fieldName;
         this.fieldType = fieldType;
@@ -68,6 +69,14 @@ public class EntityField {
         this.relation = relation;
     }
 
+    public void setEnum(Enum enumValue) {
+        this.enumValue = enumValue;
+    }
+
+    public Enum getEnum() {
+        return enumValue;
+    }
+
     public boolean isArrayType() {
         return arrayType;
     }
@@ -91,7 +100,7 @@ public class EntityField {
         boolean optionalType = false;
         private NodeList<AnnotationNode> annotationNodes = null;
 
-        private Builder(String fieldName) {
+        Builder(String fieldName) {
             this.fieldName = fieldName;
         }
 

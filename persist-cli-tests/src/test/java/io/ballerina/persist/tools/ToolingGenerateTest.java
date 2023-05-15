@@ -40,7 +40,6 @@ public class ToolingGenerateTest {
     @Test(enabled = true)
     @Description("There is only a single entity in the Ballerina project")
     public void testGenerateSingleEntity() {
-
         executeCommand("tool_test_generate_1", GENERATE);
         assertGeneratedSources("tool_test_generate_1");
     }
@@ -340,5 +339,26 @@ public class ToolingGenerateTest {
     public void testInMemoryWithCompositeKeys() {
         executeCommand("tool_test_generate_49_in_memory", GENERATE);
         assertGeneratedSources("tool_test_generate_49_in_memory");
+    }
+
+    @Test(enabled = true)
+    @Description("There is multiple entities with multiple enums and no imports")
+    public void testGenerateWithEnums() {
+        executeCommand("tool_test_generate_50", GENERATE);
+        assertGeneratedSources("tool_test_generate_50");
+    }
+
+    @Test(enabled = true)
+    @Description("There is multiple entities with multiple enums and imports")
+    public void testGenerateWithEnumsWithImports() {
+        executeCommand("tool_test_generate_51", GENERATE);
+        assertGeneratedSources("tool_test_generate_51");
+    }
+
+    @Test(enabled = true)
+    @Description("There is multiple entities with multiple enums and imports with in memory data source")
+    public void testGenerateWithEnumsInMemory() {
+        executeCommand("tool_test_generate_52_in_memory", GENERATE);
+        assertGeneratedSources("tool_test_generate_52_in_memory");
     }
 }

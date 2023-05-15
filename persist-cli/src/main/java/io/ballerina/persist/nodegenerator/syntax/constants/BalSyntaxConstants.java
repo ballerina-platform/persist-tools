@@ -45,6 +45,7 @@ public class BalSyntaxConstants {
     public static final String COMMA_SPACE = ", ";
     public static final String COLON = ":";
     public static final String SEMICOLON = ";";
+    public static final String EQUAL = "=";
     public static final String VALUE = "value";
     public static final String PERSIST_MODULE = "persist";
     public static final String PERSIST_ERROR = "persist:Error";
