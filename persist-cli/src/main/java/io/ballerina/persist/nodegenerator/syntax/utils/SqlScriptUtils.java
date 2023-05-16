@@ -26,6 +26,8 @@ import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.EntityField;
+import io.ballerina.persist.models.Enum;
+import io.ballerina.persist.models.EnumMember;
 import io.ballerina.persist.models.Relation;
 import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
 
@@ -51,6 +53,10 @@ public class SqlScriptUtils {
     private static final String TAB = "\t";
     private static final String COMMA_WITH_SPACE = ", ";
     private static final String PRIMARY_KEY_START_SCRIPT = NEW_LINE + TAB + "PRIMARY KEY(";
+    private static final String ENUM_START_SCRIPT = "ENUM(";
+    private static final String ENUM_END_SCRIPT = ")";
+
+    private static final String SINGLE_QUOTE = "'";
 
     private SqlScriptUtils(){}
 
@@ -70,8 +76,8 @@ public class SqlScriptUtils {
         return MessageFormat.format("DROP TABLE IF EXISTS {0};", tableName);
     }
 
-    private static String generateCreateTableQuery(Entity entity,
-                                                   HashMap<String, List<String>> referenceTables) throws BalException {
+    private static String generateCreateTableQuery(Entity entity, HashMap<String, List<String>> referenceTables)
+            throws BalException {
 
         String fieldDefinitions = generateFieldsDefinitionSegments(entity, referenceTables);
 
@@ -79,8 +85,7 @@ public class SqlScriptUtils {
                 addBackticks(removeSingleQuote(entity.getEntityName())), fieldDefinitions, NEW_LINE);
     }
 
-    private static String generateFieldsDefinitionSegments(Entity entity,
-                                                           HashMap<String, List<String>> referenceTables)
+    private static String generateFieldsDefinitionSegments(Entity entity, HashMap<String, List<String>> referenceTables)
             throws BalException {
         StringBuilder sqlScript = new StringBuilder();
         sqlScript.append(getColumnsScript(entity));
@@ -101,7 +106,15 @@ public class SqlScriptUtils {
             if (entityField.getRelation() != null) {
                 continue;
             }
-            String sqlType = getSqlType(entityField);
+
+            String sqlType;
+            Enum enumValue = entityField.getEnum();
+            if (enumValue == null) {
+                sqlType = getSqlType(entityField);
+            } else {
+                sqlType = getEnumType(enumValue);
+            }
+            assert sqlType != null;
             String fieldName = addBackticks(removeSingleQuote(entityField.getFieldName()));
             if (entityField.isOptionalType()) {
                 columnScript.append(MessageFormat.format("{0}{1}{2} {3},",
@@ -203,7 +216,7 @@ public class SqlScriptUtils {
         }
         return keyScripts.toString();
     }
-  
+
     private static String getSqlType(EntityField entityField) throws BalException {
         String sqlType;
         if (!entityField.isArrayType()) {
@@ -275,6 +288,32 @@ public class SqlScriptUtils {
             return PersistToolsConstants.SqlTypes.LONG_BLOB;
         }
         throw new BalException("couldn't find equivalent SQL type for the field type: " + field);
+    }
+
+    private static String getEnumType(Enum enumValue) {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(ENUM_START_SCRIPT);
+
+        List<EnumMember> members = enumValue.getMembers();
+        for (int i = 0; i < members.size(); i++) {
+            stringBuilder.append(SINGLE_QUOTE);
+
+            EnumMember member = members.get(i);
+            if (member.getValue() != null) {
+                stringBuilder.append(member.getValue());
+            } else {
+                stringBuilder.append(member.getIdentifier());
+            }
+
+            stringBuilder.append(SINGLE_QUOTE);
+
+            if (i < members.size() - 1) {
+                stringBuilder.append(COMMA_WITH_SPACE);
+            }
+        }
+
+        stringBuilder.append(ENUM_END_SCRIPT);
+        return stringBuilder.toString();
     }
 
     private static String[] rearrangeScriptsWithReference(Set<String> tables,
