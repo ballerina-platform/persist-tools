@@ -9,7 +9,7 @@ DROP TABLE IF EXISTS `Building`;
 DROP TABLE IF EXISTS `Department`;
 
 CREATE TABLE `Department` (
-	`deptNo` VARCHAR(191) NOT NULL,
+	`deptNo` VARCHAR(10) NOT NULL,
 	`deptName` VARCHAR(191) NOT NULL,
 	PRIMARY KEY(`deptNo`)
 );
@@ -30,7 +30,7 @@ CREATE TABLE `Employee` (
 	`birthDate` DATE NOT NULL,
 	`gender` VARCHAR(191) NOT NULL,
 	`hireDate` DATE NOT NULL,
-	`departmentDeptNo` VARCHAR(191) NOT NULL,
+	`departmentDeptNo` VARCHAR(10) NOT NULL,
 	CONSTRAINT FK_DEPARTMENT FOREIGN KEY(`departmentDeptNo`) REFERENCES `Department`(`deptNo`),
 	PRIMARY KEY(`empNo`)
 );
