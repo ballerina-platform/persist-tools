@@ -361,4 +361,11 @@ public class ToolingGenerateTest {
         executeCommand("tool_test_generate_52_in_memory", GENERATE);
         assertGeneratedSources("tool_test_generate_52_in_memory");
     }
+
+    @Test(enabled = true)
+    @Description("There is an entity which is associated with multiple relations")
+    public void testGenerateWithSameEntityMultipleRelationsInMemory() {
+        executeCommand("tool_test_generate_53_in_memory", GENERATE);
+        assertGeneratedSources("tool_test_generate_53_in_memory");
+    }
 }

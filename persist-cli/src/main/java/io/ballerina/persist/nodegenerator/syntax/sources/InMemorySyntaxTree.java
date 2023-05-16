@@ -232,8 +232,10 @@ public class InMemorySyntaxTree implements SyntaxTree {
 
     public static String getQueryClonedTables(Entity entity) {
         StringBuilder clonedTables = new StringBuilder();
+        ArrayList<Entity> clonedTablesList = new ArrayList<>();
 
         clonedTables.append(getClonedTable(entity));
+        clonedTablesList.add(entity);
 
         for (EntityField field : entity.getFields()) {
             Relation relation = field.getRelation();
@@ -241,8 +243,12 @@ public class InMemorySyntaxTree implements SyntaxTree {
                 continue;
             }
             Entity assocEntity = relation.getAssocEntity();
+            if (clonedTablesList.contains(assocEntity)) {
+                continue;
+            }
 
             clonedTables.append(getClonedTable(assocEntity));
+            clonedTablesList.add(assocEntity);
         }
 
         return clonedTables.toString();
