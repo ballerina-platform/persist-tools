@@ -38,7 +38,7 @@ public class ToolingMigrateTest {
 
     private static final PrintStream errStream = System.err;
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("There has been 1 previous migration")
     public void testFirstMigrateTest() {
 
@@ -46,7 +46,7 @@ public class ToolingMigrateTest {
         assertGeneratedSources("tool_test_migrate_1");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("There has been no previous migrations")
     public void testSecondMigrateTest() {
 

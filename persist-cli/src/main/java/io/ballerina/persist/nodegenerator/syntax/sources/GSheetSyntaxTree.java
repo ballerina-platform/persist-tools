@@ -217,8 +217,8 @@ public class GSheetSyntaxTree implements SyntaxTree {
                             toUpperCase(Locale.ENGLISH) + assocEntityResourceName.substring(1);
                     streamInitBuilder.append(String.format(BalSyntaxConstants.STREAM_PARAM_INIT,
                             assocEntityName, assocEntityResourceName, assocResourceNameInCamelCase));
-                    streamSelectBuilder.append(String.format(BalSyntaxConstants.QUERY_OUTER_JOIN, assocEntityName.
-                            toLowerCase(Locale.ENGLISH), BalSyntaxConstants.EMPTY_STRING,
+                    streamSelectBuilder.append(String.format(BalSyntaxConstants.G_SHEET_QUERY_OUTER_JOIN,
+                            assocEntityName.toLowerCase(Locale.ENGLISH), BalSyntaxConstants.EMPTY_STRING,
                             assocEntityResourceName + stream));
                     streamSelectBuilder.append(BalSyntaxConstants.ON);
                     relationalRecordFields.append(String.format(BalSyntaxConstants.VARIABLE,
@@ -249,12 +249,12 @@ public class GSheetSyntaxTree implements SyntaxTree {
         queryBuilder.append(streamInitBuilder);
         String streamParamName =  entityResourceName + stream;
         queryBuilder.append("record{}[] outputArray =").append(
-                String.format(BalSyntaxConstants.QUERY_STATEMENT, "check", BalSyntaxConstants.EMPTY_STRING,
+                String.format(BalSyntaxConstants.G_SHEET_QUERY_STATEMENT, "check", BalSyntaxConstants.EMPTY_STRING,
                         streamParamName));
         queryBuilder.append(streamSelectBuilder);
         queryOneBuilder.append(streamInitBuilder);
         queryOneBuilder.append("error? unionResult = ").append(
-                String.format(BalSyntaxConstants.QUERY_STATEMENT, BalSyntaxConstants.EMPTY_STRING,
+                String.format(BalSyntaxConstants.G_SHEET_QUERY_STATEMENT, BalSyntaxConstants.EMPTY_STRING,
                         BalSyntaxConstants.EMPTY_STRING, streamParamName));
         queryOneBuilder.append(streamSelectBuilder);
         if (relationalRecordFields.length() > 0) {

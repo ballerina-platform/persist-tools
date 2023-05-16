@@ -96,9 +96,14 @@ public class BalSyntaxUtils {
         return balTree.modifyWith(modulePartNode);
     }
 
-    public static Client generateClientSignature() {
-        Client clientObject = new Client("Client", true);
-        clientObject.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_CLIENT });
+    public static Client generateClientSignature(boolean isIsolated) {
+        Client clientObject = new Client("Client");
+        if (isIsolated) {
+            clientObject.addQualifiers(new String[] {
+                    BalSyntaxConstants.KEYWORD_ISOLATED, BalSyntaxConstants.KEYWORD_CLIENT });
+        } else {
+            clientObject.addQualifiers(new String[] {BalSyntaxConstants.KEYWORD_CLIENT});
+        }
         clientObject.addMember(NodeFactory.createTypeReferenceNode(
                 AbstractNodeFactory.createToken(SyntaxKind.ASTERISK_TOKEN),
                 NodeFactory.createQualifiedNameReferenceNode(
@@ -143,21 +148,35 @@ public class BalSyntaxUtils {
                         entity.getResourceName(), keyBuilder, entity.getEntityName(), className));
     }
 
-    public static Function generatePostFunction(Entity entity, List<EntityField> primaryKeys, String parameterType) {
+    public static Function generatePostFunction(Entity entity, List<EntityField> primaryKeys, String parameterType,
+                                                boolean isIsolated) {
         Function create = new Function(BalSyntaxConstants.POST, SyntaxKind.RESOURCE_ACCESSOR_DEFINITION);
         NodeList<Node> resourcePaths = AbstractNodeFactory.createEmptyNodeList();
         resourcePaths = resourcePaths.add(AbstractNodeFactory.createIdentifierToken(entity.getResourceName()));
         create.addRelativeResourcePaths(resourcePaths);
         create.addRequiredParameter(
                 TypeDescriptor.getArrayTypeDescriptorNode(parameterType), BalSyntaxConstants.KEYWORD_VALUE);
-        create.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_ISOLATED, BalSyntaxConstants.KEYWORD_RESOURCE });
+        if (isIsolated) {
+            create.addQualifiers(new String[]{BalSyntaxConstants.KEYWORD_ISOLATED,
+                    BalSyntaxConstants.KEYWORD_RESOURCE});
+        } else {
+            create.addQualifiers(new String[]{BalSyntaxConstants.KEYWORD_RESOURCE});
+        }
         addReturnsToPostResourceSignature(create, primaryKeys);
         return create;
     }
 
-    public static Function generatePutFunction(Entity entity, StringBuilder filterKeys, StringBuilder path) {
+    public static Function generatePutFunction(Entity entity, StringBuilder filterKeys, StringBuilder path,
+                                               boolean isIsolated) {
         Function update = new Function(BalSyntaxConstants.PUT, SyntaxKind.RESOURCE_ACCESSOR_DEFINITION);
-        update.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_ISOLATED, BalSyntaxConstants.KEYWORD_RESOURCE });
+        if (isIsolated) {
+            update.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_ISOLATED,
+                    BalSyntaxConstants.KEYWORD_RESOURCE });
+
+        } else {
+            update.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_RESOURCE });
+
+        }
         update.addRequiredParameter(TypeDescriptor.getSimpleNameReferenceNode(
                 String.format(BalSyntaxConstants.UPDATE_RECORD, entity.getEntityName())), BalSyntaxConstants.VALUE);
         NodeList<Node> resourcePaths = AbstractNodeFactory.createEmptyNodeList();
@@ -170,9 +189,16 @@ public class BalSyntaxUtils {
         return update;
     }
 
-    public static Function generateDeleteFunction(Entity entity, StringBuilder filterKeys, StringBuilder path) {
+    public static Function generateDeleteFunction(Entity entity, StringBuilder filterKeys, StringBuilder path,
+                                                  boolean isIsolated) {
         Function delete = new Function(BalSyntaxConstants.DELETE, SyntaxKind.RESOURCE_ACCESSOR_DEFINITION);
-        delete.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_ISOLATED, BalSyntaxConstants.KEYWORD_RESOURCE });
+        if (isIsolated) {
+            delete.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_ISOLATED,
+                    BalSyntaxConstants.KEYWORD_RESOURCE });
+        } else {
+            delete.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_RESOURCE });
+
+        }
         NodeList<Node> resourcePaths = AbstractNodeFactory.createEmptyNodeList();
         resourcePaths = getResourcePath(resourcePaths, entity.getKeys(), filterKeys, path, entity.getResourceName());
         delete.addRelativeResourcePaths(resourcePaths);

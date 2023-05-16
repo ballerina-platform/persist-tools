@@ -28,9 +28,7 @@ import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConst
  *
  * @since 0.1.0
  *
- * @since 0.1.0
  */
-
 public class EntityField {
     private final String fieldName;
     private final String fieldType;

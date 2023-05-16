@@ -31,6 +31,7 @@ import io.ballerina.persist.components.TypeDescriptor;
 import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.Module;
+import io.ballerina.persist.models.QueryMethod;
 import io.ballerina.persist.models.Relation;
 import io.ballerina.persist.nodegenerator.syntax.clients.InMemoryClientSyntax;
 import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
@@ -40,7 +41,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 /**
  * This class is used to generate the syntax tree for in-memory.
@@ -57,7 +57,7 @@ public class InMemorySyntaxTree implements SyntaxTree {
         for (Entity entity : entityModule.getEntityMap().values()) {
             moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration(
                     String.format(BalSyntaxConstants.TABLE_PARAMETER_INIT_TEMPLATE, entity.getEntityName(),
-                            getPrimaryKeys(entity, false), entity.getResourceName(), "table[]")));
+                            getPrimaryKeys(entity, false), entity.getResourceName())));
         }
         Client clientObject = dbClientSyntax.getClientObject(entityModule);
         Collection<Entity> entityArray = entityModule.getEntityMap().values();
@@ -75,9 +75,6 @@ public class InMemorySyntaxTree implements SyntaxTree {
             resource.addFunction(dbClientSyntax.getPostFunction(entity), true);
             resource.addFunction(dbClientSyntax.getPutFunction(entity), true);
             resource.addFunction(dbClientSyntax.getDeleteFunction(entity), true);
-            FunctionDefinitionNode[] functions = createQueryFunction(entity);
-            resource.addFunction(functions[0], true);
-            resource.addFunction(functions[1], true);
             resourceList.add(resource);
         }
         resourceList.forEach(resource -> {
@@ -86,18 +83,29 @@ public class InMemorySyntaxTree implements SyntaxTree {
             });
         });
 
-        for (Map.Entry<String, String> entry : dbClientSyntax.queryMethodStatement.entrySet()) {
-            Function query = new Function(entry.getKey(), SyntaxKind.OBJECT_METHOD_DEFINITION);
-            query.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PRIVATE });
+        clientObject.addMember(dbClientSyntax.getCloseFunction(), true);
+        moduleMembers = moduleMembers.add(clientObject.getClassDefinitionNode());
+
+        List<ModuleMemberDeclarationNode> functionsList = new ArrayList<>();
+        for (Entity entity : entityArray) {
+            functionsList.addAll(List.of(createQueryFunctions(entity)));
+        }
+
+        for (QueryMethod queryMethod: dbClientSyntax.queryMethodList) {
+            String entityName = queryMethod.getAssociatedEntityName();
+            Function query = new Function(queryMethod.getMethodName(), SyntaxKind.OBJECT_METHOD_DEFINITION);
+
+            query.addStatement(NodeParser.parseStatement(getClonedTable(entityModule.getEntityMap().get(entityName))));
+            query.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_ISOLATED });
             query.addReturns(TypeDescriptor.getSimpleNameReferenceNode("record{}[]"));
             query.addRequiredParameter(TypeDescriptor.getSimpleNameReferenceNode("record{}"), "value");
             query.addRequiredParameter(TypeDescriptor.getArrayTypeDescriptorNode("string"),
                     BalSyntaxConstants.KEYWORD_FIELDS);
-            query.addStatement(NodeParser.parseStatement(entry.getValue()));
-            clientObject.addMember(query.getFunctionDefinitionNode(), true);
+            query.addStatement(NodeParser.parseStatement(queryMethod.getMethodBody()));
+            functionsList.add(query.getFunctionDefinitionNode());
         }
-        clientObject.addMember(dbClientSyntax.getCloseFunction(), true);
-        moduleMembers = moduleMembers.add(clientObject.getClassDefinitionNode());
+
+        moduleMembers = moduleMembers.addAll(functionsList);
         return BalSyntaxUtils.generateSyntaxTree(imports, moduleMembers);
     }
 
@@ -120,29 +128,30 @@ public class InMemorySyntaxTree implements SyntaxTree {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    private static FunctionDefinitionNode[] createQueryFunction(Entity entity) {
+    private static FunctionDefinitionNode[] createQueryFunctions(Entity entity) {
         String resourceName = entity.getResourceName();
         String nameInCamelCase = resourceName.substring(0, 1).toUpperCase(Locale.ENGLISH) + resourceName.substring(1);
-        StringBuilder queryBuilder = new StringBuilder(String.format(BalSyntaxConstants.QUERY_STATEMENT,
-                "return", BalSyntaxConstants.SELF, resourceName));
+        String clonedTables = getQueryClonedTables(entity);
+
+        StringBuilder queryBuilder = new StringBuilder(String.format(BalSyntaxConstants.QUERY_STATEMENT, resourceName));
         Function query = new Function(String.format(BalSyntaxConstants.QUERY, nameInCamelCase),
                 SyntaxKind.OBJECT_METHOD_DEFINITION);
-        query.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PRIVATE });
+        query.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_ISOLATED });
         query.addReturns(TypeDescriptor.getSimpleNameReferenceNode(BalSyntaxConstants.QUERY_RETURN));
         query.addRequiredParameter(TypeDescriptor.getArrayTypeDescriptorNode("string"),
                 BalSyntaxConstants.KEYWORD_FIELDS);
+        query.addStatement(NodeParser.parseStatement(clonedTables));
 
         StringBuilder queryOneBuilder = new StringBuilder(String.format(BalSyntaxConstants.QUERY_ONE_FROM_STATEMENT,
                 resourceName));
-        queryOneBuilder.append(String.format(BalSyntaxConstants.QUERY_ONE_WHERE_CLAUSE,
-                BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName())));
+        queryOneBuilder.append(String.format(BalSyntaxConstants.QUERY_ONE_WHERE_CLAUSE, getPrimaryKeys(entity, true)));
         Function queryOne = new Function(String.format(BalSyntaxConstants.QUERY_ONE, nameInCamelCase),
                 SyntaxKind.OBJECT_METHOD_DEFINITION);
-        queryOne.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PRIVATE });
-        queryOne.addReturns(TypeDescriptor.getSimpleNameReferenceNode(String.format(BalSyntaxConstants.QUERY_ONE_RETURN,
-                BalSyntaxConstants.INVALID_KEY_ERROR)));
-        queryOne.addRequiredParameter(TypeDescriptor.getSimpleNameReferenceNode(BalSyntaxConstants.ANY_DATA),
+        queryOne.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_ISOLATED });
+        queryOne.addReturns(TypeDescriptor.getSimpleNameReferenceNode(BalSyntaxConstants.QUERY_ONE_RETURN));
+        queryOne.addRequiredParameter(TypeDescriptor.getSimpleNameReferenceNode("anydata"),
                 BalSyntaxConstants.KEYWORD_KEY);
+        queryOne.addStatement(NodeParser.parseStatement(clonedTables));
 
         createQuery(entity, queryBuilder, queryOneBuilder);
         query.addStatement(NodeParser.parseStatement(queryBuilder.toString()));
@@ -154,22 +163,21 @@ public class InMemorySyntaxTree implements SyntaxTree {
     private static StringBuilder[] createQuery(Entity entity, StringBuilder queryBuilder,
                                                StringBuilder queryOneBuilder) {
         StringBuilder relationalRecordFields = new StringBuilder();
-
-        for (EntityField fields : entity.getFields()) {
-            if (fields.getRelation() != null) {
-                Relation relation = fields.getRelation();
+        for (EntityField field : entity.getFields()) {
+            if (field.getRelation() != null) {
+                Relation relation = field.getRelation();
                 if (relation.isOwner()) {
                     Entity assocEntity = relation.getAssocEntity();
-                    String assocEntityName = assocEntity.getEntityName();
-                    queryBuilder.append(String.format(BalSyntaxConstants.QUERY_OUTER_JOIN, assocEntityName.
-                            toLowerCase(Locale.ENGLISH), BalSyntaxConstants.SELF, assocEntity.getResourceName()));
+                    String fieldName = field.getFieldName();
+                    queryBuilder.append(String.format(BalSyntaxConstants.QUERY_OUTER_JOIN,
+                            fieldName.toLowerCase(Locale.ENGLISH), assocEntity.getResourceName()));
                     queryBuilder.append(BalSyntaxConstants.ON);
-                    queryOneBuilder.append(String.format(BalSyntaxConstants.QUERY_OUTER_JOIN, assocEntityName.
-                            toLowerCase(Locale.ENGLISH), BalSyntaxConstants.SELF, assocEntity.getResourceName()));
+                    queryOneBuilder.append(String.format(BalSyntaxConstants.QUERY_OUTER_JOIN,
+                            fieldName.toLowerCase(Locale.ENGLISH), assocEntity.getResourceName()));
                     queryOneBuilder.append(BalSyntaxConstants.ON);
                     relationalRecordFields.append(String.format(BalSyntaxConstants.VARIABLE,
-                            assocEntityName.toLowerCase(Locale.ENGLISH),
-                            assocEntityName.toLowerCase(Locale.ENGLISH)));
+                            fieldName, fieldName.toLowerCase(Locale.ENGLISH)));
+
                     int i = 0;
                     StringBuilder arrayFields = new StringBuilder();
                     StringBuilder arrayValues = new StringBuilder();
@@ -177,35 +185,32 @@ public class InMemorySyntaxTree implements SyntaxTree {
                     arrayValues.append(BalSyntaxConstants.OPEN_BRACKET);
                     for (String references: relation.getReferences()) {
                         if (i > 0) {
-                            arrayFields.append(BalSyntaxConstants.COMMA_WITH_SPACE);
-                            arrayValues.append(BalSyntaxConstants.COMMA_WITH_SPACE);
+                            arrayFields.append(BalSyntaxConstants.COMMA);
+                            arrayValues.append(BalSyntaxConstants.COMMA);
                         }
                         arrayFields.append(String.format(BalSyntaxConstants.OBJECT_FIELD,
                                 relation.getKeyColumns().get(i).getField()));
                         arrayValues.append(String.format(BalSyntaxConstants.VALUES,
-                                assocEntityName.toLowerCase(Locale.ENGLISH), references));
+                                field.getFieldName().toLowerCase(Locale.ENGLISH), references));
                         i++;
                     }
                     queryBuilder.append(arrayFields.append(BalSyntaxConstants.CLOSE_BRACKET));
                     queryBuilder.append(BalSyntaxConstants.EQUALS);
-                    queryBuilder.append(arrayValues.append(BalSyntaxConstants.CLOSE_BRACKET)).
-                            append(System.lineSeparator());
+                    queryBuilder.append(arrayValues.append(BalSyntaxConstants.CLOSE_BRACKET));
                     queryOneBuilder.append(arrayFields);
                     queryOneBuilder.append(BalSyntaxConstants.EQUALS);
-                    queryOneBuilder.append(arrayValues).append(System.lineSeparator());
+                    queryOneBuilder.append(arrayValues);
                 }
             }
         }
         if (relationalRecordFields.length() > 0) {
-            queryBuilder.append(String.format(BalSyntaxConstants.SELECT_QUERY, BalSyntaxConstants.COMMA +
-                    System.lineSeparator() + relationalRecordFields.substring(0, relationalRecordFields.length() - 1)));
-            queryOneBuilder.append(String.format(BalSyntaxConstants.DO_QUERY, BalSyntaxConstants.COMMA  +
-                    System.lineSeparator() + relationalRecordFields.substring(0, relationalRecordFields.length() - 1)));
+            queryBuilder.append(String.format(BalSyntaxConstants.SELECT_QUERY, "," + System.lineSeparator() +
+                    relationalRecordFields.substring(0, relationalRecordFields.length() - 1)));
+            queryOneBuilder.append(String.format(BalSyntaxConstants.DO_QUERY, "," + System.lineSeparator() +
+                    relationalRecordFields.substring(0, relationalRecordFields.length() - 1)));
         } else {
-            queryBuilder.append(String.format(System.lineSeparator() + BalSyntaxConstants.SELECT_QUERY,
-                    BalSyntaxConstants.EMPTY_STRING));
-            queryOneBuilder.append(String.format(System.lineSeparator() + BalSyntaxConstants.DO_QUERY,
-                    BalSyntaxConstants.EMPTY_STRING));
+            queryBuilder.append(String.format(BalSyntaxConstants.SELECT_QUERY, ""));
+            queryOneBuilder.append(String.format(BalSyntaxConstants.DO_QUERY, ""));
         }
         return new StringBuilder[]{queryBuilder, queryOneBuilder};
     }
@@ -223,6 +228,42 @@ public class InMemorySyntaxTree implements SyntaxTree {
             }
         }
         return keyFields.toString();
+    }
+
+    public static String getQueryClonedTables(Entity entity) {
+        StringBuilder clonedTables = new StringBuilder();
+        ArrayList<Entity> clonedTablesList = new ArrayList<>();
+
+        clonedTables.append(getClonedTable(entity));
+        clonedTablesList.add(entity);
+
+        for (EntityField field : entity.getFields()) {
+            Relation relation = field.getRelation();
+            if (relation == null || !relation.isOwner()) {
+                continue;
+            }
+            Entity assocEntity = relation.getAssocEntity();
+            if (clonedTablesList.contains(assocEntity)) {
+                continue;
+            }
+
+            clonedTables.append(getClonedTable(assocEntity));
+            clonedTablesList.add(assocEntity);
+        }
+
+        return clonedTables.toString();
+    }
+
+    public static String getClonedTable(Entity entity) {
+        StringBuilder clonedTable = new StringBuilder();
+        clonedTable.append(String.format(BalSyntaxConstants.CLONED_TABLE_INIT_TEMPLATE,
+                entity.getEntityName(), getPrimaryKeys(entity, false),
+                entity.getResourceName()));
+        String clonedTableDeclaration = String.format(BalSyntaxConstants.CLONED_TABLE_DECLARATION_TEMPLATE,
+                entity.getResourceName(), entity.getResourceName());
+        clonedTable.append(String.format(BalSyntaxConstants.LOCK_TEMPLATE, clonedTableDeclaration));
+
+        return clonedTable.toString();
     }
 
 }

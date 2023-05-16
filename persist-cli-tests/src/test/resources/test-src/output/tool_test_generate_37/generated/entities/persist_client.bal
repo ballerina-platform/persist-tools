@@ -15,12 +15,12 @@ const CUSTOMER = "customers";
 const STUDENT = "students";
 const MULTIPLE_ASSOCIATIONS = "multipleassociations";
 
-public client class Client {
+public isolated client class Client {
     *persist:AbstractPersistClient;
 
     private final mysql:Client dbClient;
 
-    private final map<persist:SQLClient> persistClients;
+    private final map<persist:SQLClient> persistClients = {};
 
     private final record {|persist:SQLMetadata...;|} metadata = {
         [PROFILE] : {
@@ -135,14 +135,14 @@ public client class Client {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
-        self.persistClients = {
-            [PROFILE] : check new (self.dbClient, self.metadata.get(PROFILE)),
-            [USER] : check new (self.dbClient, self.metadata.get(USER)),
-            [DEPT] : check new (self.dbClient, self.metadata.get(DEPT)),
-            [CUSTOMER] : check new (self.dbClient, self.metadata.get(CUSTOMER)),
-            [STUDENT] : check new (self.dbClient, self.metadata.get(STUDENT)),
-            [MULTIPLE_ASSOCIATIONS] : check new (self.dbClient, self.metadata.get(MULTIPLE_ASSOCIATIONS))
-        };
+        lock {
+            self.persistClients[PROFILE] = check new (self.dbClient, self.metadata.get(PROFILE));
+            self.persistClients[USER] = check new (self.dbClient, self.metadata.get(USER));
+            self.persistClients[DEPT] = check new (self.dbClient, self.metadata.get(DEPT));
+            self.persistClients[CUSTOMER] = check new (self.dbClient, self.metadata.get(CUSTOMER));
+            self.persistClients[STUDENT] = check new (self.dbClient, self.metadata.get(STUDENT));
+            self.persistClients[MULTIPLE_ASSOCIATIONS] = check new (self.dbClient, self.metadata.get(MULTIPLE_ASSOCIATIONS));
+        }
     }
 
     isolated resource function get profiles(ProfileTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -156,19 +156,25 @@ public client class Client {
     } external;
 
     isolated resource function post profiles(ProfileInsert[] data) returns int[]|persist:Error {
-        _ = check self.persistClients.get(PROFILE).runBatchInsertQuery(data);
+        lock {
+            _ = check self.persistClients.get(PROFILE).runBatchInsertQuery(data.clone());
+        }
         return from ProfileInsert inserted in data
             select inserted.id;
     }
 
     isolated resource function put profiles/[int id](ProfileUpdate value) returns Profile|persist:Error {
-        _ = check self.persistClients.get(PROFILE).runUpdateQuery(id, value);
+        lock {
+            _ = check self.persistClients.get(PROFILE).runUpdateQuery(id, value.clone());
+        }
         return self->/profiles/[id].get();
     }
 
     isolated resource function delete profiles/[int id]() returns Profile|persist:Error {
         Profile result = check self->/profiles/[id].get();
-        _ = check self.persistClients.get(PROFILE).runDeleteQuery(id);
+        lock {
+            _ = check self.persistClients.get(PROFILE).runDeleteQuery(id);
+        }
         return result;
     }
 
@@ -183,19 +189,25 @@ public client class Client {
     } external;
 
     isolated resource function post users(UserInsert[] data) returns int[]|persist:Error {
-        _ = check self.persistClients.get(USER).runBatchInsertQuery(data);
+        lock {
+            _ = check self.persistClients.get(USER).runBatchInsertQuery(data.clone());
+        }
         return from UserInsert inserted in data
             select inserted.id;
     }
 
     isolated resource function put users/[int id](UserUpdate value) returns User|persist:Error {
-        _ = check self.persistClients.get(USER).runUpdateQuery(id, value);
+        lock {
+            _ = check self.persistClients.get(USER).runUpdateQuery(id, value.clone());
+        }
         return self->/users/[id].get();
     }
 
     isolated resource function delete users/[int id]() returns User|persist:Error {
         User result = check self->/users/[id].get();
-        _ = check self.persistClients.get(USER).runDeleteQuery(id);
+        lock {
+            _ = check self.persistClients.get(USER).runDeleteQuery(id);
+        }
         return result;
     }
 
@@ -210,19 +222,25 @@ public client class Client {
     } external;
 
     isolated resource function post depts(DeptInsert[] data) returns int[]|persist:Error {
-        _ = check self.persistClients.get(DEPT).runBatchInsertQuery(data);
+        lock {
+            _ = check self.persistClients.get(DEPT).runBatchInsertQuery(data.clone());
+        }
         return from DeptInsert inserted in data
             select inserted.id;
     }
 
     isolated resource function put depts/[int id](DeptUpdate value) returns Dept|persist:Error {
-        _ = check self.persistClients.get(DEPT).runUpdateQuery(id, value);
+        lock {
+            _ = check self.persistClients.get(DEPT).runUpdateQuery(id, value.clone());
+        }
         return self->/depts/[id].get();
     }
 
     isolated resource function delete depts/[int id]() returns Dept|persist:Error {
         Dept result = check self->/depts/[id].get();
-        _ = check self.persistClients.get(DEPT).runDeleteQuery(id);
+        lock {
+            _ = check self.persistClients.get(DEPT).runDeleteQuery(id);
+        }
         return result;
     }
 
@@ -237,19 +255,25 @@ public client class Client {
     } external;
 
     isolated resource function post customers(CustomerInsert[] data) returns int[]|persist:Error {
-        _ = check self.persistClients.get(CUSTOMER).runBatchInsertQuery(data);
+        lock {
+            _ = check self.persistClients.get(CUSTOMER).runBatchInsertQuery(data.clone());
+        }
         return from CustomerInsert inserted in data
             select inserted.id;
     }
 
     isolated resource function put customers/[int id](CustomerUpdate value) returns Customer|persist:Error {
-        _ = check self.persistClients.get(CUSTOMER).runUpdateQuery(id, value);
+        lock {
+            _ = check self.persistClients.get(CUSTOMER).runUpdateQuery(id, value.clone());
+        }
         return self->/customers/[id].get();
     }
 
     isolated resource function delete customers/[int id]() returns Customer|persist:Error {
         Customer result = check self->/customers/[id].get();
-        _ = check self.persistClients.get(CUSTOMER).runDeleteQuery(id);
+        lock {
+            _ = check self.persistClients.get(CUSTOMER).runDeleteQuery(id);
+        }
         return result;
     }
 
@@ -264,19 +288,25 @@ public client class Client {
     } external;
 
     isolated resource function post students(StudentInsert[] data) returns [int, string][]|persist:Error {
-        _ = check self.persistClients.get(STUDENT).runBatchInsertQuery(data);
+        lock {
+            _ = check self.persistClients.get(STUDENT).runBatchInsertQuery(data.clone());
+        }
         return from StudentInsert inserted in data
             select [inserted.id, inserted.firstName];
     }
 
     isolated resource function put students/[int id]/[string firstName](StudentUpdate value) returns Student|persist:Error {
-        _ = check self.persistClients.get(STUDENT).runUpdateQuery({"id": id, "firstName": firstName}, value);
+        lock {
+            _ = check self.persistClients.get(STUDENT).runUpdateQuery({"id": id, "firstName": firstName}, value.clone());
+        }
         return self->/students/[id]/[firstName].get();
     }
 
     isolated resource function delete students/[int id]/[string firstName]() returns Student|persist:Error {
         Student result = check self->/students/[id]/[firstName].get();
-        _ = check self.persistClients.get(STUDENT).runDeleteQuery({"id": id, "firstName": firstName});
+        lock {
+            _ = check self.persistClients.get(STUDENT).runDeleteQuery({"id": id, "firstName": firstName});
+        }
         return result;
     }
 
@@ -291,19 +321,25 @@ public client class Client {
     } external;
 
     isolated resource function post multipleassociations(MultipleAssociationsInsert[] data) returns int[]|persist:Error {
-        _ = check self.persistClients.get(MULTIPLE_ASSOCIATIONS).runBatchInsertQuery(data);
+        lock {
+            _ = check self.persistClients.get(MULTIPLE_ASSOCIATIONS).runBatchInsertQuery(data.clone());
+        }
         return from MultipleAssociationsInsert inserted in data
             select inserted.id;
     }
 
     isolated resource function put multipleassociations/[int id](MultipleAssociationsUpdate value) returns MultipleAssociations|persist:Error {
-        _ = check self.persistClients.get(MULTIPLE_ASSOCIATIONS).runUpdateQuery(id, value);
+        lock {
+            _ = check self.persistClients.get(MULTIPLE_ASSOCIATIONS).runUpdateQuery(id, value.clone());
+        }
         return self->/multipleassociations/[id].get();
     }
 
     isolated resource function delete multipleassociations/[int id]() returns MultipleAssociations|persist:Error {
         MultipleAssociations result = check self->/multipleassociations/[id].get();
-        _ = check self.persistClients.get(MULTIPLE_ASSOCIATIONS).runDeleteQuery(id);
+        lock {
+            _ = check self.persistClients.get(MULTIPLE_ASSOCIATIONS).runDeleteQuery(id);
+        }
         return result;
     }
 

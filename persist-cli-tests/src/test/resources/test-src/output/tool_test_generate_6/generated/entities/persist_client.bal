@@ -10,12 +10,12 @@ import ballerinax/mysql.driver as _;
 
 const DATA_TYPE = "datatypes";
 
-public client class Client {
+public isolated client class Client {
     *persist:AbstractPersistClient;
 
     private final mysql:Client dbClient;
 
-    private final map<persist:SQLClient> persistClients;
+    private final map<persist:SQLClient> persistClients = {};
 
     private final record {|persist:SQLMetadata...;|} metadata = {
         [DATA_TYPE] : {
@@ -44,7 +44,9 @@ public client class Client {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
-        self.persistClients = {[DATA_TYPE] : check new (self.dbClient, self.metadata.get(DATA_TYPE))};
+        lock {
+            self.persistClients[DATA_TYPE] = check new (self.dbClient, self.metadata.get(DATA_TYPE));
+        }
     }
 
     isolated resource function get datatypes(DataTypeTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -58,19 +60,25 @@ public client class Client {
     } external;
 
     isolated resource function post datatypes(DataTypeInsert[] data) returns int[]|persist:Error {
-        _ = check self.persistClients.get(DATA_TYPE).runBatchInsertQuery(data);
+        lock {
+            _ = check self.persistClients.get(DATA_TYPE).runBatchInsertQuery(data.clone());
+        }
         return from DataTypeInsert inserted in data
             select inserted.a;
     }
 
     isolated resource function put datatypes/[int a](DataTypeUpdate value) returns DataType|persist:Error {
-        _ = check self.persistClients.get(DATA_TYPE).runUpdateQuery(a, value);
+        lock {
+            _ = check self.persistClients.get(DATA_TYPE).runUpdateQuery(a, value.clone());
+        }
         return self->/datatypes/[a].get();
     }
 
     isolated resource function delete datatypes/[int a]() returns DataType|persist:Error {
         DataType result = check self->/datatypes/[a].get();
-        _ = check self.persistClients.get(DATA_TYPE).runDeleteQuery(a);
+        lock {
+            _ = check self.persistClients.get(DATA_TYPE).runDeleteQuery(a);
+        }
         return result;
     }
 

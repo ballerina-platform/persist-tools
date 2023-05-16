@@ -50,15 +50,17 @@ public class BalSyntaxConstants {
     public static final String PERSIST_MODULE = "persist";
     public static final String PERSIST_ERROR = "persist:Error";
     public static final String CREATE_SQL_RESULTS = "_ = check " +
+            "self.persistClients.get(%s).runBatchInsertQuery(data.clone());";
+    public static final String G_SHEET_CREATE_SQL_RESULTS = "_ = check " +
             "self.persistClients.get(%s).runBatchInsertQuery(data);";
     public static final String CREATE_ARRAY_VAR = "%s keys = [];";
     public static final String POST_RETURN = "return keys;";
-    public static final String HAS_KEY = "\tif self.%s.hasKey(%s) {";
+    public static final String HAS_KEY = "\tif %sTable.hasKey(%s) {";
     public static final String VARIABLE_TYPE = "%s[]";
     public static final String FIELD = "value.%s";
     public static final String FOREACH_STMT_START = "foreach %s value in data {" + System.lineSeparator();
-    public static final String HAS_NOT_KEY = "!self.%s.hasKey(%s)";
-    public static final String UPDATE_RECORD_FIELD_VALUE = "foreach var [k, v] in value.entries() {" +
+    public static final String HAS_NOT_KEY = "!%sTable.hasKey(%s)";
+    public static final String UPDATE_RECORD_FIELD_VALUE = "foreach var [k, v] in value.clone().entries() {" +
             System.lineSeparator() + "        %s[k] = v;" + System.lineSeparator() +
             "    }" + System.lineSeparator();
 
@@ -67,19 +69,22 @@ public class BalSyntaxConstants {
     public static final String HAS_NOT_KEY_ERROR = "return <persist:InvalidKeyError>error(\"Not found: \" + " +
             "%s.toString());";
     public static final String PUSH_VALUES = System.lineSeparator() + "\tkeys.push(%s);" + System.lineSeparator();
-    public static final String GET_UPDATE_RECORD = "%s %s = self.%s.get(%s);" + System.lineSeparator();
-    public static final String PUT_VALUE_TO_MAP = "self.%s.put(%s);";
-    public static final String RETURN_STATEMENT = "return %s;";
+    public static final String GET_UPDATE_RECORD = "%s %s = %sTable.get(%s);" + System.lineSeparator();
+    public static final String PUT_VALUE_TO_MAP = "%sTable.put(%s);";
+    public static final String RETURN_STATEMENT = "return %s.clone();";
 
     public static final String RETURN_CREATED_KEY = "return from  %s inserted in data" + System.lineSeparator();
     public static final String SELECT_WITH_SPACE = "\t\t\tselect ";
     public static final String UPDATE_RUN_UPDATE_QUERY = "_ = check self.persistClients.get(%s).runUpdateQuery" +
-            "(%s, value);";
+            "(%s, value.clone());";
+
+    public static final String G_SHEET_UPDATE_RUN_UPDATE_QUERY = "_ = check self.persistClients.get(%s)." +
+            "runUpdateQuery(%s, value);";
     public static final String UPDATE_RETURN_UPDATE_QUERY = "return self->%s.get();";
     public static final String DELETE_RUN_DELETE_QUERY = "_ = check self.persistClients.get(%s)." +
             "runDeleteQuery(%s);";
     public static final String RETURN_DELETED_OBJECT = "return result;";
-    public static final String DELETED_OBJECT = "return self.%s.remove(%s);";
+    public static final String DELETED_OBJECT = "return %sTable.remove(%s).clone();";
     public static final String GET_OBJECT_QUERY = "%s result = check self->%s.get();";
 
     public static final String CONFIGURABLE_PORT = "configurable int port = ?;";
@@ -158,8 +163,10 @@ public class BalSyntaxConstants {
     public static final String GOOGLE_SHEET_CLIENT = "private final sheets:Client googleSheetClient;";
     public static final String HTTP_CLIENT = "private final http:Client httpClient;";
     public static final String GOOGLE_PERSIST_CLIENT = "private final map<persist:GoogleSheetsClient> persistClients;";
-    public static final String INIT_DB_CLIENT_MAP = "private final map<persist:SQLClient> persistClients;";
-    public static final String INIT_IN_MEMORY_CLIENT = "private final map<persist:InMemoryClient> persistClients;";
+//    public static final String INIT_DB_CLIENT_MAP = "private final map<persist:SQLClient> persistClients;";
+//    public static final String INIT_IN_MEMORY_CLIENT = "private final map<persist:InMemoryClient> persistClients;";
+    public static final String INIT_DB_CLIENT_MAP = "private final map<persist:SQLClient> persistClients = {};";
+    public static final String INIT_IN_MEMORY_CLIENT = "private final map<persist:InMemoryClient> persistClients = {};";
     public static final String METADATA_RECORD_ENTITY_NAME_TEMPLATE = "entityName: \"%s\", " + System.lineSeparator();
     public static final String METADATA_RECORD_TABLE_NAME_TEMPLATE = "tableName: `%s`, " + System.lineSeparator();
     public static final String TABLE_NAME_TEMPLATE = "tableName: \"%s\", " + System.lineSeparator();
@@ -169,21 +176,31 @@ public class BalSyntaxConstants {
     public static final String FIELD_TYPE = "%s: \"%s\"";
     public static final String DATA_TYPE = "dataTypes: {%s},";
     public static final String RANGE_TEMPLATE = "range: \"A:%s\", " + System.lineSeparator();
-    public static final String METADATA_QUERY_TEMPLATE = "query: self.query%s, " + System.lineSeparator();
-    public static final String METADATA_QUERY_ONE_TEMPLATE = "queryOne: self.queryOne%s,";
-    public static final String METADATA_ASSOCIATIONS_METHODS_TEMPLATE = "%s: self.query%s";
+    public static final String G_SHEET_METADATA_QUERY_TEMPLATE = "query: self.query%s, " + System.lineSeparator();
+    public static final String G_SHEET_METADATA_QUERY_ONE_TEMPLATE = "queryOne: self.queryOne%s,";
+    public static final String G_SHEET_METADATA_ASSOCIATIONS_METHODS_TEMPLATE = "%s: self.query%s";
+    public static final String METADATA_QUERY_TEMPLATE = "query: query%s, " + System.lineSeparator();
+    public static final String METADATA_QUERY_ONE_TEMPLATE = "queryOne: queryOne%s,";
+    public static final String METADATA_ASSOCIATIONS_METHODS_TEMPLATE = "%s: query%s";
     public static final String QUERY_RETURN = "stream<record{}, persist:Error?>";
-    public static final String QUERY_STATEMENT = "%s from record{} 'object in %s%s";
-    public static final String QUERY_ONE_RETURN = "record {}|%s";
+    public static final String G_SHEET_QUERY_STATEMENT = "%s from record{} 'object in %s%s";
+    public static final String G_SHEET_QUERY_ONE_RETURN = "record {}|%s";
     public static final String INVALID_KEY_ERROR = "persist:InvalidKeyError";
+    public static final String QUERY_STATEMENT = "return from record{} 'object in %sClonedTable" +
+            System.lineSeparator();
+    public static final String QUERY_ONE_RETURN = "record {}|persist:InvalidKeyError";
     public static final String QUERY_ONE_RETURN_STATEMENT = "return <persist:InvalidKeyError>error(" +
             "\"Invalid key: \" + key.toString());";
-    public static final String QUERY_ONE_FROM_STATEMENT = "from record{} 'object in self.%s";
-    public static final String QUERY_ONE_WHERE_CLAUSE = "    where self.persistClients.get(%s).getKey('object) == key";
-    public static final String QUERY_OUTER_JOIN = "    outer join var %s in %s%s";
+//    public static final String QUERY_ONE_FROM_STATEMENT = "from record{} 'object in self.%s";
+//    public static final String QUERY_ONE_WHERE_CLAUSE = "    where self.persistClients.get(%s).getKey('object)
+//    == key";
+    public static final String G_SHEET_QUERY_OUTER_JOIN = "    outer join var %s in %s%s";
     public static final String STREAM_PARAM_INIT = "stream<%s, persist:Error?> %sStream = self.query%sStream();";
+    public static final String QUERY_ONE_FROM_STATEMENT = "from record{} 'object in %sClonedTable";
+    public static final String QUERY_ONE_WHERE_CLAUSE = "    where persist:getKey('object, [%s]) == key" +
+            System.lineSeparator();
+    public static final String QUERY_OUTER_JOIN = "    outer join var %s in %sClonedTable";
     public static final String ON = " on ";
-    public static final  String SELF = "self.";
     public static final String SELECT_QUERY = "select persist:filterRecord({" +
             System.lineSeparator() +
             "      ...'object" +
@@ -199,12 +216,19 @@ public class BalSyntaxConstants {
             "           %s" + System.lineSeparator() +
             "        };" + System.lineSeparator() +
             "    };";
-    public static final String RETURN_STATEMENT_FOR_RELATIONAL_ENTITY = "return from record{} 'object in %s%s" +
+    public static final String G_SHEET_RETURN_STATEMENT_FOR_RELATIONAL_ENTITY = "return from record{} 'object in %s%s" +
             System.lineSeparator() +
             "            where %s" + System.lineSeparator() +
             "            select persist:filterRecord({" + System.lineSeparator() +
             "                ...'object" + System.lineSeparator() +
             "            }, fields);";
+    public static final String RETURN_STATEMENT_FOR_RELATIONAL_ENTITY =
+            "return from record{} 'object in %sClonedTable" +
+                    System.lineSeparator() +
+                    "            where %s" + System.lineSeparator() +
+                    "            select persist:filterRecord({" + System.lineSeparator() +
+                    "                ...'object" + System.lineSeparator() +
+                    "            }, fields);";
     public static final String OBJECT_FIELD = "'object.%s";
     public static final String VALUES = "%s?.%s";
     public static final String EQUALS = " equals ";
@@ -263,12 +287,21 @@ public class BalSyntaxConstants {
     public static final String INIT_DB_CLIENT_WITH_PARAMS = "mysql:Client|error dbClient = new (host = host, " +
             "user = user, password = password, database = database, port = port, options = connectionOptions);" +
             System.lineSeparator();
-    public static final String TABLE_PARAMETER_INIT_TEMPLATE = "table<%s> key(%s) %s = %s;";
-    public static final String PERSIST_CLIENT_MAP_ELEMENT = "[%s]: check new (self.dbClient, self.metadata.get(%s))";
+//    public static final String TABLE_PARAMETER_INIT_TEMPLATE = "table<%s> key(%s) %s = %s;";
+//    public static final String PERSIST_CLIENT_MAP_ELEMENT = "[%s]: check new (self.dbClient, self.metadata.get(%s))";
     public static final String GOOGLE_SHEET_CLIENT_MAP = "[%s]: check new (self.googleSheetClient, self.httpClient, " +
             "metadata.get(%s), spreadsheetId, sheetIds.get(%s))";
-    public static final String PERSIST_IN_MEMORY_CLIENT_MAP_ELEMENT = "[%s]: check new (metadata.get(%s))";
+    public static final String TABLE_PARAMETER_INIT_TEMPLATE = "final isolated table<%s> key(%s) %sTable = table[];";
+    public static final String CLONED_TABLE_INIT_TEMPLATE = "table<%s> key(%s) %sClonedTable;";
+    public static final String CLONED_TABLE_DECLARATION_TEMPLATE = "%sClonedTable = %sTable.clone();";
+    public static final String PERSIST_CLIENT_MAP_ELEMENT =
+            "self.persistClients[%s] = check new (self.dbClient, self.metadata.get(%s));";
+    public static final String PERSIST_IN_MEMORY_CLIENT_MAP_ELEMENT =
+            "self.persistClients[%s] = check new (metadata.get(%s));";
     public static final String PERSIST_CLIENT_TEMPLATE = "self.persistClients = {%s};";
+    public static final String LOCK_TEMPLATE = "lock {%s}";
+    public static final String LOCK = "lock";
+    public static final String NEWLINE = System.lineSeparator();
     public static final String PERSIST_CLIENT_CLOSE_STATEMENT = "error? result = self.dbClient.close();";
     public static final String REGEX_FOR_SPLIT_BY_CAPITOL_LETTER = "(?=\\p{Upper})";
     public static final String OPEN_BRACE = "{";
