@@ -54,8 +54,6 @@ public class SyntaxTokenConstants {
             SyntaxKind.RETURNS_KEYWORD,
             AbstractNodeFactory.createEmptyMinutiaeList(),
             NodeFactory.createMinutiaeList(AbstractNodeFactory.createWhitespaceMinutiae(" ")));
-    public static final Token SYNTAX_TREE_IT = AbstractNodeFactory.createToken(SyntaxKind.LT_TOKEN);
-    public static final Token SYNTAX_TREE_GT = AbstractNodeFactory.createToken(SyntaxKind.GT_TOKEN);
     public static final Token SYNTAX_TREE_QUESTION_MARK = AbstractNodeFactory.createToken(
             SyntaxKind.QUESTION_MARK_TOKEN);
     public static final Token SYNTAX_TREE_KEYWORD_IF = AbstractNodeFactory.createToken(SyntaxKind.IF_KEYWORD,
