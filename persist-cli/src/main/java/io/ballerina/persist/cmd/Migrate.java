@@ -30,9 +30,11 @@ import io.ballerina.persist.nodegenerator.syntax.utils.SqlScriptUtils;
 import io.ballerina.persist.utils.BalProjectUtils;
 import picocli.CommandLine;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
@@ -95,6 +97,24 @@ public class Migrate implements BLauncherCmd {
             BalProjectUtils.validateBallerinaProject(projectPath);
         } catch (BalException e) {
             errStream.println(e.getMessage());
+            return;
+        }
+
+        boolean isMySQL = false;
+        String tomlFilePath = Paths.get(sourcePath, "Ballerina.toml").toString();
+        try (BufferedReader reader = new BufferedReader(new FileReader(tomlFilePath, StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.contains("datastore = \"mysql\"")) {
+                    isMySQL = true;
+                }
+            }
+            if (!isMySQL) {
+                errStream.println("Error: Datasource in Ballerina.toml is not mysql");
+                return;
+            }
+        } catch (IOException e) {
+            errStream.println("Error: failed to read Ballerina.toml: " + e.getMessage());
             return;
         }
 
