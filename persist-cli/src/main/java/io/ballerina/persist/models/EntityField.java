@@ -18,6 +18,9 @@
 
 package io.ballerina.persist.models;
 
+import io.ballerina.compiler.syntax.tree.AnnotationNode;
+import io.ballerina.compiler.syntax.tree.NodeList;
+
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.COLON;
 
 /**
@@ -32,12 +35,16 @@ public class EntityField {
     private final boolean arrayType;
     private final boolean optionalType;
     private Relation relation;
+    private Enum enumValue;
+    private final NodeList<AnnotationNode> annotationNodes;
 
-    private EntityField(String fieldName, String fieldType, boolean arrayType, boolean optionalType) {
+    EntityField(String fieldName, String fieldType, boolean arrayType, boolean optionalType,
+                        NodeList<AnnotationNode> annotationNodes) {
         this.fieldName = fieldName;
         this.fieldType = fieldType;
         this.arrayType = arrayType;
         this.optionalType = optionalType;
+        this.annotationNodes = annotationNodes;
     }
 
     public String getFieldName() {
@@ -52,8 +59,20 @@ public class EntityField {
         return relation;
     }
 
+    public NodeList<AnnotationNode> getAnnotation() {
+        return annotationNodes;
+    }
+
     public void setRelation(Relation relation) {
         this.relation = relation;
+    }
+
+    public void setEnum(Enum enumValue) {
+        this.enumValue = enumValue;
+    }
+
+    public Enum getEnum() {
+        return enumValue;
     }
 
     public boolean isArrayType() {
@@ -77,8 +96,9 @@ public class EntityField {
 
         boolean arrayType = false;
         boolean optionalType = false;
+        private NodeList<AnnotationNode> annotationNodes = null;
 
-        private Builder(String fieldName) {
+        Builder(String fieldName) {
             this.fieldName = fieldName;
         }
 
@@ -97,9 +117,12 @@ public class EntityField {
         public void setOptionalType(boolean optionalType) {
             this.optionalType = optionalType;
         }
+        public void setAnnotation(NodeList<AnnotationNode> annotationNodes) {
+            this.annotationNodes = annotationNodes;
+        }
 
         public EntityField build() {
-            return new EntityField(fieldName, fieldType, arrayType, optionalType);
+            return new EntityField(fieldName, fieldType, arrayType, optionalType, annotationNodes);
         }
     }
 }

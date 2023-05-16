@@ -34,17 +34,25 @@ import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 @CommandLine.Command(
         name = "persist",
         description = "generate database configurations.",
-        subcommands = {Init.class, Generate.class, Push.class}
+        subcommands = {Init.class, Generate.class, Push.class, Migrate.class}
         )
 
 public class PersistCmd implements BLauncherCmd {
 
     private static final PrintStream errStream = System.err;
 
+    @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
+    private boolean helpFlag;
+
     public PersistCmd() {}
 
     @Override
     public void execute() {
+        if (helpFlag) {
+            String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(getName());
+            errStream.println(commandUsageInfo);
+            return;
+        }
         String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMPONENT_IDENTIFIER);
         errStream.println(commandUsageInfo);
     }

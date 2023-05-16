@@ -17,11 +17,19 @@
  */
 package io.ballerina.persist.nodegenerator.syntax.utils;
 
+import io.ballerina.compiler.syntax.tree.AnnotationNode;
+import io.ballerina.compiler.syntax.tree.ExpressionNode;
+import io.ballerina.compiler.syntax.tree.MappingConstructorExpressionNode;
+import io.ballerina.compiler.syntax.tree.MappingFieldNode;
+import io.ballerina.compiler.syntax.tree.SpecificFieldNode;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.EntityField;
+import io.ballerina.persist.models.Enum;
+import io.ballerina.persist.models.EnumMember;
 import io.ballerina.persist.models.Relation;
+import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -30,6 +38,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -44,6 +53,10 @@ public class SqlScriptUtils {
     private static final String TAB = "\t";
     private static final String COMMA_WITH_SPACE = ", ";
     private static final String PRIMARY_KEY_START_SCRIPT = NEW_LINE + TAB + "PRIMARY KEY(";
+    private static final String ENUM_START_SCRIPT = "ENUM(";
+    private static final String ENUM_END_SCRIPT = ")";
+
+    private static final String SINGLE_QUOTE = "'";
 
     private SqlScriptUtils(){}
 
@@ -63,8 +76,8 @@ public class SqlScriptUtils {
         return MessageFormat.format("DROP TABLE IF EXISTS {0};", tableName);
     }
 
-    private static String generateCreateTableQuery(Entity entity,
-                                                   HashMap<String, List<String>> referenceTables) throws BalException {
+    private static String generateCreateTableQuery(Entity entity, HashMap<String, List<String>> referenceTables)
+            throws BalException {
 
         String fieldDefinitions = generateFieldsDefinitionSegments(entity, referenceTables);
 
@@ -72,8 +85,7 @@ public class SqlScriptUtils {
                 addBackticks(removeSingleQuote(entity.getEntityName())), fieldDefinitions, NEW_LINE);
     }
 
-    private static String generateFieldsDefinitionSegments(Entity entity,
-                                                           HashMap<String, List<String>> referenceTables)
+    private static String generateFieldsDefinitionSegments(Entity entity, HashMap<String, List<String>> referenceTables)
             throws BalException {
         StringBuilder sqlScript = new StringBuilder();
         sqlScript.append(getColumnsScript(entity));
@@ -94,7 +106,14 @@ public class SqlScriptUtils {
             if (entityField.getRelation() != null) {
                 continue;
             }
-            String sqlType = getType(entityField);
+
+            String sqlType;
+            Enum enumValue = entityField.getEnum();
+            if (enumValue == null) {
+                sqlType = getSqlType(entityField);
+            } else {
+                sqlType = getEnumType(enumValue);
+            }
             assert sqlType != null;
             String fieldName = addBackticks(removeSingleQuote(entityField.getFieldName()));
             if (entityField.isOptionalType()) {
@@ -126,7 +145,7 @@ public class SqlScriptUtils {
                     continue;
                 }
                 if (assocField.getFieldName().equals(references.get(i))) {
-                    referenceSqlType = getType(assocField);
+                    referenceSqlType = getSqlType(assocField);
                     break;
                 }
             }
@@ -198,40 +217,103 @@ public class SqlScriptUtils {
         return keyScripts.toString();
     }
 
-    private static String getType(EntityField field) throws BalException {
-        String fieldType = removeSingleQuote(field.getFieldType());
-        if (!field.isArrayType()) {
-            switch (fieldType) {
-                case PersistToolsConstants.BallerinaTypes.INT:
-                    return PersistToolsConstants.SqlTypes.INT;
-                case PersistToolsConstants.BallerinaTypes.BOOLEAN:
-                    return PersistToolsConstants.SqlTypes.BOOLEAN;
-                case PersistToolsConstants.BallerinaTypes.DECIMAL:
-                    return PersistToolsConstants.SqlTypes.DECIMAL + String.format("(%s,%s)",
-                        PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION,
-                        PersistToolsConstants.DefaultMaxLength.DECIMAL_SCALE);
-                case PersistToolsConstants.BallerinaTypes.FLOAT:
-                    return PersistToolsConstants.SqlTypes.DOUBLE;
-                case PersistToolsConstants.BallerinaTypes.DATE:
-                    return PersistToolsConstants.SqlTypes.DATE;
-                case PersistToolsConstants.BallerinaTypes.TIME_OF_DAY:
-                    return PersistToolsConstants.SqlTypes.TIME;
-                case PersistToolsConstants.BallerinaTypes.UTC:
-                    return PersistToolsConstants.SqlTypes.TIME_STAMP;
-                case PersistToolsConstants.BallerinaTypes.CIVIL:
-                    return PersistToolsConstants.SqlTypes.DATE_TIME;
-                case PersistToolsConstants.BallerinaTypes.STRING:
-                    return PersistToolsConstants.SqlTypes.VARCHAR + String.format("(%s)",
-                            PersistToolsConstants.DefaultMaxLength.VARCHAR_LENGTH);
-                default:
-                    throw new BalException("couldn't find equivalent SQL type for the field type: " + fieldType);
-            }
+    private static String getSqlType(EntityField entityField) throws BalException {
+        String sqlType;
+        if (!entityField.isArrayType()) {
+            sqlType = getTypeNonArray(entityField.getFieldType());
         } else {
-            if (PersistToolsConstants.BallerinaTypes.BYTE.equals(field.getFieldType())) {
-                return PersistToolsConstants.SqlTypes.LONG_BLOB;
-            }
-            throw new BalException("couldn't find equivalent SQL type for the field type: " + fieldType);
+            sqlType = getTypeArray(entityField.getFieldType());
         }
+        if (!sqlType.equals(PersistToolsConstants.SqlTypes.VARCHAR)) {
+            return sqlType;
+        }
+        String length = BalSyntaxConstants.VARCHAR_LENGTH;
+        if (entityField.getAnnotation() != null) {
+            for (AnnotationNode annotationNode : entityField.getAnnotation()) {
+                String annotationName = annotationNode.annotReference().toSourceCode().trim();
+                if (annotationName.equals(BalSyntaxConstants.CONSTRAINT_STRING)) {
+                    Optional<MappingConstructorExpressionNode> annotationFieldNode = annotationNode.annotValue();
+                    if (annotationFieldNode.isPresent()) {
+                        for (MappingFieldNode mappingFieldNode : annotationFieldNode.get().fields()) {
+                            SpecificFieldNode specificFieldNode = (SpecificFieldNode) mappingFieldNode;
+                            String fieldName = specificFieldNode.fieldName().toSourceCode().trim();
+                            if (fieldName.equals(BalSyntaxConstants.MAX_LENGTH)) {
+                                Optional<ExpressionNode> valueExpr = specificFieldNode.valueExpr();
+                                if (valueExpr.isPresent()) {
+                                    length = valueExpr.get().toSourceCode().trim();
+                                }
+                            } else if (fieldName.equals(BalSyntaxConstants.LENGTH)) {
+                                Optional<ExpressionNode> valueExpr = specificFieldNode.valueExpr();
+                                if (valueExpr.isPresent()) {
+                                    length = valueExpr.get().toSourceCode().trim();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return sqlType + (String.format("(%s)", length));
+    }
+
+    public static String getTypeNonArray(String field) throws BalException {
+        switch (removeSingleQuote(field)) {
+            case PersistToolsConstants.BallerinaTypes.INT:
+                return PersistToolsConstants.SqlTypes.INT;
+            case PersistToolsConstants.BallerinaTypes.BOOLEAN:
+                return PersistToolsConstants.SqlTypes.BOOLEAN;
+            case PersistToolsConstants.BallerinaTypes.DECIMAL:
+                return PersistToolsConstants.SqlTypes.DECIMAL + String.format("(%s,%s)",
+                    PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION,
+                    PersistToolsConstants.DefaultMaxLength.DECIMAL_SCALE);
+            case PersistToolsConstants.BallerinaTypes.FLOAT:
+                return PersistToolsConstants.SqlTypes.DOUBLE;
+            case PersistToolsConstants.BallerinaTypes.DATE:
+                return PersistToolsConstants.SqlTypes.DATE;
+            case PersistToolsConstants.BallerinaTypes.TIME_OF_DAY:
+                return PersistToolsConstants.SqlTypes.TIME;
+            case PersistToolsConstants.BallerinaTypes.UTC:
+                return PersistToolsConstants.SqlTypes.TIME_STAMP;
+            case PersistToolsConstants.BallerinaTypes.CIVIL:
+                return PersistToolsConstants.SqlTypes.DATE_TIME;
+            case PersistToolsConstants.BallerinaTypes.STRING:
+                return PersistToolsConstants.SqlTypes.VARCHAR;
+            default:
+                throw new BalException("couldn't find equivalent SQL type for the field type: " + field);
+        }
+    }
+
+    public static String getTypeArray(String field) throws BalException {
+        if (PersistToolsConstants.BallerinaTypes.BYTE.equals(field)) {
+            return PersistToolsConstants.SqlTypes.LONG_BLOB;
+        }
+        throw new BalException("couldn't find equivalent SQL type for the field type: " + field);
+    }
+
+    private static String getEnumType(Enum enumValue) {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(ENUM_START_SCRIPT);
+
+        List<EnumMember> members = enumValue.getMembers();
+        for (int i = 0; i < members.size(); i++) {
+            stringBuilder.append(SINGLE_QUOTE);
+
+            EnumMember member = members.get(i);
+            if (member.getValue() != null) {
+                stringBuilder.append(member.getValue());
+            } else {
+                stringBuilder.append(member.getIdentifier());
+            }
+
+            stringBuilder.append(SINGLE_QUOTE);
+
+            if (i < members.size() - 1) {
+                stringBuilder.append(COMMA_WITH_SPACE);
+            }
+        }
+
+        stringBuilder.append(ENUM_END_SCRIPT);
+        return stringBuilder.toString();
     }
 
     private static String[] rearrangeScriptsWithReference(Set<String> tables,

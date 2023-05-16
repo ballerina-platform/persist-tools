@@ -45,6 +45,7 @@ public class BalSyntaxConstants {
     public static final String COMMA_SPACE = ", ";
     public static final String COLON = ":";
     public static final String SEMICOLON = ";";
+    public static final String EQUAL = "=";
     public static final String VALUE = "value";
     public static final String PERSIST_MODULE = "persist";
     public static final String PERSIST_ERROR = "persist:Error";
@@ -219,6 +220,9 @@ public class BalSyntaxConstants {
     public static final String ARRAY = "[]";
     public static final String QUESTION_MARK = "?";
     public static final String COMMA_WITH_NEWLINE = "," + System.lineSeparator();
+    public static final String CONSTRAINT_ANNOTATION = "@constraint:String {" + System.lineSeparator() +
+            "        %s" + System.lineSeparator() +
+            "    }";
     public static final String NEWLINE = System.lineSeparator();
 
 
@@ -233,6 +237,10 @@ public class BalSyntaxConstants {
             + System.lineSeparator()
             + "'class: \"io.ballerina.stdlib.persist.datastore.%s\"," + System.lineSeparator() +
             " name: \"query\"} external;";
-
+    public static final String CONSTRAINT_STRING = "constraint:String";
+    public static final String CONSTRAINT = "constraint";
+    public static final String LENGTH = "length";
+    public static final String MAX_LENGTH = "maxLength";
+    public static final String VARCHAR_LENGTH = "191";
 }
 
