@@ -10,52 +10,45 @@ const EMPLOYEE = "employees";
 const WORKSPACE = "workspaces";
 const BUILDING = "buildings";
 const DEPARTMENT = "departments";
-table<Employee> key(empNo) employees = table [];
-table<Workspace> key(workspaceId) workspaces = table [];
-table<Building> key(buildingCode) buildings = table [];
-table<Department> key(deptNo) departments = table [];
+final isolated table<Employee> key(empNo) employeesTable = table [];
+final isolated table<Workspace> key(workspaceId) workspacesTable = table [];
+final isolated table<Building> key(buildingCode) buildingsTable = table [];
+final isolated table<Department> key(deptNo) departmentsTable = table [];
 
-public client class Client {
+public isolated client class Client {
     *persist:AbstractPersistClient;
 
-    private final map<persist:InMemoryClient> persistClients;
-
-    table<Employee> key(empNo) employees = employees;
-    table<Workspace> key(workspaceId) workspaces = workspaces;
-    table<Building> key(buildingCode) buildings = buildings;
-    table<Department> key(deptNo) departments = departments;
+    private final map<persist:InMemoryClient> persistClients = {};
 
     public function init() returns persist:Error? {
         final map<persist:TableMetadata> metadata = {
             [EMPLOYEE] : {
                 keyFields: ["empNo"],
-                query: self.queryEmployees,
-                queryOne: self.queryOneEmployees
+                query: queryEmployees,
+                queryOne: queryOneEmployees
             },
             [WORKSPACE] : {
                 keyFields: ["workspaceId"],
-                query: self.queryWorkspaces,
-                queryOne: self.queryOneWorkspaces
+                query: queryWorkspaces,
+                queryOne: queryOneWorkspaces
             },
             [BUILDING] : {
                 keyFields: ["buildingCode"],
-                query: self.queryBuildings,
-                queryOne: self.queryOneBuildings,
-                associationsMethods: {"workspaces": self.queryBuildingsWorkspaces}
+                query: queryBuildings,
+                queryOne: queryOneBuildings,
+                associationsMethods: {"workspaces": queryBuildingsWorkspaces}
             },
             [DEPARTMENT] : {
                 keyFields: ["deptNo"],
-                query: self.queryDepartments,
-                queryOne: self.queryOneDepartments,
-                associationsMethods: {"employees": self.queryDepartmentsEmployees}
+                query: queryDepartments,
+                queryOne: queryOneDepartments,
+                associationsMethods: {"employees": queryDepartmentsEmployees}
             }
         };
-        self.persistClients = {
-            [EMPLOYEE] : check new (metadata.get(EMPLOYEE)),
-            [WORKSPACE] : check new (metadata.get(WORKSPACE)),
-            [BUILDING] : check new (metadata.get(BUILDING)),
-            [DEPARTMENT] : check new (metadata.get(DEPARTMENT))
-        };
+        self.persistClients[EMPLOYEE] = check new (metadata.get(EMPLOYEE));
+        self.persistClients[WORKSPACE] = check new (metadata.get(WORKSPACE));
+        self.persistClients[BUILDING] = check new (metadata.get(BUILDING));
+        self.persistClients[DEPARTMENT] = check new (metadata.get(DEPARTMENT));
     }
 
     isolated resource function get employees(EmployeeTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -71,56 +64,38 @@ public client class Client {
     isolated resource function post employees(EmployeeInsert[] data) returns string[]|persist:Error {
         string[] keys = [];
         foreach EmployeeInsert value in data {
-            if self.employees.hasKey(value.empNo) {
-                return <persist:DuplicateKeyError>error("Duplicate key: " + value.empNo.toString());
+            lock {
+                if employeesTable.hasKey(value.empNo) {
+                    return <persist:DuplicateKeyError>error("Duplicate key: " + value.empNo.toString());
+                }
+                employeesTable.put(value.clone());
             }
-            self.employees.put(value.clone());
             keys.push(value.empNo);
         }
         return keys;
     }
 
     isolated resource function put employees/[string empNo](EmployeeUpdate value) returns Employee|persist:Error {
-        if !self.employees.hasKey(empNo) {
-            return <persist:InvalidKeyError>error("Not found: " + empNo.toString());
+        lock {
+            if !employeesTable.hasKey(empNo) {
+                return <persist:InvalidKeyError>error("Not found: " + empNo.toString());
+            }
+            Employee employee = employeesTable.get(empNo);
+            foreach var [k, v] in value.clone().entries() {
+                employee[k] = v;
+            }
+            employeesTable.put(employee);
+            return employee.clone();
         }
-        Employee employee = self.employees.get(empNo);
-        foreach var [k, v] in value.entries() {
-            employee[k] = v;
-        }
-        self.employees.put(employee);
-        return employee;
     }
 
     isolated resource function delete employees/[string empNo]() returns Employee|persist:Error {
-        if !self.employees.hasKey(empNo) {
-            return <persist:InvalidKeyError>error("Not found: " + empNo.toString());
+        lock {
+            if !employeesTable.hasKey(empNo) {
+                return <persist:InvalidKeyError>error("Not found: " + empNo.toString());
+            }
+            return employeesTable.remove(empNo).clone();
         }
-        return self.employees.remove(empNo);
-    }
-
-    private function queryEmployees(string[] fields) returns stream<record {}, persist:Error?> {
-        return from record {} 'object in self.employees
-            outer join var department in self.departments on ['object.departmentDeptNo] equals [department?.deptNo]
-
-            select persist:filterRecord({
-                ...'object,
-                "department": department
-            }, fields);
-    }
-
-    private function queryOneEmployees(anydata key) returns record {}|persist:InvalidKeyError {
-        from record {} 'object in self.employees
-        where self.persistClients.get(EMPLOYEE).getKey('object) == key
-        outer join var department in self.departments on ['object.departmentDeptNo] equals [department?.deptNo]
-
-        do {
-            return {
-                ...'object,
-                "department": department
-            };
-        };
-        return <persist:InvalidKeyError>error("Invalid key: " + key.toString());
     }
 
     isolated resource function get workspaces(WorkspaceTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -136,60 +111,38 @@ public client class Client {
     isolated resource function post workspaces(WorkspaceInsert[] data) returns string[]|persist:Error {
         string[] keys = [];
         foreach WorkspaceInsert value in data {
-            if self.workspaces.hasKey(value.workspaceId) {
-                return <persist:DuplicateKeyError>error("Duplicate key: " + value.workspaceId.toString());
+            lock {
+                if workspacesTable.hasKey(value.workspaceId) {
+                    return <persist:DuplicateKeyError>error("Duplicate key: " + value.workspaceId.toString());
+                }
+                workspacesTable.put(value.clone());
             }
-            self.workspaces.put(value.clone());
             keys.push(value.workspaceId);
         }
         return keys;
     }
 
     isolated resource function put workspaces/[string workspaceId](WorkspaceUpdate value) returns Workspace|persist:Error {
-        if !self.workspaces.hasKey(workspaceId) {
-            return <persist:InvalidKeyError>error("Not found: " + workspaceId.toString());
+        lock {
+            if !workspacesTable.hasKey(workspaceId) {
+                return <persist:InvalidKeyError>error("Not found: " + workspaceId.toString());
+            }
+            Workspace workspace = workspacesTable.get(workspaceId);
+            foreach var [k, v] in value.clone().entries() {
+                workspace[k] = v;
+            }
+            workspacesTable.put(workspace);
+            return workspace.clone();
         }
-        Workspace workspace = self.workspaces.get(workspaceId);
-        foreach var [k, v] in value.entries() {
-            workspace[k] = v;
-        }
-        self.workspaces.put(workspace);
-        return workspace;
     }
 
     isolated resource function delete workspaces/[string workspaceId]() returns Workspace|persist:Error {
-        if !self.workspaces.hasKey(workspaceId) {
-            return <persist:InvalidKeyError>error("Not found: " + workspaceId.toString());
+        lock {
+            if !workspacesTable.hasKey(workspaceId) {
+                return <persist:InvalidKeyError>error("Not found: " + workspaceId.toString());
+            }
+            return workspacesTable.remove(workspaceId).clone();
         }
-        return self.workspaces.remove(workspaceId);
-    }
-
-    private function queryWorkspaces(string[] fields) returns stream<record {}, persist:Error?> {
-        return from record {} 'object in self.workspaces
-            outer join var building in self.buildings on ['object.locationBuildingCode] equals [building?.buildingCode]
-            outer join var employee in self.employees on ['object.workspaceEmpNo] equals [employee?.empNo]
-
-            select persist:filterRecord({
-                ...'object,
-                "building": building,
-                "employee": employee
-            }, fields);
-    }
-
-    private function queryOneWorkspaces(anydata key) returns record {}|persist:InvalidKeyError {
-        from record {} 'object in self.workspaces
-        where self.persistClients.get(WORKSPACE).getKey('object) == key
-        outer join var building in self.buildings on ['object.locationBuildingCode] equals [building?.buildingCode]
-        outer join var employee in self.employees on ['object.workspaceEmpNo] equals [employee?.empNo]
-
-        do {
-            return {
-                ...'object,
-                "building": building,
-                "employee": employee
-            };
-        };
-        return <persist:InvalidKeyError>error("Invalid key: " + key.toString());
     }
 
     isolated resource function get buildings(BuildingTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -205,50 +158,38 @@ public client class Client {
     isolated resource function post buildings(BuildingInsert[] data) returns string[]|persist:Error {
         string[] keys = [];
         foreach BuildingInsert value in data {
-            if self.buildings.hasKey(value.buildingCode) {
-                return <persist:DuplicateKeyError>error("Duplicate key: " + value.buildingCode.toString());
+            lock {
+                if buildingsTable.hasKey(value.buildingCode) {
+                    return <persist:DuplicateKeyError>error("Duplicate key: " + value.buildingCode.toString());
+                }
+                buildingsTable.put(value.clone());
             }
-            self.buildings.put(value.clone());
             keys.push(value.buildingCode);
         }
         return keys;
     }
 
     isolated resource function put buildings/[string buildingCode](BuildingUpdate value) returns Building|persist:Error {
-        if !self.buildings.hasKey(buildingCode) {
-            return <persist:InvalidKeyError>error("Not found: " + buildingCode.toString());
+        lock {
+            if !buildingsTable.hasKey(buildingCode) {
+                return <persist:InvalidKeyError>error("Not found: " + buildingCode.toString());
+            }
+            Building building = buildingsTable.get(buildingCode);
+            foreach var [k, v] in value.clone().entries() {
+                building[k] = v;
+            }
+            buildingsTable.put(building);
+            return building.clone();
         }
-        Building building = self.buildings.get(buildingCode);
-        foreach var [k, v] in value.entries() {
-            building[k] = v;
-        }
-        self.buildings.put(building);
-        return building;
     }
 
     isolated resource function delete buildings/[string buildingCode]() returns Building|persist:Error {
-        if !self.buildings.hasKey(buildingCode) {
-            return <persist:InvalidKeyError>error("Not found: " + buildingCode.toString());
+        lock {
+            if !buildingsTable.hasKey(buildingCode) {
+                return <persist:InvalidKeyError>error("Not found: " + buildingCode.toString());
+            }
+            return buildingsTable.remove(buildingCode).clone();
         }
-        return self.buildings.remove(buildingCode);
-    }
-
-    private function queryBuildings(string[] fields) returns stream<record {}, persist:Error?> {
-        return from record {} 'object in self.buildings
-            select persist:filterRecord({
-                ...'object
-            }, fields);
-    }
-
-    private function queryOneBuildings(anydata key) returns record {}|persist:InvalidKeyError {
-        from record {} 'object in self.buildings
-        where self.persistClients.get(BUILDING).getKey('object) == key
-        do {
-            return {
-                ...'object
-            };
-        };
-        return <persist:InvalidKeyError>error("Invalid key: " + key.toString());
     }
 
     isolated resource function get departments(DepartmentTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -264,69 +205,206 @@ public client class Client {
     isolated resource function post departments(DepartmentInsert[] data) returns string[]|persist:Error {
         string[] keys = [];
         foreach DepartmentInsert value in data {
-            if self.departments.hasKey(value.deptNo) {
-                return <persist:DuplicateKeyError>error("Duplicate key: " + value.deptNo.toString());
+            lock {
+                if departmentsTable.hasKey(value.deptNo) {
+                    return <persist:DuplicateKeyError>error("Duplicate key: " + value.deptNo.toString());
+                }
+                departmentsTable.put(value.clone());
             }
-            self.departments.put(value.clone());
             keys.push(value.deptNo);
         }
         return keys;
     }
 
     isolated resource function put departments/[string deptNo](DepartmentUpdate value) returns Department|persist:Error {
-        if !self.departments.hasKey(deptNo) {
-            return <persist:InvalidKeyError>error("Not found: " + deptNo.toString());
+        lock {
+            if !departmentsTable.hasKey(deptNo) {
+                return <persist:InvalidKeyError>error("Not found: " + deptNo.toString());
+            }
+            Department department = departmentsTable.get(deptNo);
+            foreach var [k, v] in value.clone().entries() {
+                department[k] = v;
+            }
+            departmentsTable.put(department);
+            return department.clone();
         }
-        Department department = self.departments.get(deptNo);
-        foreach var [k, v] in value.entries() {
-            department[k] = v;
-        }
-        self.departments.put(department);
-        return department;
     }
 
     isolated resource function delete departments/[string deptNo]() returns Department|persist:Error {
-        if !self.departments.hasKey(deptNo) {
-            return <persist:InvalidKeyError>error("Not found: " + deptNo.toString());
+        lock {
+            if !departmentsTable.hasKey(deptNo) {
+                return <persist:InvalidKeyError>error("Not found: " + deptNo.toString());
+            }
+            return departmentsTable.remove(deptNo).clone();
         }
-        return self.departments.remove(deptNo);
-    }
-
-    private function queryDepartments(string[] fields) returns stream<record {}, persist:Error?> {
-        return from record {} 'object in self.departments
-            select persist:filterRecord({
-                ...'object
-            }, fields);
-    }
-
-    private function queryOneDepartments(anydata key) returns record {}|persist:InvalidKeyError {
-        from record {} 'object in self.departments
-        where self.persistClients.get(DEPARTMENT).getKey('object) == key
-        do {
-            return {
-                ...'object
-            };
-        };
-        return <persist:InvalidKeyError>error("Invalid key: " + key.toString());
-    }
-
-    private function queryDepartmentsEmployees(record {} value, string[] fields) returns record {}[] {
-        return from record {} 'object in self.employees
-            where 'object.departmentDeptNo == value["deptNo"]
-            select persist:filterRecord({
-                ...'object
-            }, fields);
-    }
-
-    private function queryBuildingsWorkspaces(record {} value, string[] fields) returns record {}[] {
-        return from record {} 'object in self.workspaces
-            where 'object.locationBuildingCode == value["buildingCode"]
-            select persist:filterRecord({
-                ...'object
-            }, fields);
     }
 
     public function close() returns persist:Error? {
         return ();
     }
 }
+
+isolated function queryEmployees(string[] fields) returns stream<record {}, persist:Error?> {
+    table<Employee> key(empNo) employeesClonedTable;
+    lock {
+        employeesClonedTable = employeesTable.clone();
+    }
+    table<Department> key(deptNo) departmentsClonedTable;
+    lock {
+        departmentsClonedTable = departmentsTable.clone();
+    }
+    return from record {} 'object in employeesClonedTable
+        outer join var department in departmentsClonedTable on ['object.departmentDeptNo] equals [department?.deptNo]
+        select persist:filterRecord({
+            ...'object,
+            "department": department
+        }, fields);
+}
+
+isolated function queryOneEmployees(anydata key) returns record {}|persist:InvalidKeyError {
+    table<Employee> key(empNo) employeesClonedTable;
+    lock {
+        employeesClonedTable = employeesTable.clone();
+    }
+    table<Department> key(deptNo) departmentsClonedTable;
+    lock {
+        departmentsClonedTable = departmentsTable.clone();
+    }
+    from record {} 'object in employeesClonedTable
+    where persist:getKey('object, ["empNo"]) == key
+    outer join var department in departmentsClonedTable on ['object.departmentDeptNo] equals [department?.deptNo]
+    do {
+        return {
+            ...'object,
+            "department": department
+        };
+    };
+    return <persist:InvalidKeyError>error("Invalid key: " + key.toString());
+}
+
+isolated function queryWorkspaces(string[] fields) returns stream<record {}, persist:Error?> {
+    table<Workspace> key(workspaceId) workspacesClonedTable;
+    lock {
+        workspacesClonedTable = workspacesTable.clone();
+    }
+    table<Building> key(buildingCode) buildingsClonedTable;
+    lock {
+        buildingsClonedTable = buildingsTable.clone();
+    }
+    table<Employee> key(empNo) employeesClonedTable;
+    lock {
+        employeesClonedTable = employeesTable.clone();
+    }
+    return from record {} 'object in workspacesClonedTable
+        outer join var location in buildingsClonedTable on ['object.locationBuildingCode] equals [location?.buildingCode]
+        outer join var employee in employeesClonedTable on ['object.workspaceEmpNo] equals [employee?.empNo]
+        select persist:filterRecord({
+            ...'object,
+            "location": location,
+            "employee": employee
+        }, fields);
+}
+
+isolated function queryOneWorkspaces(anydata key) returns record {}|persist:InvalidKeyError {
+    table<Workspace> key(workspaceId) workspacesClonedTable;
+    lock {
+        workspacesClonedTable = workspacesTable.clone();
+    }
+    table<Building> key(buildingCode) buildingsClonedTable;
+    lock {
+        buildingsClonedTable = buildingsTable.clone();
+    }
+    table<Employee> key(empNo) employeesClonedTable;
+    lock {
+        employeesClonedTable = employeesTable.clone();
+    }
+    from record {} 'object in workspacesClonedTable
+    where persist:getKey('object, ["workspaceId"]) == key
+    outer join var location in buildingsClonedTable on ['object.locationBuildingCode] equals [location?.buildingCode]
+    outer join var employee in employeesClonedTable on ['object.workspaceEmpNo] equals [employee?.empNo]
+    do {
+        return {
+            ...'object,
+            "location": location,
+            "employee": employee
+        };
+    };
+    return <persist:InvalidKeyError>error("Invalid key: " + key.toString());
+}
+
+isolated function queryBuildings(string[] fields) returns stream<record {}, persist:Error?> {
+    table<Building> key(buildingCode) buildingsClonedTable;
+    lock {
+        buildingsClonedTable = buildingsTable.clone();
+    }
+    return from record {} 'object in buildingsClonedTable
+        select persist:filterRecord({
+            ...'object
+        }, fields);
+}
+
+isolated function queryOneBuildings(anydata key) returns record {}|persist:InvalidKeyError {
+    table<Building> key(buildingCode) buildingsClonedTable;
+    lock {
+        buildingsClonedTable = buildingsTable.clone();
+    }
+    from record {} 'object in buildingsClonedTable
+    where persist:getKey('object, ["buildingCode"]) == key
+    do {
+        return {
+            ...'object
+        };
+    };
+    return <persist:InvalidKeyError>error("Invalid key: " + key.toString());
+}
+
+isolated function queryDepartments(string[] fields) returns stream<record {}, persist:Error?> {
+    table<Department> key(deptNo) departmentsClonedTable;
+    lock {
+        departmentsClonedTable = departmentsTable.clone();
+    }
+    return from record {} 'object in departmentsClonedTable
+        select persist:filterRecord({
+            ...'object
+        }, fields);
+}
+
+isolated function queryOneDepartments(anydata key) returns record {}|persist:InvalidKeyError {
+    table<Department> key(deptNo) departmentsClonedTable;
+    lock {
+        departmentsClonedTable = departmentsTable.clone();
+    }
+    from record {} 'object in departmentsClonedTable
+    where persist:getKey('object, ["deptNo"]) == key
+    do {
+        return {
+            ...'object
+        };
+    };
+    return <persist:InvalidKeyError>error("Invalid key: " + key.toString());
+}
+
+isolated function queryBuildingsWorkspaces(record {} value, string[] fields) returns record {}[] {
+    table<Workspace> key(workspaceId) workspacesClonedTable;
+    lock {
+        workspacesClonedTable = workspacesTable.clone();
+    }
+    return from record {} 'object in workspacesClonedTable
+        where 'object.locationBuildingCode == value["buildingCode"]
+        select persist:filterRecord({
+            ...'object
+        }, fields);
+}
+
+isolated function queryDepartmentsEmployees(record {} value, string[] fields) returns record {}[] {
+    table<Employee> key(empNo) employeesClonedTable;
+    lock {
+        employeesClonedTable = employeesTable.clone();
+    }
+    return from record {} 'object in employeesClonedTable
+        where 'object.departmentDeptNo == value["deptNo"]
+        select persist:filterRecord({
+            ...'object
+        }, fields);
+}
+

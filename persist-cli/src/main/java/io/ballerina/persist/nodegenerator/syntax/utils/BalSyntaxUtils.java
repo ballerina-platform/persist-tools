@@ -97,8 +97,9 @@ public class BalSyntaxUtils {
     }
 
     public static Client generateClientSignature() {
-        Client clientObject = new Client("Client", true);
-        clientObject.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_CLIENT });
+        Client clientObject = new Client("Client");
+        clientObject.addQualifiers(new String[] {
+                BalSyntaxConstants.KEYWORD_ISOLATED, BalSyntaxConstants.KEYWORD_CLIENT });
         clientObject.addMember(NodeFactory.createTypeReferenceNode(
                 AbstractNodeFactory.createToken(SyntaxKind.ASTERISK_TOKEN),
                 NodeFactory.createQualifiedNameReferenceNode(

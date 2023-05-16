@@ -14,12 +14,12 @@ const DEPARTMENT = "departments";
 const EMPLOYEE = "employees";
 const ORDER_ITEM = "orderitems";
 
-public client class Client {
+public isolated client class Client {
     *persist:AbstractPersistClient;
 
     private final mysql:Client dbClient;
 
-    private final map<persist:SQLClient> persistClients;
+    private final map<persist:SQLClient> persistClients = {};
 
     private final record {|persist:SQLMetadata...;|} metadata = {
         [BUILDING] : {
@@ -147,13 +147,13 @@ public client class Client {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
-        self.persistClients = {
-            [BUILDING] : check new (self.dbClient, self.metadata.get(BUILDING)),
-            [WORKSPACE] : check new (self.dbClient, self.metadata.get(WORKSPACE)),
-            [DEPARTMENT] : check new (self.dbClient, self.metadata.get(DEPARTMENT)),
-            [EMPLOYEE] : check new (self.dbClient, self.metadata.get(EMPLOYEE)),
-            [ORDER_ITEM] : check new (self.dbClient, self.metadata.get(ORDER_ITEM))
-        };
+        lock {
+            self.persistClients[BUILDING] = check new (self.dbClient, self.metadata.get(BUILDING));
+            self.persistClients[WORKSPACE] = check new (self.dbClient, self.metadata.get(WORKSPACE));
+            self.persistClients[DEPARTMENT] = check new (self.dbClient, self.metadata.get(DEPARTMENT));
+            self.persistClients[EMPLOYEE] = check new (self.dbClient, self.metadata.get(EMPLOYEE));
+            self.persistClients[ORDER_ITEM] = check new (self.dbClient, self.metadata.get(ORDER_ITEM));
+        }
     }
 
     isolated resource function get buildings(BuildingTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -167,19 +167,25 @@ public client class Client {
     } external;
 
     isolated resource function post buildings(BuildingInsert[] data) returns string[]|persist:Error {
-        _ = check self.persistClients.get(BUILDING).runBatchInsertQuery(data);
+        lock {
+            _ = check self.persistClients.get(BUILDING).runBatchInsertQuery(data.clone());
+        }
         return from BuildingInsert inserted in data
             select inserted.buildingCode;
     }
 
     isolated resource function put buildings/[string buildingCode](BuildingUpdate value) returns Building|persist:Error {
-        _ = check self.persistClients.get(BUILDING).runUpdateQuery(buildingCode, value);
+        lock {
+            _ = check self.persistClients.get(BUILDING).runUpdateQuery(buildingCode, value.clone());
+        }
         return self->/buildings/[buildingCode].get();
     }
 
     isolated resource function delete buildings/[string buildingCode]() returns Building|persist:Error {
         Building result = check self->/buildings/[buildingCode].get();
-        _ = check self.persistClients.get(BUILDING).runDeleteQuery(buildingCode);
+        lock {
+            _ = check self.persistClients.get(BUILDING).runDeleteQuery(buildingCode);
+        }
         return result;
     }
 
@@ -194,19 +200,25 @@ public client class Client {
     } external;
 
     isolated resource function post workspaces(WorkspaceInsert[] data) returns string[]|persist:Error {
-        _ = check self.persistClients.get(WORKSPACE).runBatchInsertQuery(data);
+        lock {
+            _ = check self.persistClients.get(WORKSPACE).runBatchInsertQuery(data.clone());
+        }
         return from WorkspaceInsert inserted in data
             select inserted.workspaceId;
     }
 
     isolated resource function put workspaces/[string workspaceId](WorkspaceUpdate value) returns Workspace|persist:Error {
-        _ = check self.persistClients.get(WORKSPACE).runUpdateQuery(workspaceId, value);
+        lock {
+            _ = check self.persistClients.get(WORKSPACE).runUpdateQuery(workspaceId, value.clone());
+        }
         return self->/workspaces/[workspaceId].get();
     }
 
     isolated resource function delete workspaces/[string workspaceId]() returns Workspace|persist:Error {
         Workspace result = check self->/workspaces/[workspaceId].get();
-        _ = check self.persistClients.get(WORKSPACE).runDeleteQuery(workspaceId);
+        lock {
+            _ = check self.persistClients.get(WORKSPACE).runDeleteQuery(workspaceId);
+        }
         return result;
     }
 
@@ -221,19 +233,25 @@ public client class Client {
     } external;
 
     isolated resource function post departments(DepartmentInsert[] data) returns string[]|persist:Error {
-        _ = check self.persistClients.get(DEPARTMENT).runBatchInsertQuery(data);
+        lock {
+            _ = check self.persistClients.get(DEPARTMENT).runBatchInsertQuery(data.clone());
+        }
         return from DepartmentInsert inserted in data
             select inserted.deptNo;
     }
 
     isolated resource function put departments/[string deptNo](DepartmentUpdate value) returns Department|persist:Error {
-        _ = check self.persistClients.get(DEPARTMENT).runUpdateQuery(deptNo, value);
+        lock {
+            _ = check self.persistClients.get(DEPARTMENT).runUpdateQuery(deptNo, value.clone());
+        }
         return self->/departments/[deptNo].get();
     }
 
     isolated resource function delete departments/[string deptNo]() returns Department|persist:Error {
         Department result = check self->/departments/[deptNo].get();
-        _ = check self.persistClients.get(DEPARTMENT).runDeleteQuery(deptNo);
+        lock {
+            _ = check self.persistClients.get(DEPARTMENT).runDeleteQuery(deptNo);
+        }
         return result;
     }
 
@@ -248,19 +266,25 @@ public client class Client {
     } external;
 
     isolated resource function post employees(EmployeeInsert[] data) returns string[]|persist:Error {
-        _ = check self.persistClients.get(EMPLOYEE).runBatchInsertQuery(data);
+        lock {
+            _ = check self.persistClients.get(EMPLOYEE).runBatchInsertQuery(data.clone());
+        }
         return from EmployeeInsert inserted in data
             select inserted.empNo;
     }
 
     isolated resource function put employees/[string empNo](EmployeeUpdate value) returns Employee|persist:Error {
-        _ = check self.persistClients.get(EMPLOYEE).runUpdateQuery(empNo, value);
+        lock {
+            _ = check self.persistClients.get(EMPLOYEE).runUpdateQuery(empNo, value.clone());
+        }
         return self->/employees/[empNo].get();
     }
 
     isolated resource function delete employees/[string empNo]() returns Employee|persist:Error {
         Employee result = check self->/employees/[empNo].get();
-        _ = check self.persistClients.get(EMPLOYEE).runDeleteQuery(empNo);
+        lock {
+            _ = check self.persistClients.get(EMPLOYEE).runDeleteQuery(empNo);
+        }
         return result;
     }
 
@@ -275,19 +299,25 @@ public client class Client {
     } external;
 
     isolated resource function post orderitems(OrderItemInsert[] data) returns [string, string][]|persist:Error {
-        _ = check self.persistClients.get(ORDER_ITEM).runBatchInsertQuery(data);
+        lock {
+            _ = check self.persistClients.get(ORDER_ITEM).runBatchInsertQuery(data.clone());
+        }
         return from OrderItemInsert inserted in data
             select [inserted.orderId, inserted.itemId];
     }
 
     isolated resource function put orderitems/[string orderId]/[string itemId](OrderItemUpdate value) returns OrderItem|persist:Error {
-        _ = check self.persistClients.get(ORDER_ITEM).runUpdateQuery({"orderId": orderId, "itemId": itemId}, value);
+        lock {
+            _ = check self.persistClients.get(ORDER_ITEM).runUpdateQuery({"orderId": orderId, "itemId": itemId}, value.clone());
+        }
         return self->/orderitems/[orderId]/[itemId].get();
     }
 
     isolated resource function delete orderitems/[string orderId]/[string itemId]() returns OrderItem|persist:Error {
         OrderItem result = check self->/orderitems/[orderId]/[itemId].get();
-        _ = check self.persistClients.get(ORDER_ITEM).runDeleteQuery({"orderId": orderId, "itemId": itemId});
+        lock {
+            _ = check self.persistClients.get(ORDER_ITEM).runDeleteQuery({"orderId": orderId, "itemId": itemId});
+        }
         return result;
     }
 
