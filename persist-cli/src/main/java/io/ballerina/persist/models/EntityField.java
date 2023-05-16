@@ -28,18 +28,17 @@ import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConst
  *
  * @since 0.1.0
  *
- * @since 0.1.0
  */
-
 public class EntityField {
     private final String fieldName;
     private final String fieldType;
     private final boolean arrayType;
     private final boolean optionalType;
     private Relation relation;
+    private Enum enumValue;
     private final NodeList<AnnotationNode> annotationNodes;
 
-    private EntityField(String fieldName, String fieldType, boolean arrayType, boolean optionalType,
+    EntityField(String fieldName, String fieldType, boolean arrayType, boolean optionalType,
                         NodeList<AnnotationNode> annotationNodes) {
         this.fieldName = fieldName;
         this.fieldType = fieldType;
@@ -68,6 +67,14 @@ public class EntityField {
         this.relation = relation;
     }
 
+    public void setEnum(Enum enumValue) {
+        this.enumValue = enumValue;
+    }
+
+    public Enum getEnum() {
+        return enumValue;
+    }
+
     public boolean isArrayType() {
         return arrayType;
     }
@@ -91,7 +98,7 @@ public class EntityField {
         boolean optionalType = false;
         private NodeList<AnnotationNode> annotationNodes = null;
 
-        private Builder(String fieldName) {
+        Builder(String fieldName) {
             this.fieldName = fieldName;
         }
 

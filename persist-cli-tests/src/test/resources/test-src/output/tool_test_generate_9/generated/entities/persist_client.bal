@@ -10,12 +10,12 @@ import ballerinax/mysql.driver as _;
 
 const MEDICAL_NEED = "medicalneeds";
 
-public client class Client {
+public isolated client class Client {
     *persist:AbstractPersistClient;
 
     private final mysql:Client dbClient;
 
-    private final map<persist:SQLClient> persistClients;
+    private final map<persist:SQLClient> persistClients = {};
 
     private final record {|persist:SQLMetadata...;|} metadata = {
         [MEDICAL_NEED] : {
@@ -39,7 +39,9 @@ public client class Client {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
-        self.persistClients = {[MEDICAL_NEED] : check new (self.dbClient, self.metadata.get(MEDICAL_NEED))};
+        lock {
+            self.persistClients[MEDICAL_NEED] = check new (self.dbClient, self.metadata.get(MEDICAL_NEED));
+        }
     }
 
     isolated resource function get medicalneeds(MedicalNeedTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -53,19 +55,25 @@ public client class Client {
     } external;
 
     isolated resource function post medicalneeds(MedicalNeedInsert[] data) returns [int, int][]|persist:Error {
-        _ = check self.persistClients.get(MEDICAL_NEED).runBatchInsertQuery(data);
+        lock {
+            _ = check self.persistClients.get(MEDICAL_NEED).runBatchInsertQuery(data.clone());
+        }
         return from MedicalNeedInsert inserted in data
             select [inserted.needId, inserted.itemId];
     }
 
     isolated resource function put medicalneeds/[int needId]/[int itemId](MedicalNeedUpdate value) returns MedicalNeed|persist:Error {
-        _ = check self.persistClients.get(MEDICAL_NEED).runUpdateQuery({"needId": needId, "itemId": itemId}, value);
+        lock {
+            _ = check self.persistClients.get(MEDICAL_NEED).runUpdateQuery({"needId": needId, "itemId": itemId}, value.clone());
+        }
         return self->/medicalneeds/[needId]/[itemId].get();
     }
 
     isolated resource function delete medicalneeds/[int needId]/[int itemId]() returns MedicalNeed|persist:Error {
         MedicalNeed result = check self->/medicalneeds/[needId]/[itemId].get();
-        _ = check self.persistClients.get(MEDICAL_NEED).runDeleteQuery({"needId": needId, "itemId": itemId});
+        lock {
+            _ = check self.persistClients.get(MEDICAL_NEED).runDeleteQuery({"needId": needId, "itemId": itemId});
+        }
         return result;
     }
 
