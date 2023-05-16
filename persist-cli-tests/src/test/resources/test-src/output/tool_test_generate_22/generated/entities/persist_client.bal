@@ -11,12 +11,12 @@ import ballerinax/mysql.driver as _;
 const MEDICAL_NEED = "medicalneeds";
 const MEDICAL_ITEM = "medicalitems";
 
-public client class Client {
+public isolated client class Client {
     *persist:AbstractPersistClient;
 
     private final mysql:Client dbClient;
 
-    private final map<persist:SQLClient> persistClients;
+    private final map<persist:SQLClient> persistClients = {};
 
     private final record {|persist:SQLMetadata...;|} metadata = {
         [MEDICAL_NEED] : {
@@ -30,8 +30,8 @@ public client class Client {
                 urgency: {columnName: "urgency"},
                 quantity: {columnName: "quantity"},
                 "item.itemId": {relation: {entityName: "item", refField: "itemId"}},
-                "item.'string": {relation: {entityName: "item", refField: "string"}},
-                "item.'type": {relation: {entityName: "item", refField: "type"}},
+                "item.string": {relation: {entityName: "item", refField: "string"}},
+                "item.type": {relation: {entityName: "item", refField: "type"}},
                 "item.unit": {relation: {entityName: "item", refField: "unit"}}
             },
             keyFields: ["record"],
@@ -45,10 +45,10 @@ public client class Client {
                 'string: {columnName: "string"},
                 'type: {columnName: "type"},
                 unit: {columnName: "unit"},
-                "medicalNeed.'record": {relation: {entityName: "medicalNeed", refField: "record"}},
+                "medicalNeed.record": {relation: {entityName: "medicalNeed", refField: "record"}},
                 "medicalNeed.itemItemId": {relation: {entityName: "medicalNeed", refField: "itemItemId"}},
                 "medicalNeed.beneficiaryId": {relation: {entityName: "medicalNeed", refField: "beneficiaryId"}},
-                "medicalNeed.'time": {relation: {entityName: "medicalNeed", refField: "time"}},
+                "medicalNeed.time": {relation: {entityName: "medicalNeed", refField: "time"}},
                 "medicalNeed.urgency": {relation: {entityName: "medicalNeed", refField: "urgency"}},
                 "medicalNeed.quantity": {relation: {entityName: "medicalNeed", refField: "quantity"}}
             },
@@ -63,10 +63,10 @@ public client class Client {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
-        self.persistClients = {
-            [MEDICAL_NEED] : check new (self.dbClient, self.metadata.get(MEDICAL_NEED)),
-            [MEDICAL_ITEM] : check new (self.dbClient, self.metadata.get(MEDICAL_ITEM))
-        };
+        lock {
+            self.persistClients[MEDICAL_NEED] = check new (self.dbClient, self.metadata.get(MEDICAL_NEED));
+            self.persistClients[MEDICAL_ITEM] = check new (self.dbClient, self.metadata.get(MEDICAL_ITEM));
+        }
     }
 
     isolated resource function get medicalneeds(MedicalNeedTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -80,19 +80,25 @@ public client class Client {
     } external;
 
     isolated resource function post medicalneeds(MedicalNeedInsert[] data) returns int[]|persist:Error {
-        _ = check self.persistClients.get(MEDICAL_NEED).runBatchInsertQuery(data);
+        lock {
+            _ = check self.persistClients.get(MEDICAL_NEED).runBatchInsertQuery(data.clone());
+        }
         return from MedicalNeedInsert inserted in data
             select inserted.'record;
     }
 
     isolated resource function put medicalneeds/[int 'record](MedicalNeedUpdate value) returns MedicalNeed|persist:Error {
-        _ = check self.persistClients.get(MEDICAL_NEED).runUpdateQuery('record, value);
+        lock {
+            _ = check self.persistClients.get(MEDICAL_NEED).runUpdateQuery('record, value.clone());
+        }
         return self->/medicalneeds/['record].get();
     }
 
     isolated resource function delete medicalneeds/[int 'record]() returns MedicalNeed|persist:Error {
         MedicalNeed result = check self->/medicalneeds/['record].get();
-        _ = check self.persistClients.get(MEDICAL_NEED).runDeleteQuery('record);
+        lock {
+            _ = check self.persistClients.get(MEDICAL_NEED).runDeleteQuery('record);
+        }
         return result;
     }
 
@@ -107,19 +113,25 @@ public client class Client {
     } external;
 
     isolated resource function post medicalitems(MedicalItemInsert[] data) returns int[]|persist:Error {
-        _ = check self.persistClients.get(MEDICAL_ITEM).runBatchInsertQuery(data);
+        lock {
+            _ = check self.persistClients.get(MEDICAL_ITEM).runBatchInsertQuery(data.clone());
+        }
         return from MedicalItemInsert inserted in data
             select inserted.itemId;
     }
 
     isolated resource function put medicalitems/[int itemId](MedicalItemUpdate value) returns MedicalItem|persist:Error {
-        _ = check self.persistClients.get(MEDICAL_ITEM).runUpdateQuery(itemId, value);
+        lock {
+            _ = check self.persistClients.get(MEDICAL_ITEM).runUpdateQuery(itemId, value.clone());
+        }
         return self->/medicalitems/[itemId].get();
     }
 
     isolated resource function delete medicalitems/[int itemId]() returns MedicalItem|persist:Error {
         MedicalItem result = check self->/medicalitems/[itemId].get();
-        _ = check self.persistClients.get(MEDICAL_ITEM).runDeleteQuery(itemId);
+        lock {
+            _ = check self.persistClients.get(MEDICAL_ITEM).runDeleteQuery(itemId);
+        }
         return result;
     }
 
