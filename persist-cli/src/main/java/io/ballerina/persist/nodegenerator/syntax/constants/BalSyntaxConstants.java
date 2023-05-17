@@ -87,7 +87,7 @@ public class BalSyntaxConstants {
     public static final String CONFIGURABLE_USER = "configurable string user = ?;";
     public static final String CONFIGURABLE_PASSWORD = "configurable string password = ?;";
     public static final String CONFIGURABLE_DATABASE = "configurable string database = ?;";
-    public static final String CONFIGURABLE_OPTIONS = "configurable mysql:Options connectionOptions = {};";
+    public static final String CONFIGURABLE_OPTIONS = "configurable mysql:Options & readonly connectionOptions = {};";
     public static final String INIT = "init";
     public static final String POST = "post";
     public static final String DELETE = "delete";
