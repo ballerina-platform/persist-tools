@@ -92,26 +92,6 @@ public class SourceGenerator {
         }
     }
 
-    public void createSpreadSheetSources() throws BalException {
-        DbSyntaxTree dbSyntaxTree = new DbSyntaxTree();
-        try {
-            addDbConfigBalFile(this.generatedSourceDirPath, dbSyntaxTree.getDataStoreConfigSyntax());
-            addConfigTomlFile(this.sourcePath, dbSyntaxTree.getConfigTomlSyntax(this.moduleNameWithPackageName),
-                    this.moduleNameWithPackageName);
-            addDataTypesBalFile(dbSyntaxTree.getDataTypesSyntax(entityModule),
-                    this.generatedSourceDirPath.resolve(persistTypesBal).toAbsolutePath(),
-                    this.moduleNameWithPackageName);
-            addClientFile(dbSyntaxTree.getClientSyntax(entityModule),
-                    this.generatedSourceDirPath.resolve(persistClientBal).toAbsolutePath(),
-                    this.moduleNameWithPackageName);
-            addGoogleScriptFile(this.entityModule.getModuleName(),
-                    AppScriptUtils.generateJavaScriptFile(this.entityModule.getEntityMap().values()),
-                    generatedSourceDirPath);
-        } catch (BalException e) {
-            throw new BalException(e.getMessage());
-        }
-    }
-
     public void createInMemorySources() throws BalException {
         InMemorySyntaxTree inMemorySyntaxTree = new InMemorySyntaxTree();
         try {
@@ -140,6 +120,9 @@ public class SourceGenerator {
             addClientFile(gSheetSyntaxTree.getClientSyntax(entityModule),
                     this.generatedSourceDirPath.resolve(persistClientBal).toAbsolutePath(),
                     this.moduleNameWithPackageName);
+            addGoogleScriptFile(this.entityModule.getModuleName(),
+                    AppScriptUtils.generateJavaScriptFile(this.entityModule.getEntityMap().values()),
+                    generatedSourceDirPath);
         } catch (BalException e) {
             throw new BalException(e.getMessage());
         }

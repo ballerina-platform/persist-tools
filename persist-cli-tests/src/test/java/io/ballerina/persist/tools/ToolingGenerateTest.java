@@ -343,13 +343,6 @@ public class ToolingGenerateTest {
     }
 
     @Test(enabled = true)
-    @Description("There is a generated client object with in memory data source")
-    public void testGoogleSheet() {
-        executeCommand("tool_test_generate_51_gsheet", GENERATE);
-        assertGeneratedSources("tool_test_generate_51_gsheet");
-    }
-
-    @Test(enabled = true)
     @Description("There is multiple entities with multiple enums and no imports")
     public void testGenerateWithEnums() {
         executeCommand("tool_test_generate_50", GENERATE);
@@ -376,11 +369,11 @@ public class ToolingGenerateTest {
         executeCommand("tool_test_generate_53_in_memory", GENERATE);
         assertGeneratedSources("tool_test_generate_53_in_memory");
     }
-  
-    @Description("There is multiple entities with associations in the Ballerina project")
-    public void testGenerateAssociatedEntitiesWithGoogleSheetsSupport() {
 
-        executeCommand("tool_test_generate_50_gsheets", GENERATE);
-        assertGeneratedSources("tool_test_generate_50_gsheets");
+    @Test(enabled = true)
+    @Description("There is a generated client object with in memory data source")
+    public void testGoogleSheet() {
+        executeCommand("tool_test_generate_54_gsheet", GENERATE);
+        assertGeneratedSources("tool_test_generate_54_gsheet");
     }
 }

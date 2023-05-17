@@ -181,21 +181,6 @@ public class Generate implements BLauncherCmd {
                 errStream.printf(String.format(BalSyntaxConstants.ERROR_MSG,
                         PersistToolsConstants.SupportDataSources.GOOGLE_SHEETS, e.getMessage()));
             }
-        } else if (dataStore.equals(PersistToolsConstants.SupportDataSources.GOOGLE_SHEETS)) {
-            try {
-                sourceCreator.createSpreadSheetSources();
-                errStream.printf("Generated Ballerina Client, Types, " + "and Scripts to %s directory.%n",
-                        generatedSourceDirPath);
-                errStream.println("You can now start using Ballerina Client in your code.");
-                errStream.println(System.lineSeparator() + "Next steps:");
-                errStream.printf("Set database configurations in Config.toml file to point to " +
-                        "your database. If your database has no sheets yet, execute the scripts." +
-                        "google AppScript file at %s directory, in your AppScript Console to create sheets.%n",
-                        generatedSourceDirPath);
-            } catch (BalException e) {
-                errStream.printf("ERROR: failed to generate/update source file/s for the database. %s%n",
-                        e.getMessage());
-            }
         } else {
             try {
                 sourceCreator.createInMemorySources();

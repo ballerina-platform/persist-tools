@@ -165,7 +165,5 @@ public class PersistToolsConstants {
         public static final String MYSQL_DB = "mysql";
         public static final String GOOGLE_SHEETS = "googlesheets";
         public static final String IN_MEMORY_TABLE = "inmemory";
-        public static final String GOOGLE_SHEETS = "googlesheets";
-
     }
 }
