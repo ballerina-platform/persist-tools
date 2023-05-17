@@ -169,8 +169,17 @@ public class Generate implements BLauncherCmd {
                         "your database. If your database has no tables yet, execute the scripts." +
                         "sql file at %s directory, in your database to create tables.%n", generatedSourceDirPath);
             } catch (BalException e) {
-                errStream.printf("ERROR: failed to generate/update source file/s for the database. %s%n",
-                        e.getMessage());
+                errStream.printf(String.format(BalSyntaxConstants.ERROR_MSG,
+                        PersistToolsConstants.SupportDataSources.MYSQL_DB, e.getMessage()));
+            }
+        } else if (dataStore.equals(PersistToolsConstants.SupportDataSources.GOOGLE_SHEETS)) {
+            try {
+                sourceCreator.createGSheetSources();
+                errStream.printf("Generated Ballerina Client, and Types to %s directory.%n", generatedSourceDirPath);
+                errStream.println("You can now start using Ballerina Client in your code.");
+            } catch (BalException e) {
+                errStream.printf(String.format(BalSyntaxConstants.ERROR_MSG,
+                        PersistToolsConstants.SupportDataSources.GOOGLE_SHEETS, e.getMessage()));
             }
         } else if (dataStore.equals(PersistToolsConstants.SupportDataSources.GOOGLE_SHEETS)) {
             try {
@@ -193,8 +202,8 @@ public class Generate implements BLauncherCmd {
                 errStream.printf("Generated Ballerina Client, and Types to %s directory.%n", generatedSourceDirPath);
                 errStream.println("You can now start using Ballerina Client in your code.");
             } catch (BalException e) {
-                errStream.printf("ERROR: failed to generate/update source file/s for the in-memory. %s%n",
-                        e.getMessage());
+                errStream.printf(String.format(BalSyntaxConstants.ERROR_MSG,
+                        PersistToolsConstants.SupportDataSources.IN_MEMORY_TABLE, e.getMessage()));
             }
         }
     }

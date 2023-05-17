@@ -23,6 +23,7 @@ import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
 import io.ballerina.persist.nodegenerator.syntax.sources.DbSyntaxTree;
+import io.ballerina.persist.nodegenerator.syntax.sources.GSheetSyntaxTree;
 import io.ballerina.persist.nodegenerator.syntax.sources.InMemorySyntaxTree;
 import io.ballerina.persist.nodegenerator.syntax.utils.AppScriptUtils;
 import io.ballerina.persist.nodegenerator.syntax.utils.SqlScriptUtils;
@@ -73,7 +74,8 @@ public class SourceGenerator {
     public void createDbSources() throws BalException {
         DbSyntaxTree dbSyntaxTree = new DbSyntaxTree();
         try {
-            addDbConfigBalFile(this.generatedSourceDirPath, dbSyntaxTree.getDataStoreConfigSyntax());
+            addDataSourceConfigBalFile(this.generatedSourceDirPath, BalSyntaxConstants.PATH_DB_CONFIGURATION_BAL_FILE,
+                    dbSyntaxTree.getDataStoreConfigSyntax());
             addConfigTomlFile(this.sourcePath, dbSyntaxTree.getConfigTomlSyntax(this.moduleNameWithPackageName),
                     this.moduleNameWithPackageName);
             addDataTypesBalFile(dbSyntaxTree.getDataTypesSyntax(entityModule),
@@ -124,12 +126,31 @@ public class SourceGenerator {
             throw new BalException(e.getMessage());
         }
     }
+
+    public void createGSheetSources() throws BalException {
+        GSheetSyntaxTree gSheetSyntaxTree = new GSheetSyntaxTree();
+        try {
+            addDataSourceConfigBalFile(this.generatedSourceDirPath,
+                    BalSyntaxConstants.PATH_SHEET_CONFIGURATION_BAL_FILE, gSheetSyntaxTree.getDataStoreConfigSyntax());
+            addConfigTomlFile(this.sourcePath, gSheetSyntaxTree.getConfigTomlSyntax(this.moduleNameWithPackageName),
+                    this.moduleNameWithPackageName);
+            addDataTypesBalFile(gSheetSyntaxTree.getDataTypesSyntax(entityModule),
+                    this.generatedSourceDirPath.resolve(persistTypesBal).toAbsolutePath(),
+                    this.moduleNameWithPackageName);
+            addClientFile(gSheetSyntaxTree.getClientSyntax(entityModule),
+                    this.generatedSourceDirPath.resolve(persistClientBal).toAbsolutePath(),
+                    this.moduleNameWithPackageName);
+        } catch (BalException e) {
+            throw new BalException(e.getMessage());
+        }
+    }
     
-    private void addDbConfigBalFile(Path generatedSourceDirPath, SyntaxTree syntaxTree) throws BalException {
-        Path databaseConfigPath = generatedSourceDirPath.resolve(BalSyntaxConstants.PATH_CONFIGURATION_BAL_FILE);
-        if (!Files.exists(databaseConfigPath)) {
+    private void addDataSourceConfigBalFile(Path generatedSourceDirPath, String fileName, SyntaxTree syntaxTree)
+            throws BalException {
+        Path configFilePath = generatedSourceDirPath.resolve(fileName);
+        if (!Files.exists(configFilePath)) {
             try {
-                writeOutputFile(Formatter.format(syntaxTree.toSourceCode()), databaseConfigPath.toAbsolutePath());
+                writeOutputFile(Formatter.format(syntaxTree.toSourceCode()), configFilePath.toAbsolutePath());
             } catch (Exception e) {
                 throw new BalException("failed to generate the persist_db_config.bal file. "
                         + e.getMessage());
