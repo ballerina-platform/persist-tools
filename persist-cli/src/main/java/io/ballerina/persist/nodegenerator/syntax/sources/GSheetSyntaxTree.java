@@ -249,6 +249,8 @@ public class GSheetSyntaxTree implements SyntaxTree {
         queryOneBuilder.append("error? unionResult = ").append(
                 String.format(BalSyntaxConstants.G_SHEET_QUERY_STATEMENT, BalSyntaxConstants.EMPTY_STRING,
                         BalSyntaxConstants.EMPTY_STRING, streamParamName));
+        queryOneBuilder.append(String.format(BalSyntaxConstants.G_SHEET_WHERE_CLAUSE,
+                BalSyntaxUtils.getStringWithUnderScore(entityName).toUpperCase(Locale.ENGLISH)));
         queryOneBuilder.append(streamSelectBuilder);
         if (relationalRecordFields.length() > 0) {
             queryBuilder.append(String.format(BalSyntaxConstants.SELECT_QUERY,

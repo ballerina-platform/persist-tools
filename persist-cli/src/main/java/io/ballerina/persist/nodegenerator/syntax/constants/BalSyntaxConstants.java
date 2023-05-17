@@ -182,6 +182,8 @@ public class BalSyntaxConstants {
     public static final String METADATA_ASSOCIATIONS_METHODS_TEMPLATE = "%s: query%s";
     public static final String QUERY_RETURN = "stream<record{}, persist:Error?>";
     public static final String G_SHEET_QUERY_STATEMENT = "%s from record{} 'object in %s%s";
+    public static final String G_SHEET_WHERE_CLAUSE = System.lineSeparator() +
+            "where self.persistClients.get(%s).getKey('object) == key";
     public static final String QUERY_STATEMENT = "return from record{} 'object in %sClonedTable" +
             System.lineSeparator();
     public static final String QUERY_ONE_RETURN = "record {}|persist:NotFoundError";

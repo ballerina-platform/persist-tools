@@ -218,6 +218,7 @@ public client class Client {
         stream<Department, persist:Error?> departmentsStream = self.queryDepartmentsStream();
         stream<Workspace, persist:Error?> workspacesStream = self.queryWorkspacesStream();
         error? unionResult = from record {} 'object in employeesStream
+            where self.persistClients.get(EMPLOYEE).getKey('object) == key
             outer join var department in departmentsStream on ['object.departmentDeptNo] equals [department?.deptNo]
             outer join var workspace in workspacesStream on ['object.workspaceWorkspaceId] equals [workspace?.workspaceId]
             do {
@@ -281,6 +282,7 @@ public client class Client {
         stream<Workspace, persist:Error?> workspacesStream = self.queryWorkspacesStream();
         stream<Building, persist:Error?> buildingsStream = self.queryBuildingsStream();
         error? unionResult = from record {} 'object in workspacesStream
+            where self.persistClients.get(WORKSPACE).getKey('object) == key
             outer join var building in buildingsStream on ['object.locationBuildingCode] equals [building?.buildingCode]
             do {
                 return {
@@ -338,6 +340,7 @@ public client class Client {
     private function queryOneBuildings(anydata key) returns record {}|persist:NotFoundError {
         stream<Building, persist:Error?> buildingsStream = self.queryBuildingsStream();
         error? unionResult = from record {} 'object in buildingsStream
+            where self.persistClients.get(BUILDING).getKey('object) == key
             do {
                 return {
                     ...'object
@@ -393,6 +396,7 @@ public client class Client {
     private function queryOneDepartments(anydata key) returns record {}|persist:NotFoundError {
         stream<Department, persist:Error?> departmentsStream = self.queryDepartmentsStream();
         error? unionResult = from record {} 'object in departmentsStream
+            where self.persistClients.get(DEPARTMENT).getKey('object) == key
             do {
                 return {
                     ...'object
@@ -448,6 +452,7 @@ public client class Client {
     private function queryOneOrderitems(anydata key) returns record {}|persist:NotFoundError {
         stream<OrderItem, persist:Error?> orderitemsStream = self.queryOrderitemsStream();
         error? unionResult = from record {} 'object in orderitemsStream
+            where self.persistClients.get(ORDER_ITEM).getKey('object) == key
             do {
                 return {
                     ...'object
