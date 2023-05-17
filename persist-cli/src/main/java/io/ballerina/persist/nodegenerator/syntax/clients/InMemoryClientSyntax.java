@@ -83,20 +83,19 @@ public class InMemoryClientSyntax implements ClientSyntax {
                 queryMethodList)));
 
         Collection<Entity> entityArray = entityModule.getEntityMap().values();
-        StringBuilder inMemoryClientMapInit = new StringBuilder();
-        int i = 0;
+        StringBuilder persistClientMap = new StringBuilder();
         for (Entity entity : entityArray) {
+            if (persistClientMap.length() != 0) {
+                persistClientMap.append(BalSyntaxConstants.COMMA_WITH_NEWLINE);
+            }
+
             String inMemoryClientMapElement = String.format(BalSyntaxConstants.PERSIST_IN_MEMORY_CLIENT_MAP_ELEMENT,
                     BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()),
                     BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()));
-            inMemoryClientMapInit.append(inMemoryClientMapElement);
-
-            if (++i < entityArray.size()) {
-                inMemoryClientMapInit.append(BalSyntaxConstants.COMMA_WITH_NEWLINE);
-            }
+            persistClientMap.append(inMemoryClientMapElement);
         }
         init.addStatement(NodeParser.parseStatement(String.format(
-                BalSyntaxConstants.PERSIST_CLIENT_TEMPLATE, inMemoryClientMapInit)));
+                BalSyntaxConstants.PERSIST_CLIENT_TEMPLATE, persistClientMap)));
 
         return init.getFunctionDefinitionNode();
     }
