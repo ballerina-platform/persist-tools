@@ -52,7 +52,7 @@ public client class Client {
         int[] keys = [];
         foreach MedicalNeedInsert value in data {
             if self.medicalneeds.hasKey(value.needId) {
-                return <persist:DuplicateKeyError>error("Duplicate key: " + value.needId.toString());
+                return <persist:AlreadyExistsError>error("Duplicate key: " + value.needId.toString());
             }
             self.medicalneeds.put(value.clone());
             keys.push(value.needId);
@@ -62,7 +62,7 @@ public client class Client {
 
     isolated resource function put medicalneeds/[int needId](MedicalNeedUpdate value) returns MedicalNeed|persist:Error {
         if !self.medicalneeds.hasKey(needId) {
-            return <persist:InvalidKeyError>error("Not found: " + needId.toString());
+            return <persist:NotFoundError>error("Not found: " + needId.toString());
         }
         MedicalNeed medicalneed = self.medicalneeds.get(needId);
         foreach var [k, v] in value.entries() {
@@ -74,7 +74,7 @@ public client class Client {
 
     isolated resource function delete medicalneeds/[int needId]() returns MedicalNeed|persist:Error {
         if !self.medicalneeds.hasKey(needId) {
-            return <persist:InvalidKeyError>error("Not found: " + needId.toString());
+            return <persist:NotFoundError>error("Not found: " + needId.toString());
         }
         return self.medicalneeds.remove(needId);
     }
@@ -86,7 +86,7 @@ public client class Client {
             }, fields);
     }
 
-    private function queryOneMedicalneeds(anydata key) returns record {}|persist:InvalidKeyError {
+    private function queryOneMedicalneeds(anydata key) returns record {}|persist:NotFoundError {
         from record {} 'object in self.medicalneeds
         where self.persistClients.get(MEDICAL_NEED).getKey('object) == key
         do {
@@ -94,7 +94,7 @@ public client class Client {
                 ...'object
             };
         };
-        return <persist:InvalidKeyError>error("Invalid key: " + key.toString());
+        return <persist:NotFoundError>error("Invalid key: " + key.toString());
     }
 
     isolated resource function get medicalitems(MedicalItemTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -111,7 +111,7 @@ public client class Client {
         int[] keys = [];
         foreach MedicalItemInsert value in data {
             if self.medicalitems.hasKey(value.itemId) {
-                return <persist:DuplicateKeyError>error("Duplicate key: " + value.itemId.toString());
+                return <persist:AlreadyExistsError>error("Duplicate key: " + value.itemId.toString());
             }
             self.medicalitems.put(value.clone());
             keys.push(value.itemId);
@@ -121,7 +121,7 @@ public client class Client {
 
     isolated resource function put medicalitems/[int itemId](MedicalItemUpdate value) returns MedicalItem|persist:Error {
         if !self.medicalitems.hasKey(itemId) {
-            return <persist:InvalidKeyError>error("Not found: " + itemId.toString());
+            return <persist:NotFoundError>error("Not found: " + itemId.toString());
         }
         MedicalItem medicalitem = self.medicalitems.get(itemId);
         foreach var [k, v] in value.entries() {
@@ -133,7 +133,7 @@ public client class Client {
 
     isolated resource function delete medicalitems/[int itemId]() returns MedicalItem|persist:Error {
         if !self.medicalitems.hasKey(itemId) {
-            return <persist:InvalidKeyError>error("Not found: " + itemId.toString());
+            return <persist:NotFoundError>error("Not found: " + itemId.toString());
         }
         return self.medicalitems.remove(itemId);
     }
@@ -145,7 +145,7 @@ public client class Client {
             }, fields);
     }
 
-    private function queryOneMedicalitems(anydata key) returns record {}|persist:InvalidKeyError {
+    private function queryOneMedicalitems(anydata key) returns record {}|persist:NotFoundError {
         from record {} 'object in self.medicalitems
         where self.persistClients.get(MEDICAL_ITEM).getKey('object) == key
         do {
@@ -153,7 +153,7 @@ public client class Client {
                 ...'object
             };
         };
-        return <persist:InvalidKeyError>error("Invalid key: " + key.toString());
+        return <persist:NotFoundError>error("Invalid key: " + key.toString());
     }
 
     public function close() returns persist:Error? {

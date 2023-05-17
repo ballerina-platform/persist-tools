@@ -62,9 +62,9 @@ public class BalSyntaxConstants {
             System.lineSeparator() + "        %s[k] = v;" + System.lineSeparator() +
             "    }" + System.lineSeparator();
 
-    public static final String HAS_KEY_ERROR = "\t\treturn <persist:DuplicateKeyError>error(\"Duplicate key: \" + " +
+    public static final String HAS_KEY_ERROR = "\t\treturn <persist:AlreadyExistsError>error(\"Duplicate key: \" + " +
             "%s.toString());" + System.lineSeparator() + "\t}" + System.lineSeparator();
-    public static final String HAS_NOT_KEY_ERROR = "return <persist:InvalidKeyError>error(\"Not found: \" + " +
+    public static final String HAS_NOT_KEY_ERROR = "return <persist:NotFoundError>error(\"Not found: \" + " +
             "%s.toString());";
     public static final String PUSH_VALUES = System.lineSeparator() + "\tkeys.push(%s);" + System.lineSeparator();
     public static final String GET_UPDATE_RECORD = "%s %s = self.%s.get(%s);" + System.lineSeparator();
@@ -149,8 +149,8 @@ public class BalSyntaxConstants {
     public static final String METADATA_ASSOCIATIONS_METHODS_TEMPLATE = "%s: self.query%s";
     public static final String QUERY_RETURN = "stream<record{}, persist:Error?>";
     public static final String QUERY_STATEMENT = "return from record{} 'object in self.%s";
-    public static final String QUERY_ONE_RETURN = "record {}|persist:InvalidKeyError";
-    public static final String QUERY_ONE_RETURN_STATEMENT = "return <persist:InvalidKeyError>error(" +
+    public static final String QUERY_ONE_RETURN = "record {}|persist:NotFoundError";
+    public static final String QUERY_ONE_RETURN_STATEMENT = "return <persist:NotFoundError>error(" +
             "\"Invalid key: \" + key.toString());";
     public static final String QUERY_ONE_FROM_STATEMENT = "from record{} 'object in self.%s";
     public static final String QUERY_ONE_WHERE_CLAUSE = "    where self.persistClients.get(%s).getKey('object) == key";

@@ -82,7 +82,7 @@ public client class Client {
         string[] keys = [];
         foreach WorkspaceInsert value in data {
             if self.workspaces.hasKey(value.workspaceId) {
-                return <persist:DuplicateKeyError>error("Duplicate key: " + value.workspaceId.toString());
+                return <persist:AlreadyExistsError>error("Duplicate key: " + value.workspaceId.toString());
             }
             self.workspaces.put(value.clone());
             keys.push(value.workspaceId);
@@ -92,7 +92,7 @@ public client class Client {
 
     isolated resource function put workspaces/[string workspaceId](WorkspaceUpdate value) returns Workspace|persist:Error {
         if !self.workspaces.hasKey(workspaceId) {
-            return <persist:InvalidKeyError>error("Not found: " + workspaceId.toString());
+            return <persist:NotFoundError>error("Not found: " + workspaceId.toString());
         }
         Workspace workspace = self.workspaces.get(workspaceId);
         foreach var [k, v] in value.entries() {
@@ -104,7 +104,7 @@ public client class Client {
 
     isolated resource function delete workspaces/[string workspaceId]() returns Workspace|persist:Error {
         if !self.workspaces.hasKey(workspaceId) {
-            return <persist:InvalidKeyError>error("Not found: " + workspaceId.toString());
+            return <persist:NotFoundError>error("Not found: " + workspaceId.toString());
         }
         return self.workspaces.remove(workspaceId);
     }
@@ -119,7 +119,7 @@ public client class Client {
             }, fields);
     }
 
-    private function queryOneWorkspaces(anydata key) returns record {}|persist:InvalidKeyError {
+    private function queryOneWorkspaces(anydata key) returns record {}|persist:NotFoundError {
         from record {} 'object in self.workspaces
         where self.persistClients.get(WORKSPACE).getKey('object) == key
         outer join var building in self.buildings on ['object.locationBuildingCode] equals [building?.buildingCode]
@@ -130,7 +130,7 @@ public client class Client {
                 "building": building
             };
         };
-        return <persist:InvalidKeyError>error("Invalid key: " + key.toString());
+        return <persist:NotFoundError>error("Invalid key: " + key.toString());
     }
 
     isolated resource function get buildings(BuildingTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -147,7 +147,7 @@ public client class Client {
         string[] keys = [];
         foreach BuildingInsert value in data {
             if self.buildings.hasKey(value.buildingCode) {
-                return <persist:DuplicateKeyError>error("Duplicate key: " + value.buildingCode.toString());
+                return <persist:AlreadyExistsError>error("Duplicate key: " + value.buildingCode.toString());
             }
             self.buildings.put(value.clone());
             keys.push(value.buildingCode);
@@ -157,7 +157,7 @@ public client class Client {
 
     isolated resource function put buildings/[string buildingCode](BuildingUpdate value) returns Building|persist:Error {
         if !self.buildings.hasKey(buildingCode) {
-            return <persist:InvalidKeyError>error("Not found: " + buildingCode.toString());
+            return <persist:NotFoundError>error("Not found: " + buildingCode.toString());
         }
         Building building = self.buildings.get(buildingCode);
         foreach var [k, v] in value.entries() {
@@ -169,7 +169,7 @@ public client class Client {
 
     isolated resource function delete buildings/[string buildingCode]() returns Building|persist:Error {
         if !self.buildings.hasKey(buildingCode) {
-            return <persist:InvalidKeyError>error("Not found: " + buildingCode.toString());
+            return <persist:NotFoundError>error("Not found: " + buildingCode.toString());
         }
         return self.buildings.remove(buildingCode);
     }
@@ -181,7 +181,7 @@ public client class Client {
             }, fields);
     }
 
-    private function queryOneBuildings(anydata key) returns record {}|persist:InvalidKeyError {
+    private function queryOneBuildings(anydata key) returns record {}|persist:NotFoundError {
         from record {} 'object in self.buildings
         where self.persistClients.get(BUILDING).getKey('object) == key
         do {
@@ -189,7 +189,7 @@ public client class Client {
                 ...'object
             };
         };
-        return <persist:InvalidKeyError>error("Invalid key: " + key.toString());
+        return <persist:NotFoundError>error("Invalid key: " + key.toString());
     }
 
     isolated resource function get departments(DepartmentTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -206,7 +206,7 @@ public client class Client {
         string[] keys = [];
         foreach DepartmentInsert value in data {
             if self.departments.hasKey(value.deptNo) {
-                return <persist:DuplicateKeyError>error("Duplicate key: " + value.deptNo.toString());
+                return <persist:AlreadyExistsError>error("Duplicate key: " + value.deptNo.toString());
             }
             self.departments.put(value.clone());
             keys.push(value.deptNo);
@@ -216,7 +216,7 @@ public client class Client {
 
     isolated resource function put departments/[string deptNo](DepartmentUpdate value) returns Department|persist:Error {
         if !self.departments.hasKey(deptNo) {
-            return <persist:InvalidKeyError>error("Not found: " + deptNo.toString());
+            return <persist:NotFoundError>error("Not found: " + deptNo.toString());
         }
         Department department = self.departments.get(deptNo);
         foreach var [k, v] in value.entries() {
@@ -228,7 +228,7 @@ public client class Client {
 
     isolated resource function delete departments/[string deptNo]() returns Department|persist:Error {
         if !self.departments.hasKey(deptNo) {
-            return <persist:InvalidKeyError>error("Not found: " + deptNo.toString());
+            return <persist:NotFoundError>error("Not found: " + deptNo.toString());
         }
         return self.departments.remove(deptNo);
     }
@@ -240,7 +240,7 @@ public client class Client {
             }, fields);
     }
 
-    private function queryOneDepartments(anydata key) returns record {}|persist:InvalidKeyError {
+    private function queryOneDepartments(anydata key) returns record {}|persist:NotFoundError {
         from record {} 'object in self.departments
         where self.persistClients.get(DEPARTMENT).getKey('object) == key
         do {
@@ -248,7 +248,7 @@ public client class Client {
                 ...'object
             };
         };
-        return <persist:InvalidKeyError>error("Invalid key: " + key.toString());
+        return <persist:NotFoundError>error("Invalid key: " + key.toString());
     }
 
     isolated resource function get orderitems(OrderItemTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -265,7 +265,7 @@ public client class Client {
         [string, string][] keys = [];
         foreach OrderItemInsert value in data {
             if self.orderitems.hasKey([value.orderId, value.itemId]) {
-                return <persist:DuplicateKeyError>error("Duplicate key: " + [value.orderId, value.itemId].toString());
+                return <persist:AlreadyExistsError>error("Duplicate key: " + [value.orderId, value.itemId].toString());
             }
             self.orderitems.put(value.clone());
             keys.push([value.orderId, value.itemId]);
@@ -275,7 +275,7 @@ public client class Client {
 
     isolated resource function put orderitems/[string orderId]/[string itemId](OrderItemUpdate value) returns OrderItem|persist:Error {
         if !self.orderitems.hasKey([orderId, itemId]) {
-            return <persist:InvalidKeyError>error("Not found: " + [orderId, itemId].toString());
+            return <persist:NotFoundError>error("Not found: " + [orderId, itemId].toString());
         }
         OrderItem orderitem = self.orderitems.get([orderId, itemId]);
         foreach var [k, v] in value.entries() {
@@ -287,7 +287,7 @@ public client class Client {
 
     isolated resource function delete orderitems/[string orderId]/[string itemId]() returns OrderItem|persist:Error {
         if !self.orderitems.hasKey([orderId, itemId]) {
-            return <persist:InvalidKeyError>error("Not found: " + [orderId, itemId].toString());
+            return <persist:NotFoundError>error("Not found: " + [orderId, itemId].toString());
         }
         return self.orderitems.remove([orderId, itemId]);
     }
@@ -299,7 +299,7 @@ public client class Client {
             }, fields);
     }
 
-    private function queryOneOrderitems(anydata key) returns record {}|persist:InvalidKeyError {
+    private function queryOneOrderitems(anydata key) returns record {}|persist:NotFoundError {
         from record {} 'object in self.orderitems
         where self.persistClients.get(ORDER_ITEM).getKey('object) == key
         do {
@@ -307,7 +307,7 @@ public client class Client {
                 ...'object
             };
         };
-        return <persist:InvalidKeyError>error("Invalid key: " + key.toString());
+        return <persist:NotFoundError>error("Invalid key: " + key.toString());
     }
 
     isolated resource function get employees(EmployeeTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -324,7 +324,7 @@ public client class Client {
         string[] keys = [];
         foreach EmployeeInsert value in data {
             if self.employees.hasKey(value.empNo) {
-                return <persist:DuplicateKeyError>error("Duplicate key: " + value.empNo.toString());
+                return <persist:AlreadyExistsError>error("Duplicate key: " + value.empNo.toString());
             }
             self.employees.put(value.clone());
             keys.push(value.empNo);
@@ -334,7 +334,7 @@ public client class Client {
 
     isolated resource function put employees/[string empNo](EmployeeUpdate value) returns Employee|persist:Error {
         if !self.employees.hasKey(empNo) {
-            return <persist:InvalidKeyError>error("Not found: " + empNo.toString());
+            return <persist:NotFoundError>error("Not found: " + empNo.toString());
         }
         Employee employee = self.employees.get(empNo);
         foreach var [k, v] in value.entries() {
@@ -346,7 +346,7 @@ public client class Client {
 
     isolated resource function delete employees/[string empNo]() returns Employee|persist:Error {
         if !self.employees.hasKey(empNo) {
-            return <persist:InvalidKeyError>error("Not found: " + empNo.toString());
+            return <persist:NotFoundError>error("Not found: " + empNo.toString());
         }
         return self.employees.remove(empNo);
     }
@@ -363,7 +363,7 @@ public client class Client {
             }, fields);
     }
 
-    private function queryOneEmployees(anydata key) returns record {}|persist:InvalidKeyError {
+    private function queryOneEmployees(anydata key) returns record {}|persist:NotFoundError {
         from record {} 'object in self.employees
         where self.persistClients.get(EMPLOYEE).getKey('object) == key
         outer join var department in self.departments on ['object.departmentDeptNo] equals [department?.deptNo]
@@ -376,7 +376,7 @@ public client class Client {
                 "workspace": workspace
             };
         };
-        return <persist:InvalidKeyError>error("Invalid key: " + key.toString());
+        return <persist:NotFoundError>error("Invalid key: " + key.toString());
     }
 
     private function queryDepartmentsEmployees(record {} value, string[] fields) returns record {}[] {
