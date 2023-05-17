@@ -15,12 +15,12 @@ public isolated client class Client {
 
     private final mysql:Client dbClient;
 
-    private final map<persist:SQLClient> persistClients = {};
+    private final map<persist:SQLClient> persistClients;
 
-    private final record {|persist:SQLMetadata...;|} metadata = {
+    private final record {|persist:SQLMetadata...;|} & readonly metadata = {
         [DATA_TYPE] : {
             entityName: "DataType",
-            tableName: `DataType`,
+            tableName: "DataType",
             fieldMetadata: {
                 a: {columnName: "a"},
                 b1: {columnName: "b1"},
@@ -38,15 +38,13 @@ public isolated client class Client {
         }
     };
 
-    public function init() returns persist:Error? {
+    public isolated function init() returns persist:Error? {
         mysql:Client|error dbClient = new (host = host, user = user, password = password, database = database, port = port, options = connectionOptions);
         if dbClient is error {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
-        lock {
-            self.persistClients[DATA_TYPE] = check new (self.dbClient, self.metadata.get(DATA_TYPE));
-        }
+        self.persistClients = {[DATA_TYPE] : check new (dbClient, self.metadata.get(DATA_TYPE))};
     }
 
     isolated resource function get datatypes(DataTypeTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -60,29 +58,35 @@ public isolated client class Client {
     } external;
 
     isolated resource function post datatypes(DataTypeInsert[] data) returns int[]|persist:Error {
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get(DATA_TYPE).runBatchInsertQuery(data.clone());
+            sqlClient = self.persistClients.get(DATA_TYPE);
         }
+        _ = check sqlClient.runBatchInsertQuery(data);
         return from DataTypeInsert inserted in data
             select inserted.a;
     }
 
     isolated resource function put datatypes/[int a](DataTypeUpdate value) returns DataType|persist:Error {
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get(DATA_TYPE).runUpdateQuery(a, value.clone());
+            sqlClient = self.persistClients.get(DATA_TYPE);
         }
+        _ = check sqlClient.runUpdateQuery(a, value);
         return self->/datatypes/[a].get();
     }
 
     isolated resource function delete datatypes/[int a]() returns DataType|persist:Error {
         DataType result = check self->/datatypes/[a].get();
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get(DATA_TYPE).runDeleteQuery(a);
+            sqlClient = self.persistClients.get(DATA_TYPE);
         }
+        _ = check sqlClient.runDeleteQuery(a);
         return result;
     }
 
-    public function close() returns persist:Error? {
+    public isolated function close() returns persist:Error? {
         error? result = self.dbClient.close();
         if result is error {
             return <persist:Error>error(result.message());

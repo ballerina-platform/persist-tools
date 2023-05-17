@@ -82,7 +82,7 @@ public class DbClientSyntax implements ClientSyntax {
     @Override
     public FunctionDefinitionNode getInitFunction(Module entityModule) {
         Function init = new Function(BalSyntaxConstants.INIT, SyntaxKind.OBJECT_METHOD_DEFINITION);
-        init.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PUBLIC });
+        init.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PUBLIC, BalSyntaxConstants.KEYWORD_ISOLATED });
         init.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode(BalSyntaxConstants.EMPTY_STRING,
                 BalSyntaxConstants.PERSIST_ERROR));
         init.addStatement(NodeParser.parseStatement(BalSyntaxConstants.INIT_DB_CLIENT_WITH_PARAMS));
@@ -95,14 +95,16 @@ public class DbClientSyntax implements ClientSyntax {
         StringBuilder persistClientMap = new StringBuilder();
         for (Entity entity : entityModule.getEntityMap().values()) {
             if (persistClientMap.length() != 0) {
-                persistClientMap.append(BalSyntaxConstants.NEWLINE);
+                persistClientMap.append(BalSyntaxConstants.COMMA_WITH_NEWLINE);
             }
-            persistClientMap.append(String.format(BalSyntaxConstants.PERSIST_CLIENT_MAP_ELEMENT,
+
+            String clientMapElement = String.format(BalSyntaxConstants.PERSIST_CLIENT_MAP_ELEMENT,
                     BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()),
-                    BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName())));
+                    BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()));
+            persistClientMap.append(clientMapElement);
         }
-        init.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.LOCK_TEMPLATE,
-                persistClientMap)));
+        init.addStatement(NodeParser.parseStatement(String.format(
+                BalSyntaxConstants.PERSIST_CLIENT_TEMPLATE, persistClientMap)));
         return init.getFunctionDefinitionNode();
     }
 
@@ -144,18 +146,24 @@ public class DbClientSyntax implements ClientSyntax {
         StringBuilder filterKeys = new StringBuilder(BalSyntaxConstants.OPEN_BRACE);
         StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH + entity.getResourceName());
         Function update = BalSyntaxUtils.generatePutFunction(entity, filterKeys, path);
+
+        update.addStatement(NodeParser.parseStatement(BalSyntaxConstants.SQL_CLIENT_DECLARATION));
+
+        String getPersistClientStatement = String.format(BalSyntaxConstants.GET_PERSIST_CLIENT,
+                BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()));
+        update.addStatement(NodeParser.parseStatement(
+                String.format(BalSyntaxConstants.LOCK_TEMPLATE, getPersistClientStatement)));
+
         String updateStatement;
         if (entity.getKeys().size() > 1) {
             updateStatement = String.format(BalSyntaxConstants.UPDATE_RUN_UPDATE_QUERY,
-                    BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()),
                     filterKeys.substring(0, filterKeys.length() - 2).concat(BalSyntaxConstants.CLOSE_BRACE));
         } else {
             updateStatement = String.format(BalSyntaxConstants.UPDATE_RUN_UPDATE_QUERY,
-                    BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()), entity.getKeys().stream().
-                            findFirst().get().getFieldName());
+                    entity.getKeys().stream().findFirst().get().getFieldName());
         }
-        update.addStatement(NodeParser.parseStatement(
-                String.format(BalSyntaxConstants.LOCK_TEMPLATE, updateStatement)));
+        update.addStatement(NodeParser.parseStatement(updateStatement));
+
         update.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.UPDATE_RETURN_UPDATE_QUERY,
                 path)));
         return update.getFunctionDefinitionNode();
@@ -168,18 +176,24 @@ public class DbClientSyntax implements ClientSyntax {
         Function delete = BalSyntaxUtils.generateDeleteFunction(entity, filterKeys, path);
         delete.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.GET_OBJECT_QUERY,
                 entity.getEntityName(), path)));
+
+        delete.addStatement(NodeParser.parseStatement(BalSyntaxConstants.SQL_CLIENT_DECLARATION));
+
+        String getPersistClientStatement = String.format(BalSyntaxConstants.GET_PERSIST_CLIENT,
+                BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()));
+        delete.addStatement(NodeParser.parseStatement(
+                String.format(BalSyntaxConstants.LOCK_TEMPLATE, getPersistClientStatement)));
+
         String deleteStatement;
         if (entity.getKeys().size() > 1) {
             deleteStatement = String.format(BalSyntaxConstants.DELETE_RUN_DELETE_QUERY,
-                    BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()),
                     filterKeys.substring(0, filterKeys.length() - 2).concat(BalSyntaxConstants.CLOSE_BRACE));
         } else {
             deleteStatement = String.format(BalSyntaxConstants.DELETE_RUN_DELETE_QUERY,
-                    BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()), entity.getKeys().stream().
-                            findFirst().get().getFieldName());
+                    entity.getKeys().stream().findFirst().get().getFieldName());
         }
-        delete.addStatement(NodeParser.parseStatement(
-                String.format(BalSyntaxConstants.LOCK_TEMPLATE, deleteStatement)));
+        delete.addStatement(NodeParser.parseStatement(deleteStatement));
+
         delete.addStatement(NodeParser.parseStatement(BalSyntaxConstants.RETURN_DELETED_OBJECT));
         return delete.getFunctionDefinitionNode();
     }
@@ -322,9 +336,14 @@ public class DbClientSyntax implements ClientSyntax {
 
     private static void addFunctionBodyToPostResource(Function create, List<EntityField> primaryKeys,
                                                       String tableName, String parameterType) {
-        String insertStatement = String.format(BalSyntaxConstants.CREATE_SQL_RESULTS, tableName);
+        create.addStatement(NodeParser.parseStatement(BalSyntaxConstants.SQL_CLIENT_DECLARATION));
+
+        String getPersistClientStatement = String.format(BalSyntaxConstants.GET_PERSIST_CLIENT, tableName);
         create.addStatement(NodeParser.parseStatement(
-                String.format(BalSyntaxConstants.LOCK_TEMPLATE, insertStatement)));
+                String.format(BalSyntaxConstants.LOCK_TEMPLATE, getPersistClientStatement)));
+
+        create.addStatement(NodeParser.parseStatement(BalSyntaxConstants.CREATE_SQL_RESULTS));
+
         create.addStatement(NodeParser.parseStatement(
                 String.format(BalSyntaxConstants.RETURN_CREATED_KEY, parameterType)));
         StringBuilder filterKeys = new StringBuilder();

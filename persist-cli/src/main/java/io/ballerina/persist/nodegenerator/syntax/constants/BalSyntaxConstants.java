@@ -49,8 +49,10 @@ public class BalSyntaxConstants {
     public static final String VALUE = "value";
     public static final String PERSIST_MODULE = "persist";
     public static final String PERSIST_ERROR = "persist:Error";
-    public static final String CREATE_SQL_RESULTS = "_ = check " +
-            "self.persistClients.get(%s).runBatchInsertQuery(data.clone());";
+    public static final String SQL_CLIENT_DECLARATION = "persist:SQLClient sqlClient;";
+    public static final String CREATE_SQL_RESULTS = "_ = check sqlClient.runBatchInsertQuery(data);";
+    public static final String GET_PERSIST_CLIENT = "sqlClient = self.persistClients.get(%s);";
+
     public static final String CREATE_ARRAY_VAR = "%s keys = [];";
     public static final String POST_RETURN = "return keys;";
     public static final String HAS_KEY = "\tif %sTable.hasKey(%s) {";
@@ -62,9 +64,9 @@ public class BalSyntaxConstants {
             System.lineSeparator() + "        %s[k] = v;" + System.lineSeparator() +
             "    }" + System.lineSeparator();
 
-    public static final String HAS_KEY_ERROR = "\t\treturn <persist:DuplicateKeyError>error(\"Duplicate key: \" + " +
+    public static final String HAS_KEY_ERROR = "\t\treturn <persist:AlreadyExistsError>error(\"Duplicate key: \" + " +
             "%s.toString());" + System.lineSeparator() + "\t}" + System.lineSeparator();
-    public static final String HAS_NOT_KEY_ERROR = "return <persist:InvalidKeyError>error(\"Not found: \" + " +
+    public static final String HAS_NOT_KEY_ERROR = "return <persist:NotFoundError>error(\"Not found: \" + " +
             "%s.toString());";
     public static final String PUSH_VALUES = System.lineSeparator() + "\tkeys.push(%s);" + System.lineSeparator();
     public static final String GET_UPDATE_RECORD = "%s %s = %sTable.get(%s);" + System.lineSeparator();
@@ -73,11 +75,9 @@ public class BalSyntaxConstants {
 
     public static final String RETURN_CREATED_KEY = "return from  %s inserted in data" + System.lineSeparator();
     public static final String SELECT_WITH_SPACE = "\t\t\tselect ";
-    public static final String UPDATE_RUN_UPDATE_QUERY = "_ = check self.persistClients.get(%s).runUpdateQuery" +
-            "(%s, value.clone());";
+    public static final String UPDATE_RUN_UPDATE_QUERY = "_ = check sqlClient.runUpdateQuery(%s, value);";
     public static final String UPDATE_RETURN_UPDATE_QUERY = "return self->%s.get();";
-    public static final String DELETE_RUN_DELETE_QUERY = "_ = check self.persistClients.get(%s)." +
-            "runDeleteQuery(%s);";
+    public static final String DELETE_RUN_DELETE_QUERY = "_ = check sqlClient.runDeleteQuery(%s);";
     public static final String RETURN_DELETED_OBJECT = "return result;";
     public static final String DELETED_OBJECT = "return %sTable.remove(%s).clone();";
     public static final String GET_OBJECT_QUERY = "%s result = check self->%s.get();";
@@ -87,7 +87,7 @@ public class BalSyntaxConstants {
     public static final String CONFIGURABLE_USER = "configurable string user = ?;";
     public static final String CONFIGURABLE_PASSWORD = "configurable string password = ?;";
     public static final String CONFIGURABLE_DATABASE = "configurable string database = ?;";
-    public static final String CONFIGURABLE_OPTIONS = "configurable mysql:Options connectionOptions = {};";
+    public static final String CONFIGURABLE_OPTIONS = "configurable mysql:Options & readonly connectionOptions = {};";
     public static final String INIT = "init";
     public static final String POST = "post";
     public static final String DELETE = "delete";
@@ -138,10 +138,10 @@ public class BalSyntaxConstants {
     public static final String MYSQL_DRIVER = "mysql.driver";
     public static final String BAL_EXTENTION = ".bal";
     public static final String INIT_DB_CLIENT = "private final mysql:Client dbClient;";
-    public static final String INIT_DB_CLIENT_MAP = "private final map<persist:SQLClient> persistClients = {};";
-    public static final String INIT_IN_MEMORY_CLIENT = "private final map<persist:InMemoryClient> persistClients = {};";
+    public static final String INIT_DB_CLIENT_MAP = "private final map<persist:SQLClient> persistClients;";
+    public static final String INIT_IN_MEMORY_CLIENT = "private final map<persist:InMemoryClient> persistClients;";
     public static final String METADATA_RECORD_ENTITY_NAME_TEMPLATE = "entityName: \"%s\", " + System.lineSeparator();
-    public static final String METADATA_RECORD_TABLE_NAME_TEMPLATE = "tableName: `%s`, " + System.lineSeparator();
+    public static final String METADATA_RECORD_TABLE_NAME_TEMPLATE = "tableName: \"%s\", " + System.lineSeparator();
     public static final String METADATA_RECORD_FIELD_TEMPLATE = "%s: {columnName: \"%s\"}";
     public static final String METADATA_KEY_FIELDS_TEMPLATE = "keyFields: [%s], " + System.lineSeparator();
     public static final String METADATA_QUERY_TEMPLATE = "query: query%s, " + System.lineSeparator();
@@ -149,8 +149,8 @@ public class BalSyntaxConstants {
     public static final String METADATA_ASSOCIATIONS_METHODS_TEMPLATE = "%s: query%s";
     public static final String QUERY_RETURN = "stream<record{}, persist:Error?>";
     public static final String QUERY_STATEMENT = "return from record{} 'object in %sClonedTable";
-    public static final String QUERY_ONE_RETURN = "record {}|persist:InvalidKeyError";
-    public static final String QUERY_ONE_RETURN_STATEMENT = "return <persist:InvalidKeyError>error(" +
+    public static final String QUERY_ONE_RETURN = "record {}|persist:NotFoundError";
+    public static final String QUERY_ONE_RETURN_STATEMENT = "return <persist:NotFoundError>error(" +
             "\"Invalid key: \" + key.toString());";
     public static final String QUERY_ONE_FROM_STATEMENT = "from record{} 'object in %sClonedTable";
     public static final String QUERY_ONE_WHERE_CLAUSE = "    where persist:getKey('object, [%s]) == key";
@@ -193,7 +193,7 @@ public class BalSyntaxConstants {
     public static final String METADATA_RECORD_KEY_FIELD_TEMPLATE = "keyFields: [%s]";
     public static final String METADATA_RECORD_ELEMENT_TEMPLATE = "[%s]: {%s}";
     public static final String METADATA_RECORD_TEMPLATE =
-            "private final record {|persist:SQLMetadata...;|} metadata = {%s};";
+            "private final record {|persist:SQLMetadata...;|} & readonly metadata = {%s};";
     public static final String IN_MEMORY_METADATA_MAP_TEMPLATE =
             "final map<persist:TableMetadata> metadata = {%s};";
     public static final String IN_MEMORY_ASSOC_METHODS_TEMPLATE = "associationsMethods: {%s}";
@@ -205,9 +205,9 @@ public class BalSyntaxConstants {
     public static final String CLONED_TABLE_INIT_TEMPLATE = "table<%s> key(%s) %sClonedTable;";
     public static final String CLONED_TABLE_DECLARATION_TEMPLATE = "%sClonedTable = %sTable.clone();";
     public static final String PERSIST_CLIENT_MAP_ELEMENT =
-            "self.persistClients[%s] = check new (self.dbClient, self.metadata.get(%s));";
+            "[%s]: check new (dbClient, self.metadata.get(%s))";
     public static final String PERSIST_IN_MEMORY_CLIENT_MAP_ELEMENT =
-            "self.persistClients[%s] = check new (metadata.get(%s));";
+            "[%s]: check new (metadata.get(%s).cloneReadOnly())";
     public static final String PERSIST_CLIENT_TEMPLATE = "self.persistClients = {%s};";
     public static final String LOCK_TEMPLATE = "lock {%s}";
     public static final String LOCK = "lock";
