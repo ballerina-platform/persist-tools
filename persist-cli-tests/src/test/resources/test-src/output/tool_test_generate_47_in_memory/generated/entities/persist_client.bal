@@ -14,9 +14,9 @@ final isolated table<MedicalItem> key(itemId) medicalitemsTable = table [];
 public isolated client class Client {
     *persist:AbstractPersistClient;
 
-    private final map<persist:InMemoryClient> persistClients = {};
+    private final map<persist:InMemoryClient> persistClients;
 
-    public function init() returns persist:Error? {
+    public isolated function init() returns persist:Error? {
         final map<persist:TableMetadata> metadata = {
             [MEDICAL_NEED] : {
                 keyFields: ["needId"],
@@ -29,8 +29,10 @@ public isolated client class Client {
                 queryOne: queryOneMedicalitems
             }
         };
-        self.persistClients[MEDICAL_NEED] = check new (metadata.get(MEDICAL_NEED));
-        self.persistClients[MEDICAL_ITEM] = check new (metadata.get(MEDICAL_ITEM));
+        self.persistClients = {
+            [MEDICAL_NEED] : check new (metadata.get(MEDICAL_NEED).cloneReadOnly()),
+            [MEDICAL_ITEM] : check new (metadata.get(MEDICAL_ITEM).cloneReadOnly())
+        };
     }
 
     isolated resource function get medicalneeds(MedicalNeedTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -127,7 +129,7 @@ public isolated client class Client {
         }
     }
 
-    public function close() returns persist:Error? {
+    public isolated function close() returns persist:Error? {
         return ();
     }
 }

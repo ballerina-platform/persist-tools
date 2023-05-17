@@ -20,9 +20,9 @@ final isolated table<Employee> key(empNo, firstName) employeesTable = table [];
 public isolated client class Client {
     *persist:AbstractPersistClient;
 
-    private final map<persist:InMemoryClient> persistClients = {};
+    private final map<persist:InMemoryClient> persistClients;
 
-    public function init() returns persist:Error? {
+    public isolated function init() returns persist:Error? {
         final map<persist:TableMetadata> metadata = {
             [WORKSPACE] : {
                 keyFields: ["workspaceId", "workspaceType"],
@@ -53,11 +53,13 @@ public isolated client class Client {
                 queryOne: queryOneEmployees
             }
         };
-        self.persistClients[WORKSPACE] = check new (metadata.get(WORKSPACE));
-        self.persistClients[BUILDING] = check new (metadata.get(BUILDING));
-        self.persistClients[DEPARTMENT] = check new (metadata.get(DEPARTMENT));
-        self.persistClients[ORDER_ITEM] = check new (metadata.get(ORDER_ITEM));
-        self.persistClients[EMPLOYEE] = check new (metadata.get(EMPLOYEE));
+        self.persistClients = {
+            [WORKSPACE] : check new (metadata.get(WORKSPACE).cloneReadOnly()),
+            [BUILDING] : check new (metadata.get(BUILDING).cloneReadOnly()),
+            [DEPARTMENT] : check new (metadata.get(DEPARTMENT).cloneReadOnly()),
+            [ORDER_ITEM] : check new (metadata.get(ORDER_ITEM).cloneReadOnly()),
+            [EMPLOYEE] : check new (metadata.get(EMPLOYEE).cloneReadOnly())
+        };
     }
 
     isolated resource function get workspaces(WorkspaceTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -295,7 +297,7 @@ public isolated client class Client {
         }
     }
 
-    public function close() returns persist:Error? {
+    public isolated function close() returns persist:Error? {
         return ();
     }
 }
