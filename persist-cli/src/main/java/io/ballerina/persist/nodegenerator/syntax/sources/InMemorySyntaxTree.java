@@ -219,7 +219,7 @@ public class InMemorySyntaxTree implements SyntaxTree {
         StringBuilder keyFields = new StringBuilder();
         for (EntityField key : entity.getKeys()) {
             if (keyFields.length() != 0) {
-                keyFields.append(BalSyntaxConstants.COMMA_SPACE);
+                keyFields.append(BalSyntaxConstants.COMMA_WITH_SPACE);
             }
             if (addDoubleQuotes) {
                 keyFields.append("\"").append(BalSyntaxUtils.stripEscapeCharacter(key.getFieldName())).append("\"");

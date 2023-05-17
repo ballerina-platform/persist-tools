@@ -110,6 +110,7 @@ public class ToolingGenerateTest {
     public void testGenerateSingleEntityWithWrongImport() {
         assertGeneratedSourcesNegative("tool_test_generate_12", GENERATE, new String[]{});
     }
+
     @Test(enabled = true)
     @Description("There are three entities with one to one associations between each other")
     public void testGenerateThreeEntitiesWith1To1Associations() {
@@ -339,6 +340,13 @@ public class ToolingGenerateTest {
     public void testInMemoryWithCompositeKeys() {
         executeCommand("tool_test_generate_49_in_memory", GENERATE);
         assertGeneratedSources("tool_test_generate_49_in_memory");
+    }
+
+    @Test(enabled = true)
+    @Description("There is a generated client object with in memory data source")
+    public void testGoogleSheet() {
+        executeCommand("tool_test_generate_51_gsheet", GENERATE);
+        assertGeneratedSources("tool_test_generate_51_gsheet");
     }
 
     @Test(enabled = true)

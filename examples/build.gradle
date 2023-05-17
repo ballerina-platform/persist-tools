@@ -60,6 +60,7 @@ task jBallerinaPack {
 }
 
 task unpackStdLibs() {
+    println("Unpacking standard libraries")
     dependsOn(jBallerinaPack)
     doLast {
         configurations.ballerinaStdLibs.resolvedConfiguration.resolvedArtifacts.each { artifact ->
@@ -73,7 +74,7 @@ task unpackStdLibs() {
 
 task copyStdlibs() {
     dependsOn(unpackStdLibs)
-
+    println("Copying standard libraries to the distribution")
     /* Standard Libraries */
     doLast {
         configurations.ballerinaStdLibs.resolvedConfiguration.resolvedArtifacts.each { artifact ->
@@ -101,21 +102,30 @@ task copyStdlibs() {
     }
 }
 
-task copyPersitTool(type: Copy) {
+task copyPersistTool() {
     dependsOn(copyStdlibs)
-    into "$project.buildDir"
-    into("ballerina-distribution/bre/lib") {
-        from "$project.rootDir/persist-cli/build/libs/persist-cli-${project.version}.jar"
+    doLast() {
+        copy {
+            into "$project.buildDir"
+            into("ballerina-distribution/bre/lib") {
+                from "$project.rootDir/persist-cli/build/libs/persist-cli-${project.version}.jar"
+            }
+        }
     }
 }
 
-task copyTestResources(type: Copy) {
-    examples.each { example ->
-        into buildDir
-        into("generated-examples/${example}/") {
-            from "${example}"
+task copyTestResources() {
+    doLast() {
+        copy {
+            examples.each { example ->
+                into buildDir
+                into("generated-examples/${example}/") {
+                    from "${example}"
+                }
+            }
         }
     }
+
 }
 
 task initDbExamples {
@@ -341,9 +351,9 @@ task testInMemoryExamples {
     }
 }
 
-copyPersitTool.dependsOn ":persist-cli-tests:build"
-copyPersitTool.dependsOn ":persist-cli:build"
-copyTestResources.dependsOn copyPersitTool
+copyPersistTool.dependsOn ":persist-cli-tests:build"
+copyPersistTool.dependsOn ":persist-cli:build"
+copyTestResources.dependsOn copyPersistTool
 
 initInMemoryExamples.dependsOn copyTestResources
 generateInMemoryExamples.dependsOn initInMemoryExamples
