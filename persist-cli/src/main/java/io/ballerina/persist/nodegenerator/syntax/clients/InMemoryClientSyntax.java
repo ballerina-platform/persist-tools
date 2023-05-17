@@ -76,18 +76,27 @@ public class InMemoryClientSyntax implements ClientSyntax {
     @Override
     public FunctionDefinitionNode getInitFunction(Module entityModule) {
         Function init = new Function(BalSyntaxConstants.INIT, SyntaxKind.OBJECT_METHOD_DEFINITION);
-        init.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PUBLIC });
+        init.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PUBLIC, BalSyntaxConstants.KEYWORD_ISOLATED });
         init.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode(BalSyntaxConstants.EMPTY_STRING,
                 BalSyntaxConstants.PERSIST_ERROR));
         init.addStatement(NodeParser.parseStatement(generateInMemoryMetadataRecord(entityModule,
                 queryMethodList)));
+
         Collection<Entity> entityArray = entityModule.getEntityMap().values();
+        StringBuilder persistClientMap = new StringBuilder();
         for (Entity entity : entityArray) {
-            init.addStatement(NodeParser.parseStatement(
-                    String.format(BalSyntaxConstants.PERSIST_IN_MEMORY_CLIENT_MAP_ELEMENT,
-                            BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()),
-                            BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()))));
+            if (persistClientMap.length() != 0) {
+                persistClientMap.append(BalSyntaxConstants.COMMA_WITH_NEWLINE);
+            }
+
+            String inMemoryClientMapElement = String.format(BalSyntaxConstants.PERSIST_IN_MEMORY_CLIENT_MAP_ELEMENT,
+                    BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()),
+                    BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()));
+            persistClientMap.append(inMemoryClientMapElement);
         }
+        init.addStatement(NodeParser.parseStatement(String.format(
+                BalSyntaxConstants.PERSIST_CLIENT_TEMPLATE, persistClientMap)));
+
         return init.getFunctionDefinitionNode();
     }
 
