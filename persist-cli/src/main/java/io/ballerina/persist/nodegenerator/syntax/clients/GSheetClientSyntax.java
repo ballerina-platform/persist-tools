@@ -171,11 +171,13 @@ public class GSheetClientSyntax implements ClientSyntax {
         delete.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.GET_OBJECT_QUERY,
                 entity.getEntityName(), path)));
         if (entity.getKeys().size() > 1) {
-            delete.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.DELETE_RUN_DELETE_QUERY,
+            delete.addStatement(NodeParser.parseStatement(String.format(
+                    BalSyntaxConstants.G_SHEET_DELETE_RUN_DELETE_QUERY,
                     BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()),
                     filterKeys.substring(0, filterKeys.length() - 2).concat(BalSyntaxConstants.CLOSE_BRACE))));
         } else {
-            delete.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.DELETE_RUN_DELETE_QUERY,
+            delete.addStatement(NodeParser.parseStatement(String.format(
+                    BalSyntaxConstants.G_SHEET_DELETE_RUN_DELETE_QUERY,
                     BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()), entity.getKeys().stream().
                             findFirst().get().getFieldName())));
         }

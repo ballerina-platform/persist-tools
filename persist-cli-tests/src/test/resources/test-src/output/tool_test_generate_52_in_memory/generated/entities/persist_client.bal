@@ -18,9 +18,9 @@ final isolated table<Department> key(deptNo) departmentsTable = table [];
 public isolated client class Client {
     *persist:AbstractPersistClient;
 
-    private final map<persist:InMemoryClient> persistClients = {};
+    private final map<persist:InMemoryClient> persistClients;
 
-    public function init() returns persist:Error? {
+    public isolated function init() returns persist:Error? {
         final map<persist:TableMetadata> metadata = {
             [EMPLOYEE] : {
                 keyFields: ["empNo"],
@@ -45,10 +45,12 @@ public isolated client class Client {
                 associationsMethods: {"employees": queryDepartmentsEmployees}
             }
         };
-        self.persistClients[EMPLOYEE] = check new (metadata.get(EMPLOYEE));
-        self.persistClients[WORKSPACE] = check new (metadata.get(WORKSPACE));
-        self.persistClients[BUILDING] = check new (metadata.get(BUILDING));
-        self.persistClients[DEPARTMENT] = check new (metadata.get(DEPARTMENT));
+        self.persistClients = {
+            [EMPLOYEE] : check new (metadata.get(EMPLOYEE).cloneReadOnly()),
+            [WORKSPACE] : check new (metadata.get(WORKSPACE).cloneReadOnly()),
+            [BUILDING] : check new (metadata.get(BUILDING).cloneReadOnly()),
+            [DEPARTMENT] : check new (metadata.get(DEPARTMENT).cloneReadOnly())
+        };
     }
 
     isolated resource function get employees(EmployeeTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -239,7 +241,7 @@ public isolated client class Client {
         }
     }
 
-    public function close() returns persist:Error? {
+    public isolated function close() returns persist:Error? {
         return ();
     }
 }

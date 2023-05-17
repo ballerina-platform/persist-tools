@@ -130,7 +130,7 @@ public class SourceGenerator {
             try {
                 writeOutputFile(Formatter.format(syntaxTree.toSourceCode()), configFilePath.toAbsolutePath());
             } catch (Exception e) {
-                throw new BalException("failed to generate the database_configurations.bal file. "
+                throw new BalException("failed to generate the persist_db_config.bal file. "
                         + e.getMessage());
             }
         }

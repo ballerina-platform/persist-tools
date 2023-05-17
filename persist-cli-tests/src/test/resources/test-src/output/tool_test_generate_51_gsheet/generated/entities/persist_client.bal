@@ -496,7 +496,7 @@ public client class Client {
             }, fields);
     }
 
-    public function close() returns persist:Error? {
+    public isolated function close() returns persist:Error? {
         return ();
     }
 }

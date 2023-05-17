@@ -118,7 +118,7 @@ public class BalSyntaxUtils {
 
     public static Function generateCloseFunction() {
         Function close = new Function(BalSyntaxConstants.CLOSE, SyntaxKind.OBJECT_METHOD_DEFINITION);
-        close.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PUBLIC });
+        close.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PUBLIC, BalSyntaxConstants.KEYWORD_ISOLATED });
         close.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode(BalSyntaxConstants.EMPTY_STRING,
                 BalSyntaxConstants.PERSIST_ERROR));
         return close;

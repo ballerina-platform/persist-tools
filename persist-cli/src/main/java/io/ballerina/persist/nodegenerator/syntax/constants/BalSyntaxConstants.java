@@ -49,10 +49,12 @@ public class BalSyntaxConstants {
     public static final String VALUE = "value";
     public static final String PERSIST_MODULE = "persist";
     public static final String PERSIST_ERROR = "persist:Error";
-    public static final String CREATE_SQL_RESULTS = "_ = check " +
-            "self.persistClients.get(%s).runBatchInsertQuery(data.clone());";
     public static final String G_SHEET_CREATE_SQL_RESULTS = "_ = check " +
             "self.persistClients.get(%s).runBatchInsertQuery(data);";
+    public static final String SQL_CLIENT_DECLARATION = "persist:SQLClient sqlClient;";
+    public static final String CREATE_SQL_RESULTS = "_ = check sqlClient.runBatchInsertQuery(data);";
+    public static final String GET_PERSIST_CLIENT = "sqlClient = self.persistClients.get(%s);";
+
     public static final String CREATE_ARRAY_VAR = "%s keys = [];";
     public static final String POST_RETURN = "return keys;";
     public static final String HAS_KEY = "\tif %sTable.hasKey(%s) {";
@@ -75,14 +77,13 @@ public class BalSyntaxConstants {
 
     public static final String RETURN_CREATED_KEY = "return from  %s inserted in data" + System.lineSeparator();
     public static final String SELECT_WITH_SPACE = "\t\t\tselect ";
-    public static final String UPDATE_RUN_UPDATE_QUERY = "_ = check self.persistClients.get(%s).runUpdateQuery" +
-            "(%s, value.clone());";
-
+    public static final String UPDATE_RUN_UPDATE_QUERY = "_ = check sqlClient.runUpdateQuery(%s, value);";
     public static final String G_SHEET_UPDATE_RUN_UPDATE_QUERY = "_ = check self.persistClients.get(%s)." +
             "runUpdateQuery(%s, value);";
     public static final String UPDATE_RETURN_UPDATE_QUERY = "return self->%s.get();";
-    public static final String DELETE_RUN_DELETE_QUERY = "_ = check self.persistClients.get(%s)." +
+    public static final String G_SHEET_DELETE_RUN_DELETE_QUERY = "_ = check self.persistClients.get(%s)." +
             "runDeleteQuery(%s);";
+    public static final String DELETE_RUN_DELETE_QUERY = "_ = check sqlClient.runDeleteQuery(%s);";
     public static final String RETURN_DELETED_OBJECT = "return result;";
     public static final String DELETED_OBJECT = "return %sTable.remove(%s).clone();";
     public static final String GET_OBJECT_QUERY = "%s result = check self->%s.get();";
@@ -103,7 +104,7 @@ public class BalSyntaxConstants {
             System.lineSeparator();
     public static final String CONFIGURABLE_REFRESH_URL = "configurable string refreshUrl = ?;" +
             System.lineSeparator();
-    public static final String CONFIGURABLE_OPTIONS = "configurable mysql:Options connectionOptions = {};";
+    public static final String CONFIGURABLE_OPTIONS = "configurable mysql:Options & readonly connectionOptions = {};";
     public static final String INIT = "init";
     public static final String POST = "post";
     public static final String DELETE = "delete";
@@ -163,11 +164,11 @@ public class BalSyntaxConstants {
     public static final String GOOGLE_SHEET_CLIENT = "private final sheets:Client googleSheetClient;";
     public static final String HTTP_CLIENT = "private final http:Client httpClient;";
     public static final String GOOGLE_PERSIST_CLIENT = "private final map<persist:GoogleSheetsClient> persistClients;";
-    public static final String INIT_DB_CLIENT_MAP = "private final map<persist:SQLClient> persistClients = {};";
-    public static final String INIT_IN_MEMORY_CLIENT = "private final map<persist:InMemoryClient> persistClients = {};";
+    public static final String INIT_DB_CLIENT_MAP = "private final map<persist:SQLClient> persistClients;";
+    public static final String INIT_IN_MEMORY_CLIENT = "private final map<persist:InMemoryClient> persistClients;";
     public static final String METADATA_RECORD_ENTITY_NAME_TEMPLATE = "entityName: \"%s\", " + System.lineSeparator();
-    public static final String METADATA_RECORD_TABLE_NAME_TEMPLATE = "tableName: `%s`, " + System.lineSeparator();
     public static final String TABLE_NAME_TEMPLATE = "tableName: \"%s\", " + System.lineSeparator();
+    public static final String METADATA_RECORD_TABLE_NAME_TEMPLATE = "tableName: \"%s\", " + System.lineSeparator();
     public static final String METADATA_RECORD_FIELD_TEMPLATE = "%s: {columnName: \"%s\"}";
     public static final String METADATA_KEY_FIELDS_TEMPLATE = "keyFields: [%s], " + System.lineSeparator();
     public static final String G_SHEET_FIELD_METADATA_TEMPLATE = "%s: {columnName: \"%s\", columnId: \"%s\"}";
@@ -245,7 +246,7 @@ public class BalSyntaxConstants {
     public static final String METADATA_RECORD_KEY_FIELD_TEMPLATE = "keyFields: [%s]";
     public static final String METADATA_RECORD_ELEMENT_TEMPLATE = "[%s]: {%s}";
     public static final String METADATA_RECORD_TEMPLATE =
-            "private final record {|persist:SQLMetadata...;|} metadata = {%s};";
+            "private final record {|persist:SQLMetadata...;|} & readonly metadata = {%s};";
     public static final String SHEET_METADATA_RECORD_TEMPLATE =
             "final record {|persist:SheetMetadata...;|} metadata = {%s};";
     public static final String SHEET_CLIENT_CONFIG_TEMPLATE = " sheets:ConnectionConfig sheetsClientConfig = {" +
@@ -288,9 +289,9 @@ public class BalSyntaxConstants {
     public static final String CLONED_TABLE_INIT_TEMPLATE = "table<%s> key(%s) %sClonedTable;";
     public static final String CLONED_TABLE_DECLARATION_TEMPLATE = "%sClonedTable = %sTable.clone();";
     public static final String PERSIST_CLIENT_MAP_ELEMENT =
-            "self.persistClients[%s] = check new (self.dbClient, self.metadata.get(%s));";
+            "[%s]: check new (dbClient, self.metadata.get(%s))";
     public static final String PERSIST_IN_MEMORY_CLIENT_MAP_ELEMENT =
-            "self.persistClients[%s] = check new (metadata.get(%s));";
+            "[%s]: check new (metadata.get(%s).cloneReadOnly())";
     public static final String PERSIST_CLIENT_TEMPLATE = "self.persistClients = {%s};";
     public static final String LOCK_TEMPLATE = "lock {%s}";
     public static final String LOCK = "lock";
