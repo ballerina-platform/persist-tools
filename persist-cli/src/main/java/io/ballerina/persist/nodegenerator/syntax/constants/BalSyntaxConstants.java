@@ -139,7 +139,7 @@ public class BalSyntaxConstants {
     public static final String BAL_EXTENTION = ".bal";
     public static final String INIT_DB_CLIENT = "private final mysql:Client dbClient;";
     public static final String INIT_DB_CLIENT_MAP = "private final map<persist:SQLClient> persistClients = {};";
-    public static final String INIT_IN_MEMORY_CLIENT = "private final map<persist:InMemoryClient> persistClients = {};";
+    public static final String INIT_IN_MEMORY_CLIENT = "private final map<persist:InMemoryClient> persistClients;";
     public static final String METADATA_RECORD_ENTITY_NAME_TEMPLATE = "entityName: \"%s\", " + System.lineSeparator();
     public static final String METADATA_RECORD_TABLE_NAME_TEMPLATE = "tableName: `%s`, " + System.lineSeparator();
     public static final String METADATA_RECORD_FIELD_TEMPLATE = "%s: {columnName: \"%s\"}";
@@ -207,7 +207,7 @@ public class BalSyntaxConstants {
     public static final String PERSIST_CLIENT_MAP_ELEMENT =
             "self.persistClients[%s] = check new (self.dbClient, self.metadata.get(%s));";
     public static final String PERSIST_IN_MEMORY_CLIENT_MAP_ELEMENT =
-            "self.persistClients[%s] = check new (metadata.get(%s));";
+            "[%s] : check new (metadata.get(%s).cloneReadOnly())";
     public static final String PERSIST_CLIENT_TEMPLATE = "self.persistClients = {%s};";
     public static final String LOCK_TEMPLATE = "lock {%s}";
     public static final String LOCK = "lock";
