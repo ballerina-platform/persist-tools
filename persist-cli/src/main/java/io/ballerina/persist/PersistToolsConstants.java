@@ -43,12 +43,9 @@ public class PersistToolsConstants {
     public static final String KEYWORD_PACKAGE = "package";
     public static final String KEYWORD_NAME = "name";
     public static final String KEYWORD_SHEET_ID = "spreadsheetId";
-    public static final String KEYWORD_REFRESH_URL = "refreshUrl";
     public static final String KEYWORD_CLIENT_ID = "clientId";
     public static final String KEYWORD_CLIENT_SECRET = "clientSecret";
     public static final String KEYWORD_REFRESH_TOKEN = "refreshToken";
-    public static final String SPREAD_SHEET = "SpreadSheet";
-    public static final String KEYWORD_WORK_SHEET_NAME = "worksheetName";
 
     public static final String CONFIG_SCRIPT_FILE = "Config.toml";
     public static final String PASSWORD = "password";

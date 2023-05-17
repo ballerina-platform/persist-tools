@@ -1,8 +1,5 @@
 [persist_generate_51.entities]
 spreadsheetId = ""
-refreshUrl = ""
 clientId = ""
 clientSecret = ""
 refreshToken = ""
-worksheetName = "SpreadSheet"
-

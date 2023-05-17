@@ -126,9 +126,7 @@ public class GSheetSyntaxTree implements SyntaxTree {
                 BalSyntaxConstants.CONFIGURABLE_CLIENT_ID +
                 BalSyntaxConstants.CONFIGURABLE_CLIENT_SECRET +
                 BalSyntaxConstants.CONFIGURABLE_REFRESH_TOKEN +
-                BalSyntaxConstants.CONFIGURABLE_WORK_SHEET_NAME +
-                BalSyntaxConstants.CONFIGURABLE_WORK_SHEET_ID +
-                BalSyntaxConstants.CONFIGURABLE_REFRESH_URL;
+                BalSyntaxConstants.CONFIGURABLE_WORK_SHEET_ID;
         TextDocument textDocument = TextDocuments.from(BalSyntaxConstants.EMPTY_STRING);
         io.ballerina.compiler.syntax.tree.SyntaxTree balTree =
                 io.ballerina.compiler.syntax.tree.SyntaxTree.from(textDocument);
@@ -155,15 +153,11 @@ public class GSheetSyntaxTree implements SyntaxTree {
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
                 PersistToolsConstants.KEYWORD_SHEET_ID, PersistToolsConstants.EMPTY_VALUE, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
-                PersistToolsConstants.KEYWORD_REFRESH_URL, PersistToolsConstants.EMPTY_VALUE, null));
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
                 PersistToolsConstants.KEYWORD_CLIENT_ID, PersistToolsConstants.EMPTY_VALUE, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
                 PersistToolsConstants.KEYWORD_CLIENT_SECRET, PersistToolsConstants.EMPTY_VALUE, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
                 PersistToolsConstants.KEYWORD_REFRESH_TOKEN, PersistToolsConstants.EMPTY_VALUE, null));
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
-                PersistToolsConstants.KEYWORD_WORK_SHEET_NAME, PersistToolsConstants.SPREAD_SHEET, null));
         return moduleMembers;
     }
 

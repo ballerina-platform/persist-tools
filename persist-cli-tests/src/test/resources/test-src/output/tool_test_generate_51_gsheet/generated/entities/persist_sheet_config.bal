@@ -6,6 +6,4 @@
 configurable string clientId = ?;
 configurable string clientSecret = ?;
 configurable string refreshToken = ?;
-configurable string worksheetName = ?;
 configurable string spreadsheetId = ?;
-configurable string refreshUrl = ?;
