@@ -75,6 +75,21 @@ subprojects {
         ballerinaStdLibs "io.ballerina.stdlib:persist-ballerina:${stdlibPersistVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:mysql-ballerina:${testStdlibMysqlVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:constraint-ballerina:${stdlibConstraintVersion}"
+
+        ballerinaStdLibs "io.ballerina.stdlib:mime-ballerina:${testStdlibMimeVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:file-ballerina:${testStdlibFileVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:log-ballerina:${testStdlibLogVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:auth-ballerina:${testStdlibAuthVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:jwt-ballerina:${testStdlibJwtVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:oauth2-ballerina:${testStdlibOAuth2Version}"
+        ballerinaStdLibs "io.ballerina.stdlib:http-ballerina:${testStdlibHttpVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:os-ballerina:${testStdlibOsVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:crypto-ballerina:${testStdlibCryptoVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:cache-ballerina:${testStdlibCacheVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:task-ballerina:${testStdlibTaskVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:observe-ballerina:${testStdlibObserveVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:url-ballerina:${testStdlibUrlVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:time-ballerina:${testStdlibTimeVersion}"
     }
 }
 
