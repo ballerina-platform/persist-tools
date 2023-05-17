@@ -64,9 +64,9 @@ public class BalSyntaxConstants {
             System.lineSeparator() + "        %s[k] = v;" + System.lineSeparator() +
             "    }" + System.lineSeparator();
 
-    public static final String HAS_KEY_ERROR = "\t\treturn <persist:DuplicateKeyError>error(\"Duplicate key: \" + " +
+    public static final String HAS_KEY_ERROR = "\t\treturn <persist:AlreadyExistsError>error(\"Duplicate key: \" + " +
             "%s.toString());" + System.lineSeparator() + "\t}" + System.lineSeparator();
-    public static final String HAS_NOT_KEY_ERROR = "return <persist:InvalidKeyError>error(\"Not found: \" + " +
+    public static final String HAS_NOT_KEY_ERROR = "return <persist:NotFoundError>error(\"Not found: \" + " +
             "%s.toString());";
     public static final String PUSH_VALUES = System.lineSeparator() + "\tkeys.push(%s);" + System.lineSeparator();
     public static final String GET_UPDATE_RECORD = "%s %s = %sTable.get(%s);" + System.lineSeparator();
@@ -163,8 +163,6 @@ public class BalSyntaxConstants {
     public static final String GOOGLE_SHEET_CLIENT = "private final sheets:Client googleSheetClient;";
     public static final String HTTP_CLIENT = "private final http:Client httpClient;";
     public static final String GOOGLE_PERSIST_CLIENT = "private final map<persist:GoogleSheetsClient> persistClients;";
-//    public static final String INIT_DB_CLIENT_MAP = "private final map<persist:SQLClient> persistClients;";
-//    public static final String INIT_IN_MEMORY_CLIENT = "private final map<persist:InMemoryClient> persistClients;";
     public static final String INIT_DB_CLIENT_MAP = "private final map<persist:SQLClient> persistClients = {};";
     public static final String INIT_IN_MEMORY_CLIENT = "private final map<persist:InMemoryClient> persistClients = {};";
     public static final String METADATA_RECORD_ENTITY_NAME_TEMPLATE = "entityName: \"%s\", " + System.lineSeparator();
@@ -184,16 +182,11 @@ public class BalSyntaxConstants {
     public static final String METADATA_ASSOCIATIONS_METHODS_TEMPLATE = "%s: query%s";
     public static final String QUERY_RETURN = "stream<record{}, persist:Error?>";
     public static final String G_SHEET_QUERY_STATEMENT = "%s from record{} 'object in %s%s";
-    public static final String G_SHEET_QUERY_ONE_RETURN = "record {}|%s";
-    public static final String INVALID_KEY_ERROR = "persist:InvalidKeyError";
     public static final String QUERY_STATEMENT = "return from record{} 'object in %sClonedTable" +
             System.lineSeparator();
-    public static final String QUERY_ONE_RETURN = "record {}|persist:InvalidKeyError";
-    public static final String QUERY_ONE_RETURN_STATEMENT = "return <persist:InvalidKeyError>error(" +
+    public static final String QUERY_ONE_RETURN = "record {}|persist:NotFoundError";
+    public static final String QUERY_ONE_RETURN_STATEMENT = "return <persist:NotFoundError>error(" +
             "\"Invalid key: \" + key.toString());";
-//    public static final String QUERY_ONE_FROM_STATEMENT = "from record{} 'object in self.%s";
-//    public static final String QUERY_ONE_WHERE_CLAUSE = "    where self.persistClients.get(%s).getKey('object)
-//    == key";
     public static final String G_SHEET_QUERY_OUTER_JOIN = "    outer join var %s in %s%s";
     public static final String STREAM_PARAM_INIT = "stream<%s, persist:Error?> %sStream = self.query%sStream();";
     public static final String QUERY_ONE_FROM_STATEMENT = "from record{} 'object in %sClonedTable";
@@ -207,7 +200,7 @@ public class BalSyntaxConstants {
             "      %s" + System.lineSeparator() +
             "   }, fields);";
     public static final String IF_STATEMENT = "if unionResult is error {" + System.lineSeparator() +
-            "            return <persist:InvalidKeyError>error(unionResult.message());" + System.lineSeparator() +
+            "            return <persist:NotFoundError>error(unionResult.message());" + System.lineSeparator() +
             "        }" + System.lineSeparator();
 
     public static final String DO_QUERY = "do {" + System.lineSeparator() +
@@ -287,8 +280,6 @@ public class BalSyntaxConstants {
     public static final String INIT_DB_CLIENT_WITH_PARAMS = "mysql:Client|error dbClient = new (host = host, " +
             "user = user, password = password, database = database, port = port, options = connectionOptions);" +
             System.lineSeparator();
-//    public static final String TABLE_PARAMETER_INIT_TEMPLATE = "table<%s> key(%s) %s = %s;";
-//    public static final String PERSIST_CLIENT_MAP_ELEMENT = "[%s]: check new (self.dbClient, self.metadata.get(%s))";
     public static final String GOOGLE_SHEET_CLIENT_MAP = "[%s]: check new (self.googleSheetClient, self.httpClient, " +
             "metadata.get(%s), spreadsheetId, sheetIds.get(%s))";
     public static final String TABLE_PARAMETER_INIT_TEMPLATE = "final isolated table<%s> key(%s) %sTable = table[];";

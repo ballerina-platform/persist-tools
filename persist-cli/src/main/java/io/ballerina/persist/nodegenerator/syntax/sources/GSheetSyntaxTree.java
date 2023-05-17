@@ -184,8 +184,7 @@ public class GSheetSyntaxTree implements SyntaxTree {
         Function queryOne = new Function(String.format(BalSyntaxConstants.QUERY_ONE, nameInCamelCase),
                 SyntaxKind.OBJECT_METHOD_DEFINITION);
         queryOne.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PRIVATE });
-        queryOne.addReturns(TypeDescriptor.getSimpleNameReferenceNode(String.format(BalSyntaxConstants.QUERY_ONE_RETURN,
-                BalSyntaxConstants.INVALID_KEY_ERROR)));
+        queryOne.addReturns(TypeDescriptor.getSimpleNameReferenceNode(BalSyntaxConstants.QUERY_ONE_RETURN));
         queryOne.addRequiredParameter(TypeDescriptor.getSimpleNameReferenceNode(BalSyntaxConstants.ANY_DATA),
                 BalSyntaxConstants.KEYWORD_KEY);
         createQuery(entity, queryBuilder, queryOneBuilder);
