@@ -7,14 +7,14 @@ public type Profile record {|
     readonly int id;
     string name;
     string? gender;
-    int userId;
+    int ownerId;
 |};
 
 public type ProfileOptionalized record {|
-    readonly int id?;
+    int id?;
     string name?;
     string? gender?;
-    int userId?;
+    int ownerId?;
 |};
 
 public type ProfileWithRelations record {|
@@ -29,7 +29,7 @@ public type ProfileInsert Profile;
 public type ProfileUpdate record {|
     string name?;
     string? gender?;
-    int userId?;
+    int ownerId?;
 |};
 
 public type User record {|
@@ -37,7 +37,7 @@ public type User record {|
 |};
 
 public type UserOptionalized record {|
-    readonly int id?;
+    int id?;
 |};
 
 public type UserWithRelations record {|
