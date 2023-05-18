@@ -70,7 +70,7 @@ public client class Client {
                     workspaceType: {columnName: "workspaceType", columnId: "B"},
                     locationBuildingCode: {columnName: "locationBuildingCode", columnId: "C"}
                 },
-                associationsMethods: {"employees": self.queryWorkspacesEmployees}
+                associationsMethods: {"employees": self.queryWorkspaceEmployees}
             },
             [BUILDING] : {
                 entityName: "Building",
@@ -95,7 +95,7 @@ public client class Client {
                     postalCode: {columnName: "postalCode", columnId: "E"},
                     'type: {columnName: "type", columnId: "F"}
                 },
-                associationsMethods: {"workspaces": self.queryBuildingsWorkspaces}
+                associationsMethods: {"workspaces": self.queryBuildingWorkspaces}
             },
             [DEPARTMENT] : {
                 entityName: "Department",
@@ -112,7 +112,7 @@ public client class Client {
                     deptNo: {columnName: "deptNo", columnId: "A"},
                     deptName: {columnName: "deptName", columnId: "B"}
                 },
-                associationsMethods: {"employees": self.queryDepartmentsEmployees}
+                associationsMethods: {"employees": self.queryDepartmentEmployees}
             },
             [ORDER_ITEM] : {
                 entityName: "OrderItem",
@@ -270,10 +270,10 @@ public client class Client {
         stream<Workspace, persist:Error?> workspacesStream = self.queryWorkspacesStream();
         stream<Building, persist:Error?> buildingsStream = self.queryBuildingsStream();
         record {}[] outputArray = check from record {} 'object in workspacesStream
-            outer join var building in buildingsStream on ['object.locationBuildingCode] equals [building?.buildingCode]
+            outer join var location in buildingsStream on ['object.locationBuildingCode] equals [location?.buildingCode]
             select persist:filterRecord({
                 ...'object,
-                "building": building
+                "location": location
             }, fields);
         return outputArray.toStream();
     }
@@ -283,11 +283,11 @@ public client class Client {
         stream<Building, persist:Error?> buildingsStream = self.queryBuildingsStream();
         error? unionResult = from record {} 'object in workspacesStream
             where self.persistClients.get(WORKSPACE).getKey('object) == key
-            outer join var building in buildingsStream on ['object.locationBuildingCode] equals [building?.buildingCode]
+            outer join var location in buildingsStream on ['object.locationBuildingCode] equals [location?.buildingCode]
             do {
                 return {
                     ...'object,
-                    "building": building
+                    "location": location
                 };
             };
         if unionResult is error {
@@ -469,16 +469,7 @@ public client class Client {
         name: "queryStream"
     } external;
 
-    private function queryDepartmentsEmployees(record {} value, string[] fields) returns record {}[]|persist:Error {
-        stream<Employee, persist:Error?> employeesStream = self.queryEmployeesStream();
-        return from record {} 'object in employeesStream
-            where 'object.departmentDeptNo == value["deptNo"]
-            select persist:filterRecord({
-                ...'object
-            }, fields);
-    }
-
-    private function queryBuildingsWorkspaces(record {} value, string[] fields) returns record {}[]|persist:Error {
+    private function queryBuildingWorkspaces(record {} value, string[] fields) returns record {}[]|persist:Error {
         stream<Workspace, persist:Error?> workspacesStream = self.queryWorkspacesStream();
         return from record {} 'object in workspacesStream
             where 'object.locationBuildingCode == value["buildingCode"]
@@ -487,7 +478,16 @@ public client class Client {
             }, fields);
     }
 
-    private function queryWorkspacesEmployees(record {} value, string[] fields) returns record {}[]|persist:Error {
+    private function queryDepartmentEmployees(record {} value, string[] fields) returns record {}[]|persist:Error {
+        stream<Employee, persist:Error?> employeesStream = self.queryEmployeesStream();
+        return from record {} 'object in employeesStream
+            where 'object.departmentDeptNo == value["deptNo"]
+            select persist:filterRecord({
+                ...'object
+            }, fields);
+    }
+
+    private function queryWorkspaceEmployees(record {} value, string[] fields) returns record {}[]|persist:Error {
         stream<Employee, persist:Error?> employeesStream = self.queryEmployeesStream();
         return from record {} 'object in employeesStream
             where 'object.workspaceWorkspaceId == value["workspaceId"]
@@ -500,3 +500,4 @@ public client class Client {
         return ();
     }
 }
+

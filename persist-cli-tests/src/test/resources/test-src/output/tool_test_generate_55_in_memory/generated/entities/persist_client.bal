@@ -9,9 +9,11 @@ import ballerina/jballerina.java;
 const USER = "users";
 const POST = "posts";
 const FOLLOW = "follows";
+const COMMENT = "comments";
 final isolated table<User> key(id) usersTable = table [];
 final isolated table<Post> key(id) postsTable = table [];
 final isolated table<Follow> key(id) followsTable = table [];
+final isolated table<Comment> key(id) commentsTable = table [];
 
 public isolated client class Client {
     *persist:AbstractPersistClient;
@@ -24,23 +26,35 @@ public isolated client class Client {
                 keyFields: ["id"],
                 query: queryUsers,
                 queryOne: queryOneUsers,
-                associationsMethods: {"posts": queryUserPosts}
+                associationsMethods: {
+                    "posts": queryUserPosts,
+                    "comments": queryUserComments,
+                    "followers": queryUserFollowers,
+                    "following": queryUserFollowing
+                }
             },
             [POST] : {
                 keyFields: ["id"],
                 query: queryPosts,
-                queryOne: queryOnePosts
+                queryOne: queryOnePosts,
+                associationsMethods: {"comments": queryPostComments}
             },
             [FOLLOW] : {
                 keyFields: ["id"],
                 query: queryFollows,
                 queryOne: queryOneFollows
+            },
+            [COMMENT] : {
+                keyFields: ["id"],
+                query: queryComments,
+                queryOne: queryOneComments
             }
         };
         self.persistClients = {
             [USER] : check new (metadata.get(USER).cloneReadOnly()),
             [POST] : check new (metadata.get(POST).cloneReadOnly()),
-            [FOLLOW] : check new (metadata.get(FOLLOW).cloneReadOnly())
+            [FOLLOW] : check new (metadata.get(FOLLOW).cloneReadOnly()),
+            [COMMENT] : check new (metadata.get(COMMENT).cloneReadOnly())
         };
     }
 
@@ -185,6 +199,53 @@ public isolated client class Client {
         }
     }
 
+    isolated resource function get comments(CommentTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
+        'class: "io.ballerina.stdlib.persist.datastore.InMemoryProcessor",
+        name: "query"
+    } external;
+
+    isolated resource function get comments/[int id](CommentTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
+        'class: "io.ballerina.stdlib.persist.datastore.InMemoryProcessor",
+        name: "queryOne"
+    } external;
+
+    isolated resource function post comments(CommentInsert[] data) returns int[]|persist:Error {
+        int[] keys = [];
+        foreach CommentInsert value in data {
+            lock {
+                if commentsTable.hasKey(value.id) {
+                    return <persist:AlreadyExistsError>error("Duplicate key: " + value.id.toString());
+                }
+                commentsTable.put(value.clone());
+            }
+            keys.push(value.id);
+        }
+        return keys;
+    }
+
+    isolated resource function put comments/[int id](CommentUpdate value) returns Comment|persist:Error {
+        lock {
+            if !commentsTable.hasKey(id) {
+                return <persist:NotFoundError>error("Not found: " + id.toString());
+            }
+            Comment comment = commentsTable.get(id);
+            foreach var [k, v] in value.clone().entries() {
+                comment[k] = v;
+            }
+            commentsTable.put(comment);
+            return comment.clone();
+        }
+    }
+
+    isolated resource function delete comments/[int id]() returns Comment|persist:Error {
+        lock {
+            if !commentsTable.hasKey(id) {
+                return <persist:NotFoundError>error("Not found: " + id.toString());
+            }
+            return commentsTable.remove(id).clone();
+        }
+    }
+
     public isolated function close() returns persist:Error? {
         return ();
     }
@@ -296,6 +357,56 @@ isolated function queryOneFollows(anydata key) returns record {}|persist:NotFoun
     return <persist:NotFoundError>error("Invalid key: " + key.toString());
 }
 
+isolated function queryComments(string[] fields) returns stream<record {}, persist:Error?> {
+    table<Comment> key(id) commentsClonedTable;
+    lock {
+        commentsClonedTable = commentsTable.clone();
+    }
+    table<User> key(id) usersClonedTable;
+    lock {
+        usersClonedTable = usersTable.clone();
+    }
+    table<Post> key(id) postsClonedTable;
+    lock {
+        postsClonedTable = postsTable.clone();
+    }
+    return from record {} 'object in commentsClonedTable
+        outer join var user in usersClonedTable on ['object.userId] equals [user?.id]
+        outer join var post in postsClonedTable on ['object.postId] equals [post?.id]
+        select persist:filterRecord({
+            ...'object,
+            "user": user,
+            "post": post
+        }, fields);
+}
+
+isolated function queryOneComments(anydata key) returns record {}|persist:NotFoundError {
+    table<Comment> key(id) commentsClonedTable;
+    lock {
+        commentsClonedTable = commentsTable.clone();
+    }
+    table<User> key(id) usersClonedTable;
+    lock {
+        usersClonedTable = usersTable.clone();
+    }
+    table<Post> key(id) postsClonedTable;
+    lock {
+        postsClonedTable = postsTable.clone();
+    }
+    from record {} 'object in commentsClonedTable
+    where persist:getKey('object, ["id"]) == key
+    outer join var user in usersClonedTable on ['object.userId] equals [user?.id]
+    outer join var post in postsClonedTable on ['object.postId] equals [post?.id]
+    do {
+        return {
+            ...'object,
+            "user": user,
+            "post": post
+        };
+    };
+    return <persist:NotFoundError>error("Invalid key: " + key.toString());
+}
+
 isolated function queryUserPosts(record {} value, string[] fields) returns record {}[] {
     table<Post> key(id) postsClonedTable;
     lock {
@@ -303,6 +414,54 @@ isolated function queryUserPosts(record {} value, string[] fields) returns recor
     }
     return from record {} 'object in postsClonedTable
         where 'object.userId == value["id"]
+        select persist:filterRecord({
+            ...'object
+        }, fields);
+}
+
+isolated function queryUserComments(record {} value, string[] fields) returns record {}[] {
+    table<Comment> key(id) commentsClonedTable;
+    lock {
+        commentsClonedTable = commentsTable.clone();
+    }
+    return from record {} 'object in commentsClonedTable
+        where 'object.userId == value["id"]
+        select persist:filterRecord({
+            ...'object
+        }, fields);
+}
+
+isolated function queryUserFollowers(record {} value, string[] fields) returns record {}[] {
+    table<Follow> key(id) followsClonedTable;
+    lock {
+        followsClonedTable = followsTable.clone();
+    }
+    return from record {} 'object in followsClonedTable
+        where 'object.leaderId == value["id"]
+        select persist:filterRecord({
+            ...'object
+        }, fields);
+}
+
+isolated function queryUserFollowing(record {} value, string[] fields) returns record {}[] {
+    table<Follow> key(id) followsClonedTable;
+    lock {
+        followsClonedTable = followsTable.clone();
+    }
+    return from record {} 'object in followsClonedTable
+        where 'object.followerId == value["id"]
+        select persist:filterRecord({
+            ...'object
+        }, fields);
+}
+
+isolated function queryPostComments(record {} value, string[] fields) returns record {}[] {
+    table<Comment> key(id) commentsClonedTable;
+    lock {
+        commentsClonedTable = commentsTable.clone();
+    }
+    return from record {} 'object in commentsClonedTable
+        where 'object.postId == value["id"]
         select persist:filterRecord({
             ...'object
         }, fields);
