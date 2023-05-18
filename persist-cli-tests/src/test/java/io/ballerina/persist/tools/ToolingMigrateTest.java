@@ -40,7 +40,7 @@ public class ToolingMigrateTest {
 
     @Test(enabled = true)
     @Description("There has been 1 previous migration")
-    public void testFirstMigrateTest() {
+    public void testExistingMigrateTest() {
 
         executeCommand("tool_test_migrate_1");
         assertGeneratedSources("tool_test_migrate_1");
@@ -48,10 +48,74 @@ public class ToolingMigrateTest {
 
     @Test(enabled = true)
     @Description("There has been no previous migrations")
-    public void testSecondMigrateTest() {
+    public void testNewMigrateTest() {
 
         executeCommand("tool_test_migrate_2");
         assertGeneratedSources("tool_test_migrate_2");
+    }
+
+    @Test(enabled = true)
+    @Description("Create a new table and migrate")
+    public void testCreateTableMigrateTest() {
+
+        executeCommand("tool_test_migrate_3");
+        assertGeneratedSources("tool_test_migrate_3");
+    }
+
+    @Test(enabled = true)
+    @Description("Remove a table and migrate")
+    public void testRemoveTableMigrateTest() {
+
+        executeCommand("tool_test_migrate_4");
+        assertGeneratedSources("tool_test_migrate_4");
+    }
+
+    @Test(enabled = true)
+    @Description("Add a new field to a table and migrate")
+    public void testAddFieldMigrateTest() {
+
+        executeCommand("tool_test_migrate_5");
+        assertGeneratedSources("tool_test_migrate_5");
+    }
+
+    @Test(enabled = true)
+    @Description("Remove a field from a table and migrate")
+    public void testRemoveFieldMigrateTest() {
+
+        executeCommand("tool_test_migrate_6");
+        assertGeneratedSources("tool_test_migrate_6");
+    }
+
+    @Test(enabled = true)
+    @Description("Change data type of a field and migrate")
+    public void testChangeTypeMigrateTest() {
+
+        executeCommand("tool_test_migrate_7");
+        assertGeneratedSources("tool_test_migrate_7");
+    }
+
+    @Test(enabled = true)
+    @Description("Add foreign key to a table and migrate")
+    public void testAddFKMigrateTest() {
+
+        executeCommand("tool_test_migrate_8");
+        assertGeneratedSources("tool_test_migrate_8");
+    }
+
+    @Test(enabled = true)
+    @Description("Remove foreign key from a table and migrate")
+    public void testRemoveFKMigrateTest() {
+
+        executeCommand("tool_test_migrate_9");
+        assertGeneratedSources("tool_test_migrate_9");
+    }
+
+    @Test(enabled = true)
+    @Description("Add and Remove a primary key from a table and migrate")
+    public void testPrimaryKeyMigrateTest() {
+
+        executeCommand("tool_test_migrate_10");
+        assertGeneratedSources("tool_test_migrate_10");
     }
 
     private void executeCommand(String subDir) {
