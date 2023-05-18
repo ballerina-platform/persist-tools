@@ -103,6 +103,14 @@ public class Init implements BLauncherCmd {
             return;
         }
 
+        if (datastore == null) {
+            datastore = PersistToolsConstants.SupportDataSources.IN_MEMORY_TABLE;
+        } else if (!SUPPORTED_DB_PROVIDERS.contains(datastore)) {
+            errStream.printf("ERROR: the persist layer supports one of data stores: %s" +
+                    ". but found '%s' datasource.%n", Arrays.toString(SUPPORTED_DB_PROVIDERS.toArray()), datastore);
+            return;
+        }
+
         if (Files.isDirectory(Paths.get(sourcePath, PERSIST_DIRECTORY, MIGRATIONS))) {
             errStream.println("ERROR: reinitializing persistence after executing the migrate command is not " +
                     "permitted. please remove the migrations directory within the persist directory and try " +
@@ -110,12 +118,10 @@ public class Init implements BLauncherCmd {
             return;
         }
 
-        if (datastore == null) {
-            datastore = PersistToolsConstants.SupportDataSources.IN_MEMORY_TABLE;
-        } else if (!SUPPORTED_DB_PROVIDERS.contains(datastore)) {
-            errStream.printf("ERROR: the persist layer supports one of data stores: %s" +
-                    ". but found '%s' datasource.%n", Arrays.toString(SUPPORTED_DB_PROVIDERS.toArray()), datastore);
-            return;
+        if (datastore.equals(PersistToolsConstants.SupportDataSources.GOOGLE_SHEETS)) {
+            errStream.printf(BalSyntaxConstants.EXPERIMENTAL_NOTICE, "The support for Google Sheets data store " +
+                    "is currently an experimental feature, and its behavior may be subject to change in future " +
+                    "releases." + System.lineSeparator());
         }
 
         Path projectPath = Paths.get(sourcePath);

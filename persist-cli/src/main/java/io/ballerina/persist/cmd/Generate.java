@@ -87,32 +87,12 @@ public class Generate implements BLauncherCmd {
         }
 
         try {
-            schemaFilePath =  BalProjectUtils.getSchemaFilePath(this.sourcePath);
-        } catch (BalException e) {
-            errStream.println(e.getMessage());
-            return;
-        }
-
-        try {
             packageName = TomlSyntaxUtils.readPackageName(this.sourcePath);
         } catch (BalException e) {
             errStream.println(e.getMessage());
             return;
         }
-        try {
-            BalProjectUtils.validateSchemaFile(schemaFilePath);
-            Module module = BalProjectUtils.getEntities(schemaFilePath);
-            if (module.getEntityMap().isEmpty()) {
-                errStream.printf("ERROR: the model definition file(%s) does not contain any entity definition.%n",
-                        schemaFilePath.getFileName());
-                return;
-            }
-            entityModule = module;
-        } catch (BalException e) {
-            errStream.printf("ERROR: failed to generate types and client for the definition file(%s). %s%n",
-                    schemaFilePath.getFileName(), e.getMessage());
-            return;
-        }
+
         try {
             HashMap<String, String> ballerinaTomlConfig = TomlSyntaxUtils.readBallerinaTomlConfig(
                     Paths.get(this.sourcePath, "Ballerina.toml"));
@@ -153,6 +133,34 @@ public class Generate implements BLauncherCmd {
         } catch (BalException e) {
             errStream.printf("ERROR: failed to generate types and client for the definition file(%s). %s%n",
                     "Ballerina.toml", e.getMessage());
+            return;
+        }
+
+        if (dataStore.equals(PersistToolsConstants.SupportDataSources.GOOGLE_SHEETS)) {
+            errStream.printf(BalSyntaxConstants.EXPERIMENTAL_NOTICE, "The support for Google Sheets data store " +
+                    "is currently an experimental feature, and its behavior may be subject to change in future " +
+                    "releases." + System.lineSeparator());
+        }
+
+        try {
+            schemaFilePath =  BalProjectUtils.getSchemaFilePath(this.sourcePath);
+        } catch (BalException e) {
+            errStream.println(e.getMessage());
+            return;
+        }
+
+        try {
+            BalProjectUtils.validateSchemaFile(schemaFilePath);
+            Module module = BalProjectUtils.getEntities(schemaFilePath);
+            if (module.getEntityMap().isEmpty()) {
+                errStream.printf("ERROR: the model definition file(%s) does not contain any entity definition.%n",
+                        schemaFilePath.getFileName());
+                return;
+            }
+            entityModule = module;
+        } catch (BalException e) {
+            errStream.printf("ERROR: failed to generate types and client for the definition file(%s). %s%n",
+                    schemaFilePath.getFileName(), e.getMessage());
             return;
         }
 
