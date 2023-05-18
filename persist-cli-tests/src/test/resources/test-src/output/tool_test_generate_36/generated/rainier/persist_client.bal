@@ -19,12 +19,12 @@ public isolated client class Client {
 
     private final mysql:Client dbClient;
 
-    private final map<persist:SQLClient> persistClients = {};
+    private final map<persist:SQLClient> persistClients;
 
-    private final record {|persist:SQLMetadata...;|} metadata = {
+    private final record {|persist:SQLMetadata...;|} & readonly metadata = {
         ['BUILDING] : {
             entityName: "Building",
-            tableName: `Building`,
+            tableName: "Building",
             fieldMetadata: {
                 'buildingCode: {columnName: "buildingCode"},
                 'city: {columnName: "city"},
@@ -41,7 +41,7 @@ public isolated client class Client {
         },
         ['DEPARTMENT] : {
             entityName: "Department",
-            tableName: `Department`,
+            tableName: "Department",
             fieldMetadata: {
                 deptNo: {columnName: "deptNo"},
                 deptName: {columnName: "deptName"},
@@ -59,7 +59,7 @@ public isolated client class Client {
         },
         ['EMPLOYEE] : {
             entityName: "Employee",
-            tableName: `Employee`,
+            tableName: "Employee",
             fieldMetadata: {
                 empNo: {columnName: "empNo"},
                 firstName: {columnName: "firstName"},
@@ -83,7 +83,7 @@ public isolated client class Client {
         },
         ['ORDER_ITEM] : {
             entityName: "OrderItem",
-            tableName: `OrderItem`,
+            tableName: "OrderItem",
             fieldMetadata: {
                 orderId: {columnName: "orderId"},
                 itemId: {columnName: "itemId"},
@@ -94,7 +94,7 @@ public isolated client class Client {
         },
         ['WORKSPACE] : {
             entityName: "Workspace",
-            tableName: `Workspace`,
+            tableName: "Workspace",
             fieldMetadata: {
                 workspaceId: {columnName: "workspaceId"},
                 workspaceType: {columnName: "workspaceType"},
@@ -122,19 +122,19 @@ public isolated client class Client {
         }
     };
 
-    public function init() returns persist:Error? {
+    public isolated function init() returns persist:Error? {
         mysql:Client|error dbClient = new (host = host, user = user, password = password, database = database, port = port, options = connectionOptions);
         if dbClient is error {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
-        lock {
-            self.persistClients['BUILDING] = check new (self.dbClient, self.metadata.get('BUILDING));
-            self.persistClients['DEPARTMENT] = check new (self.dbClient, self.metadata.get('DEPARTMENT));
-            self.persistClients['EMPLOYEE] = check new (self.dbClient, self.metadata.get('EMPLOYEE));
-            self.persistClients['ORDER_ITEM] = check new (self.dbClient, self.metadata.get('ORDER_ITEM));
-            self.persistClients['WORKSPACE] = check new (self.dbClient, self.metadata.get('WORKSPACE));
-        }
+        self.persistClients = {
+            ['BUILDING] : check new (dbClient, self.metadata.get('BUILDING)),
+            ['DEPARTMENT] : check new (dbClient, self.metadata.get('DEPARTMENT)),
+            ['EMPLOYEE] : check new (dbClient, self.metadata.get('EMPLOYEE)),
+            ['ORDER_ITEM] : check new (dbClient, self.metadata.get('ORDER_ITEM)),
+            ['WORKSPACE] : check new (dbClient, self.metadata.get('WORKSPACE))
+        };
     }
 
     isolated resource function get 'buildings('BuildingTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -148,25 +148,31 @@ public isolated client class Client {
     } external;
 
     isolated resource function post 'buildings('BuildingInsert[] data) returns 'string[]|persist:Error {
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get('BUILDING).runBatchInsertQuery(data.clone());
+            sqlClient = self.persistClients.get('BUILDING);
         }
+        _ = check sqlClient.runBatchInsertQuery(data);
         return from 'BuildingInsert inserted in data
             select inserted.'buildingCode;
     }
 
     isolated resource function put 'buildings/['string 'buildingCode]('BuildingUpdate value) returns 'Building|persist:Error {
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get('BUILDING).runUpdateQuery('buildingCode, value.clone());
+            sqlClient = self.persistClients.get('BUILDING);
         }
+        _ = check sqlClient.runUpdateQuery('buildingCode, value);
         return self->/'buildings/['buildingCode].get();
     }
 
     isolated resource function delete 'buildings/['string 'buildingCode]() returns 'Building|persist:Error {
         'Building result = check self->/'buildings/['buildingCode].get();
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get('BUILDING).runDeleteQuery('buildingCode);
+            sqlClient = self.persistClients.get('BUILDING);
         }
+        _ = check sqlClient.runDeleteQuery('buildingCode);
         return result;
     }
 
@@ -181,25 +187,31 @@ public isolated client class Client {
     } external;
 
     isolated resource function post 'departments('DepartmentInsert[] data) returns string[]|persist:Error {
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get('DEPARTMENT).runBatchInsertQuery(data.clone());
+            sqlClient = self.persistClients.get('DEPARTMENT);
         }
+        _ = check sqlClient.runBatchInsertQuery(data);
         return from 'DepartmentInsert inserted in data
             select inserted.deptNo;
     }
 
     isolated resource function put 'departments/[string deptNo]('DepartmentUpdate value) returns 'Department|persist:Error {
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get('DEPARTMENT).runUpdateQuery(deptNo, value.clone());
+            sqlClient = self.persistClients.get('DEPARTMENT);
         }
+        _ = check sqlClient.runUpdateQuery(deptNo, value);
         return self->/'departments/[deptNo].get();
     }
 
     isolated resource function delete 'departments/[string deptNo]() returns 'Department|persist:Error {
         'Department result = check self->/'departments/[deptNo].get();
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get('DEPARTMENT).runDeleteQuery(deptNo);
+            sqlClient = self.persistClients.get('DEPARTMENT);
         }
+        _ = check sqlClient.runDeleteQuery(deptNo);
         return result;
     }
 
@@ -214,25 +226,31 @@ public isolated client class Client {
     } external;
 
     isolated resource function post 'employees('EmployeeInsert[] data) returns string[]|persist:Error {
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get('EMPLOYEE).runBatchInsertQuery(data.clone());
+            sqlClient = self.persistClients.get('EMPLOYEE);
         }
+        _ = check sqlClient.runBatchInsertQuery(data);
         return from 'EmployeeInsert inserted in data
             select inserted.empNo;
     }
 
     isolated resource function put 'employees/[string empNo]('EmployeeUpdate value) returns 'Employee|persist:Error {
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get('EMPLOYEE).runUpdateQuery(empNo, value.clone());
+            sqlClient = self.persistClients.get('EMPLOYEE);
         }
+        _ = check sqlClient.runUpdateQuery(empNo, value);
         return self->/'employees/[empNo].get();
     }
 
     isolated resource function delete 'employees/[string empNo]() returns 'Employee|persist:Error {
         'Employee result = check self->/'employees/[empNo].get();
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get('EMPLOYEE).runDeleteQuery(empNo);
+            sqlClient = self.persistClients.get('EMPLOYEE);
         }
+        _ = check sqlClient.runDeleteQuery(empNo);
         return result;
     }
 
@@ -247,25 +265,31 @@ public isolated client class Client {
     } external;
 
     isolated resource function post 'orderitems('OrderItemInsert[] data) returns [string, string][]|persist:Error {
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get('ORDER_ITEM).runBatchInsertQuery(data.clone());
+            sqlClient = self.persistClients.get('ORDER_ITEM);
         }
+        _ = check sqlClient.runBatchInsertQuery(data);
         return from 'OrderItemInsert inserted in data
             select [inserted.orderId, inserted.itemId];
     }
 
     isolated resource function put 'orderitems/[string orderId]/[string itemId]('OrderItemUpdate value) returns 'OrderItem|persist:Error {
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get('ORDER_ITEM).runUpdateQuery({"orderId": orderId, "itemId": itemId}, value.clone());
+            sqlClient = self.persistClients.get('ORDER_ITEM);
         }
+        _ = check sqlClient.runUpdateQuery({"orderId": orderId, "itemId": itemId}, value);
         return self->/'orderitems/[orderId]/[itemId].get();
     }
 
     isolated resource function delete 'orderitems/[string orderId]/[string itemId]() returns 'OrderItem|persist:Error {
         'OrderItem result = check self->/'orderitems/[orderId]/[itemId].get();
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get('ORDER_ITEM).runDeleteQuery({"orderId": orderId, "itemId": itemId});
+            sqlClient = self.persistClients.get('ORDER_ITEM);
         }
+        _ = check sqlClient.runDeleteQuery({"orderId": orderId, "itemId": itemId});
         return result;
     }
 
@@ -280,29 +304,35 @@ public isolated client class Client {
     } external;
 
     isolated resource function post 'workspaces('WorkspaceInsert[] data) returns string[]|persist:Error {
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get('WORKSPACE).runBatchInsertQuery(data.clone());
+            sqlClient = self.persistClients.get('WORKSPACE);
         }
+        _ = check sqlClient.runBatchInsertQuery(data);
         return from 'WorkspaceInsert inserted in data
             select inserted.workspaceId;
     }
 
     isolated resource function put 'workspaces/[string workspaceId]('WorkspaceUpdate value) returns 'Workspace|persist:Error {
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get('WORKSPACE).runUpdateQuery(workspaceId, value.clone());
+            sqlClient = self.persistClients.get('WORKSPACE);
         }
+        _ = check sqlClient.runUpdateQuery(workspaceId, value);
         return self->/'workspaces/[workspaceId].get();
     }
 
     isolated resource function delete 'workspaces/[string workspaceId]() returns 'Workspace|persist:Error {
         'Workspace result = check self->/'workspaces/[workspaceId].get();
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get('WORKSPACE).runDeleteQuery(workspaceId);
+            sqlClient = self.persistClients.get('WORKSPACE);
         }
+        _ = check sqlClient.runDeleteQuery(workspaceId);
         return result;
     }
 
-    public function close() returns persist:Error? {
+    public isolated function close() returns persist:Error? {
         error? result = self.dbClient.close();
         if result is error {
             return <persist:Error>error(result.message());

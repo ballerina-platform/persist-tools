@@ -15,12 +15,12 @@ public isolated client class Client {
 
     private final mysql:Client dbClient;
 
-    private final map<persist:SQLClient> persistClients = {};
+    private final map<persist:SQLClient> persistClients;
 
-    private final record {|persist:SQLMetadata...;|} metadata = {
+    private final record {|persist:SQLMetadata...;|} & readonly metadata = {
         [MEDICAL_NEED] : {
             entityName: "MedicalNeed",
-            tableName: `MedicalNeed`,
+            tableName: "MedicalNeed",
             fieldMetadata: {
                 needId: {columnName: "needId"},
                 itemId: {columnName: "itemId"},
@@ -33,15 +33,13 @@ public isolated client class Client {
         }
     };
 
-    public function init() returns persist:Error? {
+    public isolated function init() returns persist:Error? {
         mysql:Client|error dbClient = new (host = host, user = user, password = password, database = database, port = port, options = connectionOptions);
         if dbClient is error {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
-        lock {
-            self.persistClients[MEDICAL_NEED] = check new (self.dbClient, self.metadata.get(MEDICAL_NEED));
-        }
+        self.persistClients = {[MEDICAL_NEED] : check new (dbClient, self.metadata.get(MEDICAL_NEED))};
     }
 
     isolated resource function get medicalneeds(MedicalNeedTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -55,29 +53,35 @@ public isolated client class Client {
     } external;
 
     isolated resource function post medicalneeds(MedicalNeedInsert[] data) returns [int, int][]|persist:Error {
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get(MEDICAL_NEED).runBatchInsertQuery(data.clone());
+            sqlClient = self.persistClients.get(MEDICAL_NEED);
         }
+        _ = check sqlClient.runBatchInsertQuery(data);
         return from MedicalNeedInsert inserted in data
             select [inserted.needId, inserted.itemId];
     }
 
     isolated resource function put medicalneeds/[int needId]/[int itemId](MedicalNeedUpdate value) returns MedicalNeed|persist:Error {
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get(MEDICAL_NEED).runUpdateQuery({"needId": needId, "itemId": itemId}, value.clone());
+            sqlClient = self.persistClients.get(MEDICAL_NEED);
         }
+        _ = check sqlClient.runUpdateQuery({"needId": needId, "itemId": itemId}, value);
         return self->/medicalneeds/[needId]/[itemId].get();
     }
 
     isolated resource function delete medicalneeds/[int needId]/[int itemId]() returns MedicalNeed|persist:Error {
         MedicalNeed result = check self->/medicalneeds/[needId]/[itemId].get();
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get(MEDICAL_NEED).runDeleteQuery({"needId": needId, "itemId": itemId});
+            sqlClient = self.persistClients.get(MEDICAL_NEED);
         }
+        _ = check sqlClient.runDeleteQuery({"needId": needId, "itemId": itemId});
         return result;
     }
 
-    public function close() returns persist:Error? {
+    public isolated function close() returns persist:Error? {
         error? result = self.dbClient.close();
         if result is error {
             return <persist:Error>error(result.message());

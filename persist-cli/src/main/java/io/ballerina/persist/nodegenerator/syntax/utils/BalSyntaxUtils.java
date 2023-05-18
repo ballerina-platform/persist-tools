@@ -96,10 +96,14 @@ public class BalSyntaxUtils {
         return balTree.modifyWith(modulePartNode);
     }
 
-    public static Client generateClientSignature() {
+    public static Client generateClientSignature(boolean isIsolated) {
         Client clientObject = new Client("Client");
-        clientObject.addQualifiers(new String[] {
-                BalSyntaxConstants.KEYWORD_ISOLATED, BalSyntaxConstants.KEYWORD_CLIENT });
+        if (isIsolated) {
+            clientObject.addQualifiers(new String[] {
+                    BalSyntaxConstants.KEYWORD_ISOLATED, BalSyntaxConstants.KEYWORD_CLIENT });
+        } else {
+            clientObject.addQualifiers(new String[] {BalSyntaxConstants.KEYWORD_CLIENT});
+        }
         clientObject.addMember(NodeFactory.createTypeReferenceNode(
                 AbstractNodeFactory.createToken(SyntaxKind.ASTERISK_TOKEN),
                 NodeFactory.createQualifiedNameReferenceNode(
@@ -114,7 +118,7 @@ public class BalSyntaxUtils {
 
     public static Function generateCloseFunction() {
         Function close = new Function(BalSyntaxConstants.CLOSE, SyntaxKind.OBJECT_METHOD_DEFINITION);
-        close.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PUBLIC });
+        close.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PUBLIC, BalSyntaxConstants.KEYWORD_ISOLATED });
         close.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode(BalSyntaxConstants.EMPTY_STRING,
                 BalSyntaxConstants.PERSIST_ERROR));
         return close;
@@ -144,21 +148,35 @@ public class BalSyntaxUtils {
                         entity.getResourceName(), keyBuilder, entity.getEntityName(), className));
     }
 
-    public static Function generatePostFunction(Entity entity, List<EntityField> primaryKeys, String parameterType) {
+    public static Function generatePostFunction(Entity entity, List<EntityField> primaryKeys, String parameterType,
+                                                boolean isIsolated) {
         Function create = new Function(BalSyntaxConstants.POST, SyntaxKind.RESOURCE_ACCESSOR_DEFINITION);
         NodeList<Node> resourcePaths = AbstractNodeFactory.createEmptyNodeList();
         resourcePaths = resourcePaths.add(AbstractNodeFactory.createIdentifierToken(entity.getResourceName()));
         create.addRelativeResourcePaths(resourcePaths);
         create.addRequiredParameter(
                 TypeDescriptor.getArrayTypeDescriptorNode(parameterType), BalSyntaxConstants.KEYWORD_VALUE);
-        create.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_ISOLATED, BalSyntaxConstants.KEYWORD_RESOURCE });
+        if (isIsolated) {
+            create.addQualifiers(new String[]{BalSyntaxConstants.KEYWORD_ISOLATED,
+                    BalSyntaxConstants.KEYWORD_RESOURCE});
+        } else {
+            create.addQualifiers(new String[]{BalSyntaxConstants.KEYWORD_RESOURCE});
+        }
         addReturnsToPostResourceSignature(create, primaryKeys);
         return create;
     }
 
-    public static Function generatePutFunction(Entity entity, StringBuilder filterKeys, StringBuilder path) {
+    public static Function generatePutFunction(Entity entity, StringBuilder filterKeys, StringBuilder path,
+                                               boolean isIsolated) {
         Function update = new Function(BalSyntaxConstants.PUT, SyntaxKind.RESOURCE_ACCESSOR_DEFINITION);
-        update.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_ISOLATED, BalSyntaxConstants.KEYWORD_RESOURCE });
+        if (isIsolated) {
+            update.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_ISOLATED,
+                    BalSyntaxConstants.KEYWORD_RESOURCE });
+
+        } else {
+            update.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_RESOURCE });
+
+        }
         update.addRequiredParameter(TypeDescriptor.getSimpleNameReferenceNode(
                 String.format(BalSyntaxConstants.UPDATE_RECORD, entity.getEntityName())), BalSyntaxConstants.VALUE);
         NodeList<Node> resourcePaths = AbstractNodeFactory.createEmptyNodeList();
@@ -171,9 +189,16 @@ public class BalSyntaxUtils {
         return update;
     }
 
-    public static Function generateDeleteFunction(Entity entity, StringBuilder filterKeys, StringBuilder path) {
+    public static Function generateDeleteFunction(Entity entity, StringBuilder filterKeys, StringBuilder path,
+                                                  boolean isIsolated) {
         Function delete = new Function(BalSyntaxConstants.DELETE, SyntaxKind.RESOURCE_ACCESSOR_DEFINITION);
-        delete.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_ISOLATED, BalSyntaxConstants.KEYWORD_RESOURCE });
+        if (isIsolated) {
+            delete.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_ISOLATED,
+                    BalSyntaxConstants.KEYWORD_RESOURCE });
+        } else {
+            delete.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_RESOURCE });
+
+        }
         NodeList<Node> resourcePaths = AbstractNodeFactory.createEmptyNodeList();
         resourcePaths = getResourcePath(resourcePaths, entity.getKeys(), filterKeys, path, entity.getResourceName());
         delete.addRelativeResourcePaths(resourcePaths);
@@ -264,7 +289,7 @@ public class BalSyntaxUtils {
                     AbstractNodeFactory.createToken(SyntaxKind.CLOSE_BRACKET_TOKEN)));
             filterKeys.append(BalSyntaxConstants.DOUBLE_QUOTE).append(stripEscapeCharacter(entry.getFieldName()))
                     .append(BalSyntaxConstants.DOUBLE_QUOTE).append(BalSyntaxConstants.COLON).
-                    append(entry.getFieldName()).append(BalSyntaxConstants.COMMA_SPACE);
+                    append(entry.getFieldName()).append(BalSyntaxConstants.COMMA_WITH_SPACE);
             path.append(BalSyntaxConstants.BACK_SLASH).append(BalSyntaxConstants.OPEN_BRACKET).
                     append(entry.getFieldName()).append(BalSyntaxConstants.CLOSE_BRACKET);
         }
@@ -414,7 +439,7 @@ public class BalSyntaxUtils {
             }
 
             if (i != enumValue.getMembers().size() - 1) {
-                enumMembers.append(BalSyntaxConstants.COMMA_SPACE);
+                enumMembers.append(BalSyntaxConstants.COMMA_WITH_SPACE);
             }
             enumMembers.append(System.lineSeparator());
         }
@@ -641,5 +666,20 @@ public class BalSyntaxUtils {
                 moduleNodeList,
                 prefix,
                 SyntaxTokenConstants.SYNTAX_TREE_SEMICOLON);
+    }
+
+    public static String getPrimaryKeys(Entity entity, boolean addDoubleQuotes) {
+        StringBuilder keyFields = new StringBuilder();
+        for (EntityField key : entity.getKeys()) {
+            if (keyFields.length() != 0) {
+                keyFields.append(BalSyntaxConstants.COMMA_WITH_SPACE);
+            }
+            if (addDoubleQuotes) {
+                keyFields.append("\"").append(BalSyntaxUtils.stripEscapeCharacter(key.getFieldName())).append("\"");
+            } else {
+                keyFields.append(BalSyntaxUtils.stripEscapeCharacter(key.getFieldName()));
+            }
+        }
+        return keyFields.toString();
     }
 }

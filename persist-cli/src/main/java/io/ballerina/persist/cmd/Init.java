@@ -53,10 +53,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
+import static io.ballerina.persist.PersistToolsConstants.MIGRATIONS;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.PersistToolsConstants.SCHEMA_FILE_NAME;
 import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_DB_PROVIDERS;
-import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.BAL_EXTENTION;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.BAL_EXTENSION;
 import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.readPackageName;
 import static io.ballerina.persist.utils.BalProjectUtils.validateBallerinaProject;
 import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
@@ -99,6 +100,13 @@ public class Init implements BLauncherCmd {
         if (helpFlag) {
             String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMMAND_IDENTIFIER);
             errStream.println(commandUsageInfo);
+            return;
+        }
+
+        if (Files.isDirectory(Paths.get(sourcePath, PERSIST_DIRECTORY, MIGRATIONS))) {
+            errStream.println("ERROR: reinitializing persistence after executing the migrate command is not " +
+                    "permitted. please remove the migrations directory within the persist directory and try " +
+                    "executing the command again.");
             return;
         }
 
@@ -163,8 +171,8 @@ public class Init implements BLauncherCmd {
             schemaFiles = stream.filter(file -> !Files.isDirectory(file))
                     .map(Path::getFileName)
                     .filter(Objects::nonNull)
-                    .filter(file -> file.toString().toLowerCase(Locale.ENGLISH).endsWith(BAL_EXTENTION))
-                    .map(file -> file.toString().replace(BAL_EXTENTION, ""))
+                    .filter(file -> file.toString().toLowerCase(Locale.ENGLISH).endsWith(BAL_EXTENSION))
+                    .map(file -> file.toString().replace(BAL_EXTENSION, ""))
                     .collect(Collectors.toList());
         } catch (IOException e) {
             errStream.println("ERROR: failed to list model definition files in the persist directory. "
@@ -199,7 +207,7 @@ public class Init implements BLauncherCmd {
     private void generateSchemaBalFile(Path persistPath) throws BalException {
         try {
             String configTree = generateSchemaSyntaxTree();
-            writeOutputString(configTree, persistPath.resolve(SCHEMA_FILE_NAME + BAL_EXTENTION)
+            writeOutputString(configTree, persistPath.resolve(SCHEMA_FILE_NAME + BAL_EXTENSION)
                     .toAbsolutePath().toString());
         } catch (Exception e) {
             throw new BalException(e.getMessage());

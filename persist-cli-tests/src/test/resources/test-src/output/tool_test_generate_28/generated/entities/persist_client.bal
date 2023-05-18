@@ -16,12 +16,12 @@ public isolated client class Client {
 
     private final mysql:Client dbClient;
 
-    private final map<persist:SQLClient> persistClients = {};
+    private final map<persist:SQLClient> persistClients;
 
-    private final record {|persist:SQLMetadata...;|} metadata = {
+    private final record {|persist:SQLMetadata...;|} & readonly metadata = {
         [COMPANY] : {
             entityName: "Company",
-            tableName: `Company`,
+            tableName: "Company",
             fieldMetadata: {
                 id: {columnName: "id"},
                 name: {columnName: "name"},
@@ -34,7 +34,7 @@ public isolated client class Client {
         },
         [EMPLOYEE] : {
             entityName: "Employee",
-            tableName: `Employee`,
+            tableName: "Employee",
             fieldMetadata: {
                 id: {columnName: "id"},
                 name: {columnName: "name"},
@@ -47,16 +47,16 @@ public isolated client class Client {
         }
     };
 
-    public function init() returns persist:Error? {
+    public isolated function init() returns persist:Error? {
         mysql:Client|error dbClient = new (host = host, user = user, password = password, database = database, port = port, options = connectionOptions);
         if dbClient is error {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
-        lock {
-            self.persistClients[COMPANY] = check new (self.dbClient, self.metadata.get(COMPANY));
-            self.persistClients[EMPLOYEE] = check new (self.dbClient, self.metadata.get(EMPLOYEE));
-        }
+        self.persistClients = {
+            [COMPANY] : check new (dbClient, self.metadata.get(COMPANY)),
+            [EMPLOYEE] : check new (dbClient, self.metadata.get(EMPLOYEE))
+        };
     }
 
     isolated resource function get companies(CompanyTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -70,25 +70,31 @@ public isolated client class Client {
     } external;
 
     isolated resource function post companies(CompanyInsert[] data) returns int[]|persist:Error {
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get(COMPANY).runBatchInsertQuery(data.clone());
+            sqlClient = self.persistClients.get(COMPANY);
         }
+        _ = check sqlClient.runBatchInsertQuery(data);
         return from CompanyInsert inserted in data
             select inserted.id;
     }
 
     isolated resource function put companies/[int id](CompanyUpdate value) returns Company|persist:Error {
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get(COMPANY).runUpdateQuery(id, value.clone());
+            sqlClient = self.persistClients.get(COMPANY);
         }
+        _ = check sqlClient.runUpdateQuery(id, value);
         return self->/companies/[id].get();
     }
 
     isolated resource function delete companies/[int id]() returns Company|persist:Error {
         Company result = check self->/companies/[id].get();
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get(COMPANY).runDeleteQuery(id);
+            sqlClient = self.persistClients.get(COMPANY);
         }
+        _ = check sqlClient.runDeleteQuery(id);
         return result;
     }
 
@@ -103,29 +109,35 @@ public isolated client class Client {
     } external;
 
     isolated resource function post employees(EmployeeInsert[] data) returns int[]|persist:Error {
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get(EMPLOYEE).runBatchInsertQuery(data.clone());
+            sqlClient = self.persistClients.get(EMPLOYEE);
         }
+        _ = check sqlClient.runBatchInsertQuery(data);
         return from EmployeeInsert inserted in data
             select inserted.id;
     }
 
     isolated resource function put employees/[int id](EmployeeUpdate value) returns Employee|persist:Error {
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get(EMPLOYEE).runUpdateQuery(id, value.clone());
+            sqlClient = self.persistClients.get(EMPLOYEE);
         }
+        _ = check sqlClient.runUpdateQuery(id, value);
         return self->/employees/[id].get();
     }
 
     isolated resource function delete employees/[int id]() returns Employee|persist:Error {
         Employee result = check self->/employees/[id].get();
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get(EMPLOYEE).runDeleteQuery(id);
+            sqlClient = self.persistClients.get(EMPLOYEE);
         }
+        _ = check sqlClient.runDeleteQuery(id);
         return result;
     }
 
-    public function close() returns persist:Error? {
+    public isolated function close() returns persist:Error? {
         error? result = self.dbClient.close();
         if result is error {
             return <persist:Error>error(result.message());
