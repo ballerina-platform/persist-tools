@@ -371,9 +371,24 @@ public class ToolingGenerateTest {
     }
 
     @Test(enabled = true)
-    @Description("There is a generated client object with in memory data source")
+    @Description("There is a generated client object with google sheets data source")
     public void testGoogleSheet() {
         executeCommand("tool_test_generate_54_gsheet", GENERATE);
         assertGeneratedSources("tool_test_generate_54_gsheet");
     }
+
+    @Test(enabled = true)
+    @Description("There is a model with an entity consisting of multiple relations of the same type")
+    public void testGenerateEntityWithMultipleRelationsSameTypeInMemory() {
+        executeCommand("tool_test_generate_55_in_memory", GENERATE);
+        assertGeneratedSources("tool_test_generate_55_in_memory");
+    }
+
+    @Test(enabled = true)
+    @Description("There is a model with an entity consisting of multiple relations of the same type")
+    public void testGenerateEntityWithMultipleRelationsSameTypeGoogleSheet() {
+        executeCommand("tool_test_generate_56_gsheets", GENERATE);
+        assertGeneratedSources("tool_test_generate_56_gsheets");
+    }
+
 }
