@@ -49,8 +49,11 @@ public class BalSyntaxConstants {
     public static final String VALUE = "value";
     public static final String PERSIST_MODULE = "persist";
     public static final String PERSIST_ERROR = "persist:Error";
-    public static final String G_SHEET_CREATE_SQL_RESULTS = "_ = check " +
-            "self.persistClients.get(%s).runBatchInsertQuery(data);";
+    //public static final String G_SHEET_CREATE_SQL_RESULTS = "_ = check " +
+    //        "self.persistClients.get(%s).runBatchInsertQuery(data);";
+    public static final String GET_G_SHEET_PERSIST_CLIENT = "googleSheetsClient = self.persistClients.get(%s);";
+    public static final String G_SHEET_CLIENT_DECLARATION = "persist:GoogleSheetsClient googleSheetsClient;";
+    public static final String G_SHEET_CREATE_SQL_RESULTS = "_ = check googleSheetsClient.runBatchInsertQuery(data);";
     public static final String SQL_CLIENT_DECLARATION = "persist:SQLClient sqlClient;";
     public static final String CREATE_SQL_RESULTS = "_ = check sqlClient.runBatchInsertQuery(data);";
     public static final String GET_PERSIST_CLIENT = "sqlClient = self.persistClients.get(%s);";
@@ -78,10 +81,10 @@ public class BalSyntaxConstants {
     public static final String RETURN_CREATED_KEY = "return from  %s inserted in data" + System.lineSeparator();
     public static final String SELECT_WITH_SPACE = "\t\t\tselect ";
     public static final String UPDATE_RUN_UPDATE_QUERY = "_ = check sqlClient.runUpdateQuery(%s, value);";
-    public static final String G_SHEET_UPDATE_RUN_UPDATE_QUERY = "_ = check self.persistClients.get(%s)." +
+    public static final String G_SHEET_UPDATE_RUN_UPDATE_QUERY = "_ = check googleSheetsClient." +
             "runUpdateQuery(%s, value);";
     public static final String UPDATE_RETURN_UPDATE_QUERY = "return self->%s.get();";
-    public static final String G_SHEET_DELETE_RUN_DELETE_QUERY = "_ = check self.persistClients.get(%s)." +
+    public static final String G_SHEET_DELETE_RUN_DELETE_QUERY = "_ = check googleSheetsClient." +
             "runDeleteQuery(%s);";
     public static final String DELETE_RUN_DELETE_QUERY = "_ = check sqlClient.runDeleteQuery(%s);";
     public static final String RETURN_DELETED_OBJECT = "return result;";
@@ -184,7 +187,7 @@ public class BalSyntaxConstants {
     public static final String QUERY_RETURN = "stream<record{}, persist:Error?>";
     public static final String G_SHEET_QUERY_STATEMENT = "%s from record{} 'object in %s%s";
     public static final String G_SHEET_WHERE_CLAUSE = System.lineSeparator() +
-            "where self.persistClients.get(%s).getKey('object) == key";
+            "where persist:getKey('object, [%s]) == key";
     public static final String QUERY_STATEMENT = "return from record{} 'object in %sClonedTable" +
             System.lineSeparator();
     public static final String QUERY_ONE_RETURN = "record {}|persist:NotFoundError";
@@ -248,7 +251,7 @@ public class BalSyntaxConstants {
     public static final String METADATA_RECORD_TEMPLATE =
             "private final record {|persist:SQLMetadata...;|} & readonly metadata = {%s};";
     public static final String SHEET_METADATA_RECORD_TEMPLATE =
-            "final record {|persist:SheetMetadata...;|} metadata = {%s};";
+            "final record {|persist:SheetMetadata...;|} & readonly metadata = {%s};";
     public static final String SHEET_CLIENT_CONFIG_TEMPLATE = " sheets:ConnectionConfig sheetsClientConfig = {" +
             System.lineSeparator() + "            auth: {" +
             System.lineSeparator() + "                clientId: clientId," +
@@ -284,7 +287,7 @@ public class BalSyntaxConstants {
             "user = user, password = password, database = database, port = port, options = connectionOptions);" +
             System.lineSeparator();
     public static final String GOOGLE_SHEET_CLIENT_MAP = "[%s]: check new (self.googleSheetClient, self.httpClient, " +
-            "metadata.get(%s), spreadsheetId, sheetIds.get(%s))";
+            "metadata.get(%s).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(%s).cloneReadOnly())";
     public static final String TABLE_PARAMETER_INIT_TEMPLATE = "final isolated table<%s> key(%s) %sTable = table[];";
     public static final String CLONED_TABLE_INIT_TEMPLATE = "table<%s> key(%s) %sClonedTable;";
     public static final String CLONED_TABLE_DECLARATION_TEMPLATE = "%sClonedTable = %sTable.clone();";

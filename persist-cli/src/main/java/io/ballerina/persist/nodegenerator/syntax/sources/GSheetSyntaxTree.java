@@ -93,7 +93,8 @@ public class GSheetSyntaxTree implements SyntaxTree {
         });
         for (Map.Entry<String, String> entry : gSheetClientSyntax.queryMethodStatement.entrySet()) {
             Function query = new Function(entry.getKey(), SyntaxKind.OBJECT_METHOD_DEFINITION);
-            query.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PRIVATE });
+            query.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PRIVATE,
+                    BalSyntaxConstants.KEYWORD_ISOLATED });
             query.addReturns(TypeDescriptor.getSimpleNameReferenceNode("record{}[]|persist:Error"));
             query.addRequiredParameter(TypeDescriptor.getSimpleNameReferenceNode("record{}"), "value");
             query.addRequiredParameter(TypeDescriptor.getArrayTypeDescriptorNode("string"),
@@ -169,7 +170,7 @@ public class GSheetSyntaxTree implements SyntaxTree {
 
         Function query = new Function(String.format(BalSyntaxConstants.QUERY, nameInCamelCase),
                 SyntaxKind.OBJECT_METHOD_DEFINITION);
-        query.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PRIVATE });
+        query.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PRIVATE, BalSyntaxConstants.KEYWORD_ISOLATED });
         query.addReturns(TypeDescriptor.getSimpleNameReferenceNode(BalSyntaxConstants.QUERY_RETURN + "|" +
                 BalSyntaxConstants.PERSIST_ERROR));
         query.addRequiredParameter(TypeDescriptor.getArrayTypeDescriptorNode("string"),
@@ -177,7 +178,7 @@ public class GSheetSyntaxTree implements SyntaxTree {
 
         Function queryOne = new Function(String.format(BalSyntaxConstants.QUERY_ONE, nameInCamelCase),
                 SyntaxKind.OBJECT_METHOD_DEFINITION);
-        queryOne.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PRIVATE });
+        queryOne.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PRIVATE, BalSyntaxConstants.KEYWORD_ISOLATED});
         queryOne.addReturns(TypeDescriptor.getSimpleNameReferenceNode(BalSyntaxConstants.QUERY_ONE_RETURN));
         queryOne.addRequiredParameter(TypeDescriptor.getSimpleNameReferenceNode(BalSyntaxConstants.ANY_DATA),
                 BalSyntaxConstants.KEYWORD_KEY);
@@ -249,8 +250,18 @@ public class GSheetSyntaxTree implements SyntaxTree {
         queryOneBuilder.append("error? unionResult = ").append(
                 String.format(BalSyntaxConstants.G_SHEET_QUERY_STATEMENT, BalSyntaxConstants.EMPTY_STRING,
                         BalSyntaxConstants.EMPTY_STRING, streamParamName));
-        queryOneBuilder.append(String.format(BalSyntaxConstants.G_SHEET_WHERE_CLAUSE,
-                BalSyntaxUtils.getStringWithUnderScore(entityName).toUpperCase(Locale.ENGLISH)));
+        StringBuilder keysArray = new StringBuilder();
+        if (entity.getKeys().size() > 1) {
+            for (EntityField keyField : entity.getKeys()) {
+                if (keysArray.length() > 0) {
+                    keysArray.append(", ");
+                }
+                keysArray.append(String.format("\"%s\"", keyField.getFieldName().replaceAll(" ", "")));
+            }
+        } else {
+            keysArray.append(String.format("\"%s\"", entity.getKeys().get(0).getFieldName().replaceAll(" ", "")));
+        }
+        queryOneBuilder.append(String.format(BalSyntaxConstants.G_SHEET_WHERE_CLAUSE, keysArray));
         queryOneBuilder.append(streamSelectBuilder);
         if (relationalRecordFields.length() > 0) {
             queryBuilder.append(String.format(BalSyntaxConstants.SELECT_QUERY,
