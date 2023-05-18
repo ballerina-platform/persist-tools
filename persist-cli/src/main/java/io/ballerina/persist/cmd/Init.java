@@ -38,6 +38,7 @@ import org.ballerinalang.formatter.core.Formatter;
 import org.ballerinalang.formatter.core.FormatterException;
 import picocli.CommandLine;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
@@ -53,6 +54,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
+import static io.ballerina.persist.PersistToolsConstants.MIGRATIONS;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.PersistToolsConstants.SCHEMA_FILE_NAME;
 import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_DB_PROVIDERS;
@@ -99,6 +101,12 @@ public class Init implements BLauncherCmd {
         if (helpFlag) {
             String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMMAND_IDENTIFIER);
             errStream.println(commandUsageInfo);
+            return;
+        }
+
+        if (Files.isDirectory(Paths.get(sourcePath, PERSIST_DIRECTORY, MIGRATIONS))) {
+            errStream.println("ERROR: failed to initialize persist configurations: migration directory is already " +
+                    "initialized in the persist directory.");
             return;
         }
 

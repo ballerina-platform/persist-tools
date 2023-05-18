@@ -142,6 +142,13 @@ public class Generate implements BLauncherCmd {
                         Arrays.toString(PersistToolsConstants.SUPPORTED_DB_PROVIDERS.toArray()), dataStore);
                 return;
             }
+            if (Files.isDirectory(Paths.get(sourcePath, PersistToolsConstants.PERSIST_DIRECTORY,
+                    PersistToolsConstants.MIGRATIONS)) &&
+                    !dataStore.equals(PersistToolsConstants.SupportDataSources.MYSQL_DB)) {
+                errStream.printf("ERROR: unsupported data store with migration script: expected: 'mysql' but " +
+                        "found: '%s': migration directory is already initialized in the persist directory.", dataStore);
+                return;
+            }
         } catch (BalException e) {
             errStream.printf("ERROR: failed to generate types and client for the definition file(%s). %s%n",
                     "Ballerina.toml", e.getMessage());
@@ -177,6 +184,8 @@ public class Generate implements BLauncherCmd {
                 sourceCreator.createGSheetSources();
                 errStream.printf("Generated Ballerina Client, and Types to %s directory.%n", generatedSourceDirPath);
                 errStream.println("You can now start using Ballerina Client in your code.");
+                errStream.printf("If your spread sheets has no sheets yet, execute the scripts." +
+                        "js file at %s directory, in your spread sheets to create sheets.%n", generatedSourceDirPath);
             } catch (BalException e) {
                 errStream.printf(String.format(BalSyntaxConstants.ERROR_MSG,
                         PersistToolsConstants.SupportDataSources.GOOGLE_SHEETS, e.getMessage()));
