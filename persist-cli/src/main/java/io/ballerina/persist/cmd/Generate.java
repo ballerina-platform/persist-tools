@@ -184,8 +184,8 @@ public class Generate implements BLauncherCmd {
                 sourceCreator.createGSheetSources();
                 errStream.printf("Generated Ballerina Client, and Types to %s directory.%n", generatedSourceDirPath);
                 errStream.println("You can now start using Ballerina Client in your code.");
-                errStream.printf("If your spread sheets has no sheets yet, execute the scripts." +
-                        "js file at %s directory, in your spread sheets to create sheets.%n", generatedSourceDirPath);
+                errStream.printf("If your spreadsheet has no sheets yet, execute the scripts." +
+                        "js file at %s directory, in your spreadsheet to create sheets.%n", generatedSourceDirPath);
             } catch (BalException e) {
                 errStream.printf(String.format(BalSyntaxConstants.ERROR_MSG,
                         PersistToolsConstants.SupportDataSources.GOOGLE_SHEETS, e.getMessage()));
