@@ -87,32 +87,12 @@ public class Generate implements BLauncherCmd {
         }
 
         try {
-            schemaFilePath =  BalProjectUtils.getSchemaFilePath(this.sourcePath);
-        } catch (BalException e) {
-            errStream.println(e.getMessage());
-            return;
-        }
-
-        try {
             packageName = TomlSyntaxUtils.readPackageName(this.sourcePath);
         } catch (BalException e) {
             errStream.println(e.getMessage());
             return;
         }
-        try {
-            BalProjectUtils.validateSchemaFile(schemaFilePath);
-            Module module = BalProjectUtils.getEntities(schemaFilePath);
-            if (module.getEntityMap().isEmpty()) {
-                errStream.printf("ERROR: the model definition file(%s) does not contain any entity definition.%n",
-                        schemaFilePath.getFileName());
-                return;
-            }
-            entityModule = module;
-        } catch (BalException e) {
-            errStream.printf("ERROR: failed to generate types and client for the definition file(%s). %s%n",
-                    schemaFilePath.getFileName(), e.getMessage());
-            return;
-        }
+
         try {
             HashMap<String, String> ballerinaTomlConfig = TomlSyntaxUtils.readBallerinaTomlConfig(
                     Paths.get(this.sourcePath, "Ballerina.toml"));
@@ -142,9 +122,45 @@ public class Generate implements BLauncherCmd {
                         Arrays.toString(PersistToolsConstants.SUPPORTED_DB_PROVIDERS.toArray()), dataStore);
                 return;
             }
+            if (Files.isDirectory(Paths.get(sourcePath, PersistToolsConstants.PERSIST_DIRECTORY,
+                    PersistToolsConstants.MIGRATIONS)) &&
+                    !dataStore.equals(PersistToolsConstants.SupportDataSources.MYSQL_DB)) {
+                errStream.println("ERROR: regenerating the client with a different datastore after executing " +
+                        "the migrate command is not permitted. please remove the migrations directory within the " +
+                        "persist directory and try executing the command again.");
+                return;
+            }
         } catch (BalException e) {
             errStream.printf("ERROR: failed to generate types and client for the definition file(%s). %s%n",
                     "Ballerina.toml", e.getMessage());
+            return;
+        }
+
+        if (dataStore.equals(PersistToolsConstants.SupportDataSources.GOOGLE_SHEETS)) {
+            errStream.printf(BalSyntaxConstants.EXPERIMENTAL_NOTICE, "The support for Google Sheets data store " +
+                    "is currently an experimental feature, and its behavior may be subject to change in future " +
+                    "releases." + System.lineSeparator());
+        }
+
+        try {
+            schemaFilePath =  BalProjectUtils.getSchemaFilePath(this.sourcePath);
+        } catch (BalException e) {
+            errStream.println(e.getMessage());
+            return;
+        }
+
+        try {
+            BalProjectUtils.validateSchemaFile(schemaFilePath);
+            Module module = BalProjectUtils.getEntities(schemaFilePath);
+            if (module.getEntityMap().isEmpty()) {
+                errStream.printf("ERROR: the model definition file(%s) does not contain any entity definition.%n",
+                        schemaFilePath.getFileName());
+                return;
+            }
+            entityModule = module;
+        } catch (BalException e) {
+            errStream.printf("ERROR: failed to generate types and client for the definition file(%s). %s%n",
+                    schemaFilePath.getFileName(), e.getMessage());
             return;
         }
 
@@ -169,8 +185,20 @@ public class Generate implements BLauncherCmd {
                 errStream.println("- Set the database configurations in the \"Config.toml\" file " +
                         "before running the program.");
             } catch (BalException e) {
-                errStream.printf("ERROR: failed to generate/update source file/s for the database. %s%n",
-                        e.getMessage());
+                errStream.printf(String.format(BalSyntaxConstants.ERROR_MSG,
+                        PersistToolsConstants.SupportDataSources.MYSQL_DB, e.getMessage()));
+            }
+        } else if (dataStore.equals(PersistToolsConstants.SupportDataSources.GOOGLE_SHEETS)) {
+            try {
+                sourceCreator.createGSheetSources();
+                errStream.printf("Generated Ballerina Client, and Types to %s directory.%n", generatedSourceDirPath);
+                errStream.println("You can now start using Ballerina Client in your code.");
+                errStream.println(System.lineSeparator() + "Next steps:");
+                errStream.printf("Execute the \"scripts.js\" file located at %s directory in your worksheet " +
+                        "to create sheets.", generatedSourceDirPath);
+            } catch (BalException e) {
+                errStream.printf(String.format(BalSyntaxConstants.ERROR_MSG,
+                        PersistToolsConstants.SupportDataSources.GOOGLE_SHEETS, e.getMessage()));
             }
         } else {
             try {
@@ -178,8 +206,8 @@ public class Generate implements BLauncherCmd {
                 errStream.printf("Generated Ballerina Client, and Types to %s directory.%n", generatedSourceDirPath);
                 errStream.println("You can now start using Ballerina Client in your code.");
             } catch (BalException e) {
-                errStream.printf("ERROR: failed to generate/update source file/s for the in-memory. %s%n",
-                        e.getMessage());
+                errStream.printf(String.format(BalSyntaxConstants.ERROR_MSG,
+                        PersistToolsConstants.SupportDataSources.IN_MEMORY_TABLE, e.getMessage()));
             }
         }
     }

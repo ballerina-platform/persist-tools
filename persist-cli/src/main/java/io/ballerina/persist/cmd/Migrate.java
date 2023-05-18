@@ -26,7 +26,9 @@ import io.ballerina.persist.models.FieldMetadata;
 import io.ballerina.persist.models.ForeignKey;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.SourceGenerator;
+import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
 import io.ballerina.persist.nodegenerator.syntax.utils.SqlScriptUtils;
+import io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils;
 import io.ballerina.persist.utils.BalProjectUtils;
 import picocli.CommandLine;
 
@@ -90,11 +92,28 @@ public class Migrate implements BLauncherCmd {
             return;
         }
 
+        errStream.printf(BalSyntaxConstants.EXPERIMENTAL_NOTICE, "The support for migrations is currently an " +
+                "experimental feature, and its behavior may be subject to change in future releases.");
+
         Path projectPath = Paths.get(sourcePath).toAbsolutePath();
         try {
             BalProjectUtils.validateBallerinaProject(projectPath);
         } catch (BalException e) {
             errStream.println(e.getMessage());
+            return;
+        }
+
+        try {
+            HashMap<String, String> ballerinaTomlConfig = TomlSyntaxUtils.readBallerinaTomlConfig(
+                    Paths.get(this.sourcePath, "Ballerina.toml"));
+            String dataStore = ballerinaTomlConfig.get("datastore").trim();
+            if (!dataStore.equals(PersistToolsConstants.SupportDataSources.MYSQL_DB)) {
+                errStream.printf("ERROR: unsupported data store: expected: 'mysql' but found: '%s'", dataStore);
+                return;
+            }
+        } catch (BalException e) {
+            errStream.printf("ERROR: failed to locate Ballerina.toml: %s%n",
+                    e.getMessage());
             return;
         }
 
@@ -226,7 +245,7 @@ public class Migrate implements BLauncherCmd {
         String latestTimestamp = "";
         ZonedDateTime latestDateTime = ZonedDateTime.ofInstant(Instant.EPOCH, ZoneOffset.UTC);
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss").withZone(ZoneOffset.UTC);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss").withZone(ZoneOffset.UTC);
 
         for (String folderName : folderNames) {
             String timestamp = folderName.split("_")[0];
@@ -286,9 +305,12 @@ public class Migrate implements BLauncherCmd {
                 try (FileOutputStream fStream = new FileOutputStream(filePath);
                         OutputStreamWriter oStream = new OutputStreamWriter(fStream, StandardCharsets.UTF_8);
                         BufferedWriter writer = new BufferedWriter(oStream)) {
-                    writer.write("-- AUTO-GENERATED FILE.\n-- This file is an auto-generated file by Ballerina " +
-                            "persistence layer for the migrate command.\n-- Please verify the generated scripts and " +
-                            "execute them against the target DB server.\n\n");
+                    writer.write("-- AUTO-GENERATED FILE." + System.lineSeparator() +
+                            "-- This file is an auto-generated file by Ballerina " +
+                            "persistence layer for the migrate command." + System.lineSeparator() +
+                            "-- Please verify the generated scripts and " +
+                            "execute them against the target DB server." +
+                            System.lineSeparator() + System.lineSeparator());
                     for (String query : queries) {
                         writer.write(query);
                         writer.newLine();
@@ -297,6 +319,16 @@ public class Migrate implements BLauncherCmd {
                     errStream.println("Error: An error occurred while writing to file: " + e.getMessage());
                     return;
                 }
+
+                //Get the relative path of the migration directory from the project root
+                Path relativePath = Paths.get("").toAbsolutePath().relativize(newMigrationPath);
+
+                errStream.println(
+                        "Generated migration script to " + relativePath.toString() + 
+                        " directory." + System.lineSeparator());
+                errStream.println("Next steps:" + System.lineSeparator() + "Execute the \"script.sql\" file located at "
+                        + relativePath.toString() +
+                        " in your database to migrate the schema with the latest changes.");
             }
 
         } catch (BalException e) {
@@ -337,7 +369,7 @@ public class Migrate implements BLauncherCmd {
     // Create a timestamp folder name
     private static String createTimestampFolder(String migrationName, File migrationsDir) {
         Instant currentTime = Instant.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
         String timestamp = formatter.format(ZonedDateTime.ofInstant(currentTime, ZoneOffset.UTC));
 
         String newMigration = migrationsDir + File.separator + timestamp + "_" + migrationName;
@@ -375,6 +407,7 @@ public class Migrate implements BLauncherCmd {
 
     private static List<String> findDifferences(Module previousModel, Module currentModel) {
         List<String> queries = new ArrayList<>();
+        List<String> differences = new ArrayList<>();
 
         List<String> addedEntities = new ArrayList<>();
         List<String> removedEntities = new ArrayList<>();
@@ -392,6 +425,7 @@ public class Migrate implements BLauncherCmd {
 
             // Check if currentModelEntity exists
             if (currentModelEntity == null) {
+                differences.add("Entity " + previousModelEntity.getEntityName() + " has been removed");
                 removedEntities.add(previousModelEntity.getEntityName());
                 continue;
             }
@@ -403,8 +437,12 @@ public class Migrate implements BLauncherCmd {
                 // Check if currentModelField exists and if foreign key was removed
                 if (currentModelField == null) {
                     if (previousModelField.getRelation() == null) {
+                        differences.add("Field " + previousModelField.getFieldName() +
+                                " has been removed from entity " + previousModelEntity.getEntityName());
                         addToMapNoTypeString(previousModelEntity, previousModelField, removedFields);
                     } else if (previousModelField.getRelation().isOwner()) {
+                        differences.add("Foreign key " + previousModelField.getFieldName() +
+                                " has been removed from entity " + previousModelEntity.getEntityName());
                         addToMapRemoveForeignKey(previousModelEntity, previousModelField, removedForeignKeys);
                     }
                     continue;
@@ -412,16 +450,23 @@ public class Migrate implements BLauncherCmd {
 
                 // Compare data types
                 if (!previousModelField.getFieldType().equals(currentModelField.getFieldType())) {
+                    differences.add("Data type of field " + previousModelField.getFieldName() +
+                            " in entity " + previousModelEntity.getEntityName() + " has changed from " +
+                            previousModelField.getFieldType() + " to " + currentModelField.getFieldType());
                     addToMapWithType(previousModelEntity, currentModelField, changedFieldTypes);
                 }
 
                 // Compare readonly fields
                 if (previousModelEntity.getKeys().contains(previousModelField)
                         && !currentModelEntity.getKeys().contains(currentModelField)) {
+                    differences.add("Field " + previousModelField.getFieldName() + " in entity " +
+                            previousModelEntity.getEntityName() + " is no longer a readonly field");
                     addToMapNoTypeString(previousModelEntity, previousModelField, removedReadOnly);
 
                 } else if (!previousModelEntity.getKeys().contains(previousModelField)
                         && currentModelEntity.getKeys().contains(currentModelField)) {
+                    differences.add("Field " + previousModelField.getFieldName() + " in entity " +
+                            previousModelEntity.getEntityName() + " is now a readonly field");
                     addToMapNoTypeObject(previousModelEntity, currentModelField, addedReadOnly);
                 }
 
@@ -434,11 +479,26 @@ public class Migrate implements BLauncherCmd {
                 if (previousModelField == null) {
                     if (currentModelField.getRelation() == null) {
                         if (currentModelEntity.getKeys().contains(currentModelField)) {
+                            differences.add("Field " + currentModelField.getFieldName() + " of type " +
+                                    currentModelField.getFieldType() + " has been added to entity " +
+                                    currentModelEntity.getEntityName() + " as a readonly field");
                             addToMapNoTypeObject(currentModelEntity, currentModelField, addedReadOnly);
+                        } else {
+                            differences.add("Field " + currentModelField.getFieldName() + " of type " +
+                                    currentModelField.getFieldType() + " has been added to entity " +
+                                    currentModelEntity.getEntityName());
                         }
                         addToMapWithType(currentModelEntity, currentModelField, addedFields);
                     } else if (currentModelField.getRelation().isOwner()) {
+                        differences.add("Field " + currentModelField.getRelation().getKeyColumns().get(0).getField() +
+                                " of type " + currentModelField.getRelation().getKeyColumns().get(0).getType() +
+                                " has been added to entity " + currentModelEntity.getEntityName()
+                                + " as a foreign key");
                         addToMapNewEntityFK(currentModelEntity, currentModelField, addedFields);
+
+                        differences.add("Foreign key " + currentModelField.getFieldName() + " of type " +
+                                currentModelField.getFieldType() + " has been added to entity " +
+                                currentModelEntity.getEntityName());
                         addToMapAddForeignKey(currentModelEntity, currentModelField, addedForeignKeys);
                     }
                 }
@@ -450,17 +510,32 @@ public class Migrate implements BLauncherCmd {
             Entity previousModelEntity = previousModel.getEntityMap().get(currentModelEntity.getEntityName());
 
             if (previousModelEntity == null) {
+                differences.add("Entity " + currentModelEntity.getEntityName() + " has been added");
                 addedEntities.add(currentModelEntity.getEntityName());
                 for (EntityField field : currentModelEntity.getFields()) {
                     if (field.getRelation() == null) {
                         if (currentModelEntity.getKeys().contains(field)) {
+                            differences.add("Field " + field.getFieldName() + " of type " +
+                                    field.getFieldType() + " has been added to entity " +
+                                    currentModelEntity.getEntityName() + " as a readonly field");
                             addToMapWithType(currentModelEntity, field, addedReadOnly);
 
                         } else {
+                            differences.add("Field " + field.getFieldName() + " of type " +
+                                    field.getFieldType() + " has been added to entity " +
+                                    currentModelEntity.getEntityName());
                             addToMapWithType(currentModelEntity, field, addedFields);
                         }
                     } else if (field.getRelation().isOwner()) {
+                        differences.add("Field " + field.getRelation().getKeyColumns().get(0).getField() +
+                                " of type " + field.getRelation().getKeyColumns().get(0).getType() +
+                                " has been added to entity " + currentModelEntity.getEntityName()
+                                + " as a foreign key");
                         addToMapNewEntityFK(currentModelEntity, field, addedFields);
+
+                        differences.add("Foreign key " + field.getFieldName() + " of type " +
+                                field.getFieldType() + " has been added to entity "
+                                + currentModelEntity.getEntityName());
                         addToMapAddForeignKey(currentModelEntity, field, addedForeignKeys);
                     }
                 }
@@ -477,6 +552,11 @@ public class Migrate implements BLauncherCmd {
         convertMapListToQuery(QueryTypes.REMOVE_FIELD, removedFields, queries);
         convertListToQuery(QueryTypes.REMOVE_TABLE, removedEntities, queries);
         convertMapToQuery(QueryTypes.CHANGE_TYPE, changedFieldTypes, queries, addedEntities);
+
+        if (!differences.isEmpty()) {
+            errStream.println(System.lineSeparator() + "Detailed list of differences: ");
+            errStream.println(differences + System.lineSeparator());
+        }
 
         return queries;
     }

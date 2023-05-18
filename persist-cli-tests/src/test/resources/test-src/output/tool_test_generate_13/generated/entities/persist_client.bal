@@ -17,12 +17,12 @@ public isolated client class Client {
 
     private final mysql:Client dbClient;
 
-    private final map<persist:SQLClient> persistClients = {};
+    private final map<persist:SQLClient> persistClients;
 
-    private final record {|persist:SQLMetadata...;|} metadata = {
+    private final record {|persist:SQLMetadata...;|} & readonly metadata = {
         [PROFILE] : {
             entityName: "Profile",
-            tableName: `Profile`,
+            tableName: "Profile",
             fieldMetadata: {
                 id: {columnName: "id"},
                 name: {columnName: "name"},
@@ -42,7 +42,7 @@ public isolated client class Client {
         },
         [USER] : {
             entityName: "User",
-            tableName: `User`,
+            tableName: "User",
             fieldMetadata: {
                 id: {columnName: "id"},
                 name: {columnName: "name"},
@@ -62,7 +62,7 @@ public isolated client class Client {
         },
         [MULTIPLE_ASSOCIATIONS] : {
             entityName: "MultipleAssociations",
-            tableName: `MultipleAssociations`,
+            tableName: "MultipleAssociations",
             fieldMetadata: {
                 id: {columnName: "id"},
                 name: {columnName: "name"},
@@ -82,17 +82,17 @@ public isolated client class Client {
         }
     };
 
-    public function init() returns persist:Error? {
+    public isolated function init() returns persist:Error? {
         mysql:Client|error dbClient = new (host = host, user = user, password = password, database = database, port = port, options = connectionOptions);
         if dbClient is error {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
-        lock {
-            self.persistClients[PROFILE] = check new (self.dbClient, self.metadata.get(PROFILE));
-            self.persistClients[USER] = check new (self.dbClient, self.metadata.get(USER));
-            self.persistClients[MULTIPLE_ASSOCIATIONS] = check new (self.dbClient, self.metadata.get(MULTIPLE_ASSOCIATIONS));
-        }
+        self.persistClients = {
+            [PROFILE] : check new (dbClient, self.metadata.get(PROFILE)),
+            [USER] : check new (dbClient, self.metadata.get(USER)),
+            [MULTIPLE_ASSOCIATIONS] : check new (dbClient, self.metadata.get(MULTIPLE_ASSOCIATIONS))
+        };
     }
 
     isolated resource function get profiles(ProfileTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -106,25 +106,31 @@ public isolated client class Client {
     } external;
 
     isolated resource function post profiles(ProfileInsert[] data) returns int[]|persist:Error {
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get(PROFILE).runBatchInsertQuery(data.clone());
+            sqlClient = self.persistClients.get(PROFILE);
         }
+        _ = check sqlClient.runBatchInsertQuery(data);
         return from ProfileInsert inserted in data
             select inserted.id;
     }
 
     isolated resource function put profiles/[int id](ProfileUpdate value) returns Profile|persist:Error {
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get(PROFILE).runUpdateQuery(id, value.clone());
+            sqlClient = self.persistClients.get(PROFILE);
         }
+        _ = check sqlClient.runUpdateQuery(id, value);
         return self->/profiles/[id].get();
     }
 
     isolated resource function delete profiles/[int id]() returns Profile|persist:Error {
         Profile result = check self->/profiles/[id].get();
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get(PROFILE).runDeleteQuery(id);
+            sqlClient = self.persistClients.get(PROFILE);
         }
+        _ = check sqlClient.runDeleteQuery(id);
         return result;
     }
 
@@ -139,25 +145,31 @@ public isolated client class Client {
     } external;
 
     isolated resource function post users(UserInsert[] data) returns int[]|persist:Error {
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get(USER).runBatchInsertQuery(data.clone());
+            sqlClient = self.persistClients.get(USER);
         }
+        _ = check sqlClient.runBatchInsertQuery(data);
         return from UserInsert inserted in data
             select inserted.id;
     }
 
     isolated resource function put users/[int id](UserUpdate value) returns User|persist:Error {
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get(USER).runUpdateQuery(id, value.clone());
+            sqlClient = self.persistClients.get(USER);
         }
+        _ = check sqlClient.runUpdateQuery(id, value);
         return self->/users/[id].get();
     }
 
     isolated resource function delete users/[int id]() returns User|persist:Error {
         User result = check self->/users/[id].get();
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get(USER).runDeleteQuery(id);
+            sqlClient = self.persistClients.get(USER);
         }
+        _ = check sqlClient.runDeleteQuery(id);
         return result;
     }
 
@@ -172,29 +184,35 @@ public isolated client class Client {
     } external;
 
     isolated resource function post multipleassociations(MultipleAssociationsInsert[] data) returns int[]|persist:Error {
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get(MULTIPLE_ASSOCIATIONS).runBatchInsertQuery(data.clone());
+            sqlClient = self.persistClients.get(MULTIPLE_ASSOCIATIONS);
         }
+        _ = check sqlClient.runBatchInsertQuery(data);
         return from MultipleAssociationsInsert inserted in data
             select inserted.id;
     }
 
     isolated resource function put multipleassociations/[int id](MultipleAssociationsUpdate value) returns MultipleAssociations|persist:Error {
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get(MULTIPLE_ASSOCIATIONS).runUpdateQuery(id, value.clone());
+            sqlClient = self.persistClients.get(MULTIPLE_ASSOCIATIONS);
         }
+        _ = check sqlClient.runUpdateQuery(id, value);
         return self->/multipleassociations/[id].get();
     }
 
     isolated resource function delete multipleassociations/[int id]() returns MultipleAssociations|persist:Error {
         MultipleAssociations result = check self->/multipleassociations/[id].get();
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get(MULTIPLE_ASSOCIATIONS).runDeleteQuery(id);
+            sqlClient = self.persistClients.get(MULTIPLE_ASSOCIATIONS);
         }
+        _ = check sqlClient.runDeleteQuery(id);
         return result;
     }
 
-    public function close() returns persist:Error? {
+    public isolated function close() returns persist:Error? {
         error? result = self.dbClient.close();
         if result is error {
             return <persist:Error>error(result.message());

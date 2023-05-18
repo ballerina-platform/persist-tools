@@ -16,15 +16,15 @@ final isolated table<Follow> key(id) followsTable = table [];
 public isolated client class Client {
     *persist:AbstractPersistClient;
 
-    private final map<persist:InMemoryClient> persistClients = {};
+    private final map<persist:InMemoryClient> persistClients;
 
-    public function init() returns persist:Error? {
+    public isolated function init() returns persist:Error? {
         final map<persist:TableMetadata> metadata = {
             [USER] : {
                 keyFields: ["id"],
                 query: queryUsers,
                 queryOne: queryOneUsers,
-                associationsMethods: {"posts": queryUsersPosts}
+                associationsMethods: {"posts": queryUserPosts}
             },
             [POST] : {
                 keyFields: ["id"],
@@ -37,9 +37,11 @@ public isolated client class Client {
                 queryOne: queryOneFollows
             }
         };
-        self.persistClients[USER] = check new (metadata.get(USER));
-        self.persistClients[POST] = check new (metadata.get(POST));
-        self.persistClients[FOLLOW] = check new (metadata.get(FOLLOW));
+        self.persistClients = {
+            [USER] : check new (metadata.get(USER).cloneReadOnly()),
+            [POST] : check new (metadata.get(POST).cloneReadOnly()),
+            [FOLLOW] : check new (metadata.get(FOLLOW).cloneReadOnly())
+        };
     }
 
     isolated resource function get users(UserTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -183,7 +185,7 @@ public isolated client class Client {
         }
     }
 
-    public function close() returns persist:Error? {
+    public isolated function close() returns persist:Error? {
         return ();
     }
 }
@@ -294,7 +296,7 @@ isolated function queryOneFollows(anydata key) returns record {}|persist:NotFoun
     return <persist:NotFoundError>error("Invalid key: " + key.toString());
 }
 
-isolated function queryUsersPosts(record {} value, string[] fields) returns record {}[] {
+isolated function queryUserPosts(record {} value, string[] fields) returns record {}[] {
     table<Post> key(id) postsClonedTable;
     lock {
         postsClonedTable = postsTable.clone();

@@ -67,7 +67,7 @@ public class InMemoryClientSyntax implements ClientSyntax {
 
     @Override
     public Client getClientObject(Module entityModule) {
-        Client clientObject = BalSyntaxUtils.generateClientSignature();
+        Client clientObject = BalSyntaxUtils.generateClientSignature(true);
         clientObject.addMember(NodeParser.parseObjectMember(BalSyntaxConstants.INIT_IN_MEMORY_CLIENT), true);
         clientObject.addMember(NodeParser.parseObjectMember(""), true);
         return clientObject;
@@ -76,18 +76,27 @@ public class InMemoryClientSyntax implements ClientSyntax {
     @Override
     public FunctionDefinitionNode getInitFunction(Module entityModule) {
         Function init = new Function(BalSyntaxConstants.INIT, SyntaxKind.OBJECT_METHOD_DEFINITION);
-        init.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PUBLIC });
+        init.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PUBLIC, BalSyntaxConstants.KEYWORD_ISOLATED });
         init.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode(BalSyntaxConstants.EMPTY_STRING,
                 BalSyntaxConstants.PERSIST_ERROR));
         init.addStatement(NodeParser.parseStatement(generateInMemoryMetadataRecord(entityModule,
                 queryMethodList)));
+
         Collection<Entity> entityArray = entityModule.getEntityMap().values();
+        StringBuilder persistClientMap = new StringBuilder();
         for (Entity entity : entityArray) {
-            init.addStatement(NodeParser.parseStatement(
-                    String.format(BalSyntaxConstants.PERSIST_IN_MEMORY_CLIENT_MAP_ELEMENT,
-                            BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()),
-                            BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()))));
+            if (persistClientMap.length() != 0) {
+                persistClientMap.append(BalSyntaxConstants.COMMA_WITH_NEWLINE);
+            }
+
+            String inMemoryClientMapElement = String.format(BalSyntaxConstants.PERSIST_IN_MEMORY_CLIENT_MAP_ELEMENT,
+                    BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()),
+                    BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()));
+            persistClientMap.append(inMemoryClientMapElement);
         }
+        init.addStatement(NodeParser.parseStatement(String.format(
+                BalSyntaxConstants.PERSIST_CLIENT_TEMPLATE, persistClientMap)));
+
         return init.getFunctionDefinitionNode();
     }
 
@@ -111,7 +120,7 @@ public class InMemoryClientSyntax implements ClientSyntax {
     public FunctionDefinitionNode getPostFunction(Entity entity) {
         String parameterType = String.format(BalSyntaxConstants.INSERT_RECORD, entity.getEntityName());
         List<EntityField> primaryKeys = entity.getKeys();
-        Function create = BalSyntaxUtils.generatePostFunction(entity, primaryKeys, parameterType);
+        Function create = BalSyntaxUtils.generatePostFunction(entity, primaryKeys, parameterType, true);
         addFunctionBodyToInMemoryPostResource(create, primaryKeys, entity, parameterType);
         return create.getFunctionDefinitionNode();
     }
@@ -131,14 +140,14 @@ public class InMemoryClientSyntax implements ClientSyntax {
             int iterator = 0;
             for (EntityField field : keys) {
                 if (iterator > 0) {
-                    primaryKeys.append(BalSyntaxConstants.COMMA_SPACE);
+                    primaryKeys.append(BalSyntaxConstants.COMMA_WITH_SPACE);
                 }
                 primaryKeys.append(String.format("%s", field.getFieldName()));
                 iterator++;
             }
             primaryKeys.append(BalSyntaxConstants.CLOSE_BRACKET);
         }
-        Function update = BalSyntaxUtils.generatePutFunction(entity, path, filterKeys);
+        Function update = BalSyntaxUtils.generatePutFunction(entity, path, filterKeys, true);
         update.addStatement(NodeParser.parseStatement(BalSyntaxConstants.LOCK));
         update.addStatement(NodeParser.parseStatement(BalSyntaxConstants.OPEN_BRACE));
         IfElse hasCheck = new IfElse(NodeParser.parseExpression(String.format(BalSyntaxConstants.HAS_NOT_KEY,
@@ -164,7 +173,7 @@ public class InMemoryClientSyntax implements ClientSyntax {
     public FunctionDefinitionNode getDeleteFunction(Entity entity) {
         StringBuilder filterKeys = new StringBuilder(BalSyntaxConstants.OPEN_BRACE);
         StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH + entity.getResourceName());
-        Function delete = BalSyntaxUtils.generateDeleteFunction(entity, path, filterKeys);
+        Function delete = BalSyntaxUtils.generateDeleteFunction(entity, path, filterKeys, true);
         delete.addStatement(NodeParser.parseStatement(BalSyntaxConstants.LOCK));
         delete.addStatement(NodeParser.parseStatement(BalSyntaxConstants.OPEN_BRACE));
         IfElse hasCheck = new IfElse(NodeParser.parseExpression(String.format(BalSyntaxConstants.HAS_NOT_KEY,
@@ -198,8 +207,8 @@ public class InMemoryClientSyntax implements ClientSyntax {
             int iterator = 0;
             for (EntityField field : primaryKeys) {
                 if (iterator > 0) {
-                    filterKeys.append(BalSyntaxConstants.COMMA_SPACE);
-                    variableType.append(BalSyntaxConstants.COMMA_SPACE);
+                    filterKeys.append(BalSyntaxConstants.COMMA_WITH_SPACE);
+                    variableType.append(BalSyntaxConstants.COMMA_WITH_SPACE);
                 }
                 filterKeys.append(String.format(BalSyntaxConstants.FIELD, field.getFieldName()));
                 variableType.append(field.getFieldType());
@@ -237,7 +246,6 @@ public class InMemoryClientSyntax implements ClientSyntax {
                     resourceName.substring(1).toLowerCase(Locale.ENGLISH);
             entityMetaData.append(String.format(BalSyntaxConstants.METADATA_QUERY_TEMPLATE, resourceName));
             StringBuilder associationsMethods = new StringBuilder();
-            String finalResourceName = resourceName;
             boolean hasAssociationMethod = false;
             for (EntityField field : entity.getFields()) {
                 if (field.getRelation() != null) {
@@ -252,15 +260,18 @@ public class InMemoryClientSyntax implements ClientSyntax {
                                 if (associationsMethods.length() != 0) {
                                     associationsMethods.append(BalSyntaxConstants.COMMA_WITH_NEWLINE);
                                 }
+
                                 String associateEntityName = BalSyntaxUtils.stripEscapeCharacter(relation.
                                         getAssocEntity().getResourceName());
-                                String associateEntityNameCamelCase = associateEntityName.substring(0, 1).
-                                        toUpperCase(Locale.ENGLISH) + associateEntityName.substring(1).
+
+                                String associateFieldName = BalSyntaxUtils.stripEscapeCharacter(field.getFieldName());
+                                String associateFieldNameCamelCase = associateFieldName.substring(0, 1).
+                                        toUpperCase(Locale.ENGLISH) + associateFieldName.substring(1).
                                         toLowerCase(Locale.ENGLISH);
                                 associationsMethods.append(String.format(
                                         BalSyntaxConstants.METADATA_ASSOCIATIONS_METHODS_TEMPLATE,
-                                        "\"" + associateEntityName + "\"", finalResourceName.concat(
-                                                associateEntityNameCamelCase)));
+                                        "\"" + associateFieldName + "\"", entity.getEntityName().concat(
+                                                associateFieldNameCamelCase)));
                                 int referenceIndex = 0;
                                 StringBuilder conditionStatement = new StringBuilder();
                                 for (String reference : relation.getReferences()) {
@@ -272,7 +283,7 @@ public class InMemoryClientSyntax implements ClientSyntax {
                                     referenceIndex++;
                                 }
                                 QueryMethod queryMethod = new QueryMethod(
-                                        "query" + finalResourceName.concat(associateEntityNameCamelCase),
+                                        "query" + entity.getEntityName().concat(associateFieldNameCamelCase),
                                         relation.getAssocEntity().getEntityName(),
                                         String.format(BalSyntaxConstants.RETURN_STATEMENT_FOR_RELATIONAL_ENTITY,
                                                 associateEntityName, conditionStatement)
@@ -303,7 +314,7 @@ public class InMemoryClientSyntax implements ClientSyntax {
         StringBuilder keyFields = new StringBuilder();
         for (EntityField key : entity.getKeys()) {
             if (keyFields.length() != 0) {
-                keyFields.append(BalSyntaxConstants.COMMA_SPACE);
+                keyFields.append(BalSyntaxConstants.COMMA_WITH_SPACE);
             }
             if (addDoubleQuotes) {
                 keyFields.append("\"").append(BalSyntaxUtils.stripEscapeCharacter(key.getFieldName())).append("\"");

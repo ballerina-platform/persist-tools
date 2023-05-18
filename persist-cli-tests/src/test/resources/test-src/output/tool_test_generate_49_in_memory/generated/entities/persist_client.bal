@@ -20,27 +20,27 @@ final isolated table<Employee> key(empNo, firstName) employeesTable = table [];
 public isolated client class Client {
     *persist:AbstractPersistClient;
 
-    private final map<persist:InMemoryClient> persistClients = {};
+    private final map<persist:InMemoryClient> persistClients;
 
-    public function init() returns persist:Error? {
+    public isolated function init() returns persist:Error? {
         final map<persist:TableMetadata> metadata = {
             [WORKSPACE] : {
                 keyFields: ["workspaceId", "workspaceType"],
                 query: queryWorkspaces,
                 queryOne: queryOneWorkspaces,
-                associationsMethods: {"employees": queryWorkspacesEmployees}
+                associationsMethods: {"employees": queryWorkspaceEmployees}
             },
             [BUILDING] : {
                 keyFields: ["buildingCode"],
                 query: queryBuildings,
                 queryOne: queryOneBuildings,
-                associationsMethods: {"workspaces": queryBuildingsWorkspaces}
+                associationsMethods: {"workspaces": queryBuildingWorkspaces}
             },
             [DEPARTMENT] : {
                 keyFields: ["deptNo", "deptName"],
                 query: queryDepartments,
                 queryOne: queryOneDepartments,
-                associationsMethods: {"employees": queryDepartmentsEmployees}
+                associationsMethods: {"employees": queryDepartmentEmployees}
             },
             [ORDER_ITEM] : {
                 keyFields: ["orderId", "itemId"],
@@ -53,11 +53,13 @@ public isolated client class Client {
                 queryOne: queryOneEmployees
             }
         };
-        self.persistClients[WORKSPACE] = check new (metadata.get(WORKSPACE));
-        self.persistClients[BUILDING] = check new (metadata.get(BUILDING));
-        self.persistClients[DEPARTMENT] = check new (metadata.get(DEPARTMENT));
-        self.persistClients[ORDER_ITEM] = check new (metadata.get(ORDER_ITEM));
-        self.persistClients[EMPLOYEE] = check new (metadata.get(EMPLOYEE));
+        self.persistClients = {
+            [WORKSPACE] : check new (metadata.get(WORKSPACE).cloneReadOnly()),
+            [BUILDING] : check new (metadata.get(BUILDING).cloneReadOnly()),
+            [DEPARTMENT] : check new (metadata.get(DEPARTMENT).cloneReadOnly()),
+            [ORDER_ITEM] : check new (metadata.get(ORDER_ITEM).cloneReadOnly()),
+            [EMPLOYEE] : check new (metadata.get(EMPLOYEE).cloneReadOnly())
+        };
     }
 
     isolated resource function get workspaces(WorkspaceTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -295,7 +297,7 @@ public isolated client class Client {
         }
     }
 
-    public function close() returns persist:Error? {
+    public isolated function close() returns persist:Error? {
         return ();
     }
 }
@@ -466,7 +468,7 @@ isolated function queryOneEmployees(anydata key) returns record {}|persist:NotFo
     return <persist:NotFoundError>error("Invalid key: " + key.toString());
 }
 
-isolated function queryWorkspacesEmployees(record {} value, string[] fields) returns record {}[] {
+isolated function queryWorkspaceEmployees(record {} value, string[] fields) returns record {}[] {
     table<Employee> key(empNo, firstName) employeesClonedTable;
     lock {
         employeesClonedTable = employeesTable.clone();
@@ -478,7 +480,7 @@ isolated function queryWorkspacesEmployees(record {} value, string[] fields) ret
         }, fields);
 }
 
-isolated function queryBuildingsWorkspaces(record {} value, string[] fields) returns record {}[] {
+isolated function queryBuildingWorkspaces(record {} value, string[] fields) returns record {}[] {
     table<Workspace> key(workspaceId, workspaceType) workspacesClonedTable;
     lock {
         workspacesClonedTable = workspacesTable.clone();
@@ -490,7 +492,7 @@ isolated function queryBuildingsWorkspaces(record {} value, string[] fields) ret
         }, fields);
 }
 
-isolated function queryDepartmentsEmployees(record {} value, string[] fields) returns record {}[] {
+isolated function queryDepartmentEmployees(record {} value, string[] fields) returns record {}[] {
     table<Employee> key(empNo, firstName) employeesClonedTable;
     lock {
         employeesClonedTable = employeesTable.clone();
