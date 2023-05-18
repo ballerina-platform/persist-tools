@@ -18,9 +18,9 @@ final isolated table<Department> key(deptNo) departmentsTable = table [];
 public isolated client class Client {
     *persist:AbstractPersistClient;
 
-    private final map<persist:InMemoryClient> persistClients = {};
+    private final map<persist:InMemoryClient> persistClients;
 
-    public function init() returns persist:Error? {
+    public isolated function init() returns persist:Error? {
         final map<persist:TableMetadata> metadata = {
             [EMPLOYEE] : {
                 keyFields: ["empNo"],
@@ -45,10 +45,12 @@ public isolated client class Client {
                 associationsMethods: {"employees": queryDepartmentsEmployees}
             }
         };
-        self.persistClients[EMPLOYEE] = check new (metadata.get(EMPLOYEE));
-        self.persistClients[WORKSPACE] = check new (metadata.get(WORKSPACE));
-        self.persistClients[BUILDING] = check new (metadata.get(BUILDING));
-        self.persistClients[DEPARTMENT] = check new (metadata.get(DEPARTMENT));
+        self.persistClients = {
+            [EMPLOYEE] : check new (metadata.get(EMPLOYEE).cloneReadOnly()),
+            [WORKSPACE] : check new (metadata.get(WORKSPACE).cloneReadOnly()),
+            [BUILDING] : check new (metadata.get(BUILDING).cloneReadOnly()),
+            [DEPARTMENT] : check new (metadata.get(DEPARTMENT).cloneReadOnly())
+        };
     }
 
     isolated resource function get employees(EmployeeTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -66,7 +68,7 @@ public isolated client class Client {
         foreach EmployeeInsert value in data {
             lock {
                 if employeesTable.hasKey(value.empNo) {
-                    return <persist:DuplicateKeyError>error("Duplicate key: " + value.empNo.toString());
+                    return <persist:AlreadyExistsError>error("Duplicate key: " + value.empNo.toString());
                 }
                 employeesTable.put(value.clone());
             }
@@ -78,7 +80,7 @@ public isolated client class Client {
     isolated resource function put employees/[string empNo](EmployeeUpdate value) returns Employee|persist:Error {
         lock {
             if !employeesTable.hasKey(empNo) {
-                return <persist:InvalidKeyError>error("Not found: " + empNo.toString());
+                return <persist:NotFoundError>error("Not found: " + empNo.toString());
             }
             Employee employee = employeesTable.get(empNo);
             foreach var [k, v] in value.clone().entries() {
@@ -92,7 +94,7 @@ public isolated client class Client {
     isolated resource function delete employees/[string empNo]() returns Employee|persist:Error {
         lock {
             if !employeesTable.hasKey(empNo) {
-                return <persist:InvalidKeyError>error("Not found: " + empNo.toString());
+                return <persist:NotFoundError>error("Not found: " + empNo.toString());
             }
             return employeesTable.remove(empNo).clone();
         }
@@ -113,7 +115,7 @@ public isolated client class Client {
         foreach WorkspaceInsert value in data {
             lock {
                 if workspacesTable.hasKey(value.workspaceId) {
-                    return <persist:DuplicateKeyError>error("Duplicate key: " + value.workspaceId.toString());
+                    return <persist:AlreadyExistsError>error("Duplicate key: " + value.workspaceId.toString());
                 }
                 workspacesTable.put(value.clone());
             }
@@ -125,7 +127,7 @@ public isolated client class Client {
     isolated resource function put workspaces/[string workspaceId](WorkspaceUpdate value) returns Workspace|persist:Error {
         lock {
             if !workspacesTable.hasKey(workspaceId) {
-                return <persist:InvalidKeyError>error("Not found: " + workspaceId.toString());
+                return <persist:NotFoundError>error("Not found: " + workspaceId.toString());
             }
             Workspace workspace = workspacesTable.get(workspaceId);
             foreach var [k, v] in value.clone().entries() {
@@ -139,7 +141,7 @@ public isolated client class Client {
     isolated resource function delete workspaces/[string workspaceId]() returns Workspace|persist:Error {
         lock {
             if !workspacesTable.hasKey(workspaceId) {
-                return <persist:InvalidKeyError>error("Not found: " + workspaceId.toString());
+                return <persist:NotFoundError>error("Not found: " + workspaceId.toString());
             }
             return workspacesTable.remove(workspaceId).clone();
         }
@@ -160,7 +162,7 @@ public isolated client class Client {
         foreach BuildingInsert value in data {
             lock {
                 if buildingsTable.hasKey(value.buildingCode) {
-                    return <persist:DuplicateKeyError>error("Duplicate key: " + value.buildingCode.toString());
+                    return <persist:AlreadyExistsError>error("Duplicate key: " + value.buildingCode.toString());
                 }
                 buildingsTable.put(value.clone());
             }
@@ -172,7 +174,7 @@ public isolated client class Client {
     isolated resource function put buildings/[string buildingCode](BuildingUpdate value) returns Building|persist:Error {
         lock {
             if !buildingsTable.hasKey(buildingCode) {
-                return <persist:InvalidKeyError>error("Not found: " + buildingCode.toString());
+                return <persist:NotFoundError>error("Not found: " + buildingCode.toString());
             }
             Building building = buildingsTable.get(buildingCode);
             foreach var [k, v] in value.clone().entries() {
@@ -186,7 +188,7 @@ public isolated client class Client {
     isolated resource function delete buildings/[string buildingCode]() returns Building|persist:Error {
         lock {
             if !buildingsTable.hasKey(buildingCode) {
-                return <persist:InvalidKeyError>error("Not found: " + buildingCode.toString());
+                return <persist:NotFoundError>error("Not found: " + buildingCode.toString());
             }
             return buildingsTable.remove(buildingCode).clone();
         }
@@ -207,7 +209,7 @@ public isolated client class Client {
         foreach DepartmentInsert value in data {
             lock {
                 if departmentsTable.hasKey(value.deptNo) {
-                    return <persist:DuplicateKeyError>error("Duplicate key: " + value.deptNo.toString());
+                    return <persist:AlreadyExistsError>error("Duplicate key: " + value.deptNo.toString());
                 }
                 departmentsTable.put(value.clone());
             }
@@ -219,7 +221,7 @@ public isolated client class Client {
     isolated resource function put departments/[string deptNo](DepartmentUpdate value) returns Department|persist:Error {
         lock {
             if !departmentsTable.hasKey(deptNo) {
-                return <persist:InvalidKeyError>error("Not found: " + deptNo.toString());
+                return <persist:NotFoundError>error("Not found: " + deptNo.toString());
             }
             Department department = departmentsTable.get(deptNo);
             foreach var [k, v] in value.clone().entries() {
@@ -233,13 +235,13 @@ public isolated client class Client {
     isolated resource function delete departments/[string deptNo]() returns Department|persist:Error {
         lock {
             if !departmentsTable.hasKey(deptNo) {
-                return <persist:InvalidKeyError>error("Not found: " + deptNo.toString());
+                return <persist:NotFoundError>error("Not found: " + deptNo.toString());
             }
             return departmentsTable.remove(deptNo).clone();
         }
     }
 
-    public function close() returns persist:Error? {
+    public isolated function close() returns persist:Error? {
         return ();
     }
 }
@@ -261,7 +263,7 @@ isolated function queryEmployees(string[] fields) returns stream<record {}, pers
         }, fields);
 }
 
-isolated function queryOneEmployees(anydata key) returns record {}|persist:InvalidKeyError {
+isolated function queryOneEmployees(anydata key) returns record {}|persist:NotFoundError {
     table<Employee> key(empNo) employeesClonedTable;
     lock {
         employeesClonedTable = employeesTable.clone();
@@ -279,7 +281,7 @@ isolated function queryOneEmployees(anydata key) returns record {}|persist:Inval
             "department": department
         };
     };
-    return <persist:InvalidKeyError>error("Invalid key: " + key.toString());
+    return <persist:NotFoundError>error("Invalid key: " + key.toString());
 }
 
 isolated function queryWorkspaces(string[] fields) returns stream<record {}, persist:Error?> {
@@ -305,7 +307,7 @@ isolated function queryWorkspaces(string[] fields) returns stream<record {}, per
         }, fields);
 }
 
-isolated function queryOneWorkspaces(anydata key) returns record {}|persist:InvalidKeyError {
+isolated function queryOneWorkspaces(anydata key) returns record {}|persist:NotFoundError {
     table<Workspace> key(workspaceId) workspacesClonedTable;
     lock {
         workspacesClonedTable = workspacesTable.clone();
@@ -329,7 +331,7 @@ isolated function queryOneWorkspaces(anydata key) returns record {}|persist:Inva
             "employee": employee
         };
     };
-    return <persist:InvalidKeyError>error("Invalid key: " + key.toString());
+    return <persist:NotFoundError>error("Invalid key: " + key.toString());
 }
 
 isolated function queryBuildings(string[] fields) returns stream<record {}, persist:Error?> {
@@ -343,7 +345,7 @@ isolated function queryBuildings(string[] fields) returns stream<record {}, pers
         }, fields);
 }
 
-isolated function queryOneBuildings(anydata key) returns record {}|persist:InvalidKeyError {
+isolated function queryOneBuildings(anydata key) returns record {}|persist:NotFoundError {
     table<Building> key(buildingCode) buildingsClonedTable;
     lock {
         buildingsClonedTable = buildingsTable.clone();
@@ -355,7 +357,7 @@ isolated function queryOneBuildings(anydata key) returns record {}|persist:Inval
             ...'object
         };
     };
-    return <persist:InvalidKeyError>error("Invalid key: " + key.toString());
+    return <persist:NotFoundError>error("Invalid key: " + key.toString());
 }
 
 isolated function queryDepartments(string[] fields) returns stream<record {}, persist:Error?> {
@@ -369,7 +371,7 @@ isolated function queryDepartments(string[] fields) returns stream<record {}, pe
         }, fields);
 }
 
-isolated function queryOneDepartments(anydata key) returns record {}|persist:InvalidKeyError {
+isolated function queryOneDepartments(anydata key) returns record {}|persist:NotFoundError {
     table<Department> key(deptNo) departmentsClonedTable;
     lock {
         departmentsClonedTable = departmentsTable.clone();
@@ -381,7 +383,7 @@ isolated function queryOneDepartments(anydata key) returns record {}|persist:Inv
             ...'object
         };
     };
-    return <persist:InvalidKeyError>error("Invalid key: " + key.toString());
+    return <persist:NotFoundError>error("Invalid key: " + key.toString());
 }
 
 isolated function queryBuildingsWorkspaces(record {} value, string[] fields) returns record {}[] {

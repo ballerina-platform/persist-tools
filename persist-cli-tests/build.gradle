@@ -92,6 +92,24 @@ task unpackStdLibs() {
     }
 }
 
+task pullGSheetsDependency() {
+    doLast {
+        if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+            return exec {
+                ignoreExitValue true
+                String distributionBinPath = "${project.rootDir}/target/ballerina-distribution/bin"
+                commandLine 'sh', '-c', "$distributionBinPath/bal pull ballerinax/googleapis.sheets"
+            }.exitValue
+        } else {
+            return exec {
+                ignoreExitValue true
+                String distributionBinPath = "${project.rootDir}/target/ballerina-distribution/bin"
+                commandLine 'cmd', '/c', "$distributionBinPath/bal.bat pull ballerinax/googleapis.sheets"
+            }.exitValue
+        }
+    }
+}
+
 task copyStdlibs() {
     dependsOn(unpackStdLibs)
 
@@ -281,26 +299,8 @@ jacocoTestReport {
     }
 }
 
-task pullGSheetsDependency() {
-    doLast {
-        if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-            return exec {
-                ignoreExitValue true
-                String distributionBinPath = "${project.rootDir}/target/ballerina-distribution/bin"
-                commandLine 'sh', '-c', "$distributionBinPath/bal pull ballerinax/googleapis.sheets"
-            }.exitValue
-        } else {
-            return exec {
-                ignoreExitValue true
-                String distributionBinPath = "${project.rootDir}/target/ballerina-distribution/bin"
-                commandLine 'cmd', '/c', "$distributionBinPath/bal.bat pull ballerinax/googleapis.sheets"
-            }.exitValue
-        }
-    }
-}
 
 pullGSheetsDependency.dependsOn startTestDockerContainer
-
 test.dependsOn pullGSheetsDependency
 test.dependsOn ":persist-cli:build"
 test.finalizedBy stopTestDockerContainer

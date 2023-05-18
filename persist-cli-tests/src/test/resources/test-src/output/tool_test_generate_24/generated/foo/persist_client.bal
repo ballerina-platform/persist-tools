@@ -15,12 +15,12 @@ public isolated client class Client {
 
     private final mysql:Client dbClient;
 
-    private final map<persist:SQLClient> persistClients = {};
+    private final map<persist:SQLClient> persistClients;
 
-    private final record {|persist:SQLMetadata...;|} metadata = {
+    private final record {|persist:SQLMetadata...;|} & readonly metadata = {
         [BYTE_TEST] : {
             entityName: "ByteTest",
-            tableName: `ByteTest`,
+            tableName: "ByteTest",
             fieldMetadata: {
                 id: {columnName: "id"},
                 binary1: {columnName: "binary1"},
@@ -30,15 +30,13 @@ public isolated client class Client {
         }
     };
 
-    public function init() returns persist:Error? {
+    public isolated function init() returns persist:Error? {
         mysql:Client|error dbClient = new (host = host, user = user, password = password, database = database, port = port, options = connectionOptions);
         if dbClient is error {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
-        lock {
-            self.persistClients[BYTE_TEST] = check new (self.dbClient, self.metadata.get(BYTE_TEST));
-        }
+        self.persistClients = {[BYTE_TEST] : check new (dbClient, self.metadata.get(BYTE_TEST))};
     }
 
     isolated resource function get bytetests(ByteTestTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -52,29 +50,35 @@ public isolated client class Client {
     } external;
 
     isolated resource function post bytetests(ByteTestInsert[] data) returns int[]|persist:Error {
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get(BYTE_TEST).runBatchInsertQuery(data.clone());
+            sqlClient = self.persistClients.get(BYTE_TEST);
         }
+        _ = check sqlClient.runBatchInsertQuery(data);
         return from ByteTestInsert inserted in data
             select inserted.id;
     }
 
     isolated resource function put bytetests/[int id](ByteTestUpdate value) returns ByteTest|persist:Error {
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get(BYTE_TEST).runUpdateQuery(id, value.clone());
+            sqlClient = self.persistClients.get(BYTE_TEST);
         }
+        _ = check sqlClient.runUpdateQuery(id, value);
         return self->/bytetests/[id].get();
     }
 
     isolated resource function delete bytetests/[int id]() returns ByteTest|persist:Error {
         ByteTest result = check self->/bytetests/[id].get();
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get(BYTE_TEST).runDeleteQuery(id);
+            sqlClient = self.persistClients.get(BYTE_TEST);
         }
+        _ = check sqlClient.runDeleteQuery(id);
         return result;
     }
 
-    public function close() returns persist:Error? {
+    public isolated function close() returns persist:Error? {
         error? result = self.dbClient.close();
         if result is error {
             return <persist:Error>error(result.message());
