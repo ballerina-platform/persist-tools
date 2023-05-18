@@ -177,13 +177,13 @@ public class Generate implements BLauncherCmd {
         if (dataStore.equals(PersistToolsConstants.SupportDataSources.MYSQL_DB)) {
             try {
                 sourceCreator.createDbSources();
-                errStream.printf("Generated Ballerina Client, Types, " + "and Scripts to %s directory.%n",
-                        generatedSourceDirPath);
-                errStream.println("You can now start using Ballerina Client in your code.");
+                errStream.println("Persist client and SQL script generated successfully in the ./generated directory.");
+                errStream.println("You can now start using the Ballerina Client in your code.");
                 errStream.println(System.lineSeparator() + "Next steps:");
-                errStream.printf("Set database configurations in Config.toml file to point to " +
-                        "your database. If your database has no tables yet, execute the scripts." +
-                        "sql file at %s directory, in your database to create tables.%n", generatedSourceDirPath);
+                errStream.println("- If your database is empty, execute the scripts.sql file " +
+                        "in the ./generated directory to populate the database.");
+                errStream.println("- Set the database configurations in the \"Config.toml\" file " +
+                        "before running the program.");
             } catch (BalException e) {
                 errStream.printf(String.format(BalSyntaxConstants.ERROR_MSG,
                         PersistToolsConstants.SupportDataSources.MYSQL_DB, e.getMessage()));
