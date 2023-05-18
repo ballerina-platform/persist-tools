@@ -1,6 +1,6 @@
 [package]
 org = "foo"
-name = "persist_generate_51"
+name = "persist_generate_54"
 version = "0.1.0"
 distribution = "2201.5.0"
 
@@ -9,4 +9,4 @@ observabilityIncluded = false
 
 [persist]
 datastore = "googlesheets"
-module = "persist_generate_51.entities"
+module = "persist_generate_54.entities"
