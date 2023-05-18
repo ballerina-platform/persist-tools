@@ -270,10 +270,10 @@ public client class Client {
         stream<Workspace, persist:Error?> workspacesStream = self.queryWorkspacesStream();
         stream<Building, persist:Error?> buildingsStream = self.queryBuildingsStream();
         record {}[] outputArray = check from record {} 'object in workspacesStream
-            outer join var building in buildingsStream on ['object.locationBuildingCode] equals [building?.buildingCode]
+            outer join var location in buildingsStream on ['object.locationBuildingCode] equals [location?.buildingCode]
             select persist:filterRecord({
                 ...'object,
-                "building": building
+                "location": location
             }, fields);
         return outputArray.toStream();
     }
@@ -283,11 +283,11 @@ public client class Client {
         stream<Building, persist:Error?> buildingsStream = self.queryBuildingsStream();
         error? unionResult = from record {} 'object in workspacesStream
             where self.persistClients.get(WORKSPACE).getKey('object) == key
-            outer join var building in buildingsStream on ['object.locationBuildingCode] equals [building?.buildingCode]
+            outer join var location in buildingsStream on ['object.locationBuildingCode] equals [location?.buildingCode]
             do {
                 return {
                     ...'object,
-                    "building": building
+                    "location": location
                 };
             };
         if unionResult is error {
