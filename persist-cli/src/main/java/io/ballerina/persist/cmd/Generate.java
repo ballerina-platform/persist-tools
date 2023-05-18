@@ -186,7 +186,7 @@ public class Generate implements BLauncherCmd {
                 errStream.printf("Generated Ballerina Client, and Types to %s directory.%n", generatedSourceDirPath);
                 errStream.println("You can now start using Ballerina Client in your code.");
                 errStream.println(System.lineSeparator() + "Next steps:");
-                errStream.printf("Execute the \"scripts.js\" file located at %s directory in your worksheet " +
+                errStream.printf("Execute the \"scripts.gs\" file located at %s directory in your worksheet " +
                         "to create sheets.", generatedSourceDirPath);
             } catch (BalException e) {
                 errStream.printf(String.format(BalSyntaxConstants.ERROR_MSG,
