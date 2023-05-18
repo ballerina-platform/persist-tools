@@ -90,6 +90,9 @@ public class Migrate implements BLauncherCmd {
             return;
         }
 
+        errStream.println(System.lineSeparator() + "WARNING The support for migrations is currently an experimental " +
+                "feature, and its behavior may be subject to change in future releases." + System.lineSeparator());
+
         Path projectPath = Paths.get(sourcePath).toAbsolutePath();
         try {
             BalProjectUtils.validateBallerinaProject(projectPath);
