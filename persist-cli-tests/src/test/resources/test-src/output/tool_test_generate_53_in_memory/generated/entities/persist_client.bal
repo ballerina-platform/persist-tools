@@ -24,7 +24,7 @@ public isolated client class Client {
                 keyFields: ["id"],
                 query: queryUsers,
                 queryOne: queryOneUsers,
-                associationsMethods: {"posts": queryUsersPosts}
+                associationsMethods: {"posts": queryUserPosts}
             },
             [POST] : {
                 keyFields: ["id"],
@@ -296,7 +296,7 @@ isolated function queryOneFollows(anydata key) returns record {}|persist:NotFoun
     return <persist:NotFoundError>error("Invalid key: " + key.toString());
 }
 
-isolated function queryUsersPosts(record {} value, string[] fields) returns record {}[] {
+isolated function queryUserPosts(record {} value, string[] fields) returns record {}[] {
     table<Post> key(id) postsClonedTable;
     lock {
         postsClonedTable = postsTable.clone();

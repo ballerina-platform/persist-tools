@@ -36,13 +36,13 @@ public isolated client class Client {
                 keyFields: ["buildingCode"],
                 query: queryBuildings,
                 queryOne: queryOneBuildings,
-                associationsMethods: {"workspaces": queryBuildingsWorkspaces}
+                associationsMethods: {"workspaces": queryBuildingWorkspaces}
             },
             [DEPARTMENT] : {
                 keyFields: ["deptNo"],
                 query: queryDepartments,
                 queryOne: queryOneDepartments,
-                associationsMethods: {"employees": queryDepartmentsEmployees}
+                associationsMethods: {"employees": queryDepartmentEmployees}
             }
         };
         self.persistClients = {
@@ -386,7 +386,7 @@ isolated function queryOneDepartments(anydata key) returns record {}|persist:Not
     return <persist:NotFoundError>error("Invalid key: " + key.toString());
 }
 
-isolated function queryBuildingsWorkspaces(record {} value, string[] fields) returns record {}[] {
+isolated function queryBuildingWorkspaces(record {} value, string[] fields) returns record {}[] {
     table<Workspace> key(workspaceId) workspacesClonedTable;
     lock {
         workspacesClonedTable = workspacesTable.clone();
@@ -398,7 +398,7 @@ isolated function queryBuildingsWorkspaces(record {} value, string[] fields) ret
         }, fields);
 }
 
-isolated function queryDepartmentsEmployees(record {} value, string[] fields) returns record {}[] {
+isolated function queryDepartmentEmployees(record {} value, string[] fields) returns record {}[] {
     table<Employee> key(empNo) employeesClonedTable;
     lock {
         employeesClonedTable = employeesTable.clone();

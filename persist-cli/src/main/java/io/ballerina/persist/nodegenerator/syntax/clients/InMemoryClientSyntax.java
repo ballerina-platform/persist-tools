@@ -246,7 +246,6 @@ public class InMemoryClientSyntax implements ClientSyntax {
                     resourceName.substring(1).toLowerCase(Locale.ENGLISH);
             entityMetaData.append(String.format(BalSyntaxConstants.METADATA_QUERY_TEMPLATE, resourceName));
             StringBuilder associationsMethods = new StringBuilder();
-            String finalResourceName = resourceName;
             boolean hasAssociationMethod = false;
             for (EntityField field : entity.getFields()) {
                 if (field.getRelation() != null) {
@@ -261,15 +260,18 @@ public class InMemoryClientSyntax implements ClientSyntax {
                                 if (associationsMethods.length() != 0) {
                                     associationsMethods.append(BalSyntaxConstants.COMMA_WITH_NEWLINE);
                                 }
+
                                 String associateEntityName = BalSyntaxUtils.stripEscapeCharacter(relation.
                                         getAssocEntity().getResourceName());
-                                String associateEntityNameCamelCase = associateEntityName.substring(0, 1).
-                                        toUpperCase(Locale.ENGLISH) + associateEntityName.substring(1).
+
+                                String associateFieldName = BalSyntaxUtils.stripEscapeCharacter(field.getFieldName());
+                                String associateFieldNameCamelCase = associateFieldName.substring(0, 1).
+                                        toUpperCase(Locale.ENGLISH) + associateFieldName.substring(1).
                                         toLowerCase(Locale.ENGLISH);
                                 associationsMethods.append(String.format(
                                         BalSyntaxConstants.METADATA_ASSOCIATIONS_METHODS_TEMPLATE,
-                                        "\"" + associateEntityName + "\"", finalResourceName.concat(
-                                                associateEntityNameCamelCase)));
+                                        "\"" + associateFieldName + "\"", entity.getEntityName().concat(
+                                                associateFieldNameCamelCase)));
                                 int referenceIndex = 0;
                                 StringBuilder conditionStatement = new StringBuilder();
                                 for (String reference : relation.getReferences()) {
@@ -281,7 +283,7 @@ public class InMemoryClientSyntax implements ClientSyntax {
                                     referenceIndex++;
                                 }
                                 QueryMethod queryMethod = new QueryMethod(
-                                        "query" + finalResourceName.concat(associateEntityNameCamelCase),
+                                        "query" + entity.getEntityName().concat(associateFieldNameCamelCase),
                                         relation.getAssocEntity().getEntityName(),
                                         String.format(BalSyntaxConstants.RETURN_STATEMENT_FOR_RELATIONAL_ENTITY,
                                                 associateEntityName, conditionStatement)
