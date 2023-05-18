@@ -16,9 +16,9 @@ final isolated table<Follow> key(id) followsTable = table [];
 public isolated client class Client {
     *persist:AbstractPersistClient;
 
-    private final map<persist:InMemoryClient> persistClients = {};
+    private final map<persist:InMemoryClient> persistClients;
 
-    public function init() returns persist:Error? {
+    public isolated function init() returns persist:Error? {
         final map<persist:TableMetadata> metadata = {
             [USER] : {
                 keyFields: ["id"],
@@ -37,9 +37,11 @@ public isolated client class Client {
                 queryOne: queryOneFollows
             }
         };
-        self.persistClients[USER] = check new (metadata.get(USER));
-        self.persistClients[POST] = check new (metadata.get(POST));
-        self.persistClients[FOLLOW] = check new (metadata.get(FOLLOW));
+        self.persistClients = {
+            [USER] : check new (metadata.get(USER).cloneReadOnly()),
+            [POST] : check new (metadata.get(POST).cloneReadOnly()),
+            [FOLLOW] : check new (metadata.get(FOLLOW).cloneReadOnly())
+        };
     }
 
     isolated resource function get users(UserTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -57,7 +59,7 @@ public isolated client class Client {
         foreach UserInsert value in data {
             lock {
                 if usersTable.hasKey(value.id) {
-                    return <persist:DuplicateKeyError>error("Duplicate key: " + value.id.toString());
+                    return <persist:AlreadyExistsError>error("Duplicate key: " + value.id.toString());
                 }
                 usersTable.put(value.clone());
             }
@@ -69,7 +71,7 @@ public isolated client class Client {
     isolated resource function put users/[int id](UserUpdate value) returns User|persist:Error {
         lock {
             if !usersTable.hasKey(id) {
-                return <persist:InvalidKeyError>error("Not found: " + id.toString());
+                return <persist:NotFoundError>error("Not found: " + id.toString());
             }
             User user = usersTable.get(id);
             foreach var [k, v] in value.clone().entries() {
@@ -83,7 +85,7 @@ public isolated client class Client {
     isolated resource function delete users/[int id]() returns User|persist:Error {
         lock {
             if !usersTable.hasKey(id) {
-                return <persist:InvalidKeyError>error("Not found: " + id.toString());
+                return <persist:NotFoundError>error("Not found: " + id.toString());
             }
             return usersTable.remove(id).clone();
         }
@@ -104,7 +106,7 @@ public isolated client class Client {
         foreach PostInsert value in data {
             lock {
                 if postsTable.hasKey(value.id) {
-                    return <persist:DuplicateKeyError>error("Duplicate key: " + value.id.toString());
+                    return <persist:AlreadyExistsError>error("Duplicate key: " + value.id.toString());
                 }
                 postsTable.put(value.clone());
             }
@@ -116,7 +118,7 @@ public isolated client class Client {
     isolated resource function put posts/[int id](PostUpdate value) returns Post|persist:Error {
         lock {
             if !postsTable.hasKey(id) {
-                return <persist:InvalidKeyError>error("Not found: " + id.toString());
+                return <persist:NotFoundError>error("Not found: " + id.toString());
             }
             Post post = postsTable.get(id);
             foreach var [k, v] in value.clone().entries() {
@@ -130,7 +132,7 @@ public isolated client class Client {
     isolated resource function delete posts/[int id]() returns Post|persist:Error {
         lock {
             if !postsTable.hasKey(id) {
-                return <persist:InvalidKeyError>error("Not found: " + id.toString());
+                return <persist:NotFoundError>error("Not found: " + id.toString());
             }
             return postsTable.remove(id).clone();
         }
@@ -151,7 +153,7 @@ public isolated client class Client {
         foreach FollowInsert value in data {
             lock {
                 if followsTable.hasKey(value.id) {
-                    return <persist:DuplicateKeyError>error("Duplicate key: " + value.id.toString());
+                    return <persist:AlreadyExistsError>error("Duplicate key: " + value.id.toString());
                 }
                 followsTable.put(value.clone());
             }
@@ -163,7 +165,7 @@ public isolated client class Client {
     isolated resource function put follows/[int id](FollowUpdate value) returns Follow|persist:Error {
         lock {
             if !followsTable.hasKey(id) {
-                return <persist:InvalidKeyError>error("Not found: " + id.toString());
+                return <persist:NotFoundError>error("Not found: " + id.toString());
             }
             Follow follow = followsTable.get(id);
             foreach var [k, v] in value.clone().entries() {
@@ -177,13 +179,13 @@ public isolated client class Client {
     isolated resource function delete follows/[int id]() returns Follow|persist:Error {
         lock {
             if !followsTable.hasKey(id) {
-                return <persist:InvalidKeyError>error("Not found: " + id.toString());
+                return <persist:NotFoundError>error("Not found: " + id.toString());
             }
             return followsTable.remove(id).clone();
         }
     }
 
-    public function close() returns persist:Error? {
+    public isolated function close() returns persist:Error? {
         return ();
     }
 }
@@ -199,7 +201,7 @@ isolated function queryUsers(string[] fields) returns stream<record {}, persist:
         }, fields);
 }
 
-isolated function queryOneUsers(anydata key) returns record {}|persist:InvalidKeyError {
+isolated function queryOneUsers(anydata key) returns record {}|persist:NotFoundError {
     table<User> key(id) usersClonedTable;
     lock {
         usersClonedTable = usersTable.clone();
@@ -211,7 +213,7 @@ isolated function queryOneUsers(anydata key) returns record {}|persist:InvalidKe
             ...'object
         };
     };
-    return <persist:InvalidKeyError>error("Invalid key: " + key.toString());
+    return <persist:NotFoundError>error("Invalid key: " + key.toString());
 }
 
 isolated function queryPosts(string[] fields) returns stream<record {}, persist:Error?> {
@@ -231,7 +233,7 @@ isolated function queryPosts(string[] fields) returns stream<record {}, persist:
         }, fields);
 }
 
-isolated function queryOnePosts(anydata key) returns record {}|persist:InvalidKeyError {
+isolated function queryOnePosts(anydata key) returns record {}|persist:NotFoundError {
     table<Post> key(id) postsClonedTable;
     lock {
         postsClonedTable = postsTable.clone();
@@ -249,7 +251,7 @@ isolated function queryOnePosts(anydata key) returns record {}|persist:InvalidKe
             "user": user
         };
     };
-    return <persist:InvalidKeyError>error("Invalid key: " + key.toString());
+    return <persist:NotFoundError>error("Invalid key: " + key.toString());
 }
 
 isolated function queryFollows(string[] fields) returns stream<record {}, persist:Error?> {
@@ -271,7 +273,7 @@ isolated function queryFollows(string[] fields) returns stream<record {}, persis
         }, fields);
 }
 
-isolated function queryOneFollows(anydata key) returns record {}|persist:InvalidKeyError {
+isolated function queryOneFollows(anydata key) returns record {}|persist:NotFoundError {
     table<Follow> key(id) followsClonedTable;
     lock {
         followsClonedTable = followsTable.clone();
@@ -291,7 +293,7 @@ isolated function queryOneFollows(anydata key) returns record {}|persist:Invalid
             "follower": follower
         };
     };
-    return <persist:InvalidKeyError>error("Invalid key: " + key.toString());
+    return <persist:NotFoundError>error("Invalid key: " + key.toString());
 }
 
 isolated function queryUsersPosts(record {} value, string[] fields) returns record {}[] {

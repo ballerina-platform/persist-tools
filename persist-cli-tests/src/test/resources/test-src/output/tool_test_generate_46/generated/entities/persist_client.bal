@@ -17,12 +17,12 @@ public isolated client class Client {
 
     private final mysql:Client dbClient;
 
-    private final map<persist:SQLClient> persistClients = {};
+    private final map<persist:SQLClient> persistClients;
 
-    private final record {|persist:SQLMetadata...;|} metadata = {
+    private final record {|persist:SQLMetadata...;|} & readonly metadata = {
         [USER] : {
             entityName: "User",
-            tableName: `User`,
+            tableName: "User",
             fieldMetadata: {
                 id: {columnName: "id"},
                 name: {columnName: "name"},
@@ -51,7 +51,7 @@ public isolated client class Client {
         },
         [POST] : {
             entityName: "Post",
-            tableName: `Post`,
+            tableName: "Post",
             fieldMetadata: {
                 id: {columnName: "id"},
                 description: {columnName: "description"},
@@ -68,7 +68,7 @@ public isolated client class Client {
         },
         [FOLLOWER] : {
             entityName: "Follower",
-            tableName: `Follower`,
+            tableName: "Follower",
             fieldMetadata: {
                 id: {columnName: "id"},
                 created_date: {columnName: "created_date"},
@@ -89,17 +89,17 @@ public isolated client class Client {
         }
     };
 
-    public function init() returns persist:Error? {
+    public isolated function init() returns persist:Error? {
         mysql:Client|error dbClient = new (host = host, user = user, password = password, database = database, port = port, options = connectionOptions);
         if dbClient is error {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
-        lock {
-            self.persistClients[USER] = check new (self.dbClient, self.metadata.get(USER));
-            self.persistClients[POST] = check new (self.dbClient, self.metadata.get(POST));
-            self.persistClients[FOLLOWER] = check new (self.dbClient, self.metadata.get(FOLLOWER));
-        }
+        self.persistClients = {
+            [USER] : check new (dbClient, self.metadata.get(USER)),
+            [POST] : check new (dbClient, self.metadata.get(POST)),
+            [FOLLOWER] : check new (dbClient, self.metadata.get(FOLLOWER))
+        };
     }
 
     isolated resource function get users(UserTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -113,25 +113,31 @@ public isolated client class Client {
     } external;
 
     isolated resource function post users(UserInsert[] data) returns int[]|persist:Error {
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get(USER).runBatchInsertQuery(data.clone());
+            sqlClient = self.persistClients.get(USER);
         }
+        _ = check sqlClient.runBatchInsertQuery(data);
         return from UserInsert inserted in data
             select inserted.id;
     }
 
     isolated resource function put users/[int id](UserUpdate value) returns User|persist:Error {
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get(USER).runUpdateQuery(id, value.clone());
+            sqlClient = self.persistClients.get(USER);
         }
+        _ = check sqlClient.runUpdateQuery(id, value);
         return self->/users/[id].get();
     }
 
     isolated resource function delete users/[int id]() returns User|persist:Error {
         User result = check self->/users/[id].get();
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get(USER).runDeleteQuery(id);
+            sqlClient = self.persistClients.get(USER);
         }
+        _ = check sqlClient.runDeleteQuery(id);
         return result;
     }
 
@@ -146,25 +152,31 @@ public isolated client class Client {
     } external;
 
     isolated resource function post posts(PostInsert[] data) returns int[]|persist:Error {
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get(POST).runBatchInsertQuery(data.clone());
+            sqlClient = self.persistClients.get(POST);
         }
+        _ = check sqlClient.runBatchInsertQuery(data);
         return from PostInsert inserted in data
             select inserted.id;
     }
 
     isolated resource function put posts/[int id](PostUpdate value) returns Post|persist:Error {
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get(POST).runUpdateQuery(id, value.clone());
+            sqlClient = self.persistClients.get(POST);
         }
+        _ = check sqlClient.runUpdateQuery(id, value);
         return self->/posts/[id].get();
     }
 
     isolated resource function delete posts/[int id]() returns Post|persist:Error {
         Post result = check self->/posts/[id].get();
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get(POST).runDeleteQuery(id);
+            sqlClient = self.persistClients.get(POST);
         }
+        _ = check sqlClient.runDeleteQuery(id);
         return result;
     }
 
@@ -179,29 +191,35 @@ public isolated client class Client {
     } external;
 
     isolated resource function post followers(FollowerInsert[] data) returns int[]|persist:Error {
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get(FOLLOWER).runBatchInsertQuery(data.clone());
+            sqlClient = self.persistClients.get(FOLLOWER);
         }
+        _ = check sqlClient.runBatchInsertQuery(data);
         return from FollowerInsert inserted in data
             select inserted.id;
     }
 
     isolated resource function put followers/[int id](FollowerUpdate value) returns Follower|persist:Error {
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get(FOLLOWER).runUpdateQuery(id, value.clone());
+            sqlClient = self.persistClients.get(FOLLOWER);
         }
+        _ = check sqlClient.runUpdateQuery(id, value);
         return self->/followers/[id].get();
     }
 
     isolated resource function delete followers/[int id]() returns Follower|persist:Error {
         Follower result = check self->/followers/[id].get();
+        persist:SQLClient sqlClient;
         lock {
-            _ = check self.persistClients.get(FOLLOWER).runDeleteQuery(id);
+            sqlClient = self.persistClients.get(FOLLOWER);
         }
+        _ = check sqlClient.runDeleteQuery(id);
         return result;
     }
 
-    public function close() returns persist:Error? {
+    public isolated function close() returns persist:Error? {
         error? result = self.dbClient.close();
         if result is error {
             return <persist:Error>error(result.message());
