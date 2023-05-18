@@ -104,8 +104,9 @@ public class Init implements BLauncherCmd {
         }
 
         if (Files.isDirectory(Paths.get(sourcePath, PERSIST_DIRECTORY, MIGRATIONS))) {
-            errStream.println("ERROR: failed to initialize persist configurations: migration directory is already " +
-                    "initialized in the persist directory.");
+            errStream.println("ERROR: reinitializing persistence after executing the migrate command is not " +
+                    "permitted. please remove the migrations directory within the persist directory and try " +
+                    "executing the command again.");
             return;
         }
 

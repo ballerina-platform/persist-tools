@@ -145,8 +145,9 @@ public class Generate implements BLauncherCmd {
             if (Files.isDirectory(Paths.get(sourcePath, PersistToolsConstants.PERSIST_DIRECTORY,
                     PersistToolsConstants.MIGRATIONS)) &&
                     !dataStore.equals(PersistToolsConstants.SupportDataSources.MYSQL_DB)) {
-                errStream.printf("ERROR: unsupported data store with migration script: expected: 'mysql' but " +
-                        "found: '%s': migration directory is already initialized in the persist directory.", dataStore);
+                errStream.println("ERROR: regenerating the client with a different datastore after executing " +
+                        "the migrate command is not permitted. please remove the migrations directory within the " +
+                        "persist directory and try executing the command again.");
                 return;
             }
         } catch (BalException e) {
@@ -184,8 +185,9 @@ public class Generate implements BLauncherCmd {
                 sourceCreator.createGSheetSources();
                 errStream.printf("Generated Ballerina Client, and Types to %s directory.%n", generatedSourceDirPath);
                 errStream.println("You can now start using Ballerina Client in your code.");
-                errStream.printf("If your spreadsheet has no sheets yet, execute the scripts." +
-                        "js file at %s directory, in your spreadsheet to create sheets.%n", generatedSourceDirPath);
+                errStream.println(System.lineSeparator() + "Next steps:");
+                errStream.printf("Execute the \"scripts.js\" file located at %s directory in your worksheet " +
+                        "to create sheets.", generatedSourceDirPath);
             } catch (BalException e) {
                 errStream.printf(String.format(BalSyntaxConstants.ERROR_MSG,
                         PersistToolsConstants.SupportDataSources.GOOGLE_SHEETS, e.getMessage()));
