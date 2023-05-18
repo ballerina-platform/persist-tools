@@ -332,5 +332,6 @@ public class BalSyntaxConstants {
     public static final String LENGTH = "length";
     public static final String MAX_LENGTH = "maxLength";
     public static final String VARCHAR_LENGTH = "191";
+    public static final String EXPERIMENTAL_NOTICE = System.lineSeparator() + "WARNING %s" + System.lineSeparator();
 }
 

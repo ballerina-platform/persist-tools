@@ -273,10 +273,16 @@ public class GSheetClientSyntax implements ClientSyntax {
                                 String associateEntityNameCamelCase = associateEntityName.substring(0, 1).
                                         toUpperCase(Locale.ENGLISH) + associateEntityName.substring(1).
                                         toLowerCase(Locale.ENGLISH);
+
+                                String associateFieldName = BalSyntaxUtils.stripEscapeCharacter(field.getFieldName());
+                                String associateFieldNameCamelCase = associateFieldName.substring(0, 1).
+                                        toUpperCase(Locale.ENGLISH) + associateFieldName.substring(1).
+                                        toLowerCase(Locale.ENGLISH);
+
                                 associationsMethods.append(String.format(
                                         BalSyntaxConstants.G_SHEET_METADATA_ASSOCIATIONS_METHODS_TEMPLATE,
-                                        "\"" + associateEntityName + "\"", resourceName.concat(
-                                                associateEntityNameCamelCase)));
+                                        "\"" + associateFieldName + "\"", entity.getEntityName().concat(
+                                                associateFieldNameCamelCase)));
                                 int referenceIndex = 0;
                                 StringBuilder conditionStatement = new StringBuilder();
                                 for (String reference : relation.getReferences()) {
@@ -287,8 +293,8 @@ public class GSheetClientSyntax implements ClientSyntax {
                                             reference, entity.getKeys().get(referenceIndex).getFieldName()));
                                     referenceIndex++;
                                 }
-                                queryMethodStatement.put("query" +
-                                                resourceName.concat(associateEntityNameCamelCase),
+                                queryMethodStatement.put(
+                                        "query" + entity.getEntityName().concat(associateFieldNameCamelCase),
                                         String.format(BalSyntaxConstants.STREAM_PARAM_INIT, assEntity.getEntityName(),
                                                 associateEntityName, associateEntityNameCamelCase) +
                                         String.format(BalSyntaxConstants.G_SHEET_RETURN_STATEMENT_FOR_RELATIONAL_ENTITY,

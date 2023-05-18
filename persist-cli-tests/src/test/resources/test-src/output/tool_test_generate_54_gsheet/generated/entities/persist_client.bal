@@ -71,7 +71,7 @@ public isolated client class Client {
                     workspaceType: {columnName: "workspaceType", columnId: "B"},
                     locationBuildingCode: {columnName: "locationBuildingCode", columnId: "C"}
                 },
-                associationsMethods: {"employees": self.queryWorkspacesEmployees}
+                associationsMethods: {"employees": self.queryWorkspaceEmployees}
             },
             [BUILDING] : {
                 entityName: "Building",
@@ -96,7 +96,7 @@ public isolated client class Client {
                     postalCode: {columnName: "postalCode", columnId: "E"},
                     'type: {columnName: "type", columnId: "F"}
                 },
-                associationsMethods: {"workspaces": self.queryBuildingsWorkspaces}
+                associationsMethods: {"workspaces": self.queryBuildingWorkspaces}
             },
             [DEPARTMENT] : {
                 entityName: "Department",
@@ -113,7 +113,7 @@ public isolated client class Client {
                     deptNo: {columnName: "deptNo", columnId: "A"},
                     deptName: {columnName: "deptName", columnId: "B"}
                 },
-                associationsMethods: {"employees": self.queryDepartmentsEmployees}
+                associationsMethods: {"employees": self.queryDepartmentEmployees}
             },
             [ORDER_ITEM] : {
                 entityName: "OrderItem",
@@ -296,10 +296,10 @@ public isolated client class Client {
         stream<Workspace, persist:Error?> workspacesStream = self.queryWorkspacesStream();
         stream<Building, persist:Error?> buildingsStream = self.queryBuildingsStream();
         record {}[] outputArray = check from record {} 'object in workspacesStream
-            outer join var building in buildingsStream on ['object.locationBuildingCode] equals [building?.buildingCode]
+            outer join var location in buildingsStream on ['object.locationBuildingCode] equals [location?.buildingCode]
             select persist:filterRecord({
                 ...'object,
-                "building": building
+                "location": location
             }, fields);
         return outputArray.toStream();
     }
@@ -313,7 +313,7 @@ public isolated client class Client {
             do {
                 return {
                     ...'object,
-                    "building": building
+                    "location": location
                 };
             };
         if unionResult is error {
