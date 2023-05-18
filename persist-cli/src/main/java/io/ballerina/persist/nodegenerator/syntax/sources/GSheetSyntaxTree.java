@@ -262,12 +262,14 @@ public class GSheetSyntaxTree implements SyntaxTree {
         if (entity.getKeys().size() > 1) {
             for (EntityField keyField : entity.getKeys()) {
                 if (keysArray.length() > 0) {
-                    keysArray.append(", ");
+                    keysArray.append(BalSyntaxConstants.COMMA_WITH_SPACE);
                 }
-                keysArray.append(String.format("\"%s\"", keyField.getFieldName().replaceAll(" ", "")));
+                keysArray.append(String.format("\"%s\"", keyField.getFieldName().replaceAll(BalSyntaxConstants.SPACE
+                        , "")));
             }
         } else {
-            keysArray.append(String.format("\"%s\"", entity.getKeys().get(0).getFieldName().replaceAll(" ", "")));
+            keysArray.append(String.format("\"%s\"", entity.getKeys().get(0).getFieldName().replaceAll(
+                    BalSyntaxConstants.SPACE, "")));
         }
         queryOneBuilder.append(String.format(BalSyntaxConstants.G_SHEET_WHERE_CLAUSE, keysArray));
         queryOneBuilder.append(streamSelectBuilder);
