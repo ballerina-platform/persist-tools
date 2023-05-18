@@ -192,6 +192,17 @@ public class Migrate implements BLauncherCmd {
                         errStream.println("Error: Copying file failed: " + e.getMessage());
                         return;
                     }
+
+                    //Get the relative path of the migration directory from the project root
+                    Path relativePath = Paths.get("").toAbsolutePath().relativize(newMigrationPath);
+
+                    errStream.println(
+                            "Generated migration script to " + relativePath.toString() + 
+                            " directory." + System.lineSeparator());
+                    errStream.println("Next steps:" + System.lineSeparator() + 
+                            "Execute the \"script.sql\" file located at " +
+                            relativePath.toString() +
+                            " in your database to migrate the schema with the latest changes.");
                 } else {
                     errStream.println("ERROR: Could not find any entities in the schema file");
                 }
