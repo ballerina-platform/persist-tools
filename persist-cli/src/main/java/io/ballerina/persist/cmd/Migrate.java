@@ -51,8 +51,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -303,9 +301,12 @@ public class Migrate implements BLauncherCmd {
                 try (FileOutputStream fStream = new FileOutputStream(filePath);
                         OutputStreamWriter oStream = new OutputStreamWriter(fStream, StandardCharsets.UTF_8);
                         BufferedWriter writer = new BufferedWriter(oStream)) {
-                    writer.write("-- AUTO-GENERATED FILE.\n-- This file is an auto-generated file by Ballerina " +
-                            "persistence layer for the migrate command.\n-- Please verify the generated scripts and " +
-                            "execute them against the target DB server.\n\n");
+                    writer.write("-- AUTO-GENERATED FILE." + System.lineSeparator() +
+                            "-- This file is an auto-generated file by Ballerina " +
+                            "persistence layer for the migrate command." + System.lineSeparator() +
+                            "-- Please verify the generated scripts and " +
+                            "execute them against the target DB server." +
+                            System.lineSeparator() + System.lineSeparator());
                     for (String query : queries) {
                         writer.write(query);
                         writer.newLine();
@@ -315,22 +316,14 @@ public class Migrate implements BLauncherCmd {
                     return;
                 }
 
-                String subpath = "";
-                String directoryName = "persist";
-                String pattern = "(?:^|\\/)" + directoryName + "(?:\\/|$)(.*)";
-    
-                Pattern regex = Pattern.compile(pattern);
-                String pathString = newMigrationPath.toString();
-                Matcher matcher = regex.matcher(pathString);
-    
-                if (matcher.find()) {
-                    subpath = directoryName + File.separator + matcher.group(1);
-                } else {
-                    errStream.println("Error: could not find the desired directory.");
-                }
-    
-                errStream.println("Generated migration script to " + subpath + " directory.\n");
-                errStream.println("Next steps:\nExecute the \"script.sql\" file located at " + subpath +
+                //Get the relative path of the migration directory from the project root
+                Path relativePath = Paths.get("").toAbsolutePath().relativize(newMigrationPath);
+
+                errStream.println(
+                        "Generated migration script to " + relativePath.toString() + 
+                        " directory." + System.lineSeparator());
+                errStream.println("Next steps:" + System.lineSeparator() + "Execute the \"script.sql\" file located at "
+                        + relativePath.toString() +
                         " in your database to migrate the schema with the latest changes.");
             }
 
@@ -557,11 +550,10 @@ public class Migrate implements BLauncherCmd {
         convertMapToQuery(QueryTypes.CHANGE_TYPE, changedFieldTypes, queries, addedEntities);
 
         if (!differences.isEmpty()) {
-            errStream.println("\nDetailed list of differences: ");
-            errStream.println(differences);
-            errStream.println("\n");
+            errStream.println(System.lineSeparator() + "Detailed list of differences: ");
+            errStream.println(differences + System.lineSeparator());
         }
-        
+
         return queries;
     }
 
