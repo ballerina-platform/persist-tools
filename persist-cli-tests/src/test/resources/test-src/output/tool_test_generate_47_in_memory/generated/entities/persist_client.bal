@@ -8,34 +8,29 @@ import ballerina/jballerina.java;
 
 const MEDICAL_NEED = "medicalneeds";
 const MEDICAL_ITEM = "medicalitems";
-table<MedicalNeed> key(needId) medicalneeds = table [];
-table<MedicalItem> key(itemId) medicalitems = table [];
+final isolated table<MedicalNeed> key(needId) medicalneedsTable = table [];
+final isolated table<MedicalItem> key(itemId) medicalitemsTable = table [];
 
-public client class Client {
+public isolated client class Client {
     *persist:AbstractPersistClient;
 
-    private final map<persist:InMemoryClient> persistClients;
-
-    table<MedicalNeed> key(needId) medicalneeds = medicalneeds;
-    table<MedicalItem> key(itemId) medicalitems = medicalitems;
+    private final map<persist:InMemoryClient> persistClients = {};
 
     public function init() returns persist:Error? {
         final map<persist:TableMetadata> metadata = {
             [MEDICAL_NEED] : {
                 keyFields: ["needId"],
-                query: self.queryMedicalneeds,
-                queryOne: self.queryOneMedicalneeds
+                query: queryMedicalneeds,
+                queryOne: queryOneMedicalneeds
             },
             [MEDICAL_ITEM] : {
                 keyFields: ["itemId"],
-                query: self.queryMedicalitems,
-                queryOne: self.queryOneMedicalitems
+                query: queryMedicalitems,
+                queryOne: queryOneMedicalitems
             }
         };
-        self.persistClients = {
-            [MEDICAL_NEED] : check new (metadata.get(MEDICAL_NEED)),
-            [MEDICAL_ITEM] : check new (metadata.get(MEDICAL_ITEM))
-        };
+        self.persistClients[MEDICAL_NEED] = check new (metadata.get(MEDICAL_NEED));
+        self.persistClients[MEDICAL_ITEM] = check new (metadata.get(MEDICAL_ITEM));
     }
 
     isolated resource function get medicalneeds(MedicalNeedTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -51,50 +46,38 @@ public client class Client {
     isolated resource function post medicalneeds(MedicalNeedInsert[] data) returns int[]|persist:Error {
         int[] keys = [];
         foreach MedicalNeedInsert value in data {
-            if self.medicalneeds.hasKey(value.needId) {
-                return <persist:DuplicateKeyError>error("Duplicate key: " + value.needId.toString());
+            lock {
+                if medicalneedsTable.hasKey(value.needId) {
+                    return <persist:DuplicateKeyError>error("Duplicate key: " + value.needId.toString());
+                }
+                medicalneedsTable.put(value.clone());
             }
-            self.medicalneeds.put(value.clone());
             keys.push(value.needId);
         }
         return keys;
     }
 
     isolated resource function put medicalneeds/[int needId](MedicalNeedUpdate value) returns MedicalNeed|persist:Error {
-        if !self.medicalneeds.hasKey(needId) {
-            return <persist:InvalidKeyError>error("Not found: " + needId.toString());
+        lock {
+            if !medicalneedsTable.hasKey(needId) {
+                return <persist:InvalidKeyError>error("Not found: " + needId.toString());
+            }
+            MedicalNeed medicalneed = medicalneedsTable.get(needId);
+            foreach var [k, v] in value.clone().entries() {
+                medicalneed[k] = v;
+            }
+            medicalneedsTable.put(medicalneed);
+            return medicalneed.clone();
         }
-        MedicalNeed medicalneed = self.medicalneeds.get(needId);
-        foreach var [k, v] in value.entries() {
-            medicalneed[k] = v;
-        }
-        self.medicalneeds.put(medicalneed);
-        return medicalneed;
     }
 
     isolated resource function delete medicalneeds/[int needId]() returns MedicalNeed|persist:Error {
-        if !self.medicalneeds.hasKey(needId) {
-            return <persist:InvalidKeyError>error("Not found: " + needId.toString());
+        lock {
+            if !medicalneedsTable.hasKey(needId) {
+                return <persist:InvalidKeyError>error("Not found: " + needId.toString());
+            }
+            return medicalneedsTable.remove(needId).clone();
         }
-        return self.medicalneeds.remove(needId);
-    }
-
-    private function queryMedicalneeds(string[] fields) returns stream<record {}, persist:Error?> {
-        return from record {} 'object in self.medicalneeds
-            select persist:filterRecord({
-                ...'object
-            }, fields);
-    }
-
-    private function queryOneMedicalneeds(anydata key) returns record {}|persist:InvalidKeyError {
-        from record {} 'object in self.medicalneeds
-        where self.persistClients.get(MEDICAL_NEED).getKey('object) == key
-        do {
-            return {
-                ...'object
-            };
-        };
-        return <persist:InvalidKeyError>error("Invalid key: " + key.toString());
     }
 
     isolated resource function get medicalitems(MedicalItemTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -110,53 +93,94 @@ public client class Client {
     isolated resource function post medicalitems(MedicalItemInsert[] data) returns int[]|persist:Error {
         int[] keys = [];
         foreach MedicalItemInsert value in data {
-            if self.medicalitems.hasKey(value.itemId) {
-                return <persist:DuplicateKeyError>error("Duplicate key: " + value.itemId.toString());
+            lock {
+                if medicalitemsTable.hasKey(value.itemId) {
+                    return <persist:DuplicateKeyError>error("Duplicate key: " + value.itemId.toString());
+                }
+                medicalitemsTable.put(value.clone());
             }
-            self.medicalitems.put(value.clone());
             keys.push(value.itemId);
         }
         return keys;
     }
 
     isolated resource function put medicalitems/[int itemId](MedicalItemUpdate value) returns MedicalItem|persist:Error {
-        if !self.medicalitems.hasKey(itemId) {
-            return <persist:InvalidKeyError>error("Not found: " + itemId.toString());
+        lock {
+            if !medicalitemsTable.hasKey(itemId) {
+                return <persist:InvalidKeyError>error("Not found: " + itemId.toString());
+            }
+            MedicalItem medicalitem = medicalitemsTable.get(itemId);
+            foreach var [k, v] in value.clone().entries() {
+                medicalitem[k] = v;
+            }
+            medicalitemsTable.put(medicalitem);
+            return medicalitem.clone();
         }
-        MedicalItem medicalitem = self.medicalitems.get(itemId);
-        foreach var [k, v] in value.entries() {
-            medicalitem[k] = v;
-        }
-        self.medicalitems.put(medicalitem);
-        return medicalitem;
     }
 
     isolated resource function delete medicalitems/[int itemId]() returns MedicalItem|persist:Error {
-        if !self.medicalitems.hasKey(itemId) {
-            return <persist:InvalidKeyError>error("Not found: " + itemId.toString());
+        lock {
+            if !medicalitemsTable.hasKey(itemId) {
+                return <persist:InvalidKeyError>error("Not found: " + itemId.toString());
+            }
+            return medicalitemsTable.remove(itemId).clone();
         }
-        return self.medicalitems.remove(itemId);
-    }
-
-    private function queryMedicalitems(string[] fields) returns stream<record {}, persist:Error?> {
-        return from record {} 'object in self.medicalitems
-            select persist:filterRecord({
-                ...'object
-            }, fields);
-    }
-
-    private function queryOneMedicalitems(anydata key) returns record {}|persist:InvalidKeyError {
-        from record {} 'object in self.medicalitems
-        where self.persistClients.get(MEDICAL_ITEM).getKey('object) == key
-        do {
-            return {
-                ...'object
-            };
-        };
-        return <persist:InvalidKeyError>error("Invalid key: " + key.toString());
     }
 
     public function close() returns persist:Error? {
         return ();
     }
 }
+
+isolated function queryMedicalneeds(string[] fields) returns stream<record {}, persist:Error?> {
+    table<MedicalNeed> key(needId) medicalneedsClonedTable;
+    lock {
+        medicalneedsClonedTable = medicalneedsTable.clone();
+    }
+    return from record {} 'object in medicalneedsClonedTable
+        select persist:filterRecord({
+            ...'object
+        }, fields);
+}
+
+isolated function queryOneMedicalneeds(anydata key) returns record {}|persist:InvalidKeyError {
+    table<MedicalNeed> key(needId) medicalneedsClonedTable;
+    lock {
+        medicalneedsClonedTable = medicalneedsTable.clone();
+    }
+    from record {} 'object in medicalneedsClonedTable
+    where persist:getKey('object, ["needId"]) == key
+    do {
+        return {
+            ...'object
+        };
+    };
+    return <persist:InvalidKeyError>error("Invalid key: " + key.toString());
+}
+
+isolated function queryMedicalitems(string[] fields) returns stream<record {}, persist:Error?> {
+    table<MedicalItem> key(itemId) medicalitemsClonedTable;
+    lock {
+        medicalitemsClonedTable = medicalitemsTable.clone();
+    }
+    return from record {} 'object in medicalitemsClonedTable
+        select persist:filterRecord({
+            ...'object
+        }, fields);
+}
+
+isolated function queryOneMedicalitems(anydata key) returns record {}|persist:InvalidKeyError {
+    table<MedicalItem> key(itemId) medicalitemsClonedTable;
+    lock {
+        medicalitemsClonedTable = medicalitemsTable.clone();
+    }
+    from record {} 'object in medicalitemsClonedTable
+    where persist:getKey('object, ["itemId"]) == key
+    do {
+        return {
+            ...'object
+        };
+    };
+    return <persist:InvalidKeyError>error("Invalid key: " + key.toString());
+}
+
