@@ -26,6 +26,7 @@ import io.ballerina.persist.models.FieldMetadata;
 import io.ballerina.persist.models.ForeignKey;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.SourceGenerator;
+import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
 import io.ballerina.persist.nodegenerator.syntax.utils.SqlScriptUtils;
 import io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils;
 import io.ballerina.persist.utils.BalProjectUtils;
@@ -90,6 +91,9 @@ public class Migrate implements BLauncherCmd {
             errStream.println(commandUsageInfo);
             return;
         }
+
+        errStream.printf(BalSyntaxConstants.EXPERIMENTAL_NOTICE, "The support for migrations is currently an " +
+                "experimental feature, and its behavior may be subject to change in future releases.");
 
         Path projectPath = Paths.get(sourcePath).toAbsolutePath();
         try {
