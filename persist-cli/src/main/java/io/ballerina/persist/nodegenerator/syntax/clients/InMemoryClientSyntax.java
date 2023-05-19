@@ -120,7 +120,7 @@ public class InMemoryClientSyntax implements ClientSyntax {
     public FunctionDefinitionNode getPostFunction(Entity entity) {
         String parameterType = String.format(BalSyntaxConstants.INSERT_RECORD, entity.getEntityName());
         List<EntityField> primaryKeys = entity.getKeys();
-        Function create = BalSyntaxUtils.generatePostFunction(entity, primaryKeys, parameterType, true);
+        Function create = BalSyntaxUtils.generatePostFunction(entity, primaryKeys, parameterType);
         addFunctionBodyToInMemoryPostResource(create, primaryKeys, entity, parameterType);
         return create.getFunctionDefinitionNode();
     }
@@ -147,7 +147,7 @@ public class InMemoryClientSyntax implements ClientSyntax {
             }
             primaryKeys.append(BalSyntaxConstants.CLOSE_BRACKET);
         }
-        Function update = BalSyntaxUtils.generatePutFunction(entity, path, filterKeys, true);
+        Function update = BalSyntaxUtils.generatePutFunction(entity, path, filterKeys);
         update.addStatement(NodeParser.parseStatement(BalSyntaxConstants.LOCK));
         update.addStatement(NodeParser.parseStatement(BalSyntaxConstants.OPEN_BRACE));
         IfElse hasCheck = new IfElse(NodeParser.parseExpression(String.format(BalSyntaxConstants.HAS_NOT_KEY,
@@ -173,7 +173,7 @@ public class InMemoryClientSyntax implements ClientSyntax {
     public FunctionDefinitionNode getDeleteFunction(Entity entity) {
         StringBuilder filterKeys = new StringBuilder(BalSyntaxConstants.OPEN_BRACE);
         StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH + entity.getResourceName());
-        Function delete = BalSyntaxUtils.generateDeleteFunction(entity, path, filterKeys, true);
+        Function delete = BalSyntaxUtils.generateDeleteFunction(entity, path, filterKeys);
         delete.addStatement(NodeParser.parseStatement(BalSyntaxConstants.LOCK));
         delete.addStatement(NodeParser.parseStatement(BalSyntaxConstants.OPEN_BRACE));
         IfElse hasCheck = new IfElse(NodeParser.parseExpression(String.format(BalSyntaxConstants.HAS_NOT_KEY,
