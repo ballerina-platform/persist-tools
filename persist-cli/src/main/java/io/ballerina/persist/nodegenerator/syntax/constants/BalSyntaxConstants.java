@@ -48,6 +48,7 @@ public class BalSyntaxConstants {
     public static final String EQUAL = "=";
     public static final String VALUE = "value";
     public static final String PERSIST_MODULE = "persist";
+    public static final String ENUM = "ENUM";
     public static final String PERSIST_ERROR = "persist:Error";
     //public static final String G_SHEET_CREATE_SQL_RESULTS = "_ = check " +
     //        "self.persistClients.get(%s).runBatchInsertQuery(data);";

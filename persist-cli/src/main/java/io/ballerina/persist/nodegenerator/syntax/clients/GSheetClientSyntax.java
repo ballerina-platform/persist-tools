@@ -240,8 +240,13 @@ public class GSheetClientSyntax implements ClientSyntax {
                     endRange = getEndRange(++index);
                     fieldMetaData.append(String.format(BalSyntaxConstants.G_SHEET_FIELD_METADATA_TEMPLATE,
                             field.getFieldName(), BalSyntaxUtils.stripEscapeCharacter(field.getFieldName()), endRange));
-                    fieldType.append(String.format(BalSyntaxConstants.FIELD_TYPE, field.getFieldName(),
-                            field.getFieldType()));
+                    if (field.getEnum() == null) {
+                        fieldType.append(String.format(BalSyntaxConstants.FIELD_TYPE, field.getFieldName(),
+                                field.getFieldType()));
+                    } else {
+                        fieldType.append(String.format(BalSyntaxConstants.FIELD_TYPE, field.getFieldName(),
+                                BalSyntaxConstants.ENUM));
+                    }
                 } else {
                     Relation relation = field.getRelation();
                     if (relation.isOwner()) {
