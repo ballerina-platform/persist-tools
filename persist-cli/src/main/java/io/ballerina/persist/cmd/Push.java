@@ -19,6 +19,7 @@ package io.ballerina.persist.cmd;
 
 import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.BalException;
+import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.configuration.PersistConfiguration;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
@@ -115,6 +116,20 @@ public class Push implements BLauncherCmd {
             validateBallerinaProject(Paths.get(this.sourcePath));
         } catch (BalException e) {
             errStream.println(e.getMessage());
+            return;
+        }
+
+        try {
+            HashMap<String, String> ballerinaTomlConfig = TomlSyntaxUtils.readBallerinaTomlConfig(
+                    Paths.get(this.sourcePath, "Ballerina.toml"));
+            String dataStore = ballerinaTomlConfig.get("datastore").trim();
+            if (!dataStore.equals(PersistToolsConstants.SupportDataSources.MYSQL_DB)) {
+                errStream.printf("ERROR: unsupported data store: expected: 'mysql' but found: '%s'%n", dataStore);
+                return;
+            }
+        } catch (BalException e) {
+            errStream.printf("ERROR: failed to locate Ballerina.toml: %s%n",
+                    e.getMessage());
             return;
         }
 
