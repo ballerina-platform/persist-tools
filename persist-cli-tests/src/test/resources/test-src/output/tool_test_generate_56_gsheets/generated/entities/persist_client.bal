@@ -13,7 +13,7 @@ const POST = "posts";
 const FOLLOW = "follows";
 const COMMENT = "comments";
 
-public client class Client {
+public isolated client class Client {
     *persist:AbstractPersistClient;
 
     private final sheets:Client googleSheetClient;
@@ -22,8 +22,8 @@ public client class Client {
 
     private final map<persist:GoogleSheetsClient> persistClients;
 
-    public function init() returns persist:Error? {
-        final record {|persist:SheetMetadata...;|} metadata = {
+    public isolated function init() returns persist:Error? {
+        final record {|persist:SheetMetadata...;|} & readonly metadata = {
             [USER] : {
                 entityName: "User",
                 tableName: "User",
@@ -93,7 +93,8 @@ public client class Client {
                     leaderId: {columnName: "leaderId", columnId: "B"},
                     followerId: {columnName: "followerId", columnId: "C"},
                     timestamp: {columnName: "timestamp", columnId: "D"}
-                }
+                },
+                associationsMethods: {}
             },
             [COMMENT] : {
                 entityName: "Comment",
@@ -115,7 +116,8 @@ public client class Client {
                     timesteamp: {columnName: "timesteamp", columnId: "C"},
                     userId: {columnName: "userId", columnId: "D"},
                     postId: {columnName: "postId", columnId: "E"}
-                }
+                },
+                associationsMethods: {}
             }
         };
         sheets:ConnectionConfig sheetsClientConfig = {
@@ -146,10 +148,10 @@ public client class Client {
         self.httpClient = httpClient;
         map<int> sheetIds = check persist:getSheetIds(self.googleSheetClient, metadata, spreadsheetId);
         self.persistClients = {
-            [USER] : check new (self.googleSheetClient, self.httpClient, metadata.get(USER), spreadsheetId, sheetIds.get(USER)),
-            [POST] : check new (self.googleSheetClient, self.httpClient, metadata.get(POST), spreadsheetId, sheetIds.get(POST)),
-            [FOLLOW] : check new (self.googleSheetClient, self.httpClient, metadata.get(FOLLOW), spreadsheetId, sheetIds.get(FOLLOW)),
-            [COMMENT] : check new (self.googleSheetClient, self.httpClient, metadata.get(COMMENT), spreadsheetId, sheetIds.get(COMMENT))
+            [USER] : check new (self.googleSheetClient, self.httpClient, metadata.get(USER).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(USER).cloneReadOnly()),
+            [POST] : check new (self.googleSheetClient, self.httpClient, metadata.get(POST).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(POST).cloneReadOnly()),
+            [FOLLOW] : check new (self.googleSheetClient, self.httpClient, metadata.get(FOLLOW).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(FOLLOW).cloneReadOnly()),
+            [COMMENT] : check new (self.googleSheetClient, self.httpClient, metadata.get(COMMENT).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(COMMENT).cloneReadOnly())
         };
     }
 
@@ -164,23 +166,35 @@ public client class Client {
     } external;
 
     resource function post users(UserInsert[] data) returns int[]|persist:Error {
-        _ = check self.persistClients.get(USER).runBatchInsertQuery(data);
+        persist:GoogleSheetsClient googleSheetsClient;
+        lock {
+            googleSheetsClient = self.persistClients.get(USER);
+        }
+        _ = check googleSheetsClient.runBatchInsertQuery(data);
         return from UserInsert inserted in data
             select inserted.id;
     }
 
     resource function put users/[int id](UserUpdate value) returns User|persist:Error {
-        _ = check self.persistClients.get(USER).runUpdateQuery(id, value);
+        persist:GoogleSheetsClient googleSheetsClient;
+        lock {
+            googleSheetsClient = self.persistClients.get(USER);
+        }
+        _ = check googleSheetsClient.runUpdateQuery(id, value);
         return self->/users/[id].get();
     }
 
     resource function delete users/[int id]() returns User|persist:Error {
         User result = check self->/users/[id].get();
-        _ = check self.persistClients.get(USER).runDeleteQuery(id);
+        persist:GoogleSheetsClient googleSheetsClient;
+        lock {
+            googleSheetsClient = self.persistClients.get(USER);
+        }
+        _ = check googleSheetsClient.runDeleteQuery(id);
         return result;
     }
 
-    private function queryUsers(string[] fields) returns stream<record {}, persist:Error?>|persist:Error {
+    private isolated function queryUsers(string[] fields) returns stream<record {}, persist:Error?>|persist:Error {
         stream<User, persist:Error?> usersStream = self.queryUsersStream();
         record {}[] outputArray = check from record {} 'object in usersStream
             select persist:filterRecord({
@@ -189,10 +203,10 @@ public client class Client {
         return outputArray.toStream();
     }
 
-    private function queryOneUsers(anydata key) returns record {}|persist:NotFoundError {
+    private isolated function queryOneUsers(anydata key) returns record {}|persist:NotFoundError {
         stream<User, persist:Error?> usersStream = self.queryUsersStream();
         error? unionResult = from record {} 'object in usersStream
-            where self.persistClients.get(USER).getKey('object) == key
+            where persist:getKey('object, ["id"]) == key
             do {
                 return {
                     ...'object
@@ -220,23 +234,35 @@ public client class Client {
     } external;
 
     resource function post posts(PostInsert[] data) returns int[]|persist:Error {
-        _ = check self.persistClients.get(POST).runBatchInsertQuery(data);
+        persist:GoogleSheetsClient googleSheetsClient;
+        lock {
+            googleSheetsClient = self.persistClients.get(POST);
+        }
+        _ = check googleSheetsClient.runBatchInsertQuery(data);
         return from PostInsert inserted in data
             select inserted.id;
     }
 
     resource function put posts/[int id](PostUpdate value) returns Post|persist:Error {
-        _ = check self.persistClients.get(POST).runUpdateQuery(id, value);
+        persist:GoogleSheetsClient googleSheetsClient;
+        lock {
+            googleSheetsClient = self.persistClients.get(POST);
+        }
+        _ = check googleSheetsClient.runUpdateQuery(id, value);
         return self->/posts/[id].get();
     }
 
     resource function delete posts/[int id]() returns Post|persist:Error {
         Post result = check self->/posts/[id].get();
-        _ = check self.persistClients.get(POST).runDeleteQuery(id);
+        persist:GoogleSheetsClient googleSheetsClient;
+        lock {
+            googleSheetsClient = self.persistClients.get(POST);
+        }
+        _ = check googleSheetsClient.runDeleteQuery(id);
         return result;
     }
 
-    private function queryPosts(string[] fields) returns stream<record {}, persist:Error?>|persist:Error {
+    private isolated function queryPosts(string[] fields) returns stream<record {}, persist:Error?>|persist:Error {
         stream<Post, persist:Error?> postsStream = self.queryPostsStream();
         stream<User, persist:Error?> usersStream = self.queryUsersStream();
         record {}[] outputArray = check from record {} 'object in postsStream
@@ -248,11 +274,11 @@ public client class Client {
         return outputArray.toStream();
     }
 
-    private function queryOnePosts(anydata key) returns record {}|persist:NotFoundError {
+    private isolated function queryOnePosts(anydata key) returns record {}|persist:NotFoundError {
         stream<Post, persist:Error?> postsStream = self.queryPostsStream();
         stream<User, persist:Error?> usersStream = self.queryUsersStream();
         error? unionResult = from record {} 'object in postsStream
-            where self.persistClients.get(POST).getKey('object) == key
+            where persist:getKey('object, ["id"]) == key
             outer join var user in usersStream on ['object.userId] equals [user?.id]
             do {
                 return {
@@ -282,23 +308,35 @@ public client class Client {
     } external;
 
     resource function post follows(FollowInsert[] data) returns int[]|persist:Error {
-        _ = check self.persistClients.get(FOLLOW).runBatchInsertQuery(data);
+        persist:GoogleSheetsClient googleSheetsClient;
+        lock {
+            googleSheetsClient = self.persistClients.get(FOLLOW);
+        }
+        _ = check googleSheetsClient.runBatchInsertQuery(data);
         return from FollowInsert inserted in data
             select inserted.id;
     }
 
     resource function put follows/[int id](FollowUpdate value) returns Follow|persist:Error {
-        _ = check self.persistClients.get(FOLLOW).runUpdateQuery(id, value);
+        persist:GoogleSheetsClient googleSheetsClient;
+        lock {
+            googleSheetsClient = self.persistClients.get(FOLLOW);
+        }
+        _ = check googleSheetsClient.runUpdateQuery(id, value);
         return self->/follows/[id].get();
     }
 
     resource function delete follows/[int id]() returns Follow|persist:Error {
         Follow result = check self->/follows/[id].get();
-        _ = check self.persistClients.get(FOLLOW).runDeleteQuery(id);
+        persist:GoogleSheetsClient googleSheetsClient;
+        lock {
+            googleSheetsClient = self.persistClients.get(FOLLOW);
+        }
+        _ = check googleSheetsClient.runDeleteQuery(id);
         return result;
     }
 
-    private function queryFollows(string[] fields) returns stream<record {}, persist:Error?>|persist:Error {
+    private isolated function queryFollows(string[] fields) returns stream<record {}, persist:Error?>|persist:Error {
         stream<Follow, persist:Error?> followsStream = self.queryFollowsStream();
         stream<User, persist:Error?> usersStream = self.queryUsersStream();
         record {}[] outputArray = check from record {} 'object in followsStream
@@ -312,11 +350,11 @@ public client class Client {
         return outputArray.toStream();
     }
 
-    private function queryOneFollows(anydata key) returns record {}|persist:NotFoundError {
+    private isolated function queryOneFollows(anydata key) returns record {}|persist:NotFoundError {
         stream<Follow, persist:Error?> followsStream = self.queryFollowsStream();
         stream<User, persist:Error?> usersStream = self.queryUsersStream();
         error? unionResult = from record {} 'object in followsStream
-            where self.persistClients.get(FOLLOW).getKey('object) == key
+            where persist:getKey('object, ["id"]) == key
             outer join var leader in usersStream on ['object.leaderId] equals [leader?.id]
             outer join var follower in usersStream on ['object.followerId] equals [follower?.id]
             do {
@@ -348,23 +386,35 @@ public client class Client {
     } external;
 
     resource function post comments(CommentInsert[] data) returns int[]|persist:Error {
-        _ = check self.persistClients.get(COMMENT).runBatchInsertQuery(data);
+        persist:GoogleSheetsClient googleSheetsClient;
+        lock {
+            googleSheetsClient = self.persistClients.get(COMMENT);
+        }
+        _ = check googleSheetsClient.runBatchInsertQuery(data);
         return from CommentInsert inserted in data
             select inserted.id;
     }
 
     resource function put comments/[int id](CommentUpdate value) returns Comment|persist:Error {
-        _ = check self.persistClients.get(COMMENT).runUpdateQuery(id, value);
+        persist:GoogleSheetsClient googleSheetsClient;
+        lock {
+            googleSheetsClient = self.persistClients.get(COMMENT);
+        }
+        _ = check googleSheetsClient.runUpdateQuery(id, value);
         return self->/comments/[id].get();
     }
 
     resource function delete comments/[int id]() returns Comment|persist:Error {
         Comment result = check self->/comments/[id].get();
-        _ = check self.persistClients.get(COMMENT).runDeleteQuery(id);
+        persist:GoogleSheetsClient googleSheetsClient;
+        lock {
+            googleSheetsClient = self.persistClients.get(COMMENT);
+        }
+        _ = check googleSheetsClient.runDeleteQuery(id);
         return result;
     }
 
-    private function queryComments(string[] fields) returns stream<record {}, persist:Error?>|persist:Error {
+    private isolated function queryComments(string[] fields) returns stream<record {}, persist:Error?>|persist:Error {
         stream<Comment, persist:Error?> commentsStream = self.queryCommentsStream();
         stream<User, persist:Error?> usersStream = self.queryUsersStream();
         stream<Post, persist:Error?> postsStream = self.queryPostsStream();
@@ -379,12 +429,12 @@ public client class Client {
         return outputArray.toStream();
     }
 
-    private function queryOneComments(anydata key) returns record {}|persist:NotFoundError {
+    private isolated function queryOneComments(anydata key) returns record {}|persist:NotFoundError {
         stream<Comment, persist:Error?> commentsStream = self.queryCommentsStream();
         stream<User, persist:Error?> usersStream = self.queryUsersStream();
         stream<Post, persist:Error?> postsStream = self.queryPostsStream();
         error? unionResult = from record {} 'object in commentsStream
-            where self.persistClients.get(COMMENT).getKey('object) == key
+            where persist:getKey('object, ["id"]) == key
             outer join var user in usersStream on ['object.userId] equals [user?.id]
             outer join var post in postsStream on ['object.postId] equals [post?.id]
             do {
@@ -405,7 +455,7 @@ public client class Client {
         name: "queryStream"
     } external;
 
-    private function queryUserFollowers(record {} value, string[] fields) returns record {}[]|persist:Error {
+    private isolated function queryUserFollowers(record {} value, string[] fields) returns record {}[]|persist:Error {
         stream<Follow, persist:Error?> followsStream = self.queryFollowsStream();
         return from record {} 'object in followsStream
             where 'object.leaderId == value["id"]
@@ -414,7 +464,7 @@ public client class Client {
             }, fields);
     }
 
-    private function queryUserComments(record {} value, string[] fields) returns record {}[]|persist:Error {
+    private isolated function queryUserComments(record {} value, string[] fields) returns record {}[]|persist:Error {
         stream<Comment, persist:Error?> commentsStream = self.queryCommentsStream();
         return from record {} 'object in commentsStream
             where 'object.userId == value["id"]
@@ -423,7 +473,7 @@ public client class Client {
             }, fields);
     }
 
-    private function queryUserPosts(record {} value, string[] fields) returns record {}[]|persist:Error {
+    private isolated function queryUserPosts(record {} value, string[] fields) returns record {}[]|persist:Error {
         stream<Post, persist:Error?> postsStream = self.queryPostsStream();
         return from record {} 'object in postsStream
             where 'object.userId == value["id"]
@@ -432,7 +482,7 @@ public client class Client {
             }, fields);
     }
 
-    private function queryPostComments(record {} value, string[] fields) returns record {}[]|persist:Error {
+    private isolated function queryPostComments(record {} value, string[] fields) returns record {}[]|persist:Error {
         stream<Comment, persist:Error?> commentsStream = self.queryCommentsStream();
         return from record {} 'object in commentsStream
             where 'object.postId == value["id"]
@@ -441,7 +491,7 @@ public client class Client {
             }, fields);
     }
 
-    private function queryUserFollowing(record {} value, string[] fields) returns record {}[]|persist:Error {
+    private isolated function queryUserFollowing(record {} value, string[] fields) returns record {}[]|persist:Error {
         stream<Follow, persist:Error?> followsStream = self.queryFollowsStream();
         return from record {} 'object in followsStream
             where 'object.followerId == value["id"]
@@ -454,3 +504,4 @@ public client class Client {
         return ();
     }
 }
+

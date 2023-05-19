@@ -69,7 +69,7 @@ public class GSheetClientSyntax implements ClientSyntax {
 
     @Override
     public Client getClientObject(Module entityModule) {
-        Client clientObject = BalSyntaxUtils.generateClientSignature(false);
+        Client clientObject = BalSyntaxUtils.generateClientSignature(true);
         clientObject.addMember(NodeParser.parseObjectMember(BalSyntaxConstants.GOOGLE_SHEET_CLIENT), true);
         clientObject.addMember(NodeParser.parseObjectMember(BalSyntaxConstants.HTTP_CLIENT), true);
         clientObject.addMember(NodeParser.parseObjectMember(BalSyntaxConstants.GOOGLE_PERSIST_CLIENT), true);
@@ -81,7 +81,7 @@ public class GSheetClientSyntax implements ClientSyntax {
         String httpClient = "httpClient";
         String sheetClient = "googleSheetClient";
         Function init = new Function(BalSyntaxConstants.INIT, SyntaxKind.OBJECT_METHOD_DEFINITION);
-        init.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PUBLIC });
+        init.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PUBLIC, BalSyntaxConstants.KEYWORD_ISOLATED });
         init.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode(BalSyntaxConstants.EMPTY_STRING,
                 BalSyntaxConstants.PERSIST_ERROR));
         init.addStatement(NodeParser.parseStatement(generateMetadataRecord(entityModule)));
@@ -148,14 +148,25 @@ public class GSheetClientSyntax implements ClientSyntax {
         StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH + entity.getResourceName());
         Function update = BalSyntaxUtils.generatePutFunction(entity, filterKeys, path, false);
         if (entity.getKeys().size() > 1) {
+
+            update.addStatement(NodeParser.parseStatement(BalSyntaxConstants.G_SHEET_CLIENT_DECLARATION));
+
+            String getPersistClientStatement = String.format(BalSyntaxConstants.GET_G_SHEET_PERSIST_CLIENT,
+                    BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()));
+            update.addStatement(NodeParser.parseStatement(
+                    String.format(BalSyntaxConstants.LOCK_TEMPLATE, getPersistClientStatement)));
             update.addStatement(NodeParser.parseStatement(String.format(
                     BalSyntaxConstants.G_SHEET_UPDATE_RUN_UPDATE_QUERY,
-                    BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()),
                     filterKeys.substring(0, filterKeys.length() - 2).concat(BalSyntaxConstants.CLOSE_BRACE))));
         } else {
+            update.addStatement(NodeParser.parseStatement(BalSyntaxConstants.G_SHEET_CLIENT_DECLARATION));
+
+            String getPersistClientStatement = String.format(BalSyntaxConstants.GET_G_SHEET_PERSIST_CLIENT,
+                    BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()));
+            update.addStatement(NodeParser.parseStatement(
+                    String.format(BalSyntaxConstants.LOCK_TEMPLATE, getPersistClientStatement)));
             update.addStatement(NodeParser.parseStatement(String.format(
-                    BalSyntaxConstants.G_SHEET_UPDATE_RUN_UPDATE_QUERY,
-                    BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()), entity.getKeys().stream().
+                    BalSyntaxConstants.G_SHEET_UPDATE_RUN_UPDATE_QUERY, entity.getKeys().stream().
                             findFirst().get().getFieldName())));
         }
         update.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.UPDATE_RETURN_UPDATE_QUERY,
@@ -171,14 +182,25 @@ public class GSheetClientSyntax implements ClientSyntax {
         delete.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.GET_OBJECT_QUERY,
                 entity.getEntityName(), path)));
         if (entity.getKeys().size() > 1) {
+            delete.addStatement(NodeParser.parseStatement(BalSyntaxConstants.G_SHEET_CLIENT_DECLARATION));
+
+            String getPersistClientStatement = String.format(BalSyntaxConstants.GET_G_SHEET_PERSIST_CLIENT,
+                    BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()));
+            delete.addStatement(NodeParser.parseStatement(
+                    String.format(BalSyntaxConstants.LOCK_TEMPLATE, getPersistClientStatement)));
+
             delete.addStatement(NodeParser.parseStatement(String.format(
                     BalSyntaxConstants.G_SHEET_DELETE_RUN_DELETE_QUERY,
-                    BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()),
                     filterKeys.substring(0, filterKeys.length() - 2).concat(BalSyntaxConstants.CLOSE_BRACE))));
         } else {
+            delete.addStatement(NodeParser.parseStatement(BalSyntaxConstants.G_SHEET_CLIENT_DECLARATION));
+
+            String getPersistClientStatement = String.format(BalSyntaxConstants.GET_G_SHEET_PERSIST_CLIENT,
+                    BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()));
+            delete.addStatement(NodeParser.parseStatement(
+                    String.format(BalSyntaxConstants.LOCK_TEMPLATE, getPersistClientStatement)));
             delete.addStatement(NodeParser.parseStatement(String.format(
-                    BalSyntaxConstants.G_SHEET_DELETE_RUN_DELETE_QUERY,
-                    BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()), entity.getKeys().stream().
+                    BalSyntaxConstants.G_SHEET_DELETE_RUN_DELETE_QUERY, entity.getKeys().stream().
                             findFirst().get().getFieldName())));
         }
         delete.addStatement(NodeParser.parseStatement(BalSyntaxConstants.RETURN_DELETED_OBJECT));
@@ -294,7 +316,8 @@ public class GSheetClientSyntax implements ClientSyntax {
                 entityMetaData.append(String.format(BalSyntaxConstants.IN_MEMORY_ASSOC_METHODS_TEMPLATE,
                         associationsMethods));
             } else {
-                entityMetaData.append(System.lineSeparator());
+                entityMetaData.append(BalSyntaxConstants.COMMA_WITH_SPACE);
+                entityMetaData.append(String.format(BalSyntaxConstants.IN_MEMORY_ASSOC_METHODS_TEMPLATE, ""));
             }
             mapBuilder.append(String.format(BalSyntaxConstants.METADATA_RECORD_ELEMENT_TEMPLATE,
                     BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()), entityMetaData));
@@ -304,8 +327,13 @@ public class GSheetClientSyntax implements ClientSyntax {
 
     private static void addFunctionBodyToPostResource(Function create, List<EntityField> primaryKeys,
                                                         String tableName, String parameterType) {
-        create.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.G_SHEET_CREATE_SQL_RESULTS,
-                tableName)));
+        create.addStatement(NodeParser.parseStatement(BalSyntaxConstants.G_SHEET_CLIENT_DECLARATION));
+        String getPersistClientStatement = String.format(BalSyntaxConstants.GET_G_SHEET_PERSIST_CLIENT, tableName);
+        create.addStatement(NodeParser.parseStatement(
+                String.format(BalSyntaxConstants.LOCK_TEMPLATE, getPersistClientStatement)));
+
+        create.addStatement(NodeParser.parseStatement(BalSyntaxConstants.G_SHEET_CREATE_SQL_RESULTS));
+
         create.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.RETURN_CREATED_KEY,
                 parameterType)));
         StringBuilder filterKeys = new StringBuilder();
