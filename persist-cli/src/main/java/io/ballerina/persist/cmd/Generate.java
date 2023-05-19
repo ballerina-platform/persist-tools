@@ -87,32 +87,12 @@ public class Generate implements BLauncherCmd {
         }
 
         try {
-            schemaFilePath =  BalProjectUtils.getSchemaFilePath(this.sourcePath);
-        } catch (BalException e) {
-            errStream.println(e.getMessage());
-            return;
-        }
-
-        try {
             packageName = TomlSyntaxUtils.readPackageName(this.sourcePath);
         } catch (BalException e) {
             errStream.println(e.getMessage());
             return;
         }
-        try {
-            BalProjectUtils.validateSchemaFile(schemaFilePath);
-            Module module = BalProjectUtils.getEntities(schemaFilePath);
-            if (module.getEntityMap().isEmpty()) {
-                errStream.printf("ERROR: the model definition file(%s) does not contain any entity definition.%n",
-                        schemaFilePath.getFileName());
-                return;
-            }
-            entityModule = module;
-        } catch (BalException e) {
-            errStream.printf("ERROR: failed to generate types and client for the definition file(%s). %s%n",
-                    schemaFilePath.getFileName(), e.getMessage());
-            return;
-        }
+
         try {
             HashMap<String, String> ballerinaTomlConfig = TomlSyntaxUtils.readBallerinaTomlConfig(
                     Paths.get(this.sourcePath, "Ballerina.toml"));
@@ -156,6 +136,34 @@ public class Generate implements BLauncherCmd {
             return;
         }
 
+        if (dataStore.equals(PersistToolsConstants.SupportDataSources.GOOGLE_SHEETS)) {
+            errStream.printf(BalSyntaxConstants.EXPERIMENTAL_NOTICE, "The support for Google Sheets data store " +
+                    "is currently an experimental feature, and its behavior may be subject to change in future " +
+                    "releases." + System.lineSeparator());
+        }
+
+        try {
+            schemaFilePath =  BalProjectUtils.getSchemaFilePath(this.sourcePath);
+        } catch (BalException e) {
+            errStream.println(e.getMessage());
+            return;
+        }
+
+        try {
+            BalProjectUtils.validateSchemaFile(schemaFilePath);
+            Module module = BalProjectUtils.getEntities(schemaFilePath);
+            if (module.getEntityMap().isEmpty()) {
+                errStream.printf("ERROR: the model definition file(%s) does not contain any entity definition.%n",
+                        schemaFilePath.getFileName());
+                return;
+            }
+            entityModule = module;
+        } catch (BalException e) {
+            errStream.printf("ERROR: failed to generate types and client for the definition file(%s). %s%n",
+                    schemaFilePath.getFileName(), e.getMessage());
+            return;
+        }
+
         if (!Files.exists(generatedSourceDirPath)) {
             try {
                 Files.createDirectories(generatedSourceDirPath.toAbsolutePath());
@@ -169,13 +177,13 @@ public class Generate implements BLauncherCmd {
         if (dataStore.equals(PersistToolsConstants.SupportDataSources.MYSQL_DB)) {
             try {
                 sourceCreator.createDbSources();
-                errStream.printf("Generated Ballerina Client, Types, " + "and Scripts to %s directory.%n",
-                        generatedSourceDirPath);
-                errStream.println("You can now start using Ballerina Client in your code.");
+                errStream.println("Persist client and SQL script generated successfully in the ./generated directory.");
+                errStream.println("You can now start using the Ballerina Client in your code.");
                 errStream.println(System.lineSeparator() + "Next steps:");
-                errStream.printf("Set database configurations in Config.toml file to point to " +
-                        "your database. If your database has no tables yet, execute the scripts." +
-                        "sql file at %s directory, in your database to create tables.%n", generatedSourceDirPath);
+                errStream.println("- If your database is empty, execute the scripts.sql file " +
+                        "in the ./generated directory to populate the database.");
+                errStream.println("- Set the database configurations in the \"Config.toml\" file " +
+                        "before running the program.");
             } catch (BalException e) {
                 errStream.printf(String.format(BalSyntaxConstants.ERROR_MSG,
                         PersistToolsConstants.SupportDataSources.MYSQL_DB, e.getMessage()));

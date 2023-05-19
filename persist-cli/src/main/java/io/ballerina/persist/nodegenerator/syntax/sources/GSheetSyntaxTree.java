@@ -199,6 +199,7 @@ public class GSheetSyntaxTree implements SyntaxTree {
         String stream = "Stream";
         streamInitBuilder.append(String.format(BalSyntaxConstants.STREAM_PARAM_INIT, entityName, entityResourceName,
                 resourceNameInCamelCase));
+        List<String> addedEntities = new ArrayList<>();
         for (EntityField fields : entity.getFields()) {
             if (fields.getRelation() != null) {
                 Relation relation = fields.getRelation();
@@ -208,15 +209,22 @@ public class GSheetSyntaxTree implements SyntaxTree {
                     String assocEntityResourceName = assocEntity.getResourceName();
                     String assocResourceNameInCamelCase = assocEntityResourceName.substring(0, 1).
                             toUpperCase(Locale.ENGLISH) + assocEntityResourceName.substring(1);
-                    streamInitBuilder.append(String.format(BalSyntaxConstants.STREAM_PARAM_INIT,
-                            assocEntityName, assocEntityResourceName, assocResourceNameInCamelCase));
+
+
+                    if (!addedEntities.contains(assocEntityResourceName)) {
+                        streamInitBuilder.append(String.format(BalSyntaxConstants.STREAM_PARAM_INIT,
+                                assocEntityName, assocEntityResourceName, assocResourceNameInCamelCase));
+                        addedEntities.add(assocEntityResourceName);
+                    }
+
+                    String assocFieldName = fields.getFieldName();
                     streamSelectBuilder.append(String.format(BalSyntaxConstants.G_SHEET_QUERY_OUTER_JOIN,
-                            assocEntityName.toLowerCase(Locale.ENGLISH), BalSyntaxConstants.EMPTY_STRING,
+                            assocFieldName.toLowerCase(Locale.ENGLISH), BalSyntaxConstants.EMPTY_STRING,
                             assocEntityResourceName + stream));
                     streamSelectBuilder.append(BalSyntaxConstants.ON);
                     relationalRecordFields.append(String.format(BalSyntaxConstants.VARIABLE,
-                            assocEntityName.toLowerCase(Locale.ENGLISH),
-                            assocEntityName.toLowerCase(Locale.ENGLISH)));
+                            assocFieldName.toLowerCase(Locale.ENGLISH),
+                            assocFieldName.toLowerCase(Locale.ENGLISH)));
                     int i = 0;
                     StringBuilder arrayFields = new StringBuilder();
                     StringBuilder arrayValues = new StringBuilder();
@@ -230,7 +238,7 @@ public class GSheetSyntaxTree implements SyntaxTree {
                         arrayFields.append(String.format(BalSyntaxConstants.OBJECT_FIELD,
                                 relation.getKeyColumns().get(i).getField()));
                         arrayValues.append(String.format(BalSyntaxConstants.VALUES,
-                                assocEntityName.toLowerCase(Locale.ENGLISH), references));
+                                assocFieldName.toLowerCase(Locale.ENGLISH), references));
                         i++;
                     }
                     streamSelectBuilder.append(arrayFields.append(BalSyntaxConstants.CLOSE_BRACKET));

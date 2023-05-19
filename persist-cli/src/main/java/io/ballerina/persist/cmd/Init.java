@@ -103,6 +103,14 @@ public class Init implements BLauncherCmd {
             return;
         }
 
+        if (datastore == null) {
+            datastore = PersistToolsConstants.SupportDataSources.IN_MEMORY_TABLE;
+        } else if (!SUPPORTED_DB_PROVIDERS.contains(datastore)) {
+            errStream.printf("ERROR: the persist layer supports one of data stores: %s" +
+                    ". but found '%s' datasource.%n", Arrays.toString(SUPPORTED_DB_PROVIDERS.toArray()), datastore);
+            return;
+        }
+
         if (Files.isDirectory(Paths.get(sourcePath, PERSIST_DIRECTORY, MIGRATIONS))) {
             errStream.println("ERROR: reinitializing persistence after executing the migrate command is not " +
                     "permitted. please remove the migrations directory within the persist directory and try " +
@@ -110,12 +118,10 @@ public class Init implements BLauncherCmd {
             return;
         }
 
-        if (datastore == null) {
-            datastore = PersistToolsConstants.SupportDataSources.IN_MEMORY_TABLE;
-        } else if (!SUPPORTED_DB_PROVIDERS.contains(datastore)) {
-            errStream.printf("ERROR: the persist layer supports one of data stores: %s" +
-                    ". but found '%s' datasource.%n", Arrays.toString(SUPPORTED_DB_PROVIDERS.toArray()), datastore);
-            return;
+        if (datastore.equals(PersistToolsConstants.SupportDataSources.GOOGLE_SHEETS)) {
+            errStream.printf(BalSyntaxConstants.EXPERIMENTAL_NOTICE, "The support for Google Sheets data store " +
+                    "is currently an experimental feature, and its behavior may be subject to change in future " +
+                    "releases." + System.lineSeparator());
         }
 
         Path projectPath = Paths.get(sourcePath);
@@ -194,13 +200,12 @@ public class Init implements BLauncherCmd {
             }
         }
 
-        errStream.println("Initialized persistence in your Ballerina project.");
-        errStream.println(System.lineSeparator() + "Your Persist schema is at persist/model.bal.");
-        errStream.println("You can now update it with entity definitions.");
+        errStream.println("Initialized the package for persistence.");
         errStream.println(System.lineSeparator() + "Next steps:");
 
-        errStream.println("Run bal persist generate to generate the Ballerina Client, Types," +
-                " and Scripts. You can then start querying your database.");
+        errStream.println("- Define your data model in \"persist/model.bal\".");
+        errStream.println("- Run \"bal persist generate\" to generate persist client and SQL script tailored for " +
+                "your data model.");
 
     }
 
