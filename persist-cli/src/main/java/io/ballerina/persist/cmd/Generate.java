@@ -177,13 +177,6 @@ public class Generate implements BLauncherCmd {
         if (dataStore.equals(PersistToolsConstants.SupportDataSources.MYSQL_DB)) {
             try {
                 sourceCreator.createDbSources();
-                errStream.println("Persist client and SQL script generated successfully in the ./generated directory.");
-                errStream.println("You can now start using the Ballerina Client in your code.");
-                errStream.println(System.lineSeparator() + "Next steps:");
-                errStream.println("- If your database is empty, execute the scripts.sql file " +
-                        "in the ./generated directory to populate the database.");
-                errStream.println("- Set the database configurations in the \"Config.toml\" file " +
-                        "before running the program.");
             } catch (BalException e) {
                 errStream.printf(String.format(BalSyntaxConstants.ERROR_MSG,
                         PersistToolsConstants.SupportDataSources.MYSQL_DB, e.getMessage()));
@@ -191,11 +184,6 @@ public class Generate implements BLauncherCmd {
         } else if (dataStore.equals(PersistToolsConstants.SupportDataSources.GOOGLE_SHEETS)) {
             try {
                 sourceCreator.createGSheetSources();
-                errStream.printf("Generated Ballerina Client, and Types to %s directory.%n", generatedSourceDirPath);
-                errStream.println("You can now start using Ballerina Client in your code.");
-                errStream.println(System.lineSeparator() + "Next steps:");
-                errStream.printf("Execute the \"scripts.js\" file located at %s directory in your worksheet " +
-                        "to create sheets.", generatedSourceDirPath);
             } catch (BalException e) {
                 errStream.printf(String.format(BalSyntaxConstants.ERROR_MSG,
                         PersistToolsConstants.SupportDataSources.GOOGLE_SHEETS, e.getMessage()));
@@ -203,13 +191,12 @@ public class Generate implements BLauncherCmd {
         } else {
             try {
                 sourceCreator.createInMemorySources();
-                errStream.printf("Generated Ballerina Client, and Types to %s directory.%n", generatedSourceDirPath);
-                errStream.println("You can now start using Ballerina Client in your code.");
             } catch (BalException e) {
                 errStream.printf(String.format(BalSyntaxConstants.ERROR_MSG,
                         PersistToolsConstants.SupportDataSources.IN_MEMORY_TABLE, e.getMessage()));
             }
         }
+        errStream.println("Persist client and entity types generated successfully in the ./generated directory.");
     }
 
     @Override
