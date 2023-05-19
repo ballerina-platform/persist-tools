@@ -136,7 +136,7 @@ public class GSheetClientSyntax implements ClientSyntax {
     public FunctionDefinitionNode getPostFunction(Entity entity) {
         String parameterType = String.format(BalSyntaxConstants.INSERT_RECORD, entity.getEntityName());
         List<EntityField> primaryKeys = entity.getKeys();
-        Function create = BalSyntaxUtils.generatePostFunction(entity, primaryKeys, parameterType, false);
+        Function create = BalSyntaxUtils.generatePostFunction(entity, primaryKeys, parameterType, true);
         addFunctionBodyToPostResource(create, primaryKeys,
                 BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()), parameterType);
         return create.getFunctionDefinitionNode();
@@ -146,7 +146,7 @@ public class GSheetClientSyntax implements ClientSyntax {
     public FunctionDefinitionNode getPutFunction(Entity entity) {
         StringBuilder filterKeys = new StringBuilder(BalSyntaxConstants.OPEN_BRACE);
         StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH + entity.getResourceName());
-        Function update = BalSyntaxUtils.generatePutFunction(entity, filterKeys, path, false);
+        Function update = BalSyntaxUtils.generatePutFunction(entity, filterKeys, path, true);
         if (entity.getKeys().size() > 1) {
 
             update.addStatement(NodeParser.parseStatement(BalSyntaxConstants.G_SHEET_CLIENT_DECLARATION));
@@ -178,7 +178,7 @@ public class GSheetClientSyntax implements ClientSyntax {
     public FunctionDefinitionNode getDeleteFunction(Entity entity) {
         StringBuilder filterKeys = new StringBuilder(BalSyntaxConstants.OPEN_BRACE);
         StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH + entity.getResourceName());
-        Function delete = BalSyntaxUtils.generateDeleteFunction(entity, filterKeys, path, false);
+        Function delete = BalSyntaxUtils.generateDeleteFunction(entity, filterKeys, path, true);
         delete.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.GET_OBJECT_QUERY,
                 entity.getEntityName(), path)));
         if (entity.getKeys().size() > 1) {
