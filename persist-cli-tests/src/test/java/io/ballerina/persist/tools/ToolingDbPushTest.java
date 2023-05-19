@@ -272,4 +272,11 @@ public class ToolingDbPushTest {
         executeCommand("tool_test_db_push_27", DB_PUSH);
         assertGeneratedSources("tool_test_db_push_27");
     }
+
+    @Test(enabled = true)
+    @Description("Test execute db push command for unsupported data stores")
+    public void testDbPushWithUnsupportedDataStores() {
+        executeCommand("tool_test_db_push_28", DB_PUSH);
+        assertGeneratedSources("tool_test_db_push_28");
+    }
 }
