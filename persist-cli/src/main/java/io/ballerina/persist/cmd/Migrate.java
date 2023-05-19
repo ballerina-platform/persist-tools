@@ -342,7 +342,7 @@ public class Migrate implements BLauncherCmd {
                         " directory." + System.lineSeparator());
                 errStream.println("Next steps:" + System.lineSeparator() + "Execute the \"script.sql\" file located at "
                         + relativePath.toString() +
-                        " in your database to migrate the schema with the latest changes.");
+                        " directory in your database to migrate the schema with the latest changes.");
             }
 
         } catch (BalException e) {
