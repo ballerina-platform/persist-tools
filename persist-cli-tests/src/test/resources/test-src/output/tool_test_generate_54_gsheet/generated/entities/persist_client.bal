@@ -183,7 +183,7 @@ public isolated client class Client {
         name: "queryOne"
     } external;
 
-    resource function post employees(EmployeeInsert[] data) returns string[]|persist:Error {
+    isolated resource function post employees(EmployeeInsert[] data) returns string[]|persist:Error {
         persist:GoogleSheetsClient googleSheetsClient;
         lock {
             googleSheetsClient = self.persistClients.get(EMPLOYEE);
@@ -193,7 +193,7 @@ public isolated client class Client {
             select inserted.empNo;
     }
 
-    resource function put employees/[string empNo](EmployeeUpdate value) returns Employee|persist:Error {
+    isolated resource function put employees/[string empNo](EmployeeUpdate value) returns Employee|persist:Error {
         persist:GoogleSheetsClient googleSheetsClient;
         lock {
             googleSheetsClient = self.persistClients.get(EMPLOYEE);
@@ -202,7 +202,7 @@ public isolated client class Client {
         return self->/employees/[empNo].get();
     }
 
-    resource function delete employees/[string empNo]() returns Employee|persist:Error {
+    isolated resource function delete employees/[string empNo]() returns Employee|persist:Error {
         Employee result = check self->/employees/[empNo].get();
         persist:GoogleSheetsClient googleSheetsClient;
         lock {
@@ -263,7 +263,7 @@ public isolated client class Client {
         name: "queryOne"
     } external;
 
-    resource function post workspaces(WorkspaceInsert[] data) returns string[]|persist:Error {
+    isolated resource function post workspaces(WorkspaceInsert[] data) returns string[]|persist:Error {
         persist:GoogleSheetsClient googleSheetsClient;
         lock {
             googleSheetsClient = self.persistClients.get(WORKSPACE);
@@ -273,7 +273,7 @@ public isolated client class Client {
             select inserted.workspaceId;
     }
 
-    resource function put workspaces/[string workspaceId](WorkspaceUpdate value) returns Workspace|persist:Error {
+    isolated resource function put workspaces/[string workspaceId](WorkspaceUpdate value) returns Workspace|persist:Error {
         persist:GoogleSheetsClient googleSheetsClient;
         lock {
             googleSheetsClient = self.persistClients.get(WORKSPACE);
@@ -282,7 +282,7 @@ public isolated client class Client {
         return self->/workspaces/[workspaceId].get();
     }
 
-    resource function delete workspaces/[string workspaceId]() returns Workspace|persist:Error {
+    isolated resource function delete workspaces/[string workspaceId]() returns Workspace|persist:Error {
         Workspace result = check self->/workspaces/[workspaceId].get();
         persist:GoogleSheetsClient googleSheetsClient;
         lock {
@@ -337,7 +337,7 @@ public isolated client class Client {
         name: "queryOne"
     } external;
 
-    resource function post buildings(BuildingInsert[] data) returns string[]|persist:Error {
+    isolated resource function post buildings(BuildingInsert[] data) returns string[]|persist:Error {
         persist:GoogleSheetsClient googleSheetsClient;
         lock {
             googleSheetsClient = self.persistClients.get(BUILDING);
@@ -347,7 +347,7 @@ public isolated client class Client {
             select inserted.buildingCode;
     }
 
-    resource function put buildings/[string buildingCode](BuildingUpdate value) returns Building|persist:Error {
+    isolated resource function put buildings/[string buildingCode](BuildingUpdate value) returns Building|persist:Error {
         persist:GoogleSheetsClient googleSheetsClient;
         lock {
             googleSheetsClient = self.persistClients.get(BUILDING);
@@ -356,7 +356,7 @@ public isolated client class Client {
         return self->/buildings/[buildingCode].get();
     }
 
-    resource function delete buildings/[string buildingCode]() returns Building|persist:Error {
+    isolated resource function delete buildings/[string buildingCode]() returns Building|persist:Error {
         Building result = check self->/buildings/[buildingCode].get();
         persist:GoogleSheetsClient googleSheetsClient;
         lock {
@@ -405,7 +405,7 @@ public isolated client class Client {
         name: "queryOne"
     } external;
 
-    resource function post departments(DepartmentInsert[] data) returns string[]|persist:Error {
+    isolated resource function post departments(DepartmentInsert[] data) returns string[]|persist:Error {
         persist:GoogleSheetsClient googleSheetsClient;
         lock {
             googleSheetsClient = self.persistClients.get(DEPARTMENT);
@@ -415,7 +415,7 @@ public isolated client class Client {
             select inserted.deptNo;
     }
 
-    resource function put departments/[string deptNo](DepartmentUpdate value) returns Department|persist:Error {
+    isolated resource function put departments/[string deptNo](DepartmentUpdate value) returns Department|persist:Error {
         persist:GoogleSheetsClient googleSheetsClient;
         lock {
             googleSheetsClient = self.persistClients.get(DEPARTMENT);
@@ -424,7 +424,7 @@ public isolated client class Client {
         return self->/departments/[deptNo].get();
     }
 
-    resource function delete departments/[string deptNo]() returns Department|persist:Error {
+    isolated resource function delete departments/[string deptNo]() returns Department|persist:Error {
         Department result = check self->/departments/[deptNo].get();
         persist:GoogleSheetsClient googleSheetsClient;
         lock {
@@ -473,7 +473,7 @@ public isolated client class Client {
         name: "queryOne"
     } external;
 
-    resource function post orderitems(OrderItemInsert[] data) returns [string, string][]|persist:Error {
+    isolated resource function post orderitems(OrderItemInsert[] data) returns [string, string][]|persist:Error {
         persist:GoogleSheetsClient googleSheetsClient;
         lock {
             googleSheetsClient = self.persistClients.get(ORDER_ITEM);
@@ -483,7 +483,7 @@ public isolated client class Client {
             select [inserted.orderId, inserted.itemId];
     }
 
-    resource function put orderitems/[string orderId]/[string itemId](OrderItemUpdate value) returns OrderItem|persist:Error {
+    isolated resource function put orderitems/[string orderId]/[string itemId](OrderItemUpdate value) returns OrderItem|persist:Error {
         persist:GoogleSheetsClient googleSheetsClient;
         lock {
             googleSheetsClient = self.persistClients.get(ORDER_ITEM);
@@ -492,7 +492,7 @@ public isolated client class Client {
         return self->/orderitems/[orderId]/[itemId].get();
     }
 
-    resource function delete orderitems/[string orderId]/[string itemId]() returns OrderItem|persist:Error {
+    isolated resource function delete orderitems/[string orderId]/[string itemId]() returns OrderItem|persist:Error {
         OrderItem result = check self->/orderitems/[orderId]/[itemId].get();
         persist:GoogleSheetsClient googleSheetsClient;
         lock {

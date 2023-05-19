@@ -135,7 +135,7 @@ public class DbClientSyntax implements ClientSyntax {
     public FunctionDefinitionNode getPostFunction(Entity entity) {
         String parameterType = String.format(BalSyntaxConstants.INSERT_RECORD, entity.getEntityName());
         List<EntityField> primaryKeys = entity.getKeys();
-        Function create = BalSyntaxUtils.generatePostFunction(entity, primaryKeys, parameterType, true);
+        Function create = BalSyntaxUtils.generatePostFunction(entity, primaryKeys, parameterType);
         addFunctionBodyToPostResource(create, primaryKeys,
                 BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()), parameterType);
         return create.getFunctionDefinitionNode();
@@ -145,7 +145,7 @@ public class DbClientSyntax implements ClientSyntax {
     public FunctionDefinitionNode getPutFunction(Entity entity) {
         StringBuilder filterKeys = new StringBuilder(BalSyntaxConstants.OPEN_BRACE);
         StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH + entity.getResourceName());
-        Function update = BalSyntaxUtils.generatePutFunction(entity, filterKeys, path, true);
+        Function update = BalSyntaxUtils.generatePutFunction(entity, filterKeys, path);
 
         update.addStatement(NodeParser.parseStatement(BalSyntaxConstants.SQL_CLIENT_DECLARATION));
 
@@ -173,7 +173,7 @@ public class DbClientSyntax implements ClientSyntax {
     public FunctionDefinitionNode getDeleteFunction(Entity entity) {
         StringBuilder filterKeys = new StringBuilder(BalSyntaxConstants.OPEN_BRACE);
         StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH + entity.getResourceName());
-        Function delete = BalSyntaxUtils.generateDeleteFunction(entity, filterKeys, path, true);
+        Function delete = BalSyntaxUtils.generateDeleteFunction(entity, filterKeys, path);
         delete.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.GET_OBJECT_QUERY,
                 entity.getEntityName(), path)));
 
