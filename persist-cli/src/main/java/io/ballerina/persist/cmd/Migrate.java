@@ -108,7 +108,7 @@ public class Migrate implements BLauncherCmd {
                     Paths.get(this.sourcePath, "Ballerina.toml"));
             String dataStore = ballerinaTomlConfig.get("datastore").trim();
             if (!dataStore.equals(PersistToolsConstants.SupportDataSources.MYSQL_DB)) {
-                errStream.printf("ERROR: unsupported data store: expected: 'mysql' but found: '%s'", dataStore);
+                errStream.printf("ERROR: unsupported data store: expected: 'mysql' but found: '%s'%n", dataStore);
                 return;
             }
         } catch (BalException e) {
