@@ -118,6 +118,14 @@ public class ToolingMigrateTest {
         assertGeneratedSources("tool_test_migrate_10");
     }
 
+    @Test(enabled = true)
+    @Description("Test execute command with no difference")
+    public void testNoDifferenceMigrateTest() {
+
+        executeCommand("tool_test_migrate_11");
+        assertGeneratedSources("tool_test_migrate_11");
+    }
+
     private void executeCommand(String subDir) {
         Class<?> persistClass;
         Path sourcePath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);
