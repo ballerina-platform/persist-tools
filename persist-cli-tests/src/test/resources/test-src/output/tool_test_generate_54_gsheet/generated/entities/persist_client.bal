@@ -14,7 +14,7 @@ const BUILDING = "buildings";
 const DEPARTMENT = "departments";
 const ORDER_ITEM = "orderitems";
 
-public client class Client {
+public isolated client class Client {
     *persist:AbstractPersistClient;
 
     private final sheets:Client googleSheetClient;
@@ -23,8 +23,8 @@ public client class Client {
 
     private final map<persist:GoogleSheetsClient> persistClients;
 
-    public function init() returns persist:Error? {
-        final record {|persist:SheetMetadata...;|} metadata = {
+    public isolated function init() returns persist:Error? {
+        final record {|persist:SheetMetadata...;|} & readonly metadata = {
             [EMPLOYEE] : {
                 entityName: "Employee",
                 tableName: "Employee",
@@ -51,7 +51,8 @@ public client class Client {
                     hireDate: {columnName: "hireDate", columnId: "F"},
                     departmentDeptNo: {columnName: "departmentDeptNo", columnId: "G"},
                     workspaceWorkspaceId: {columnName: "workspaceWorkspaceId", columnId: "H"}
-                }
+                },
+                associationsMethods: {}
             },
             [WORKSPACE] : {
                 entityName: "Workspace",
@@ -132,7 +133,8 @@ public client class Client {
                     itemId: {columnName: "itemId", columnId: "B"},
                     quantity: {columnName: "quantity", columnId: "C"},
                     notes: {columnName: "notes", columnId: "D"}
-                }
+                },
+                associationsMethods: {}
             }
         };
         sheets:ConnectionConfig sheetsClientConfig = {
@@ -163,11 +165,11 @@ public client class Client {
         self.httpClient = httpClient;
         map<int> sheetIds = check persist:getSheetIds(self.googleSheetClient, metadata, spreadsheetId);
         self.persistClients = {
-            [EMPLOYEE] : check new (self.googleSheetClient, self.httpClient, metadata.get(EMPLOYEE), spreadsheetId, sheetIds.get(EMPLOYEE)),
-            [WORKSPACE] : check new (self.googleSheetClient, self.httpClient, metadata.get(WORKSPACE), spreadsheetId, sheetIds.get(WORKSPACE)),
-            [BUILDING] : check new (self.googleSheetClient, self.httpClient, metadata.get(BUILDING), spreadsheetId, sheetIds.get(BUILDING)),
-            [DEPARTMENT] : check new (self.googleSheetClient, self.httpClient, metadata.get(DEPARTMENT), spreadsheetId, sheetIds.get(DEPARTMENT)),
-            [ORDER_ITEM] : check new (self.googleSheetClient, self.httpClient, metadata.get(ORDER_ITEM), spreadsheetId, sheetIds.get(ORDER_ITEM))
+            [EMPLOYEE] : check new (self.googleSheetClient, self.httpClient, metadata.get(EMPLOYEE).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(EMPLOYEE).cloneReadOnly()),
+            [WORKSPACE] : check new (self.googleSheetClient, self.httpClient, metadata.get(WORKSPACE).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(WORKSPACE).cloneReadOnly()),
+            [BUILDING] : check new (self.googleSheetClient, self.httpClient, metadata.get(BUILDING).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(BUILDING).cloneReadOnly()),
+            [DEPARTMENT] : check new (self.googleSheetClient, self.httpClient, metadata.get(DEPARTMENT).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(DEPARTMENT).cloneReadOnly()),
+            [ORDER_ITEM] : check new (self.googleSheetClient, self.httpClient, metadata.get(ORDER_ITEM).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(ORDER_ITEM).cloneReadOnly())
         };
     }
 
@@ -182,23 +184,35 @@ public client class Client {
     } external;
 
     resource function post employees(EmployeeInsert[] data) returns string[]|persist:Error {
-        _ = check self.persistClients.get(EMPLOYEE).runBatchInsertQuery(data);
+        persist:GoogleSheetsClient googleSheetsClient;
+        lock {
+            googleSheetsClient = self.persistClients.get(EMPLOYEE);
+        }
+        _ = check googleSheetsClient.runBatchInsertQuery(data);
         return from EmployeeInsert inserted in data
             select inserted.empNo;
     }
 
     resource function put employees/[string empNo](EmployeeUpdate value) returns Employee|persist:Error {
-        _ = check self.persistClients.get(EMPLOYEE).runUpdateQuery(empNo, value);
+        persist:GoogleSheetsClient googleSheetsClient;
+        lock {
+            googleSheetsClient = self.persistClients.get(EMPLOYEE);
+        }
+        _ = check googleSheetsClient.runUpdateQuery(empNo, value);
         return self->/employees/[empNo].get();
     }
 
     resource function delete employees/[string empNo]() returns Employee|persist:Error {
         Employee result = check self->/employees/[empNo].get();
-        _ = check self.persistClients.get(EMPLOYEE).runDeleteQuery(empNo);
+        persist:GoogleSheetsClient googleSheetsClient;
+        lock {
+            googleSheetsClient = self.persistClients.get(EMPLOYEE);
+        }
+        _ = check googleSheetsClient.runDeleteQuery(empNo);
         return result;
     }
 
-    private function queryEmployees(string[] fields) returns stream<record {}, persist:Error?>|persist:Error {
+    private isolated function queryEmployees(string[] fields) returns stream<record {}, persist:Error?>|persist:Error {
         stream<Employee, persist:Error?> employeesStream = self.queryEmployeesStream();
         stream<Department, persist:Error?> departmentsStream = self.queryDepartmentsStream();
         stream<Workspace, persist:Error?> workspacesStream = self.queryWorkspacesStream();
@@ -213,12 +227,12 @@ public client class Client {
         return outputArray.toStream();
     }
 
-    private function queryOneEmployees(anydata key) returns record {}|persist:NotFoundError {
+    private isolated function queryOneEmployees(anydata key) returns record {}|persist:NotFoundError {
         stream<Employee, persist:Error?> employeesStream = self.queryEmployeesStream();
         stream<Department, persist:Error?> departmentsStream = self.queryDepartmentsStream();
         stream<Workspace, persist:Error?> workspacesStream = self.queryWorkspacesStream();
         error? unionResult = from record {} 'object in employeesStream
-            where self.persistClients.get(EMPLOYEE).getKey('object) == key
+            where persist:getKey('object, ["empNo"]) == key
             outer join var department in departmentsStream on ['object.departmentDeptNo] equals [department?.deptNo]
             outer join var workspace in workspacesStream on ['object.workspaceWorkspaceId] equals [workspace?.workspaceId]
             do {
@@ -250,23 +264,35 @@ public client class Client {
     } external;
 
     resource function post workspaces(WorkspaceInsert[] data) returns string[]|persist:Error {
-        _ = check self.persistClients.get(WORKSPACE).runBatchInsertQuery(data);
+        persist:GoogleSheetsClient googleSheetsClient;
+        lock {
+            googleSheetsClient = self.persistClients.get(WORKSPACE);
+        }
+        _ = check googleSheetsClient.runBatchInsertQuery(data);
         return from WorkspaceInsert inserted in data
             select inserted.workspaceId;
     }
 
     resource function put workspaces/[string workspaceId](WorkspaceUpdate value) returns Workspace|persist:Error {
-        _ = check self.persistClients.get(WORKSPACE).runUpdateQuery(workspaceId, value);
+        persist:GoogleSheetsClient googleSheetsClient;
+        lock {
+            googleSheetsClient = self.persistClients.get(WORKSPACE);
+        }
+        _ = check googleSheetsClient.runUpdateQuery(workspaceId, value);
         return self->/workspaces/[workspaceId].get();
     }
 
     resource function delete workspaces/[string workspaceId]() returns Workspace|persist:Error {
         Workspace result = check self->/workspaces/[workspaceId].get();
-        _ = check self.persistClients.get(WORKSPACE).runDeleteQuery(workspaceId);
+        persist:GoogleSheetsClient googleSheetsClient;
+        lock {
+            googleSheetsClient = self.persistClients.get(WORKSPACE);
+        }
+        _ = check googleSheetsClient.runDeleteQuery(workspaceId);
         return result;
     }
 
-    private function queryWorkspaces(string[] fields) returns stream<record {}, persist:Error?>|persist:Error {
+    private isolated function queryWorkspaces(string[] fields) returns stream<record {}, persist:Error?>|persist:Error {
         stream<Workspace, persist:Error?> workspacesStream = self.queryWorkspacesStream();
         stream<Building, persist:Error?> buildingsStream = self.queryBuildingsStream();
         record {}[] outputArray = check from record {} 'object in workspacesStream
@@ -278,11 +304,11 @@ public client class Client {
         return outputArray.toStream();
     }
 
-    private function queryOneWorkspaces(anydata key) returns record {}|persist:NotFoundError {
+    private isolated function queryOneWorkspaces(anydata key) returns record {}|persist:NotFoundError {
         stream<Workspace, persist:Error?> workspacesStream = self.queryWorkspacesStream();
         stream<Building, persist:Error?> buildingsStream = self.queryBuildingsStream();
         error? unionResult = from record {} 'object in workspacesStream
-            where self.persistClients.get(WORKSPACE).getKey('object) == key
+            where persist:getKey('object, ["workspaceId"]) == key
             outer join var location in buildingsStream on ['object.locationBuildingCode] equals [location?.buildingCode]
             do {
                 return {
@@ -312,23 +338,35 @@ public client class Client {
     } external;
 
     resource function post buildings(BuildingInsert[] data) returns string[]|persist:Error {
-        _ = check self.persistClients.get(BUILDING).runBatchInsertQuery(data);
+        persist:GoogleSheetsClient googleSheetsClient;
+        lock {
+            googleSheetsClient = self.persistClients.get(BUILDING);
+        }
+        _ = check googleSheetsClient.runBatchInsertQuery(data);
         return from BuildingInsert inserted in data
             select inserted.buildingCode;
     }
 
     resource function put buildings/[string buildingCode](BuildingUpdate value) returns Building|persist:Error {
-        _ = check self.persistClients.get(BUILDING).runUpdateQuery(buildingCode, value);
+        persist:GoogleSheetsClient googleSheetsClient;
+        lock {
+            googleSheetsClient = self.persistClients.get(BUILDING);
+        }
+        _ = check googleSheetsClient.runUpdateQuery(buildingCode, value);
         return self->/buildings/[buildingCode].get();
     }
 
     resource function delete buildings/[string buildingCode]() returns Building|persist:Error {
         Building result = check self->/buildings/[buildingCode].get();
-        _ = check self.persistClients.get(BUILDING).runDeleteQuery(buildingCode);
+        persist:GoogleSheetsClient googleSheetsClient;
+        lock {
+            googleSheetsClient = self.persistClients.get(BUILDING);
+        }
+        _ = check googleSheetsClient.runDeleteQuery(buildingCode);
         return result;
     }
 
-    private function queryBuildings(string[] fields) returns stream<record {}, persist:Error?>|persist:Error {
+    private isolated function queryBuildings(string[] fields) returns stream<record {}, persist:Error?>|persist:Error {
         stream<Building, persist:Error?> buildingsStream = self.queryBuildingsStream();
         record {}[] outputArray = check from record {} 'object in buildingsStream
             select persist:filterRecord({
@@ -337,10 +375,10 @@ public client class Client {
         return outputArray.toStream();
     }
 
-    private function queryOneBuildings(anydata key) returns record {}|persist:NotFoundError {
+    private isolated function queryOneBuildings(anydata key) returns record {}|persist:NotFoundError {
         stream<Building, persist:Error?> buildingsStream = self.queryBuildingsStream();
         error? unionResult = from record {} 'object in buildingsStream
-            where self.persistClients.get(BUILDING).getKey('object) == key
+            where persist:getKey('object, ["buildingCode"]) == key
             do {
                 return {
                     ...'object
@@ -368,23 +406,35 @@ public client class Client {
     } external;
 
     resource function post departments(DepartmentInsert[] data) returns string[]|persist:Error {
-        _ = check self.persistClients.get(DEPARTMENT).runBatchInsertQuery(data);
+        persist:GoogleSheetsClient googleSheetsClient;
+        lock {
+            googleSheetsClient = self.persistClients.get(DEPARTMENT);
+        }
+        _ = check googleSheetsClient.runBatchInsertQuery(data);
         return from DepartmentInsert inserted in data
             select inserted.deptNo;
     }
 
     resource function put departments/[string deptNo](DepartmentUpdate value) returns Department|persist:Error {
-        _ = check self.persistClients.get(DEPARTMENT).runUpdateQuery(deptNo, value);
+        persist:GoogleSheetsClient googleSheetsClient;
+        lock {
+            googleSheetsClient = self.persistClients.get(DEPARTMENT);
+        }
+        _ = check googleSheetsClient.runUpdateQuery(deptNo, value);
         return self->/departments/[deptNo].get();
     }
 
     resource function delete departments/[string deptNo]() returns Department|persist:Error {
         Department result = check self->/departments/[deptNo].get();
-        _ = check self.persistClients.get(DEPARTMENT).runDeleteQuery(deptNo);
+        persist:GoogleSheetsClient googleSheetsClient;
+        lock {
+            googleSheetsClient = self.persistClients.get(DEPARTMENT);
+        }
+        _ = check googleSheetsClient.runDeleteQuery(deptNo);
         return result;
     }
 
-    private function queryDepartments(string[] fields) returns stream<record {}, persist:Error?>|persist:Error {
+    private isolated function queryDepartments(string[] fields) returns stream<record {}, persist:Error?>|persist:Error {
         stream<Department, persist:Error?> departmentsStream = self.queryDepartmentsStream();
         record {}[] outputArray = check from record {} 'object in departmentsStream
             select persist:filterRecord({
@@ -393,10 +443,10 @@ public client class Client {
         return outputArray.toStream();
     }
 
-    private function queryOneDepartments(anydata key) returns record {}|persist:NotFoundError {
+    private isolated function queryOneDepartments(anydata key) returns record {}|persist:NotFoundError {
         stream<Department, persist:Error?> departmentsStream = self.queryDepartmentsStream();
         error? unionResult = from record {} 'object in departmentsStream
-            where self.persistClients.get(DEPARTMENT).getKey('object) == key
+            where persist:getKey('object, ["deptNo"]) == key
             do {
                 return {
                     ...'object
@@ -424,23 +474,35 @@ public client class Client {
     } external;
 
     resource function post orderitems(OrderItemInsert[] data) returns [string, string][]|persist:Error {
-        _ = check self.persistClients.get(ORDER_ITEM).runBatchInsertQuery(data);
+        persist:GoogleSheetsClient googleSheetsClient;
+        lock {
+            googleSheetsClient = self.persistClients.get(ORDER_ITEM);
+        }
+        _ = check googleSheetsClient.runBatchInsertQuery(data);
         return from OrderItemInsert inserted in data
             select [inserted.orderId, inserted.itemId];
     }
 
     resource function put orderitems/[string orderId]/[string itemId](OrderItemUpdate value) returns OrderItem|persist:Error {
-        _ = check self.persistClients.get(ORDER_ITEM).runUpdateQuery({"orderId": orderId, "itemId": itemId}, value);
+        persist:GoogleSheetsClient googleSheetsClient;
+        lock {
+            googleSheetsClient = self.persistClients.get(ORDER_ITEM);
+        }
+        _ = check googleSheetsClient.runUpdateQuery({"orderId": orderId, "itemId": itemId}, value);
         return self->/orderitems/[orderId]/[itemId].get();
     }
 
     resource function delete orderitems/[string orderId]/[string itemId]() returns OrderItem|persist:Error {
         OrderItem result = check self->/orderitems/[orderId]/[itemId].get();
-        _ = check self.persistClients.get(ORDER_ITEM).runDeleteQuery({"orderId": orderId, "itemId": itemId});
+        persist:GoogleSheetsClient googleSheetsClient;
+        lock {
+            googleSheetsClient = self.persistClients.get(ORDER_ITEM);
+        }
+        _ = check googleSheetsClient.runDeleteQuery({"orderId": orderId, "itemId": itemId});
         return result;
     }
 
-    private function queryOrderitems(string[] fields) returns stream<record {}, persist:Error?>|persist:Error {
+    private isolated function queryOrderitems(string[] fields) returns stream<record {}, persist:Error?>|persist:Error {
         stream<OrderItem, persist:Error?> orderitemsStream = self.queryOrderitemsStream();
         record {}[] outputArray = check from record {} 'object in orderitemsStream
             select persist:filterRecord({
@@ -449,10 +511,10 @@ public client class Client {
         return outputArray.toStream();
     }
 
-    private function queryOneOrderitems(anydata key) returns record {}|persist:NotFoundError {
+    private isolated function queryOneOrderitems(anydata key) returns record {}|persist:NotFoundError {
         stream<OrderItem, persist:Error?> orderitemsStream = self.queryOrderitemsStream();
         error? unionResult = from record {} 'object in orderitemsStream
-            where self.persistClients.get(ORDER_ITEM).getKey('object) == key
+            where persist:getKey('object, ["orderId", "itemId"]) == key
             do {
                 return {
                     ...'object
@@ -469,7 +531,7 @@ public client class Client {
         name: "queryStream"
     } external;
 
-    private function queryBuildingWorkspaces(record {} value, string[] fields) returns record {}[]|persist:Error {
+    private isolated function queryBuildingWorkspaces(record {} value, string[] fields) returns record {}[]|persist:Error {
         stream<Workspace, persist:Error?> workspacesStream = self.queryWorkspacesStream();
         return from record {} 'object in workspacesStream
             where 'object.locationBuildingCode == value["buildingCode"]
@@ -478,7 +540,7 @@ public client class Client {
             }, fields);
     }
 
-    private function queryDepartmentEmployees(record {} value, string[] fields) returns record {}[]|persist:Error {
+    private isolated function queryDepartmentEmployees(record {} value, string[] fields) returns record {}[]|persist:Error {
         stream<Employee, persist:Error?> employeesStream = self.queryEmployeesStream();
         return from record {} 'object in employeesStream
             where 'object.departmentDeptNo == value["deptNo"]
@@ -487,7 +549,7 @@ public client class Client {
             }, fields);
     }
 
-    private function queryWorkspaceEmployees(record {} value, string[] fields) returns record {}[]|persist:Error {
+    private isolated function queryWorkspaceEmployees(record {} value, string[] fields) returns record {}[]|persist:Error {
         stream<Employee, persist:Error?> employeesStream = self.queryEmployeesStream();
         return from record {} 'object in employeesStream
             where 'object.workspaceWorkspaceId == value["workspaceId"]
