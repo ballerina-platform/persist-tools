@@ -204,8 +204,8 @@ public class Init implements BLauncherCmd {
         errStream.println(System.lineSeparator() + "Next steps:");
 
         errStream.println("- Define your data model in \"persist/model.bal\".");
-        errStream.println("- Run \"bal persist generate\" to generate persist client and SQL script tailored for " +
-                "your data model.");
+        errStream.println("- Run \"bal persist generate\" to generate persist client and " +
+                "entity types for your data model.");
 
     }
 
