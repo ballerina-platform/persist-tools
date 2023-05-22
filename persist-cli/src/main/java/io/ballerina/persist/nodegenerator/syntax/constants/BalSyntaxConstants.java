@@ -50,8 +50,6 @@ public class BalSyntaxConstants {
     public static final String PERSIST_MODULE = "persist";
     public static final String ENUM = "ENUM";
     public static final String PERSIST_ERROR = "persist:Error";
-    //public static final String G_SHEET_CREATE_SQL_RESULTS = "_ = check " +
-    //        "self.persistClients.get(%s).runBatchInsertQuery(data);";
     public static final String GET_G_SHEET_PERSIST_CLIENT = "googleSheetsClient = self.persistClients.get(%s);";
     public static final String G_SHEET_CLIENT_DECLARATION = "persist:GoogleSheetsClient googleSheetsClient;";
     public static final String G_SHEET_CREATE_SQL_RESULTS = "_ = check googleSheetsClient.runBatchInsertQuery(data);";
