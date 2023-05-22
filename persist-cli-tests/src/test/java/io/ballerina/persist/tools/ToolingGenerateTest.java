@@ -391,4 +391,11 @@ public class ToolingGenerateTest {
         assertGeneratedSources("tool_test_generate_56_gsheets");
     }
 
+    @Test(enabled = true)
+    @Description("There is a generated client object with google sheets data source and ENUM as field type.")
+    public void testGoogleSheetWithEnum() {
+        executeCommand("tool_test_generate_57_gsheets", GENERATE);
+        assertGeneratedSources("tool_test_generate_57_gsheets");
+    }
+
 }
