@@ -7,7 +7,7 @@ import ballerina/persist;
 import ballerina/jballerina.java;
 import ballerinax/mysql;
 import ballerinax/mysql.driver as _;
-import ballerinax/persist.sql;
+import ballerinax/persist.sql as psql;
 
 const COMPANY = "companies";
 const EMPLOYEE = "employees";
@@ -18,9 +18,9 @@ public isolated client class Client {
 
     private final mysql:Client dbClient;
 
-    private final map<sql:SQLClient> persistClients;
+    private final map<psql:SQLClient> persistClients;
 
-    private final record {|sql:SQLMetadata...;|} & readonly metadata = {
+    private final record {|psql:SQLMetadata...;|} & readonly metadata = {
         [COMPANY] : {
             entityName: "Company",
             tableName: "Company",
@@ -32,7 +32,7 @@ public isolated client class Client {
                 "employee[].companyId": {relation: {entityName: "employee", refField: "companyId"}}
             },
             keyFields: ["id"],
-            joinMetadata: {employee: {entity: Employee, fieldName: "employee", refTable: "Employee", refColumns: ["companyId"], joinColumns: ["id"], 'type: sql:MANY_TO_ONE}}
+            joinMetadata: {employee: {entity: Employee, fieldName: "employee", refTable: "Employee", refColumns: ["companyId"], joinColumns: ["id"], 'type: psql:MANY_TO_ONE}}
         },
         [EMPLOYEE] : {
             entityName: "Employee",
@@ -49,8 +49,8 @@ public isolated client class Client {
             },
             keyFields: ["id"],
             joinMetadata: {
-                company: {entity: Company, fieldName: "company", refTable: "Company", refColumns: ["id"], joinColumns: ["companyId"], 'type: sql:ONE_TO_MANY},
-                vehicles: {entity: Vehicle, fieldName: "vehicles", refTable: "Vehicle", refColumns: ["employeeId"], joinColumns: ["id"], 'type: sql:MANY_TO_ONE}
+                company: {entity: Company, fieldName: "company", refTable: "Company", refColumns: ["id"], joinColumns: ["companyId"], 'type: psql:ONE_TO_MANY},
+                vehicles: {entity: Vehicle, fieldName: "vehicles", refTable: "Vehicle", refColumns: ["employeeId"], joinColumns: ["id"], 'type: psql:MANY_TO_ONE}
             }
         },
         [VEHICLE] : {
@@ -65,7 +65,7 @@ public isolated client class Client {
                 "employee.companyId": {relation: {entityName: "employee", refField: "companyId"}}
             },
             keyFields: ["model"],
-            joinMetadata: {employee: {entity: Employee, fieldName: "employee", refTable: "Employee", refColumns: ["id"], joinColumns: ["employeeId"], 'type: sql:ONE_TO_MANY}}
+            joinMetadata: {employee: {entity: Employee, fieldName: "employee", refTable: "Employee", refColumns: ["id"], joinColumns: ["employeeId"], 'type: psql:ONE_TO_MANY}}
         }
     };
 
@@ -93,7 +93,7 @@ public isolated client class Client {
     } external;
 
     isolated resource function post companies(CompanyInsert[] data) returns int[]|persist:Error {
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(COMPANY);
         }
@@ -103,7 +103,7 @@ public isolated client class Client {
     }
 
     isolated resource function put companies/[int id](CompanyUpdate value) returns Company|persist:Error {
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(COMPANY);
         }
@@ -113,7 +113,7 @@ public isolated client class Client {
 
     isolated resource function delete companies/[int id]() returns Company|persist:Error {
         Company result = check self->/companies/[id].get();
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(COMPANY);
         }
@@ -132,7 +132,7 @@ public isolated client class Client {
     } external;
 
     isolated resource function post employees(EmployeeInsert[] data) returns int[]|persist:Error {
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(EMPLOYEE);
         }
@@ -142,7 +142,7 @@ public isolated client class Client {
     }
 
     isolated resource function put employees/[int id](EmployeeUpdate value) returns Employee|persist:Error {
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(EMPLOYEE);
         }
@@ -152,7 +152,7 @@ public isolated client class Client {
 
     isolated resource function delete employees/[int id]() returns Employee|persist:Error {
         Employee result = check self->/employees/[id].get();
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(EMPLOYEE);
         }
@@ -171,7 +171,7 @@ public isolated client class Client {
     } external;
 
     isolated resource function post vehicles(VehicleInsert[] data) returns int[]|persist:Error {
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(VEHICLE);
         }
@@ -181,7 +181,7 @@ public isolated client class Client {
     }
 
     isolated resource function put vehicles/[int model](VehicleUpdate value) returns Vehicle|persist:Error {
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(VEHICLE);
         }
@@ -191,7 +191,7 @@ public isolated client class Client {
 
     isolated resource function delete vehicles/[int model]() returns Vehicle|persist:Error {
         Vehicle result = check self->/vehicles/[model].get();
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(VEHICLE);
         }

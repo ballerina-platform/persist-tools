@@ -75,7 +75,7 @@ public class GSheetClientSyntax implements ClientSyntax {
         Client clientObject = BalSyntaxUtils.generateClientSignature(true);
         clientObject.addMember(NodeParser.parseObjectMember(BalSyntaxConstants.GOOGLE_SHEET_CLIENT), true);
         clientObject.addMember(NodeParser.parseObjectMember(BalSyntaxConstants.HTTP_CLIENT), true);
-        clientObject.addMember(NodeParser.parseObjectMember(BalSyntaxConstants.GOOGLE_PERSIST_CLIENT), true);
+        clientObject.addMember(NodeParser.parseObjectMember(BalSyntaxConstants.INIT_GOOGLE_SHEET_CLIENT_MAP), true);
         return clientObject;
     }
 

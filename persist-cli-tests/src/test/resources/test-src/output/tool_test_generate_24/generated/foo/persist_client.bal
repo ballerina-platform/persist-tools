@@ -7,7 +7,7 @@ import ballerina/persist;
 import ballerina/jballerina.java;
 import ballerinax/mysql;
 import ballerinax/mysql.driver as _;
-import ballerinax/persist.sql;
+import ballerinax/persist.sql as psql;
 
 const BYTE_TEST = "bytetests";
 
@@ -16,9 +16,9 @@ public isolated client class Client {
 
     private final mysql:Client dbClient;
 
-    private final map<sql:SQLClient> persistClients;
+    private final map<psql:SQLClient> persistClients;
 
-    private final record {|sql:SQLMetadata...;|} & readonly metadata = {
+    private final record {|psql:SQLMetadata...;|} & readonly metadata = {
         [BYTE_TEST] : {
             entityName: "ByteTest",
             tableName: "ByteTest",
@@ -51,7 +51,7 @@ public isolated client class Client {
     } external;
 
     isolated resource function post bytetests(ByteTestInsert[] data) returns int[]|persist:Error {
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(BYTE_TEST);
         }
@@ -61,7 +61,7 @@ public isolated client class Client {
     }
 
     isolated resource function put bytetests/[int id](ByteTestUpdate value) returns ByteTest|persist:Error {
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(BYTE_TEST);
         }
@@ -71,7 +71,7 @@ public isolated client class Client {
 
     isolated resource function delete bytetests/[int id]() returns ByteTest|persist:Error {
         ByteTest result = check self->/bytetests/[id].get();
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(BYTE_TEST);
         }

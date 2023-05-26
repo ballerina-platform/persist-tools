@@ -27,6 +27,7 @@ import io.ballerina.compiler.syntax.tree.NodeFactory;
 import io.ballerina.compiler.syntax.tree.NodeList;
 import io.ballerina.compiler.syntax.tree.NodeParser;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
+import io.ballerina.compiler.syntax.tree.Token;
 import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.components.Client;
 import io.ballerina.persist.components.Function;
@@ -63,8 +64,10 @@ public class DbClientSyntax implements ClientSyntax {
                 AbstractNodeFactory.createToken(SyntaxKind.UNDERSCORE_KEYWORD));
         imports = imports.add(BalSyntaxUtils.getImportDeclarationNode(BalSyntaxConstants.KEYWORD_BALLERINAX,
                 BalSyntaxConstants.MYSQL_DRIVER, prefix));
+        Token prefixToken = AbstractNodeFactory.createIdentifierToken("psql");
+        prefix = NodeFactory.createImportPrefixNode(SyntaxTokenConstants.SYNTAX_TREE_AS, prefixToken);
         imports = imports.add(BalSyntaxUtils.getImportDeclarationNode(BalSyntaxConstants.KEYWORD_BALLERINAX,
-                BalSyntaxConstants.PERSIST_MODULE + "." + BalSyntaxConstants.PERSIST_SQL, null));
+                BalSyntaxConstants.PERSIST_MODULE + "." + BalSyntaxConstants.PERSIST_SQL, prefix));
         return imports;
     }
 
@@ -76,7 +79,7 @@ public class DbClientSyntax implements ClientSyntax {
     public Client getClientObject(Module entityModule) {
         Client clientObject = BalSyntaxUtils.generateClientSignature(true);
         clientObject.addMember(NodeParser.parseObjectMember(BalSyntaxConstants.INIT_DB_CLIENT), true);
-        clientObject.addMember(NodeParser.parseObjectMember(BalSyntaxConstants.INIT_DB_CLIENT_MAP), true);
+        clientObject.addMember(NodeParser.parseObjectMember(BalSyntaxConstants.INIT_SQL_CLIENT_MAP), true);
         clientObject.addMember(generateMetadataRecord(entityModule), true);
         return clientObject;
     }
@@ -299,16 +302,16 @@ public class DbClientSyntax implements ClientSyntax {
             StringBuilder refColumns = new StringBuilder();
             StringBuilder joinColumns = new StringBuilder();
             if (entityField.getRelation() != null) {
-                String relationType = "sql:ONE_TO_ONE";
+                String relationType = BalSyntaxConstants.ONE_TO_ONE;
                 Entity associatedEntity = entityField.getRelation().getAssocEntity();
                 for (EntityField associatedEntityField : associatedEntity.getFields()) {
                     if (associatedEntityField.getFieldType().equals(entity.getEntityName())) {
                         if (associatedEntityField.isArrayType() && !entityField.isArrayType()) {
-                            relationType = "sql:ONE_TO_MANY";
+                            relationType = BalSyntaxConstants.ONE_TO_MANY;
                         } else if (!associatedEntityField.isArrayType() && entityField.isArrayType()) {
-                            relationType = "sql:MANY_TO_ONE";
+                            relationType = BalSyntaxConstants.MANY_TO_ONE;
                         } else if (associatedEntityField.isArrayType() && entityField.isArrayType()) {
-                            relationType = "sql:MANY_TO_MANY";
+                            relationType = BalSyntaxConstants.MANY_TO_MANY;
                         }
                     }
                 }

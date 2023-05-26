@@ -177,7 +177,7 @@ public class ToolingInitTest {
                String dataStore = "persist.inmemory";
                if (content.contains("datastore = \"mysql\"")) {
                    dataStore = "persist.sql";
-               } else if (content.contains("datastore = \"ggoglesheets\"")) {
+               } else if (content.contains("datastore = \"googlesheets\"")) {
                    dataStore = "persist.googlesheets";
                }
                content = content.replaceAll(

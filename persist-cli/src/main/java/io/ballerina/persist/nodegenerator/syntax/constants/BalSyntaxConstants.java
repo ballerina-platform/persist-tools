@@ -53,7 +53,7 @@ public class BalSyntaxConstants {
     public static final String GET_G_SHEET_PERSIST_CLIENT = "googleSheetsClient = self.persistClients.get(%s);";
     public static final String G_SHEET_CLIENT_DECLARATION = "googlesheets:GoogleSheetsClient googleSheetsClient;";
     public static final String G_SHEET_CREATE_SQL_RESULTS = "_ = check googleSheetsClient.runBatchInsertQuery(data);";
-    public static final String SQL_CLIENT_DECLARATION = "sql:SQLClient sqlClient;";
+    public static final String SQL_CLIENT_DECLARATION = "psql:SQLClient sqlClient;";
     public static final String CREATE_SQL_RESULTS = "_ = check sqlClient.runBatchInsertQuery(data);";
     public static final String GET_PERSIST_CLIENT = "sqlClient = self.persistClients.get(%s);";
 
@@ -168,10 +168,10 @@ public class BalSyntaxConstants {
     public static final String INIT_DB_CLIENT = "private final mysql:Client dbClient;";
     public static final String GOOGLE_SHEET_CLIENT = "private final sheets:Client googleSheetClient;";
     public static final String HTTP_CLIENT = "private final http:Client httpClient;";
-    public static final String GOOGLE_PERSIST_CLIENT = "private final map<googlesheets:GoogleSheetsClient> " +
+    public static final String INIT_GOOGLE_SHEET_CLIENT_MAP = "private final map<googlesheets:GoogleSheetsClient> " +
             "persistClients;";
-    public static final String INIT_DB_CLIENT_MAP = "private final map<sql:SQLClient> persistClients;";
-    public static final String INIT_IN_MEMORY_CLIENT = "private final map<inmemory:InMemoryClient> persistClients;";
+    public static final String INIT_SQL_CLIENT_MAP = "private final map<psql:SQLClient> persistClients;";
+    public static final String INIT_IN_MEMORY_CLIENT_MAP = "private final map<inmemory:InMemoryClient> persistClients;";
     public static final String METADATA_RECORD_ENTITY_NAME_TEMPLATE = "entityName: \"%s\", " + System.lineSeparator();
     public static final String TABLE_NAME_TEMPLATE = "tableName: \"%s\", " + System.lineSeparator();
     public static final String METADATA_RECORD_TABLE_NAME_TEMPLATE = "tableName: \"%s\", " + System.lineSeparator();
@@ -252,7 +252,7 @@ public class BalSyntaxConstants {
     public static final String METADATA_RECORD_KEY_FIELD_TEMPLATE = "keyFields: [%s]";
     public static final String METADATA_RECORD_ELEMENT_TEMPLATE = "[%s]: {%s}";
     public static final String METADATA_RECORD_TEMPLATE =
-            "private final record {|sql:SQLMetadata...;|} & readonly metadata = {%s};";
+            "private final record {|psql:SQLMetadata...;|} & readonly metadata = {%s};";
     public static final String SHEET_METADATA_RECORD_TEMPLATE =
             "final record {|googlesheets:SheetMetadata...;|} & readonly metadata = {%s};";
     public static final String SHEET_CLIENT_CONFIG_TEMPLATE = " sheets:ConnectionConfig sheetsClientConfig = {" +
@@ -311,6 +311,10 @@ public class BalSyntaxConstants {
     public static final String ARRAY = "[]";
     public static final String QUESTION_MARK = "?";
     public static final String COMMA_WITH_NEWLINE = "," + System.lineSeparator();
+    public static final String ONE_TO_ONE = "psql:ONE_TO_ONE";
+    public static final String ONE_TO_MANY = "psql:ONE_TO_MANY";
+    public static final String MANY_TO_ONE = "psql:MANY_TO_ONE";
+    public static final String MANY_TO_MANY = "psql:MANY_TO_MANY";
 
     public static final String EXTERNAL_GET_BY_KEY_METHOD_TEMPLATE = "isolated resource function get %s/%s(" +
             "%sTargetType targetType = <>) returns targetType|persist:Error = @java:Method {"

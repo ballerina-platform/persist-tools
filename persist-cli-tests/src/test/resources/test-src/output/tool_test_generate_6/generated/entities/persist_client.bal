@@ -7,7 +7,7 @@ import ballerina/persist;
 import ballerina/jballerina.java;
 import ballerinax/mysql;
 import ballerinax/mysql.driver as _;
-import ballerinax/persist.sql;
+import ballerinax/persist.sql as psql;
 
 const DATA_TYPE = "datatypes";
 
@@ -16,9 +16,9 @@ public isolated client class Client {
 
     private final mysql:Client dbClient;
 
-    private final map<sql:SQLClient> persistClients;
+    private final map<psql:SQLClient> persistClients;
 
-    private final record {|sql:SQLMetadata...;|} & readonly metadata = {
+    private final record {|psql:SQLMetadata...;|} & readonly metadata = {
         [DATA_TYPE] : {
             entityName: "DataType",
             tableName: "DataType",
@@ -59,7 +59,7 @@ public isolated client class Client {
     } external;
 
     isolated resource function post datatypes(DataTypeInsert[] data) returns int[]|persist:Error {
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(DATA_TYPE);
         }
@@ -69,7 +69,7 @@ public isolated client class Client {
     }
 
     isolated resource function put datatypes/[int a](DataTypeUpdate value) returns DataType|persist:Error {
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(DATA_TYPE);
         }
@@ -79,7 +79,7 @@ public isolated client class Client {
 
     isolated resource function delete datatypes/[int a]() returns DataType|persist:Error {
         DataType result = check self->/datatypes/[a].get();
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(DATA_TYPE);
         }

@@ -7,7 +7,7 @@ import ballerina/persist;
 import ballerina/jballerina.java;
 import ballerinax/mysql;
 import ballerinax/mysql.driver as _;
-import ballerinax/persist.sql;
+import ballerinax/persist.sql as psql;
 
 const MEDICAL_NEED = "medicalneeds";
 const MEDICAL_ITEM = "medicalitems";
@@ -17,9 +17,9 @@ public isolated client class Client {
 
     private final mysql:Client dbClient;
 
-    private final map<sql:SQLClient> persistClients;
+    private final map<psql:SQLClient> persistClients;
 
-    private final record {|sql:SQLMetadata...;|} & readonly metadata = {
+    private final record {|psql:SQLMetadata...;|} & readonly metadata = {
         [MEDICAL_NEED] : {
             entityName: "MedicalNeed",
             tableName: "MedicalNeed",
@@ -36,7 +36,7 @@ public isolated client class Client {
                 "item.unit": {relation: {entityName: "item", refField: "unit"}}
             },
             keyFields: ["record"],
-            joinMetadata: {item: {entity: MedicalItem, fieldName: "item", refTable: "MedicalItem", refColumns: ["itemId"], joinColumns: ["itemItemId"], 'type: sql:ONE_TO_ONE}}
+            joinMetadata: {item: {entity: MedicalItem, fieldName: "item", refTable: "MedicalItem", refColumns: ["itemId"], joinColumns: ["itemItemId"], 'type: psql:ONE_TO_ONE}}
         },
         [MEDICAL_ITEM] : {
             entityName: "MedicalItem",
@@ -54,7 +54,7 @@ public isolated client class Client {
                 "medicalNeed.quantity": {relation: {entityName: "medicalNeed", refField: "quantity"}}
             },
             keyFields: ["itemId"],
-            joinMetadata: {medicalNeed: {entity: MedicalNeed, fieldName: "medicalNeed", refTable: "MedicalNeed", refColumns: ["itemItemId"], joinColumns: ["itemId"], 'type: sql:ONE_TO_ONE}}
+            joinMetadata: {medicalNeed: {entity: MedicalNeed, fieldName: "medicalNeed", refTable: "MedicalNeed", refColumns: ["itemItemId"], joinColumns: ["itemId"], 'type: psql:ONE_TO_ONE}}
         }
     };
 
@@ -81,7 +81,7 @@ public isolated client class Client {
     } external;
 
     isolated resource function post medicalneeds(MedicalNeedInsert[] data) returns int[]|persist:Error {
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(MEDICAL_NEED);
         }
@@ -91,7 +91,7 @@ public isolated client class Client {
     }
 
     isolated resource function put medicalneeds/[int 'record](MedicalNeedUpdate value) returns MedicalNeed|persist:Error {
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(MEDICAL_NEED);
         }
@@ -101,7 +101,7 @@ public isolated client class Client {
 
     isolated resource function delete medicalneeds/[int 'record]() returns MedicalNeed|persist:Error {
         MedicalNeed result = check self->/medicalneeds/['record].get();
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(MEDICAL_NEED);
         }
@@ -120,7 +120,7 @@ public isolated client class Client {
     } external;
 
     isolated resource function post medicalitems(MedicalItemInsert[] data) returns int[]|persist:Error {
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(MEDICAL_ITEM);
         }
@@ -130,7 +130,7 @@ public isolated client class Client {
     }
 
     isolated resource function put medicalitems/[int itemId](MedicalItemUpdate value) returns MedicalItem|persist:Error {
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(MEDICAL_ITEM);
         }
@@ -140,7 +140,7 @@ public isolated client class Client {
 
     isolated resource function delete medicalitems/[int itemId]() returns MedicalItem|persist:Error {
         MedicalItem result = check self->/medicalitems/[itemId].get();
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(MEDICAL_ITEM);
         }

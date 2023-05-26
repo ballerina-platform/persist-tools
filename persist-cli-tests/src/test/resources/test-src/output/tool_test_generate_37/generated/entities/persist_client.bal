@@ -7,7 +7,7 @@ import ballerina/persist;
 import ballerina/jballerina.java;
 import ballerinax/mysql;
 import ballerinax/mysql.driver as _;
-import ballerinax/persist.sql;
+import ballerinax/persist.sql as psql;
 
 const PROFILE = "profiles";
 const USER = "users";
@@ -21,9 +21,9 @@ public isolated client class Client {
 
     private final mysql:Client dbClient;
 
-    private final map<sql:SQLClient> persistClients;
+    private final map<psql:SQLClient> persistClients;
 
-    private final record {|sql:SQLMetadata...;|} & readonly metadata = {
+    private final record {|psql:SQLMetadata...;|} & readonly metadata = {
         [PROFILE] : {
             entityName: "Profile",
             tableName: "Profile",
@@ -40,7 +40,7 @@ public isolated client class Client {
                 "owner.multipleassociationsId": {relation: {entityName: "owner", refField: "multipleassociationsId"}}
             },
             keyFields: ["id"],
-            joinMetadata: {owner: {entity: User, fieldName: "owner", refTable: "User", refColumns: ["id"], joinColumns: ["ownerId"], 'type: sql:ONE_TO_ONE}}
+            joinMetadata: {owner: {entity: User, fieldName: "owner", refTable: "User", refColumns: ["id"], joinColumns: ["ownerId"], 'type: psql:ONE_TO_ONE}}
         },
         [USER] : {
             entityName: "User",
@@ -61,8 +61,8 @@ public isolated client class Client {
             },
             keyFields: ["id"],
             joinMetadata: {
-                profile: {entity: Profile, fieldName: "profile", refTable: "Profile", refColumns: ["ownerId"], joinColumns: ["id"], 'type: sql:ONE_TO_ONE},
-                multipleAssociations: {entity: MultipleAssociations, fieldName: "multipleAssociations", refTable: "MultipleAssociations", refColumns: ["id"], joinColumns: ["multipleassociationsId"], 'type: sql:ONE_TO_ONE}
+                profile: {entity: Profile, fieldName: "profile", refTable: "Profile", refColumns: ["ownerId"], joinColumns: ["id"], 'type: psql:ONE_TO_ONE},
+                multipleAssociations: {entity: MultipleAssociations, fieldName: "multipleAssociations", refTable: "MultipleAssociations", refColumns: ["id"], joinColumns: ["multipleassociationsId"], 'type: psql:ONE_TO_ONE}
             }
         },
         [DEPT] : {
@@ -76,7 +76,7 @@ public isolated client class Client {
                 "multipleAssociations.name": {relation: {entityName: "multipleAssociations", refField: "name"}}
             },
             keyFields: ["id"],
-            joinMetadata: {multipleAssociations: {entity: MultipleAssociations, fieldName: "multipleAssociations", refTable: "MultipleAssociations", refColumns: ["id"], joinColumns: ["multipleassociationsId"], 'type: sql:ONE_TO_ONE}}
+            joinMetadata: {multipleAssociations: {entity: MultipleAssociations, fieldName: "multipleAssociations", refTable: "MultipleAssociations", refColumns: ["id"], joinColumns: ["multipleassociationsId"], 'type: psql:ONE_TO_ONE}}
         },
         [CUSTOMER] : {
             entityName: "Customer",
@@ -90,7 +90,7 @@ public isolated client class Client {
                 "multipleAssociations.name": {relation: {entityName: "multipleAssociations", refField: "name"}}
             },
             keyFields: ["id"],
-            joinMetadata: {multipleAssociations: {entity: MultipleAssociations, fieldName: "multipleAssociations", refTable: "MultipleAssociations", refColumns: ["id"], joinColumns: ["multipleassociationsId"], 'type: sql:ONE_TO_ONE}}
+            joinMetadata: {multipleAssociations: {entity: MultipleAssociations, fieldName: "multipleAssociations", refTable: "MultipleAssociations", refColumns: ["id"], joinColumns: ["multipleassociationsId"], 'type: psql:ONE_TO_ONE}}
         },
         [STUDENT] : {
             entityName: "Student",
@@ -123,9 +123,9 @@ public isolated client class Client {
             },
             keyFields: ["id"],
             joinMetadata: {
-                owner: {entity: User, fieldName: "owner", refTable: "User", refColumns: ["multipleassociationsId"], joinColumns: ["id"], 'type: sql:ONE_TO_ONE},
-                dept: {entity: Dept, fieldName: "dept", refTable: "Dept", refColumns: ["multipleassociationsId"], joinColumns: ["id"], 'type: sql:ONE_TO_ONE},
-                customer: {entity: Customer, fieldName: "customer", refTable: "Customer", refColumns: ["multipleassociationsId"], joinColumns: ["id"], 'type: sql:ONE_TO_ONE}
+                owner: {entity: User, fieldName: "owner", refTable: "User", refColumns: ["multipleassociationsId"], joinColumns: ["id"], 'type: psql:ONE_TO_ONE},
+                dept: {entity: Dept, fieldName: "dept", refTable: "Dept", refColumns: ["multipleassociationsId"], joinColumns: ["id"], 'type: psql:ONE_TO_ONE},
+                customer: {entity: Customer, fieldName: "customer", refTable: "Customer", refColumns: ["multipleassociationsId"], joinColumns: ["id"], 'type: psql:ONE_TO_ONE}
             }
         }
     };
@@ -157,7 +157,7 @@ public isolated client class Client {
     } external;
 
     isolated resource function post profiles(ProfileInsert[] data) returns int[]|persist:Error {
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(PROFILE);
         }
@@ -167,7 +167,7 @@ public isolated client class Client {
     }
 
     isolated resource function put profiles/[int id](ProfileUpdate value) returns Profile|persist:Error {
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(PROFILE);
         }
@@ -177,7 +177,7 @@ public isolated client class Client {
 
     isolated resource function delete profiles/[int id]() returns Profile|persist:Error {
         Profile result = check self->/profiles/[id].get();
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(PROFILE);
         }
@@ -196,7 +196,7 @@ public isolated client class Client {
     } external;
 
     isolated resource function post users(UserInsert[] data) returns int[]|persist:Error {
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(USER);
         }
@@ -206,7 +206,7 @@ public isolated client class Client {
     }
 
     isolated resource function put users/[int id](UserUpdate value) returns User|persist:Error {
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(USER);
         }
@@ -216,7 +216,7 @@ public isolated client class Client {
 
     isolated resource function delete users/[int id]() returns User|persist:Error {
         User result = check self->/users/[id].get();
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(USER);
         }
@@ -235,7 +235,7 @@ public isolated client class Client {
     } external;
 
     isolated resource function post depts(DeptInsert[] data) returns int[]|persist:Error {
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(DEPT);
         }
@@ -245,7 +245,7 @@ public isolated client class Client {
     }
 
     isolated resource function put depts/[int id](DeptUpdate value) returns Dept|persist:Error {
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(DEPT);
         }
@@ -255,7 +255,7 @@ public isolated client class Client {
 
     isolated resource function delete depts/[int id]() returns Dept|persist:Error {
         Dept result = check self->/depts/[id].get();
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(DEPT);
         }
@@ -274,7 +274,7 @@ public isolated client class Client {
     } external;
 
     isolated resource function post customers(CustomerInsert[] data) returns int[]|persist:Error {
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(CUSTOMER);
         }
@@ -284,7 +284,7 @@ public isolated client class Client {
     }
 
     isolated resource function put customers/[int id](CustomerUpdate value) returns Customer|persist:Error {
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(CUSTOMER);
         }
@@ -294,7 +294,7 @@ public isolated client class Client {
 
     isolated resource function delete customers/[int id]() returns Customer|persist:Error {
         Customer result = check self->/customers/[id].get();
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(CUSTOMER);
         }
@@ -313,7 +313,7 @@ public isolated client class Client {
     } external;
 
     isolated resource function post students(StudentInsert[] data) returns [int, string][]|persist:Error {
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(STUDENT);
         }
@@ -323,7 +323,7 @@ public isolated client class Client {
     }
 
     isolated resource function put students/[int id]/[string firstName](StudentUpdate value) returns Student|persist:Error {
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(STUDENT);
         }
@@ -333,7 +333,7 @@ public isolated client class Client {
 
     isolated resource function delete students/[int id]/[string firstName]() returns Student|persist:Error {
         Student result = check self->/students/[id]/[firstName].get();
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(STUDENT);
         }
@@ -352,7 +352,7 @@ public isolated client class Client {
     } external;
 
     isolated resource function post multipleassociations(MultipleAssociationsInsert[] data) returns int[]|persist:Error {
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(MULTIPLE_ASSOCIATIONS);
         }
@@ -362,7 +362,7 @@ public isolated client class Client {
     }
 
     isolated resource function put multipleassociations/[int id](MultipleAssociationsUpdate value) returns MultipleAssociations|persist:Error {
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(MULTIPLE_ASSOCIATIONS);
         }
@@ -372,7 +372,7 @@ public isolated client class Client {
 
     isolated resource function delete multipleassociations/[int id]() returns MultipleAssociations|persist:Error {
         MultipleAssociations result = check self->/multipleassociations/[id].get();
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(MULTIPLE_ASSOCIATIONS);
         }

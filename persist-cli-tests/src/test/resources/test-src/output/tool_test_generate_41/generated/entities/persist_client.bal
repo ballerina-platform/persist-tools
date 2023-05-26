@@ -7,7 +7,7 @@ import ballerina/persist;
 import ballerina/jballerina.java;
 import ballerinax/mysql;
 import ballerinax/mysql.driver as _;
-import ballerinax/persist.sql;
+import ballerinax/persist.sql as psql;
 
 const BUILDING = "buildings";
 const WORKSPACE = "workspaces";
@@ -20,9 +20,9 @@ public isolated client class Client {
 
     private final mysql:Client dbClient;
 
-    private final map<sql:SQLClient> persistClients;
+    private final map<psql:SQLClient> persistClients;
 
-    private final record {|sql:SQLMetadata...;|} & readonly metadata = {
+    private final record {|psql:SQLMetadata...;|} & readonly metadata = {
         [BUILDING] : {
             entityName: "Building",
             tableName: "Building",
@@ -38,7 +38,7 @@ public isolated client class Client {
                 "workspaces[].employeeEmpNo": {relation: {entityName: "workspaces", refField: "employeeEmpNo"}}
             },
             keyFields: ["buildingCode"],
-            joinMetadata: {workspaces: {entity: Workspace, fieldName: "workspaces", refTable: "Workspace", refColumns: ["locationBuildingCode"], joinColumns: ["buildingCode"], 'type: sql:MANY_TO_ONE}}
+            joinMetadata: {workspaces: {entity: Workspace, fieldName: "workspaces", refTable: "Workspace", refColumns: ["locationBuildingCode"], joinColumns: ["buildingCode"], 'type: psql:MANY_TO_ONE}}
         },
         [WORKSPACE] : {
             entityName: "Workspace",
@@ -65,8 +65,8 @@ public isolated client class Client {
             },
             keyFields: ["workspaceId"],
             joinMetadata: {
-                location: {entity: Building, fieldName: "location", refTable: "Building", refColumns: ["buildingCode"], joinColumns: ["locationBuildingCode"], 'type: sql:ONE_TO_MANY},
-                employee: {entity: Employee, fieldName: "employee", refTable: "Employee", refColumns: ["empNo"], joinColumns: ["employeeEmpNo"], 'type: sql:ONE_TO_ONE}
+                location: {entity: Building, fieldName: "location", refTable: "Building", refColumns: ["buildingCode"], joinColumns: ["locationBuildingCode"], 'type: psql:ONE_TO_MANY},
+                employee: {entity: Employee, fieldName: "employee", refTable: "Employee", refColumns: ["empNo"], joinColumns: ["employeeEmpNo"], 'type: psql:ONE_TO_ONE}
             }
         },
         [DEPARTMENT] : {
@@ -86,7 +86,7 @@ public isolated client class Client {
                 "employees[].orderitemItemId": {relation: {entityName: "employees", refField: "orderitemItemId"}}
             },
             keyFields: ["deptNo"],
-            joinMetadata: {employees: {entity: Employee, fieldName: "employees", refTable: "Employee", refColumns: ["departmentDeptNo"], joinColumns: ["deptNo"], 'type: sql:MANY_TO_ONE}}
+            joinMetadata: {employees: {entity: Employee, fieldName: "employees", refTable: "Employee", refColumns: ["departmentDeptNo"], joinColumns: ["deptNo"], 'type: psql:MANY_TO_ONE}}
         },
         [EMPLOYEE] : {
             entityName: "Employee",
@@ -114,9 +114,9 @@ public isolated client class Client {
             },
             keyFields: ["empNo"],
             joinMetadata: {
-                department: {entity: Department, fieldName: "department", refTable: "Department", refColumns: ["deptNo"], joinColumns: ["departmentDeptNo"], 'type: sql:ONE_TO_MANY},
-                workspace: {entity: Workspace, fieldName: "workspace", refTable: "Workspace", refColumns: ["employeeEmpNo"], joinColumns: ["empNo"], 'type: sql:ONE_TO_ONE},
-                orderItem: {entity: OrderItem, fieldName: "orderItem", refTable: "OrderItem", refColumns: ["orderId", "itemId"], joinColumns: ["orderitemOrderId", "orderitemItemId"], 'type: sql:ONE_TO_ONE}
+                department: {entity: Department, fieldName: "department", refTable: "Department", refColumns: ["deptNo"], joinColumns: ["departmentDeptNo"], 'type: psql:ONE_TO_MANY},
+                workspace: {entity: Workspace, fieldName: "workspace", refTable: "Workspace", refColumns: ["employeeEmpNo"], joinColumns: ["empNo"], 'type: psql:ONE_TO_ONE},
+                orderItem: {entity: OrderItem, fieldName: "orderItem", refTable: "OrderItem", refColumns: ["orderId", "itemId"], joinColumns: ["orderitemOrderId", "orderitemItemId"], 'type: psql:ONE_TO_ONE}
             }
         },
         [ORDER_ITEM] : {
@@ -138,7 +138,7 @@ public isolated client class Client {
                 "employee.orderitemItemId": {relation: {entityName: "employee", refField: "orderitemItemId"}}
             },
             keyFields: ["orderId", "itemId"],
-            joinMetadata: {employee: {entity: Employee, fieldName: "employee", refTable: "Employee", refColumns: ["orderitemOrderId", "orderitemItemId"], joinColumns: ["orderId", "itemId"], 'type: sql:ONE_TO_ONE}}
+            joinMetadata: {employee: {entity: Employee, fieldName: "employee", refTable: "Employee", refColumns: ["orderitemOrderId", "orderitemItemId"], joinColumns: ["orderId", "itemId"], 'type: psql:ONE_TO_ONE}}
         }
     };
 
@@ -168,7 +168,7 @@ public isolated client class Client {
     } external;
 
     isolated resource function post buildings(BuildingInsert[] data) returns string[]|persist:Error {
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(BUILDING);
         }
@@ -178,7 +178,7 @@ public isolated client class Client {
     }
 
     isolated resource function put buildings/[string buildingCode](BuildingUpdate value) returns Building|persist:Error {
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(BUILDING);
         }
@@ -188,7 +188,7 @@ public isolated client class Client {
 
     isolated resource function delete buildings/[string buildingCode]() returns Building|persist:Error {
         Building result = check self->/buildings/[buildingCode].get();
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(BUILDING);
         }
@@ -207,7 +207,7 @@ public isolated client class Client {
     } external;
 
     isolated resource function post workspaces(WorkspaceInsert[] data) returns string[]|persist:Error {
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(WORKSPACE);
         }
@@ -217,7 +217,7 @@ public isolated client class Client {
     }
 
     isolated resource function put workspaces/[string workspaceId](WorkspaceUpdate value) returns Workspace|persist:Error {
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(WORKSPACE);
         }
@@ -227,7 +227,7 @@ public isolated client class Client {
 
     isolated resource function delete workspaces/[string workspaceId]() returns Workspace|persist:Error {
         Workspace result = check self->/workspaces/[workspaceId].get();
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(WORKSPACE);
         }
@@ -246,7 +246,7 @@ public isolated client class Client {
     } external;
 
     isolated resource function post departments(DepartmentInsert[] data) returns string[]|persist:Error {
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(DEPARTMENT);
         }
@@ -256,7 +256,7 @@ public isolated client class Client {
     }
 
     isolated resource function put departments/[string deptNo](DepartmentUpdate value) returns Department|persist:Error {
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(DEPARTMENT);
         }
@@ -266,7 +266,7 @@ public isolated client class Client {
 
     isolated resource function delete departments/[string deptNo]() returns Department|persist:Error {
         Department result = check self->/departments/[deptNo].get();
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(DEPARTMENT);
         }
@@ -285,7 +285,7 @@ public isolated client class Client {
     } external;
 
     isolated resource function post employees(EmployeeInsert[] data) returns string[]|persist:Error {
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(EMPLOYEE);
         }
@@ -295,7 +295,7 @@ public isolated client class Client {
     }
 
     isolated resource function put employees/[string empNo](EmployeeUpdate value) returns Employee|persist:Error {
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(EMPLOYEE);
         }
@@ -305,7 +305,7 @@ public isolated client class Client {
 
     isolated resource function delete employees/[string empNo]() returns Employee|persist:Error {
         Employee result = check self->/employees/[empNo].get();
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(EMPLOYEE);
         }
@@ -324,7 +324,7 @@ public isolated client class Client {
     } external;
 
     isolated resource function post orderitems(OrderItemInsert[] data) returns [string, string][]|persist:Error {
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(ORDER_ITEM);
         }
@@ -334,7 +334,7 @@ public isolated client class Client {
     }
 
     isolated resource function put orderitems/[string orderId]/[string itemId](OrderItemUpdate value) returns OrderItem|persist:Error {
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(ORDER_ITEM);
         }
@@ -344,7 +344,7 @@ public isolated client class Client {
 
     isolated resource function delete orderitems/[string orderId]/[string itemId]() returns OrderItem|persist:Error {
         OrderItem result = check self->/orderitems/[orderId]/[itemId].get();
-        sql:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(ORDER_ITEM);
         }
