@@ -5,8 +5,9 @@
 
 import ballerina/persist;
 import ballerina/jballerina.java;
-import ballerinax/googleapis.sheets;
 import ballerina/http;
+import ballerinax/googleapis.sheets;
+import ballerinax/persist.googlesheets;
 
 const USER = "users";
 const POST = "posts";
@@ -20,10 +21,10 @@ public isolated client class Client {
 
     private final http:Client httpClient;
 
-    private final map<persist:GoogleSheetsClient> persistClients;
+    private final map<googlesheets:GoogleSheetsClient> persistClients;
 
     public isolated function init() returns persist:Error? {
-        final record {|persist:SheetMetadata...;|} & readonly metadata = {
+        final record {|googlesheets:SheetMetadata...;|} & readonly metadata = {
             [USER] : {
                 entityName: "User",
                 tableName: "User",
@@ -146,7 +147,7 @@ public isolated client class Client {
         }
         self.googleSheetClient = googleSheetClient;
         self.httpClient = httpClient;
-        map<int> sheetIds = check persist:getSheetIds(self.googleSheetClient, metadata, spreadsheetId);
+        map<int> sheetIds = check googlesheets:getSheetIds(self.googleSheetClient, metadata, spreadsheetId);
         self.persistClients = {
             [USER] : check new (self.googleSheetClient, self.httpClient, metadata.get(USER).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(USER).cloneReadOnly()),
             [POST] : check new (self.googleSheetClient, self.httpClient, metadata.get(POST).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(POST).cloneReadOnly()),
@@ -156,17 +157,17 @@ public isolated client class Client {
     }
 
     isolated resource function get users(UserTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.GoogleSheetsProcessor",
+        'class: "io.ballerina.stdlib.persist.googlesheets.datastore.GoogleSheetsProcessor",
         name: "query"
     } external;
 
     isolated resource function get users/[int id](UserTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.GoogleSheetsProcessor",
+        'class: "io.ballerina.stdlib.persist.googlesheets.datastore.GoogleSheetsProcessor",
         name: "queryOne"
     } external;
 
     isolated resource function post users(UserInsert[] data) returns int[]|persist:Error {
-        persist:GoogleSheetsClient googleSheetsClient;
+        googlesheets:GoogleSheetsClient googleSheetsClient;
         lock {
             googleSheetsClient = self.persistClients.get(USER);
         }
@@ -176,7 +177,7 @@ public isolated client class Client {
     }
 
     isolated resource function put users/[int id](UserUpdate value) returns User|persist:Error {
-        persist:GoogleSheetsClient googleSheetsClient;
+        googlesheets:GoogleSheetsClient googleSheetsClient;
         lock {
             googleSheetsClient = self.persistClients.get(USER);
         }
@@ -186,7 +187,7 @@ public isolated client class Client {
 
     isolated resource function delete users/[int id]() returns User|persist:Error {
         User result = check self->/users/[id].get();
-        persist:GoogleSheetsClient googleSheetsClient;
+        googlesheets:GoogleSheetsClient googleSheetsClient;
         lock {
             googleSheetsClient = self.persistClients.get(USER);
         }
@@ -219,22 +220,22 @@ public isolated client class Client {
     }
 
     private isolated function queryUsersStream(UserTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.GoogleSheetsProcessor",
+        'class: "io.ballerina.stdlib.persist.googlesheets.datastore.GoogleSheetsProcessor",
         name: "queryStream"
     } external;
 
     isolated resource function get posts(PostTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.GoogleSheetsProcessor",
+        'class: "io.ballerina.stdlib.persist.googlesheets.datastore.GoogleSheetsProcessor",
         name: "query"
     } external;
 
     isolated resource function get posts/[int id](PostTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.GoogleSheetsProcessor",
+        'class: "io.ballerina.stdlib.persist.googlesheets.datastore.GoogleSheetsProcessor",
         name: "queryOne"
     } external;
 
     isolated resource function post posts(PostInsert[] data) returns int[]|persist:Error {
-        persist:GoogleSheetsClient googleSheetsClient;
+        googlesheets:GoogleSheetsClient googleSheetsClient;
         lock {
             googleSheetsClient = self.persistClients.get(POST);
         }
@@ -244,7 +245,7 @@ public isolated client class Client {
     }
 
     isolated resource function put posts/[int id](PostUpdate value) returns Post|persist:Error {
-        persist:GoogleSheetsClient googleSheetsClient;
+        googlesheets:GoogleSheetsClient googleSheetsClient;
         lock {
             googleSheetsClient = self.persistClients.get(POST);
         }
@@ -254,7 +255,7 @@ public isolated client class Client {
 
     isolated resource function delete posts/[int id]() returns Post|persist:Error {
         Post result = check self->/posts/[id].get();
-        persist:GoogleSheetsClient googleSheetsClient;
+        googlesheets:GoogleSheetsClient googleSheetsClient;
         lock {
             googleSheetsClient = self.persistClients.get(POST);
         }
@@ -293,22 +294,22 @@ public isolated client class Client {
     }
 
     private isolated function queryPostsStream(PostTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.GoogleSheetsProcessor",
+        'class: "io.ballerina.stdlib.persist.googlesheets.datastore.GoogleSheetsProcessor",
         name: "queryStream"
     } external;
 
     isolated resource function get follows(FollowTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.GoogleSheetsProcessor",
+        'class: "io.ballerina.stdlib.persist.googlesheets.datastore.GoogleSheetsProcessor",
         name: "query"
     } external;
 
     isolated resource function get follows/[int id](FollowTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.GoogleSheetsProcessor",
+        'class: "io.ballerina.stdlib.persist.googlesheets.datastore.GoogleSheetsProcessor",
         name: "queryOne"
     } external;
 
     isolated resource function post follows(FollowInsert[] data) returns int[]|persist:Error {
-        persist:GoogleSheetsClient googleSheetsClient;
+        googlesheets:GoogleSheetsClient googleSheetsClient;
         lock {
             googleSheetsClient = self.persistClients.get(FOLLOW);
         }
@@ -318,7 +319,7 @@ public isolated client class Client {
     }
 
     isolated resource function put follows/[int id](FollowUpdate value) returns Follow|persist:Error {
-        persist:GoogleSheetsClient googleSheetsClient;
+        googlesheets:GoogleSheetsClient googleSheetsClient;
         lock {
             googleSheetsClient = self.persistClients.get(FOLLOW);
         }
@@ -328,7 +329,7 @@ public isolated client class Client {
 
     isolated resource function delete follows/[int id]() returns Follow|persist:Error {
         Follow result = check self->/follows/[id].get();
-        persist:GoogleSheetsClient googleSheetsClient;
+        googlesheets:GoogleSheetsClient googleSheetsClient;
         lock {
             googleSheetsClient = self.persistClients.get(FOLLOW);
         }
@@ -371,22 +372,22 @@ public isolated client class Client {
     }
 
     private isolated function queryFollowsStream(FollowTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.GoogleSheetsProcessor",
+        'class: "io.ballerina.stdlib.persist.googlesheets.datastore.GoogleSheetsProcessor",
         name: "queryStream"
     } external;
 
     isolated resource function get comments(CommentTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.GoogleSheetsProcessor",
+        'class: "io.ballerina.stdlib.persist.googlesheets.datastore.GoogleSheetsProcessor",
         name: "query"
     } external;
 
     isolated resource function get comments/[int id](CommentTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.GoogleSheetsProcessor",
+        'class: "io.ballerina.stdlib.persist.googlesheets.datastore.GoogleSheetsProcessor",
         name: "queryOne"
     } external;
 
     isolated resource function post comments(CommentInsert[] data) returns int[]|persist:Error {
-        persist:GoogleSheetsClient googleSheetsClient;
+        googlesheets:GoogleSheetsClient googleSheetsClient;
         lock {
             googleSheetsClient = self.persistClients.get(COMMENT);
         }
@@ -396,7 +397,7 @@ public isolated client class Client {
     }
 
     isolated resource function put comments/[int id](CommentUpdate value) returns Comment|persist:Error {
-        persist:GoogleSheetsClient googleSheetsClient;
+        googlesheets:GoogleSheetsClient googleSheetsClient;
         lock {
             googleSheetsClient = self.persistClients.get(COMMENT);
         }
@@ -406,7 +407,7 @@ public isolated client class Client {
 
     isolated resource function delete comments/[int id]() returns Comment|persist:Error {
         Comment result = check self->/comments/[id].get();
-        persist:GoogleSheetsClient googleSheetsClient;
+        googlesheets:GoogleSheetsClient googleSheetsClient;
         lock {
             googleSheetsClient = self.persistClients.get(COMMENT);
         }
@@ -451,7 +452,7 @@ public isolated client class Client {
     }
 
     private isolated function queryCommentsStream(CommentTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.GoogleSheetsProcessor",
+        'class: "io.ballerina.stdlib.persist.googlesheets.datastore.GoogleSheetsProcessor",
         name: "queryStream"
     } external;
 

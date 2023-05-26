@@ -5,6 +5,7 @@
 
 import ballerina/persist;
 import ballerina/jballerina.java;
+import ballerinax/persist.inmemory;
 
 const MEDICAL_NEED = "medicalneeds";
 const MEDICAL_ITEM = "medicalitems";
@@ -14,10 +15,10 @@ final isolated table<MedicalItem> key(itemId) medicalitemsTable = table [];
 public isolated client class Client {
     *persist:AbstractPersistClient;
 
-    private final map<persist:InMemoryClient> persistClients;
+    private final map<inmemory:InMemoryClient> persistClients;
 
     public isolated function init() returns persist:Error? {
-        final map<persist:TableMetadata> metadata = {
+        final map<inmemory:TableMetadata> metadata = {
             [MEDICAL_NEED] : {
                 keyFields: ["needId"],
                 query: queryMedicalneeds,
@@ -36,12 +37,12 @@ public isolated client class Client {
     }
 
     isolated resource function get medicalneeds(MedicalNeedTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.InMemoryProcessor",
+        'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "query"
     } external;
 
     isolated resource function get medicalneeds/[int needId](MedicalNeedTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.InMemoryProcessor",
+        'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "queryOne"
     } external;
 
@@ -83,12 +84,12 @@ public isolated client class Client {
     }
 
     isolated resource function get medicalitems(MedicalItemTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.InMemoryProcessor",
+        'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "query"
     } external;
 
     isolated resource function get medicalitems/[int itemId](MedicalItemTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.InMemoryProcessor",
+        'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "queryOne"
     } external;
 

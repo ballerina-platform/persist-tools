@@ -5,6 +5,7 @@
 
 import ballerina/persist;
 import ballerina/jballerina.java;
+import ballerinax/persist.inmemory;
 
 const USER = "users";
 const POST = "posts";
@@ -16,10 +17,10 @@ final isolated table<Follow> key(id) followsTable = table [];
 public isolated client class Client {
     *persist:AbstractPersistClient;
 
-    private final map<persist:InMemoryClient> persistClients;
+    private final map<inmemory:InMemoryClient> persistClients;
 
     public isolated function init() returns persist:Error? {
-        final map<persist:TableMetadata> metadata = {
+        final map<inmemory:TableMetadata> metadata = {
             [USER] : {
                 keyFields: ["id"],
                 query: queryUsers,
@@ -45,12 +46,12 @@ public isolated client class Client {
     }
 
     isolated resource function get users(UserTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.InMemoryProcessor",
+        'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "query"
     } external;
 
     isolated resource function get users/[int id](UserTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.InMemoryProcessor",
+        'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "queryOne"
     } external;
 
@@ -92,12 +93,12 @@ public isolated client class Client {
     }
 
     isolated resource function get posts(PostTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.InMemoryProcessor",
+        'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "query"
     } external;
 
     isolated resource function get posts/[int id](PostTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.InMemoryProcessor",
+        'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "queryOne"
     } external;
 
@@ -139,12 +140,12 @@ public isolated client class Client {
     }
 
     isolated resource function get follows(FollowTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.InMemoryProcessor",
+        'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "query"
     } external;
 
     isolated resource function get follows/[int id](FollowTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.InMemoryProcessor",
+        'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "queryOne"
     } external;
 

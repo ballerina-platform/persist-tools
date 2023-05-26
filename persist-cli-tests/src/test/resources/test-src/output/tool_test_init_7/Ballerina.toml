@@ -13,5 +13,5 @@ module = "persist_init_7"
 
 [[platform.java11.dependency]]
 groupId = "io.ballerina.stdlib"
-artifactId = "persist-native"
+artifactId = "persist.sql-native"
 version = "1.0.0-SNAPSHOT"

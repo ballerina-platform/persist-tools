@@ -51,9 +51,9 @@ public class BalSyntaxConstants {
     public static final String ENUM = "ENUM";
     public static final String PERSIST_ERROR = "persist:Error";
     public static final String GET_G_SHEET_PERSIST_CLIENT = "googleSheetsClient = self.persistClients.get(%s);";
-    public static final String G_SHEET_CLIENT_DECLARATION = "persist:GoogleSheetsClient googleSheetsClient;";
+    public static final String G_SHEET_CLIENT_DECLARATION = "googlesheets:GoogleSheetsClient googleSheetsClient;";
     public static final String G_SHEET_CREATE_SQL_RESULTS = "_ = check googleSheetsClient.runBatchInsertQuery(data);";
-    public static final String SQL_CLIENT_DECLARATION = "persist:SQLClient sqlClient;";
+    public static final String SQL_CLIENT_DECLARATION = "psql:SQLClient sqlClient;";
     public static final String CREATE_SQL_RESULTS = "_ = check sqlClient.runBatchInsertQuery(data);";
     public static final String GET_PERSIST_CLIENT = "sqlClient = self.persistClients.get(%s);";
 
@@ -161,13 +161,17 @@ public class BalSyntaxConstants {
     public static final String MYSQL_DRIVER = "mysql.driver";
     public static final String GOOGLE_API_SHEET = "googleapis.sheets";
     public static final String HTTP = "http";
+    public static final String GOOGLE_SHEETS = "googlesheets";
+    public static final String PERSIST_SQL = "sql";
+    public static final String PERSIST_IN_MEMORY = "inmemory";
     public static final String BAL_EXTENSION = ".bal";
     public static final String INIT_DB_CLIENT = "private final mysql:Client dbClient;";
     public static final String GOOGLE_SHEET_CLIENT = "private final sheets:Client googleSheetClient;";
     public static final String HTTP_CLIENT = "private final http:Client httpClient;";
-    public static final String GOOGLE_PERSIST_CLIENT = "private final map<persist:GoogleSheetsClient> persistClients;";
-    public static final String INIT_DB_CLIENT_MAP = "private final map<persist:SQLClient> persistClients;";
-    public static final String INIT_IN_MEMORY_CLIENT = "private final map<persist:InMemoryClient> persistClients;";
+    public static final String INIT_GOOGLE_SHEET_CLIENT_MAP = "private final map<googlesheets:GoogleSheetsClient> " +
+            "persistClients;";
+    public static final String INIT_SQL_CLIENT_MAP = "private final map<psql:SQLClient> persistClients;";
+    public static final String INIT_IN_MEMORY_CLIENT_MAP = "private final map<inmemory:InMemoryClient> persistClients;";
     public static final String METADATA_RECORD_ENTITY_NAME_TEMPLATE = "entityName: \"%s\", " + System.lineSeparator();
     public static final String TABLE_NAME_TEMPLATE = "tableName: \"%s\", " + System.lineSeparator();
     public static final String METADATA_RECORD_TABLE_NAME_TEMPLATE = "tableName: \"%s\", " + System.lineSeparator();
@@ -248,9 +252,9 @@ public class BalSyntaxConstants {
     public static final String METADATA_RECORD_KEY_FIELD_TEMPLATE = "keyFields: [%s]";
     public static final String METADATA_RECORD_ELEMENT_TEMPLATE = "[%s]: {%s}";
     public static final String METADATA_RECORD_TEMPLATE =
-            "private final record {|persist:SQLMetadata...;|} & readonly metadata = {%s};";
+            "private final record {|psql:SQLMetadata...;|} & readonly metadata = {%s};";
     public static final String SHEET_METADATA_RECORD_TEMPLATE =
-            "final record {|persist:SheetMetadata...;|} & readonly metadata = {%s};";
+            "final record {|googlesheets:SheetMetadata...;|} & readonly metadata = {%s};";
     public static final String SHEET_CLIENT_CONFIG_TEMPLATE = " sheets:ConnectionConfig sheetsClientConfig = {" +
             System.lineSeparator() + "            auth: {" +
             System.lineSeparator() + "                clientId: clientId," +
@@ -277,10 +281,10 @@ public class BalSyntaxConstants {
     public static final String SELF_SHEET_CLIENT_INIT_TEMPLATE =
             "self.httpClient = httpClient;" + System.lineSeparator();
     public static final String SHEET_IDS_TEMPLATE =
-            "map<int> sheetIds = check persist:getSheetIds(self.googleSheetClient, metadata, spreadsheetId);" +
+            "map<int> sheetIds = check googlesheets:getSheetIds(self.googleSheetClient, metadata, spreadsheetId);" +
                     System.lineSeparator();
     public static final String IN_MEMORY_METADATA_MAP_TEMPLATE =
-            "final map<persist:TableMetadata> metadata = {%s};";
+            "final map<inmemory:TableMetadata> metadata = {%s};";
     public static final String IN_MEMORY_ASSOC_METHODS_TEMPLATE = "associationsMethods: {%s}";
     public static final String INIT_DB_CLIENT_WITH_PARAMS = "mysql:Client|error dbClient = new (host = host, " +
             "user = user, password = password, database = database, port = port, options = connectionOptions);" +
@@ -307,22 +311,26 @@ public class BalSyntaxConstants {
     public static final String ARRAY = "[]";
     public static final String QUESTION_MARK = "?";
     public static final String COMMA_WITH_NEWLINE = "," + System.lineSeparator();
+    public static final String ONE_TO_ONE = "psql:ONE_TO_ONE";
+    public static final String ONE_TO_MANY = "psql:ONE_TO_MANY";
+    public static final String MANY_TO_ONE = "psql:MANY_TO_ONE";
+    public static final String MANY_TO_MANY = "psql:MANY_TO_MANY";
 
     public static final String EXTERNAL_GET_BY_KEY_METHOD_TEMPLATE = "isolated resource function get %s/%s(" +
             "%sTargetType targetType = <>) returns targetType|persist:Error = @java:Method {"
             + System.lineSeparator()
-            + "'class: \"io.ballerina.stdlib.persist.datastore.%s\"," + System.lineSeparator() +
+            + "'class: \"io.ballerina.stdlib.persist.%s.datastore.%s\"," + System.lineSeparator() +
              " name: \"queryOne\"} external;";
 
     public static final String EXTERNAL_GET_METHOD_TEMPLATE = "isolated resource function get %s(" +
             "%sTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {"
             + System.lineSeparator()
-            + "'class: \"io.ballerina.stdlib.persist.datastore.%s\"," + System.lineSeparator() +
+            + "'class: \"io.ballerina.stdlib.persist.%s.datastore.%s\"," + System.lineSeparator() +
             " name: \"query\"} external;";
     public static final String EXTERNAL_QUERY_STREAM_METHOD_TEMPLATE =
             "private isolated function query%sStream(%sTargetType targetType = <>) returns " +
                     "stream<targetType, persist:Error?> = @java:Method {" + System.lineSeparator() +
-            "        'class: \"io.ballerina.stdlib.persist.datastore.GoogleSheetsProcessor\"," +
+            "        'class: \"io.ballerina.stdlib.persist.%s.datastore.GoogleSheetsProcessor\"," +
                     System.lineSeparator() +
             "        name: \"queryStream\"" + System.lineSeparator() +
             "    } external;";

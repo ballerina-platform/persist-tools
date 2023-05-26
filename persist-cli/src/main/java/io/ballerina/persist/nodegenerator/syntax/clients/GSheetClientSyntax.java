@@ -55,10 +55,13 @@ public class GSheetClientSyntax implements ClientSyntax {
     @Override
     public NodeList<ImportDeclarationNode> getImports() {
         NodeList<ImportDeclarationNode> imports = BalSyntaxUtils.generateImport(entityModule);
-        imports = imports.add(BalSyntaxUtils.getImportDeclarationNode(BalSyntaxConstants.KEYWORD_BALLERINAX,
-                BalSyntaxConstants.GOOGLE_API_SHEET, null));
         imports = imports.add(BalSyntaxUtils.getImportDeclarationNode(BalSyntaxConstants.KEYWORD_BALLERINA,
                 BalSyntaxConstants.HTTP, null));
+        imports = imports.add(BalSyntaxUtils.getImportDeclarationNode(BalSyntaxConstants.KEYWORD_BALLERINAX,
+                BalSyntaxConstants.GOOGLE_API_SHEET, null));
+        imports = imports.add(BalSyntaxUtils.getImportDeclarationNode(BalSyntaxConstants.KEYWORD_BALLERINAX,
+                BalSyntaxConstants.PERSIST_MODULE + "." +
+                        BalSyntaxConstants.GOOGLE_SHEETS, null));
         return imports;
     }
 
@@ -72,7 +75,7 @@ public class GSheetClientSyntax implements ClientSyntax {
         Client clientObject = BalSyntaxUtils.generateClientSignature(true);
         clientObject.addMember(NodeParser.parseObjectMember(BalSyntaxConstants.GOOGLE_SHEET_CLIENT), true);
         clientObject.addMember(NodeParser.parseObjectMember(BalSyntaxConstants.HTTP_CLIENT), true);
-        clientObject.addMember(NodeParser.parseObjectMember(BalSyntaxConstants.GOOGLE_PERSIST_CLIENT), true);
+        clientObject.addMember(NodeParser.parseObjectMember(BalSyntaxConstants.INIT_GOOGLE_SHEET_CLIENT_MAP), true);
         return clientObject;
     }
 
@@ -117,12 +120,14 @@ public class GSheetClientSyntax implements ClientSyntax {
 
     @Override
     public FunctionDefinitionNode getGetFunction(Entity entity) {
-        return BalSyntaxUtils.generateGetFunction(entity, "GoogleSheetsProcessor");
+        return BalSyntaxUtils.generateGetFunction(entity, "GoogleSheetsProcessor",
+                BalSyntaxConstants.GOOGLE_SHEETS);
     }
 
     @Override
     public FunctionDefinitionNode getGetByKeyFunction(Entity entity) {
-        return BalSyntaxUtils.generateGetByKeyFunction(entity, "GoogleSheetsProcessor");
+        return BalSyntaxUtils.generateGetByKeyFunction(entity, "GoogleSheetsProcessor",
+                BalSyntaxConstants.GOOGLE_SHEETS);
     }
 
     @Override

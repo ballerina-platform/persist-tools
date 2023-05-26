@@ -7,6 +7,7 @@ import ballerina/persist;
 import ballerina/jballerina.java;
 import ballerinax/mysql;
 import ballerinax/mysql.driver as _;
+import ballerinax/persist.sql as psql;
 
 const USER = "users";
 const POST = "posts";
@@ -17,9 +18,9 @@ public isolated client class Client {
 
     private final mysql:Client dbClient;
 
-    private final map<persist:SQLClient> persistClients;
+    private final map<psql:SQLClient> persistClients;
 
-    private final record {|persist:SQLMetadata...;|} & readonly metadata = {
+    private final record {|psql:SQLMetadata...;|} & readonly metadata = {
         [USER] : {
             entityName: "User",
             tableName: "User",
@@ -44,9 +45,9 @@ public isolated client class Client {
             },
             keyFields: ["id"],
             joinMetadata: {
-                posts: {entity: Post, fieldName: "posts", refTable: "Post", refColumns: ["userId"], joinColumns: ["id"], 'type: persist:MANY_TO_ONE},
-                followers: {entity: Follower, fieldName: "followers", refTable: "Follower", refColumns: ["leaderId"], joinColumns: ["id"], 'type: persist:MANY_TO_ONE},
-                leaders: {entity: Follower, fieldName: "leaders", refTable: "Follower", refColumns: ["followerId"], joinColumns: ["id"], 'type: persist:MANY_TO_ONE}
+                posts: {entity: Post, fieldName: "posts", refTable: "Post", refColumns: ["userId"], joinColumns: ["id"], 'type: psql:MANY_TO_ONE},
+                followers: {entity: Follower, fieldName: "followers", refTable: "Follower", refColumns: ["leaderId"], joinColumns: ["id"], 'type: psql:MANY_TO_ONE},
+                leaders: {entity: Follower, fieldName: "leaders", refTable: "Follower", refColumns: ["followerId"], joinColumns: ["id"], 'type: psql:MANY_TO_ONE}
             }
         },
         [POST] : {
@@ -64,7 +65,7 @@ public isolated client class Client {
                 "user.birthDate": {relation: {entityName: "user", refField: "birthDate"}}
             },
             keyFields: ["id"],
-            joinMetadata: {user: {entity: User, fieldName: "user", refTable: "User", refColumns: ["id"], joinColumns: ["userId"], 'type: persist:ONE_TO_MANY}}
+            joinMetadata: {user: {entity: User, fieldName: "user", refTable: "User", refColumns: ["id"], joinColumns: ["userId"], 'type: psql:ONE_TO_MANY}}
         },
         [FOLLOWER] : {
             entityName: "Follower",
@@ -83,8 +84,8 @@ public isolated client class Client {
             },
             keyFields: ["id"],
             joinMetadata: {
-                leader: {entity: User, fieldName: "leader", refTable: "User", refColumns: ["id"], joinColumns: ["leaderId"], 'type: persist:ONE_TO_MANY},
-                follower: {entity: User, fieldName: "follower", refTable: "User", refColumns: ["id"], joinColumns: ["followerId"], 'type: persist:ONE_TO_MANY}
+                leader: {entity: User, fieldName: "leader", refTable: "User", refColumns: ["id"], joinColumns: ["leaderId"], 'type: psql:ONE_TO_MANY},
+                follower: {entity: User, fieldName: "follower", refTable: "User", refColumns: ["id"], joinColumns: ["followerId"], 'type: psql:ONE_TO_MANY}
             }
         }
     };
@@ -103,17 +104,17 @@ public isolated client class Client {
     }
 
     isolated resource function get users(UserTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get users/[int id](UserTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
     isolated resource function post users(UserInsert[] data) returns int[]|persist:Error {
-        persist:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(USER);
         }
@@ -123,7 +124,7 @@ public isolated client class Client {
     }
 
     isolated resource function put users/[int id](UserUpdate value) returns User|persist:Error {
-        persist:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(USER);
         }
@@ -133,7 +134,7 @@ public isolated client class Client {
 
     isolated resource function delete users/[int id]() returns User|persist:Error {
         User result = check self->/users/[id].get();
-        persist:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(USER);
         }
@@ -142,17 +143,17 @@ public isolated client class Client {
     }
 
     isolated resource function get posts(PostTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get posts/[int id](PostTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
     isolated resource function post posts(PostInsert[] data) returns int[]|persist:Error {
-        persist:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(POST);
         }
@@ -162,7 +163,7 @@ public isolated client class Client {
     }
 
     isolated resource function put posts/[int id](PostUpdate value) returns Post|persist:Error {
-        persist:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(POST);
         }
@@ -172,7 +173,7 @@ public isolated client class Client {
 
     isolated resource function delete posts/[int id]() returns Post|persist:Error {
         Post result = check self->/posts/[id].get();
-        persist:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(POST);
         }
@@ -181,17 +182,17 @@ public isolated client class Client {
     }
 
     isolated resource function get followers(FollowerTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get followers/[int id](FollowerTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
     isolated resource function post followers(FollowerInsert[] data) returns int[]|persist:Error {
-        persist:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(FOLLOWER);
         }
@@ -201,7 +202,7 @@ public isolated client class Client {
     }
 
     isolated resource function put followers/[int id](FollowerUpdate value) returns Follower|persist:Error {
-        persist:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(FOLLOWER);
         }
@@ -211,7 +212,7 @@ public isolated client class Client {
 
     isolated resource function delete followers/[int id]() returns Follower|persist:Error {
         Follower result = check self->/followers/[id].get();
-        persist:SQLClient sqlClient;
+        psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(FOLLOWER);
         }
