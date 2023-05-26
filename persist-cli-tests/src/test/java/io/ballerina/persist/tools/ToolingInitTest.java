@@ -174,11 +174,11 @@ public class ToolingInitTest {
         if (filePath.endsWith(tomlFileName)) {
            try {
                String content = Files.readString(filePath);
-               String dataStore = "inmemory";
+               String dataStore = "persist.inmemory";
                if (content.contains("datastore = \"mysql\"")) {
-                   dataStore = "sql";
+                   dataStore = "persist.sql";
                } else if (content.contains("datastore = \"ggoglesheets\"")) {
-                   dataStore = "ggoglesheets";
+                   dataStore = "persist.googlesheets";
                }
                content = content.replaceAll(
                         "artifactId\\s=\\s\"" + dataStore + "-native\"\nversion\\s=\\s\\\"\\d+(\\.\\d+)+" +

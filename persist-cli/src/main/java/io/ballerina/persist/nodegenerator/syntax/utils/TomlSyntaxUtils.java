@@ -172,11 +172,9 @@ public class TomlSyntaxUtils {
         NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
         Path fileNamePath = configPath.getFileName();
         TextDocument configDocument = TextDocuments.from(Files.readString(configPath));
-        String artifactId;
+        String artifactId = BalSyntaxConstants.PERSIST_MODULE + "." + datasource;
         if (datasource.equals(PersistToolsConstants.SupportDataSources.MYSQL_DB)) {
             artifactId = BalSyntaxConstants.PERSIST_MODULE + "." + BalSyntaxConstants.PERSIST_SQL;
-        } else {
-            artifactId = BalSyntaxConstants.PERSIST_MODULE + "." + datasource;
         }
         if (Objects.nonNull(fileNamePath)) {
             SyntaxTree syntaxTree = SyntaxTree.from(configDocument, fileNamePath.toString());
@@ -239,13 +237,13 @@ public class TomlSyntaxUtils {
     }
 
     private static NodeList<DocumentMemberDeclarationNode> populatePersistDependency(
-            NodeList<DocumentMemberDeclarationNode> moduleMembers, String datasource) throws BalException {
+            NodeList<DocumentMemberDeclarationNode> moduleMembers, String artifactID) throws BalException {
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
                 PersistToolsConstants.TomlFileConstants.KEYWORD_GROUP_ID,
                 PersistToolsConstants.TomlFileConstants.PERSIST_GROUP_ID, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
                 PersistToolsConstants.TomlFileConstants.KEYWORD_ARTIFACT_ID,
-                String.format(PersistToolsConstants.TomlFileConstants.ARTIFACT_ID, datasource), null));
+                String.format(PersistToolsConstants.TomlFileConstants.ARTIFACT_ID, artifactID), null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
                 PersistToolsConstants.TomlFileConstants.KEYWORD_VERSION,
                 getPersistVersion(), null));
