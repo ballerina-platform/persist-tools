@@ -7,6 +7,7 @@ import ballerina/persist;
 import ballerina/jballerina.java;
 import ballerinax/mysql;
 import ballerinax/mysql.driver as _;
+import ballerinax/persist.sql;
 
 const 'BUILDING = "'buildings";
 const 'DEPARTMENT = "'departments";
@@ -19,9 +20,9 @@ public isolated client class Client {
 
     private final mysql:Client dbClient;
 
-    private final map<persist:SQLClient> persistClients;
+    private final map<sql:SQLClient> persistClients;
 
-    private final record {|persist:SQLMetadata...;|} & readonly metadata = {
+    private final record {|sql:SQLMetadata...;|} & readonly metadata = {
         ['BUILDING] : {
             entityName: "Building",
             tableName: "Building",
@@ -37,7 +38,7 @@ public isolated client class Client {
                 "workspaces[].locationBuildingCode": {relation: {entityName: "workspaces", refField: "locationBuildingCode"}}
             },
             keyFields: ["buildingCode"],
-            joinMetadata: {workspaces: {entity: 'Workspace, fieldName: "workspaces", refTable: "'Workspace", refColumns: ["locationBuildingCode"], joinColumns: ["'buildingCode"], 'type: persist:MANY_TO_ONE}}
+            joinMetadata: {workspaces: {entity: 'Workspace, fieldName: "workspaces", refTable: "'Workspace", refColumns: ["locationBuildingCode"], joinColumns: ["'buildingCode"], 'type: sql:MANY_TO_ONE}}
         },
         ['DEPARTMENT] : {
             entityName: "Department",
@@ -55,7 +56,7 @@ public isolated client class Client {
                 "employees[].workspaceWorkspaceId": {relation: {entityName: "employees", refField: "workspaceWorkspaceId"}}
             },
             keyFields: ["deptNo"],
-            joinMetadata: {employees: {entity: 'Employee, fieldName: "employees", refTable: "'Employee", refColumns: ["departmentDeptNo"], joinColumns: ["deptNo"], 'type: persist:MANY_TO_ONE}}
+            joinMetadata: {employees: {entity: 'Employee, fieldName: "employees", refTable: "'Employee", refColumns: ["departmentDeptNo"], joinColumns: ["deptNo"], 'type: sql:MANY_TO_ONE}}
         },
         ['EMPLOYEE] : {
             entityName: "Employee",
@@ -77,8 +78,8 @@ public isolated client class Client {
             },
             keyFields: ["empNo"],
             joinMetadata: {
-                department: {entity: 'Department, fieldName: "department", refTable: "'Department", refColumns: ["deptNo"], joinColumns: ["departmentDeptNo"], 'type: persist:ONE_TO_MANY},
-                workspace: {entity: 'Workspace, fieldName: "workspace", refTable: "'Workspace", refColumns: ["workspaceId"], joinColumns: ["workspaceWorkspaceId"], 'type: persist:ONE_TO_ONE}
+                department: {entity: 'Department, fieldName: "department", refTable: "'Department", refColumns: ["deptNo"], joinColumns: ["departmentDeptNo"], 'type: sql:ONE_TO_MANY},
+                workspace: {entity: 'Workspace, fieldName: "workspace", refTable: "'Workspace", refColumns: ["workspaceId"], joinColumns: ["workspaceWorkspaceId"], 'type: sql:ONE_TO_ONE}
             }
         },
         ['ORDER_ITEM] : {
@@ -116,8 +117,8 @@ public isolated client class Client {
             },
             keyFields: ["workspaceId"],
             joinMetadata: {
-                location: {entity: 'Building, fieldName: "location", refTable: "'Building", refColumns: ["'buildingCode"], joinColumns: ["locationBuildingCode"], 'type: persist:ONE_TO_MANY},
-                employee: {entity: 'Employee, fieldName: "employee", refTable: "'Employee", refColumns: ["workspaceWorkspaceId"], joinColumns: ["workspaceId"], 'type: persist:ONE_TO_ONE}
+                location: {entity: 'Building, fieldName: "location", refTable: "'Building", refColumns: ["'buildingCode"], joinColumns: ["locationBuildingCode"], 'type: sql:ONE_TO_MANY},
+                employee: {entity: 'Employee, fieldName: "employee", refTable: "'Employee", refColumns: ["workspaceWorkspaceId"], joinColumns: ["workspaceId"], 'type: sql:ONE_TO_ONE}
             }
         }
     };
@@ -138,17 +139,17 @@ public isolated client class Client {
     }
 
     isolated resource function get 'buildings('BuildingTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get 'buildings/['string 'buildingCode]('BuildingTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
     isolated resource function post 'buildings('BuildingInsert[] data) returns 'string[]|persist:Error {
-        persist:SQLClient sqlClient;
+        sql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get('BUILDING);
         }
@@ -158,7 +159,7 @@ public isolated client class Client {
     }
 
     isolated resource function put 'buildings/['string 'buildingCode]('BuildingUpdate value) returns 'Building|persist:Error {
-        persist:SQLClient sqlClient;
+        sql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get('BUILDING);
         }
@@ -168,7 +169,7 @@ public isolated client class Client {
 
     isolated resource function delete 'buildings/['string 'buildingCode]() returns 'Building|persist:Error {
         'Building result = check self->/'buildings/['buildingCode].get();
-        persist:SQLClient sqlClient;
+        sql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get('BUILDING);
         }
@@ -177,17 +178,17 @@ public isolated client class Client {
     }
 
     isolated resource function get 'departments('DepartmentTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get 'departments/[string deptNo]('DepartmentTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
     isolated resource function post 'departments('DepartmentInsert[] data) returns string[]|persist:Error {
-        persist:SQLClient sqlClient;
+        sql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get('DEPARTMENT);
         }
@@ -197,7 +198,7 @@ public isolated client class Client {
     }
 
     isolated resource function put 'departments/[string deptNo]('DepartmentUpdate value) returns 'Department|persist:Error {
-        persist:SQLClient sqlClient;
+        sql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get('DEPARTMENT);
         }
@@ -207,7 +208,7 @@ public isolated client class Client {
 
     isolated resource function delete 'departments/[string deptNo]() returns 'Department|persist:Error {
         'Department result = check self->/'departments/[deptNo].get();
-        persist:SQLClient sqlClient;
+        sql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get('DEPARTMENT);
         }
@@ -216,17 +217,17 @@ public isolated client class Client {
     }
 
     isolated resource function get 'employees('EmployeeTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get 'employees/[string empNo]('EmployeeTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
     isolated resource function post 'employees('EmployeeInsert[] data) returns string[]|persist:Error {
-        persist:SQLClient sqlClient;
+        sql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get('EMPLOYEE);
         }
@@ -236,7 +237,7 @@ public isolated client class Client {
     }
 
     isolated resource function put 'employees/[string empNo]('EmployeeUpdate value) returns 'Employee|persist:Error {
-        persist:SQLClient sqlClient;
+        sql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get('EMPLOYEE);
         }
@@ -246,7 +247,7 @@ public isolated client class Client {
 
     isolated resource function delete 'employees/[string empNo]() returns 'Employee|persist:Error {
         'Employee result = check self->/'employees/[empNo].get();
-        persist:SQLClient sqlClient;
+        sql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get('EMPLOYEE);
         }
@@ -255,17 +256,17 @@ public isolated client class Client {
     }
 
     isolated resource function get 'orderitems('OrderItemTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get 'orderitems/[string orderId]/[string itemId]('OrderItemTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
     isolated resource function post 'orderitems('OrderItemInsert[] data) returns [string, string][]|persist:Error {
-        persist:SQLClient sqlClient;
+        sql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get('ORDER_ITEM);
         }
@@ -275,7 +276,7 @@ public isolated client class Client {
     }
 
     isolated resource function put 'orderitems/[string orderId]/[string itemId]('OrderItemUpdate value) returns 'OrderItem|persist:Error {
-        persist:SQLClient sqlClient;
+        sql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get('ORDER_ITEM);
         }
@@ -285,7 +286,7 @@ public isolated client class Client {
 
     isolated resource function delete 'orderitems/[string orderId]/[string itemId]() returns 'OrderItem|persist:Error {
         'OrderItem result = check self->/'orderitems/[orderId]/[itemId].get();
-        persist:SQLClient sqlClient;
+        sql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get('ORDER_ITEM);
         }
@@ -294,17 +295,17 @@ public isolated client class Client {
     }
 
     isolated resource function get 'workspaces('WorkspaceTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get 'workspaces/[string workspaceId]('WorkspaceTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
     isolated resource function post 'workspaces('WorkspaceInsert[] data) returns string[]|persist:Error {
-        persist:SQLClient sqlClient;
+        sql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get('WORKSPACE);
         }
@@ -314,7 +315,7 @@ public isolated client class Client {
     }
 
     isolated resource function put 'workspaces/[string workspaceId]('WorkspaceUpdate value) returns 'Workspace|persist:Error {
-        persist:SQLClient sqlClient;
+        sql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get('WORKSPACE);
         }
@@ -324,7 +325,7 @@ public isolated client class Client {
 
     isolated resource function delete 'workspaces/[string workspaceId]() returns 'Workspace|persist:Error {
         'Workspace result = check self->/'workspaces/[workspaceId].get();
-        persist:SQLClient sqlClient;
+        sql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get('WORKSPACE);
         }

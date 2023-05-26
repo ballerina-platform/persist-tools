@@ -172,6 +172,12 @@ public class TomlSyntaxUtils {
         NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
         Path fileNamePath = configPath.getFileName();
         TextDocument configDocument = TextDocuments.from(Files.readString(configPath));
+        String artifactId;
+        if (datasource.equals(PersistToolsConstants.SupportDataSources.MYSQL_DB)) {
+            artifactId = BalSyntaxConstants.PERSIST_MODULE + "." + BalSyntaxConstants.PERSIST_SQL;
+        } else {
+            artifactId = BalSyntaxConstants.PERSIST_MODULE + "." + datasource;
+        }
         if (Objects.nonNull(fileNamePath)) {
             SyntaxTree syntaxTree = SyntaxTree.from(configDocument, fileNamePath.toString());
             DocumentNode rootNote = syntaxTree.rootNode();
@@ -198,7 +204,8 @@ public class TomlSyntaxUtils {
                             if (field.identifier().toSourceCode().trim().equals(
                                     PersistToolsConstants.TomlFileConstants.KEYWORD_ARTIFACT_ID) &&
                                     (value).substring(1, value.length() - 1).equals(
-                                            PersistToolsConstants.TomlFileConstants.ARTIFACT_ID)) {
+                                            String.format(PersistToolsConstants.TomlFileConstants.ARTIFACT_ID,
+                                                    artifactId))) {
                                 dependencyExists = true;
                                 break;
                             }
@@ -216,7 +223,7 @@ public class TomlSyntaxUtils {
             moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
             moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray(
                     BalSyntaxConstants.PERSIST_DEPENDENCY, null));
-            moduleMembers = populatePersistDependency(moduleMembers);
+            moduleMembers = populatePersistDependency(moduleMembers, artifactId);
         }
         Token eofToken = AbstractNodeFactory.createIdentifierToken("");
         DocumentNode documentNode = NodeFactory.createDocumentNode(moduleMembers, eofToken);
@@ -232,13 +239,13 @@ public class TomlSyntaxUtils {
     }
 
     private static NodeList<DocumentMemberDeclarationNode> populatePersistDependency(
-            NodeList<DocumentMemberDeclarationNode> moduleMembers) throws BalException {
+            NodeList<DocumentMemberDeclarationNode> moduleMembers, String datasource) throws BalException {
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
                 PersistToolsConstants.TomlFileConstants.KEYWORD_GROUP_ID,
                 PersistToolsConstants.TomlFileConstants.PERSIST_GROUP_ID, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
                 PersistToolsConstants.TomlFileConstants.KEYWORD_ARTIFACT_ID,
-                PersistToolsConstants.TomlFileConstants.ARTIFACT_ID, null));
+                String.format(PersistToolsConstants.TomlFileConstants.ARTIFACT_ID, datasource), null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
                 PersistToolsConstants.TomlFileConstants.KEYWORD_VERSION,
                 getPersistVersion(), null));

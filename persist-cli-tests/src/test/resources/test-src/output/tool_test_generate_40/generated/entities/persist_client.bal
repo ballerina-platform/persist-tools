@@ -7,6 +7,7 @@ import ballerina/persist;
 import ballerina/jballerina.java;
 import ballerinax/mysql;
 import ballerinax/mysql.driver as _;
+import ballerinax/persist.sql;
 
 const PROFILE = "profiles";
 const USER = "users";
@@ -16,9 +17,9 @@ public isolated client class Client {
 
     private final mysql:Client dbClient;
 
-    private final map<persist:SQLClient> persistClients;
+    private final map<sql:SQLClient> persistClients;
 
-    private final record {|persist:SQLMetadata...;|} & readonly metadata = {
+    private final record {|sql:SQLMetadata...;|} & readonly metadata = {
         [PROFILE] : {
             entityName: "Profile",
             tableName: "Profile",
@@ -30,7 +31,7 @@ public isolated client class Client {
                 "owner.id": {relation: {entityName: "owner", refField: "id"}}
             },
             keyFields: ["id"],
-            joinMetadata: {owner: {entity: User, fieldName: "owner", refTable: "User", refColumns: ["id"], joinColumns: ["ownerId"], 'type: persist:ONE_TO_ONE}}
+            joinMetadata: {owner: {entity: User, fieldName: "owner", refTable: "User", refColumns: ["id"], joinColumns: ["ownerId"], 'type: sql:ONE_TO_ONE}}
         },
         [USER] : {
             entityName: "User",
@@ -43,7 +44,7 @@ public isolated client class Client {
                 "profile.ownerId": {relation: {entityName: "profile", refField: "ownerId"}}
             },
             keyFields: ["id"],
-            joinMetadata: {profile: {entity: Profile, fieldName: "profile", refTable: "Profile", refColumns: ["ownerId"], joinColumns: ["id"], 'type: persist:ONE_TO_ONE}}
+            joinMetadata: {profile: {entity: Profile, fieldName: "profile", refTable: "Profile", refColumns: ["ownerId"], joinColumns: ["id"], 'type: sql:ONE_TO_ONE}}
         }
     };
 
@@ -60,17 +61,17 @@ public isolated client class Client {
     }
 
     isolated resource function get profiles(ProfileTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get profiles/[int id](ProfileTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
     isolated resource function post profiles(ProfileInsert[] data) returns int[]|persist:Error {
-        persist:SQLClient sqlClient;
+        sql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(PROFILE);
         }
@@ -80,7 +81,7 @@ public isolated client class Client {
     }
 
     isolated resource function put profiles/[int id](ProfileUpdate value) returns Profile|persist:Error {
-        persist:SQLClient sqlClient;
+        sql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(PROFILE);
         }
@@ -90,7 +91,7 @@ public isolated client class Client {
 
     isolated resource function delete profiles/[int id]() returns Profile|persist:Error {
         Profile result = check self->/profiles/[id].get();
-        persist:SQLClient sqlClient;
+        sql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(PROFILE);
         }
@@ -99,17 +100,17 @@ public isolated client class Client {
     }
 
     isolated resource function get users(UserTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get users/[int id](UserTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
     isolated resource function post users(UserInsert[] data) returns int[]|persist:Error {
-        persist:SQLClient sqlClient;
+        sql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(USER);
         }
@@ -119,7 +120,7 @@ public isolated client class Client {
     }
 
     isolated resource function put users/[int id](UserUpdate value) returns User|persist:Error {
-        persist:SQLClient sqlClient;
+        sql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(USER);
         }
@@ -129,7 +130,7 @@ public isolated client class Client {
 
     isolated resource function delete users/[int id]() returns User|persist:Error {
         User result = check self->/users/[id].get();
-        persist:SQLClient sqlClient;
+        sql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(USER);
         }

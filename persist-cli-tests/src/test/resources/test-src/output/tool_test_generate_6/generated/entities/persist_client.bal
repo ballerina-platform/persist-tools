@@ -7,6 +7,7 @@ import ballerina/persist;
 import ballerina/jballerina.java;
 import ballerinax/mysql;
 import ballerinax/mysql.driver as _;
+import ballerinax/persist.sql;
 
 const DATA_TYPE = "datatypes";
 
@@ -15,9 +16,9 @@ public isolated client class Client {
 
     private final mysql:Client dbClient;
 
-    private final map<persist:SQLClient> persistClients;
+    private final map<sql:SQLClient> persistClients;
 
-    private final record {|persist:SQLMetadata...;|} & readonly metadata = {
+    private final record {|sql:SQLMetadata...;|} & readonly metadata = {
         [DATA_TYPE] : {
             entityName: "DataType",
             tableName: "DataType",
@@ -48,17 +49,17 @@ public isolated client class Client {
     }
 
     isolated resource function get datatypes(DataTypeTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get datatypes/[int a](DataTypeTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
     isolated resource function post datatypes(DataTypeInsert[] data) returns int[]|persist:Error {
-        persist:SQLClient sqlClient;
+        sql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(DATA_TYPE);
         }
@@ -68,7 +69,7 @@ public isolated client class Client {
     }
 
     isolated resource function put datatypes/[int a](DataTypeUpdate value) returns DataType|persist:Error {
-        persist:SQLClient sqlClient;
+        sql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(DATA_TYPE);
         }
@@ -78,7 +79,7 @@ public isolated client class Client {
 
     isolated resource function delete datatypes/[int a]() returns DataType|persist:Error {
         DataType result = check self->/datatypes/[a].get();
-        persist:SQLClient sqlClient;
+        sql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(DATA_TYPE);
         }

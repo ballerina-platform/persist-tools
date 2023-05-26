@@ -57,7 +57,11 @@ public class InMemoryClientSyntax implements ClientSyntax {
 
     @Override
     public NodeList<ImportDeclarationNode> getImports() {
-        return BalSyntaxUtils.generateImport(this.entityModule);
+        NodeList<ImportDeclarationNode> imports = BalSyntaxUtils.generateImport(this.entityModule);
+        imports = imports.add(BalSyntaxUtils.getImportDeclarationNode(BalSyntaxConstants.KEYWORD_BALLERINAX,
+                BalSyntaxConstants.PERSIST_MODULE + "." + BalSyntaxConstants.PERSIST_IN_MEMORY,
+                null));
+        return imports;
     }
 
     @Override
@@ -102,12 +106,14 @@ public class InMemoryClientSyntax implements ClientSyntax {
 
     @Override
     public FunctionDefinitionNode getGetFunction(Entity entity) {
-        return BalSyntaxUtils.generateGetFunction(entity, "InMemoryProcessor");
+        return BalSyntaxUtils.generateGetFunction(entity, "InMemoryProcessor",
+                BalSyntaxConstants.PERSIST_IN_MEMORY);
     }
 
     @Override
     public FunctionDefinitionNode getGetByKeyFunction(Entity entity) {
-        return BalSyntaxUtils.generateGetByKeyFunction(entity, "InMemoryProcessor");
+        return BalSyntaxUtils.generateGetByKeyFunction(entity, "InMemoryProcessor",
+                BalSyntaxConstants.PERSIST_IN_MEMORY);
     }
 
     public FunctionDefinitionNode getCloseFunction() {

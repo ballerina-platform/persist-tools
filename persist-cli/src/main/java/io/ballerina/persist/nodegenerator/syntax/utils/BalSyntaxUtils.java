@@ -124,13 +124,13 @@ public class BalSyntaxUtils {
         return close;
     }
 
-    public static FunctionDefinitionNode generateGetFunction(Entity entity, String className) {
+    public static FunctionDefinitionNode generateGetFunction(Entity entity, String className, String moduleName) {
         return (FunctionDefinitionNode) NodeParser.parseObjectMember(
                 String.format(BalSyntaxConstants.EXTERNAL_GET_METHOD_TEMPLATE,
-                        entity.getResourceName(), entity.getEntityName(), className));
+                        entity.getResourceName(), entity.getEntityName(), moduleName, className));
     }
 
-    public static FunctionDefinitionNode generateGetByKeyFunction(Entity entity, String className) {
+    public static FunctionDefinitionNode generateGetByKeyFunction(Entity entity, String className, String moduleName) {
         StringBuilder keyBuilder = new StringBuilder();
         for (EntityField keyField : entity.getKeys()) {
             if (keyBuilder.length() > 0) {
@@ -145,7 +145,7 @@ public class BalSyntaxUtils {
 
         return (FunctionDefinitionNode) NodeParser.parseObjectMember(
                 String.format(BalSyntaxConstants.EXTERNAL_GET_BY_KEY_METHOD_TEMPLATE,
-                        entity.getResourceName(), keyBuilder, entity.getEntityName(), className));
+                        entity.getResourceName(), keyBuilder, entity.getEntityName(), moduleName, className));
     }
 
     public static Function generatePostFunction(Entity entity, List<EntityField> primaryKeys, String parameterType) {

@@ -83,7 +83,7 @@ public class GSheetSyntaxTree implements SyntaxTree {
             resource.addFunction(NodeParser.parseStatement(String.format(
                     BalSyntaxConstants.EXTERNAL_QUERY_STREAM_METHOD_TEMPLATE, entityResourceName.substring(0, 1).
                             toUpperCase(Locale.ENGLISH) + entityResourceName.substring(1),
-                    entity.getEntityName())), true);
+                    entity.getEntityName(), BalSyntaxConstants.GOOGLE_SHEETS)), true);
             resourceList.add(resource);
         }
         resourceList.forEach(resource -> {

@@ -7,6 +7,7 @@ import ballerina/persist;
 import ballerina/jballerina.java;
 import ballerinax/mysql;
 import ballerinax/mysql.driver as _;
+import ballerinax/persist.sql;
 
 const BYTE_TEST = "bytetests";
 
@@ -15,9 +16,9 @@ public isolated client class Client {
 
     private final mysql:Client dbClient;
 
-    private final map<persist:SQLClient> persistClients;
+    private final map<sql:SQLClient> persistClients;
 
-    private final record {|persist:SQLMetadata...;|} & readonly metadata = {
+    private final record {|sql:SQLMetadata...;|} & readonly metadata = {
         [BYTE_TEST] : {
             entityName: "ByteTest",
             tableName: "ByteTest",
@@ -40,17 +41,17 @@ public isolated client class Client {
     }
 
     isolated resource function get bytetests(ByteTestTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "query"
     } external;
 
     isolated resource function get bytetests/[int id](ByteTestTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.datastore.MySQLProcessor",
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
     isolated resource function post bytetests(ByteTestInsert[] data) returns int[]|persist:Error {
-        persist:SQLClient sqlClient;
+        sql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(BYTE_TEST);
         }
@@ -60,7 +61,7 @@ public isolated client class Client {
     }
 
     isolated resource function put bytetests/[int id](ByteTestUpdate value) returns ByteTest|persist:Error {
-        persist:SQLClient sqlClient;
+        sql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(BYTE_TEST);
         }
@@ -70,7 +71,7 @@ public isolated client class Client {
 
     isolated resource function delete bytetests/[int id]() returns ByteTest|persist:Error {
         ByteTest result = check self->/bytetests/[id].get();
-        persist:SQLClient sqlClient;
+        sql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(BYTE_TEST);
         }

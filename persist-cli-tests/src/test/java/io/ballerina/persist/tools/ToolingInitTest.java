@@ -174,9 +174,16 @@ public class ToolingInitTest {
         if (filePath.endsWith(tomlFileName)) {
            try {
                String content = Files.readString(filePath);
+               String dataStore = "inmemory";
+               if (content.contains("datastore = \"mysql\"")) {
+                   dataStore = "sql";
+               } else if (content.contains("datastore = \"ggoglesheets\"")) {
+                   dataStore = "ggoglesheets";
+               }
                content = content.replaceAll(
-                        "artifactId\\s=\\s\"persist-native\"\nversion\\s=\\s\\\"\\d+(\\.\\d+)+(-SNAPSHOT)?\\\"",
-                        "artifactId = \"persist-native\"\nversion = \"" + version + "\"");
+                        "artifactId\\s=\\s\"" + dataStore + "-native\"\nversion\\s=\\s\\\"\\d+(\\.\\d+)+" +
+                                "(-SNAPSHOT)?\\\"",  "artifactId = \"" + dataStore +
+                               "-native\"\nversion = \"" + version + "\"");
                Files.writeString(filePath, content);
             } catch (IOException e) {
                 // ignore

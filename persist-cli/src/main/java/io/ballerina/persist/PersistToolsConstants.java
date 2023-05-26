@@ -152,7 +152,7 @@ public class PersistToolsConstants {
         public static final String KEYWORD_GROUP_ID = "groupId";
         public static final String PERSIST_GROUP_ID = "io.ballerina.stdlib";
         public static final String KEYWORD_ARTIFACT_ID = "artifactId";
-        public static final String ARTIFACT_ID = "persist-native";
+        public static final String ARTIFACT_ID = "%s-native";
         public static final String PERSIST_VERSION = "persistVersion";
         public static final String KEYWORD_VERSION = "version";
     }
