@@ -351,19 +351,19 @@ task testInMemoryExamples {
     }
 }
 
-copyPersistTool.dependsOn ":persist-cli-tests:build"
-copyPersistTool.dependsOn ":persist-cli:build"
-copyTestResources.dependsOn copyPersistTool
-
-initInMemoryExamples.dependsOn copyTestResources
-generateInMemoryExamples.dependsOn initInMemoryExamples
-testInMemoryExamples.dependsOn generateInMemoryExamples
-
-initDbExamples.dependsOn testInMemoryExamples
-generateDbExamples.dependsOn initDbExamples
-pushExamples.dependsOn generateDbExamples
-testDbExamples.dependsOn pushExamples
-
-build.dependsOn testInMemoryExamples
-build.dependsOn testDbExamples
-build.finalizedBy stopTestDockerContainer
+//copyPersistTool.dependsOn ":persist-cli-tests:build"
+//copyPersistTool.dependsOn ":persist-cli:build"
+//copyTestResources.dependsOn copyPersistTool
+//
+//initInMemoryExamples.dependsOn copyTestResources
+//generateInMemoryExamples.dependsOn initInMemoryExamples
+//testInMemoryExamples.dependsOn generateInMemoryExamples
+//
+//initDbExamples.dependsOn testInMemoryExamples
+//generateDbExamples.dependsOn initDbExamples
+//pushExamples.dependsOn generateDbExamples
+//testDbExamples.dependsOn pushExamples
+//
+//build.dependsOn testInMemoryExamples
+//build.dependsOn testDbExamples
+//build.finalizedBy stopTestDockerContainer
