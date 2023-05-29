@@ -36,6 +36,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -87,6 +88,10 @@ public class GeneratedSourcesTestUtils {
                     .toAbsolutePath());
             Package currentPackage = buildProject.currentPackage();
             PackageCompilation compilation = currentPackage.getCompilation();
+            if (compilation.diagnosticResult().hasErrors()) {
+                errStream.println("Compilation errors found in generated sources");
+                errStream.println(Arrays.toString(compilation.diagnosticResult().errors().toArray()));
+            }
             Assert.assertFalse(compilation.diagnosticResult().hasErrors());
         }
     }
