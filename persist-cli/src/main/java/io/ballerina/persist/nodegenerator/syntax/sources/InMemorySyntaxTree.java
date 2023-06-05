@@ -148,7 +148,7 @@ public class InMemorySyntaxTree implements SyntaxTree {
         Function queryOne = new Function(String.format(BalSyntaxConstants.QUERY_ONE, nameInCamelCase),
                 SyntaxKind.OBJECT_METHOD_DEFINITION);
         queryOne.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_ISOLATED });
-        queryOne.addReturns(TypeDescriptor.getSimpleNameReferenceNode(BalSyntaxConstants.QUERY_ONE_RETURN));
+        queryOne.addReturns(TypeDescriptor.getSimpleNameReferenceNode(BalSyntaxConstants.QUERY_ONE_RETURN_IN_MEMORY));
         queryOne.addRequiredParameter(TypeDescriptor.getSimpleNameReferenceNode("anydata"),
                 BalSyntaxConstants.KEYWORD_KEY);
         queryOne.addStatement(NodeParser.parseStatement(clonedTables));
