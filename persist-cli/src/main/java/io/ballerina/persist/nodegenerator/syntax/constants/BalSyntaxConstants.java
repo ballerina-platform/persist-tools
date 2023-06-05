@@ -193,7 +193,8 @@ public class BalSyntaxConstants {
             "where persist:getKey('object, [%s]) == key";
     public static final String QUERY_STATEMENT = "return from record{} 'object in %sClonedTable" +
             System.lineSeparator();
-    public static final String QUERY_ONE_RETURN = "record {}|persist:Error";
+    public static final String QUERY_ONE_RETURN_GSHEET = "record {}|persist:Error";
+    public static final String QUERY_ONE_RETURN_IN_MEMORY = "record {}|persist:NotFoundError";
     public static final String QUERY_ONE_RETURN_STATEMENT = "return persist:getNotFoundError(\"%s\", key);";
     public static final String G_SHEET_QUERY_OUTER_JOIN = "    outer join var %s in %s%s";
     public static final String STREAM_PARAM_INIT = "stream<%s, persist:Error?> %sStream = self.query%sStream();";

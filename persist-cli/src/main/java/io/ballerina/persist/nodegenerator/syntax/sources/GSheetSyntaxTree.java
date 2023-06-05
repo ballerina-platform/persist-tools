@@ -179,13 +179,14 @@ public class GSheetSyntaxTree implements SyntaxTree {
         Function queryOne = new Function(String.format(BalSyntaxConstants.QUERY_ONE, nameInCamelCase),
                 SyntaxKind.OBJECT_METHOD_DEFINITION);
         queryOne.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PRIVATE, BalSyntaxConstants.KEYWORD_ISOLATED});
-        queryOne.addReturns(TypeDescriptor.getSimpleNameReferenceNode(BalSyntaxConstants.QUERY_ONE_RETURN));
+        queryOne.addReturns(TypeDescriptor.getSimpleNameReferenceNode(BalSyntaxConstants.QUERY_ONE_RETURN_GSHEET));
         queryOne.addRequiredParameter(TypeDescriptor.getSimpleNameReferenceNode(BalSyntaxConstants.ANY_DATA),
                 BalSyntaxConstants.KEYWORD_KEY);
         createQuery(entity, queryBuilder, queryOneBuilder);
         query.addStatement(NodeParser.parseStatement(queryBuilder.toString()));
         queryOne.addStatement(NodeParser.parseStatement(queryOneBuilder.toString()));
-        queryOne.addStatement(NodeParser.parseStatement(BalSyntaxConstants.QUERY_ONE_RETURN_STATEMENT));
+        queryOne.addStatement(NodeParser.parseStatement(
+                String.format(BalSyntaxConstants.QUERY_ONE_RETURN_STATEMENT, entity.getEntityName())));
         return new FunctionDefinitionNode[]{query.getFunctionDefinitionNode(), queryOne.getFunctionDefinitionNode()};
     }
 
@@ -210,7 +211,6 @@ public class GSheetSyntaxTree implements SyntaxTree {
                     String assocEntityResourceName = assocEntity.getResourceName();
                     String assocResourceNameInCamelCase = assocEntityResourceName.substring(0, 1).
                             toUpperCase(Locale.ENGLISH) + assocEntityResourceName.substring(1);
-
 
                     if (!addedEntities.contains(assocEntityResourceName)) {
                         streamInitBuilder.append(String.format(BalSyntaxConstants.STREAM_PARAM_INIT,
