@@ -62,16 +62,16 @@ public class BalSyntaxConstants {
     public static final String HAS_KEY = "\tif %sTable.hasKey(%s) {";
     public static final String VARIABLE_TYPE = "%s[]";
     public static final String FIELD = "value.%s";
+    public static final String FIELD_WITH_KEY = "%s: value.%s";
+
     public static final String FOREACH_STMT_START = "foreach %s value in data {" + System.lineSeparator();
     public static final String HAS_NOT_KEY = "!%sTable.hasKey(%s)";
     public static final String UPDATE_RECORD_FIELD_VALUE = "foreach var [k, v] in value.clone().entries() {" +
             System.lineSeparator() + "        %s[k] = v;" + System.lineSeparator() +
             "    }" + System.lineSeparator();
-
-    public static final String HAS_KEY_ERROR = "\t\treturn <persist:AlreadyExistsError>error(\"Duplicate key: \" + " +
-            "%s.toString());" + System.lineSeparator() + "\t}" + System.lineSeparator();
-    public static final String HAS_NOT_KEY_ERROR = "return <persist:NotFoundError>error(\"Not found: \" + " +
-            "%s.toString());";
+    public static final String HAS_KEY_ERROR = "\t\treturn persist:getAlreadyExistsError(\"%s\", %s);"
+            + System.lineSeparator() + "\t}" + System.lineSeparator();
+    public static final String HAS_NOT_KEY_ERROR = "\t\treturn persist:getNotFoundError(\"%s\", %s);";
     public static final String PUSH_VALUES = System.lineSeparator() + "\tkeys.push(%s);" + System.lineSeparator();
     public static final String GET_UPDATE_RECORD = "%s %s = %sTable.get(%s);" + System.lineSeparator();
     public static final String PUT_VALUE_TO_MAP = "%sTable.put(%s);";
@@ -193,9 +193,8 @@ public class BalSyntaxConstants {
             "where persist:getKey('object, [%s]) == key";
     public static final String QUERY_STATEMENT = "return from record{} 'object in %sClonedTable" +
             System.lineSeparator();
-    public static final String QUERY_ONE_RETURN = "record {}|persist:NotFoundError";
-    public static final String QUERY_ONE_RETURN_STATEMENT = "return <persist:NotFoundError>error(" +
-            "\"Invalid key: \" + key.toString());";
+    public static final String QUERY_ONE_RETURN = "record {}|persist:Error";
+    public static final String QUERY_ONE_RETURN_STATEMENT = "return persist:getNotFoundError(\"%s\", key);";
     public static final String G_SHEET_QUERY_OUTER_JOIN = "    outer join var %s in %s%s";
     public static final String STREAM_PARAM_INIT = "stream<%s, persist:Error?> %sStream = self.query%sStream();";
     public static final String QUERY_ONE_FROM_STATEMENT = "from record{} 'object in %sClonedTable";
@@ -209,7 +208,7 @@ public class BalSyntaxConstants {
             "      %s" + System.lineSeparator() +
             "   }, fields);";
     public static final String IF_STATEMENT = "if unionResult is error {" + System.lineSeparator() +
-            "            return <persist:NotFoundError>error(unionResult.message());" + System.lineSeparator() +
+            "            return error persist:Error(unionResult.message());" + System.lineSeparator() +
             "        }" + System.lineSeparator();
 
     public static final String DO_QUERY = "do {" + System.lineSeparator() +

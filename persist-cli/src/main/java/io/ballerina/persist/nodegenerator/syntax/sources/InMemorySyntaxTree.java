@@ -156,7 +156,8 @@ public class InMemorySyntaxTree implements SyntaxTree {
         createQuery(entity, queryBuilder, queryOneBuilder);
         query.addStatement(NodeParser.parseStatement(queryBuilder.toString()));
         queryOne.addStatement(NodeParser.parseStatement(queryOneBuilder.toString()));
-        queryOne.addStatement(NodeParser.parseStatement(BalSyntaxConstants.QUERY_ONE_RETURN_STATEMENT));
+        queryOne.addStatement(NodeParser.parseStatement(
+                String.format(BalSyntaxConstants.QUERY_ONE_RETURN_STATEMENT, entity.getEntityName())));
         return new FunctionDefinitionNode[]{query.getFunctionDefinitionNode(), queryOne.getFunctionDefinitionNode()};
     }
 
