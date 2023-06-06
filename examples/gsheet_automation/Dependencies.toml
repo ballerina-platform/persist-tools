@@ -5,7 +5,7 @@
 
 [ballerina]
 dependencies-toml-version = "2"
-distribution-version = "2201.6.0"
+distribution-version = "2201.6.0-20230525-070000-e36fc7ac"
 
 [[package]]
 org = "ballerina"
@@ -93,9 +93,6 @@ version = "1.4.1"
 dependencies = [
 	{org = "ballerina", name = "jballerina.java"},
 	{org = "ballerina", name = "lang.value"}
-]
-modules = [
-	{org = "ballerina", packageName = "io", moduleName = "io"}
 ]
 
 [[package]]
@@ -324,7 +321,6 @@ org = "wso2"
 name = "gsheet_automation"
 version = "0.1.0"
 dependencies = [
-	{org = "ballerina", name = "io"},
 	{org = "ballerina", name = "os"},
 	{org = "ballerinai", name = "observe"},
 	{org = "ballerinax", name = "googleapis.sheets"}
