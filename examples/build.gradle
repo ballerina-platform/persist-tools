@@ -181,6 +181,9 @@ task initInMemoryExamples {
 
 task initGSheetExamples {
     doLast {
+        System.setProperty("REFRESH_TOKEN", "sdwd");
+        System.setProperty("CLIENT_ID", "sdwd");
+        System.setProperty("CLIENT_SECRET", "sdwd");
         examples.each { example ->
             try {
                 exec {
