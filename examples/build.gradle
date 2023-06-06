@@ -260,7 +260,7 @@ task generateGSheetExamples {
                     if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
                         commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate"
                         copy {
-                            from(file("${project.projectDir}/build/generated-examples/${example}/resources/gsheet/files"))
+                            from(file("${project.projectDir}/build/generated-examples/${example}/resources/gsheet/persist_config"))
                             into("${project.projectDir}/build/generated-examples/${example}/generated/entities")
                         }
                     } else {
@@ -409,7 +409,7 @@ task testInMemoryExamples {
     }
 }
 
-task automateGSheetTabel {
+task automateGSheetTable {
     doLast {
         try {
             exec {
@@ -433,6 +433,7 @@ task testGSheetExamples {
         examples.each { example ->
             try {
                 exec {
+                    new File("${project.projectDir}/build/generated-examples/${example}/Config.toml").delete()
                     workingDir "${project.projectDir}/build/generated-examples/${example}"
                     if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
                         commandLine 'sh', '-c', "${ballerinaDist}/bin/bal run --offline"
@@ -464,8 +465,8 @@ testDbExamples.dependsOn pushExamples
 
 initGSheetExamples.dependsOn testDbExamples
 generateGSheetExamples.dependsOn initGSheetExamples
-automateGSheetTabel.dependsOn generateGSheetExamples
-testGSheetExamples.dependsOn automateGSheetTabel
+automateGSheetTable.dependsOn generateGSheetExamples
+testGSheetExamples.dependsOn automateGSheetTable
 
 build.dependsOn testInMemoryExamples
 build.dependsOn testDbExamples
