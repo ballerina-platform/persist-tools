@@ -14,29 +14,26 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import ballerina/io;
 import ballerina/os;
 import ballerinax/googleapis.sheets;
 
-string & readonly refreshToken = os:getEnv("REFRESH_TOKEN");
-string & readonly clientId = os:getEnv("CLIENT_ID");
-string & readonly clientSecret = os:getEnv("CLIENT_SECRET");
-string & readonly spreadsheetId = "1GkxVMXJYaoshPOtnLdNV_4syKyMMbInCFfGHlD-d3DU";
+configurable string & readonly refreshToken = os:getEnv("REFRESH_TOKEN");
+configurable string & readonly clientId = os:getEnv("CLIENT_ID");
+configurable string & readonly clientSecret = os:getEnv("CLIENT_SECRET");
+configurable string & readonly spreadsheetId = "1GkxVMXJYaoshPOtnLdNV_4syKyMMbInCFfGHlD-d3DU";
+
+sheets:ConnectionConfig spreadsheetConfig = {
+    auth: {
+        clientId: clientId,
+        clientSecret: clientSecret,
+        refreshToken: refreshToken,
+        refreshUrl: sheets:REFRESH_URL
+    }
+};
+
+sheets:Client spreadsheetClient = check new (spreadsheetConfig);
 
 public function main() returns error? {
-    io:println("Refreshing access token...");
-    io:println(os:listEnv().toString());
-    io:println("Refreshing access token...");
-    sheets:ConnectionConfig spreadsheetConfig = {
-        auth: {
-            clientId: clientId,
-            clientSecret: clientSecret,
-            refreshToken: refreshToken,
-            refreshUrl: sheets:REFRESH_URL
-        }
-    };
-
-    sheets:Client spreadsheetClient = check new (spreadsheetConfig);
     string[] sheetNames = ["OrderItem", "Employee", "Workspace", "Building", "Department", "MedicalNeed", "MedicalItem"];
     sheets:Spreadsheet spreadSheet = check spreadsheetClient->openSpreadsheetById(spreadsheetId);
     foreach sheets:Sheet sheet in spreadSheet.sheets {
