@@ -163,12 +163,7 @@ task initInMemoryExamples {
                 try {
                     exec {
                         workingDir "${project.projectDir}/build/generated-examples/${example}"
-                        if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-                            commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist init --module=entities"
-                        } else {
-                            commandLine 'cmd', 'slmgr /dlv'
-                            println('\n' + "Windows Instance detected")
-                        }
+                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist init --module=entities"
                     }
                 } catch (Exception e) {
                     println("Example '${example}' Generation failed: " + e.message)
@@ -190,12 +185,7 @@ task initGSheetExamples {
                     }
                     delete "${project.projectDir}/build/generated-examples/${example}/generated"
                     workingDir "${project.projectDir}/build/generated-examples/${example}"
-                    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist init --module=entities --datastore=googlesheets"
-                    } else {
-                        commandLine 'cmd','slmgr /dlv'
-                        println('\n' + "Windows Instance detected")
-                    }
+                    commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist init --module=entities --datastore=googlesheets"
                 }
             } catch (Exception e) {
                 println("Example '${example}' Generation failed: " + e.message)
@@ -235,12 +225,7 @@ task generateInMemoryExamples {
                 try {
                     exec {
                         workingDir "${project.projectDir}/build/generated-examples/${example}"
-                        if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-                            commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate"
-                        } else {
-                            commandLine 'cmd', 'slmgr /dlv'
-                            println('\n' + "Windows Instance detected")
-                        }
+                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate"
                     }
                 } catch (Exception e) {
                     println("Example '${example}' Generation failed: " + e.message)
@@ -257,15 +242,10 @@ task generateGSheetExamples {
             try {
                 exec {
                     workingDir "${project.projectDir}/build/generated-examples/${example}"
-                    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate"
-                        copy {
-                            from(file("${project.projectDir}/build/generated-examples/${example}/resources/gsheet/persist_config"))
-                            into("${project.projectDir}/build/generated-examples/${example}/generated/entities")
-                        }
-                    } else {
-                        commandLine 'cmd','slmgr /dlv'
-                        println('\n' + "Windows Instance detected")
+                    commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate"
+                    copy {
+                        from(file("${project.projectDir}/build/generated-examples/${example}/resources/gsheet/persist_config"))
+                        into("${project.projectDir}/build/generated-examples/${example}/generated/entities")
                     }
                 }
             } catch (Exception e) {
@@ -394,12 +374,7 @@ task testInMemoryExamples {
             try {
                 exec {
                     workingDir "${project.projectDir}/build/generated-examples/${example}"
-                    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal run --offline"
-                    } else {
-                        commandLine 'cmd','slmgr /dlv'
-                        println('\n' + "Windows Instance detected")
-                    }
+                    commandLine 'sh', '-c', "${ballerinaDist}/bin/bal run --offline"
                 }
             } catch (Exception e) {
                 println("Example '${example}' test failed: " + e.message)
@@ -414,12 +389,7 @@ task automateGSheetTable {
         try {
             exec {
                 workingDir "${project.projectDir}/gsheet_automation"
-                if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-                    commandLine 'sh', '-c', "${ballerinaDist}/bin/bal run --offline"
-                } else {
-                    commandLine 'cmd','slmgr /dlv'
-                    println('\n' + "Windows Instance detected")
-                }
+                commandLine 'sh', '-c', "${ballerinaDist}/bin/bal run --offline"
             }
         } catch (Exception e) {
             println("Example '${example}' test failed: " + e.message)
@@ -435,12 +405,7 @@ task testGSheetExamples {
                 exec {
                     new File("${project.projectDir}/build/generated-examples/${example}/Config.toml").delete()
                     workingDir "${project.projectDir}/build/generated-examples/${example}"
-                    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal run --offline"
-                    } else {
-                        commandLine 'cmd','slmgr /dlv'
-                        println('\n' + "Windows Instance detected")
-                    }
+                    commandLine 'sh', '-c', "${ballerinaDist}/bin/bal run --offline"
                 }
             } catch (Exception e) {
                 println("Example '${example}' test failed: " + e.message)
