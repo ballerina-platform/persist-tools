@@ -353,11 +353,11 @@ public function main() returns error? {
     rainier:Client rainierClient = check new ();
 
     check checkBuilding(rainierClient);
+    runtime:sleep(60);
     check checkDepartment(rainierClient);
     check checkWorkspace(rainierClient);
     check checkEmployee(rainierClient);
     check checkOrderItem(rainierClient);
-    runtime:sleep(15);
     io:println("\n========== Building ==========");
     _ = check from rainier:Building building in rainierClient->/buildings.get(rainier:Building)
         do {
