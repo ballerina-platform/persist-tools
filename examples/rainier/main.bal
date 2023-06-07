@@ -353,7 +353,7 @@ public function main() returns error? {
     rainier:Client rainierClient = check new ();
 
     check checkBuilding(rainierClient);
-    runtime:sleep(60);
+    runtime:sleep(15);
     check checkDepartment(rainierClient);
     check checkWorkspace(rainierClient);
     check checkEmployee(rainierClient);
