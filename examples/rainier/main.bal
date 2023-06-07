@@ -15,6 +15,7 @@
 // under the License.
 
 import ballerina/io;
+import ballerina/lang.runtime;
 import ballerina/persist;
 import foo/association.entities as rainier;
 
@@ -356,7 +357,7 @@ public function main() returns error? {
     check checkWorkspace(rainierClient);
     check checkEmployee(rainierClient);
     check checkOrderItem(rainierClient);
-    
+    runtime:sleep(15);
     io:println("\n========== Building ==========");
     _ = check from rainier:Building building in rainierClient->/buildings.get(rainier:Building)
         do {
