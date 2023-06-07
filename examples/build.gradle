@@ -166,7 +166,7 @@ task initInMemoryExamples {
                         if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
                             commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist init --module=entities"
                         } else {
-                            commandLine 'sh', '-c', "${ballerinaDist}/bin/bal.bat persist init --module=entities"
+                            commandLine 'cmd', '-c', "${ballerinaDist}/bin/bal.bat persist init --module=entities"
                         }
                     }
                 } catch (Exception e) {
@@ -192,7 +192,7 @@ task initGSheetExamples {
                     if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
                         commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist init --module=entities --datastore=googlesheets"
                     } else {
-                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal.bat persist init --module=entities --datastore=googlesheets"
+                        commandLine 'cmd', '-c', "${ballerinaDist}/bin/bal.bat persist init --module=entities --datastore=googlesheets"
                     }
                 }
             } catch (Exception e) {
@@ -236,7 +236,7 @@ task generateInMemoryExamples {
                         if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
                             commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate"
                         } else {
-                            commandLine 'sh', '-c', "${ballerinaDist}/bin/bal.bat persist generate"
+                            commandLine 'cmd', '-c', "${ballerinaDist}/bin/bal.bat persist generate"
                         }
                     }
                 } catch (Exception e) {
@@ -257,7 +257,7 @@ task generateGSheetExamples {
                     if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
                         commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate"
                     } else {
-                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal.bat persist generate"
+                        commandLine 'cmd', '-c', "${ballerinaDist}/bin/bal.bat persist generate"
                     }
                     copy {
                         from(file("${project.projectDir}/build/generated-examples/${example}/resources/gsheet/persist_config"))
@@ -393,7 +393,7 @@ task testInMemoryExamples {
                     if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
                         commandLine 'sh', '-c', "${ballerinaDist}/bin/bal run --offline"
                     } else {
-                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal.bat run --offline"
+                        commandLine 'cmd', '-c', "${ballerinaDist}/bin/bal.bat run --offline"
                     }
                 }
             } catch (Exception e) {
@@ -412,7 +412,7 @@ task automateGSheetTable {
                 if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
                     commandLine 'sh', '-c', "${ballerinaDist}/bin/bal run --offline"
                 } else {
-                    commandLine 'sh', '-c', "${ballerinaDist}/bin/bal.bat run --offline"
+                    commandLine 'cmd', '-c', "${ballerinaDist}/bin/bal.bat run --offline"
                 }
             }
         } catch (Exception e) {
@@ -432,7 +432,7 @@ task testGSheetExamples {
                     if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
                         commandLine 'sh', '-c', "${ballerinaDist}/bin/bal run --offline"
                     } else {
-                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal.bat run --offline"
+                        commandLine 'cmd', '-c', "${ballerinaDist}/bin/bal.bat run --offline"
                     }
                 }
             } catch (Exception e) {
