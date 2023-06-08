@@ -48,7 +48,8 @@ import java.util.Locale;
 public class InMemoryClientSyntax implements ClientSyntax {
 
     public final List<QueryMethod> queryMethodList = new ArrayList<>();
-    private StringBuilder primaryKeys = new StringBuilder();
+    private StringBuilder primaryKeysTuple = new StringBuilder();
+    private StringBuilder primaryKeysRecord = new StringBuilder();
     private final Module entityModule;
 
     public InMemoryClientSyntax(Module entityModule) {
@@ -133,38 +134,44 @@ public class InMemoryClientSyntax implements ClientSyntax {
 
     @Override
     public FunctionDefinitionNode getPutFunction(Entity entity) {
-        this.primaryKeys = new StringBuilder();
+        this.primaryKeysTuple = new StringBuilder();
+        this.primaryKeysRecord = new StringBuilder();
         StringBuilder filterKeys = new StringBuilder(BalSyntaxConstants.OPEN_BRACE);
         StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH + entity.getResourceName());
         EntityField primaryKey;
         List<EntityField> keys = entity.getKeys();
         if (keys.size() == 1) {
             primaryKey = keys.get(0);
-            primaryKeys.append(String.format("%s", primaryKey.getFieldName()));
+            primaryKeysTuple.append(String.format("%s", primaryKey.getFieldName()));
+            primaryKeysRecord.append(String.format("%s", primaryKey.getFieldName()));
         } else {
-            primaryKeys.append(BalSyntaxConstants.OPEN_BRACKET);
+            primaryKeysTuple.append(BalSyntaxConstants.OPEN_BRACKET);
+            primaryKeysRecord.append(BalSyntaxConstants.OPEN_BRACE);
             int iterator = 0;
             for (EntityField field : keys) {
                 if (iterator > 0) {
-                    primaryKeys.append(BalSyntaxConstants.COMMA_WITH_SPACE);
+                    primaryKeysTuple.append(BalSyntaxConstants.COMMA_WITH_SPACE);
+                    primaryKeysRecord.append(BalSyntaxConstants.COMMA_WITH_SPACE);
                 }
-                primaryKeys.append(String.format("%s", field.getFieldName()));
+                primaryKeysTuple.append(String.format("%s", field.getFieldName()));
+                primaryKeysRecord.append(String.format("%s: %s", field.getFieldName(), field.getFieldName()));
                 iterator++;
             }
-            primaryKeys.append(BalSyntaxConstants.CLOSE_BRACKET);
+            primaryKeysTuple.append(BalSyntaxConstants.CLOSE_BRACKET);
+            primaryKeysRecord.append(BalSyntaxConstants.CLOSE_BRACE);
         }
         Function update = BalSyntaxUtils.generatePutFunction(entity, path, filterKeys);
         update.addStatement(NodeParser.parseStatement(BalSyntaxConstants.LOCK));
         update.addStatement(NodeParser.parseStatement(BalSyntaxConstants.OPEN_BRACE));
         IfElse hasCheck = new IfElse(NodeParser.parseExpression(String.format(BalSyntaxConstants.HAS_NOT_KEY,
                 entity.getResourceName(),
-                primaryKeys)));
+                primaryKeysTuple)));
         hasCheck.addIfStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.HAS_NOT_KEY_ERROR,
-                primaryKeys)));
+                entity.getEntityName(), primaryKeysRecord)));
         update.addIfElseStatement(hasCheck.getIfElseStatementNode());
         String entityNameInLowerCase = entity.getEntityName().toLowerCase(Locale.ENGLISH);
         update.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.GET_UPDATE_RECORD,
-                entity.getEntityName(), entityNameInLowerCase, entity.getResourceName(), primaryKeys)));
+                entity.getEntityName(), entityNameInLowerCase, entity.getResourceName(), primaryKeysTuple)));
         update.addStatement(NodeParser.parseStatement(
                 String.format(BalSyntaxConstants.UPDATE_RECORD_FIELD_VALUE, entityNameInLowerCase)));
         update.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.PUT_VALUE_TO_MAP,
@@ -183,12 +190,12 @@ public class InMemoryClientSyntax implements ClientSyntax {
         delete.addStatement(NodeParser.parseStatement(BalSyntaxConstants.LOCK));
         delete.addStatement(NodeParser.parseStatement(BalSyntaxConstants.OPEN_BRACE));
         IfElse hasCheck = new IfElse(NodeParser.parseExpression(String.format(BalSyntaxConstants.HAS_NOT_KEY,
-                entity.getResourceName(), primaryKeys)));
+                entity.getResourceName(), primaryKeysTuple)));
         hasCheck.addIfStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.HAS_NOT_KEY_ERROR,
-                primaryKeys)));
+                entity.getEntityName(), primaryKeysRecord)));
         delete.addIfElseStatement(hasCheck.getIfElseStatementNode());
         delete.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.DELETED_OBJECT,
-                entity.getResourceName(), primaryKeys)));
+                entity.getResourceName(), primaryKeysTuple)));
         delete.addStatement(NodeParser.parseStatement(BalSyntaxConstants.CLOSE_BRACE));
         return delete.getFunctionDefinitionNode();
     }
@@ -201,31 +208,38 @@ public class InMemoryClientSyntax implements ClientSyntax {
         forEachStmt.append(BalSyntaxConstants.OPEN_BRACE);
         StringBuilder variableArrayType = new StringBuilder();
         StringBuilder filterKeys = new StringBuilder();
+        StringBuilder filterKeysRecord = new StringBuilder();
         EntityField primaryKey;
         if (primaryKeys.size() == 1) {
             primaryKey = primaryKeys.get(0);
             filterKeys.append(String.format(BalSyntaxConstants.FIELD, primaryKey.getFieldName()));
+            filterKeysRecord.append(String.format(BalSyntaxConstants.FIELD, primaryKey.getFieldName()));
             variableArrayType.append(String.format(BalSyntaxConstants.VARIABLE_TYPE, primaryKey.getFieldType()));
         } else {
             StringBuilder variableType = new StringBuilder();
             filterKeys.append(BalSyntaxConstants.OPEN_BRACKET);
+            filterKeysRecord.append(BalSyntaxConstants.OPEN_BRACE);
             variableType.append(BalSyntaxConstants.OPEN_BRACKET);
             int iterator = 0;
             for (EntityField field : primaryKeys) {
                 if (iterator > 0) {
                     filterKeys.append(BalSyntaxConstants.COMMA_WITH_SPACE);
                     variableType.append(BalSyntaxConstants.COMMA_WITH_SPACE);
+                    filterKeysRecord.append(BalSyntaxConstants.COMMA_WITH_SPACE);
                 }
                 filterKeys.append(String.format(BalSyntaxConstants.FIELD, field.getFieldName()));
+                filterKeysRecord.append(String.format(BalSyntaxConstants.FIELD_WITH_KEY,
+                        field.getFieldName(), field.getFieldName()));
                 variableType.append(field.getFieldType());
                 iterator++;
             }
             filterKeys.append(BalSyntaxConstants.CLOSE_BRACKET);
             variableType.append(BalSyntaxConstants.CLOSE_BRACKET);
+            filterKeysRecord.append(BalSyntaxConstants.CLOSE_BRACE);
             variableArrayType.append(String.format(BalSyntaxConstants.VARIABLE_TYPE, variableType));
         }
         forEachStmt.append(String.format(BalSyntaxConstants.HAS_KEY, entity.getResourceName(), filterKeys));
-        forEachStmt.append(String.format(BalSyntaxConstants.HAS_KEY_ERROR, filterKeys));
+        forEachStmt.append(String.format(BalSyntaxConstants.HAS_KEY_ERROR, entity.getEntityName(), filterKeysRecord));
 
         forEachStmt.append(String.format("\t" + BalSyntaxConstants.PUT_VALUE_TO_MAP, entity.getResourceName(),
                 "value.clone()"));
