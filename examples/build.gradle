@@ -458,7 +458,6 @@ task testGSheetExamples {
 copyPersistTool.dependsOn ":persist-cli-tests:build"
 copyPersistTool.dependsOn ":persist-cli:build"
 copyTestResources.dependsOn copyPersistTool
-copyTestResources.dependsOn  pullGSheetsDependency
 
 initInMemoryExamples.dependsOn copyTestResources
 generateInMemoryExamples.dependsOn initInMemoryExamples
@@ -466,6 +465,7 @@ testInMemoryExamples.dependsOn generateInMemoryExamples
 
 initDbExamples.dependsOn testInMemoryExamples
 generateDbExamples.dependsOn initDbExamples
+pushExamples.dependsOn  pullGSheetsDependency
 pushExamples.dependsOn generateDbExamples
 testDbExamples.dependsOn pushExamples
 
