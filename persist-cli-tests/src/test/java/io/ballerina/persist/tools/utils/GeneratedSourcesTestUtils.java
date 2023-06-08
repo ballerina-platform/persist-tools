@@ -90,8 +90,6 @@ public class GeneratedSourcesTestUtils {
             try {
                 PackageCompilation compilation = currentPackage.getCompilation();
                 if (compilation.diagnosticResult().hasErrors()) {
-                    errStream.println("Compilation errors found in generated sources");
-                    errStream.println(Arrays.toString(compilation.diagnosticResult().errors().toArray()));
                     Assert.assertFalse(compilation.diagnosticResult().hasErrors());
                 }
             } catch (Exception e) {
