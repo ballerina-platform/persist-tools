@@ -350,13 +350,17 @@ function checkOrderItem(rainier:Client rainierClient) returns error? {
 }
 
 public function main() returns error? {
+    runtime:sleep(5);
     rainier:Client rainierClient = check new ();
-
+    runtime:sleep(5);
     check checkBuilding(rainierClient);
-    runtime:sleep(15);
+    runtime:sleep(5);
     check checkDepartment(rainierClient);
+    runtime:sleep(5);
     check checkWorkspace(rainierClient);
+    runtime:sleep(5);
     check checkEmployee(rainierClient);
+    runtime:sleep(5);
     check checkOrderItem(rainierClient);
     io:println("\n========== Building ==========");
     _ = check from rainier:Building building in rainierClient->/buildings.get(rainier:Building)

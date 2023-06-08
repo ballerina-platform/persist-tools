@@ -469,7 +469,7 @@ pushExamples.dependsOn generateDbExamples
 testDbExamples.dependsOn pushExamples
 
 initGSheetExamples.dependsOn testDbExamples
-automateGSheetTable.dependsOn initGSheetExamples
+generateGSheetExamples.dependsOn pullGSheetsDependency
 generateGSheetExamples.dependsOn initGSheetExamples
 automateGSheetTable.dependsOn generateGSheetExamples
 testGSheetExamples.dependsOn automateGSheetTable
