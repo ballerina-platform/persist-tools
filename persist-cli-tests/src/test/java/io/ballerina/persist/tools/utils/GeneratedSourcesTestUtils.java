@@ -93,7 +93,6 @@ public class GeneratedSourcesTestUtils {
                     errStream.println("Compilation errors found in generated sources");
                     errStream.println(Arrays.toString(compilation.diagnosticResult().errors().toArray()));
                     Assert.assertFalse(compilation.diagnosticResult().hasErrors());
-
                 }
             } catch (Exception e) {
                 errStream.println("Error occurred while executing the generated packages: " + e.getMessage());
