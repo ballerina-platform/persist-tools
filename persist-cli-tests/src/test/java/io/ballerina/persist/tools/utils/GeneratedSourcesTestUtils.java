@@ -89,9 +89,7 @@ public class GeneratedSourcesTestUtils {
             Package currentPackage = buildProject.currentPackage();
             try {
                 PackageCompilation compilation = currentPackage.getCompilation();
-                if (compilation.diagnosticResult().hasErrors()) {
-                    Assert.assertFalse(compilation.diagnosticResult().hasErrors());
-                }
+                Assert.assertFalse(compilation.diagnosticResult().hasErrors());
             } catch (Exception e) {
                 errStream.println("Error occurred while executing the generated packages: " + e.getMessage());
             }
