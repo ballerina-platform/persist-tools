@@ -404,6 +404,18 @@ task testInMemoryExamples {
     }
 }
 
+task pullGSheetsDependency() {
+    if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+        doLast {
+            return exec {
+                ignoreExitValue true
+                String distributionBinPath = "${project.rootDir}/target/ballerina-distribution/bin"
+                commandLine 'cmd', '/c', "$distributionBinPath/bal.bat pull ballerinax/googleapis.sheets"
+            }.exitValue
+        }
+    }
+}
+
 task automateGSheetTable {
     doLast {
         try {
@@ -457,6 +469,7 @@ pushExamples.dependsOn generateDbExamples
 testDbExamples.dependsOn pushExamples
 
 initGSheetExamples.dependsOn testDbExamples
+automateGSheetTable.dependsOn initGSheetExamples
 generateGSheetExamples.dependsOn initGSheetExamples
 automateGSheetTable.dependsOn generateGSheetExamples
 testGSheetExamples.dependsOn automateGSheetTable
