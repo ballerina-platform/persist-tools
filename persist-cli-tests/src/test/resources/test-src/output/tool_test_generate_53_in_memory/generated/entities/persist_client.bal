@@ -60,7 +60,7 @@ public isolated client class Client {
         foreach UserInsert value in data {
             lock {
                 if usersTable.hasKey(value.id) {
-                    return <persist:AlreadyExistsError>error("Duplicate key: " + value.id.toString());
+                    return persist:getAlreadyExistsError("User", value.id);
                 }
                 usersTable.put(value.clone());
             }
@@ -72,7 +72,7 @@ public isolated client class Client {
     isolated resource function put users/[int id](UserUpdate value) returns User|persist:Error {
         lock {
             if !usersTable.hasKey(id) {
-                return <persist:NotFoundError>error("Not found: " + id.toString());
+                return persist:getNotFoundError("User", id);
             }
             User user = usersTable.get(id);
             foreach var [k, v] in value.clone().entries() {
@@ -86,7 +86,7 @@ public isolated client class Client {
     isolated resource function delete users/[int id]() returns User|persist:Error {
         lock {
             if !usersTable.hasKey(id) {
-                return <persist:NotFoundError>error("Not found: " + id.toString());
+                return persist:getNotFoundError("User", id);
             }
             return usersTable.remove(id).clone();
         }
@@ -107,7 +107,7 @@ public isolated client class Client {
         foreach PostInsert value in data {
             lock {
                 if postsTable.hasKey(value.id) {
-                    return <persist:AlreadyExistsError>error("Duplicate key: " + value.id.toString());
+                    return persist:getAlreadyExistsError("Post", value.id);
                 }
                 postsTable.put(value.clone());
             }
@@ -119,7 +119,7 @@ public isolated client class Client {
     isolated resource function put posts/[int id](PostUpdate value) returns Post|persist:Error {
         lock {
             if !postsTable.hasKey(id) {
-                return <persist:NotFoundError>error("Not found: " + id.toString());
+                return persist:getNotFoundError("Post", id);
             }
             Post post = postsTable.get(id);
             foreach var [k, v] in value.clone().entries() {
@@ -133,7 +133,7 @@ public isolated client class Client {
     isolated resource function delete posts/[int id]() returns Post|persist:Error {
         lock {
             if !postsTable.hasKey(id) {
-                return <persist:NotFoundError>error("Not found: " + id.toString());
+                return persist:getNotFoundError("Post", id);
             }
             return postsTable.remove(id).clone();
         }
@@ -154,7 +154,7 @@ public isolated client class Client {
         foreach FollowInsert value in data {
             lock {
                 if followsTable.hasKey(value.id) {
-                    return <persist:AlreadyExistsError>error("Duplicate key: " + value.id.toString());
+                    return persist:getAlreadyExistsError("Follow", value.id);
                 }
                 followsTable.put(value.clone());
             }
@@ -166,7 +166,7 @@ public isolated client class Client {
     isolated resource function put follows/[int id](FollowUpdate value) returns Follow|persist:Error {
         lock {
             if !followsTable.hasKey(id) {
-                return <persist:NotFoundError>error("Not found: " + id.toString());
+                return persist:getNotFoundError("Follow", id);
             }
             Follow follow = followsTable.get(id);
             foreach var [k, v] in value.clone().entries() {
@@ -180,7 +180,7 @@ public isolated client class Client {
     isolated resource function delete follows/[int id]() returns Follow|persist:Error {
         lock {
             if !followsTable.hasKey(id) {
-                return <persist:NotFoundError>error("Not found: " + id.toString());
+                return persist:getNotFoundError("Follow", id);
             }
             return followsTable.remove(id).clone();
         }
@@ -214,7 +214,7 @@ isolated function queryOneUsers(anydata key) returns record {}|persist:NotFoundE
             ...'object
         };
     };
-    return <persist:NotFoundError>error("Invalid key: " + key.toString());
+    return persist:getNotFoundError("User", key);
 }
 
 isolated function queryPosts(string[] fields) returns stream<record {}, persist:Error?> {
@@ -252,7 +252,7 @@ isolated function queryOnePosts(anydata key) returns record {}|persist:NotFoundE
             "user": user
         };
     };
-    return <persist:NotFoundError>error("Invalid key: " + key.toString());
+    return persist:getNotFoundError("Post", key);
 }
 
 isolated function queryFollows(string[] fields) returns stream<record {}, persist:Error?> {
@@ -294,7 +294,7 @@ isolated function queryOneFollows(anydata key) returns record {}|persist:NotFoun
             "follower": follower
         };
     };
-    return <persist:NotFoundError>error("Invalid key: " + key.toString());
+    return persist:getNotFoundError("Follow", key);
 }
 
 isolated function queryUserPosts(record {} value, string[] fields) returns record {}[] {

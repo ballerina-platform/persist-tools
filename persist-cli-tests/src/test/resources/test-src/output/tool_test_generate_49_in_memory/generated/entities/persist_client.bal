@@ -78,7 +78,7 @@ public isolated client class Client {
         foreach WorkspaceInsert value in data {
             lock {
                 if workspacesTable.hasKey([value.workspaceId, value.workspaceType]) {
-                    return <persist:AlreadyExistsError>error("Duplicate key: " + [value.workspaceId, value.workspaceType].toString());
+                    return persist:getAlreadyExistsError("Workspace", {workspaceId: value.workspaceId, workspaceType: value.workspaceType});
                 }
                 workspacesTable.put(value.clone());
             }
@@ -90,7 +90,7 @@ public isolated client class Client {
     isolated resource function put workspaces/[string workspaceId]/[string workspaceType](WorkspaceUpdate value) returns Workspace|persist:Error {
         lock {
             if !workspacesTable.hasKey([workspaceId, workspaceType]) {
-                return <persist:NotFoundError>error("Not found: " + [workspaceId, workspaceType].toString());
+                return persist:getNotFoundError("Workspace", {workspaceId: workspaceId, workspaceType: workspaceType});
             }
             Workspace workspace = workspacesTable.get([workspaceId, workspaceType]);
             foreach var [k, v] in value.clone().entries() {
@@ -104,7 +104,7 @@ public isolated client class Client {
     isolated resource function delete workspaces/[string workspaceId]/[string workspaceType]() returns Workspace|persist:Error {
         lock {
             if !workspacesTable.hasKey([workspaceId, workspaceType]) {
-                return <persist:NotFoundError>error("Not found: " + [workspaceId, workspaceType].toString());
+                return persist:getNotFoundError("Workspace", {workspaceId: workspaceId, workspaceType: workspaceType});
             }
             return workspacesTable.remove([workspaceId, workspaceType]).clone();
         }
@@ -125,7 +125,7 @@ public isolated client class Client {
         foreach BuildingInsert value in data {
             lock {
                 if buildingsTable.hasKey(value.buildingCode) {
-                    return <persist:AlreadyExistsError>error("Duplicate key: " + value.buildingCode.toString());
+                    return persist:getAlreadyExistsError("Building", value.buildingCode);
                 }
                 buildingsTable.put(value.clone());
             }
@@ -137,7 +137,7 @@ public isolated client class Client {
     isolated resource function put buildings/[string buildingCode](BuildingUpdate value) returns Building|persist:Error {
         lock {
             if !buildingsTable.hasKey(buildingCode) {
-                return <persist:NotFoundError>error("Not found: " + buildingCode.toString());
+                return persist:getNotFoundError("Building", buildingCode);
             }
             Building building = buildingsTable.get(buildingCode);
             foreach var [k, v] in value.clone().entries() {
@@ -151,7 +151,7 @@ public isolated client class Client {
     isolated resource function delete buildings/[string buildingCode]() returns Building|persist:Error {
         lock {
             if !buildingsTable.hasKey(buildingCode) {
-                return <persist:NotFoundError>error("Not found: " + buildingCode.toString());
+                return persist:getNotFoundError("Building", buildingCode);
             }
             return buildingsTable.remove(buildingCode).clone();
         }
@@ -172,7 +172,7 @@ public isolated client class Client {
         foreach DepartmentInsert value in data {
             lock {
                 if departmentsTable.hasKey([value.deptNo, value.deptName]) {
-                    return <persist:AlreadyExistsError>error("Duplicate key: " + [value.deptNo, value.deptName].toString());
+                    return persist:getAlreadyExistsError("Department", {deptNo: value.deptNo, deptName: value.deptName});
                 }
                 departmentsTable.put(value.clone());
             }
@@ -184,7 +184,7 @@ public isolated client class Client {
     isolated resource function put departments/[string deptNo]/[string deptName](DepartmentUpdate value) returns Department|persist:Error {
         lock {
             if !departmentsTable.hasKey([deptNo, deptName]) {
-                return <persist:NotFoundError>error("Not found: " + [deptNo, deptName].toString());
+                return persist:getNotFoundError("Department", {deptNo: deptNo, deptName: deptName});
             }
             Department department = departmentsTable.get([deptNo, deptName]);
             foreach var [k, v] in value.clone().entries() {
@@ -198,7 +198,7 @@ public isolated client class Client {
     isolated resource function delete departments/[string deptNo]/[string deptName]() returns Department|persist:Error {
         lock {
             if !departmentsTable.hasKey([deptNo, deptName]) {
-                return <persist:NotFoundError>error("Not found: " + [deptNo, deptName].toString());
+                return persist:getNotFoundError("Department", {deptNo: deptNo, deptName: deptName});
             }
             return departmentsTable.remove([deptNo, deptName]).clone();
         }
@@ -219,7 +219,7 @@ public isolated client class Client {
         foreach OrderItemInsert value in data {
             lock {
                 if orderitemsTable.hasKey([value.orderId, value.itemId]) {
-                    return <persist:AlreadyExistsError>error("Duplicate key: " + [value.orderId, value.itemId].toString());
+                    return persist:getAlreadyExistsError("OrderItem", {orderId: value.orderId, itemId: value.itemId});
                 }
                 orderitemsTable.put(value.clone());
             }
@@ -231,7 +231,7 @@ public isolated client class Client {
     isolated resource function put orderitems/[string orderId]/[string itemId](OrderItemUpdate value) returns OrderItem|persist:Error {
         lock {
             if !orderitemsTable.hasKey([orderId, itemId]) {
-                return <persist:NotFoundError>error("Not found: " + [orderId, itemId].toString());
+                return persist:getNotFoundError("OrderItem", {orderId: orderId, itemId: itemId});
             }
             OrderItem orderitem = orderitemsTable.get([orderId, itemId]);
             foreach var [k, v] in value.clone().entries() {
@@ -245,7 +245,7 @@ public isolated client class Client {
     isolated resource function delete orderitems/[string orderId]/[string itemId]() returns OrderItem|persist:Error {
         lock {
             if !orderitemsTable.hasKey([orderId, itemId]) {
-                return <persist:NotFoundError>error("Not found: " + [orderId, itemId].toString());
+                return persist:getNotFoundError("OrderItem", {orderId: orderId, itemId: itemId});
             }
             return orderitemsTable.remove([orderId, itemId]).clone();
         }
@@ -266,7 +266,7 @@ public isolated client class Client {
         foreach EmployeeInsert value in data {
             lock {
                 if employeesTable.hasKey([value.empNo, value.firstName]) {
-                    return <persist:AlreadyExistsError>error("Duplicate key: " + [value.empNo, value.firstName].toString());
+                    return persist:getAlreadyExistsError("Employee", {empNo: value.empNo, firstName: value.firstName});
                 }
                 employeesTable.put(value.clone());
             }
@@ -278,7 +278,7 @@ public isolated client class Client {
     isolated resource function put employees/[string empNo]/[string firstName](EmployeeUpdate value) returns Employee|persist:Error {
         lock {
             if !employeesTable.hasKey([empNo, firstName]) {
-                return <persist:NotFoundError>error("Not found: " + [empNo, firstName].toString());
+                return persist:getNotFoundError("Employee", {empNo: empNo, firstName: firstName});
             }
             Employee employee = employeesTable.get([empNo, firstName]);
             foreach var [k, v] in value.clone().entries() {
@@ -292,7 +292,7 @@ public isolated client class Client {
     isolated resource function delete employees/[string empNo]/[string firstName]() returns Employee|persist:Error {
         lock {
             if !employeesTable.hasKey([empNo, firstName]) {
-                return <persist:NotFoundError>error("Not found: " + [empNo, firstName].toString());
+                return persist:getNotFoundError("Employee", {empNo: empNo, firstName: firstName});
             }
             return employeesTable.remove([empNo, firstName]).clone();
         }
@@ -338,7 +338,7 @@ isolated function queryOneWorkspaces(anydata key) returns record {}|persist:NotF
             "location": location
         };
     };
-    return <persist:NotFoundError>error("Invalid key: " + key.toString());
+    return persist:getNotFoundError("Workspace", key);
 }
 
 isolated function queryBuildings(string[] fields) returns stream<record {}, persist:Error?> {
@@ -364,7 +364,7 @@ isolated function queryOneBuildings(anydata key) returns record {}|persist:NotFo
             ...'object
         };
     };
-    return <persist:NotFoundError>error("Invalid key: " + key.toString());
+    return persist:getNotFoundError("Building", key);
 }
 
 isolated function queryDepartments(string[] fields) returns stream<record {}, persist:Error?> {
@@ -390,7 +390,7 @@ isolated function queryOneDepartments(anydata key) returns record {}|persist:Not
             ...'object
         };
     };
-    return <persist:NotFoundError>error("Invalid key: " + key.toString());
+    return persist:getNotFoundError("Department", key);
 }
 
 isolated function queryOrderitems(string[] fields) returns stream<record {}, persist:Error?> {
@@ -416,7 +416,7 @@ isolated function queryOneOrderitems(anydata key) returns record {}|persist:NotF
             ...'object
         };
     };
-    return <persist:NotFoundError>error("Invalid key: " + key.toString());
+    return persist:getNotFoundError("OrderItem", key);
 }
 
 isolated function queryEmployees(string[] fields) returns stream<record {}, persist:Error?> {
@@ -466,7 +466,7 @@ isolated function queryOneEmployees(anydata key) returns record {}|persist:NotFo
             "workspace": workspace
         };
     };
-    return <persist:NotFoundError>error("Invalid key: " + key.toString());
+    return persist:getNotFoundError("Employee", key);
 }
 
 isolated function queryWorkspaceEmployees(record {} value, string[] fields) returns record {}[] {

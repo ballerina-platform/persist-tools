@@ -51,7 +51,7 @@ public isolated client class Client {
         foreach MedicalNeedInsert value in data {
             lock {
                 if medicalneedsTable.hasKey(value.needId) {
-                    return <persist:AlreadyExistsError>error("Duplicate key: " + value.needId.toString());
+                    return persist:getAlreadyExistsError("MedicalNeed", value.needId);
                 }
                 medicalneedsTable.put(value.clone());
             }
@@ -63,7 +63,7 @@ public isolated client class Client {
     isolated resource function put medicalneeds/[int needId](MedicalNeedUpdate value) returns MedicalNeed|persist:Error {
         lock {
             if !medicalneedsTable.hasKey(needId) {
-                return <persist:NotFoundError>error("Not found: " + needId.toString());
+                return persist:getNotFoundError("MedicalNeed", needId);
             }
             MedicalNeed medicalneed = medicalneedsTable.get(needId);
             foreach var [k, v] in value.clone().entries() {
@@ -77,7 +77,7 @@ public isolated client class Client {
     isolated resource function delete medicalneeds/[int needId]() returns MedicalNeed|persist:Error {
         lock {
             if !medicalneedsTable.hasKey(needId) {
-                return <persist:NotFoundError>error("Not found: " + needId.toString());
+                return persist:getNotFoundError("MedicalNeed", needId);
             }
             return medicalneedsTable.remove(needId).clone();
         }
@@ -98,7 +98,7 @@ public isolated client class Client {
         foreach MedicalItemInsert value in data {
             lock {
                 if medicalitemsTable.hasKey(value.itemId) {
-                    return <persist:AlreadyExistsError>error("Duplicate key: " + value.itemId.toString());
+                    return persist:getAlreadyExistsError("MedicalItem", value.itemId);
                 }
                 medicalitemsTable.put(value.clone());
             }
@@ -110,7 +110,7 @@ public isolated client class Client {
     isolated resource function put medicalitems/[int itemId](MedicalItemUpdate value) returns MedicalItem|persist:Error {
         lock {
             if !medicalitemsTable.hasKey(itemId) {
-                return <persist:NotFoundError>error("Not found: " + itemId.toString());
+                return persist:getNotFoundError("MedicalItem", itemId);
             }
             MedicalItem medicalitem = medicalitemsTable.get(itemId);
             foreach var [k, v] in value.clone().entries() {
@@ -124,7 +124,7 @@ public isolated client class Client {
     isolated resource function delete medicalitems/[int itemId]() returns MedicalItem|persist:Error {
         lock {
             if !medicalitemsTable.hasKey(itemId) {
-                return <persist:NotFoundError>error("Not found: " + itemId.toString());
+                return persist:getNotFoundError("MedicalItem", itemId);
             }
             return medicalitemsTable.remove(itemId).clone();
         }
@@ -158,7 +158,7 @@ isolated function queryOneMedicalneeds(anydata key) returns record {}|persist:No
             ...'object
         };
     };
-    return <persist:NotFoundError>error("Invalid key: " + key.toString());
+    return persist:getNotFoundError("MedicalNeed", key);
 }
 
 isolated function queryMedicalitems(string[] fields) returns stream<record {}, persist:Error?> {
@@ -184,6 +184,6 @@ isolated function queryOneMedicalitems(anydata key) returns record {}|persist:No
             ...'object
         };
     };
-    return <persist:NotFoundError>error("Invalid key: " + key.toString());
+    return persist:getNotFoundError("MedicalItem", key);
 }
 
