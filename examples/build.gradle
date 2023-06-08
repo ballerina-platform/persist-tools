@@ -405,8 +405,8 @@ task testInMemoryExamples {
 }
 
 task pullGSheetsDependency() {
-    if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-        doLast {
+    doLast {
+        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
             return exec {
                 ignoreExitValue true
                 String distributionBinPath = "${project.rootDir}/target/ballerina-distribution/bin"
