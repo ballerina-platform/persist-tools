@@ -204,7 +204,7 @@ public isolated client class Client {
         return outputArray.toStream();
     }
 
-    private isolated function queryOneUsers(anydata key) returns record {}|persist:NotFoundError {
+    private isolated function queryOneUsers(anydata key) returns record {}|persist:Error {
         stream<User, persist:Error?> usersStream = self.queryUsersStream();
         error? unionResult = from record {} 'object in usersStream
             where persist:getKey('object, ["id"]) == key
@@ -214,9 +214,9 @@ public isolated client class Client {
                 };
             };
         if unionResult is error {
-            return <persist:NotFoundError>error(unionResult.message());
+            return error persist:Error(unionResult.message());
         }
-        return <persist:NotFoundError>error("Invalid key: " + key.toString());
+        return persist:getNotFoundError("User", key);
     }
 
     private isolated function queryUsersStream(UserTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -275,7 +275,7 @@ public isolated client class Client {
         return outputArray.toStream();
     }
 
-    private isolated function queryOnePosts(anydata key) returns record {}|persist:NotFoundError {
+    private isolated function queryOnePosts(anydata key) returns record {}|persist:Error {
         stream<Post, persist:Error?> postsStream = self.queryPostsStream();
         stream<User, persist:Error?> usersStream = self.queryUsersStream();
         error? unionResult = from record {} 'object in postsStream
@@ -288,9 +288,9 @@ public isolated client class Client {
                 };
             };
         if unionResult is error {
-            return <persist:NotFoundError>error(unionResult.message());
+            return error persist:Error(unionResult.message());
         }
-        return <persist:NotFoundError>error("Invalid key: " + key.toString());
+        return persist:getNotFoundError("Post", key);
     }
 
     private isolated function queryPostsStream(PostTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -351,7 +351,7 @@ public isolated client class Client {
         return outputArray.toStream();
     }
 
-    private isolated function queryOneFollows(anydata key) returns record {}|persist:NotFoundError {
+    private isolated function queryOneFollows(anydata key) returns record {}|persist:Error {
         stream<Follow, persist:Error?> followsStream = self.queryFollowsStream();
         stream<User, persist:Error?> usersStream = self.queryUsersStream();
         error? unionResult = from record {} 'object in followsStream
@@ -366,9 +366,9 @@ public isolated client class Client {
                 };
             };
         if unionResult is error {
-            return <persist:NotFoundError>error(unionResult.message());
+            return error persist:Error(unionResult.message());
         }
-        return <persist:NotFoundError>error("Invalid key: " + key.toString());
+        return persist:getNotFoundError("Follow", key);
     }
 
     private isolated function queryFollowsStream(FollowTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -430,7 +430,7 @@ public isolated client class Client {
         return outputArray.toStream();
     }
 
-    private isolated function queryOneComments(anydata key) returns record {}|persist:NotFoundError {
+    private isolated function queryOneComments(anydata key) returns record {}|persist:Error {
         stream<Comment, persist:Error?> commentsStream = self.queryCommentsStream();
         stream<User, persist:Error?> usersStream = self.queryUsersStream();
         stream<Post, persist:Error?> postsStream = self.queryPostsStream();
@@ -446,9 +446,9 @@ public isolated client class Client {
                 };
             };
         if unionResult is error {
-            return <persist:NotFoundError>error(unionResult.message());
+            return error persist:Error(unionResult.message());
         }
-        return <persist:NotFoundError>error("Invalid key: " + key.toString());
+        return persist:getNotFoundError("Comment", key);
     }
 
     private isolated function queryCommentsStream(CommentTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {

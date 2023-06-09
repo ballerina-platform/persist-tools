@@ -228,7 +228,7 @@ public isolated client class Client {
         return outputArray.toStream();
     }
 
-    private isolated function queryOneEmployees(anydata key) returns record {}|persist:NotFoundError {
+    private isolated function queryOneEmployees(anydata key) returns record {}|persist:Error {
         stream<Employee, persist:Error?> employeesStream = self.queryEmployeesStream();
         stream<Department, persist:Error?> departmentsStream = self.queryDepartmentsStream();
         stream<Workspace, persist:Error?> workspacesStream = self.queryWorkspacesStream();
@@ -244,9 +244,9 @@ public isolated client class Client {
                 };
             };
         if unionResult is error {
-            return <persist:NotFoundError>error(unionResult.message());
+            return error persist:Error(unionResult.message());
         }
-        return <persist:NotFoundError>error("Invalid key: " + key.toString());
+        return persist:getNotFoundError("Employee", key);
     }
 
     private isolated function queryEmployeesStream(EmployeeTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -305,7 +305,7 @@ public isolated client class Client {
         return outputArray.toStream();
     }
 
-    private isolated function queryOneWorkspaces(anydata key) returns record {}|persist:NotFoundError {
+    private isolated function queryOneWorkspaces(anydata key) returns record {}|persist:Error {
         stream<Workspace, persist:Error?> workspacesStream = self.queryWorkspacesStream();
         stream<Building, persist:Error?> buildingsStream = self.queryBuildingsStream();
         error? unionResult = from record {} 'object in workspacesStream
@@ -318,9 +318,9 @@ public isolated client class Client {
                 };
             };
         if unionResult is error {
-            return <persist:NotFoundError>error(unionResult.message());
+            return error persist:Error(unionResult.message());
         }
-        return <persist:NotFoundError>error("Invalid key: " + key.toString());
+        return persist:getNotFoundError("Workspace", key);
     }
 
     private isolated function queryWorkspacesStream(WorkspaceTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -376,7 +376,7 @@ public isolated client class Client {
         return outputArray.toStream();
     }
 
-    private isolated function queryOneBuildings(anydata key) returns record {}|persist:NotFoundError {
+    private isolated function queryOneBuildings(anydata key) returns record {}|persist:Error {
         stream<Building, persist:Error?> buildingsStream = self.queryBuildingsStream();
         error? unionResult = from record {} 'object in buildingsStream
             where persist:getKey('object, ["buildingCode"]) == key
@@ -386,9 +386,9 @@ public isolated client class Client {
                 };
             };
         if unionResult is error {
-            return <persist:NotFoundError>error(unionResult.message());
+            return error persist:Error(unionResult.message());
         }
-        return <persist:NotFoundError>error("Invalid key: " + key.toString());
+        return persist:getNotFoundError("Building", key);
     }
 
     private isolated function queryBuildingsStream(BuildingTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -444,7 +444,7 @@ public isolated client class Client {
         return outputArray.toStream();
     }
 
-    private isolated function queryOneDepartments(anydata key) returns record {}|persist:NotFoundError {
+    private isolated function queryOneDepartments(anydata key) returns record {}|persist:Error {
         stream<Department, persist:Error?> departmentsStream = self.queryDepartmentsStream();
         error? unionResult = from record {} 'object in departmentsStream
             where persist:getKey('object, ["deptNo"]) == key
@@ -454,9 +454,9 @@ public isolated client class Client {
                 };
             };
         if unionResult is error {
-            return <persist:NotFoundError>error(unionResult.message());
+            return error persist:Error(unionResult.message());
         }
-        return <persist:NotFoundError>error("Invalid key: " + key.toString());
+        return persist:getNotFoundError("Department", key);
     }
 
     private isolated function queryDepartmentsStream(DepartmentTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -512,7 +512,7 @@ public isolated client class Client {
         return outputArray.toStream();
     }
 
-    private isolated function queryOneOrderitems(anydata key) returns record {}|persist:NotFoundError {
+    private isolated function queryOneOrderitems(anydata key) returns record {}|persist:Error {
         stream<OrderItem, persist:Error?> orderitemsStream = self.queryOrderitemsStream();
         error? unionResult = from record {} 'object in orderitemsStream
             where persist:getKey('object, ["orderId", "itemId"]) == key
@@ -522,9 +522,9 @@ public isolated client class Client {
                 };
             };
         if unionResult is error {
-            return <persist:NotFoundError>error(unionResult.message());
+            return error persist:Error(unionResult.message());
         }
-        return <persist:NotFoundError>error("Invalid key: " + key.toString());
+        return persist:getNotFoundError("OrderItem", key);
     }
 
     private isolated function queryOrderitemsStream(OrderItemTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
