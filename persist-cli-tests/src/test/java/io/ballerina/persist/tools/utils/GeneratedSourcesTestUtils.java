@@ -36,6 +36,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -88,7 +89,12 @@ public class GeneratedSourcesTestUtils {
             Package currentPackage = buildProject.currentPackage();
             try {
                 PackageCompilation compilation = currentPackage.getCompilation();
-                Assert.assertFalse(compilation.diagnosticResult().hasErrors());
+                boolean hasError = compilation.diagnosticResult().hasErrors();
+                if (hasError) {
+                    errStream.println("Compilation errors found in generated sources");
+                    errStream.println(Arrays.toString(compilation.diagnosticResult().errors().toArray()));
+                }
+                Assert.assertFalse(hasError);
             } catch (Exception e) {
                 errStream.println("Error occurred while executing the generated packages: " + e.getMessage());
             }
