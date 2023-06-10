@@ -40,4 +40,4 @@ jobs:
           packageUser: ${{ github.actor }}
           packagePAT: ${{ secrets.GITHUB_TOKEN }}
         # Issue for enabling testcases: https://github.com/ballerina-platform/ballerina-standard-library/issues/4452
-        run: ./gradlew.bat build -x test
+        run: ./gradlew.bat build
