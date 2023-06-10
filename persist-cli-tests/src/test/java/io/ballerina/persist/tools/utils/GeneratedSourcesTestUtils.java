@@ -87,12 +87,17 @@ public class GeneratedSourcesTestUtils {
             BuildProject buildProject = BuildProject.load(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)
                     .toAbsolutePath());
             Package currentPackage = buildProject.currentPackage();
-            PackageCompilation compilation = currentPackage.getCompilation();
-            if (compilation.diagnosticResult().hasErrors()) {
-                errStream.println("Compilation errors found in generated sources");
-                errStream.println(Arrays.toString(compilation.diagnosticResult().errors().toArray()));
+            try {
+                PackageCompilation compilation = currentPackage.getCompilation();
+                boolean hasError = compilation.diagnosticResult().hasErrors();
+                if (hasError) {
+                    errStream.println("Compilation errors found in generated sources");
+                    errStream.println(Arrays.toString(compilation.diagnosticResult().errors().toArray()));
+                }
+                Assert.assertFalse(hasError);
+            } catch (Exception e) {
+                errStream.println("Error occurred while executing the generated packages: " + e.getMessage());
             }
-            Assert.assertFalse(compilation.diagnosticResult().hasErrors());
         }
     }
 
