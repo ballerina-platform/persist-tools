@@ -39,5 +39,8 @@ jobs:
         env:
           packageUser: ${{ github.actor }}
           packagePAT: ${{ secrets.GITHUB_TOKEN }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          REFRESH_TOKEN: ${{ secrets.REFRESH_TOKEN }}
         # Issue for enabling testcases: https://github.com/ballerina-platform/ballerina-standard-library/issues/4452
         run: ./gradlew.bat build
