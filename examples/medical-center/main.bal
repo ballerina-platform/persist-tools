@@ -109,7 +109,6 @@ public function main() returns error? {
         needId: 1,
         itemId: 1,
         beneficiaryId: 1,
-        period: {year: 2022, month: 10, day: 10, hour: 1, minute: 2, second: 3},
         urgency: "URGENT",
         quantity: 5
     };
@@ -120,7 +119,6 @@ public function main() returns error? {
         needId: 2,
         itemId: 2,
         beneficiaryId: 2,
-        period: {year: 2021, month: 10, day: 10, hour: 1, minute: 2, second: 3},
         urgency: "NOT URGENT",
         quantity: 5
     };
