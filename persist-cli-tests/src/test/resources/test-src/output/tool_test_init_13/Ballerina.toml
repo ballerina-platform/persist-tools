@@ -1,0 +1,17 @@
+[package]
+org = "foo"
+name = "persist_init_13"
+version = "0.1.0"
+distribution = "2201.3.0"
+
+[build-options]
+observabilityIncluded = true
+
+[persist]
+datastore = "mssql"
+module = "persist_init_13"
+
+[[platform.java11.dependency]]
+groupId = "io.ballerina.stdlib"
+artifactId = "persist.sql-native"
+version = "1.0.0"
