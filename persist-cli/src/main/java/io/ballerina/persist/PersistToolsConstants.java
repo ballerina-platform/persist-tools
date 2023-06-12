@@ -30,16 +30,7 @@ public class PersistToolsConstants {
 
     public static final String COMPONENT_IDENTIFIER = "persist";
 
-    public static final String DEFAULT_USER = "root";
-    public static final String DEFAULT_PORT = "3306";
     public static final String EMPTY_VALUE = "";
-    public static final String DEFAULT_HOST = "localhost";
-
-    public static final String KEY_USER = "user";
-    public static final String KEY_PORT = "port";
-    public static final String KEY_PASSWORD = "password";
-    public static final String KEY_DATABASE = "database";
-    public static final String KEY_HOST = "host";
     public static final String KEYWORD_PACKAGE = "package";
     public static final String KEYWORD_NAME = "name";
     public static final String KEYWORD_SHEET_ID = "spreadsheetId";
@@ -63,7 +54,8 @@ public class PersistToolsConstants {
     public static final String MYSQL_CONNECTOR_NAME_PREFIX = "mysql-connector";
     public static final String SCHEMA_FILE_NAME = "model";
     public static final Set<String> SUPPORTED_DB_PROVIDERS =
-           Set.of(SupportDataSources.MYSQL_DB, SupportDataSources.IN_MEMORY_TABLE, SupportDataSources.GOOGLE_SHEETS);
+           Set.of(SupportedDataSources.MYSQL_DB, SupportedDataSources.MSSQL_DB, SupportedDataSources.IN_MEMORY_TABLE,
+                   SupportedDataSources.GOOGLE_SHEETS);
 
     /**
      * Constants related to Ballerina types.
@@ -160,11 +152,51 @@ public class PersistToolsConstants {
     /**
      * Constants related to the data sources.
      */
-    public static final class SupportDataSources {
-        private SupportDataSources() {}
+    public static final class SupportedDataSources {
+        private SupportedDataSources() {}
 
         public static final String MYSQL_DB = "mysql";
+        public static final String MSSQL_DB = "mssql";
         public static final String GOOGLE_SHEETS = "googlesheets";
         public static final String IN_MEMORY_TABLE = "inmemory";
+    }
+
+    /**
+     * Constants related to the database configurations.
+     */
+    public static final class DBConfigs {
+
+        private DBConfigs() {}
+
+        public static final String KEY_USER = "user";
+        public static final String KEY_PORT = "port";
+        public static final String KEY_PASSWORD = "password";
+        public static final String KEY_DATABASE = "database";
+        public static final String KEY_HOST = "host";
+
+        /**
+         * Constants related to the MySQL configurations.
+         */
+        public static final class MySQL {
+            private MySQL() {}
+
+            public static final String DEFAULT_HOST = "localhost";
+            public static final String DEFAULT_PORT = "3306";
+            public static final String DEFAULT_USER = "root";
+
+        }
+
+        /**
+         * Constants related to the MSSQL configurations.
+         */
+        public static final class MSSQL {
+            private MSSQL() {}
+
+            public static final String DEFAULT_HOST = "localhost";
+            public static final String DEFAULT_PORT = "1433";
+            public static final String DEFAULT_USER = "sa";
+
+        }
+
     }
 }

@@ -123,7 +123,7 @@ public class Push implements BLauncherCmd {
             HashMap<String, String> ballerinaTomlConfig = TomlSyntaxUtils.readBallerinaTomlConfig(
                     Paths.get(this.sourcePath, "Ballerina.toml"));
             String dataStore = ballerinaTomlConfig.get("datastore").trim();
-            if (!dataStore.equals(PersistToolsConstants.SupportDataSources.MYSQL_DB)) {
+            if (!dataStore.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB)) {
                 errStream.printf("ERROR: unsupported data store: expected: 'mysql' but found: '%s'%n", dataStore);
                 return;
             }

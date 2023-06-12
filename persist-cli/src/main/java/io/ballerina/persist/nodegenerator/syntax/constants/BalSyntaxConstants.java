@@ -159,13 +159,14 @@ public class BalSyntaxConstants {
             System.lineSeparator();
 
     public static final String MYSQL_DRIVER = "mysql.driver";
+    public static final String MSSQL_DRIVER = "mssql.driver";
     public static final String GOOGLE_API_SHEET = "googleapis.sheets";
     public static final String HTTP = "http";
     public static final String GOOGLE_SHEETS = "googlesheets";
     public static final String PERSIST_SQL = "sql";
     public static final String PERSIST_IN_MEMORY = "inmemory";
     public static final String BAL_EXTENSION = ".bal";
-    public static final String INIT_DB_CLIENT = "private final mysql:Client dbClient;";
+    public static final String INIT_DB_CLIENT = "private final %s:Client dbClient;";
     public static final String GOOGLE_SHEET_CLIENT = "private final sheets:Client googleSheetClient;";
     public static final String HTTP_CLIENT = "private final http:Client httpClient;";
     public static final String INIT_GOOGLE_SHEET_CLIENT_MAP = "private final map<googlesheets:GoogleSheetsClient> " +
@@ -286,7 +287,7 @@ public class BalSyntaxConstants {
     public static final String IN_MEMORY_METADATA_MAP_TEMPLATE =
             "final map<inmemory:TableMetadata> metadata = {%s};";
     public static final String IN_MEMORY_ASSOC_METHODS_TEMPLATE = "associationsMethods: {%s}";
-    public static final String INIT_DB_CLIENT_WITH_PARAMS = "mysql:Client|error dbClient = new (host = host, " +
+    public static final String INIT_DB_CLIENT_WITH_PARAMS = "%s:Client|error dbClient = new (host = host, " +
             "user = user, password = password, database = database, port = port, options = connectionOptions);" +
             System.lineSeparator();
     public static final String GOOGLE_SHEET_CLIENT_MAP = "[%s]: check new (self.googleSheetClient, self.httpClient, " +
@@ -295,7 +296,7 @@ public class BalSyntaxConstants {
     public static final String CLONED_TABLE_INIT_TEMPLATE = "table<%s> key(%s) %sClonedTable;";
     public static final String CLONED_TABLE_DECLARATION_TEMPLATE = "%sClonedTable = %sTable.clone();";
     public static final String PERSIST_CLIENT_MAP_ELEMENT =
-            "[%s]: check new (dbClient, self.metadata.get(%s))";
+            "[%s]: check new (dbClient, self.metadata.get(%s), %s)";
     public static final String PERSIST_IN_MEMORY_CLIENT_MAP_ELEMENT =
             "[%s]: check new (metadata.get(%s).cloneReadOnly())";
     public static final String PERSIST_CLIENT_TEMPLATE = "self.persistClients = {%s};";
@@ -340,5 +341,8 @@ public class BalSyntaxConstants {
     public static final String MAX_LENGTH = "maxLength";
     public static final String VARCHAR_LENGTH = "191";
     public static final String EXPERIMENTAL_NOTICE = System.lineSeparator() + "WARNING %s" + System.lineSeparator();
+
+    public static final String MYSQL_SPECIFICS = "psql:MYSQL_SPECIFICS";
+    public static final String MSSQL_SPECIFICS = "psql:MSSQL_SPECIFICS";
 }
 
