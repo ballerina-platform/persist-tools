@@ -398,4 +398,12 @@ public class ToolingGenerateTest {
         assertGeneratedSources("tool_test_generate_57_gsheets");
     }
 
+    @Test(enabled = true)
+    @Description("There is a generated client object with mssql data source")
+    public void testMssqlEntity() {
+        executeCommand("tool_test_generate_58_mssql", GENERATE);
+        assertGeneratedSources("tool_test_generate_58_mssql");
+    }
+
+
 }

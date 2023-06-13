@@ -100,13 +100,9 @@ public class BalSyntaxConstants {
             System.lineSeparator();
     public static final String CONFIGURABLE_REFRESH_TOKEN = "configurable string refreshToken = ?;" +
             System.lineSeparator();
-    public static final String CONFIGURABLE_WORK_SHEET_NAME = "configurable string worksheetName = ?;" +
-            System.lineSeparator();
     public static final String CONFIGURABLE_WORK_SHEET_ID = "configurable string spreadsheetId = ?;" +
             System.lineSeparator();
-    public static final String CONFIGURABLE_REFRESH_URL = "configurable string refreshUrl = ?;" +
-            System.lineSeparator();
-    public static final String CONFIGURABLE_OPTIONS = "configurable mysql:Options & readonly connectionOptions = {};";
+    public static final String CONFIGURABLE_OPTIONS = "configurable %s:Options & readonly connectionOptions = {};";
     public static final String INIT = "init";
     public static final String POST = "post";
     public static final String DELETE = "delete";

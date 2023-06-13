@@ -85,7 +85,7 @@ public class SourceGenerator {
                     this.generatedSourceDirPath.resolve(persistClientBal).toAbsolutePath(),
                     this.moduleNameWithPackageName);
             addSqlScriptFile(this.entityModule.getModuleName(),
-                    SqlScriptUtils.generateSqlScript(this.entityModule.getEntityMap().values()),
+                    SqlScriptUtils.generateSqlScript(this.entityModule.getEntityMap().values(), datasource),
                     generatedSourceDirPath);
         } catch (BalException e) {
             throw new BalException(e.getMessage());

@@ -1,0 +1,7 @@
+[persist_generate_58.entities]
+host = "localhost"
+port = 1433
+user = "sa"
+password = ""
+database = ""
+

@@ -119,7 +119,7 @@ public class DbSyntaxTree implements RDBMSSyntaxTree {
         moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration(
                 BalSyntaxConstants.CONFIGURABLE_PASSWORD));
         moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration(
-                BalSyntaxConstants.CONFIGURABLE_OPTIONS));
+                String.format(BalSyntaxConstants.CONFIGURABLE_OPTIONS, datasource)));
 
         Token eofToken = AbstractNodeFactory.createIdentifierToken(BalSyntaxConstants.EMPTY_STRING);
         ModulePartNode modulePartNode = NodeFactory.createModulePartNode(imports, moduleMembers, eofToken);

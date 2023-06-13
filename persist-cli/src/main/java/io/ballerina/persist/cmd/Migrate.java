@@ -182,8 +182,8 @@ public class Migrate implements BLauncherCmd {
                     try {
                         // Generate the SQL script
                         SourceGenerator.addSqlScriptFile("the migrate command",
-                                SqlScriptUtils.generateSqlScript(model.getEntityMap().values()),
-                                newMigrationPath);
+                                SqlScriptUtils.generateSqlScript(model.getEntityMap().values(),
+                                        PersistToolsConstants.SupportedDataSources.MYSQL_DB), newMigrationPath);
                     } catch (BalException e) {
                         errStream.println("ERROR: failed to generate SQL script " + e.getMessage());
                         return;
@@ -678,9 +678,11 @@ public class Migrate implements BLauncherCmd {
 
                 try {
                     if (!primaryKey.isArrayType()) {
-                        pKField = SqlScriptUtils.getTypeNonArray(primaryKey.getDataType());
+                        pKField = SqlScriptUtils.getTypeNonArray(primaryKey.getDataType(),
+                                PersistToolsConstants.SupportedDataSources.MYSQL_DB);
                     } else {
-                        pKField = SqlScriptUtils.getTypeArray(primaryKey.getDataType());
+                        pKField = SqlScriptUtils.getTypeArray(primaryKey.getDataType(),
+                                PersistToolsConstants.SupportedDataSources.MYSQL_DB);
                     }
                 } catch (BalException e) {
                     errStream.println("ERROR: data type conversion failed: " + e.getMessage());
@@ -696,9 +698,11 @@ public class Migrate implements BLauncherCmd {
                     for (FieldMetadata field : addedFields.get(entity)) {
                         try {
                             if (!field.isArrayType()) {
-                                addField = SqlScriptUtils.getTypeNonArray(field.getDataType());
+                                addField = SqlScriptUtils.getTypeNonArray(field.getDataType(),
+                                        PersistToolsConstants.SupportedDataSources.MYSQL_DB);
                             } else {
-                                addField = SqlScriptUtils.getTypeArray(field.getDataType());
+                                addField = SqlScriptUtils.getTypeArray(field.getDataType(),
+                                        PersistToolsConstants.SupportedDataSources.MYSQL_DB);
                             }
                         } catch (BalException e) {
                             errStream.println("ERROR: data type conversion failed: " + e.getMessage());
@@ -776,9 +780,11 @@ public class Migrate implements BLauncherCmd {
                             String fieldType = "";
                             try {
                                 if (!field.isArrayType()) {
-                                    fieldType = SqlScriptUtils.getTypeNonArray(field.getDataType());
+                                    fieldType = SqlScriptUtils.getTypeNonArray(field.getDataType(),
+                                            PersistToolsConstants.SupportedDataSources.MYSQL_DB);
                                 } else {
-                                    fieldType = SqlScriptUtils.getTypeArray(field.getDataType());
+                                    fieldType = SqlScriptUtils.getTypeArray(field.getDataType(),
+                                            PersistToolsConstants.SupportedDataSources.MYSQL_DB);
                                 }
                             } catch (BalException e) {
                                 errStream.println("ERROR: data type conversion failed: " + e.getMessage());
@@ -800,9 +806,11 @@ public class Migrate implements BLauncherCmd {
                         String fieldType = "";
                         try {
                             if (!field.isArrayType()) {
-                                fieldType = SqlScriptUtils.getTypeNonArray(field.getDataType());
+                                fieldType = SqlScriptUtils.getTypeNonArray(field.getDataType(),
+                                        PersistToolsConstants.SupportedDataSources.MYSQL_DB);
                             } else {
-                                fieldType = SqlScriptUtils.getTypeArray(field.getDataType());
+                                fieldType = SqlScriptUtils.getTypeArray(field.getDataType(),
+                                        PersistToolsConstants.SupportedDataSources.MYSQL_DB);
                             }
                         } catch (BalException e) {
                             errStream.println("ERROR: data type conversion failed: " + e.getMessage());

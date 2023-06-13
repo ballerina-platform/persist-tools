@@ -83,15 +83,19 @@ public class PersistToolsConstants {
         private SqlTypes() {}
 
         public static final String INT = "INT";
+        public static final String BIT = "BIT";
         public static final String BOOLEAN = "BOOLEAN";
         public static final String DECIMAL = "DECIMAL";
         public static final String DOUBLE = "DOUBLE";
+        public static final String FLOAT = "FLOAT";
         public static final String VARCHAR = "VARCHAR";
         public static final String DATE = "DATE";
         public static final String TIME = "TIME";
         public static final String TIME_STAMP = "TIMESTAMP";
         public static final String DATE_TIME = "DATETIME";
+        public static final String DATE_TIME2 = "DATETIME2";
         public static final String LONG_BLOB = "LONGBLOB";
+        public static final String VARBINARY = "VARBINARY(MAX)";
     }
 
     /**
@@ -130,7 +134,8 @@ public class PersistToolsConstants {
         private DefaultMaxLength() {}
 
         public static final int VARCHAR_LENGTH = 191;
-        public static final int DECIMAL_PRECISION = 65;
+        public static final int DECIMAL_PRECISION_MYSQL = 65;
+        public static final int DECIMAL_PRECISION_MSSQL = 38;
         public static final int DECIMAL_SCALE = 30;
     }
 
