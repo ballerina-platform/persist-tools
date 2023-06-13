@@ -37,7 +37,7 @@ public isolated client class Client {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
-        self.persistClients = {[BYTE_TEST] : check new (dbClient, self.metadata.get(BYTE_TEST))};
+        self.persistClients = {[BYTE_TEST] : check new (dbClient, self.metadata.get(BYTE_TEST), psql:MYSQL_SPECIFICS)};
     }
 
     isolated resource function get bytetests(ByteTestTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
