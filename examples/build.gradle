@@ -464,4 +464,4 @@ testGSheetExamples.dependsOn automateGSheetTable
 build.dependsOn testInMemoryExamples
 build.dependsOn testDbExamples
 build.dependsOn testGSheetExamples
-//build.finalizedBy stopTestDockerContainer
+build.finalizedBy stopTestDockerContainer
