@@ -53,6 +53,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * This Class implements the `persist migrate` command in Ballerina
@@ -228,8 +229,8 @@ public class Migrate implements BLauncherCmd {
         Path folderPath = Path.of(folder);
 
         if (Files.exists(folderPath) && Files.isDirectory(folderPath)) {
-            try {
-                List<Path> directories = Files.list(folderPath)
+            try (Stream<Path> directoryStream = Files.list(folderPath)) {
+                List<Path> directories = directoryStream
                         .filter(Files::isDirectory)
                         .collect(Collectors.toList());
 
@@ -360,9 +361,11 @@ public class Migrate implements BLauncherCmd {
             }
         } else {
             // Delete the newMigrateDirectory
-            boolean deleteNewMigrateFolder = newMigrateDirectory.delete();
-            if (!deleteNewMigrateFolder) {
-                errStream.println("Error: Failed to delete timestamp folder.");
+            if (newMigrateDirectory != null) {
+                boolean deleteNewMigrateFolder = newMigrateDirectory.delete();
+                if (!deleteNewMigrateFolder) {
+                    errStream.println("Error: Failed to delete timestamp folder.");
+                }
             }
 
             // Delete the migrations directory if it is empty
