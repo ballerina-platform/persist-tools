@@ -232,20 +232,20 @@ task stopTestDockerContainer() {
 task startMSSQLTestDockerContainer(type: Exec) {
     if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
         def standardOutput = new ByteArrayOutputStream()
-        commandLine 'sh', '-c', 'docker run --platform linux/arm64/v8 --rm -d --name ballerina-persist-tools-mssql -e ACCEPT_EULA=1 -e SA_PASSWORD=Test123# -p 1434:1433 -t mcr.microsoft.com/azure-sql-edge'
-//        def healthCheck = 1
-//        def counter = 0
-//        doLast {
-//            checkExecResult(execResult, 'Error', standardOutput)
-//            while (healthCheck != 0 && counter < 12) {
-//                sleep(60 * 1000)
-//                healthCheck = checkMSSQLTestDockerContainerStatus('ballerina-persist-tools-mssql')
-//                counter = counter + 1
-//            }
-//            if (healthCheck != 0) {
-//                throw new GradleException("Docker container 'ballerina-persist-tools-mssql' health test exceeded timeout!")
-//            }
-//        }
+        commandLine 'sh', '-c', 'docker run --platform linux/amd64 --rm -d --name ballerina-persist-tools-mssql -e ACCEPT_EULA=1 -e SA_PASSWORD=Test123# -p 1434:1433 -t mcr.microsoft.com/mssql/server:2019-latest'
+        def healthCheck = 1
+        def counter = 0
+        doLast {
+            checkExecResult(execResult, 'Error', standardOutput)
+            while (healthCheck != 0 && counter < 12) {
+                sleep(60 * 1000)
+                healthCheck = checkMSSQLTestDockerContainerStatus('ballerina-persist-tools-mssql')
+                counter = counter + 1
+            }
+            if (healthCheck != 0) {
+                throw new GradleException("Docker container 'ballerina-persist-tools-mssql' health test exceeded timeout!")
+            }
+        }
     } else {
         commandLine 'cmd','slmgr /dlv'
         println('\n' + "Windows Instance detected")
