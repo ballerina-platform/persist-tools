@@ -135,7 +135,8 @@ public class DatabaseTestUtils {
         return exists;
     }
 
-    private static boolean tableExists(Connection connection, String databaseName, String tableName) throws SQLException {
+    private static boolean tableExists(Connection connection, String databaseName, String tableName)
+            throws SQLException {
         boolean exists;
         DatabaseMetaData meta = connection.getMetaData();
         ResultSet resultSet = meta.getTables(databaseName, null, tableName, new String[] {table});

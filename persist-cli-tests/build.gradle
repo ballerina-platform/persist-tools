@@ -232,7 +232,7 @@ task stopTestDockerContainer() {
 task startMSSQLTestDockerContainer(type: Exec) {
     if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
         def standardOutput = new ByteArrayOutputStream()
-        commandLine 'sh', '-c', 'docker run --platform linux/amd64 --rm -d --name ballerina-persist-tools-mssql -e ACCEPT_EULA=1 -e SA_PASSWORD=Test123# -p 1434:1433 -t mcr.microsoft.com/azure-sql-edge'
+        commandLine 'sh', '-c', 'docker run --platform linux/arm64/v8 --rm -d --name ballerina-persist-tools-mssql -e ACCEPT_EULA=1 -e SA_PASSWORD=Test123# -p 1434:1433 -t mcr.microsoft.com/azure-sql-edge'
 //        def healthCheck = 1
 //        def counter = 0
 //        doLast {
@@ -322,7 +322,6 @@ test {
     dependsOn(copyTestPack)
     systemProperty "ballerina.home", ballerinaDist
     dependsOn(copyTestResources)
-    dependsOn(startTestDockerContainer)
     systemProperty "ballerina.offline.flag", "true"
     useTestNG() {
         suites 'src/test/resources/testng.xml'
@@ -355,11 +354,12 @@ jacocoTestReport {
     }
 }
 
-
-pullGSheetsDependency.dependsOn startTestDockerContainer
+test.dependsOn startTestDockerContainer
+test.dependsOn startMSSQLTestDockerContainer
 test.dependsOn pullGSheetsDependency
 test.dependsOn ":persist-cli:build"
 test.finalizedBy stopTestDockerContainer
+test.finalizedBy stopMSSQLTestDockerContainer
 
 build.dependsOn ":persist-cli:build"
 build.dependsOn copyTestPack
