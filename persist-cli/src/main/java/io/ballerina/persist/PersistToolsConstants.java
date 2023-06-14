@@ -42,16 +42,18 @@ public class PersistToolsConstants {
     public static final String PASSWORD = "password";
     public static final String USER = "user";
     public static final String MYSQL_DRIVER_CLASS = "com.mysql.cj.jdbc.Driver";
-
+    public static final String MSSQL_DRIVER_CLASS = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
     public static final String PERSIST_CONFIG_PATTERN = "persist.model.storage";
     public static final String SQL_SCHEMA_FILE = "script.sql";
     public static final String GOOGLE_SHEETS_SCHEMA_FILE = "script.gs";
     public static final String PERSIST_DIRECTORY = "persist";
     public static final String MIGRATIONS = "migrations";
     public static final String BALLERINA_MYSQL_DRIVER_NAME = "ballerinax/mysql.driver";
+    public static final String BALLERINA_MSSQL_DRIVER_NAME = "ballerinax/mssql.driver";
     public static final String PLATFORM = "java11";
     public static final String PROPERTY_KEY_PATH = "path";
     public static final String MYSQL_CONNECTOR_NAME_PREFIX = "mysql-connector";
+    public static final String MSSQL_CONNECTOR_NAME_PREFIX = "mssql-jdbc";
     public static final String SCHEMA_FILE_NAME = "model";
     public static final Set<String> SUPPORTED_DB_PROVIDERS =
            Set.of(SupportedDataSources.MYSQL_DB, SupportedDataSources.MSSQL_DB, SupportedDataSources.IN_MEMORY_TABLE,
