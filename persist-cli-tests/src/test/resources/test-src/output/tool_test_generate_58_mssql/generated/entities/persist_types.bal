@@ -12,6 +12,20 @@ public enum EnumType {
     TYPE_4
 }
 
+public enum Category {
+    FOOD,
+    TRAVEL,
+    FASHION = "fashion",
+    SPORTS,
+    TECHNOLOGY,
+    OTHERS
+}
+
+public enum Gender {
+    MALE,
+    FEMALE
+}
+
 public type AllTypes record {|
     readonly int id;
     boolean booleanType;
@@ -250,5 +264,286 @@ public type AllTypesIdRecordInsert AllTypesIdRecord;
 
 public type AllTypesIdRecordUpdate record {|
     string randomField?;
+|};
+
+public type User record {|
+    readonly int id;
+    string name;
+    time:Date birthDate;
+    string mobileNumber;
+|};
+
+public type UserOptionalized record {|
+    int id?;
+    string name?;
+    time:Date birthDate?;
+    string mobileNumber?;
+|};
+
+public type UserWithRelations record {|
+    *UserOptionalized;
+    PostOptionalized[] posts?;
+    CommentOptionalized[] comments?;
+    FollowOptionalized[] followers?;
+    FollowOptionalized[] following?;
+|};
+
+public type UserTargetType typedesc<UserWithRelations>;
+
+public type UserInsert User;
+
+public type UserUpdate record {|
+    string name?;
+    time:Date birthDate?;
+    string mobileNumber?;
+|};
+
+public type Post record {|
+    readonly int id;
+    string description;
+    string tags;
+    Category category;
+    time:Civil timestamp;
+    int userId;
+|};
+
+public type PostOptionalized record {|
+    int id?;
+    string description?;
+    string tags?;
+    Category category?;
+    time:Civil timestamp?;
+    int userId?;
+|};
+
+public type PostWithRelations record {|
+    *PostOptionalized;
+    UserOptionalized user?;
+    CommentOptionalized[] comments?;
+|};
+
+public type PostTargetType typedesc<PostWithRelations>;
+
+public type PostInsert Post;
+
+public type PostUpdate record {|
+    string description?;
+    string tags?;
+    Category category?;
+    time:Civil timestamp?;
+    int userId?;
+|};
+
+public type Follow record {|
+    readonly int id;
+    int leaderId;
+    int followerId;
+    time:Civil timestamp;
+|};
+
+public type FollowOptionalized record {|
+    int id?;
+    int leaderId?;
+    int followerId?;
+    time:Civil timestamp?;
+|};
+
+public type FollowWithRelations record {|
+    *FollowOptionalized;
+    UserOptionalized leader?;
+    UserOptionalized follower?;
+|};
+
+public type FollowTargetType typedesc<FollowWithRelations>;
+
+public type FollowInsert Follow;
+
+public type FollowUpdate record {|
+    int leaderId?;
+    int followerId?;
+    time:Civil timestamp?;
+|};
+
+public type Comment record {|
+    readonly int id;
+    string comment;
+    time:Civil timesteamp;
+    int userId;
+    int postId;
+|};
+
+public type CommentOptionalized record {|
+    int id?;
+    string comment?;
+    time:Civil timesteamp?;
+    int userId?;
+    int postId?;
+|};
+
+public type CommentWithRelations record {|
+    *CommentOptionalized;
+    UserOptionalized user?;
+    PostOptionalized post?;
+|};
+
+public type CommentTargetType typedesc<CommentWithRelations>;
+
+public type CommentInsert Comment;
+
+public type CommentUpdate record {|
+    string comment?;
+    time:Civil timesteamp?;
+    int userId?;
+    int postId?;
+|};
+
+public type Employee record {|
+    readonly string empNo;
+    string firstName;
+    string lastName;
+    time:Date birthDate;
+    Gender gender;
+    time:Date hireDate;
+    string departmentDeptNo;
+    string workspaceWorkspaceId;
+|};
+
+public type EmployeeOptionalized record {|
+    string empNo?;
+    string firstName?;
+    string lastName?;
+    time:Date birthDate?;
+    Gender gender?;
+    time:Date hireDate?;
+    string departmentDeptNo?;
+    string workspaceWorkspaceId?;
+|};
+
+public type EmployeeWithRelations record {|
+    *EmployeeOptionalized;
+    DepartmentOptionalized department?;
+    WorkspaceOptionalized workspace?;
+|};
+
+public type EmployeeTargetType typedesc<EmployeeWithRelations>;
+
+public type EmployeeInsert Employee;
+
+public type EmployeeUpdate record {|
+    string firstName?;
+    string lastName?;
+    time:Date birthDate?;
+    Gender gender?;
+    time:Date hireDate?;
+    string departmentDeptNo?;
+    string workspaceWorkspaceId?;
+|};
+
+public type Workspace record {|
+    readonly string workspaceId;
+    string workspaceType;
+    string locationBuildingCode;
+|};
+
+public type WorkspaceOptionalized record {|
+    string workspaceId?;
+    string workspaceType?;
+    string locationBuildingCode?;
+|};
+
+public type WorkspaceWithRelations record {|
+    *WorkspaceOptionalized;
+    BuildingOptionalized location?;
+    EmployeeOptionalized[] employees?;
+|};
+
+public type WorkspaceTargetType typedesc<WorkspaceWithRelations>;
+
+public type WorkspaceInsert Workspace;
+
+public type WorkspaceUpdate record {|
+    string workspaceType?;
+    string locationBuildingCode?;
+|};
+
+public type Building record {|
+    readonly string buildingCode;
+    string city;
+    string state;
+    string country;
+    string postalCode;
+    string 'type;
+|};
+
+public type BuildingOptionalized record {|
+    string buildingCode?;
+    string city?;
+    string state?;
+    string country?;
+    string postalCode?;
+    string 'type?;
+|};
+
+public type BuildingWithRelations record {|
+    *BuildingOptionalized;
+    WorkspaceOptionalized[] workspaces?;
+|};
+
+public type BuildingTargetType typedesc<BuildingWithRelations>;
+
+public type BuildingInsert Building;
+
+public type BuildingUpdate record {|
+    string city?;
+    string state?;
+    string country?;
+    string postalCode?;
+    string 'type?;
+|};
+
+public type Department record {|
+    readonly string deptNo;
+    string deptName;
+|};
+
+public type DepartmentOptionalized record {|
+    string deptNo?;
+    string deptName?;
+|};
+
+public type DepartmentWithRelations record {|
+    *DepartmentOptionalized;
+    EmployeeOptionalized[] employees?;
+|};
+
+public type DepartmentTargetType typedesc<DepartmentWithRelations>;
+
+public type DepartmentInsert Department;
+
+public type DepartmentUpdate record {|
+    string deptName?;
+|};
+
+public type OrderItem record {|
+    readonly string orderId;
+    readonly string itemId;
+    int quantity;
+    string notes;
+|};
+
+public type OrderItemOptionalized record {|
+    string orderId?;
+    string itemId?;
+    int quantity?;
+    string notes?;
+|};
+
+public type OrderItemTargetType typedesc<OrderItemOptionalized>;
+
+public type OrderItemInsert OrderItem;
+
+public type OrderItemUpdate record {|
+    int quantity?;
+    string notes?;
 |};
 

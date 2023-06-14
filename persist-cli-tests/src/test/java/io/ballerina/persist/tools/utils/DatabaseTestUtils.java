@@ -19,6 +19,7 @@
 package io.ballerina.persist.tools.utils;
 
 import io.ballerina.persist.BalException;
+import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.configuration.PersistConfiguration;
 import io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils;
 import org.testng.Assert;
@@ -48,7 +49,7 @@ public class DatabaseTestUtils {
     private static final String autoincrement = "IS_AUTOINCREMENT";
     private static final String nullable = "IS_NULLABLE";
 
-    public static void assertCreateDatabaseTables(String packageName, String modelName,
+    public static void assertCreateDatabaseTables(String packageName, String datasource,
                                                   ArrayList<PersistTable> tables) throws BalException {
         String osName = System.getProperty("os.name");
         if (osName.toLowerCase(Locale.getDefault()).contains("windows")) {
@@ -62,7 +63,12 @@ public class DatabaseTestUtils {
         String host = configuration.getDbConfig().getHost();
         int port = configuration.getDbConfig().getPort();
 
-        String url = String.format("jdbc:mysql://%s:%s", host, port);
+        String url;
+        if (datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
+            url = String.format("jdbc:sqlserver://%s:%s", host, port);
+        } else {
+            url = String.format("jdbc:mysql://%s:%s", host, port);
+        }
 
         Connection connection = null;
         try {
@@ -79,7 +85,7 @@ public class DatabaseTestUtils {
 
         for (PersistTable persistTable : tables) {
             try {
-                Assert.assertTrue(tableExists(connection, persistTable.getTableName()));
+                Assert.assertTrue(tableExists(connection, database, persistTable.getTableName()));
 
                 validateTable(connection, persistTable);
             } catch (SQLException e) {
@@ -129,10 +135,10 @@ public class DatabaseTestUtils {
         return exists;
     }
 
-    private static boolean tableExists(Connection connection, String tableName) throws SQLException {
+    private static boolean tableExists(Connection connection, String databaseName, String tableName) throws SQLException {
         boolean exists;
         DatabaseMetaData meta = connection.getMetaData();
-        ResultSet resultSet = meta.getTables(null, null, tableName, new String[] {table});
+        ResultSet resultSet = meta.getTables(databaseName, null, tableName, new String[] {table});
 
         exists =  resultSet.next();
         resultSet.close();

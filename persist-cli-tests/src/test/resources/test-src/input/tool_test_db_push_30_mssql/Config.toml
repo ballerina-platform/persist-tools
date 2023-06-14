@@ -1,0 +1,7 @@
+[tool_test_db_push_3.entities]
+host = "localhost"
+port = 1434
+user = "sa"
+password = "Test123#"
+database = "persist"
+

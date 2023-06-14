@@ -17,6 +17,15 @@ const DECIMAL_ID_RECORD = "decimalidrecords";
 const BOOLEAN_ID_RECORD = "booleanidrecords";
 const COMPOSITE_ASSOCIATION_RECORD = "compositeassociationrecords";
 const ALL_TYPES_ID_RECORD = "alltypesidrecords";
+const USER = "users";
+const POST = "posts";
+const FOLLOW = "follows";
+const COMMENT = "comments";
+const EMPLOYEE = "employees";
+const WORKSPACE = "workspaces";
+const BUILDING = "buildings";
+const DEPARTMENT = "departments";
+const ORDER_ITEM = "orderitems";
 
 public isolated client class Client {
     *persist:AbstractPersistClient;
@@ -142,6 +151,215 @@ public isolated client class Client {
             },
             keyFields: ["booleanType", "intType", "floatType", "decimalType", "stringType"],
             joinMetadata: {compositeAssociationRecord: {entity: CompositeAssociationRecord, fieldName: "compositeAssociationRecord", refTable: "CompositeAssociationRecord", refColumns: ["alltypesidrecordBooleanType", "alltypesidrecordIntType", "alltypesidrecordFloatType", "alltypesidrecordDecimalType", "alltypesidrecordStringType"], joinColumns: ["booleanType", "intType", "floatType", "decimalType", "stringType"], 'type: psql:ONE_TO_ONE}}
+        },
+        [USER] : {
+            entityName: "User",
+            tableName: "User",
+            fieldMetadata: {
+                id: {columnName: "id"},
+                name: {columnName: "name"},
+                birthDate: {columnName: "birthDate"},
+                mobileNumber: {columnName: "mobileNumber"},
+                "posts[].id": {relation: {entityName: "posts", refField: "id"}},
+                "posts[].description": {relation: {entityName: "posts", refField: "description"}},
+                "posts[].tags": {relation: {entityName: "posts", refField: "tags"}},
+                "posts[].category": {relation: {entityName: "posts", refField: "category"}},
+                "posts[].timestamp": {relation: {entityName: "posts", refField: "timestamp"}},
+                "posts[].userId": {relation: {entityName: "posts", refField: "userId"}},
+                "comments[].id": {relation: {entityName: "comments", refField: "id"}},
+                "comments[].comment": {relation: {entityName: "comments", refField: "comment"}},
+                "comments[].timesteamp": {relation: {entityName: "comments", refField: "timesteamp"}},
+                "comments[].userId": {relation: {entityName: "comments", refField: "userId"}},
+                "comments[].postId": {relation: {entityName: "comments", refField: "postId"}},
+                "followers[].id": {relation: {entityName: "followers", refField: "id"}},
+                "followers[].leaderId": {relation: {entityName: "followers", refField: "leaderId"}},
+                "followers[].followerId": {relation: {entityName: "followers", refField: "followerId"}},
+                "followers[].timestamp": {relation: {entityName: "followers", refField: "timestamp"}},
+                "following[].id": {relation: {entityName: "following", refField: "id"}},
+                "following[].leaderId": {relation: {entityName: "following", refField: "leaderId"}},
+                "following[].followerId": {relation: {entityName: "following", refField: "followerId"}},
+                "following[].timestamp": {relation: {entityName: "following", refField: "timestamp"}}
+            },
+            keyFields: ["id"],
+            joinMetadata: {
+                posts: {entity: Post, fieldName: "posts", refTable: "Post", refColumns: ["userId"], joinColumns: ["id"], 'type: psql:MANY_TO_ONE},
+                comments: {entity: Comment, fieldName: "comments", refTable: "Comment", refColumns: ["userId"], joinColumns: ["id"], 'type: psql:MANY_TO_ONE},
+                followers: {entity: Follow, fieldName: "followers", refTable: "Follow", refColumns: ["leaderId"], joinColumns: ["id"], 'type: psql:MANY_TO_ONE},
+                following: {entity: Follow, fieldName: "following", refTable: "Follow", refColumns: ["followerId"], joinColumns: ["id"], 'type: psql:MANY_TO_ONE}
+            }
+        },
+        [POST] : {
+            entityName: "Post",
+            tableName: "Post",
+            fieldMetadata: {
+                id: {columnName: "id"},
+                description: {columnName: "description"},
+                tags: {columnName: "tags"},
+                category: {columnName: "category"},
+                timestamp: {columnName: "timestamp"},
+                userId: {columnName: "userId"},
+                "user.id": {relation: {entityName: "user", refField: "id"}},
+                "user.name": {relation: {entityName: "user", refField: "name"}},
+                "user.birthDate": {relation: {entityName: "user", refField: "birthDate"}},
+                "user.mobileNumber": {relation: {entityName: "user", refField: "mobileNumber"}},
+                "comments[].id": {relation: {entityName: "comments", refField: "id"}},
+                "comments[].comment": {relation: {entityName: "comments", refField: "comment"}},
+                "comments[].timesteamp": {relation: {entityName: "comments", refField: "timesteamp"}},
+                "comments[].userId": {relation: {entityName: "comments", refField: "userId"}},
+                "comments[].postId": {relation: {entityName: "comments", refField: "postId"}}
+            },
+            keyFields: ["id"],
+            joinMetadata: {
+                user: {entity: User, fieldName: "user", refTable: "User", refColumns: ["id"], joinColumns: ["userId"], 'type: psql:ONE_TO_MANY},
+                comments: {entity: Comment, fieldName: "comments", refTable: "Comment", refColumns: ["postId"], joinColumns: ["id"], 'type: psql:MANY_TO_ONE}
+            }
+        },
+        [FOLLOW] : {
+            entityName: "Follow",
+            tableName: "Follow",
+            fieldMetadata: {
+                id: {columnName: "id"},
+                leaderId: {columnName: "leaderId"},
+                followerId: {columnName: "followerId"},
+                timestamp: {columnName: "timestamp"},
+                "leader.id": {relation: {entityName: "leader", refField: "id"}},
+                "leader.name": {relation: {entityName: "leader", refField: "name"}},
+                "leader.birthDate": {relation: {entityName: "leader", refField: "birthDate"}},
+                "leader.mobileNumber": {relation: {entityName: "leader", refField: "mobileNumber"}},
+                "follower.id": {relation: {entityName: "follower", refField: "id"}},
+                "follower.name": {relation: {entityName: "follower", refField: "name"}},
+                "follower.birthDate": {relation: {entityName: "follower", refField: "birthDate"}},
+                "follower.mobileNumber": {relation: {entityName: "follower", refField: "mobileNumber"}}
+            },
+            keyFields: ["id"],
+            joinMetadata: {
+                leader: {entity: User, fieldName: "leader", refTable: "User", refColumns: ["id"], joinColumns: ["leaderId"], 'type: psql:ONE_TO_MANY},
+                follower: {entity: User, fieldName: "follower", refTable: "User", refColumns: ["id"], joinColumns: ["followerId"], 'type: psql:ONE_TO_MANY}
+            }
+        },
+        [COMMENT] : {
+            entityName: "Comment",
+            tableName: "Comment",
+            fieldMetadata: {
+                id: {columnName: "id"},
+                comment: {columnName: "comment"},
+                timesteamp: {columnName: "timesteamp"},
+                userId: {columnName: "userId"},
+                postId: {columnName: "postId"},
+                "user.id": {relation: {entityName: "user", refField: "id"}},
+                "user.name": {relation: {entityName: "user", refField: "name"}},
+                "user.birthDate": {relation: {entityName: "user", refField: "birthDate"}},
+                "user.mobileNumber": {relation: {entityName: "user", refField: "mobileNumber"}},
+                "post.id": {relation: {entityName: "post", refField: "id"}},
+                "post.description": {relation: {entityName: "post", refField: "description"}},
+                "post.tags": {relation: {entityName: "post", refField: "tags"}},
+                "post.category": {relation: {entityName: "post", refField: "category"}},
+                "post.timestamp": {relation: {entityName: "post", refField: "timestamp"}},
+                "post.userId": {relation: {entityName: "post", refField: "userId"}}
+            },
+            keyFields: ["id"],
+            joinMetadata: {
+                user: {entity: User, fieldName: "user", refTable: "User", refColumns: ["id"], joinColumns: ["userId"], 'type: psql:ONE_TO_MANY},
+                post: {entity: Post, fieldName: "post", refTable: "Post", refColumns: ["id"], joinColumns: ["postId"], 'type: psql:ONE_TO_MANY}
+            }
+        },
+        [EMPLOYEE] : {
+            entityName: "Employee",
+            tableName: "Employee",
+            fieldMetadata: {
+                empNo: {columnName: "empNo"},
+                firstName: {columnName: "firstName"},
+                lastName: {columnName: "lastName"},
+                birthDate: {columnName: "birthDate"},
+                gender: {columnName: "gender"},
+                hireDate: {columnName: "hireDate"},
+                departmentDeptNo: {columnName: "departmentDeptNo"},
+                workspaceWorkspaceId: {columnName: "workspaceWorkspaceId"},
+                "department.deptNo": {relation: {entityName: "department", refField: "deptNo"}},
+                "department.deptName": {relation: {entityName: "department", refField: "deptName"}},
+                "workspace.workspaceId": {relation: {entityName: "workspace", refField: "workspaceId"}},
+                "workspace.workspaceType": {relation: {entityName: "workspace", refField: "workspaceType"}},
+                "workspace.locationBuildingCode": {relation: {entityName: "workspace", refField: "locationBuildingCode"}}
+            },
+            keyFields: ["empNo"],
+            joinMetadata: {
+                department: {entity: Department, fieldName: "department", refTable: "Department", refColumns: ["deptNo"], joinColumns: ["departmentDeptNo"], 'type: psql:ONE_TO_MANY},
+                workspace: {entity: Workspace, fieldName: "workspace", refTable: "Workspace", refColumns: ["workspaceId"], joinColumns: ["workspaceWorkspaceId"], 'type: psql:ONE_TO_MANY}
+            }
+        },
+        [WORKSPACE] : {
+            entityName: "Workspace",
+            tableName: "Workspace",
+            fieldMetadata: {
+                workspaceId: {columnName: "workspaceId"},
+                workspaceType: {columnName: "workspaceType"},
+                locationBuildingCode: {columnName: "locationBuildingCode"},
+                "location.buildingCode": {relation: {entityName: "location", refField: "buildingCode"}},
+                "location.city": {relation: {entityName: "location", refField: "city"}},
+                "location.state": {relation: {entityName: "location", refField: "state"}},
+                "location.country": {relation: {entityName: "location", refField: "country"}},
+                "location.postalCode": {relation: {entityName: "location", refField: "postalCode"}},
+                "location.type": {relation: {entityName: "location", refField: "type"}},
+                "employees[].empNo": {relation: {entityName: "employees", refField: "empNo"}},
+                "employees[].firstName": {relation: {entityName: "employees", refField: "firstName"}},
+                "employees[].lastName": {relation: {entityName: "employees", refField: "lastName"}},
+                "employees[].birthDate": {relation: {entityName: "employees", refField: "birthDate"}},
+                "employees[].gender": {relation: {entityName: "employees", refField: "gender"}},
+                "employees[].hireDate": {relation: {entityName: "employees", refField: "hireDate"}},
+                "employees[].departmentDeptNo": {relation: {entityName: "employees", refField: "departmentDeptNo"}},
+                "employees[].workspaceWorkspaceId": {relation: {entityName: "employees", refField: "workspaceWorkspaceId"}}
+            },
+            keyFields: ["workspaceId"],
+            joinMetadata: {
+                location: {entity: Building, fieldName: "location", refTable: "Building", refColumns: ["buildingCode"], joinColumns: ["locationBuildingCode"], 'type: psql:ONE_TO_MANY},
+                employees: {entity: Employee, fieldName: "employees", refTable: "Employee", refColumns: ["workspaceWorkspaceId"], joinColumns: ["workspaceId"], 'type: psql:MANY_TO_ONE}
+            }
+        },
+        [BUILDING] : {
+            entityName: "Building",
+            tableName: "Building",
+            fieldMetadata: {
+                buildingCode: {columnName: "buildingCode"},
+                city: {columnName: "city"},
+                state: {columnName: "state"},
+                country: {columnName: "country"},
+                postalCode: {columnName: "postalCode"},
+                'type: {columnName: "type"},
+                "workspaces[].workspaceId": {relation: {entityName: "workspaces", refField: "workspaceId"}},
+                "workspaces[].workspaceType": {relation: {entityName: "workspaces", refField: "workspaceType"}},
+                "workspaces[].locationBuildingCode": {relation: {entityName: "workspaces", refField: "locationBuildingCode"}}
+            },
+            keyFields: ["buildingCode"],
+            joinMetadata: {workspaces: {entity: Workspace, fieldName: "workspaces", refTable: "Workspace", refColumns: ["locationBuildingCode"], joinColumns: ["buildingCode"], 'type: psql:MANY_TO_ONE}}
+        },
+        [DEPARTMENT] : {
+            entityName: "Department",
+            tableName: "Department",
+            fieldMetadata: {
+                deptNo: {columnName: "deptNo"},
+                deptName: {columnName: "deptName"},
+                "employees[].empNo": {relation: {entityName: "employees", refField: "empNo"}},
+                "employees[].firstName": {relation: {entityName: "employees", refField: "firstName"}},
+                "employees[].lastName": {relation: {entityName: "employees", refField: "lastName"}},
+                "employees[].birthDate": {relation: {entityName: "employees", refField: "birthDate"}},
+                "employees[].gender": {relation: {entityName: "employees", refField: "gender"}},
+                "employees[].hireDate": {relation: {entityName: "employees", refField: "hireDate"}},
+                "employees[].departmentDeptNo": {relation: {entityName: "employees", refField: "departmentDeptNo"}},
+                "employees[].workspaceWorkspaceId": {relation: {entityName: "employees", refField: "workspaceWorkspaceId"}}
+            },
+            keyFields: ["deptNo"],
+            joinMetadata: {employees: {entity: Employee, fieldName: "employees", refTable: "Employee", refColumns: ["departmentDeptNo"], joinColumns: ["deptNo"], 'type: psql:MANY_TO_ONE}}
+        },
+        [ORDER_ITEM] : {
+            entityName: "OrderItem",
+            tableName: "OrderItem",
+            fieldMetadata: {
+                orderId: {columnName: "orderId"},
+                itemId: {columnName: "itemId"},
+                quantity: {columnName: "quantity"},
+                notes: {columnName: "notes"}
+            },
+            keyFields: ["orderId", "itemId"]
         }
     };
 
@@ -159,7 +377,16 @@ public isolated client class Client {
             [DECIMAL_ID_RECORD] : check new (dbClient, self.metadata.get(DECIMAL_ID_RECORD), psql:MSSQL_SPECIFICS),
             [BOOLEAN_ID_RECORD] : check new (dbClient, self.metadata.get(BOOLEAN_ID_RECORD), psql:MSSQL_SPECIFICS),
             [COMPOSITE_ASSOCIATION_RECORD] : check new (dbClient, self.metadata.get(COMPOSITE_ASSOCIATION_RECORD), psql:MSSQL_SPECIFICS),
-            [ALL_TYPES_ID_RECORD] : check new (dbClient, self.metadata.get(ALL_TYPES_ID_RECORD), psql:MSSQL_SPECIFICS)
+            [ALL_TYPES_ID_RECORD] : check new (dbClient, self.metadata.get(ALL_TYPES_ID_RECORD), psql:MSSQL_SPECIFICS),
+            [USER] : check new (dbClient, self.metadata.get(USER), psql:MSSQL_SPECIFICS),
+            [POST] : check new (dbClient, self.metadata.get(POST), psql:MSSQL_SPECIFICS),
+            [FOLLOW] : check new (dbClient, self.metadata.get(FOLLOW), psql:MSSQL_SPECIFICS),
+            [COMMENT] : check new (dbClient, self.metadata.get(COMMENT), psql:MSSQL_SPECIFICS),
+            [EMPLOYEE] : check new (dbClient, self.metadata.get(EMPLOYEE), psql:MSSQL_SPECIFICS),
+            [WORKSPACE] : check new (dbClient, self.metadata.get(WORKSPACE), psql:MSSQL_SPECIFICS),
+            [BUILDING] : check new (dbClient, self.metadata.get(BUILDING), psql:MSSQL_SPECIFICS),
+            [DEPARTMENT] : check new (dbClient, self.metadata.get(DEPARTMENT), psql:MSSQL_SPECIFICS),
+            [ORDER_ITEM] : check new (dbClient, self.metadata.get(ORDER_ITEM), psql:MSSQL_SPECIFICS)
         };
     }
 
@@ -472,6 +699,357 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(ALL_TYPES_ID_RECORD);
         }
         _ = check sqlClient.runDeleteQuery({"booleanType": booleanType, "intType": intType, "floatType": floatType, "decimalType": decimalType, "stringType": stringType});
+        return result;
+    }
+
+    isolated resource function get users(UserTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MSSQLProcessor",
+        name: "query"
+    } external;
+
+    isolated resource function get users/[int id](UserTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MSSQLProcessor",
+        name: "queryOne"
+    } external;
+
+    isolated resource function post users(UserInsert[] data) returns int[]|persist:Error {
+        psql:SQLClient sqlClient;
+        lock {
+            sqlClient = self.persistClients.get(USER);
+        }
+        _ = check sqlClient.runBatchInsertQuery(data);
+        return from UserInsert inserted in data
+            select inserted.id;
+    }
+
+    isolated resource function put users/[int id](UserUpdate value) returns User|persist:Error {
+        psql:SQLClient sqlClient;
+        lock {
+            sqlClient = self.persistClients.get(USER);
+        }
+        _ = check sqlClient.runUpdateQuery(id, value);
+        return self->/users/[id].get();
+    }
+
+    isolated resource function delete users/[int id]() returns User|persist:Error {
+        User result = check self->/users/[id].get();
+        psql:SQLClient sqlClient;
+        lock {
+            sqlClient = self.persistClients.get(USER);
+        }
+        _ = check sqlClient.runDeleteQuery(id);
+        return result;
+    }
+
+    isolated resource function get posts(PostTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MSSQLProcessor",
+        name: "query"
+    } external;
+
+    isolated resource function get posts/[int id](PostTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MSSQLProcessor",
+        name: "queryOne"
+    } external;
+
+    isolated resource function post posts(PostInsert[] data) returns int[]|persist:Error {
+        psql:SQLClient sqlClient;
+        lock {
+            sqlClient = self.persistClients.get(POST);
+        }
+        _ = check sqlClient.runBatchInsertQuery(data);
+        return from PostInsert inserted in data
+            select inserted.id;
+    }
+
+    isolated resource function put posts/[int id](PostUpdate value) returns Post|persist:Error {
+        psql:SQLClient sqlClient;
+        lock {
+            sqlClient = self.persistClients.get(POST);
+        }
+        _ = check sqlClient.runUpdateQuery(id, value);
+        return self->/posts/[id].get();
+    }
+
+    isolated resource function delete posts/[int id]() returns Post|persist:Error {
+        Post result = check self->/posts/[id].get();
+        psql:SQLClient sqlClient;
+        lock {
+            sqlClient = self.persistClients.get(POST);
+        }
+        _ = check sqlClient.runDeleteQuery(id);
+        return result;
+    }
+
+    isolated resource function get follows(FollowTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MSSQLProcessor",
+        name: "query"
+    } external;
+
+    isolated resource function get follows/[int id](FollowTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MSSQLProcessor",
+        name: "queryOne"
+    } external;
+
+    isolated resource function post follows(FollowInsert[] data) returns int[]|persist:Error {
+        psql:SQLClient sqlClient;
+        lock {
+            sqlClient = self.persistClients.get(FOLLOW);
+        }
+        _ = check sqlClient.runBatchInsertQuery(data);
+        return from FollowInsert inserted in data
+            select inserted.id;
+    }
+
+    isolated resource function put follows/[int id](FollowUpdate value) returns Follow|persist:Error {
+        psql:SQLClient sqlClient;
+        lock {
+            sqlClient = self.persistClients.get(FOLLOW);
+        }
+        _ = check sqlClient.runUpdateQuery(id, value);
+        return self->/follows/[id].get();
+    }
+
+    isolated resource function delete follows/[int id]() returns Follow|persist:Error {
+        Follow result = check self->/follows/[id].get();
+        psql:SQLClient sqlClient;
+        lock {
+            sqlClient = self.persistClients.get(FOLLOW);
+        }
+        _ = check sqlClient.runDeleteQuery(id);
+        return result;
+    }
+
+    isolated resource function get comments(CommentTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MSSQLProcessor",
+        name: "query"
+    } external;
+
+    isolated resource function get comments/[int id](CommentTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MSSQLProcessor",
+        name: "queryOne"
+    } external;
+
+    isolated resource function post comments(CommentInsert[] data) returns int[]|persist:Error {
+        psql:SQLClient sqlClient;
+        lock {
+            sqlClient = self.persistClients.get(COMMENT);
+        }
+        _ = check sqlClient.runBatchInsertQuery(data);
+        return from CommentInsert inserted in data
+            select inserted.id;
+    }
+
+    isolated resource function put comments/[int id](CommentUpdate value) returns Comment|persist:Error {
+        psql:SQLClient sqlClient;
+        lock {
+            sqlClient = self.persistClients.get(COMMENT);
+        }
+        _ = check sqlClient.runUpdateQuery(id, value);
+        return self->/comments/[id].get();
+    }
+
+    isolated resource function delete comments/[int id]() returns Comment|persist:Error {
+        Comment result = check self->/comments/[id].get();
+        psql:SQLClient sqlClient;
+        lock {
+            sqlClient = self.persistClients.get(COMMENT);
+        }
+        _ = check sqlClient.runDeleteQuery(id);
+        return result;
+    }
+
+    isolated resource function get employees(EmployeeTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MSSQLProcessor",
+        name: "query"
+    } external;
+
+    isolated resource function get employees/[string empNo](EmployeeTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MSSQLProcessor",
+        name: "queryOne"
+    } external;
+
+    isolated resource function post employees(EmployeeInsert[] data) returns string[]|persist:Error {
+        psql:SQLClient sqlClient;
+        lock {
+            sqlClient = self.persistClients.get(EMPLOYEE);
+        }
+        _ = check sqlClient.runBatchInsertQuery(data);
+        return from EmployeeInsert inserted in data
+            select inserted.empNo;
+    }
+
+    isolated resource function put employees/[string empNo](EmployeeUpdate value) returns Employee|persist:Error {
+        psql:SQLClient sqlClient;
+        lock {
+            sqlClient = self.persistClients.get(EMPLOYEE);
+        }
+        _ = check sqlClient.runUpdateQuery(empNo, value);
+        return self->/employees/[empNo].get();
+    }
+
+    isolated resource function delete employees/[string empNo]() returns Employee|persist:Error {
+        Employee result = check self->/employees/[empNo].get();
+        psql:SQLClient sqlClient;
+        lock {
+            sqlClient = self.persistClients.get(EMPLOYEE);
+        }
+        _ = check sqlClient.runDeleteQuery(empNo);
+        return result;
+    }
+
+    isolated resource function get workspaces(WorkspaceTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MSSQLProcessor",
+        name: "query"
+    } external;
+
+    isolated resource function get workspaces/[string workspaceId](WorkspaceTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MSSQLProcessor",
+        name: "queryOne"
+    } external;
+
+    isolated resource function post workspaces(WorkspaceInsert[] data) returns string[]|persist:Error {
+        psql:SQLClient sqlClient;
+        lock {
+            sqlClient = self.persistClients.get(WORKSPACE);
+        }
+        _ = check sqlClient.runBatchInsertQuery(data);
+        return from WorkspaceInsert inserted in data
+            select inserted.workspaceId;
+    }
+
+    isolated resource function put workspaces/[string workspaceId](WorkspaceUpdate value) returns Workspace|persist:Error {
+        psql:SQLClient sqlClient;
+        lock {
+            sqlClient = self.persistClients.get(WORKSPACE);
+        }
+        _ = check sqlClient.runUpdateQuery(workspaceId, value);
+        return self->/workspaces/[workspaceId].get();
+    }
+
+    isolated resource function delete workspaces/[string workspaceId]() returns Workspace|persist:Error {
+        Workspace result = check self->/workspaces/[workspaceId].get();
+        psql:SQLClient sqlClient;
+        lock {
+            sqlClient = self.persistClients.get(WORKSPACE);
+        }
+        _ = check sqlClient.runDeleteQuery(workspaceId);
+        return result;
+    }
+
+    isolated resource function get buildings(BuildingTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MSSQLProcessor",
+        name: "query"
+    } external;
+
+    isolated resource function get buildings/[string buildingCode](BuildingTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MSSQLProcessor",
+        name: "queryOne"
+    } external;
+
+    isolated resource function post buildings(BuildingInsert[] data) returns string[]|persist:Error {
+        psql:SQLClient sqlClient;
+        lock {
+            sqlClient = self.persistClients.get(BUILDING);
+        }
+        _ = check sqlClient.runBatchInsertQuery(data);
+        return from BuildingInsert inserted in data
+            select inserted.buildingCode;
+    }
+
+    isolated resource function put buildings/[string buildingCode](BuildingUpdate value) returns Building|persist:Error {
+        psql:SQLClient sqlClient;
+        lock {
+            sqlClient = self.persistClients.get(BUILDING);
+        }
+        _ = check sqlClient.runUpdateQuery(buildingCode, value);
+        return self->/buildings/[buildingCode].get();
+    }
+
+    isolated resource function delete buildings/[string buildingCode]() returns Building|persist:Error {
+        Building result = check self->/buildings/[buildingCode].get();
+        psql:SQLClient sqlClient;
+        lock {
+            sqlClient = self.persistClients.get(BUILDING);
+        }
+        _ = check sqlClient.runDeleteQuery(buildingCode);
+        return result;
+    }
+
+    isolated resource function get departments(DepartmentTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MSSQLProcessor",
+        name: "query"
+    } external;
+
+    isolated resource function get departments/[string deptNo](DepartmentTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MSSQLProcessor",
+        name: "queryOne"
+    } external;
+
+    isolated resource function post departments(DepartmentInsert[] data) returns string[]|persist:Error {
+        psql:SQLClient sqlClient;
+        lock {
+            sqlClient = self.persistClients.get(DEPARTMENT);
+        }
+        _ = check sqlClient.runBatchInsertQuery(data);
+        return from DepartmentInsert inserted in data
+            select inserted.deptNo;
+    }
+
+    isolated resource function put departments/[string deptNo](DepartmentUpdate value) returns Department|persist:Error {
+        psql:SQLClient sqlClient;
+        lock {
+            sqlClient = self.persistClients.get(DEPARTMENT);
+        }
+        _ = check sqlClient.runUpdateQuery(deptNo, value);
+        return self->/departments/[deptNo].get();
+    }
+
+    isolated resource function delete departments/[string deptNo]() returns Department|persist:Error {
+        Department result = check self->/departments/[deptNo].get();
+        psql:SQLClient sqlClient;
+        lock {
+            sqlClient = self.persistClients.get(DEPARTMENT);
+        }
+        _ = check sqlClient.runDeleteQuery(deptNo);
+        return result;
+    }
+
+    isolated resource function get orderitems(OrderItemTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MSSQLProcessor",
+        name: "query"
+    } external;
+
+    isolated resource function get orderitems/[string orderId]/[string itemId](OrderItemTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MSSQLProcessor",
+        name: "queryOne"
+    } external;
+
+    isolated resource function post orderitems(OrderItemInsert[] data) returns [string, string][]|persist:Error {
+        psql:SQLClient sqlClient;
+        lock {
+            sqlClient = self.persistClients.get(ORDER_ITEM);
+        }
+        _ = check sqlClient.runBatchInsertQuery(data);
+        return from OrderItemInsert inserted in data
+            select [inserted.orderId, inserted.itemId];
+    }
+
+    isolated resource function put orderitems/[string orderId]/[string itemId](OrderItemUpdate value) returns OrderItem|persist:Error {
+        psql:SQLClient sqlClient;
+        lock {
+            sqlClient = self.persistClients.get(ORDER_ITEM);
+        }
+        _ = check sqlClient.runUpdateQuery({"orderId": orderId, "itemId": itemId}, value);
+        return self->/orderitems/[orderId]/[itemId].get();
+    }
+
+    isolated resource function delete orderitems/[string orderId]/[string itemId]() returns OrderItem|persist:Error {
+        OrderItem result = check self->/orderitems/[orderId]/[itemId].get();
+        psql:SQLClient sqlClient;
+        lock {
+            sqlClient = self.persistClients.get(ORDER_ITEM);
+        }
+        _ = check sqlClient.runDeleteQuery({"orderId": orderId, "itemId": itemId});
         return result;
     }
 

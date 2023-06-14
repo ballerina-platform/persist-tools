@@ -90,3 +90,100 @@ type AllTypesIdRecord record {|
     string randomField;
     CompositeAssociationRecord? compositeAssociationRecord;
 |};
+
+enum Category {
+    FOOD,
+    TRAVEL,
+    FASHION = "fashion",
+    SPORTS,
+    TECHNOLOGY,
+    OTHERS
+}
+
+type User record {|
+    readonly int id;
+    string name;
+    time:Date birthDate;
+    string mobileNumber;
+
+    Post[] posts;
+    Comment[] comments;
+
+    Follow[] followers;
+    Follow[] following;
+|};
+
+type Post record {|
+    readonly int id;
+    string description;
+    string tags;
+    Category category;
+    time:Civil timestamp;
+    User user;
+    Comment[] comments;
+|};
+
+type Follow record {|
+    readonly int id;
+    User leader;
+    User follower;
+    time:Civil timestamp;
+|};
+
+type Comment record {|
+    readonly int id;
+    string comment;
+    time:Civil timesteamp;
+    User user;
+    Post post;
+|};
+
+enum Gender {
+    MALE,
+    FEMALE
+}
+
+type Employee record {|
+    readonly string empNo;
+    string firstName;
+    string lastName;
+    time:Date birthDate;
+    Gender gender;
+    time:Date hireDate;
+
+    Department department;
+    Workspace workspace;
+|};
+
+type Workspace record {|
+    readonly string workspaceId;
+    string workspaceType;
+
+    Building location;
+    Employee[] employees;
+|};
+
+type Building record {|
+    readonly string buildingCode;
+    string city;
+    string state;
+    string country;
+    string postalCode;
+    string 'type;
+
+    Workspace[] workspaces;
+|};
+
+type Department record {|
+    readonly string deptNo;
+    string deptName;
+
+    Employee[] employees;
+|};
+
+type OrderItem record {|
+    readonly string orderId;
+    readonly string itemId;
+    int quantity;
+    string notes;
+|};
