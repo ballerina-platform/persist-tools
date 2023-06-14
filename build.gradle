@@ -100,7 +100,9 @@ subprojects {
 }
 
 def moduleVersion = project.version.replace("-SNAPSHOT", "")
-def persistNativeVersion = "${persistNativeVersion}"
+def persistSqlNativeVersion = "${persistSqlNativeVersion}"
+def persistInMemoryNativeVersion = "${persistInMemoryNativeVersion}"
+def persistGoogleSheetsNativeVersion = "${persistGoogleSheetsNativeVersion}"
 
 release {
     versionPropertyFile = 'gradle.properties'
@@ -143,7 +145,9 @@ task createProperties(dependsOn: processResources) {
         def file = new File("$project.rootDir/persist-cli/src/main/resources/version.properties")
         file.withWriter('UTF-8') {
             it.writeLine 'version = ${project.version}'
-            it.writeLine 'persistVersion = ' + persistNativeVersion.toString()
+            it.writeLine 'persistSqlVersion = ' + persistSqlNativeVersion.toString()
+            it.writeLine 'persistInMemoryVersion = ' + persistInMemoryNativeVersion.toString()
+            it.writeLine 'persistGoogleSheetsVersion = ' + persistGoogleSheetsNativeVersion.toString()
         }
     }
 }

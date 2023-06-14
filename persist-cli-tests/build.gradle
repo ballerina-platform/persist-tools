@@ -354,12 +354,12 @@ jacocoTestReport {
     }
 }
 
-test.dependsOn startTestDockerContainer
-test.dependsOn startMSSQLTestDockerContainer
+//test.dependsOn startTestDockerContainer
+//test.dependsOn startMSSQLTestDockerContainer
 test.dependsOn pullGSheetsDependency
 test.dependsOn ":persist-cli:build"
-test.finalizedBy stopTestDockerContainer
-test.finalizedBy stopMSSQLTestDockerContainer
+//test.finalizedBy stopTestDockerContainer
+//test.finalizedBy stopMSSQLTestDockerContainer
 
 build.dependsOn ":persist-cli:build"
 build.dependsOn copyTestPack

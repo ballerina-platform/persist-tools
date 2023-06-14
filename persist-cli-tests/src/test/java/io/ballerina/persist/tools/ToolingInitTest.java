@@ -53,7 +53,9 @@ public class ToolingInitTest {
         try (InputStream inputStream = Files.newInputStream(versionPropertiesFile)) {
             Properties properties = new Properties();
             properties.load(inputStream);
-            version = properties.get("persistVersion").toString();
+            version = properties.get("persistSqlVersion").toString();
+            version = properties.get("persistInMemoryVersion").toString();
+            version = properties.get("persistGoogleSheetsVersion").toString();
         } catch (IOException e) {
             // ignore
         }
