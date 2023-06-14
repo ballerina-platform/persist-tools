@@ -21,6 +21,7 @@ import io.ballerina.compiler.syntax.tree.FunctionDefinitionNode;
 import io.ballerina.compiler.syntax.tree.ImportDeclarationNode;
 import io.ballerina.compiler.syntax.tree.ModuleMemberDeclarationNode;
 import io.ballerina.compiler.syntax.tree.NodeList;
+import io.ballerina.persist.BalException;
 import io.ballerina.persist.components.Client;
 import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.Module;
@@ -32,7 +33,7 @@ import io.ballerina.persist.models.Module;
  */
 public interface ClientSyntax {
 
-    NodeList<ImportDeclarationNode> getImports();
+    NodeList<ImportDeclarationNode> getImports() throws BalException;
 
     NodeList<ModuleMemberDeclarationNode> getConstantVariables();
 

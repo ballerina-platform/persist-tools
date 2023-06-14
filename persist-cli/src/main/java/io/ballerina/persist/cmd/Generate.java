@@ -68,7 +68,7 @@ public class Generate implements BLauncherCmd {
     @Override
     public void execute() {
         Path generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);
-        String dataStore;
+        String datastore;
         Module entityModule;
         Path schemaFilePath;
         String packageName;
@@ -115,16 +115,16 @@ public class Generate implements BLauncherCmd {
                 }
                 generatedSourceDirPath = generatedSourceDirPath.resolve(moduleName);
             }
-            dataStore = ballerinaTomlConfig.get("datastore").trim();
-            if (!PersistToolsConstants.SUPPORTED_DB_PROVIDERS.contains(dataStore)) {
+            datastore = ballerinaTomlConfig.get("datastore").trim();
+            if (!PersistToolsConstants.SUPPORTED_DB_PROVIDERS.contains(datastore)) {
                 errStream.printf("ERROR: the persist layer supports one of data stores: %s" +
                                 ". but found '%s' datasource.%n",
-                        Arrays.toString(PersistToolsConstants.SUPPORTED_DB_PROVIDERS.toArray()), dataStore);
+                        Arrays.toString(PersistToolsConstants.SUPPORTED_DB_PROVIDERS.toArray()), datastore);
                 return;
             }
             if (Files.isDirectory(Paths.get(sourcePath, PersistToolsConstants.PERSIST_DIRECTORY,
                     PersistToolsConstants.MIGRATIONS)) &&
-                    !dataStore.equals(PersistToolsConstants.SupportDataSources.MYSQL_DB)) {
+                    !datastore.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB)) {
                 errStream.println("ERROR: regenerating the client with a different datastore after executing " +
                         "the migrate command is not permitted. please remove the migrations directory within the " +
                         "persist directory and try executing the command again.");
@@ -136,7 +136,7 @@ public class Generate implements BLauncherCmd {
             return;
         }
 
-        if (dataStore.equals(PersistToolsConstants.SupportDataSources.GOOGLE_SHEETS)) {
+        if (datastore.equals(PersistToolsConstants.SupportedDataSources.GOOGLE_SHEETS)) {
             errStream.printf(BalSyntaxConstants.EXPERIMENTAL_NOTICE, "The support for Google Sheets data store " +
                     "is currently an experimental feature, and its behavior may be subject to change in future " +
                     "releases." + System.lineSeparator());
@@ -174,27 +174,22 @@ public class Generate implements BLauncherCmd {
         }
         SourceGenerator sourceCreator = new SourceGenerator(sourcePath, generatedSourceDirPath,
                 moduleNameWithPackageName, entityModule);
-        if (dataStore.equals(PersistToolsConstants.SupportDataSources.MYSQL_DB)) {
-            try {
-                sourceCreator.createDbSources();
-            } catch (BalException e) {
-                errStream.printf(String.format(BalSyntaxConstants.ERROR_MSG,
-                        PersistToolsConstants.SupportDataSources.MYSQL_DB, e.getMessage()));
+        try {
+            switch (datastore) {
+                case PersistToolsConstants.SupportedDataSources.MYSQL_DB:
+                case PersistToolsConstants.SupportedDataSources.MSSQL_DB:
+                    sourceCreator.createDbSources(datastore);
+                    break;
+                case PersistToolsConstants.SupportedDataSources.GOOGLE_SHEETS:
+                    sourceCreator.createGSheetSources();
+                    break;
+                default:
+                    sourceCreator.createInMemorySources();
+                    break;
             }
-        } else if (dataStore.equals(PersistToolsConstants.SupportDataSources.GOOGLE_SHEETS)) {
-            try {
-                sourceCreator.createGSheetSources();
-            } catch (BalException e) {
-                errStream.printf(String.format(BalSyntaxConstants.ERROR_MSG,
-                        PersistToolsConstants.SupportDataSources.GOOGLE_SHEETS, e.getMessage()));
-            }
-        } else {
-            try {
-                sourceCreator.createInMemorySources();
-            } catch (BalException e) {
-                errStream.printf(String.format(BalSyntaxConstants.ERROR_MSG,
-                        PersistToolsConstants.SupportDataSources.IN_MEMORY_TABLE, e.getMessage()));
-            }
+        } catch (BalException e) {
+            errStream.printf(String.format(BalSyntaxConstants.ERROR_MSG,
+                    datastore, e.getMessage()));
         }
         errStream.println("Persist client and entity types generated successfully in the ./generated directory.");
     }

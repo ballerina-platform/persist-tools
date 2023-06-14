@@ -55,8 +55,8 @@ public isolated client class Client {
         }
         self.dbClient = dbClient;
         self.persistClients = {
-            [PROFILE] : check new (dbClient, self.metadata.get(PROFILE)),
-            [USER] : check new (dbClient, self.metadata.get(USER))
+            [PROFILE] : check new (dbClient, self.metadata.get(PROFILE), psql:MYSQL_SPECIFICS),
+            [USER] : check new (dbClient, self.metadata.get(USER), psql:MYSQL_SPECIFICS)
         };
     }
 

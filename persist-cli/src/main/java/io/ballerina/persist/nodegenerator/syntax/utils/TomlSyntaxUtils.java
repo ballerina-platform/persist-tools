@@ -173,7 +173,8 @@ public class TomlSyntaxUtils {
         Path fileNamePath = configPath.getFileName();
         TextDocument configDocument = TextDocuments.from(Files.readString(configPath));
         String artifactId = BalSyntaxConstants.PERSIST_MODULE + "." + datasource;
-        if (datasource.equals(PersistToolsConstants.SupportDataSources.MYSQL_DB)) {
+        if (datasource.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB) ||
+                datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
             artifactId = BalSyntaxConstants.PERSIST_MODULE + "." + BalSyntaxConstants.PERSIST_SQL;
         }
         if (Objects.nonNull(fileNamePath)) {

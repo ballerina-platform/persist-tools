@@ -104,7 +104,7 @@ public class Init implements BLauncherCmd {
         }
 
         if (datastore == null) {
-            datastore = PersistToolsConstants.SupportDataSources.IN_MEMORY_TABLE;
+            datastore = PersistToolsConstants.SupportedDataSources.IN_MEMORY_TABLE;
         } else if (!SUPPORTED_DB_PROVIDERS.contains(datastore)) {
             errStream.printf("ERROR: the persist layer supports one of data stores: %s" +
                     ". but found '%s' datasource.%n", Arrays.toString(SUPPORTED_DB_PROVIDERS.toArray()), datastore);
@@ -118,7 +118,7 @@ public class Init implements BLauncherCmd {
             return;
         }
 
-        if (datastore.equals(PersistToolsConstants.SupportDataSources.GOOGLE_SHEETS)) {
+        if (datastore.equals(PersistToolsConstants.SupportedDataSources.GOOGLE_SHEETS)) {
             errStream.printf(BalSyntaxConstants.EXPERIMENTAL_NOTICE, "The support for Google Sheets data store " +
                     "is currently an experimental feature, and its behavior may be subject to change in future " +
                     "releases." + System.lineSeparator());

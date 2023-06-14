@@ -18,6 +18,8 @@
 
 package io.ballerina.persist.configuration;
 
+import io.ballerina.persist.PersistToolsConstants;
+
 /**
  * The configuration class for the persist tool.
  * @since 0.1.0
@@ -43,6 +45,10 @@ public class PersistConfiguration {
     }
 
     public void setProvider(String provider) {
+        if (provider.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
+            this.provider = "sqlserver";
+            return;
+        }
         this.provider = provider;
     }
 }

@@ -45,7 +45,7 @@ public isolated client class Client {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
-        self.persistClients = {[DATA_TYPE] : check new (dbClient, self.metadata.get(DATA_TYPE))};
+        self.persistClients = {[DATA_TYPE] : check new (dbClient, self.metadata.get(DATA_TYPE), psql:MYSQL_SPECIFICS)};
     }
 
     isolated resource function get datatypes(DataTypeTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {

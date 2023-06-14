@@ -60,8 +60,11 @@ import java.util.Properties;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static io.ballerina.persist.PersistToolsConstants.BALLERINA_MSSQL_DRIVER_NAME;
 import static io.ballerina.persist.PersistToolsConstants.BALLERINA_MYSQL_DRIVER_NAME;
 import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
+import static io.ballerina.persist.PersistToolsConstants.MSSQL_CONNECTOR_NAME_PREFIX;
+import static io.ballerina.persist.PersistToolsConstants.MSSQL_DRIVER_CLASS;
 import static io.ballerina.persist.PersistToolsConstants.MYSQL_CONNECTOR_NAME_PREFIX;
 import static io.ballerina.persist.PersistToolsConstants.MYSQL_DRIVER_CLASS;
 import static io.ballerina.persist.PersistToolsConstants.PASSWORD;
@@ -70,8 +73,11 @@ import static io.ballerina.persist.PersistToolsConstants.PLATFORM;
 import static io.ballerina.persist.PersistToolsConstants.PROPERTY_KEY_PATH;
 import static io.ballerina.persist.PersistToolsConstants.SQL_SCHEMA_FILE;
 import static io.ballerina.persist.PersistToolsConstants.USER;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.CREATE_DATABASE_SQL_FORMAT_MSSQL;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.CREATE_DATABASE_SQL_FORMAT_MYSQL;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.JDBC_URL_WITHOUT_DATABASE;
-import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.JDBC_URL_WITH_DATABASE;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.JDBC_URL_WITH_DATABASE_MSSQL;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.JDBC_URL_WITH_DATABASE_MYSQL;
 import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.readBallerinaTomlConfig;
 import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.readPackageName;
 import static io.ballerina.persist.utils.BalProjectUtils.validateBallerinaProject;
@@ -88,11 +94,12 @@ import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
         name = "push",
         description = "Create database tables corresponding to user-defined entities")
 public class Push implements BLauncherCmd {
-
-    private static final String CREATE_DATABASE_SQL_FORMAT = "CREATE DATABASE IF NOT EXISTS %s";
     private final PrintStream errStream = System.err;
     private static final String COMMAND_IDENTIFIER = "persist-push";
     private final String sourcePath;
+    private String createDatabaseSqlFormat;
+    private String jdbcUrlWithDatabaseFormat;
+    private String driverClass;
     @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
     private boolean helpFlag;
 
@@ -122,9 +129,18 @@ public class Push implements BLauncherCmd {
         try {
             HashMap<String, String> ballerinaTomlConfig = TomlSyntaxUtils.readBallerinaTomlConfig(
                     Paths.get(this.sourcePath, "Ballerina.toml"));
-            String dataStore = ballerinaTomlConfig.get("datastore").trim();
-            if (!dataStore.equals(PersistToolsConstants.SupportDataSources.MYSQL_DB)) {
-                errStream.printf("ERROR: unsupported data store: expected: 'mysql' but found: '%s'%n", dataStore);
+            String datastore = ballerinaTomlConfig.get("datastore").trim();
+
+            if (datastore.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB)) {
+                this.jdbcUrlWithDatabaseFormat = JDBC_URL_WITH_DATABASE_MYSQL;
+                this.createDatabaseSqlFormat = CREATE_DATABASE_SQL_FORMAT_MYSQL;
+                this.driverClass = MYSQL_DRIVER_CLASS;
+            } else if (datastore.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
+                this.jdbcUrlWithDatabaseFormat = JDBC_URL_WITH_DATABASE_MSSQL;
+                this.createDatabaseSqlFormat = CREATE_DATABASE_SQL_FORMAT_MSSQL;
+                this.driverClass = MSSQL_DRIVER_CLASS;
+            } else {
+                errStream.printf("ERROR: unsupported data store: '%s'%n", datastore);
                 return;
             }
         } catch (BalException e) {
@@ -222,7 +238,7 @@ public class Push implements BLauncherCmd {
 
             try (JdbcDriverLoader driverLoader = getJdbcDriverLoader(balProject)) {
                 Driver driver = getJdbcDriver(driverLoader);
-                String query = String.format(CREATE_DATABASE_SQL_FORMAT,
+                String query = String.format(this.createDatabaseSqlFormat,
                         persistConfigurations.getDbConfig().getDatabase());
                 try (Connection connection = getDBConnection(driver, persistConfigurations, false)) {
                     ScriptRunner sr = new ScriptRunner(connection);
@@ -272,7 +288,7 @@ public class Push implements BLauncherCmd {
         String provider = persistConfigurations.getProvider();
         String url;
         if (withDB) {
-            url = String.format(JDBC_URL_WITH_DATABASE, provider,
+            url = String.format(this.jdbcUrlWithDatabaseFormat, provider,
                     host, port,
                     database);
         } else {
@@ -306,7 +322,7 @@ public class Push implements BLauncherCmd {
     private Driver getJdbcDriver(JdbcDriverLoader driverLoader) throws BalException {
         Driver driver;
         try {
-            Class<?> drvClass = driverLoader.loadClass(MYSQL_DRIVER_CLASS);
+            Class<?> drvClass = driverLoader.loadClass(this.driverClass);
             driver = (Driver) drvClass.getDeclaredConstructor().newInstance();
         } catch (ClassNotFoundException e) {
             throw new BalException("required database driver class not found. " + e.getMessage());
@@ -367,6 +383,24 @@ public class Push implements BLauncherCmd {
                 }
             }
         }
-        throw new BalException("failed to retrieve MySQL driver path in the local cache.");
+
+        Optional<ResolvedPackageDependency> mssqlDriverDependency = resolvedPackageDependencyDependencyGraph
+                .getDirectDependencies(root).stream().
+                filter(resolvedPackageDependency -> resolvedPackageDependency.packageInstance().
+                        descriptor().toString().contains(BALLERINA_MSSQL_DRIVER_NAME)).findFirst();
+
+        if (mssqlDriverDependency.isPresent()) {
+            Package mssqlDriverPackage = mssqlDriverDependency.get().packageInstance();
+            List<Map<String, Object>> dependencies = mssqlDriverPackage.manifest().platform(PLATFORM).dependencies();
+
+            for (Map<String, Object> dependency : dependencies) {
+                if (dependency.get(PROPERTY_KEY_PATH).toString().contains(MSSQL_CONNECTOR_NAME_PREFIX)) {
+                    relativeLibPath = dependency.get(PROPERTY_KEY_PATH).toString();
+                    return mssqlDriverPackage.project().sourceRoot().resolve(relativeLibPath);
+                }
+            }
+        }
+
+        throw new BalException("failed to retrieve driver path in the local cache.");
     }
 }

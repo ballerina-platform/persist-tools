@@ -28,6 +28,7 @@ import io.ballerina.compiler.syntax.tree.NodeList;
 import io.ballerina.compiler.syntax.tree.NodeParser;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
 import io.ballerina.compiler.syntax.tree.Token;
+import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.components.Client;
 import io.ballerina.persist.components.Function;
@@ -51,19 +52,40 @@ import java.util.List;
 public class DbClientSyntax implements ClientSyntax {
 
     private final Module entityModule;
+    private final String datasource;
+    private final String importPackage;
+    private final String importDriver;
+    private final String dbSpecifics;
+    private final String nativeClass;
 
-    public DbClientSyntax(Module entityModule) {
+    public DbClientSyntax(Module entityModule, String datasource) throws BalException {
         this.entityModule = entityModule;
+        this.datasource = datasource;
+        this.importPackage = datasource;
+
+        if (datasource.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB)) {
+            this.importDriver = BalSyntaxConstants.MYSQL_DRIVER;
+            this.dbSpecifics = BalSyntaxConstants.MYSQL_SPECIFICS;
+            this.nativeClass = "MySQLProcessor";
+        } else if (datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
+            this.importDriver = BalSyntaxConstants.MSSQL_DRIVER;
+            this.dbSpecifics = BalSyntaxConstants.MSSQL_SPECIFICS;
+            this.nativeClass = "MSSQLProcessor";
+        } else {
+            throw new BalException("Unsupported datasource: " + datasource);
+        }
+
     }
 
-    public NodeList<ImportDeclarationNode> getImports() {
+    public NodeList<ImportDeclarationNode> getImports() throws BalException {
         NodeList<ImportDeclarationNode> imports = BalSyntaxUtils.generateImport(entityModule);
         imports = imports.add(BalSyntaxUtils.getImportDeclarationNode(BalSyntaxConstants.KEYWORD_BALLERINAX,
-                PersistToolsConstants.SupportDataSources.MYSQL_DB, null));
+                importPackage, null));
         ImportPrefixNode prefix = NodeFactory.createImportPrefixNode(SyntaxTokenConstants.SYNTAX_TREE_AS,
                 AbstractNodeFactory.createToken(SyntaxKind.UNDERSCORE_KEYWORD));
         imports = imports.add(BalSyntaxUtils.getImportDeclarationNode(BalSyntaxConstants.KEYWORD_BALLERINAX,
-                BalSyntaxConstants.MYSQL_DRIVER, prefix));
+                importDriver, prefix));
+
         Token prefixToken = AbstractNodeFactory.createIdentifierToken("psql");
         prefix = NodeFactory.createImportPrefixNode(SyntaxTokenConstants.SYNTAX_TREE_AS, prefixToken);
         imports = imports.add(BalSyntaxUtils.getImportDeclarationNode(BalSyntaxConstants.KEYWORD_BALLERINAX,
@@ -78,7 +100,8 @@ public class DbClientSyntax implements ClientSyntax {
     @Override
     public Client getClientObject(Module entityModule) {
         Client clientObject = BalSyntaxUtils.generateClientSignature(true);
-        clientObject.addMember(NodeParser.parseObjectMember(BalSyntaxConstants.INIT_DB_CLIENT), true);
+        clientObject.addMember(NodeParser.parseObjectMember(
+                String.format(BalSyntaxConstants.INIT_DB_CLIENT, this.datasource)), true);
         clientObject.addMember(NodeParser.parseObjectMember(BalSyntaxConstants.INIT_SQL_CLIENT_MAP), true);
         clientObject.addMember(generateMetadataRecord(entityModule), true);
         return clientObject;
@@ -90,7 +113,8 @@ public class DbClientSyntax implements ClientSyntax {
         init.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PUBLIC, BalSyntaxConstants.KEYWORD_ISOLATED });
         init.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode(BalSyntaxConstants.EMPTY_STRING,
                 BalSyntaxConstants.PERSIST_ERROR));
-        init.addStatement(NodeParser.parseStatement(BalSyntaxConstants.INIT_DB_CLIENT_WITH_PARAMS));
+        init.addStatement(NodeParser.parseStatement(
+                String.format(BalSyntaxConstants.INIT_DB_CLIENT_WITH_PARAMS, this.datasource)));
         IfElse errorCheck = new IfElse(NodeParser.parseExpression(String.format(
                 BalSyntaxConstants.RESULT_IS_BALLERINA_ERROR, BalSyntaxConstants.DB_CLIENT)));
         errorCheck.addIfStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.RETURN_ERROR,
@@ -105,7 +129,8 @@ public class DbClientSyntax implements ClientSyntax {
 
             String clientMapElement = String.format(BalSyntaxConstants.PERSIST_CLIENT_MAP_ELEMENT,
                     BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()),
-                    BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()));
+                    BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()),
+                    this.dbSpecifics);
             persistClientMap.append(clientMapElement);
         }
         init.addStatement(NodeParser.parseStatement(String.format(
@@ -115,12 +140,12 @@ public class DbClientSyntax implements ClientSyntax {
 
     @Override
     public FunctionDefinitionNode getGetFunction(Entity entity) {
-        return BalSyntaxUtils.generateGetFunction(entity, "MySQLProcessor", BalSyntaxConstants.PERSIST_SQL);
+        return BalSyntaxUtils.generateGetFunction(entity, this.nativeClass, BalSyntaxConstants.PERSIST_SQL);
     }
 
     @Override
     public FunctionDefinitionNode getGetByKeyFunction(Entity entity) {
-        return BalSyntaxUtils.generateGetByKeyFunction(entity, "MySQLProcessor", BalSyntaxConstants.PERSIST_SQL);
+        return BalSyntaxUtils.generateGetByKeyFunction(entity, this.nativeClass, BalSyntaxConstants.PERSIST_SQL);
     }
 
     @Override
