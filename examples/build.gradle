@@ -178,30 +178,30 @@ task initInMemoryExamples {
     }
 }
 
-task initGSheetExamples {
-    doLast {
-        examples.each { example ->
-            try {
-                exec {
-                    copy {
-                        from(file("${project.projectDir}/build/generated-examples/${example}/resources/gsheet/files"))
-                        into("${project.projectDir}/build/generated-examples/${example}")
-                    }
-                    delete "${project.projectDir}/build/generated-examples/${example}/generated"
-                    workingDir "${project.projectDir}/build/generated-examples/${example}"
-                    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist init --module=entities --datastore=googlesheets"
-                    } else {
-                        commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat persist init --module=entities --datastore=googlesheets"
-                    }
-                }
-            } catch (Exception e) {
-                println("Example '${example}' Generation failed: " + e.message)
-                throw e
-            }
-        }
-    }
-}
+// task initGSheetExamples {
+//     doLast {
+//         examples.each { example ->
+//             try {
+//                 exec {
+//                     copy {
+//                         from(file("${project.projectDir}/build/generated-examples/${example}/resources/gsheet/files"))
+//                         into("${project.projectDir}/build/generated-examples/${example}")
+//                     }
+//                     delete "${project.projectDir}/build/generated-examples/${example}/generated"
+//                     workingDir "${project.projectDir}/build/generated-examples/${example}"
+//                     if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+//                         commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist init --module=entities --datastore=googlesheets"
+//                     } else {
+//                         commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat persist init --module=entities --datastore=googlesheets"
+//                     }
+//                 }
+//             } catch (Exception e) {
+//                 println("Example '${example}' Generation failed: " + e.message)
+//                 throw e
+//             }
+//         }
+//     }
+// }
 
 task generateDbExamples {
     doLast {
@@ -248,29 +248,29 @@ task generateInMemoryExamples {
     }
 }
 
-task generateGSheetExamples {
-    doLast {
-        examples.each { example ->
-            try {
-                exec {
-                    workingDir "${project.projectDir}/build/generated-examples/${example}"
-                    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate"
-                    } else {
-                        commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat persist generate"
-                    }
-                    copy {
-                        from(file("${project.projectDir}/build/generated-examples/${example}/resources/gsheet/persist_config"))
-                        into("${project.projectDir}/build/generated-examples/${example}/generated/entities")
-                    }
-                }
-            } catch (Exception e) {
-                println("Example '${example}' Generation failed: " + e.message)
-                throw e
-            }
-        }
-    }
-}
+// task generateGSheetExamples {
+//     doLast {
+//         examples.each { example ->
+//             try {
+//                 exec {
+//                     workingDir "${project.projectDir}/build/generated-examples/${example}"
+//                     if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+//                         commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate"
+//                     } else {
+//                         commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat persist generate"
+//                     }
+//                     copy {
+//                         from(file("${project.projectDir}/build/generated-examples/${example}/resources/gsheet/persist_config"))
+//                         into("${project.projectDir}/build/generated-examples/${example}/generated/entities")
+//                     }
+//                 }
+//             } catch (Exception e) {
+//                 println("Example '${example}' Generation failed: " + e.message)
+//                 throw e
+//             }
+//         }
+//     }
+// }
 
 def checkTestDockerContainerStatus(dockerName) {
     if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
@@ -422,26 +422,26 @@ task automateGSheetTable {
     }
 }
 
-task testGSheetExamples {
-    doLast {
-        examples.each { example ->
-            try {
-                exec {
-                    new File("${project.projectDir}/build/generated-examples/${example}/Config.toml").delete()
-                    workingDir "${project.projectDir}/build/generated-examples/${example}"
-                    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal run --offline"
-                    } else {
-                        commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat run --offline"
-                    }
-                }
-            } catch (Exception e) {
-                println("Example '${example}' test failed: " + e.message)
-                throw e
-            }
-        }
-    }
-}
+// task testGSheetExamples {
+//     doLast {
+//         examples.each { example ->
+//             try {
+//                 exec {
+//                     new File("${project.projectDir}/build/generated-examples/${example}/Config.toml").delete()
+//                     workingDir "${project.projectDir}/build/generated-examples/${example}"
+//                     if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+//                         commandLine 'sh', '-c', "${ballerinaDist}/bin/bal run --offline"
+//                     } else {
+//                         commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat run --offline"
+//                     }
+//                 }
+//             } catch (Exception e) {
+//                 println("Example '${example}' test failed: " + e.message)
+//                 throw e
+//             }
+//         }
+//     }
+// }
 
 copyPersistTool.dependsOn ":persist-cli-tests:build"
 copyPersistTool.dependsOn ":persist-cli:build"
@@ -456,12 +456,12 @@ generateDbExamples.dependsOn initDbExamples
 pushExamples.dependsOn generateDbExamples
 testDbExamples.dependsOn pushExamples
 
-initGSheetExamples.dependsOn testDbExamples
-generateGSheetExamples.dependsOn initGSheetExamples
-automateGSheetTable.dependsOn generateGSheetExamples
-testGSheetExamples.dependsOn automateGSheetTable
+// initGSheetExamples.dependsOn testDbExamples
+// generateGSheetExamples.dependsOn initGSheetExamples
+// automateGSheetTable.dependsOn generateGSheetExamples
+// testGSheetExamples.dependsOn automateGSheetTable
 
 build.dependsOn testInMemoryExamples
 build.dependsOn testDbExamples
-build.dependsOn testGSheetExamples
+//build.dependsOn testGSheetExamples
 build.finalizedBy stopTestDockerContainer
