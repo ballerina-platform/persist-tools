@@ -173,7 +173,8 @@ public class TomlSyntaxUtils {
         Path fileNamePath = configPath.getFileName();
         TextDocument configDocument = TextDocuments.from(Files.readString(configPath));
         String artifactId = BalSyntaxConstants.PERSIST_MODULE + "." + datasource;
-        if (datasource.equals(PersistToolsConstants.SupportDataSources.MYSQL_DB)) {
+        if (datasource.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB) ||
+                datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
             artifactId = BalSyntaxConstants.PERSIST_MODULE + "." + BalSyntaxConstants.PERSIST_SQL;
         }
         if (Objects.nonNull(fileNamePath)) {
@@ -221,7 +222,7 @@ public class TomlSyntaxUtils {
             moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
             moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray(
                     BalSyntaxConstants.PERSIST_DEPENDENCY, null));
-            moduleMembers = populatePersistDependency(moduleMembers, artifactId);
+            moduleMembers = populatePersistDependency(moduleMembers, artifactId, datasource);
         }
         Token eofToken = AbstractNodeFactory.createIdentifierToken("");
         DocumentNode documentNode = NodeFactory.createDocumentNode(moduleMembers, eofToken);
@@ -237,7 +238,8 @@ public class TomlSyntaxUtils {
     }
 
     private static NodeList<DocumentMemberDeclarationNode> populatePersistDependency(
-            NodeList<DocumentMemberDeclarationNode> moduleMembers, String artifactID) throws BalException {
+            NodeList<DocumentMemberDeclarationNode> moduleMembers, String artifactID, String datasource)
+            throws BalException {
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
                 PersistToolsConstants.TomlFileConstants.KEYWORD_GROUP_ID,
                 PersistToolsConstants.TomlFileConstants.PERSIST_GROUP_ID, null));
@@ -246,17 +248,26 @@ public class TomlSyntaxUtils {
                 String.format(PersistToolsConstants.TomlFileConstants.ARTIFACT_ID, artifactID), null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
                 PersistToolsConstants.TomlFileConstants.KEYWORD_VERSION,
-                getPersistVersion(), null));
+                getPersistVersion(datasource), null));
         return moduleMembers;
     }
 
-    private static String getPersistVersion() throws BalException {
+    private static String getPersistVersion(String datasource) throws BalException {
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
         try (InputStream inputStream = classloader.getResourceAsStream(
                 PersistToolsConstants.TomlFileConstants.VERSION_PROPERTIES_FILE)) {
             Properties properties = new Properties();
             properties.load(inputStream);
-            return properties.get(PersistToolsConstants.TomlFileConstants.PERSIST_VERSION).toString();
+            if (datasource.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB) ||
+                    datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
+                return properties.get(PersistToolsConstants.TomlFileConstants.PERSIST_SQL_VERSION).toString();
+            } else if (datasource.equals(PersistToolsConstants.SupportedDataSources.IN_MEMORY_TABLE)) {
+                return properties.get(PersistToolsConstants.TomlFileConstants.PERSIST_IN_MEMORY_VERSION).toString();
+            } else if (datasource.equals(PersistToolsConstants.SupportedDataSources.GOOGLE_SHEETS)) {
+                return properties.get(PersistToolsConstants.TomlFileConstants.PERSIST_GOOGLE_SHEETS_VERSION).toString();
+            } else {
+                throw new BalException("ERROR: invalid datasource: " + datasource);
+            }
         } catch (IOException e) {
             throw new BalException("ERROR: couldn't read the version.properties file. " + e.getMessage());
         }

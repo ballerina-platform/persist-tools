@@ -69,6 +69,32 @@ public class ToolingDbPushTest {
     }
 
     @Test(enabled = true)
+    @Description("Database is not available and it is created while running the db push command")
+    public void testDbPushWithoutDatabaseMSSQL() throws BalException {
+        ArrayList<PersistTable> tables = new ArrayList<>();
+        tables.add(
+                new PersistTable("MedicalNeed", "needId")
+                        .addColumn(new PersistTableColumn("needId", sqlInt, no, no))
+                        .addColumn(new PersistTableColumn("itemId", sqlInt, no, no))
+                        .addColumn(new PersistTableColumn("beneficiaryId", sqlInt, no, no))
+                        .addColumn(new PersistTableColumn("period", sqlDateTime, no, no))
+                        .addColumn(new PersistTableColumn("urgency", sqlVarchar, no, no))
+                        .addColumn(new PersistTableColumn("quantity", sqlInt, no, no))
+        );
+        tables.add(
+                new PersistTable("MedicalItem", "itemId")
+                        .addColumn(new PersistTableColumn("itemId", sqlInt, no, no))
+                        .addColumn(new PersistTableColumn("name", sqlVarchar, no, no))
+                        .addColumn(new PersistTableColumn("type", sqlVarchar, no, no))
+                        .addColumn(new PersistTableColumn("unit", sqlVarchar, no, no))
+        );
+        executeCommand("tool_test_db_push_29_mssql", DB_PUSH);
+        assertGeneratedSources("tool_test_db_push_29_mssql");
+        assertCreateDatabaseTables("tool_test_db_push_29_mssql", "mssql", tables);
+    }
+
+
+    @Test(enabled = true)
     @Description("When the db push command is executed outside a Ballerina project")
     public void testDbPushOutsideBallerinaProject() {
         assertGeneratedSourcesNegative("tool_test_db_push_2", DB_PUSH, null);
@@ -97,6 +123,31 @@ public class ToolingDbPushTest {
         executeCommand("tool_test_db_push_3", DB_PUSH);
         assertGeneratedSources("tool_test_db_push_3");
         assertCreateDatabaseTables("tool_test_db_push_3", "entities", tables);
+    }
+
+    @Test(enabled = true, dependsOnMethods = { "testDbPushWithoutDatabaseMSSQL" })
+    @Description("Database already exists. An entity is removed. The database tables should not be affected.")
+    public void testDbPushEntityRemovedMSSQL() throws BalException {
+        ArrayList<PersistTable> tables = new ArrayList<>();
+        tables.add(
+                new PersistTable("MedicalNeed", "needId")
+                        .addColumn(new PersistTableColumn("needId", sqlInt, no, no))
+                        .addColumn(new PersistTableColumn("itemId", sqlInt, no, no))
+                        .addColumn(new PersistTableColumn("beneficiaryId", sqlInt, no, no))
+                        .addColumn(new PersistTableColumn("period", sqlDateTime, no, no))
+                        .addColumn(new PersistTableColumn("urgency", sqlVarchar, no, no))
+                        .addColumn(new PersistTableColumn("quantity", sqlInt, no, no))
+        );
+        tables.add(
+                new PersistTable("MedicalItem", "itemId")
+                        .addColumn(new PersistTableColumn("itemId", sqlInt, no, no))
+                        .addColumn(new PersistTableColumn("name", sqlVarchar, no, no))
+                        .addColumn(new PersistTableColumn("type", sqlVarchar, no, no))
+                        .addColumn(new PersistTableColumn("unit", sqlVarchar, no, no))
+        );
+        executeCommand("tool_test_db_push_30_mssql", DB_PUSH);
+        assertGeneratedSources("tool_test_db_push_30_mssql");
+        assertCreateDatabaseTables("tool_test_db_push_30_mssql", "mssql", tables);
     }
 
     @Test(enabled = true)
@@ -129,6 +180,31 @@ public class ToolingDbPushTest {
         executeCommand("tool_test_db_push_5", DB_PUSH);
         assertGeneratedSources("tool_test_db_push_5");
         assertCreateDatabaseTables("tool_test_db_push_5", "entities", tables);
+    }
+
+    @Test(enabled = true, dependsOnMethods = { "testDbPushEntityRemoved" })
+    @Description("Database already exists. An entity is updated. The respective table should be updated.")
+    public void testDbPushEntityUpdatedMSSQL() throws BalException {
+        ArrayList<PersistTable> tables = new ArrayList<>();
+        tables.add(
+                new PersistTable("MedicalNeed", "fooNeedId")
+                        .addColumn(new PersistTableColumn("fooNeedId", sqlInt, no, no))
+                        .addColumn(new PersistTableColumn("fooItemId", sqlInt, no, no))
+                        .addColumn(new PersistTableColumn("fooBeneficiaryId", sqlInt, no, no))
+                        .addColumn(new PersistTableColumn("period", sqlDateTime, no, no))
+                        .addColumn(new PersistTableColumn("urgency", sqlInt, no, no))
+                        .addColumn(new PersistTableColumn("foo", sqlInt, no, no))
+        );
+        tables.add(
+                new PersistTable("MedicalItem", "itemId")
+                        .addColumn(new PersistTableColumn("itemId", sqlInt, no, no))
+                        .addColumn(new PersistTableColumn("name", sqlVarchar, no, no))
+                        .addColumn(new PersistTableColumn("type", sqlVarchar, no, no))
+                        .addColumn(new PersistTableColumn("unit", sqlVarchar, no, no))
+        );
+        executeCommand("tool_test_db_push_31_mssql", DB_PUSH);
+        assertGeneratedSources("tool_test_db_push_31_mssql");
+        assertCreateDatabaseTables("tool_test_db_push_31_mssql", "mssql", tables);
     }
 
     @Test(enabled = true)

@@ -52,6 +52,9 @@ dependencies {
     testImplementation (group: 'mysql', name: 'mysql-connector-java', version: "${mySqlDriverVersion}") {
         transitive = false
     }
+    testImplementation (group: 'com.microsoft.sqlserver', name: 'mssql-jdbc', version: "${mssqlDriverVersion}") {
+        transitive = false
+    }
 }
 
 clean {
@@ -226,6 +229,59 @@ task stopTestDockerContainer() {
     }
 }
 
+task startMSSQLTestDockerContainer(type: Exec) {
+    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+        def standardOutput = new ByteArrayOutputStream()
+        commandLine 'sh', '-c', 'docker run --platform linux/amd64 --rm -d --name ballerina-persist-tools-mssql -e ACCEPT_EULA=1 -e SA_PASSWORD=Test123# -p 1434:1433 -t mcr.microsoft.com/mssql/server:2019-latest'
+        def healthCheck = 1
+        def counter = 0
+        doLast {
+            checkExecResult(execResult, 'Error', standardOutput)
+            while (healthCheck != 0 && counter < 12) {
+                sleep(60 * 1000)
+                healthCheck = checkMSSQLTestDockerContainerStatus('ballerina-persist-tools-mssql')
+                counter = counter + 1
+            }
+            if (healthCheck != 0) {
+                throw new GradleException("Docker container 'ballerina-persist-tools-mssql' health test exceeded timeout!")
+            }
+        }
+    } else {
+        commandLine 'cmd','slmgr /dlv'
+        println('\n' + "Windows Instance detected")
+        println('\n' + "skippped starting the docker container")
+    }
+}
+
+def checkMSSQLTestDockerContainerStatus(containerName) {
+    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+        try {
+            return exec {
+                commandLine 'sh', '-c',
+                        "docker exec ${containerName} /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Test123#"
+            }.exitValue
+        } catch (all) {
+            return 1;
+        }
+    }
+}
+
+task stopMSSQLTestDockerContainer() {
+    doLast {
+        if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+            try {
+                def stdOut = new ByteArrayOutputStream()
+                exec {
+                    commandLine 'sh', '-c', "docker stop ballerina-persist-tools-mssql"
+                    standardOutput = stdOut
+                }
+            } catch (all) {
+                println("Process can safely ignore stopMSSQLTestDockerContainer task")
+            }
+        }
+    }
+}
+
 checkstyle {
     toolVersion "${project.checkstylePluginVersion}"
     configFile rootProject.file("build-config/checkstyle/build/checkstyle.xml")
@@ -266,7 +322,6 @@ test {
     dependsOn(copyTestPack)
     systemProperty "ballerina.home", ballerinaDist
     dependsOn(copyTestResources)
-    dependsOn(startTestDockerContainer)
     systemProperty "ballerina.offline.flag", "true"
     useTestNG() {
         suites 'src/test/resources/testng.xml'
@@ -299,11 +354,12 @@ jacocoTestReport {
     }
 }
 
-
-pullGSheetsDependency.dependsOn startTestDockerContainer
+test.dependsOn startTestDockerContainer
+test.dependsOn startMSSQLTestDockerContainer
 test.dependsOn pullGSheetsDependency
 test.dependsOn ":persist-cli:build"
 test.finalizedBy stopTestDockerContainer
+test.finalizedBy stopMSSQLTestDockerContainer
 
 build.dependsOn ":persist-cli:build"
 build.dependsOn copyTestPack

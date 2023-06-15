@@ -398,4 +398,45 @@ public class ToolingGenerateTest {
         assertGeneratedSources("tool_test_generate_57_gsheets");
     }
 
+    @Test(enabled = true)
+    @Description("There is a generated client object with mssql data source")
+    public void testMssqlEntity() {
+        executeCommand("tool_test_generate_58_mssql", GENERATE);
+        assertGeneratedSources("tool_test_generate_58_mssql");
+    }
+
+    @Test(enabled = true)
+    @Description("There is a generated client object with mssql data source")
+    public void testMSSQLWithAssociatedEntity() {
+        executeCommand("tool_test_generate_59_mssql", GENERATE);
+        assertGeneratedSources("tool_test_generate_59_mssql");
+    }
+
+    @Test(enabled = true)
+    @Description("There is a generated client object with mssql data source")
+    public void testMSSQLWithCompositeKeys() {
+        executeCommand("tool_test_generate_60_mssql", GENERATE);
+        assertGeneratedSources("tool_test_generate_60_mssql");
+    }
+
+    @Test(enabled = true)
+    @Description("There is multiple entities with multiple enums and imports with mssql data source")
+    public void testGenerateWithEnumsMSSQL() {
+        executeCommand("tool_test_generate_61_mssql", GENERATE);
+        assertGeneratedSources("tool_test_generate_61_mssql");
+    }
+
+    @Test(enabled = true)
+    @Description("There is an entity which is associated with multiple relations")
+    public void testGenerateWithSameEntityMultipleRelationsMSSQL() {
+        executeCommand("tool_test_generate_62_mssql", GENERATE);
+        assertGeneratedSources("tool_test_generate_62_mssql");
+    }
+
+    @Test(enabled = true)
+    @Description("There is a model with an entity consisting of multiple relations of the same type")
+    public void testGenerateEntityWithMultipleRelationsSameTypeMSSQL() {
+        executeCommand("tool_test_generate_63_mssql", GENERATE);
+        assertGeneratedSources("tool_test_generate_63_mssql");
+    }
 }

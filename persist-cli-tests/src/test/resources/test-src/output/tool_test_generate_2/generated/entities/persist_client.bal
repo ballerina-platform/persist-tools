@@ -53,8 +53,8 @@ public isolated client class Client {
         }
         self.dbClient = dbClient;
         self.persistClients = {
-            [MEDICAL_NEED] : check new (dbClient, self.metadata.get(MEDICAL_NEED)),
-            [MEDICAL_ITEM] : check new (dbClient, self.metadata.get(MEDICAL_ITEM))
+            [MEDICAL_NEED] : check new (dbClient, self.metadata.get(MEDICAL_NEED), psql:MYSQL_SPECIFICS),
+            [MEDICAL_ITEM] : check new (dbClient, self.metadata.get(MEDICAL_ITEM), psql:MYSQL_SPECIFICS)
         };
     }
 

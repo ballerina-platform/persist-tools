@@ -40,7 +40,7 @@ public isolated client class Client {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
-        self.persistClients = {[MEDICAL_NEED] : check new (dbClient, self.metadata.get(MEDICAL_NEED))};
+        self.persistClients = {[MEDICAL_NEED] : check new (dbClient, self.metadata.get(MEDICAL_NEED), psql:MYSQL_SPECIFICS)};
     }
 
     isolated resource function get medicalneeds(MedicalNeedTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {

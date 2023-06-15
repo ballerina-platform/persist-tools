@@ -53,7 +53,9 @@ public class ToolingInitTest {
         try (InputStream inputStream = Files.newInputStream(versionPropertiesFile)) {
             Properties properties = new Properties();
             properties.load(inputStream);
-            version = properties.get("persistVersion").toString();
+            version = properties.get("persistSqlVersion").toString();
+            version = properties.get("persistInMemoryVersion").toString();
+            version = properties.get("persistGoogleSheetsVersion").toString();
         } catch (IOException e) {
             // ignore
         }
@@ -168,6 +170,19 @@ public class ToolingInitTest {
         assertGeneratedSources("tool_test_init_12");
     }
 
+    @Test(enabled = true)
+    public void testInitWithMssql() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
+            InstantiationException, IllegalAccessException {
+        updateOutputBallerinaToml("tool_test_init_13");
+        Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Init");
+        Init persistCmd = (Init) persistClass.getDeclaredConstructor(String.class).
+                newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, "tool_test_init_13").toAbsolutePath().
+                        toString());
+        new CommandLine(persistCmd).parseArgs("--datastore", "mssql");
+        persistCmd.execute();
+        assertGeneratedSources("tool_test_init_13");
+    }
+
     private void updateOutputBallerinaToml(String fileName) {
         String tomlFileName = "Ballerina.toml";
         Path filePath = Paths.get("src", "test", "resources", "test-src", "output", fileName, tomlFileName);
@@ -175,7 +190,7 @@ public class ToolingInitTest {
            try {
                String content = Files.readString(filePath);
                String dataStore = "persist.inmemory";
-               if (content.contains("datastore = \"mysql\"")) {
+               if (content.contains("datastore = \"mysql\"") || content.contains("datastore = \"mssql\"")) {
                    dataStore = "persist.sql";
                } else if (content.contains("datastore = \"googlesheets\"")) {
                    dataStore = "persist.googlesheets";

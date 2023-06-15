@@ -71,21 +71,21 @@ public class SourceGenerator {
         this.generatedSourceDirPath = generatedSourceDirPath;
     }
 
-    public void createDbSources() throws BalException {
+    public void createDbSources(String datasource) throws BalException {
         DbSyntaxTree dbSyntaxTree = new DbSyntaxTree();
         try {
             addDataSourceConfigBalFile(this.generatedSourceDirPath, BalSyntaxConstants.PATH_DB_CONFIGURATION_BAL_FILE,
-                    dbSyntaxTree.getDataStoreConfigSyntax());
-            addConfigTomlFile(this.sourcePath, dbSyntaxTree.getConfigTomlSyntax(this.moduleNameWithPackageName),
-                    this.moduleNameWithPackageName);
+                    dbSyntaxTree.getDataStoreConfigSyntax(datasource));
+            addConfigTomlFile(this.sourcePath, dbSyntaxTree.getConfigTomlSyntax(
+                    this.moduleNameWithPackageName, datasource), this.moduleNameWithPackageName);
             addDataTypesBalFile(dbSyntaxTree.getDataTypesSyntax(entityModule),
                     this.generatedSourceDirPath.resolve(persistTypesBal).toAbsolutePath(),
                     this.moduleNameWithPackageName);
-            addClientFile(dbSyntaxTree.getClientSyntax(entityModule),
+            addClientFile(dbSyntaxTree.getClientSyntax(entityModule, datasource),
                     this.generatedSourceDirPath.resolve(persistClientBal).toAbsolutePath(),
                     this.moduleNameWithPackageName);
             addSqlScriptFile(this.entityModule.getModuleName(),
-                    SqlScriptUtils.generateSqlScript(this.entityModule.getEntityMap().values()),
+                    SqlScriptUtils.generateSqlScript(this.entityModule.getEntityMap().values(), datasource),
                     generatedSourceDirPath);
         } catch (BalException e) {
             throw new BalException(e.getMessage());

@@ -30,16 +30,7 @@ public class PersistToolsConstants {
 
     public static final String COMPONENT_IDENTIFIER = "persist";
 
-    public static final String DEFAULT_USER = "root";
-    public static final String DEFAULT_PORT = "3306";
     public static final String EMPTY_VALUE = "";
-    public static final String DEFAULT_HOST = "localhost";
-
-    public static final String KEY_USER = "user";
-    public static final String KEY_PORT = "port";
-    public static final String KEY_PASSWORD = "password";
-    public static final String KEY_DATABASE = "database";
-    public static final String KEY_HOST = "host";
     public static final String KEYWORD_PACKAGE = "package";
     public static final String KEYWORD_NAME = "name";
     public static final String KEYWORD_SHEET_ID = "spreadsheetId";
@@ -51,19 +42,22 @@ public class PersistToolsConstants {
     public static final String PASSWORD = "password";
     public static final String USER = "user";
     public static final String MYSQL_DRIVER_CLASS = "com.mysql.cj.jdbc.Driver";
-
+    public static final String MSSQL_DRIVER_CLASS = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
     public static final String PERSIST_CONFIG_PATTERN = "persist.model.storage";
     public static final String SQL_SCHEMA_FILE = "script.sql";
     public static final String GOOGLE_SHEETS_SCHEMA_FILE = "script.gs";
     public static final String PERSIST_DIRECTORY = "persist";
     public static final String MIGRATIONS = "migrations";
     public static final String BALLERINA_MYSQL_DRIVER_NAME = "ballerinax/mysql.driver";
+    public static final String BALLERINA_MSSQL_DRIVER_NAME = "ballerinax/mssql.driver";
     public static final String PLATFORM = "java11";
     public static final String PROPERTY_KEY_PATH = "path";
     public static final String MYSQL_CONNECTOR_NAME_PREFIX = "mysql-connector";
+    public static final String MSSQL_CONNECTOR_NAME_PREFIX = "mssql-jdbc";
     public static final String SCHEMA_FILE_NAME = "model";
     public static final Set<String> SUPPORTED_DB_PROVIDERS =
-           Set.of(SupportDataSources.MYSQL_DB, SupportDataSources.IN_MEMORY_TABLE, SupportDataSources.GOOGLE_SHEETS);
+           Set.of(SupportedDataSources.MYSQL_DB, SupportedDataSources.MSSQL_DB, SupportedDataSources.IN_MEMORY_TABLE,
+                   SupportedDataSources.GOOGLE_SHEETS);
 
     /**
      * Constants related to Ballerina types.
@@ -91,15 +85,19 @@ public class PersistToolsConstants {
         private SqlTypes() {}
 
         public static final String INT = "INT";
+        public static final String BIT = "BIT";
         public static final String BOOLEAN = "BOOLEAN";
         public static final String DECIMAL = "DECIMAL";
         public static final String DOUBLE = "DOUBLE";
+        public static final String FLOAT = "FLOAT";
         public static final String VARCHAR = "VARCHAR";
         public static final String DATE = "DATE";
         public static final String TIME = "TIME";
         public static final String TIME_STAMP = "TIMESTAMP";
         public static final String DATE_TIME = "DATETIME";
+        public static final String DATE_TIME2 = "DATETIME2";
         public static final String LONG_BLOB = "LONGBLOB";
+        public static final String VARBINARY = "VARBINARY(MAX)";
     }
 
     /**
@@ -138,7 +136,8 @@ public class PersistToolsConstants {
         private DefaultMaxLength() {}
 
         public static final int VARCHAR_LENGTH = 191;
-        public static final int DECIMAL_PRECISION = 65;
+        public static final int DECIMAL_PRECISION_MYSQL = 65;
+        public static final int DECIMAL_PRECISION_MSSQL = 38;
         public static final int DECIMAL_SCALE = 30;
     }
 
@@ -153,18 +152,60 @@ public class PersistToolsConstants {
         public static final String PERSIST_GROUP_ID = "io.ballerina.stdlib";
         public static final String KEYWORD_ARTIFACT_ID = "artifactId";
         public static final String ARTIFACT_ID = "%s-native";
-        public static final String PERSIST_VERSION = "persistVersion";
+        public static final String PERSIST_SQL_VERSION = "persistSqlVersion";
+        public static final String PERSIST_IN_MEMORY_VERSION = "persistInMemoryVersion";
+        public static final String PERSIST_GOOGLE_SHEETS_VERSION = "persistGoogleSheetsVersion";
         public static final String KEYWORD_VERSION = "version";
     }
 
     /**
      * Constants related to the data sources.
      */
-    public static final class SupportDataSources {
-        private SupportDataSources() {}
+    public static final class SupportedDataSources {
+        private SupportedDataSources() {}
 
         public static final String MYSQL_DB = "mysql";
+        public static final String MSSQL_DB = "mssql";
         public static final String GOOGLE_SHEETS = "googlesheets";
         public static final String IN_MEMORY_TABLE = "inmemory";
+    }
+
+    /**
+     * Constants related to the database configurations.
+     */
+    public static final class DBConfigs {
+
+        private DBConfigs() {}
+
+        public static final String KEY_USER = "user";
+        public static final String KEY_PORT = "port";
+        public static final String KEY_PASSWORD = "password";
+        public static final String KEY_DATABASE = "database";
+        public static final String KEY_HOST = "host";
+
+        /**
+         * Constants related to the MySQL configurations.
+         */
+        public static final class MySQL {
+            private MySQL() {}
+
+            public static final String DEFAULT_HOST = "localhost";
+            public static final String DEFAULT_PORT = "3306";
+            public static final String DEFAULT_USER = "root";
+
+        }
+
+        /**
+         * Constants related to the MSSQL configurations.
+         */
+        public static final class MSSQL {
+            private MSSQL() {}
+
+            public static final String DEFAULT_HOST = "localhost";
+            public static final String DEFAULT_PORT = "1433";
+            public static final String DEFAULT_USER = "sa";
+
+        }
+
     }
 }
