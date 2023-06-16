@@ -36,7 +36,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -174,10 +173,8 @@ public class SqlScriptUtils {
                 associatedEntityRelationType.equals(Relation.RelationType.ONE)) {
             relationScripts.append(MessageFormat.format("{0}{1}UNIQUE ({2}),", NEW_LINE, TAB, foreignKey));
         }
-        relationScripts.append(MessageFormat.format("{0}{1}CONSTRAINT FK_{2} FOREIGN KEY({3}) " +
-                        "REFERENCES {4}({5}),", NEW_LINE, TAB,
-                BalSyntaxUtils.getStringWithUnderScore(entityField.getFieldName()).toUpperCase(Locale.ENGLISH),
-                foreignKey.toString(),
+        relationScripts.append(MessageFormat.format("{0}{1}FOREIGN KEY({2}) REFERENCES {3}({4}),",
+                NEW_LINE, TAB, foreignKey.toString(),
                 escape(removeSingleQuote(assocEntity.getEntityName()), datasource), referenceFieldName));
         updateReferenceTable(tableName, assocEntity.getEntityName(), referenceTables);
         return relationScripts.toString();

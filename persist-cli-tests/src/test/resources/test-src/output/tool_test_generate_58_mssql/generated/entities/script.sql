@@ -124,7 +124,7 @@ CREATE TABLE [Workspace] (
 	[workspaceId] VARCHAR(191) NOT NULL,
 	[workspaceType] VARCHAR(191) NOT NULL,
 	[locationBuildingCode] VARCHAR(191) NOT NULL,
-	CONSTRAINT FK_LOCATION FOREIGN KEY([locationBuildingCode]) REFERENCES [Building]([buildingCode]),
+	FOREIGN KEY([locationBuildingCode]) REFERENCES [Building]([buildingCode]),
 	PRIMARY KEY([workspaceId])
 );
 
@@ -135,7 +135,7 @@ CREATE TABLE [Post] (
 	[category] VARCHAR(10) CHECK ([category] IN ('FOOD', 'TRAVEL', 'fashion', 'SPORTS', 'TECHNOLOGY', 'OTHERS')) NOT NULL,
 	[timestamp] DATETIME2 NOT NULL,
 	[userId] INT NOT NULL,
-	CONSTRAINT FK_USER FOREIGN KEY([userId]) REFERENCES [User]([id]),
+	FOREIGN KEY([userId]) REFERENCES [User]([id]),
 	PRIMARY KEY([id])
 );
 
@@ -147,9 +147,9 @@ CREATE TABLE [Employee] (
 	[gender] VARCHAR(6) CHECK ([gender] IN ('MALE', 'FEMALE')) NOT NULL,
 	[hireDate] DATE NOT NULL,
 	[departmentDeptNo] VARCHAR(191) NOT NULL,
-	CONSTRAINT FK_DEPARTMENT FOREIGN KEY([departmentDeptNo]) REFERENCES [Department]([deptNo]),
+	FOREIGN KEY([departmentDeptNo]) REFERENCES [Department]([deptNo]),
 	[workspaceWorkspaceId] VARCHAR(191) NOT NULL,
-	CONSTRAINT FK_WORKSPACE FOREIGN KEY([workspaceWorkspaceId]) REFERENCES [Workspace]([workspaceId]),
+	FOREIGN KEY([workspaceWorkspaceId]) REFERENCES [Workspace]([workspaceId]),
 	PRIMARY KEY([empNo])
 );
 
@@ -157,9 +157,9 @@ CREATE TABLE [Follow] (
 	[id] INT NOT NULL,
 	[timestamp] DATETIME2 NOT NULL,
 	[leaderId] INT NOT NULL,
-	CONSTRAINT FK_LEADER FOREIGN KEY([leaderId]) REFERENCES [User]([id]),
+	FOREIGN KEY([leaderId]) REFERENCES [User]([id]),
 	[followerId] INT NOT NULL,
-	CONSTRAINT FK_FOLLOWER FOREIGN KEY([followerId]) REFERENCES [User]([id]),
+	FOREIGN KEY([followerId]) REFERENCES [User]([id]),
 	PRIMARY KEY([id])
 );
 
@@ -168,9 +168,9 @@ CREATE TABLE [Comment] (
 	[comment] VARCHAR(191) NOT NULL,
 	[timesteamp] DATETIME2 NOT NULL,
 	[userId] INT NOT NULL,
-	CONSTRAINT FK_USER FOREIGN KEY([userId]) REFERENCES [User]([id]),
+	FOREIGN KEY([userId]) REFERENCES [User]([id]),
 	[postId] INT NOT NULL,
-	CONSTRAINT FK_POST FOREIGN KEY([postId]) REFERENCES [Post]([id]),
+	FOREIGN KEY([postId]) REFERENCES [Post]([id]),
 	PRIMARY KEY([id])
 );
 
@@ -183,6 +183,6 @@ CREATE TABLE [CompositeAssociationRecord] (
 	[alltypesidrecordDecimalType] DECIMAL(38,30) NOT NULL,
 	[alltypesidrecordStringType] VARCHAR(191) NOT NULL,
 	UNIQUE ([alltypesidrecordBooleanType], [alltypesidrecordIntType], [alltypesidrecordFloatType], [alltypesidrecordDecimalType], [alltypesidrecordStringType]),
-	CONSTRAINT FK_ALL_TYPES_ID_RECORD FOREIGN KEY([alltypesidrecordBooleanType], [alltypesidrecordIntType], [alltypesidrecordFloatType], [alltypesidrecordDecimalType], [alltypesidrecordStringType]) REFERENCES [AllTypesIdRecord]([booleanType], [intType], [floatType], [decimalType], [stringType]),
+	FOREIGN KEY([alltypesidrecordBooleanType], [alltypesidrecordIntType], [alltypesidrecordFloatType], [alltypesidrecordDecimalType], [alltypesidrecordStringType]) REFERENCES [AllTypesIdRecord]([booleanType], [intType], [floatType], [decimalType], [stringType]),
 	PRIMARY KEY([id])
 );

@@ -31,7 +31,7 @@ CREATE TABLE [Employee] (
 	[gender] VARCHAR(6) CHECK ([gender] IN ('MALE', 'FEMALE')) NOT NULL,
 	[dateOfBirth] DATETIME2 NOT NULL,
 	[departmentDeptNo] VARCHAR(191) NOT NULL,
-	CONSTRAINT FK_DEPARTMENT FOREIGN KEY([departmentDeptNo]) REFERENCES [Department]([deptNo]),
+	FOREIGN KEY([departmentDeptNo]) REFERENCES [Department]([deptNo]),
 	PRIMARY KEY([empNo])
 );
 
@@ -39,8 +39,8 @@ CREATE TABLE [Workspace] (
 	[workspaceId] VARCHAR(191) NOT NULL,
 	[workspaceType] VARCHAR(6) CHECK ([workspaceType] IN ('C', 'OFFICE', 'MR')) NOT NULL,
 	[locationBuildingCode] VARCHAR(191) NOT NULL,
-	CONSTRAINT FK_LOCATION FOREIGN KEY([locationBuildingCode]) REFERENCES [Building]([buildingCode]),
+	FOREIGN KEY([locationBuildingCode]) REFERENCES [Building]([buildingCode]),
 	[workspaceEmpNo] VARCHAR(191) UNIQUE NOT NULL,
-	CONSTRAINT FK_EMPLOYEE FOREIGN KEY([workspaceEmpNo]) REFERENCES [Employee]([empNo]),
+	FOREIGN KEY([workspaceEmpNo]) REFERENCES [Employee]([empNo]),
 	PRIMARY KEY([workspaceId])
 );

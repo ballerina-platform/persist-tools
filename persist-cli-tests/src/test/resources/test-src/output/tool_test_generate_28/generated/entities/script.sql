@@ -16,6 +16,6 @@ CREATE TABLE `Employee` (
 	`id` INT NOT NULL,
 	`name` VARCHAR(191) NOT NULL,
 	`companyId` INT NOT NULL,
-	CONSTRAINT FK_COMPANY FOREIGN KEY(`companyId`) REFERENCES `Company`(`id`),
+	FOREIGN KEY(`companyId`) REFERENCES `Company`(`id`),
 	PRIMARY KEY(`id`)
 );

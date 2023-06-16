@@ -40,11 +40,11 @@ CREATE TABLE `Employee` (
 	`gender` VARCHAR(191) NOT NULL,
 	`hireDate` DATE NOT NULL,
 	`departmentDeptNo` VARCHAR(191) NOT NULL,
-	CONSTRAINT FK_DEPARTMENT FOREIGN KEY(`departmentDeptNo`) REFERENCES `Department`(`deptNo`),
+	FOREIGN KEY(`departmentDeptNo`) REFERENCES `Department`(`deptNo`),
 	`orderitemOrderId` VARCHAR(191) NOT NULL,
 	`orderitemItemId` VARCHAR(191) NOT NULL,
 	UNIQUE (`orderitemOrderId`, `orderitemItemId`),
-	CONSTRAINT FK_ORDER_ITEM FOREIGN KEY(`orderitemOrderId`, `orderitemItemId`) REFERENCES `OrderItem`(`orderId`, `itemId`),
+	FOREIGN KEY(`orderitemOrderId`, `orderitemItemId`) REFERENCES `OrderItem`(`orderId`, `itemId`),
 	PRIMARY KEY(`empNo`)
 );
 
@@ -52,8 +52,8 @@ CREATE TABLE `Workspace` (
 	`workspaceId` VARCHAR(191) NOT NULL,
 	`workspaceType` VARCHAR(191) NOT NULL,
 	`locationBuildingCode` VARCHAR(191) NOT NULL,
-	CONSTRAINT FK_LOCATION FOREIGN KEY(`locationBuildingCode`) REFERENCES `Building`(`buildingCode`),
+	FOREIGN KEY(`locationBuildingCode`) REFERENCES `Building`(`buildingCode`),
 	`employeeEmpNo` VARCHAR(191) UNIQUE NOT NULL,
-	CONSTRAINT FK_EMPLOYEE FOREIGN KEY(`employeeEmpNo`) REFERENCES `Employee`(`empNo`),
+	FOREIGN KEY(`employeeEmpNo`) REFERENCES `Employee`(`empNo`),
 	PRIMARY KEY(`workspaceId`)
 );

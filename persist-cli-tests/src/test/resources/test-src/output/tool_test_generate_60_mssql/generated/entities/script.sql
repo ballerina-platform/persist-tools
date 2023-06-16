@@ -38,7 +38,7 @@ CREATE TABLE [Workspace] (
 	[workspaceId] VARCHAR(191) NOT NULL,
 	[workspaceType] VARCHAR(191) NOT NULL,
 	[locationBuildingCode] VARCHAR(191) NOT NULL,
-	CONSTRAINT FK_LOCATION FOREIGN KEY([locationBuildingCode]) REFERENCES [Building]([buildingCode]),
+	FOREIGN KEY([locationBuildingCode]) REFERENCES [Building]([buildingCode]),
 	PRIMARY KEY([workspaceId],[workspaceType])
 );
 
@@ -51,9 +51,9 @@ CREATE TABLE [Employee] (
 	[hireDate] DATE NOT NULL,
 	[departmentDeptNo] VARCHAR(191) NOT NULL,
 	[departmentDeptName] VARCHAR(191) NOT NULL,
-	CONSTRAINT FK_DEPARTMENT FOREIGN KEY([departmentDeptNo], [departmentDeptName]) REFERENCES [Department]([deptNo], [deptName]),
+	FOREIGN KEY([departmentDeptNo], [departmentDeptName]) REFERENCES [Department]([deptNo], [deptName]),
 	[workspaceWorkspaceId] VARCHAR(191) NOT NULL,
 	[workspaceWorkspaceType] VARCHAR(191) NOT NULL,
-	CONSTRAINT FK_WORKSPACE FOREIGN KEY([workspaceWorkspaceId], [workspaceWorkspaceType]) REFERENCES [Workspace]([workspaceId], [workspaceType]),
+	FOREIGN KEY([workspaceWorkspaceId], [workspaceWorkspaceType]) REFERENCES [Workspace]([workspaceId], [workspaceType]),
 	PRIMARY KEY([empNo],[firstName])
 );
