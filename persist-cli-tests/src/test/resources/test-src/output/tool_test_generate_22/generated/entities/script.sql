@@ -21,6 +21,6 @@ CREATE TABLE `MedicalNeed` (
 	`urgency` VARCHAR(191) NOT NULL,
 	`quantity` INT NOT NULL,
 	`itemItemId` INT UNIQUE NOT NULL,
-	CONSTRAINT FK_ITEM FOREIGN KEY(`itemItemId`) REFERENCES `MedicalItem`(`itemId`),
+	FOREIGN KEY(`itemItemId`) REFERENCES `MedicalItem`(`itemId`),
 	PRIMARY KEY(`record`)
 );

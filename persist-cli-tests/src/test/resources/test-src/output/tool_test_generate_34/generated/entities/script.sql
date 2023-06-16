@@ -16,6 +16,6 @@ CREATE TABLE `Profile` (
 	`name` VARCHAR(191) NOT NULL,
 	`gender` VARCHAR(191),
 	`ownerId` INT UNIQUE NOT NULL,
-	CONSTRAINT FK_OWNER FOREIGN KEY(`ownerId`) REFERENCES `User`(`id`),
+	FOREIGN KEY(`ownerId`) REFERENCES `User`(`id`),
 	PRIMARY KEY(`id`)
 );

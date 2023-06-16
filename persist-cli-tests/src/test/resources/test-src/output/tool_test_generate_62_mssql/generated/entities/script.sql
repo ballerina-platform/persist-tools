@@ -22,7 +22,7 @@ CREATE TABLE [Post] (
 	[category] VARCHAR(191) NOT NULL,
 	[created_date] DATE NOT NULL,
 	[userId] INT NOT NULL,
-	CONSTRAINT FK_USER FOREIGN KEY([userId]) REFERENCES [User]([id]),
+	FOREIGN KEY([userId]) REFERENCES [User]([id]),
 	PRIMARY KEY([id])
 );
 
@@ -30,8 +30,8 @@ CREATE TABLE [Follow] (
 	[id] INT NOT NULL,
 	[created_date] DATE NOT NULL,
 	[leaderId] INT UNIQUE NOT NULL,
-	CONSTRAINT FK_LEADER FOREIGN KEY([leaderId]) REFERENCES [User]([id]),
+	FOREIGN KEY([leaderId]) REFERENCES [User]([id]),
 	[followerId] INT UNIQUE NOT NULL,
-	CONSTRAINT FK_FOLLOWER FOREIGN KEY([followerId]) REFERENCES [User]([id]),
+	FOREIGN KEY([followerId]) REFERENCES [User]([id]),
 	PRIMARY KEY([id])
 );

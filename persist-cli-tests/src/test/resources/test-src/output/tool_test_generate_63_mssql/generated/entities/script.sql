@@ -23,7 +23,7 @@ CREATE TABLE [Post] (
 	[category] VARCHAR(191) NOT NULL,
 	[timestamp] DATETIME2 NOT NULL,
 	[userId] INT NOT NULL,
-	CONSTRAINT FK_USER FOREIGN KEY([userId]) REFERENCES [User]([id]),
+	FOREIGN KEY([userId]) REFERENCES [User]([id]),
 	PRIMARY KEY([id])
 );
 
@@ -31,9 +31,9 @@ CREATE TABLE [Follow] (
 	[id] INT NOT NULL,
 	[timestamp] DATETIME2 NOT NULL,
 	[leaderId] INT NOT NULL,
-	CONSTRAINT FK_LEADER FOREIGN KEY([leaderId]) REFERENCES [User]([id]),
+	FOREIGN KEY([leaderId]) REFERENCES [User]([id]),
 	[followerId] INT NOT NULL,
-	CONSTRAINT FK_FOLLOWER FOREIGN KEY([followerId]) REFERENCES [User]([id]),
+	FOREIGN KEY([followerId]) REFERENCES [User]([id]),
 	PRIMARY KEY([id])
 );
 
@@ -42,8 +42,8 @@ CREATE TABLE [Comment] (
 	[comment] VARCHAR(191) NOT NULL,
 	[timesteamp] DATETIME2 NOT NULL,
 	[userId] INT NOT NULL,
-	CONSTRAINT FK_USER FOREIGN KEY([userId]) REFERENCES [User]([id]),
+	FOREIGN KEY([userId]) REFERENCES [User]([id]),
 	[postId] INT NOT NULL,
-	CONSTRAINT FK_POST FOREIGN KEY([postId]) REFERENCES [Post]([id]),
+	FOREIGN KEY([postId]) REFERENCES [Post]([id]),
 	PRIMARY KEY([id])
 );
