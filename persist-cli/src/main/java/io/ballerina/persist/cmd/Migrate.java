@@ -104,12 +104,15 @@ public class Migrate implements BLauncherCmd {
             return;
         }
 
+        String dataStore = "";
+
         try {
             HashMap<String, String> ballerinaTomlConfig = TomlSyntaxUtils.readBallerinaTomlConfig(
                     Paths.get(this.sourcePath, "Ballerina.toml"));
-            String dataStore = ballerinaTomlConfig.get("datastore").trim();
-            if (!dataStore.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB)) {
-                errStream.printf("ERROR: unsupported data store: expected: 'mysql' but found: '%s'%n", dataStore);
+            dataStore = ballerinaTomlConfig.get("datastore").trim();
+            if (!dataStore.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB) || 
+                    !dataStore.equals(PersistToolsConstants.SupportedDataSources.GOOGLE_SHEETS)) {
+                errStream.printf("ERROR: unsupported data store: expected: 'mysql' or 'googlesheets' but found: '%s'%n", dataStore);
                 return;
             }
         } catch (BalException e) {
@@ -142,11 +145,11 @@ public class Migrate implements BLauncherCmd {
             return;
         }
 
-        migrate(migrationName, projectPath, this.sourcePath, schemaFilePath);
+        migrate(migrationName, projectPath, this.sourcePath, schemaFilePath, dataStore);
 
     }
 
-    private static void migrate(String migrationName, Path projectDirPath, String sourcePath, Path schemaFilePath) {
+    private static void migrate(String migrationName, Path projectDirPath, String sourcePath, Path schemaFilePath, String dataStore) {
         if (schemaFilePath != null) {
             Path persistDirPath = Paths.get(projectDirPath.toString(), "persist");
 
@@ -208,7 +211,7 @@ public class Migrate implements BLauncherCmd {
                             "Generated migration script to " + relativePath.toString() + 
                             " directory." + System.lineSeparator());
                     errStream.println("Next steps:" + System.lineSeparator() + 
-                            "Execute the \"script.sql\" file located at " +
+                            "Execute the \"script" + checkDataStore(dataStore) + "\" file located at " +
                             relativePath.toString() +
                             " directory in your database to migrate the schema with the latest changes.");
                 } else {
@@ -218,7 +221,7 @@ public class Migrate implements BLauncherCmd {
             } else {
                 // Migrate with the latest bal file in the migrations directory
                 migrateWithTimestamp(migrationsDir, migrationName, schemaFilePath,
-                        findLatestBalFile(getDirectoryPaths(migrationsDir.toString()), sourcePath));
+                        findLatestBalFile(getDirectoryPaths(migrationsDir.toString()), sourcePath), dataStore);
             }
         }
     }
@@ -300,7 +303,7 @@ public class Migrate implements BLauncherCmd {
     }
 
     private static void migrateWithTimestamp(File migrationsDir, String migrationName, Path currentModelPath,
-            Path previousModelPath) {
+            Path previousModelPath, String dataStore) {
         List<String> queries;
 
         String newMigration = createTimestampFolder(migrationName, migrationsDir);
@@ -312,24 +315,50 @@ public class Migrate implements BLauncherCmd {
             Module previousModel = BalProjectUtils.getEntities(previousModelPath);
             Module currentModel = BalProjectUtils.getEntities(currentModelPath);
 
-            queries = findDifferences(previousModel, currentModel);
+            queries = findDifferences(previousModel, currentModel, dataStore);
 
             // Write queries to file
             if (!queries.isEmpty()) {
-                String filePath = Paths.get(newMigrationPath.toString(), "script.sql").toString();
+                String filePath = Paths.get(newMigrationPath.toString(), "script" + checkDataStore(dataStore)).toString();
                 try (FileOutputStream fStream = new FileOutputStream(filePath);
                         OutputStreamWriter oStream = new OutputStreamWriter(fStream, StandardCharsets.UTF_8);
                         BufferedWriter writer = new BufferedWriter(oStream)) {
-                    writer.write("-- AUTO-GENERATED FILE." + System.lineSeparator() +
+                    switch(dataStore) {
+                        case "mysql":
+                            writer.write("-- AUTO-GENERATED FILE." + System.lineSeparator() +
                             "-- This file is an auto-generated file by Ballerina " +
                             "persistence layer for the migrate command." + System.lineSeparator() +
                             "-- Please verify the generated scripts and " +
                             "execute them against the target DB server." +
                             System.lineSeparator() + System.lineSeparator());
+                            break;
+
+                        case "googlesheets":
+                            writer.write("// AUTO-GENERATED FILE." + System.lineSeparator() +
+                            "// This file is an auto-generated file by Ballerina " +
+                            "persistence layer for the migrate command." + System.lineSeparator() +
+                            "// Please verify the generated scripts and " +
+                            "execute them against the target DB server." +
+                            System.lineSeparator() + System.lineSeparator() +
+                            "function migrateSheets() {" + System.lineSeparator() +
+                            "   var activeSpreadsheet = SpreadsheetApp.getActiveSpreadsheet();" +
+                            "   var yourNewSheet = \"\"");
+                            break;
+                    }
+
                     for (String query : queries) {
                         writer.write(query);
                         writer.newLine();
                     }
+
+                    if (dataStore == "googlesheets") {
+                        writer.write(
+                            System.lineSeparator() + " yourNewSheet  = activeSpreadsheet.getSheetByName(\"Sheet1\");" +
+                            System.lineSeparator() + "  if (yourNewSheet != null) {" + 
+                            System.lineSeparator() + "       activeSpreadsheet.deleteSheet(yourNewSheet);" + System.lineSeparator() + "   }" +
+                            System.lineSeparator() + "}" + System.lineSeparator());
+                    }
+
                 } catch (IOException e) {
                     errStream.println("Error: An error occurred while writing to file: " + e.getMessage());
                     return;
@@ -341,7 +370,7 @@ public class Migrate implements BLauncherCmd {
                 errStream.println(
                         "Generated migration script to " + relativePath.toString() + 
                         " directory." + System.lineSeparator());
-                errStream.println("Next steps:" + System.lineSeparator() + "Execute the \"script.sql\" file located at "
+                errStream.println("Next steps:" + System.lineSeparator() + "Execute the \"script" + checkDataStore(dataStore) + "\" file located at "
                         + relativePath.toString() +
                         " directory in your database to migrate the schema with the latest changes.");
             }
@@ -422,9 +451,10 @@ public class Migrate implements BLauncherCmd {
         }
     }
 
-    private static List<String> findDifferences(Module previousModel, Module currentModel) {
+    private static List<String> findDifferences(Module previousModel, Module currentModel, String dataStore) {
         List<String> queries = new ArrayList<>();
         List<String> differences = new ArrayList<>();
+        List<String> warnings = new ArrayList<>();
 
         List<String> addedEntities = new ArrayList<>();
         List<String> removedEntities = new ArrayList<>();
@@ -559,22 +589,71 @@ public class Migrate implements BLauncherCmd {
             }
         }
 
-        // Convert differences to queries (ordered)
-        convertCreateTableToQuery(QueryTypes.ADD_TABLE, addedEntities, queries, addedReadOnly, addedFields);
-        convertMapToQuery(QueryTypes.ADD_FIELD, addedFields, queries, addedEntities);
-        convertMapListToQuery(QueryTypes.REMOVE_FOREIGN_KEY, removedForeignKeys, queries);
-        convertMapListToQuery(QueryTypes.REMOVE_READONLY, removedReadOnly, queries);
-        convertMapToQuery(QueryTypes.ADD_READONLY, addedReadOnly, queries, addedEntities);
-        convertFKMapToQuery(QueryTypes.ADD_FOREIGN_KEY, addedForeignKeys, queries);
-        convertMapListToQuery(QueryTypes.REMOVE_FIELD, removedFields, queries);
-        convertListToQuery(QueryTypes.REMOVE_TABLE, removedEntities, queries);
-        convertMapToQuery(QueryTypes.CHANGE_TYPE, changedFieldTypes, queries, addedEntities);
+        // Convert differences to queries (ordered) based on datasource
+        switch (dataStore) {
+            case("mysql"):
+                convertCreateTableToMySQLQuery(QueryTypes.ADD_TABLE, addedEntities, queries, addedReadOnly, addedFields);
+                convertMapToMySQLQuery(QueryTypes.ADD_FIELD, addedFields, queries, addedEntities);
+                convertMapListToMySQLQuery(QueryTypes.REMOVE_FOREIGN_KEY, removedForeignKeys, queries);
+                convertMapListToMySQLQuery(QueryTypes.REMOVE_READONLY, removedReadOnly, queries);
+                convertMapToMySQLQuery(QueryTypes.ADD_READONLY, addedReadOnly, queries, addedEntities);
+                convertFKMapToMySQLQuery(QueryTypes.ADD_FOREIGN_KEY, addedForeignKeys, queries);
+                convertMapListToMySQLQuery(QueryTypes.REMOVE_FIELD, removedFields, queries);
+                convertListToMySQLQuery(QueryTypes.REMOVE_TABLE, removedEntities, queries);
+                convertMapToMySQLQuery(QueryTypes.CHANGE_TYPE, changedFieldTypes, queries, addedEntities);
+                break;
+
+            case("googlesheets"):
+                convertCreateTableToGSheetsQuery(QueryTypes.ADD_TABLE, addedEntities, queries, addedReadOnly, addedFields);
+                List<String> addFieldWarnings = convertMapToGSheetsQuery(QueryTypes.ADD_FIELD, addedFields, queries, addedEntities);
+                for (String warning : addFieldWarnings) {
+                    warnings.add(warning);
+                }
+                List<String> removeFKWarnings = convertMapListToGSheetsQuery(QueryTypes.REMOVE_FOREIGN_KEY, removedForeignKeys, queries);
+                for (String warning : removeFKWarnings) {
+                    warnings.add(warning);
+                }
+                List<String> removePKWarnings = convertMapListToGSheetsQuery(QueryTypes.REMOVE_READONLY, removedReadOnly, queries);
+                for (String warning : removePKWarnings) {
+                    warnings.add(warning);
+                }
+                List<String> addReadOnlyWarnings = convertMapToGSheetsQuery(QueryTypes.ADD_READONLY, addedReadOnly, queries, addedEntities);
+                for (String warning : addReadOnlyWarnings) {
+                    warnings.add(warning);
+                }
+                List<String> addFKWarnings = convertFKMapToGSheetsQuery(QueryTypes.ADD_FOREIGN_KEY, addedForeignKeys, queries);
+                for (String warning : addFKWarnings) {
+                    warnings.add(warning);
+                }
+                List<String> removeFieldWarnings = convertMapListToGSheetsQuery(QueryTypes.REMOVE_FIELD, removedFields, queries);
+                for (String warning : removeFieldWarnings) {
+                    warnings.add(warning);
+                }
+                List<String> removeTableWarnings = convertListToGSheetsQuery(QueryTypes.REMOVE_TABLE, removedEntities, queries);
+                for (String warning : removeTableWarnings) {
+                    warnings.add(warning);
+                }
+                List<String> changeDataTypeWarnings = convertMapToGSheetsQuery(QueryTypes.CHANGE_TYPE, changedFieldTypes, queries, addedEntities);
+                for (String warning : changeDataTypeWarnings) {
+                    warnings.add(warning);
+                }
+                break;
+
+            default:
+                errStream.println("Error: Invalid data store: " + dataStore);
+                break;
+        }
 
         errStream.println(System.lineSeparator() + "Detailed list of differences: ");
         if (!differences.isEmpty()) {
             errStream.println(differences + System.lineSeparator());
         } else {
             errStream.println("[No differences found]" + System.lineSeparator());
+        }
+
+        if (!warnings.isEmpty()) {
+            errStream.println(System.lineSeparator() + "List of Warnings: ");
+            errStream.println(warnings + System.lineSeparator());
         }
 
         return queries;
@@ -669,8 +748,8 @@ public class Migrate implements BLauncherCmd {
         }
     }
 
-    // Convert Create Table List to Query
-    private static void convertCreateTableToQuery(QueryTypes type, List<String> addedEntities, List<String> queries,
+    // Convert Create Table List to MySQL Query
+    private static void convertCreateTableToMySQLQuery(QueryTypes type, List<String> addedEntities, List<String> queries,
             HashMap<String, List<FieldMetadata>> addedReadOnly, HashMap<String, List<FieldMetadata>> addedFields) {
         String addField = "";
         String pKField = "";
@@ -723,7 +802,7 @@ public class Migrate implements BLauncherCmd {
     }
 
     // Convert list to a MySQL query
-    private static void convertListToQuery(QueryTypes type, List<String> entities, List<String> queries) {
+    private static void convertListToMySQLQuery(QueryTypes type, List<String> entities, List<String> queries) {
         if (Objects.requireNonNull(type) == QueryTypes.REMOVE_TABLE) {
             for (String entity : entities) {
                 String removeTableTemplate = "DROP TABLE %s;%n";
@@ -733,7 +812,7 @@ public class Migrate implements BLauncherCmd {
     }
 
     // Convert map of String lists to a MySQL query
-    private static void convertMapListToQuery(QueryTypes type, Map<String, List<String>> map, List<String> queries) {
+    private static void convertMapListToMySQLQuery(QueryTypes type, Map<String, List<String>> map, List<String> queries) {
         switch (type) {
             case REMOVE_FIELD:
                 for (Map.Entry<String, List<String>> entry : map.entrySet()) {
@@ -771,7 +850,7 @@ public class Migrate implements BLauncherCmd {
     }
 
     // Convert map of FieldMetadata lists to a MySQL query
-    private static void convertMapToQuery(QueryTypes type, Map<String, List<FieldMetadata>> map, List<String> queries,
+    private static void convertMapToMySQLQuery(QueryTypes type, Map<String, List<FieldMetadata>> map, List<String> queries,
             List<String> addedEntities) {
         switch (type) {
             case ADD_FIELD:
@@ -846,7 +925,7 @@ public class Migrate implements BLauncherCmd {
     }
 
     // Convert map of ForeignKey lists to a MySQL query
-    private static void convertFKMapToQuery(QueryTypes type, Map<String, List<ForeignKey>> map, List<String> queries) {
+    private static void convertFKMapToMySQLQuery(QueryTypes type, Map<String, List<ForeignKey>> map, List<String> queries) {
         if (Objects.requireNonNull(type) == QueryTypes.ADD_FOREIGN_KEY) {
             for (Map.Entry<String, List<ForeignKey>> entry : map.entrySet()) {
                 String entity = entry.getKey();
@@ -864,6 +943,215 @@ public class Migrate implements BLauncherCmd {
             }
         }
     }
+
+    // Convert Create Table List to Google Sheets Query
+    private static void convertCreateTableToGSheetsQuery(QueryTypes type, List<String> addedEntities, List<String> queries,
+            HashMap<String, List<FieldMetadata>> addedReadOnly, HashMap<String, List<FieldMetadata>> addedFields) {
+        if (Objects.requireNonNull(type) == QueryTypes.ADD_TABLE) {
+            for (String entity : addedEntities) {
+                StringBuilder query = new StringBuilder(
+                System.lineSeparator() +
+                System.lineSeparator() + "  yourNewSheet = activeSpreadsheet.getSheetByName(\"" + entity + "\");" + 
+                System.lineSeparator() + "  if (yourNewSheet != null) {" +
+                System.lineSeparator() + "      activeSpreadsheet.deleteSheet(yourNewSheet);" +
+                System.lineSeparator() + "  }" + 
+                System.lineSeparator() + "  yourNewSheet = activeSpreadsheet.insertSheet();" +
+                System.lineSeparator() + "  yourNewSheet.setName(\"" + entity + "\");");
+
+                if (addedFields.get(entity) != null) {
+                    query.append(System.lineSeparator() + "  yourNewSheet.appendRow([");
+                    for (FieldMetadata field : addedFields.get(entity)) {
+                        if (addedFields.get(entity).indexOf(field) == addedFields.get(entity).size() - 1) {
+                            query.append("\"" + field.getName() + "\"");
+                        } else {
+                            query.append("\"" + field.getName() + "\", ");
+                        }
+                    }
+                }
+
+                query.append("\n);\n");
+                queries.add(query.toString());
+            }
+        }
+    }
+
+    // Convert list to a Google Sheets query
+    private static List<String> convertListToGSheetsQuery(QueryTypes type, List<String> entities, List<String> queries) {
+        List<String> warnings = new ArrayList<>();
+        String warning = "";
+        if (Objects.requireNonNull(type) == QueryTypes.REMOVE_TABLE) {
+            for (String entity : entities) {
+                StringBuilder query = new StringBuilder(
+                    System.lineSeparator() + "  yourNewSheet  = activeSpreadsheet.getSheetByName(\"" + entity + "\");" +
+                    System.lineSeparator() + "  if (yourNewSheet != null) {" +
+                    System.lineSeparator() + "      activeSpreadsheet.deleteSheet(yourNewSheet);" +
+                    System.lineSeparator() + "  }"
+                );
+
+                query.append("\n);\n");
+                queries.add(query.toString());
+
+                warning = "WARNING: User must manually delete any foreign keys related to the deleted table.\n";
+                warnings.add(warning);
+            }
+        }
+
+        return warnings;
+    }
+
+    // Convert map of FieldMetadata lists to a Google Sheets query
+    private static List<String> convertMapToGSheetsQuery(QueryTypes type, Map<String, List<FieldMetadata>> map, List<String> queries,
+        List<String> addedEntities) {
+        List<String> warnings = new ArrayList<>();
+        String warning = "";
+        switch (type) {
+            case ADD_FIELD:
+                for (Map.Entry<String, List<FieldMetadata>> entry : map.entrySet()) {
+                    String entity = entry.getKey();
+                    if (!addedEntities.contains(entity)) {
+                        for (FieldMetadata field : entry.getValue()) {
+                            StringBuilder query = new StringBuilder(
+                                System.lineSeparator() + "  yourNewSheet  = activeSpreadsheet.getSheetByName(\"" + entity + "\");" +
+                                System.lineSeparator() + "  var numColumns = yourSheet.getLastColumn();" +
+                                System.lineSeparator() + "  var newColumn = numColumns + 1;" +
+                                System.lineSeparator() + "  yourSheet.getRange(1, newColumn).setValue(\"" + field.getName() + "\");"
+                            );
+
+                            query.append("\n);\n");
+
+                            queries.add(query.toString());
+                        }
+                    }
+                }
+                break;
+
+            case CHANGE_TYPE:
+                for (Map.Entry<String, List<FieldMetadata>> entry : map.entrySet()) {
+                    String entity = entry.getKey();
+                    for (FieldMetadata field : entry.getValue()) {
+                        warning = "WARNING: User must manually change the data type of the field " + field.getName() + " in the " + entity + " table.";
+                        warnings.add(warning);
+                    }
+                }
+                break;
+
+            case ADD_READONLY:
+                for (Map.Entry<String, List<FieldMetadata>> entry : map.entrySet()) {
+                    String entity = entry.getKey();
+                    if (!addedEntities.contains(entity)) {
+                        warning = "WARNING: Google Sheets does not support primary keys";
+                        warnings.add(warning);
+                    }
+                }
+                break;
+
+            default:
+                break;
+        }
+
+        return warnings;
+    }
+
+    // Convert map of String lists to a Google Sheets query
+    private static List<String> convertMapListToGSheetsQuery(QueryTypes type, Map<String, List<String>> map, List<String> queries) {
+        List<String> warnings = new ArrayList<>();
+        String warning = "";
+        switch (type) {
+            case REMOVE_FIELD:
+                for (Map.Entry<String, List<String>> entry : map.entrySet()) {
+                    String entity = entry.getKey();
+                    for (String field : entry.getValue()) {
+                        StringBuilder query = new StringBuilder(
+                                System.lineSeparator() + "  yourNewSheet  = activeSpreadsheet.getSheetByName(\"" + entity + "\");" +
+                                System.lineSeparator() + "  var headerRange = yourSheet.getRange(1, 1, 1, yourSheet.getLastColumn());" +
+                                System.lineSeparator() + "  var headerValues = headerRange.getValues()[0];" +
+                                System.lineSeparator() + "  var fieldToRemove = \"" + field + "\";" +
+                                System.lineSeparator() + "  var fieldIndex = headerValues.indexOf(fieldToRemove) + 1;" +
+                                System.lineSeparator() + "  if (fieldIndex != 0) {" +
+                                System.lineSeparator() + "      yourSheet.deleteColumn(fieldIndex);" +
+                                System.lineSeparator() + "  }"
+                            );
+
+                        query.append("\n);\n");
+
+                        queries.add(query.toString());
+                    }
+                }
+                break;
+
+            case REMOVE_READONLY:
+                for (Map.Entry<String, List<String>> entry : map.entrySet()) {
+                    warning = "WARNING: Google Sheets does not support primary keys, " +
+                    "User needs to manually remove the column from the " + entry.getKey() + " table.";
+                    warnings.add(warning);
+                }
+                break;
+
+            case REMOVE_FOREIGN_KEY:
+                for (Map.Entry<String, List<String>> entry : map.entrySet()) {
+                    String entity = entry.getKey();
+                    for (String field : entry.getValue()) {
+                        String[] fieldData = field.split(",");
+                        String foreignKeyName = fieldData[0];
+                        warning = "WARNING: User must manually delete the foreign key " + foreignKeyName + " in the " + entity + " table.";
+                        warnings.add(warning);
+                    }
+                }
+                break;
+
+            default:
+                break;
+        }
+
+        return warnings;
+    }
+
+    // Convert map of ForeignKey lists to a Google Sheets query
+    private static List<String> convertFKMapToGSheetsQuery(QueryTypes type, Map<String, List<ForeignKey>> map, List<String> queries) {
+        List<String> warnings = new ArrayList<>();
+        String warning = "";
+        if (Objects.requireNonNull(type) == QueryTypes.ADD_FOREIGN_KEY) {
+            for (Map.Entry<String, List<ForeignKey>> entry : map.entrySet()) {
+                String entity = entry.getKey();
+                for (ForeignKey foreignKey : entry.getValue()) {
+                    String childColumnName = foreignKey.getColumnName();
+                
+                    StringBuilder query = new StringBuilder(
+                        System.lineSeparator() + "  yourNewSheet  = activeSpreadsheet.getSheetByName(\"" + entity + "\");" +
+                        System.lineSeparator() + "  var numColumns = yourSheet.getLastColumn();" +
+                        System.lineSeparator() + "  var newColumn = numColumns + 1;" +
+                        System.lineSeparator() + "  yourSheet.getRange(1, newColumn).setValue(\"" + childColumnName + "\");"
+                    );
+
+                    query.append("\n);\n");
+
+                    queries.add(query.toString());
+
+                    warning = "WARNING: When deleting parent table user must manually remove any " +
+                    "foreign keys related to the deleted table.";
+                    warnings.add(warning);
+                }
+            }
+        }
+
+        return warnings;
+    }
+
+    private static String checkDataStore(String dataStore) {
+        switch (dataStore) {
+            case "mysql":
+                return ".sql";
+    
+            case "googlesheets":
+                return ".gs";
+    
+            default:
+                errStream.println("Error: Invalid data store: " + dataStore);
+                return "";
+        }
+    }    
+    
+    
 
     // Types of MySQL queries
     private enum QueryTypes {
