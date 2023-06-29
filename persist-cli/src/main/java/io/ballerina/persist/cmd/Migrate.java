@@ -178,7 +178,8 @@ public class Migrate implements BLauncherCmd {
                     return;
                 }
 
-                String newMigration = createTimestampFolder(migrationName, migrationsDir);
+                String folderName = createTimestampFolder(migrationName);
+                String newMigration = migrationsDir + File.separator + folderName;
 
                 createTimestampDirectory(newMigration);
 
@@ -308,7 +309,8 @@ public class Migrate implements BLauncherCmd {
             Path previousModelPath, String dataStore) {
         List<String> queries;
 
-        String newMigration = createTimestampFolder(migrationName, migrationsDir);
+        String folderName = createTimestampFolder(migrationName);
+        String newMigration = migrationsDir + File.separator + folderName;
 
         File newMigrateDirectory = getTimestampDirectory(newMigration);
 
@@ -321,7 +323,7 @@ public class Migrate implements BLauncherCmd {
 
             // Write queries to file
             if (!queries.isEmpty()) {
-                String filePath = Paths.get(newMigrationPath.toString(), "script" + 
+                String filePath = Paths.get(newMigrationPath.toString(), folderName + "_script" + 
                     checkDataStore(dataStore)).toString();
                 try (FileOutputStream fStream = new FileOutputStream(filePath);
                         OutputStreamWriter oStream = new OutputStreamWriter(fStream, StandardCharsets.UTF_8);
@@ -337,11 +339,13 @@ public class Migrate implements BLauncherCmd {
                             break;
 
                         case "googlesheets":
-                            writer.write("// AUTO-GENERATED FILE." + System.lineSeparator() +
-                            "// This file is an auto-generated file by Ballerina " +
+                            writer.write("/*" + System.lineSeparator() + 
+                            "AUTO-GENERATED FILE." + System.lineSeparator() + System.lineSeparator() +
+                            "This file is an auto-generated file by Ballerina " +
                             "persistence layer for the migrate command." + System.lineSeparator() +
-                            "// Please verify the generated scripts and " +
+                            "Please verify the generated scripts and " +
                             "execute them against the target DB server." +
+                            System.lineSeparator() + "*/" +
                             System.lineSeparator() + System.lineSeparator() +
                             "function migrateSheets() {" + System.lineSeparator() +
                             "   var activeSpreadsheet = SpreadsheetApp.getActiveSpreadsheet();" +
@@ -422,12 +426,12 @@ public class Migrate implements BLauncherCmd {
     }
 
     // Create a timestamp folder name
-    private static String createTimestampFolder(String migrationName, File migrationsDir) {
+    private static String createTimestampFolder(String migrationName) {
         Instant currentTime = Instant.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
         String timestamp = formatter.format(ZonedDateTime.ofInstant(currentTime, ZoneOffset.UTC));
 
-        String newMigration = migrationsDir + File.separator + timestamp + "_" + migrationName;
+        String newMigration = timestamp + "_" + migrationName;
 
         return newMigration;
     }
