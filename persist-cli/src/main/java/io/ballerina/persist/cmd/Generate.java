@@ -103,7 +103,7 @@ public class Generate implements BLauncherCmd {
                             "module name should follow the template <package_name>.<module_name>");
                     return;
                 }
-                String moduleName = moduleNameWithPackageName.split("\\.")[1];
+                String moduleName = moduleNameWithPackageName.replace(packageName + ".", "");
                 if (!ProjectUtils.validateModuleName(moduleName)) {
                     errStream.println("ERROR: invalid module name : '" + moduleName + "' :\n" +
                             "module name can only contain alphanumerics, underscores and periods");
