@@ -50,7 +50,7 @@ public class AppScriptUtils {
     private static final String NEW_LINE = System.lineSeparator();
     private static final String TAB = "\t";
 
-    private AppScriptUtils(){}
+    private AppScriptUtils() {}
 
     public static String generateJavaScriptFile(Collection<Entity> entities) throws BalException {
         boolean initialized = false;

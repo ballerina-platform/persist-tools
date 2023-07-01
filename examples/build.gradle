@@ -288,10 +288,12 @@ def checkTestDockerContainerStatus(dockerName) {
     }
 }
 
-def checkExecResult(execResult, failText, standardOutput) {
-    if (execResult) {
-        if (execResult.getExitValue() != 0) {
-            throw new GradleException('Non-zero exit value: ' + execResult.getExitValue())
+def checkExecResult(executionResult, failText, standardOutput) {
+    if (executionResult) {
+        Provider<ExecResult> execResultProvider = executionResult.getProvider()
+        int exitCode = execResultProvider.get().getExitValue()
+        if (exitCode != 0) {
+            throw new GradleException('Non-zero exit value: ' + exitCode)
         }
         if (standardOutput.toString().contains(failText)) {
             throw new GradleException('"' + failText + '" string in output: ' + standardOutput.toString())
@@ -308,7 +310,7 @@ task startTestDockerContainer(type: Exec) {
         def healthCheck = 1
         def counter = 0
         doLast {
-            checkExecResult(execResult, 'Error', standardOutput)
+            checkExecResult(executionResult, 'Error', standardOutput)
             while (healthCheck != 0 && counter < 12) {
                 sleep(60 * 1000)
                 healthCheck = checkTestDockerContainerStatus('ballerina-persist-tools-example')

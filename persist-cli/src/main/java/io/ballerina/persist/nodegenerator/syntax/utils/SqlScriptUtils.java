@@ -57,7 +57,7 @@ public class SqlScriptUtils {
 
     private static final String SINGLE_QUOTE = "'";
 
-    private SqlScriptUtils(){}
+    private SqlScriptUtils() {}
 
     public static String[] generateSqlScript(Collection<Entity> entities, String datasource) throws BalException {
         HashMap<String, List<String>> referenceTables = new HashMap<>();
