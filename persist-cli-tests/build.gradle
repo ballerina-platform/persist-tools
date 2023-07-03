@@ -49,10 +49,10 @@ dependencies {
     testImplementation project(":persist-cli")
     testImplementation group: 'org.testng', name: 'testng', version: "${testngVersion}"
     testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
-    testImplementation (group: 'mysql', name: 'mysql-connector-java', version: "${mySqlDriverVersion}") {
+    testImplementation (group: 'mysql', name: 'mysql-connector-java', version: "${stdlibMysqlDriverVersion}") {
         transitive = false
     }
-    testImplementation (group: 'com.microsoft.sqlserver', name: 'mssql-jdbc', version: "${mssqlDriverVersion}") {
+    testImplementation (group: 'com.microsoft.sqlserver', name: 'mssql-jdbc', version: "${stdlibMssqlDriverVersion}") {
         transitive = false
     }
 }
