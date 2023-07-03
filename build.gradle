@@ -76,6 +76,7 @@ subprojects {
         ballerinaStdLibs "io.ballerina.stdlib:sql-ballerina:${stdlibSqlVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:persist-ballerina:${stdlibPersistVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:mysql-ballerina:${stdlibMysqlVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:mysql.driver-ballerina:${stdlibMysqlDriverVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:persist.sql-ballerina:${stdlibPersistSqlVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:persist.inmemory-ballerina:${stdlibPersistInmemoryVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:persist.googlesheets-ballerina:${stdlibPersistGoogleSheetVersion}"
