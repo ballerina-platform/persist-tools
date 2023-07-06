@@ -37,6 +37,7 @@ public class PersistToolsConstants {
     public static final String KEYWORD_CLIENT_ID = "clientId";
     public static final String KEYWORD_CLIENT_SECRET = "clientSecret";
     public static final String KEYWORD_REFRESH_TOKEN = "refreshToken";
+    public static final String KEYWORD_SCRIPT_ID = "scriptId";
 
     public static final String CONFIG_SCRIPT_FILE = "Config.toml";
     public static final String PASSWORD = "password";

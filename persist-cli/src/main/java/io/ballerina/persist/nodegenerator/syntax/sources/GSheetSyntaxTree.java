@@ -159,6 +159,8 @@ public class GSheetSyntaxTree implements SyntaxTree {
                 PersistToolsConstants.KEYWORD_CLIENT_SECRET, PersistToolsConstants.EMPTY_VALUE, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
                 PersistToolsConstants.KEYWORD_REFRESH_TOKEN, PersistToolsConstants.EMPTY_VALUE, null));
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
+                PersistToolsConstants.KEYWORD_SCRIPT_ID, PersistToolsConstants.EMPTY_VALUE, null));
         return moduleMembers;
     }
 
