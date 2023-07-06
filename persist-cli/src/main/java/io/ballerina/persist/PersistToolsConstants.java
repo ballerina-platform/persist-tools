@@ -46,6 +46,7 @@ public class PersistToolsConstants {
     public static final String PERSIST_CONFIG_PATTERN = "persist.model.storage";
     public static final String SQL_SCHEMA_FILE = "script.sql";
     public static final String GOOGLE_SHEETS_SCHEMA_FILE = "script.gs";
+    public static final String GOOGLE_SHEETS_INSERT_SCHEMA_FILE = "appscript/insert.gs";
     public static final String PERSIST_DIRECTORY = "persist";
     public static final String MIGRATIONS = "migrations";
     public static final String BALLERINA_MYSQL_DRIVER_NAME = "ballerinax/mysql.driver";

@@ -38,6 +38,7 @@ import org.ballerinalang.formatter.core.Formatter;
 import org.ballerinalang.formatter.core.FormatterException;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -45,6 +46,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
 
+import static io.ballerina.persist.PersistToolsConstants.GOOGLE_SHEETS_INSERT_SCHEMA_FILE;
 import static io.ballerina.persist.PersistToolsConstants.GOOGLE_SHEETS_SCHEMA_FILE;
 import static io.ballerina.persist.PersistToolsConstants.SQL_SCHEMA_FILE;
 
@@ -222,7 +224,10 @@ public class SourceGenerator {
                 moduleName)).append(NEW_LINE);
         gsScript.append(PersistToolsConstants.AppScriptComments.COMMENT_SHOULD_BE_VERIFIED_AND_EXECUTED)
                 .append(NEW_LINE).append(NEW_LINE);
-            gsScript.append(gsScripts);
+        gsScript.append(gsScripts);
+        gsScript.append(NEW_LINE).append(NEW_LINE);
+        gsScript.append(getAppscriptContentFromResources(GOOGLE_SHEETS_INSERT_SCHEMA_FILE));
+        gsScript.append(NEW_LINE).append(NEW_LINE);
         try {
             Files.deleteIfExists(path);
             Files.createFile(path);
@@ -230,6 +235,18 @@ public class SourceGenerator {
         } catch (IOException e) {
             throw new BalException(String.format("could not write the google AppScript code to the %s file. %s",
                     GOOGLE_SHEETS_SCHEMA_FILE, e.getMessage()));
+        }
+    }
+
+    public static String getAppscriptContentFromResources(String path) throws BalException {
+        InputStream scriptAsStream = ClassLoader.getSystemResourceAsStream(path);
+        try {
+            byte[] bytes = scriptAsStream.readAllBytes();
+            String scriptAsString = new String(bytes, StandardCharsets.UTF_8);
+            return scriptAsString;
+        } catch (IOException e) {
+            throw new BalException(String.format("error occurred while reading the file: %s, %s",
+                    path, e.getMessage()));
         }
     }
 
