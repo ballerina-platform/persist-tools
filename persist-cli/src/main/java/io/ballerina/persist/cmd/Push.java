@@ -28,7 +28,9 @@ import io.ballerina.persist.utils.BalProjectUtils;
 import io.ballerina.persist.utils.JdbcDriverLoader;
 import io.ballerina.persist.utils.ScriptRunner;
 import io.ballerina.projects.DependencyGraph;
+import io.ballerina.projects.JvmTarget;
 import io.ballerina.projects.Package;
+import io.ballerina.projects.PackageManifest;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.ProjectException;
 import io.ballerina.projects.ResolvedPackageDependency;
@@ -50,6 +52,7 @@ import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -69,7 +72,6 @@ import static io.ballerina.persist.PersistToolsConstants.MYSQL_CONNECTOR_NAME_PR
 import static io.ballerina.persist.PersistToolsConstants.MYSQL_DRIVER_CLASS;
 import static io.ballerina.persist.PersistToolsConstants.PASSWORD;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
-import static io.ballerina.persist.PersistToolsConstants.PLATFORM;
 import static io.ballerina.persist.PersistToolsConstants.PROPERTY_KEY_PATH;
 import static io.ballerina.persist.PersistToolsConstants.SQL_SCHEMA_FILE;
 import static io.ballerina.persist.PersistToolsConstants.USER;
@@ -374,8 +376,7 @@ public class Push implements BLauncherCmd {
 
         if (mysqlDriverDependency.isPresent()) {
             Package mysqlDriverPackage = mysqlDriverDependency.get().packageInstance();
-            List<Map<String, Object>> dependencies = mysqlDriverPackage.manifest().platform(PLATFORM).dependencies();
-
+            List<Map<String, Object>> dependencies = getDependencies(mysqlDriverPackage);
             for (Map<String, Object> dependency : dependencies) {
                 if (dependency.get(PROPERTY_KEY_PATH).toString().contains(MYSQL_CONNECTOR_NAME_PREFIX)) {
                     relativeLibPath = dependency.get(PROPERTY_KEY_PATH).toString();
@@ -391,8 +392,7 @@ public class Push implements BLauncherCmd {
 
         if (mssqlDriverDependency.isPresent()) {
             Package mssqlDriverPackage = mssqlDriverDependency.get().packageInstance();
-            List<Map<String, Object>> dependencies = mssqlDriverPackage.manifest().platform(PLATFORM).dependencies();
-
+            List<Map<String, Object>> dependencies = getDependencies(mssqlDriverPackage);
             for (Map<String, Object> dependency : dependencies) {
                 if (dependency.get(PROPERTY_KEY_PATH).toString().contains(MSSQL_CONNECTOR_NAME_PREFIX)) {
                     relativeLibPath = dependency.get(PROPERTY_KEY_PATH).toString();
@@ -402,5 +402,16 @@ public class Push implements BLauncherCmd {
         }
 
         throw new BalException("failed to retrieve driver path in the local cache.");
+    }
+
+    private static List<Map<String, Object>> getDependencies(Package driverPackage) {
+        List<Map<String, Object>> dependencies = new ArrayList<>();
+        for (JvmTarget jvmTarget : JvmTarget.values()) {
+            PackageManifest.Platform platform = driverPackage.manifest().platform(jvmTarget.code());
+            if (platform != null) {
+                dependencies.addAll(platform.dependencies());
+            }
+        }
+        return dependencies;
     }
 }

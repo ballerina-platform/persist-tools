@@ -50,7 +50,6 @@ public class PersistToolsConstants {
     public static final String MIGRATIONS = "migrations";
     public static final String BALLERINA_MYSQL_DRIVER_NAME = "ballerinax/mysql.driver";
     public static final String BALLERINA_MSSQL_DRIVER_NAME = "ballerinax/mssql.driver";
-    public static final String PLATFORM = "java17";
     public static final String PROPERTY_KEY_PATH = "path";
     public static final String MYSQL_CONNECTOR_NAME_PREFIX = "mysql-connector";
     public static final String MSSQL_CONNECTOR_NAME_PREFIX = "mssql-jdbc";
