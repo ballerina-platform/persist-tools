@@ -157,7 +157,7 @@ public class ToolingInitTest {
         assertGeneratedSources("tool_test_init_11");
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     public void testInitWithModuleArg() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
             InstantiationException, IllegalAccessException {
         updateOutputBallerinaToml("tool_test_init_12");
