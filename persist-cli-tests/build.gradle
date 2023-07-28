@@ -152,6 +152,7 @@ task copyTestResources(type: Copy) {
     into("generated-sources/") {
         from "src/test/resources/test-src/input"
     }
+    doNotTrackState("build needs to run every time")
 }
 
 task copyTestPack(type: Copy) {
