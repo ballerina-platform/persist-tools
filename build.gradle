@@ -167,6 +167,7 @@ task copyPersistTool(type: Copy) {
 copyPersistTool.dependsOn ":persist-cli-tests:build"
 copyPersistTool.dependsOn ":persist-cli:build"
 
+build.doNotTrackState("build needs to run every time")
 build.dependsOn copyPersistTool
 build.dependsOn ":examples:build"
 
