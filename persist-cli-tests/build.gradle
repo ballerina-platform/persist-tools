@@ -162,6 +162,7 @@ task copyTestPack(type: Copy) {
     into("ballerina-distribution/") {
         from ballerinaDist
     }
+    doNotTrackState("build needs to run every time")
 }
 
 def checkExecResult(executionResult, failText, standardOutput) {
@@ -364,5 +365,6 @@ test.dependsOn ":persist-cli:build"
 test.finalizedBy stopTestDockerContainer
 test.finalizedBy stopMSSQLTestDockerContainer
 
+build.doNotTrackState("build needs to run every time")
 build.dependsOn ":persist-cli:build"
 build.dependsOn copyTestPack
