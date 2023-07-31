@@ -152,6 +152,7 @@ task copyTestResources(type: Copy) {
     into("generated-sources/") {
         from "src/test/resources/test-src/input"
     }
+    doNotTrackState("build needs to run every time")
 }
 
 task copyTestPack(type: Copy) {
@@ -161,12 +162,15 @@ task copyTestPack(type: Copy) {
     into("ballerina-distribution/") {
         from ballerinaDist
     }
+    doNotTrackState("build needs to run every time")
 }
 
-def checkExecResult(execResult, failText, standardOutput) {
-    if (execResult) {
-        if (execResult.getExitValue() != 0) {
-            throw new GradleException('Non-zero exit value: ' + execResult.getExitValue())
+def checkExecResult(executionResult, failText, standardOutput) {
+    if (executionResult) {
+        Provider<ExecResult> execResultProvider = executionResult.getProvider()
+        int exitCode = execResultProvider.get().getExitValue()
+        if (exitCode != 0) {
+            throw new GradleException('Non-zero exit value: ' + exitCode)
         }
         if (standardOutput.toString().contains(failText)) {
             throw new GradleException('"' + failText + '" string in output: ' + standardOutput.toString())
@@ -196,7 +200,7 @@ task startTestDockerContainer(type: Exec) {
         def healthCheck = 1
         def counter = 0
         doLast {
-            checkExecResult(execResult, 'Error', standardOutput)
+            checkExecResult(executionResult, 'Error', standardOutput)
             while (healthCheck != 0 && counter < 12) {
                 sleep(60 * 1000)
                 healthCheck = checkTestDockerContainerStatus('ballerina-persist-tools')
@@ -236,7 +240,7 @@ task startMSSQLTestDockerContainer(type: Exec) {
         def healthCheck = 1
         def counter = 0
         doLast {
-            checkExecResult(execResult, 'Error', standardOutput)
+            checkExecResult(executionResult, 'Error', standardOutput)
             while (healthCheck != 0 && counter < 12) {
                 sleep(60 * 1000)
                 healthCheck = checkMSSQLTestDockerContainerStatus('ballerina-persist-tools-mssql')
@@ -350,7 +354,7 @@ jacocoTestReport {
     def classFiles = new File("${rootDir}/persist-cli/build/classes/java/main/io/ballerina/persist")
     additionalClassDirs(classFiles)
     reports {
-        xml.enabled true
+        xml.required = true
     }
 }
 
@@ -361,5 +365,6 @@ test.dependsOn ":persist-cli:build"
 test.finalizedBy stopTestDockerContainer
 test.finalizedBy stopMSSQLTestDockerContainer
 
+build.doNotTrackState("build needs to run every time")
 build.dependsOn ":persist-cli:build"
 build.dependsOn copyTestPack

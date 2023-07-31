@@ -96,7 +96,7 @@ jacoco {
 jacocoTestReport {
     dependsOn test
     reports {
-        xml.enabled true
+        xml.required = true
     }
 }
 
@@ -121,6 +121,7 @@ checkstyle {
 
 spotbugsMain.finalizedBy validateSpotbugs
 checkstyleMain.dependsOn(":checkstyle:downloadCheckstyleRuleFiles")
+checkstyleTest.dependsOn(":checkstyle:downloadCheckstyleRuleFiles")
 
 def excludePattern = '**/module-info.java'
 tasks.withType(Checkstyle) {

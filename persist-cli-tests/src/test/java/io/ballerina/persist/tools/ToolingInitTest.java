@@ -42,7 +42,9 @@ import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertG
  */
 public class ToolingInitTest {
 
-    private String version;
+    private String persistSqlVersion;
+    private String persistInMemoryVersion;
+    private String persistGoogleSheetsVersion;
     private static final PrintStream errStream = System.err;
     public static final String GENERATED_SOURCES_DIRECTORY = Paths.get("build", "generated-sources").toString();
 
@@ -53,9 +55,9 @@ public class ToolingInitTest {
         try (InputStream inputStream = Files.newInputStream(versionPropertiesFile)) {
             Properties properties = new Properties();
             properties.load(inputStream);
-            version = properties.get("persistSqlVersion").toString();
-            version = properties.get("persistInMemoryVersion").toString();
-            version = properties.get("persistGoogleSheetsVersion").toString();
+            persistSqlVersion = properties.get("persistSqlVersion").toString();
+            persistInMemoryVersion = properties.get("persistInMemoryVersion").toString();
+            persistGoogleSheetsVersion = properties.get("persistGoogleSheetsVersion").toString();
         } catch (IOException e) {
             // ignore
         }
@@ -157,7 +159,7 @@ public class ToolingInitTest {
         assertGeneratedSources("tool_test_init_11");
     }
 
-    @Test(enabled = true)
+    @Test
     public void testInitWithModuleArg() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
             InstantiationException, IllegalAccessException {
         updateOutputBallerinaToml("tool_test_init_12");
@@ -190,10 +192,13 @@ public class ToolingInitTest {
            try {
                String content = Files.readString(filePath);
                String dataStore = "persist.inmemory";
+               String version = persistInMemoryVersion;
                if (content.contains("datastore = \"mysql\"") || content.contains("datastore = \"mssql\"")) {
                    dataStore = "persist.sql";
+                   version = persistSqlVersion;
                } else if (content.contains("datastore = \"googlesheets\"")) {
                    dataStore = "persist.googlesheets";
+                     version = persistGoogleSheetsVersion;
                }
                content = content.replaceAll(
                         "artifactId\\s=\\s\"" + dataStore + "-native\"\nversion\\s=\\s\\\"\\d+(\\.\\d+)+" +

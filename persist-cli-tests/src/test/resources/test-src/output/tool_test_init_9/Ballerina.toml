@@ -18,7 +18,7 @@ array = [ [1, 0], [0, 1] ]
 datastore = "mysql"
 module = "persist_init_9"
 
-[[platform.java11.dependency]]
+[[platform.java17.dependency]]
 groupId = "io.ballerina.stdlib"
 artifactId = "persist.sql-native"
 version = "1.1.0"

@@ -196,7 +196,7 @@ public class TomlSyntaxUtils {
                     }
                 } else if (member instanceof TableArrayNode) {
                     TableArrayNode tableArray = (TableArrayNode) member;
-                    if (tableArray.identifier().toSourceCode().trim().equals("platform.java11.dependency")) {
+                    if (tableArray.identifier().toSourceCode().trim().equals("platform.java17.dependency")) {
                         NodeList<KeyValueNode> fields = ((TableArrayNode) member).fields();
                         for (KeyValueNode field : fields) {
                             String value = field.value().toSourceCode().trim();
