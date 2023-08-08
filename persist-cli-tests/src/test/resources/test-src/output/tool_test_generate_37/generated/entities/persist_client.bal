@@ -5,6 +5,7 @@
 
 import ballerina/persist;
 import ballerina/jballerina.java;
+import ballerina/sql;
 import ballerinax/mysql;
 import ballerinax/mysql.driver as _;
 import ballerinax/persist.sql as psql;
@@ -146,7 +147,7 @@ public isolated client class Client {
         };
     }
 
-    isolated resource function get profiles(ProfileTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get profiles(ProfileTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "query"
     } external;
@@ -185,7 +186,7 @@ public isolated client class Client {
         return result;
     }
 
-    isolated resource function get users(UserTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get users(UserTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "query"
     } external;
@@ -224,7 +225,7 @@ public isolated client class Client {
         return result;
     }
 
-    isolated resource function get depts(DeptTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get depts(DeptTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "query"
     } external;
@@ -263,7 +264,7 @@ public isolated client class Client {
         return result;
     }
 
-    isolated resource function get customers(CustomerTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get customers(CustomerTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "query"
     } external;
@@ -302,7 +303,7 @@ public isolated client class Client {
         return result;
     }
 
-    isolated resource function get students(StudentTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get students(StudentTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "query"
     } external;
@@ -341,7 +342,7 @@ public isolated client class Client {
         return result;
     }
 
-    isolated resource function get multipleassociations(MultipleAssociationsTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get multipleassociations(MultipleAssociationsTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "query"
     } external;

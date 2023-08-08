@@ -79,6 +79,8 @@ public class DbClientSyntax implements ClientSyntax {
 
     public NodeList<ImportDeclarationNode> getImports() throws BalException {
         NodeList<ImportDeclarationNode> imports = BalSyntaxUtils.generateImport(entityModule);
+        imports = imports.add(BalSyntaxUtils.getImportDeclarationNode(BalSyntaxConstants.KEYWORD_BALLERINA,
+                BalSyntaxConstants.SQL, null));
         imports = imports.add(BalSyntaxUtils.getImportDeclarationNode(BalSyntaxConstants.KEYWORD_BALLERINAX,
                 importPackage, null));
         ImportPrefixNode prefix = NodeFactory.createImportPrefixNode(SyntaxTokenConstants.SYNTAX_TREE_AS,
@@ -89,7 +91,7 @@ public class DbClientSyntax implements ClientSyntax {
         Token prefixToken = AbstractNodeFactory.createIdentifierToken("psql");
         prefix = NodeFactory.createImportPrefixNode(SyntaxTokenConstants.SYNTAX_TREE_AS, prefixToken);
         imports = imports.add(BalSyntaxUtils.getImportDeclarationNode(BalSyntaxConstants.KEYWORD_BALLERINAX,
-                BalSyntaxConstants.PERSIST_MODULE + "." + BalSyntaxConstants.PERSIST_SQL, prefix));
+                BalSyntaxConstants.PERSIST_MODULE + "." + BalSyntaxConstants.SQL, prefix));
         return imports;
     }
 
@@ -128,7 +130,7 @@ public class DbClientSyntax implements ClientSyntax {
             }
 
             String clientMapElement = String.format(BalSyntaxConstants.PERSIST_CLIENT_MAP_ELEMENT,
-                    BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()),
+                    BalSyntaxUtils.stripEscapeCharacter(BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName())),
                     BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()),
                     this.dbSpecifics);
             persistClientMap.append(clientMapElement);
@@ -140,12 +142,14 @@ public class DbClientSyntax implements ClientSyntax {
 
     @Override
     public FunctionDefinitionNode getGetFunction(Entity entity) {
-        return BalSyntaxUtils.generateGetFunction(entity, this.nativeClass, BalSyntaxConstants.PERSIST_SQL);
+        return (FunctionDefinitionNode) NodeParser.parseObjectMember(
+                String.format(BalSyntaxConstants.EXTERNAL_SQL_GET_METHOD_TEMPLATE, entity.getResourceName(),
+                        entity.getEntityName(), BalSyntaxConstants.SQL, this.nativeClass));
     }
 
     @Override
     public FunctionDefinitionNode getGetByKeyFunction(Entity entity) {
-        return BalSyntaxUtils.generateGetByKeyFunction(entity, this.nativeClass, BalSyntaxConstants.PERSIST_SQL);
+        return BalSyntaxUtils.generateGetByKeyFunction(entity, this.nativeClass, BalSyntaxConstants.SQL);
     }
 
     @Override
@@ -180,7 +184,7 @@ public class DbClientSyntax implements ClientSyntax {
         update.addStatement(NodeParser.parseStatement(BalSyntaxConstants.SQL_CLIENT_DECLARATION));
 
         String getPersistClientStatement = String.format(BalSyntaxConstants.GET_PERSIST_CLIENT,
-                BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()));
+                BalSyntaxUtils.stripEscapeCharacter(BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName())));
         update.addStatement(NodeParser.parseStatement(
                 String.format(BalSyntaxConstants.LOCK_TEMPLATE, getPersistClientStatement)));
 
@@ -210,7 +214,7 @@ public class DbClientSyntax implements ClientSyntax {
         delete.addStatement(NodeParser.parseStatement(BalSyntaxConstants.SQL_CLIENT_DECLARATION));
 
         String getPersistClientStatement = String.format(BalSyntaxConstants.GET_PERSIST_CLIENT,
-                BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()));
+                BalSyntaxUtils.stripEscapeCharacter(BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName())));
         delete.addStatement(NodeParser.parseStatement(
                 String.format(BalSyntaxConstants.LOCK_TEMPLATE, getPersistClientStatement)));
 
@@ -316,7 +320,8 @@ public class DbClientSyntax implements ClientSyntax {
             }
 
             mapBuilder.append(String.format(BalSyntaxConstants.METADATA_RECORD_ELEMENT_TEMPLATE,
-                    BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()), entityMetaData));
+                    BalSyntaxUtils.stripEscapeCharacter((BalSyntaxUtils.
+                            getStringWithUnderScore(entity.getEntityName()))), entityMetaData));
         }
         return NodeParser.parseObjectMember(String.format(BalSyntaxConstants.METADATA_RECORD_TEMPLATE, mapBuilder));
     }
@@ -367,7 +372,8 @@ public class DbClientSyntax implements ClientSyntax {
                                                       String tableName, String parameterType) {
         create.addStatement(NodeParser.parseStatement(BalSyntaxConstants.SQL_CLIENT_DECLARATION));
 
-        String getPersistClientStatement = String.format(BalSyntaxConstants.GET_PERSIST_CLIENT, tableName);
+        String getPersistClientStatement = String.format(BalSyntaxConstants.GET_PERSIST_CLIENT,
+                BalSyntaxUtils.stripEscapeCharacter(tableName));
         create.addStatement(NodeParser.parseStatement(
                 String.format(BalSyntaxConstants.LOCK_TEMPLATE, getPersistClientStatement)));
 
