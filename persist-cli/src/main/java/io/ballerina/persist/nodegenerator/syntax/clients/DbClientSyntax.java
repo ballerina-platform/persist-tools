@@ -128,11 +128,10 @@ public class DbClientSyntax implements ClientSyntax {
             if (persistClientMap.length() != 0) {
                 persistClientMap.append(BalSyntaxConstants.COMMA_WITH_NEWLINE);
             }
-
+            String constantName = BalSyntaxUtils.stripEscapeCharacter(BalSyntaxUtils.
+                    getStringWithUnderScore(entity.getEntityName()));
             String clientMapElement = String.format(BalSyntaxConstants.PERSIST_CLIENT_MAP_ELEMENT,
-                    BalSyntaxUtils.stripEscapeCharacter(BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName())),
-                    BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()),
-                    this.dbSpecifics);
+                    constantName, constantName, this.dbSpecifics);
             persistClientMap.append(clientMapElement);
         }
         init.addStatement(NodeParser.parseStatement(String.format(
