@@ -5,15 +5,16 @@
 
 import ballerina/persist;
 import ballerina/jballerina.java;
+import ballerina/sql;
 import ballerinax/mysql;
 import ballerinax/mysql.driver as _;
 import ballerinax/persist.sql as psql;
 
-const 'BUILDING = "'buildings";
-const 'DEPARTMENT = "'departments";
-const 'EMPLOYEE = "'employees";
-const 'ORDER_ITEM = "'orderitems";
-const 'WORKSPACE = "'workspaces";
+const BUILDING = "buildings";
+const DEPARTMENT = "departments";
+const EMPLOYEE = "employees";
+const ORDER_ITEM = "orderitems";
+const WORKSPACE = "workspaces";
 
 public isolated client class Client {
     *persist:AbstractPersistClient;
@@ -23,7 +24,7 @@ public isolated client class Client {
     private final map<psql:SQLClient> persistClients;
 
     private final record {|psql:SQLMetadata...;|} & readonly metadata = {
-        ['BUILDING] : {
+        [BUILDING] : {
             entityName: "Building",
             tableName: "Building",
             fieldMetadata: {
@@ -40,7 +41,7 @@ public isolated client class Client {
             keyFields: ["buildingCode"],
             joinMetadata: {workspaces: {entity: 'Workspace, fieldName: "workspaces", refTable: "'Workspace", refColumns: ["locationBuildingCode"], joinColumns: ["'buildingCode"], 'type: psql:MANY_TO_ONE}}
         },
-        ['DEPARTMENT] : {
+        [DEPARTMENT] : {
             entityName: "Department",
             tableName: "Department",
             fieldMetadata: {
@@ -58,7 +59,7 @@ public isolated client class Client {
             keyFields: ["deptNo"],
             joinMetadata: {employees: {entity: 'Employee, fieldName: "employees", refTable: "'Employee", refColumns: ["departmentDeptNo"], joinColumns: ["deptNo"], 'type: psql:MANY_TO_ONE}}
         },
-        ['EMPLOYEE] : {
+        [EMPLOYEE] : {
             entityName: "Employee",
             tableName: "Employee",
             fieldMetadata: {
@@ -82,7 +83,7 @@ public isolated client class Client {
                 workspace: {entity: 'Workspace, fieldName: "workspace", refTable: "'Workspace", refColumns: ["workspaceId"], joinColumns: ["workspaceWorkspaceId"], 'type: psql:ONE_TO_ONE}
             }
         },
-        ['ORDER_ITEM] : {
+        [ORDER_ITEM] : {
             entityName: "OrderItem",
             tableName: "OrderItem",
             fieldMetadata: {
@@ -93,7 +94,7 @@ public isolated client class Client {
             },
             keyFields: ["orderId", "itemId"]
         },
-        ['WORKSPACE] : {
+        [WORKSPACE] : {
             entityName: "Workspace",
             tableName: "Workspace",
             fieldMetadata: {
@@ -130,15 +131,15 @@ public isolated client class Client {
         }
         self.dbClient = dbClient;
         self.persistClients = {
-            ['BUILDING] : check new (dbClient, self.metadata.get('BUILDING), psql:MYSQL_SPECIFICS),
-            ['DEPARTMENT] : check new (dbClient, self.metadata.get('DEPARTMENT), psql:MYSQL_SPECIFICS),
-            ['EMPLOYEE] : check new (dbClient, self.metadata.get('EMPLOYEE), psql:MYSQL_SPECIFICS),
-            ['ORDER_ITEM] : check new (dbClient, self.metadata.get('ORDER_ITEM), psql:MYSQL_SPECIFICS),
-            ['WORKSPACE] : check new (dbClient, self.metadata.get('WORKSPACE), psql:MYSQL_SPECIFICS)
+            [BUILDING] : check new (dbClient, self.metadata.get(BUILDING), psql:MYSQL_SPECIFICS),
+            [DEPARTMENT] : check new (dbClient, self.metadata.get(DEPARTMENT), psql:MYSQL_SPECIFICS),
+            [EMPLOYEE] : check new (dbClient, self.metadata.get(EMPLOYEE), psql:MYSQL_SPECIFICS),
+            [ORDER_ITEM] : check new (dbClient, self.metadata.get(ORDER_ITEM), psql:MYSQL_SPECIFICS),
+            [WORKSPACE] : check new (dbClient, self.metadata.get(WORKSPACE), psql:MYSQL_SPECIFICS)
         };
     }
 
-    isolated resource function get 'buildings('BuildingTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get 'buildings('BuildingTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "query"
     } external;
@@ -151,7 +152,7 @@ public isolated client class Client {
     isolated resource function post 'buildings('BuildingInsert[] data) returns 'string[]|persist:Error {
         psql:SQLClient sqlClient;
         lock {
-            sqlClient = self.persistClients.get('BUILDING);
+            sqlClient = self.persistClients.get(BUILDING);
         }
         _ = check sqlClient.runBatchInsertQuery(data);
         return from 'BuildingInsert inserted in data
@@ -161,7 +162,7 @@ public isolated client class Client {
     isolated resource function put 'buildings/['string 'buildingCode]('BuildingUpdate value) returns 'Building|persist:Error {
         psql:SQLClient sqlClient;
         lock {
-            sqlClient = self.persistClients.get('BUILDING);
+            sqlClient = self.persistClients.get(BUILDING);
         }
         _ = check sqlClient.runUpdateQuery('buildingCode, value);
         return self->/'buildings/['buildingCode].get();
@@ -171,13 +172,13 @@ public isolated client class Client {
         'Building result = check self->/'buildings/['buildingCode].get();
         psql:SQLClient sqlClient;
         lock {
-            sqlClient = self.persistClients.get('BUILDING);
+            sqlClient = self.persistClients.get(BUILDING);
         }
         _ = check sqlClient.runDeleteQuery('buildingCode);
         return result;
     }
 
-    isolated resource function get 'departments('DepartmentTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get 'departments('DepartmentTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "query"
     } external;
@@ -190,7 +191,7 @@ public isolated client class Client {
     isolated resource function post 'departments('DepartmentInsert[] data) returns string[]|persist:Error {
         psql:SQLClient sqlClient;
         lock {
-            sqlClient = self.persistClients.get('DEPARTMENT);
+            sqlClient = self.persistClients.get(DEPARTMENT);
         }
         _ = check sqlClient.runBatchInsertQuery(data);
         return from 'DepartmentInsert inserted in data
@@ -200,7 +201,7 @@ public isolated client class Client {
     isolated resource function put 'departments/[string deptNo]('DepartmentUpdate value) returns 'Department|persist:Error {
         psql:SQLClient sqlClient;
         lock {
-            sqlClient = self.persistClients.get('DEPARTMENT);
+            sqlClient = self.persistClients.get(DEPARTMENT);
         }
         _ = check sqlClient.runUpdateQuery(deptNo, value);
         return self->/'departments/[deptNo].get();
@@ -210,13 +211,13 @@ public isolated client class Client {
         'Department result = check self->/'departments/[deptNo].get();
         psql:SQLClient sqlClient;
         lock {
-            sqlClient = self.persistClients.get('DEPARTMENT);
+            sqlClient = self.persistClients.get(DEPARTMENT);
         }
         _ = check sqlClient.runDeleteQuery(deptNo);
         return result;
     }
 
-    isolated resource function get 'employees('EmployeeTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get 'employees('EmployeeTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "query"
     } external;
@@ -229,7 +230,7 @@ public isolated client class Client {
     isolated resource function post 'employees('EmployeeInsert[] data) returns string[]|persist:Error {
         psql:SQLClient sqlClient;
         lock {
-            sqlClient = self.persistClients.get('EMPLOYEE);
+            sqlClient = self.persistClients.get(EMPLOYEE);
         }
         _ = check sqlClient.runBatchInsertQuery(data);
         return from 'EmployeeInsert inserted in data
@@ -239,7 +240,7 @@ public isolated client class Client {
     isolated resource function put 'employees/[string empNo]('EmployeeUpdate value) returns 'Employee|persist:Error {
         psql:SQLClient sqlClient;
         lock {
-            sqlClient = self.persistClients.get('EMPLOYEE);
+            sqlClient = self.persistClients.get(EMPLOYEE);
         }
         _ = check sqlClient.runUpdateQuery(empNo, value);
         return self->/'employees/[empNo].get();
@@ -249,13 +250,13 @@ public isolated client class Client {
         'Employee result = check self->/'employees/[empNo].get();
         psql:SQLClient sqlClient;
         lock {
-            sqlClient = self.persistClients.get('EMPLOYEE);
+            sqlClient = self.persistClients.get(EMPLOYEE);
         }
         _ = check sqlClient.runDeleteQuery(empNo);
         return result;
     }
 
-    isolated resource function get 'orderitems('OrderItemTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get 'orderitems('OrderItemTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "query"
     } external;
@@ -268,7 +269,7 @@ public isolated client class Client {
     isolated resource function post 'orderitems('OrderItemInsert[] data) returns [string, string][]|persist:Error {
         psql:SQLClient sqlClient;
         lock {
-            sqlClient = self.persistClients.get('ORDER_ITEM);
+            sqlClient = self.persistClients.get(ORDER_ITEM);
         }
         _ = check sqlClient.runBatchInsertQuery(data);
         return from 'OrderItemInsert inserted in data
@@ -278,7 +279,7 @@ public isolated client class Client {
     isolated resource function put 'orderitems/[string orderId]/[string itemId]('OrderItemUpdate value) returns 'OrderItem|persist:Error {
         psql:SQLClient sqlClient;
         lock {
-            sqlClient = self.persistClients.get('ORDER_ITEM);
+            sqlClient = self.persistClients.get(ORDER_ITEM);
         }
         _ = check sqlClient.runUpdateQuery({"orderId": orderId, "itemId": itemId}, value);
         return self->/'orderitems/[orderId]/[itemId].get();
@@ -288,13 +289,13 @@ public isolated client class Client {
         'OrderItem result = check self->/'orderitems/[orderId]/[itemId].get();
         psql:SQLClient sqlClient;
         lock {
-            sqlClient = self.persistClients.get('ORDER_ITEM);
+            sqlClient = self.persistClients.get(ORDER_ITEM);
         }
         _ = check sqlClient.runDeleteQuery({"orderId": orderId, "itemId": itemId});
         return result;
     }
 
-    isolated resource function get 'workspaces('WorkspaceTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get 'workspaces('WorkspaceTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "query"
     } external;
@@ -307,7 +308,7 @@ public isolated client class Client {
     isolated resource function post 'workspaces('WorkspaceInsert[] data) returns string[]|persist:Error {
         psql:SQLClient sqlClient;
         lock {
-            sqlClient = self.persistClients.get('WORKSPACE);
+            sqlClient = self.persistClients.get(WORKSPACE);
         }
         _ = check sqlClient.runBatchInsertQuery(data);
         return from 'WorkspaceInsert inserted in data
@@ -317,7 +318,7 @@ public isolated client class Client {
     isolated resource function put 'workspaces/[string workspaceId]('WorkspaceUpdate value) returns 'Workspace|persist:Error {
         psql:SQLClient sqlClient;
         lock {
-            sqlClient = self.persistClients.get('WORKSPACE);
+            sqlClient = self.persistClients.get(WORKSPACE);
         }
         _ = check sqlClient.runUpdateQuery(workspaceId, value);
         return self->/'workspaces/[workspaceId].get();
@@ -327,7 +328,7 @@ public isolated client class Client {
         'Workspace result = check self->/'workspaces/[workspaceId].get();
         psql:SQLClient sqlClient;
         lock {
-            sqlClient = self.persistClients.get('WORKSPACE);
+            sqlClient = self.persistClients.get(WORKSPACE);
         }
         _ = check sqlClient.runDeleteQuery(workspaceId);
         return result;
