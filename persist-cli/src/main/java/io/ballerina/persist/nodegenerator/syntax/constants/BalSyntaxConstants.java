@@ -342,6 +342,21 @@ public class BalSyntaxConstants {
                     System.lineSeparator() +
             "        name: \"queryStream\"" + System.lineSeparator() +
             "    } external;";
+
+    public static final String QUERY_NATIVE_SQL_METHOD_TEMPLATE =
+            "remote isolated function " +
+                    "queryNativeSQL(sql:ParameterizedQuery sqlQuery, typedesc<record {}> rowType = <>) " +
+                    "returns stream<rowType, persist:Error?> = @java:Method {" + System.lineSeparator() +
+                    "        'class: \"io.ballerina.stdlib.persist.sql.datastore.%s\""
+                    + System.lineSeparator() +
+                    "    } external;";
+
+    public static final String EXECUTE_NATIVE_SQL_METHOD_TEMPLATE =
+            "remote isolated function executeNativeSQL(sql:ParameterizedQuery sqlQuery) " +
+                    "returns ExecutionResult|persist:Error = @java:Method {" + System.lineSeparator() +
+                    "        'class: \"io.ballerina.stdlib.persist.sql.datastore.%s\"" + System.lineSeparator() +
+                    "    } external;\n";
+
     public static final String CONSTRAINT_STRING = "constraint:String";
     public static final String CONSTRAINT = "constraint";
     public static final String LENGTH = "length";
