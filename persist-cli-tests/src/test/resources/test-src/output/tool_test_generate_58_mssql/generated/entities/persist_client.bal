@@ -1058,7 +1058,7 @@ public isolated client class Client {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MSSQLProcessor"
     } external;
 
-    remote isolated function executeNativeSQL(sql:ParameterizedQuery sqlQuery) returns persist:ExecutionResult|persist:Error = @java:Method {
+    remote isolated function executeNativeSQL(sql:ParameterizedQuery sqlQuery) returns psql:ExecutionResult|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MSSQLProcessor"
     } external;
 
