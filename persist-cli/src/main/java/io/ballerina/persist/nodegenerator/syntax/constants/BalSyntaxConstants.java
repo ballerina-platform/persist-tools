@@ -353,7 +353,7 @@ public class BalSyntaxConstants {
 
     public static final String EXECUTE_NATIVE_SQL_METHOD_TEMPLATE =
             "remote isolated function executeNativeSQL(sql:ParameterizedQuery sqlQuery) " +
-                    "returns persist:ExecutionResult|persist:Error = @java:Method {" + System.lineSeparator() +
+                    "returns psql:ExecutionResult|persist:Error = @java:Method {" + System.lineSeparator() +
                     "        'class: \"io.ballerina.stdlib.persist.sql.datastore.%s\"" + System.lineSeparator() +
                     "    } external;\n";
 
