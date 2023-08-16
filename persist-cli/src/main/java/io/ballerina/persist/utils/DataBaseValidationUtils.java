@@ -33,7 +33,7 @@ public class DataBaseValidationUtils {
 
     private static final String REGEX_DB_NAME_PATTERN = "[^A-Za-z\\d$_]";
 
-    private DataBaseValidationUtils(){}
+    private DataBaseValidationUtils() {}
 
     public static String validateDatabaseInput(String databaseName) throws BalException {
         if (databaseName == null || databaseName.isEmpty() || databaseName.isBlank()) {

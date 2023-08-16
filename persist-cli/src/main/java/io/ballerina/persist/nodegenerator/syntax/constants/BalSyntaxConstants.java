@@ -130,7 +130,7 @@ public class BalSyntaxConstants {
     public static final String GENERATED_SOURCE_DIRECTORY = "generated";
     public static final String PATH_DB_CONFIGURATION_BAL_FILE = "persist_db_config.bal";
     public static final String PATH_SHEET_CONFIGURATION_BAL_FILE = "persist_sheet_config.bal";
-    public static final String PERSIST_DEPENDENCY = "platform.java11.dependency";
+    public static final String PERSIST_DEPENDENCY = "platform.java17.dependency";
     public static final String KEYWORD_JBALLERINA_JAVA_PREFIX = "jballerina.java";
     public static final String KEYWORD_READONLY = "readonly";
     public static final String JDBC_URL_WITHOUT_DATABASE = "jdbc:%s://%s:%s";
@@ -163,7 +163,7 @@ public class BalSyntaxConstants {
     public static final String GOOGLE_API_SHEET = "googleapis.sheets";
     public static final String HTTP = "http";
     public static final String GOOGLE_SHEETS = "googlesheets";
-    public static final String PERSIST_SQL = "sql";
+    public static final String SQL = "sql";
     public static final String PERSIST_IN_MEMORY = "inmemory";
     public static final String BAL_EXTENSION = ".bal";
     public static final String INIT_DB_CLIENT = "private final %s:Client dbClient;";
@@ -325,6 +325,13 @@ public class BalSyntaxConstants {
 
     public static final String EXTERNAL_GET_METHOD_TEMPLATE = "isolated resource function get %s(" +
             "%sTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {"
+            + System.lineSeparator()
+            + "'class: \"io.ballerina.stdlib.persist.%s.datastore.%s\"," + System.lineSeparator() +
+            " name: \"query\"} external;";
+    public static final String EXTERNAL_SQL_GET_METHOD_TEMPLATE = "isolated resource function get %s(" +
+            "%sTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, " +
+            "sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, " +
+            "sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {"
             + System.lineSeparator()
             + "'class: \"io.ballerina.stdlib.persist.%s.datastore.%s\"," + System.lineSeparator() +
             " name: \"query\"} external;";

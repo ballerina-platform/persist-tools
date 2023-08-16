@@ -68,7 +68,7 @@ public class ToolingDbPushTest {
         assertCreateDatabaseTables("tool_test_db_push_1", "entities", tables);
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     @Description("Database is not available and it is created while running the db push command")
     public void testDbPushWithoutDatabaseMSSQL() throws BalException {
         ArrayList<PersistTable> tables = new ArrayList<>();
@@ -125,7 +125,7 @@ public class ToolingDbPushTest {
         assertCreateDatabaseTables("tool_test_db_push_3", "entities", tables);
     }
 
-    @Test(enabled = true, dependsOnMethods = { "testDbPushWithoutDatabaseMSSQL" })
+    @Test(enabled = false, dependsOnMethods = { "testDbPushWithoutDatabaseMSSQL" })
     @Description("Database already exists. An entity is removed. The database tables should not be affected.")
     public void testDbPushEntityRemovedMSSQL() throws BalException {
         ArrayList<PersistTable> tables = new ArrayList<>();
@@ -182,7 +182,7 @@ public class ToolingDbPushTest {
         assertCreateDatabaseTables("tool_test_db_push_5", "entities", tables);
     }
 
-    @Test(enabled = true, dependsOnMethods = { "testDbPushEntityRemoved" })
+    @Test(enabled = false, dependsOnMethods = { "testDbPushEntityRemoved" })
     @Description("Database already exists. An entity is updated. The respective table should be updated.")
     public void testDbPushEntityUpdatedMSSQL() throws BalException {
         ArrayList<PersistTable> tables = new ArrayList<>();

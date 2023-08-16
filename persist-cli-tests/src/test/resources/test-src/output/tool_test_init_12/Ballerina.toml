@@ -11,7 +11,7 @@ observabilityIncluded = true
 datastore = "inmemory"
 module = "persist_init_12.test"
 
-[[platform.java11.dependency]]
+[[platform.java17.dependency]]
 groupId = "io.ballerina.stdlib"
 artifactId = "persist.inmemory-native"
-version = "1.1.0-SNAPSHOT"
+version = "1.2.0-SNAPSHOT"

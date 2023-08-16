@@ -5,6 +5,7 @@
 
 import ballerina/persist;
 import ballerina/jballerina.java;
+import ballerina/sql;
 import ballerinax/mysql;
 import ballerinax/mysql.driver as _;
 import ballerinax/persist.sql as psql;
@@ -40,7 +41,7 @@ public isolated client class Client {
         self.persistClients = {[BYTE_TEST] : check new (dbClient, self.metadata.get(BYTE_TEST), psql:MYSQL_SPECIFICS)};
     }
 
-    isolated resource function get bytetests(ByteTestTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get bytetests(ByteTestTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "query"
     } external;

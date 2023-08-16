@@ -175,7 +175,7 @@ public class TomlSyntaxUtils {
         String artifactId = BalSyntaxConstants.PERSIST_MODULE + "." + datasource;
         if (datasource.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB) ||
                 datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
-            artifactId = BalSyntaxConstants.PERSIST_MODULE + "." + BalSyntaxConstants.PERSIST_SQL;
+            artifactId = BalSyntaxConstants.PERSIST_MODULE + "." + BalSyntaxConstants.SQL;
         }
         if (Objects.nonNull(fileNamePath)) {
             SyntaxTree syntaxTree = SyntaxTree.from(configDocument, fileNamePath.toString());
@@ -196,7 +196,7 @@ public class TomlSyntaxUtils {
                     }
                 } else if (member instanceof TableArrayNode) {
                     TableArrayNode tableArray = (TableArrayNode) member;
-                    if (tableArray.identifier().toSourceCode().trim().equals("platform.java11.dependency")) {
+                    if (tableArray.identifier().toSourceCode().trim().equals("platform.java17.dependency")) {
                         NodeList<KeyValueNode> fields = ((TableArrayNode) member).fields();
                         for (KeyValueNode field : fields) {
                             String value = field.value().toSourceCode().trim();

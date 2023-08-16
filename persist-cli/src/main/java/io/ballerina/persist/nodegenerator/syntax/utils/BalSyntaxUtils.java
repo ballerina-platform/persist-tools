@@ -81,8 +81,8 @@ public class BalSyntaxUtils {
         NodeList<ModuleMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
         for (Entity entity : entityModule.getEntityMap().values()) {
             moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration(String.format(
-                    "const %s = \"%s\";", getStringWithUnderScore(entity.getEntityName()),
-                    entity.getResourceName())));
+                    "const %s = \"%s\";", stripEscapeCharacter(getStringWithUnderScore(entity.getEntityName())),
+                    stripEscapeCharacter(entity.getResourceName()))));
         }
         return moduleMembers;
     }
