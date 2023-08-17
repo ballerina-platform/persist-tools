@@ -231,6 +231,16 @@ public class DbClientSyntax implements ClientSyntax {
         return delete.getFunctionDefinitionNode();
     }
 
+    public FunctionDefinitionNode getQueryNativeSQLFunction() {
+        return (FunctionDefinitionNode) NodeParser.parseObjectMember(
+                String.format(BalSyntaxConstants.QUERY_NATIVE_SQL_METHOD_TEMPLATE, this.nativeClass));
+    }
+
+    public FunctionDefinitionNode getExecuteNativeSQLFunction() {
+        return (FunctionDefinitionNode) NodeParser.parseObjectMember(
+                String.format(BalSyntaxConstants.EXECUTE_NATIVE_SQL_METHOD_TEMPLATE, this.nativeClass));
+    }
+
     private static Node generateMetadataRecord(Module entityModule) {
         StringBuilder mapBuilder = new StringBuilder();
         for (Entity entity : entityModule.getEntityMap().values()) {

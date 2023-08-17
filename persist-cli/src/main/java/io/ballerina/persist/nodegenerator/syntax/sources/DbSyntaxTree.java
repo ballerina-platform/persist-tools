@@ -86,6 +86,8 @@ public class DbSyntaxTree implements RDBMSSyntaxTree {
                 clientObject.addMember(function, false);
             });
         });
+        clientObject.addMember(dbClientSyntax.getQueryNativeSQLFunction(), true);
+        clientObject.addMember(dbClientSyntax.getExecuteNativeSQLFunction(), true);
         clientObject.addMember(dbClientSyntax.getCloseFunction(), true);
         moduleMembers = moduleMembers.add(clientObject.getClassDefinitionNode());
         return BalSyntaxUtils.generateSyntaxTree(imports, moduleMembers);

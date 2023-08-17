@@ -221,6 +221,14 @@ public isolated client class Client {
         return result;
     }
 
+    remote isolated function queryNativeSQL(sql:ParameterizedQuery sqlQuery, typedesc<record {}> rowType = <>) returns stream<rowType, persist:Error?> = @java:Method {
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor"
+    } external;
+
+    remote isolated function executeNativeSQL(sql:ParameterizedQuery sqlQuery) returns psql:ExecutionResult|persist:Error = @java:Method {
+        'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor"
+    } external;
+
     public isolated function close() returns persist:Error? {
         error? result = self.dbClient.close();
         if result is error {
