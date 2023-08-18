@@ -137,7 +137,7 @@ public isolated client class Client {
                 refreshToken: refreshToken
             }
         };
-        http:Client|error httpClient = new ("https://docs.google.com/spreadsheets", httpClientConfiguration);
+        http:Client|error httpClient = new (string `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values`, httpClientConfiguration);
         if httpClient is error {
             return <persist:Error>error(httpClient.message());
         }
