@@ -272,9 +272,9 @@ public class BalSyntaxConstants {
             System.lineSeparator() + "                refreshToken: refreshToken" +
             System.lineSeparator() + "            }" +
             System.lineSeparator() + "        };";
-    public static final String HTTP_CLIENT_INIT_TEMPLATE =
-            "http:Client|error httpClient = new (\"https://docs.google.com/spreadsheets\", httpClientConfiguration);" +
-                    System.lineSeparator();
+    public static final String HTTP_CLIENT_INIT_TEMPLATE = "http:Client|error httpClient = new (string " + 
+            "`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values`, httpClientConfiguration);" 
+            + System.lineSeparator();
     public static final String SHEET_CLIENT_INIT_TEMPLATE =
             "sheets:Client|error googleSheetClient = new (sheetsClientConfig);" + System.lineSeparator();
     public static final String SELF_HTTP_CLIENT_INIT_TEMPLATE =
