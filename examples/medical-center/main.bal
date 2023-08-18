@@ -60,14 +60,14 @@ public function main() returns error? {
         quantity: 13421.456
     };
     _ = check mcClient->/medicalitems.post([item2, item3, item4]);
-
+    runtime:sleep(30);
     io:println("\n========== type1 ==========");
     _ = check from entities:MedicalItem itemx in mcClient->/medicalitems.get(entities:MedicalItem)
         where itemx.itemType == "type1"
         do {
             io:println(itemx);
         };
-
+        
     io:println("\n========== type2 ==========");
     _ = check from entities:MedicalItem itemx in mcClient->/medicalitems.get(entities:MedicalItem)
         where itemx.itemType == "type2"
@@ -103,7 +103,7 @@ public function main() returns error? {
         do {
             io:println(itemx);
         };
-
+    runtime:sleep(30);
     io:println("\n========== create medical needs ==========");
     entities:MedicalNeed mnItem = {
         needId: 1,
