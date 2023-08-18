@@ -3,3 +3,6 @@ spreadsheetId = ""
 clientId = ""
 clientSecret = ""
 refreshToken = ""
+scriptId = ""
+
+

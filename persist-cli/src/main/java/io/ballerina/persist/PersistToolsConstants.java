@@ -37,6 +37,7 @@ public class PersistToolsConstants {
     public static final String KEYWORD_CLIENT_ID = "clientId";
     public static final String KEYWORD_CLIENT_SECRET = "clientSecret";
     public static final String KEYWORD_REFRESH_TOKEN = "refreshToken";
+    public static final String KEYWORD_SCRIPT_ID = "scriptId";
 
     public static final String CONFIG_SCRIPT_FILE = "Config.toml";
     public static final String PASSWORD = "password";
@@ -46,6 +47,7 @@ public class PersistToolsConstants {
     public static final String PERSIST_CONFIG_PATTERN = "persist.model.storage";
     public static final String SQL_SCHEMA_FILE = "script.sql";
     public static final String GOOGLE_SHEETS_SCHEMA_FILE = "script.gs";
+    public static final String GOOGLE_SHEETS_INSERT_SCHEMA_FILE = "appscript/insert.gs";
     public static final String PERSIST_DIRECTORY = "persist";
     public static final String MIGRATIONS = "migrations";
     public static final String BALLERINA_MYSQL_DRIVER_NAME = "ballerinax/mysql.driver";
