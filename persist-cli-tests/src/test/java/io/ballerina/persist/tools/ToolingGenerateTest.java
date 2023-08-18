@@ -439,4 +439,11 @@ public class ToolingGenerateTest {
         executeCommand("tool_test_generate_63_mssql", GENERATE);
         assertGeneratedSources("tool_test_generate_63_mssql");
     }
+
+    @Test(enabled = true)
+    @Description("module name is in the shape x.y.z")
+    public void testGenerateEntityDotSeperatedModuleNames() {
+        executeCommand("tool_test_generate_64", GENERATE);
+        assertGeneratedSources("tool_test_generate_64");
+    }
 }
