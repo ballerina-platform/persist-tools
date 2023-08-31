@@ -54,9 +54,7 @@ public class GSheetClientSyntax implements ClientSyntax {
 
     @Override
     public NodeList<ImportDeclarationNode> getImports() {
-        NodeList<ImportDeclarationNode> imports = BalSyntaxUtils.generateImport(entityModule);
-        imports = imports.add(BalSyntaxUtils.getImportDeclarationNode(BalSyntaxConstants.KEYWORD_BALLERINA,
-                BalSyntaxConstants.HTTP, null));
+        NodeList<ImportDeclarationNode> imports = BalSyntaxUtils.generateImportGSheets(entityModule);
         imports = imports.add(BalSyntaxUtils.getImportDeclarationNode(BalSyntaxConstants.KEYWORD_BALLERINAX,
                 BalSyntaxConstants.GOOGLE_API_SHEET, null));
         imports = imports.add(BalSyntaxUtils.getImportDeclarationNode(BalSyntaxConstants.KEYWORD_BALLERINAX,

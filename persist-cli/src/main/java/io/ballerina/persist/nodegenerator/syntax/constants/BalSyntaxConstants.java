@@ -132,6 +132,7 @@ public class BalSyntaxConstants {
     public static final String PATH_SHEET_CONFIGURATION_BAL_FILE = "persist_sheet_config.bal";
     public static final String PERSIST_DEPENDENCY = "platform.java17.dependency";
     public static final String KEYWORD_JBALLERINA_JAVA_PREFIX = "jballerina.java";
+    public static final String KEYWORD_HTTP = "http";
     public static final String KEYWORD_READONLY = "readonly";
     public static final String JDBC_URL_WITHOUT_DATABASE = "jdbc:%s://%s:%s";
     public static final String JDBC_URL_WITH_DATABASE_MYSQL = "jdbc:%s://%s:%s/%s";
