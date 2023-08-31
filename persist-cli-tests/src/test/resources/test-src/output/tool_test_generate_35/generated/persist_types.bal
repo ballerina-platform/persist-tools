@@ -1,8 +1,6 @@
 // AUTO-GENERATED FILE. DO NOT MODIFY.
-
 // This file is an auto-generated file by Ballerina persistence layer for model.
 // It should not be modified by hand.
-
 import ballerina/time;
 
 public type Building record {|
@@ -128,3 +126,4 @@ public type EmployeeUpdate record {|
     time:Date hireDate?;
     string departmentDeptNo?;
 |};
+
