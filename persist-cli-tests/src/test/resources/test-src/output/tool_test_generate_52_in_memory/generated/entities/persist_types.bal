@@ -1,8 +1,6 @@
 // AUTO-GENERATED FILE. DO NOT MODIFY.
-
 // This file is an auto-generated file by Ballerina persistence layer for model.
 // It should not be modified by hand.
-
 import ballerina/time;
 
 public enum Gender {
@@ -145,3 +143,4 @@ public type DepartmentInsert Department;
 public type DepartmentUpdate record {|
     string deptName?;
 |};
+

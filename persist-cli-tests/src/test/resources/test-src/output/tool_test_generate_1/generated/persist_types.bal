@@ -1,8 +1,6 @@
 // AUTO-GENERATED FILE. DO NOT MODIFY.
-
 // This file is an auto-generated file by Ballerina persistence layer for model.
 // It should not be modified by hand.
-
 import ballerina/constraint;
 import ballerina/time;
 
@@ -144,3 +142,4 @@ public type DepartmentInsert Department;
 public type DepartmentUpdate record {|
     string deptName?;
 |};
+
