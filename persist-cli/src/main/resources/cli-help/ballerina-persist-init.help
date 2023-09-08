@@ -17,6 +17,7 @@ OPTIONS
        --datastore <store type>
               The type of the datastore to be used for persistence.
               The supported datastores are 'inmemory', 'mysql', 'mssql', and 'googlesheets'.
+              If not specified, the 'inmemory' datastore will be used as the default.
        -h, --help
            Print the usage details of all commands.
 
