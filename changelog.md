@@ -24,7 +24,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Updated error messages to be consistent across all data sources](https://github.com/ballerina-platform/ballerina-standard-library/issues/4360)
 - [Removed constraint ID from foreign keys in generated SQL scripts](https://github.com/ballerina-platform/ballerina-standard-library/issues/4581)
 
-
 ## [1.0.0] - 2021-06-01
 
 ### Added
