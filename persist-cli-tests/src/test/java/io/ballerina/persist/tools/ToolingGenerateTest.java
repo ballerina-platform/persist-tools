@@ -453,5 +453,4 @@ public class ToolingGenerateTest {
         executeCommand("tool_test_generate_65", GENERATE);
         assertGeneratedSources("tool_test_generate_65");
     }
-
 }
