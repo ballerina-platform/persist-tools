@@ -46,8 +46,8 @@ public isolated client class Client {
             keyFields: ["id"],
             joinMetadata: {
                 posts: {entity: Post, fieldName: "posts", refTable: "Post", refColumns: ["userId"], joinColumns: ["id"], 'type: psql:MANY_TO_ONE},
-                leader: {entity: Follow, fieldName: "leader", refTable: "Follow", refColumns: ["userId"], joinColumns: ["id"], 'type: psql:ONE_TO_ONE},
-                follower: {entity: Follow, fieldName: "follower", refTable: "Follow", refColumns: ["userId"], joinColumns: ["id"], 'type: psql:ONE_TO_ONE}
+                leader: {entity: Follow, fieldName: "leader", refTable: "Follow", refColumns: ["leaderId"], joinColumns: ["id"], 'type: psql:ONE_TO_ONE},
+                follower: {entity: Follow, fieldName: "follower", refTable: "Follow", refColumns: ["followerId"], joinColumns: ["id"], 'type: psql:ONE_TO_ONE}
             }
         },
         [POST] : {
