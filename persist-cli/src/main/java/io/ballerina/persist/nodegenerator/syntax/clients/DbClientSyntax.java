@@ -365,8 +365,9 @@ public class DbClientSyntax implements ClientSyntax {
                         refColumns.append(BalSyntaxConstants.COMMA);
                     }
                     refColumns.append(String.format(BalSyntaxConstants.COLUMN_ARRAY_ENTRY_TEMPLATE,
-                            key.getReference()));
-                    joinColumns.append(String.format(BalSyntaxConstants.COLUMN_ARRAY_ENTRY_TEMPLATE, key.getField()));
+                            BalSyntaxUtils.stripEscapeCharacter(key.getReference())));
+                    joinColumns.append(String.format(BalSyntaxConstants.COLUMN_ARRAY_ENTRY_TEMPLATE,
+                            BalSyntaxUtils.stripEscapeCharacter(key.getField())));
                 }
                 joinMetaData.append(String.format(BalSyntaxConstants.JOIN_METADATA_FIELD_TEMPLATE,
                         entityField.getFieldName(), entityField.getFieldType(),

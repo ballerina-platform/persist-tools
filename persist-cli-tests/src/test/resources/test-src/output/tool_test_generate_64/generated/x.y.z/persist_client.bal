@@ -42,7 +42,7 @@ public isolated client class Client {
             keyFields: ["empNo"],
             joinMetadata: {
                 department: {entity: Department, fieldName: "department", refTable: "Department", refColumns: ["deptNo"], joinColumns: ["departmentDeptNo"], 'type: psql:ONE_TO_MANY},
-                workspace: {entity: Workspace, fieldName: "workspace", refTable: "Workspace", refColumns: ["employeeEmpNo"], joinColumns: ["empNo"], 'type: psql:ONE_TO_ONE}
+                workspace: {entity: Workspace, fieldName: "workspace", refTable: "Workspace", refColumns: ["workspaceEmpNo"], joinColumns: ["empNo"], 'type: psql:ONE_TO_ONE}
             }
         },
         [WORKSPACE] : {

@@ -446,4 +446,11 @@ public class ToolingGenerateTest {
         executeCommand("tool_test_generate_64", GENERATE);
         assertGeneratedSources("tool_test_generate_64");
     }
+
+    @Test(enabled = true)
+    @Description("The model has multiple relations of various types")
+    public void testGenerateEntitiesWithMultipleRelations() {
+        executeCommand("tool_test_generate_65", GENERATE);
+        assertGeneratedSources("tool_test_generate_65");
+    }
 }

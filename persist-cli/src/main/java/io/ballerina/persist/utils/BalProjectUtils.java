@@ -351,53 +351,6 @@ public class BalProjectUtils {
                                             }
                                         }
                                     });
-                        } else if (field.getRelation() != null && field.getRelation().isOwner()) {
-                            field.getRelation().setRelationType(
-                                    field.isArrayType() ? Relation.RelationType.MANY : Relation.RelationType.ONE);
-                            field.getRelation().setAssocEntity(assocEntity);
-                            List<Relation.Key> keyColumns = field.getRelation().getKeyColumns();
-                            if (keyColumns == null || keyColumns.size() == 0) {
-                                keyColumns = assocEntity.getKeys().stream()
-                                        .map(key -> new Relation.Key(
-                                                assocEntity.getEntityName().toLowerCase(Locale.ENGLISH)
-                                                        + stripEscapeCharacter(key.getFieldName()).substring(0, 1)
-                                                        .toUpperCase(Locale.ENGLISH)
-                                                        + stripEscapeCharacter(key.getFieldName()).substring(1),
-                                                key.getFieldName(), key.getFieldType()))
-                                        .collect(Collectors.toList());
-                                field.getRelation().setKeyColumns(keyColumns);
-                            }
-                            List<String> references = field.getRelation().getReferences();
-                            if (references == null || references.size() == 0) {
-                                field.getRelation().setReferences(assocEntity.getKeys().stream()
-                                        .map(EntityField::getFieldName)
-                                        .collect(Collectors.toList()));
-                            }
-
-                            // create bidirectional mapping for associated entity
-                            Relation.Builder assocRelBuilder = Relation.newBuilder();
-                            assocRelBuilder.setOwner(false);
-                            assocRelBuilder.setAssocEntity(entity);
-
-                            List<Relation.Key> assockeyColumns = assocEntity
-                                    .getKeys().stream().map(key -> new Relation.Key(key.getFieldName(),
-                                            assocEntity.getEntityName().toLowerCase(Locale.ENGLISH)
-                                                    + stripEscapeCharacter(key.getFieldName()).substring(0, 1)
-                                                    .toUpperCase(Locale.ENGLISH)
-                                                    + stripEscapeCharacter(key.getFieldName()).substring(1),
-                                            key.getFieldType()))
-                                    .collect(Collectors.toList());
-                            assocRelBuilder.setKeys(assockeyColumns);
-                            assocRelBuilder.setReferences(assockeyColumns.stream().map(Relation.Key::getReference)
-                                    .collect(Collectors.toList()));
-                            assocEntity.getFields().stream().filter(assocfield -> assocfield.getFieldType()
-                                    .equals(entity.getEntityName())).forEach(
-                                    assocField -> {
-                                        assocRelBuilder.setRelationType(
-                                                assocField.isArrayType() ? Relation.RelationType.MANY
-                                                        : Relation.RelationType.ONE);
-                                        assocField.setRelation(assocRelBuilder.build());
-                                    });
                         }
                     });
         }
