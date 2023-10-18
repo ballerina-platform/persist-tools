@@ -5,3 +5,5 @@ user = "root"
 password = ""
 database = ""
 
+[persist_generate_5.connectionOptions.ssl]
+allowPublicKeyRetrieval=true
