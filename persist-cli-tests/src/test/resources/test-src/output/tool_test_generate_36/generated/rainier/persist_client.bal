@@ -37,7 +37,7 @@ public isolated client class Client {
                 "workspaces[].locationBuildingCode": {relation: {entityName: "workspaces", refField: "locationBuildingCode"}}
             },
             keyFields: ["buildingCode"],
-            joinMetadata: {workspaces: {entity: 'Workspace, fieldName: "workspaces", refTable: "'Workspace", refColumns: ["locationBuildingCode"], joinColumns: ["'buildingCode"], 'type: psql:MANY_TO_ONE}}
+            joinMetadata: {workspaces: {entity: 'Workspace, fieldName: "workspaces", refTable: "'Workspace", refColumns: ["locationBuildingCode"], joinColumns: ["buildingCode"], 'type: psql:MANY_TO_ONE}}
         },
         [DEPARTMENT] : {
             entityName: "Department",
@@ -116,7 +116,7 @@ public isolated client class Client {
             },
             keyFields: ["workspaceId"],
             joinMetadata: {
-                location: {entity: 'Building, fieldName: "location", refTable: "'Building", refColumns: ["'buildingCode"], joinColumns: ["locationBuildingCode"], 'type: psql:ONE_TO_MANY},
+                location: {entity: 'Building, fieldName: "location", refTable: "'Building", refColumns: ["buildingCode"], joinColumns: ["locationBuildingCode"], 'type: psql:ONE_TO_MANY},
                 employee: {entity: 'Employee, fieldName: "employee", refTable: "'Employee", refColumns: ["workspaceWorkspaceId"], joinColumns: ["workspaceId"], 'type: psql:ONE_TO_ONE}
             }
         }
