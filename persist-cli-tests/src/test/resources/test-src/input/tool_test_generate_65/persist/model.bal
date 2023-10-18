@@ -22,7 +22,7 @@ type Book record {|
     string author;
     decimal price;
     int stock;
-	OrderItem? orderitem;
+    OrderItem? orderitem;
 |};
 
 type Order record {|
@@ -30,8 +30,8 @@ type Order record {|
     string customerId;
     string createdAt;
     decimal totalPrice;
-	OrderItem[] orderItems;
-	Payment? payment;
+    OrderItem[] orderItems;
+    Payment? payment;
 |};
 
 type OrderItem record {|
