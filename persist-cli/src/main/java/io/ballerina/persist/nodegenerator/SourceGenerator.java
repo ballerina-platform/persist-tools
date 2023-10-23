@@ -254,7 +254,6 @@ public class SourceGenerator {
                     moduleMembers = moduleMembers.add(member);
                     if (node.identifier().toSourceCode().trim().equals(moduleName)) {
                         configExists = true;
-                        break;
                     }
                 } else if (member instanceof TableArrayNode) {
                     moduleMembers = moduleMembers.add(member);

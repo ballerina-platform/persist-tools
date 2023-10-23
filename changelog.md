@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- [Fixed the issue related to existing configurations in Config.toml file](https://github.com/ballerina-platform/persist-tools/issues/314)
+
 ### Added
 - [Added support for MSSQL as a datasource](https://github.com/ballerina-platform/ballerina-standard-library/issues/4506)
 
