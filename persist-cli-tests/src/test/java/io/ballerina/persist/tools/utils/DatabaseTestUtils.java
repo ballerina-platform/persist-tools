@@ -144,8 +144,9 @@ public class DatabaseTestUtils {
 
         if (connection.getMetaData().getURL().contains("postgresql")) {
             String sql = "SELECT datname FROM pg_database WHERE datistemplate = false;";
-            PreparedStatement preparedStatement = connection.prepareStatement(sql);
-            resultSet = preparedStatement.executeQuery();
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                resultSet = preparedStatement.executeQuery();
+            }
         } else {
             resultSet = connection.getMetaData().getCatalogs();
         }
