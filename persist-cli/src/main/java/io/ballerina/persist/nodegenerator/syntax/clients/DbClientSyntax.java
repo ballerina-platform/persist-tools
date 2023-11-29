@@ -57,6 +57,7 @@ public class DbClientSyntax implements ClientSyntax {
     private final String importDriver;
     private final String dbSpecifics;
     private final String nativeClass;
+    private final String initDbClientMethodTemplate;
 
     public DbClientSyntax(Module entityModule, String datasource) throws BalException {
         this.entityModule = entityModule;
@@ -66,11 +67,18 @@ public class DbClientSyntax implements ClientSyntax {
         if (datasource.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB)) {
             this.importDriver = BalSyntaxConstants.MYSQL_DRIVER;
             this.dbSpecifics = BalSyntaxConstants.MYSQL_SPECIFICS;
-            this.nativeClass = "MySQLProcessor";
+            this.nativeClass = BalSyntaxConstants.MYSQL_PROCESSOR;
+            this.initDbClientMethodTemplate = BalSyntaxConstants.INIT_DB_CLIENT_WITH_PARAMS;
         } else if (datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
             this.importDriver = BalSyntaxConstants.MSSQL_DRIVER;
             this.dbSpecifics = BalSyntaxConstants.MSSQL_SPECIFICS;
-            this.nativeClass = "MSSQLProcessor";
+            this.nativeClass = BalSyntaxConstants.MSSQL_PROCESSOR;
+            this.initDbClientMethodTemplate = BalSyntaxConstants.INIT_DB_CLIENT_WITH_PARAMS;
+        } else if (datasource.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB)) {
+            this.importDriver = BalSyntaxConstants.POSTGRESQL_DRIVER;
+            this.dbSpecifics = BalSyntaxConstants.POSTGRESQL_SPECIFICS;
+            this.nativeClass = BalSyntaxConstants.POSTGRESQL_PROCESSOR;
+            this.initDbClientMethodTemplate = BalSyntaxConstants.POSTGRESQL_INIT_DB_CLIENT_WITH_PARAMS;
         } else {
             throw new BalException("Unsupported datasource: " + datasource);
         }
@@ -115,8 +123,8 @@ public class DbClientSyntax implements ClientSyntax {
         init.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PUBLIC, BalSyntaxConstants.KEYWORD_ISOLATED });
         init.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode(BalSyntaxConstants.EMPTY_STRING,
                 BalSyntaxConstants.PERSIST_ERROR));
-        init.addStatement(NodeParser.parseStatement(
-                String.format(BalSyntaxConstants.INIT_DB_CLIENT_WITH_PARAMS, this.datasource)));
+         init.addStatement(NodeParser.parseStatement(
+                    String.format(this.initDbClientMethodTemplate, this.datasource)));
         IfElse errorCheck = new IfElse(NodeParser.parseExpression(String.format(
                 BalSyntaxConstants.RESULT_IS_BALLERINA_ERROR, BalSyntaxConstants.DB_CLIENT)));
         errorCheck.addIfStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.RETURN_ERROR,

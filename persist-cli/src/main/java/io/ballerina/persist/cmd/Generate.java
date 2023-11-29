@@ -178,6 +178,7 @@ public class Generate implements BLauncherCmd {
             switch (datastore) {
                 case PersistToolsConstants.SupportedDataSources.MYSQL_DB:
                 case PersistToolsConstants.SupportedDataSources.MSSQL_DB:
+                case PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB:
                     sourceCreator.createDbSources(datastore);
                     break;
                 case PersistToolsConstants.SupportedDataSources.GOOGLE_SHEETS:
@@ -190,6 +191,7 @@ public class Generate implements BLauncherCmd {
         } catch (BalException e) {
             errStream.printf(String.format(BalSyntaxConstants.ERROR_MSG,
                     datastore, e.getMessage()));
+            return;
         }
         errStream.println("Persist client and entity types generated successfully in the ./generated directory.");
     }

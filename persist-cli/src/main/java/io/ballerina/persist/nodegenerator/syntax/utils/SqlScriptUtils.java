@@ -257,52 +257,114 @@ public class SqlScriptUtils {
 
     public static String getTypeNonArray(String field, String datasource) throws BalException {
         switch (removeSingleQuote(field)) {
+
+            // Ballerina --> int
+            // MySQL --> INT
+            // MSSQL --> INT
+            // PostgreSQL --> INT
             case PersistToolsConstants.BallerinaTypes.INT:
                 return PersistToolsConstants.SqlTypes.INT;
+
+            // Ballerina --> boolean
+            // MySQL --> BOOLEAN
+            // MSSQL --> BIT
+            // PostgreSQL --> BOOLEAN
             case PersistToolsConstants.BallerinaTypes.BOOLEAN:
                 if (datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
                     return PersistToolsConstants.SqlTypes.BIT;
                 }
                 return PersistToolsConstants.SqlTypes.BOOLEAN;
+
+            // Ballerina --> decimal
+            // MySQL --> DECIMAL(65,30)
+            // MSSQL --> DECIMAL(38,30)
+            // PostgreSQL --> DECIMAL(65,30)
             case PersistToolsConstants.BallerinaTypes.DECIMAL:
                 if (datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
                     return PersistToolsConstants.SqlTypes.DECIMAL + String.format("(%s,%s)",
                             PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION_MSSQL,
                             PersistToolsConstants.DefaultMaxLength.DECIMAL_SCALE);
                 }
+                if (datasource.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB)) {
+                    return PersistToolsConstants.SqlTypes.DECIMAL + String.format("(%s,%s)",
+                            PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION_POSTGRESQL,
+                            PersistToolsConstants.DefaultMaxLength.DECIMAL_SCALE);
+                }
                 return PersistToolsConstants.SqlTypes.DECIMAL + String.format("(%s,%s)",
                         PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION_MYSQL,
                         PersistToolsConstants.DefaultMaxLength.DECIMAL_SCALE);
+
+            // Ballerina --> float
+            // MySQL --> DOUBLE
+            // MSSQL --> FLOAT
+            // PostgreSQL --> FLOAT
             case PersistToolsConstants.BallerinaTypes.FLOAT:
-                if (datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
-                    return PersistToolsConstants.SqlTypes.FLOAT;
+                if (datasource.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB)) {
+                    return PersistToolsConstants.SqlTypes.DOUBLE;
                 }
-                return PersistToolsConstants.SqlTypes.DOUBLE;
+                return PersistToolsConstants.SqlTypes.FLOAT;
+
+            // Ballerina --> time:Date
+            // MySQL --> DATE
+            // MSSQL --> DATE
+            // PostgreSQL --> DATE
             case PersistToolsConstants.BallerinaTypes.DATE:
                 return PersistToolsConstants.SqlTypes.DATE;
+
+            // Ballerina --> time:TimeOfDay
+            // MySQL --> TIME
+            // MSSQL --> TIME
+            // PostgreSQL --> TIME
             case PersistToolsConstants.BallerinaTypes.TIME_OF_DAY:
                 return PersistToolsConstants.SqlTypes.TIME;
+
+            // Ballerina --> time:Utc
+            // MySQL --> TIMESTAMP
+            // MSSQL --> DATETIME2
+            // PostgreSQL --> TIMESTAMP
             case PersistToolsConstants.BallerinaTypes.UTC:
                 if (datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
                     return PersistToolsConstants.SqlTypes.DATE_TIME2;
                 }
                 return PersistToolsConstants.SqlTypes.TIME_STAMP;
+
+            // Ballerina --> time:Civil
+            // MySQL --> DATETIME
+            // MSSQL --> DATETIME2
+            // PostgreSQL --> TIMESTAMP
             case PersistToolsConstants.BallerinaTypes.CIVIL:
                 if (datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
                     return PersistToolsConstants.SqlTypes.DATE_TIME2;
                 }
+                if (datasource.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB)) {
+                    return PersistToolsConstants.SqlTypes.TIME_STAMP;
+                }
                 return PersistToolsConstants.SqlTypes.DATE_TIME;
+
+            // Ballerina --> string
+            // MySQL --> VARCHAR
+            // MSSQL --> VARCHAR
+            // PostgreSQL --> VARCHAR
             case PersistToolsConstants.BallerinaTypes.STRING:
                 return PersistToolsConstants.SqlTypes.VARCHAR;
+
             default:
                 throw new BalException("couldn't find equivalent SQL type for the field type: " + field);
         }
     }
 
     public static String getTypeArray(String field, String datasource) throws BalException {
+
+        // Ballerina --> byte[]
+        // MySQL --> LONGBLOB
+        // MSSQL --> VARBINARY
+        // PostgreSQL --> BYTEA
         if (PersistToolsConstants.BallerinaTypes.BYTE.equals(field)) {
             if (datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
                 return PersistToolsConstants.SqlTypes.VARBINARY;
+            }
+            if (datasource.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB)) {
+                return PersistToolsConstants.SqlTypes.BYTEA;
             }
             return PersistToolsConstants.SqlTypes.LONG_BLOB;
         }
@@ -310,7 +372,8 @@ public class SqlScriptUtils {
     }
 
     private static String getEnumType(Enum enumValue, String fieldName, String datasource) {
-        if (datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
+        if (datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB) ||
+            datasource.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB)) {
             int maxLength = 0;
             List<EnumMember> members = enumValue.getMembers();
             StringBuilder checkStringBuilder = new StringBuilder();
@@ -403,6 +466,9 @@ public class SqlScriptUtils {
     private static String escape(String name, String datasource) {
         if (datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
             return "[" + name + "]";
+        }
+        if (datasource.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB)) {
+            return "\"" + name + "\"";
         }
         return "`" + name + "`";
     }
