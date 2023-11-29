@@ -55,6 +55,9 @@ dependencies {
     testImplementation (group: 'com.microsoft.sqlserver', name: 'mssql-jdbc', version: "${mssqlDriverVersion}") {
         transitive = false
     }
+    testImplementation (group: 'org.postgresql', name: 'postgresql', version: "${postgresqlDriverVersion}") {
+        transitive = false
+    }
 }
 
 clean {
@@ -286,6 +289,57 @@ task stopMSSQLTestDockerContainer() {
     }
 }
 
+task startPostgreSQLTestDockerContainer(type: Exec) {
+    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+        def standardOutput = new ByteArrayOutputStream()
+        commandLine 'sh', '-c',
+                "docker run --rm -d --name ballerina-persist-tools-postgresql -p 5432:5432 -d postgres"
+        def healthCheck = 1;
+        def counter = 0;
+        doLast {
+            checkExecResult(executionResult, 'Error', standardOutput)
+            while (healthCheck != 0 && counter < 12) {
+                sleep(5 * 1000)
+                healthCheck = checkPostgreSQLTestDockerContainerStatus("ballerina-persist-tools-postgresql")
+                counter = counter + 1;
+            }
+            if (healthCheck != 0) {
+                throw new GradleException("Docker container 'ballerina-persist-tools-postgresql' health test exceeded timeout!")
+            }
+        }
+    }
+}
+
+def checkPostgreSQLTestDockerContainerStatus(containerName) {
+    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+        try {
+            return exec {
+                commandLine 'sh', '-c', "docker exec ${containerName} psql -U postgres -h localhost -p 5432"
+            }.exitValue
+        } catch (all) {
+            return 1;
+        }
+    }
+}
+
+
+task stopPostgreSQLTestDockerContainer() {
+    doLast {
+        if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+            try {
+                def stdOut = new ByteArrayOutputStream()
+                exec {
+                    commandLine 'sh', '-c', "docker stop ballerina-persist-tools-postgresql"
+                    standardOutput = stdOut
+                }
+            } catch (all) {
+                println("Process can safely ignore stopPostgreSQLTestDockerContainer task")
+            }
+        }
+    }
+}
+
+
 checkstyle {
     toolVersion "${project.checkstylePluginVersion}"
     configFile rootProject.file("build-config/checkstyle/build/checkstyle.xml")
@@ -360,10 +414,12 @@ jacocoTestReport {
 
 test.dependsOn startTestDockerContainer
 test.dependsOn startMSSQLTestDockerContainer
+test.dependsOn startPostgreSQLTestDockerContainer
 test.dependsOn pullGSheetsDependency
 test.dependsOn ":persist-cli:build"
 test.finalizedBy stopTestDockerContainer
 test.finalizedBy stopMSSQLTestDockerContainer
+test.finalizedBy stopPostgreSQLTestDockerContainer
 
 build.doNotTrackState("build needs to run every time")
 build.dependsOn ":persist-cli:build"
