@@ -259,8 +259,7 @@ public class ToolingDbPushTest {
         assertCreateDatabaseTables("tool_test_db_push_31_mssql", "mssql", tables);
     }
 
-//    @Test(dependsOnMethods = { "testDbPushEntityRemovedPostgreSQL" })
-    @Test
+    @Test(dependsOnMethods = { "testDbPushEntityRemovedPostgreSQL" })
     @Description("Database already exists. An entity is updated. The respective table should be updated.")
     public void testDbPushEntityUpdatedPostgreSQL() throws BalException {
         ArrayList<PersistTable> tables = new ArrayList<>();
