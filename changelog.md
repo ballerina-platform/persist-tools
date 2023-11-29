@@ -4,9 +4,13 @@ This file contains all the notable changes done to the Ballerina Persist Tools t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## Unreleased
+
+### Changed
 
 ### Added
+
+## [1.2.1] - 2021-11-21
 
 ### Changed
 - [Fixed the issue related to existing configurations in Config.toml file](https://github.com/ballerina-platform/persist-tools/issues/314)
