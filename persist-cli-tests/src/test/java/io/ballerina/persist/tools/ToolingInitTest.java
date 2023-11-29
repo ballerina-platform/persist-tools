@@ -185,6 +185,19 @@ public class ToolingInitTest {
         assertGeneratedSources("tool_test_init_13");
     }
 
+    @Test
+    public void testInitWithPostgresql() throws ClassNotFoundException, NoSuchMethodException,
+            InvocationTargetException, InstantiationException, IllegalAccessException {
+        updateOutputBallerinaToml("tool_test_init_14");
+        Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Init");
+        Init persistCmd = (Init) persistClass.getDeclaredConstructor(String.class).
+                newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, "tool_test_init_14").toAbsolutePath().
+                        toString());
+        new CommandLine(persistCmd).parseArgs("--datastore", "postgresql");
+        persistCmd.execute();
+        assertGeneratedSources("tool_test_init_14");
+    }
+
     private void updateOutputBallerinaToml(String fileName) {
         String tomlFileName = "Ballerina.toml";
         Path filePath = Paths.get("src", "test", "resources", "test-src", "output", fileName, tomlFileName);
@@ -193,7 +206,8 @@ public class ToolingInitTest {
                String content = Files.readString(filePath);
                String dataStore = "persist.inmemory";
                String version = persistInMemoryVersion;
-               if (content.contains("datastore = \"mysql\"") || content.contains("datastore = \"mssql\"")) {
+               if (content.contains("datastore = \"mysql\"") || content.contains("datastore = \"mssql\"") ||
+                       content.contains("datastore = \"postgresql\"")) {
                    dataStore = "persist.sql";
                    version = persistSqlVersion;
                } else if (content.contains("datastore = \"googlesheets\"")) {
