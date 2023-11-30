@@ -321,7 +321,6 @@ def checkPostgreSQLTestDockerContainerStatus(containerName) {
     }
 }
 
-
 task stopPostgreSQLTestDockerContainer() {
     doLast {
         if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
@@ -337,7 +336,6 @@ task stopPostgreSQLTestDockerContainer() {
         }
     }
 }
-
 
 checkstyle {
     toolVersion "${project.checkstylePluginVersion}"
