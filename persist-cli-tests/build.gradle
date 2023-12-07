@@ -306,6 +306,10 @@ task startPostgreSQLTestDockerContainer(type: Exec) {
                 throw new GradleException("Docker container 'ballerina-persist-tools-postgresql' health test exceeded timeout!")
             }
         }
+    } else {
+        commandLine 'cmd','slmgr /dlv'
+        println('\n' + "Windows Instance detected")
+        println('\n' + "skipped starting the docker container")
     }
 }
 
