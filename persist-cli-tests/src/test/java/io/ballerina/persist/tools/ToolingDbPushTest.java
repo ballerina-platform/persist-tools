@@ -39,9 +39,12 @@ import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.execute
 public class ToolingDbPushTest {
 
     private static final String sqlInt = "INT";
+    private static final String postgresqlInt = "int4";
     private static final String sqlVarchar = "VARCHAR";
+    private static final String postgresqlVarchar = "varchar";
     private static final String no = "NO";
     private static final String sqlDateTime = "DATETIME";
+    private static final String postgresqlTimestamp = "timestamp";
 
     @Test(enabled = true)
     @Description("Database is not available and it is created while running the db push command")
@@ -93,6 +96,30 @@ public class ToolingDbPushTest {
         assertCreateDatabaseTables("tool_test_db_push_29_mssql", "mssql", tables);
     }
 
+    @Test
+    @Description("Database is not available and it is created while running the db push command")
+    public void testDbPushWithoutDatabasePostgreSQL() throws BalException {
+        ArrayList<PersistTable> tables = new ArrayList<>();
+        tables.add(
+                new PersistTable("MedicalNeed", "needId")
+                        .addColumn(new PersistTableColumn("needId", postgresqlInt, no, no))
+                        .addColumn(new PersistTableColumn("itemId", postgresqlInt, no, no))
+                        .addColumn(new PersistTableColumn("beneficiaryId", postgresqlInt, no, no))
+                        .addColumn(new PersistTableColumn("period", postgresqlTimestamp, no, no))
+                        .addColumn(new PersistTableColumn("urgency", postgresqlVarchar, no, no))
+                        .addColumn(new PersistTableColumn("quantity", postgresqlInt, no, no))
+        );
+        tables.add(
+                new PersistTable("MedicalItem", "itemId")
+                        .addColumn(new PersistTableColumn("itemId", postgresqlInt, no, no))
+                        .addColumn(new PersistTableColumn("name", postgresqlVarchar, no, no))
+                        .addColumn(new PersistTableColumn("type", postgresqlVarchar, no, no))
+                        .addColumn(new PersistTableColumn("unit", postgresqlVarchar, no, no))
+        );
+        executeCommand("tool_test_db_push_32_postgresql", DB_PUSH);
+        assertGeneratedSources("tool_test_db_push_32_postgresql");
+        assertCreateDatabaseTables("tool_test_db_push_32_postgresql", "postgresql", tables);
+    }
 
     @Test(enabled = true)
     @Description("When the db push command is executed outside a Ballerina project")
@@ -150,6 +177,31 @@ public class ToolingDbPushTest {
         assertCreateDatabaseTables("tool_test_db_push_30_mssql", "mssql", tables);
     }
 
+    @Test(dependsOnMethods = { "testDbPushWithoutDatabasePostgreSQL" })
+    @Description("Database already exists. An entity is removed. The database tables should not be affected.")
+    public void testDbPushEntityRemovedPostgreSQL() throws BalException {
+        ArrayList<PersistTable> tables = new ArrayList<>();
+        tables.add(
+                new PersistTable("MedicalNeed", "needId")
+                        .addColumn(new PersistTableColumn("needId", postgresqlInt, no, no))
+                        .addColumn(new PersistTableColumn("itemId", postgresqlInt, no, no))
+                        .addColumn(new PersistTableColumn("beneficiaryId", postgresqlInt, no, no))
+                        .addColumn(new PersistTableColumn("period", postgresqlTimestamp, no, no))
+                        .addColumn(new PersistTableColumn("urgency", postgresqlVarchar, no, no))
+                        .addColumn(new PersistTableColumn("quantity", postgresqlInt, no, no))
+        );
+        tables.add(
+                new PersistTable("MedicalItem", "itemId")
+                        .addColumn(new PersistTableColumn("itemId", postgresqlInt, no, no))
+                        .addColumn(new PersistTableColumn("name", postgresqlVarchar, no, no))
+                        .addColumn(new PersistTableColumn("type", postgresqlVarchar, no, no))
+                        .addColumn(new PersistTableColumn("unit", postgresqlVarchar, no, no))
+        );
+        executeCommand("tool_test_db_push_33_postgresql", DB_PUSH);
+        assertGeneratedSources("tool_test_db_push_33_postgresql");
+        assertCreateDatabaseTables("tool_test_db_push_33_postgresql", "postgresql", tables);
+    }
+
     @Test(enabled = true)
     @Description("When the db push command is executed with empty schema file")
     public void testDbPushEmptySchemaFile() {
@@ -205,6 +257,31 @@ public class ToolingDbPushTest {
         executeCommand("tool_test_db_push_31_mssql", DB_PUSH);
         assertGeneratedSources("tool_test_db_push_31_mssql");
         assertCreateDatabaseTables("tool_test_db_push_31_mssql", "mssql", tables);
+    }
+
+    @Test(dependsOnMethods = { "testDbPushEntityRemovedPostgreSQL" })
+    @Description("Database already exists. An entity is updated. The respective table should be updated.")
+    public void testDbPushEntityUpdatedPostgreSQL() throws BalException {
+        ArrayList<PersistTable> tables = new ArrayList<>();
+        tables.add(
+                new PersistTable("MedicalNeed", "fooNeedId")
+                        .addColumn(new PersistTableColumn("fooNeedId", postgresqlInt, no, no))
+                        .addColumn(new PersistTableColumn("fooItemId", postgresqlInt, no, no))
+                        .addColumn(new PersistTableColumn("fooBeneficiaryId", postgresqlInt, no, no))
+                        .addColumn(new PersistTableColumn("period", postgresqlTimestamp, no, no))
+                        .addColumn(new PersistTableColumn("urgency", postgresqlInt, no, no))
+                        .addColumn(new PersistTableColumn("foo", postgresqlInt, no, no))
+        );
+        tables.add(
+                new PersistTable("MedicalItem", "itemId")
+                        .addColumn(new PersistTableColumn("itemId", postgresqlInt, no, no))
+                        .addColumn(new PersistTableColumn("name", postgresqlVarchar, no, no))
+                        .addColumn(new PersistTableColumn("type", postgresqlVarchar, no, no))
+                        .addColumn(new PersistTableColumn("unit", postgresqlVarchar, no, no))
+        );
+        executeCommand("tool_test_db_push_34_postgresql", DB_PUSH);
+        assertGeneratedSources("tool_test_db_push_34_postgresql");
+        assertCreateDatabaseTables("tool_test_db_push_34_postgresql", "postgresql", tables);
     }
 
     @Test(enabled = true)

@@ -174,7 +174,8 @@ public class TomlSyntaxUtils {
         TextDocument configDocument = TextDocuments.from(Files.readString(configPath));
         String artifactId = BalSyntaxConstants.PERSIST_MODULE + "." + datasource;
         if (datasource.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB) ||
-                datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
+                datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB) ||
+                datasource.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB)) {
             artifactId = BalSyntaxConstants.PERSIST_MODULE + "." + BalSyntaxConstants.SQL;
         }
         if (Objects.nonNull(fileNamePath)) {
@@ -259,7 +260,8 @@ public class TomlSyntaxUtils {
             Properties properties = new Properties();
             properties.load(inputStream);
             if (datasource.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB) ||
-                    datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
+                    datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB) ||
+                    datasource.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB)) {
                 return properties.get(PersistToolsConstants.TomlFileConstants.PERSIST_SQL_VERSION).toString();
             } else if (datasource.equals(PersistToolsConstants.SupportedDataSources.IN_MEMORY_TABLE)) {
                 return properties.get(PersistToolsConstants.TomlFileConstants.PERSIST_IN_MEMORY_VERSION).toString();

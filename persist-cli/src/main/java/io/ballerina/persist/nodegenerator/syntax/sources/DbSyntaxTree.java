@@ -184,6 +184,10 @@ public class DbSyntaxTree implements RDBMSSyntaxTree {
             host = PersistToolsConstants.DBConfigs.MSSQL.DEFAULT_HOST;
             port = PersistToolsConstants.DBConfigs.MSSQL.DEFAULT_PORT;
             user = PersistToolsConstants.DBConfigs.MSSQL.DEFAULT_USER;
+        } else if (datasource.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB)) {
+            host = PersistToolsConstants.DBConfigs.POSTGRESQL.DEFAULT_HOST;
+            port = PersistToolsConstants.DBConfigs.POSTGRESQL.DEFAULT_PORT;
+            user = PersistToolsConstants.DBConfigs.POSTGRESQL.DEFAULT_USER;
         } else {
             throw new BalException("Unsupported datasource: " + datasource);
         }

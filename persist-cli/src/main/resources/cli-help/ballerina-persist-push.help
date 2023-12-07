@@ -9,7 +9,7 @@ DESCRIPTION
          configuration in the `Ballerina.toml` file as shown below.
 
          ```
-         [persist.model.storage.mysql]
+         [persist.model.storage.<datastore>]
          host = "<db_host_name>"
          port = <db_port>
          user = "<db_user_name>"

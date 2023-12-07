@@ -134,12 +134,14 @@ public class BalSyntaxConstants {
     public static final String KEYWORD_JBALLERINA_JAVA_PREFIX = "jballerina.java";
     public static final String KEYWORD_HTTP = "http";
     public static final String KEYWORD_READONLY = "readonly";
-    public static final String JDBC_URL_WITHOUT_DATABASE = "jdbc:%s://%s:%s";
+    public static final String JDBC_URL_WITHOUT_DATABASE = "jdbc:%s://%s:%s/";
     public static final String JDBC_URL_WITH_DATABASE_MYSQL = "jdbc:%s://%s:%s/%s";
     public static final String JDBC_URL_WITH_DATABASE_MSSQL = "jdbc:%s://%s:%s;databaseName=%s";
+    public static final String JDBC_URL_WITH_DATABASE_POSTGRESQL = "jdbc:%s://%s:%s/%s";
     public static final String CREATE_DATABASE_SQL_FORMAT_MYSQL = "CREATE DATABASE IF NOT EXISTS %s";
     public static final String CREATE_DATABASE_SQL_FORMAT_MSSQL =
             "IF NOT EXISTS(SELECT name FROM sys.databases WHERE name = '%1$s') CREATE DATABASE %1$s;";
+    public static final String CREATE_DATABASE_SQL_FORMAT_POSTGRESQL = "CREATE DATABASE %s;";
     public static final String RESULT_IS_BALLERINA_ERROR = "%s is error";
     public static final String RESULT = "result";
     public static final String DB_CLIENT = "dbClient";
@@ -161,6 +163,7 @@ public class BalSyntaxConstants {
 
     public static final String MYSQL_DRIVER = "mysql.driver";
     public static final String MSSQL_DRIVER = "mssql.driver";
+    public static final String POSTGRESQL_DRIVER = "postgresql.driver";
     public static final String GOOGLE_API_SHEET = "googleapis.sheets";
     public static final String HTTP = "http";
     public static final String GOOGLE_SHEETS = "googlesheets";
@@ -291,6 +294,10 @@ public class BalSyntaxConstants {
     public static final String INIT_DB_CLIENT_WITH_PARAMS = "%s:Client|error dbClient = new (host = host, " +
             "user = user, password = password, database = database, port = port, options = connectionOptions);" +
             System.lineSeparator();
+
+    public static final String POSTGRESQL_INIT_DB_CLIENT_WITH_PARAMS = "%s:Client|error dbClient = new (host = host, " +
+            "username = user, password = password, database = database, port = port, options = connectionOptions);" +
+            System.lineSeparator();
     public static final String GOOGLE_SHEET_CLIENT_MAP = "[%s]: check new (self.googleSheetClient, self.httpClient, " +
             "metadata.get(%s).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(%s).cloneReadOnly())";
     public static final String TABLE_PARAMETER_INIT_TEMPLATE = "final isolated table<%s> key(%s) %sTable = table[];";
@@ -367,5 +374,10 @@ public class BalSyntaxConstants {
 
     public static final String MYSQL_SPECIFICS = "psql:MYSQL_SPECIFICS";
     public static final String MSSQL_SPECIFICS = "psql:MSSQL_SPECIFICS";
+    public static final String POSTGRESQL_SPECIFICS = "psql:POSTGRESQL_SPECIFICS";
+
+    public static final String MYSQL_PROCESSOR = "MySQLProcessor";
+    public static final String MSSQL_PROCESSOR = "MSSQLProcessor";
+    public static final String POSTGRESQL_PROCESSOR = "PostgreSQLProcessor";
 }
 

@@ -1,0 +1,7 @@
+[tool_test_db_push_33.entities]
+host = "localhost"
+port = 5432
+user = "postgres"
+password = "postgres#"
+database = "persist"
+

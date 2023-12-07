@@ -1,0 +1,16 @@
+[package]
+org = "foo"
+name = "tool_test_db_push_34"
+version = "0.1.0"
+distribution = "2201.3.0"
+
+[persist]
+datastore = "postgresql"
+module = "tool_test_db_push_34.entities"
+
+[persist.model.storage.postgresql]
+host = "localhost"
+port = 5432
+user = "postgres"
+password = "postgres"
+database = "persist"

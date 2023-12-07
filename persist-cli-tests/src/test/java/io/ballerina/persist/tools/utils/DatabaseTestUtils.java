@@ -29,6 +29,7 @@ import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -66,6 +67,8 @@ public class DatabaseTestUtils {
         String url;
         if (datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
             url = String.format("jdbc:sqlserver://%s:%s", host, port);
+        } else if (datasource.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB)) {
+            url = String.format("jdbc:postgresql://%s:%s/", host, port);
         } else {
             url = String.format("jdbc:mysql://%s:%s", host, port);
         }
@@ -81,6 +84,19 @@ public class DatabaseTestUtils {
             Assert.assertTrue(databaseExists(connection, database));
         } catch (SQLException e) {
             errStream.println("Failed to check if database exists: " + e.getMessage());
+        }
+
+        if (datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
+            url = String.format("jdbc:sqlserver://%s:%s/%s", host, port, database);
+        } else if (datasource.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB)) {
+            url = String.format("jdbc:postgresql://%s:%s/%s", host, port, database);
+        } else {
+            url = String.format("jdbc:mysql://%s:%s/%s", host, port, database);
+        }
+        try {
+            connection = DriverManager.getConnection(url, username, password);
+        } catch (SQLException e) {
+            errStream.println("Failed to create database connection: " + e.getMessage());
         }
 
         for (PersistTable persistTable : tables) {
@@ -124,11 +140,22 @@ public class DatabaseTestUtils {
     private static boolean databaseExists(Connection connection, String databaseName) throws SQLException {
 
         boolean exists = false;
-        ResultSet resultSet = connection.getMetaData().getCatalogs();
+        ResultSet resultSet;
+
+        if (connection.getMetaData().getURL().contains("postgresql")) {
+            String sql = "SELECT datname FROM pg_database WHERE datistemplate = false;";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                resultSet = preparedStatement.executeQuery();
+            }
+        } else {
+            resultSet = connection.getMetaData().getCatalogs();
+        }
 
         while (resultSet.next()) {
-            if (resultSet.getString(1).equals(databaseName)) {
+            String database = resultSet.getString(1);
+            if (database.equals(databaseName)) {
                 exists = true;
+                break;
             }
         }
         resultSet.close();

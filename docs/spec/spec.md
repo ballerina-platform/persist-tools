@@ -32,10 +32,10 @@ This specification elaborates on the `Persist CLI Tool` commands.
 bal persist init --datastore="datastore" --module="module_name"
 ```
 
-| Command Parameter |                                       Description                                        | Mandatory | Default Value |
-|:-----------------:|:----------------------------------------------------------------------------------------:|:---------:|:-------------:|
-|    --datastore    |  used to indicate the preferred database client. Currently, only 'mysql' is supported.   |    No     |     mysql     |
-|     --module      |      used to indicate the persist enabled module in which the files are generated.       |    No     |     <package_name>          |
+| Command Parameter |                                       Description                                        | Mandatory | Default Value  |
+|:-----------------:|:----------------------------------------------------------------------------------------:|:---------:|:--------------:|
+|    --datastore    |  used to indicate the preferred database client. Currently, only 'mysql' is supported.   |    No     |    inmemory    |
+|     --module      |      used to indicate the persist enabled module in which the files are generated.       |    No     | <package_name> |
 
 
 The command initializes the bal project with the persistence layer. This command includes the following steps,
@@ -48,7 +48,7 @@ The command initializes the bal project with the persistence layer. This command
    It will update the Ballerina.toml file with persist configurations.
     ```ballerina
     [persist]
-    datastore = "mysql"
+    datastore = "<datastore>"
     module = "<package_name>.<module_name>"
    ```
 
@@ -155,6 +155,7 @@ user = "root"
 password = "Test123#"
 database = "persist"
 ```
+
 The file structure of the project should be similar to the following before running the command.
 ```
 medical-center

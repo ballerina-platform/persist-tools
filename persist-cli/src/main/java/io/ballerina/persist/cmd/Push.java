@@ -65,6 +65,7 @@ import java.util.stream.Stream;
 
 import static io.ballerina.persist.PersistToolsConstants.BALLERINA_MSSQL_DRIVER_NAME;
 import static io.ballerina.persist.PersistToolsConstants.BALLERINA_MYSQL_DRIVER_NAME;
+import static io.ballerina.persist.PersistToolsConstants.BALLERINA_POSTGRESQL_DRIVER_NAME;
 import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 import static io.ballerina.persist.PersistToolsConstants.MSSQL_CONNECTOR_NAME_PREFIX;
 import static io.ballerina.persist.PersistToolsConstants.MSSQL_DRIVER_CLASS;
@@ -72,14 +73,18 @@ import static io.ballerina.persist.PersistToolsConstants.MYSQL_CONNECTOR_NAME_PR
 import static io.ballerina.persist.PersistToolsConstants.MYSQL_DRIVER_CLASS;
 import static io.ballerina.persist.PersistToolsConstants.PASSWORD;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
+import static io.ballerina.persist.PersistToolsConstants.POSTGRESQL_CONNECTOR_NAME_PREFIX;
+import static io.ballerina.persist.PersistToolsConstants.POSTGRESQL_DRIVER_CLASS;
 import static io.ballerina.persist.PersistToolsConstants.PROPERTY_KEY_PATH;
 import static io.ballerina.persist.PersistToolsConstants.SQL_SCHEMA_FILE;
 import static io.ballerina.persist.PersistToolsConstants.USER;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.CREATE_DATABASE_SQL_FORMAT_MSSQL;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.CREATE_DATABASE_SQL_FORMAT_MYSQL;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.CREATE_DATABASE_SQL_FORMAT_POSTGRESQL;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.JDBC_URL_WITHOUT_DATABASE;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.JDBC_URL_WITH_DATABASE_MSSQL;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.JDBC_URL_WITH_DATABASE_MYSQL;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.JDBC_URL_WITH_DATABASE_POSTGRESQL;
 import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.readBallerinaTomlConfig;
 import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.readPackageName;
 import static io.ballerina.persist.utils.BalProjectUtils.validateBallerinaProject;
@@ -99,6 +104,7 @@ public class Push implements BLauncherCmd {
     private final PrintStream errStream = System.err;
     private static final String COMMAND_IDENTIFIER = "persist-push";
     private final String sourcePath;
+    private String datastore;
     private String createDatabaseSqlFormat;
     private String jdbcUrlWithDatabaseFormat;
     private String driverClass;
@@ -131,23 +137,27 @@ public class Push implements BLauncherCmd {
         try {
             HashMap<String, String> ballerinaTomlConfig = TomlSyntaxUtils.readBallerinaTomlConfig(
                     Paths.get(this.sourcePath, "Ballerina.toml"));
-            String datastore = ballerinaTomlConfig.get("datastore").trim();
-
-            if (datastore.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB)) {
-                this.jdbcUrlWithDatabaseFormat = JDBC_URL_WITH_DATABASE_MYSQL;
-                this.createDatabaseSqlFormat = CREATE_DATABASE_SQL_FORMAT_MYSQL;
-                this.driverClass = MYSQL_DRIVER_CLASS;
-            } else if (datastore.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
-                this.jdbcUrlWithDatabaseFormat = JDBC_URL_WITH_DATABASE_MSSQL;
-                this.createDatabaseSqlFormat = CREATE_DATABASE_SQL_FORMAT_MSSQL;
-                this.driverClass = MSSQL_DRIVER_CLASS;
-            } else {
-                errStream.printf("ERROR: unsupported data store: '%s'%n", datastore);
-                return;
-            }
+            this.datastore = ballerinaTomlConfig.get("datastore").trim();
         } catch (BalException e) {
             errStream.printf("ERROR: failed to locate Ballerina.toml: %s%n",
                     e.getMessage());
+            return;
+        }
+
+        if (this.datastore.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB)) {
+            this.jdbcUrlWithDatabaseFormat = JDBC_URL_WITH_DATABASE_MYSQL;
+            this.createDatabaseSqlFormat = CREATE_DATABASE_SQL_FORMAT_MYSQL;
+            this.driverClass = MYSQL_DRIVER_CLASS;
+        } else if (this.datastore.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
+            this.jdbcUrlWithDatabaseFormat = JDBC_URL_WITH_DATABASE_MSSQL;
+            this.createDatabaseSqlFormat = CREATE_DATABASE_SQL_FORMAT_MSSQL;
+            this.driverClass = MSSQL_DRIVER_CLASS;
+        } else if (this.datastore.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB)) {
+            this.jdbcUrlWithDatabaseFormat = JDBC_URL_WITH_DATABASE_POSTGRESQL;
+            this.createDatabaseSqlFormat = CREATE_DATABASE_SQL_FORMAT_POSTGRESQL;
+            this.driverClass = POSTGRESQL_DRIVER_CLASS;
+        } else {
+            errStream.printf("ERROR: unsupported data store: '%s'%n", datastore);
             return;
         }
 
@@ -246,9 +256,15 @@ public class Push implements BLauncherCmd {
                     ScriptRunner sr = new ScriptRunner(connection);
                     sr.runQuery(query);
                 } catch (SQLException e) {
-                    errStream.printf("ERROR: failed to create the database(%s). %s%n",
-                            persistConfigurations.getDbConfig().getDatabase(), e.getMessage());
-                    return;
+
+                    // PostgreSQL doesn't offer an equivalent query to `CREATE DATABASE IF NOT EXISTS`.
+                    // Therefore, we just ignore the exception if the database already exists.
+                    if (!(this.datastore.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB)
+                            && e.getMessage().contains("already exists"))) {
+                        errStream.printf("ERROR: failed to create the database(%s). %s%n",
+                                persistConfigurations.getDbConfig().getDatabase(), e.getMessage());
+                        return;
+                    }
                 }
                 errStream.printf("Created database '%s'.%n", persistConfigurations.getDbConfig().getDatabase());
 
@@ -397,6 +413,22 @@ public class Push implements BLauncherCmd {
                 if (dependency.get(PROPERTY_KEY_PATH).toString().contains(MSSQL_CONNECTOR_NAME_PREFIX)) {
                     relativeLibPath = dependency.get(PROPERTY_KEY_PATH).toString();
                     return mssqlDriverPackage.project().sourceRoot().resolve(relativeLibPath);
+                }
+            }
+        }
+
+        Optional<ResolvedPackageDependency> postgresqlDriverDependency = resolvedPackageDependencyDependencyGraph
+                .getDirectDependencies(root).stream().
+                filter(resolvedPackageDependency -> resolvedPackageDependency.packageInstance().
+                        descriptor().toString().contains(BALLERINA_POSTGRESQL_DRIVER_NAME)).findFirst();
+
+        if (postgresqlDriverDependency.isPresent()) {
+            Package postgresqlDriverPackage = postgresqlDriverDependency.get().packageInstance();
+            List<Map<String, Object>> dependencies = getDependencies(postgresqlDriverPackage);
+            for (Map<String, Object> dependency : dependencies) {
+                if (dependency.get(PROPERTY_KEY_PATH).toString().contains(POSTGRESQL_CONNECTOR_NAME_PREFIX)) {
+                    relativeLibPath = dependency.get(PROPERTY_KEY_PATH).toString();
+                    return postgresqlDriverPackage.project().sourceRoot().resolve(relativeLibPath);
                 }
             }
         }

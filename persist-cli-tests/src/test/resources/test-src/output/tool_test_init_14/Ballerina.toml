@@ -1,0 +1,17 @@
+[package]
+org = "foo"
+name = "persist_init_14"
+version = "0.1.0"
+distribution = "2201.3.0"
+
+[build-options]
+observabilityIncluded = true
+
+[persist]
+datastore = "postgresql"
+module = "persist_init_14"
+
+[[platform.java17.dependency]]
+groupId = "io.ballerina.stdlib"
+artifactId = "persist.sql-native"
+version = "1.2.2-SNAPSHOT"

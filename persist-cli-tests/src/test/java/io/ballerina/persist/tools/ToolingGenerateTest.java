@@ -406,10 +406,24 @@ public class ToolingGenerateTest {
     }
 
     @Test(enabled = true)
+    @Description("There is a generated client object with postgresql data source")
+    public void testPostgresqlEntity() {
+        executeCommand("tool_test_generate_66_postgresql", GENERATE);
+        assertGeneratedSources("tool_test_generate_66_postgresql");
+    }
+
+    @Test(enabled = true)
     @Description("There is a generated client object with mssql data source")
     public void testMSSQLWithAssociatedEntity() {
         executeCommand("tool_test_generate_59_mssql", GENERATE);
         assertGeneratedSources("tool_test_generate_59_mssql");
+    }
+
+    @Test(enabled = true)
+    @Description("There is a generated client object with postgresql data source")
+    public void testPostgreSQLWithAssociatedEntity() {
+        executeCommand("tool_test_generate_67_postgresql", GENERATE);
+        assertGeneratedSources("tool_test_generate_67_postgresql");
     }
 
     @Test(enabled = true)
@@ -420,10 +434,24 @@ public class ToolingGenerateTest {
     }
 
     @Test(enabled = true)
+    @Description("There is a generated client object with postgresql data source")
+    public void testPostgreSQLWithCompositeKeys() {
+        executeCommand("tool_test_generate_68_postgresql", GENERATE);
+        assertGeneratedSources("tool_test_generate_68_postgresql");
+    }
+
+    @Test(enabled = true)
     @Description("There is multiple entities with multiple enums and imports with mssql data source")
     public void testGenerateWithEnumsMSSQL() {
         executeCommand("tool_test_generate_61_mssql", GENERATE);
         assertGeneratedSources("tool_test_generate_61_mssql");
+    }
+
+    @Test(enabled = true)
+    @Description("There is multiple entities with multiple enums and imports with postgresql data source")
+    public void testGenerateWithEnumsPostgresSQL() {
+        executeCommand("tool_test_generate_69_postgresql", GENERATE);
+        assertGeneratedSources("tool_test_generate_69_postgresql");
     }
 
     @Test(enabled = true)
@@ -434,10 +462,24 @@ public class ToolingGenerateTest {
     }
 
     @Test(enabled = true)
+    @Description("There is an entity which is associated with multiple relations")
+    public void testGenerateWithSameEntityMultipleRelationsPostgresql() {
+        executeCommand("tool_test_generate_70_postgresql", GENERATE);
+        assertGeneratedSources("tool_test_generate_70_postgresql");
+    }
+
+    @Test(enabled = true)
     @Description("There is a model with an entity consisting of multiple relations of the same type")
     public void testGenerateEntityWithMultipleRelationsSameTypeMSSQL() {
         executeCommand("tool_test_generate_63_mssql", GENERATE);
         assertGeneratedSources("tool_test_generate_63_mssql");
+    }
+
+    @Test(enabled = true)
+    @Description("There is a model with an entity consisting of multiple relations of the same type")
+    public void testGenerateEntityWithMultipleRelationsSameTypePostgreSQL() {
+        executeCommand("tool_test_generate_71_postgresql", GENERATE);
+        assertGeneratedSources("tool_test_generate_71_postgresql");
     }
 
     @Test(enabled = true)

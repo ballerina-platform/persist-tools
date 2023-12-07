@@ -43,6 +43,7 @@ public class PersistToolsConstants {
     public static final String USER = "user";
     public static final String MYSQL_DRIVER_CLASS = "com.mysql.cj.jdbc.Driver";
     public static final String MSSQL_DRIVER_CLASS = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
+    public static final String POSTGRESQL_DRIVER_CLASS = "org.postgresql.Driver";
     public static final String PERSIST_CONFIG_PATTERN = "persist.model.storage";
     public static final String SQL_SCHEMA_FILE = "script.sql";
     public static final String GOOGLE_SHEETS_SCHEMA_FILE = "script.gs";
@@ -50,13 +51,15 @@ public class PersistToolsConstants {
     public static final String MIGRATIONS = "migrations";
     public static final String BALLERINA_MYSQL_DRIVER_NAME = "ballerinax/mysql.driver";
     public static final String BALLERINA_MSSQL_DRIVER_NAME = "ballerinax/mssql.driver";
+    public static final String BALLERINA_POSTGRESQL_DRIVER_NAME = "ballerinax/postgresql.driver";
     public static final String PROPERTY_KEY_PATH = "path";
     public static final String MYSQL_CONNECTOR_NAME_PREFIX = "mysql-connector";
     public static final String MSSQL_CONNECTOR_NAME_PREFIX = "mssql-jdbc";
+    public static final String POSTGRESQL_CONNECTOR_NAME_PREFIX = "postgresql";
     public static final String SCHEMA_FILE_NAME = "model";
     public static final Set<String> SUPPORTED_DB_PROVIDERS =
            Set.of(SupportedDataSources.MYSQL_DB, SupportedDataSources.MSSQL_DB, SupportedDataSources.IN_MEMORY_TABLE,
-                   SupportedDataSources.GOOGLE_SHEETS);
+                   SupportedDataSources.GOOGLE_SHEETS, SupportedDataSources.POSTGRESQL_DB);
 
     /**
      * Constants related to Ballerina types.
@@ -97,6 +100,7 @@ public class PersistToolsConstants {
         public static final String DATE_TIME2 = "DATETIME2";
         public static final String LONG_BLOB = "LONGBLOB";
         public static final String VARBINARY = "VARBINARY(MAX)";
+        public static final String BYTEA = "BYTEA";
     }
 
     /**
@@ -137,6 +141,7 @@ public class PersistToolsConstants {
         public static final int VARCHAR_LENGTH = 191;
         public static final int DECIMAL_PRECISION_MYSQL = 65;
         public static final int DECIMAL_PRECISION_MSSQL = 38;
+        public static final int DECIMAL_PRECISION_POSTGRESQL = 65;
         public static final int DECIMAL_SCALE = 30;
     }
 
@@ -167,6 +172,7 @@ public class PersistToolsConstants {
         public static final String MSSQL_DB = "mssql";
         public static final String GOOGLE_SHEETS = "googlesheets";
         public static final String IN_MEMORY_TABLE = "inmemory";
+        public static final String POSTGRESQL_DB = "postgresql";
     }
 
     /**
@@ -205,6 +211,19 @@ public class PersistToolsConstants {
             public static final String DEFAULT_USER = "sa";
 
         }
+
+        /**
+         * Constants related to the PostgreSQL configurations.
+         */
+        public static final class POSTGRESQL {
+            private POSTGRESQL() {}
+
+            public static final String DEFAULT_HOST = "localhost";
+            public static final String DEFAULT_PORT = "5432";
+            public static final String DEFAULT_USER = "postgres";
+
+        }
+
 
     }
 }
