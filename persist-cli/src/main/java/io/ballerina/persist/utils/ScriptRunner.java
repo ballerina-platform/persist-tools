@@ -18,18 +18,26 @@
 
 package io.ballerina.persist.utils;
 
+import io.ballerina.persist.introspectiondto.SQLColumn;
+import io.ballerina.persist.introspectiondto.SQLForeignKey;
+import io.ballerina.persist.introspectiondto.SQLIndex;
+import io.ballerina.persist.introspectiondto.SQLTable;
+
 import java.io.BufferedReader;
 import java.io.Reader;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+
 
 /**
  * The script runner class executes SQL query or scripts against DB.
  * @since 0.1.0
  */
 public class ScriptRunner {
-
     private static final String LINE_SEPARATOR = System.lineSeparator();
 
     private static final String DEFAULT_DELIMITER = ";";
@@ -55,6 +63,9 @@ public class ScriptRunner {
             rollbackConnection();
         }
     }
+
+
+
 
     private void executeLineByLine(Reader reader) throws Exception {
         StringBuilder command = new StringBuilder();
@@ -126,4 +137,115 @@ public class ScriptRunner {
             statement.execute(sql);
         }
     }
+
+    public List<SQLTable> getSQLTables(String query) throws SQLException {
+        List<SQLTable> tables = new ArrayList<>();
+        try (Statement statement = connection.createStatement()) {
+            try (ResultSet results = statement.executeQuery(query)) {
+                while (results.next()) {
+                    tables.add(SQLTable.newBuilder(results.getString("table_name"))
+                            .setTableComment(results.getString("table_comment"))
+                            .setCreateOptions(results.getString("create_options")).build());
+                }
+                return tables;
+            }
+        } catch (SQLException e) {
+            throw new SQLException("Error while retrieving tables for database: " + e.getMessage());
+        } finally {
+            rollbackConnection();
+        }
+    }
+
+    public void readColumnsOfSQLTable(SQLTable table, String query) throws SQLException {
+        try (Statement statement = connection.createStatement()) {
+            try (ResultSet results = statement.executeQuery(query)) {
+                while (results.next()) {
+                    SQLColumn column = SQLColumn.newBuilder(results.getString("column_name"))
+                            .setTableName(results.getString("table_name"))
+                            .setDataType(results.getString("data_type"))
+                            .setFullDataType(results.getString("full_data_type"))
+                            .setCharacterMaximumLength(results.getString("character_maximum_length"))
+                            .setNumericPrecision(results.getString("numeric_precision"))
+                            .setNumericScale(results.getString("numeric_scale"))
+                            .setDatetimePrecision(results.getString("datetime_precision"))
+                            .setColumnDefault(results.getString("column_default"))
+                            .setIsNullable(results.getString("is_nullable"))
+                            .setExtra(results.getString("extra"))
+                            .setColumnComment(results.getString("column_comment"))
+                            .setIsPrimaryKey(results.getString("column_key").equals("PRI"))
+                            .build();
+                    table.addColumn(column);
+                    }
+            }
+        } catch (SQLException e) {
+            throw new SQLException("Error while retrieving columns for table: " + e.getMessage());
+        } finally {
+            rollbackConnection();
+        }
+    }
+
+    public void readForeignKeysOfSQLTable(SQLTable table, String query) throws SQLException {
+        try (Statement statement = connection.createStatement()) {
+            try (ResultSet results = statement.executeQuery(query)) {
+                while (results.next()) {
+                    String constraintName = results.getString("constraint_name");
+                    SQLForeignKey existingForeignKey = table.getForeignKeys().stream().filter(
+                                    fKey -> fKey.getConstraintName().equals(constraintName))
+                            .findFirst().orElse(null);
+                    if (existingForeignKey == null) {
+                        table.addForeignKey(SQLForeignKey.Builder.newBuilder(results.getString("constraint_name"))
+                                .setTableName(results.getString("table_name"))
+                                .addColumnName(results.getString("column_name"))
+                                .setReferencedTableName(results.getString("referenced_table_name"))
+                                .addReferencedColumnName(results.getString("referenced_column_name"))
+                                .setUpdateRule(results.getString("update_rule"))
+                                .setDeleteRule(results.getString("delete_rule"))
+                                .build()
+                        );
+                    } else {
+                        existingForeignKey.addColumnName(results.getString("column_name"));
+                        existingForeignKey.addReferencedColumnName(results.getString("referenced_column_name"));
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new SQLException("Error while retrieving foreign keys for table: " + e.getMessage());
+        } finally {
+            rollbackConnection();
+        }
+    }
+
+    public void readIndexesOfSQLTable(SQLTable table, String query) throws SQLException {
+        try (Statement statement = connection.createStatement()) {
+            try (ResultSet results = statement.executeQuery(query)) {
+                while (results.next()) {
+                    String indexName = results.getString("index_name");
+                    SQLIndex existingIndex = table.getIndexes().stream().filter(
+                            index -> index.getIndexName().equals(indexName))
+                            .findFirst().orElse(null);
+                    if (existingIndex == null) {
+                        table.addIndex(SQLIndex.Builder.newBuilder(results.getString("index_name"))
+                                .setTableName(results.getString("table_name"))
+                                .addColumnName(results.getString("column_name"))
+                                .setPartial(results.getString("partial"))
+                                .setColumnOrder(results.getString("column_order"))
+                                .setNonUnique(results.getString("non_unique"))
+                                .setIndexType(results.getString("index_type"))
+                                .build()
+                        );
+                    } else {
+                        existingIndex.addColumnName(results.getString("column_name"));
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new SQLException("Error while retrieving indexes for table: " + e.getMessage());
+        } finally {
+            rollbackConnection();
+        }
+    }
+
+
+
+
 }

@@ -32,6 +32,7 @@ import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConst
 public class EntityField {
     private final String fieldName;
     private final String fieldType;
+    private SQLType sqlType;
     private final boolean arrayType;
     private final boolean optionalType;
     private Relation relation;
@@ -47,6 +48,16 @@ public class EntityField {
         this.annotationNodes = annotationNodes;
     }
 
+    EntityField(String fieldName, String fieldType, boolean arrayType, boolean optionalType,
+                NodeList<AnnotationNode> annotationNodes, SQLType sqlType) {
+        this.fieldName = fieldName;
+        this.fieldType = fieldType;
+        this.arrayType = arrayType;
+        this.optionalType = optionalType;
+        this.annotationNodes = annotationNodes;
+        this.sqlType = sqlType;
+    }
+
     public String getFieldName() {
         return fieldName;
     }
@@ -57,6 +68,10 @@ public class EntityField {
 
     public Relation getRelation() {
         return relation;
+    }
+
+    public SQLType getSqlType() {
+        return sqlType;
     }
 
     public NodeList<AnnotationNode> getAnnotation() {
@@ -96,6 +111,8 @@ public class EntityField {
 
         boolean arrayType = false;
         boolean optionalType = false;
+
+        SQLType sqlType;
         private NodeList<AnnotationNode> annotationNodes = null;
 
         Builder(String fieldName) {
@@ -107,6 +124,10 @@ public class EntityField {
                 fieldType = fieldType.split(COLON, 2)[1];
             }
             this.fieldType = fieldType;
+        }
+
+        public void setSqlType(SQLType sqlType) {
+            this.sqlType = sqlType;
         }
 
 
@@ -122,6 +143,9 @@ public class EntityField {
         }
 
         public EntityField build() {
+            if (sqlType != null) {
+                return new EntityField(fieldName, fieldType, arrayType, optionalType, annotationNodes, sqlType);
+            }
             return new EntityField(fieldName, fieldType, arrayType, optionalType, annotationNodes);
         }
     }

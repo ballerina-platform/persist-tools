@@ -37,14 +37,21 @@ public class Entity {
 
     private final String entityName;
 
+
     private final List<EntityField> fields;
 
+    private final List<Index> indexes;
+
+    private final List<Index> uniqueIndexes;
+
     private Entity(String entityName, List<EntityField> keys,
-                   String resourceName, List<EntityField> fields) {
+                   String resourceName, List<EntityField> fields, List<Index> indexes, List<Index> uniqueIndexes) {
         this.entityName = entityName;
         this.keys = Collections.unmodifiableList(keys);
         this.resourceName = resourceName;
         this.fields = Collections.unmodifiableList(fields);
+        this.indexes = Collections.unmodifiableList(indexes);
+        this.uniqueIndexes = Collections.unmodifiableList(uniqueIndexes);
     }
 
     public List<EntityField> getKeys() {
@@ -60,6 +67,14 @@ public class Entity {
 
     public List<EntityField> getFields() {
         return this.fields;
+    }
+
+    public List<Index> getIndexes() {
+        return this.indexes;
+    }
+
+    public List<Index> getUniqueIndexes() {
+        return this.uniqueIndexes;
     }
 
     public EntityField getFieldByName(String fieldName) {
@@ -85,8 +100,14 @@ public class Entity {
 
         List<EntityField> fieldList = null;
 
+        List<Index> indexes;
+
+        List<Index> uniqueIndexes;
+
         private Builder(String entityName) {
             this.entityName = entityName;
+            this.indexes = new ArrayList<>();
+            this.uniqueIndexes = new ArrayList<>();
         }
 
         public void setKeys(List<EntityField> keys) {
@@ -100,12 +121,20 @@ public class Entity {
             fieldList.add(field);
         }
 
+        public void addIndex(Index index) {
+            indexes.add(index);
+        }
+
+        public void addUniqueIndex(Index index) {
+            uniqueIndexes.add(index);
+        }
+
         public Entity build() {
             if (resourceName == null) {
                 resourceName = entityName.toLowerCase(Locale.ENGLISH);
             }
             resourceName = Pluralizer.pluralize(resourceName);
-            return new Entity(entityName, keys, resourceName, fieldList);
+            return new Entity(entityName, keys, resourceName, fieldList, indexes, uniqueIndexes);
         }
     }
 }
