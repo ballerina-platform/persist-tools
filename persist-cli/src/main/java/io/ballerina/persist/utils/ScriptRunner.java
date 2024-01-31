@@ -184,34 +184,39 @@ public class ScriptRunner {
         }
     }
 
-    public void readForeignKeysOfSQLTable(SQLTable table, String query) throws SQLException {
+    public List<SQLForeignKey> readForeignKeysOfSQLTable(SQLTable table, String query) throws SQLException {
+        List<SQLForeignKey> sqlForeignKeys = new ArrayList<>();
         try (Statement statement = connection.createStatement()) {
             try (ResultSet results = statement.executeQuery(query)) {
                 while (results.next()) {
                     String constraintName = results.getString("constraint_name");
-                    SQLForeignKey existingForeignKey = table.getForeignKeys().stream().filter(
+                    SQLForeignKey existingForeignKey = table.getSqlForeignKeys().stream().filter(
                                     fKey -> fKey.getConstraintName().equals(constraintName))
                             .findFirst().orElse(null);
                     if (existingForeignKey == null) {
-                        table.addForeignKey(SQLForeignKey.Builder.newBuilder(results.getString("constraint_name"))
+                        SQLForeignKey foreignKey = SQLForeignKey.Builder
+                                .newBuilder(results.getString("constraint_name"))
                                 .setTableName(results.getString("table_name"))
                                 .addColumnName(results.getString("column_name"))
                                 .setReferencedTableName(results.getString("referenced_table_name"))
                                 .addReferencedColumnName(results.getString("referenced_column_name"))
                                 .setUpdateRule(results.getString("update_rule"))
                                 .setDeleteRule(results.getString("delete_rule"))
-                                .build()
-                        );
+                                .build();
+                        table.addForeignKey(foreignKey);
+                        sqlForeignKeys.add(foreignKey);
                     } else {
                         existingForeignKey.addColumnName(results.getString("column_name"));
                         existingForeignKey.addReferencedColumnName(results.getString("referenced_column_name"));
                     }
                 }
             }
+            return sqlForeignKeys;
         } catch (SQLException e) {
             throw new SQLException("Error while retrieving foreign keys for table: " + e.getMessage());
         } finally {
             rollbackConnection();
+
         }
     }
 

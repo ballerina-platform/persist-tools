@@ -100,6 +100,7 @@ public class PersistToolsConstants {
         public static final String DOUBLE = "DOUBLE";
         public static final String FLOAT = "FLOAT";
         public static final String VARCHAR = "VARCHAR";
+        public static final String CHAR = "CHAR";
         public static final String DATE = "DATE";
         public static final String TIME = "TIME";
         public static final String TIME_STAMP = "TIMESTAMP";

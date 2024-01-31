@@ -15,7 +15,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.ballerina.persist.plural;
+package io.ballerina.persist.inflector;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

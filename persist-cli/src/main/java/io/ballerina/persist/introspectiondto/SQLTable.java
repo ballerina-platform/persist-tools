@@ -5,23 +5,23 @@ import java.util.Collections;
 import java.util.List;
 
 public class SQLTable {
-    private String tableName;
-    private String createOptions;
-    private String tableComment;
-    private List<SQLColumn> columns;
+    private final String tableName;
+    private final String createOptions;
+    private final String tableComment;
+    private final List<SQLColumn> columns;
 
 
 //    private List<SQLConstraint> constraints;
-    private List<SQLForeignKey> foreignKeys;
+    private final List<SQLForeignKey> sqlForeignKeys;
 
-    private List<SQLIndex> indexes;
+    private final List<SQLIndex> indexes;
 
     public SQLTable(String tableName, String createOptions, String tableComment) {
         this.tableName = tableName;
         this.createOptions = createOptions;
         this.tableComment = tableComment;
         this.columns = new ArrayList<>();
-        this.foreignKeys = new ArrayList<>();
+        this.sqlForeignKeys = new ArrayList<>();
         this.indexes = new ArrayList<>();
     }
 
@@ -55,8 +55,8 @@ public class SQLTable {
 //        this.constraints = constraints;
 //    }
 
-    public List<SQLForeignKey> getForeignKeys() {
-        return Collections.unmodifiableList(foreignKeys);
+    public List<SQLForeignKey> getSqlForeignKeys() {
+        return Collections.unmodifiableList(sqlForeignKeys);
     }
 
     public List<SQLIndex> getIndexes() {
@@ -70,7 +70,7 @@ public class SQLTable {
 
 
     public void addForeignKey(SQLForeignKey foreignKey) {
-        this.foreignKeys.add(foreignKey);
+        this.sqlForeignKeys.add(foreignKey);
     }
 
     public void addIndex(SQLIndex index) {

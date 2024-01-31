@@ -17,6 +17,9 @@
  */
 package io.ballerina.persist.utils;
 
+import io.ballerina.persist.inflector.CaseConverter;
+import io.ballerina.persist.inflector.Pluralizer;
+import io.ballerina.persist.introspectiondto.SQLForeignKey;
 import io.ballerina.persist.introspectiondto.SQLTable;
 import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.EntityField;
@@ -24,12 +27,13 @@ import io.ballerina.persist.models.Index;
 import io.ballerina.persist.models.Relation;
 import io.ballerina.persist.models.SQLType;
 
-import java.io.PrintStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import static java.lang.Integer.parseInt;
@@ -46,7 +50,7 @@ public abstract class Introspector {
 
     protected final Connection connection;
 
-    private final PrintStream errStream = System.err;
+//    private final PrintStream errStream = System.err;
     protected String databaseName;
     protected abstract String getTablesQuery();
     protected abstract String getColumnsQuery(String tableName);
@@ -54,48 +58,57 @@ public abstract class Introspector {
     protected abstract String getIndexesQuery(String tableName);
     protected abstract String getForeignKeysQuery(String tableName);
 
+    private List<SQLTable> tables;
+
+    private Map<String, Entity> entityMap;
+
+    private List<SQLForeignKey> sqlForeignKeys;
+
     public Introspector(Connection connection, String databaseName) {
         this.connection = connection;
         this.databaseName = databaseName;
+        this.tables = new ArrayList<>();
+        this.entityMap = new HashMap<>();
+        this.sqlForeignKeys = new ArrayList<>();
     }
 
-    public List<Entity> introspectDatabase() throws SQLException {
+    public Map<String, Entity> introspectDatabase() throws SQLException {
         ScriptRunner sr = new ScriptRunner(connection);
-        List<SQLTable> tables = sr.getSQLTables(this.getTablesQuery());
+        this.tables = sr.getSQLTables(this.getTablesQuery());
         tables.forEach(table -> {
             try {
                 sr.readColumnsOfSQLTable(table, this.getColumnsQuery(table.getTableName()));
-                sr.readForeignKeysOfSQLTable(table, this.getForeignKeysQuery(table.getTableName()));
+                this.sqlForeignKeys.addAll(sr.readForeignKeysOfSQLTable
+                        (table, this.getForeignKeysQuery(table.getTableName())));
                 sr.readIndexesOfSQLTable(table, this.getIndexesQuery(table.getTableName()));
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
         });
 
+        mapEntities();
+
+        //revise this. relationships are not correctly mapped
+//        mapRelations();
+
+        return Collections.unmodifiableMap(entityMap);
+    }
+
+    private void mapEntities() {
+        Map<String, Entity.Builder> entityBuilderMap = new HashMap<>();
         tables.forEach(table -> {
-            errStream.println("Indexes found: " + table.getIndexes().size());
-            table.getIndexes().forEach(index -> {
-                errStream.println();
-                errStream.println("Table Name: " + index.getTableName());
-                errStream.println("Index Name: " + index.getIndexName());
-                errStream.println();
-                index.getColumnNames().forEach(column -> errStream.print(column + ", "));
-                errStream.println();
-                errStream.println("Index Non Unique: " + index.getNonUnique());
-                errStream.println("Index Partial: " + index.getPartial());
-                errStream.println("Index Type: " + index.getIndexType());
-                errStream.println("Index Column Order: " + index.getColumnOrder());
-            });
-        });
-        Map<String, Entity> entityMap = new HashMap<>();
-        tables.forEach(table -> {
-            Entity.Builder entityBuilder = Entity.newBuilder(table.getTableName());
+            String entityName = CaseConverter.toSingularPascalCase(table.getTableName());
+
+            Entity.Builder entityBuilder = Entity.newBuilder(entityName);
+            entityBuilder.setResourceName(table.getTableName());
             List<EntityField> keys = new ArrayList<>();
             List<EntityField> fields = new ArrayList<>();
             table.getColumns().forEach(column -> {
-                EntityField.Builder fieldBuilder = EntityField.newBuilder(column.getColumnName());
+                EntityField.Builder fieldBuilder = EntityField.newBuilder(
+                        CaseConverter.toCamelCase(column.getColumnName()));
+                fieldBuilder.setResourceFieldName(column.getColumnName());
                 SQLType sqlType = new SQLType(
-                        column.getDataType(),
+                        column.getDataType().toUpperCase(Locale.ENGLISH),
                         column.getColumnDefault(),
                         column.getNumericPrecision(),
                         column.getNumericScale(),
@@ -103,7 +116,8 @@ public abstract class Introspector {
                         column.getCharacterMaximumLength() != null ? parseInt(column.getCharacterMaximumLength()) : 0
                 );
 
-                fieldBuilder.setType(column.getDataType());
+                String balType = sqlType.getBalType();
+                fieldBuilder.setType(balType);
                 fieldBuilder.setOptionalType(column.getIsNullable().equals("YES"));
                 fieldBuilder.setSqlType(sqlType);
                 fieldBuilder.setArrayType(false);
@@ -116,7 +130,13 @@ public abstract class Introspector {
                 }
             });
             table.getIndexes().forEach(sqlIndex -> {
-                Index index = new Index(sqlIndex.getIndexName(), fields, sqlIndex.getNonUnique().equals("0"));
+                List<EntityField> indexFields = new ArrayList<>();
+                sqlIndex.getColumnNames().forEach(columnName -> fields.forEach(entityField -> {
+                    if (entityField.getFieldResourceName().equals(columnName)) {
+                        indexFields.add(entityField);
+                    }
+                }));
+                Index index = new Index(sqlIndex.getIndexName(), indexFields, sqlIndex.getNonUnique().equals("0"));
                 if (index.isUnique()) {
                     entityBuilder.addUniqueIndex(index);
                 } else {
@@ -124,70 +144,103 @@ public abstract class Introspector {
                 }
             });
             entityBuilder.setKeys(keys);
-            entityMap.put(table.getTableName(), entityBuilder.build());
+            entityBuilderMap.put(entityBuilder.getEntityName(), entityBuilder);
         });
 
-        tables.forEach(table-> {
-            table.getForeignKeys().forEach(foreignKey -> {
-                Entity entity = entityMap.get(table.getTableName());
-                Entity assocEntity = entityMap.get(foreignKey.getReferencedTableName());
-                List<EntityField> ownerColumns = new ArrayList<>();
-                foreignKey.getColumnNames().forEach(columnName -> {
-                    ownerColumns.add(entity.getFieldByName(columnName));
-                });
-                List<EntityField> referencedColumns = new ArrayList<>();
-                foreignKey.getReferencedColumnNames().forEach(columnName -> {
-                    referencedColumns.add(assocEntity.getFieldByName(columnName));
-                });
-                Relation.Builder ownerRelBuilder = new Relation.Builder();
-                Relation.Builder referenceRelBuilder = new Relation.Builder();
+        this.sqlForeignKeys.forEach(sqlForeignKey -> {
+            Entity.Builder ownerEntityBuilder = entityBuilderMap
+                    .get(CaseConverter.toSingularPascalCase(sqlForeignKey.getTableName()));
+            Entity.Builder assocEntityBuilder = entityBuilderMap
+                    .get(CaseConverter.toSingularPascalCase(sqlForeignKey.getReferencedTableName()));
+            boolean isReferenceMany = inferRelationshipCardinality
+                    (ownerEntityBuilder.buildForIntrospection(), sqlForeignKey)
+                    == Relation.RelationType.MANY;
+            EntityField.Builder assocField = EntityField
+                    .newBuilder(
+                            isReferenceMany ?
+                                    Pluralizer.pluralize(ownerEntityBuilder.getEntityName().toLowerCase(Locale.ENGLISH))
+                                    : ownerEntityBuilder.getEntityName().toLowerCase(Locale.ENGLISH)
+                    );
+            assocField.setType(ownerEntityBuilder.getEntityName());
 
-                ownerRelBuilder.setOwner(true);
-                ownerRelBuilder.setAssocEntity(assocEntity);
-                if (entity.getKeys().contains(ownerColumns.get(0))) {
-                    ownerRelBuilder.setRelationType(Relation.RelationType.MANY);
-                    // add indexes unique as well
-                } else {
-                    ownerRelBuilder.setRelationType(Relation.RelationType.ONE);
-                }
-                ownerRelBuilder.setRelationType(Relation.RelationType.ONE);
-                ownerRelBuilder.setReferences(referencedColumns.stream().map(EntityField::getFieldName).toList());
-                ownerRelBuilder.setKeys(ownerColumns.stream().map(entityField ->
-                        new Relation.Key(entityField.getFieldName(), referencedColumns
-                        .get(ownerColumns.indexOf(entityField)).getFieldName(),
-                                entityField.getSqlType().getTypeName())).toList());
-                Relation ownerRelation = ownerRelBuilder.build();
-                ownerColumns.forEach(entityField -> entityField.setRelation(ownerRelation));
+            EntityField.Builder ownerField = EntityField
+                    .newBuilder(assocEntityBuilder.getEntityName().toLowerCase(Locale.ENGLISH));
+            ownerField.setType(assocEntityBuilder.getEntityName());
 
-                referenceRelBuilder.setOwner(false);
-                referenceRelBuilder.setAssocEntity(entity);
-                referenceRelBuilder.setRelationType(Relation.RelationType.ONE);
-                referenceRelBuilder.setKeys(referencedColumns.stream().map(entityField ->
-                        new Relation.Key(entityField.getFieldName(), ownerColumns
-                        .get(referencedColumns.indexOf(entityField)).getFieldName(),
-                                entityField.getSqlType().getTypeName())).toList());
-                referenceRelBuilder.setReferences(ownerColumns.stream().map(EntityField::getFieldName).toList());
-                Relation referenceRelation = referenceRelBuilder.build();
-                referencedColumns.forEach(entityField -> entityField.setRelation(referenceRelation));
-            });
+            assocField.setArrayType(isReferenceMany);
+
+            assocEntityBuilder.addField(assocField.build());
+            ownerEntityBuilder.addField(ownerField.build());
         });
 
-        errStream.println("Entities found: " + entityMap.size());
-        entityMap.forEach((entityName, entity) -> {
-            errStream.println();
-            errStream.println(entity.getEntityName());
-            errStream.println();
-            errStream.println("Fields:");
-            entity.getFields().forEach(field -> errStream.println(field.getFieldName() + "\t\t" +
-                    field.getFieldType() + "\t\tOptional: " + field.isOptionalType() +
-                    "\t\tArray: " + field.isArrayType()));
-            errStream.println();
-            errStream.println("Keys:");
-            entity.getKeys().forEach(key -> errStream.println(key.getFieldName()));
-        });
-
-        return entityMap.values().stream().toList();
+        entityBuilderMap.forEach((key, value) -> entityMap.put(key, value.buildForIntrospection()));
     }
 
+//    private void mapRelations() {
+//
+//        this.tables.forEach(table-> table.getSqlForeignKeys().forEach(foreignKey -> {
+//            Entity ownerEntity = entityMap.get(table.getTableName());
+//            Entity assocEntity = entityMap.get(foreignKey.getReferencedTableName());
+//            List<EntityField> ownerColumns = new ArrayList<>();
+//            foreignKey.getColumnNames().forEach(columnName ->
+//                    ownerColumns.add(ownerEntity.getFieldByName(columnName)));
+//            List<EntityField> referencedColumns = new ArrayList<>();
+//            foreignKey.getReferencedColumnNames().forEach(columnName ->
+//                    referencedColumns.add(assocEntity.getFieldByName(columnName)));
+//            Relation.Builder ownerRelBuilder = new Relation.Builder();
+//            Relation.Builder referenceRelBuilder = new Relation.Builder();
+//
+//            ownerRelBuilder.setOwner(true);
+//            ownerRelBuilder.setAssocEntity(assocEntity);
+//
+//            ownerRelBuilder.setRelationType(inferRelationshipCardinality(ownerEntity, foreignKey));
+//
+//            ownerRelBuilder.setRelationType(Relation.RelationType.ONE);
+//            ownerRelBuilder.setReferences(referencedColumns.stream().map(EntityField::getFieldName).toList());
+//            ownerRelBuilder.setKeys(ownerColumns.stream().map(entityField ->
+//                    new Relation.Key(entityField.getFieldName(), referencedColumns
+//                            .get(ownerColumns.indexOf(entityField)).getFieldName(),
+//                            entityField.getFieldType())).toList());
+//            Relation ownerRelation = ownerRelBuilder.build();
+//            ownerColumns.forEach(entityField -> entityField.setRelation(ownerRelation));
+//
+//            referenceRelBuilder.setOwner(false);
+//            referenceRelBuilder.setAssocEntity(ownerEntity);
+//            referenceRelBuilder.setRelationType(Relation.RelationType.ONE);
+//            referenceRelBuilder.setKeys(referencedColumns.stream().map(entityField ->
+//                    new Relation.Key(entityField.getFieldName(), ownerColumns
+//                            .get(referencedColumns.indexOf(entityField)).getFieldName(),
+//                            entityField.getFieldType())).toList());
+//            referenceRelBuilder.setReferences(ownerColumns.stream().map(EntityField::getFieldName).toList());
+//            Relation referenceRelation = referenceRelBuilder.build();
+//            referencedColumns.forEach(entityField -> entityField.setRelation(referenceRelation));
+//        }));
+//    }
 
+    private Relation.RelationType inferRelationshipCardinality(Entity ownerEntity, SQLForeignKey foreignKey) {
+        List<EntityField> ownerColumns = new ArrayList<>();
+        foreignKey.getColumnNames().forEach(columnName ->
+                ownerColumns.add(ownerEntity.getFieldByName(columnName)));
+        boolean isUniqueIndexPresent = ownerEntity.getUniqueIndexes().stream()
+                .anyMatch(index -> areTwoFieldListsEqual(index.getFields(), ownerColumns));
+        if (areTwoFieldListsEqual(ownerEntity.getKeys(), ownerColumns)) {
+            return Relation.RelationType.ONE;
+        } else if (isUniqueIndexPresent) {
+            return Relation.RelationType.ONE;
+        } else {
+            return Relation.RelationType.MANY;
+        }
+    }
+
+    private boolean areTwoFieldListsEqual(List<EntityField> list1, List<EntityField> list2) {
+        if (list1.size() != list2.size()) {
+            return false;
+        }
+        for (EntityField entityField : list1) {
+            if (!list2.contains(entityField)) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

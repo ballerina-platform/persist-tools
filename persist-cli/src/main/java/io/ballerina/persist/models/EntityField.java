@@ -31,6 +31,7 @@ import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConst
  */
 public class EntityField {
     private final String fieldName;
+    private final String fieldResourceName;
     private final String fieldType;
     private SQLType sqlType;
     private final boolean arrayType;
@@ -46,11 +47,13 @@ public class EntityField {
         this.arrayType = arrayType;
         this.optionalType = optionalType;
         this.annotationNodes = annotationNodes;
+        this.fieldResourceName = "";
     }
 
-    EntityField(String fieldName, String fieldType, boolean arrayType, boolean optionalType,
+    EntityField(String fieldName, String fieldResourceName, String fieldType, boolean arrayType, boolean optionalType,
                 NodeList<AnnotationNode> annotationNodes, SQLType sqlType) {
         this.fieldName = fieldName;
+        this.fieldResourceName = fieldResourceName;
         this.fieldType = fieldType;
         this.arrayType = arrayType;
         this.optionalType = optionalType;
@@ -60,6 +63,10 @@ public class EntityField {
 
     public String getFieldName() {
         return fieldName;
+    }
+
+    public String getFieldResourceName() {
+        return fieldResourceName;
     }
 
     public String getFieldType() {
@@ -107,6 +114,7 @@ public class EntityField {
      */
     public static class Builder {
         String fieldName;
+        String resourceFieldName;
         String fieldType;
 
         boolean arrayType = false;
@@ -129,6 +137,9 @@ public class EntityField {
         public void setSqlType(SQLType sqlType) {
             this.sqlType = sqlType;
         }
+        public void setResourceFieldName(String resourceFieldName) {
+            this.resourceFieldName = resourceFieldName;
+        }
 
 
         public void setArrayType(boolean arrayType) {
@@ -144,7 +155,8 @@ public class EntityField {
 
         public EntityField build() {
             if (sqlType != null) {
-                return new EntityField(fieldName, fieldType, arrayType, optionalType, annotationNodes, sqlType);
+                return new EntityField
+                        (fieldName, resourceFieldName, fieldType, arrayType, optionalType, annotationNodes, sqlType);
             }
             return new EntityField(fieldName, fieldType, arrayType, optionalType, annotationNodes);
         }

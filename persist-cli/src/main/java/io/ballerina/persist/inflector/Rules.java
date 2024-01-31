@@ -15,7 +15,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.ballerina.persist.plural;
+package io.ballerina.persist.inflector;
 
 import java.util.Arrays;
 import java.util.List;
@@ -117,6 +117,37 @@ public class Rules {
             {"thou", "you"},
             {"s?$", "s"}
     });
+
+    static final String[][] SINGULARIZATION_RULES = (new String[][]{
+            {"(s|si|ni)([aeiouy])s$", "$1$2"},
+            {"([^aeiou])ese$", "$1"},
+            {"(ax|test)es$", "$1is"},
+            {"(alias|[^aou]us|t[lm]as|gas|ris)es$", "$1"},
+            {"(e[mn]u)s$", "$1"},
+            {"([^l]ias|[aeiou]las|[ejzr]as|[iu]am)s$", "$1"},
+            {"(alumn|syllab|vir|radi|nucle|fung|cact|stimul|termin|bacill|foc|uter|loc|strat)i$", "$1us"},
+            {"(alumn|alg|vertebr)ae$", "$1a"},
+            {"(seraph|cherub)im$", "$1"},
+            {"(her|at|gr)oes$", "$1o"},
+            {"(agend|addend|millenni|dat|extrem|bacteri|desiderat|strat|candelabr|errat|ov|" +
+                    "symposi|curricul|automat|quor)a$", "$1um"},
+            {"(apheli|hyperbat|periheli|asyndet|noumen|phenomen|criteri|organ|prolegomen|" +
+                    "hedr|automat)a$", "$1on"},
+            {"ses$", "sis"},
+            {"(?:(kni|wi|li)fe|(ar|l|ea|eo|oa|hoo)f)ves$", "$1$2"},
+            {"([^aeiouy]|qu)ies$", "$1y"},
+            {"([^ch][ieo][ln])eys$", "$1ey"},
+            {"(x|ch|ss|sh|zz)es$", "$1"},
+            {"(matr|cod|mur|sil|vert|ind|append)ices$", "$1ix"},
+            {"\b((?:tit)?m|l)ice$", "$1ouse"},
+            {"(pe)ople$", "$1rson"},
+            {"(child)ren$", "$1"},
+            {"eaux$", "$0"},
+            {"men$", "man"},
+            {"you", "thou"},
+            {"s$", ""}
+    });
+
 
     // Uncountable rules.
     static final List<String> UNCOUNTABLE_RULES = Arrays.asList(

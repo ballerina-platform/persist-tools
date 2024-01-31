@@ -18,7 +18,7 @@
 
 package io.ballerina.persist.models;
 
-import io.ballerina.persist.plural.Pluralizer;
+import io.ballerina.persist.inflector.Pluralizer;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -86,6 +86,15 @@ public class Entity {
         return null;
     }
 
+    public EntityField getFieldByFieldResourceName(String fieldResourceName) {
+        for (EntityField field : fields) {
+            if (field.getFieldResourceName().equals(fieldResourceName)) {
+                return field;
+            }
+        }
+        return null;
+    }
+
     public static Entity.Builder newBuilder(String entityName) {
         return new Entity.Builder(entityName);
     }
@@ -108,6 +117,10 @@ public class Entity {
             this.entityName = entityName;
             this.indexes = new ArrayList<>();
             this.uniqueIndexes = new ArrayList<>();
+        }
+
+        public void setResourceName(String resourceName) {
+            this.resourceName = resourceName;
         }
 
         public void setKeys(List<EntityField> keys) {
@@ -136,5 +149,23 @@ public class Entity {
             resourceName = Pluralizer.pluralize(resourceName);
             return new Entity(entityName, keys, resourceName, fieldList, indexes, uniqueIndexes);
         }
+
+        public Entity buildForIntrospection() {
+            return new Entity(entityName, keys, resourceName, fieldList, indexes, uniqueIndexes);
+        }
+
+        public EntityField getFieldByName(String fieldName) {
+            for (EntityField field : fieldList) {
+                if (field.getFieldName().equals(fieldName)) {
+                    return field;
+                }
+            }
+            return null;
+        }
+
+        public String getEntityName() {
+            return entityName;
+        }
+
     }
 }

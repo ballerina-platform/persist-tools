@@ -19,6 +19,10 @@ package io.ballerina.persist.cmd;
 
 import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.BalException;
+import io.ballerina.persist.PersistToolsConstants;
+import io.ballerina.persist.models.Entity;
+import io.ballerina.persist.models.Module;
+import io.ballerina.persist.nodegenerator.SourceGenerator;
 import io.ballerina.persist.utils.DatabaseConnector;
 import io.ballerina.persist.utils.Introspector;
 import io.ballerina.persist.utils.JdbcDriverLoader;
@@ -30,10 +34,12 @@ import picocli.CommandLine;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.SQLException;
+import java.util.Map;
 
 @CommandLine.Command(
         name = "pull",
@@ -44,6 +50,8 @@ public class Pull implements BLauncherCmd {
     private final String sourcePath;
 
     private static final String COMMAND_IDENTIFIER = "persist-pull";
+
+
 
     DatabaseConnector databaseConnector;
 
@@ -56,11 +64,12 @@ public class Pull implements BLauncherCmd {
         databaseConnector = new DatabaseConnector();
     }
 
+
     @Override
     public void execute() {
+        Module entityModule = null;
+        Path schemaFilePath;
 
-        PrintStream standardOut = System.out;
-        standardOut.println("Pull command executed");
 
         // Load Ballerina project to get DB driver path.
         Project balProject;
@@ -78,7 +87,17 @@ public class Pull implements BLauncherCmd {
 
                 Introspector introspector = new MySQLIntrospector(connection, "prismaTest");
 
-                introspector.introspectDatabase();
+                Map<String, Entity> entityMap = introspector.introspectDatabase();
+
+                Module.Builder moduleBuilder = Module.newBuilder("prismaTest");
+
+                entityMap.forEach(moduleBuilder::addEntity);
+                // add enums and imports
+                entityModule = moduleBuilder.build();
+
+                if (entityModule == null) {
+                    throw new BalException("ERROR: failed to generate the client object for the entity.");
+                }
 
             } catch (SQLException e) {
                 errStream.printf("ERROR: failed to connect to the database. %s%n", e.getMessage());
@@ -89,6 +108,18 @@ public class Pull implements BLauncherCmd {
                      e.getMessage());
         } catch (IOException e) {
             errStream.printf("ERROR: failed to load the database driver. %s%n", e.getMessage());
+        }
+
+        SourceGenerator sourceGenerator = new SourceGenerator(sourcePath,
+                Paths.get(sourcePath, PersistToolsConstants.PERSIST_DIRECTORY),
+                "prismaTest", entityModule);
+
+        try {
+            sourceGenerator.createDbModel();
+        } catch (BalException e) {
+            errStream.printf(String.format("ERROR: failed to generate model for introspected database: %s%n",
+                     e.getMessage()));
+            return;
         }
     }
 
