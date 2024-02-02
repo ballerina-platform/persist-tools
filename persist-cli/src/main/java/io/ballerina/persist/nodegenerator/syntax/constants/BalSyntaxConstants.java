@@ -248,6 +248,8 @@ public class BalSyntaxConstants {
     public static final String CONSTRAINT_ANNOTATION = "@constraint:String {" + System.lineSeparator() +
             "        %s" + System.lineSeparator() +
             "    }";
+
+    public static final String SQL_DB_MAPPING_ANNOTATION = "@sql:DatabaseMapping{ name: \"%s\" }";
     public static final String FIELD_METADATA_TEMPLATE = "fieldMetadata: {%s}";
     public static final String JOIN_METADATA_TEMPLATE = "joinMetadata: {%s}";
 

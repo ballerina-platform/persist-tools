@@ -95,6 +95,13 @@ public class Entity {
         return null;
     }
 
+    public boolean shouldResourceMappingGenerated() {
+        if (resourceName.isBlank()) {
+            return false;
+        }
+        return !resourceName.equals(entityName);
+    }
+
     public static Entity.Builder newBuilder(String entityName) {
         return new Entity.Builder(entityName);
     }

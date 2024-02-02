@@ -39,6 +39,9 @@ public class EntityField {
     private Relation relation;
     private Enum enumValue;
     private final NodeList<AnnotationNode> annotationNodes;
+//    private final AnnotationNode sqlDbMappingAnnotationNode;
+
+//    private final AnnotationNode indexAnnotationNode;
 
     EntityField(String fieldName, String fieldType, boolean arrayType, boolean optionalType,
                         NodeList<AnnotationNode> annotationNodes) {
@@ -59,6 +62,13 @@ public class EntityField {
         this.optionalType = optionalType;
         this.annotationNodes = annotationNodes;
         this.sqlType = sqlType;
+//        AnnotationNode annotationNode = new AnnotationNode(
+//                new STNode()
+//        );
+//        if (fieldResourceName.equals(fieldName)) {
+////            AnnotationNode annotationNode = new AnnotationNode()
+////            this.annotationNodes.add(AnnotationNode.createIdentifier("Field"));
+//        }
     }
 
     public String getFieldName() {
@@ -84,6 +94,14 @@ public class EntityField {
     public NodeList<AnnotationNode> getAnnotation() {
         return annotationNodes;
     }
+
+    public boolean shouldResourceMappingGenerated() {
+        if (fieldResourceName.isBlank()) {
+            return false;
+        }
+        return !fieldResourceName.equals(fieldName);
+    }
+
 
     public void setRelation(Relation relation) {
         this.relation = relation;
