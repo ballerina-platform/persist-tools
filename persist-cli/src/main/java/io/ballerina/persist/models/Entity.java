@@ -34,16 +34,10 @@ public class Entity {
 
     private final List<EntityField> keys;
     private final String resourceName;
-
     private final String entityName;
-
-
     private final List<EntityField> fields;
-
     private final List<Index> indexes;
-
     private final List<Index> uniqueIndexes;
-
     private Entity(String entityName, List<EntityField> keys,
                    String resourceName, List<EntityField> fields, List<Index> indexes, List<Index> uniqueIndexes) {
         this.entityName = entityName;

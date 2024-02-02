@@ -17,7 +17,7 @@
  */
 package io.ballerina.persist;
 
-import io.ballerina.persist.plural.Pluralizer;
+import io.ballerina.persist.inflector.Pluralizer;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

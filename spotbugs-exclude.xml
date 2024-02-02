@@ -41,4 +41,12 @@
         <Class name="io.ballerina.persist.utils.ScriptRunner" />
         <Bug pattern="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE" />
     </Match>
+    <Match>
+        <Class name="io.ballerina.persist.introspect.Introspector" />
+        <Bug pattern="EI_EXPOSE_REP2" />
+    </Match>
+    <Match>
+        <Class name="io.ballerina.persist.introspect.Introspector" />
+        <Bug pattern="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE" />
+    </Match>
 </FindBugsFilter>

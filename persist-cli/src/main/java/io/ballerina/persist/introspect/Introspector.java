@@ -15,7 +15,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.ballerina.persist.utils;
+package io.ballerina.persist.introspect;
 
 import io.ballerina.persist.inflector.CaseConverter;
 import io.ballerina.persist.inflector.Pluralizer;
@@ -26,6 +26,7 @@ import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.Index;
 import io.ballerina.persist.models.Relation;
 import io.ballerina.persist.models.SQLType;
+import io.ballerina.persist.utils.ScriptRunner;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -110,8 +111,8 @@ public abstract class Introspector {
                 SQLType sqlType = new SQLType(
                         column.getDataType().toUpperCase(Locale.ENGLISH),
                         column.getColumnDefault(),
-                        column.getNumericPrecision(),
-                        column.getNumericScale(),
+                        column.getNumericPrecision() != null ? parseInt(column.getNumericPrecision()) : 0,
+                        column.getNumericScale() != null ? parseInt(column.getNumericScale()) : 0,
                         column.getDatetimePrecision(),
                         column.getCharacterMaximumLength() != null ? parseInt(column.getCharacterMaximumLength()) : 0
                 );

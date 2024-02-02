@@ -6,12 +6,12 @@ import io.ballerina.persist.PersistToolsConstants;
 public class SQLType {
     private final String typeName;
     protected final String columnDefaultValue;
-    private final String numericPrecision;
-    private final String numericScale;
+    private final int numericPrecision;
+    private final int numericScale;
     private final String dateTimePrecision;
     private final int maxLength;
 
-    public SQLType(String typeName, String columnDefaultValue, String numericPrecision, String numericScale,
+    public SQLType(String typeName, String columnDefaultValue, int numericPrecision, int numericScale,
                    String dateTimePrecision, int maxCharLength) {
         this.typeName = typeName;
         this.columnDefaultValue = columnDefaultValue;
@@ -29,11 +29,11 @@ public class SQLType {
         return columnDefaultValue;
     }
 
-    public String getNumericPrecision() {
+    public int getNumericPrecision() {
         return numericPrecision;
     }
 
-    public String getNumericScale() {
+    public int getNumericScale() {
         return numericScale;
     }
 

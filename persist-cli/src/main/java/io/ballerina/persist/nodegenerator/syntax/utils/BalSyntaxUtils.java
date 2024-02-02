@@ -40,6 +40,7 @@ import io.ballerina.compiler.syntax.tree.SpecificFieldNode;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.compiler.syntax.tree.Token;
+import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.components.Client;
 import io.ballerina.persist.components.Function;
 import io.ballerina.persist.components.TypeDescriptor;
@@ -49,6 +50,7 @@ import io.ballerina.persist.models.Enum;
 import io.ballerina.persist.models.EnumMember;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.models.Relation;
+import io.ballerina.persist.models.SQLType;
 import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
 import io.ballerina.persist.nodegenerator.syntax.constants.SyntaxTokenConstants;
 import io.ballerina.tools.text.TextDocument;
@@ -417,6 +419,7 @@ public class BalSyntaxUtils {
         StringBuilder recordFields = new StringBuilder();
         for (EntityField field : entity.getFields()) {
             addDbMappingAnnotationToField(field, recordFields);
+            addDbTypeMappingAnnotationToField(field, recordFields);
             if (entity.getKeys().stream().anyMatch(key -> key == field)) {
                 addConstrainAnnotationToField(field, recordFields);
                 recordFields.append(BalSyntaxConstants.KEYWORD_READONLY);
@@ -467,6 +470,42 @@ public class BalSyntaxUtils {
         recordString.append(String.format("public type %s record {| %s |};",
                 entity.getEntityName().trim(), recordFields));
         return NodeParser.parseModuleMemberDeclaration(recordString.toString());
+    }
+
+    private static void addDbTypeMappingAnnotationToField(EntityField field, StringBuilder recordFields) {
+        SQLType sqlType = field.getSqlType();
+        if (sqlType != null) {
+            switch (sqlType.getTypeName()) {
+                case PersistToolsConstants.SqlTypes.CHAR:
+                    recordFields.append(String.format
+                            (BalSyntaxConstants.SQL_CHAR_MAPPING_ANNOTATION, sqlType.getMaxLength()));
+                    break;
+                case PersistToolsConstants.SqlTypes.VARCHAR:
+                    if (PersistToolsConstants.DefaultMaxLength.VARCHAR_LENGTH != sqlType.getMaxLength()) {
+                        recordFields.append(String.format
+                                (BalSyntaxConstants.SQL_VARCHAR_MAPPING_ANNOTATION, sqlType.getMaxLength()));
+                    }
+                    break;
+                case PersistToolsConstants.SqlTypes.DECIMAL:
+                    // add later: check for default values for separate data sources
+                    String dataSource = PersistToolsConstants.SupportedDataSources.MYSQL_DB;
+                    int precision = PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION_MYSQL;
+                    int scale = PersistToolsConstants.DefaultMaxLength.DECIMAL_SCALE;
+                    switch (dataSource) {
+                        case PersistToolsConstants.SupportedDataSources.MYSQL_DB:
+                            precision = PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION_MYSQL;
+                            break;
+                        default: // do nothing
+                    }
+                    if (sqlType.getNumericPrecision() != precision || sqlType.getNumericScale() != scale) {
+                        recordFields.append(String.format
+                                (BalSyntaxConstants.SQL_DECIMAL_MAPPING_ANNOTATION, sqlType.getNumericPrecision(),
+                                        sqlType.getNumericScale()));
+                    }
+                    break;
+                default: // do nothing
+            }
+        }
     }
 
     private static void addDbMappingAnnotationToField(EntityField field, StringBuilder recordFields) {

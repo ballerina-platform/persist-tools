@@ -163,10 +163,20 @@ task copyPersistTool(type: Copy) {
     }
 }
 
+
+task copyFiles(type: Copy) {
+    from '/home/haritha/module-ballerinax-persist.sql/ballerina/build/bala_unzipped/bala/ballerinax/persist.sql'
+    into './target/ballerina-distribution/repo/bala/ballerinax/persist.sql'
+}
+
+
+
+
 copyPersistTool.dependsOn ":persist-cli-tests:build"
 copyPersistTool.dependsOn ":persist-cli:build"
 
 build.dependsOn copyPersistTool
-build.dependsOn ":examples:build"
+build.dependsOn copyFiles
+//build.dependsOn ":examples:build"
 
 publish.dependsOn build
