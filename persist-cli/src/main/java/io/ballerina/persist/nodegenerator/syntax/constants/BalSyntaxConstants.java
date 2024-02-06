@@ -249,10 +249,14 @@ public class BalSyntaxConstants {
             "        %s" + System.lineSeparator() +
             "    }";
 
-    public static final String SQL_DB_MAPPING_ANNOTATION = "@sql:DatabaseMapping{ name: \"%s\" }";
+    public static final String SQL_DB_MAPPING_ANNOTATION = "@sql:Mapping{ name: \"%s\" }";
     public static final String SQL_VARCHAR_MAPPING_ANNOTATION = "@sql:VarChar{ length: %s }";
     public static final String SQL_CHAR_MAPPING_ANNOTATION = "@sql:Char{ length: %s }";
     public static final String SQL_DECIMAL_MAPPING_ANNOTATION = "@sql:Decimal{ precision: [%s,%s] }";
+    public static final String SQL_RELATION_MAPPING_ANNOTATION = "@sql:Relation { refs: %s }";
+
+    public static final String SQL_INDEX_MAPPING_ANNOTATION = "@sql:Index { name: \"%s\" }";
+    public static final String SQL_UNIQUE_INDEX_MAPPING_ANNOTATION = "@sql:UniqueIndex { name: \"%s\" }";
     public static final String FIELD_METADATA_TEMPLATE = "fieldMetadata: {%s}";
     public static final String JOIN_METADATA_TEMPLATE = "joinMetadata: {%s}";
 

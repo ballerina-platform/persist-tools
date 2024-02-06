@@ -18,6 +18,7 @@
 
 package io.ballerina.persist.models;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -101,7 +102,7 @@ public class Relation {
      */
     public static class Builder {
         List<Key> keys = null;
-        List<String> references = null;
+        List<String> references = new ArrayList<>();
         Entity assocEntity = null;
 
         RelationType relationType = RelationType.ONE;

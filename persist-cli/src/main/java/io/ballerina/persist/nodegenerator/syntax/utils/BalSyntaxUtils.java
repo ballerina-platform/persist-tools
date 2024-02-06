@@ -420,6 +420,8 @@ public class BalSyntaxUtils {
         for (EntityField field : entity.getFields()) {
             addDbMappingAnnotationToField(field, recordFields);
             addDbTypeMappingAnnotationToField(field, recordFields);
+            addDbRelationMappingAnnotationToField(field, recordFields);
+            addDbIndexAnnotationToField(entity, field, recordFields);
             if (entity.getKeys().stream().anyMatch(key -> key == field)) {
                 addConstrainAnnotationToField(field, recordFields);
                 recordFields.append(BalSyntaxConstants.KEYWORD_READONLY);
@@ -470,6 +472,38 @@ public class BalSyntaxUtils {
         recordString.append(String.format("public type %s record {| %s |};",
                 entity.getEntityName().trim(), recordFields));
         return NodeParser.parseModuleMemberDeclaration(recordString.toString());
+    }
+
+    private static void addDbIndexAnnotationToField(Entity entity, EntityField field, StringBuilder recordFields) {
+        entity.getUniqueIndexes().forEach(index -> {
+            if (index.getFields().contains(field)) {
+                recordFields.append(
+                        String.format(BalSyntaxConstants.SQL_UNIQUE_INDEX_MAPPING_ANNOTATION, index.getIndexName()));
+            }
+        });
+        entity.getIndexes().forEach(index -> {
+            if (index.getFields().contains(field)) {
+                recordFields.append(
+                        String.format(BalSyntaxConstants.SQL_INDEX_MAPPING_ANNOTATION, index.getIndexName()));
+            }
+        });
+    }
+
+    private static void addDbRelationMappingAnnotationToField(EntityField field, StringBuilder recordFields) {
+        if (field.getIntrospectionRelationRefs() != null) {
+            StringBuilder relationRefs = new StringBuilder();
+            relationRefs.append(SyntaxTokenConstants.SYNTAX_TREE_OPEN_BRACKET);
+            for (String ref : field.getIntrospectionRelationRefs()) {
+                relationRefs.append(BalSyntaxConstants.DOUBLE_QUOTE);
+                relationRefs.append(ref);
+                relationRefs.append(BalSyntaxConstants.DOUBLE_QUOTE);
+                relationRefs.append(BalSyntaxConstants.COMMA_WITH_SPACE);
+            }
+            relationRefs.delete(relationRefs.length() - 2, relationRefs.length());
+            relationRefs.append(SyntaxTokenConstants.SYNTAX_TREE_CLOSE_BRACKET);
+            recordFields.append(String.format(BalSyntaxConstants.SQL_RELATION_MAPPING_ANNOTATION,
+                    relationRefs));
+        }
     }
 
     private static void addDbTypeMappingAnnotationToField(EntityField field, StringBuilder recordFields) {

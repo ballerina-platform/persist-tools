@@ -21,6 +21,9 @@ package io.ballerina.persist.models;
 import io.ballerina.compiler.syntax.tree.AnnotationNode;
 import io.ballerina.compiler.syntax.tree.NodeList;
 
+import java.util.Collections;
+import java.util.List;
+
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.COLON;
 
 /**
@@ -39,9 +42,10 @@ public class EntityField {
     private Relation relation;
     private Enum enumValue;
     private final NodeList<AnnotationNode> annotationNodes;
-//    private final AnnotationNode sqlDbMappingAnnotationNode;
 
-//    private final AnnotationNode indexAnnotationNode;
+
+
+    private List<String> introspectionRelationRefs;
 
     EntityField(String fieldName, String fieldType, boolean arrayType, boolean optionalType,
                         NodeList<AnnotationNode> annotationNodes) {
@@ -54,7 +58,7 @@ public class EntityField {
     }
 
     EntityField(String fieldName, String fieldResourceName, String fieldType, boolean arrayType, boolean optionalType,
-                NodeList<AnnotationNode> annotationNodes, SQLType sqlType) {
+                NodeList<AnnotationNode> annotationNodes, SQLType sqlType, List<String> introspectionRelationRefs) {
         this.fieldName = fieldName;
         this.fieldResourceName = fieldResourceName;
         this.fieldType = fieldType;
@@ -62,13 +66,9 @@ public class EntityField {
         this.optionalType = optionalType;
         this.annotationNodes = annotationNodes;
         this.sqlType = sqlType;
-//        AnnotationNode annotationNode = new AnnotationNode(
-//                new STNode()
-//        );
-//        if (fieldResourceName.equals(fieldName)) {
-////            AnnotationNode annotationNode = new AnnotationNode()
-////            this.annotationNodes.add(AnnotationNode.createIdentifier("Field"));
-//        }
+    if (introspectionRelationRefs != null) {
+            this.introspectionRelationRefs = Collections.unmodifiableList(introspectionRelationRefs);
+        }
     }
 
     public String getFieldName() {
@@ -96,12 +96,15 @@ public class EntityField {
     }
 
     public boolean shouldResourceMappingGenerated() {
-        if (fieldResourceName.isBlank()) {
+        if (fieldResourceName == null ||  fieldResourceName.isBlank()) {
             return false;
         }
         return !fieldResourceName.equals(fieldName);
     }
 
+    public List<String> getIntrospectionRelationRefs() {
+        return introspectionRelationRefs;
+    }
 
     public void setRelation(Relation relation) {
         this.relation = relation;
@@ -141,6 +144,8 @@ public class EntityField {
         SQLType sqlType;
         private NodeList<AnnotationNode> annotationNodes = null;
 
+        private List<String> introspectionRelationRefs;
+
         Builder(String fieldName) {
             this.fieldName = fieldName;
         }
@@ -159,6 +164,10 @@ public class EntityField {
             this.resourceFieldName = resourceFieldName;
         }
 
+        public void setIntrospectionRelationRefs(List<String> introspectionRelationRefs) {
+            this.introspectionRelationRefs = introspectionRelationRefs;
+        }
+
 
         public void setArrayType(boolean arrayType) {
             this.arrayType = arrayType;
@@ -172,11 +181,12 @@ public class EntityField {
         }
 
         public EntityField build() {
-            if (sqlType != null) {
-                return new EntityField
-                        (fieldName, resourceFieldName, fieldType, arrayType, optionalType, annotationNodes, sqlType);
-            }
             return new EntityField(fieldName, fieldType, arrayType, optionalType, annotationNodes);
+        }
+
+        public EntityField buildForIntrospection() {
+            return new EntityField(fieldName, resourceFieldName, fieldType, arrayType, optionalType, annotationNodes,
+                    sqlType, introspectionRelationRefs);
         }
     }
 }

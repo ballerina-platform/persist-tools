@@ -18,7 +18,7 @@ public class SQLIndex {
 
         this.indexName = indexName;
         this.tableName = tableName;
-        this.columnNames = Collections.unmodifiableList(columnNames);
+        this.columnNames = columnNames;
         this.partial = partial;
         this.columnOrder = columnOrder;
         this.nonUnique = nonUnique;
@@ -36,7 +36,7 @@ public class SQLIndex {
 
 
     public List<String> getColumnNames() {
-        return columnNames;
+        return Collections.unmodifiableList(columnNames);
     }
 
 

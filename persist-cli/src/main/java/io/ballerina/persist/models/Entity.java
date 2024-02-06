@@ -90,7 +90,10 @@ public class Entity {
     }
 
     public boolean shouldResourceMappingGenerated() {
-        if (resourceName.isBlank()) {
+        if (resourceName == null || resourceName.isBlank()) {
+            return false;
+        }
+        if (Pluralizer.pluralize(entityName.toLowerCase(Locale.ENGLISH)).equals(resourceName)) {
             return false;
         }
         return !resourceName.equals(entityName);

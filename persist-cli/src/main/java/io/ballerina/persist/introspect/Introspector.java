@@ -88,9 +88,11 @@ public abstract class Introspector {
         });
 
         mapEntities();
+        finalizeRelations();
 
         //revise this. relationships are not correctly mapped
 //        mapRelations();
+
 
         return Collections.unmodifiableMap(entityMap);
     }
@@ -123,7 +125,7 @@ public abstract class Introspector {
                 fieldBuilder.setSqlType(sqlType);
                 fieldBuilder.setArrayType(false);
 
-                EntityField entityField = fieldBuilder.build();
+                EntityField entityField = fieldBuilder.buildForIntrospection();
                 entityBuilder.addField(entityField);
                 fields.add(entityField);
                 if (column.getIsPrimaryKey()) {
@@ -156,25 +158,43 @@ public abstract class Introspector {
             boolean isReferenceMany = inferRelationshipCardinality
                     (ownerEntityBuilder.buildForIntrospection(), sqlForeignKey)
                     == Relation.RelationType.MANY;
-            EntityField.Builder assocField = EntityField
+            EntityField.Builder assocFieldBuilder = EntityField
                     .newBuilder(
                             isReferenceMany ?
                                     Pluralizer.pluralize(ownerEntityBuilder.getEntityName().toLowerCase(Locale.ENGLISH))
                                     : ownerEntityBuilder.getEntityName().toLowerCase(Locale.ENGLISH)
                     );
-            assocField.setType(ownerEntityBuilder.getEntityName());
+            assocFieldBuilder.setType(ownerEntityBuilder.getEntityName());
 
-            EntityField.Builder ownerField = EntityField
+            EntityField.Builder ownerFieldBuilder = EntityField
                     .newBuilder(assocEntityBuilder.getEntityName().toLowerCase(Locale.ENGLISH));
-            ownerField.setType(assocEntityBuilder.getEntityName());
+            ownerFieldBuilder.setType(assocEntityBuilder.getEntityName());
 
-            assocField.setArrayType(isReferenceMany);
+            assocFieldBuilder.setArrayType(isReferenceMany);
 
-            assocEntityBuilder.addField(assocField.build());
-            ownerEntityBuilder.addField(ownerField.build());
+            ownerFieldBuilder.setIntrospectionRelationRefs(sqlForeignKey.getColumnNames().stream().map(
+                    columnName -> ownerEntityBuilder.buildForIntrospection()
+                            .getFieldByFieldResourceName(columnName).getFieldName()
+            ).toList());
+
+            EntityField ownerField = ownerFieldBuilder.buildForIntrospection();
+
+
+            assocEntityBuilder.addField(assocFieldBuilder.buildForIntrospection());
+            ownerEntityBuilder.addField(ownerField);
         });
 
         entityBuilderMap.forEach((key, value) -> entityMap.put(key, value.buildForIntrospection()));
+    }
+
+    private void finalizeRelations() {
+        this.entityMap.values().forEach(entity -> {
+            entity.getFields().forEach(entityField -> {
+                if (entityField.getRelation() != null) {
+                    entityField.getRelation().setAssocEntity(entityMap.get(entityField.getFieldType()));
+                }
+            });
+        });
     }
 
 //    private void mapRelations() {

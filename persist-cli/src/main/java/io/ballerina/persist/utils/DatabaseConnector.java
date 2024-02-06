@@ -35,7 +35,7 @@ public class DatabaseConnector {
 
 
     public Connection getConnection(Driver driver) throws SQLException {
-        return driver.connect("jdbc:mysql://root:haritha@172.20.175.103:3306/information_schema?schema=public",
+        return driver.connect("jdbc:mysql://root@localhost/information_schema?schema=public",
                 new Properties());
     }
 
