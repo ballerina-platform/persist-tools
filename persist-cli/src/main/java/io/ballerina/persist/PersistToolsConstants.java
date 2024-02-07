@@ -64,6 +64,8 @@ public class PersistToolsConstants {
     public static final String MSSQL_CONNECTOR_NAME_PREFIX = "mssql-jdbc";
     public static final String POSTGRESQL_CONNECTOR_NAME_PREFIX = "postgresql";
     public static final String SCHEMA_FILE_NAME = "model";
+
+    public static final String MYSQL_DRIVER_PATH = "target/platform-libs/com/mysql/mysql-connector-j";
     public static final Set<String> SUPPORTED_DB_PROVIDERS =
            Set.of(SupportedDataSources.MYSQL_DB, SupportedDataSources.MSSQL_DB, SupportedDataSources.IN_MEMORY_TABLE,
                    SupportedDataSources.GOOGLE_SHEETS, SupportedDataSources.POSTGRESQL_DB);

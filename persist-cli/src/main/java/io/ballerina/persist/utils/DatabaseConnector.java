@@ -1,6 +1,7 @@
 package io.ballerina.persist.utils;
 
 import io.ballerina.persist.BalException;
+import io.ballerina.persist.configuration.PersistConfiguration;
 import io.ballerina.projects.DependencyGraph;
 import io.ballerina.projects.JvmTarget;
 import io.ballerina.projects.Package;
@@ -27,22 +28,58 @@ import static io.ballerina.persist.PersistToolsConstants.BALLERINA_MYSQL_DRIVER_
 import static io.ballerina.persist.PersistToolsConstants.BALLERINA_POSTGRESQL_DRIVER_NAME;
 import static io.ballerina.persist.PersistToolsConstants.MSSQL_CONNECTOR_NAME_PREFIX;
 import static io.ballerina.persist.PersistToolsConstants.MYSQL_CONNECTOR_NAME_PREFIX;
-import static io.ballerina.persist.PersistToolsConstants.MYSQL_DRIVER_CLASS;
+import static io.ballerina.persist.PersistToolsConstants.PASSWORD;
 import static io.ballerina.persist.PersistToolsConstants.POSTGRESQL_CONNECTOR_NAME_PREFIX;
 import static io.ballerina.persist.PersistToolsConstants.PROPERTY_KEY_PATH;
+import static io.ballerina.persist.PersistToolsConstants.USER;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.JDBC_URL_WITHOUT_DATABASE;
 
 public class DatabaseConnector {
 
+    private final String jdbcUrlWithDatabaseFormat;
+    private final String driverClass;
+//    private final String sourcePath;
+//    private final String datasource;
 
-    public Connection getConnection(Driver driver) throws SQLException {
-        return driver.connect("jdbc:mysql://root@localhost/information_schema?schema=public",
-                new Properties());
+    public DatabaseConnector (String jdbcUrlWithDatabaseFormat, String driverClass,
+                              String sourcePath, String datasource) {
+        this.driverClass = driverClass;
+        this.jdbcUrlWithDatabaseFormat = jdbcUrlWithDatabaseFormat;
+//        this.sourcePath = sourcePath;
+//        this.datasource = datasource;
+    }
+
+
+    public Connection getConnection(Driver driver, PersistConfiguration persistConfigurations,
+                                     boolean withDB) throws SQLException {
+        String host = persistConfigurations.getDbConfig().getHost();
+        int port = persistConfigurations.getDbConfig().getPort();
+        String user = persistConfigurations.getDbConfig().getUsername();
+        String password = persistConfigurations.getDbConfig().getPassword();
+        String database = persistConfigurations.getDbConfig().getDatabase();
+        String provider = persistConfigurations.getProvider();
+        String url;
+        if (withDB) {
+            url = String.format(this.jdbcUrlWithDatabaseFormat, provider,
+                    host, port,
+                    database);
+        } else {
+            url = String.format(JDBC_URL_WITHOUT_DATABASE, provider, host, port);
+        }
+        Properties props = new Properties();
+        if (user != null) {
+            props.put(USER, user);
+        }
+        if (password != null) {
+            props.put(PASSWORD, password);
+        }
+        return driver.connect(url, props);
     }
 
     public Driver getJdbcDriver(JdbcDriverLoader driverLoader) throws BalException {
         Driver driver;
         try {
-            Class<?> drvClass = driverLoader.loadClass(MYSQL_DRIVER_CLASS);
+            Class<?> drvClass = driverLoader.loadClass(this.driverClass);
             driver = (Driver) drvClass.getDeclaredConstructor().newInstance();
         } catch (ClassNotFoundException e) {
             throw new BalException("required database driver class not found. " + e.getMessage());
@@ -77,6 +114,26 @@ public class DatabaseConnector {
     }
 
     private Path getDriverPath(Project balProject) throws BalException {
+//        Path directoryPath;
+//        switch (this.datasource) {
+//            case PersistToolsConstants.SupportedDataSources.MYSQL_DB:
+//                directoryPath = Path.of(this.sourcePath, PersistToolsConstants.MYSQL_DRIVER_PATH);
+//                break;
+//            default:
+//                throw new BalException("Unsupported data store: " + datasource);
+//        }
+//        File directory = directoryPath.toFile();
+//        // Check if the directory exists
+//        if (directory.exists() && directory.isDirectory()) {
+//            // List all files in the directory
+//            File[] files = directory.listFiles();
+//            if (files == null || files.length == 0) {
+//                throw new BalException("No files found in the driver directory.");
+//            }
+//            return Path.of(files[0].getAbsolutePath());
+//        } else {
+//            throw new BalException("Driver directory does not exist.");
+//        }
         String relativeLibPath;
 
         DependencyGraph<ResolvedPackageDependency> resolvedPackageDependencyDependencyGraph =

@@ -84,11 +84,12 @@ public class SourceGenerator {
         }
     }
 
+
     private void addModelFile(SyntaxTree syntaxTree, Path path, String moduleName) throws BalException {
         try {
             writeOutputFile(Formatter.format(syntaxTree.toSourceCode()), path);
         } catch (FormatterException | IOException e) {
-            throw new BalException(String.format("could not write the type code for the `%s` data model " +
+            throw new BalException(String.format("could not write the records for the `%s` data model " +
                     "to the model.bal file.", moduleName) + e.getMessage());
         }
     }

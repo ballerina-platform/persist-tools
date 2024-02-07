@@ -22,4 +22,10 @@ public class DbModelGenSyntaxTree implements IntrospectSyntaxTree {
         return null;
     }
 
+    @Override
+    public SyntaxTree createInitialDriverImportFile() throws BalException {
+        return BalSyntaxUtils.createDriverImportFile("mysql");
+    }
+
+
 }

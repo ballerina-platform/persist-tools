@@ -50,6 +50,7 @@ import io.ballerina.projects.BuildOptions;
 import io.ballerina.projects.DiagnosticResult;
 import io.ballerina.projects.Package;
 import io.ballerina.projects.PackageCompilation;
+import io.ballerina.projects.Project;
 import io.ballerina.projects.directory.SingleFileProject;
 import io.ballerina.toml.syntax.tree.AbstractNodeFactory;
 import io.ballerina.toml.syntax.tree.DocumentMemberDeclarationNode;
@@ -137,6 +138,20 @@ public class BalProjectUtils {
                 throw new BalException(errorMessage.toString());
             }
         }
+    }
+
+    public static Project buildDriverFile(Path driverPath) throws BalException {
+        BuildOptions.BuildOptionsBuilder buildOptionsBuilder = BuildOptions.builder();
+        buildOptionsBuilder.setOffline(true);
+        SingleFileProject buildProject =  SingleFileProject.load(driverPath.toAbsolutePath(),
+                buildOptionsBuilder.build());
+        Package currentPackage = buildProject.currentPackage();
+        PackageCompilation compilation = currentPackage.getCompilation();
+        DiagnosticResult diagnosticResult = compilation.diagnosticResult();
+        if (diagnosticResult.hasErrors()) {
+            throw new BalException("ERROR: failed to build the driver file.");
+        }
+        return buildProject;
     }
 
     public static void validateBallerinaProject(Path projectPath) throws BalException {

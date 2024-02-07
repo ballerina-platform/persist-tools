@@ -20,26 +20,37 @@ package io.ballerina.persist.cmd;
 import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
+import io.ballerina.persist.configuration.PersistConfiguration;
 import io.ballerina.persist.introspect.Introspector;
 import io.ballerina.persist.introspect.MySQLIntrospector;
 import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.Module;
+import io.ballerina.persist.nodegenerator.DriverResolver;
 import io.ballerina.persist.nodegenerator.SourceGenerator;
+import io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils;
 import io.ballerina.persist.utils.DatabaseConnector;
 import io.ballerina.persist.utils.JdbcDriverLoader;
 import io.ballerina.projects.Project;
-import io.ballerina.projects.ProjectException;
-import io.ballerina.projects.directory.BuildProject;
 import picocli.CommandLine;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.Map;
+
+import static io.ballerina.persist.PersistToolsConstants.MYSQL_DRIVER_CLASS;
+import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.JDBC_URL_WITH_DATABASE_MYSQL;
+import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.readPackageName;
+import static io.ballerina.persist.utils.BalProjectUtils.validateBallerinaProject;
+import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
+import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
 
 @CommandLine.Command(
         name = "pull",
@@ -51,8 +62,6 @@ public class Pull implements BLauncherCmd {
 
     private static final String COMMAND_IDENTIFIER = "persist-pull";
 
-
-
     DatabaseConnector databaseConnector;
 
     public Pull() {
@@ -61,57 +70,121 @@ public class Pull implements BLauncherCmd {
 
     public Pull(String sourcePath) {
         this.sourcePath = sourcePath;
-        databaseConnector = new DatabaseConnector();
     }
 
 
     @Override
     public void execute() {
-        Module entityModule = null;
-        Path schemaFilePath;
 
-
-        // Load Ballerina project to get DB driver path.
-        Project balProject;
+        DriverResolver driverResolver = new DriverResolver(this.sourcePath);
+        Project driverProject;
         try {
-            balProject = BuildProject.load(Paths.get(this.sourcePath).toAbsolutePath());
-        } catch (ProjectException e) {
-            errStream.println("ERROR: failed to load the Ballerina project. " + e.getMessage());
+            driverProject = driverResolver.resolveDriverDependencies();
+        } catch (BalException e) {
+            errStream.println(e.getMessage());
             return;
         }
 
-        try (JdbcDriverLoader driverLoader = databaseConnector.getJdbcDriverLoader(balProject)) {
+        try {
+            validateBallerinaProject(Paths.get(this.sourcePath));
+        } catch (BalException e) {
+            errStream.println(e.getMessage());
+            return;
+        }
+
+        String datastore;
+        try {
+            HashMap<String, String> ballerinaTomlConfig = TomlSyntaxUtils.readBallerinaTomlConfig(
+                    Paths.get(this.sourcePath, "Ballerina.toml"));
+            datastore = ballerinaTomlConfig.get("datastore").trim();
+        } catch (BalException e) {
+            errStream.printf("ERROR: failed to locate Ballerina.toml: %s%n",
+                    e.getMessage());
+            return;
+        }
+
+        if (datastore.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB)) {
+            this.databaseConnector = new DatabaseConnector(JDBC_URL_WITH_DATABASE_MYSQL, MYSQL_DRIVER_CLASS,
+                    this.sourcePath, datastore);
+        } else {
+            errStream.printf("ERROR: unsupported data store: '%s'%n", datastore);
+            return;
+        }
+
+        Path persistDir = Paths.get(this.sourcePath, PERSIST_DIRECTORY);
+        if (!Files.isDirectory(persistDir, NOFOLLOW_LINKS)) {
+            errStream.println("ERROR: the persist directory inside the Ballerina project does not exist. " +
+                    "run `bal persist init` to initiate the project before generation");
+            return;
+        }
+
+        //check if model.bal file exists, if exists throw warning
+//        List<Path> schemaFilePaths;
+//        try (Stream<Path> stream = Files.list(persistDir)) {
+//            schemaFilePaths = stream.filter(file -> !Files.isDirectory(file))
+//                    .filter(file -> file.toString().toLowerCase(Locale.ENGLISH).endsWith(".bal"))
+//                    .collect(Collectors.toList());
+//        } catch (IOException e) {
+//            errStream.printf("ERROR: failed to list the model definition files in the persist directory. %s%n",
+//                    e.getMessage());
+//            return;
+//        }
+
+        String packageName;
+        try {
+            packageName = readPackageName(this.sourcePath);
+        } catch (BalException e) {
+            errStream.println(e.getMessage());
+            return;
+        }
+
+        PersistConfiguration persistConfigurations;
+        try {
+            Path ballerinaTomlPath = Paths.get(this.sourcePath, BALLERINA_TOML);
+            persistConfigurations = TomlSyntaxUtils.readDatabaseConfigurations(ballerinaTomlPath);
+        } catch (BalException e) {
+            errStream.printf("ERROR: failed to load db configurations. %s ", e.getMessage());
+            return;
+        }
+
+        Module entityModule;
+
+        try (JdbcDriverLoader driverLoader = databaseConnector.getJdbcDriverLoader(driverProject)) {
             Driver driver = databaseConnector.getJdbcDriver(driverLoader);
 
-            try (Connection connection = databaseConnector.getConnection(driver)) {
+            try (Connection connection = databaseConnector.getConnection(driver, persistConfigurations, true)) {
 
-                Introspector introspector = new MySQLIntrospector(connection, "prismaTest");
+                Introspector introspector = new MySQLIntrospector(connection,
+                        persistConfigurations.getDbConfig().getDatabase());
 
                 Map<String, Entity> entityMap = introspector.introspectDatabase();
 
-                Module.Builder moduleBuilder = Module.newBuilder("prismaTest");
+                Module.Builder moduleBuilder = Module.newBuilder(packageName);
 
                 entityMap.forEach(moduleBuilder::addEntity);
                 // add enums and imports
                 entityModule = moduleBuilder.build();
 
                 if (entityModule == null) {
-                    throw new BalException("ERROR: failed to generate the client object for the entity.");
+                    throw new BalException("ERROR: failed to generate entity module.");
                 }
 
             } catch (SQLException e) {
                 errStream.printf("ERROR: failed to connect to the database. %s%n", e.getMessage());
+                return;
             }
 
         } catch (BalException e) {
-            errStream.printf("ERROR: failed to execute the SQL scripts for the definition file. %s%n",
+            errStream.printf("ERROR: database introspection failed. %s%n",
                      e.getMessage());
+            return;
         } catch (IOException e) {
             errStream.printf("ERROR: failed to load the database driver. %s%n", e.getMessage());
+            return;
         }
 
         SourceGenerator sourceGenerator = new SourceGenerator(sourcePath,
-                Paths.get(sourcePath, PersistToolsConstants.PERSIST_DIRECTORY),
+                Paths.get(sourcePath, PERSIST_DIRECTORY),
                 "prismaTest", entityModule);
 
         try {
@@ -119,7 +192,12 @@ public class Pull implements BLauncherCmd {
         } catch (BalException e) {
             errStream.printf(String.format("ERROR: failed to generate model for introspected database: %s%n",
                      e.getMessage()));
-            return;
+        }
+
+        try {
+            driverResolver.deleteDriverFile();
+        } catch (BalException e) {
+            errStream.println(e.getMessage());
         }
     }
 
