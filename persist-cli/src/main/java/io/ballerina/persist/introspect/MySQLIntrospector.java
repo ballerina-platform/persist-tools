@@ -46,7 +46,8 @@ public class MySQLIntrospector extends Introspector {
                 extra extra,
                 table_name table_name,
                 column_key column_key,
-                IF(column_comment = '', NULL, column_comment) AS column_comment
+                IF(column_comment = '', NULL, column_comment) AS column_comment,
+                IF(extra = 'auto_increment', 1, 0) AS dbgenerated
             FROM
                 information_schema.columns
             WHERE

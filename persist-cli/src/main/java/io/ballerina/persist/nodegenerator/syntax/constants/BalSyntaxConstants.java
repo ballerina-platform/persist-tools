@@ -257,6 +257,8 @@ public class BalSyntaxConstants {
 
     public static final String SQL_INDEX_MAPPING_ANNOTATION = "@sql:Index { name: \"%s\" }";
     public static final String SQL_UNIQUE_INDEX_MAPPING_ANNOTATION = "@sql:UniqueIndex { name: \"%s\" }";
+
+    public static final String SQL_GENERATED_ANNOTATION = "@sql:Generated";
     public static final String FIELD_METADATA_TEMPLATE = "fieldMetadata: {%s}";
     public static final String JOIN_METADATA_TEMPLATE = "joinMetadata: {%s}";
 

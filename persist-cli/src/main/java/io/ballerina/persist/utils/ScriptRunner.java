@@ -173,6 +173,7 @@ public class ScriptRunner {
                             .setExtra(results.getString("extra"))
                             .setColumnComment(results.getString("column_comment"))
                             .setIsPrimaryKey(results.getString("column_key").equals("PRI"))
+                            .setIsDbGenerated(results.getBoolean("dbgenerated"))
                             .build();
                     table.addColumn(column);
                     }

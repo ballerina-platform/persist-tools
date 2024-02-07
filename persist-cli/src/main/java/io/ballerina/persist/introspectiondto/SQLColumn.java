@@ -16,10 +16,12 @@ public class SQLColumn {
 
     private Boolean isPrimaryKey;
 
+    private Boolean isDbGenerated;
+
     private SQLColumn(String columnName, String tableName, String dataType, String fullDataType,
                       String characterMaximumLength, String numericPrecision, String numericScale,
                       String datetimePrecision, String columnDefault, String isNullable, String extra,
-                      String columnComment, Boolean isPrimaryKey) {
+                      String columnComment, Boolean isPrimaryKey, Boolean isDbGenerated) {
         this.columnName = columnName;
         this.tableName = tableName;
         this.dataType = dataType;
@@ -33,6 +35,7 @@ public class SQLColumn {
         this.extra = extra;
         this.columnComment = columnComment;
         this.isPrimaryKey = isPrimaryKey;
+        this.isDbGenerated = isDbGenerated;
     }
 
     public String getColumnName() {
@@ -81,6 +84,10 @@ public class SQLColumn {
         return isNullable;
     }
 
+    public Boolean isDbGenerated() {
+        return isDbGenerated;
+    }
+
 
     public String getExtra() {
         return extra;
@@ -112,6 +119,7 @@ public class SQLColumn {
         private String columnComment;
         private String tableName;
         private Boolean isPrimaryKey;
+        private Boolean isDbGenerated;
 
         private Builder(String columnName) {
             this.columnName = columnName;
@@ -124,6 +132,11 @@ public class SQLColumn {
 
         public Builder setDataType(String dataType) {
             this.dataType = dataType;
+            return this;
+        }
+
+        public Builder setIsDbGenerated(Boolean isDbGenerated) {
+            this.isDbGenerated = isDbGenerated;
             return this;
         }
 
@@ -179,7 +192,8 @@ public class SQLColumn {
         public SQLColumn build() {
             return new SQLColumn(this.columnName, this.tableName, this.dataType, this.fullDataType,
                     this.characterMaximumLength, this.numericPrecision, this.numericScale, this.datetimePrecision,
-                    this.columnDefault, this.isNullable, this.extra, this.columnComment, this.isPrimaryKey
+                    this.columnDefault, this.isNullable, this.extra, this.columnComment, this.isPrimaryKey,
+                    this.isDbGenerated
                     );
         }
     }

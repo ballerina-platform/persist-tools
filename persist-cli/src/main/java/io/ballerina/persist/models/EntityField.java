@@ -39,6 +39,8 @@ public class EntityField {
     private SQLType sqlType;
     private final boolean arrayType;
     private final boolean optionalType;
+
+    private boolean isDbGenerated = false;
     private Relation relation;
     private Enum enumValue;
     private final NodeList<AnnotationNode> annotationNodes;
@@ -58,7 +60,8 @@ public class EntityField {
     }
 
     EntityField(String fieldName, String fieldResourceName, String fieldType, boolean arrayType, boolean optionalType,
-                NodeList<AnnotationNode> annotationNodes, SQLType sqlType, List<String> introspectionRelationRefs) {
+                NodeList<AnnotationNode> annotationNodes, SQLType sqlType, List<String> introspectionRelationRefs,
+                boolean isDbGenerated) {
         this.fieldName = fieldName;
         this.fieldResourceName = fieldResourceName;
         this.fieldType = fieldType;
@@ -66,9 +69,10 @@ public class EntityField {
         this.optionalType = optionalType;
         this.annotationNodes = annotationNodes;
         this.sqlType = sqlType;
-    if (introspectionRelationRefs != null) {
+        if (introspectionRelationRefs != null) {
             this.introspectionRelationRefs = Collections.unmodifiableList(introspectionRelationRefs);
         }
+        this.isDbGenerated = isDbGenerated;
     }
 
     public String getFieldName() {
@@ -93,6 +97,10 @@ public class EntityField {
 
     public NodeList<AnnotationNode> getAnnotation() {
         return annotationNodes;
+    }
+
+    public boolean isDbGenerated() {
+        return isDbGenerated;
     }
 
     public boolean shouldResourceMappingGenerated() {
@@ -138,13 +146,15 @@ public class EntityField {
         String resourceFieldName;
         String fieldType;
 
-        boolean arrayType = false;
-        boolean optionalType = false;
+        private boolean arrayType = false;
+        private boolean optionalType = false;
 
         SQLType sqlType;
         private NodeList<AnnotationNode> annotationNodes = null;
 
         private List<String> introspectionRelationRefs;
+
+        private boolean isDbGenerated = false;
 
         Builder(String fieldName) {
             this.fieldName = fieldName;
@@ -168,6 +178,10 @@ public class EntityField {
             this.introspectionRelationRefs = introspectionRelationRefs;
         }
 
+        public void setIsDbGenerated(boolean isDbGenerated) {
+            this.isDbGenerated = isDbGenerated;
+        }
+
 
         public void setArrayType(boolean arrayType) {
             this.arrayType = arrayType;
@@ -186,7 +200,7 @@ public class EntityField {
 
         public EntityField buildForIntrospection() {
             return new EntityField(fieldName, resourceFieldName, fieldType, arrayType, optionalType, annotationNodes,
-                    sqlType, introspectionRelationRefs);
+                    sqlType, introspectionRelationRefs, isDbGenerated);
         }
     }
 }

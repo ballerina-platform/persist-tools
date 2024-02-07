@@ -422,6 +422,7 @@ public class BalSyntaxUtils {
             addDbTypeMappingAnnotationToField(field, recordFields);
             addDbRelationMappingAnnotationToField(field, recordFields);
             addDbIndexAnnotationToField(entity, field, recordFields);
+            addDbGeneratedAnnotationToField(field, recordFields);
             if (entity.getKeys().stream().anyMatch(key -> key == field)) {
                 addConstrainAnnotationToField(field, recordFields);
                 recordFields.append(BalSyntaxConstants.KEYWORD_READONLY);
@@ -472,6 +473,13 @@ public class BalSyntaxUtils {
         recordString.append(String.format("public type %s record {| %s |};",
                 entity.getEntityName().trim(), recordFields));
         return NodeParser.parseModuleMemberDeclaration(recordString.toString());
+    }
+
+    private static void addDbGeneratedAnnotationToField(EntityField field, StringBuilder recordFields) {
+        if (field.isDbGenerated()) {
+            recordFields.append(BalSyntaxConstants.SQL_GENERATED_ANNOTATION);
+            recordFields.append(BalSyntaxConstants.NEWLINE);
+        }
     }
 
     private static void addDbIndexAnnotationToField(Entity entity, EntityField field, StringBuilder recordFields) {

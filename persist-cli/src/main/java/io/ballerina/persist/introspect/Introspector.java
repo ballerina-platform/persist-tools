@@ -124,6 +124,7 @@ public abstract class Introspector {
                 fieldBuilder.setOptionalType(column.getIsNullable().equals("YES"));
                 fieldBuilder.setSqlType(sqlType);
                 fieldBuilder.setArrayType(false);
+                fieldBuilder.setIsDbGenerated(column.isDbGenerated());
 
                 EntityField entityField = fieldBuilder.buildForIntrospection();
                 entityBuilder.addField(entityField);
