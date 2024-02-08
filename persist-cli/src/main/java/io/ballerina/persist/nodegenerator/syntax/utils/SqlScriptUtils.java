@@ -28,18 +28,20 @@ import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.Enum;
 import io.ballerina.persist.models.EnumMember;
+import io.ballerina.persist.models.Index;
 import io.ballerina.persist.models.Relation;
+import io.ballerina.persist.models.SQLType;
 import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Sql script generator.
@@ -62,14 +64,28 @@ public class SqlScriptUtils {
     public static String[] generateSqlScript(Collection<Entity> entities, String datasource) throws BalException {
         HashMap<String, List<String>> referenceTables = new HashMap<>();
         HashMap<String, List<String>> tableScripts = new HashMap<>();
+        //generate create table
         for (Entity entity : entities) {
             List<String> tableScript = new ArrayList<>();
-            String tableName = removeSingleQuote(entity.getEntityName());
+            String tableName = removeSingleQuote(entity.getResourceName());
             tableScript.add(generateDropTableQuery(escape(tableName, datasource)));
             tableScript.add(generateCreateTableQuery(entity, referenceTables, datasource));
             tableScripts.put(tableName, tableScript);
         }
-        return rearrangeScriptsWithReference(tableScripts.keySet(), referenceTables, tableScripts);
+        //generate create index
+        List<String> indexScripts = new ArrayList<>();
+        for (Entity entity : entities) {
+            entity.getIndexes().forEach(index -> {
+                indexScripts.add(
+                        generateCreateIndexQuery(index, entity, datasource, index.isUnique())
+                );
+            });
+        }
+        List<String> scripts = new ArrayList<>(Arrays.asList(
+                rearrangeScriptsWithReference(tableScripts.keySet(), referenceTables, tableScripts)));
+        scripts.add(NEW_LINE);
+        scripts.addAll(indexScripts);
+        return scripts.toArray(new String[0]);
     }
     private static String generateDropTableQuery(String tableName) {
         return MessageFormat.format("DROP TABLE IF EXISTS {0};", tableName);
@@ -81,7 +97,17 @@ public class SqlScriptUtils {
         String fieldDefinitions = generateFieldsDefinitionSegments(entity, referenceTables, datasource);
 
         return MessageFormat.format("{0}CREATE TABLE {1} ({2}{3});", NEW_LINE,
-                escape(removeSingleQuote(entity.getEntityName()), datasource), fieldDefinitions, NEW_LINE);
+                escape(removeSingleQuote(entity.getResourceName()), datasource), fieldDefinitions, NEW_LINE);
+    }
+
+    private static String generateCreateIndexQuery(Index index, Entity entity, String datasource, boolean unique) {
+        return MessageFormat.format("CREATE{0} INDEX {1} ON {2} ({3});",
+                    unique ? " UNIQUE" : "",
+                    escape(index.getIndexName(), datasource),
+                    escape(removeSingleQuote(entity.getResourceName()), datasource),
+                    index.getFields().stream()
+                            .map(field -> escape(removeSingleQuote(field.getFieldResourceName()), datasource))
+                            .reduce((s1, s2) -> s1 + COMMA_WITH_SPACE + s2).orElse(""));
     }
 
     private static String generateFieldsDefinitionSegments(Entity entity, HashMap<String, List<String>> referenceTables,
@@ -90,9 +116,9 @@ public class SqlScriptUtils {
         sqlScript.append(getColumnsScript(entity, datasource));
         List<EntityField> relationFields = entity.getFields().stream()
                 .filter(entityField -> entityField.getRelation() != null && entityField.getRelation().isOwner())
-                .collect(Collectors.toList());
+                .toList();
         for (EntityField entityField : relationFields) {
-            sqlScript.append(getRelationScripts(removeSingleQuote(entity.getEntityName()),
+            sqlScript.append(getRelationScripts(removeSingleQuote(entity.getResourceName()),
                     entityField, referenceTables, datasource));
         }
         sqlScript.append(addPrimaryKey(entity.getKeys(), datasource));
@@ -106,7 +132,7 @@ public class SqlScriptUtils {
                 continue;
             }
 
-            String fieldName = escape(removeSingleQuote(entityField.getFieldName()), datasource);
+            String fieldName = escape(removeSingleQuote(entityField.getFieldResourceName()), datasource);
             String sqlType;
             Enum enumValue = entityField.getEnum();
             if (enumValue == null) {
@@ -120,7 +146,8 @@ public class SqlScriptUtils {
                         NEW_LINE, TAB, fieldName, sqlType));
             } else {
                 columnScript.append(MessageFormat.format("{0}{1}{2} {3}{4},",
-                        NEW_LINE, TAB, fieldName, sqlType, " NOT NULL"));
+                        NEW_LINE, TAB, fieldName, sqlType,
+                        entityField.isDbGenerated() ? " AUTO_INCREMENT" : " NOT NULL"));
             }
         }
         return columnScript.toString();
@@ -144,7 +171,7 @@ public class SqlScriptUtils {
                 if (assocField.getRelation() != null) {
                     continue;
                 }
-                if (assocField.getFieldName().equals(references.get(i))) {
+                if (assocField.getFieldResourceName().equals(references.get(i))) {
                     referenceSqlType = getSqlType(assocField, datasource);
                     break;
                 }
@@ -209,7 +236,7 @@ public class SqlScriptUtils {
             keyScripts.append(MessageFormat.format("{0}", PRIMARY_KEY_START_SCRIPT));
             for (EntityField key : keys) {
                 keyScripts.append(MessageFormat.format("{0},",
-                        escape(removeSingleQuote(key.getFieldName()), datasource)));
+                        escape(removeSingleQuote(key.getFieldResourceName()), datasource)));
             }
             keyScripts.deleteCharAt(keyScripts.length() - 1).append("),");
         }
@@ -219,7 +246,7 @@ public class SqlScriptUtils {
     private static String getSqlType(EntityField entityField, String datasource) throws BalException {
         String sqlType;
         if (!entityField.isArrayType()) {
-            sqlType = getTypeNonArray(entityField.getFieldType(), datasource);
+            sqlType = getTypeNonArray(entityField, datasource);
         } else {
             sqlType = getTypeArray(entityField.getFieldType(), datasource);
         }
@@ -257,6 +284,119 @@ public class SqlScriptUtils {
 
     public static String getTypeNonArray(String field, String datasource) throws BalException {
         switch (removeSingleQuote(field)) {
+
+            // Ballerina --> int
+            // MySQL --> INT
+            // MSSQL --> INT
+            // PostgreSQL --> INT
+            case PersistToolsConstants.BallerinaTypes.INT:
+                return PersistToolsConstants.SqlTypes.INT;
+
+            // Ballerina --> boolean
+            // MySQL --> BOOLEAN
+            // MSSQL --> BIT
+            // PostgreSQL --> BOOLEAN
+            case PersistToolsConstants.BallerinaTypes.BOOLEAN:
+                if (datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
+                    return PersistToolsConstants.SqlTypes.BIT;
+                }
+                return PersistToolsConstants.SqlTypes.BOOLEAN;
+
+            // Ballerina --> decimal
+            // MySQL --> DECIMAL(65,30)
+            // MSSQL --> DECIMAL(38,30)
+            // PostgreSQL --> DECIMAL(65,30)
+            case PersistToolsConstants.BallerinaTypes.DECIMAL:
+                if (datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
+                    return PersistToolsConstants.SqlTypes.DECIMAL + String.format("(%s,%s)",
+                            PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION_MSSQL,
+                            PersistToolsConstants.DefaultMaxLength.DECIMAL_SCALE);
+                }
+                if (datasource.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB)) {
+                    return PersistToolsConstants.SqlTypes.DECIMAL + String.format("(%s,%s)",
+                            PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION_POSTGRESQL,
+                            PersistToolsConstants.DefaultMaxLength.DECIMAL_SCALE);
+                }
+                return PersistToolsConstants.SqlTypes.DECIMAL + String.format("(%s,%s)",
+                        PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION_MYSQL,
+                        PersistToolsConstants.DefaultMaxLength.DECIMAL_SCALE);
+
+            // Ballerina --> float
+            // MySQL --> DOUBLE
+            // MSSQL --> FLOAT
+            // PostgreSQL --> FLOAT
+            case PersistToolsConstants.BallerinaTypes.FLOAT:
+                if (datasource.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB)) {
+                    return PersistToolsConstants.SqlTypes.DOUBLE;
+                }
+                return PersistToolsConstants.SqlTypes.FLOAT;
+
+            // Ballerina --> time:Date
+            // MySQL --> DATE
+            // MSSQL --> DATE
+            // PostgreSQL --> DATE
+            case PersistToolsConstants.BallerinaTypes.DATE:
+                return PersistToolsConstants.SqlTypes.DATE;
+
+            // Ballerina --> time:TimeOfDay
+            // MySQL --> TIME
+            // MSSQL --> TIME
+            // PostgreSQL --> TIME
+            case PersistToolsConstants.BallerinaTypes.TIME_OF_DAY:
+                return PersistToolsConstants.SqlTypes.TIME;
+
+            // Ballerina --> time:Utc
+            // MySQL --> TIMESTAMP
+            // MSSQL --> DATETIME2
+            // PostgreSQL --> TIMESTAMP
+            case PersistToolsConstants.BallerinaTypes.UTC:
+                if (datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
+                    return PersistToolsConstants.SqlTypes.DATE_TIME2;
+                }
+                return PersistToolsConstants.SqlTypes.TIME_STAMP;
+
+            // Ballerina --> time:Civil
+            // MySQL --> DATETIME
+            // MSSQL --> DATETIME2
+            // PostgreSQL --> TIMESTAMP
+            case PersistToolsConstants.BallerinaTypes.CIVIL:
+                if (datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
+                    return PersistToolsConstants.SqlTypes.DATE_TIME2;
+                }
+                if (datasource.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB)) {
+                    return PersistToolsConstants.SqlTypes.TIME_STAMP;
+                }
+                return PersistToolsConstants.SqlTypes.DATE_TIME;
+
+            // Ballerina --> string
+            // MySQL --> VARCHAR
+            // MSSQL --> VARCHAR
+            // PostgreSQL --> VARCHAR
+            case PersistToolsConstants.BallerinaTypes.STRING:
+                return PersistToolsConstants.SqlTypes.VARCHAR;
+
+            default:
+                throw new BalException("couldn't find equivalent SQL type for the field type: " + field);
+        }
+    }
+
+    public static String getTypeNonArray(EntityField field, String datasource) throws BalException {
+        SQLType sqlType = field.getSqlType();
+        if (sqlType != null) {
+            switch (sqlType.getTypeName()) {
+                case PersistToolsConstants.SqlTypes.DECIMAL:
+                    return PersistToolsConstants.SqlTypes.DECIMAL + String.format("(%s,%s)",
+                                sqlType.getNumericPrecision(),
+                                sqlType.getNumericScale());
+                case PersistToolsConstants.SqlTypes.VARCHAR:
+                    return PersistToolsConstants.SqlTypes.VARCHAR + String.format("(%s)", sqlType.getMaxLength());
+                case PersistToolsConstants.SqlTypes.CHAR:
+                    return PersistToolsConstants.SqlTypes.CHAR + String.format("(%s)", sqlType.getMaxLength());
+                default: { }
+            }
+        }
+
+        switch (removeSingleQuote(field.getFieldType())) {
 
             // Ballerina --> int
             // MySQL --> INT

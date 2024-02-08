@@ -258,7 +258,7 @@ public class DbClientSyntax implements ClientSyntax {
             entityMetaData.append(String.format(BalSyntaxConstants.METADATA_RECORD_ENTITY_NAME_TEMPLATE,
                     BalSyntaxUtils.stripEscapeCharacter(entity.getEntityName())));
             entityMetaData.append(String.format(BalSyntaxConstants.METADATA_RECORD_TABLE_NAME_TEMPLATE,
-                    BalSyntaxUtils.stripEscapeCharacter(entity.getEntityName())));
+                    BalSyntaxUtils.stripEscapeCharacter(entity.getResourceName())));
             StringBuilder fieldMetaData = new StringBuilder();
             StringBuilder associateFieldMetaData = new StringBuilder();
             boolean relationsExists = false;
@@ -311,7 +311,7 @@ public class DbClientSyntax implements ClientSyntax {
                         fieldMetaData.append(BalSyntaxConstants.COMMA_WITH_NEWLINE);
                     }
                     fieldMetaData.append(String.format(BalSyntaxConstants.METADATA_RECORD_FIELD_TEMPLATE,
-                            field.getFieldName(), BalSyntaxUtils.stripEscapeCharacter(field.getFieldName())));
+                            field.getFieldName(), BalSyntaxUtils.stripEscapeCharacter(field.getFieldResourceName())));
                 }
             }
             if (associateFieldMetaData.length() > 1) {

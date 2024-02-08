@@ -249,16 +249,31 @@ public class BalSyntaxConstants {
             "        %s" + System.lineSeparator() +
             "    }";
 
-    public static final String SQL_DB_MAPPING_ANNOTATION = "@sql:Mapping{ name: \"%s\" }";
-    public static final String SQL_VARCHAR_MAPPING_ANNOTATION = "@sql:VarChar{ length: %s }";
-    public static final String SQL_CHAR_MAPPING_ANNOTATION = "@sql:Char{ length: %s }";
-    public static final String SQL_DECIMAL_MAPPING_ANNOTATION = "@sql:Decimal{ precision: [%s,%s] }";
-    public static final String SQL_RELATION_MAPPING_ANNOTATION = "@sql:Relation { refs: %s }";
+    public static final String SQL_DB_MAPPING_ANNOTATION_NAME = "sql:Mapping";
+    public static final String SQL_VARCHAR_MAPPING_ANNOTATION_NAME = "sql:VarChar";
+    public static final String SQL_CHAR_MAPPING_ANNOTATION_NAME = "sql:Char";
+    public static final String SQL_DECIMAL_MAPPING_ANNOTATION_NAME = "sql:Decimal";
+    public static final String SQL_RELATION_MAPPING_ANNOTATION_NAME = "sql:Relation";
+    public static final String SQL_INDEX_MAPPING_ANNOTATION_NAME = "sql:Index";
+    public static final String SQL_UNIQUE_INDEX_MAPPING_ANNOTATION_NAME = "sql:UniqueIndex";
+    public static final String SQL_GENERATED_ANNOTATION_NAME = "sql:Generated";
+    public static final String SQL_DB_MAPPING_ANNOTATION =
+            String.format("@%s { name: \"%s\" }", SQL_DB_MAPPING_ANNOTATION_NAME, "%s");
+    public static final String SQL_VARCHAR_MAPPING_ANNOTATION =
+            String.format("@%s { length: %s }", SQL_VARCHAR_MAPPING_ANNOTATION_NAME, "%s");
+    public static final String SQL_CHAR_MAPPING_ANNOTATION =
+            String.format("@%s{ length: %s }", SQL_CHAR_MAPPING_ANNOTATION_NAME, "%s");
+    public static final String SQL_DECIMAL_MAPPING_ANNOTATION =
+            String.format("@%s{ precision: [%s,%s] }", SQL_DECIMAL_MAPPING_ANNOTATION_NAME, "%s", "%s");
+    public static final String SQL_RELATION_MAPPING_ANNOTATION =
+            String.format("@%s{ refs: %s }", SQL_RELATION_MAPPING_ANNOTATION_NAME, "%s");
+    public static final String SQL_INDEX_MAPPING_ANNOTATION =
+            String.format("@%s { name: \"%s\" }", SQL_INDEX_MAPPING_ANNOTATION_NAME, "%s");
+    public static final String SQL_UNIQUE_INDEX_MAPPING_ANNOTATION =
+            String.format("@%s { name: \"%s\" }", SQL_UNIQUE_INDEX_MAPPING_ANNOTATION_NAME, "%s");
+    public static final String SQL_GENERATED_ANNOTATION = String.format("@%s", SQL_GENERATED_ANNOTATION_NAME);
 
-    public static final String SQL_INDEX_MAPPING_ANNOTATION = "@sql:Index { name: \"%s\" }";
-    public static final String SQL_UNIQUE_INDEX_MAPPING_ANNOTATION = "@sql:UniqueIndex { name: \"%s\" }";
 
-    public static final String SQL_GENERATED_ANNOTATION = "@sql:Generated";
     public static final String FIELD_METADATA_TEMPLATE = "fieldMetadata: {%s}";
     public static final String JOIN_METADATA_TEMPLATE = "joinMetadata: {%s}";
 

@@ -93,10 +93,7 @@ public class Entity {
         if (resourceName == null || resourceName.isBlank()) {
             return false;
         }
-        if (Pluralizer.pluralize(entityName.toLowerCase(Locale.ENGLISH)).equals(resourceName)) {
-            return false;
-        }
-        return !resourceName.equals(entityName);
+        return !Pluralizer.pluralize(entityName.toLowerCase(Locale.ENGLISH)).equals(resourceName);
     }
 
     public static Entity.Builder newBuilder(String entityName) {
@@ -142,15 +139,40 @@ public class Entity {
             indexes.add(index);
         }
 
+        public void upsertIndex(String indexName, EntityField field) {
+            List<EntityField> fields = new ArrayList<>();
+            fields.add(field);
+            Index existingIndex = this.indexes.stream()
+                    .filter(i -> i.getIndexName().equals(indexName)).findFirst().orElse(null);
+            if (existingIndex != null) {
+                existingIndex.addField(field);
+            } else {
+                Index index = new Index(indexName, fields, false);
+                indexes.add(index);
+            }
+        }
+
+        public void upsertUniqueIndex(String indexName, EntityField field) {
+            List<EntityField> fields = new ArrayList<>();
+            fields.add(field);
+            Index existingIndex = this.uniqueIndexes.stream()
+                    .filter(i -> i.getIndexName().equals(indexName)).findFirst().orElse(null);
+            if (existingIndex != null) {
+                existingIndex.addField(field);
+            } else {
+                Index index = new Index(indexName, fields, true);
+                uniqueIndexes.add(index);
+            }
+        }
+
         public void addUniqueIndex(Index index) {
             uniqueIndexes.add(index);
         }
 
         public Entity build() {
             if (resourceName == null) {
-                resourceName = entityName.toLowerCase(Locale.ENGLISH);
+                resourceName = Pluralizer.pluralize(entityName.toLowerCase(Locale.ENGLISH));
             }
-            resourceName = Pluralizer.pluralize(resourceName);
             return new Entity(entityName, keys, resourceName, fieldList, indexes, uniqueIndexes);
         }
 
@@ -171,5 +193,8 @@ public class Entity {
             return entityName;
         }
 
+        public void removeField(String ref) {
+            fieldList.removeIf(field -> field.getFieldName().equals(ref));
+        }
     }
 }

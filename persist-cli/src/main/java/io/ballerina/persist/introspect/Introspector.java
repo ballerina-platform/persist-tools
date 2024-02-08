@@ -173,7 +173,7 @@ public abstract class Introspector {
 
             assocFieldBuilder.setArrayType(isReferenceMany);
 
-            ownerFieldBuilder.setIntrospectionRelationRefs(sqlForeignKey.getColumnNames().stream().map(
+            ownerFieldBuilder.setRelationRefs(sqlForeignKey.getColumnNames().stream().map(
                     columnName -> ownerEntityBuilder.buildForIntrospection()
                             .getFieldByFieldResourceName(columnName).getFieldName()
             ).toList());
