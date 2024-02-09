@@ -76,6 +76,8 @@ public class Pull implements BLauncherCmd {
     @Override
     public void execute() {
 
+        errStream.println("Introspecting database schema...");
+
         DriverResolver driverResolver = new DriverResolver(this.sourcePath);
         Project driverProject;
         try {
@@ -192,13 +194,16 @@ public class Pull implements BLauncherCmd {
         } catch (BalException e) {
             errStream.printf(String.format("ERROR: failed to generate model for introspected database: %s%n",
                      e.getMessage()));
+            return;
         }
 
         try {
             driverResolver.deleteDriverFile();
         } catch (BalException e) {
             errStream.println(e.getMessage());
+            return;
         }
+        errStream.println("Introspection complete! model.bal file created successfully.");
     }
 
     @Override
