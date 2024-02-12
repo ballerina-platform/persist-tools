@@ -55,6 +55,8 @@ public class BalSyntaxConstants {
     public static final String G_SHEET_CREATE_SQL_RESULTS = "_ = check googleSheetsClient.runBatchInsertQuery(data);";
     public static final String SQL_CLIENT_DECLARATION = "psql:SQLClient sqlClient;";
     public static final String CREATE_SQL_RESULTS = "_ = check sqlClient.runBatchInsertQuery(data);";
+    public static final String CREATE_SQL_RESULTS_AUTO_INCREMENT =
+            "sql:ExecutionResult[] result = check sqlClient.runBatchInsertQuery(data);";
     public static final String GET_PERSIST_CLIENT = "sqlClient = self.persistClients.get(%s);";
 
     public static final String CREATE_ARRAY_VAR = "%s keys = [];";
@@ -78,6 +80,11 @@ public class BalSyntaxConstants {
     public static final String RETURN_STATEMENT = "return %s.clone();";
 
     public static final String RETURN_CREATED_KEY = "return from  %s inserted in data" + System.lineSeparator();
+    public static final String RETURN_CREATED_KEY_AUTO_INCREMENT =
+            "return from  %s inserted in result" + System.lineSeparator();
+    public static final String RETURN_FILTERED_AUTO_INCREMENT_KEYS =
+            "where inserted.lastInsertId != ()" + System.lineSeparator() +
+                    "select <%s>inserted.lastInsertId;" + System.lineSeparator();
     public static final String SELECT_WITH_SPACE = "\t\t\tselect ";
     public static final String UPDATE_RUN_UPDATE_QUERY = "_ = check sqlClient.runUpdateQuery(%s, value);";
     public static final String G_SHEET_UPDATE_RUN_UPDATE_QUERY = "_ = check googleSheetsClient." +

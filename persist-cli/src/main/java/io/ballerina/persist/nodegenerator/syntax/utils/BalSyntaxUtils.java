@@ -839,17 +839,9 @@ public class BalSyntaxUtils {
         StringBuilder recordFields = new StringBuilder();
         for (EntityField field : entity.getFields()) {
             if (entity.getKeys().stream().anyMatch(key -> key == field)) {
-                recordFields.append(BalSyntaxConstants.KEYWORD_READONLY);
-                recordFields.append(BalSyntaxConstants.SPACE);
-                recordFields.append(field.getFieldType());
-                if (field.isArrayType()) {
-                    recordFields.append(BalSyntaxConstants.ARRAY);
-                }
-                recordFields.append(BalSyntaxConstants.SPACE);
-                recordFields.append(field.getFieldName());
-                recordFields.append(BalSyntaxConstants.SEMICOLON);
-                recordFields.append(BalSyntaxConstants.SPACE);
-            } else if (field.getRelation() != null) {
+                continue;
+            }
+            if (field.getRelation() != null) {
                 if (field.getRelation().isOwner()) {
                     for (Relation.Key key : field.getRelation().getKeyColumns()) {
                         recordFields.append(key.getType());

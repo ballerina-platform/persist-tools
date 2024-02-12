@@ -394,6 +394,18 @@ public class DbClientSyntax implements ClientSyntax {
         create.addStatement(NodeParser.parseStatement(
                 String.format(BalSyntaxConstants.LOCK_TEMPLATE, getPersistClientStatement)));
 
+        // there can only be one auto_incremented key and it cannot be a partial key
+        if (primaryKeys.get(0).isDbGenerated()) {
+            create.addStatement(NodeParser.parseStatement
+                    (BalSyntaxConstants.CREATE_SQL_RESULTS_AUTO_INCREMENT));
+            create.addStatement(NodeParser.parseStatement(
+                    String.format(BalSyntaxConstants.RETURN_CREATED_KEY_AUTO_INCREMENT, "sql:ExecutionResult")));
+            create.addStatement(NodeParser.parseStatement(String.format(
+                    BalSyntaxConstants.RETURN_FILTERED_AUTO_INCREMENT_KEYS, primaryKeys.get(0).getFieldType())));
+
+            return;
+        }
+
         create.addStatement(NodeParser.parseStatement(BalSyntaxConstants.CREATE_SQL_RESULTS));
 
         create.addStatement(NodeParser.parseStatement(
