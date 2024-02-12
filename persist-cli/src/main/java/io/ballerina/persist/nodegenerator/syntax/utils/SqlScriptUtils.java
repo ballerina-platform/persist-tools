@@ -202,8 +202,8 @@ public class SqlScriptUtils {
         }
         relationScripts.append(MessageFormat.format("{0}{1}FOREIGN KEY({2}) REFERENCES {3}({4}),",
                 NEW_LINE, TAB, foreignKey.toString(),
-                escape(removeSingleQuote(assocEntity.getEntityName()), datasource), referenceFieldName));
-        updateReferenceTable(tableName, assocEntity.getEntityName(), referenceTables);
+                escape(removeSingleQuote(assocEntity.getResourceName()), datasource), referenceFieldName));
+        updateReferenceTable(tableName, assocEntity.getResourceName(), referenceTables);
         return relationScripts.toString();
     }
 

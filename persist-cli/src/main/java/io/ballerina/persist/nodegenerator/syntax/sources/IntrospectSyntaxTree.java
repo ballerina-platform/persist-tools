@@ -22,5 +22,5 @@ import io.ballerina.persist.models.Module;
 
 public interface IntrospectSyntaxTree {
     io.ballerina.compiler.syntax.tree.SyntaxTree getDataModels(Module entityModule) throws BalException;
-    io.ballerina.compiler.syntax.tree.SyntaxTree createInitialDriverImportFile() throws BalException;
+    io.ballerina.compiler.syntax.tree.SyntaxTree createInitialDriverImportFile();
 }

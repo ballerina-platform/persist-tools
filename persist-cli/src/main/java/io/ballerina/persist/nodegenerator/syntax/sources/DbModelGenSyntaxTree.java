@@ -40,7 +40,7 @@ public class DbModelGenSyntaxTree implements IntrospectSyntaxTree {
     }
 
     @Override
-    public SyntaxTree createInitialDriverImportFile() throws BalException {
+    public SyntaxTree createInitialDriverImportFile() {
         return BalSyntaxUtils.createDriverImportFile("mysql");
     }
 

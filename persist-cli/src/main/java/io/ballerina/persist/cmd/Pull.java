@@ -31,6 +31,7 @@ import io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils;
 import io.ballerina.persist.utils.DatabaseConnector;
 import io.ballerina.persist.utils.JdbcDriverLoader;
 import io.ballerina.projects.Project;
+import io.ballerina.projects.util.ProjectUtils;
 import picocli.CommandLine;
 
 import java.io.IOException;
@@ -75,6 +76,9 @@ public class Pull implements BLauncherCmd {
 
     @Override
     public void execute() {
+        String packageName;
+        String moduleNameWithPackageName;
+        String datastore;
 
         errStream.println("Introspecting database schema...");
 
@@ -94,14 +98,38 @@ public class Pull implements BLauncherCmd {
             return;
         }
 
-        String datastore;
+        try {
+            packageName = TomlSyntaxUtils.readPackageName(this.sourcePath);
+        } catch (BalException e) {
+            errStream.println(e.getMessage());
+            return;
+        }
+
         try {
             HashMap<String, String> ballerinaTomlConfig = TomlSyntaxUtils.readBallerinaTomlConfig(
                     Paths.get(this.sourcePath, "Ballerina.toml"));
+            moduleNameWithPackageName = ballerinaTomlConfig.get("module").trim();
+            if (!moduleNameWithPackageName.equals(packageName)) {
+                if (!moduleNameWithPackageName.startsWith(packageName + ".")) {
+                    errStream.println("ERROR: invalid module name : '" + ballerinaTomlConfig.get("module") + "' :\n" +
+                            "module name should follow the template <package_name>.<module_name>");
+                    return;
+                }
+                String moduleName = moduleNameWithPackageName.replace(packageName + ".", "");
+                if (!ProjectUtils.validateModuleName(moduleName)) {
+                    errStream.println("ERROR: invalid module name : '" + moduleName + "' :\n" +
+                            "module name can only contain alphanumerics, underscores and periods");
+                    return;
+                } else if (!ProjectUtils.validateNameLength(moduleName)) {
+                    errStream.println("ERROR: invalid module name : '" + moduleName + "' :\n" +
+                            "maximum length of module name is 256 characters");
+                    return;
+                }
+            }
             datastore = ballerinaTomlConfig.get("datastore").trim();
         } catch (BalException e) {
-            errStream.printf("ERROR: failed to locate Ballerina.toml: %s%n",
-                    e.getMessage());
+            errStream.printf("ERROR: failed to introspect database according to definition file (%s). %s%n",
+                    "Ballerina.toml", e.getMessage());
             return;
         }
 
@@ -132,7 +160,6 @@ public class Pull implements BLauncherCmd {
 //            return;
 //        }
 
-        String packageName;
         try {
             packageName = readPackageName(this.sourcePath);
         } catch (BalException e) {
@@ -187,7 +214,7 @@ public class Pull implements BLauncherCmd {
 
         SourceGenerator sourceGenerator = new SourceGenerator(sourcePath,
                 Paths.get(sourcePath, PERSIST_DIRECTORY),
-                "prismaTest", entityModule);
+                moduleNameWithPackageName, entityModule);
 
         try {
             sourceGenerator.createDbModel();
