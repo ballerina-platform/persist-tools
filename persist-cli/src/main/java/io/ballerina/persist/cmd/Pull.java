@@ -23,7 +23,6 @@ import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.configuration.PersistConfiguration;
 import io.ballerina.persist.introspect.Introspector;
 import io.ballerina.persist.introspect.MySQLIntrospector;
-import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.DriverResolver;
 import io.ballerina.persist.nodegenerator.SourceGenerator;
@@ -43,7 +42,6 @@ import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.Map;
 
 import static io.ballerina.persist.PersistToolsConstants.MYSQL_DRIVER_CLASS;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
@@ -184,15 +182,9 @@ public class Pull implements BLauncherCmd {
             try (Connection connection = databaseConnector.getConnection(driver, persistConfigurations, true)) {
 
                 Introspector introspector = new MySQLIntrospector(connection,
-                        persistConfigurations.getDbConfig().getDatabase());
+                        persistConfigurations.getDbConfig().getDatabase(), packageName);
 
-                Map<String, Entity> entityMap = introspector.introspectDatabase();
-
-                Module.Builder moduleBuilder = Module.newBuilder(packageName);
-
-                entityMap.forEach(moduleBuilder::addEntity);
-                // add enums and imports
-                entityModule = moduleBuilder.build();
+                entityModule = introspector.introspectDatabase();
 
                 if (entityModule == null) {
                     throw new BalException("ERROR: failed to generate entity module.");

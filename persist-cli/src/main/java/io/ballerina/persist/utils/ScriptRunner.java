@@ -18,7 +18,9 @@
 
 package io.ballerina.persist.utils;
 
+
 import io.ballerina.persist.introspectiondto.SQLColumn;
+import io.ballerina.persist.introspectiondto.SQLEnum;
 import io.ballerina.persist.introspectiondto.SQLForeignKey;
 import io.ballerina.persist.introspectiondto.SQLIndex;
 import io.ballerina.persist.introspectiondto.SQLTable;
@@ -151,6 +153,26 @@ public class ScriptRunner {
             }
         } catch (SQLException e) {
             throw new SQLException("Error while retrieving tables for database: " + e.getMessage());
+        } finally {
+            rollbackConnection();
+        }
+    }
+
+    public List<SQLEnum> getSQLEnums(String query) throws SQLException {
+        List<SQLEnum> enums = new ArrayList<>();
+        try (Statement statement = connection.createStatement()) {
+            try (ResultSet results = statement.executeQuery(query)) {
+                while (results.next()) {
+                    enums.add(new SQLEnum(
+                            results.getString("full_enum_type"),
+                            results.getString("table_name"),
+                            results.getString("column_name")
+                    ));
+                }
+                return enums;
+            }
+        } catch (SQLException e) {
+            throw new SQLException("Error while retrieving enums for database: " + e.getMessage());
         } finally {
             rollbackConnection();
         }

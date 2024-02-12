@@ -19,11 +19,15 @@ package io.ballerina.persist.introspect;
 
 import io.ballerina.persist.inflector.CaseConverter;
 import io.ballerina.persist.inflector.Pluralizer;
+import io.ballerina.persist.introspectiondto.SQLEnum;
 import io.ballerina.persist.introspectiondto.SQLForeignKey;
 import io.ballerina.persist.introspectiondto.SQLTable;
 import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.EntityField;
+import io.ballerina.persist.models.Enum;
+import io.ballerina.persist.models.EnumMember;
 import io.ballerina.persist.models.Index;
+import io.ballerina.persist.models.Module;
 import io.ballerina.persist.models.Relation;
 import io.ballerina.persist.models.SQLType;
 import io.ballerina.persist.utils.ScriptRunner;
@@ -31,11 +35,14 @@ import io.ballerina.persist.utils.ScriptRunner;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static java.lang.Integer.parseInt;
 
@@ -58,24 +65,31 @@ public abstract class Introspector {
     protected abstract String getConstraintsQuery();
     protected abstract String getIndexesQuery(String tableName);
     protected abstract String getForeignKeysQuery(String tableName);
+    protected abstract String getEnumsQuery();
 
     private List<SQLTable> tables;
+
+    private List<SQLEnum> sqlEnums;
+    private Module.Builder moduleBuilder;
 
     private Map<String, Entity> entityMap;
 
     private List<SQLForeignKey> sqlForeignKeys;
 
-    public Introspector(Connection connection, String databaseName) {
+    public Introspector(Connection connection, String databaseName, String moduleName) {
         this.connection = connection;
         this.databaseName = databaseName;
         this.tables = new ArrayList<>();
         this.entityMap = new HashMap<>();
         this.sqlForeignKeys = new ArrayList<>();
+        this.sqlEnums = new ArrayList<>();
+        this.moduleBuilder = Module.newBuilder(moduleName);
     }
 
-    public Map<String, Entity> introspectDatabase() throws SQLException {
+    public Module introspectDatabase() throws SQLException {
         ScriptRunner sr = new ScriptRunner(connection);
         this.tables = sr.getSQLTables(this.getTablesQuery());
+        this.sqlEnums = sr.getSQLEnums(this.getEnumsQuery());
         tables.forEach(table -> {
             try {
                 sr.readColumnsOfSQLTable(table, this.getColumnsQuery(table.getTableName()));
@@ -87,14 +101,47 @@ public abstract class Introspector {
             }
         });
 
+        mapEnums();
         mapEntities();
         finalizeRelations();
 
-        //revise this. relationships are not correctly mapped
-//        mapRelations();
+        entityMap.forEach((key, value) -> moduleBuilder.addEntity(key, value));
+        return moduleBuilder.build();
+    }
 
+    private void mapEnums() {
+        this.sqlEnums.forEach(sqlEnum -> {
+            String enumName = CaseConverter.toPascalCase(sqlEnum.getEnumTableName()) +
+                    CaseConverter.toPascalCase(sqlEnum.getEnumColumnName());
+            Enum.Builder enumBuilder = Enum.newBuilder(enumName);
+            extractEnumValues(sqlEnum.getFullEnumText())
+                    .forEach(enumValue ->
+                    enumBuilder.addMember(new EnumMember(enumValue.toUpperCase(Locale.ENGLISH), enumValue)));
+            moduleBuilder.addEnum(enumName, enumBuilder.build());
+        });
+    }
 
-        return Collections.unmodifiableMap(entityMap);
+    private List<String> extractEnumValues(String enumString) {
+        List<String> enumValues = new ArrayList<>();
+
+        // Using regex to extract values inside parentheses
+        Pattern pattern = Pattern.compile("\\((.*?)\\)");
+        Matcher matcher = pattern.matcher(enumString);
+
+        if (matcher.find()) {
+            // Group 1 contains the values inside parentheses
+            String valuesInsideParentheses = matcher.group(1);
+
+            // Split the values by comma
+            String[] valuesArray = valuesInsideParentheses.split(",");
+            Arrays.stream(valuesArray).map(value -> {
+                value = value.trim();
+                value = value.replaceAll("'", "");
+                return value.trim();
+            }).forEach(enumValues::add);
+        }
+
+        return enumValues;
     }
 
     private void mapEntities() {
@@ -110,19 +157,31 @@ public abstract class Introspector {
                 EntityField.Builder fieldBuilder = EntityField.newBuilder(
                         CaseConverter.toCamelCase(column.getColumnName()));
                 fieldBuilder.setResourceFieldName(column.getColumnName());
-                SQLType sqlType = new SQLType(
-                        column.getDataType().toUpperCase(Locale.ENGLISH),
-                        column.getColumnDefault(),
-                        column.getNumericPrecision() != null ? parseInt(column.getNumericPrecision()) : 0,
-                        column.getNumericScale() != null ? parseInt(column.getNumericScale()) : 0,
-                        column.getDatetimePrecision(),
-                        column.getCharacterMaximumLength() != null ? parseInt(column.getCharacterMaximumLength()) : 0
-                );
 
-                String balType = sqlType.getBalType();
-                fieldBuilder.setType(balType);
+                if (Objects.equals(column.getDataType(), "enum")) {
+                    SQLEnum sqlEnum = sqlEnums.stream()
+                            .filter(e -> e.getEnumTableName().equals(table.getTableName())
+                                    && e.getEnumColumnName().equals(column.getColumnName()))
+                            .findFirst().orElseThrow();
+                    fieldBuilder.setType(CaseConverter.toPascalCase(sqlEnum.getEnumTableName()) +
+                            CaseConverter.toPascalCase(sqlEnum.getEnumColumnName()));
+                } else {
+                    SQLType sqlType = new SQLType(
+                            column.getDataType().toUpperCase(Locale.ENGLISH),
+                            column.getColumnDefault(),
+                            column.getNumericPrecision() != null ? parseInt(column.getNumericPrecision()) : 0,
+                            column.getNumericScale() != null ? parseInt(column.getNumericScale()) : 0,
+                            column.getDatetimePrecision(),
+                            column.getCharacterMaximumLength() != null ?
+                                    parseInt(column.getCharacterMaximumLength()) : 0
+                    );
+
+                    String balType = sqlType.getBalType();
+                    fieldBuilder.setType(balType);
+                    fieldBuilder.setSqlType(sqlType);
+                }
+
                 fieldBuilder.setOptionalType(column.getIsNullable().equals("YES"));
-                fieldBuilder.setSqlType(sqlType);
                 fieldBuilder.setArrayType(false);
                 fieldBuilder.setIsDbGenerated(column.isDbGenerated());
 
@@ -197,48 +256,6 @@ public abstract class Introspector {
             });
         });
     }
-
-//    private void mapRelations() {
-//
-//        this.tables.forEach(table-> table.getSqlForeignKeys().forEach(foreignKey -> {
-//            Entity ownerEntity = entityMap.get(table.getTableName());
-//            Entity assocEntity = entityMap.get(foreignKey.getReferencedTableName());
-//            List<EntityField> ownerColumns = new ArrayList<>();
-//            foreignKey.getColumnNames().forEach(columnName ->
-//                    ownerColumns.add(ownerEntity.getFieldByName(columnName)));
-//            List<EntityField> referencedColumns = new ArrayList<>();
-//            foreignKey.getReferencedColumnNames().forEach(columnName ->
-//                    referencedColumns.add(assocEntity.getFieldByName(columnName)));
-//            Relation.Builder ownerRelBuilder = new Relation.Builder();
-//            Relation.Builder referenceRelBuilder = new Relation.Builder();
-//
-//            ownerRelBuilder.setOwner(true);
-//            ownerRelBuilder.setAssocEntity(assocEntity);
-//
-//            ownerRelBuilder.setRelationType(inferRelationshipCardinality(ownerEntity, foreignKey));
-//
-//            ownerRelBuilder.setRelationType(Relation.RelationType.ONE);
-//            ownerRelBuilder.setReferences(referencedColumns.stream().map(EntityField::getFieldName).toList());
-//            ownerRelBuilder.setKeys(ownerColumns.stream().map(entityField ->
-//                    new Relation.Key(entityField.getFieldName(), referencedColumns
-//                            .get(ownerColumns.indexOf(entityField)).getFieldName(),
-//                            entityField.getFieldType())).toList());
-//            Relation ownerRelation = ownerRelBuilder.build();
-//            ownerColumns.forEach(entityField -> entityField.setRelation(ownerRelation));
-//
-//            referenceRelBuilder.setOwner(false);
-//            referenceRelBuilder.setAssocEntity(ownerEntity);
-//            referenceRelBuilder.setRelationType(Relation.RelationType.ONE);
-//            referenceRelBuilder.setKeys(referencedColumns.stream().map(entityField ->
-//                    new Relation.Key(entityField.getFieldName(), ownerColumns
-//                            .get(referencedColumns.indexOf(entityField)).getFieldName(),
-//                            entityField.getFieldType())).toList());
-//            referenceRelBuilder.setReferences(ownerColumns.stream().map(EntityField::getFieldName).toList());
-//            Relation referenceRelation = referenceRelBuilder.build();
-//            referencedColumns.forEach(entityField -> entityField.setRelation(referenceRelation));
-//        }));
-//    }
-
     private Relation.RelationType inferRelationshipCardinality(Entity ownerEntity, SQLForeignKey foreignKey) {
         List<EntityField> ownerColumns = new ArrayList<>();
         foreignKey.getColumnNames().forEach(columnName ->

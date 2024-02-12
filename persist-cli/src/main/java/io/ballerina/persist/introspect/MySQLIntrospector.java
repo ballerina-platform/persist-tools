@@ -22,8 +22,8 @@ import java.sql.Connection;
 
 public class MySQLIntrospector extends Introspector {
 
-    public MySQLIntrospector(Connection connection, String databaseName) {
-        super(connection, databaseName);
+    public MySQLIntrospector(Connection connection, String databaseName, String moduleName) {
+        super(connection, databaseName, moduleName);
     }
 
     @Override
@@ -157,6 +157,26 @@ public class MySQLIntrospector extends Introspector {
                 """;
         formatQuery = formatQuery.replace("\r\n", "%n");
         return String.format(formatQuery, this.databaseName, tableName);
+    }
+
+    @Override
+    protected String getEnumsQuery() {
+        String formatQuery = """
+            SELECT
+                column_name column_name,
+                data_type data_type,
+                column_type full_enum_type,
+                table_name table_name
+            FROM
+                information_schema.columns
+            WHERE
+                table_schema = '%s'
+                AND data_type = 'enum'
+            ORDER BY
+                ordinal_position ASC;
+            """;
+        formatQuery = formatQuery.replace("\r\n", "%n");
+        return String.format(formatQuery, this.databaseName);
     }
 
 }
