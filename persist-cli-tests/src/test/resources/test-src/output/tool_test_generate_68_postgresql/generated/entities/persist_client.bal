@@ -22,7 +22,7 @@ public isolated client class Client {
     private final map<psql:SQLClient> persistClients;
 
     private final record {|psql:SQLMetadata...;|} & readonly metadata = {
-        [WORKSPACE] : {
+        [WORKSPACE]: {
             entityName: "Workspace",
             tableName: "Workspace",
             fieldMetadata: {
@@ -52,7 +52,7 @@ public isolated client class Client {
                 employees: {entity: Employee, fieldName: "employees", refTable: "Employee", refColumns: ["workspaceWorkspaceId", "workspaceWorkspaceType"], joinColumns: ["workspaceId", "workspaceType"], 'type: psql:MANY_TO_ONE}
             }
         },
-        [BUILDING] : {
+        [BUILDING]: {
             entityName: "Building",
             tableName: "Building",
             fieldMetadata: {
@@ -69,7 +69,7 @@ public isolated client class Client {
             keyFields: ["buildingCode"],
             joinMetadata: {workspaces: {entity: Workspace, fieldName: "workspaces", refTable: "Workspace", refColumns: ["locationBuildingCode"], joinColumns: ["buildingCode"], 'type: psql:MANY_TO_ONE}}
         },
-        [DEPARTMENT] : {
+        [DEPARTMENT]: {
             entityName: "Department",
             tableName: "Department",
             fieldMetadata: {
@@ -90,7 +90,7 @@ public isolated client class Client {
             keyFields: ["deptNo", "deptName"],
             joinMetadata: {employees: {entity: Employee, fieldName: "employees", refTable: "Employee", refColumns: ["departmentDeptNo", "departmentDeptName"], joinColumns: ["deptNo", "deptName"], 'type: psql:MANY_TO_ONE}}
         },
-        [ORDER_ITEM] : {
+        [ORDER_ITEM]: {
             entityName: "OrderItem",
             tableName: "OrderItem",
             fieldMetadata: {
@@ -101,7 +101,7 @@ public isolated client class Client {
             },
             keyFields: ["orderId", "itemId"]
         },
-        [EMPLOYEE] : {
+        [EMPLOYEE]: {
             entityName: "Employee",
             tableName: "Employee",
             fieldMetadata: {
@@ -137,11 +137,11 @@ public isolated client class Client {
         }
         self.dbClient = dbClient;
         self.persistClients = {
-            [WORKSPACE] : check new (dbClient, self.metadata.get(WORKSPACE), psql:POSTGRESQL_SPECIFICS),
-            [BUILDING] : check new (dbClient, self.metadata.get(BUILDING), psql:POSTGRESQL_SPECIFICS),
-            [DEPARTMENT] : check new (dbClient, self.metadata.get(DEPARTMENT), psql:POSTGRESQL_SPECIFICS),
-            [ORDER_ITEM] : check new (dbClient, self.metadata.get(ORDER_ITEM), psql:POSTGRESQL_SPECIFICS),
-            [EMPLOYEE] : check new (dbClient, self.metadata.get(EMPLOYEE), psql:POSTGRESQL_SPECIFICS)
+            [WORKSPACE]: check new (dbClient, self.metadata.get(WORKSPACE), psql:POSTGRESQL_SPECIFICS),
+            [BUILDING]: check new (dbClient, self.metadata.get(BUILDING), psql:POSTGRESQL_SPECIFICS),
+            [DEPARTMENT]: check new (dbClient, self.metadata.get(DEPARTMENT), psql:POSTGRESQL_SPECIFICS),
+            [ORDER_ITEM]: check new (dbClient, self.metadata.get(ORDER_ITEM), psql:POSTGRESQL_SPECIFICS),
+            [EMPLOYEE]: check new (dbClient, self.metadata.get(EMPLOYEE), psql:POSTGRESQL_SPECIFICS)
         };
     }
 

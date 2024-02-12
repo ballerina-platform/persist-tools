@@ -23,41 +23,41 @@ public isolated client class Client {
 
     public isolated function init() returns persist:Error? {
         final map<inmemory:TableMetadata> metadata = {
-            [WORKSPACE] : {
+            [WORKSPACE]: {
                 keyFields: ["workspaceId"],
                 query: queryWorkspaces,
                 queryOne: queryOneWorkspaces,
                 associationsMethods: {"employees": queryWorkspaceEmployees}
             },
-            [BUILDING] : {
+            [BUILDING]: {
                 keyFields: ["buildingCode"],
                 query: queryBuildings,
                 queryOne: queryOneBuildings,
                 associationsMethods: {"workspaces": queryBuildingWorkspaces}
             },
-            [DEPARTMENT] : {
+            [DEPARTMENT]: {
                 keyFields: ["deptNo"],
                 query: queryDepartments,
                 queryOne: queryOneDepartments,
                 associationsMethods: {"employees": queryDepartmentEmployees}
             },
-            [ORDER_ITEM] : {
+            [ORDER_ITEM]: {
                 keyFields: ["orderId", "itemId"],
                 query: queryOrderitems,
                 queryOne: queryOneOrderitems
             },
-            [EMPLOYEE] : {
+            [EMPLOYEE]: {
                 keyFields: ["empNo"],
                 query: queryEmployees,
                 queryOne: queryOneEmployees
             }
         };
         self.persistClients = {
-            [WORKSPACE] : check new (metadata.get(WORKSPACE).cloneReadOnly()),
-            [BUILDING] : check new (metadata.get(BUILDING).cloneReadOnly()),
-            [DEPARTMENT] : check new (metadata.get(DEPARTMENT).cloneReadOnly()),
-            [ORDER_ITEM] : check new (metadata.get(ORDER_ITEM).cloneReadOnly()),
-            [EMPLOYEE] : check new (metadata.get(EMPLOYEE).cloneReadOnly())
+            [WORKSPACE]: check new (metadata.get(WORKSPACE).cloneReadOnly()),
+            [BUILDING]: check new (metadata.get(BUILDING).cloneReadOnly()),
+            [DEPARTMENT]: check new (metadata.get(DEPARTMENT).cloneReadOnly()),
+            [ORDER_ITEM]: check new (metadata.get(ORDER_ITEM).cloneReadOnly()),
+            [EMPLOYEE]: check new (metadata.get(EMPLOYEE).cloneReadOnly())
         };
     }
 

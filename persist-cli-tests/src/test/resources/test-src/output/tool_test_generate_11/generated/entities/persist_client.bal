@@ -18,7 +18,7 @@ public isolated client class Client {
     private final map<psql:SQLClient> persistClients;
 
     private final record {|psql:SQLMetadata...;|} & readonly metadata = {
-        [MEDICAL_NEED] : {
+        [MEDICAL_NEED]: {
             entityName: "MedicalNeed",
             tableName: "MedicalNeed",
             fieldMetadata: {
@@ -39,7 +39,7 @@ public isolated client class Client {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
-        self.persistClients = {[MEDICAL_NEED] : check new (dbClient, self.metadata.get(MEDICAL_NEED), psql:MYSQL_SPECIFICS)};
+        self.persistClients = {[MEDICAL_NEED]: check new (dbClient, self.metadata.get(MEDICAL_NEED), psql:MYSQL_SPECIFICS)};
     }
 
     isolated resource function get medicalneeds(MedicalNeedTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {

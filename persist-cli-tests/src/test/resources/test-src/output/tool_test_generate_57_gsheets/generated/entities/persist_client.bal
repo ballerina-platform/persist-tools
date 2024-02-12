@@ -24,7 +24,7 @@ public isolated client class Client {
 
     public isolated function init() returns persist:Error? {
         final record {|googlesheets:SheetMetadata...;|} & readonly metadata = {
-            [EMPLOYEE] : {
+            [EMPLOYEE]: {
                 entityName: "Employee",
                 tableName: "Employee",
                 keyFields: ["empNo"],
@@ -53,7 +53,7 @@ public isolated client class Client {
                 },
                 associationsMethods: {}
             },
-            [WORKSPACE] : {
+            [WORKSPACE]: {
                 entityName: "Workspace",
                 tableName: "Workspace",
                 keyFields: ["workspaceId"],
@@ -72,7 +72,7 @@ public isolated client class Client {
                 },
                 associationsMethods: {"employees": self.queryWorkspaceEmployees}
             },
-            [BUILDING] : {
+            [BUILDING]: {
                 entityName: "Building",
                 tableName: "Building",
                 keyFields: ["buildingCode"],
@@ -97,7 +97,7 @@ public isolated client class Client {
                 },
                 associationsMethods: {"workspaces": self.queryBuildingWorkspaces}
             },
-            [DEPARTMENT] : {
+            [DEPARTMENT]: {
                 entityName: "Department",
                 tableName: "Department",
                 keyFields: ["deptNo"],
@@ -114,7 +114,7 @@ public isolated client class Client {
                 },
                 associationsMethods: {"employees": self.queryDepartmentEmployees}
             },
-            [ORDER_ITEM] : {
+            [ORDER_ITEM]: {
                 entityName: "OrderItem",
                 tableName: "OrderItem",
                 keyFields: ["orderId", "itemId"],

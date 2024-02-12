@@ -21,23 +21,23 @@ public isolated client class Client {
 
     public isolated function init() returns persist:Error? {
         final map<inmemory:TableMetadata> metadata = {
-            [EMPLOYEE] : {
+            [EMPLOYEE]: {
                 keyFields: ["empNo"],
                 query: queryEmployees,
                 queryOne: queryOneEmployees
             },
-            [WORKSPACE] : {
+            [WORKSPACE]: {
                 keyFields: ["workspaceId"],
                 query: queryWorkspaces,
                 queryOne: queryOneWorkspaces
             },
-            [BUILDING] : {
+            [BUILDING]: {
                 keyFields: ["buildingCode"],
                 query: queryBuildings,
                 queryOne: queryOneBuildings,
                 associationsMethods: {"workspaces": queryBuildingWorkspaces}
             },
-            [DEPARTMENT] : {
+            [DEPARTMENT]: {
                 keyFields: ["deptNo"],
                 query: queryDepartments,
                 queryOne: queryOneDepartments,
@@ -45,10 +45,10 @@ public isolated client class Client {
             }
         };
         self.persistClients = {
-            [EMPLOYEE] : check new (metadata.get(EMPLOYEE).cloneReadOnly()),
-            [WORKSPACE] : check new (metadata.get(WORKSPACE).cloneReadOnly()),
-            [BUILDING] : check new (metadata.get(BUILDING).cloneReadOnly()),
-            [DEPARTMENT] : check new (metadata.get(DEPARTMENT).cloneReadOnly())
+            [EMPLOYEE]: check new (metadata.get(EMPLOYEE).cloneReadOnly()),
+            [WORKSPACE]: check new (metadata.get(WORKSPACE).cloneReadOnly()),
+            [BUILDING]: check new (metadata.get(BUILDING).cloneReadOnly()),
+            [DEPARTMENT]: check new (metadata.get(DEPARTMENT).cloneReadOnly())
         };
     }
 

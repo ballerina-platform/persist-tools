@@ -21,7 +21,7 @@ public isolated client class Client {
 
     public isolated function init() returns persist:Error? {
         final map<inmemory:TableMetadata> metadata = {
-            [USER] : {
+            [USER]: {
                 keyFields: ["id"],
                 query: queryUsers,
                 queryOne: queryOneUsers,
@@ -32,28 +32,28 @@ public isolated client class Client {
                     "following": queryUserFollowing
                 }
             },
-            [POST] : {
+            [POST]: {
                 keyFields: ["id"],
                 query: queryPosts,
                 queryOne: queryOnePosts,
                 associationsMethods: {"comments": queryPostComments}
             },
-            [FOLLOW] : {
+            [FOLLOW]: {
                 keyFields: ["id"],
                 query: queryFollows,
                 queryOne: queryOneFollows
             },
-            [COMMENT] : {
+            [COMMENT]: {
                 keyFields: ["id"],
                 query: queryComments,
                 queryOne: queryOneComments
             }
         };
         self.persistClients = {
-            [USER] : check new (metadata.get(USER).cloneReadOnly()),
-            [POST] : check new (metadata.get(POST).cloneReadOnly()),
-            [FOLLOW] : check new (metadata.get(FOLLOW).cloneReadOnly()),
-            [COMMENT] : check new (metadata.get(COMMENT).cloneReadOnly())
+            [USER]: check new (metadata.get(USER).cloneReadOnly()),
+            [POST]: check new (metadata.get(POST).cloneReadOnly()),
+            [FOLLOW]: check new (metadata.get(FOLLOW).cloneReadOnly()),
+            [COMMENT]: check new (metadata.get(COMMENT).cloneReadOnly())
         };
     }
 

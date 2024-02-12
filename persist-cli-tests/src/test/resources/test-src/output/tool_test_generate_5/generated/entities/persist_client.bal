@@ -19,7 +19,7 @@ public isolated client class Client {
     private final map<psql:SQLClient> persistClients;
 
     private final record {|psql:SQLMetadata...;|} & readonly metadata = {
-        [MEDICAL_NEED] : {
+        [MEDICAL_NEED]: {
             entityName: "MedicalNeed",
             tableName: "MedicalNeed",
             fieldMetadata: {
@@ -33,7 +33,7 @@ public isolated client class Client {
             },
             keyFields: ["needId"]
         },
-        [MEDICAL_ITEM] : {
+        [MEDICAL_ITEM]: {
             entityName: "MedicalItem",
             tableName: "MedicalItem",
             fieldMetadata: {
@@ -53,8 +53,8 @@ public isolated client class Client {
         }
         self.dbClient = dbClient;
         self.persistClients = {
-            [MEDICAL_NEED] : check new (dbClient, self.metadata.get(MEDICAL_NEED), psql:MYSQL_SPECIFICS),
-            [MEDICAL_ITEM] : check new (dbClient, self.metadata.get(MEDICAL_ITEM), psql:MYSQL_SPECIFICS)
+            [MEDICAL_NEED]: check new (dbClient, self.metadata.get(MEDICAL_NEED), psql:MYSQL_SPECIFICS),
+            [MEDICAL_ITEM]: check new (dbClient, self.metadata.get(MEDICAL_ITEM), psql:MYSQL_SPECIFICS)
         };
     }
 

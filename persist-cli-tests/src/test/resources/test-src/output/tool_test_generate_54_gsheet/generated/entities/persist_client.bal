@@ -24,7 +24,7 @@ public isolated client class Client {
 
     public isolated function init() returns persist:Error? {
         final record {|googlesheets:SheetMetadata...;|} & readonly metadata = {
-            [EMPLOYEE] : {
+            [EMPLOYEE]: {
                 entityName: "Employee",
                 tableName: "Employee",
                 keyFields: ["empNo"],
@@ -53,7 +53,7 @@ public isolated client class Client {
                 },
                 associationsMethods: {}
             },
-            [WORKSPACE] : {
+            [WORKSPACE]: {
                 entityName: "Workspace",
                 tableName: "Workspace",
                 keyFields: ["workspaceId"],
@@ -72,7 +72,7 @@ public isolated client class Client {
                 },
                 associationsMethods: {"employees": self.queryWorkspaceEmployees}
             },
-            [BUILDING] : {
+            [BUILDING]: {
                 entityName: "Building",
                 tableName: "Building",
                 keyFields: ["buildingCode"],
@@ -97,7 +97,7 @@ public isolated client class Client {
                 },
                 associationsMethods: {"workspaces": self.queryBuildingWorkspaces}
             },
-            [DEPARTMENT] : {
+            [DEPARTMENT]: {
                 entityName: "Department",
                 tableName: "Department",
                 keyFields: ["deptNo"],
@@ -114,7 +114,7 @@ public isolated client class Client {
                 },
                 associationsMethods: {"employees": self.queryDepartmentEmployees}
             },
-            [ORDER_ITEM] : {
+            [ORDER_ITEM]: {
                 entityName: "OrderItem",
                 tableName: "OrderItem",
                 keyFields: ["orderId", "itemId"],
@@ -164,11 +164,11 @@ public isolated client class Client {
         self.httpClient = httpClient;
         map<int> sheetIds = check googlesheets:getSheetIds(self.googleSheetClient, metadata, spreadsheetId);
         self.persistClients = {
-            [EMPLOYEE] : check new (self.googleSheetClient, self.httpClient, metadata.get(EMPLOYEE).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(EMPLOYEE).cloneReadOnly()),
-            [WORKSPACE] : check new (self.googleSheetClient, self.httpClient, metadata.get(WORKSPACE).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(WORKSPACE).cloneReadOnly()),
-            [BUILDING] : check new (self.googleSheetClient, self.httpClient, metadata.get(BUILDING).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(BUILDING).cloneReadOnly()),
-            [DEPARTMENT] : check new (self.googleSheetClient, self.httpClient, metadata.get(DEPARTMENT).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(DEPARTMENT).cloneReadOnly()),
-            [ORDER_ITEM] : check new (self.googleSheetClient, self.httpClient, metadata.get(ORDER_ITEM).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(ORDER_ITEM).cloneReadOnly())
+            [EMPLOYEE]: check new (self.googleSheetClient, self.httpClient, metadata.get(EMPLOYEE).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(EMPLOYEE).cloneReadOnly()),
+            [WORKSPACE]: check new (self.googleSheetClient, self.httpClient, metadata.get(WORKSPACE).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(WORKSPACE).cloneReadOnly()),
+            [BUILDING]: check new (self.googleSheetClient, self.httpClient, metadata.get(BUILDING).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(BUILDING).cloneReadOnly()),
+            [DEPARTMENT]: check new (self.googleSheetClient, self.httpClient, metadata.get(DEPARTMENT).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(DEPARTMENT).cloneReadOnly()),
+            [ORDER_ITEM]: check new (self.googleSheetClient, self.httpClient, metadata.get(ORDER_ITEM).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(ORDER_ITEM).cloneReadOnly())
         };
     }
 

@@ -23,7 +23,7 @@ public isolated client class Client {
     private final map<psql:SQLClient> persistClients;
 
     private final record {|psql:SQLMetadata...;|} & readonly metadata = {
-        [PROFILE] : {
+        [PROFILE]: {
             entityName: "Profile",
             tableName: "Profile",
             fieldMetadata: {
@@ -41,7 +41,7 @@ public isolated client class Client {
             keyFields: ["id"],
             joinMetadata: {owner: {entity: User, fieldName: "owner", refTable: "User", refColumns: ["id"], joinColumns: ["ownerId"], 'type: psql:ONE_TO_ONE}}
         },
-        [USER] : {
+        [USER]: {
             entityName: "User",
             tableName: "User",
             fieldMetadata: {
@@ -64,7 +64,7 @@ public isolated client class Client {
                 multipleAssociations: {entity: MultipleAssociations, fieldName: "multipleAssociations", refTable: "MultipleAssociations", refColumns: ["id"], joinColumns: ["multipleassociationsId"], 'type: psql:ONE_TO_ONE}
             }
         },
-        [DEPT] : {
+        [DEPT]: {
             entityName: "Dept",
             tableName: "Dept",
             fieldMetadata: {
@@ -77,7 +77,7 @@ public isolated client class Client {
             keyFields: ["id"],
             joinMetadata: {multipleAssociations: {entity: MultipleAssociations, fieldName: "multipleAssociations", refTable: "MultipleAssociations", refColumns: ["id"], joinColumns: ["multipleassociationsId"], 'type: psql:ONE_TO_ONE}}
         },
-        [CUSTOMER] : {
+        [CUSTOMER]: {
             entityName: "Customer",
             tableName: "Customer",
             fieldMetadata: {
@@ -91,7 +91,7 @@ public isolated client class Client {
             keyFields: ["id"],
             joinMetadata: {multipleAssociations: {entity: MultipleAssociations, fieldName: "multipleAssociations", refTable: "MultipleAssociations", refColumns: ["id"], joinColumns: ["multipleassociationsId"], 'type: psql:ONE_TO_ONE}}
         },
-        [STUDENT] : {
+        [STUDENT]: {
             entityName: "Student",
             tableName: "Student",
             fieldMetadata: {
@@ -103,7 +103,7 @@ public isolated client class Client {
             },
             keyFields: ["id", "firstName"]
         },
-        [MULTIPLE_ASSOCIATIONS] : {
+        [MULTIPLE_ASSOCIATIONS]: {
             entityName: "MultipleAssociations",
             tableName: "MultipleAssociations",
             fieldMetadata: {
@@ -136,12 +136,12 @@ public isolated client class Client {
         }
         self.dbClient = dbClient;
         self.persistClients = {
-            [PROFILE] : check new (dbClient, self.metadata.get(PROFILE), psql:MYSQL_SPECIFICS),
-            [USER] : check new (dbClient, self.metadata.get(USER), psql:MYSQL_SPECIFICS),
-            [DEPT] : check new (dbClient, self.metadata.get(DEPT), psql:MYSQL_SPECIFICS),
-            [CUSTOMER] : check new (dbClient, self.metadata.get(CUSTOMER), psql:MYSQL_SPECIFICS),
-            [STUDENT] : check new (dbClient, self.metadata.get(STUDENT), psql:MYSQL_SPECIFICS),
-            [MULTIPLE_ASSOCIATIONS] : check new (dbClient, self.metadata.get(MULTIPLE_ASSOCIATIONS), psql:MYSQL_SPECIFICS)
+            [PROFILE]: check new (dbClient, self.metadata.get(PROFILE), psql:MYSQL_SPECIFICS),
+            [USER]: check new (dbClient, self.metadata.get(USER), psql:MYSQL_SPECIFICS),
+            [DEPT]: check new (dbClient, self.metadata.get(DEPT), psql:MYSQL_SPECIFICS),
+            [CUSTOMER]: check new (dbClient, self.metadata.get(CUSTOMER), psql:MYSQL_SPECIFICS),
+            [STUDENT]: check new (dbClient, self.metadata.get(STUDENT), psql:MYSQL_SPECIFICS),
+            [MULTIPLE_ASSOCIATIONS]: check new (dbClient, self.metadata.get(MULTIPLE_ASSOCIATIONS), psql:MYSQL_SPECIFICS)
         };
     }
 

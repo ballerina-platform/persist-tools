@@ -23,7 +23,7 @@ public isolated client class Client {
 
     public isolated function init() returns persist:Error? {
         final record {|googlesheets:SheetMetadata...;|} & readonly metadata = {
-            [USER] : {
+            [USER]: {
                 entityName: "User",
                 tableName: "User",
                 keyFields: ["id"],
@@ -49,7 +49,7 @@ public isolated client class Client {
                     "following": self.queryUserFollowing
                 }
             },
-            [POST] : {
+            [POST]: {
                 entityName: "Post",
                 tableName: "Post",
                 keyFields: ["id"],
@@ -74,7 +74,7 @@ public isolated client class Client {
                 },
                 associationsMethods: {"comments": self.queryPostComments}
             },
-            [FOLLOW] : {
+            [FOLLOW]: {
                 entityName: "Follow",
                 tableName: "Follow",
                 keyFields: ["id"],
@@ -95,7 +95,7 @@ public isolated client class Client {
                 },
                 associationsMethods: {}
             },
-            [COMMENT] : {
+            [COMMENT]: {
                 entityName: "Comment",
                 tableName: "Comment",
                 keyFields: ["id"],
@@ -147,10 +147,10 @@ public isolated client class Client {
         self.httpClient = httpClient;
         map<int> sheetIds = check googlesheets:getSheetIds(self.googleSheetClient, metadata, spreadsheetId);
         self.persistClients = {
-            [USER] : check new (self.googleSheetClient, self.httpClient, metadata.get(USER).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(USER).cloneReadOnly()),
-            [POST] : check new (self.googleSheetClient, self.httpClient, metadata.get(POST).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(POST).cloneReadOnly()),
-            [FOLLOW] : check new (self.googleSheetClient, self.httpClient, metadata.get(FOLLOW).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(FOLLOW).cloneReadOnly()),
-            [COMMENT] : check new (self.googleSheetClient, self.httpClient, metadata.get(COMMENT).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(COMMENT).cloneReadOnly())
+            [USER]: check new (self.googleSheetClient, self.httpClient, metadata.get(USER).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(USER).cloneReadOnly()),
+            [POST]: check new (self.googleSheetClient, self.httpClient, metadata.get(POST).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(POST).cloneReadOnly()),
+            [FOLLOW]: check new (self.googleSheetClient, self.httpClient, metadata.get(FOLLOW).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(FOLLOW).cloneReadOnly()),
+            [COMMENT]: check new (self.googleSheetClient, self.httpClient, metadata.get(COMMENT).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(COMMENT).cloneReadOnly())
         };
     }
 

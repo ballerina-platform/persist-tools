@@ -20,7 +20,7 @@ public isolated client class Client {
     private final map<psql:SQLClient> persistClients;
 
     private final record {|psql:SQLMetadata...;|} & readonly metadata = {
-        [USER] : {
+        [USER]: {
             entityName: "User",
             tableName: "User",
             fieldMetadata: {
@@ -50,7 +50,7 @@ public isolated client class Client {
                 follower: {entity: Follow, fieldName: "follower", refTable: "Follow", refColumns: ["followerId"], joinColumns: ["id"], 'type: psql:ONE_TO_ONE}
             }
         },
-        [POST] : {
+        [POST]: {
             entityName: "Post",
             tableName: "Post",
             fieldMetadata: {
@@ -68,7 +68,7 @@ public isolated client class Client {
             keyFields: ["id"],
             joinMetadata: {user: {entity: User, fieldName: "user", refTable: "User", refColumns: ["id"], joinColumns: ["userId"], 'type: psql:ONE_TO_MANY}}
         },
-        [FOLLOW] : {
+        [FOLLOW]: {
             entityName: "Follow",
             tableName: "Follow",
             fieldMetadata: {
@@ -100,9 +100,9 @@ public isolated client class Client {
         }
         self.dbClient = dbClient;
         self.persistClients = {
-            [USER] : check new (dbClient, self.metadata.get(USER), psql:POSTGRESQL_SPECIFICS),
-            [POST] : check new (dbClient, self.metadata.get(POST), psql:POSTGRESQL_SPECIFICS),
-            [FOLLOW] : check new (dbClient, self.metadata.get(FOLLOW), psql:POSTGRESQL_SPECIFICS)
+            [USER]: check new (dbClient, self.metadata.get(USER), psql:POSTGRESQL_SPECIFICS),
+            [POST]: check new (dbClient, self.metadata.get(POST), psql:POSTGRESQL_SPECIFICS),
+            [FOLLOW]: check new (dbClient, self.metadata.get(FOLLOW), psql:POSTGRESQL_SPECIFICS)
         };
     }
 
