@@ -21,7 +21,7 @@ public isolated client class Client {
     private final map<psql:SQLClient> persistClients;
 
     private final record {|psql:SQLMetadata...;|} & readonly metadata = {
-        [EMPLOYEE] : {
+        [EMPLOYEE]: {
             entityName: "Employee",
             tableName: "Employee",
             fieldMetadata: {
@@ -45,7 +45,7 @@ public isolated client class Client {
                 workspace: {entity: Workspace, fieldName: "workspace", refTable: "Workspace", refColumns: ["workspaceEmpNo"], joinColumns: ["empNo"], 'type: psql:ONE_TO_ONE}
             }
         },
-        [WORKSPACE] : {
+        [WORKSPACE]: {
             entityName: "Workspace",
             tableName: "Workspace",
             fieldMetadata: {
@@ -72,7 +72,7 @@ public isolated client class Client {
                 employee: {entity: Employee, fieldName: "employee", refTable: "Employee", refColumns: ["empNo"], joinColumns: ["workspaceEmpNo"], 'type: psql:ONE_TO_ONE}
             }
         },
-        [BUILDING] : {
+        [BUILDING]: {
             entityName: "Building",
             tableName: "Building",
             fieldMetadata: {
@@ -89,7 +89,7 @@ public isolated client class Client {
             keyFields: ["buildingCode"],
             joinMetadata: {workspaces: {entity: Workspace, fieldName: "workspaces", refTable: "Workspace", refColumns: ["locationBuildingCode"], joinColumns: ["buildingCode"], 'type: psql:MANY_TO_ONE}}
         },
-        [DEPARTMENT] : {
+        [DEPARTMENT]: {
             entityName: "Department",
             tableName: "Department",
             fieldMetadata: {
@@ -115,10 +115,10 @@ public isolated client class Client {
         }
         self.dbClient = dbClient;
         self.persistClients = {
-            [EMPLOYEE] : check new (dbClient, self.metadata.get(EMPLOYEE), psql:MYSQL_SPECIFICS),
-            [WORKSPACE] : check new (dbClient, self.metadata.get(WORKSPACE), psql:MYSQL_SPECIFICS),
-            [BUILDING] : check new (dbClient, self.metadata.get(BUILDING), psql:MYSQL_SPECIFICS),
-            [DEPARTMENT] : check new (dbClient, self.metadata.get(DEPARTMENT), psql:MYSQL_SPECIFICS)
+            [EMPLOYEE]: check new (dbClient, self.metadata.get(EMPLOYEE), psql:MYSQL_SPECIFICS),
+            [WORKSPACE]: check new (dbClient, self.metadata.get(WORKSPACE), psql:MYSQL_SPECIFICS),
+            [BUILDING]: check new (dbClient, self.metadata.get(BUILDING), psql:MYSQL_SPECIFICS),
+            [DEPARTMENT]: check new (dbClient, self.metadata.get(DEPARTMENT), psql:MYSQL_SPECIFICS)
         };
     }
 

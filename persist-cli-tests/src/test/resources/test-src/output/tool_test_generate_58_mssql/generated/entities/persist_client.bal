@@ -34,7 +34,7 @@ public isolated client class Client {
     private final map<psql:SQLClient> persistClients;
 
     private final record {|psql:SQLMetadata...;|} & readonly metadata = {
-        [ALL_TYPES] : {
+        [ALL_TYPES]: {
             entityName: "AllTypes",
             tableName: "AllTypes",
             fieldMetadata: {
@@ -64,7 +64,7 @@ public isolated client class Client {
             },
             keyFields: ["id"]
         },
-        [STRING_ID_RECORD] : {
+        [STRING_ID_RECORD]: {
             entityName: "StringIdRecord",
             tableName: "StringIdRecord",
             fieldMetadata: {
@@ -73,7 +73,7 @@ public isolated client class Client {
             },
             keyFields: ["id"]
         },
-        [INT_ID_RECORD] : {
+        [INT_ID_RECORD]: {
             entityName: "IntIdRecord",
             tableName: "IntIdRecord",
             fieldMetadata: {
@@ -82,7 +82,7 @@ public isolated client class Client {
             },
             keyFields: ["id"]
         },
-        [FLOAT_ID_RECORD] : {
+        [FLOAT_ID_RECORD]: {
             entityName: "FloatIdRecord",
             tableName: "FloatIdRecord",
             fieldMetadata: {
@@ -91,7 +91,7 @@ public isolated client class Client {
             },
             keyFields: ["id"]
         },
-        [DECIMAL_ID_RECORD] : {
+        [DECIMAL_ID_RECORD]: {
             entityName: "DecimalIdRecord",
             tableName: "DecimalIdRecord",
             fieldMetadata: {
@@ -100,7 +100,7 @@ public isolated client class Client {
             },
             keyFields: ["id"]
         },
-        [BOOLEAN_ID_RECORD] : {
+        [BOOLEAN_ID_RECORD]: {
             entityName: "BooleanIdRecord",
             tableName: "BooleanIdRecord",
             fieldMetadata: {
@@ -109,7 +109,7 @@ public isolated client class Client {
             },
             keyFields: ["id"]
         },
-        [COMPOSITE_ASSOCIATION_RECORD] : {
+        [COMPOSITE_ASSOCIATION_RECORD]: {
             entityName: "CompositeAssociationRecord",
             tableName: "CompositeAssociationRecord",
             fieldMetadata: {
@@ -130,7 +130,7 @@ public isolated client class Client {
             keyFields: ["id"],
             joinMetadata: {allTypesIdRecord: {entity: AllTypesIdRecord, fieldName: "allTypesIdRecord", refTable: "AllTypesIdRecord", refColumns: ["booleanType", "intType", "floatType", "decimalType", "stringType"], joinColumns: ["alltypesidrecordBooleanType", "alltypesidrecordIntType", "alltypesidrecordFloatType", "alltypesidrecordDecimalType", "alltypesidrecordStringType"], 'type: psql:ONE_TO_ONE}}
         },
-        [ALL_TYPES_ID_RECORD] : {
+        [ALL_TYPES_ID_RECORD]: {
             entityName: "AllTypesIdRecord",
             tableName: "AllTypesIdRecord",
             fieldMetadata: {
@@ -151,7 +151,7 @@ public isolated client class Client {
             keyFields: ["booleanType", "intType", "floatType", "decimalType", "stringType"],
             joinMetadata: {compositeAssociationRecord: {entity: CompositeAssociationRecord, fieldName: "compositeAssociationRecord", refTable: "CompositeAssociationRecord", refColumns: ["alltypesidrecordBooleanType", "alltypesidrecordIntType", "alltypesidrecordFloatType", "alltypesidrecordDecimalType", "alltypesidrecordStringType"], joinColumns: ["booleanType", "intType", "floatType", "decimalType", "stringType"], 'type: psql:ONE_TO_ONE}}
         },
-        [USER] : {
+        [USER]: {
             entityName: "User",
             tableName: "User",
             fieldMetadata: {
@@ -187,7 +187,7 @@ public isolated client class Client {
                 following: {entity: Follow, fieldName: "following", refTable: "Follow", refColumns: ["followerId"], joinColumns: ["id"], 'type: psql:MANY_TO_ONE}
             }
         },
-        [POST] : {
+        [POST]: {
             entityName: "Post",
             tableName: "Post",
             fieldMetadata: {
@@ -213,7 +213,7 @@ public isolated client class Client {
                 comments: {entity: Comment, fieldName: "comments", refTable: "Comment", refColumns: ["postId"], joinColumns: ["id"], 'type: psql:MANY_TO_ONE}
             }
         },
-        [FOLLOW] : {
+        [FOLLOW]: {
             entityName: "Follow",
             tableName: "Follow",
             fieldMetadata: {
@@ -236,7 +236,7 @@ public isolated client class Client {
                 follower: {entity: User, fieldName: "follower", refTable: "User", refColumns: ["id"], joinColumns: ["followerId"], 'type: psql:ONE_TO_MANY}
             }
         },
-        [COMMENT] : {
+        [COMMENT]: {
             entityName: "Comment",
             tableName: "Comment",
             fieldMetadata: {
@@ -262,7 +262,7 @@ public isolated client class Client {
                 post: {entity: Post, fieldName: "post", refTable: "Post", refColumns: ["id"], joinColumns: ["postId"], 'type: psql:ONE_TO_MANY}
             }
         },
-        [EMPLOYEE] : {
+        [EMPLOYEE]: {
             entityName: "Employee",
             tableName: "Employee",
             fieldMetadata: {
@@ -286,7 +286,7 @@ public isolated client class Client {
                 workspace: {entity: Workspace, fieldName: "workspace", refTable: "Workspace", refColumns: ["workspaceId"], joinColumns: ["workspaceWorkspaceId"], 'type: psql:ONE_TO_MANY}
             }
         },
-        [WORKSPACE] : {
+        [WORKSPACE]: {
             entityName: "Workspace",
             tableName: "Workspace",
             fieldMetadata: {
@@ -314,7 +314,7 @@ public isolated client class Client {
                 employees: {entity: Employee, fieldName: "employees", refTable: "Employee", refColumns: ["workspaceWorkspaceId"], joinColumns: ["workspaceId"], 'type: psql:MANY_TO_ONE}
             }
         },
-        [BUILDING] : {
+        [BUILDING]: {
             entityName: "Building",
             tableName: "Building",
             fieldMetadata: {
@@ -331,7 +331,7 @@ public isolated client class Client {
             keyFields: ["buildingCode"],
             joinMetadata: {workspaces: {entity: Workspace, fieldName: "workspaces", refTable: "Workspace", refColumns: ["locationBuildingCode"], joinColumns: ["buildingCode"], 'type: psql:MANY_TO_ONE}}
         },
-        [DEPARTMENT] : {
+        [DEPARTMENT]: {
             entityName: "Department",
             tableName: "Department",
             fieldMetadata: {
@@ -349,7 +349,7 @@ public isolated client class Client {
             keyFields: ["deptNo"],
             joinMetadata: {employees: {entity: Employee, fieldName: "employees", refTable: "Employee", refColumns: ["departmentDeptNo"], joinColumns: ["deptNo"], 'type: psql:MANY_TO_ONE}}
         },
-        [ORDER_ITEM] : {
+        [ORDER_ITEM]: {
             entityName: "OrderItem",
             tableName: "OrderItem",
             fieldMetadata: {
@@ -369,23 +369,23 @@ public isolated client class Client {
         }
         self.dbClient = dbClient;
         self.persistClients = {
-            [ALL_TYPES] : check new (dbClient, self.metadata.get(ALL_TYPES), psql:MSSQL_SPECIFICS),
-            [STRING_ID_RECORD] : check new (dbClient, self.metadata.get(STRING_ID_RECORD), psql:MSSQL_SPECIFICS),
-            [INT_ID_RECORD] : check new (dbClient, self.metadata.get(INT_ID_RECORD), psql:MSSQL_SPECIFICS),
-            [FLOAT_ID_RECORD] : check new (dbClient, self.metadata.get(FLOAT_ID_RECORD), psql:MSSQL_SPECIFICS),
-            [DECIMAL_ID_RECORD] : check new (dbClient, self.metadata.get(DECIMAL_ID_RECORD), psql:MSSQL_SPECIFICS),
-            [BOOLEAN_ID_RECORD] : check new (dbClient, self.metadata.get(BOOLEAN_ID_RECORD), psql:MSSQL_SPECIFICS),
-            [COMPOSITE_ASSOCIATION_RECORD] : check new (dbClient, self.metadata.get(COMPOSITE_ASSOCIATION_RECORD), psql:MSSQL_SPECIFICS),
-            [ALL_TYPES_ID_RECORD] : check new (dbClient, self.metadata.get(ALL_TYPES_ID_RECORD), psql:MSSQL_SPECIFICS),
-            [USER] : check new (dbClient, self.metadata.get(USER), psql:MSSQL_SPECIFICS),
-            [POST] : check new (dbClient, self.metadata.get(POST), psql:MSSQL_SPECIFICS),
-            [FOLLOW] : check new (dbClient, self.metadata.get(FOLLOW), psql:MSSQL_SPECIFICS),
-            [COMMENT] : check new (dbClient, self.metadata.get(COMMENT), psql:MSSQL_SPECIFICS),
-            [EMPLOYEE] : check new (dbClient, self.metadata.get(EMPLOYEE), psql:MSSQL_SPECIFICS),
-            [WORKSPACE] : check new (dbClient, self.metadata.get(WORKSPACE), psql:MSSQL_SPECIFICS),
-            [BUILDING] : check new (dbClient, self.metadata.get(BUILDING), psql:MSSQL_SPECIFICS),
-            [DEPARTMENT] : check new (dbClient, self.metadata.get(DEPARTMENT), psql:MSSQL_SPECIFICS),
-            [ORDER_ITEM] : check new (dbClient, self.metadata.get(ORDER_ITEM), psql:MSSQL_SPECIFICS)
+            [ALL_TYPES]: check new (dbClient, self.metadata.get(ALL_TYPES), psql:MSSQL_SPECIFICS),
+            [STRING_ID_RECORD]: check new (dbClient, self.metadata.get(STRING_ID_RECORD), psql:MSSQL_SPECIFICS),
+            [INT_ID_RECORD]: check new (dbClient, self.metadata.get(INT_ID_RECORD), psql:MSSQL_SPECIFICS),
+            [FLOAT_ID_RECORD]: check new (dbClient, self.metadata.get(FLOAT_ID_RECORD), psql:MSSQL_SPECIFICS),
+            [DECIMAL_ID_RECORD]: check new (dbClient, self.metadata.get(DECIMAL_ID_RECORD), psql:MSSQL_SPECIFICS),
+            [BOOLEAN_ID_RECORD]: check new (dbClient, self.metadata.get(BOOLEAN_ID_RECORD), psql:MSSQL_SPECIFICS),
+            [COMPOSITE_ASSOCIATION_RECORD]: check new (dbClient, self.metadata.get(COMPOSITE_ASSOCIATION_RECORD), psql:MSSQL_SPECIFICS),
+            [ALL_TYPES_ID_RECORD]: check new (dbClient, self.metadata.get(ALL_TYPES_ID_RECORD), psql:MSSQL_SPECIFICS),
+            [USER]: check new (dbClient, self.metadata.get(USER), psql:MSSQL_SPECIFICS),
+            [POST]: check new (dbClient, self.metadata.get(POST), psql:MSSQL_SPECIFICS),
+            [FOLLOW]: check new (dbClient, self.metadata.get(FOLLOW), psql:MSSQL_SPECIFICS),
+            [COMMENT]: check new (dbClient, self.metadata.get(COMMENT), psql:MSSQL_SPECIFICS),
+            [EMPLOYEE]: check new (dbClient, self.metadata.get(EMPLOYEE), psql:MSSQL_SPECIFICS),
+            [WORKSPACE]: check new (dbClient, self.metadata.get(WORKSPACE), psql:MSSQL_SPECIFICS),
+            [BUILDING]: check new (dbClient, self.metadata.get(BUILDING), psql:MSSQL_SPECIFICS),
+            [DEPARTMENT]: check new (dbClient, self.metadata.get(DEPARTMENT), psql:MSSQL_SPECIFICS),
+            [ORDER_ITEM]: check new (dbClient, self.metadata.get(ORDER_ITEM), psql:MSSQL_SPECIFICS)
         };
     }
 

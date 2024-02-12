@@ -17,20 +17,20 @@ public isolated client class Client {
 
     public isolated function init() returns persist:Error? {
         final map<inmemory:TableMetadata> metadata = {
-            [MEDICAL_NEED] : {
+            [MEDICAL_NEED]: {
                 keyFields: ["needId"],
                 query: queryMedicalneeds,
                 queryOne: queryOneMedicalneeds
             },
-            [MEDICAL_ITEM] : {
+            [MEDICAL_ITEM]: {
                 keyFields: ["itemId"],
                 query: queryMedicalitems,
                 queryOne: queryOneMedicalitems
             }
         };
         self.persistClients = {
-            [MEDICAL_NEED] : check new (metadata.get(MEDICAL_NEED).cloneReadOnly()),
-            [MEDICAL_ITEM] : check new (metadata.get(MEDICAL_ITEM).cloneReadOnly())
+            [MEDICAL_NEED]: check new (metadata.get(MEDICAL_NEED).cloneReadOnly()),
+            [MEDICAL_ITEM]: check new (metadata.get(MEDICAL_ITEM).cloneReadOnly())
         };
     }
 
@@ -140,8 +140,8 @@ isolated function queryMedicalneeds(string[] fields) returns stream<record {}, p
     }
     return from record {} 'object in medicalneedsClonedTable
         select persist:filterRecord({
-            ...'object
-        }, fields);
+                                        ...'object
+                                    }, fields);
 }
 
 isolated function queryOneMedicalneeds(anydata key) returns record {}|persist:NotFoundError {
@@ -166,8 +166,8 @@ isolated function queryMedicalitems(string[] fields) returns stream<record {}, p
     }
     return from record {} 'object in medicalitemsClonedTable
         select persist:filterRecord({
-            ...'object
-        }, fields);
+                                        ...'object
+                                    }, fields);
 }
 
 isolated function queryOneMedicalitems(anydata key) returns record {}|persist:NotFoundError {
