@@ -257,8 +257,8 @@ isolated function queryUsers(string[] fields) returns stream<record {}, persist:
     }
     return from record {} 'object in usersClonedTable
         select persist:filterRecord({
-            ...'object
-        }, fields);
+                                        ...'object
+                                    }, fields);
 }
 
 isolated function queryOneUsers(anydata key) returns record {}|persist:NotFoundError {
@@ -288,9 +288,9 @@ isolated function queryPosts(string[] fields) returns stream<record {}, persist:
     return from record {} 'object in postsClonedTable
         outer join var user in usersClonedTable on ['object.userId] equals [user?.id]
         select persist:filterRecord({
-            ...'object,
-            "user": user
-        }, fields);
+                                        ...'object,
+                                        "user": user
+                                    }, fields);
 }
 
 isolated function queryOnePosts(anydata key) returns record {}|persist:NotFoundError {
@@ -327,10 +327,10 @@ isolated function queryFollows(string[] fields) returns stream<record {}, persis
         outer join var leader in usersClonedTable on ['object.leaderId] equals [leader?.id]
         outer join var follower in usersClonedTable on ['object.followerId] equals [follower?.id]
         select persist:filterRecord({
-            ...'object,
-            "leader": leader,
-            "follower": follower
-        }, fields);
+                                        ...'object,
+                                        "leader": leader,
+                                        "follower": follower
+                                    }, fields);
 }
 
 isolated function queryOneFollows(anydata key) returns record {}|persist:NotFoundError {
@@ -373,10 +373,10 @@ isolated function queryComments(string[] fields) returns stream<record {}, persi
         outer join var user in usersClonedTable on ['object.userId] equals [user?.id]
         outer join var post in postsClonedTable on ['object.postId] equals [post?.id]
         select persist:filterRecord({
-            ...'object,
-            "user": user,
-            "post": post
-        }, fields);
+                                        ...'object,
+                                        "user": user,
+                                        "post": post
+                                    }, fields);
 }
 
 isolated function queryOneComments(anydata key) returns record {}|persist:NotFoundError {
@@ -414,8 +414,8 @@ isolated function queryUserPosts(record {} value, string[] fields) returns recor
     return from record {} 'object in postsClonedTable
         where 'object.userId == value["id"]
         select persist:filterRecord({
-            ...'object
-        }, fields);
+                                        ...'object
+                                    }, fields);
 }
 
 isolated function queryUserComments(record {} value, string[] fields) returns record {}[] {
@@ -426,8 +426,8 @@ isolated function queryUserComments(record {} value, string[] fields) returns re
     return from record {} 'object in commentsClonedTable
         where 'object.userId == value["id"]
         select persist:filterRecord({
-            ...'object
-        }, fields);
+                                        ...'object
+                                    }, fields);
 }
 
 isolated function queryUserFollowers(record {} value, string[] fields) returns record {}[] {
@@ -438,8 +438,8 @@ isolated function queryUserFollowers(record {} value, string[] fields) returns r
     return from record {} 'object in followsClonedTable
         where 'object.leaderId == value["id"]
         select persist:filterRecord({
-            ...'object
-        }, fields);
+                                        ...'object
+                                    }, fields);
 }
 
 isolated function queryUserFollowing(record {} value, string[] fields) returns record {}[] {
@@ -450,8 +450,8 @@ isolated function queryUserFollowing(record {} value, string[] fields) returns r
     return from record {} 'object in followsClonedTable
         where 'object.followerId == value["id"]
         select persist:filterRecord({
-            ...'object
-        }, fields);
+                                        ...'object
+                                    }, fields);
 }
 
 isolated function queryPostComments(record {} value, string[] fields) returns record {}[] {
@@ -462,7 +462,7 @@ isolated function queryPostComments(record {} value, string[] fields) returns re
     return from record {} 'object in commentsClonedTable
         where 'object.postId == value["id"]
         select persist:filterRecord({
-            ...'object
-        }, fields);
+                                        ...'object
+                                    }, fields);
 }
 

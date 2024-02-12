@@ -140,8 +140,8 @@ isolated function queryMedicalneeds(string[] fields) returns stream<record {}, p
     }
     return from record {} 'object in medicalneedsClonedTable
         select persist:filterRecord({
-            ...'object
-        }, fields);
+                                        ...'object
+                                    }, fields);
 }
 
 isolated function queryOneMedicalneeds(anydata key) returns record {}|persist:NotFoundError {
@@ -166,8 +166,8 @@ isolated function queryMedicalitems(string[] fields) returns stream<record {}, p
     }
     return from record {} 'object in medicalitemsClonedTable
         select persist:filterRecord({
-            ...'object
-        }, fields);
+                                        ...'object
+                                    }, fields);
 }
 
 isolated function queryOneMedicalitems(anydata key) returns record {}|persist:NotFoundError {

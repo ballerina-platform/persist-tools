@@ -164,11 +164,11 @@ public isolated client class Client {
         self.httpClient = httpClient;
         map<int> sheetIds = check googlesheets:getSheetIds(self.googleSheetClient, metadata, spreadsheetId);
         self.persistClients = {
-            [EMPLOYEE] : check new (self.googleSheetClient, self.httpClient, metadata.get(EMPLOYEE).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(EMPLOYEE).cloneReadOnly()),
-            [WORKSPACE] : check new (self.googleSheetClient, self.httpClient, metadata.get(WORKSPACE).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(WORKSPACE).cloneReadOnly()),
-            [BUILDING] : check new (self.googleSheetClient, self.httpClient, metadata.get(BUILDING).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(BUILDING).cloneReadOnly()),
-            [DEPARTMENT] : check new (self.googleSheetClient, self.httpClient, metadata.get(DEPARTMENT).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(DEPARTMENT).cloneReadOnly()),
-            [ORDER_ITEM] : check new (self.googleSheetClient, self.httpClient, metadata.get(ORDER_ITEM).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(ORDER_ITEM).cloneReadOnly())
+            [EMPLOYEE]: check new (self.googleSheetClient, self.httpClient, metadata.get(EMPLOYEE).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(EMPLOYEE).cloneReadOnly()),
+            [WORKSPACE]: check new (self.googleSheetClient, self.httpClient, metadata.get(WORKSPACE).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(WORKSPACE).cloneReadOnly()),
+            [BUILDING]: check new (self.googleSheetClient, self.httpClient, metadata.get(BUILDING).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(BUILDING).cloneReadOnly()),
+            [DEPARTMENT]: check new (self.googleSheetClient, self.httpClient, metadata.get(DEPARTMENT).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(DEPARTMENT).cloneReadOnly()),
+            [ORDER_ITEM]: check new (self.googleSheetClient, self.httpClient, metadata.get(ORDER_ITEM).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(ORDER_ITEM).cloneReadOnly())
         };
     }
 
@@ -219,10 +219,10 @@ public isolated client class Client {
             outer join var department in departmentsStream on ['object.departmentDeptNo] equals [department?.deptNo]
             outer join var workspace in workspacesStream on ['object.workspaceWorkspaceId] equals [workspace?.workspaceId]
             select persist:filterRecord({
-                ...'object,
-                "department": department,
-                "workspace": workspace
-            }, fields);
+                                            ...'object,
+                                            "department": department,
+                                            "workspace": workspace
+                                        }, fields);
         return outputArray.toStream();
     }
 
@@ -297,9 +297,9 @@ public isolated client class Client {
         record {}[] outputArray = check from record {} 'object in workspacesStream
             outer join var location in buildingsStream on ['object.locationBuildingCode] equals [location?.buildingCode]
             select persist:filterRecord({
-                ...'object,
-                "location": location
-            }, fields);
+                                            ...'object,
+                                            "location": location
+                                        }, fields);
         return outputArray.toStream();
     }
 
@@ -369,8 +369,8 @@ public isolated client class Client {
         stream<Building, persist:Error?> buildingsStream = self.queryBuildingsStream();
         record {}[] outputArray = check from record {} 'object in buildingsStream
             select persist:filterRecord({
-                ...'object
-            }, fields);
+                                            ...'object
+                                        }, fields);
         return outputArray.toStream();
     }
 
@@ -437,8 +437,8 @@ public isolated client class Client {
         stream<Department, persist:Error?> departmentsStream = self.queryDepartmentsStream();
         record {}[] outputArray = check from record {} 'object in departmentsStream
             select persist:filterRecord({
-                ...'object
-            }, fields);
+                                            ...'object
+                                        }, fields);
         return outputArray.toStream();
     }
 
@@ -505,8 +505,8 @@ public isolated client class Client {
         stream<OrderItem, persist:Error?> orderitemsStream = self.queryOrderitemsStream();
         record {}[] outputArray = check from record {} 'object in orderitemsStream
             select persist:filterRecord({
-                ...'object
-            }, fields);
+                                            ...'object
+                                        }, fields);
         return outputArray.toStream();
     }
 
@@ -535,8 +535,8 @@ public isolated client class Client {
         return from record {} 'object in workspacesStream
             where 'object.locationBuildingCode == value["buildingCode"]
             select persist:filterRecord({
-                ...'object
-            }, fields);
+                                            ...'object
+                                        }, fields);
     }
 
     private isolated function queryDepartmentEmployees(record {} value, string[] fields) returns record {}[]|persist:Error {
@@ -544,8 +544,8 @@ public isolated client class Client {
         return from record {} 'object in employeesStream
             where 'object.departmentDeptNo == value["deptNo"]
             select persist:filterRecord({
-                ...'object
-            }, fields);
+                                            ...'object
+                                        }, fields);
     }
 
     private isolated function queryWorkspaceEmployees(record {} value, string[] fields) returns record {}[]|persist:Error {
@@ -553,8 +553,8 @@ public isolated client class Client {
         return from record {} 'object in employeesStream
             where 'object.workspaceWorkspaceId == value["workspaceId"]
             select persist:filterRecord({
-                ...'object
-            }, fields);
+                                            ...'object
+                                        }, fields);
     }
 
     public isolated function close() returns persist:Error? {
