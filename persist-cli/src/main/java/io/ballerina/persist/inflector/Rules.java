@@ -84,7 +84,8 @@ public class Rules {
             {"groove", "grooves"},
             {"pickaxe", "pickaxes"},
             {"passerby", "passersby"},
-            {"canvas", "canvases"}
+            {"canvas", "canvases"},
+            {"status", "statuses"}
     });
 
     // Pluralization rules.

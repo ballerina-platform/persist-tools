@@ -160,13 +160,15 @@ public class BalSyntaxUtils {
 
         return (FunctionDefinitionNode) NodeParser.parseObjectMember(
                 String.format(BalSyntaxConstants.EXTERNAL_GET_BY_KEY_METHOD_TEMPLATE,
-                        entity.getResourceName(), keyBuilder, entity.getEntityName(), moduleName, className));
+                        entity.getClientResourceName(),
+                        keyBuilder, entity.getEntityName(), moduleName, className));
     }
 
     public static Function generatePostFunction(Entity entity, List<EntityField> primaryKeys, String parameterType) {
         Function create = new Function(BalSyntaxConstants.POST, SyntaxKind.RESOURCE_ACCESSOR_DEFINITION);
         NodeList<Node> resourcePaths = AbstractNodeFactory.createEmptyNodeList();
-        resourcePaths = resourcePaths.add(AbstractNodeFactory.createIdentifierToken(entity.getResourceName()));
+        resourcePaths = resourcePaths.add(AbstractNodeFactory.createIdentifierToken(
+                entity.getClientResourceName()));
         create.addRelativeResourcePaths(resourcePaths);
         create.addRequiredParameter(
                 TypeDescriptor.getArrayTypeDescriptorNode(parameterType), BalSyntaxConstants.KEYWORD_VALUE);
@@ -185,7 +187,8 @@ public class BalSyntaxUtils {
         update.addRequiredParameter(TypeDescriptor.getSimpleNameReferenceNode(
             String.format(BalSyntaxConstants.UPDATE_RECORD, entity.getEntityName())), BalSyntaxConstants.VALUE);
         NodeList<Node> resourcePaths = AbstractNodeFactory.createEmptyNodeList();
-        resourcePaths = getResourcePath(resourcePaths, entity.getKeys(), filterKeys, path, entity.getResourceName());
+        resourcePaths = getResourcePath(resourcePaths, entity.getKeys(), filterKeys, path,
+                entity.getClientResourceName());
         update.addRelativeResourcePaths(resourcePaths);
         update.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(
                 TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()),
@@ -200,7 +203,8 @@ public class BalSyntaxUtils {
                 BalSyntaxConstants.KEYWORD_RESOURCE });
 
         NodeList<Node> resourcePaths = AbstractNodeFactory.createEmptyNodeList();
-        resourcePaths = getResourcePath(resourcePaths, entity.getKeys(), filterKeys, path, entity.getResourceName());
+        resourcePaths = getResourcePath(resourcePaths, entity.getKeys(), filterKeys, path,
+                entity.getClientResourceName());
         delete.addRelativeResourcePaths(resourcePaths);
         delete.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(
                 TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()),
@@ -287,9 +291,10 @@ public class BalSyntaxUtils {
                     null,
                     AbstractNodeFactory.createIdentifierToken(entry.getFieldName()),
                     AbstractNodeFactory.createToken(SyntaxKind.CLOSE_BRACKET_TOKEN)));
-            filterKeys.append(BalSyntaxConstants.DOUBLE_QUOTE).append(stripEscapeCharacter(entry.getFieldName()))
+            filterKeys.append(BalSyntaxConstants.DOUBLE_QUOTE)
+                    .append(stripEscapeCharacter(entry.getFieldName()))
                     .append(BalSyntaxConstants.DOUBLE_QUOTE).append(BalSyntaxConstants.COLON).
-                    append(entry.getFieldName()).append(BalSyntaxConstants.COMMA_WITH_SPACE);
+                    append(entry.getFieldResourceName()).append(BalSyntaxConstants.COMMA_WITH_SPACE);
             path.append(BalSyntaxConstants.BACK_SLASH).append(BalSyntaxConstants.OPEN_BRACKET).
                     append(entry.getFieldName()).append(BalSyntaxConstants.CLOSE_BRACKET);
         }
@@ -452,14 +457,16 @@ public class BalSyntaxUtils {
                 recordFields.append(BalSyntaxConstants.SPACE);
             } else if (field.getRelation() != null) {
                 if (field.getRelation().isOwner()) {
-                    for (Relation.Key key : field.getRelation().getKeyColumns()) {
-                        addConstraintsAnnotationForForeignKey(field, recordFields);
-                        recordFields.append(key.getType());
-                        recordFields.append(BalSyntaxConstants.SPACE);
-                        recordFields.append(key.getField());
-                        recordFields.append(BalSyntaxConstants.SEMICOLON);
-                        recordFields.append(BalSyntaxConstants.SPACE);
-                    }
+
+                        for (Relation.Key key : field.getRelation().getKeyColumns()) {
+                            addConstraintsAnnotationForForeignKey(field, recordFields);
+                            recordFields.append(key.getType());
+                            recordFields.append(BalSyntaxConstants.SPACE);
+                            recordFields.append(key.getField());
+                            recordFields.append(BalSyntaxConstants.SEMICOLON);
+                            recordFields.append(BalSyntaxConstants.SPACE);
+                        }
+
                 }
             } else {
                 addConstrainAnnotationToField(field, recordFields);
@@ -625,14 +632,16 @@ public class BalSyntaxUtils {
             if (field.getRelation() != null) {
                 addConstraintsAnnotationForForeignKey(field, recordFields);
                 if (field.getRelation().isOwner()) {
-                    for (Relation.Key key : field.getRelation().getKeyColumns()) {
-                        recordFields.append(key.getType());
-                        recordFields.append(BalSyntaxConstants.SPACE);
-                        recordFields.append(key.getField());
-                        recordFields.append(BalSyntaxConstants.QUESTION_MARK);
-                        recordFields.append(BalSyntaxConstants.SEMICOLON);
-                        recordFields.append(BalSyntaxConstants.SPACE);
-                    }
+                        for (Relation.Key key : field.getRelation().getKeyColumns()) {
+                            recordFields.append(key.getType());
+                            recordFields.append(BalSyntaxConstants.SPACE);
+                            recordFields.append(key.getField());
+                            recordFields.append(BalSyntaxConstants.QUESTION_MARK);
+                            recordFields.append(BalSyntaxConstants.SEMICOLON);
+                            recordFields.append(BalSyntaxConstants.SPACE);
+                        }
+
+
                 }
             } else {
                 addConstrainAnnotationToField(field, recordFields);
@@ -804,15 +813,16 @@ public class BalSyntaxUtils {
             if (entity.getKeys().stream().noneMatch(key -> key == field)) {
                 if (field.getRelation() != null) {
                     if (field.getRelation().isOwner()) {
-                        for (Relation.Key key : field.getRelation().getKeyColumns()) {
-                            addConstraintsAnnotationForForeignKey(field, recordFields);
-                            recordFields.append(key.getType());
-                            recordFields.append(" ");
-                            recordFields.append(key.getField());
-                            recordFields.append(BalSyntaxConstants.QUESTION_MARK);
-                            recordFields.append(BalSyntaxConstants.SEMICOLON);
-                            recordFields.append(BalSyntaxConstants.SPACE);
-                        }
+                            for (Relation.Key key : field.getRelation().getKeyColumns()) {
+                                addConstraintsAnnotationForForeignKey(field, recordFields);
+                                recordFields.append(key.getType());
+                                recordFields.append(" ");
+                                recordFields.append(key.getField());
+                                recordFields.append(BalSyntaxConstants.QUESTION_MARK);
+                                recordFields.append(BalSyntaxConstants.SEMICOLON);
+                                recordFields.append(BalSyntaxConstants.SPACE);
+                            }
+
                     }
                 } else {
                     addConstrainAnnotationToField(field, recordFields);
@@ -847,13 +857,14 @@ public class BalSyntaxUtils {
             }
             if (field.getRelation() != null) {
                 if (field.getRelation().isOwner()) {
-                    for (Relation.Key key : field.getRelation().getKeyColumns()) {
-                        recordFields.append(key.getType());
-                        recordFields.append(BalSyntaxConstants.SPACE);
-                        recordFields.append(key.getField());
-                        recordFields.append(BalSyntaxConstants.SEMICOLON);
-                        recordFields.append(BalSyntaxConstants.SPACE);
-                    }
+                        for (Relation.Key key : field.getRelation().getKeyColumns()) {
+                            recordFields.append(key.getType());
+                            recordFields.append(BalSyntaxConstants.SPACE);
+                            recordFields.append(key.getField());
+                            recordFields.append(BalSyntaxConstants.SEMICOLON);
+                            recordFields.append(BalSyntaxConstants.SPACE);
+                        }
+
                 }
             } else {
                 recordFields.append(field.isOptionalType() ? field.getFieldType() + (field.isArrayType() ?

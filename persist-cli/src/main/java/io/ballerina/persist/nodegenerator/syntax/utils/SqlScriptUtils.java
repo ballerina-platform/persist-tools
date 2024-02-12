@@ -186,14 +186,14 @@ public class SqlScriptUtils {
                     associatedEntityRelationType.equals(Relation.RelationType.ONE) && noOfReferencesKey == 1) {
                 referenceSqlType += " UNIQUE";
             }
-            foreignKey.append(escape(removeSingleQuote(keyColumns.get(i).getField()), datasource));
+            foreignKey.append(escape(removeSingleQuote(keyColumns.get(i).getResourceName()), datasource));
             referenceFieldName.append(escape(removeSingleQuote(references.get(i)), datasource));
             if (i < noOfReferencesKey - 1) {
                 foreignKey.append(COMMA_WITH_SPACE);
                 referenceFieldName.append(COMMA_WITH_SPACE);
             }
             relationScripts.append(MessageFormat.format("{0}{1}{2} {3}{4},", NEW_LINE, TAB,
-                    escape(removeSingleQuote(keyColumns.get(i).getField()), datasource), referenceSqlType,
+                    escape(removeSingleQuote(keyColumns.get(i).getResourceName()), datasource), referenceSqlType,
                     " NOT NULL"));
         }
         if (noOfReferencesKey > 1 && relation.getRelationType().equals(Relation.RelationType.ONE) &&

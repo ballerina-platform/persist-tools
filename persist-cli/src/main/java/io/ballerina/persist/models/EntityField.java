@@ -199,9 +199,5 @@ public class EntityField {
                     sqlType, relationRefs, isDbGenerated);
         }
 
-        public EntityField buildForIntrospection() {
-            return new EntityField(fieldName, resourceFieldName, fieldType, arrayType, optionalType, annotationNodes,
-                    sqlType, relationRefs, isDbGenerated);
-        }
     }
 }

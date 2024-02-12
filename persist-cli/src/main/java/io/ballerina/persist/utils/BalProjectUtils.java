@@ -271,7 +271,7 @@ public class BalProjectUtils {
                     );
                     if (relationRefs != null) {
                         fieldBuilder.setRelationRefs(relationRefs);
-                        removeRelationRefsFromEntityFields(entityBuilder, relationRefs);
+//                        removeRelationRefsFromEntityFields(entityBuilder, relationRefs);
                     }
 
 
@@ -354,11 +354,11 @@ public class BalProjectUtils {
         }
     }
 
-    private static void removeRelationRefsFromEntityFields(Entity.Builder entityBuilder, List<String> relationRefs) {
-        for (String ref: relationRefs) {
-            entityBuilder.removeField(ref);
-        }
-    }
+//    private static void removeRelationRefsFromEntityFields(Entity.Builder entityBuilder, List<String> relationRefs) {
+//        for (String ref: relationRefs) {
+//            entityBuilder.removeField(ref);
+//        }
+//    }
 
     public static void populateEnums(Module.Builder moduleBuilder, SyntaxTree balSyntaxTree) throws IOException,
             BalException {
@@ -526,13 +526,20 @@ public class BalProjectUtils {
                     .mapToObj(i -> {
 
                         EntityField key = assocEntity.getKeys().get(i);
+                        if (relationRefs != null) {
+                            String fkField = relationRefs.get(i);
+                            EntityField fkEntityField = entity.getFieldByName(fkField);
+                            entity.removeField(fkField);
+                            return new Relation.Key(fkField,
+                                    fkEntityField.getFieldResourceName(), key.getFieldName(),  key.getFieldType());
+                        }
                         String fkField = stripEscapeCharacter(fieldName.toLowerCase(Locale.ENGLISH))
                                 + stripEscapeCharacter(key.getFieldName()).substring(0, 1).toUpperCase(Locale.ENGLISH)
                                 + stripEscapeCharacter(key.getFieldName()).substring(1);
-                        if (relationRefs != null) {
-                            fkField = relationRefs.get(i);
-                        }
-                        return new Relation.Key(fkField, key.getFieldName(), key.getFieldType());
+
+                        return new Relation.Key(fkField,
+                                fkField, key.getFieldName(), key.getFieldType());
+
                     })
                     .collect(Collectors.toList());
             relBuilder.setOwner(true);
@@ -551,7 +558,8 @@ public class BalProjectUtils {
                         if (relationRefs != null) {
                             fkField = relationRefs.get(i);
                         }
-                        return new Relation.Key(fkField, key.getFieldName(), key.getFieldType());
+                        return new Relation.Key(fkField, fkField, key.getFieldName(),
+                                key.getFieldType());
                     })
                     .collect(Collectors.toList());
             relBuilder.setOwner(false);

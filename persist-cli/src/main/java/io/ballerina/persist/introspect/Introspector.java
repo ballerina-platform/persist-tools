@@ -111,8 +111,7 @@ public abstract class Introspector {
 
     private void mapEnums() {
         this.sqlEnums.forEach(sqlEnum -> {
-            String enumName = CaseConverter.toPascalCase(sqlEnum.getEnumTableName()) +
-                    CaseConverter.toPascalCase(sqlEnum.getEnumColumnName());
+            String enumName = createEnumName(sqlEnum.getEnumTableName(), sqlEnum.getEnumColumnName());
             Enum.Builder enumBuilder = Enum.newBuilder(enumName);
             extractEnumValues(sqlEnum.getFullEnumText())
                     .forEach(enumValue ->
@@ -156,15 +155,17 @@ public abstract class Introspector {
             table.getColumns().forEach(column -> {
                 EntityField.Builder fieldBuilder = EntityField.newBuilder(
                         CaseConverter.toCamelCase(column.getColumnName()));
+                //remove this after adding compiler support
+                if (sqlForeignKeys.stream().anyMatch(
+                        foreignKey -> foreignKey.getTableName().equals(table.getTableName())
+                        && foreignKey.getColumnNames().contains(column.getColumnName()))) {
+                    fieldBuilder = EntityField.newBuilder(
+                            "_" + CaseConverter.toCamelCase(column.getColumnName()));
+                }
                 fieldBuilder.setResourceFieldName(column.getColumnName());
 
                 if (Objects.equals(column.getDataType(), "enum")) {
-                    SQLEnum sqlEnum = sqlEnums.stream()
-                            .filter(e -> e.getEnumTableName().equals(table.getTableName())
-                                    && e.getEnumColumnName().equals(column.getColumnName()))
-                            .findFirst().orElseThrow();
-                    fieldBuilder.setType(CaseConverter.toPascalCase(sqlEnum.getEnumTableName()) +
-                            CaseConverter.toPascalCase(sqlEnum.getEnumColumnName()));
+                    fieldBuilder.setType(createEnumName(table.getTableName(), column.getColumnName()));
                 } else {
                     SQLType sqlType = new SQLType(
                             column.getDataType().toUpperCase(Locale.ENGLISH),
@@ -185,7 +186,7 @@ public abstract class Introspector {
                 fieldBuilder.setArrayType(false);
                 fieldBuilder.setIsDbGenerated(column.isDbGenerated());
 
-                EntityField entityField = fieldBuilder.buildForIntrospection();
+                EntityField entityField = fieldBuilder.build();
                 entityBuilder.addField(entityField);
                 fields.add(entityField);
                 if (column.getIsPrimaryKey()) {
@@ -231,16 +232,15 @@ public abstract class Introspector {
             ownerFieldBuilder.setType(assocEntityBuilder.getEntityName());
 
             assocFieldBuilder.setArrayType(isReferenceMany);
-
             ownerFieldBuilder.setRelationRefs(sqlForeignKey.getColumnNames().stream().map(
                     columnName -> ownerEntityBuilder.buildForIntrospection()
                             .getFieldByFieldResourceName(columnName).getFieldName()
             ).toList());
 
-            EntityField ownerField = ownerFieldBuilder.buildForIntrospection();
+            EntityField ownerField = ownerFieldBuilder.build();
 
 
-            assocEntityBuilder.addField(assocFieldBuilder.buildForIntrospection());
+            assocEntityBuilder.addField(assocFieldBuilder.build());
             ownerEntityBuilder.addField(ownerField);
         });
 
@@ -256,6 +256,11 @@ public abstract class Introspector {
             });
         });
     }
+
+    private String createEnumName(String tableName, String columnName) {
+        return CaseConverter.toSingularPascalCase(tableName) + CaseConverter.toSingularPascalCase(columnName);
+    }
+
     private Relation.RelationType inferRelationshipCardinality(Entity ownerEntity, SQLForeignKey foreignKey) {
         List<EntityField> ownerColumns = new ArrayList<>();
         foreignKey.getColumnNames().forEach(columnName ->

@@ -165,7 +165,7 @@ task copyPersistTool(type: Copy) {
 
 
 task copyFiles(type: Copy) {
-    from '/home/haritha/module-ballerinax-persist.sql/ballerina/build/bala_unzipped/bala/ballerinax/persist.sql'
+    from '/Users/haritha/Developer/WSO2/module-ballerinax-persist.sql/ballerina/build/bala_unzipped/bala/ballerinax/persist.sql'
     into './target/ballerina-distribution/repo/bala/ballerinax/persist.sql'
 }
 

@@ -35,7 +35,7 @@ public class Entity {
     private final List<EntityField> keys;
     private final String resourceName;
     private final String entityName;
-    private final List<EntityField> fields;
+    private List<EntityField> fields;
     private final List<Index> indexes;
     private final List<Index> uniqueIndexes;
     private Entity(String entityName, List<EntityField> keys,
@@ -61,6 +61,10 @@ public class Entity {
 
     public List<EntityField> getFields() {
         return this.fields;
+    }
+
+    public String getClientResourceName() {
+        return Pluralizer.pluralize(entityName.toLowerCase(Locale.ENGLISH));
     }
 
     public List<Index> getIndexes() {
@@ -96,9 +100,16 @@ public class Entity {
         return !Pluralizer.pluralize(entityName.toLowerCase(Locale.ENGLISH)).equals(resourceName);
     }
 
+    public void removeField(String fieldName) {
+        List<EntityField> newFields = new ArrayList<>(this.fields);
+        newFields.removeIf(field -> field.getFieldName().equals(fieldName));
+        this.fields = Collections.unmodifiableList(newFields);
+    }
+
     public static Entity.Builder newBuilder(String entityName) {
         return new Entity.Builder(entityName);
     }
+
 
     /**
      * Entity Definition.Builder.
@@ -193,8 +204,5 @@ public class Entity {
             return entityName;
         }
 
-        public void removeField(String ref) {
-            fieldList.removeIf(field -> field.getFieldName().equals(ref));
-        }
     }
 }
