@@ -97,7 +97,7 @@ public class BalSyntaxUtils {
         for (Entity entity : entityModule.getEntityMap().values()) {
             moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration(String.format(
                     "const %s = \"%s\";", stripEscapeCharacter(getStringWithUnderScore(entity.getEntityName())),
-                    stripEscapeCharacter(entity.getResourceName()))));
+                    stripEscapeCharacter(entity.getClientResourceName()))));
         }
         return moduleMembers;
     }
