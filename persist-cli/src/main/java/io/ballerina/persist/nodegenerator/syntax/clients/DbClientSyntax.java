@@ -279,7 +279,7 @@ public class DbClientSyntax implements ClientSyntax {
                                 foreignKeyFields.append(BalSyntaxConstants.COMMA_WITH_NEWLINE);
                             }
                             foreignKeyFields.append(String.format(BalSyntaxConstants.METADATA_RECORD_FIELD_TEMPLATE,
-                                    key.getField(), BalSyntaxUtils.stripEscapeCharacter(key.getResourceName())));
+                                    key.getField(), BalSyntaxUtils.stripEscapeCharacter(key.getColumnName())));
                         }
                     }
                     fieldMetaData.append(foreignKeyFields);
@@ -379,7 +379,7 @@ public class DbClientSyntax implements ClientSyntax {
                     refColumns.append(String.format(BalSyntaxConstants.COLUMN_ARRAY_ENTRY_TEMPLATE,
                             BalSyntaxUtils.stripEscapeCharacter(key.getReference())));
                     joinColumns.append(String.format(BalSyntaxConstants.COLUMN_ARRAY_ENTRY_TEMPLATE,
-                            BalSyntaxUtils.stripEscapeCharacter(key.getResourceName())));
+                            BalSyntaxUtils.stripEscapeCharacter(key.getColumnName())));
                 }
                 joinMetaData.append(String.format(BalSyntaxConstants.JOIN_METADATA_FIELD_TEMPLATE,
                         entityField.getFieldName(), entityField.getFieldType(), entityField.getFieldName(),

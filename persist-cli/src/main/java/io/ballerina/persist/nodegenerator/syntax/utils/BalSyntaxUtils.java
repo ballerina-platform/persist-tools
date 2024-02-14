@@ -142,7 +142,7 @@ public class BalSyntaxUtils {
     public static FunctionDefinitionNode generateGetFunction(Entity entity, String className, String moduleName) {
         return (FunctionDefinitionNode) NodeParser.parseObjectMember(
                 String.format(BalSyntaxConstants.EXTERNAL_GET_METHOD_TEMPLATE,
-                        entity.getTableName(), entity.getEntityName(), moduleName, className));
+                        entity.getClientResourceName(), entity.getEntityName(), moduleName, className));
     }
 
     public static FunctionDefinitionNode generateGetByKeyFunction(Entity entity, String className, String moduleName) {

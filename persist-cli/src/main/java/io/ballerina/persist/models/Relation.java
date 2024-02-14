@@ -140,13 +140,13 @@ public class Relation {
     public static class Key {
         private final String field;
 
-        private final String resourceName;
+        private final String columnName;
         private final String reference;
         private final String type;
 
-        public Key(String field, String resourceName, String reference, String type) {
+        public Key(String field, String columnName, String reference, String type) {
             this.field = field;
-            this.resourceName = resourceName;
+            this.columnName = columnName;
             this.reference = reference;
             this.type = type;
         }
@@ -163,8 +163,8 @@ public class Relation {
             return type;
         }
 
-        public String getResourceName() {
-            return resourceName;
+        public String getColumnName() {
+            return columnName;
         }
     }
 }

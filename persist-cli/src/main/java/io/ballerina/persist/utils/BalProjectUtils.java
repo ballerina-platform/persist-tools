@@ -337,7 +337,7 @@ public class BalProjectUtils {
                                         0)
                         );
                     }
-//                    fieldBuilder.setAnnotation(value.annotations());
+                    fieldBuilder.setAnnotation(value.annotations());
                 });
                 EntityField entityField = fieldBuilder.build();
                 entityBuilder.addField(entityField);
@@ -462,30 +462,32 @@ public class BalProjectUtils {
                                             if (!field.isOptionalType() && assocfield.isOptionalType()) {
                                                 field.setRelation(computeRelation(field.getFieldName(), entity,
                                                         assocEntity, true, Relation.RelationType.ONE,
-                                                        null));
+                                                        field.getRelationRefs()));
                                                 assocfield.setRelation(computeRelation(field.getFieldName(),
                                                         assocEntity, entity, false, Relation.RelationType.ONE
-                                                        , null));
+                                                        , field.getRelationRefs()));
                                             } else if (field.isOptionalType() && !assocfield.isOptionalType()) {
                                                 field.setRelation(computeRelation(field.getFieldName(), entity,
                                                         assocEntity, false, Relation.RelationType.ONE, null));
                                                 assocfield.setRelation(computeRelation(field.getFieldName(),
                                                         assocEntity, entity, true, Relation.RelationType.ONE,
-                                                        null));
+                                                        assocfield.getRelationRefs()));
                                             } else {
                                                 throw new RuntimeException("unsupported ownership annotation " +
                                                         "in the relation between " + entity.getEntityName() +
                                                         " and " + assocEntity.getEntityName());
                                             }
                                         } else {
+                                            //not one to one. so one to many
                                             if (field.isArrayType() && field.isOptionalType()) {
                                                 // one-to-many relation. associated entity is the owner.
                                                 // first param should be always owner entities field name
                                                 field.setRelation(computeRelation(assocfield.getFieldName(), entity,
-                                                        assocEntity, false, Relation.RelationType.MANY, null));
+                                                        assocEntity, false, Relation.RelationType.MANY,
+                                                        field.getRelationRefs()));
                                                 assocfield.setRelation(computeRelation(assocfield.getFieldName(),
                                                         assocEntity, entity, true, Relation.RelationType.ONE,
-                                                        null));
+                                                        field.getRelationRefs()));
                                             } else if (field.isArrayType() || field.getFieldType().equals("byte")) {
                                                 field.setRelation(null);
                                             } else {
@@ -559,7 +561,7 @@ public class BalProjectUtils {
                         if (relationRefs != null) {
                             fkField = relationRefs.get(i);
                         }
-                        return new Relation.Key(fkField, fkField, key.getFieldName(),
+                        return new Relation.Key(key.getFieldName(), key.getFieldColumnName(), fkField,
                                 key.getFieldType());
                     })
                     .collect(Collectors.toList());

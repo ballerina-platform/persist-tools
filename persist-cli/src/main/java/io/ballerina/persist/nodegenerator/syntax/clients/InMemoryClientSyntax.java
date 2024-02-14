@@ -137,7 +137,7 @@ public class InMemoryClientSyntax implements ClientSyntax {
         this.primaryKeysTuple = new StringBuilder();
         this.primaryKeysRecord = new StringBuilder();
         StringBuilder filterKeys = new StringBuilder(BalSyntaxConstants.OPEN_BRACE);
-        StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH + entity.getTableName());
+        StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH + entity.getClientResourceName());
         EntityField primaryKey;
         List<EntityField> keys = entity.getKeys();
         if (keys.size() == 1) {
@@ -164,18 +164,18 @@ public class InMemoryClientSyntax implements ClientSyntax {
         update.addStatement(NodeParser.parseStatement(BalSyntaxConstants.LOCK));
         update.addStatement(NodeParser.parseStatement(BalSyntaxConstants.OPEN_BRACE));
         IfElse hasCheck = new IfElse(NodeParser.parseExpression(String.format(BalSyntaxConstants.HAS_NOT_KEY,
-                entity.getTableName(),
+                entity.getClientResourceName(),
                 primaryKeysTuple)));
         hasCheck.addIfStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.HAS_NOT_KEY_ERROR,
                 entity.getEntityName(), primaryKeysRecord)));
         update.addIfElseStatement(hasCheck.getIfElseStatementNode());
         String entityNameInLowerCase = entity.getEntityName().toLowerCase(Locale.ENGLISH);
         update.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.GET_UPDATE_RECORD,
-                entity.getEntityName(), entityNameInLowerCase, entity.getTableName(), primaryKeysTuple)));
+                entity.getEntityName(), entityNameInLowerCase, entity.getClientResourceName(), primaryKeysTuple)));
         update.addStatement(NodeParser.parseStatement(
                 String.format(BalSyntaxConstants.UPDATE_RECORD_FIELD_VALUE, entityNameInLowerCase)));
         update.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.PUT_VALUE_TO_MAP,
-                entity.getTableName(), entityNameInLowerCase)));
+                entity.getClientResourceName(), entityNameInLowerCase)));
         update.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.RETURN_STATEMENT,
                 entity.getEntityName().toLowerCase(Locale.ENGLISH))));
         update.addStatement(NodeParser.parseStatement(BalSyntaxConstants.CLOSE_BRACE));
@@ -185,17 +185,17 @@ public class InMemoryClientSyntax implements ClientSyntax {
     @Override
     public FunctionDefinitionNode getDeleteFunction(Entity entity) {
         StringBuilder filterKeys = new StringBuilder(BalSyntaxConstants.OPEN_BRACE);
-        StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH + entity.getTableName());
+        StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH + entity.getClientResourceName());
         Function delete = BalSyntaxUtils.generateDeleteFunction(entity, path, filterKeys);
         delete.addStatement(NodeParser.parseStatement(BalSyntaxConstants.LOCK));
         delete.addStatement(NodeParser.parseStatement(BalSyntaxConstants.OPEN_BRACE));
         IfElse hasCheck = new IfElse(NodeParser.parseExpression(String.format(BalSyntaxConstants.HAS_NOT_KEY,
-                entity.getTableName(), primaryKeysTuple)));
+                entity.getClientResourceName(), primaryKeysTuple)));
         hasCheck.addIfStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.HAS_NOT_KEY_ERROR,
                 entity.getEntityName(), primaryKeysRecord)));
         delete.addIfElseStatement(hasCheck.getIfElseStatementNode());
         delete.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.DELETED_OBJECT,
-                entity.getTableName(), primaryKeysTuple)));
+                entity.getClientResourceName(), primaryKeysTuple)));
         delete.addStatement(NodeParser.parseStatement(BalSyntaxConstants.CLOSE_BRACE));
         return delete.getFunctionDefinitionNode();
     }
@@ -238,10 +238,10 @@ public class InMemoryClientSyntax implements ClientSyntax {
             filterKeysRecord.append(BalSyntaxConstants.CLOSE_BRACE);
             variableArrayType.append(String.format(BalSyntaxConstants.VARIABLE_TYPE, variableType));
         }
-        forEachStmt.append(String.format(BalSyntaxConstants.HAS_KEY, entity.getTableName(), filterKeys));
+        forEachStmt.append(String.format(BalSyntaxConstants.HAS_KEY, entity.getClientResourceName(), filterKeys));
         forEachStmt.append(String.format(BalSyntaxConstants.HAS_KEY_ERROR, entity.getEntityName(), filterKeysRecord));
 
-        forEachStmt.append(String.format("\t" + BalSyntaxConstants.PUT_VALUE_TO_MAP, entity.getTableName(),
+        forEachStmt.append(String.format("\t" + BalSyntaxConstants.PUT_VALUE_TO_MAP, entity.getClientResourceName(),
                 "value.clone()"));
         forEachStmt.append(BalSyntaxConstants.CLOSE_BRACE);
         forEachStmt.append(String.format(BalSyntaxConstants.PUSH_VALUES, filterKeys)).append("}");
@@ -261,7 +261,7 @@ public class InMemoryClientSyntax implements ClientSyntax {
             StringBuilder entityMetaData = new StringBuilder();
             entityMetaData.append(String.format(BalSyntaxConstants.METADATA_KEY_FIELDS_TEMPLATE,
                     getPrimaryKeys(entity, true)));
-            String resourceName = BalSyntaxUtils.stripEscapeCharacter(entity.getTableName());
+            String resourceName = BalSyntaxUtils.stripEscapeCharacter(entity.getClientResourceName());
             resourceName = resourceName.substring(0, 1).toUpperCase(Locale.ENGLISH) +
                     resourceName.substring(1).toLowerCase(Locale.ENGLISH);
             entityMetaData.append(String.format(BalSyntaxConstants.METADATA_QUERY_TEMPLATE, resourceName));
@@ -282,7 +282,7 @@ public class InMemoryClientSyntax implements ClientSyntax {
                                 }
 
                                 String associateEntityName = BalSyntaxUtils.stripEscapeCharacter(relation.
-                                        getAssocEntity().getTableName());
+                                        getAssocEntity().getClientResourceName());
 
                                 String associateFieldName = BalSyntaxUtils.stripEscapeCharacter(field.getFieldName());
                                 String associateFieldNameCamelCase = associateFieldName.substring(0, 1).
