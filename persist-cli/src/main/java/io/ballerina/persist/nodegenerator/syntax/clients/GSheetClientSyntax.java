@@ -148,7 +148,7 @@ public class GSheetClientSyntax implements ClientSyntax {
     @Override
     public FunctionDefinitionNode getPutFunction(Entity entity) {
         StringBuilder filterKeys = new StringBuilder(BalSyntaxConstants.OPEN_BRACE);
-        StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH + entity.getResourceName());
+        StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH + entity.getTableName());
         Function update = BalSyntaxUtils.generatePutFunction(entity, filterKeys, path);
         if (entity.getKeys().size() > 1) {
 
@@ -180,7 +180,7 @@ public class GSheetClientSyntax implements ClientSyntax {
     @Override
     public FunctionDefinitionNode getDeleteFunction(Entity entity) {
         StringBuilder filterKeys = new StringBuilder(BalSyntaxConstants.OPEN_BRACE);
-        StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH + entity.getResourceName());
+        StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH + entity.getTableName());
         Function delete = BalSyntaxUtils.generateDeleteFunction(entity, filterKeys, path);
         delete.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.GET_OBJECT_QUERY,
                 entity.getEntityName(), path)));
@@ -217,7 +217,7 @@ public class GSheetClientSyntax implements ClientSyntax {
             String endRange = "A";
             boolean hasAssociationMethod = false;
             String entityName = entity.getEntityName();
-            String entityResourceName = entity.getResourceName();
+            String entityResourceName = entity.getTableName();
             StringBuilder fieldMetaData = new StringBuilder();
             StringBuilder associationsMethods = new StringBuilder();
             StringBuilder fieldType = new StringBuilder();
@@ -277,7 +277,7 @@ public class GSheetClientSyntax implements ClientSyntax {
                                     associationsMethods.append(BalSyntaxConstants.COMMA_WITH_NEWLINE);
                                 }
                                 String associateEntityName = BalSyntaxUtils.stripEscapeCharacter(relation.
-                                        getAssocEntity().getResourceName());
+                                        getAssocEntity().getTableName());
                                 String associateEntityNameCamelCase = associateEntityName.substring(0, 1).
                                         toUpperCase(Locale.ENGLISH) + associateEntityName.substring(1).
                                         toLowerCase(Locale.ENGLISH);

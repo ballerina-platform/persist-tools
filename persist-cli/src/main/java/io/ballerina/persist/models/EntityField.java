@@ -34,7 +34,7 @@ import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConst
  */
 public class EntityField {
     private final String fieldName;
-    private final String fieldResourceName;
+    private final String fieldColumnName;
     private final String fieldType;
     private SQLType sqlType;
     private final boolean arrayType;
@@ -49,21 +49,21 @@ public class EntityField {
 
     private List<String> relationRefs;
 
-    EntityField(String fieldName, String fieldResourceName, String fieldType, boolean arrayType, boolean optionalType,
+    EntityField(String fieldName, String fieldColumnName, String fieldType, boolean arrayType, boolean optionalType,
                         NodeList<AnnotationNode> annotationNodes) {
         this.fieldName = fieldName;
         this.fieldType = fieldType;
         this.arrayType = arrayType;
         this.optionalType = optionalType;
         this.annotationNodes = annotationNodes;
-        this.fieldResourceName = fieldResourceName;
+        this.fieldColumnName = fieldColumnName;
     }
 
-    EntityField(String fieldName, String fieldResourceName, String fieldType, boolean arrayType, boolean optionalType,
+    EntityField(String fieldName, String fieldColumnName, String fieldType, boolean arrayType, boolean optionalType,
                 NodeList<AnnotationNode> annotationNodes, SQLType sqlType, List<String> relationRefs,
                 boolean isDbGenerated) {
         this.fieldName = fieldName;
-        this.fieldResourceName = fieldResourceName;
+        this.fieldColumnName = fieldColumnName;
         this.fieldType = fieldType;
         this.arrayType = arrayType;
         this.optionalType = optionalType;
@@ -79,8 +79,8 @@ public class EntityField {
         return fieldName;
     }
 
-    public String getFieldResourceName() {
-        return fieldResourceName;
+    public String getFieldColumnName() {
+        return fieldColumnName;
     }
 
     public String getFieldType() {
@@ -104,10 +104,10 @@ public class EntityField {
     }
 
     public boolean shouldResourceMappingGenerated() {
-        if (fieldResourceName == null ||  fieldResourceName.isBlank()) {
+        if (fieldColumnName == null ||  fieldColumnName.isBlank()) {
             return false;
         }
-        return !fieldResourceName.equals(fieldName);
+        return !fieldColumnName.equals(fieldName);
     }
 
     public List<String> getRelationRefs() {
@@ -143,7 +143,7 @@ public class EntityField {
      */
     public static class Builder {
         String fieldName;
-        String resourceFieldName;
+        String fieldColumnName;
         String fieldType;
 
         private boolean arrayType = false;
@@ -170,8 +170,8 @@ public class EntityField {
         public void setSqlType(SQLType sqlType) {
             this.sqlType = sqlType;
         }
-        public void setResourceFieldName(String resourceFieldName) {
-            this.resourceFieldName = resourceFieldName;
+        public void setFieldColumnName(String fieldColumnName) {
+            this.fieldColumnName = fieldColumnName;
         }
 
         public void setRelationRefs(List<String> relationRefs) {
@@ -195,7 +195,7 @@ public class EntityField {
         }
 
         public EntityField build() {
-            return new EntityField(fieldName, resourceFieldName, fieldType, arrayType, optionalType, annotationNodes,
+            return new EntityField(fieldName, fieldColumnName, fieldType, arrayType, optionalType, annotationNodes,
                     sqlType, relationRefs, isDbGenerated);
         }
 

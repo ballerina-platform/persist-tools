@@ -149,7 +149,7 @@ public abstract class Introspector {
             String entityName = CaseConverter.toSingularPascalCase(table.getTableName());
 
             Entity.Builder entityBuilder = Entity.newBuilder(entityName);
-            entityBuilder.setResourceName(table.getTableName());
+            entityBuilder.setTableName(table.getTableName());
             List<EntityField> keys = new ArrayList<>();
             List<EntityField> fields = new ArrayList<>();
             table.getColumns().forEach(column -> {
@@ -162,7 +162,7 @@ public abstract class Introspector {
                     fieldBuilder = EntityField.newBuilder(
                             "_" + CaseConverter.toCamelCase(column.getColumnName()));
                 }
-                fieldBuilder.setResourceFieldName(column.getColumnName());
+                fieldBuilder.setFieldColumnName(column.getColumnName());
 
                 if (Objects.equals(column.getDataType(), "enum")) {
                     fieldBuilder.setType(createEnumName(table.getTableName(), column.getColumnName()));
@@ -196,7 +196,7 @@ public abstract class Introspector {
             table.getIndexes().forEach(sqlIndex -> {
                 List<EntityField> indexFields = new ArrayList<>();
                 sqlIndex.getColumnNames().forEach(columnName -> fields.forEach(entityField -> {
-                    if (entityField.getFieldResourceName().equals(columnName)) {
+                    if (entityField.getFieldColumnName().equals(columnName)) {
                         indexFields.add(entityField);
                     }
                 }));
@@ -217,7 +217,7 @@ public abstract class Introspector {
             Entity.Builder assocEntityBuilder = entityBuilderMap
                     .get(CaseConverter.toSingularPascalCase(sqlForeignKey.getReferencedTableName()));
             boolean isReferenceMany = inferRelationshipCardinality
-                    (ownerEntityBuilder.buildForIntrospection(), sqlForeignKey)
+                    (ownerEntityBuilder.build(), sqlForeignKey)
                     == Relation.RelationType.MANY;
             EntityField.Builder assocFieldBuilder = EntityField
                     .newBuilder(
@@ -233,8 +233,8 @@ public abstract class Introspector {
 
             assocFieldBuilder.setArrayType(isReferenceMany);
             ownerFieldBuilder.setRelationRefs(sqlForeignKey.getColumnNames().stream().map(
-                    columnName -> ownerEntityBuilder.buildForIntrospection()
-                            .getFieldByFieldResourceName(columnName).getFieldName()
+                    columnName -> ownerEntityBuilder.build()
+                            .getFieldByColumnName(columnName).getFieldName()
             ).toList());
 
             EntityField ownerField = ownerFieldBuilder.build();
@@ -244,7 +244,7 @@ public abstract class Introspector {
             ownerEntityBuilder.addField(ownerField);
         });
 
-        entityBuilderMap.forEach((key, value) -> entityMap.put(key, value.buildForIntrospection()));
+        entityBuilderMap.forEach((key, value) -> entityMap.put(key, value.build()));
     }
 
     private void finalizeRelations() {

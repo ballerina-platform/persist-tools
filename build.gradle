@@ -164,9 +164,13 @@ task copyPersistTool(type: Copy) {
 }
 
 
-task copyFiles(type: Copy) {
-    from '/Users/haritha/Developer/WSO2/module-ballerinax-persist.sql/ballerina/build/bala_unzipped/bala/ballerinax/persist.sql'
-    into './target/ballerina-distribution/repo/bala/ballerinax/persist.sql'
+task copyLocalPersistSqlLib {
+    doLast {
+        copy {
+            from '/Users/haritha/Developer/WSO2/module-ballerinax-persist.sql/ballerina/build/bala_unzipped/bala/ballerinax/persist.sql'
+            into './target/ballerina-distribution/repo/bala/ballerinax/persist.sql'
+        }
+    }
 }
 
 
@@ -176,7 +180,7 @@ copyPersistTool.dependsOn ":persist-cli-tests:build"
 copyPersistTool.dependsOn ":persist-cli:build"
 
 build.dependsOn copyPersistTool
-build.dependsOn copyFiles
-//build.dependsOn ":examples:build"
+build.finalizedBy copyLocalPersistSqlLib
+build.dependsOn ":examples:build"
 
 publish.dependsOn build

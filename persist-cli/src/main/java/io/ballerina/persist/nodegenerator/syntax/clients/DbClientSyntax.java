@@ -202,7 +202,7 @@ public class DbClientSyntax implements ClientSyntax {
                     filterKeys.substring(0, filterKeys.length() - 2).concat(BalSyntaxConstants.CLOSE_BRACE));
         } else {
             updateStatement = String.format(BalSyntaxConstants.UPDATE_RUN_UPDATE_QUERY,
-                    entity.getKeys().stream().findFirst().get().getFieldResourceName());
+                    entity.getKeys().stream().findFirst().get().getFieldColumnName());
         }
         update.addStatement(NodeParser.parseStatement(updateStatement));
 
@@ -261,7 +261,7 @@ public class DbClientSyntax implements ClientSyntax {
             entityMetaData.append(String.format(BalSyntaxConstants.METADATA_RECORD_ENTITY_NAME_TEMPLATE,
                     BalSyntaxUtils.stripEscapeCharacter(entity.getEntityName())));
             entityMetaData.append(String.format(BalSyntaxConstants.METADATA_RECORD_TABLE_NAME_TEMPLATE,
-                    BalSyntaxUtils.stripEscapeCharacter(entity.getResourceName())));
+                    BalSyntaxUtils.stripEscapeCharacter(entity.getTableName())));
             StringBuilder fieldMetaData = new StringBuilder();
             StringBuilder associateFieldMetaData = new StringBuilder();
             boolean relationsExists = false;
@@ -316,7 +316,7 @@ public class DbClientSyntax implements ClientSyntax {
                         fieldMetaData.append(BalSyntaxConstants.COMMA_WITH_NEWLINE);
                     }
                     fieldMetaData.append(String.format(BalSyntaxConstants.METADATA_RECORD_FIELD_TEMPLATE,
-                            field.getFieldName(), BalSyntaxUtils.stripEscapeCharacter(field.getFieldResourceName())));
+                            field.getFieldName(), BalSyntaxUtils.stripEscapeCharacter(field.getFieldColumnName())));
                 }
             }
             if (associateFieldMetaData.length() > 1) {
@@ -383,7 +383,7 @@ public class DbClientSyntax implements ClientSyntax {
                 }
                 joinMetaData.append(String.format(BalSyntaxConstants.JOIN_METADATA_FIELD_TEMPLATE,
                         entityField.getFieldName(), entityField.getFieldType(), entityField.getFieldName(),
-                        entityField.getRelation().getAssocEntity().getResourceName(), refColumns,
+                        entityField.getRelation().getAssocEntity().getTableName(), refColumns,
                         joinColumns, relationType));
             }
         }

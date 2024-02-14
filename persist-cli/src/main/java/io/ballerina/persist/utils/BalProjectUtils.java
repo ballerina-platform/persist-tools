@@ -211,7 +211,8 @@ public class BalProjectUtils {
             RecordTypeDescriptorNode recordDesc = (RecordTypeDescriptorNode) ((TypeDefinitionNode) moduleNode)
                     .typeDescriptor();
             Optional<MetadataNode> entityMetadataNode = typeDefinitionNode.metadata();
-            entityMetadataNode.ifPresent(value -> entityBuilder.setResourceName(
+            entityBuilder.setTableName(typeDefinitionNode.typeName().text().trim());
+            entityMetadataNode.ifPresent(value -> entityBuilder.setTableName(
                     BalSyntaxUtils.readStringValueFromAnnotation(
                             value.annotations(),
                             BalSyntaxConstants.SQL_DB_MAPPING_ANNOTATION_NAME,
@@ -238,7 +239,7 @@ public class BalProjectUtils {
                 String qualifiedNamePrefix = getQualifiedModulePrefix(type);
                 fieldBuilder.setType(fType);
                 fieldBuilder.setOptionalType(fieldNode.typeName().kind().equals(SyntaxKind.OPTIONAL_TYPE_DESC));
-                fieldBuilder.setResourceFieldName(fieldNode.fieldName().text().trim());
+                fieldBuilder.setFieldColumnName(fieldNode.fieldName().text().trim());
                 Optional<MetadataNode> metadataNode = fieldNode.metadata();
                 metadataNode.ifPresent(value -> {
                     //read the db generated annotation
@@ -255,7 +256,7 @@ public class BalProjectUtils {
                             "name"
                     );
                     if (fieldResourceName != null) {
-                        fieldBuilder.setResourceFieldName(fieldResourceName);
+                        fieldBuilder.setFieldColumnName(fieldResourceName);
                     }
                     //read the unique index annotation
                     String uniqueIndexName = BalSyntaxUtils.readStringValueFromAnnotation(
@@ -531,7 +532,7 @@ public class BalProjectUtils {
                             EntityField fkEntityField = entity.getFieldByName(fkField);
                             entity.removeField(fkField);
                             return new Relation.Key(fkField,
-                                    fkEntityField.getFieldResourceName(), key.getFieldName(),  key.getFieldType());
+                                    fkEntityField.getFieldColumnName(), key.getFieldName(),  key.getFieldType());
                         }
                         String fkField = stripEscapeCharacter(fieldName.toLowerCase(Locale.ENGLISH))
                                 + stripEscapeCharacter(key.getFieldName()).substring(0, 1).toUpperCase(Locale.ENGLISH)

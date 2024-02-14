@@ -142,7 +142,7 @@ public class BalSyntaxUtils {
     public static FunctionDefinitionNode generateGetFunction(Entity entity, String className, String moduleName) {
         return (FunctionDefinitionNode) NodeParser.parseObjectMember(
                 String.format(BalSyntaxConstants.EXTERNAL_GET_METHOD_TEMPLATE,
-                        entity.getResourceName(), entity.getEntityName(), moduleName, className));
+                        entity.getTableName(), entity.getEntityName(), moduleName, className));
     }
 
     public static FunctionDefinitionNode generateGetByKeyFunction(Entity entity, String className, String moduleName) {
@@ -294,7 +294,7 @@ public class BalSyntaxUtils {
             filterKeys.append(BalSyntaxConstants.DOUBLE_QUOTE)
                     .append(stripEscapeCharacter(entry.getFieldName()))
                     .append(BalSyntaxConstants.DOUBLE_QUOTE).append(BalSyntaxConstants.COLON).
-                    append(entry.getFieldResourceName()).append(BalSyntaxConstants.COMMA_WITH_SPACE);
+                    append(entry.getFieldColumnName()).append(BalSyntaxConstants.COMMA_WITH_SPACE);
             path.append(BalSyntaxConstants.BACK_SLASH).append(BalSyntaxConstants.OPEN_BRACKET).
                     append(entry.getFieldName()).append(BalSyntaxConstants.CLOSE_BRACKET);
         }
@@ -577,14 +577,14 @@ public class BalSyntaxUtils {
     private static void addDbMappingAnnotationToField(EntityField field, StringBuilder recordFields) {
         if (field.shouldResourceMappingGenerated()) {
             recordFields.append(String.format(BalSyntaxConstants.SQL_DB_MAPPING_ANNOTATION,
-                    field.getFieldResourceName()));
+                    field.getFieldColumnName()));
         }
     }
 
     private static void addDbMappingAnnotationToEntity(Entity entity, StringBuilder recordString) {
         if (entity.shouldResourceMappingGenerated()) {
             recordString.append(String.format(BalSyntaxConstants.SQL_DB_MAPPING_ANNOTATION,
-                    entity.getResourceName()));
+                    entity.getTableName()));
             recordString.append(System.lineSeparator());
         }
     }

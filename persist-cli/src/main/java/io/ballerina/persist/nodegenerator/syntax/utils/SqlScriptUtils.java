@@ -67,7 +67,7 @@ public class SqlScriptUtils {
         //generate create table
         for (Entity entity : entities) {
             List<String> tableScript = new ArrayList<>();
-            String tableName = removeSingleQuote(entity.getResourceName());
+            String tableName = removeSingleQuote(entity.getTableName());
             tableScript.add(generateDropTableQuery(escape(tableName, datasource)));
             tableScript.add(generateCreateTableQuery(entity, referenceTables, datasource));
             tableScripts.put(tableName, tableScript);
@@ -76,6 +76,11 @@ public class SqlScriptUtils {
         List<String> indexScripts = new ArrayList<>();
         for (Entity entity : entities) {
             entity.getIndexes().forEach(index -> {
+                indexScripts.add(
+                        generateCreateIndexQuery(index, entity, datasource, index.isUnique())
+                );
+            });
+            entity.getUniqueIndexes().forEach(index -> {
                 indexScripts.add(
                         generateCreateIndexQuery(index, entity, datasource, index.isUnique())
                 );
@@ -97,16 +102,16 @@ public class SqlScriptUtils {
         String fieldDefinitions = generateFieldsDefinitionSegments(entity, referenceTables, datasource);
 
         return MessageFormat.format("{0}CREATE TABLE {1} ({2}{3});", NEW_LINE,
-                escape(removeSingleQuote(entity.getResourceName()), datasource), fieldDefinitions, NEW_LINE);
+                escape(removeSingleQuote(entity.getTableName()), datasource), fieldDefinitions, NEW_LINE);
     }
 
     private static String generateCreateIndexQuery(Index index, Entity entity, String datasource, boolean unique) {
         return MessageFormat.format("CREATE{0} INDEX {1} ON {2} ({3});",
                     unique ? " UNIQUE" : "",
                     escape(index.getIndexName(), datasource),
-                    escape(removeSingleQuote(entity.getResourceName()), datasource),
+                    escape(removeSingleQuote(entity.getTableName()), datasource),
                     index.getFields().stream()
-                            .map(field -> escape(removeSingleQuote(field.getFieldResourceName()), datasource))
+                            .map(field -> escape(removeSingleQuote(field.getFieldColumnName()), datasource))
                             .reduce((s1, s2) -> s1 + COMMA_WITH_SPACE + s2).orElse(""));
     }
 
@@ -118,7 +123,7 @@ public class SqlScriptUtils {
                 .filter(entityField -> entityField.getRelation() != null && entityField.getRelation().isOwner())
                 .toList();
         for (EntityField entityField : relationFields) {
-            sqlScript.append(getRelationScripts(removeSingleQuote(entity.getResourceName()),
+            sqlScript.append(getRelationScripts(removeSingleQuote(entity.getTableName()),
                     entityField, referenceTables, datasource));
         }
         sqlScript.append(addPrimaryKey(entity.getKeys(), datasource));
@@ -132,7 +137,7 @@ public class SqlScriptUtils {
                 continue;
             }
 
-            String fieldName = escape(removeSingleQuote(entityField.getFieldResourceName()), datasource);
+            String fieldName = escape(removeSingleQuote(entityField.getFieldColumnName()), datasource);
             String sqlType;
             Enum enumValue = entityField.getEnum();
             if (enumValue == null) {
@@ -171,7 +176,7 @@ public class SqlScriptUtils {
                 if (assocField.getRelation() != null) {
                     continue;
                 }
-                if (assocField.getFieldResourceName().equals(references.get(i))) {
+                if (assocField.getFieldColumnName().equals(references.get(i))) {
                     referenceSqlType = getSqlType(assocField, datasource);
                     break;
                 }
@@ -202,8 +207,8 @@ public class SqlScriptUtils {
         }
         relationScripts.append(MessageFormat.format("{0}{1}FOREIGN KEY({2}) REFERENCES {3}({4}),",
                 NEW_LINE, TAB, foreignKey.toString(),
-                escape(removeSingleQuote(assocEntity.getResourceName()), datasource), referenceFieldName));
-        updateReferenceTable(tableName, assocEntity.getResourceName(), referenceTables);
+                escape(removeSingleQuote(assocEntity.getTableName()), datasource), referenceFieldName));
+        updateReferenceTable(tableName, assocEntity.getTableName(), referenceTables);
         return relationScripts.toString();
     }
 
@@ -236,7 +241,7 @@ public class SqlScriptUtils {
             keyScripts.append(MessageFormat.format("{0}", PRIMARY_KEY_START_SCRIPT));
             for (EntityField key : keys) {
                 keyScripts.append(MessageFormat.format("{0},",
-                        escape(removeSingleQuote(key.getFieldResourceName()), datasource)));
+                        escape(removeSingleQuote(key.getFieldColumnName()), datasource)));
             }
             keyScripts.deleteCharAt(keyScripts.length() - 1).append("),");
         }

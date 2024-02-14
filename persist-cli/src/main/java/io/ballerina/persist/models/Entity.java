@@ -33,7 +33,7 @@ import java.util.Locale;
 public class Entity {
 
     private final List<EntityField> keys;
-    private final String resourceName;
+    private final String tableName;
     private final String entityName;
     private List<EntityField> fields;
     private final List<Index> indexes;
@@ -42,7 +42,7 @@ public class Entity {
                    String resourceName, List<EntityField> fields, List<Index> indexes, List<Index> uniqueIndexes) {
         this.entityName = entityName;
         this.keys = Collections.unmodifiableList(keys);
-        this.resourceName = resourceName;
+        this.tableName = resourceName;
         this.fields = Collections.unmodifiableList(fields);
         this.indexes = Collections.unmodifiableList(indexes);
         this.uniqueIndexes = Collections.unmodifiableList(uniqueIndexes);
@@ -52,8 +52,8 @@ public class Entity {
         return this.keys;
     }
 
-    public String getResourceName() {
-        return this.resourceName;
+    public String getTableName() {
+        return this.tableName;
     }
     public String getEntityName() {
         return this.entityName;
@@ -84,9 +84,9 @@ public class Entity {
         return null;
     }
 
-    public EntityField getFieldByFieldResourceName(String fieldResourceName) {
+    public EntityField getFieldByColumnName(String columnName) {
         for (EntityField field : fields) {
-            if (field.getFieldResourceName().equals(fieldResourceName)) {
+            if (field.getFieldColumnName().equals(columnName)) {
                 return field;
             }
         }
@@ -94,10 +94,10 @@ public class Entity {
     }
 
     public boolean shouldResourceMappingGenerated() {
-        if (resourceName == null || resourceName.isBlank()) {
+        if (tableName == null || tableName.isBlank()) {
             return false;
         }
-        return !Pluralizer.pluralize(entityName.toLowerCase(Locale.ENGLISH)).equals(resourceName);
+        return !entityName.equals(tableName);
     }
 
     public void removeField(String fieldName) {
@@ -116,7 +116,7 @@ public class Entity {
      */
     public static class Builder {
         String entityName;
-        String resourceName = null;
+        String tableName = null;
         List<EntityField> keys;
 
         List<EntityField> fieldList = null;
@@ -131,8 +131,8 @@ public class Entity {
             this.uniqueIndexes = new ArrayList<>();
         }
 
-        public void setResourceName(String resourceName) {
-            this.resourceName = resourceName;
+        public void setTableName(String tableName) {
+            this.tableName = tableName;
         }
 
         public void setKeys(List<EntityField> keys) {
@@ -181,14 +181,7 @@ public class Entity {
         }
 
         public Entity build() {
-            if (resourceName == null) {
-                resourceName = Pluralizer.pluralize(entityName.toLowerCase(Locale.ENGLISH));
-            }
-            return new Entity(entityName, keys, resourceName, fieldList, indexes, uniqueIndexes);
-        }
-
-        public Entity buildForIntrospection() {
-            return new Entity(entityName, keys, resourceName, fieldList, indexes, uniqueIndexes);
+            return new Entity(entityName, keys, tableName, fieldList, indexes, uniqueIndexes);
         }
 
         public EntityField getFieldByName(String fieldName) {
