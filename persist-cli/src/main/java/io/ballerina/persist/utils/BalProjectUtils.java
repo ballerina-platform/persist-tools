@@ -38,6 +38,7 @@ import io.ballerina.compiler.syntax.tree.TypeDefinitionNode;
 import io.ballerina.compiler.syntax.tree.TypeDescriptorNode;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
+import io.ballerina.persist.cmd.Utils;
 import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.Enum;
@@ -71,6 +72,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static io.ballerina.compiler.syntax.tree.SyntaxKind.QUALIFIED_NAME_REFERENCE;
+import static io.ballerina.persist.PersistToolsConstants.GENERATE_CMD_FILE;
+import static io.ballerina.persist.PersistToolsConstants.TARGET_DIRECTORY;
 import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 
 /**
@@ -103,6 +106,14 @@ public class BalProjectUtils {
         } catch (IOException | BalException | RuntimeException e) {
             throw new BalException(e.getMessage());
         }
+    }
+
+    public static void updateToml(String sourcePath, String datastore, String module) throws BalException, IOException {
+        String sourceContent = "[tool.persist]\n" +
+                "options.datastore = \"" + datastore + "\"\n" +
+                "module = \"" + module + "\"";
+        Path generatedCmdOutPath = Paths.get(sourcePath, TARGET_DIRECTORY, GENERATE_CMD_FILE);
+        Utils.writeToTargetFile(sourceContent, generatedCmdOutPath.toAbsolutePath().toString());
     }
 
     public static void validateSchemaFile(Path schemaPath) throws BalException {

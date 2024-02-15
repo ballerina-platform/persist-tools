@@ -234,7 +234,7 @@ task generateInMemoryExamples {
                     exec {
                         workingDir "${project.projectDir}/build/generated-examples/${example}"
                         if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-                            commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate"
+                            commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate --datastore=inmemory"
                         } else {
                             commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat persist generate"
                         }

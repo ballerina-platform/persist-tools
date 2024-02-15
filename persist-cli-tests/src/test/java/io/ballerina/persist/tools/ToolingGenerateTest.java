@@ -31,6 +31,7 @@ import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.GENERAT
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertGeneratedSources;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertGeneratedSourcesNegative;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.executeCommand;
+import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.executeGenerateCommand;
 
 /**
  * persist tool generate command tests.
@@ -40,21 +41,21 @@ public class ToolingGenerateTest {
     @Test(enabled = true)
     @Description("There is multiple entities with associations in the Ballerina project")
     public void testGenerateAssociatedEntities() {
-        executeCommand("tool_test_generate_1", GENERATE);
+        executeGenerateCommand("tool_test_generate_1", "mysql", "persist_generate_1");
         assertGeneratedSources("tool_test_generate_1");
     }
 
     @Test(enabled = true)
     @Description("There are multiple entities in the Ballerina project")
     public void testGenerateMultipleEntities() {
-        executeCommand("tool_test_generate_2", GENERATE);
+        executeGenerateCommand("tool_test_generate_2", "mysql", "persist_generate_2.entities");
         assertGeneratedSources("tool_test_generate_2");
     }
 
     @Test(enabled = true)
     @Description("There are no entities nor already generated client objects in the Ballerina project")
     public void testGenerateWithoutEntitiesWithoutClients() {
-        executeCommand("tool_test_generate_3", GENERATE);
+        executeGenerateCommand("tool_test_generate_3", "mysql", "persist_generate_3.entities");
         assertGeneratedSources("tool_test_generate_3");
     }
 
@@ -68,113 +69,119 @@ public class ToolingGenerateTest {
     @Test(enabled = true)
     @Description("There is a generated client object and the corresponding entity is updated")
     public void testGenerateUpdateEntity() {
-        executeCommand("tool_test_generate_5", GENERATE);
+        executeGenerateCommand("tool_test_generate_5", "mysql", "persist_generate_5.entities");
         assertGeneratedSources("tool_test_generate_5");
     }
 
     @Test(enabled = true)
     @Description("A persist entity with all the supported fields data types")
     public void testGenerateAllEntityFieldTypes() {
-        executeCommand("tool_test_generate_6", GENERATE);
+        executeGenerateCommand("tool_test_generate_6", "mysql", "persist_generate_6.entities");
         assertGeneratedSources("tool_test_generate_6");
     }
 
     @Test(enabled = true)
     @Description("Use case where unsupported datatypes are used")
     public void testGenerateClientWithUnsupportedDataTypes() {
-        assertGeneratedSourcesNegative("tool_test_generate_7", GENERATE, new String[]{});
+        assertGeneratedSourcesNegative("tool_test_generate_7", GENERATE, new String[]{}, "mysql",
+                "persist_generate_7.entities");
     }
 
     @Test(enabled = true)
     @Description("There is only a single entity in the Ballerina project where key is a string")
     public void testGenerateSingleEntityWithStringKey() {
-        executeCommand("tool_test_generate_8", GENERATE);
+        executeGenerateCommand("tool_test_generate_8", "mysql", "persist_generate_8.entities");
         assertGeneratedSources("tool_test_generate_8");
     }
 
     @Test(enabled = true) //removed until support for multiple keys are provided
     @Description("There is only a single entity in the Ballerina project with two keys")
     public void testGenerateSingleEntityWithMultipleKeysAndAutoInc() {
-        executeCommand("tool_test_generate_9", GENERATE);
+        executeGenerateCommand("tool_test_generate_9", "mysql", "persist_generate_9.entities");
         assertGeneratedSources("tool_test_generate_9");
     }
 
     @Test(enabled = true)
     @Description("There is only a single entity in the Ballerina project and there are errors in the project")
     public void testGenerateSingleEntityWithErrors() {
-        assertGeneratedSourcesNegative("tool_test_generate_11", GENERATE, new String[]{});
+        assertGeneratedSourcesNegative("tool_test_generate_11", GENERATE, new String[]{}, "mysql",
+                "persist_generate_11.entities");
     }
 
     @Test(enabled = true)
     @Description("There is only a single entity in the schema with wrong import")
     public void testGenerateSingleEntityWithWrongImport() {
-        assertGeneratedSourcesNegative("tool_test_generate_12", GENERATE, new String[]{});
+        assertGeneratedSourcesNegative("tool_test_generate_12", GENERATE, new String[]{}, "mysql",
+                "persist_generate_12.entities");
     }
 
     @Test(enabled = true)
     @Description("There are three entities with one to one associations between each other")
     public void testGenerateThreeEntitiesWith1To1Associations() {
-        executeCommand("tool_test_generate_13", GENERATE);
+        executeGenerateCommand("tool_test_generate_13", "mysql", "persist_generate_13.entities");
         assertGeneratedSources("tool_test_generate_13");
     }
 
     @Test(enabled = true)
     @Description("There are three entities in two schema files")
     public void testGenerateThreeEntitiesWith1To1AssociationsWithChildEntityInSubModule() {
-        assertGeneratedSourcesNegative("tool_test_generate_15", GENERATE, new String[]{});
+        assertGeneratedSourcesNegative("tool_test_generate_15", GENERATE, new String[]{}, "mysql",
+                "persist_generate_13.entities");
     }
 
     @Test(enabled = true)
     @Description("There are two entities with one to many associations between each other")
     public void testGenerateClientsWith1ToManyAssociations() {
-        executeCommand("tool_test_generate_16", GENERATE);
+        executeGenerateCommand("tool_test_generate_16", "mysql", "persist_generate_16.entities");
         assertGeneratedSources("tool_test_generate_16");
     }
 
     @Test(enabled = true)
     @Description("There are three entities with one to many associations between each other")
     public void testGenerateThreeClientsWith1ToManyAssociations() {
-        executeCommand("tool_test_generate_17", GENERATE);
+        executeGenerateCommand("tool_test_generate_17", "mysql", "persist_generate_17.entities");
         assertGeneratedSources("tool_test_generate_17");
     }
 
     @Test(enabled = true)
     @Description("There are three entities with one to one associations between each other without nullable fields")
     public void testGenerateThreeEntitiesWith1To1AssociationsWithOutAnnotationValue() {
-        assertGeneratedSourcesNegative("tool_test_generate_19", GENERATE, new String[]{});
+        assertGeneratedSourcesNegative("tool_test_generate_19", GENERATE, new String[]{}, "mysql",
+                "persist_generate_19.entities");
     }
 
     @Test(enabled = true)
     @Description("There are two special entities with special characters in field names")
     public void testGenerateRelatedClientsWithSpecialCharactersInName() {
-        executeCommand("tool_test_generate_22", GENERATE);
+        executeGenerateCommand("tool_test_generate_22", "mysql", "persist_generate_22.entities");
         assertGeneratedSources("tool_test_generate_22");
     }
 
     @Test(enabled = true)
     @Description("Negative test case where init command was not run before generate command")
     public void testGenerateWithoutInit() {
-        assertGeneratedSourcesNegative("tool_test_generate_23", GENERATE, new String[]{});
+        assertGeneratedSourcesNegative("tool_test_generate_23", GENERATE, new String[]{}, "mysql",
+                "persist_generate_23.entities");
     }
 
     @Test(enabled = true)
     @Description("Test the generate command with entities containing byte[] fields")
     public void testGenerateWithByteArrays() {
-        executeCommand("tool_test_generate_24", GENERATE);
+        executeGenerateCommand("tool_test_generate_24", "mysql", "persist_generate_24.foo");
         assertGeneratedSources("tool_test_generate_24");
     }
 
     @Test(enabled = true)
     @Description("There are two entities with one to many associations between each other without relation annotation")
     public void testGenerateOneToManyAssociationsWithoutRelationAnnotation() {
-        executeCommand("tool_test_generate_25", GENERATE);
+        executeGenerateCommand("tool_test_generate_25", "mysql", "persist_generate_25.entities");
         assertGeneratedSources("tool_test_generate_25");
     }
 
     @Test(enabled = true)
     @Description("There are two entities with one to one associations between each other without relation annotation")
     public void testGenerateOneToOneAssociationsWithoutRelationAnnotation() {
-        executeCommand("tool_test_generate_26", GENERATE);
+        executeGenerateCommand("tool_test_generate_26", "mysql", "persist_generate_26.entities");
         assertGeneratedSources("tool_test_generate_26");
     }
 
@@ -182,7 +189,7 @@ public class ToolingGenerateTest {
     @Description("There are three entities with one to one associations between each other with comments " +
             "in entity fields")
     public void testGenerateThreeEntitiesWith1To1AssociationsWithComments() {
-        executeCommand("tool_test_generate_27", GENERATE);
+        executeGenerateCommand("tool_test_generate_27", "mysql", "persist_generate_27.entities");
         assertGeneratedSources("tool_test_generate_27");
     }
 
@@ -190,91 +197,91 @@ public class ToolingGenerateTest {
     @Description("There are three entities with one to many associations between each other with comments " +
             "in entity fields")
     public void testGenerateThreeEntitiesWith1ToManyAssociationsWithComments() {
-        executeCommand("tool_test_generate_28", GENERATE);
+        executeGenerateCommand("tool_test_generate_28", "mysql", "persist_generate_28.entities");
         assertGeneratedSources("tool_test_generate_28");
     }
 
     @Test(enabled = true)
     @Description("There is a entity inside the project with comments inside entity")
     public void testGenerateWithComments() {
-        executeCommand("tool_test_generate_29", GENERATE);
+        executeGenerateCommand("tool_test_generate_29", "mysql", "persist_generate_29.entities");
         assertGeneratedSources("tool_test_generate_29");
     }
 
     @Test(enabled = true)
     @Description("Test the generate command with out defining any schema files inside persist directory")
     public void testGenerateWithoutSchemaFile() {
-        executeCommand("tool_test_generate_30", GENERATE);
+        executeGenerateCommand("tool_test_generate_30", "mysql", "persist_generate_30.entities");
         assertGeneratedSources("tool_test_generate_30");
     }
 
     @Test(enabled = true)
     @Description("Test the generate command with empty schema file inside persist directory")
     public void testGenerateWithEmptySchemaFile() {
-        executeCommand("tool_test_generate_31", GENERATE);
+        executeGenerateCommand("tool_test_generate_31", "mysql", "persist_generate_31.entities");
         assertGeneratedSources("tool_test_generate_31");
     }
 
     @Test(enabled = true)
     @Description("Test the generate command without persist import in schema file")
     public void testGenerateWithoutPersistImport() {
-        executeCommand("tool_test_generate_33", GENERATE);
+        executeGenerateCommand("tool_test_generate_33", "mysql", "persist_generate_33.entities");
         assertGeneratedSources("tool_test_generate_33");
     }
 
     @Test(enabled = true)
     @Description("Test the generate command with optional type in schema file")
     public void testGenerateWithOptionalType() {
-        executeCommand("tool_test_generate_34", GENERATE);
+        executeGenerateCommand("tool_test_generate_34", "mysql", "persist_generate_34.entities");
         assertGeneratedSources("tool_test_generate_34");
     }
 
     @Test(enabled = true)
     @Description("Test the generate command in default Ballerina package")
     public void testGenerateInDefaultPackage() {
-        executeCommand("tool_test_generate_35", GENERATE);
+        executeGenerateCommand("tool_test_generate_35", "mysql", "persist_generate_35");
         assertGeneratedSources("tool_test_generate_35");
     }
 
     @Test(enabled = true)
     @Description("Test the generate command with escape character in entity fields, and names")
     public void testGenerateRelationsWithSingleQuote() {
-        executeCommand("tool_test_generate_36", GENERATE);
+        executeGenerateCommand("tool_test_generate_36", "mysql", "persist_generate_36.rainier");
         assertGeneratedSources("tool_test_generate_36");
     }
 
     @Test(enabled = true)
     @Description("Test the created sql script content for relations and byte[] type")
     public void testSqlGen() {
-        executeCommand("tool_test_generate_37", GENERATE);
+        executeGenerateCommand("tool_test_generate_37", "mysql", "tool_test_generate_37.entities");
         assertGeneratedSources("tool_test_generate_37");
     }
 
     @Test(enabled = true)
     @Description("Test the created sql script content with out defining any schema files inside persist directory")
     public void testSqlGenWithoutSchemaFile() {
-        executeCommand("tool_test_generate_38", GENERATE);
+        executeGenerateCommand("tool_test_generate_38", "mysql", "tool_test_generate_38.entities");
         assertGeneratedSources("tool_test_generate_38");
     }
 
     @Test(enabled = true)
     @Description("Test the created sql script with one to many relation entity")
     public void testSqlGenWithOneToManyRelationship() {
-        executeCommand("tool_test_generate_39", GENERATE);
+        executeGenerateCommand("tool_test_generate_39", "mysql", "tool_test_generate_39.entities");
         assertGeneratedSources("tool_test_generate_39");
     }
 
     @Test(enabled = true)
     @Description("Test the created sql script with optional type fields")
     public void testSqlGenWithOptionalTypeFields() {
-        executeCommand("tool_test_generate_40", GENERATE);
+        executeGenerateCommand("tool_test_generate_40", "mysql", "tool_test_generate_40.entities");
         assertGeneratedSources("tool_test_generate_40");
     }
 
     @Test(enabled = true)
     @Description("Test the created sql script with composite reference keys")
     public void testSqlGenWithCompositeReferenceKeys() {
-        executeCommand("tool_test_generate_41", GENERATE);
+        executeGenerateCommand("tool_test_generate_41", "mysql", "tool_test_generate_41.entities");
         assertGeneratedSources("tool_test_generate_41");
     }
 
@@ -292,207 +299,211 @@ public class ToolingGenerateTest {
 
     @Test(enabled = true)
     public void testInvalidDataStore() {
-        executeCommand("tool_test_generate_42", GENERATE);
+        executeGenerateCommand("tool_test_generate_42", "my", "tool_test_generate_42.entities");
         assertGeneratedSources("tool_test_generate_42");
     }
 
     @Test(enabled = true)
     public void testInvalidModuleName() {
-        executeCommand("tool_test_generate_43", GENERATE);
+        String invalidModuleName = "testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttestt" +
+                "esttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttestt" +
+                "esttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttestt" +
+                "esttesttesttesttesttesttesttest";
+        executeGenerateCommand("tool_test_generate_43", "mysql", invalidModuleName);
         assertGeneratedSources("tool_test_generate_43");
     }
 
     @Test(enabled = true)
     public void testInvalidModuleName1() {
-        executeCommand("tool_test_generate_44", GENERATE);
+        executeGenerateCommand("tool_test_generate_44", "mysql", ".test");
         assertGeneratedSources("tool_test_generate_44");
     }
 
     @Test(enabled = true)
     public void testInvalidModuleName2() {
-        executeCommand("tool_test_generate_45", GENERATE);
+        executeGenerateCommand("tool_test_generate_45", "mysql", "^^^");
         assertGeneratedSources("tool_test_generate_45");
     }
 
     @Test(enabled = true)
     @Description("Test the generated types for multiple association between same entities")
     public void testGenerateMultipleAssociationBetweenSameEntities() {
-        executeCommand("tool_test_generate_46", GENERATE);
+        executeGenerateCommand("tool_test_generate_46", "mysql", "tool_test_generate_46.entities");
         assertGeneratedSources("tool_test_generate_46");
     }
 
     @Test(enabled = true)
     @Description("There is a generated client object with in memory data source")
     public void testInMemoryEntity() {
-        executeCommand("tool_test_generate_47_in_memory", GENERATE);
+        executeGenerateCommand("tool_test_generate_47_in_memory", "inmemory", "persist_generate_47.entities");
         assertGeneratedSources("tool_test_generate_47_in_memory");
     }
 
     @Test(enabled = true)
     @Description("There is a generated client object with in memory data source")
     public void testInMemoryWithAssociatedEntity() {
-        executeCommand("tool_test_generate_48_in_memory", GENERATE);
+        executeGenerateCommand("tool_test_generate_48_in_memory", "inmemory", "persist_generate_48.entities");
         assertGeneratedSources("tool_test_generate_48_in_memory");
     }
 
     @Test(enabled = true)
     @Description("There is a generated client object with in memory data source")
     public void testInMemoryWithCompositeKeys() {
-        executeCommand("tool_test_generate_49_in_memory", GENERATE);
+        executeGenerateCommand("tool_test_generate_49_in_memory", "inmemory", "persist_generate_49.entities");
         assertGeneratedSources("tool_test_generate_49_in_memory");
     }
 
     @Test(enabled = true)
     @Description("There is multiple entities with multiple enums and no imports")
     public void testGenerateWithEnums() {
-        executeCommand("tool_test_generate_50", GENERATE);
+        executeGenerateCommand("tool_test_generate_50", "mysql", "persist_generate_50");
         assertGeneratedSources("tool_test_generate_50");
     }
 
     @Test(enabled = true)
     @Description("There is multiple entities with multiple enums and imports")
     public void testGenerateWithEnumsWithImports() {
-        executeCommand("tool_test_generate_51", GENERATE);
+        executeGenerateCommand("tool_test_generate_51", "mysql", "persist_generate_51");
         assertGeneratedSources("tool_test_generate_51");
     }
 
     @Test(enabled = true)
     @Description("There is multiple entities with multiple enums and imports with in memory data source")
     public void testGenerateWithEnumsInMemory() {
-        executeCommand("tool_test_generate_52_in_memory", GENERATE);
+        executeGenerateCommand("tool_test_generate_52_in_memory", "inmemory", "persist_generate_52.entities");
         assertGeneratedSources("tool_test_generate_52_in_memory");
     }
 
     @Test(enabled = true)
     @Description("There is an entity which is associated with multiple relations")
     public void testGenerateWithSameEntityMultipleRelationsInMemory() {
-        executeCommand("tool_test_generate_53_in_memory", GENERATE);
+        executeGenerateCommand("tool_test_generate_53_in_memory", "inmemory", "persist_generate_52.entities");
         assertGeneratedSources("tool_test_generate_53_in_memory");
     }
 
     @Test(enabled = true)
     @Description("There is a generated client object with google sheets data source")
     public void testGoogleSheet() {
-        executeCommand("tool_test_generate_54_gsheet", GENERATE);
+        executeGenerateCommand("tool_test_generate_54_gsheet", "googlesheets", "persist_generate_54.entities");
         assertGeneratedSources("tool_test_generate_54_gsheet");
     }
 
     @Test(enabled = true)
     @Description("There is a model with an entity consisting of multiple relations of the same type")
     public void testGenerateEntityWithMultipleRelationsSameTypeInMemory() {
-        executeCommand("tool_test_generate_55_in_memory", GENERATE);
+        executeGenerateCommand("tool_test_generate_55_in_memory", "inmemory", "persist_generate_55.entities");
         assertGeneratedSources("tool_test_generate_55_in_memory");
     }
 
     @Test(enabled = true)
     @Description("There is a model with an entity consisting of multiple relations of the same type")
     public void testGenerateEntityWithMultipleRelationsSameTypeGoogleSheet() {
-        executeCommand("tool_test_generate_56_gsheets", GENERATE);
+        executeGenerateCommand("tool_test_generate_56_gsheets", "googlesheets", "persist_generate_56.entities");
         assertGeneratedSources("tool_test_generate_56_gsheets");
     }
 
     @Test(enabled = true)
     @Description("There is a generated client object with google sheets data source and ENUM as field type.")
     public void testGoogleSheetWithEnum() {
-        executeCommand("tool_test_generate_57_gsheets", GENERATE);
+        executeGenerateCommand("tool_test_generate_57_gsheets", "googlesheets", "persist_generate_57.entities");
         assertGeneratedSources("tool_test_generate_57_gsheets");
     }
 
     @Test(enabled = true)
     @Description("There is a generated client object with mssql data source")
     public void testMssqlEntity() {
-        executeCommand("tool_test_generate_58_mssql", GENERATE);
+        executeGenerateCommand("tool_test_generate_58_mssql", "mssql", "persist_generate_58.entities");
         assertGeneratedSources("tool_test_generate_58_mssql");
     }
 
     @Test(enabled = true)
     @Description("There is a generated client object with postgresql data source")
     public void testPostgresqlEntity() {
-        executeCommand("tool_test_generate_66_postgresql", GENERATE);
+        executeGenerateCommand("tool_test_generate_66_postgresql", "postgresql", "persist_generate_66.entities");
         assertGeneratedSources("tool_test_generate_66_postgresql");
     }
 
     @Test(enabled = true)
     @Description("There is a generated client object with mssql data source")
     public void testMSSQLWithAssociatedEntity() {
-        executeCommand("tool_test_generate_59_mssql", GENERATE);
+        executeGenerateCommand("tool_test_generate_59_mssql", "mssql", "persist_generate_59.entities");
         assertGeneratedSources("tool_test_generate_59_mssql");
     }
 
     @Test(enabled = true)
     @Description("There is a generated client object with postgresql data source")
     public void testPostgreSQLWithAssociatedEntity() {
-        executeCommand("tool_test_generate_67_postgresql", GENERATE);
+        executeGenerateCommand("tool_test_generate_67_postgresql", "postgresql", "persist_generate_67.entities");
         assertGeneratedSources("tool_test_generate_67_postgresql");
     }
 
     @Test(enabled = true)
     @Description("There is a generated client object with mssql data source")
     public void testMSSQLWithCompositeKeys() {
-        executeCommand("tool_test_generate_60_mssql", GENERATE);
+        executeGenerateCommand("tool_test_generate_60_mssql", "mssql", "persist_generate_60.entities");
         assertGeneratedSources("tool_test_generate_60_mssql");
     }
 
     @Test(enabled = true)
     @Description("There is a generated client object with postgresql data source")
     public void testPostgreSQLWithCompositeKeys() {
-        executeCommand("tool_test_generate_68_postgresql", GENERATE);
+        executeGenerateCommand("tool_test_generate_68_postgresql", "postgresql", "persist_generate_68.entities");
         assertGeneratedSources("tool_test_generate_68_postgresql");
     }
 
     @Test(enabled = true)
     @Description("There is multiple entities with multiple enums and imports with mssql data source")
     public void testGenerateWithEnumsMSSQL() {
-        executeCommand("tool_test_generate_61_mssql", GENERATE);
+        executeGenerateCommand("tool_test_generate_61_mssql", "mssql", "persist_generate_61.entities");
         assertGeneratedSources("tool_test_generate_61_mssql");
     }
 
     @Test(enabled = true)
     @Description("There is multiple entities with multiple enums and imports with postgresql data source")
     public void testGenerateWithEnumsPostgresSQL() {
-        executeCommand("tool_test_generate_69_postgresql", GENERATE);
+        executeGenerateCommand("tool_test_generate_69_postgresql", "postgresql", "persist_generate_69.entities");
         assertGeneratedSources("tool_test_generate_69_postgresql");
     }
 
     @Test(enabled = true)
     @Description("There is an entity which is associated with multiple relations")
     public void testGenerateWithSameEntityMultipleRelationsMSSQL() {
-        executeCommand("tool_test_generate_62_mssql", GENERATE);
+        executeGenerateCommand("tool_test_generate_62_mssql", "mssql", "persist_generate_62.entities");
         assertGeneratedSources("tool_test_generate_62_mssql");
     }
 
     @Test(enabled = true)
     @Description("There is an entity which is associated with multiple relations")
     public void testGenerateWithSameEntityMultipleRelationsPostgresql() {
-        executeCommand("tool_test_generate_70_postgresql", GENERATE);
+        executeGenerateCommand("tool_test_generate_70_postgresql", "postgresql", "persist_generate_70.entities");
         assertGeneratedSources("tool_test_generate_70_postgresql");
     }
 
     @Test(enabled = true)
     @Description("There is a model with an entity consisting of multiple relations of the same type")
     public void testGenerateEntityWithMultipleRelationsSameTypeMSSQL() {
-        executeCommand("tool_test_generate_63_mssql", GENERATE);
+        executeGenerateCommand("tool_test_generate_63_mssql", "mssql", "persist_generate_63.entities");
         assertGeneratedSources("tool_test_generate_63_mssql");
     }
 
     @Test(enabled = true)
     @Description("There is a model with an entity consisting of multiple relations of the same type")
     public void testGenerateEntityWithMultipleRelationsSameTypePostgreSQL() {
-        executeCommand("tool_test_generate_71_postgresql", GENERATE);
+        executeGenerateCommand("tool_test_generate_71_postgresql", "postgresql", "persist_generate_71.entities");
         assertGeneratedSources("tool_test_generate_71_postgresql");
     }
 
     @Test(enabled = true)
     @Description("module name is in the shape x.y.z")
     public void testGenerateEntityDotSeperatedModuleNames() {
-        executeCommand("tool_test_generate_64", GENERATE);
+        executeGenerateCommand("tool_test_generate_64", "mysql", "persist_generate_64.x.y.z");
         assertGeneratedSources("tool_test_generate_64");
     }
 
     @Test(enabled = true)
     @Description("The model has multiple relations of various types")
     public void testGenerateEntitiesWithMultipleRelations() {
-        executeCommand("tool_test_generate_65", GENERATE);
+        executeGenerateCommand("tool_test_generate_65", "mysql", "persist_generate_65");
         assertGeneratedSources("tool_test_generate_65");
     }
 }

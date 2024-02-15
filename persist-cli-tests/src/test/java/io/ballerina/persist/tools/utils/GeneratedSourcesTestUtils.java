@@ -27,6 +27,7 @@ import io.ballerina.projects.Package;
 import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.directory.BuildProject;
 import org.testng.Assert;
+import picocli.CommandLine;
 
 import java.io.File;
 import java.io.IOException;
@@ -101,9 +102,14 @@ public class GeneratedSourcesTestUtils {
         }
     }
 
-    public static void assertGeneratedSourcesNegative(String subDir, Command cmd, String[] relativeFilepaths) {
+    public static void assertGeneratedSourcesNegative(String subDir, Command cmd, String[] relativeFilepaths,
+                                                      String... args) {
         Path sourceDirPath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);
-        executeCommand(subDir, cmd);
+        if (cmd == Command.GENERATE) {
+            executeGenerateCommand(subDir, args);
+        } else {
+            executeCommand(subDir, cmd);
+        }
         if (cmd == Command.DB_PUSH) {
             Assert.assertFalse(false);
         } else {
@@ -179,6 +185,21 @@ public class GeneratedSourcesTestUtils {
             errStream.println(e.getMessage());
         }
         return new HashMap<>();
+    }
+
+    public static void executeGenerateCommand(String subDir, String... args) {
+        Class<?> persistClass;
+        Path sourcePath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);
+        try {
+            persistClass = Class.forName("io.ballerina.persist.cmd.Generate");
+            Generate persistCmd = (Generate) persistClass.getDeclaredConstructor(String.class)
+                    .newInstance(sourcePath.toAbsolutePath().toString());
+            new CommandLine(persistCmd).parseArgs("--datastore", args[0], "--module", args[1]);
+            persistCmd.execute();
+        } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException | IllegalAccessException
+                | InvocationTargetException e) {
+            errStream.println(e.getMessage());
+        }
     }
 
     private static List<Path> listFiles(Path path) {

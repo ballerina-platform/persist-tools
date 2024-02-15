@@ -18,7 +18,7 @@
 
 package io.ballerina.persist.tools;
 
-import io.ballerina.persist.cmd.Init;
+import io.ballerina.persist.cmd.Add;
 import jdk.jfr.Description;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -40,7 +40,7 @@ import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertG
 /**
  * persist tool init command tests.
  */
-public class ToolingInitTest {
+public class ToolingAddTest {
 
     private String persistSqlVersion;
     private String persistInMemoryVersion;
@@ -126,29 +126,29 @@ public class ToolingInitTest {
     @Test(enabled = true)
     public void testInitArgs() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
             InstantiationException, IllegalAccessException {
-        Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Init");
-        Init persistCmd = (Init) persistClass.getDeclaredConstructor(String.class).
+        Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Add");
+        Add persistCmd = (Add) persistClass.getDeclaredConstructor(String.class).
                 newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, "tool_test_init_11").toAbsolutePath().
                         toString());
         new CommandLine(persistCmd).parseArgs("--help");
         persistCmd.execute();
         assertGeneratedSources("tool_test_init_11");
 
-        Init persistCmd1 = (Init) persistClass.getDeclaredConstructor(String.class).
+        Add persistCmd1 = (Add) persistClass.getDeclaredConstructor(String.class).
                 newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, "tool_test_init_11").toAbsolutePath().
                         toString());
         new CommandLine(persistCmd1).parseArgs("--datastore", "");
         persistCmd1.execute();
         assertGeneratedSources("tool_test_init_11");
 
-        Init persistCmd2 = (Init) persistClass.getDeclaredConstructor(String.class).
+        Add persistCmd2 = (Add) persistClass.getDeclaredConstructor(String.class).
                 newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, "tool_test_init_11").toAbsolutePath().
                         toString());
         new CommandLine(persistCmd2).parseArgs("--module", "^db");
         persistCmd2.execute();
         assertGeneratedSources("tool_test_init_11");
 
-        Init persistCmd3 = (Init) persistClass.getDeclaredConstructor(String.class).
+        Add persistCmd3 = (Add) persistClass.getDeclaredConstructor(String.class).
                 newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, "tool_test_init_11").toAbsolutePath().
                         toString());
         new CommandLine(persistCmd3).parseArgs("--module",
@@ -163,8 +163,8 @@ public class ToolingInitTest {
     public void testInitWithModuleArg() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
             InstantiationException, IllegalAccessException {
         updateOutputBallerinaToml("tool_test_init_12");
-        Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Init");
-        Init persistCmd = (Init) persistClass.getDeclaredConstructor(String.class).
+        Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Add");
+        Add persistCmd = (Add) persistClass.getDeclaredConstructor(String.class).
                 newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, "tool_test_init_12").toAbsolutePath().
                         toString());
         new CommandLine(persistCmd).parseArgs("--module", "test");
@@ -176,8 +176,8 @@ public class ToolingInitTest {
     public void testInitWithMssql() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
             InstantiationException, IllegalAccessException {
         updateOutputBallerinaToml("tool_test_init_13");
-        Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Init");
-        Init persistCmd = (Init) persistClass.getDeclaredConstructor(String.class).
+        Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Add");
+        Add persistCmd = (Add) persistClass.getDeclaredConstructor(String.class).
                 newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, "tool_test_init_13").toAbsolutePath().
                         toString());
         new CommandLine(persistCmd).parseArgs("--datastore", "mssql");
@@ -189,8 +189,8 @@ public class ToolingInitTest {
     public void testInitWithPostgresql() throws ClassNotFoundException, NoSuchMethodException,
             InvocationTargetException, InstantiationException, IllegalAccessException {
         updateOutputBallerinaToml("tool_test_init_14");
-        Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Init");
-        Init persistCmd = (Init) persistClass.getDeclaredConstructor(String.class).
+        Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Add");
+        Add persistCmd = (Add) persistClass.getDeclaredConstructor(String.class).
                 newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, "tool_test_init_14").toAbsolutePath().
                         toString());
         new CommandLine(persistCmd).parseArgs("--datastore", "postgresql");
@@ -229,8 +229,8 @@ public class ToolingInitTest {
         Class<?> persistClass;
         Path sourcePath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);
         try {
-            persistClass = Class.forName("io.ballerina.persist.cmd.Init");
-            Init persistCmd = (Init) persistClass.getDeclaredConstructor(String.class)
+            persistClass = Class.forName("io.ballerina.persist.cmd.Add");
+            Add persistCmd = (Add) persistClass.getDeclaredConstructor(String.class)
                     .newInstance(sourcePath.toAbsolutePath().toString());
             new CommandLine(persistCmd).parseArgs("--datastore", "mysql");
             persistCmd.execute();

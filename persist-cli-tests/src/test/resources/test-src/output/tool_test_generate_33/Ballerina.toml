@@ -3,7 +3,3 @@ org = "foo"
 name = "tool_test_generate_33"
 version = "0.1.0"
 distribution = "2201.3.0"
-
-[persist]
-datastore = "mysql"
-module = "tool_test_generate_33.entities"

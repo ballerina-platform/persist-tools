@@ -14,9 +14,10 @@ user = "root"
 password = "test123"
 database = "persistdb"
 
-[persist]
-datastore = "mysql"
-module = "persist_init_5"
+[tool.persist]
+id = "generate-db-client"
+targetModule = "persist_init_5"
+options.datastore = "mysql"
 
 [[platform.java17.dependency]]
 groupId = "io.ballerina.stdlib"

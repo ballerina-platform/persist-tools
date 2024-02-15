@@ -14,9 +14,10 @@ value = 2
 
 array = [ [1, 0], [0, 1] ]
 
-[persist]
-datastore = "mysql"
-module = "persist_init_9"
+[tool.persist]
+id = "generate-db-client"
+targetModule = "persist_init_9"
+options.datastore = "mysql"
 
 [[platform.java17.dependency]]
 groupId = "io.ballerina.stdlib"

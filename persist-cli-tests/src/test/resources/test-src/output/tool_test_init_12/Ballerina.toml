@@ -7,9 +7,10 @@ distribution = "2201.3.0"
 [build-options]
 observabilityIncluded = true
 
-[persist]
-datastore = "inmemory"
-module = "persist_init_12.test"
+[tool.persist]
+id = "generate-db-client"
+targetModule = "persist_init_12.test"
+options.datastore = "inmemory"
 
 [[platform.java17.dependency]]
 groupId = "io.ballerina.stdlib"
