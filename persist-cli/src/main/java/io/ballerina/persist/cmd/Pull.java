@@ -80,14 +80,7 @@ public class Pull implements BLauncherCmd {
 
         errStream.println("Introspecting database schema...");
 
-        DriverResolver driverResolver = new DriverResolver(this.sourcePath);
-        Project driverProject;
-        try {
-            driverProject = driverResolver.resolveDriverDependencies();
-        } catch (BalException e) {
-            errStream.println(e.getMessage());
-            return;
-        }
+
 
         try {
             validateBallerinaProject(Paths.get(this.sourcePath));
@@ -175,6 +168,14 @@ public class Pull implements BLauncherCmd {
         }
 
         Module entityModule;
+        DriverResolver driverResolver = new DriverResolver(this.sourcePath);
+        Project driverProject;
+        try {
+            driverProject = driverResolver.resolveDriverDependencies();
+        } catch (BalException e) {
+            errStream.println(e.getMessage());
+            return;
+        }
 
         try (JdbcDriverLoader driverLoader = databaseConnector.getJdbcDriverLoader(driverProject)) {
             Driver driver = databaseConnector.getJdbcDriver(driverLoader);
