@@ -19,27 +19,27 @@ public isolated client class Client {
 
     public isolated function init() returns persist:Error? {
         final map<inmemory:TableMetadata> metadata = {
-            [USER] : {
+            [USER]: {
                 keyFields: ["id"],
                 query: queryUsers,
                 queryOne: queryOneUsers,
                 associationsMethods: {"posts": queryUserPosts}
             },
-            [POST] : {
+            [POST]: {
                 keyFields: ["id"],
                 query: queryPosts,
                 queryOne: queryOnePosts
             },
-            [FOLLOW] : {
+            [FOLLOW]: {
                 keyFields: ["id"],
                 query: queryFollows,
                 queryOne: queryOneFollows
             }
         };
         self.persistClients = {
-            [USER] : check new (metadata.get(USER).cloneReadOnly()),
-            [POST] : check new (metadata.get(POST).cloneReadOnly()),
-            [FOLLOW] : check new (metadata.get(FOLLOW).cloneReadOnly())
+            [USER]: check new (metadata.get(USER).cloneReadOnly()),
+            [POST]: check new (metadata.get(POST).cloneReadOnly()),
+            [FOLLOW]: check new (metadata.get(FOLLOW).cloneReadOnly())
         };
     }
 
@@ -196,8 +196,8 @@ isolated function queryUsers(string[] fields) returns stream<record {}, persist:
     }
     return from record {} 'object in usersClonedTable
         select persist:filterRecord({
-            ...'object
-        }, fields);
+                                        ...'object
+                                    }, fields);
 }
 
 isolated function queryOneUsers(anydata key) returns record {}|persist:NotFoundError {
@@ -227,9 +227,9 @@ isolated function queryPosts(string[] fields) returns stream<record {}, persist:
     return from record {} 'object in postsClonedTable
         outer join var user in usersClonedTable on ['object.userId] equals [user?.id]
         select persist:filterRecord({
-            ...'object,
-            "user": user
-        }, fields);
+                                        ...'object,
+                                        "user": user
+                                    }, fields);
 }
 
 isolated function queryOnePosts(anydata key) returns record {}|persist:NotFoundError {
@@ -266,10 +266,10 @@ isolated function queryFollows(string[] fields) returns stream<record {}, persis
         outer join var leader in usersClonedTable on ['object.leaderId] equals [leader?.id]
         outer join var follower in usersClonedTable on ['object.followerId] equals [follower?.id]
         select persist:filterRecord({
-            ...'object,
-            "leader": leader,
-            "follower": follower
-        }, fields);
+                                        ...'object,
+                                        "leader": leader,
+                                        "follower": follower
+                                    }, fields);
 }
 
 isolated function queryOneFollows(anydata key) returns record {}|persist:NotFoundError {
@@ -303,7 +303,7 @@ isolated function queryUserPosts(record {} value, string[] fields) returns recor
     return from record {} 'object in postsClonedTable
         where 'object.userId == value["id"]
         select persist:filterRecord({
-            ...'object
-        }, fields);
+                                        ...'object
+                                    }, fields);
 }
 

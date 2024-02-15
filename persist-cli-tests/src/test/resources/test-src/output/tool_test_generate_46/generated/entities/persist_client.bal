@@ -20,7 +20,7 @@ public isolated client class Client {
     private final map<psql:SQLClient> persistClients;
 
     private final record {|psql:SQLMetadata...;|} & readonly metadata = {
-        [USER] : {
+        [USER]: {
             entityName: "User",
             tableName: "User",
             fieldMetadata: {
@@ -49,7 +49,7 @@ public isolated client class Client {
                 leaders: {entity: Follower, fieldName: "leaders", refTable: "Follower", refColumns: ["followerId"], joinColumns: ["id"], 'type: psql:MANY_TO_ONE}
             }
         },
-        [POST] : {
+        [POST]: {
             entityName: "Post",
             tableName: "Post",
             fieldMetadata: {
@@ -66,7 +66,7 @@ public isolated client class Client {
             keyFields: ["id"],
             joinMetadata: {user: {entity: User, fieldName: "user", refTable: "User", refColumns: ["id"], joinColumns: ["userId"], 'type: psql:ONE_TO_MANY}}
         },
-        [FOLLOWER] : {
+        [FOLLOWER]: {
             entityName: "Follower",
             tableName: "Follower",
             fieldMetadata: {
@@ -96,9 +96,9 @@ public isolated client class Client {
         }
         self.dbClient = dbClient;
         self.persistClients = {
-            [USER] : check new (dbClient, self.metadata.get(USER), psql:MYSQL_SPECIFICS),
-            [POST] : check new (dbClient, self.metadata.get(POST), psql:MYSQL_SPECIFICS),
-            [FOLLOWER] : check new (dbClient, self.metadata.get(FOLLOWER), psql:MYSQL_SPECIFICS)
+            [USER]: check new (dbClient, self.metadata.get(USER), psql:MYSQL_SPECIFICS),
+            [POST]: check new (dbClient, self.metadata.get(POST), psql:MYSQL_SPECIFICS),
+            [FOLLOWER]: check new (dbClient, self.metadata.get(FOLLOWER), psql:MYSQL_SPECIFICS)
         };
     }
 

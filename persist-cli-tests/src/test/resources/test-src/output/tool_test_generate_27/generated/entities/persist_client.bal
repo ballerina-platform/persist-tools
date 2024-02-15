@@ -20,7 +20,7 @@ public isolated client class Client {
     private final map<psql:SQLClient> persistClients;
 
     private final record {|psql:SQLMetadata...;|} & readonly metadata = {
-        [PROFILE] : {
+        [PROFILE]: {
             entityName: "Profile",
             tableName: "Profile",
             fieldMetadata: {
@@ -40,7 +40,7 @@ public isolated client class Client {
                 multipleAssociations: {entity: MultipleAssociations, fieldName: "multipleAssociations", refTable: "MultipleAssociations", refColumns: ["id"], joinColumns: ["multipleassociationsId"], 'type: psql:ONE_TO_ONE}
             }
         },
-        [USER] : {
+        [USER]: {
             entityName: "User",
             tableName: "User",
             fieldMetadata: {
@@ -60,7 +60,7 @@ public isolated client class Client {
                 multipleAssociations: {entity: MultipleAssociations, fieldName: "multipleAssociations", refTable: "MultipleAssociations", refColumns: ["id"], joinColumns: ["multipleassociationsId"], 'type: psql:ONE_TO_ONE}
             }
         },
-        [MULTIPLE_ASSOCIATIONS] : {
+        [MULTIPLE_ASSOCIATIONS]: {
             entityName: "MultipleAssociations",
             tableName: "MultipleAssociations",
             fieldMetadata: {
@@ -89,9 +89,9 @@ public isolated client class Client {
         }
         self.dbClient = dbClient;
         self.persistClients = {
-            [PROFILE] : check new (dbClient, self.metadata.get(PROFILE), psql:MYSQL_SPECIFICS),
-            [USER] : check new (dbClient, self.metadata.get(USER), psql:MYSQL_SPECIFICS),
-            [MULTIPLE_ASSOCIATIONS] : check new (dbClient, self.metadata.get(MULTIPLE_ASSOCIATIONS), psql:MYSQL_SPECIFICS)
+            [PROFILE]: check new (dbClient, self.metadata.get(PROFILE), psql:MYSQL_SPECIFICS),
+            [USER]: check new (dbClient, self.metadata.get(USER), psql:MYSQL_SPECIFICS),
+            [MULTIPLE_ASSOCIATIONS]: check new (dbClient, self.metadata.get(MULTIPLE_ASSOCIATIONS), psql:MYSQL_SPECIFICS)
         };
     }
 

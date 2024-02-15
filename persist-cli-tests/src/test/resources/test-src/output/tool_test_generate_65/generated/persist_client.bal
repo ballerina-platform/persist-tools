@@ -21,7 +21,7 @@ public isolated client class Client {
     private final map<psql:SQLClient> persistClients;
 
     private final record {|psql:SQLMetadata...;|} & readonly metadata = {
-        [BOOK] : {
+        [BOOK]: {
             entityName: "Book",
             tableName: "Book",
             fieldMetadata: {
@@ -39,7 +39,7 @@ public isolated client class Client {
             keyFields: ["bookId"],
             joinMetadata: {orderitem: {entity: OrderItem, fieldName: "orderitem", refTable: "OrderItem", refColumns: ["orderitemBookId"], joinColumns: ["bookId"], 'type: psql:ONE_TO_ONE}}
         },
-        [ORDER] : {
+        [ORDER]: {
             entityName: "Order",
             tableName: "Order",
             fieldMetadata: {
@@ -63,7 +63,7 @@ public isolated client class Client {
                 payment: {entity: Payment, fieldName: "payment", refTable: "Payment", refColumns: ["paymentOrderId"], joinColumns: ["orderId"], 'type: psql:ONE_TO_ONE}
             }
         },
-        [ORDER_ITEM] : {
+        [ORDER_ITEM]: {
             entityName: "OrderItem",
             tableName: "OrderItem",
             fieldMetadata: {
@@ -88,7 +88,7 @@ public isolated client class Client {
                 'order: {entity: Order, fieldName: "'order", refTable: "Order", refColumns: ["orderId"], joinColumns: ["orderOrderId"], 'type: psql:ONE_TO_MANY}
             }
         },
-        [PAYMENT] : {
+        [PAYMENT]: {
             entityName: "Payment",
             tableName: "Payment",
             fieldMetadata: {
@@ -113,10 +113,10 @@ public isolated client class Client {
         }
         self.dbClient = dbClient;
         self.persistClients = {
-            [BOOK] : check new (dbClient, self.metadata.get(BOOK), psql:MYSQL_SPECIFICS),
-            [ORDER] : check new (dbClient, self.metadata.get(ORDER), psql:MYSQL_SPECIFICS),
-            [ORDER_ITEM] : check new (dbClient, self.metadata.get(ORDER_ITEM), psql:MYSQL_SPECIFICS),
-            [PAYMENT] : check new (dbClient, self.metadata.get(PAYMENT), psql:MYSQL_SPECIFICS)
+            [BOOK]: check new (dbClient, self.metadata.get(BOOK), psql:MYSQL_SPECIFICS),
+            [ORDER]: check new (dbClient, self.metadata.get(ORDER), psql:MYSQL_SPECIFICS),
+            [ORDER_ITEM]: check new (dbClient, self.metadata.get(ORDER_ITEM), psql:MYSQL_SPECIFICS),
+            [PAYMENT]: check new (dbClient, self.metadata.get(PAYMENT), psql:MYSQL_SPECIFICS)
         };
     }
 

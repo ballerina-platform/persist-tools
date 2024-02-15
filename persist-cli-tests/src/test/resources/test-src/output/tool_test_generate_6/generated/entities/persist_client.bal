@@ -18,7 +18,7 @@ public isolated client class Client {
     private final map<psql:SQLClient> persistClients;
 
     private final record {|psql:SQLMetadata...;|} & readonly metadata = {
-        [DATA_TYPE] : {
+        [DATA_TYPE]: {
             entityName: "DataType",
             tableName: "DataType",
             fieldMetadata: {
@@ -44,7 +44,7 @@ public isolated client class Client {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
-        self.persistClients = {[DATA_TYPE] : check new (dbClient, self.metadata.get(DATA_TYPE), psql:MYSQL_SPECIFICS)};
+        self.persistClients = {[DATA_TYPE]: check new (dbClient, self.metadata.get(DATA_TYPE), psql:MYSQL_SPECIFICS)};
     }
 
     isolated resource function get datatypes(DataTypeTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {

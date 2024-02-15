@@ -19,7 +19,7 @@ public isolated client class Client {
     private final map<psql:SQLClient> persistClients;
 
     private final record {|psql:SQLMetadata...;|} & readonly metadata = {
-        [PROFILE] : {
+        [PROFILE]: {
             entityName: "Profile",
             tableName: "Profile",
             fieldMetadata: {
@@ -32,7 +32,7 @@ public isolated client class Client {
             keyFields: ["id"],
             joinMetadata: {owner: {entity: User, fieldName: "owner", refTable: "User", refColumns: ["id"], joinColumns: ["ownerId"], 'type: psql:ONE_TO_ONE}}
         },
-        [USER] : {
+        [USER]: {
             entityName: "User",
             tableName: "User",
             fieldMetadata: {
@@ -54,8 +54,8 @@ public isolated client class Client {
         }
         self.dbClient = dbClient;
         self.persistClients = {
-            [PROFILE] : check new (dbClient, self.metadata.get(PROFILE), psql:MYSQL_SPECIFICS),
-            [USER] : check new (dbClient, self.metadata.get(USER), psql:MYSQL_SPECIFICS)
+            [PROFILE]: check new (dbClient, self.metadata.get(PROFILE), psql:MYSQL_SPECIFICS),
+            [USER]: check new (dbClient, self.metadata.get(USER), psql:MYSQL_SPECIFICS)
         };
     }
 

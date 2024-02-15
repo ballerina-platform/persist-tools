@@ -18,7 +18,7 @@ public isolated client class Client {
     private final map<psql:SQLClient> persistClients;
 
     private final record {|psql:SQLMetadata...;|} & readonly metadata = {
-        [BYTE_TEST] : {
+        [BYTE_TEST]: {
             entityName: "ByteTest",
             tableName: "ByteTest",
             fieldMetadata: {
@@ -36,7 +36,7 @@ public isolated client class Client {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
-        self.persistClients = {[BYTE_TEST] : check new (dbClient, self.metadata.get(BYTE_TEST), psql:MYSQL_SPECIFICS)};
+        self.persistClients = {[BYTE_TEST]: check new (dbClient, self.metadata.get(BYTE_TEST), psql:MYSQL_SPECIFICS)};
     }
 
     isolated resource function get bytetests(ByteTestTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
