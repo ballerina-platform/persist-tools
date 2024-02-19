@@ -318,7 +318,27 @@ public class BalSyntaxUtils {
         MinutiaeList commentMinutiaeList = createCommentMinutiaeList(String.format(
                 BalSyntaxConstants.AUTO_GENERATED_COMMENT_WITH_REASON, entityModule.getModuleName()));
         imports = imports.add(NodeParser.parseImportDeclaration("import ballerina/persist as _;"));
-        imports = imports.add(NodeParser.parseImportDeclaration(("import ballerinax/persist.sql;")));
+        boolean areAnnotationsAdded = false;
+        for (Entity entity : entityModule.getEntityMap().values()) {
+            if (entity.shouldTableMappingGenerated()
+                || (entity.getIndexes() != null && !entity.getIndexes().isEmpty())
+                || (entity.getUniqueIndexes() != null && !entity.getUniqueIndexes().isEmpty())) {
+                areAnnotationsAdded = true;
+                break;
+            }
+            for (EntityField field : entity.getFields()) {
+                if (field.shouldColumnMappingGenerated()
+                        || field.isDbGenerated()
+                        || isDbTypeMappingRequired(field)
+                        || (field.getRelationRefs() != null) && !field.getRelationRefs().isEmpty()) {
+                    areAnnotationsAdded = true;
+                    break;
+                }
+            }
+        }
+        if (areAnnotationsAdded) {
+            imports = imports.add(NodeParser.parseImportDeclaration(("import ballerinax/persist.sql;")));
+        }
         if (entityModule.getEntityMap().values().stream().anyMatch(entity ->
                 entity.getFields().stream().anyMatch(field -> field.getFieldType().startsWith("time")))) {
             imports = imports.add(NodeParser.parseImportDeclaration("import ballerina/time;"));
@@ -569,20 +589,54 @@ public class BalSyntaxUtils {
                                         sqlType.getNumericScale()));
                     }
                     break;
-                default: // do nothing
+                default:
+                    break;
             }
         }
     }
 
+    private static boolean isDbTypeMappingRequired(EntityField field) {
+        SQLType sqlType = field.getSqlType();
+        if (sqlType != null) {
+            switch (sqlType.getTypeName()) {
+                case PersistToolsConstants.SqlTypes.CHAR:
+                    return true;
+                case PersistToolsConstants.SqlTypes.VARCHAR:
+                    if (PersistToolsConstants.DefaultMaxLength.VARCHAR_LENGTH != sqlType.getMaxLength()) {
+                        return true;
+                    }
+                    return false;
+                case PersistToolsConstants.SqlTypes.DECIMAL:
+                    // add later: check for default values for separate data sources
+                    String dataSource = PersistToolsConstants.SupportedDataSources.MYSQL_DB;
+                    int precision = PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION_MYSQL;
+                    int scale = PersistToolsConstants.DefaultMaxLength.DECIMAL_SCALE;
+                    switch (dataSource) {
+                        case PersistToolsConstants.SupportedDataSources.MYSQL_DB:
+                            precision = PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION_MYSQL;
+                            break;
+                        default: // do nothing
+                    }
+                    if (sqlType.getNumericPrecision() != precision || sqlType.getNumericScale() != scale) {
+                        return true;
+                    }
+                    return false;
+                default:
+                    return false;
+            }
+        }
+        return false;
+    }
+
     private static void addDbMappingAnnotationToField(EntityField field, StringBuilder recordFields) {
-        if (field.shouldResourceMappingGenerated()) {
+        if (field.shouldColumnMappingGenerated()) {
             recordFields.append(String.format(BalSyntaxConstants.SQL_DB_MAPPING_ANNOTATION,
                     field.getFieldColumnName()));
         }
     }
 
     private static void addDbMappingAnnotationToEntity(Entity entity, StringBuilder recordString) {
-        if (entity.shouldResourceMappingGenerated()) {
+        if (entity.shouldTableMappingGenerated()) {
             recordString.append(String.format(BalSyntaxConstants.SQL_DB_MAPPING_ANNOTATION,
                     entity.getTableName()));
             recordString.append(System.lineSeparator());

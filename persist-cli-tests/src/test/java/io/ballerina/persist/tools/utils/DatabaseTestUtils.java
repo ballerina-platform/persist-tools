@@ -24,7 +24,10 @@ import io.ballerina.persist.configuration.PersistConfiguration;
 import io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils;
 import org.testng.Assert;
 
+import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -32,10 +35,14 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Locale;
 
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.CREATE_DATABASE_SQL_FORMAT_MYSQL;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.DROP_DATABASE_SQL_FORMAT_MYSQL;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.GENERATED_SOURCES_DIRECTORY;
+import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.INPUT_RESOURCES_DIRECTORY;
 import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 
 /**
@@ -193,5 +200,63 @@ public class DatabaseTestUtils {
             Assert.assertEquals(persistTable.isNullable(columns.getString(columnName)),
                     columns.getString(nullable));
         }
+    }
+
+    public static void createFromDatabaseScript(String packageName, String datasource) throws BalException {
+        Path sourcePath = Paths.get(INPUT_RESOURCES_DIRECTORY, packageName);
+        PersistConfiguration configuration = TomlSyntaxUtils.readDatabaseConfigurations(
+                Paths.get(INPUT_RESOURCES_DIRECTORY, packageName, BALLERINA_TOML));
+        String username = configuration.getDbConfig().getUsername();
+        String password = configuration.getDbConfig().getPassword();
+        String host = configuration.getDbConfig().getHost();
+        String database = configuration.getDbConfig().getDatabase();
+        int port = configuration.getDbConfig().getPort();
+
+        String url;
+        if (datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
+            url = String.format("jdbc:sqlserver://%s:%s", host, port);
+        } else if (datasource.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB)) {
+            url = String.format("jdbc:postgresql://%s:%s/", host, port);
+        } else {
+            url = String.format("jdbc:mysql://%s:%s", host, port);
+        }
+
+        try (Connection connection = DriverManager.getConnection(url, username, password)) {
+            try (Statement statement = connection.createStatement()) {
+                String sql = String.format(DROP_DATABASE_SQL_FORMAT_MYSQL, database);
+                // remove CR
+                sql = sql.replace("\r\n", "\n");
+                statement.execute(sql);
+            }
+            try (Statement statement = connection.createStatement()) {
+                String sql = String.format(CREATE_DATABASE_SQL_FORMAT_MYSQL, database);
+                // remove CR
+                sql = sql.replace("\r\n", "\n");
+                statement.execute(sql);
+            }
+        } catch (SQLException e) {
+            errStream.println("Failed to create database connection: " + e.getMessage());
+        }
+
+        if (datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
+            url = String.format("jdbc:sqlserver://%s:%s/%s", host, port, database);
+        } else if (datasource.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB)) {
+            url = String.format("jdbc:postgresql://%s:%s/%s", host, port, database);
+        } else {
+            url = String.format("jdbc:mysql://%s:%s/%s", host, port, database);
+        }
+
+        try (Connection connection = DriverManager.getConnection(url, username, password)) {
+            Path scriptFilePath = sourcePath.resolve("script.sql");
+            String scriptContent = Files.readString(scriptFilePath);
+            try (Statement statement = connection.createStatement()) {
+                statement.execute(scriptContent.replace("\r\n", "\n"));
+            }
+        } catch (SQLException e) {
+            errStream.println("Failed to create database connection: " + e.getMessage());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 }

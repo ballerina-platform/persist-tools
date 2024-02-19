@@ -159,8 +159,7 @@ public abstract class Introspector {
                 if (sqlForeignKeys.stream().anyMatch(
                         foreignKey -> foreignKey.getTableName().equals(table.getTableName())
                         && foreignKey.getColumnNames().contains(column.getColumnName()))) {
-                    fieldBuilder = EntityField.newBuilder(
-                            "_" + CaseConverter.toCamelCase(column.getColumnName()));
+                    fieldBuilder = EntityField.newBuilder(CaseConverter.toCamelCase(column.getColumnName()));
                 }
                 fieldBuilder.setFieldColumnName(column.getColumnName());
 

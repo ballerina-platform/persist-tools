@@ -93,7 +93,7 @@ public class Entity {
         return null;
     }
 
-    public boolean shouldResourceMappingGenerated() {
+    public boolean shouldTableMappingGenerated() {
         if (tableName == null || tableName.isBlank()) {
             return false;
         }

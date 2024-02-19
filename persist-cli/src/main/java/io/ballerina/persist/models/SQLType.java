@@ -122,7 +122,10 @@ public class SQLType {
             // MySQL --> DATETIME
             // MSSQL --> DATETIME2
             // PostgreSQL --> TIMESTAMP
-            // Revise this part
+//            case PersistToolsConstants.SqlTypes.DATE_TIME:
+//            case PersistToolsConstants.SqlTypes.DATE_TIME2:
+//            case PersistToolsConstants.SqlTypes.TIME_STAMP:
+//                return PersistToolsConstants.BallerinaTypes.UTC;
 
             // Ballerina --> string
             // MySQL --> VARCHAR

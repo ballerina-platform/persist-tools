@@ -103,7 +103,7 @@ public class EntityField {
         return isDbGenerated;
     }
 
-    public boolean shouldResourceMappingGenerated() {
+    public boolean shouldColumnMappingGenerated() {
         if (fieldColumnName == null ||  fieldColumnName.isBlank()) {
             return false;
         }
