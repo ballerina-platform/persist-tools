@@ -147,6 +147,7 @@ public class MySQLIntrospector extends Introspector {
                     BINARY kcu.constraint_name = BINARY rc.constraint_name
                 WHERE
                     BINARY kcu.table_schema = '%s'
+                    AND rc.constraint_schema = '%s'
                     AND kcu.table_name = '%s'
                     AND kcu.referenced_column_name IS NOT NULL
                 ORDER BY
@@ -156,7 +157,7 @@ public class MySQLIntrospector extends Introspector {
                 kcu.ordinal_position;
                 """;
         formatQuery = formatQuery.replace("\r\n", "%n");
-        return String.format(formatQuery, this.databaseName, tableName);
+        return String.format(formatQuery, this.databaseName, this.databaseName, tableName);
     }
 
     @Override

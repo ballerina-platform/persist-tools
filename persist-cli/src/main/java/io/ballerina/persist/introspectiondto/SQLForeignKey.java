@@ -71,11 +71,15 @@ public class SQLForeignKey {
 
 
     public void addColumnName(String columnName) {
-        this.columnNames.add(columnName);
+        List<String> newColumnNames = new ArrayList<>(this.columnNames);
+        newColumnNames.add(columnName);
+        this.columnNames = Collections.unmodifiableList(newColumnNames);
     }
 
     public void addReferencedColumnName(String referencedColumnName) {
-        this.referencedColumnNames.add(referencedColumnName);
+        List<String> newReferencedColumnNames = new ArrayList<>(this.referencedColumnNames);
+        newReferencedColumnNames.add(referencedColumnName);
+        this.referencedColumnNames = Collections.unmodifiableList(newReferencedColumnNames);
     }
     public static class Builder {
         private String constraintName;

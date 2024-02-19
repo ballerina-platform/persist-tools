@@ -39,8 +39,6 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Locale;
 
-import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.CREATE_DATABASE_SQL_FORMAT_MYSQL;
-import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.DROP_DATABASE_SQL_FORMAT_MYSQL;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.GENERATED_SOURCES_DIRECTORY;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.INPUT_RESOURCES_DIRECTORY;
 import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
@@ -209,7 +207,6 @@ public class DatabaseTestUtils {
         String username = configuration.getDbConfig().getUsername();
         String password = configuration.getDbConfig().getPassword();
         String host = configuration.getDbConfig().getHost();
-        String database = configuration.getDbConfig().getDatabase();
         int port = configuration.getDbConfig().getPort();
 
         String url;
@@ -221,36 +218,19 @@ public class DatabaseTestUtils {
             url = String.format("jdbc:mysql://%s:%s", host, port);
         }
 
-        try (Connection connection = DriverManager.getConnection(url, username, password)) {
-            try (Statement statement = connection.createStatement()) {
-                String sql = String.format(DROP_DATABASE_SQL_FORMAT_MYSQL, database);
-                // remove CR
-                sql = sql.replace("\r\n", "\n");
-                statement.execute(sql);
-            }
-            try (Statement statement = connection.createStatement()) {
-                String sql = String.format(CREATE_DATABASE_SQL_FORMAT_MYSQL, database);
-                // remove CR
-                sql = sql.replace("\r\n", "\n");
-                statement.execute(sql);
-            }
-        } catch (SQLException e) {
-            errStream.println("Failed to create database connection: " + e.getMessage());
-        }
-
-        if (datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
-            url = String.format("jdbc:sqlserver://%s:%s/%s", host, port, database);
-        } else if (datasource.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB)) {
-            url = String.format("jdbc:postgresql://%s:%s/%s", host, port, database);
-        } else {
-            url = String.format("jdbc:mysql://%s:%s/%s", host, port, database);
-        }
 
         try (Connection connection = DriverManager.getConnection(url, username, password)) {
             Path scriptFilePath = sourcePath.resolve("script.sql");
-            String scriptContent = Files.readString(scriptFilePath);
+            //15 lines skipped to avoid license headers
+            String scriptContent = Files.lines(scriptFilePath).skip(15).reduce("", String::concat);
             try (Statement statement = connection.createStatement()) {
-                statement.execute(scriptContent.replace("\r\n", "\n"));
+                String sql = scriptContent.replace("\r\n", "\n");
+                String[] statements = sql.split(";");
+                for (String statementStr : statements) {
+                    statement.addBatch(statementStr);
+                }
+                statement.executeBatch();
+                connection.commit();
             }
         } catch (SQLException e) {
             errStream.println("Failed to create database connection: " + e.getMessage());

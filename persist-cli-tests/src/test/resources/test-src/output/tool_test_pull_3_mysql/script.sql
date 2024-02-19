@@ -23,6 +23,15 @@ CREATE TABLE User (
   name VARCHAR(191) NOT NULL,
   gender ENUM ('MALE', 'FEMALE') NOT NULL,
   nic VARCHAR(191) NOT NULL,
-  salary DECIMAL(65,30) NOT NULL,
+  salary DECIMAL(65,30),
+  PRIMARY KEY (id)
+);
+
+CREATE TABLE Car (
+  id INT,
+  name VARCHAR(191) NOT NULL,
+  model VARCHAR(191) NOT NULL,
+  ownerId INT NOT NULL,
+  FOREIGN KEY (ownerId) REFERENCES User(id),
   PRIMARY KEY (id)
 );

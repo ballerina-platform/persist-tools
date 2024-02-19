@@ -23,6 +23,6 @@ CREATE TABLE User (
   name VARCHAR(191) NOT NULL,
   gender ENUM ('MALE', 'FEMALE') NOT NULL,
   nic VARCHAR(191) NOT NULL,
-  salary DECIMAL(65,30) NOT NULL,
+  salary DECIMAL(65,30),
   PRIMARY KEY (id)
 );

@@ -14,6 +14,10 @@
 -- specific language governing permissions and limitations
 -- under the License.
 
+DROP DATABASE IF EXISTS persist;
+CREATE DATABASE persist;
+USE persist;
+
 CREATE TABLE User (
   id INT,
   name VARCHAR(191) NOT NULL,
