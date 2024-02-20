@@ -230,7 +230,6 @@ public class DatabaseTestUtils {
                     statement.addBatch(statementStr);
                 }
                 statement.executeBatch();
-                connection.commit();
             }
         } catch (SQLException e) {
             errStream.println("Failed to create database connection: " + e.getMessage());

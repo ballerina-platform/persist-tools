@@ -164,7 +164,8 @@ public class SqlScriptUtils {
         StringBuilder relationScripts = new StringBuilder();
         Relation relation = entityField.getRelation();
         List<Relation.Key> keyColumns = relation.getKeyColumns();
-        List<String> references = relation.getReferences();
+        List<String> references = relation.getKeyColumns().stream().map(Relation.Key::getReferenceColumnName)
+                .toList();
         Entity assocEntity = relation.getAssocEntity();
         StringBuilder foreignKey = new StringBuilder();
         StringBuilder referenceFieldName = new StringBuilder();

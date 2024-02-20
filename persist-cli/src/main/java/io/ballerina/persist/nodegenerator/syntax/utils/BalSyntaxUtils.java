@@ -60,6 +60,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * This class is used to generate the common syntax tree for the client.
@@ -294,7 +295,7 @@ public class BalSyntaxUtils {
             filterKeys.append(BalSyntaxConstants.DOUBLE_QUOTE)
                     .append(stripEscapeCharacter(entry.getFieldName()))
                     .append(BalSyntaxConstants.DOUBLE_QUOTE).append(BalSyntaxConstants.COLON).
-                    append(entry.getFieldColumnName()).append(BalSyntaxConstants.COMMA_WITH_SPACE);
+                    append(entry.getFieldName()).append(BalSyntaxConstants.COMMA_WITH_SPACE);
             path.append(BalSyntaxConstants.BACK_SLASH).append(BalSyntaxConstants.OPEN_BRACKET).
                     append(entry.getFieldName()).append(BalSyntaxConstants.CLOSE_BRACKET);
         }
@@ -527,35 +528,49 @@ public class BalSyntaxUtils {
     }
 
     private static void addDbIndexAnnotationToField(Entity entity, EntityField field, StringBuilder recordFields) {
+        List<String> indexNames = new ArrayList<>();
+        List<String> uniqueIndexNames = new ArrayList<>();
         entity.getUniqueIndexes().forEach(index -> {
             if (index.getFields().contains(field)) {
-                recordFields.append(
-                        String.format(BalSyntaxConstants.SQL_UNIQUE_INDEX_MAPPING_ANNOTATION, index.getIndexName()));
+                uniqueIndexNames.add(index.getIndexName());
             }
         });
         entity.getIndexes().forEach(index -> {
             if (index.getFields().contains(field)) {
-                recordFields.append(
-                        String.format(BalSyntaxConstants.SQL_INDEX_MAPPING_ANNOTATION, index.getIndexName()));
+                indexNames.add(index.getIndexName());
             }
         });
+        if (!indexNames.isEmpty()) {
+            recordFields.append(String.format(BalSyntaxConstants.SQL_INDEX_MAPPING_ANNOTATION,
+                     formatToBalStringArray(indexNames)));
+            recordFields.append(BalSyntaxConstants.NEWLINE);
+        }
+        if (!uniqueIndexNames.isEmpty()) {
+            recordFields.append(String.format(BalSyntaxConstants.SQL_UNIQUE_INDEX_MAPPING_ANNOTATION,
+                    formatToBalStringArray(uniqueIndexNames)));
+            recordFields.append(BalSyntaxConstants.NEWLINE);
+        }
     }
 
     private static void addDbRelationMappingAnnotationToField(EntityField field, StringBuilder recordFields) {
         if (field.getRelationRefs() != null) {
-            StringBuilder relationRefs = new StringBuilder();
-            relationRefs.append(SyntaxTokenConstants.SYNTAX_TREE_OPEN_BRACKET);
-            for (String ref : field.getRelationRefs()) {
-                relationRefs.append(BalSyntaxConstants.DOUBLE_QUOTE);
-                relationRefs.append(ref);
-                relationRefs.append(BalSyntaxConstants.DOUBLE_QUOTE);
-                relationRefs.append(BalSyntaxConstants.COMMA_WITH_SPACE);
-            }
-            relationRefs.delete(relationRefs.length() - 2, relationRefs.length());
-            relationRefs.append(SyntaxTokenConstants.SYNTAX_TREE_CLOSE_BRACKET);
             recordFields.append(String.format(BalSyntaxConstants.SQL_RELATION_MAPPING_ANNOTATION,
-                    relationRefs));
+                    formatToBalStringArray(field.getRelationRefs())));
         }
+    }
+
+    private static String formatToBalStringArray(List<String> list) {
+        StringBuilder stringArray = new StringBuilder();
+        stringArray.append(SyntaxTokenConstants.SYNTAX_TREE_OPEN_BRACKET);
+        for (String item : list) {
+            stringArray.append(BalSyntaxConstants.DOUBLE_QUOTE);
+            stringArray.append(item);
+            stringArray.append(BalSyntaxConstants.DOUBLE_QUOTE);
+            stringArray.append(BalSyntaxConstants.COMMA_WITH_SPACE);
+        }
+        stringArray.delete(stringArray.length() - 2, stringArray.length());
+        stringArray.append(SyntaxTokenConstants.SYNTAX_TREE_CLOSE_BRACKET);
+        return stringArray.toString();
     }
 
     private static void addDbTypeMappingAnnotationToField(EntityField field, StringBuilder recordFields) {
@@ -745,7 +760,11 @@ public class BalSyntaxUtils {
     }
 
     public static String readStringValueFromAnnotation
-            (NodeList<AnnotationNode> annotationNodes, String annotation, String field) {
+            (io.ballerina.compiler.syntax.tree.NodeList<AnnotationNode> annotationNodes, String annotation,
+             String field) {
+        if (annotationNodes == null) {
+            return null;
+        }
         for (AnnotationNode annotationNode : annotationNodes) {
             String annotationName = annotationNode.annotReference().toSourceCode().trim();
             if (annotationName.equals(annotation)) {
@@ -759,7 +778,7 @@ public class BalSyntaxUtils {
                         }
                         Optional<ExpressionNode> valueExpr = specificFieldNode.valueExpr();
                         if (valueExpr.isPresent()) {
-                            return valueExpr.get().toSourceCode().trim().replace("\"", "");
+                            return valueExpr.get().toSourceCode().trim().replace("\"", "").trim();
                         }
                     }
                 }
@@ -769,7 +788,10 @@ public class BalSyntaxUtils {
     }
 
     public static boolean isAnnotationPresent
-            (NodeList<AnnotationNode> annotationNodes, String annotation) {
+            (io.ballerina.compiler.syntax.tree.NodeList<AnnotationNode> annotationNodes, String annotation) {
+        if (annotationNodes == null) {
+            return false;
+        }
         for (AnnotationNode annotationNode : annotationNodes) {
             String annotationName = annotationNode.annotReference().toSourceCode().trim();
             if (annotationName.equals(annotation)) {
@@ -780,7 +802,11 @@ public class BalSyntaxUtils {
     }
 
     public static List<String> readStringArrayValueFromAnnotation
-            (NodeList<AnnotationNode> annotationNodes, String annotation, String field) {
+            (io.ballerina.compiler.syntax.tree.NodeList<AnnotationNode> annotationNodes, String annotation,
+             String field) {
+        if (annotationNodes == null) {
+            return null;
+        }
         for (AnnotationNode annotationNode : annotationNodes) {
             String annotationName = annotationNode.annotReference().toSourceCode().trim();
             if (annotationName.equals(annotation)) {
@@ -794,8 +820,9 @@ public class BalSyntaxUtils {
                         }
                         Optional<ExpressionNode> valueExpr = specificFieldNode.valueExpr();
                         if (valueExpr.isPresent()) {
-                            return List.of(valueExpr.get().toSourceCode().trim().replace("\"", "")
-                                    .replace("[", "").replace("]", "").split(","));
+                            return Stream.of(valueExpr.get().toSourceCode().trim().replace("\"", "")
+                                    .replace("[", "")
+                                    .replace("]", "").split(",")).map(String::trim).toList();
                         }
                     }
                 }
@@ -803,7 +830,6 @@ public class BalSyntaxUtils {
         }
         return null;
     }
-
 
     private static String getConstraintField(EntityField field) {
         for (AnnotationNode annotationNode : field.getAnnotation()) {

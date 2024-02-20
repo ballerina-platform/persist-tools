@@ -142,12 +142,14 @@ public class Relation {
 
         private final String columnName;
         private final String reference;
+        private final String referenceColumnName;
         private final String type;
 
-        public Key(String field, String columnName, String reference, String type) {
+        public Key(String field, String columnName, String reference, String referenceColumnName, String type) {
             this.field = field;
             this.columnName = columnName;
             this.reference = reference;
+            this.referenceColumnName = referenceColumnName;
             this.type = type;
         }
 
@@ -165,6 +167,10 @@ public class Relation {
 
         public String getColumnName() {
             return columnName;
+        }
+
+        public String getReferenceColumnName() {
+            return referenceColumnName;
         }
     }
 }

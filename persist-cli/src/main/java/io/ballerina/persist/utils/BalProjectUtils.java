@@ -66,6 +66,7 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -259,11 +260,22 @@ public class BalProjectUtils {
                         fieldBuilder.setFieldColumnName(fieldResourceName);
                     }
                     //read the unique index annotation
-                    String uniqueIndexName = BalSyntaxUtils.readStringValueFromAnnotation(
+                    boolean isUniqueIndexPresent = BalSyntaxUtils.isAnnotationPresent(
+                            value.annotations(),
+                            BalSyntaxConstants.SQL_UNIQUE_INDEX_MAPPING_ANNOTATION_NAME
+                    );
+                    List<String> uniqueIndexNames = BalSyntaxUtils.readStringArrayValueFromAnnotation(
                             value.annotations(),
                             BalSyntaxConstants.SQL_UNIQUE_INDEX_MAPPING_ANNOTATION_NAME,
-                            "name"
+                            "names"
                     );
+                    if (uniqueIndexNames != null && !uniqueIndexNames.isEmpty()) {
+                        uniqueIndexNames.forEach(uniqueIndexName ->
+                                entityBuilder.upsertUniqueIndex(uniqueIndexName, fieldBuilder.build()));
+                    } else if (isUniqueIndexPresent) {
+                        entityBuilder.upsertUniqueIndex("unique_idx_" +
+                                fieldBuilder.getFieldName().toLowerCase(Locale.ENGLISH), fieldBuilder.build());
+                    }
                     //read the relation annotation
                     List<String> relationRefs = BalSyntaxUtils.readStringArrayValueFromAnnotation(
                             value.annotations(),
@@ -272,21 +284,24 @@ public class BalProjectUtils {
                     );
                     if (relationRefs != null) {
                         fieldBuilder.setRelationRefs(relationRefs);
-//                        removeRelationRefsFromEntityFields(entityBuilder, relationRefs);
                     }
 
-
-                    if (uniqueIndexName != null) {
-                        entityBuilder.upsertUniqueIndex(uniqueIndexName, fieldBuilder.build());
-                    }
                     //read the index annotation
-                    String indexName = BalSyntaxUtils.readStringValueFromAnnotation(
+                    boolean isIndexPresent = BalSyntaxUtils.isAnnotationPresent(
+                            value.annotations(),
+                            BalSyntaxConstants.SQL_INDEX_MAPPING_ANNOTATION_NAME
+                    );
+                    List<String> indexNames = BalSyntaxUtils.readStringArrayValueFromAnnotation(
                             value.annotations(),
                             BalSyntaxConstants.SQL_INDEX_MAPPING_ANNOTATION_NAME,
-                            "name"
+                            "names"
                     );
-                    if (indexName != null) {
-                        entityBuilder.upsertIndex(indexName, fieldBuilder.build());
+                    if (indexNames != null && !indexNames.isEmpty()) {
+                        indexNames.forEach(indexName ->
+                                entityBuilder.upsertIndex(indexName, fieldBuilder.build()));
+                    } else if (isIndexPresent) {
+                        entityBuilder.upsertIndex("idx_" +
+                                fieldBuilder.getFieldName().toLowerCase(Locale.ENGLISH), fieldBuilder.build());
                     }
                     // read the varchar annotation
                     String varcharLength = BalSyntaxUtils.readStringValueFromAnnotation(
@@ -448,6 +463,7 @@ public class BalProjectUtils {
                             assocEntity.getFields().stream().filter(assocfield -> assocfield.getFieldType()
                                             .equals(entity.getEntityName()))
                                     .filter(assocfield -> assocfield.getRelation() == null).forEach(assocfield -> {
+                                        Map<String, EntityField> fkFields = new HashMap<>();
                                         // skip if the relation is already set for the entity field.
                                         if (field.getRelation() != null) {
                                             return;
@@ -462,16 +478,17 @@ public class BalProjectUtils {
                                             if (!field.isOptionalType() && assocfield.isOptionalType()) {
                                                 field.setRelation(computeRelation(field.getFieldName(), entity,
                                                         assocEntity, true, Relation.RelationType.ONE,
-                                                        field.getRelationRefs()));
+                                                        field.getRelationRefs(), fkFields));
                                                 assocfield.setRelation(computeRelation(field.getFieldName(),
                                                         assocEntity, entity, false, Relation.RelationType.ONE
-                                                        , field.getRelationRefs()));
+                                                        , field.getRelationRefs(), fkFields));
                                             } else if (field.isOptionalType() && !assocfield.isOptionalType()) {
                                                 field.setRelation(computeRelation(field.getFieldName(), entity,
-                                                        assocEntity, false, Relation.RelationType.ONE, null));
+                                                        assocEntity, false, Relation.RelationType.ONE, null
+                                                        , fkFields));
                                                 assocfield.setRelation(computeRelation(field.getFieldName(),
                                                         assocEntity, entity, true, Relation.RelationType.ONE,
-                                                        assocfield.getRelationRefs()));
+                                                        assocfield.getRelationRefs(), fkFields));
                                             } else {
                                                 throw new RuntimeException("unsupported ownership annotation " +
                                                         "in the relation between " + entity.getEntityName() +
@@ -484,10 +501,10 @@ public class BalProjectUtils {
                                                 // first param should be always owner entities field name
                                                 field.setRelation(computeRelation(assocfield.getFieldName(), entity,
                                                         assocEntity, false, Relation.RelationType.MANY,
-                                                        field.getRelationRefs()));
+                                                        field.getRelationRefs(), fkFields));
                                                 assocfield.setRelation(computeRelation(assocfield.getFieldName(),
                                                         assocEntity, entity, true, Relation.RelationType.ONE,
-                                                        field.getRelationRefs()));
+                                                        field.getRelationRefs(), fkFields));
                                             } else if (field.isArrayType() || field.getFieldType().equals("byte")) {
                                                 field.setRelation(null);
                                             } else {
@@ -496,10 +513,10 @@ public class BalProjectUtils {
                                                 // first param should be always owner entities field name
                                                 field.setRelation(computeRelation(field.getFieldName(), entity,
                                                         assocEntity, true, Relation.RelationType.ONE,
-                                                        field.getRelationRefs()));
+                                                        field.getRelationRefs(), fkFields));
                                                 assocfield.setRelation(computeRelation(field.getFieldName(),
                                                         assocEntity, entity, false, Relation.RelationType.MANY,
-                                                        field.getRelationRefs()));
+                                                        field.getRelationRefs(), fkFields));
                                             }
                                         }
                                     });
@@ -521,7 +538,8 @@ public class BalProjectUtils {
     }
 
     private static Relation computeRelation(String fieldName, Entity entity, Entity assocEntity, boolean isOwner,
-                                            Relation.RelationType relationType, List<String> relationRefs) {
+                                            Relation.RelationType relationType, List<String> relationRefs,
+                                            Map<String, EntityField> fkFields) {
         Relation.Builder relBuilder = new Relation.Builder();
         relBuilder.setAssocEntity(assocEntity);
         if (isOwner) {
@@ -533,15 +551,17 @@ public class BalProjectUtils {
                             String fkField = relationRefs.get(i);
                             EntityField fkEntityField = entity.getFieldByName(fkField);
                             entity.removeField(fkField);
+                            fkFields.put(fkField, fkEntityField);
                             return new Relation.Key(fkField,
-                                    fkEntityField.getFieldColumnName(), key.getFieldName(),  key.getFieldType());
+                                    fkEntityField.getFieldColumnName(), key.getFieldName(), key.getFieldColumnName(),
+                                    key.getFieldType());
                         }
                         String fkField = stripEscapeCharacter(fieldName.toLowerCase(Locale.ENGLISH))
                                 + stripEscapeCharacter(key.getFieldName()).substring(0, 1).toUpperCase(Locale.ENGLISH)
                                 + stripEscapeCharacter(key.getFieldName()).substring(1);
 
                         return new Relation.Key(fkField,
-                                fkField, key.getFieldName(), key.getFieldType());
+                                fkField, key.getFieldName(), key.getFieldColumnName(), key.getFieldType());
 
                     })
                     .collect(Collectors.toList());
@@ -560,9 +580,12 @@ public class BalProjectUtils {
                                 + stripEscapeCharacter(key.getFieldName()).substring(1);
                         if (relationRefs != null) {
                             fkField = relationRefs.get(i);
+                            EntityField assocField = fkFields.get(fkField);
+                            return new Relation.Key(key.getFieldName(), key.getFieldColumnName(), fkField,
+                                    assocField.getFieldColumnName(), key.getFieldType());
                         }
                         return new Relation.Key(key.getFieldName(), key.getFieldColumnName(), fkField,
-                                key.getFieldType());
+                                fkField, key.getFieldType());
                     })
                     .collect(Collectors.toList());
             relBuilder.setOwner(false);

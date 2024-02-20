@@ -276,9 +276,9 @@ public class BalSyntaxConstants {
     public static final String SQL_RELATION_MAPPING_ANNOTATION =
             String.format("@%s{ refs: %s }", SQL_RELATION_MAPPING_ANNOTATION_NAME, "%s");
     public static final String SQL_INDEX_MAPPING_ANNOTATION =
-            String.format("@%s { name: \"%s\" }", SQL_INDEX_MAPPING_ANNOTATION_NAME, "%s");
+            String.format("@%s { names: %s }", SQL_INDEX_MAPPING_ANNOTATION_NAME, "%s");
     public static final String SQL_UNIQUE_INDEX_MAPPING_ANNOTATION =
-            String.format("@%s { name: \"%s\" }", SQL_UNIQUE_INDEX_MAPPING_ANNOTATION_NAME, "%s");
+            String.format("@%s { names: %s }", SQL_UNIQUE_INDEX_MAPPING_ANNOTATION_NAME, "%s");
     public static final String SQL_GENERATED_ANNOTATION = String.format("@%s", SQL_GENERATED_ANNOTATION_NAME);
 
 

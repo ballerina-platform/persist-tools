@@ -202,7 +202,7 @@ public class DbClientSyntax implements ClientSyntax {
                     filterKeys.substring(0, filterKeys.length() - 2).concat(BalSyntaxConstants.CLOSE_BRACE));
         } else {
             updateStatement = String.format(BalSyntaxConstants.UPDATE_RUN_UPDATE_QUERY,
-                    entity.getKeys().stream().findFirst().get().getFieldColumnName());
+                    entity.getKeys().stream().findFirst().get().getFieldName());
         }
         update.addStatement(NodeParser.parseStatement(updateStatement));
 
@@ -377,7 +377,7 @@ public class DbClientSyntax implements ClientSyntax {
                         refColumns.append(BalSyntaxConstants.COMMA);
                     }
                     refColumns.append(String.format(BalSyntaxConstants.COLUMN_ARRAY_ENTRY_TEMPLATE,
-                            BalSyntaxUtils.stripEscapeCharacter(key.getReference())));
+                            BalSyntaxUtils.stripEscapeCharacter(key.getReferenceColumnName())));
                     joinColumns.append(String.format(BalSyntaxConstants.COLUMN_ARRAY_ENTRY_TEMPLATE,
                             BalSyntaxUtils.stripEscapeCharacter(key.getColumnName())));
                 }

@@ -62,7 +62,6 @@ public abstract class Introspector {
     protected String databaseName;
     protected abstract String getTablesQuery();
     protected abstract String getColumnsQuery(String tableName);
-    protected abstract String getConstraintsQuery();
     protected abstract String getIndexesQuery(String tableName);
     protected abstract String getForeignKeysQuery(String tableName);
     protected abstract String getEnumsQuery();
@@ -155,12 +154,7 @@ public abstract class Introspector {
             table.getColumns().forEach(column -> {
                 EntityField.Builder fieldBuilder = EntityField.newBuilder(
                         CaseConverter.toCamelCase(column.getColumnName()));
-                //remove this after adding compiler support
-                if (sqlForeignKeys.stream().anyMatch(
-                        foreignKey -> foreignKey.getTableName().equals(table.getTableName())
-                        && foreignKey.getColumnNames().contains(column.getColumnName()))) {
-                    fieldBuilder = EntityField.newBuilder(CaseConverter.toCamelCase(column.getColumnName()));
-                }
+
                 fieldBuilder.setFieldColumnName(column.getColumnName());
 
                 if (Objects.equals(column.getDataType(), "enum")) {
@@ -209,7 +203,8 @@ public abstract class Introspector {
             entityBuilder.setKeys(keys);
             entityBuilderMap.put(entityBuilder.getEntityName(), entityBuilder);
         });
-
+        HashMap<String, Integer> ownerFieldNames = new HashMap<>();
+        HashMap<String, Integer> assocFieldNames = new HashMap<>();
         this.sqlForeignKeys.forEach(sqlForeignKey -> {
             Entity.Builder ownerEntityBuilder = entityBuilderMap
                     .get(CaseConverter.toSingularPascalCase(sqlForeignKey.getTableName()));
@@ -218,19 +213,37 @@ public abstract class Introspector {
             boolean isReferenceMany = inferRelationshipCardinality
                     (ownerEntityBuilder.build(), sqlForeignKey)
                     == Relation.RelationType.MANY;
+            String assocFieldName = isReferenceMany ?
+                    Pluralizer.pluralize(ownerEntityBuilder.getEntityName().toLowerCase(Locale.ENGLISH))
+                    : ownerEntityBuilder.getEntityName().toLowerCase(Locale.ENGLISH);
+            if (assocFieldNames.containsKey(assocEntityBuilder.getEntityName() + assocFieldName)) {
+                assocFieldNames.put(assocEntityBuilder.getEntityName() + assocFieldName,
+                        assocFieldNames.get(assocEntityBuilder.getEntityName() + assocFieldName) + 1);
+                assocFieldName = assocFieldName +
+                        assocFieldNames.get(assocEntityBuilder.getEntityName() + assocFieldName);
+            } else {
+                assocFieldNames.put(assocEntityBuilder.getEntityName() + assocFieldName, 0);
+            }
             EntityField.Builder assocFieldBuilder = EntityField
-                    .newBuilder(
-                            isReferenceMany ?
-                                    Pluralizer.pluralize(ownerEntityBuilder.getEntityName().toLowerCase(Locale.ENGLISH))
-                                    : ownerEntityBuilder.getEntityName().toLowerCase(Locale.ENGLISH)
-                    );
+                    .newBuilder(assocFieldName);
             assocFieldBuilder.setType(ownerEntityBuilder.getEntityName());
 
+            String ownerFieldName = assocEntityBuilder.getEntityName().toLowerCase(Locale.ENGLISH);
+            if (ownerFieldNames.containsKey(ownerEntityBuilder.getEntityName() + ownerFieldName)) {
+                ownerFieldNames.put(ownerEntityBuilder.getEntityName() + ownerFieldName,
+                        ownerFieldNames.get(ownerEntityBuilder.getEntityName() + ownerFieldName) + 1);
+                ownerFieldName = ownerFieldName +
+                        ownerFieldNames.get(ownerEntityBuilder.getEntityName() + ownerFieldName);
+            } else {
+                ownerFieldNames.put(ownerEntityBuilder.getEntityName() + ownerFieldName, 0);
+            }
+
             EntityField.Builder ownerFieldBuilder = EntityField
-                    .newBuilder(assocEntityBuilder.getEntityName().toLowerCase(Locale.ENGLISH));
+                    .newBuilder(ownerFieldName);
             ownerFieldBuilder.setType(assocEntityBuilder.getEntityName());
 
             assocFieldBuilder.setArrayType(isReferenceMany);
+            assocFieldBuilder.setOptionalType(!isReferenceMany);
             ownerFieldBuilder.setRelationRefs(sqlForeignKey.getColumnNames().stream().map(
                     columnName -> ownerEntityBuilder.build()
                             .getFieldByColumnName(columnName).getFieldName()
@@ -247,13 +260,11 @@ public abstract class Introspector {
     }
 
     private void finalizeRelations() {
-        this.entityMap.values().forEach(entity -> {
-            entity.getFields().forEach(entityField -> {
-                if (entityField.getRelation() != null) {
-                    entityField.getRelation().setAssocEntity(entityMap.get(entityField.getFieldType()));
-                }
-            });
-        });
+        this.entityMap.values().forEach(entity -> entity.getFields().forEach(entityField -> {
+            if (entityField.getRelation() != null) {
+                entityField.getRelation().setAssocEntity(entityMap.get(entityField.getFieldType()));
+            }
+        }));
     }
 
     private String createEnumName(String tableName, String columnName) {
@@ -263,7 +274,7 @@ public abstract class Introspector {
     private Relation.RelationType inferRelationshipCardinality(Entity ownerEntity, SQLForeignKey foreignKey) {
         List<EntityField> ownerColumns = new ArrayList<>();
         foreignKey.getColumnNames().forEach(columnName ->
-                ownerColumns.add(ownerEntity.getFieldByName(columnName)));
+                ownerColumns.add(ownerEntity.getFieldByColumnName(columnName)));
         boolean isUniqueIndexPresent = ownerEntity.getUniqueIndexes().stream()
                 .anyMatch(index -> areTwoFieldListsEqual(index.getFields(), ownerColumns));
         if (areTwoFieldListsEqual(ownerEntity.getKeys(), ownerColumns)) {

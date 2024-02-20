@@ -199,5 +199,8 @@ public class EntityField {
                     sqlType, relationRefs, isDbGenerated);
         }
 
+        public String getFieldName() {
+            return fieldName;
+        }
     }
 }

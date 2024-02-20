@@ -142,11 +142,12 @@ public class Pull implements BLauncherCmd {
             return;
         }
 
-        //check if model.bal file exists, if exists throw warning
         boolean modelFile = Files.exists(Path.of(String.valueOf(persistDir), "model.bal"));
         if (modelFile) {
-            errStream.print("A model.bal file already exists. " +
-                    "Continuing would overwrite it. Do you wish to continue? (y/n) ");
+            String yellowColor = "\u001B[33m";
+            String resetColor = "\u001B[0m";
+            errStream.print(yellowColor + "A model.bal file already exists. " +
+                    "Continuing would overwrite it. Do you wish to continue? (y/n) " + resetColor);
             Scanner scanner = new Scanner(System.in, StandardCharsets.UTF_8);
             String input = scanner.nextLine();
             if (!input.toLowerCase(Locale.ENGLISH).equals("y")) {
