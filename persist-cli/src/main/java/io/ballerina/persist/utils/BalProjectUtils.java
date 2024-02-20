@@ -109,7 +109,7 @@ public class BalProjectUtils {
     }
 
     public static void updateToml(String sourcePath, String datastore, String module) throws BalException, IOException {
-        String sourceContent = "[tool.persist]\n" +
+        String sourceContent = "[[tool.persist]]\n" +
                 "options.datastore = \"" + datastore + "\"\n" +
                 "module = \"" + module + "\"";
         Path generatedCmdOutPath = Paths.get(sourcePath, TARGET_DIRECTORY, GENERATE_CMD_FILE);

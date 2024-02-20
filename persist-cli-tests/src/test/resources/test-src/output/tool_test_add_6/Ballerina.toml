@@ -1,0 +1,14 @@
+[package]
+org = "foo"
+name = "persist_add_6"
+version = "0.1.0"
+distribution = "2201.3.0"
+
+[build-options]
+observabilityIncluded = true
+
+[[tool.persist]]
+id = "persist_add_6"
+options.datastore = "mysql"
+targetModule = "persist_add_6_old"
+

@@ -7,6 +7,7 @@ distribution = "2201.3.0"
 [build-options]
 observabilityIncluded = true
 
-[persist]
-datastore = "mysql"
-module = "tool_test_db_push_24.entities"
+[[tool.persist]]
+id = "persist"
+options.datastore = "mysql"
+targetModule = "tool_test_db_push_24.entities"

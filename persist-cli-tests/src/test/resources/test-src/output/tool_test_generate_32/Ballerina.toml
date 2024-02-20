@@ -5,5 +5,5 @@ version = "0.1.0"
 distribution = "2201.3.0"
 
 [persist]
-datastore = "mysql"
+options.datastore = "mysql"
 module = "persist_generate_32.entities"

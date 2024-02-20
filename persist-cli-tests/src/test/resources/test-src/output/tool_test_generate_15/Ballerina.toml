@@ -8,9 +8,9 @@ distribution = "2201.3.0"
 observabilityIncluded = false
 
 [persist]
-datastore = "mysql"
+options.datastore = "mysql"
 module = "persist_generate_15.entities1"
 
 [persist]
-datastore = "mysql"
+options.datastore = "mysql"
 module = "persist_generate_15.entities"

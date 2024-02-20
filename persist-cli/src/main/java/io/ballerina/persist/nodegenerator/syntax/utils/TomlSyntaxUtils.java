@@ -110,8 +110,7 @@ public class TomlSyntaxUtils {
             boolean dbConfigExists = false;
             HashMap<String, String> persistConfig = new HashMap<>();
             for (DocumentMemberDeclarationNode member : nodeList) {
-                if (member instanceof TableNode) {
-                    TableNode node = (TableNode) member;
+                if (member instanceof TableArrayNode node) {
                     String tableName = node.identifier().toSourceCode().trim();
                     if (tableName.equals(PersistToolsConstants.PERSIST_TOOL_CONFIG)) {
                         dbConfigExists = true;
@@ -186,17 +185,12 @@ public class TomlSyntaxUtils {
                 boolean dependencyExists = false;
                 if (member instanceof KeyValueNode) {
                     moduleMembers = moduleMembers.add(member);
-                } else if (member instanceof TableNode) {
-                    TableNode node = (TableNode) member;
+                } else if (member instanceof TableArrayNode) {
+                    TableArrayNode node = (TableArrayNode) member;
                     if (node.identifier().toSourceCode().trim().equals(PersistToolsConstants.PERSIST_TOOL_CONFIG)) {
                         throw new BalException("persist configuration already exists in the Ballerina.toml. " +
                                 "remove the existing configuration and try again.");
-                    } else {
-                        moduleMembers = moduleMembers.add(member);
-                    }
-                } else if (member instanceof TableArrayNode) {
-                    TableArrayNode tableArray = (TableArrayNode) member;
-                    if (tableArray.identifier().toSourceCode().trim().equals("platform.java17.dependency")) {
+                    } else if (node.identifier().toSourceCode().trim().equals("platform.java17.dependency")) {
                         NodeList<KeyValueNode> fields = ((TableArrayNode) member).fields();
                         for (KeyValueNode field : fields) {
                             String value = field.value().toSourceCode().trim();
@@ -213,10 +207,12 @@ public class TomlSyntaxUtils {
                     if (!dependencyExists) {
                         moduleMembers = moduleMembers.add(member);
                     }
+                } else {
+                    moduleMembers = moduleMembers.add(member);
                 }
             }
             moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
-            moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(
+            moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray(
                     PersistToolsConstants.PERSIST_TOOL_CONFIG, null));
             moduleMembers = populateBallerinaNodeList(moduleMembers, module, datasource, id);
             moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
@@ -235,6 +231,7 @@ public class TomlSyntaxUtils {
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("id", id, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("targetModule", module, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("options.datastore", dataStore, null));
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("filePath", "x", null));
         return moduleMembers;
     }
 

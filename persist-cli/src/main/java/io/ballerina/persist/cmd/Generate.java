@@ -153,14 +153,14 @@ public class Generate implements BLauncherCmd {
 //                return;
 //            }
 //        }
-        moduleNameWithPackageName = module;
-        if (!moduleNameWithPackageName.equals(packageName)) {
-            if (!moduleNameWithPackageName.startsWith(packageName + ".")) {
+//        moduleNameWithPackageName = module;
+        if (!module.equals(packageName)) {
+            if (!module.startsWith(packageName + ".")) {
                 errStream.println("ERROR: invalid module name : '" + module + "' :\n" +
                         "module name should follow the template <package_name>.<module_name>");
                 return;
             }
-            String moduleName = moduleNameWithPackageName.replace(packageName + ".", "");
+            String moduleName = module.replace(packageName + ".", "");
             if (!ProjectUtils.validateModuleName(moduleName)) {
                 errStream.println("ERROR: invalid module name : '" + moduleName + "' :\n" +
                         "module name can only contain alphanumerics, underscores and periods");
@@ -225,7 +225,7 @@ public class Generate implements BLauncherCmd {
             }
         }
         SourceGenerator sourceCreator = new SourceGenerator(sourcePath, generatedSourceDirPath,
-                moduleNameWithPackageName, entityModule);
+                module, entityModule);
         try {
             switch (datastore) {
                 case PersistToolsConstants.SupportedDataSources.MYSQL_DB:
