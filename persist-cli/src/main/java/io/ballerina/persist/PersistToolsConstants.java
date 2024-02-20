@@ -224,6 +224,17 @@ public class PersistToolsConstants {
 
         }
 
+        /**
+         * Constants related to the PostgreSQL configurations.
+         */
+        public static final class REDIS {
+            private REDIS() {}
+
+            public static final String DEFAULT_HOST = "localhost";
+            public static final String DEFAULT_PORT = "6379";
+
+        }
+
 
     }
 }
