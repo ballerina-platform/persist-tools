@@ -35,6 +35,7 @@ import picocli.CommandLine;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -42,6 +43,8 @@ import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.Locale;
+import java.util.Scanner;
 
 import static io.ballerina.persist.PersistToolsConstants.MYSQL_DRIVER_CLASS;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
@@ -140,16 +143,18 @@ public class Pull implements BLauncherCmd {
         }
 
         //check if model.bal file exists, if exists throw warning
-//        List<Path> schemaFilePaths;
-//        try (Stream<Path> stream = Files.list(persistDir)) {
-//            schemaFilePaths = stream.filter(file -> !Files.isDirectory(file))
-//                    .filter(file -> file.toString().toLowerCase(Locale.ENGLISH).endsWith(".bal"))
-//                    .collect(Collectors.toList());
-//        } catch (IOException e) {
-//            errStream.printf("ERROR: failed to list the model definition files in the persist directory. %s%n",
-//                    e.getMessage());
-//            return;
-//        }
+        boolean modelFile = Files.exists(Path.of(String.valueOf(persistDir), "model.bal"));
+        if (modelFile) {
+            errStream.print("A model.bal file already exists. " +
+                    "Continuing would overwrite it. Do you wish to continue? (y/n) ");
+            Scanner scanner = new Scanner(System.in, StandardCharsets.UTF_8);
+            String input = scanner.nextLine();
+            if (!input.toLowerCase(Locale.ENGLISH).equals("y")) {
+                errStream.println("Introspection aborted.");
+                return;
+            }
+            errStream.println("Continuing...");
+        }
 
         try {
             packageName = readPackageName(this.sourcePath);
