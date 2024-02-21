@@ -453,77 +453,148 @@ public class BalProjectUtils {
         Map<String, Entity> entityMap = entityModule.getEntityMap();
         for (Entity entity : entityMap.values()) {
             List<EntityField> fields = entity.getFields();
-            fields.stream().filter(field -> entityMap.get(field.getFieldType()) != null)
+            HashMap<String, List<EntityField>> relationFields = new HashMap<>();
+            fields.stream().filter(field -> entityMap.get(field.getFieldType()) != null && field.getRelation() == null)
                     .forEach(field -> {
-                        String fieldType = field.getFieldType();
-                        Entity assocEntity = entityMap.get(fieldType);
-                        if (field.getRelation() == null) {
-                            // this branch only handles one-to-one or one-to-many or many-to-many with no relation
-                            // annotations
-                            assocEntity.getFields().stream().filter(assocfield -> assocfield.getFieldType()
-                                            .equals(entity.getEntityName()))
-                                    .filter(assocfield -> assocfield.getRelation() == null).forEach(assocfield -> {
-                                        Map<String, EntityField> fkFields = new HashMap<>();
-                                        // skip if the relation is already set for the entity field.
-                                        if (field.getRelation() != null) {
-                                            return;
-                                        }
-                                        // one-to-many or many-to-many with no relation annotations
-                                        if (field.isArrayType() && assocfield.isArrayType()) {
-                                            throw new RuntimeException("unsupported many to many relation between " +
-                                                    entity.getEntityName() + " and " + assocEntity.getEntityName());
-                                        }
-                                        // one-to-one
-                                        if (!field.isArrayType() && !assocfield.isArrayType()) {
-                                            if (!field.isOptionalType() && assocfield.isOptionalType()) {
-                                                field.setRelation(computeRelation(field.getFieldName(), entity,
-                                                        assocEntity, true, Relation.RelationType.ONE,
-                                                        field.getRelationRefs(), fkFields));
-                                                assocfield.setRelation(computeRelation(field.getFieldName(),
-                                                        assocEntity, entity, false, Relation.RelationType.ONE
-                                                        , field.getRelationRefs(), fkFields));
-                                            } else if (field.isOptionalType() && !assocfield.isOptionalType()) {
-                                                field.setRelation(computeRelation(field.getFieldName(), entity,
-                                                        assocEntity, false, Relation.RelationType.ONE, null
-                                                        , fkFields));
-                                                assocfield.setRelation(computeRelation(field.getFieldName(),
-                                                        assocEntity, entity, true, Relation.RelationType.ONE,
-                                                        assocfield.getRelationRefs(), fkFields));
-                                            } else {
-                                                throw new RuntimeException("unsupported ownership annotation " +
-                                                        "in the relation between " + entity.getEntityName() +
-                                                        " and " + assocEntity.getEntityName());
-                                            }
-                                        } else {
-                                            //not one to one. so one to many
-                                            if (field.isArrayType() && field.isOptionalType()) {
-                                                // one-to-many relation. associated entity is the owner.
-                                                // first param should be always owner entities field name
-                                                field.setRelation(computeRelation(assocfield.getFieldName(), entity,
-                                                        assocEntity, false, Relation.RelationType.MANY,
-                                                        field.getRelationRefs(), fkFields));
-                                                assocfield.setRelation(computeRelation(assocfield.getFieldName(),
-                                                        assocEntity, entity, true, Relation.RelationType.ONE,
-                                                        field.getRelationRefs(), fkFields));
-                                            } else if (field.isArrayType() || field.getFieldType().equals("byte")) {
-                                                field.setRelation(null);
-                                            } else {
-                                                // one-to-many relation. entity is the owner.
-                                                // one-to-one relation. entity is the owner.
-                                                // first param should be always owner entities field name
-                                                field.setRelation(computeRelation(field.getFieldName(), entity,
-                                                        assocEntity, true, Relation.RelationType.ONE,
-                                                        field.getRelationRefs(), fkFields));
-                                                assocfield.setRelation(computeRelation(field.getFieldName(),
-                                                        assocEntity, entity, false, Relation.RelationType.MANY,
-                                                        field.getRelationRefs(), fkFields));
-                                            }
-                                        }
-                                    });
+                        if (relationFields.containsKey(field.getFieldType())) {
+                            relationFields.get(field.getFieldType()).add(field);
+                        } else {
+                            List<EntityField> fieldList = new ArrayList<>();
+                            fieldList.add(field);
+                            relationFields.put(field.getFieldType(), fieldList);
                         }
                     });
+            for (List<EntityField> fieldList : relationFields.values()) {
+                Entity assocEntity = entityMap.get(fieldList.get(0).getFieldType());
+                List<EntityField> assocFields = assocEntity.getFields().stream()
+                        .filter(assocField -> assocField.getFieldType()
+                                .equals(entity.getEntityName()) && assocField.getRelation() == null).toList();
+                for (int i = 0; i < fieldList.size(); i++) {
+                    EntityField field = fieldList.get(i);
+                    EntityField assocField = assocFields.get(i);
+                    if (field.isArrayType() && assocField.isArrayType()) {
+                        //both are array types. many-to-many is not supported
+                        throw new RuntimeException("unsupported many to many relation between " +
+                                entity.getEntityName() + " and " + assocEntity.getEntityName());
+                    }
+                    if (field.isArrayType() || assocField.isArrayType()) {
+                        // one of them is array type -> one-to-many or many-to-many relation
+                        if (field.isArrayType()) {
+                            // many-to-one -> associated entity is the owner
+                            field.setRelation(computeRelation(assocField.getFieldName(), entity, assocEntity, false,
+                                    Relation.RelationType.MANY, assocField.getRelationRefs()));
+                            assocField.setRelation(computeRelation(assocField.getFieldName(), assocEntity, entity,
+                                    true, Relation.RelationType.ONE, assocField.getRelationRefs()));
+
+                        } else {
+                            // one-to-many -> entity is the owner
+                            field.setRelation(computeRelation(field.getFieldName(), entity, assocEntity, true,
+                                    Relation.RelationType.ONE, field.getRelationRefs()));
+                            assocField.setRelation(computeRelation(field.getFieldName(), assocEntity, entity,
+                                    false, Relation.RelationType.MANY, field.getRelationRefs()));
+                        }
+                    } else {
+                        // one-to-one relation
+                        if (field.isOptionalType()) {
+                            // associated entity is the owner
+                            field.setRelation(computeRelation(assocField.getFieldName(), entity, assocEntity, false,
+                                    Relation.RelationType.ONE, assocField.getRelationRefs()));
+                            assocField.setRelation(computeRelation(assocField.getFieldName(), assocEntity, entity,
+                                    true, Relation.RelationType.ONE, assocField.getRelationRefs()));
+                        } else {
+                            // entity is the owner
+                            field.setRelation(computeRelation(field.getFieldName(), entity, assocEntity, true,
+                                    Relation.RelationType.ONE, field.getRelationRefs()));
+                            assocField.setRelation(computeRelation(field.getFieldName(), assocEntity, entity,
+                                    false, Relation.RelationType.ONE, field.getRelationRefs()));
+                        }
+                    }
+                    if (field.getRelationRefs() != null) {
+                        field.getRelationRefs().forEach(entity::removeField);
+                    }
+                    if (assocField.getRelationRefs() != null) {
+                        assocField.getRelationRefs().forEach(assocEntity::removeField);
+                    }
+                }
+            }
         }
     }
+
+//    public static void inferRelationDetails2(Module entityModule) {
+//        Map<String, Entity> entityMap = entityModule.getEntityMap();
+//        for (Entity entity : entityMap.values()) {
+//            List<EntityField> fields = entity.getFields();
+//            fields.stream().filter(field -> entityMap.get(field.getFieldType()) != null)
+//                    .forEach(field -> {
+//                        String fieldType = field.getFieldType();
+//                        Entity assocEntity = entityMap.get(fieldType);
+//                        if (field.getRelation() == null) {
+//                            // this branch only handles one-to-one or one-to-many or many-to-many with no relation
+//                            // annotations
+//                            assocEntity.getFields().stream().filter(assocfield -> assocfield.getFieldType()
+//                                            .equals(entity.getEntityName()))
+//                                    .filter(assocfield -> assocfield.getRelation() == null).forEach(assocfield -> {
+//                                        Map<String, EntityField> fkFields = new HashMap<>();
+//                                        // skip if the relation is already set for the entity field.
+//                                        if (field.getRelation() != null) {
+//                                            return;
+//                                        }
+//                                        // one-to-many or many-to-many with no relation annotations
+//                                        if (field.isArrayType() && assocfield.isArrayType()) {
+//                                            throw new RuntimeException("unsupported many to many relation between " +
+//                                                    entity.getEntityName() + " and " + assocEntity.getEntityName());
+//                                        }
+//                                        // one-to-one
+//                                        if (!field.isArrayType() && !assocfield.isArrayType()) {
+//                                            if (!field.isOptionalType() && assocfield.isOptionalType()) {
+//                                                field.setRelation(computeRelation(field.getFieldName(), entity,
+//                                                        assocEntity, true, Relation.RelationType.ONE,
+//                                                        field.getRelationRefs(), fkFields));
+//                                                assocfield.setRelation(computeRelation(field.getFieldName(),
+//                                                        assocEntity, entity, false, Relation.RelationType.ONE
+//                                                        , field.getRelationRefs(), fkFields));
+//                                            } else if (field.isOptionalType() && !assocfield.isOptionalType()) {
+//                                                field.setRelation(computeRelation(field.getFieldName(), entity,
+//                                                        assocEntity, false, Relation.RelationType.ONE, null
+//                                                        , fkFields));
+//                                                assocfield.setRelation(computeRelation(field.getFieldName(),
+//                                                        assocEntity, entity, true, Relation.RelationType.ONE,
+//                                                        assocfield.getRelationRefs(), fkFields));
+//                                            } else {
+//                                                throw new RuntimeException("unsupported ownership annotation " +
+//                                                        "in the relation between " + entity.getEntityName() +
+//                                                        " and " + assocEntity.getEntityName());
+//                                            }
+//                                        } else {
+//                                            //not one to one. so one to many
+//                                            if (field.isArrayType() && field.isOptionalType()) {
+//                                                // one-to-many relation. associated entity is the owner.
+//                                                // first param should be always owner entities field name
+//                                                field.setRelation(computeRelation(assocfield.getFieldName(), entity,
+//                                                        assocEntity, false, Relation.RelationType.MANY,
+//                                                        field.getRelationRefs(), fkFields));
+//                                                assocfield.setRelation(computeRelation(assocfield.getFieldName(),
+//                                                        assocEntity, entity, true, Relation.RelationType.ONE,
+//                                                        field.getRelationRefs(), fkFields));
+//                                            } else if (field.isArrayType() || field.getFieldType().equals("byte")) {
+//                                                field.setRelation(null);
+//                                            } else {
+//                                                // one-to-many relation. entity is the owner.
+//                                                // one-to-one relation. entity is the owner.
+//                                                // first param should be always owner entities field name
+//                                                field.setRelation(computeRelation(field.getFieldName(), entity,
+//                                                        assocEntity, true, Relation.RelationType.ONE,
+//                                                        field.getRelationRefs(), fkFields));
+//                                                assocfield.setRelation(computeRelation(field.getFieldName(),
+//                                                        assocEntity, entity, false, Relation.RelationType.MANY,
+//                                                        field.getRelationRefs(), fkFields));
+//                                            }
+//                                        }
+//                                    });
+//                        }
+//                    });
+//        }
+//    }
 
     public static void inferEnumDetails(Module entityModule) {
         Map<String, Enum> enumMap = entityModule.getEnumMap();
@@ -537,9 +608,9 @@ public class BalProjectUtils {
         }
     }
 
+
     private static Relation computeRelation(String fieldName, Entity entity, Entity assocEntity, boolean isOwner,
-                                            Relation.RelationType relationType, List<String> relationRefs,
-                                            Map<String, EntityField> fkFields) {
+                                            Relation.RelationType relationType, List<String> relationRefs) {
         Relation.Builder relBuilder = new Relation.Builder();
         relBuilder.setAssocEntity(assocEntity);
         if (isOwner) {
@@ -550,8 +621,6 @@ public class BalProjectUtils {
                         if (relationRefs != null) {
                             String fkField = relationRefs.get(i);
                             EntityField fkEntityField = entity.getFieldByName(fkField);
-                            entity.removeField(fkField);
-                            fkFields.put(fkField, fkEntityField);
                             return new Relation.Key(fkField,
                                     fkEntityField.getFieldColumnName(), key.getFieldName(), key.getFieldColumnName(),
                                     key.getFieldType());
@@ -580,7 +649,7 @@ public class BalProjectUtils {
                                 + stripEscapeCharacter(key.getFieldName()).substring(1);
                         if (relationRefs != null) {
                             fkField = relationRefs.get(i);
-                            EntityField assocField = fkFields.get(fkField);
+                            EntityField assocField = assocEntity.getFieldByName(fkField);
                             return new Relation.Key(key.getFieldName(), key.getFieldColumnName(), fkField,
                                     assocField.getFieldColumnName(), key.getFieldType());
                         }

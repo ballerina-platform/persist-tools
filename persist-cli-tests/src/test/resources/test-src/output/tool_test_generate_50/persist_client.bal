@@ -35,12 +35,12 @@ public isolated client class Client {
                 "workspace.workspaceId": {relation: {entityName: "workspace", refField: "workspaceId"}},
                 "workspace.workspaceType": {relation: {entityName: "workspace", refField: "workspaceType"}},
                 "workspace.locationBuildingCode": {relation: {entityName: "workspace", refField: "locationBuildingCode"}},
-                "workspace.workspaceEmpNo": {relation: {entityName: "workspace", refField: "workspaceEmpNo"}}
+                "workspace.employeeEmpNo": {relation: {entityName: "workspace", refField: "employeeEmpNo"}}
             },
             keyFields: ["empNo"],
             joinMetadata: {
                 department: {entity: Department, fieldName: "department", refTable: "Department", refColumns: ["deptNo"], joinColumns: ["departmentDeptNo"], 'type: psql:ONE_TO_MANY},
-                workspace: {entity: Workspace, fieldName: "workspace", refTable: "Workspace", refColumns: ["workspaceEmpNo"], joinColumns: ["empNo"], 'type: psql:ONE_TO_ONE}
+                workspace: {entity: Workspace, fieldName: "workspace", refTable: "Workspace", refColumns: ["employeeEmpNo"], joinColumns: ["empNo"], 'type: psql:ONE_TO_ONE}
             }
         },
         [WORKSPACE]: {
@@ -50,7 +50,7 @@ public isolated client class Client {
                 workspaceId: {columnName: "workspaceId"},
                 workspaceType: {columnName: "workspaceType"},
                 locationBuildingCode: {columnName: "locationBuildingCode"},
-                workspaceEmpNo: {columnName: "workspaceEmpNo"},
+                employeeEmpNo: {columnName: "employeeEmpNo"},
                 "location.buildingCode": {relation: {entityName: "location", refField: "buildingCode"}},
                 "location.city": {relation: {entityName: "location", refField: "city"}},
                 "location.state": {relation: {entityName: "location", refField: "state"}},
@@ -65,7 +65,7 @@ public isolated client class Client {
             keyFields: ["workspaceId"],
             joinMetadata: {
                 location: {entity: Building, fieldName: "location", refTable: "Building", refColumns: ["buildingCode"], joinColumns: ["locationBuildingCode"], 'type: psql:ONE_TO_MANY},
-                employee: {entity: Employee, fieldName: "employee", refTable: "Employee", refColumns: ["empNo"], joinColumns: ["workspaceEmpNo"], 'type: psql:ONE_TO_ONE}
+                employee: {entity: Employee, fieldName: "employee", refTable: "Employee", refColumns: ["empNo"], joinColumns: ["employeeEmpNo"], 'type: psql:ONE_TO_ONE}
             }
         },
         [BUILDING]: {
@@ -80,7 +80,7 @@ public isolated client class Client {
                 "workspaces[].workspaceId": {relation: {entityName: "workspaces", refField: "workspaceId"}},
                 "workspaces[].workspaceType": {relation: {entityName: "workspaces", refField: "workspaceType"}},
                 "workspaces[].locationBuildingCode": {relation: {entityName: "workspaces", refField: "locationBuildingCode"}},
-                "workspaces[].workspaceEmpNo": {relation: {entityName: "workspaces", refField: "workspaceEmpNo"}}
+                "workspaces[].employeeEmpNo": {relation: {entityName: "workspaces", refField: "employeeEmpNo"}}
             },
             keyFields: ["buildingCode"],
             joinMetadata: {workspaces: {entity: Workspace, fieldName: "workspaces", refTable: "Workspace", refColumns: ["locationBuildingCode"], joinColumns: ["buildingCode"], 'type: psql:MANY_TO_ONE}}

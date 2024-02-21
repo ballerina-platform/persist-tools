@@ -33,11 +33,11 @@ public isolated client class Client {
                 "orderitem.orderItemId": {relation: {entityName: "orderitem", refField: "orderItemId"}},
                 "orderitem.quantity": {relation: {entityName: "orderitem", refField: "quantity"}},
                 "orderitem.price": {relation: {entityName: "orderitem", refField: "price"}},
-                "orderitem.orderitemBookId": {relation: {entityName: "orderitem", refField: "orderitemBookId"}},
+                "orderitem.bookBookId": {relation: {entityName: "orderitem", refField: "bookBookId"}},
                 "orderitem.orderOrderId": {relation: {entityName: "orderitem", refField: "orderOrderId"}}
             },
             keyFields: ["bookId"],
-            joinMetadata: {orderitem: {entity: OrderItem, fieldName: "orderitem", refTable: "OrderItem", refColumns: ["orderitemBookId"], joinColumns: ["bookId"], 'type: psql:ONE_TO_ONE}}
+            joinMetadata: {orderitem: {entity: OrderItem, fieldName: "orderitem", refTable: "OrderItem", refColumns: ["bookBookId"], joinColumns: ["bookId"], 'type: psql:ONE_TO_ONE}}
         },
         [ORDER]: {
             entityName: "Order",
@@ -50,17 +50,17 @@ public isolated client class Client {
                 "orderItems[].orderItemId": {relation: {entityName: "orderItems", refField: "orderItemId"}},
                 "orderItems[].quantity": {relation: {entityName: "orderItems", refField: "quantity"}},
                 "orderItems[].price": {relation: {entityName: "orderItems", refField: "price"}},
-                "orderItems[].orderitemBookId": {relation: {entityName: "orderItems", refField: "orderitemBookId"}},
+                "orderItems[].bookBookId": {relation: {entityName: "orderItems", refField: "bookBookId"}},
                 "orderItems[].orderOrderId": {relation: {entityName: "orderItems", refField: "orderOrderId"}},
                 "payment.paymentId": {relation: {entityName: "payment", refField: "paymentId"}},
                 "payment.paymentAmount": {relation: {entityName: "payment", refField: "paymentAmount"}},
                 "payment.paymentDate": {relation: {entityName: "payment", refField: "paymentDate"}},
-                "payment.paymentOrderId": {relation: {entityName: "payment", refField: "paymentOrderId"}}
+                "payment.orderOrderId": {relation: {entityName: "payment", refField: "orderOrderId"}}
             },
             keyFields: ["orderId"],
             joinMetadata: {
                 orderItems: {entity: OrderItem, fieldName: "orderItems", refTable: "OrderItem", refColumns: ["orderOrderId"], joinColumns: ["orderId"], 'type: psql:MANY_TO_ONE},
-                payment: {entity: Payment, fieldName: "payment", refTable: "Payment", refColumns: ["paymentOrderId"], joinColumns: ["orderId"], 'type: psql:ONE_TO_ONE}
+                payment: {entity: Payment, fieldName: "payment", refTable: "Payment", refColumns: ["orderOrderId"], joinColumns: ["orderId"], 'type: psql:ONE_TO_ONE}
             }
         },
         [ORDER_ITEM]: {
@@ -70,7 +70,7 @@ public isolated client class Client {
                 orderItemId: {columnName: "orderItemId"},
                 quantity: {columnName: "quantity"},
                 price: {columnName: "price"},
-                orderitemBookId: {columnName: "orderitemBookId"},
+                bookBookId: {columnName: "bookBookId"},
                 orderOrderId: {columnName: "orderOrderId"},
                 "book.bookId": {relation: {entityName: "book", refField: "bookId"}},
                 "book.title": {relation: {entityName: "book", refField: "title"}},
@@ -84,7 +84,7 @@ public isolated client class Client {
             },
             keyFields: ["orderItemId"],
             joinMetadata: {
-                book: {entity: Book, fieldName: "book", refTable: "Book", refColumns: ["bookId"], joinColumns: ["orderitemBookId"], 'type: psql:ONE_TO_ONE},
+                book: {entity: Book, fieldName: "book", refTable: "Book", refColumns: ["bookId"], joinColumns: ["bookBookId"], 'type: psql:ONE_TO_ONE},
                 'order: {entity: Order, fieldName: "'order", refTable: "Order", refColumns: ["orderId"], joinColumns: ["orderOrderId"], 'type: psql:ONE_TO_MANY}
             }
         },
@@ -95,14 +95,14 @@ public isolated client class Client {
                 paymentId: {columnName: "paymentId"},
                 paymentAmount: {columnName: "paymentAmount"},
                 paymentDate: {columnName: "paymentDate"},
-                paymentOrderId: {columnName: "paymentOrderId"},
+                orderOrderId: {columnName: "orderOrderId"},
                 "order.orderId": {relation: {entityName: "order", refField: "orderId"}},
                 "order.customerId": {relation: {entityName: "order", refField: "customerId"}},
                 "order.createdAt": {relation: {entityName: "order", refField: "createdAt"}},
                 "order.totalPrice": {relation: {entityName: "order", refField: "totalPrice"}}
             },
             keyFields: ["paymentId"],
-            joinMetadata: {'order: {entity: Order, fieldName: "'order", refTable: "Order", refColumns: ["orderId"], joinColumns: ["paymentOrderId"], 'type: psql:ONE_TO_ONE}}
+            joinMetadata: {'order: {entity: Order, fieldName: "'order", refTable: "Order", refColumns: ["orderId"], joinColumns: ["orderOrderId"], 'type: psql:ONE_TO_ONE}}
         }
     };
 

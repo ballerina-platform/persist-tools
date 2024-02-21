@@ -69,7 +69,7 @@ public type OrderItem record {|
     readonly string orderItemId;
     int quantity;
     decimal price;
-    string orderitemBookId;
+    string bookBookId;
     string orderOrderId;
 |};
 
@@ -77,7 +77,7 @@ public type OrderItemOptionalized record {|
     string orderItemId?;
     int quantity?;
     decimal price?;
-    string orderitemBookId?;
+    string bookBookId?;
     string orderOrderId?;
 |};
 
@@ -94,7 +94,7 @@ public type OrderItemInsert OrderItem;
 public type OrderItemUpdate record {|
     int quantity?;
     decimal price?;
-    string orderitemBookId?;
+    string bookBookId?;
     string orderOrderId?;
 |};
 
@@ -102,14 +102,14 @@ public type Payment record {|
     readonly string paymentId;
     decimal paymentAmount;
     string paymentDate;
-    string paymentOrderId;
+    string orderOrderId;
 |};
 
 public type PaymentOptionalized record {|
     string paymentId?;
     decimal paymentAmount?;
     string paymentDate?;
-    string paymentOrderId?;
+    string orderOrderId?;
 |};
 
 public type PaymentWithRelations record {|
@@ -124,6 +124,6 @@ public type PaymentInsert Payment;
 public type PaymentUpdate record {|
     decimal paymentAmount?;
     string paymentDate?;
-    string paymentOrderId?;
+    string orderOrderId?;
 |};
 
