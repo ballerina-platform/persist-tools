@@ -173,6 +173,7 @@ public class PersistToolsConstants {
         public static final String GOOGLE_SHEETS = "googlesheets";
         public static final String IN_MEMORY_TABLE = "inmemory";
         public static final String POSTGRESQL_DB = "postgresql";
+        public static final String REDIS = "redis";
     }
 
     /**

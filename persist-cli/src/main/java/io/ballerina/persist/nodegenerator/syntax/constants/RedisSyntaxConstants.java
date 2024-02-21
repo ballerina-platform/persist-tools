@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2023, WSO2 LLC. (https://www.wso2.com) All Rights Reserved.
+ *
+ * WSO2 LLC. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package io.ballerina.persist.nodegenerator.syntax.constants;
 
 public class RedisSyntaxConstants {
@@ -21,14 +38,16 @@ public class RedisSyntaxConstants {
     public static final String UPDATE_RUN_UPDATE_QUERY = "_ = check redisClient.runUpdateQuery(%s, value);";
     public static final String DELETE_RUN_DELETE_QUERY = "_ = check redisClient.runDeleteQuery(%s);";
 
-    public static final String METADATA_RECORD_COLLECTION_NAME_TEMPLATE = "collectionName: \"%s\", " + System.lineSeparator();
+    public static final String METADATA_RECORD_COLLECTION_NAME_TEMPLATE = "collectionName: \"%s\", " 
+    + System.lineSeparator();
     public static final String METADATA_RECORD_FIELD_TEMPLATE = "%s: {fieldName: \"%s\", fieldDataType: predis:%s}";
     public static final String REFERENCE_METADATA_TEMPLATE = "refMetadata: {%s}";
-    public static final String METADATA_RECORD_TEMPLATE =
-            "private final record {|predis:RedisMetadata...;|} & readonly metadata = {%s};";
-    public static final String ASSOCIATED_FIELD_TEMPLATE = ".%s\": {relation: {entityName: \"%s\", refField: \"%s\", refFieldDataType: predis:%s}}";
-    public static final String JOIN_METADATA_FIELD_TEMPLATE =
-            "%s: {entity: %s, fieldName: \"%s\", refCollection: \"%s\", refFields: [%s], joinFields: [%s], 'type: %s}";
+    public static final String METADATA_RECORD_TEMPLATE = 
+        "private final record {|predis:RedisMetadata...;|} & readonly metadata = {%s};";
+    public static final String ASSOCIATED_FIELD_TEMPLATE = 
+        ".%s\": {relation: {entityName: \"%s\", refField: \"%s\", refFieldDataType: predis:%s}}";
+    public static final String JOIN_METADATA_FIELD_TEMPLATE = 
+        "%s: {entity: %s, fieldName: \"%s\", refCollection: \"%s\", refFields: [%s], joinFields: [%s], 'type: %s}";
     public static final String ONE_TO_ONE = "predis:ONE_TO_ONE";
     public static final String ONE_TO_MANY = "predis:ONE_TO_MANY";
     public static final String MANY_TO_ONE = "predis:MANY_TO_ONE";
