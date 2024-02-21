@@ -141,19 +141,6 @@ public class Generate implements BLauncherCmd {
                     " to the updated documentation.");
             return;
         }
-//        moduleNameWithPackageName = packageName;
-//        if (!module.equals(packageName)) {
-//            if (!ProjectUtils.validateModuleName(module)) {
-//                errStream.println("ERROR: invalid module name : '" + module + "' :\n" +
-//                        "module name can only contain alphanumerics, underscores and periods");
-//                return;
-//            } else if (!ProjectUtils.validateNameLength(module)) {
-//                errStream.println("ERROR: invalid module name : '" + module + "' :\n" +
-//                        "maximum length of module name is 256 characters");
-//                return;
-//            }
-//        }
-//        moduleNameWithPackageName = module;
         if (!module.equals(packageName)) {
             if (!module.startsWith(packageName + ".")) {
                 errStream.println("ERROR: invalid module name : '" + module + "' :\n" +

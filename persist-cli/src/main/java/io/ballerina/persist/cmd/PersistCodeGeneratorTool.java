@@ -62,7 +62,7 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
         String targetModule;
         Path generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);
 
-        Path projectPath = Paths.get(sourcePath);
+        Path projectPath = toolContext.currentPackage().project().sourceRoot();
         try {
             BalProjectUtils.validateBallerinaProject(projectPath);
         } catch (BalException e) {
@@ -120,6 +120,11 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
                         "the migrate command is not permitted. please remove the migrations directory within the " +
                         "persist directory and try executing the command again.");
                 return;
+            }
+            if (datastore.equals(PersistToolsConstants.SupportedDataSources.GOOGLE_SHEETS)) {
+                errStream.printf(BalSyntaxConstants.EXPERIMENTAL_NOTICE, "The support for Google Sheets data store " +
+                        "is currently an experimental feature, and its behavior may be subject to change in future " +
+                        "releases." + System.lineSeparator());
             }
             entityModule = BalProjectUtils.getEntities(schemaFilePath);
             if (entityModule.getEntityMap().isEmpty()) {

@@ -18,6 +18,7 @@
 
 package io.ballerina.persist.tools.utils;
 
+import io.ballerina.persist.cmd.Add;
 import io.ballerina.persist.cmd.Generate;
 import io.ballerina.persist.cmd.Init;
 import io.ballerina.persist.cmd.Migrate;
@@ -53,7 +54,7 @@ public class GeneratedSourcesTestUtils {
      * Represents persist commands.
      */
     public enum Command {
-        INIT,
+        ADD,
         GENERATE,
         DB_PUSH,
         MIGRATE
@@ -158,9 +159,9 @@ public class GeneratedSourcesTestUtils {
         Class<?> persistClass;
         Path sourcePath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);
         try {
-            if (cmd == Command.INIT) {
-                persistClass = Class.forName("io.ballerina.persist.cmd.Init");
-                Init persistCmd = (Init) persistClass.getDeclaredConstructor(String.class)
+            if (cmd == Command.ADD) {
+                persistClass = Class.forName("io.ballerina.persist.cmd.Add");
+                Add persistCmd = (Add) persistClass.getDeclaredConstructor(String.class)
                         .newInstance(sourcePath.toAbsolutePath().toString());
                 persistCmd.execute();
             } else if (cmd == Command.GENERATE) {

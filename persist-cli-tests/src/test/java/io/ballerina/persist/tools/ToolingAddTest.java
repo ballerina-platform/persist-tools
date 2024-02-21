@@ -33,7 +33,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
 
-import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.Command.INIT;
+import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.Command.ADD;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertGeneratedSources;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertGeneratedSourcesNegative;
 
@@ -65,7 +65,7 @@ public class ToolingAddTest {
 
     @Test(enabled = true)
     @Description("When the project is not initiated")
-    public void testInit() {
+    public void testAdd() {
         updateOutputBallerinaToml("tool_test_add_1");
         executeCommand("tool_test_add_1");
         assertGeneratedSources("tool_test_add_1");
@@ -73,8 +73,8 @@ public class ToolingAddTest {
 
     @Test(enabled = true)
     @Description("When there is an already initiated configs and there is an uninitiated schema")
-    public void testInitUpdateConfigWithNewDbConfigurations() {
-        assertGeneratedSourcesNegative("tool_test_add_2", INIT, new String[]{});
+    public void testAddUpdateConfigWithNewDbConfigurations() {
+        assertGeneratedSourcesNegative("tool_test_add_2", ADD, new String[]{});
     }
 
     @Test(enabled = true)
@@ -89,7 +89,7 @@ public class ToolingAddTest {
     @Test(enabled = true)
     @Description("When the init command is executed outside a Ballerina project")
     public void testsInitOutsideBalProject() {
-        assertGeneratedSourcesNegative("tool_test_add_4", INIT, new String[]{"Config.toml"});
+        assertGeneratedSourcesNegative("tool_test_add_4", ADD, new String[]{"Config.toml"});
     }
 
     @Test(enabled = true)
