@@ -182,6 +182,22 @@ public class ToolingDbPullTest {
         assertGeneratedSources(subDir);
     }
 
-    //test with foreign key with composite primary key
+    @Test(enabled = true)
+    @Description("Create a model.bal file consisting of an entity with self-referenced relation.")
+    public void pullTestSelfReferencedRelation() throws BalException {
+        String subDir = "tool_test_pull_18_mysql";
+        createFromDatabaseScript(subDir, "mysql");
+        executeCommand(subDir, PULL);
+        assertGeneratedSources(subDir);
+    }
+
+    @Test(enabled = true)
+    @Description("Create a model.bal file consisting of two relations which cross-reference each other.")
+    public void pullTestCrossReferencedRelations() throws BalException {
+        String subDir = "tool_test_pull_19_mysql";
+        createFromDatabaseScript(subDir, "mysql");
+        executeCommand(subDir, PULL);
+        assertGeneratedSources(subDir);
+    }
 }
 
