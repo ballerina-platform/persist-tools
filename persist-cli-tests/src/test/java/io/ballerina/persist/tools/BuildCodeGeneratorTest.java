@@ -7,6 +7,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedList;
@@ -20,7 +21,6 @@ import java.util.stream.Stream;
 public class BuildCodeGeneratorTest {
     public static final Path TARGET_DIR = Paths.get(System.getProperty("user.dir"), "build");
     public static final Path TEST_DISTRIBUTION_PATH = TARGET_DIR.resolve("ballerina-distribution");
-    public static final Path RESOURCES_PATH = TARGET_DIR.resolve("resources/test");
 
     @Test(enabled = true)
     public void testBuildWithMysql() throws IOException, InterruptedException {
@@ -74,8 +74,8 @@ public class BuildCodeGeneratorTest {
     private void assertLogs(String log, Path project) throws IOException, InterruptedException {
         List<String> buildArgs = new LinkedList<>();
         Process process = executeRun(TEST_DISTRIBUTION_PATH.toString(), project, buildArgs);
-        InputStream success = process.getErrorStream();
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(success, "UTF-8"))) {
+        InputStream outStream = process.getErrorStream();
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(outStream, StandardCharsets.UTF_8))) {
             Stream<String> logLines = br.lines();
             String generatedLog = logLines.collect(Collectors.joining(System.lineSeparator()));
             Assert.assertEquals(generatedLog, log);
@@ -86,8 +86,8 @@ public class BuildCodeGeneratorTest {
     private void assertContainLogs(String log, Path project) throws IOException, InterruptedException {
         List<String> buildArgs = new LinkedList<>();
         Process process = executeRun(TEST_DISTRIBUTION_PATH.toString(), project, buildArgs);
-        InputStream success = process.getErrorStream();
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(success, "UTF-8"))) {
+        InputStream outStream = process.getErrorStream();
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(outStream, StandardCharsets.UTF_8))) {
             Stream<String> logLines = br.lines();
             String generatedLog = logLines.collect(Collectors.joining(System.lineSeparator()));
             Assert.assertTrue(generatedLog.contains(log));

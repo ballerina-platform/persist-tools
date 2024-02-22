@@ -123,6 +123,7 @@ task copyStdlibs() {
     doLast {
         configurations.ballerinaStdLibs.resolvedConfiguration.resolvedArtifacts.each { artifact ->
             def artifactExtractedPath = "${project.buildDir}/extracted-stdlibs/" + artifact.name + "-zip"
+            def persistCliJar = "${project.rootDir}/persist-cli/build/libs/persist-cli-${project.version}.jar"
             copy {
                 into ballerinaDist
                 into("repo/bala") {
@@ -140,6 +141,13 @@ task copyStdlibs() {
                 }
                 into("repo/cache") {
                     from "${artifactExtractedPath}/cache"
+                }
+            }
+            copy {
+                def testDistribution = "${project.rootDir}/persist-cli-tests/build/ballerina-distribution"
+                into testDistribution
+                into("bre/lib") {
+                    from "${persistCliJar}"
                 }
             }
         }
