@@ -514,4 +514,11 @@ public class ToolingGenerateTest {
         executeCommand("tool_test_init_1", INIT);
         assertGeneratedSources("tool_test_init_1");
     }
+
+    @Test(enabled = false)
+    @Description("The model has multiple relations with relation annotations")
+    public void testGenerateEntitiesWithRelationAnnotations1() {
+        executeCommand("tool_test_generate_72", GENERATE);
+        assertGeneratedSources("tool_test_generate_72");
+    }
 }

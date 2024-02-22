@@ -199,5 +199,14 @@ public class ToolingDbPullTest {
         executeCommand(subDir, PULL);
         assertGeneratedSources(subDir);
     }
+
+    @Test(enabled = true)
+    @Description("Create a model.bal file consisting keyword field names which are to be escaped.")
+    public void pullTestEscapedFieldNames() throws BalException {
+        String subDir = "tool_test_pull_20_mysql";
+        createFromDatabaseScript(subDir, "mysql");
+        executeCommand(subDir, PULL);
+        assertGeneratedSources(subDir);
+    }
 }
 

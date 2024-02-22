@@ -25,6 +25,9 @@ import java.util.Collections;
 import java.util.List;
 
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.COLON;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.SINGLE_QUOTE;
+import static io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils.stripEscapeCharacter;
+import static io.ballerina.persist.utils.StubUtils.isLiteralName;
 
 /**
  * Client Entity fieldMetaData class.
@@ -107,7 +110,8 @@ public class EntityField {
         if (fieldColumnName == null ||  fieldColumnName.isBlank()) {
             return false;
         }
-        return !fieldColumnName.equals(fieldName);
+
+        return !fieldColumnName.equals(stripEscapeCharacter(fieldName));
     }
 
     public List<String> getRelationRefs() {
@@ -157,6 +161,10 @@ public class EntityField {
         private boolean isDbGenerated = false;
 
         Builder(String fieldName) {
+            if (isLiteralName(fieldName)) {
+                this.fieldName = SINGLE_QUOTE + fieldName;
+                return;
+            }
             this.fieldName = fieldName;
         }
 
