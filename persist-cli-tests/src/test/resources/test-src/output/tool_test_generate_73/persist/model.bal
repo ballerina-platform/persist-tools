@@ -24,5 +24,5 @@ public type Car record {|
     @sql:Index {names: ["ownerId"]}
     int ownerId;
     @sql:Relation {refs: ["ownerId"]}
-    User user;
+    User owner;
 |};

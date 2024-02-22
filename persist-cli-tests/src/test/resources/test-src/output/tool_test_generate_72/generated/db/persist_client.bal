@@ -44,14 +44,14 @@ public isolated client class Client {
                 name: {columnName: "name"},
                 model: {columnName: "model"},
                 ownerId: {columnName: "ownerId"},
-                "user.id": {relation: {entityName: "user", refField: "id"}},
-                "user.name": {relation: {entityName: "user", refField: "name"}},
-                "user.gender": {relation: {entityName: "user", refField: "gender"}},
-                "user.nic": {relation: {entityName: "user", refField: "nic"}},
-                "user.salary": {relation: {entityName: "user", refField: "salary"}}
+                "owner.id": {relation: {entityName: "owner", refField: "id"}},
+                "owner.name": {relation: {entityName: "owner", refField: "name"}},
+                "owner.gender": {relation: {entityName: "owner", refField: "gender"}},
+                "owner.nic": {relation: {entityName: "owner", refField: "nic"}},
+                "owner.salary": {relation: {entityName: "owner", refField: "salary"}}
             },
             keyFields: ["id"],
-            joinMetadata: {user: {entity: User, fieldName: "user", refTable: "User", refColumns: ["id"], joinColumns: ["ownerId"], 'type: psql:ONE_TO_MANY}}
+            joinMetadata: {owner: {entity: User, fieldName: "owner", refTable: "User", refColumns: ["id"], joinColumns: ["ownerId"], 'type: psql:ONE_TO_MANY}}
         }
     };
 

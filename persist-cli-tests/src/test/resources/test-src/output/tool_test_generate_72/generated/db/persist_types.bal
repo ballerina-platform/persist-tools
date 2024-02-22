@@ -56,7 +56,7 @@ public type CarOptionalized record {|
 
 public type CarWithRelations record {|
     *CarOptionalized;
-    UserOptionalized user?;
+    UserOptionalized owner?;
 |};
 
 public type CarTargetType typedesc<CarWithRelations>;

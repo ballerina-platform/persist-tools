@@ -102,7 +102,7 @@ public abstract class Introspector {
 
         mapEnums();
         mapEntities();
-        finalizeRelations();
+//        finalizeRelations();
 
         entityMap.forEach((key, value) -> moduleBuilder.addEntity(key, value));
         return moduleBuilder.build();
@@ -257,14 +257,6 @@ public abstract class Introspector {
         });
 
         entityBuilderMap.forEach((key, value) -> entityMap.put(key, value.build()));
-    }
-
-    private void finalizeRelations() {
-        this.entityMap.values().forEach(entity -> entity.getFields().forEach(entityField -> {
-            if (entityField.getRelation() != null) {
-                entityField.getRelation().setAssocEntity(entityMap.get(entityField.getFieldType()));
-            }
-        }));
     }
 
     private String createEnumName(String tableName, String columnName) {
