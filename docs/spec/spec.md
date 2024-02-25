@@ -22,6 +22,7 @@ The conforming implementation of the specification is released and included in t
 2. [Initializing Persistence Layer in Bal Project](#2-initializing-the-bal-project-with-persistence-layer)
 3. [Generating Persistence Derived Types, Clients, and Database Schema](#3-generating-persistence-derived-types-and-clients)
 4. [Push Persistence Schema to the Data Provider](#4-push-persistence-schema-to-the-data-provider)
+5. [Pull Persistence Schema from the Data Provider](#5-pull-persistence-schema-from-the-data-provider)
 
 ## 1. Overview
 This specification elaborates on the `Persist CLI Tool` commands.
@@ -206,3 +207,42 @@ Behaviour of the `push` command,
 - User should add the relevant configuration to the Ballerina.toml file.
 - The user should have initiated the persistence layer in the project and executed the `generate` command to generate the SQL script.
 - If the user invokes the command twice, it will not fail. It will rerun the SQL script against the database.
+
+## 5. Pull Persistence Schema from the Data Provider
+
+```bash
+bal persist pull
+```
+
+This command will introspect the schema of the database defined in  the `Ballerina.toml` file under the heading ([persist.model.storage.mysql]). It will generate the `model.bal` file with the entities and relations based on the schema of the database.
+Database configuration in `Ballerina.toml` should look like following,
+```
+[persist.model.storage.mysql]
+host = "localhost"
+port = 3306
+user = "root"
+password = "Test123#"
+database = "persist"
+```
+
+The file structure of the project should be similar to the following before running the command.
+```
+medical-center
+├── persist
+     └── 
+├── Ballerina.toml
+├── Config.toml
+└── main.bal
+```
+If the `persist` directory does not contain a `model.bal` file, the command will create a new `model.bal` file with the entities and relations based on the schema of the database. If the `persist` directory contains a `model.bal` file, the command will prompt the user to confirm overwriting the existing `model.bal` file.
+
+Running the pull command will,
+1. Create a `model.bal` file with the entities and relations based on the introspected schema of the database.
+2. Not change the schema of the database in any way.
+
+Behaviour of the `pull` command,
+- User should invoke the command within a Ballerina project
+- User should add the relevant configuration to the Ballerina.toml file.
+- The user should have initiated the persistence layer in the project.
+- If the user invokes the command while a `model.bal` file exists in the `persist` directory, it will prompt the user to confirm overwriting the existing `model.bal` file.
+- The user must execute the `generate` command to generate the derived types and client API after running the `pull` command in order to use the client API in the project.
