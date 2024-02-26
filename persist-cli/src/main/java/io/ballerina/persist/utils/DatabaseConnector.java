@@ -55,15 +55,10 @@ public class DatabaseConnector {
 
     private final String jdbcUrlWithDatabaseFormat;
     private final String driverClass;
-//    private final String sourcePath;
-//    private final String datasource;
 
-    public DatabaseConnector (String jdbcUrlWithDatabaseFormat, String driverClass,
-                              String sourcePath, String datasource) {
+    public DatabaseConnector (String jdbcUrlWithDatabaseFormat, String driverClass) {
         this.driverClass = driverClass;
         this.jdbcUrlWithDatabaseFormat = jdbcUrlWithDatabaseFormat;
-//        this.sourcePath = sourcePath;
-//        this.datasource = datasource;
     }
 
 
@@ -131,26 +126,6 @@ public class DatabaseConnector {
     }
 
     private Path getDriverPath(Project balProject) throws BalException {
-//        Path directoryPath;
-//        switch (this.datasource) {
-//            case PersistToolsConstants.SupportedDataSources.MYSQL_DB:
-//                directoryPath = Path.of(this.sourcePath, PersistToolsConstants.MYSQL_DRIVER_PATH);
-//                break;
-//            default:
-//                throw new BalException("Unsupported data store: " + datasource);
-//        }
-//        File directory = directoryPath.toFile();
-//        // Check if the directory exists
-//        if (directory.exists() && directory.isDirectory()) {
-//            // List all files in the directory
-//            File[] files = directory.listFiles();
-//            if (files == null || files.length == 0) {
-//                throw new BalException("No files found in the driver directory.");
-//            }
-//            return Path.of(files[0].getAbsolutePath());
-//        } else {
-//            throw new BalException("Driver directory does not exist.");
-//        }
         String relativeLibPath;
 
         DependencyGraph<ResolvedPackageDependency> resolvedPackageDependencyDependencyGraph =

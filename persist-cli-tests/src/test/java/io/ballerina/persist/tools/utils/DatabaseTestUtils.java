@@ -20,6 +20,7 @@ package io.ballerina.persist.tools.utils;
 
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
+import io.ballerina.persist.configuration.DatabaseConfiguration;
 import io.ballerina.persist.configuration.PersistConfiguration;
 import io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils;
 import org.testng.Assert;
@@ -200,26 +201,21 @@ public class DatabaseTestUtils {
         }
     }
 
-    public static void createFromDatabaseScript(String packageName, String datasource) throws BalException {
+    public static void createFromDatabaseScript(String packageName, String datasource,
+                                                DatabaseConfiguration dbConfig) throws BalException {
         Path sourcePath = Paths.get(INPUT_RESOURCES_DIRECTORY, packageName);
-        PersistConfiguration configuration = TomlSyntaxUtils.readDatabaseConfigurations(
-                Paths.get(INPUT_RESOURCES_DIRECTORY, packageName, BALLERINA_TOML));
-        String username = configuration.getDbConfig().getUsername();
-        String password = configuration.getDbConfig().getPassword();
-        String host = configuration.getDbConfig().getHost();
-        int port = configuration.getDbConfig().getPort();
 
         String url;
         if (datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
-            url = String.format("jdbc:sqlserver://%s:%s", host, port);
+            url = String.format("jdbc:sqlserver://%s:%s", dbConfig.getHost(), dbConfig.getPort());
         } else if (datasource.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB)) {
-            url = String.format("jdbc:postgresql://%s:%s/", host, port);
+            url = String.format("jdbc:postgresql://%s:%s/", dbConfig.getHost(), dbConfig.getPort());
         } else {
-            url = String.format("jdbc:mysql://%s:%s", host, port);
+            url = String.format("jdbc:mysql://%s:%s", dbConfig.getHost(), dbConfig.getPort());
         }
 
 
-        try (Connection connection = DriverManager.getConnection(url, username, password)) {
+        try (Connection connection = DriverManager.getConnection(url, dbConfig.getUsername(), dbConfig.getPassword())) {
             Path scriptFilePath = sourcePath.resolve("script.sql");
             //15 lines skipped to avoid license headers
             String scriptContent = Files.lines(scriptFilePath).skip(15).reduce("", String::concat);

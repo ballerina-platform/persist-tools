@@ -34,6 +34,15 @@ public class DatabaseConfiguration {
     private int port;
     private String database;
 
+    public DatabaseConfiguration(String host, String username, String password, String port, String database)
+            throws BalException {
+        this.host = host;
+        this.username = username;
+        this.password = password;
+        this.port = Integer.parseInt(port);
+        this.database = DataBaseValidationUtils.validateDatabaseInput(database);
+    }
+
     public DatabaseConfiguration(String modelName, NodeList<KeyValueNode> nodeList) throws BalException {
 
         for (KeyValueNode member : nodeList) {

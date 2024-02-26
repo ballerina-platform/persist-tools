@@ -20,19 +20,19 @@ package io.ballerina.persist.cmd;
 import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
+import io.ballerina.persist.configuration.DatabaseConfiguration;
 import io.ballerina.persist.configuration.PersistConfiguration;
 import io.ballerina.persist.introspect.Introspector;
 import io.ballerina.persist.introspect.MySQLIntrospector;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.DriverResolver;
 import io.ballerina.persist.nodegenerator.SourceGenerator;
-import io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils;
 import io.ballerina.persist.utils.DatabaseConnector;
 import io.ballerina.persist.utils.JdbcDriverLoader;
 import io.ballerina.projects.Project;
-import io.ballerina.projects.util.ProjectUtils;
 import picocli.CommandLine;
 
+import java.io.Console;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
@@ -42,23 +42,22 @@ import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Scanner;
 
 import static io.ballerina.persist.PersistToolsConstants.MYSQL_DRIVER_CLASS;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.JDBC_URL_WITH_DATABASE_MYSQL;
-import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.readPackageName;
 import static io.ballerina.persist.utils.BalProjectUtils.validateBallerinaProject;
-import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
-import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
+import static io.ballerina.persist.utils.BalProjectUtils.validatePullCommandOptions;
 
 @CommandLine.Command(
         name = "pull",
         description = "Create model.bal file according to given database schema")
 public class Pull implements BLauncherCmd {
     private final PrintStream errStream = System.err;
+
+    private Scanner scanner;
 
     private final String sourcePath;
 
@@ -74,16 +73,40 @@ public class Pull implements BLauncherCmd {
         this.sourcePath = sourcePath;
     }
 
+    @CommandLine.Option(names = {"--datastore"})
+    private String datastore = "mysql";
+
+    @CommandLine.Option(names = {"--host"})
+    private String host;
+
+    @CommandLine.Option(names = {"--port"})
+    private String port = "3306";
+
+    @CommandLine.Option(names = {"--user"})
+    private String user;
+
+    @CommandLine.Option(names = {"--database"})
+    private String database;
+
 
     @Override
     public void execute() {
-        String packageName;
-        String moduleNameWithPackageName;
-        String datastore;
+        scanner = new Scanner(System.in, StandardCharsets.UTF_8);
+        try {
+            validatePullCommandOptions(datastore, host, port, user, database);
+        } catch (BalException e) {
+            errStream.println("Invalid Option(s): \n" + e.getMessage());
+            return;
+        }
 
-        errStream.println("Introspecting database schema...");
-
-
+        String password;
+        Console console = System.console();
+        if (console == null) {
+            errStream.print("Database Password: ");
+            password = scanner.nextLine();
+        } else {
+            password = new String(console.readPassword("Database Password: "));
+        }
 
         try {
             validateBallerinaProject(Paths.get(this.sourcePath));
@@ -92,54 +115,21 @@ public class Pull implements BLauncherCmd {
             return;
         }
 
-        try {
-            packageName = TomlSyntaxUtils.readPackageName(this.sourcePath);
-        } catch (BalException e) {
-            errStream.println(e.getMessage());
-            return;
-        }
-
-        try {
-            HashMap<String, String> ballerinaTomlConfig = TomlSyntaxUtils.readBallerinaTomlConfig(
-                    Paths.get(this.sourcePath, "Ballerina.toml"));
-            moduleNameWithPackageName = ballerinaTomlConfig.get("module").trim();
-            if (!moduleNameWithPackageName.equals(packageName)) {
-                if (!moduleNameWithPackageName.startsWith(packageName + ".")) {
-                    errStream.println("ERROR: invalid module name : '" + ballerinaTomlConfig.get("module") + "' :\n" +
-                            "module name should follow the template <package_name>.<module_name>");
-                    return;
-                }
-                String moduleName = moduleNameWithPackageName.replace(packageName + ".", "");
-                if (!ProjectUtils.validateModuleName(moduleName)) {
-                    errStream.println("ERROR: invalid module name : '" + moduleName + "' :\n" +
-                            "module name can only contain alphanumerics, underscores and periods");
-                    return;
-                } else if (!ProjectUtils.validateNameLength(moduleName)) {
-                    errStream.println("ERROR: invalid module name : '" + moduleName + "' :\n" +
-                            "maximum length of module name is 256 characters");
-                    return;
-                }
-            }
-            datastore = ballerinaTomlConfig.get("datastore").trim();
-        } catch (BalException e) {
-            errStream.printf("ERROR: failed to introspect database according to definition file (%s). %s%n",
-                    "Ballerina.toml", e.getMessage());
-            return;
-        }
-
-        if (datastore.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB)) {
-            this.databaseConnector = new DatabaseConnector(JDBC_URL_WITH_DATABASE_MYSQL, MYSQL_DRIVER_CLASS,
-                    this.sourcePath, datastore);
+        if (this.datastore.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB)) {
+            this.databaseConnector = new DatabaseConnector(JDBC_URL_WITH_DATABASE_MYSQL, MYSQL_DRIVER_CLASS);
         } else {
             errStream.printf("ERROR: unsupported data store: '%s'%n", datastore);
             return;
         }
 
         Path persistDir = Paths.get(this.sourcePath, PERSIST_DIRECTORY);
-        if (!Files.isDirectory(persistDir, NOFOLLOW_LINKS)) {
-            errStream.println("ERROR: the persist directory inside the Ballerina project does not exist. " +
-                    "run `bal persist init` to initiate the project before generation");
-            return;
+        if (!Files.exists(persistDir)) {
+            try {
+                Files.createDirectory(persistDir.toAbsolutePath());
+            } catch (IOException e) {
+                errStream.println("ERROR: failed to create the persist directory. " + e.getMessage());
+                return;
+            }
         }
 
         boolean modelFile = Files.exists(Path.of(String.valueOf(persistDir), "model.bal"));
@@ -148,7 +138,6 @@ public class Pull implements BLauncherCmd {
             String resetColor = "\u001B[0m";
             errStream.print(yellowColor + "A model.bal file already exists. " +
                     "Continuing would overwrite it. Do you wish to continue? (y/n) " + resetColor);
-            Scanner scanner = new Scanner(System.in, StandardCharsets.UTF_8);
             String input = scanner.nextLine();
             if (!input.toLowerCase(Locale.ENGLISH).equals("y")) {
                 errStream.println("Introspection aborted.");
@@ -157,20 +146,13 @@ public class Pull implements BLauncherCmd {
             errStream.println("Continuing...");
         }
 
+        PersistConfiguration persistConfigurations = new PersistConfiguration();
+        persistConfigurations.setProvider(datastore);
         try {
-            packageName = readPackageName(this.sourcePath);
+            persistConfigurations.setDbConfig(new DatabaseConfiguration(this.host, this.user, password, this.port,
+                    this.database));
         } catch (BalException e) {
-            errStream.println(e.getMessage());
-            return;
-        }
-
-        PersistConfiguration persistConfigurations;
-        try {
-            Path ballerinaTomlPath = Paths.get(this.sourcePath, BALLERINA_TOML);
-            persistConfigurations = TomlSyntaxUtils.readDatabaseConfigurations(ballerinaTomlPath);
-        } catch (BalException e) {
-            errStream.printf("ERROR: failed to load db configurations. %s ", e.getMessage());
-            return;
+            throw new RuntimeException(e);
         }
 
         Module entityModule;
@@ -190,7 +172,7 @@ public class Pull implements BLauncherCmd {
             try (Connection connection = databaseConnector.getConnection(driver, persistConfigurations, true)) {
 
                 Introspector introspector = new MySQLIntrospector(connection,
-                        persistConfigurations.getDbConfig().getDatabase(), packageName);
+                        persistConfigurations.getDbConfig().getDatabase());
 
                 entityModule = introspector.introspectDatabase();
 
@@ -216,7 +198,7 @@ public class Pull implements BLauncherCmd {
 
         SourceGenerator sourceGenerator = new SourceGenerator(sourcePath,
                 Paths.get(sourcePath, PERSIST_DIRECTORY),
-                moduleNameWithPackageName, entityModule);
+                "Introspect.db", entityModule);
 
         try {
             sourceGenerator.createDbModel();

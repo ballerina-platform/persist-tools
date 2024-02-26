@@ -7,17 +7,6 @@ version = "0.1.0"
 [build-options]
 observabilityIncluded = true
 
-[persist]
-datastore = "mysql"
-module = "tool_test_pull_7_mysql.db"
-
-[persist.model.storage.mysql]
-database = "persist"
-host = "localhost"
-password = "Test123#"
-port = 3307
-user = "root"
-
 [[platform.java17.dependency]]
 artifactId = "persist.sql-native"
 groupId = "io.ballerina.stdlib"

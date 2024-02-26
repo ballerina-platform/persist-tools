@@ -73,14 +73,14 @@ public abstract class Introspector {
 
     private List<SQLForeignKey> sqlForeignKeys;
 
-    public Introspector(Connection connection, String databaseName, String moduleName) {
+    public Introspector(Connection connection, String databaseName) {
         this.connection = connection;
         this.databaseName = databaseName;
         this.tables = new ArrayList<>();
         this.entityMap = new HashMap<>();
         this.sqlForeignKeys = new ArrayList<>();
         this.sqlEnums = new ArrayList<>();
-        this.moduleBuilder = Module.newBuilder(moduleName);
+        this.moduleBuilder = Module.newBuilder("db");
     }
 
     public Module introspectDatabase() throws SQLException {

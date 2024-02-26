@@ -22,8 +22,8 @@ import java.sql.Connection;
 
 public class MySQLIntrospector extends Introspector {
 
-    public MySQLIntrospector(Connection connection, String databaseName, String moduleName) {
-        super(connection, databaseName, moduleName);
+    public MySQLIntrospector(Connection connection, String databaseName) {
+        super(connection, databaseName);
     }
 
     @Override

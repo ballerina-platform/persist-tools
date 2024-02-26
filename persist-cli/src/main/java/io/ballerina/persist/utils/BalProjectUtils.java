@@ -72,6 +72,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -520,82 +521,6 @@ public class BalProjectUtils {
         }
     }
 
-//    public static void inferRelationDetails2(Module entityModule) {
-//        Map<String, Entity> entityMap = entityModule.getEntityMap();
-//        for (Entity entity : entityMap.values()) {
-//            List<EntityField> fields = entity.getFields();
-//            fields.stream().filter(field -> entityMap.get(field.getFieldType()) != null)
-//                    .forEach(field -> {
-//                        String fieldType = field.getFieldType();
-//                        Entity assocEntity = entityMap.get(fieldType);
-//                        if (field.getRelation() == null) {
-//                            // this branch only handles one-to-one or one-to-many or many-to-many with no relation
-//                            // annotations
-//                            assocEntity.getFields().stream().filter(assocfield -> assocfield.getFieldType()
-//                                            .equals(entity.getEntityName()))
-//                                    .filter(assocfield -> assocfield.getRelation() == null).forEach(assocfield -> {
-//                                        Map<String, EntityField> fkFields = new HashMap<>();
-//                                        // skip if the relation is already set for the entity field.
-//                                        if (field.getRelation() != null) {
-//                                            return;
-//                                        }
-//                                        // one-to-many or many-to-many with no relation annotations
-//                                        if (field.isArrayType() && assocfield.isArrayType()) {
-//                                            throw new RuntimeException("unsupported many to many relation between " +
-//                                                    entity.getEntityName() + " and " + assocEntity.getEntityName());
-//                                        }
-//                                        // one-to-one
-//                                        if (!field.isArrayType() && !assocfield.isArrayType()) {
-//                                            if (!field.isOptionalType() && assocfield.isOptionalType()) {
-//                                                field.setRelation(computeRelation(field.getFieldName(), entity,
-//                                                        assocEntity, true, Relation.RelationType.ONE,
-//                                                        field.getRelationRefs(), fkFields));
-//                                                assocfield.setRelation(computeRelation(field.getFieldName(),
-//                                                        assocEntity, entity, false, Relation.RelationType.ONE
-//                                                        , field.getRelationRefs(), fkFields));
-//                                            } else if (field.isOptionalType() && !assocfield.isOptionalType()) {
-//                                                field.setRelation(computeRelation(field.getFieldName(), entity,
-//                                                        assocEntity, false, Relation.RelationType.ONE, null
-//                                                        , fkFields));
-//                                                assocfield.setRelation(computeRelation(field.getFieldName(),
-//                                                        assocEntity, entity, true, Relation.RelationType.ONE,
-//                                                        assocfield.getRelationRefs(), fkFields));
-//                                            } else {
-//                                                throw new RuntimeException("unsupported ownership annotation " +
-//                                                        "in the relation between " + entity.getEntityName() +
-//                                                        " and " + assocEntity.getEntityName());
-//                                            }
-//                                        } else {
-//                                            //not one to one. so one to many
-//                                            if (field.isArrayType() && field.isOptionalType()) {
-//                                                // one-to-many relation. associated entity is the owner.
-//                                                // first param should be always owner entities field name
-//                                                field.setRelation(computeRelation(assocfield.getFieldName(), entity,
-//                                                        assocEntity, false, Relation.RelationType.MANY,
-//                                                        field.getRelationRefs(), fkFields));
-//                                                assocfield.setRelation(computeRelation(assocfield.getFieldName(),
-//                                                        assocEntity, entity, true, Relation.RelationType.ONE,
-//                                                        field.getRelationRefs(), fkFields));
-//                                            } else if (field.isArrayType() || field.getFieldType().equals("byte")) {
-//                                                field.setRelation(null);
-//                                            } else {
-//                                                // one-to-many relation. entity is the owner.
-//                                                // one-to-one relation. entity is the owner.
-//                                                // first param should be always owner entities field name
-//                                                field.setRelation(computeRelation(field.getFieldName(), entity,
-//                                                        assocEntity, true, Relation.RelationType.ONE,
-//                                                        field.getRelationRefs(), fkFields));
-//                                                assocfield.setRelation(computeRelation(field.getFieldName(),
-//                                                        assocEntity, entity, false, Relation.RelationType.MANY,
-//                                                        field.getRelationRefs(), fkFields));
-//                                            }
-//                                        }
-//                                    });
-//                        }
-//                    });
-//        }
-//    }
-
     public static void inferEnumDetails(Module entityModule) {
         Map<String, Enum> enumMap = entityModule.getEnumMap();
 
@@ -696,4 +621,48 @@ public class BalProjectUtils {
 
         return schemaFilePaths.get(0);
     }
+
+    public static void validatePullCommandOptions(String datastore, String host, String port, String user,
+                                                  String database) throws BalException {
+        String nameRegex = "[A-Za-z][A-Za-z0-9_]*";
+        List<String> errors = new ArrayList<>();
+        if (datastore == null) {
+            errors.add("The datastore type is not provided.");
+        } else if (datastore.isEmpty()) {
+            errors.add("The datastore type cannot be empty.");
+        } else if (!datastore.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB)) {
+            errors.add("Unsupported data store: '" + datastore + "'");
+        }
+        if (host == null) {
+            errors.add("The host is not provided.");
+        } else if (host.isEmpty()) {
+            errors.add("The host cannot be empty.");
+        }
+        if (port == null) {
+            errors.add("The port is not provided.");
+        } else if (port.isEmpty()) {
+            errors.add("The port cannot be empty.");
+        } else if (!Pattern.matches("\\d+", port)) {
+            errors.add("The port is invalid. The port should be a number.");
+        } else if (Integer.parseInt(port) < 0 || Integer.parseInt(port) > 65535) {
+            errors.add("The port is invalid. The port should be in the range of 0 to 65535.");
+        }
+        if (user == null) {
+            errors.add("The user is not provided.");
+        } else if (user.isEmpty()) {
+            errors.add("The user cannot be empty.");
+        }
+        if (database == null) {
+            errors.add("The database is not provided.");
+        } else if (database.isEmpty()) {
+            errors.add("The database cannot be empty.");
+        } else if (!Pattern.matches(nameRegex, database)) {
+            errors.add("The database name is invalid. The database name should start with a letter or underscore(_)" +
+                    "and must contain only alphanumeric characters.");
+        }
+        if (!errors.isEmpty()) {
+            throw new BalException(String.join(System.lineSeparator(), errors));
+        }
+    }
+
 }
