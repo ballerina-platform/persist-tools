@@ -57,8 +57,6 @@ import static java.lang.Integer.parseInt;
 public abstract class Introspector {
 
     protected final Connection connection;
-
-//    private final PrintStream errStream = System.err;
     protected String databaseName;
     protected abstract String getTablesQuery();
     protected abstract String getColumnsQuery(String tableName);
@@ -102,7 +100,6 @@ public abstract class Introspector {
 
         mapEnums();
         mapEntities();
-//        finalizeRelations();
 
         entityMap.forEach((key, value) -> moduleBuilder.addEntity(key, value));
         return moduleBuilder.build();

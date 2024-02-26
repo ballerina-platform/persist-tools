@@ -114,9 +114,10 @@ public class SQLType {
             // MSSQL --> DATETIME2
             // PostgreSQL --> TIMESTAMP
             case PersistToolsConstants.SqlTypes.TIME_STAMP:
+                return PersistToolsConstants.BallerinaTypes.UTC;
             case PersistToolsConstants.SqlTypes.DATE_TIME2:
             case PersistToolsConstants.SqlTypes.DATE_TIME:
-                    return PersistToolsConstants.BallerinaTypes.UTC;
+                return PersistToolsConstants.BallerinaTypes.CIVIL;
 
             // Ballerina --> time:Civil
             // MySQL --> DATETIME

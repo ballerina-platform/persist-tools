@@ -208,5 +208,23 @@ public class ToolingDbPullTest {
         executeCommand(subDir, PULL);
         assertGeneratedSources(subDir);
     }
+
+    @Test(enabled = true)
+    @Description("When the database does not contain any tables.")
+    public void pullTestNoTablesInDatabase() throws BalException {
+        String subDir = "tool_test_pull_21_mysql";
+        createFromDatabaseScript(subDir, "mysql");
+        executeCommand(subDir, PULL);
+        assertGeneratedSources(subDir);
+    }
+
+    @Test(enabled = true)
+    @Description("When the database does not exist.")
+    public void pullTestDatabaseDoesNotExist() throws BalException {
+        String subDir = "tool_test_pull_22_mysql";
+        createFromDatabaseScript(subDir, "mysql");
+        executeCommand(subDir, PULL);
+        assertGeneratedSources(subDir);
+    }
 }
 

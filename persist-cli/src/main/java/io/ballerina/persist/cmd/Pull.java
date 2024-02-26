@@ -180,6 +180,7 @@ public class Pull implements BLauncherCmd {
             driverProject = driverResolver.resolveDriverDependencies();
         } catch (BalException e) {
             errStream.println(e.getMessage());
+            deleteDriverFile(driverResolver);
             return;
         }
 
@@ -198,16 +199,18 @@ public class Pull implements BLauncherCmd {
                 }
 
             } catch (SQLException e) {
-                errStream.printf("ERROR: failed to connect to the database. %s%n", e.getMessage());
+                errStream.printf("ERROR: database failure. %s%n", e.getMessage());
+                deleteDriverFile(driverResolver);
                 return;
             }
-
         } catch (BalException e) {
             errStream.printf("ERROR: database introspection failed. %s%n",
                      e.getMessage());
+            deleteDriverFile(driverResolver);
             return;
         } catch (IOException e) {
             errStream.printf("ERROR: failed to load the database driver. %s%n", e.getMessage());
+            deleteDriverFile(driverResolver);
             return;
         }
 
@@ -220,15 +223,11 @@ public class Pull implements BLauncherCmd {
         } catch (BalException e) {
             errStream.printf(String.format("ERROR: failed to generate model for introspected database: %s%n",
                      e.getMessage()));
+            deleteDriverFile(driverResolver);
             return;
         }
 
-        try {
-            driverResolver.deleteDriverFile();
-        } catch (BalException e) {
-            errStream.println(e.getMessage());
-            return;
-        }
+        deleteDriverFile(driverResolver);
         errStream.println("Introspection complete! model.bal file created successfully.");
     }
 
@@ -252,6 +251,12 @@ public class Pull implements BLauncherCmd {
 
     }
 
-
+    public void deleteDriverFile(DriverResolver driverResolver) {
+        try {
+            driverResolver.deleteDriverFile();
+        } catch (BalException e) {
+            errStream.println(e.getMessage());
+        }
+    }
 
 }

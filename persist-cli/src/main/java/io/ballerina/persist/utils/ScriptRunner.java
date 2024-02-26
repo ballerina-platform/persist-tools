@@ -149,6 +149,9 @@ public class ScriptRunner {
                             .setTableComment(results.getString("table_comment"))
                             .setCreateOptions(results.getString("create_options")).build());
                 }
+                if (tables.isEmpty()) {
+                    throw new SQLException("No tables found in the database.");
+                }
                 return tables;
             }
         } catch (SQLException e) {
