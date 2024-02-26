@@ -211,38 +211,34 @@ Behaviour of the `push` command,
 ## 5. Pull Persistence Schema from the Data Provider
 
 ```bash
-bal persist pull
+bal persist pull --datastore mysql --host localhost --port 3306 --user root --database persist
 ```
+| Command Parameter |                                      Description                                      | Mandatory | Default Value |
+|:-----------------:|:-------------------------------------------------------------------------------------:|:---------:|:-------------:|
+|    --datastore    | used to indicate the preferred database client. Currently, only 'mysql' is supported. |    No     |     mysql     |
+|      --host       |                          used to indicate the database host                           |    Yes    |     None      |
+|      --port       |                          used to indicate the database port                           |    No     |     3306      |
+|      --user       |                          used to indicate the database user                           |    Yes    |     None      |
+|    --database     |                          used to indicate the database name                           |    Yes    |     None      |
 
-This command will introspect the schema of the database defined in  the `Ballerina.toml` file under the heading ([persist.model.storage.mysql]). It will generate the `model.bal` file with the entities and relations based on the schema of the database.
-Database configuration in `Ballerina.toml` should look like following,
-```
-[persist.model.storage.mysql]
-host = "localhost"
-port = 3306
-user = "root"
-password = "Test123#"
-database = "persist"
-```
+This command will introspect the schema of the database and create a `model.bal` file with the entities and relations based on the schema of the database. The database configuration should be provided as command-line arguments.
+
 
 The file structure of the project should be similar to the following before running the command.
 ```
 medical-center
-├── persist
-     └── 
 ├── Ballerina.toml
-├── Config.toml
 └── main.bal
 ```
-If the `persist` directory does not contain a `model.bal` file, the command will create a new `model.bal` file with the entities and relations based on the schema of the database. If the `persist` directory contains a `model.bal` file, the command will prompt the user to confirm overwriting the existing `model.bal` file.
+The `persist` directory is created if it is not already present. If a `model.bal` file is already present in the `persist` directory, it will prompt the user to confirm overwriting the existing `model.bal` file.
 
-Running the pull command will,
+Running the `pull` command will,
 1. Create a `model.bal` file with the entities and relations based on the introspected schema of the database.
 2. Not change the schema of the database in any way.
 
 Behaviour of the `pull` command,
-- User should invoke the command within a Ballerina project
-- User should add the relevant configuration to the Ballerina.toml file.
-- The user should have initiated the persistence layer in the project.
+- User should invoke the command within a Ballerina project.
+- User should provide the relevant database configuration as command-line arguments.
+- The database password is not provided as a command-line argument. The user will be prompted to enter the password.
 - If the user invokes the command while a `model.bal` file exists in the `persist` directory, it will prompt the user to confirm overwriting the existing `model.bal` file.
 - The user must execute the `generate` command to generate the derived types and client API after running the `pull` command in order to use the client API in the project.
