@@ -23,7 +23,6 @@ import org.testng.annotations.Test;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -89,49 +88,36 @@ public class BuildCodeGeneratorTest {
         assertLogs(log, project);
     }
 
-    private void assertLogs(String log, Path project) throws IOException, InterruptedException {
+    private String collectLogOutput(Path project) throws IOException, InterruptedException {
         List<String> buildArgs = new LinkedList<>();
-        Process process = executeRun(TEST_DISTRIBUTION_PATH.toString(), project, buildArgs);
-        InputStream outStream = process.getErrorStream();
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(outStream, StandardCharsets.UTF_8))) {
+        Process process = executeBuild(TEST_DISTRIBUTION_PATH.toString(), project, buildArgs);
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(process.getErrorStream(),
+                StandardCharsets.UTF_8))) {
             Stream<String> logLines = br.lines();
             String generatedLog = logLines.collect(Collectors.joining(System.lineSeparator()));
-            Assert.assertEquals(generatedLog, log);
             logLines.close();
+            return generatedLog;
         }
+    }
+
+    private void assertLogs(String log, Path project) throws IOException, InterruptedException {
+        String generatedLog = collectLogOutput(project);
+        Assert.assertEquals(generatedLog, log);
     }
 
     private void assertContainLogs(String log, Path project) throws IOException, InterruptedException {
-        List<String> buildArgs = new LinkedList<>();
-        Process process = executeRun(TEST_DISTRIBUTION_PATH.toString(), project, buildArgs);
-        InputStream outStream = process.getErrorStream();
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(outStream, StandardCharsets.UTF_8))) {
-            Stream<String> logLines = br.lines();
-            String generatedLog = logLines.collect(Collectors.joining(System.lineSeparator()));
-            Assert.assertTrue(generatedLog.contains(log));
-            logLines.close();
-        }
+        String generatedLog = collectLogOutput(project);
+        Assert.assertTrue(generatedLog.contains(log));
     }
 
-    /**
-     * Ballerina run command.
-     */
-    public static Process executeRun(String distributionName, Path sourceDirectory,
-                                     List<String> args) throws IOException, InterruptedException {
+    public static Process executeBuild(String distributionName, Path sourceDirectory,
+                                       List<String> args) throws IOException, InterruptedException {
         args.add(0, "build");
         Process process = getProcessBuilderResults(distributionName, sourceDirectory, args);
         process.waitFor();
         return process;
     }
 
-    /**
-     *  Get Process from given arguments.
-     * @param distributionName The name of the distribution.
-     * @param sourceDirectory  The directory where the sources files are location.
-     * @param args             The arguments to be passed to the build command.
-     * @return process
-     * @throws IOException          Error executing build command.
-     */
     public static Process getProcessBuilderResults(String distributionName, Path sourceDirectory, List<String> args)
             throws IOException {
         String balFile = "bal";

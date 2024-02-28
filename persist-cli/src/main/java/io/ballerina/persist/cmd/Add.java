@@ -34,13 +34,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static io.ballerina.persist.PersistToolsConstants.BAL_PERSIST_ADD_CMD;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.BAL_EXTENSION;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_DB_PROVIDERS;
-import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.BAL_EXTENSION;
 import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 
 @CommandLine.Command(
@@ -51,8 +51,6 @@ public class Add implements BLauncherCmd {
     private static final PrintStream errStream = System.err;
 
     private final String sourcePath;
-
-    private static final String COMMAND_IDENTIFIER = "persist-add";
 
     @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
     private boolean helpFlag;
@@ -76,126 +74,95 @@ public class Add implements BLauncherCmd {
 
     @Override
     public void execute() {
-        String packageName;
         if (helpFlag) {
             String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(getName());
             errStream.println(commandUsageInfo);
             return;
         }
-        if (datastore == null) {
-            datastore = PersistToolsConstants.SupportedDataSources.IN_MEMORY_TABLE;
-        } else if (!SUPPORTED_DB_PROVIDERS.contains(datastore)) {
-            errStream.printf("ERROR: the persist layer supports one of data stores: %s" +
-                    ". but found '%s' datasource.%n", Arrays.toString(SUPPORTED_DB_PROVIDERS.toArray()), datastore);
-            return;
-        }
         try {
-            packageName = TomlSyntaxUtils.readPackageName(this.sourcePath);
-        } catch (BalException e) {
-            errStream.println(e.getMessage());
-            return;
-        }
-        if (module == null) {
-            module = packageName;
-        } else {
-            module = module.replaceAll("\"", "");
-        }
-        if (!ProjectUtils.validateModuleName(module)) {
-            errStream.println("ERROR: invalid module name : '" + module + "' :\n" +
-                    "module name can only contain alphanumerics, underscores and periods");
-            return;
-        } else if (!ProjectUtils.validateNameLength(module)) {
-            errStream.println("ERROR: invalid module name : '" + module + "' :\n" +
-                    "maximum length of module name is 256 characters");
-            return;
-        }
-        if (!module.equals(packageName)) {
-            module = String.format("%s.%s", packageName.replaceAll("\"", ""), module);
-        }
-        try {
-            Path projectPath = Paths.get(sourcePath);
-            validateBallerinaProject(projectPath);
+            validateDatastore();
+            validateAndProcessModule();
             createDefaultClientId();
             String syntaxTree = TomlSyntaxUtils.updateBallerinaToml(Paths.get(this.sourcePath, BALLERINA_TOML), module,
                     datastore, false, id);
             Utils.writeOutputString(syntaxTree,
-                    Paths.get(this.sourcePath, BALLERINA_TOML).toAbsolutePath().toString());
-            Path persistDirPath = Paths.get(this.sourcePath, PERSIST_DIRECTORY);
-            if (!Files.exists(persistDirPath)) {
-                try {
-                    Files.createDirectory(persistDirPath.toAbsolutePath());
-                } catch (IOException e) {
-                    errStream.println("ERROR: failed to create the persist directory. " + e.getMessage());
-                    return;
-                }
-            }
-            List<String> schemaFiles;
-            try (Stream<Path> stream = Files.list(persistDirPath)) {
-                schemaFiles = stream.filter(file -> !Files.isDirectory(file))
-                        .map(Path::getFileName)
-                        .filter(Objects::nonNull)
-                        .filter(file -> file.toString().toLowerCase(Locale.ENGLISH).endsWith(BAL_EXTENSION))
-                        .map(file -> file.toString().replace(BAL_EXTENSION, ""))
-                        .collect(Collectors.toList());
-            } catch (IOException e) {
-                errStream.println("ERROR: failed to list model definition files in the persist directory. "
-                        + e.getMessage());
-                return;
-            }
-            if (schemaFiles.size() > 1) {
-                errStream.println("ERROR: the persist directory allows only one model definition file, " +
-                        "but contains many files.");
-                return;
-            }
-            if (schemaFiles.size() == 0) {
-                try {
-                    Utils.generateSchemaBalFile(persistDirPath);
-                } catch (BalException e) {
-                    errStream.println("ERROR: failed to create the model definition file in persist directory. "
-                            + e.getMessage());
-                    return;
-                }
-            }
+                    Paths.get(sourcePath, BALLERINA_TOML).toAbsolutePath().toString());
+            createPersistDirectoryIfNotExists();
+            createDefaultSchemaBalFile();
         } catch (BalException | IOException e) {
-            errStream.printf("ERROR: Failed to generate types and client for the definition file(%s). %s%n",
-                    "Ballerina.toml", e.getMessage());
+            errStream.printf("ERROR: %s%n", e.getMessage());
         }
     }
 
     @Override
     public String getName() {
-        return "add";
+        return BAL_PERSIST_ADD_CMD;
     }
 
     @Override
     public void printLongDesc(StringBuilder stringBuilder) {
-
     }
 
     @Override
     public void printUsage(StringBuilder stringBuilder) {
-
     }
 
     @Override
     public void setParentCmdParser(CommandLine commandLine) {
-
     }
 
-    private static void validateBallerinaProject(Path projectPath) throws BalException {
-        Optional<Path> ballerinaToml = Optional.empty();
-        try (Stream<Path> stream = Files.list(projectPath)) {
-            ballerinaToml = stream.filter(file -> !Files.isDirectory(file))
+    private void validateDatastore() throws BalException {
+        if (datastore == null) {
+            datastore = PersistToolsConstants.SupportedDataSources.IN_MEMORY_TABLE;
+        } else if (!SUPPORTED_DB_PROVIDERS.contains(datastore)) {
+            throw new BalException(String.format("the persist layer supports one of data stores: %s" +
+                    ". but found '%s' datasource.", Arrays.toString(SUPPORTED_DB_PROVIDERS.toArray()), datastore));
+        }
+    }
+
+    private void validateAndProcessModule() throws BalException {
+        String packageName;
+        try {
+            packageName = TomlSyntaxUtils.readPackageName(sourcePath);
+        } catch (BalException e) {
+            throw new BalException(e.getMessage());
+        }
+        module = module == null ? packageName : module.replaceAll("\"", "");
+        if (!ProjectUtils.validateModuleName(module)) {
+            throw new BalException(String.format("invalid module name : '%s' :" + System.lineSeparator() +
+                    "module name can only contain alphanumerics, underscores and periods", module));
+        } else if (!ProjectUtils.validateNameLength(module)) {
+            throw new BalException(String.format("invalid module name : '%s' :" + System.lineSeparator() +
+                    "maximum length of module name is 256 characters", module));
+        }
+        if (!module.equals(packageName)) {
+            module = String.format("%s.%s", packageName.replaceAll("\"", ""), module);
+        }
+    }
+
+    private void createPersistDirectoryIfNotExists() throws IOException {
+        Path persistDirPath = Paths.get(sourcePath, PERSIST_DIRECTORY);
+        if (!Files.exists(persistDirPath)) {
+            Files.createDirectory(persistDirPath.toAbsolutePath());
+        }
+    }
+
+    private void createDefaultSchemaBalFile() throws IOException, BalException {
+        List<String> schemaFiles;
+        try (Stream<Path> stream = Files.list(Paths.get(sourcePath, PERSIST_DIRECTORY))) {
+            schemaFiles = stream.filter(file -> !Files.isDirectory(file))
                     .map(Path::getFileName)
                     .filter(Objects::nonNull)
-                    .filter(file -> BALLERINA_TOML.equals(file.toString()))
-                    .findFirst();
-        } catch (IOException e) {
-            errStream.printf("ERROR: Invalid Ballerina package", projectPath.toAbsolutePath(), e.getMessage());
+                    .filter(file -> file.toString().toLowerCase(Locale.ENGLISH).endsWith(BAL_EXTENSION))
+                    .map(file -> file.toString().replace(BAL_EXTENSION, ""))
+                    .collect(Collectors.toList());
         }
-        if (ballerinaToml.isEmpty()) {
-            throw new BalException(String.format("ERROR: invalid Ballerina package directory: %s, " +
-                    "cannot find 'Ballerina.toml' file.%n", projectPath.toAbsolutePath()));
+        if (schemaFiles.size() > 1) {
+            throw new BalException("the persist directory allows only one model definition file, " +
+                    "but contains many files.");
+        }
+        if (schemaFiles.isEmpty()) {
+            Utils.generateSchemaBalFile(Paths.get(sourcePath, PERSIST_DIRECTORY));
         }
     }
 

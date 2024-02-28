@@ -26,6 +26,8 @@ import java.util.Set;
  */
 public class PersistToolsConstants {
 
+    public static final String BAL_PERSIST_ADD_CMD = "add";
+
     private PersistToolsConstants() {}
 
     public static final String COMPONENT_IDENTIFIER = "persist";

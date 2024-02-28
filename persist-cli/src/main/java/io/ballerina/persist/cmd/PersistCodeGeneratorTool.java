@@ -38,6 +38,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 
 import static io.ballerina.persist.PersistToolsConstants.TARGET_MODULE;
+import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 
 public class PersistCodeGeneratorTool implements CodeGeneratorTool {
 
@@ -55,112 +56,105 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
         Path generatedSourceDirPath = Paths.get(projectPath.toString(), BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);
         try {
             BalProjectUtils.validateBallerinaProject(projectPath);
-        } catch (BalException e) {
-            errStream.println(e.getMessage());
-            return;
-        }
-
-        try {
             packageName = TomlSyntaxUtils.readPackageName(projectPath.toString());
-        } catch (BalException e) {
-            errStream.println(e.getMessage());
-            return;
-        }
-
-        try {
-            schemaFilePath =  BalProjectUtils.getSchemaFilePath(projectPath.toString());
-        } catch (BalException e) {
-            errStream.println(e.getMessage());
-            return;
-        }
-
-        try {
+            schemaFilePath = BalProjectUtils.getSchemaFilePath(projectPath.toString());
             HashMap<String, String> ballerinaTomlConfig = TomlSyntaxUtils.readBallerinaTomlConfig(
-                    Paths.get(projectPath.toString(), "Ballerina.toml"));
+                    Paths.get(projectPath.toString(), BALLERINA_TOML));
             targetModule = ballerinaTomlConfig.get(TARGET_MODULE).trim();
-            if (!targetModule.equals(packageName)) {
-                if (!targetModule.startsWith(packageName + ".")) {
-                    errStream.println("ERROR: invalid module name : '" + ballerinaTomlConfig.get(TARGET_MODULE)
-                            + "' :\n" + "module name should follow the template <package_name>.<module_name>");
-                    return;
-                }
-                String moduleName = targetModule.replace(packageName + ".", "");
-                if (!ProjectUtils.validateModuleName(moduleName)) {
-                    errStream.println("ERROR: invalid module name : '" + moduleName + "' :\n" +
-                            "module name can only contain alphanumerics, underscores and periods");
-                    return;
-                } else if (!ProjectUtils.validateNameLength(moduleName)) {
-                    errStream.println("ERROR: invalid module name : '" + moduleName + "' :\n" +
-                            "maximum length of module name is 256 characters");
-                    return;
-                }
-                generatedSourceDirPath = generatedSourceDirPath.resolve(moduleName);
-            }
             datastore = ballerinaTomlConfig.get("options.datastore").trim();
-            if (!PersistToolsConstants.SUPPORTED_DB_PROVIDERS.contains(datastore)) {
-                errStream.printf("ERROR: the persist layer supports one of data stores: %s" +
-                                ". but found '%s' datasource.%n",
-                        Arrays.toString(PersistToolsConstants.SUPPORTED_DB_PROVIDERS.toArray()), datastore);
-                return;
-            }
-            if (Files.isDirectory(Paths.get(projectPath.toString(), PersistToolsConstants.PERSIST_DIRECTORY,
-                    PersistToolsConstants.MIGRATIONS)) &&
-                    !datastore.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB)) {
-                errStream.println("ERROR: regenerating the client with a different datastore after executing " +
-                        "the migrate command is not permitted. please remove the migrations directory within the " +
-                        "persist directory and try executing the command again.");
-                return;
-            }
-            if (datastore.equals(PersistToolsConstants.SupportedDataSources.GOOGLE_SHEETS)) {
-                errStream.printf(BalSyntaxConstants.EXPERIMENTAL_NOTICE, "The support for Google Sheets data store " +
-                        "is currently an experimental feature, and its behavior may be subject to change in future " +
-                        "releases." + System.lineSeparator());
-            }
+            validateDatastore(datastore);
+            validateTargetModule(targetModule, packageName, ballerinaTomlConfig);
+            validatePersistDirectory(datastore, projectPath);
+            validateExperimentalFeatures(datastore);
             entityModule = BalProjectUtils.getEntities(schemaFilePath);
-            if (entityModule.getEntityMap().isEmpty()) {
-                errStream.printf("ERROR: the model definition file(%s) does not contain any entity definition.%n",
-                        schemaFilePath.getFileName());
-                return;
-            }
-        } catch (BalException e) {
-            errStream.printf("ERROR: Failed to generate types and client for the definition file(%s). %s%n",
-                    "Ballerina.toml", e.getMessage());
-            return;
+            validateEntityModule(entityModule, schemaFilePath);
+            createGeneratedSourceDirIfNotExists(generatedSourceDirPath);
+            generateSources(datastore, entityModule, targetModule, projectPath, generatedSourceDirPath);
+            errStream.println("Persist client and entity types generated successfully in the " + targetModule +
+                    " directory.");
+        } catch (BalException | IOException e) {
+            errStream.printf("ERROR: %s%n", e.getMessage());
         }
-        if (!Files.exists(generatedSourceDirPath)) {
-            try {
-                Files.createDirectories(generatedSourceDirPath.toAbsolutePath());
-            } catch (IOException e) {
-                errStream.println("ERROR: failed to create the generated directory. " + e.getMessage());
-                return;
-            }
-        }
-        SourceGenerator sourceCreator = new SourceGenerator(projectPath.toString(), generatedSourceDirPath,
-                targetModule, entityModule);
-        try {
-            switch (datastore) {
-                case PersistToolsConstants.SupportedDataSources.MYSQL_DB:
-                case PersistToolsConstants.SupportedDataSources.MSSQL_DB:
-                case PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB:
-                    sourceCreator.createDbSources(datastore);
-                    break;
-                case PersistToolsConstants.SupportedDataSources.GOOGLE_SHEETS:
-                    sourceCreator.createGSheetSources();
-                    break;
-                default:
-                    sourceCreator.createInMemorySources();
-                    break;
-            }
-        } catch (BalException e) {
-            errStream.printf(BalSyntaxConstants.ERROR_MSG, datastore, e.getMessage());
-            return;
-        }
-        errStream.println("Persist client and entity types generated successfully in the " + targetModule +
-                " directory.");
     }
 
     @Override
     public String toolName() {
         return "persist";
+    }
+
+    private void validateDatastore(String datastore) throws BalException {
+        if (!PersistToolsConstants.SUPPORTED_DB_PROVIDERS.contains(datastore)) {
+            throw new BalException(String.format("the persist layer supports one of data stores: %s" +
+                    ". but found '%s' datasource.", Arrays.toString(PersistToolsConstants.SUPPORTED_DB_PROVIDERS
+                    .toArray()), datastore));
+        }
+    }
+
+    private void validateTargetModule(String targetModule, String packageName, HashMap<String, String> config)
+            throws BalException {
+        if (!targetModule.equals(packageName)) {
+            if (!targetModule.startsWith(packageName + ".")) {
+                throw new BalException("invalid module name : '" + targetModule
+                        + "' :\n" + "module name should follow the template <package_name>.<module_name>");
+            }
+            String moduleName = targetModule.replace(packageName + ".", "");
+            if (!ProjectUtils.validateModuleName(moduleName)) {
+                throw new BalException("invalid module name : '" + moduleName + "' :" + System.lineSeparator() +
+                        "module name can only contain alphanumerics, underscores and periods");
+            } else if (!ProjectUtils.validateNameLength(moduleName)) {
+                throw new BalException("invalid module name : '" + moduleName + "' :" + System.lineSeparator() +
+                        "maximum length of module name is 256 characters");
+            }
+        }
+    }
+
+    private void validatePersistDirectory(String datastore, Path projectPath) throws BalException {
+        if (Files.isDirectory(Paths.get(projectPath.toString(), PersistToolsConstants.PERSIST_DIRECTORY,
+                PersistToolsConstants.MIGRATIONS)) &&
+                !datastore.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB)) {
+            throw new BalException("regenerating the client with a different datastore after executing " +
+                    "the migrate command is not permitted. please remove the migrations directory within the " +
+                    "persist directory and try executing the command again.");
+        }
+    }
+
+    private void validateExperimentalFeatures(String datastore) {
+        if (datastore.equals(PersistToolsConstants.SupportedDataSources.GOOGLE_SHEETS)) {
+            errStream.printf(BalSyntaxConstants.EXPERIMENTAL_NOTICE, "The support for Google Sheets data store " +
+                    "is currently an experimental feature, and its behavior may be subject to change in future " +
+                    "releases." + System.lineSeparator());
+        }
+    }
+
+    private void validateEntityModule(Module entityModule, Path schemaFilePath) throws BalException {
+        if (entityModule.getEntityMap().isEmpty()) {
+            throw new BalException(String.format("the model definition file(%s) does not contain any " +
+                            "entity definition.", schemaFilePath.getFileName()));
+        }
+    }
+
+    private void createGeneratedSourceDirIfNotExists(Path generatedSourceDirPath) throws IOException {
+        if (!Files.exists(generatedSourceDirPath)) {
+                Files.createDirectories(generatedSourceDirPath.toAbsolutePath());
+        }
+    }
+
+    private void generateSources(String datastore, Module entityModule, String targetModule, Path projectPath,
+                                 Path generatedSourceDirPath) throws BalException {
+        SourceGenerator sourceCreator = new SourceGenerator(projectPath.toString(), generatedSourceDirPath,
+                targetModule, entityModule);
+        switch (datastore) {
+            case PersistToolsConstants.SupportedDataSources.MYSQL_DB:
+            case PersistToolsConstants.SupportedDataSources.MSSQL_DB:
+            case PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB:
+                sourceCreator.createDbSources(datastore);
+                break;
+            case PersistToolsConstants.SupportedDataSources.GOOGLE_SHEETS:
+                sourceCreator.createGSheetSources();
+                break;
+            default:
+                sourceCreator.createInMemorySources();
+                break;
+        }
     }
 }
