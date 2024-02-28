@@ -4,8 +4,8 @@
 // It should not be modified by hand.
 
 public enum UserGender {
-    MALE = "MALE",
-    FEMALE = "FEMALE"
+    MALE,
+    FEMALE
 }
 
 public type User record {|
