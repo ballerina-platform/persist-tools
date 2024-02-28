@@ -202,7 +202,7 @@ public class DatabaseTestUtils {
     }
 
     public static void createFromDatabaseScript(String packageName, String datasource,
-                                                DatabaseConfiguration dbConfig) throws BalException {
+                                                DatabaseConfiguration dbConfig) {
         Path sourcePath = Paths.get(INPUT_RESOURCES_DIRECTORY, packageName);
 
         String url;

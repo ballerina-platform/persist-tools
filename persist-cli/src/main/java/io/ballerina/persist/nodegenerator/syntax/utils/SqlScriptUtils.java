@@ -260,7 +260,6 @@ public class SqlScriptUtils {
             return sqlType;
         }
         String length = BalSyntaxConstants.VARCHAR_LENGTH;
-        if (entityField.getAnnotation() != null) {
             for (AnnotationNode annotationNode : entityField.getAnnotation()) {
                 String annotationName = annotationNode.annotReference().toSourceCode().trim();
                 if (annotationName.equals(BalSyntaxConstants.CONSTRAINT_STRING)) {
@@ -284,7 +283,6 @@ public class SqlScriptUtils {
                     }
                 }
             }
-        }
         return sqlType + (String.format("(%s)", length));
     }
 

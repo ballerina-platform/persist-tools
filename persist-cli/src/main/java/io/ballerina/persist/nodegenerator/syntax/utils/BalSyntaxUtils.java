@@ -57,6 +57,7 @@ import io.ballerina.tools.text.TextDocument;
 import io.ballerina.tools.text.TextDocuments;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -553,7 +554,7 @@ public class BalSyntaxUtils {
     }
 
     private static void addDbRelationMappingAnnotationToField(EntityField field, StringBuilder recordFields) {
-        if (field.getRelationRefs() != null) {
+        if (!field.getRelationRefs().isEmpty()) {
             recordFields.append(String.format(BalSyntaxConstants.SQL_RELATION_MAPPING_ANNOTATION,
                     formatToBalStringArray(field.getRelationRefs())));
         }
@@ -735,13 +736,10 @@ public class BalSyntaxUtils {
         for (EntityField assocField : relation.getAssocEntity().getFields()) {
             for (String reference : references) {
                 if (assocField.getFieldName().equals(reference)) {
-                    NodeList<AnnotationNode> annotation = assocField.getAnnotation();
-                    if (annotation != null) {
-                        String params = getConstraintField(assocField);
-                        if (params != null) {
-                            recordFields.append(String.format(BalSyntaxConstants.CONSTRAINT_ANNOTATION,
+                    String params = getConstraintField(assocField);
+                    if (params != null) {
+                        recordFields.append(String.format(BalSyntaxConstants.CONSTRAINT_ANNOTATION,
                                     params));
-                        }
                     }
                     break;
                 }
@@ -750,21 +748,15 @@ public class BalSyntaxUtils {
     }
 
     private static void addConstrainAnnotationToField(EntityField field, StringBuilder recordFields) {
-        NodeList<AnnotationNode> annotation = field.getAnnotation();
-        if (annotation != null) {
-            String params = getConstraintField(field);
-            if (params != null) {
-                recordFields.append(String.format(BalSyntaxConstants.CONSTRAINT_ANNOTATION, params));
-            }
+        String params = getConstraintField(field);
+        if (params != null) {
+            recordFields.append(String.format(BalSyntaxConstants.CONSTRAINT_ANNOTATION, params));
         }
     }
 
     public static String readStringValueFromAnnotation
-            (io.ballerina.compiler.syntax.tree.NodeList<AnnotationNode> annotationNodes, String annotation,
+            (List<AnnotationNode> annotationNodes, String annotation,
              String field) {
-        if (annotationNodes == null) {
-            return null;
-        }
         for (AnnotationNode annotationNode : annotationNodes) {
             String annotationName = annotationNode.annotReference().toSourceCode().trim();
             if (annotationName.equals(annotation)) {
@@ -774,7 +766,7 @@ public class BalSyntaxUtils {
                         SpecificFieldNode specificFieldNode = (SpecificFieldNode) mappingFieldNode;
                         String fieldName = specificFieldNode.fieldName().toSourceCode().trim();
                         if (!fieldName.equals(field)) {
-                            return null;
+                            return "";
                         }
                         Optional<ExpressionNode> valueExpr = specificFieldNode.valueExpr();
                         if (valueExpr.isPresent()) {
@@ -784,14 +776,11 @@ public class BalSyntaxUtils {
                 }
             }
         }
-        return null;
+        return "";
     }
 
     public static boolean isAnnotationPresent
-            (io.ballerina.compiler.syntax.tree.NodeList<AnnotationNode> annotationNodes, String annotation) {
-        if (annotationNodes == null) {
-            return false;
-        }
+            (List<AnnotationNode> annotationNodes, String annotation) {
         for (AnnotationNode annotationNode : annotationNodes) {
             String annotationName = annotationNode.annotReference().toSourceCode().trim();
             if (annotationName.equals(annotation)) {
@@ -800,13 +789,9 @@ public class BalSyntaxUtils {
         }
         return false;
     }
-
     public static List<String> readStringArrayValueFromAnnotation
-            (io.ballerina.compiler.syntax.tree.NodeList<AnnotationNode> annotationNodes, String annotation,
+            (List<AnnotationNode> annotationNodes, String annotation,
              String field) {
-        if (annotationNodes == null) {
-            return null;
-        }
         for (AnnotationNode annotationNode : annotationNodes) {
             String annotationName = annotationNode.annotReference().toSourceCode().trim();
             if (annotationName.equals(annotation)) {
@@ -816,7 +801,7 @@ public class BalSyntaxUtils {
                         SpecificFieldNode specificFieldNode = (SpecificFieldNode) mappingFieldNode;
                         String fieldName = specificFieldNode.fieldName().toSourceCode().trim();
                         if (!fieldName.equals(field)) {
-                            return null;
+                            return Collections.emptyList();
                         }
                         Optional<ExpressionNode> valueExpr = specificFieldNode.valueExpr();
                         if (valueExpr.isPresent()) {
@@ -828,7 +813,7 @@ public class BalSyntaxUtils {
                 }
             }
         }
-        return null;
+        return Collections.emptyList();
     }
 
     private static String getConstraintField(EntityField field) {

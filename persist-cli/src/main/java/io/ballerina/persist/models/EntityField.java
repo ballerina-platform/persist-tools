@@ -19,8 +19,8 @@
 package io.ballerina.persist.models;
 
 import io.ballerina.compiler.syntax.tree.AnnotationNode;
-import io.ballerina.compiler.syntax.tree.NodeList;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -43,38 +43,24 @@ public class EntityField {
     private final boolean arrayType;
     private final boolean optionalType;
 
-    private boolean isDbGenerated = false;
+    private final boolean isDbGenerated;
     private Relation relation;
     private Enum enumValue;
-    private final NodeList<AnnotationNode> annotationNodes;
-
-
-
-    private List<String> relationRefs;
+    private final List<AnnotationNode> annotationNodes;
+    private final List<String> relationRefs;
 
     EntityField(String fieldName, String fieldColumnName, String fieldType, boolean arrayType, boolean optionalType,
-                        NodeList<AnnotationNode> annotationNodes) {
-        this.fieldName = fieldName;
-        this.fieldType = fieldType;
-        this.arrayType = arrayType;
-        this.optionalType = optionalType;
-        this.annotationNodes = annotationNodes;
-        this.fieldColumnName = fieldColumnName;
-    }
-
-    EntityField(String fieldName, String fieldColumnName, String fieldType, boolean arrayType, boolean optionalType,
-                NodeList<AnnotationNode> annotationNodes, SQLType sqlType, List<String> relationRefs,
+                List<AnnotationNode> annotationNodes, SQLType sqlType, List<String> relationRefs,
                 boolean isDbGenerated) {
         this.fieldName = fieldName;
         this.fieldColumnName = fieldColumnName;
         this.fieldType = fieldType;
         this.arrayType = arrayType;
         this.optionalType = optionalType;
-        this.annotationNodes = annotationNodes;
+        this.annotationNodes =
+                Collections.unmodifiableList(annotationNodes != null ? annotationNodes : new ArrayList<>());
         this.sqlType = sqlType;
-        if (relationRefs != null) {
-            this.relationRefs = Collections.unmodifiableList(relationRefs);
-        }
+        this.relationRefs = Collections.unmodifiableList(relationRefs != null ? relationRefs : new ArrayList<>());
         this.isDbGenerated = isDbGenerated;
     }
 
@@ -98,7 +84,7 @@ public class EntityField {
         return sqlType;
     }
 
-    public NodeList<AnnotationNode> getAnnotation() {
+    public List<AnnotationNode> getAnnotation() {
         return annotationNodes;
     }
 
@@ -154,7 +140,7 @@ public class EntityField {
         private boolean optionalType = false;
 
         SQLType sqlType;
-        private NodeList<AnnotationNode> annotationNodes = null;
+        private List<AnnotationNode> annotationNodes = null;
 
         private List<String> relationRefs;
 
@@ -198,7 +184,7 @@ public class EntityField {
         public void setOptionalType(boolean optionalType) {
             this.optionalType = optionalType;
         }
-        public void setAnnotation(NodeList<AnnotationNode> annotationNodes) {
+        public void setAnnotations(List<AnnotationNode> annotationNodes) {
             this.annotationNodes = annotationNodes;
         }
 

@@ -18,6 +18,7 @@
 
 package io.ballerina.persist.utils;
 
+import io.ballerina.compiler.syntax.tree.AnnotationNode;
 import io.ballerina.compiler.syntax.tree.ArrayTypeDescriptorNode;
 import io.ballerina.compiler.syntax.tree.BuiltinSimpleNameReferenceNode;
 import io.ballerina.compiler.syntax.tree.EnumDeclarationNode;
@@ -216,7 +217,7 @@ public class BalProjectUtils {
             entityBuilder.setTableName(typeDefinitionNode.typeName().text().trim());
             entityMetadataNode.ifPresent(value -> entityBuilder.setTableName(
                     BalSyntaxUtils.readStringValueFromAnnotation(
-                            value.annotations(),
+                            value.annotations().stream().toList(),
                             BalSyntaxConstants.SQL_DB_MAPPING_ANNOTATION_NAME,
                             "name"
                     )
@@ -245,28 +246,29 @@ public class BalProjectUtils {
                 Optional<MetadataNode> metadataNode = fieldNode.metadata();
                 metadataNode.ifPresent(value -> {
                     //read the db generated annotation
+                    List<AnnotationNode> annotations = value.annotations().stream().toList();
                     boolean dbGenerated = BalSyntaxUtils.isAnnotationPresent(
-                            value.annotations(),
+                            annotations,
                             BalSyntaxConstants.SQL_GENERATED_ANNOTATION_NAME
                     );
                     fieldBuilder.setIsDbGenerated(dbGenerated);
 
                     //read the db mapping annotation
                     String fieldResourceName = BalSyntaxUtils.readStringValueFromAnnotation(
-                            value.annotations(),
+                            annotations,
                             BalSyntaxConstants.SQL_DB_MAPPING_ANNOTATION_NAME,
                             "name"
                     );
-                    if (fieldResourceName != null) {
+                    if (!fieldResourceName.isEmpty()) {
                         fieldBuilder.setFieldColumnName(fieldResourceName);
                     }
                     //read the unique index annotation
                     boolean isUniqueIndexPresent = BalSyntaxUtils.isAnnotationPresent(
-                            value.annotations(),
+                            annotations,
                             BalSyntaxConstants.SQL_UNIQUE_INDEX_MAPPING_ANNOTATION_NAME
                     );
                     List<String> uniqueIndexNames = BalSyntaxUtils.readStringArrayValueFromAnnotation(
-                            value.annotations(),
+                            annotations,
                             BalSyntaxConstants.SQL_UNIQUE_INDEX_MAPPING_ANNOTATION_NAME,
                             "names"
                     );
@@ -279,7 +281,7 @@ public class BalProjectUtils {
                     }
                     //read the relation annotation
                     List<String> relationRefs = BalSyntaxUtils.readStringArrayValueFromAnnotation(
-                            value.annotations(),
+                            annotations,
                             BalSyntaxConstants.SQL_RELATION_MAPPING_ANNOTATION_NAME,
                             "refs"
                     );
@@ -289,11 +291,11 @@ public class BalProjectUtils {
 
                     //read the index annotation
                     boolean isIndexPresent = BalSyntaxUtils.isAnnotationPresent(
-                            value.annotations(),
+                            annotations,
                             BalSyntaxConstants.SQL_INDEX_MAPPING_ANNOTATION_NAME
                     );
                     List<String> indexNames = BalSyntaxUtils.readStringArrayValueFromAnnotation(
-                            value.annotations(),
+                            annotations,
                             BalSyntaxConstants.SQL_INDEX_MAPPING_ANNOTATION_NAME,
                             "names"
                     );
@@ -306,11 +308,11 @@ public class BalProjectUtils {
                     }
                     // read the varchar annotation
                     String varcharLength = BalSyntaxUtils.readStringValueFromAnnotation(
-                            value.annotations(),
+                            annotations,
                             BalSyntaxConstants.SQL_VARCHAR_MAPPING_ANNOTATION_NAME,
                             "length"
                     );
-                    if (varcharLength != null) {
+                    if (!varcharLength.isEmpty()) {
                         fieldBuilder.setSqlType(
                                 new SQLType(
                                         VARCHAR,
@@ -322,11 +324,11 @@ public class BalProjectUtils {
                     }
                     //read the char annotation
                     String charLength = BalSyntaxUtils.readStringValueFromAnnotation(
-                            value.annotations(),
+                            annotations,
                             BalSyntaxConstants.SQL_CHAR_MAPPING_ANNOTATION_NAME,
                             "length"
                     );
-                    if (charLength != null) {
+                    if (!charLength.isEmpty()) {
                         fieldBuilder.setSqlType(
                                 new SQLType(
                                         CHAR,
@@ -338,7 +340,7 @@ public class BalProjectUtils {
                     }
                     //read the decimal annotation
                     List<String> decimal = BalSyntaxUtils.readStringArrayValueFromAnnotation(
-                            value.annotations(),
+                            annotations,
                             BalSyntaxConstants.SQL_DECIMAL_MAPPING_ANNOTATION_NAME,
                             "precision"
                     );
@@ -353,7 +355,7 @@ public class BalProjectUtils {
                                         0)
                         );
                     }
-                    fieldBuilder.setAnnotation(value.annotations());
+                    fieldBuilder.setAnnotations(annotations);
                 });
                 EntityField entityField = fieldBuilder.build();
                 entityBuilder.addField(entityField);
@@ -543,7 +545,7 @@ public class BalProjectUtils {
                     .mapToObj(i -> {
 
                         EntityField key = assocEntity.getKeys().get(i);
-                        if (relationRefs != null) {
+                        if (!relationRefs.isEmpty()) {
                             String fkField = relationRefs.get(i);
                             EntityField fkEntityField = entity.getFieldByName(fkField);
                             return new Relation.Key(fkField,
@@ -572,7 +574,7 @@ public class BalProjectUtils {
                         String fkField = stripEscapeCharacter(fieldName.toLowerCase(Locale.ENGLISH))
                                 + stripEscapeCharacter(key.getFieldName()).substring(0, 1).toUpperCase(Locale.ENGLISH)
                                 + stripEscapeCharacter(key.getFieldName()).substring(1);
-                        if (relationRefs != null) {
+                        if (!relationRefs.isEmpty()) {
                             fkField = relationRefs.get(i);
                             EntityField assocField = assocEntity.getFieldByName(fkField);
                             return new Relation.Key(key.getFieldName(), key.getFieldColumnName(), fkField,
