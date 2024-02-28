@@ -50,7 +50,7 @@ public class BuildCodeGeneratorTest {
 
     @Test(enabled = true)
     public void testBuildWithInvalidTargetModule() throws IOException, InterruptedException {
-        String log = "ERROR: invalid module name : 'persist_add_1' :\n" +
+        String log = "ERROR: invalid module name : 'persist_add_1' :" + System.lineSeparator() +
                 "module name should follow the template <package_name>.<module_name>";
         Path project = TARGET_DIR.resolve("generated-sources/tool_test_build_2");
         assertLogs(log, project);
@@ -58,7 +58,7 @@ public class BuildCodeGeneratorTest {
 
     @Test(enabled = true)
     public void testBuildWithInvalidCharachtersInTargetModule() throws IOException, InterruptedException {
-        String log = "ERROR: invalid module name : '*****' :\n" +
+        String log = "ERROR: invalid module name : '*****' :" + System.lineSeparator() +
                 "module name can only contain alphanumerics, underscores and periods";
         Path project = TARGET_DIR.resolve("generated-sources/tool_test_build_3");
         assertLogs(log, project);
@@ -69,7 +69,7 @@ public class BuildCodeGeneratorTest {
         String log = "ERROR: invalid module name : 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" +
                 "aaaaaaaaaaaaaaaaaaaaaaaaddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd" +
                 "ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd" +
-                "dddddddddddddddddddddd' :\n" +
+                "dddddddddddddddddddddd' :" + System.lineSeparator() +
                 "maximum length of module name is 256 characters";
         Path project = TARGET_DIR.resolve("generated-sources/tool_test_build_4");
         assertLogs(log, project);
