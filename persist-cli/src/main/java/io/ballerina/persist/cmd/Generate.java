@@ -43,6 +43,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
+import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 
 /**
  * This Class implements the `persist generate` command in Ballerina persist-tool.
@@ -188,6 +189,10 @@ public class Generate implements BLauncherCmd {
 
         try {
             BalProjectUtils.updateToml(sourcePath, datastore, moduleNameWithPackage);
+            String syntaxTree = TomlSyntaxUtils.updateBallerinaToml(Paths.get(this.sourcePath, BALLERINA_TOML), module,
+                    datastore, true);
+            Utils.writeOutputString(syntaxTree,
+                    Paths.get(this.sourcePath, BALLERINA_TOML).toAbsolutePath().toString());
             BalProjectUtils.validateSchemaFile(schemaFilePath);
             Module module = BalProjectUtils.getEntities(schemaFilePath);
             if (module.getEntityMap().isEmpty()) {

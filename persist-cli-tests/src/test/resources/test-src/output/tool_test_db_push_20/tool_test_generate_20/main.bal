@@ -1,4 +1,4 @@
-// Copyright (c) 2023 WSO2 LLC. (http://www.wso2.org) All Rights Reserved.
+// Copyright (c) 2022 WSO2 LLC. (http://www.wso2.org) All Rights Reserved.
 //
 // WSO2 LLC. licenses this file to you under the Apache License,
 // Version 2.0 (the "License"); you may not use this file except
@@ -14,30 +14,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import ballerina/persist as _;
-import ballerina/time;
+import ballerina/io;
 
-type User record {|
-    readonly int id;
-    string name;
-    time:Date birthDate;
-    Post[] posts;
-    Follower[] followers;
-    Follower[] leaders;
-|};
-
-type Post record {|
-    readonly int id;
-    string description;
-    string tags;
-    string category;
-    time:Date created_date;
-    User user;
-|};
-
-type Follower record {|
-    readonly int id;
-    time:Civil created_date;
-    User leader;
-    User follower;
-|};
+public function main() {
+    io:println("hello");
+}

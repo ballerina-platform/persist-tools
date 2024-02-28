@@ -124,7 +124,7 @@ public class TomlSyntaxUtils {
             }
             if (!dbConfigExists) {
                 throw new BalException("the persist config doesn't exist in the Ballerina.toml. " +
-                        "add [persist] table with persist configurations.");
+                        "add [tool.persist] table with persist configurations.");
             } else if (!persistConfig.containsKey("targetModule") || !persistConfig.containsKey("options.datastore")) {
                 throw new BalException("the persist configurations does not exist under [persist] table.");
             }
@@ -166,8 +166,8 @@ public class TomlSyntaxUtils {
     /**
      * Method to update the Ballerina.toml with database configurations and persist dependency.
      */
-    public static String updateBallerinaToml(Path configPath, String module, String datasource, String id)
-            throws IOException, BalException {
+    public static String updateBallerinaToml(Path configPath, String module, String datasource,
+                                             boolean generateCmd, String... id) throws IOException, BalException {
         NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
         Path fileNamePath = configPath.getFileName();
         TextDocument configDocument = TextDocuments.from(Files.readString(configPath));
@@ -212,10 +212,12 @@ public class TomlSyntaxUtils {
                 }
             }
             moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
-            moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray(
-                    PersistToolsConstants.PERSIST_TOOL_CONFIG, null));
-            moduleMembers = populateBallerinaNodeList(moduleMembers, module, datasource, id);
-            moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
+            if (!generateCmd) {
+                moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray(
+                        PersistToolsConstants.PERSIST_TOOL_CONFIG, null));
+                moduleMembers = populateBallerinaNodeList(moduleMembers, module, datasource, id[0]);
+                moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
+            }
             moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray(
                     BalSyntaxConstants.PERSIST_DEPENDENCY, null));
             moduleMembers = populatePersistDependency(moduleMembers, artifactId, datasource);

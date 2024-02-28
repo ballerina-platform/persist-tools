@@ -117,7 +117,7 @@ public class Add implements BLauncherCmd {
             validateBallerinaProject(projectPath);
             createDefaultClientId();
             String syntaxTree = TomlSyntaxUtils.updateBallerinaToml(Paths.get(this.sourcePath, BALLERINA_TOML), module,
-                    datastore, id);
+                    datastore, false, id);
             Utils.writeOutputString(syntaxTree,
                     Paths.get(this.sourcePath, BALLERINA_TOML).toAbsolutePath().toString());
             Path persistDirPath = Paths.get(this.sourcePath, PERSIST_DIRECTORY);

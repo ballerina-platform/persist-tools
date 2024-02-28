@@ -24,3 +24,4 @@ filePath = "persist/model.bal"
 groupId = "io.ballerina.stdlib"
 artifactId = "persist.sql-native"
 version = "1.2.2-SNAPSHOT"
+

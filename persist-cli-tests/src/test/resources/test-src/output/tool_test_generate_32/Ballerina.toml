@@ -4,6 +4,6 @@ name = "persist_generate_32"
 version = "0.1.0"
 distribution = "2201.3.0"
 
-[persist]
+[[tool.persist]]
 options.datastore = "mysql"
-module = "persist_generate_32.entities"
+targetModule = "persist_generate_32.entities"
