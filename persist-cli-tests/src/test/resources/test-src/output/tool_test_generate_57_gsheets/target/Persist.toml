@@ -1,0 +1,3 @@
+[[tool.persist]]
+options.datastore = "googlesheets"
+module = "persist_generate_57.entities"
