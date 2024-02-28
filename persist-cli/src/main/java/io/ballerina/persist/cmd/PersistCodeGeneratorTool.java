@@ -43,16 +43,6 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
 
     private static final PrintStream errStream = System.err;
 
-    private final String sourcePath;
-
-    public PersistCodeGeneratorTool() {
-        this("");
-    }
-
-    public PersistCodeGeneratorTool(String sourcePath) {
-        this.sourcePath = sourcePath;
-    }
-
     @Override
     public void execute(ToolContext toolContext) {
         String datastore;
@@ -60,9 +50,9 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
         Path schemaFilePath;
         String packageName;
         String targetModule;
-        Path generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);
 
         Path projectPath = toolContext.currentPackage().project().sourceRoot();
+        Path generatedSourceDirPath = Paths.get(projectPath.toString(), BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);
         try {
             BalProjectUtils.validateBallerinaProject(projectPath);
         } catch (BalException e) {
@@ -71,14 +61,14 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
         }
 
         try {
-            packageName = TomlSyntaxUtils.readPackageName(this.sourcePath);
+            packageName = TomlSyntaxUtils.readPackageName(projectPath.toString());
         } catch (BalException e) {
             errStream.println(e.getMessage());
             return;
         }
 
         try {
-            schemaFilePath =  BalProjectUtils.getSchemaFilePath(this.sourcePath);
+            schemaFilePath =  BalProjectUtils.getSchemaFilePath(projectPath.toString());
         } catch (BalException e) {
             errStream.println(e.getMessage());
             return;
@@ -86,7 +76,7 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
 
         try {
             HashMap<String, String> ballerinaTomlConfig = TomlSyntaxUtils.readBallerinaTomlConfig(
-                    Paths.get(this.sourcePath, "Ballerina.toml"));
+                    Paths.get(projectPath.toString(), "Ballerina.toml"));
             targetModule = ballerinaTomlConfig.get(TARGET_MODULE).trim();
             if (!targetModule.equals(packageName)) {
                 if (!targetModule.startsWith(packageName + ".")) {
@@ -113,7 +103,7 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
                         Arrays.toString(PersistToolsConstants.SUPPORTED_DB_PROVIDERS.toArray()), datastore);
                 return;
             }
-            if (Files.isDirectory(Paths.get(sourcePath, PersistToolsConstants.PERSIST_DIRECTORY,
+            if (Files.isDirectory(Paths.get(projectPath.toString(), PersistToolsConstants.PERSIST_DIRECTORY,
                     PersistToolsConstants.MIGRATIONS)) &&
                     !datastore.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB)) {
                 errStream.println("ERROR: regenerating the client with a different datastore after executing " +
@@ -133,7 +123,7 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
                 return;
             }
         } catch (BalException e) {
-            errStream.printf("ERROR: failed to generate types and client for the definition file(%s). %s%n",
+            errStream.printf("ERROR: Failed to generate types and client for the definition file(%s). %s%n",
                     "Ballerina.toml", e.getMessage());
             return;
         }
@@ -145,7 +135,7 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
                 return;
             }
         }
-        SourceGenerator sourceCreator = new SourceGenerator(sourcePath, generatedSourceDirPath,
+        SourceGenerator sourceCreator = new SourceGenerator(projectPath.toString(), generatedSourceDirPath,
                 targetModule, entityModule);
         try {
             switch (datastore) {

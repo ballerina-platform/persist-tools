@@ -18,7 +18,7 @@ array = [ [1, 0], [0, 1] ]
 id = "generate-db-client"
 targetModule = "persist_add_1"
 options.datastore = "mysql"
-filePath = "x"
+filePath = "persist/model.bal"
 
 [[platform.java17.dependency]]
 groupId = "io.ballerina.stdlib"

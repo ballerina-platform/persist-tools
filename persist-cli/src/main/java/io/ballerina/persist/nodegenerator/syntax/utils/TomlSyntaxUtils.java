@@ -231,7 +231,7 @@ public class TomlSyntaxUtils {
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("id", id, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("targetModule", module, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("options.datastore", dataStore, null));
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("filePath", "x", null));
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("filePath", "persist/model.bal", null));
         return moduleMembers;
     }
 

@@ -134,16 +134,6 @@ public class Init implements BLauncherCmd {
                     "maximum length of module name is 256 characters");
             return;
         }
-//        try {
-//            String moduleName = packageName;
-//            if (!module.equals(packageName)) {
-//                moduleName = String.format("%s.%s", packageName.replaceAll("\"", ""), module);
-//            }
-//            updateBallerinaToml(moduleName, datastore);
-//        } catch (BalException e) {
-//            errStream.println("ERROR: failed to add persist configurations in the toml file. " + e.getMessage());
-//            return;
-//        }
 
         Path persistDirPath = Paths.get(this.sourcePath, PERSIST_DIRECTORY);
         if (!Files.exists(persistDirPath)) {
@@ -189,28 +179,6 @@ public class Init implements BLauncherCmd {
                 "entity types for your data model.");
 
     }
-
-//    private void generateSchemaBalFile(Path persistPath) throws BalException {
-//        try {
-//            String configTree = generateSchemaSyntaxTree();
-//            writeOutputString(configTree, persistPath.resolve(SCHEMA_FILE_NAME + BAL_EXTENSION)
-//                    .toAbsolutePath().toString());
-//        } catch (Exception e) {
-//            throw new BalException(e.getMessage());
-//        }
-//    }
-
-//    private void updateBallerinaToml(String module, String datastore) throws BalException {
-//        try {
-//            String syntaxTree = TomlSyntaxUtils.updateBallerinaToml(
-//                    Paths.get(this.sourcePath, BALLERINA_TOML), module, datastore, "");
-//            writeOutputString(syntaxTree,
-//                    Paths.get(this.sourcePath, BALLERINA_TOML).toAbsolutePath().toString());
-//        } catch (Exception e) {
-//            throw new BalException("could not update the Ballerina.toml with persist configurations. " +
-//                    e.getMessage());
-//        }
-//    }
 
     @Override
     public void setParentCmdParser(CommandLine parentCmdParser) {

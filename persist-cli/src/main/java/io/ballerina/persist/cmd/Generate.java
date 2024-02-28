@@ -85,7 +85,7 @@ public class Generate implements BLauncherCmd {
         Module entityModule;
         Path schemaFilePath;
         String packageName;
-        String moduleNameWithPackageName;
+        String moduleNameWithPackage;
         if (helpFlag) {
             String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMMAND_IDENTIFIER);
             errStream.println(commandUsageInfo);
@@ -94,9 +94,6 @@ public class Generate implements BLauncherCmd {
         if (datastore == null) {
             errStream.println("ERROR: datastore is required");
             return;
-        }
-        if (module == null) {
-            module = "generated";
         }
         Path projectPath = Paths.get(sourcePath);
         try {
@@ -112,6 +109,13 @@ public class Generate implements BLauncherCmd {
             errStream.println(e.getMessage());
             return;
         }
+
+        if (module == null) {
+            module = packageName;
+        } else {
+            module = module.replaceAll("\"", "");
+        }
+        moduleNameWithPackage = (packageName.equals(module)) ? packageName : packageName + "." + module;
 
         boolean hasPersistConfig;
         try {
@@ -141,24 +145,19 @@ public class Generate implements BLauncherCmd {
                     " to the updated documentation.");
             return;
         }
-        if (!module.equals(packageName)) {
-            if (!module.startsWith(packageName + ".")) {
-                errStream.println("ERROR: invalid module name : '" + module + "' :\n" +
-                        "module name should follow the template <package_name>.<module_name>");
-                return;
-            }
-            String moduleName = module.replace(packageName + ".", "");
-            if (!ProjectUtils.validateModuleName(moduleName)) {
-                errStream.println("ERROR: invalid module name : '" + moduleName + "' :\n" +
-                        "module name can only contain alphanumerics, underscores and periods");
-                return;
-            } else if (!ProjectUtils.validateNameLength(moduleName)) {
-                errStream.println("ERROR: invalid module name : '" + moduleName + "' :\n" +
-                        "maximum length of module name is 256 characters");
-                return;
-            }
-            generatedSourceDirPath = generatedSourceDirPath.resolve(moduleName);
+        if (!ProjectUtils.validateModuleName(moduleNameWithPackage)) {
+            errStream.println("ERROR: invalid module name : '" + module + "' :\n" +
+                    "module name can only contain alphanumerics, underscores and periods");
+            return;
+        } else if (!ProjectUtils.validateNameLength(moduleNameWithPackage)) {
+            errStream.println("ERROR: invalid module name : '" + module + "' :\n" +
+                    "maximum length of module name is 256 characters");
+            return;
         }
+        if (!module.equals(packageName)) {
+            generatedSourceDirPath = generatedSourceDirPath.resolve(module);
+        }
+
         if (!PersistToolsConstants.SUPPORTED_DB_PROVIDERS.contains(datastore)) {
             errStream.printf("ERROR: the persist layer supports one of data stores: %s" +
                             ". but found '%s' datasource.%n",
@@ -188,7 +187,7 @@ public class Generate implements BLauncherCmd {
         }
 
         try {
-            BalProjectUtils.updateToml(sourcePath, datastore, module);
+            BalProjectUtils.updateToml(sourcePath, datastore, moduleNameWithPackage);
             BalProjectUtils.validateSchemaFile(schemaFilePath);
             Module module = BalProjectUtils.getEntities(schemaFilePath);
             if (module.getEntityMap().isEmpty()) {
@@ -198,7 +197,7 @@ public class Generate implements BLauncherCmd {
             }
             entityModule = module;
         } catch (BalException | IOException e) {
-            errStream.printf("ERROR: failed to generate types and client for the definition file(%s). %s%n",
+            errStream.printf("ERROR: Failed to generate types and client for the definition file(%s). %s%n",
                     schemaFilePath.getFileName(), e.getMessage());
             return;
         }
@@ -212,7 +211,7 @@ public class Generate implements BLauncherCmd {
             }
         }
         SourceGenerator sourceCreator = new SourceGenerator(sourcePath, generatedSourceDirPath,
-                module, entityModule);
+                moduleNameWithPackage, entityModule);
         try {
             switch (datastore) {
                 case PersistToolsConstants.SupportedDataSources.MYSQL_DB:

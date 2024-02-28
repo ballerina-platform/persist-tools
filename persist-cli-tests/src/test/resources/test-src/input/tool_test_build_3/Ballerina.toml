@@ -11,7 +11,7 @@ observabilityIncluded = true
 id = "generate-db-client"
 targetModule = "persist_build_3.*****"
 options.datastore = "mysql"
-filePath = "x"
+filePath = "persist/model.bal"
 
 [[platform.java17.dependency]]
 groupId = "io.ballerina.stdlib"

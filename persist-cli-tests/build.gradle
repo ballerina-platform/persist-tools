@@ -422,7 +422,7 @@ jacocoTestReport {
 }
 
 test.dependsOn startTestDockerContainer
-//test.dependsOn startMSSQLTestDockerContainer
+test.dependsOn startMSSQLTestDockerContainer
 test.dependsOn startPostgreSQLTestDockerContainer
 test.dependsOn pullGSheetsDependency
 test.dependsOn ":persist-cli:build"

@@ -112,9 +112,6 @@ public class Utils {
         ModulePartNode modulePartNode = NodeFactory.createModulePartNode(imports, moduleMembers, eofToken);
         TextDocument textDocument = TextDocuments.from(BalSyntaxConstants.EMPTY_STRING);
         SyntaxTree balTree = SyntaxTree.from(textDocument);
-
-        // output cannot be SyntaxTree as it will overlap with Toml Syntax Tree in Init
-        // Command
         return Formatter.format(balTree.modifyWith(modulePartNode).toSourceCode());
     }
 }

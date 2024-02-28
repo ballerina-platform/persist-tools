@@ -66,10 +66,6 @@ public class Add implements BLauncherCmd {
     @CommandLine.Option(names = {"--id"}, description = "ID for the generated Ballerina client")
     private String id;
 
-    // TODO: Check if we need this command line option
-    @CommandLine.Option(names = {"-p", "--package"}, description = "Location for the Ballerina package")
-    private String packagePath;
-
     public Add() {
         this("");
     }
@@ -161,7 +157,7 @@ public class Add implements BLauncherCmd {
                 }
             }
         } catch (BalException | IOException e) {
-            errStream.printf("ERROR: failed to generate types and client for the definition file(%s). %s%n",
+            errStream.printf("ERROR: Failed to generate types and client for the definition file(%s). %s%n",
                     "Ballerina.toml", e.getMessage());
         }
     }
