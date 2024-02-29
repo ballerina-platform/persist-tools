@@ -63,7 +63,16 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
             targetModule = ballerinaTomlConfig.get(TARGET_MODULE).trim();
             datastore = ballerinaTomlConfig.get("options.datastore").trim();
             validateDatastore(datastore);
-            validateTargetModule(targetModule, packageName, ballerinaTomlConfig);
+            if (!targetModule.equals(packageName)) {
+                if (!targetModule.startsWith(packageName + ".")) {
+                    errStream.println("ERROR: invalid module name : '" + ballerinaTomlConfig.get(TARGET_MODULE)
+                            + "' :" + System.lineSeparator() + "module name should follow the template <package_name>.<module_name>");
+                    return;
+                }
+                String moduleName = targetModule.replace(packageName + ".", "");
+                validateModuleName(moduleName);
+                generatedSourceDirPath = generatedSourceDirPath.resolve(moduleName);
+            }
             validatePersistDirectory(datastore, projectPath);
             validateExperimentalFeatures(datastore);
             entityModule = BalProjectUtils.getEntities(schemaFilePath);
@@ -77,6 +86,16 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
         }
     }
 
+    private void validateModuleName(String moduleName) throws BalException {
+        if (!ProjectUtils.validateModuleName(moduleName)) {
+            throw new BalException("invalid module name : '" + moduleName + "' :" + System.lineSeparator() +
+                    "module name can only contain alphanumerics, underscores and periods");
+        } else if (!ProjectUtils.validateNameLength(moduleName)) {
+            throw new BalException("invalid module name : '" + moduleName + "' :" + System.lineSeparator() +
+                    "maximum length of module name is 256 characters");
+        }
+    }
+
     @Override
     public String toolName() {
         return "persist";
@@ -87,24 +106,6 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
             throw new BalException(String.format("the persist layer supports one of data stores: %s" +
                     ". but found '%s' datasource.", Arrays.toString(PersistToolsConstants.SUPPORTED_DB_PROVIDERS
                     .toArray()), datastore));
-        }
-    }
-
-    private void validateTargetModule(String targetModule, String packageName, HashMap<String, String> config)
-            throws BalException {
-        if (!targetModule.equals(packageName)) {
-            if (!targetModule.startsWith(packageName + ".")) {
-                throw new BalException("invalid module name : '" + targetModule
-                        + "' :\n" + "module name should follow the template <package_name>.<module_name>");
-            }
-            String moduleName = targetModule.replace(packageName + ".", "");
-            if (!ProjectUtils.validateModuleName(moduleName)) {
-                throw new BalException("invalid module name : '" + moduleName + "' :" + System.lineSeparator() +
-                        "module name can only contain alphanumerics, underscores and periods");
-            } else if (!ProjectUtils.validateNameLength(moduleName)) {
-                throw new BalException("invalid module name : '" + moduleName + "' :" + System.lineSeparator() +
-                        "maximum length of module name is 256 characters");
-            }
         }
     }
 
