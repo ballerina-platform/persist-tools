@@ -66,7 +66,8 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
             if (!targetModule.equals(packageName)) {
                 if (!targetModule.startsWith(packageName + ".")) {
                     errStream.println("ERROR: invalid module name : '" + ballerinaTomlConfig.get(TARGET_MODULE)
-                            + "' :" + System.lineSeparator() + "module name should follow the template <package_name>.<module_name>");
+                            + "' :" + System.lineSeparator() + "module name should follow the template " +
+                            "<package_name>.<module_name>");
                     return;
                 }
                 String moduleName = targetModule.replace(packageName + ".", "");
