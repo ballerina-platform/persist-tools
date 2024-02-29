@@ -49,6 +49,7 @@ import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 public class Add implements BLauncherCmd {
 
     private static final PrintStream errStream = System.err;
+    private static final String COMMAND_IDENTIFIER = "persist-add";
 
     private final String sourcePath;
 
@@ -75,7 +76,7 @@ public class Add implements BLauncherCmd {
     @Override
     public void execute() {
         if (helpFlag) {
-            String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(getName());
+            String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMMAND_IDENTIFIER);
             errStream.println(commandUsageInfo);
             return;
         }
