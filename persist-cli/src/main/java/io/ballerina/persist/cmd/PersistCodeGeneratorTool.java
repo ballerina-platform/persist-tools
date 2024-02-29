@@ -75,7 +75,7 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
                 generatedSourceDirPath = generatedSourceDirPath.resolve(moduleName);
             }
             validatePersistDirectory(datastore, projectPath);
-            validateExperimentalFeatures(datastore);
+            printExperimentalFeatureInfo(datastore);
             entityModule = BalProjectUtils.getEntities(schemaFilePath);
             validateEntityModule(entityModule, schemaFilePath);
             createGeneratedSourceDirIfNotExists(generatedSourceDirPath);
@@ -120,7 +120,7 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
         }
     }
 
-    private void validateExperimentalFeatures(String datastore) {
+    private void printExperimentalFeatureInfo(String datastore) {
         if (datastore.equals(PersistToolsConstants.SupportedDataSources.GOOGLE_SHEETS)) {
             errStream.printf(BalSyntaxConstants.EXPERIMENTAL_NOTICE, "The support for Google Sheets data store " +
                     "is currently an experimental feature, and its behavior may be subject to change in future " +
