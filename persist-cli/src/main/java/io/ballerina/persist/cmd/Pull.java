@@ -1,7 +1,7 @@
 /*
- *  Copyright (c) 2022, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2024, WSO2 LLC. (http://www.wso2.org) All Rights Reserved.
  *
- *  WSO2 Inc. licenses this file to you under the Apache License,
+ *  WSO2 LLC. licenses this file to you under the Apache License,
  *  Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License.
  *  You may obtain a copy of the License at
@@ -57,8 +57,6 @@ import static io.ballerina.persist.utils.BalProjectUtils.validatePullCommandOpti
 public class Pull implements BLauncherCmd {
     private final PrintStream errStream = System.err;
 
-    private Scanner scanner;
-
     private final String sourcePath;
 
     private static final String COMMAND_IDENTIFIER = "persist-pull";
@@ -88,10 +86,17 @@ public class Pull implements BLauncherCmd {
     @CommandLine.Option(names = {"--database"})
     private String database;
 
+    @CommandLine.Option(names = { "-h", "--help" }, hidden = true)
+    private boolean helpFlag;
 
     @Override
     public void execute() {
-        scanner = new Scanner(System.in, StandardCharsets.UTF_8);
+        Scanner scanner = new Scanner(System.in, StandardCharsets.UTF_8);
+        if (helpFlag) {
+            String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMMAND_IDENTIFIER);
+            errStream.println(commandUsageInfo);
+            return;
+        }
         try {
             validatePullCommandOptions(datastore, host, port, user, database);
         } catch (BalException e) {
