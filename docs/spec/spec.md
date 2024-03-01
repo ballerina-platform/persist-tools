@@ -29,13 +29,14 @@ This specification elaborates on the `Persist CLI Tool` commands.
 ## 2. Initializing the Bal Project with Persistence Layer
 
 ```bash
-bal persist init --datastore="datastore" --module="module_name"
+bal persist add --datastore="datastore" --module="module_name"
 ```
 
 | Command Parameter |                                       Description                                        | Mandatory | Default Value  |
 |:-----------------:|:----------------------------------------------------------------------------------------:|:---------:|:--------------:|
-|    --datastore    |  used to indicate the preferred database client. Currently, only 'mysql' is supported.   |    No     |    inmemory    |
+|    --datastore    |  used to indicate the preferred database client. Currently, 'mysql', 'mssql', 'google sheets' and 'postgresql' are supported.   |    No     |    inmemory    |
 |     --module      |      used to indicate the persist enabled module in which the files are generated.       |    No     | <package_name> |
+| --id  | Used as an identifier | No | generate-db-client |
 
 
 The command initializes the bal project with the persistence layer. This command includes the following steps,
@@ -47,32 +48,47 @@ The command initializes the bal project with the persistence layer. This command
 3. Update Ballerina.toml with persist module configurations.
    It will update the Ballerina.toml file with persist configurations.
     ```ballerina
-    [persist]
-    datastore = "<datastore>"
-    module = "<package_name>.<module_name>"
+    [[tool.persist]]
+    id = "generate-db-client"
+    targetModule = "<package_name>.<module_name>"
+    options.datastore = "<datastore>"
+    filePath = "persist/model.bal"
    ```
 
 The directory structure will be,
 ```
 medical-center
 ├── persist
-         └── medical-center.bal
+         └── model.bal
 ├── Ballerina.toml
 └── main.bal
 ```
 
-Behaviour of the `init` command,
-- User should invoke the command within a Ballerina project
-- User can use the optional arguments to indicate the preferred module name and data store, otherwise default values will be used.
-- User cannot execute the command multiple times within the same project. User needs to remove the Ballerina.toml configurations, if the user wants to reinitialize the project.
+Behaviour of the `add` command,
+- Users should invoke the command within a Ballerina project.
+- Users can use optional arguments to indicate the preferred module name and data store; otherwise, default values will be used.
+- Users cannot execute the command multiple times within the same project. They need to remove the persist configurations from the Ballerina.toml if they want to reinitialize the project.
+
+Apart from the `bal persist add` command, if you want to use the `bal persist generate` command you can initialize the project with the following `init` command,
+
+```bash
+bal persist init
+```
+
+This command includes the following steps,
+
+1. Create persist directory:
+   Within this directory, a data model definition file should be created. This file will outline the necessary entities according to the [`persist` specification](https://github.com/ballerina-platform/module-ballerina-persist/blob/main/docs/spec/spec.md#2-data-model-definition)
+2. Generate a model definition file within the persist directory:
+   This action will create a file named model.bal with the requisite imports (import ballerina/persist as _;) if no files currently exist in the persist directory.
 
 ## 3. Generating Persistence Derived Types, Clients, and Database Schema
 
 ```bash
-bal persist generate
+bal build
 ```
 
-The command will generate [Derived Entity Types and Persist Clients](https://github.com/ballerina-platform/module-ballerina-persist/blob/main/docs/spec/spec.md#3-derived-entity-types-and-persist-clients)
+The `bal build` command will generate [Derived Entity Types and Persist Clients](https://github.com/ballerina-platform/module-ballerina-persist/blob/main/docs/spec/spec.md#3-derived-entity-types-and-persist-clients)
 as per the `persist` specification and the database schema associated with the data model definition.
 Additionally, this command will create(update) `Config.toml` file with configurables used to initialize variables in `persist_db_config.bal`.
 ```ballerina
@@ -130,12 +146,22 @@ The database schema will contain the code to create,
 1. Tables for each entity with defined primary keys
 2. Create foreign key associations between tables if the model has defined associations between entities
 
+Apart from the `bal build` users can also use the following command to generate the same as above mentioned,
+
+```bash
+bal persist generate --datastore mysql --module db
+```
+
+| Command Parameter |                                       Description                                        | Mandatory | Default Value  |
+|:-----------------:|:----------------------------------------------------------------------------------------:|:---------:|:--------------:|
+|    --datastore    |  used to indicate the preferred database client. Currently, 'mysql', 'mssql', 'google sheets' and 'postgresql' are supported.   |    Yes     |        |
+|     --module      |      used to indicate the persist enabled module in which the files are generated.       |    No     | <package_name> |
+
 Behaviour of the `generate` command,
 - User should invoke the command within a Ballerina project
-- The user should have initiated the persistence layer in the project and update the model definition file.
 - The model definition file should contain the `persist` module import (`import ballerina/persist as _;`)
 - The Model definition file should contain at least one entity
-- If the user invokes the command twice, it will not fail. It will generate the files once again.
+- If the user invokes the command twice, it will fail. The user needs to remove the persist configurations from the Ballerina.toml if they want to reinitialize the project.
 
 ## 4. Push Persistence Schema to the Data Provider
 
