@@ -161,7 +161,7 @@ Behaviour of the `generate` command,
 - User should invoke the command within a Ballerina project
 - The model definition file should contain the `persist` module import (`import ballerina/persist as _;`)
 - The Model definition file should contain at least one entity
-- If the user invokes the command twice, it will fail. The user needs to remove the persist configurations from the Ballerina.toml if they want to reinitialize the project.
+- If the user invokes the command twice, it will not fail. It will generate the files once again.
 
 ## 4. Push Persistence Schema to the Data Provider
 
