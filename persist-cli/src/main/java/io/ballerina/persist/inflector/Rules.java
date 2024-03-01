@@ -85,8 +85,12 @@ public class Rules {
             {"pickaxe", "pickaxes"},
             {"passerby", "passersby"},
             {"canvas", "canvases"},
-            {"status", "statuses"}
+            {"mango", "mangoes"}
     });
+
+    static final String[][] SINGULAR_IRREGULAR_RULES = {
+            {"have", "have"}
+    };
 
     // Pluralization rules.
     static final String[][] PLURALIZATION_RULES = (new String[][]{
@@ -120,33 +124,32 @@ public class Rules {
     });
 
     static final String[][] SINGULARIZATION_RULES = (new String[][]{
-            {"(s|si|ni)([aeiouy])s$", "$1$2"},
-            {"([^aeiou])ese$", "$1"},
-            {"(ax|test)es$", "$1is"},
-            {"(alias|[^aou]us|t[lm]as|gas|ris)es$", "$1"},
-            {"(e[mn]u)s$", "$1"},
-            {"([^l]ias|[aeiou]las|[ejzr]as|[iu]am)s$", "$1"},
-            {"(alumn|syllab|vir|radi|nucle|fung|cact|stimul|termin|bacill|foc|uter|loc|strat)i$", "$1us"},
-            {"(alumn|alg|vertebr)ae$", "$1a"},
-            {"(seraph|cherub)im$", "$1"},
-            {"(her|at|gr)oes$", "$1o"},
-            {"(agend|addend|millenni|dat|extrem|bacteri|desiderat|strat|candelabr|errat|ov|" +
-                    "symposi|curricul|automat|quor)a$", "$1um"},
-            {"(apheli|hyperbat|periheli|asyndet|noumen|phenomen|criteri|organ|prolegomen|" +
-                    "hedr|automat)a$", "$1on"},
-            {"ses$", "sis"},
-            {"(?:(kni|wi|li)fe|(ar|l|ea|eo|oa|hoo)f)ves$", "$1$2"},
-            {"([^aeiouy]|qu)ies$", "$1y"},
-            {"([^ch][ieo][ln])eys$", "$1ey"},
-            {"(x|ch|ss|sh|zz)es$", "$1"},
-            {"(matr|cod|mur|sil|vert|ind|append)ices$", "$1ix"},
+            {"(ss)$", "$1"},
+            {"(wi|kni|(?:after|half|high|low|mid|non|night|[^\\w]|^)li)ves$", "$1fe"},
+            {"(ar|(?:wo|[ae])l|[eo][ao])ves$", "$1f"},
+            {"ies$", "y"},
+            {"(dg|ss|ois|lk|ok|wn|mb|th|ch|ec|oal|is|ck|ix|sser|ts|wb)ies$", "$1ie"},
+            {"\b(l|(?:neck|cross|hog|aun)?t|coll|faer|food|gen|goon|group|hipp|junk|vegg|(?:pork)?p|charl|calor|cut" +
+                    ")ies$", "$1ie"},
+            {"\b(mon|smil)ies$", "$1ey"},
             {"\b((?:tit)?m|l)ice$", "$1ouse"},
-            {"(pe)ople$", "$1rson"},
+            {"(seraph|cherub)im$", "$1"},
+            {"(x|ch|ss|sh|zz|tto|go|cho|alias|[^aou]us|t[lm]as|gas|(?:her|at|gr)o|[aeiou]ris)(?:es)?$", "$1"},
+            {"(analy|diagno|parenthe|progno|synop|the|empha|cri|ne)(?:sis|ses)$", "$1sis"},
+            {"(movie|twelve|abuse|e[mn]u)s$", "$1"},
+            {"(test)(?:is|es)$", "$1is"},
+            {"(alumn|syllab|vir|radi|nucle|fung|cact|stimul|termin|bacill|foc|uter|loc|strat)(?:us|i)$", "$1us"},
+            {"(agend|addend|millenni|dat|extrem|bacteri|desiderat|strat|candelabr|errat|ov|symposi|curricul|" +
+                    "quor)a$", "$1um"},
+            {"(apheli|hyperbat|periheli|asyndet|noumen|phenomen|criteri|organ|prolegomen|hedr|automat)a$", "$1on"},
+            {"(alumn|alg|vertebr)ae$", "$1a"},
+            {"(cod|mur|sil|vert|ind)ices$", "$1ex"},
+            {"(matr|append)ices$", "$1ix"},
+            {"(pe)(rson|ople)$", "$1rson"},
             {"(child)ren$", "$1"},
-            {"eaux$", "$0"},
+            {"(eau)x?$", "$1"},
             {"men$", "man"},
-            {"you", "thou"},
-            {"s$", ""}
+            {"s$", ""},
     });
 
 
@@ -171,6 +174,7 @@ public class Rules {
             "^[a-z]*measles$",
             "^[a-z]*o[iu]s$", // "carnivorous"
             "^[a-z]*pox$", // "chickpox", "smallpox"
-            "^[a-z]*sheep$"
+            "^[a-z]*sheep$",
+            "species"
     );
 }

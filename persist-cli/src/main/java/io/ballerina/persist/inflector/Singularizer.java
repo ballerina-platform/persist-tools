@@ -30,6 +30,14 @@ public class Singularizer {
                 return word;
             }
         }
+        for (String[] irregularRule: Rules.SINGULAR_IRREGULAR_RULES) {
+            if (irregularRule[0].equals(word)) {
+                return word;
+            }
+            if (irregularRule[1].equals(word)) {
+                return irregularRule[0];
+            }
+        }
         for (String[] irregularRule: Rules.IRREGULAR_RULES) {
             if (irregularRule[0].equals(word)) {
                 return word;
