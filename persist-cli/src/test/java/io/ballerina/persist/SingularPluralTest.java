@@ -31,7 +31,7 @@ import java.util.stream.Stream;
 /**
  * A unit test class for singular to plural functions.
  */
-public class UnitTest {
+public class SingularPluralTest {
 
     List<String> singularWords = Arrays.asList(
             "boy", "girl", "bird", "cod", "commerce", "quiz", "lemma", "dingo", "echo", "yes",

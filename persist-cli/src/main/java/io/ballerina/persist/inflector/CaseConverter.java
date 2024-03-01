@@ -17,86 +17,57 @@
  */
 package io.ballerina.persist.inflector;
 
+import java.util.Arrays;
 import java.util.Locale;
-import java.util.regex.Pattern;
+
 
 public class CaseConverter {
-
-    private static final String CAMEL_CASE_PATTERN = "^[a-z]+(?:[A-Z][a-z]+)*$";
-    private static final String PASCAL_CASE_PATTERN = "^[A-Z][a-z]+(?:[A-Z][a-z]+)*$";
-    private static final String DELIMITER_PATTERN = "[^a-zA-Z0-9]";
     private CaseConverter() {}
     public static String toPascalCase(String word) {
-        //check if camelCase
-        if (Pattern.matches(CAMEL_CASE_PATTERN, word)) {
-            StringBuilder result = new StringBuilder();
-            result.append(Character.toUpperCase(word.charAt(0)));
-            result.append(word.substring(1));
-            return result.toString();
-        }
-        //check if already PascalCase
-        if (Pattern.matches(PASCAL_CASE_PATTERN, word)) {
-            return word;
-        }
-        word = word.toLowerCase(Locale.ENGLISH);
-        String[] words = word.split(DELIMITER_PATTERN);
-        StringBuilder result = new StringBuilder();
-        for (String  item: words) {
-            if (!item.isEmpty()) {
-                // Capitalize the first letter of each word
-                result.append(Character.toUpperCase(item.charAt(0)));
-                result.append(item.substring(1).toLowerCase(Locale.ENGLISH));
-            }
-        }
-        return result.toString();
+        return arrayToPascalCase(split(word));
     }
     public static String toCamelCase(String word) {
-        //Check if already camelCase
-        if (Pattern.matches(CAMEL_CASE_PATTERN, word)) {
-            return word;
-        }
-        word = word.toLowerCase(Locale.ENGLISH);
-        String[] words = word.split(DELIMITER_PATTERN);
-        StringBuilder result = new StringBuilder();
-        for (int i = 0; i < words.length; i++) {
-            String item = words[i];
-            if (!item.isEmpty()) {
-                // Capitalize the first letter of the first word, and lowercase the first letter of subsequent words
-                if (i == 0) {
-                    result.append(item.toLowerCase(Locale.ENGLISH));
-                } else {
-                    result.append(Character.toUpperCase(item.charAt(0)))
-                            .append(item.substring(1).toLowerCase(Locale.ENGLISH));
-                }
-            }
-        }
-        return result.toString();
+        String pascalsCase = arrayToPascalCase(split(word));
+        return pascalsCase.substring(0, 1).toLowerCase(Locale.ENGLISH) + pascalsCase.substring(1);
     }
 
     public static String toSingularPascalCase(String word) {
-        //check if camelCase
-        if (Pattern.matches(CAMEL_CASE_PATTERN, word)) {
-            StringBuilder result = new StringBuilder();
-            word = Singularizer.singularize(word);
-            result.append(Character.toUpperCase(word.charAt(0)));
-            result.append(word.substring(1));
-            return result.toString();
-        }
-        //check if already PascalCase
-        if (Pattern.matches(PASCAL_CASE_PATTERN, word)) {
-            return word;
-        }
-        word = word.toLowerCase(Locale.ENGLISH);
-        String[] words = word.split(DELIMITER_PATTERN);
+        String[] words = split(word);
+        words = Arrays.stream(words).map(Singularizer::singularize).toArray(String[]::new);
+        return arrayToPascalCase(words);
+    }
+
+    private static String arrayToPascalCase(String[] words) {
         StringBuilder result = new StringBuilder();
         for (String  item: words) {
             if (!item.isEmpty()) {
                 // Capitalize the first letter of each word
-                item = Singularizer.singularize(item);
                 result.append(Character.toUpperCase(item.charAt(0)));
                 result.append(item.substring(1).toLowerCase(Locale.ENGLISH));
             }
         }
         return result.toString();
+    }
+    private static String[] split(String value) {
+        String splitUpperUpperRe = "([\\p{Ll}\\d])(\\p{Lu})";
+        String splitLowerUpperRe = "([\\p{Ll}\\d])(\\p{Lu})";
+        String splitReplaceValue = "$1\0$2";
+        String result = value.replaceAll(splitLowerUpperRe, splitReplaceValue)
+                .replaceAll(splitUpperUpperRe, splitReplaceValue);
+        String defaultStripRegexp = "[^\\p{L}\\d]+";
+        result = result.replaceAll(defaultStripRegexp, "\0");
+        int start = 0;
+        int end = result.length();
+        while (result.charAt(start) == '\0') {
+            start++;
+        }
+        while (result.charAt(end - 1) == '\0') {
+            end--;
+        }
+        return Arrays.stream(result.substring(start, end)
+                .split("\0"))
+                .map(String::trim)
+                .map(String::toLowerCase)
+                .toArray(String[]::new);
     }
 }
