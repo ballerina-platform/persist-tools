@@ -131,7 +131,7 @@ public abstract class Introspector {
             String[] valuesArray = valuesInsideParentheses.split(",");
             Arrays.stream(valuesArray).map(value -> {
                 value = value.trim();
-                value = value.replaceAll("'", "");
+                value = value.replace("'", "");
                 return value.trim();
             }).forEach(enumValues::add);
         }

@@ -373,12 +373,6 @@ public class BalProjectUtils {
         }
     }
 
-//    private static void removeRelationRefsFromEntityFields(Entity.Builder entityBuilder, List<String> relationRefs) {
-//        for (String ref: relationRefs) {
-//            entityBuilder.removeField(ref);
-//        }
-//    }
-
     public static void populateEnums(Module.Builder moduleBuilder, SyntaxTree balSyntaxTree) throws IOException,
             BalException {
         ModulePartNode rootNote = balSyntaxTree.rootNode();
@@ -626,7 +620,7 @@ public class BalProjectUtils {
 
     public static void validatePullCommandOptions(String datastore, String host, String port, String user,
                                                   String database) throws BalException {
-        String nameRegex = "[A-Za-z][A-Za-z0-9_]*";
+        String nameRegex = "[A-Za-z]\\w*";
         List<String> errors = new ArrayList<>();
         if (datastore == null) {
             errors.add("The datastore type is not provided.");

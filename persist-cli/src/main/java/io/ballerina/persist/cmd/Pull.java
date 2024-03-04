@@ -32,7 +32,6 @@ import io.ballerina.persist.utils.JdbcDriverLoader;
 import io.ballerina.projects.Project;
 import picocli.CommandLine;
 
-import java.io.Console;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
@@ -50,12 +49,13 @@ import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.JDBC_URL_WITH_DATABASE_MYSQL;
 import static io.ballerina.persist.utils.BalProjectUtils.validateBallerinaProject;
 import static io.ballerina.persist.utils.BalProjectUtils.validatePullCommandOptions;
+import static io.ballerina.persist.utils.DatabaseConnector.readDatabasePassword;
 
 @CommandLine.Command(
         name = "pull",
         description = "Create model.bal file according to given database schema")
 public class Pull implements BLauncherCmd {
-    private final PrintStream errStream = System.err;
+    private static final PrintStream errStream = System.err;
 
     private final String sourcePath;
 
@@ -105,13 +105,7 @@ public class Pull implements BLauncherCmd {
         }
 
         String password;
-        Console console = System.console();
-        if (console == null) {
-            errStream.print("Database Password: ");
-            password = scanner.nextLine();
-        } else {
-            password = new String(console.readPassword("Database Password: "));
-        }
+        password = readDatabasePassword(scanner, errStream);
 
         try {
             validateBallerinaProject(Paths.get(this.sourcePath));
@@ -157,7 +151,8 @@ public class Pull implements BLauncherCmd {
             persistConfigurations.setDbConfig(new DatabaseConfiguration(this.host, this.user, password, this.port,
                     this.database));
         } catch (BalException e) {
-            throw new RuntimeException(e);
+            errStream.println(e.getMessage());
+            return;
         }
 
         Module entityModule;
@@ -245,5 +240,4 @@ public class Pull implements BLauncherCmd {
             errStream.println(e.getMessage());
         }
     }
-
 }

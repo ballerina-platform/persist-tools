@@ -47,6 +47,7 @@ public class MySQLIntrospector extends Introspector {
         formatQuery = formatQuery.replace("\r\n", "%n");
         return String.format(formatQuery, this.databaseName, this.databaseName);
     }
+
     @Override
     public String getColumnsQuery(String tableName) {
         String formatQuery = """

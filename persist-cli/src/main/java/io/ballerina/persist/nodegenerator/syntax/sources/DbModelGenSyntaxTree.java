@@ -23,9 +23,6 @@ import io.ballerina.persist.BalException;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils;
 
-
-
-
 public class DbModelGenSyntaxTree implements IntrospectSyntaxTree {
 
     @Override
@@ -40,6 +37,5 @@ public class DbModelGenSyntaxTree implements IntrospectSyntaxTree {
     public SyntaxTree createInitialDriverImportFile() {
         return BalSyntaxUtils.createDriverImportFile("mysql");
     }
-
 
 }

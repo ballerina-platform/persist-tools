@@ -18,22 +18,22 @@
 package io.ballerina.persist.introspectiondto;
 
 public class SQLColumn {
-    private String columnName;
-    private String tableName;
-    private String dataType;
-    private String fullDataType;
-    private String characterMaximumLength;
-    private String numericPrecision;
-    private String numericScale;
-    private String datetimePrecision;
-    private String columnDefault;
-    private String isNullable;
-    private String extra;
-    private String columnComment;
+    private final String columnName;
+    private final String tableName;
+    private final String dataType;
+    private final String fullDataType;
+    private final String characterMaximumLength;
+    private final String numericPrecision;
+    private final String numericScale;
+    private final String datetimePrecision;
+    private final String columnDefault;
+    private final String isNullable;
+    private final String extra;
+    private final String columnComment;
 
-    private Boolean isPrimaryKey;
+    private final boolean isPrimaryKey;
 
-    private Boolean isDbGenerated;
+    private final boolean isDbGenerated;
 
     private SQLColumn(String columnName, String tableName, String dataType, String fullDataType,
                       String characterMaximumLength, String numericPrecision, String numericScale,

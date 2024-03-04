@@ -39,7 +39,7 @@ public class EntityField {
     private final String fieldName;
     private final String fieldColumnName;
     private final String fieldType;
-    private SQLType sqlType;
+    private final SQLType sqlType;
     private final boolean arrayType;
     private final boolean optionalType;
 

@@ -82,11 +82,11 @@ public class SQLForeignKey {
         this.referencedColumnNames = Collections.unmodifiableList(newReferencedColumnNames);
     }
     public static class Builder {
-        private String constraintName;
+        private final String constraintName;
         private String tableName;
-        private List<String> columnNames;
+        private final List<String> columnNames;
         private String referencedTableName;
-        private List<String> referencedColumnNames;
+        private final List<String> referencedColumnNames;
         private String updateRule;
         private String deleteRule;
 

@@ -43,7 +43,6 @@ public class DriverResolver {
         return BalProjectUtils.buildDriverFile(driverImportFile);
     }
 
-
     private void createDriverImportFile() throws BalException {
         DbModelGenSyntaxTree dbModelGenSyntaxTree = new DbModelGenSyntaxTree();
         try {

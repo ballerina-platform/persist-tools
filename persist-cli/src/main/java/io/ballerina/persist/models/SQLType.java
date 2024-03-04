@@ -119,15 +119,6 @@ public class SQLType {
             case PersistToolsConstants.SqlTypes.DATE_TIME:
                 return PersistToolsConstants.BallerinaTypes.CIVIL;
 
-            // Ballerina --> time:Civil
-            // MySQL --> DATETIME
-            // MSSQL --> DATETIME2
-            // PostgreSQL --> TIMESTAMP
-//            case PersistToolsConstants.SqlTypes.DATE_TIME:
-//            case PersistToolsConstants.SqlTypes.DATE_TIME2:
-//            case PersistToolsConstants.SqlTypes.TIME_STAMP:
-//                return PersistToolsConstants.BallerinaTypes.UTC;
-
             // Ballerina --> string
             // MySQL --> VARCHAR
             // MSSQL --> VARCHAR

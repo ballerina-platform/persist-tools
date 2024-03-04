@@ -22,13 +22,13 @@ import java.util.Collections;
 import java.util.List;
 
 public class SQLIndex {
-    private String tableName;
-    private String indexName;
-    private List<String> columnNames;
-    private String partial;
-    private String columnOrder;
-    private String nonUnique;
-    private String indexType;
+    private final String tableName;
+    private final String indexName;
+    private final List<String> columnNames;
+    private final String partial;
+    private final String columnOrder;
+    private final String nonUnique;
+    private final String indexType;
 
     private SQLIndex(String indexName, String tableName, List<String> columnNames, String partial,
                     String columnOrder, String nonUnique, String indexType) {
@@ -87,9 +87,9 @@ public class SQLIndex {
     }
 
     public static class Builder {
-        private String indexName;
+        private final String indexName;
         private String tableName;
-        private List<String> columnNames;
+        private final List<String> columnNames;
         private String partial;
         private String columnOrder;
         private String nonUnique;
@@ -120,8 +120,6 @@ public class SQLIndex {
             return this;
         }
 
-
-
         public Builder setColumnOrder(String columnOrder) {
             this.columnOrder = columnOrder;
             return this;
@@ -142,5 +140,4 @@ public class SQLIndex {
                      columnOrder, nonUnique, indexType);
         }
     }
-
 }

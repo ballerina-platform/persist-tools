@@ -46,7 +46,6 @@ public class Relation {
     private RelationType relationType;
     private Entity assocEntity;
 
-
     private Relation(List<Key> keyColumns,
                      List<String> references, RelationType relationType,
                      Entity assocEntity, boolean owner) {

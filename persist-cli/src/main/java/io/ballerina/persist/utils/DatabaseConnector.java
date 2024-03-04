@@ -26,7 +26,9 @@ import io.ballerina.projects.PackageManifest;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.ResolvedPackageDependency;
 
+import java.io.Console;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.nio.file.Path;
@@ -39,6 +41,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.Scanner;
 
 import static io.ballerina.persist.PersistToolsConstants.BALLERINA_MSSQL_DRIVER_NAME;
 import static io.ballerina.persist.PersistToolsConstants.BALLERINA_MYSQL_DRIVER_NAME;
@@ -60,7 +63,6 @@ public class DatabaseConnector {
         this.driverClass = driverClass;
         this.jdbcUrlWithDatabaseFormat = jdbcUrlWithDatabaseFormat;
     }
-
 
     public Connection getConnection(Driver driver, PersistConfiguration persistConfigurations,
                                      boolean withDB) throws SQLException {
@@ -191,5 +193,16 @@ public class DatabaseConnector {
             }
         }
         return dependencies;
+    }
+    public static String readDatabasePassword(Scanner scanner, PrintStream errStream) {
+        String password;
+        Console console = System.console();
+        if (console == null) {
+            errStream.print("Database Password: ");
+            password = scanner.nextLine();
+        } else {
+            password = new String(console.readPassword("Database Password: "));
+        }
+        return password;
     }
 }

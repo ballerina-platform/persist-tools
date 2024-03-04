@@ -24,6 +24,8 @@ package io.ballerina.persist.utils;
  */
 public class StubUtils {
 
+    private StubUtils() {}
+
     private static final String[] RESERVED_LITERAL_NAMES = {
             "import", "as", "public", "private", "external", "final", "service", "resource", "function", "object",
             "record", "annotation", "parameter", "transformer", "worker", "listener", "remote", "xmlns", "returns",

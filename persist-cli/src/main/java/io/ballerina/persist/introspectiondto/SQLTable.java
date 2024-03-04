@@ -26,9 +26,6 @@ public class SQLTable {
     private final String createOptions;
     private final String tableComment;
     private final List<SQLColumn> columns;
-
-
-//    private List<SQLConstraint> constraints;
     private final List<SQLForeignKey> sqlForeignKeys;
 
     private final List<SQLIndex> indexes;
@@ -61,17 +58,6 @@ public class SQLTable {
         return Collections.unmodifiableList(columns);
     }
 
-
-
-
-//    public List<Constraint> getConstraints() {
-//        return constraints;
-//    }
-//
-//    public void setConstraints(List<Constraint> constraints) {
-//        this.constraints = constraints;
-//    }
-
     public List<SQLForeignKey> getSqlForeignKeys() {
         return Collections.unmodifiableList(sqlForeignKeys);
     }
@@ -83,8 +69,6 @@ public class SQLTable {
     public void addColumn(SQLColumn column) {
         this.columns.add(column);
     }
-
-
 
     public void addForeignKey(SQLForeignKey foreignKey) {
         this.sqlForeignKeys.add(foreignKey);
@@ -99,7 +83,7 @@ public class SQLTable {
     }
 
     public static class Builder {
-        private String tableName;
+        private final String tableName;
         private String createOptions;
         private String tableComment;
 
@@ -117,13 +101,9 @@ public class SQLTable {
             return this;
         }
 
-
         public SQLTable build() {
             return new SQLTable(tableName, createOptions,
                     tableComment);
         }
     }
-
-
-
 }
