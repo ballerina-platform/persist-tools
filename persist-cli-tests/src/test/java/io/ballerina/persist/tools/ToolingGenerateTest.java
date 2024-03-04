@@ -27,6 +27,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Paths;
 
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.Command.GENERATE;
+import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.Command.INIT;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.GENERATED_SOURCES_DIRECTORY;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertGeneratedSources;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertGeneratedSourcesNegative;
@@ -505,5 +506,12 @@ public class ToolingGenerateTest {
     public void testGenerateEntitiesWithMultipleRelations() {
         executeGenerateCommand("tool_test_generate_65", "mysql");
         assertGeneratedSources("tool_test_generate_65");
+    }
+
+    @Test(enabled = true)
+    @Description("The model has multiple relations of various types")
+    public void testInit() {
+        executeCommand("tool_test_init_1", INIT);
+        assertGeneratedSources("tool_test_init_1");
     }
 }
