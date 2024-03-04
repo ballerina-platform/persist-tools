@@ -223,13 +223,8 @@ bal persist pull --datastore mysql --host localhost --port 3306 --user root --da
 
 This command will introspect the schema of the database and create a `model.bal` file with the entities and relations based on the schema of the database. The database configuration should be provided as command-line arguments.
 
+This command should execute within a Ballerina project.  
 
-The file structure of the project should be similar to the following before running the command.
-```
-medical-center
-├── Ballerina.toml
-└── main.bal
-```
 The `persist` directory is created if it is not already present. If a `model.bal` file is already present in the `persist` directory, it will prompt the user to confirm overwriting the existing `model.bal` file.
 
 Running the `pull` command will,
