@@ -239,7 +239,7 @@ public class ToolingGenerateTest {
     @Test(enabled = true)
     @Description("Test the generate command in default Ballerina package")
     public void testGenerateInDefaultPackage() {
-        executeGenerateCommand("tool_test_generate_35", "mysql", "persist_generate_35");
+        executeGenerateCommand("tool_test_generate_35", "mysql");
         assertGeneratedSources("tool_test_generate_35");
     }
 
@@ -356,14 +356,14 @@ public class ToolingGenerateTest {
     @Test(enabled = true)
     @Description("There is multiple entities with multiple enums and no imports")
     public void testGenerateWithEnums() {
-        executeGenerateCommand("tool_test_generate_50", "mysql", "persist_generate_50");
+        executeGenerateCommand("tool_test_generate_50", "mysql");
         assertGeneratedSources("tool_test_generate_50");
     }
 
     @Test(enabled = true)
     @Description("There is multiple entities with multiple enums and imports")
     public void testGenerateWithEnumsWithImports() {
-        executeGenerateCommand("tool_test_generate_51", "mysql", "persist_generate_51");
+        executeGenerateCommand("tool_test_generate_51", "mysql");
         assertGeneratedSources("tool_test_generate_51");
     }
 
@@ -503,7 +503,7 @@ public class ToolingGenerateTest {
     @Test(enabled = true)
     @Description("The model has multiple relations of various types")
     public void testGenerateEntitiesWithMultipleRelations() {
-        executeGenerateCommand("tool_test_generate_65", "mysql", "persist_generate_65");
+        executeGenerateCommand("tool_test_generate_65", "mysql");
         assertGeneratedSources("tool_test_generate_65");
     }
 }

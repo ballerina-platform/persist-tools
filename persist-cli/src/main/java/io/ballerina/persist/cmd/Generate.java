@@ -82,7 +82,7 @@ public class Generate implements BLauncherCmd {
 
     @Override
     public void execute() {
-        Path generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);
+        Path generatedSourceDirPath;
         Module entityModule;
         Path schemaFilePath;
         String packageName;
@@ -112,8 +112,10 @@ public class Generate implements BLauncherCmd {
         }
 
         if (module == null) {
+            generatedSourceDirPath = Paths.get(this.sourcePath);
             module = packageName;
         } else {
+            generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.MODULES_SOURCE_DIRECTORY);
             module = module.replaceAll("\"", "");
         }
         moduleNameWithPackage = (packageName.equals(module)) ? packageName : packageName + "." + module;

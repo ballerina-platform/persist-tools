@@ -195,7 +195,13 @@ public class GeneratedSourcesTestUtils {
             persistClass = Class.forName("io.ballerina.persist.cmd.Generate");
             Generate persistCmd = (Generate) persistClass.getDeclaredConstructor(String.class)
                     .newInstance(sourcePath.toAbsolutePath().toString());
-            new CommandLine(persistCmd).parseArgs("--datastore", args[0], "--module", args[1]);
+            if (args.length > 1) {
+                // ballerina persist generate --datastore <datastore> --module <module>
+                new CommandLine(persistCmd).parseArgs("--datastore", args[0], "--module", args[1]);
+            } else {
+                // ballerina persist generate --datastore <datastore>
+                new CommandLine(persistCmd).parseArgs("--datastore", args[0]);
+            }
             persistCmd.execute();
         } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException | IllegalAccessException
                 | InvocationTargetException e) {
