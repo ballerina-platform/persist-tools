@@ -104,8 +104,7 @@ public class Pull implements BLauncherCmd {
             return;
         }
 
-        String password;
-        password = readDatabasePassword(scanner, errStream);
+        String password = readDatabasePassword(scanner, errStream);
 
         try {
             validateBallerinaProject(Paths.get(this.sourcePath));
