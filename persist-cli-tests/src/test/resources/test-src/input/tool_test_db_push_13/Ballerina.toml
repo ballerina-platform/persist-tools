@@ -11,6 +11,7 @@ observabilityIncluded = false
 id = "persist"
 options.datastore = "mysql"
 targetModule = "tool_test_db_push_13.entities"
+filePath = "persist/model.bal"
 
 [persist.model.storage.mysql]
 host = "localhost"

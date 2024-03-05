@@ -11,6 +11,7 @@ observabilityIncluded = true
 id = "persist"
 options.datastore = "mysql"
 targetModule = "persistTest6"
+filePath = "persist/model.bal"
 
 [[platform.java17.dependency]]
 groupId = "io.ballerina.stdlib"

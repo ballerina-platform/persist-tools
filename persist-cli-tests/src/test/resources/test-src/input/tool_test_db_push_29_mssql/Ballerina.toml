@@ -11,6 +11,7 @@ observabilityIncluded = false
 id = "persist"
 options.datastore = "mssql"
 targetModule = "tool_test_db_push_29.entities"
+filePath = "persist/model.bal"
 
 [persist.model.storage.mssql]
 host = "localhost"

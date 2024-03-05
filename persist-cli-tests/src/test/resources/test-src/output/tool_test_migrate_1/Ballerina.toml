@@ -11,4 +11,5 @@ observabilityIncluded = true
 id = "persist"
 options.datastore = "mysql"
 targetModule = "persistTest6"
+filePath = "persist/model.bal"
 
