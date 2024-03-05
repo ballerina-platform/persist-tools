@@ -1,8 +1,7 @@
-[tool_test_generate_86.db]
+[tool_test_generate_86.entities]
 host = "localhost"
 port = 3306
 user = "root"
 password = ""
 database = ""
-
 
