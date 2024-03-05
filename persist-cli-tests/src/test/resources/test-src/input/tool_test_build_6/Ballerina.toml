@@ -1,0 +1,19 @@
+[package]
+org = "foo"
+name = "persist_build_6"
+version = "0.1.0"
+distribution = "2201.3.0"
+
+[build-options]
+observabilityIncluded = true
+
+[[tool.persist]]
+id = "generate-db-client"
+targetModule = "persist_build_6"
+options.datastore = "mysql"
+filePath = "persist/model.bal"
+
+[[platform.java17.dependency]]
+groupId = "io.ballerina.stdlib"
+artifactId = "persist.sql-native"
+version = "1.2.1"

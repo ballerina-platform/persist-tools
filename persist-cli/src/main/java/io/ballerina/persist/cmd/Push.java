@@ -137,7 +137,7 @@ public class Push implements BLauncherCmd {
         try {
             HashMap<String, String> ballerinaTomlConfig = TomlSyntaxUtils.readBallerinaTomlConfig(
                     Paths.get(this.sourcePath, "Ballerina.toml"));
-            this.datastore = ballerinaTomlConfig.get("datastore").trim();
+            this.datastore = ballerinaTomlConfig.get("options.datastore").trim();
         } catch (BalException e) {
             errStream.printf("ERROR: failed to locate Ballerina.toml: %s%n",
                     e.getMessage());
@@ -210,13 +210,13 @@ public class Push implements BLauncherCmd {
                 generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);
                 HashMap<String, String> persistConfig = readBallerinaTomlConfig(
                         Paths.get(this.sourcePath, "Ballerina.toml"));
-                if (!persistConfig.get("module").equals(packageName)) {
-                    if (!persistConfig.get("module").startsWith(packageName + ".")) {
+                if (!persistConfig.get("targetModule").equals(packageName)) {
+                    if (!persistConfig.get("targetModule").startsWith(packageName + ".")) {
                         errStream.println("ERROR: invalid module name : '" + persistConfig.get("module") + "' :\n" +
                                 "module name should follow the template <package_name>.<module_name>");
                         return;
                     }
-                    submodule = persistConfig.get("module").split("\\.")[1];
+                    submodule = persistConfig.get("targetModule").split("\\.")[1];
                     if (!ProjectUtils.validateModuleName(submodule)) {
                         errStream.println("ERROR: invalid module name : '" + submodule + "' :\n" +
                                 "module name can only contain alphanumerics, underscores and periods");

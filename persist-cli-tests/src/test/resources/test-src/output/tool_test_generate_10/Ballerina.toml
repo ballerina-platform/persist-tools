@@ -7,6 +7,6 @@ distribution = "2201.3.0"
 [build-options]
 observabilityIncluded = false
 
-[persist]
-datastore = "mysql"
-module = "persist_generate_10.entities"
+[[tool.persist]]
+options.datastore = "mysql"
+targetModule = "persist_generate_10.entities"

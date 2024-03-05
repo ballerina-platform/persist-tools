@@ -4,9 +4,11 @@ name = "tool_test_db_push_31"
 version = "0.1.0"
 distribution = "2201.3.0"
 
-[persist]
-datastore = "mssql"
-module = "tool_test_db_push_31.entities"
+[[tool.persist]]
+id = "persist"
+options.datastore = "mssql"
+targetModule = "tool_test_db_push_31.entities"
+filePath = "persist/model.bal"
 
 [persist.model.storage.mssql]
 host = "localhost"

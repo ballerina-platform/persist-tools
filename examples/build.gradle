@@ -141,7 +141,7 @@ task initDbExamples {
                         delete "${project.projectDir}/build/generated-examples/${example}/generated"
                         workingDir "${project.projectDir}/build/generated-examples/${example}"
                         if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-                            commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist init --module=entities --datastore=mysql"
+                            commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate --module=entities --datastore=mysql"
                         } else {
                             commandLine 'cmd', 'slmgr /dlv'
                             println('\n' + "Windows Instance detected")
@@ -164,9 +164,9 @@ task initInMemoryExamples {
                     exec {
                         workingDir "${project.projectDir}/build/generated-examples/${example}"
                         if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-                            commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist init --module=entities"
+                            commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate --module=entities --datastore=inmemory"
                         } else {
-                            commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat persist init --module=entities"
+                            commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat persist generate --module=entities --datastore=inmemory"
                         }
                     }
                 } catch (Exception e) {
@@ -211,7 +211,7 @@ task generateDbExamples {
                     exec {
                         workingDir "${project.projectDir}/build/generated-examples/${example}"
                         if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-                            commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate"
+                            commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate --module=entities --datastore=inmemory"
                         } else {
                             commandLine 'cmd', 'slmgr /dlv'
                             println('\n' + "Windows Instance detected")
@@ -234,9 +234,9 @@ task generateInMemoryExamples {
                     exec {
                         workingDir "${project.projectDir}/build/generated-examples/${example}"
                         if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-                            commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate"
+                            commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate --datastore=inmemory --module=entities"
                         } else {
-                            commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat persist generate"
+                            commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat persist generate --datastore=inmemory --module=entities"
                         }
                     }
                 } catch (Exception e) {

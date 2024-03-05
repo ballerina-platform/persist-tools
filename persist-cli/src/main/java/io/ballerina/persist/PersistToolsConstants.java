@@ -26,6 +26,8 @@ import java.util.Set;
  */
 public class PersistToolsConstants {
 
+    public static final String BAL_PERSIST_ADD_CMD = "add";
+
     private PersistToolsConstants() {}
 
     public static final String COMPONENT_IDENTIFIER = "persist";
@@ -48,6 +50,11 @@ public class PersistToolsConstants {
     public static final String SQL_SCHEMA_FILE = "script.sql";
     public static final String GOOGLE_SHEETS_SCHEMA_FILE = "script.gs";
     public static final String PERSIST_DIRECTORY = "persist";
+    public static final String TARGET_DIRECTORY = "target";
+    public static final String GENERATE_CMD_FILE = "Persist.toml";
+    public static final String PERSIST_TOOL_CONFIG = "tool.persist";
+    public static final String GENERATED_DIRECTORY = "generated";
+    public static final String TARGET_MODULE = "targetModule";
     public static final String MIGRATIONS = "migrations";
     public static final String BALLERINA_MYSQL_DRIVER_NAME = "ballerinax/mysql.driver";
     public static final String BALLERINA_MSSQL_DRIVER_NAME = "ballerinax/mssql.driver";

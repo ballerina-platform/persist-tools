@@ -110,10 +110,9 @@ public class TomlSyntaxUtils {
             boolean dbConfigExists = false;
             HashMap<String, String> persistConfig = new HashMap<>();
             for (DocumentMemberDeclarationNode member : nodeList) {
-                if (member instanceof TableNode) {
-                    TableNode node = (TableNode) member;
+                if (member instanceof TableArrayNode node) {
                     String tableName = node.identifier().toSourceCode().trim();
-                    if (tableName.equals(PersistToolsConstants.PERSIST_DIRECTORY)) {
+                    if (tableName.equals(PersistToolsConstants.PERSIST_TOOL_CONFIG)) {
                         dbConfigExists = true;
                         for (KeyValueNode field : node.fields()) {
                             persistConfig.put(field.identifier().toSourceCode().trim(),
@@ -125,8 +124,8 @@ public class TomlSyntaxUtils {
             }
             if (!dbConfigExists) {
                 throw new BalException("the persist config doesn't exist in the Ballerina.toml. " +
-                        "add [persist] table with persist configurations.");
-            } else if (!persistConfig.containsKey("module") || !persistConfig.containsKey("datastore")) {
+                        "add [tool.persist] table with persist configurations.");
+            } else if (!persistConfig.containsKey("targetModule") || !persistConfig.containsKey("options.datastore")) {
                 throw new BalException("the persist configurations does not exist under [persist] table.");
             }
             return persistConfig;
@@ -167,8 +166,8 @@ public class TomlSyntaxUtils {
     /**
      * Method to update the Ballerina.toml with database configurations and persist dependency.
      */
-    public static String updateBallerinaToml(Path configPath, String module, String datasource) throws IOException,
-            BalException {
+    public static String updateBallerinaToml(Path configPath, String module, String datasource,
+                                             boolean generateCmd, String... id) throws IOException, BalException {
         NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
         Path fileNamePath = configPath.getFileName();
         TextDocument configDocument = TextDocuments.from(Files.readString(configPath));
@@ -182,22 +181,16 @@ public class TomlSyntaxUtils {
             SyntaxTree syntaxTree = SyntaxTree.from(configDocument, fileNamePath.toString());
             DocumentNode rootNote = syntaxTree.rootNode();
             NodeList<DocumentMemberDeclarationNode> nodeList = rootNote.members();
-
             for (DocumentMemberDeclarationNode member : nodeList) {
                 boolean dependencyExists = false;
                 if (member instanceof KeyValueNode) {
                     moduleMembers = moduleMembers.add(member);
-                } else if (member instanceof TableNode) {
-                    TableNode node = (TableNode) member;
-                    if (node.identifier().toSourceCode().trim().equals(PersistToolsConstants.PERSIST_DIRECTORY)) {
+                } else if (member instanceof TableArrayNode) {
+                    TableArrayNode node = (TableArrayNode) member;
+                    if (node.identifier().toSourceCode().trim().equals(PersistToolsConstants.PERSIST_TOOL_CONFIG)) {
                         throw new BalException("persist configuration already exists in the Ballerina.toml. " +
                                 "remove the existing configuration and try again.");
-                    } else {
-                        moduleMembers = moduleMembers.add(member);
-                    }
-                } else if (member instanceof TableArrayNode) {
-                    TableArrayNode tableArray = (TableArrayNode) member;
-                    if (tableArray.identifier().toSourceCode().trim().equals("platform.java17.dependency")) {
+                    } else if (node.identifier().toSourceCode().trim().equals("platform.java17.dependency")) {
                         NodeList<KeyValueNode> fields = ((TableArrayNode) member).fields();
                         for (KeyValueNode field : fields) {
                             String value = field.value().toSourceCode().trim();
@@ -214,13 +207,17 @@ public class TomlSyntaxUtils {
                     if (!dependencyExists) {
                         moduleMembers = moduleMembers.add(member);
                     }
+                } else {
+                    moduleMembers = moduleMembers.add(member);
                 }
             }
             moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
-            moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(
-                    PersistToolsConstants.PERSIST_DIRECTORY, null));
-            moduleMembers = populateBallerinaNodeList(moduleMembers, module, datasource);
-            moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
+            if (!generateCmd) {
+                moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray(
+                        PersistToolsConstants.PERSIST_TOOL_CONFIG, null));
+                moduleMembers = populateBallerinaNodeList(moduleMembers, module, datasource, id[0]);
+                moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
+            }
             moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray(
                     BalSyntaxConstants.PERSIST_DEPENDENCY, null));
             moduleMembers = populatePersistDependency(moduleMembers, artifactId, datasource);
@@ -232,9 +229,11 @@ public class TomlSyntaxUtils {
     }
 
     private static NodeList<DocumentMemberDeclarationNode> populateBallerinaNodeList(
-            NodeList<DocumentMemberDeclarationNode> moduleMembers, String module, String dataStore) {
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("datastore", dataStore, null));
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("module", module, null));
+            NodeList<DocumentMemberDeclarationNode> moduleMembers, String module, String dataStore, String id) {
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("id", id, null));
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("targetModule", module, null));
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("options.datastore", dataStore, null));
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("filePath", "persist/model.bal", null));
         return moduleMembers;
     }
 

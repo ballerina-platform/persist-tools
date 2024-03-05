@@ -18,30 +18,14 @@
 package io.ballerina.persist.cmd;
 
 import io.ballerina.cli.BLauncherCmd;
-import io.ballerina.compiler.syntax.tree.AbstractNodeFactory;
-import io.ballerina.compiler.syntax.tree.ImportDeclarationNode;
-import io.ballerina.compiler.syntax.tree.ModuleMemberDeclarationNode;
-import io.ballerina.compiler.syntax.tree.ModulePartNode;
-import io.ballerina.compiler.syntax.tree.NodeFactory;
-import io.ballerina.compiler.syntax.tree.NodeList;
-import io.ballerina.compiler.syntax.tree.NodeParser;
-import io.ballerina.compiler.syntax.tree.SyntaxTree;
-import io.ballerina.compiler.syntax.tree.Token;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
-import io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils;
 import io.ballerina.projects.util.ProjectUtils;
-import io.ballerina.tools.text.TextDocument;
-import io.ballerina.tools.text.TextDocuments;
-import org.ballerinalang.formatter.core.Formatter;
-import org.ballerinalang.formatter.core.FormatterException;
 import picocli.CommandLine;
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -55,12 +39,10 @@ import java.util.stream.Stream;
 import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 import static io.ballerina.persist.PersistToolsConstants.MIGRATIONS;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
-import static io.ballerina.persist.PersistToolsConstants.SCHEMA_FILE_NAME;
 import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_DB_PROVIDERS;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.BAL_EXTENSION;
 import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.readPackageName;
 import static io.ballerina.persist.utils.BalProjectUtils.validateBallerinaProject;
-import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 
 /**
  * Class to implement "persist init" command for ballerina.
@@ -152,16 +134,6 @@ public class Init implements BLauncherCmd {
                     "maximum length of module name is 256 characters");
             return;
         }
-        try {
-            String moduleName = packageName;
-            if (!module.equals(packageName)) {
-                moduleName = String.format("%s.%s", packageName.replaceAll("\"", ""), module);
-            }
-            updateBallerinaToml(moduleName, datastore);
-        } catch (BalException e) {
-            errStream.println("ERROR: failed to add persist configurations in the toml file. " + e.getMessage());
-            return;
-        }
 
         Path persistDirPath = Paths.get(this.sourcePath, PERSIST_DIRECTORY);
         if (!Files.exists(persistDirPath)) {
@@ -192,14 +164,13 @@ public class Init implements BLauncherCmd {
         }
         if (schemaFiles.size() == 0) {
             try {
-                generateSchemaBalFile(persistDirPath);
+                Utils.generateSchemaBalFile(persistDirPath);
             } catch (BalException e) {
                 errStream.println("ERROR: failed to create the model definition file in persist directory. "
                         + e.getMessage());
                 return;
             }
         }
-
         errStream.println("Initialized the package for persistence.");
         errStream.println(System.lineSeparator() + "Next steps:");
 
@@ -207,47 +178,6 @@ public class Init implements BLauncherCmd {
         errStream.println("- Run \"bal persist generate\" to generate persist client and " +
                 "entity types for your data model.");
 
-    }
-
-    private void generateSchemaBalFile(Path persistPath) throws BalException {
-        try {
-            String configTree = generateSchemaSyntaxTree();
-            writeOutputString(configTree, persistPath.resolve(SCHEMA_FILE_NAME + BAL_EXTENSION)
-                    .toAbsolutePath().toString());
-        } catch (Exception e) {
-            throw new BalException(e.getMessage());
-        }
-    }
-
-    private void updateBallerinaToml(String module, String datastore) throws BalException {
-        try {
-            String syntaxTree = TomlSyntaxUtils.updateBallerinaToml(
-                    Paths.get(this.sourcePath, BALLERINA_TOML), module, datastore);
-            writeOutputString(syntaxTree,
-                    Paths.get(this.sourcePath, BALLERINA_TOML).toAbsolutePath().toString());
-        } catch (Exception e) {
-            throw new BalException("could not update the Ballerina.toml with persist configurations. " +
-                    e.getMessage());
-        }
-    }
-
-    private void writeOutputString(String content, String outPath) throws Exception {
-        Path pathToFile = Paths.get(outPath);
-        Path parentDirectory = pathToFile.getParent();
-        if (Objects.nonNull(parentDirectory)) {
-            if (!Files.exists(parentDirectory)) {
-                try {
-                    Files.createDirectories(parentDirectory);
-                } catch (IOException e) {
-                    throw new BalException(
-                            String.format("could not create the parent directories of output path %s. %s",
-                                    parentDirectory, e.getMessage()));
-                }
-            }
-            try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8)) {
-                writer.println(content);
-            }
-        }
     }
 
     @Override
@@ -268,20 +198,5 @@ public class Init implements BLauncherCmd {
     public void printUsage(StringBuilder stringBuilder) {
         stringBuilder.append("  ballerina " + COMPONENT_IDENTIFIER +
                 " init").append(System.lineSeparator());
-    }
-
-    private static String generateSchemaSyntaxTree() throws FormatterException {
-        NodeList<ImportDeclarationNode> imports = AbstractNodeFactory.createEmptyNodeList();
-        NodeList<ModuleMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
-
-        imports = imports.add(NodeParser.parseImportDeclaration("import ballerina/persist as _;"));
-        Token eofToken = AbstractNodeFactory.createIdentifierToken(BalSyntaxConstants.EMPTY_STRING);
-        ModulePartNode modulePartNode = NodeFactory.createModulePartNode(imports, moduleMembers, eofToken);
-        TextDocument textDocument = TextDocuments.from(BalSyntaxConstants.EMPTY_STRING);
-        SyntaxTree balTree = SyntaxTree.from(textDocument);
-
-        // output cannot be SyntaxTree as it will overlap with Toml Syntax Tree in Init
-        // Command
-        return Formatter.format(balTree.modifyWith(modulePartNode).toSourceCode());
     }
 }

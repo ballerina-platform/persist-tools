@@ -4,6 +4,8 @@ name = "persist_generate_31"
 version = "0.1.0"
 distribution = "2201.3.0"
 
-[persist]
-datastore = "mysql"
-module = "persist_generate_31.entities"
+[[platform.java17.dependency]]
+groupId = "io.ballerina.stdlib"
+artifactId = "persist.sql-native"
+version = "1.2.2-SNAPSHOT"
+
