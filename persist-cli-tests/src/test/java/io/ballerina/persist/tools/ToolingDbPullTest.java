@@ -358,7 +358,7 @@ public class ToolingDbPullTest {
     }
 
     @Test(enabled = true)
-    @Description("Create a model.bal file consisting keyword field names which are to be escaped.")
+    @Description("Create a model.bal file consisting of keyword field names which are to be escaped.")
     public void pullTestEscapedFieldNames() throws BalException {
         String subDir = "tool_test_pull_20_mysql";
         createFromDatabaseScript(subDir, "mysql", databaseConfig);
@@ -379,6 +379,15 @@ public class ToolingDbPullTest {
     @Description("When the database does not exist.")
     public void pullTestDatabaseDoesNotExist() throws BalException {
         String subDir = "tool_test_pull_22_mysql";
+        createFromDatabaseScript(subDir, "mysql", databaseConfig);
+        executeDefaultPullCommand(subDir);
+        assertGeneratedSources(subDir);
+    }
+
+    @Test(enabled = true)
+    @Description("Create a model.bal file consisting of a generated primary key field.")
+    public void pullTestWithGeneratedId() throws BalException {
+        String subDir = "tool_test_pull_24_mysql";
         createFromDatabaseScript(subDir, "mysql", databaseConfig);
         executeDefaultPullCommand(subDir);
         assertGeneratedSources(subDir);
