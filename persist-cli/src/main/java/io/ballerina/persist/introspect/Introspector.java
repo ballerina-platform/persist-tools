@@ -67,11 +67,11 @@ public abstract class Introspector {
     private List<SQLTable> tables;
 
     private List<SQLEnum> sqlEnums;
-    private Module.Builder moduleBuilder;
+    private final Module.Builder moduleBuilder;
 
-    private Map<String, Entity> entityMap;
+    private final Map<String, Entity> entityMap;
 
-    private List<SQLForeignKey> sqlForeignKeys;
+    private final List<SQLForeignKey> sqlForeignKeys;
 
     public Introspector(Connection connection, String databaseName) {
         this.connection = connection;
@@ -101,7 +101,7 @@ public abstract class Introspector {
         mapEnums();
         mapEntities();
 
-        entityMap.forEach((key, value) -> moduleBuilder.addEntity(key, value));
+        entityMap.forEach(moduleBuilder::addEntity);
         return moduleBuilder.build();
     }
 
