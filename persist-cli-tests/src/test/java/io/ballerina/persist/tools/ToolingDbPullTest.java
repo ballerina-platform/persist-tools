@@ -17,7 +17,6 @@
  */
 package io.ballerina.persist.tools;
 
-
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.cmd.Pull;
 import io.ballerina.persist.configuration.DatabaseConfiguration;
@@ -30,6 +29,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static io.ballerina.persist.tools.utils.DatabaseTestUtils.createFromDatabaseScript;
@@ -39,12 +39,12 @@ public class ToolingDbPullTest {
     private static final String GENERATED_SOURCES_DIRECTORY = Paths.get("build", "generated-sources")
             .toString();
 
-    private static DatabaseConfiguration databaseConfig;
+    private static final DatabaseConfiguration databaseConfig;
 
     static {
         try {
-            databaseConfig = new DatabaseConfiguration("localhost", "root",
-                    "Test123#", "3307", "persist");
+            databaseConfig = new DatabaseConfiguration("localhost", "root", "Test123#",
+                    "3307", "persist");
         } catch (BalException e) {
             throw new RuntimeException(e);
         }
@@ -58,9 +58,9 @@ public class ToolingDbPullTest {
         Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Pull");
 
         // datastore is empty
-        Pull persistCmd1 = (Pull) persistClass.getDeclaredConstructor(String.class).
-                newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir).toAbsolutePath().
-                        toString());
+        Path path = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);
+        Pull persistCmd1 = (Pull) persistClass.getDeclaredConstructor(String.class).newInstance(path.toAbsolutePath()
+                .toString());
         new CommandLine(persistCmd1).parseArgs("--datastore", "");
         new CommandLine(persistCmd1).parseArgs("--host", "localhost");
         new CommandLine(persistCmd1).parseArgs("--port", "3307");
@@ -70,9 +70,8 @@ public class ToolingDbPullTest {
         assertGeneratedSources(subDir);
 
         // host is empty
-        Pull persistCmd2 = (Pull) persistClass.getDeclaredConstructor(String.class).
-                newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir).toAbsolutePath().
-                        toString());
+        Pull persistCmd2 = (Pull) persistClass.getDeclaredConstructor(String.class).newInstance(path.toAbsolutePath()
+                .toString());
         new CommandLine(persistCmd2).parseArgs("--datastore", "mysql");
         new CommandLine(persistCmd2).parseArgs("--host", "");
         new CommandLine(persistCmd2).parseArgs("--port", "3307");
@@ -82,9 +81,8 @@ public class ToolingDbPullTest {
         assertGeneratedSources(subDir);
 
         // port is empty
-        Pull persistCmd3 = (Pull) persistClass.getDeclaredConstructor(String.class).
-                newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir).toAbsolutePath().
-                        toString());
+        Pull persistCmd3 = (Pull) persistClass.getDeclaredConstructor(String.class).newInstance(path.toAbsolutePath()
+                .toString());
         new CommandLine(persistCmd3).parseArgs("--datastore", "mysql");
         new CommandLine(persistCmd3).parseArgs("--host", "localhost");
         new CommandLine(persistCmd3).parseArgs("--port", "");
@@ -94,9 +92,8 @@ public class ToolingDbPullTest {
         assertGeneratedSources(subDir);
 
         // user is empty
-        Pull persistCmd4 = (Pull) persistClass.getDeclaredConstructor(String.class).
-                newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir).toAbsolutePath().
-                        toString());
+        Pull persistCmd4 = (Pull) persistClass.getDeclaredConstructor(String.class).newInstance(path.toAbsolutePath()
+                .toString());
         new CommandLine(persistCmd4).parseArgs("--datastore", "mysql");
         new CommandLine(persistCmd4).parseArgs("--host", "localhost");
         new CommandLine(persistCmd4).parseArgs("--port", "3307");
@@ -106,9 +103,8 @@ public class ToolingDbPullTest {
         assertGeneratedSources(subDir);
 
         // database is empty
-        Pull persistCmd5 = (Pull) persistClass.getDeclaredConstructor(String.class).
-                newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir).toAbsolutePath().
-                        toString());
+        Pull persistCmd5 = (Pull) persistClass.getDeclaredConstructor(String.class).newInstance(path.toAbsolutePath()
+                .toString());
         new CommandLine(persistCmd5).parseArgs("--datastore", "mysql");
         new CommandLine(persistCmd5).parseArgs("--host", "localhost");
         new CommandLine(persistCmd5).parseArgs("--port", "3307");
@@ -118,9 +114,8 @@ public class ToolingDbPullTest {
         assertGeneratedSources(subDir);
 
         // host is not provided
-        Pull persistCmd6 = (Pull) persistClass.getDeclaredConstructor(String.class).
-                newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir).toAbsolutePath().
-                        toString());
+        Pull persistCmd6 = (Pull) persistClass.getDeclaredConstructor(String.class).newInstance(path.toAbsolutePath()
+                .toString());
         new CommandLine(persistCmd6).parseArgs("--datastore", "mysql");
         new CommandLine(persistCmd6).parseArgs("--port", "3307");
         new CommandLine(persistCmd6).parseArgs("--user", "root");
@@ -129,9 +124,8 @@ public class ToolingDbPullTest {
         assertGeneratedSources(subDir);
 
         // user is not provided
-        Pull persistCmd7 = (Pull) persistClass.getDeclaredConstructor(String.class).
-                newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir).toAbsolutePath().
-                        toString());
+        Pull persistCmd7 = (Pull) persistClass.getDeclaredConstructor(String.class).newInstance(path.toAbsolutePath()
+                .toString());
         new CommandLine(persistCmd7).parseArgs("--datastore", "mysql");
         new CommandLine(persistCmd7).parseArgs("--host", "localhost");
         new CommandLine(persistCmd7).parseArgs("--port", "3307");
@@ -140,9 +134,8 @@ public class ToolingDbPullTest {
         assertGeneratedSources(subDir);
 
         // database is not provided
-        Pull persistCmd8 = (Pull) persistClass.getDeclaredConstructor(String.class).
-                newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir).toAbsolutePath().
-                        toString());
+        Pull persistCmd8 = (Pull) persistClass.getDeclaredConstructor(String.class).newInstance(path.toAbsolutePath()
+                .toString());
         new CommandLine(persistCmd8).parseArgs("--datastore", "mysql");
         new CommandLine(persistCmd8).parseArgs("--host", "localhost");
         new CommandLine(persistCmd8).parseArgs("--port", "3307");
@@ -151,9 +144,8 @@ public class ToolingDbPullTest {
         assertGeneratedSources(subDir);
 
         // invalid port number (not a number)
-        Pull persistCmd9 = (Pull) persistClass.getDeclaredConstructor(String.class).
-                newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir).toAbsolutePath().
-                        toString());
+        Pull persistCmd9 = (Pull) persistClass.getDeclaredConstructor(String.class).newInstance(path.toAbsolutePath()
+                .toString());
         new CommandLine(persistCmd9).parseArgs("--datastore", "mysql");
         new CommandLine(persistCmd9).parseArgs("--host", "localhost");
         new CommandLine(persistCmd9).parseArgs("--port", "lkj");
@@ -163,9 +155,8 @@ public class ToolingDbPullTest {
         assertGeneratedSources(subDir);
 
         // invalid port number (number, but invalid)
-        Pull persistCmd10 = (Pull) persistClass.getDeclaredConstructor(String.class).
-                newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir).toAbsolutePath().
-                        toString());
+        Pull persistCmd10 = (Pull) persistClass.getDeclaredConstructor(String.class).newInstance(path.toAbsolutePath()
+                .toString());
         new CommandLine(persistCmd10).parseArgs("--datastore", "mysql");
         new CommandLine(persistCmd10).parseArgs("--host", "localhost");
         new CommandLine(persistCmd10).parseArgs("--port", "69000");
@@ -175,9 +166,8 @@ public class ToolingDbPullTest {
         assertGeneratedSources(subDir);
 
         // invalid database name
-        Pull persistCmd11 = (Pull) persistClass.getDeclaredConstructor(String.class).
-                newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir).toAbsolutePath().
-                        toString());
+        Pull persistCmd11 = (Pull) persistClass.getDeclaredConstructor(String.class).newInstance(path.toAbsolutePath()
+                .toString());
         new CommandLine(persistCmd11).parseArgs("--datastore", "mysql");
         new CommandLine(persistCmd11).parseArgs("--host", "localhost");
         new CommandLine(persistCmd11).parseArgs("--port", "3307");
@@ -187,9 +177,8 @@ public class ToolingDbPullTest {
         assertGeneratedSources(subDir);
 
         // no args given
-        Pull persistCmd12 = (Pull) persistClass.getDeclaredConstructor(String.class).
-                newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir).toAbsolutePath().
-                        toString());
+        Pull persistCmd12 = (Pull) persistClass.getDeclaredConstructor(String.class).newInstance(path.toAbsolutePath()
+                .toString());
         persistCmd12.execute();
         assertGeneratedSources(subDir);
     }
@@ -399,18 +388,20 @@ public class ToolingDbPullTest {
         try {
             Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Pull");
             Pull persistCmd = (Pull) persistClass.getDeclaredConstructor(String.class).
-                    newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir).toAbsolutePath().
-                            toString());
+                    newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir).toAbsolutePath().toString());
             new CommandLine(persistCmd).parseArgs("--datastore", "mysql");
             new CommandLine(persistCmd).parseArgs("--host", "localhost");
             new CommandLine(persistCmd).parseArgs("--port", "3307");
             new CommandLine(persistCmd).parseArgs("--user", "root");
             new CommandLine(persistCmd).parseArgs("--database", "persist");
-            String password = "Test123#\n";
+            String password = databaseConfig.getPassword() + "\n";
             InputStream originalSystemIn = System.in;
-            InputStream inputStream = new ByteArrayInputStream(password.getBytes(StandardCharsets.UTF_8));
-            System.setIn(inputStream);
-            persistCmd.execute();
+            try (InputStream inputStream = new ByteArrayInputStream(password.getBytes(StandardCharsets.UTF_8))) {
+                System.setIn(inputStream);
+                persistCmd.execute();
+            } finally {
+                System.setIn(originalSystemIn);
+            }
             System.setIn(originalSystemIn);
         } catch (RuntimeException e) {
             throw new RuntimeException("Error occurred while executing pull command: " + e.getMessage());
@@ -423,8 +414,7 @@ public class ToolingDbPullTest {
         try {
             Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Pull");
             Pull persistCmd = (Pull) persistClass.getDeclaredConstructor(String.class).
-                    newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir).toAbsolutePath().
-                            toString());
+                    newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir).toAbsolutePath().toString());
             new CommandLine(persistCmd).parseArgs("--datastore", "mysql");
             new CommandLine(persistCmd).parseArgs("--host", databaseConfig.getHost());
             new CommandLine(persistCmd).parseArgs("--port", String.valueOf(databaseConfig.getPort()));
@@ -432,11 +422,13 @@ public class ToolingDbPullTest {
             new CommandLine(persistCmd).parseArgs("--database", databaseConfig.getDatabase());
             InputStream originalSystemIn = System.in;
             String passwordAndSimulatedInput = databaseConfig.getPassword() + "\n" + simulatedInput;
-            InputStream inputStream = new ByteArrayInputStream
-                    (passwordAndSimulatedInput.getBytes(StandardCharsets.UTF_8));
-            System.setIn(inputStream);
-            persistCmd.execute();
-            System.setIn(originalSystemIn);
+            try (InputStream inputStream = new ByteArrayInputStream(passwordAndSimulatedInput
+                    .getBytes(StandardCharsets.UTF_8))) {
+                System.setIn(inputStream);
+                persistCmd.execute();
+            } finally {
+                System.setIn(originalSystemIn);
+            }
         } catch (RuntimeException e) {
             throw new RuntimeException("Error occurred while executing pull command: " + e.getMessage());
         } catch (Exception e) {

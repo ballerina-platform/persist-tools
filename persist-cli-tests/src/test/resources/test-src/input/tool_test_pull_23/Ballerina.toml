@@ -1,7 +1,7 @@
 [package]
 distribution = "2201.8.4"
 name = "tool_test_pull_23_mysql"
-org = "haritha"
+org = "wso2"
 version = "0.1.0"
 
 [build-options]

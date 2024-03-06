@@ -214,7 +214,6 @@ public class DatabaseTestUtils {
             url = String.format("jdbc:mysql://%s:%s", dbConfig.getHost(), dbConfig.getPort());
         }
 
-
         try (Connection connection = DriverManager.getConnection(url, dbConfig.getUsername(), dbConfig.getPassword())) {
             Path scriptFilePath = sourcePath.resolve("script.sql");
             //15 lines skipped to avoid license headers

@@ -65,8 +65,8 @@ public class GeneratedSourcesTestUtils {
     }
 
     private static final PrintStream errStream = System.err;
-    public static final String GENERATED_SOURCES_DIRECTORY =
-            Paths.get("build", "generated-sources").toString();
+    public static final String GENERATED_SOURCES_DIRECTORY = Paths.get("build", "generated-sources")
+            .toString();
 
     public static final String INPUT_RESOURCES_DIRECTORY =
             Paths.get("src", "test", "resources", "test-src", "input").toString();

@@ -24,7 +24,9 @@ hs_err_pid*
 
 build
 .gradle/
-target
+
+/target/
+!persist-cli-tests/src/resources/test-src/**/target/
 
 # IDEA Files
 .idea/
