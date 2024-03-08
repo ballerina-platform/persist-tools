@@ -19,11 +19,11 @@
 package io.ballerina.persist.utils;
 
 
-import io.ballerina.persist.introspectiondto.SQLColumn;
-import io.ballerina.persist.introspectiondto.SQLEnum;
-import io.ballerina.persist.introspectiondto.SQLForeignKey;
-import io.ballerina.persist.introspectiondto.SQLIndex;
-import io.ballerina.persist.introspectiondto.SQLTable;
+import io.ballerina.persist.introspectiondto.SqlColumn;
+import io.ballerina.persist.introspectiondto.SqlEnum;
+import io.ballerina.persist.introspectiondto.SqlForeignKey;
+import io.ballerina.persist.introspectiondto.SqlIndex;
+import io.ballerina.persist.introspectiondto.SqlTable;
 
 import java.io.BufferedReader;
 import java.io.Reader;
@@ -140,12 +140,12 @@ public class ScriptRunner {
         }
     }
 
-    public List<SQLTable> getSQLTables(String query) throws SQLException {
-        List<SQLTable> tables = new ArrayList<>();
+    public List<SqlTable> getSQLTables(String query) throws SQLException {
+        List<SqlTable> tables = new ArrayList<>();
         try (Statement statement = connection.createStatement()) {
             try (ResultSet results = statement.executeQuery(query)) {
                 while (results.next()) {
-                    tables.add(SQLTable.newBuilder(results.getString("table_name"))
+                    tables.add(SqlTable.newBuilder(results.getString("table_name"))
                             .setTableComment(results.getString("table_comment"))
                             .setCreateOptions(results.getString("create_options")).build());
                 }
@@ -161,12 +161,12 @@ public class ScriptRunner {
         }
     }
 
-    public List<SQLEnum> getSQLEnums(String query) throws SQLException {
-        List<SQLEnum> enums = new ArrayList<>();
+    public List<SqlEnum> getSQLEnums(String query) throws SQLException {
+        List<SqlEnum> enums = new ArrayList<>();
         try (Statement statement = connection.createStatement()) {
             try (ResultSet results = statement.executeQuery(query)) {
                 while (results.next()) {
-                    enums.add(new SQLEnum(
+                    enums.add(new SqlEnum(
                             results.getString("full_enum_type"),
                             results.getString("table_name"),
                             results.getString("column_name")
@@ -181,11 +181,11 @@ public class ScriptRunner {
         }
     }
 
-    public void readColumnsOfSQLTable(SQLTable table, String query) throws SQLException {
+    public void readColumnsOfSQLTable(SqlTable table, String query) throws SQLException {
         try (Statement statement = connection.createStatement()) {
             try (ResultSet results = statement.executeQuery(query)) {
                 while (results.next()) {
-                    SQLColumn column = SQLColumn.newBuilder(results.getString("column_name"))
+                    SqlColumn column = SqlColumn.newBuilder(results.getString("column_name"))
                             .setTableName(results.getString("table_name"))
                             .setDataType(results.getString("data_type"))
                             .setFullDataType(results.getString("full_data_type"))
@@ -210,17 +210,17 @@ public class ScriptRunner {
         }
     }
 
-    public List<SQLForeignKey> readForeignKeysOfSQLTable(SQLTable table, String query) throws SQLException {
-        List<SQLForeignKey> sqlForeignKeys = new ArrayList<>();
+    public List<SqlForeignKey> readForeignKeysOfSQLTable(SqlTable table, String query) throws SQLException {
+        List<SqlForeignKey> sqlForeignKeys = new ArrayList<>();
         try (Statement statement = connection.createStatement()) {
             try (ResultSet results = statement.executeQuery(query)) {
                 while (results.next()) {
                     String constraintName = results.getString("constraint_name");
-                    SQLForeignKey existingForeignKey = table.getSqlForeignKeys().stream().filter(
+                    SqlForeignKey existingForeignKey = table.getSqlForeignKeys().stream().filter(
                                     fKey -> fKey.getConstraintName().equals(constraintName))
                             .findFirst().orElse(null);
                     if (existingForeignKey == null) {
-                        SQLForeignKey foreignKey = SQLForeignKey.Builder
+                        SqlForeignKey foreignKey = SqlForeignKey.Builder
                                 .newBuilder(results.getString("constraint_name"))
                                 .setTableName(results.getString("table_name"))
                                 .addColumnName(results.getString("column_name"))
@@ -246,16 +246,16 @@ public class ScriptRunner {
         }
     }
 
-    public void readIndexesOfSQLTable(SQLTable table, String query) throws SQLException {
+    public void readIndexesOfSQLTable(SqlTable table, String query) throws SQLException {
         try (Statement statement = connection.createStatement()) {
             try (ResultSet results = statement.executeQuery(query)) {
                 while (results.next()) {
                     String indexName = results.getString("index_name");
-                    SQLIndex existingIndex = table.getIndexes().stream().filter(
+                    SqlIndex existingIndex = table.getIndexes().stream().filter(
                             index -> index.getIndexName().equals(indexName))
                             .findFirst().orElse(null);
                     if (existingIndex == null) {
-                        table.addIndex(SQLIndex.Builder.newBuilder(results.getString("index_name"))
+                        table.addIndex(SqlIndex.Builder.newBuilder(results.getString("index_name"))
                                 .setTableName(results.getString("table_name"))
                                 .addColumnName(results.getString("column_name"))
                                 .setPartial(results.getString("partial"))

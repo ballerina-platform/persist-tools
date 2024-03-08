@@ -24,7 +24,6 @@ public class Index {
     private final String indexName;
     private List<EntityField> fields;
     private boolean unique;
-
     public Index(String indexName, List<EntityField> fields, boolean unique) {
         this.indexName = indexName;
         this.fields = fields;
@@ -42,7 +41,6 @@ public class Index {
     public void addField(EntityField field) {
         fields.add(field);
     }
-
 
     public boolean isUnique() {
         return unique;

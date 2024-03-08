@@ -21,16 +21,16 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class SQLTable {
+public class SqlTable {
     private final String tableName;
     private final String createOptions;
     private final String tableComment;
-    private final List<SQLColumn> columns;
-    private final List<SQLForeignKey> sqlForeignKeys;
+    private final List<SqlColumn> columns;
+    private final List<SqlForeignKey> sqlForeignKeys;
 
-    private final List<SQLIndex> indexes;
+    private final List<SqlIndex> indexes;
 
-    public SQLTable(String tableName, String createOptions, String tableComment) {
+    public SqlTable(String tableName, String createOptions, String tableComment) {
         this.tableName = tableName;
         this.createOptions = createOptions;
         this.tableComment = tableComment;
@@ -43,38 +43,35 @@ public class SQLTable {
         return tableName;
     }
 
-
     public String getCreateOptions() {
         return createOptions;
     }
-
 
     public String getTableComment() {
         return tableComment;
     }
 
-
-    public List<SQLColumn> getColumns() {
+    public List<SqlColumn> getColumns() {
         return Collections.unmodifiableList(columns);
     }
 
-    public List<SQLForeignKey> getSqlForeignKeys() {
+    public List<SqlForeignKey> getSqlForeignKeys() {
         return Collections.unmodifiableList(sqlForeignKeys);
     }
 
-    public List<SQLIndex> getIndexes() {
+    public List<SqlIndex> getIndexes() {
         return Collections.unmodifiableList(indexes);
     }
 
-    public void addColumn(SQLColumn column) {
+    public void addColumn(SqlColumn column) {
         this.columns.add(column);
     }
 
-    public void addForeignKey(SQLForeignKey foreignKey) {
+    public void addForeignKey(SqlForeignKey foreignKey) {
         this.sqlForeignKeys.add(foreignKey);
     }
 
-    public void addIndex(SQLIndex index) {
+    public void addIndex(SqlIndex index) {
         this.indexes.add(index);
     }
 
@@ -101,8 +98,8 @@ public class SQLTable {
             return this;
         }
 
-        public SQLTable build() {
-            return new SQLTable(tableName, createOptions,
+        public SqlTable build() {
+            return new SqlTable(tableName, createOptions,
                     tableComment);
         }
     }

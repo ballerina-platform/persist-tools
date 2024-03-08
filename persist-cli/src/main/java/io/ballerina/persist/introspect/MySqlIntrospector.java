@@ -17,12 +17,11 @@
  */
 package io.ballerina.persist.introspect;
 
-
 import java.sql.Connection;
 
-public class MySQLIntrospector extends Introspector {
+public class MySqlIntrospector extends Introspector {
 
-    public MySQLIntrospector(Connection connection, String databaseName) {
+    public MySqlIntrospector(Connection connection, String databaseName) {
         super(connection, databaseName);
     }
 

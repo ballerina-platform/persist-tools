@@ -19,9 +19,9 @@ package io.ballerina.persist.introspect;
 
 import io.ballerina.persist.inflector.CaseConverter;
 import io.ballerina.persist.inflector.Pluralizer;
-import io.ballerina.persist.introspectiondto.SQLEnum;
-import io.ballerina.persist.introspectiondto.SQLForeignKey;
-import io.ballerina.persist.introspectiondto.SQLTable;
+import io.ballerina.persist.introspectiondto.SqlEnum;
+import io.ballerina.persist.introspectiondto.SqlForeignKey;
+import io.ballerina.persist.introspectiondto.SqlTable;
 import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.Enum;
@@ -46,9 +46,6 @@ import java.util.regex.Pattern;
 
 import static java.lang.Integer.parseInt;
 
-
-
-
 /**
  * Database Introspector class.
  *
@@ -64,14 +61,14 @@ public abstract class Introspector {
     protected abstract String getForeignKeysQuery(String tableName);
     protected abstract String getEnumsQuery();
 
-    private List<SQLTable> tables;
+    private List<SqlTable> tables;
 
-    private List<SQLEnum> sqlEnums;
+    private List<SqlEnum> sqlEnums;
     private final Module.Builder moduleBuilder;
 
     private final Map<String, Entity> entityMap;
 
-    private final List<SQLForeignKey> sqlForeignKeys;
+    private final List<SqlForeignKey> sqlForeignKeys;
 
     public Introspector(Connection connection, String databaseName) {
         this.connection = connection;
@@ -87,16 +84,12 @@ public abstract class Introspector {
         ScriptRunner sr = new ScriptRunner(connection);
         this.tables = sr.getSQLTables(this.getTablesQuery());
         this.sqlEnums = sr.getSQLEnums(this.getEnumsQuery());
-        tables.forEach(table -> {
-            try {
-                sr.readColumnsOfSQLTable(table, this.getColumnsQuery(table.getTableName()));
-                this.sqlForeignKeys.addAll(sr.readForeignKeysOfSQLTable
-                        (table, this.getForeignKeysQuery(table.getTableName())));
-                sr.readIndexesOfSQLTable(table, this.getIndexesQuery(table.getTableName()));
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-        });
+        for (SqlTable table : tables) {
+            sr.readColumnsOfSQLTable(table, this.getColumnsQuery(table.getTableName()));
+            this.sqlForeignKeys.addAll(sr.readForeignKeysOfSQLTable
+                    (table, this.getForeignKeysQuery(table.getTableName())));
+            sr.readIndexesOfSQLTable(table, this.getIndexesQuery(table.getTableName()));
+        }
 
         mapEnums();
         mapEntities();
@@ -241,13 +234,10 @@ public abstract class Introspector {
 
             assocFieldBuilder.setArrayType(isReferenceMany);
             assocFieldBuilder.setOptionalType(!isReferenceMany);
-            ownerFieldBuilder.setRelationRefs(sqlForeignKey.getColumnNames().stream().map(
-                    columnName -> ownerEntityBuilder.build()
-                            .getFieldByColumnName(columnName).getFieldName()
-            ).toList());
+            ownerFieldBuilder.setRelationRefs(sqlForeignKey.getColumnNames().stream().map(columnName ->
+                    ownerEntityBuilder.build().getFieldByColumnName(columnName).getFieldName()).toList());
 
             EntityField ownerField = ownerFieldBuilder.build();
-
 
             assocEntityBuilder.addField(assocFieldBuilder.build());
             ownerEntityBuilder.addField(ownerField);
@@ -260,7 +250,7 @@ public abstract class Introspector {
         return CaseConverter.toSingularPascalCase(tableName) + CaseConverter.toSingularPascalCase(columnName);
     }
 
-    private Relation.RelationType inferRelationshipCardinality(Entity ownerEntity, SQLForeignKey foreignKey) {
+    private Relation.RelationType inferRelationshipCardinality(Entity ownerEntity, SqlForeignKey foreignKey) {
         List<EntityField> ownerColumns = new ArrayList<>();
         foreignKey.getColumnNames().forEach(columnName ->
                 ownerColumns.add(ownerEntity.getFieldByColumnName(columnName)));

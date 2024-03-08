@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class SQLIndex {
+public class SqlIndex {
     private final String tableName;
     private final String indexName;
     private final List<String> columnNames;
@@ -30,9 +30,8 @@ public class SQLIndex {
     private final String nonUnique;
     private final String indexType;
 
-    private SQLIndex(String indexName, String tableName, List<String> columnNames, String partial,
-                    String columnOrder, String nonUnique, String indexType) {
-
+    private SqlIndex(String indexName, String tableName, List<String> columnNames, String partial,
+                     String columnOrder, String nonUnique, String indexType) {
         this.indexName = indexName;
         this.tableName = tableName;
         this.columnNames = columnNames;
@@ -46,33 +45,25 @@ public class SQLIndex {
         return this.tableName;
     }
 
-
     public String getIndexName() {
         return indexName;
     }
-
 
     public List<String> getColumnNames() {
         return Collections.unmodifiableList(columnNames);
     }
 
-
     public String getPartial() {
         return partial;
     }
-
-
-
 
     public String getColumnOrder() {
         return columnOrder;
     }
 
-
     public String getNonUnique() {
         return nonUnique;
     }
-
 
     public String getIndexType() {
         return indexType;
@@ -135,8 +126,8 @@ public class SQLIndex {
             return this;
         }
 
-        public SQLIndex build() {
-            return new SQLIndex(indexName, tableName, columnNames, partial,
+        public SqlIndex build() {
+            return new SqlIndex(indexName, tableName, columnNames, partial,
                      columnOrder, nonUnique, indexType);
         }
     }

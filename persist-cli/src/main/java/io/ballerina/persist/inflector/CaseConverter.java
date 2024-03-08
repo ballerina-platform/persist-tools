@@ -20,7 +20,6 @@ package io.ballerina.persist.inflector;
 import java.util.Arrays;
 import java.util.Locale;
 
-
 public class CaseConverter {
     private CaseConverter() {}
     public static String toPascalCase(String word) {

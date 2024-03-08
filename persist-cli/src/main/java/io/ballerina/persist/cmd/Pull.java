@@ -23,7 +23,7 @@ import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.configuration.DatabaseConfiguration;
 import io.ballerina.persist.configuration.PersistConfiguration;
 import io.ballerina.persist.introspect.Introspector;
-import io.ballerina.persist.introspect.MySQLIntrospector;
+import io.ballerina.persist.introspect.MySqlIntrospector;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.DriverResolver;
 import io.ballerina.persist.nodegenerator.SourceGenerator;
@@ -100,7 +100,7 @@ public class Pull implements BLauncherCmd {
         try {
             validatePullCommandOptions(datastore, host, port, user, database);
         } catch (BalException e) {
-            errStream.println("Invalid Option(s): \n" + e.getMessage());
+            errStream.println("Invalid Option(s): " + System.lineSeparator() + e.getMessage());
             return;
         }
 
@@ -137,7 +137,7 @@ public class Pull implements BLauncherCmd {
             errStream.print(yellowColor + "A model.bal file already exists. " +
                     "Continuing would overwrite it. Do you wish to continue? (y/n) " + resetColor);
             String input = scanner.nextLine();
-            if (!input.toLowerCase(Locale.ENGLISH).equals("y")) {
+            if (!(input.toLowerCase(Locale.ENGLISH).equals("y") || input.toLowerCase(Locale.ENGLISH).equals("yes"))) {
                 errStream.println("Introspection aborted.");
                 return;
             }
@@ -170,7 +170,7 @@ public class Pull implements BLauncherCmd {
 
             try (Connection connection = databaseConnector.getConnection(driver, persistConfigurations, true)) {
 
-                Introspector introspector = new MySQLIntrospector(connection,
+                Introspector introspector = new MySqlIntrospector(connection,
                         persistConfigurations.getDbConfig().getDatabase());
 
                 entityModule = introspector.introspectDatabase();
@@ -185,8 +185,7 @@ public class Pull implements BLauncherCmd {
                 return;
             }
         } catch (BalException e) {
-            errStream.printf("ERROR: database introspection failed. %s%n",
-                     e.getMessage());
+            errStream.printf("ERROR: database introspection failed. %s%n", e.getMessage());
             deleteDriverFile(driverResolver);
             return;
         } catch (IOException e) {
@@ -195,21 +194,20 @@ public class Pull implements BLauncherCmd {
             return;
         }
 
-        SourceGenerator sourceGenerator = new SourceGenerator(sourcePath,
-                Paths.get(sourcePath, PERSIST_DIRECTORY),
+        SourceGenerator sourceGenerator = new SourceGenerator(sourcePath, Paths.get(sourcePath, PERSIST_DIRECTORY),
                 "Introspect.db", entityModule);
 
         try {
             sourceGenerator.createDbModel();
         } catch (BalException e) {
             errStream.printf(String.format("ERROR: failed to generate model for introspected database: %s%n",
-                     e.getMessage()));
+                    e.getMessage()));
             deleteDriverFile(driverResolver);
             return;
         }
 
         deleteDriverFile(driverResolver);
-        errStream.println("Introspection complete! model.bal file created successfully.");
+        errStream.println("Introspection complete! The model.bal file created successfully.");
     }
 
     @Override

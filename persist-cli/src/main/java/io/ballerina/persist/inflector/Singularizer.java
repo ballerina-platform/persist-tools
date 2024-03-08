@@ -17,7 +17,6 @@
  */
 package io.ballerina.persist.inflector;
 
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 

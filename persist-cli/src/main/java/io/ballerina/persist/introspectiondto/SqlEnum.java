@@ -17,12 +17,12 @@
  */
 package io.ballerina.persist.introspectiondto;
 
-public class SQLEnum {
+public class SqlEnum {
     private final String fullEnumText;
     private final String enumTableName;
     private final String enumColumnName;
 
-    public SQLEnum(String fullEnumText, String enumTableName, String enumColumnName) {
+    public SqlEnum(String fullEnumText, String enumTableName, String enumColumnName) {
         this.fullEnumText = fullEnumText;
         this.enumTableName = enumTableName;
         this.enumColumnName = enumColumnName;

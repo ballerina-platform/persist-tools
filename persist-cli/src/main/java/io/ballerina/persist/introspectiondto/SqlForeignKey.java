@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class SQLForeignKey {
+public class SqlForeignKey {
     private final String constraintName;
     private final String tableName;
     private List<String> columnNames;
@@ -30,20 +30,20 @@ public class SQLForeignKey {
     private final String updateRule;
     private final String deleteRule;
 
-
     public String getConstraintName() {
         return constraintName;
     }
+
     public String getTableName() {
         return tableName;
     }
+
     public List<String> getColumnNames() {
         return Collections.unmodifiableList(columnNames);
     }
 
-    public SQLForeignKey(String constraintName, String tableName, List<String> columnNames, String referencedTableName,
-                         List<String> referencedColumnNames, String updateRule, String deleteRule
-                          ) {
+    public SqlForeignKey(String constraintName, String tableName, List<String> columnNames, String referencedTableName,
+                         List<String> referencedColumnNames, String updateRule, String deleteRule) {
         this.constraintName = constraintName;
         this.tableName = tableName;
         this.columnNames = Collections.unmodifiableList(columnNames);
@@ -68,7 +68,6 @@ public class SQLForeignKey {
     public String getDeleteRule() {
         return deleteRule;
     }
-
 
     public void addColumnName(String columnName) {
         List<String> newColumnNames = new ArrayList<>(this.columnNames);
@@ -131,8 +130,8 @@ public class SQLForeignKey {
             return this;
         }
 
-        public SQLForeignKey build() {
-            return new SQLForeignKey(constraintName, tableName, columnNames, referencedTableName, referencedColumnNames,
+        public SqlForeignKey build() {
+            return new SqlForeignKey(constraintName, tableName, columnNames, referencedTableName, referencedColumnNames,
                     updateRule, deleteRule);
         }
     }

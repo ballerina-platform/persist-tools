@@ -17,7 +17,7 @@
  */
 package io.ballerina.persist.introspectiondto;
 
-public class SQLColumn {
+public class SqlColumn {
     private final String columnName;
     private final String tableName;
     private final String dataType;
@@ -30,12 +30,10 @@ public class SQLColumn {
     private final String isNullable;
     private final String extra;
     private final String columnComment;
-
     private final boolean isPrimaryKey;
-
     private final boolean isDbGenerated;
 
-    private SQLColumn(String columnName, String tableName, String dataType, String fullDataType,
+    private SqlColumn(String columnName, String tableName, String dataType, String fullDataType,
                       String characterMaximumLength, String numericPrecision, String numericScale,
                       String datetimePrecision, String columnDefault, String isNullable, String extra,
                       String columnComment, Boolean isPrimaryKey, Boolean isDbGenerated) {
@@ -71,31 +69,25 @@ public class SQLColumn {
         return fullDataType;
     }
 
-
     public String getCharacterMaximumLength() {
         return characterMaximumLength;
     }
-
 
     public String getNumericPrecision() {
         return numericPrecision;
     }
 
-
     public String getNumericScale() {
         return numericScale;
     }
-
 
     public String getDatetimePrecision() {
         return datetimePrecision;
     }
 
-
     public String getColumnDefault() {
         return columnDefault;
     }
-
 
     public String getIsNullable() {
         return isNullable;
@@ -104,7 +96,6 @@ public class SQLColumn {
     public Boolean isDbGenerated() {
         return isDbGenerated;
     }
-
 
     public String getExtra() {
         return extra;
@@ -118,7 +109,7 @@ public class SQLColumn {
         return isPrimaryKey;
     }
 
-    public static SQLColumn.Builder newBuilder(String columnName) {
+    public static SqlColumn.Builder newBuilder(String columnName) {
         return new Builder(columnName);
     }
 
@@ -206,13 +197,11 @@ public class SQLColumn {
             return this;
         }
 
-        public SQLColumn build() {
-            return new SQLColumn(this.columnName, this.tableName, this.dataType, this.fullDataType,
+        public SqlColumn build() {
+            return new SqlColumn(this.columnName, this.tableName, this.dataType, this.fullDataType,
                     this.characterMaximumLength, this.numericPrecision, this.numericScale, this.datetimePrecision,
                     this.columnDefault, this.isNullable, this.extra, this.columnComment, this.isPrimaryKey,
-                    this.isDbGenerated
-                    );
+                    this.isDbGenerated);
         }
     }
-
 }

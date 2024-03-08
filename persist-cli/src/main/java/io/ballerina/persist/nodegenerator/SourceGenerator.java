@@ -75,15 +75,10 @@ public class SourceGenerator {
 
     public void createDbModel() throws BalException {
         DbModelGenSyntaxTree dbModelGenSyntaxTree = new DbModelGenSyntaxTree();
-        try {
-            addModelFile(dbModelGenSyntaxTree.getDataModels(entityModule),
-                    this.generatedSourceDirPath.resolve(persistModelBal).toAbsolutePath(),
-                    this.moduleNameWithPackageName);
-        } catch (BalException e) {
-            throw new BalException(e.getMessage());
-        }
+        addModelFile(dbModelGenSyntaxTree.getDataModels(entityModule),
+                this.generatedSourceDirPath.resolve(persistModelBal).toAbsolutePath(),
+                this.moduleNameWithPackageName);
     }
-
 
     private void addModelFile(SyntaxTree syntaxTree, Path path, String moduleName) throws BalException {
         try {
