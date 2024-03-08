@@ -653,8 +653,8 @@ public class BalProjectUtils {
         } else if (database.isEmpty()) {
             errors.add("The database cannot be empty.");
         } else if (!Pattern.matches(nameRegex, database)) {
-            errors.add("The database name is invalid. The database name should start with a letter or underscore(_)" +
-                    "and must contain only alphanumeric characters.");
+            errors.add("The database name is invalid. The database name should start with a letter or underscore (_)" +
+                    " and must contain only alphanumeric characters.");
         }
         if (!errors.isEmpty()) {
             throw new BalException(String.join(System.lineSeparator(), errors));
