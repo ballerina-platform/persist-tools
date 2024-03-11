@@ -393,6 +393,15 @@ public class ToolingDbPullTest {
         assertGeneratedSources(subDir);
     }
 
+    @Test(enabled = true)
+    @Description("Create a model.bal file consisting of a blob type field.")
+    public void pullTestWithBlobTypeField() throws BalException {
+        String subDir = "tool_test_pull_25_mysql";
+        createFromDatabaseScript(subDir, "mysql", databaseConfig);
+        executeDefaultPullCommand(subDir);
+        assertGeneratedSources(subDir);
+    }
+
     private static void executeDefaultPullCommand(String subDir) throws BalException {
         try {
             Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Pull");
