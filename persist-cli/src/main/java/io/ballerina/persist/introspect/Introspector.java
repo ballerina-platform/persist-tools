@@ -146,7 +146,7 @@ public abstract class Introspector {
                         CaseConverter.toCamelCase(column.getColumnName()));
 
                 fieldBuilder.setFieldColumnName(column.getColumnName());
-
+                fieldBuilder.setArrayType(false);
                 if (Objects.equals(column.getDataType(), "enum")) {
                     fieldBuilder.setType(createEnumName(table.getTableName(), column.getColumnName()));
                 } else {
@@ -163,10 +163,10 @@ public abstract class Introspector {
                     String balType = sqlType.getBalType();
                     fieldBuilder.setType(balType);
                     fieldBuilder.setSqlType(sqlType);
+                    fieldBuilder.setArrayType(sqlType.isArrayType());
                 }
 
                 fieldBuilder.setOptionalType(column.getIsNullable().equals("YES"));
-                fieldBuilder.setArrayType(false);
                 fieldBuilder.setIsDbGenerated(column.isDbGenerated());
 
                 EntityField entityField = fieldBuilder.build();

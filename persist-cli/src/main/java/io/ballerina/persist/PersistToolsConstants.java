@@ -108,6 +108,7 @@ public class PersistToolsConstants {
         public static final String DATE_TIME = "DATETIME";
         public static final String DATE_TIME2 = "DATETIME2";
         public static final String LONG_BLOB = "LONGBLOB";
+        public static final String BLOB = "BLOB";
         public static final String VARBINARY = "VARBINARY(MAX)";
         public static final String BYTEA = "BYTEA";
     }

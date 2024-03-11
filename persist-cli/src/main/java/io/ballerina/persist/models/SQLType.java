@@ -62,6 +62,10 @@ public class SQLType {
         return maxLength;
     }
 
+    public boolean isArrayType() {
+        return this.typeName.equals(PersistToolsConstants.SqlTypes.BLOB) ||
+                this.typeName.equals(PersistToolsConstants.SqlTypes.LONG_BLOB);
+    }
     public String getBalType() {
         switch (this.typeName) {
 
@@ -77,8 +81,8 @@ public class SQLType {
             // MSSQL --> BIT
             // PostgreSQL --> BOOLEAN
             case PersistToolsConstants.SqlTypes.BIT:
-                case PersistToolsConstants.SqlTypes.BOOLEAN:
-                    return PersistToolsConstants.BallerinaTypes.BOOLEAN;
+            case PersistToolsConstants.SqlTypes.BOOLEAN:
+                return PersistToolsConstants.BallerinaTypes.BOOLEAN;
 
             // Ballerina --> decimal
             // MySQL --> DECIMAL(65,30)
@@ -92,8 +96,8 @@ public class SQLType {
             // MSSQL --> FLOAT
             // PostgreSQL --> FLOAT
             case PersistToolsConstants.SqlTypes.DOUBLE:
-                case PersistToolsConstants.SqlTypes.FLOAT:
-                    return PersistToolsConstants.BallerinaTypes.FLOAT;
+            case PersistToolsConstants.SqlTypes.FLOAT:
+                return PersistToolsConstants.BallerinaTypes.FLOAT;
 
             // Ballerina --> time:Date
             // MySQL --> DATE
@@ -126,6 +130,10 @@ public class SQLType {
             case PersistToolsConstants.SqlTypes.VARCHAR:
             case PersistToolsConstants.SqlTypes.CHAR:
                 return PersistToolsConstants.BallerinaTypes.STRING;
+
+            case PersistToolsConstants.SqlTypes.LONG_BLOB:
+            case PersistToolsConstants.SqlTypes.BLOB:
+                return PersistToolsConstants.BallerinaTypes.BYTE;
 
             default:
                 throw new RuntimeException
