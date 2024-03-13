@@ -100,7 +100,7 @@ public class Pull implements BLauncherCmd {
         try {
             validatePullCommandOptions(datastore, host, port, user, database);
         } catch (BalException e) {
-            errStream.println("Invalid Option(s): " + System.lineSeparator() + e.getMessage());
+            errStream.println("ERROR: invalid option(s): " + System.lineSeparator() + e.getMessage());
             return;
         }
 
@@ -134,7 +134,7 @@ public class Pull implements BLauncherCmd {
         if (modelFile) {
             String yellowColor = "\u001B[33m";
             String resetColor = "\u001B[0m";
-            errStream.print(yellowColor + "A model.bal file already exists. " +
+            errStream.print(yellowColor + "[WARNING] A model.bal file already exists. " +
                     "Continuing would overwrite it. Do you wish to continue? (y/n) " + resetColor);
             String input = scanner.nextLine();
             if (!(input.toLowerCase(Locale.ENGLISH).equals("y") || input.toLowerCase(Locale.ENGLISH).equals("yes"))) {

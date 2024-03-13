@@ -74,9 +74,7 @@ public class DatabaseConnector {
         String provider = persistConfigurations.getProvider();
         String url;
         if (withDB) {
-            url = String.format(this.jdbcUrlWithDatabaseFormat, provider,
-                    host, port,
-                    database);
+            url = String.format(this.jdbcUrlWithDatabaseFormat, provider, host, port, database);
         } else {
             url = String.format(JDBC_URL_WITHOUT_DATABASE, provider, host, port);
         }
@@ -198,6 +196,7 @@ public class DatabaseConnector {
         String password;
         Console console = System.console();
         if (console == null) {
+            errStream.println("[WARNING] console could not be detected. falling back to standard input.");
             errStream.print("Database Password: ");
             password = scanner.nextLine();
         } else {
