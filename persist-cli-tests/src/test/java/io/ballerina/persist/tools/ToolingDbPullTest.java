@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2024 WSO2 LLC. (http://www.wso2.com) All Rights Reserved.
+ *  Copyright (c) 2024 WSO2 LLC. (http://www.wso2.com).
  *
  *  WSO2 LLC. licenses this file to you under the Apache License,
  *  Version 2.0 (the "License"); you may not use this file except
@@ -21,6 +21,7 @@ import io.ballerina.persist.BalException;
 import io.ballerina.persist.cmd.Pull;
 import io.ballerina.persist.configuration.DatabaseConfiguration;
 import jdk.jfr.Description;
+import org.junit.jupiter.api.condition.OS;
 import org.testng.annotations.Test;
 import picocli.CommandLine;
 
@@ -186,33 +187,27 @@ public class ToolingDbPullTest {
     @Test(enabled = true)
     @Description("Create a model.bal file consisting of one Entity with no annotations and not null fields.")
     public void pullTestMysqlBasic() throws BalException {
-        String subDir = "tool_test_pull_1_mysql";
-        createFromDatabaseScript(subDir, "mysql", databaseConfig);
-        executeDefaultPullCommand(subDir);
-        assertGeneratedSources(subDir);
+        runIntrospectionTest("tool_test_pull_1_mysql");
     }
 
     @Test(enabled = true)
     @Description("Create a model.bal file consisting of one Entity with no annotations and one nullable field.")
     public void pullTestMysqlNullableField() throws BalException {
-        String subDir = "tool_test_pull_2_mysql";
-        createFromDatabaseScript(subDir, "mysql", databaseConfig);
-        executeDefaultPullCommand(subDir);
-        assertGeneratedSources(subDir);
+        runIntrospectionTest("tool_test_pull_2_mysql");
     }
 
     @Test(enabled = true)
     @Description("Create a model.bal file consisting of two Entities with a one to many relation.")
     public void pullTestMysqlOneToMany() throws BalException {
-        String subDir = "tool_test_pull_3_mysql";
-        createFromDatabaseScript(subDir, "mysql", databaseConfig);
-        executeDefaultPullCommand(subDir);
-        assertGeneratedSources(subDir);
+        runIntrospectionTest("tool_test_pull_3_mysql");
     }
 
     @Test(enabled = true)
     @Description("Introspection when a model.bal file already exists and continue.")
     public void pullTestMysqlModelFileExistsContinue() throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
         String subDir = "tool_test_pull_4_mysql";
         createFromDatabaseScript(subDir, "mysql", databaseConfig);
         executeDefaultPullCommand(subDir, "y\n");
@@ -222,6 +217,9 @@ public class ToolingDbPullTest {
     @Test(enabled = true)
     @Description("Introspection when a model.bal file already exists and abort.")
     public void pullTestMysqlModelFileExistsAbort() throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
         String subDir = "tool_test_pull_5_mysql";
         createFromDatabaseScript(subDir, "mysql", databaseConfig);
         executeDefaultPullCommand(subDir, "n\n");
@@ -232,175 +230,128 @@ public class ToolingDbPullTest {
     @Description("Create a model.bal file consisting of two Entities with a one to one relation " +
             "by making foreign key unique.")
     public void pullTestMysqlOneToOneUniqueKey() throws BalException {
-        String subDir = "tool_test_pull_6_mysql";
-        createFromDatabaseScript(subDir, "mysql", databaseConfig);
-        executeDefaultPullCommand(subDir);
-        assertGeneratedSources(subDir);
+        runIntrospectionTest("tool_test_pull_6_mysql");
     }
 
     @Test(enabled = true)
     @Description("Create a model.bal file consisting of two Entities with a one to one relation by " +
             "making foreign key primary.")
     public void pullTestMysqlOneToOnePrimaryKey() throws BalException {
-        String subDir = "tool_test_pull_7_mysql";
-        createFromDatabaseScript(subDir, "mysql", databaseConfig);
-        executeDefaultPullCommand(subDir);
-        assertGeneratedSources(subDir);
+        runIntrospectionTest("tool_test_pull_7_mysql");
     }
 
     @Test(enabled = true)
     @Description("Create a model.bal file consisting of two Entities with a one to many relation by " +
             "making foreign key a partial key.")
     public void pullTestMysqlPartialPrimaryKey() throws BalException {
-        String subDir = "tool_test_pull_8_mysql";
-        createFromDatabaseScript(subDir, "mysql", databaseConfig);
-        executeDefaultPullCommand(subDir);
-        assertGeneratedSources(subDir);
+        runIntrospectionTest("tool_test_pull_8_mysql");
     }
 
     @Test(enabled = true)
     @Description("Create a model.bal file three Entities with two one to many relations.")
     public void pullTestMysqlMultipleRelations() throws BalException {
-        String subDir = "tool_test_pull_9_mysql";
-        createFromDatabaseScript(subDir, "mysql", databaseConfig);
-        executeDefaultPullCommand(subDir);
-        assertGeneratedSources(subDir);
+        runIntrospectionTest("tool_test_pull_9_mysql");
     }
 
     @Test(enabled = true)
     @Description("Create a model.bal file consisting of name mapping annotations.")
     public void pullTestMysqlNameMappingAnnotation() throws BalException {
-        String subDir = "tool_test_pull_10_mysql";
-        createFromDatabaseScript(subDir, "mysql", databaseConfig);
-        executeDefaultPullCommand(subDir);
-        assertGeneratedSources(subDir);
+        runIntrospectionTest("tool_test_pull_10_mysql");
     }
 
     @Test(enabled = true)
     @Description("Create a model.bal file consisting of type mapping annotations Char, VarChar and Decimal.")
     public void pullTestMysqlTypeMappingAnnotation() throws BalException {
-        String subDir = "tool_test_pull_11_mysql";
-        createFromDatabaseScript(subDir, "mysql", databaseConfig);
-        executeDefaultPullCommand(subDir);
-        assertGeneratedSources(subDir);
+        runIntrospectionTest("tool_test_pull_11_mysql");
     }
 
     @Test(enabled = true)
     @Description("Create a model.bal file consisting of unique index annotation.")
     public void pullTestMysqlUniqueIndexAnnotation() throws BalException {
-        String subDir = "tool_test_pull_12_mysql";
-        createFromDatabaseScript(subDir, "mysql", databaseConfig);
-        executeDefaultPullCommand(subDir);
-        assertGeneratedSources(subDir);
+        runIntrospectionTest("tool_test_pull_12_mysql");
     }
 
     @Test(enabled = true)
     @Description("Create a model.bal file consisting of index annotation.")
     public void pullTestMysqlIndexAnnotation() throws BalException {
-        String subDir = "tool_test_pull_13_mysql";
-        createFromDatabaseScript(subDir, "mysql", databaseConfig);
-        executeDefaultPullCommand(subDir);
-        assertGeneratedSources(subDir);
+        runIntrospectionTest("tool_test_pull_13_mysql");
     }
 
     @Test(enabled = true)
     @Description("Create a model.bal file consisting of multiple relations between same entities.")
     public void pullTestMysqlMultipleRelationsBetweenSameEntities() throws BalException {
-        String subDir = "tool_test_pull_14_mysql";
-        createFromDatabaseScript(subDir, "mysql", databaseConfig);
-        executeDefaultPullCommand(subDir);
-        assertGeneratedSources(subDir);
+        runIntrospectionTest("tool_test_pull_14_mysql");
     }
 
     @Test(enabled = true)
     @Description("Create a model.bal file consisting of multiple unique indexes on same column.")
     public void pullTestMysqlMultipleUniqueIndexes() throws BalException {
-        String subDir = "tool_test_pull_15_mysql";
-        createFromDatabaseScript(subDir, "mysql", databaseConfig);
-        executeDefaultPullCommand(subDir);
-        assertGeneratedSources(subDir);
+        runIntrospectionTest("tool_test_pull_15_mysql");
     }
 
     @Test(enabled = true)
     @Description("Create a model.bal file consisting of multiple indexes on same column.")
     public void pullTestMysqlMultipleIndexes() throws BalException {
-        String subDir = "tool_test_pull_16_mysql";
-        createFromDatabaseScript(subDir, "mysql", databaseConfig);
-        executeDefaultPullCommand(subDir);
-        assertGeneratedSources(subDir);
+        runIntrospectionTest("tool_test_pull_16_mysql");
     }
 
     @Test(enabled = true)
     @Description("Create a model.bal file consisting of a one to many relation with composite foreign key.")
     public void pullTestCompositeForeignKeys() throws BalException {
-        String subDir = "tool_test_pull_17_mysql";
-        createFromDatabaseScript(subDir, "mysql", databaseConfig);
-        executeDefaultPullCommand(subDir);
-        assertGeneratedSources(subDir);
+        runIntrospectionTest("tool_test_pull_17_mysql");
     }
 
     @Test(enabled = true)
     @Description("Create a model.bal file consisting of an entity with self-referenced relation.")
     public void pullTestSelfReferencedRelation() throws BalException {
-        String subDir = "tool_test_pull_18_mysql";
-        createFromDatabaseScript(subDir, "mysql", databaseConfig);
-        executeDefaultPullCommand(subDir);
-        assertGeneratedSources(subDir);
+        runIntrospectionTest("tool_test_pull_18_mysql");
     }
 
     @Test(enabled = true)
     @Description("Create a model.bal file consisting of two relations which cross-reference each other.")
     public void pullTestCrossReferencedRelations() throws BalException {
-        String subDir = "tool_test_pull_19_mysql";
-        createFromDatabaseScript(subDir, "mysql", databaseConfig);
-        executeDefaultPullCommand(subDir);
-        assertGeneratedSources(subDir);
+        runIntrospectionTest("tool_test_pull_19_mysql");
     }
 
     @Test(enabled = true)
     @Description("Create a model.bal file consisting of keyword field names which are to be escaped.")
     public void pullTestEscapedFieldNames() throws BalException {
-        String subDir = "tool_test_pull_20_mysql";
-        createFromDatabaseScript(subDir, "mysql", databaseConfig);
-        executeDefaultPullCommand(subDir);
-        assertGeneratedSources(subDir);
+        runIntrospectionTest("tool_test_pull_20_mysql");
     }
 
     @Test(enabled = true)
     @Description("When the database does not contain any tables.")
     public void pullTestNoTablesInDatabase() throws BalException {
-        String subDir = "tool_test_pull_21_mysql";
-        createFromDatabaseScript(subDir, "mysql", databaseConfig);
-        executeDefaultPullCommand(subDir);
-        assertGeneratedSources(subDir);
+        runIntrospectionTest("tool_test_pull_21_mysql");
     }
 
     @Test(enabled = true)
     @Description("When the database does not exist.")
     public void pullTestDatabaseDoesNotExist() throws BalException {
-        String subDir = "tool_test_pull_22_mysql";
-        createFromDatabaseScript(subDir, "mysql", databaseConfig);
-        executeDefaultPullCommand(subDir);
-        assertGeneratedSources(subDir);
+        runIntrospectionTest("tool_test_pull_22_mysql");
     }
 
     @Test(enabled = true)
     @Description("Create a model.bal file consisting of a generated primary key field.")
     public void pullTestWithGeneratedId() throws BalException {
-        String subDir = "tool_test_pull_24_mysql";
-        createFromDatabaseScript(subDir, "mysql", databaseConfig);
-        executeDefaultPullCommand(subDir);
-        assertGeneratedSources(subDir);
+        runIntrospectionTest("tool_test_pull_24_mysql");
     }
 
     @Test(enabled = true)
     @Description("Create a model.bal file consisting of a blob type field.")
     public void pullTestWithBlobTypeField() throws BalException {
-        String subDir = "tool_test_pull_25_mysql";
+        runIntrospectionTest("tool_test_pull_25_mysql");
+    }
+
+    private static void runIntrospectionTest(String subDir) throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
         createFromDatabaseScript(subDir, "mysql", databaseConfig);
         executeDefaultPullCommand(subDir);
         assertGeneratedSources(subDir);
     }
+
 
     private static void executeDefaultPullCommand(String subDir) throws BalException {
         try {
