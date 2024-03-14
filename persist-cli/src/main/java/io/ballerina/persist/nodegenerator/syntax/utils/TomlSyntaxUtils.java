@@ -267,6 +267,8 @@ public class TomlSyntaxUtils {
                 return properties.get(PersistToolsConstants.TomlFileConstants.PERSIST_IN_MEMORY_VERSION).toString();
             } else if (datasource.equals(PersistToolsConstants.SupportedDataSources.GOOGLE_SHEETS)) {
                 return properties.get(PersistToolsConstants.TomlFileConstants.PERSIST_GOOGLE_SHEETS_VERSION).toString();
+            } else if (datasource.equals(PersistToolsConstants.SupportedDataSources.REDIS)) {
+                return properties.get(PersistToolsConstants.TomlFileConstants.PERSIST_REDIS_VERSION).toString();
             } else {
                 throw new BalException("ERROR: invalid datasource: " + datasource);
             }

@@ -38,18 +38,16 @@ import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.models.Relation;
 import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
-import io.ballerina.persist.nodegenerator.syntax.constants.RedisSyntaxConstants;
 import io.ballerina.persist.nodegenerator.syntax.constants.SyntaxTokenConstants;
 import io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils;
 
 import java.util.List;
+import java.util.Locale;
 
 public class RedisClientSyntax  implements ClientSyntax {
     private final Module entityModule;
     private final String datasource;
     private final String importPackage;
-    // private final String importDriver;
-    // private final String dbSpecifics;
     private final String nativeClass;
     private final String initDbClientMethodTemplate;
 
@@ -57,25 +55,19 @@ public class RedisClientSyntax  implements ClientSyntax {
         this.entityModule = entityModule;
         this.datasource = "redis";
         this.importPackage = this.datasource;
-        this.nativeClass = RedisSyntaxConstants.REDIS_PROCESSOR;
-        this.initDbClientMethodTemplate = RedisSyntaxConstants.INIT_DB_CLIENT_WITH_PARAMS;
+        this.nativeClass = BalSyntaxConstants.REDIS_PROCESSOR;
+        this.initDbClientMethodTemplate = BalSyntaxConstants.INIT_REDIS_DB_CLIENT_WITH_PARAMS;
     }
 
     public NodeList<ImportDeclarationNode> getImports() throws BalException {
         NodeList<ImportDeclarationNode> imports = BalSyntaxUtils.generateImport(entityModule);
-        // imports = imports.add(BalSyntaxUtils.getImportDeclarationNode(BalSyntaxConstants.KEYWORD_BALLERINA,
-        //         BalSyntaxConstants.SQL, null));
         imports = imports.add(BalSyntaxUtils.getImportDeclarationNode(BalSyntaxConstants.KEYWORD_BALLERINAX,
                 importPackage, null));
-        ImportPrefixNode prefix = NodeFactory.createImportPrefixNode(SyntaxTokenConstants.SYNTAX_TREE_AS,
-                AbstractNodeFactory.createToken(SyntaxKind.UNDERSCORE_KEYWORD));
-        // imports = imports.add(BalSyntaxUtils.getImportDeclarationNode(BalSyntaxConstants.KEYWORD_BALLERINAX,
-        //         importDriver, prefix));
 
         Token prefixToken = AbstractNodeFactory.createIdentifierToken("predis");
-        prefix = NodeFactory.createImportPrefixNode(SyntaxTokenConstants.SYNTAX_TREE_AS, prefixToken);
+        ImportPrefixNode prefix = NodeFactory.createImportPrefixNode(SyntaxTokenConstants.SYNTAX_TREE_AS, prefixToken);
         imports = imports.add(BalSyntaxUtils.getImportDeclarationNode(BalSyntaxConstants.KEYWORD_BALLERINAX,
-                BalSyntaxConstants.PERSIST_MODULE + "." + RedisSyntaxConstants.REDIS, prefix));
+                BalSyntaxConstants.PERSIST_MODULE + "." + BalSyntaxConstants.REDIS, prefix));
         return imports;
     }
 
@@ -88,7 +80,7 @@ public class RedisClientSyntax  implements ClientSyntax {
         Client clientObject = BalSyntaxUtils.generateClientSignature(true);
         clientObject.addMember(NodeParser.parseObjectMember(
                 String.format(BalSyntaxConstants.INIT_DB_CLIENT, this.datasource)), true);
-        clientObject.addMember(NodeParser.parseObjectMember(RedisSyntaxConstants.INIT_REDIS_CLIENT_MAP), true);
+        clientObject.addMember(NodeParser.parseObjectMember(BalSyntaxConstants.INIT_REDIS_CLIENT_MAP), true);
         clientObject.addMember(generateMetadataRecord(entityModule), true);
         return clientObject;
     }
@@ -113,7 +105,7 @@ public class RedisClientSyntax  implements ClientSyntax {
             }
             String constantName = BalSyntaxUtils.stripEscapeCharacter(BalSyntaxUtils.
                     getStringWithUnderScore(entity.getEntityName()));
-            String clientMapElement = String.format(RedisSyntaxConstants.PERSIST_CLIENT_MAP_ELEMENT,
+            String clientMapElement = String.format(BalSyntaxConstants.PERSIST_REDIS_CLIENT_MAP_ELEMENT,
                     constantName, constantName);
             persistClientMap.append(clientMapElement);
         }
@@ -125,19 +117,19 @@ public class RedisClientSyntax  implements ClientSyntax {
     @Override
     public FunctionDefinitionNode getGetFunction(Entity entity) {
         return (FunctionDefinitionNode) NodeParser.parseObjectMember(
-                String.format(RedisSyntaxConstants.EXTERNAL_REDIS_GET_METHOD_TEMPLATE, entity.getResourceName(),
-                        entity.getEntityName(), RedisSyntaxConstants.REDIS, this.nativeClass));
+                String.format(BalSyntaxConstants.EXTERNAL_REDIS_GET_METHOD_TEMPLATE, entity.getResourceName(),
+                        entity.getEntityName(), BalSyntaxConstants.REDIS, this.nativeClass));
     }
 
     @Override
     public FunctionDefinitionNode getGetByKeyFunction(Entity entity) {
-        return BalSyntaxUtils.generateGetByKeyFunction(entity, this.nativeClass, RedisSyntaxConstants.REDIS);
+        return BalSyntaxUtils.generateGetByKeyFunction(entity, this.nativeClass, BalSyntaxConstants.REDIS);
     }
 
     @Override
     public FunctionDefinitionNode getCloseFunction() {
         Function close = BalSyntaxUtils.generateCloseFunction();
-        close.addStatement(NodeParser.parseStatement(RedisSyntaxConstants.PERSIST_CLIENT_CLOSE_STATEMENT));
+        close.addStatement(NodeParser.parseStatement(BalSyntaxConstants.PERSIST_CLIENT_CLOSE_STATEMENT));
         IfElse errorCheck = new IfElse(NodeParser.parseExpression(String.format(
                 BalSyntaxConstants.RESULT_IS_BALLERINA_ERROR, BalSyntaxConstants.RESULT)));
         errorCheck.addIfStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.RETURN_ERROR,
@@ -163,19 +155,19 @@ public class RedisClientSyntax  implements ClientSyntax {
         StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH + entity.getResourceName());
         Function update = BalSyntaxUtils.generatePutFunction(entity, filterKeys, path);
 
-        update.addStatement(NodeParser.parseStatement(RedisSyntaxConstants.REDIS_CLIENT_DECLARATION));
+        update.addStatement(NodeParser.parseStatement(BalSyntaxConstants.REDIS_CLIENT_DECLARATION));
 
-        String getPersistClientStatement = String.format(RedisSyntaxConstants.GET_PERSIST_CLIENT,
+        String getPersistClientStatement = String.format(BalSyntaxConstants.GET_PERSIST_REDIS_CLIENT,
                 BalSyntaxUtils.stripEscapeCharacter(BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName())));
         update.addStatement(NodeParser.parseStatement(
                 String.format(BalSyntaxConstants.LOCK_TEMPLATE, getPersistClientStatement)));
 
         String updateStatement;
         if (entity.getKeys().size() > 1) {
-            updateStatement = String.format(RedisSyntaxConstants.UPDATE_RUN_UPDATE_QUERY,
+            updateStatement = String.format(BalSyntaxConstants.REDIS_UPDATE_RUN_UPDATE_QUERY,
                     filterKeys.substring(0, filterKeys.length() - 2).concat(BalSyntaxConstants.CLOSE_BRACE));
         } else {
-            updateStatement = String.format(RedisSyntaxConstants.UPDATE_RUN_UPDATE_QUERY,
+            updateStatement = String.format(BalSyntaxConstants.REDIS_UPDATE_RUN_UPDATE_QUERY,
                     entity.getKeys().stream().findFirst().get().getFieldName());
         }
         update.addStatement(NodeParser.parseStatement(updateStatement));
@@ -193,19 +185,19 @@ public class RedisClientSyntax  implements ClientSyntax {
         delete.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.GET_OBJECT_QUERY,
                 entity.getEntityName(), path)));
 
-        delete.addStatement(NodeParser.parseStatement(RedisSyntaxConstants.REDIS_CLIENT_DECLARATION));
+        delete.addStatement(NodeParser.parseStatement(BalSyntaxConstants.REDIS_CLIENT_DECLARATION));
 
-        String getPersistClientStatement = String.format(RedisSyntaxConstants.GET_PERSIST_CLIENT,
+        String getPersistClientStatement = String.format(BalSyntaxConstants.GET_PERSIST_REDIS_CLIENT,
                 BalSyntaxUtils.stripEscapeCharacter(BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName())));
         delete.addStatement(NodeParser.parseStatement(
                 String.format(BalSyntaxConstants.LOCK_TEMPLATE, getPersistClientStatement)));
 
         String deleteStatement;
         if (entity.getKeys().size() > 1) {
-            deleteStatement = String.format(RedisSyntaxConstants.DELETE_RUN_DELETE_QUERY,
+            deleteStatement = String.format(BalSyntaxConstants.REDIS_DELETE_RUN_DELETE_QUERY,
                     filterKeys.substring(0, filterKeys.length() - 2).concat(BalSyntaxConstants.CLOSE_BRACE));
         } else {
-            deleteStatement = String.format(RedisSyntaxConstants.DELETE_RUN_DELETE_QUERY,
+            deleteStatement = String.format(BalSyntaxConstants.REDIS_DELETE_RUN_DELETE_QUERY,
                     entity.getKeys().stream().findFirst().get().getFieldName());
         }
         delete.addStatement(NodeParser.parseStatement(deleteStatement));
@@ -214,27 +206,14 @@ public class RedisClientSyntax  implements ClientSyntax {
         return delete.getFunctionDefinitionNode();
     }
 
-    // public FunctionDefinitionNode getQueryNativeSQLFunction() {
-    //     return (FunctionDefinitionNode) NodeParser.parseObjectMember(
-    //             String.format(BalSyntaxConstants.QUERY_NATIVE_SQL_METHOD_TEMPLATE, this.nativeClass));
-    // }
-
-    // public FunctionDefinitionNode getExecuteNativeSQLFunction() {
-    //     return (FunctionDefinitionNode) NodeParser.parseObjectMember(
-    //             String.format(BalSyntaxConstants.EXECUTE_NATIVE_SQL_METHOD_TEMPLATE, this.nativeClass));
-    // }
     private static String getDataTypeInAllCaps(String fieldType) {
         switch (fieldType) {
             case "int":
-                return "INT";
             case "float":
-                return "FLOAT";
             case "decimal":
-                return "DECIMAL";
             case "boolean":
-                return "BOOLEAN";
             case "ENUM":
-                return "ENUM";
+                return fieldType.toUpperCase(Locale.ENGLISH);
             case "time:Date":
                 return "DATE";
             case "time:TimeOfDay":
@@ -253,7 +232,7 @@ public class RedisClientSyntax  implements ClientSyntax {
             StringBuilder entityMetaData = new StringBuilder();
             entityMetaData.append(String.format(BalSyntaxConstants.METADATA_RECORD_ENTITY_NAME_TEMPLATE,
                     BalSyntaxUtils.stripEscapeCharacter(entity.getEntityName())));
-            entityMetaData.append(String.format(RedisSyntaxConstants.METADATA_RECORD_COLLECTION_NAME_TEMPLATE,
+            entityMetaData.append(String.format(BalSyntaxConstants.REDIS_METADATA_RECORD_COLLECTION_NAME_TEMPLATE,
                     BalSyntaxUtils.stripEscapeCharacter(entity.getEntityName())));
             StringBuilder fieldMetaData = new StringBuilder();
             StringBuilder associateFieldMetaData = new StringBuilder();
@@ -271,7 +250,7 @@ public class RedisClientSyntax  implements ClientSyntax {
                                 foreignKeyFields.append(BalSyntaxConstants.COMMA_WITH_NEWLINE);
                             }
                             foreignKeyFields.append(
-                                String.format(RedisSyntaxConstants.METADATA_RECORD_FIELD_TEMPLATE,
+                                String.format(BalSyntaxConstants.REDIS_METADATA_RECORD_FIELD_TEMPLATE,
                                 key.getField(), 
                                 BalSyntaxUtils.stripEscapeCharacter(key.getField()), 
                                 getDataTypeInAllCaps(field.getFieldType())));
@@ -285,7 +264,7 @@ public class RedisClientSyntax  implements ClientSyntax {
                                 associateFieldMetaData.append(BalSyntaxConstants.COMMA_WITH_NEWLINE);
                             }
                             associateFieldMetaData.append(String.format((field.isArrayType() ? "\"%s[]" : "\"%s") +
-                            RedisSyntaxConstants.ASSOCIATED_FIELD_TEMPLATE,
+                            BalSyntaxConstants.REDIS_ASSOCIATED_FIELD_TEMPLATE,
                                     BalSyntaxUtils.stripEscapeCharacter(field.getFieldName()),
                                     BalSyntaxUtils.stripEscapeCharacter(associatedEntityField.getFieldName()),
                                     BalSyntaxUtils.stripEscapeCharacter(field.getFieldName()),
@@ -298,7 +277,7 @@ public class RedisClientSyntax  implements ClientSyntax {
                                         associateFieldMetaData.append(BalSyntaxConstants.COMMA_WITH_NEWLINE);
                                     }
                                     associateFieldMetaData.append(String.format((field.isArrayType() ?
-                                                    "\"%s[]" : "\"%s") + RedisSyntaxConstants.ASSOCIATED_FIELD_TEMPLATE,
+                                                    "\"%s[]" : "\"%s") + BalSyntaxConstants.REDIS_ASSOCIATED_FIELD_TEMPLATE,
                                             field.getFieldName(), key.getField(),
                                             BalSyntaxUtils.stripEscapeCharacter(field.getFieldName()),
                                             BalSyntaxUtils.stripEscapeCharacter(key.getField()),
@@ -311,7 +290,7 @@ public class RedisClientSyntax  implements ClientSyntax {
                     if (fieldMetaData.length() != 0) {
                         fieldMetaData.append(BalSyntaxConstants.COMMA_WITH_NEWLINE);
                     }
-                    fieldMetaData.append(String.format(RedisSyntaxConstants.METADATA_RECORD_FIELD_TEMPLATE,
+                    fieldMetaData.append(String.format(BalSyntaxConstants.REDIS_METADATA_RECORD_FIELD_TEMPLATE,
                             field.getFieldName(), BalSyntaxUtils.stripEscapeCharacter(field.getFieldName()),
                             getDataTypeInAllCaps(field.getFieldType())));
                 }
@@ -334,14 +313,14 @@ public class RedisClientSyntax  implements ClientSyntax {
             if (relationsExists) {
                 entityMetaData.append(BalSyntaxConstants.COMMA_WITH_SPACE);
                 String joinMetaData = getJoinMetaData(entity);
-                entityMetaData.append(String.format(RedisSyntaxConstants.REFERENCE_METADATA_TEMPLATE, joinMetaData));
+                entityMetaData.append(String.format(BalSyntaxConstants.REFERENCE_METADATA_TEMPLATE, joinMetaData));
             }
 
             mapBuilder.append(String.format(BalSyntaxConstants.METADATA_RECORD_ELEMENT_TEMPLATE,
                     BalSyntaxUtils.stripEscapeCharacter((BalSyntaxUtils.
                             getStringWithUnderScore(entity.getEntityName()))), entityMetaData));
         }
-        return NodeParser.parseObjectMember(String.format(RedisSyntaxConstants.METADATA_RECORD_TEMPLATE, mapBuilder));
+        return NodeParser.parseObjectMember(String.format(BalSyntaxConstants.REDIS_METADATA_RECORD_TEMPLATE, mapBuilder));
     }
 
     private static String getJoinMetaData(Entity entity) {
@@ -350,18 +329,17 @@ public class RedisClientSyntax  implements ClientSyntax {
             StringBuilder refColumns = new StringBuilder();
             StringBuilder joinColumns = new StringBuilder();
             if (entityField.getRelation() != null) {
-                String relationType = RedisSyntaxConstants.ONE_TO_ONE;
+                String relationType = BalSyntaxConstants.REDIS_ONE_TO_ONE;
                 Entity associatedEntity = entityField.getRelation().getAssocEntity();
                 for (EntityField associatedEntityField : associatedEntity.getFields()) {
                     if (associatedEntityField.getFieldType().equals(entity.getEntityName())) {
                         if (associatedEntityField.isArrayType() && !entityField.isArrayType()) {
-                            relationType = RedisSyntaxConstants.ONE_TO_MANY;
+                            relationType = BalSyntaxConstants.REDIS_ONE_TO_MANY;
                         } else if (!associatedEntityField.isArrayType() && entityField.isArrayType()) {
-                            relationType = RedisSyntaxConstants.MANY_TO_ONE;
+                            relationType = BalSyntaxConstants.REDIS_MANY_TO_ONE;
+                        } else if (associatedEntityField.isArrayType() && entityField.isArrayType()) {
+                             relationType = BalSyntaxConstants.REDIS_MANY_TO_MANY;
                         }
-                        // } else if (associatedEntityField.isArrayType() && entityField.isArrayType()) {
-                        //     relationType = RedisSyntaxConstants.MANY_TO_MANY;
-                        // }
                     }
                 }
                 if (joinMetaData.length() > 0) {
@@ -379,7 +357,7 @@ public class RedisClientSyntax  implements ClientSyntax {
                     joinColumns.append(String.format(BalSyntaxConstants.COLUMN_ARRAY_ENTRY_TEMPLATE,
                             BalSyntaxUtils.stripEscapeCharacter(key.getField())));
                 }
-                joinMetaData.append(String.format(RedisSyntaxConstants.JOIN_METADATA_FIELD_TEMPLATE,
+                joinMetaData.append(String.format(BalSyntaxConstants.REDIS_JOIN_METADATA_FIELD_TEMPLATE,
                         entityField.getFieldName(), entityField.getFieldType(),
                         entityField.getFieldName(), entityField.getFieldType(), refColumns,
                         joinColumns, relationType));
@@ -390,14 +368,14 @@ public class RedisClientSyntax  implements ClientSyntax {
 
     private static void addFunctionBodyToPostResource(Function create, List<EntityField> primaryKeys,
                                                       String tableName, String parameterType) {
-        create.addStatement(NodeParser.parseStatement(RedisSyntaxConstants.REDIS_CLIENT_DECLARATION));
+        create.addStatement(NodeParser.parseStatement(BalSyntaxConstants.REDIS_CLIENT_DECLARATION));
 
-        String getPersistClientStatement = String.format(RedisSyntaxConstants.GET_PERSIST_CLIENT,
+        String getPersistClientStatement = String.format(BalSyntaxConstants.GET_PERSIST_REDIS_CLIENT,
                 BalSyntaxUtils.stripEscapeCharacter(tableName));
         create.addStatement(NodeParser.parseStatement(
                 String.format(BalSyntaxConstants.LOCK_TEMPLATE, getPersistClientStatement)));
 
-        create.addStatement(NodeParser.parseStatement(RedisSyntaxConstants.CREATE_REDIS_RESULTS));
+        create.addStatement(NodeParser.parseStatement(BalSyntaxConstants.CREATE_REDIS_RESULTS));
 
         create.addStatement(NodeParser.parseStatement(
                 String.format(BalSyntaxConstants.RETURN_CREATED_KEY, parameterType)));

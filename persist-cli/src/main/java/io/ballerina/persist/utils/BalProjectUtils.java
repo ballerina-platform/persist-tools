@@ -199,6 +199,7 @@ public class BalProjectUtils {
                 String qualifiedNamePrefix = getQualifiedModulePrefix(type);
                 fieldBuilder.setType(fType);
                 fieldBuilder.setOptionalType(fieldNode.typeName().kind().equals(SyntaxKind.OPTIONAL_TYPE_DESC));
+                fieldBuilder.setOptionalField(fieldNode.questionMarkToken().isPresent());
                 Optional<MetadataNode> metadataNode = fieldNode.metadata();
                 metadataNode.ifPresent(value -> fieldBuilder.setAnnotation(value.annotations()));
                 EntityField entityField = fieldBuilder.build();

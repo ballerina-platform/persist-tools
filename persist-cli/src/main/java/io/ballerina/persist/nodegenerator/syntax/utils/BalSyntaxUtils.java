@@ -383,6 +383,9 @@ public class BalSyntaxUtils {
                 }
                 recordFields.append(BalSyntaxConstants.SPACE);
                 recordFields.append(field.getFieldName());
+                if (field.isOptionalField()) {
+                    recordFields.append(BalSyntaxConstants.QUESTION_MARK);
+                }
                 recordFields.append(BalSyntaxConstants.SEMICOLON);
                 recordFields.append(BalSyntaxConstants.SPACE);
             } else if (field.getRelation() != null) {
@@ -403,6 +406,9 @@ public class BalSyntaxUtils {
                         (field.isArrayType() ? BalSyntaxConstants.ARRAY : ""));
                 recordFields.append(BalSyntaxConstants.SPACE);
                 recordFields.append(field.getFieldName());
+                if (field.isOptionalField()) {
+                    recordFields.append(BalSyntaxConstants.QUESTION_MARK);
+                }
                 recordFields.append(BalSyntaxConstants.SEMICOLON);
                 recordFields.append(BalSyntaxConstants.SPACE);
             }

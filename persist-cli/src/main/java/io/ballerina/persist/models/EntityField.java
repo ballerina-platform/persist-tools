@@ -34,16 +34,18 @@ public class EntityField {
     private final String fieldType;
     private final boolean arrayType;
     private final boolean optionalType;
+    private final boolean optionalField;
     private Relation relation;
     private Enum enumValue;
     private final NodeList<AnnotationNode> annotationNodes;
 
-    EntityField(String fieldName, String fieldType, boolean arrayType, boolean optionalType,
+    EntityField(String fieldName, String fieldType, boolean arrayType, boolean optionalType, boolean optionalField,
                         NodeList<AnnotationNode> annotationNodes) {
         this.fieldName = fieldName;
         this.fieldType = fieldType;
         this.arrayType = arrayType;
         this.optionalType = optionalType;
+        this.optionalField = optionalField;
         this.annotationNodes = annotationNodes;
     }
 
@@ -83,6 +85,10 @@ public class EntityField {
         return optionalType;
     }
 
+    public boolean isOptionalField() {
+        return optionalField;
+    }
+
     public static EntityField.Builder newBuilder(String fieldName) {
         return new EntityField.Builder(fieldName);
     }
@@ -96,6 +102,7 @@ public class EntityField {
 
         boolean arrayType = false;
         boolean optionalType = false;
+        boolean optionalField = false;
         private NodeList<AnnotationNode> annotationNodes = null;
 
         Builder(String fieldName) {
@@ -117,12 +124,15 @@ public class EntityField {
         public void setOptionalType(boolean optionalType) {
             this.optionalType = optionalType;
         }
+        public void setOptionalField(boolean optionalField) {
+            this.optionalField = optionalField;
+        }
         public void setAnnotation(NodeList<AnnotationNode> annotationNodes) {
             this.annotationNodes = annotationNodes;
         }
 
         public EntityField build() {
-            return new EntityField(fieldName, fieldType, arrayType, optionalType, annotationNodes);
+            return new EntityField(fieldName, fieldType, arrayType, optionalType, optionalField, annotationNodes);
         }
     }
 }

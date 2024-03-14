@@ -100,10 +100,10 @@ public class SourceGenerator {
             redisSyntaxTree.getDataStoreConfigSyntax());
             addConfigTomlFile(this.sourcePath, redisSyntaxTree.getConfigTomlSyntax(
                     this.moduleNameWithPackageName), this.moduleNameWithPackageName);
-            addDataTypesBalFile(redisSyntaxTree.getDataTypesSyntax(entityModule),
+            addDataTypesBalFile(redisSyntaxTree.getDataTypesSyntax(this.entityModule),
                     this.generatedSourceDirPath.resolve(persistTypesBal).toAbsolutePath(),
                     this.moduleNameWithPackageName);
-            addClientFile(redisSyntaxTree.getClientSyntax(entityModule),
+            addClientFile(redisSyntaxTree.getClientSyntax(this.entityModule),
                     this.generatedSourceDirPath.resolve(persistClientBal).toAbsolutePath(),
                     this.moduleNameWithPackageName);
         } catch (BalException e) {

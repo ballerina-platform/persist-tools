@@ -33,6 +33,7 @@ target
 *.iws
 
 # VSCode files
+.vscode/
 .project
 .classpath
 .settings

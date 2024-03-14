@@ -59,7 +59,7 @@ public class PersistToolsConstants {
     public static final String SCHEMA_FILE_NAME = "model";
     public static final Set<String> SUPPORTED_DB_PROVIDERS =
            Set.of(SupportedDataSources.MYSQL_DB, SupportedDataSources.MSSQL_DB, SupportedDataSources.IN_MEMORY_TABLE,
-                   SupportedDataSources.GOOGLE_SHEETS, SupportedDataSources.POSTGRESQL_DB);
+                   SupportedDataSources.GOOGLE_SHEETS, SupportedDataSources.POSTGRESQL_DB, SupportedDataSources.REDIS);
 
     /**
      * Constants related to Ballerina types.
@@ -159,6 +159,7 @@ public class PersistToolsConstants {
         public static final String PERSIST_SQL_VERSION = "persistSqlVersion";
         public static final String PERSIST_IN_MEMORY_VERSION = "persistInMemoryVersion";
         public static final String PERSIST_GOOGLE_SHEETS_VERSION = "persistGoogleSheetsVersion";
+        public static final String PERSIST_REDIS_VERSION = "persistRedisVersion";
         public static final String KEYWORD_VERSION = "version";
     }
 
@@ -188,6 +189,7 @@ public class PersistToolsConstants {
         public static final String KEY_PASSWORD = "password";
         public static final String KEY_DATABASE = "database";
         public static final String KEY_HOST = "host";
+        public static final String KEY_CONNECTION = "connection";
 
         /**
          * Constants related to the MySQL configurations.
@@ -231,8 +233,7 @@ public class PersistToolsConstants {
         public static final class REDIS {
             private REDIS() {}
 
-            public static final String DEFAULT_HOST = "localhost";
-            public static final String DEFAULT_PORT = "6379";
+            public static final String CONNECTION_URI = "redis://localhost:6379";
 
         }
 
