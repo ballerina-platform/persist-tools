@@ -31,15 +31,15 @@ public type User record {|
     Car[] cars;
 |};
 
-@sql:Mapping {name: "cars"}
+@sql:Name {value: "cars"}
 public type Car record {|
     readonly int id;
     string name;
-    @sql:Mapping {name: "MODEL"}
+    @sql:Name {value: "MODEL"}
     string model;
-    @sql:Mapping {name: "OWNER_ID"}
-    @sql:Index {names: ["ownerId"]}
+    @sql:Name {value: "OWNER_ID"}
+    @sql:Index {name: "ownerId"}
     int ownerId;
-    @sql:Relation {refs: ["ownerId"]}
+    @sql:Relation {keys: ["ownerId"]}
     User user;
 |};

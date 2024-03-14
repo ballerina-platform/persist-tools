@@ -11,11 +11,11 @@ public type User record {|
     string name;
     UserGender gender;
     decimal? salary;
-    @sql:Mapping {name: "drives_car"}
-    @sql:Index {names: ["drives_car"]}
+    @sql:Name {value: "drives_car"}
+    @sql:Index {name: ["drives_car"]}
     int? drivesCar;
     Car[] cars;
-    @sql:Relation {refs: ["drivesCar"]}
+    @sql:Relation {keys: ["drivesCar"]}
     Car car;
 |};
 
@@ -23,9 +23,9 @@ public type Car record {|
     readonly int id;
     string name;
     string model;
-    @sql:Index {names: ["ownerId"]}
+    @sql:Index {name: "ownerId"}
     int ownerId;
-    @sql:Relation {refs: ["ownerId"]}
+    @sql:Relation {keys: ["ownerId"]}
     User user;
     User[] users;
 |};

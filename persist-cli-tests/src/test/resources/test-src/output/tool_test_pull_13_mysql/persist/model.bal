@@ -12,9 +12,9 @@ public type User record {|
     UserGender gender;
     string nic;
     decimal salary;
-    @sql:Index {names: ["favorite"]}
+    @sql:Index {name: "favorite"}
     string favColor;
-    @sql:Index {names: ["favorite"]}
+    @sql:Index {name: "favorite"}
     string favCar;
 |};
 

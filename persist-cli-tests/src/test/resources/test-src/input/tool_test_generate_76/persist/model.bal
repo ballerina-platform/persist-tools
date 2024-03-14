@@ -26,7 +26,7 @@ public type User record {|
     readonly int id;
     string name;
     UserGender gender;
-    @sql:UniqueIndex {names: ["nic_index"]}
+    @sql:UniqueIndex {name: "nic_index"}
     string nic;
     decimal? salary;
     Car[] cars;
@@ -36,8 +36,8 @@ public type Car record {|
     readonly int id;
     string name;
     string model;
-    @sql:Index {names: ["ownerId"]}
+    @sql:Index {name: ["ownerId"]}
     int ownerId;
-    @sql:Relation {refs: ["ownerId"]}
+    @sql:Relation {keys: ["ownerId"]}
     User user;
 |};

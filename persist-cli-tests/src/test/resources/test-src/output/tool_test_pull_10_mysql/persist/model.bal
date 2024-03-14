@@ -7,38 +7,38 @@ public enum PatientGender {
     FEMALE = "FEMALE"
 }
 
-@sql:Mapping {name: "appointment"}
+@sql:Name {value: "appointment"}
 public type Appointment record {|
     readonly int id;
-    @sql:Mapping {name: "patient_Id"}
-    @sql:Index {names: ["patient_Id"]}
+    @sql:Name {value: "patient_Id"}
+    @sql:Index {name: "patient_Id"}
     int patientId;
-    @sql:Mapping {name: "Doctor_Id"}
-    @sql:Index {names: ["Doctor_Id"]}
+    @sql:Name {value: "Doctor_Id"}
+    @sql:Index {name: ["Doctor_Id"]}
     int doctorId;
     time:Date date;
-    @sql:Relation {refs: ["patientId"]}
+    @sql:Relation {keys: ["patientId"]}
     Patient patient;
-    @sql:Relation {refs: ["doctorId"]}
+    @sql:Relation {keys: ["doctorId"]}
     Doctor doctor;
 |};
 
-@sql:Mapping {name: "patients"}
+@sql:Name {value: "patients"}
 public type Patient record {|
     readonly int id;
     string name;
-    @sql:Mapping {name: "GENDER"}
+    @sql:Name {value: "GENDER"}
     PatientGender gender;
-    @sql:Mapping {name: "NIC"}
+    @sql:Name {value: "NIC"}
     string nic;
     Appointment[] appointments;
 |};
 
-@sql:Mapping {name: "DOCTOR"}
+@sql:Name {value: "DOCTOR"}
 public type Doctor record {|
     readonly int id;
     string name;
-    @sql:Mapping {name: "doctor_Specialty"}
+    @sql:Name {value: "doctor_Specialty"}
     string doctorSpecialty;
     Appointment[] appointments;
 |};

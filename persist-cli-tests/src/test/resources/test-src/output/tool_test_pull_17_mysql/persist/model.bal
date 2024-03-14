@@ -19,11 +19,11 @@ public type Car record {|
     readonly int id;
     string name;
     string model;
-    @sql:Index {names: ["ownerEmail"]}
+    @sql:Index {name: "ownerEmail"}
     string ownerEmail;
-    @sql:Index {names: ["ownerEmail"]}
+    @sql:Index {name: "ownerEmail"}
     string ownerNic;
-    @sql:Relation {refs: ["ownerEmail", "ownerNic"]}
+    @sql:Relation {keys: ["ownerEmail", "ownerNic"]}
     User user;
 |};
 

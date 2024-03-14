@@ -23,7 +23,7 @@ public enum UserGender {
 }
 
 public type User record {|
-    @sql:Mapping {name: "ID"}
+    @sql:Name {value: "ID"}
     @sql:Generated
     readonly int id;
     string name;
@@ -37,8 +37,8 @@ public type Car record {|
     readonly int id;
     string name;
     string model;
-    @sql:Index {names: ["ownerId"]}
+    @sql:Index {name: ["ownerId"]}
     int ownerId;
-    @sql:Relation {refs: ["ownerId"]}
+    @sql:Relation {keys: ["ownerId"]}
     User user;
 |};
