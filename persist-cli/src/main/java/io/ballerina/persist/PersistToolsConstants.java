@@ -26,6 +26,8 @@ import java.util.Set;
  */
 public class PersistToolsConstants {
 
+    public static final String BAL_PERSIST_ADD_CMD = "add";
+
     private PersistToolsConstants() {}
 
     public static final String COMPONENT_IDENTIFIER = "persist";
@@ -48,6 +50,11 @@ public class PersistToolsConstants {
     public static final String SQL_SCHEMA_FILE = "script.sql";
     public static final String GOOGLE_SHEETS_SCHEMA_FILE = "script.gs";
     public static final String PERSIST_DIRECTORY = "persist";
+    public static final String TARGET_DIRECTORY = "target";
+    public static final String GENERATE_CMD_FILE = "Persist.toml";
+    public static final String PERSIST_TOOL_CONFIG = "tool.persist";
+    public static final String GENERATED_DIRECTORY = "generated";
+    public static final String TARGET_MODULE = "targetModule";
     public static final String MIGRATIONS = "migrations";
     public static final String BALLERINA_MYSQL_DRIVER_NAME = "ballerinax/mysql.driver";
     public static final String BALLERINA_MSSQL_DRIVER_NAME = "ballerinax/mssql.driver";
@@ -57,6 +64,7 @@ public class PersistToolsConstants {
     public static final String MSSQL_CONNECTOR_NAME_PREFIX = "mssql-jdbc";
     public static final String POSTGRESQL_CONNECTOR_NAME_PREFIX = "postgresql";
     public static final String SCHEMA_FILE_NAME = "model";
+
     public static final Set<String> SUPPORTED_DB_PROVIDERS =
            Set.of(SupportedDataSources.MYSQL_DB, SupportedDataSources.MSSQL_DB, SupportedDataSources.IN_MEMORY_TABLE,
                    SupportedDataSources.GOOGLE_SHEETS, SupportedDataSources.POSTGRESQL_DB, SupportedDataSources.REDIS);
@@ -93,12 +101,14 @@ public class PersistToolsConstants {
         public static final String DOUBLE = "DOUBLE";
         public static final String FLOAT = "FLOAT";
         public static final String VARCHAR = "VARCHAR";
+        public static final String CHAR = "CHAR";
         public static final String DATE = "DATE";
         public static final String TIME = "TIME";
         public static final String TIME_STAMP = "TIMESTAMP";
         public static final String DATE_TIME = "DATETIME";
         public static final String DATE_TIME2 = "DATETIME2";
         public static final String LONG_BLOB = "LONGBLOB";
+        public static final String BLOB = "BLOB";
         public static final String VARBINARY = "VARBINARY(MAX)";
         public static final String BYTEA = "BYTEA";
     }

@@ -6,7 +6,3 @@ distribution = "2201.5.0"
 
 [build-options]
 observabilityIncluded = false
-
-[persist]
-datastore = "googlesheets"
-module = "persist_generate_54.entities"

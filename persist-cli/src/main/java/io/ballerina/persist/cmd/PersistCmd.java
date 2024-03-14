@@ -34,7 +34,7 @@ import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 @CommandLine.Command(
         name = "persist",
         description = "generate database configurations.",
-        subcommands = {Init.class, Generate.class, Push.class, Migrate.class}
+        subcommands = {Init.class, Generate.class, Push.class, Migrate.class, Add.class, Pull.class}
         )
 
 public class PersistCmd implements BLauncherCmd {

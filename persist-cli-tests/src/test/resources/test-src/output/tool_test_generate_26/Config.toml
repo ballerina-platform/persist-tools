@@ -1,4 +1,4 @@
-[persist_generate_22.entities]
+[persist_generate_26.entities]
 host = "localhost"
 port = 3306
 user = "root"

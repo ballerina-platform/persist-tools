@@ -19,9 +19,15 @@
 package io.ballerina.persist.models;
 
 import io.ballerina.compiler.syntax.tree.AnnotationNode;
-import io.ballerina.compiler.syntax.tree.NodeList;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.COLON;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.SINGLE_QUOTE;
+import static io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils.stripEscapeCharacter;
+import static io.ballerina.persist.utils.StubUtils.isLiteralName;
 
 /**
  * Client Entity fieldMetaData class.
@@ -31,26 +37,41 @@ import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConst
  */
 public class EntityField {
     private final String fieldName;
+    private final String fieldColumnName;
     private final String fieldType;
+    private final SQLType sqlType;
     private final boolean arrayType;
     private final boolean optionalType;
+
+    private final boolean isDbGenerated;
     private final boolean optionalField;
     private Relation relation;
     private Enum enumValue;
-    private final NodeList<AnnotationNode> annotationNodes;
+    private final List<AnnotationNode> annotationNodes;
+    private final List<String> relationRefs;
 
-    EntityField(String fieldName, String fieldType, boolean arrayType, boolean optionalType, boolean optionalField,
-                        NodeList<AnnotationNode> annotationNodes) {
+    EntityField(String fieldName, String fieldColumnName, String fieldType, boolean arrayType, boolean optionalType,
+    boolean optionalField, List<AnnotationNode> annotationNodes, SQLType sqlType, List<String> relationRefs,
+                boolean isDbGenerated) {
         this.fieldName = fieldName;
+        this.fieldColumnName = fieldColumnName;
         this.fieldType = fieldType;
         this.arrayType = arrayType;
         this.optionalType = optionalType;
         this.optionalField = optionalField;
-        this.annotationNodes = annotationNodes;
+        this.annotationNodes =
+                Collections.unmodifiableList(annotationNodes != null ? annotationNodes : new ArrayList<>());
+        this.sqlType = sqlType;
+        this.relationRefs = Collections.unmodifiableList(relationRefs != null ? relationRefs : new ArrayList<>());
+        this.isDbGenerated = isDbGenerated;
     }
 
     public String getFieldName() {
         return fieldName;
+    }
+
+    public String getFieldColumnName() {
+        return fieldColumnName;
     }
 
     public String getFieldType() {
@@ -61,8 +82,28 @@ public class EntityField {
         return relation;
     }
 
-    public NodeList<AnnotationNode> getAnnotation() {
+    public SQLType getSqlType() {
+        return sqlType;
+    }
+
+    public List<AnnotationNode> getAnnotation() {
         return annotationNodes;
+    }
+
+    public boolean isDbGenerated() {
+        return isDbGenerated;
+    }
+
+    public boolean shouldColumnMappingGenerated() {
+        if (fieldColumnName == null ||  fieldColumnName.isBlank()) {
+            return false;
+        }
+
+        return !fieldColumnName.equals(stripEscapeCharacter(fieldName));
+    }
+
+    public List<String> getRelationRefs() {
+        return relationRefs;
     }
 
     public void setRelation(Relation relation) {
@@ -98,14 +139,25 @@ public class EntityField {
      */
     public static class Builder {
         String fieldName;
+        String fieldColumnName;
         String fieldType;
 
-        boolean arrayType = false;
-        boolean optionalType = false;
+        private boolean arrayType = false;
+        private boolean optionalType = false;
         boolean optionalField = false;
-        private NodeList<AnnotationNode> annotationNodes = null;
+
+        SQLType sqlType;
+        private List<AnnotationNode> annotationNodes = null;
+
+        private List<String> relationRefs;
+
+        private boolean isDbGenerated = false;
 
         Builder(String fieldName) {
+            if (isLiteralName(fieldName)) {
+                this.fieldName = SINGLE_QUOTE + fieldName;
+                return;
+            }
             this.fieldName = fieldName;
         }
 
@@ -114,6 +166,21 @@ public class EntityField {
                 fieldType = fieldType.split(COLON, 2)[1];
             }
             this.fieldType = fieldType;
+        }
+
+        public void setSqlType(SQLType sqlType) {
+            this.sqlType = sqlType;
+        }
+        public void setFieldColumnName(String fieldColumnName) {
+            this.fieldColumnName = fieldColumnName;
+        }
+
+        public void setRelationRefs(List<String> relationRefs) {
+            this.relationRefs = relationRefs;
+        }
+
+        public void setIsDbGenerated(boolean isDbGenerated) {
+            this.isDbGenerated = isDbGenerated;
         }
 
 
@@ -127,12 +194,17 @@ public class EntityField {
         public void setOptionalField(boolean optionalField) {
             this.optionalField = optionalField;
         }
-        public void setAnnotation(NodeList<AnnotationNode> annotationNodes) {
+        public void setAnnotations(List<AnnotationNode> annotationNodes) {
             this.annotationNodes = annotationNodes;
         }
 
         public EntityField build() {
-            return new EntityField(fieldName, fieldType, arrayType, optionalType, optionalField, annotationNodes);
+            return new EntityField(fieldName, fieldColumnName, fieldType, arrayType, optionalType, optionalField, 
+            annotationNodes, sqlType, relationRefs, isDbGenerated);
+        }
+
+        public String getFieldName() {
+            return fieldName;
         }
     }
 }

@@ -10,9 +10,11 @@ name="persist"
 version="0.1.0"
 repository="local"
 
-[persist]
-datastore = "mysql"
-module = "tool_test_db_push_8.entities"
+[[tool.persist]]
+id = "persist"
+options.datastore = "mysql"
+targetModule = "tool_test_db_push_8.entities"
+filePath = "persist/model.bal"
 
 [persist.model.storage.mysql]
 host = "localhost"

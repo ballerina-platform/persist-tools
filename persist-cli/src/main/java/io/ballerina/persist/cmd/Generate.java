@@ -26,6 +26,13 @@ import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
 import io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils;
 import io.ballerina.persist.utils.BalProjectUtils;
 import io.ballerina.projects.util.ProjectUtils;
+import io.ballerina.toml.syntax.tree.DocumentMemberDeclarationNode;
+import io.ballerina.toml.syntax.tree.DocumentNode;
+import io.ballerina.toml.syntax.tree.NodeList;
+import io.ballerina.toml.syntax.tree.SyntaxTree;
+import io.ballerina.toml.syntax.tree.TableNode;
+import io.ballerina.tools.text.TextDocument;
+import io.ballerina.tools.text.TextDocuments;
 import picocli.CommandLine;
 
 import java.io.IOException;
@@ -34,7 +41,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.HashMap;
+
+import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
+import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 
 /**
  * This Class implements the `persist generate` command in Ballerina persist-tool.
@@ -65,17 +74,26 @@ public class Generate implements BLauncherCmd {
     @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
     private boolean helpFlag;
 
+    @CommandLine.Option(names = {"--module"})
+    private String module;
+
+    @CommandLine.Option(names = {"--datastore"})
+    private String datastore;
+
     @Override
     public void execute() {
-        Path generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);
-        String datastore;
+        Path generatedSourceDirPath;
         Module entityModule;
         Path schemaFilePath;
         String packageName;
-        String moduleNameWithPackageName;
+        String moduleNameWithPackage;
         if (helpFlag) {
             String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMMAND_IDENTIFIER);
             errStream.println(commandUsageInfo);
+            return;
+        }
+        if (datastore == null) {
+            errStream.println("ERROR: datastore is required");
             return;
         }
         Path projectPath = Paths.get(sourcePath);
@@ -93,46 +111,68 @@ public class Generate implements BLauncherCmd {
             return;
         }
 
+        if (module == null) {
+            generatedSourceDirPath = Paths.get(this.sourcePath);
+            module = packageName;
+        } else {
+            generatedSourceDirPath = Paths.get(this.sourcePath, BalSyntaxConstants.MODULES_SOURCE_DIRECTORY);
+            module = module.replaceAll("\"", "");
+        }
+        moduleNameWithPackage = (packageName.equals(module)) ? packageName : packageName + "." + module;
+
+        boolean hasPersistConfig;
         try {
-            HashMap<String, String> ballerinaTomlConfig = TomlSyntaxUtils.readBallerinaTomlConfig(
-                    Paths.get(this.sourcePath, "Ballerina.toml"));
-            moduleNameWithPackageName = ballerinaTomlConfig.get("module").trim();
-            if (!moduleNameWithPackageName.equals(packageName)) {
-                if (!moduleNameWithPackageName.startsWith(packageName + ".")) {
-                    errStream.println("ERROR: invalid module name : '" + ballerinaTomlConfig.get("module") + "' :\n" +
-                            "module name should follow the template <package_name>.<module_name>");
-                    return;
-                }
-                String moduleName = moduleNameWithPackageName.replace(packageName + ".", "");
-                if (!ProjectUtils.validateModuleName(moduleName)) {
-                    errStream.println("ERROR: invalid module name : '" + moduleName + "' :\n" +
-                            "module name can only contain alphanumerics, underscores and periods");
-                    return;
-                } else if (!ProjectUtils.validateNameLength(moduleName)) {
-                    errStream.println("ERROR: invalid module name : '" + moduleName + "' :\n" +
-                            "maximum length of module name is 256 characters");
-                    return;
-                }
-                generatedSourceDirPath = generatedSourceDirPath.resolve(moduleName);
-            }
-            datastore = ballerinaTomlConfig.get("datastore").trim();
-            if (!PersistToolsConstants.SUPPORTED_DB_PROVIDERS.contains(datastore)) {
-                errStream.printf("ERROR: the persist layer supports one of data stores: %s" +
-                                ". but found '%s' datasource.%n",
-                        Arrays.toString(PersistToolsConstants.SUPPORTED_DB_PROVIDERS.toArray()), datastore);
-                return;
-            }
-            if (Files.isDirectory(Paths.get(sourcePath, PersistToolsConstants.PERSIST_DIRECTORY,
-                    PersistToolsConstants.MIGRATIONS)) &&
-                    !datastore.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB)) {
-                errStream.println("ERROR: regenerating the client with a different datastore after executing " +
-                        "the migrate command is not permitted. please remove the migrations directory within the " +
-                        "persist directory and try executing the command again.");
-                return;
-            }
+            hasPersistConfig = hasPersistConfig(Paths.get(this.sourcePath, "Ballerina.toml"));
         } catch (BalException e) {
-            errStream.printf("ERROR: failed to generate types and client for the definition file(%s). %s%n",
-                    "Ballerina.toml", e.getMessage());
+            errStream.printf("ERROR: The project does not contain a toml file");
+            return;
+        }
+        // Check if there are previous persist configurations.
+        if (hasPersistConfig) {
+            errStream.println("The behavior of the `bal persist generate` command has been updated starting " +
+                    "from Ballerina update 09.");
+            errStream.println("You now have the following options for code generation:");
+            errStream.println(System.lineSeparator() + "- `bal persist add --datastore <datastore> --module <module>`" +
+                    ": This command adds an entry to \"Ballerina.toml\" to integrate code generation with the " +
+                    "package build process.");
+            errStream.println("- `bal persist generate --datastore <datastore> --module <module>`: This command " +
+                    "performs a one-time generation of the client.");
+            errStream.println(System.lineSeparator() + "If you choose to proceed with the `bal persist generate` " +
+                    "command, please follow these steps:");
+            errStream.println(System.lineSeparator() + "1. Remove the [persist] configuration in the " +
+                    "\"Ballerina.toml\" file.");
+            errStream.println("2. Delete any previously generated source files, if they exist.");
+            errStream.println("3. Re-execute the `bal persist generate --datastore <datastore> --module <module>`" +
+                    " command.");
+            errStream.println(System.lineSeparator() + "If you have any questions or need further assistance, refer" +
+                    " to the updated documentation.");
+            return;
+        }
+        if (!ProjectUtils.validateModuleName(moduleNameWithPackage)) {
+            errStream.println("ERROR: invalid module name : '" + module + "' :\n" +
+                    "module name can only contain alphanumerics, underscores and periods");
+            return;
+        } else if (!ProjectUtils.validateNameLength(moduleNameWithPackage)) {
+            errStream.println("ERROR: invalid module name : '" + module + "' :\n" +
+                    "maximum length of module name is 256 characters");
+            return;
+        }
+        if (!module.equals(packageName)) {
+            generatedSourceDirPath = generatedSourceDirPath.resolve(module);
+        }
+
+        if (!PersistToolsConstants.SUPPORTED_DB_PROVIDERS.contains(datastore)) {
+            errStream.printf("ERROR: the persist layer supports one of data stores: %s" +
+                            ". but found '%s' datasource.%n",
+                    Arrays.toString(PersistToolsConstants.SUPPORTED_DB_PROVIDERS.toArray()), datastore);
+            return;
+        }
+        if (Files.isDirectory(Paths.get(sourcePath, PersistToolsConstants.PERSIST_TOOL_CONFIG,
+                PersistToolsConstants.MIGRATIONS)) &&
+                !datastore.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB)) {
+            errStream.println("ERROR: regenerating the client with a different datastore after executing " +
+                    "the migrate command is not permitted. please remove the migrations directory within the " +
+                    "persist directory and try executing the command again.");
             return;
         }
 
@@ -156,6 +196,11 @@ public class Generate implements BLauncherCmd {
         }
 
         try {
+            BalProjectUtils.updateToml(sourcePath, datastore, moduleNameWithPackage);
+            String syntaxTree = TomlSyntaxUtils.updateBallerinaToml(Paths.get(this.sourcePath, BALLERINA_TOML), module,
+                    datastore, true);
+            Utils.writeOutputString(syntaxTree,
+                    Paths.get(this.sourcePath, BALLERINA_TOML).toAbsolutePath().toString());
             BalProjectUtils.validateSchemaFile(schemaFilePath);
             Module module = BalProjectUtils.getEntities(schemaFilePath);
             if (module.getEntityMap().isEmpty()) {
@@ -164,8 +209,8 @@ public class Generate implements BLauncherCmd {
                 return;
             }
             entityModule = module;
-        } catch (BalException e) {
-            errStream.printf("ERROR: failed to generate types and client for the definition file(%s). %s%n",
+        } catch (BalException | IOException e) {
+            errStream.printf("ERROR: Failed to generate types and client for the definition file(%s). %s%n",
                     schemaFilePath.getFileName(), e.getMessage());
             return;
         }
@@ -179,7 +224,7 @@ public class Generate implements BLauncherCmd {
             }
         }
         SourceGenerator sourceCreator = new SourceGenerator(sourcePath, generatedSourceDirPath,
-                moduleNameWithPackageName, entityModule);
+                moduleNameWithPackage, entityModule);
         try {
             switch (datastore) {
                 case PersistToolsConstants.SupportedDataSources.MYSQL_DB:
@@ -202,7 +247,7 @@ public class Generate implements BLauncherCmd {
                     datastore, e.getMessage()));
             return;
         }
-        errStream.println("Persist client and entity types generated successfully in the ./generated directory.");
+        errStream.println("Persist client and entity types generated successfully in the " + module +  " directory.");
     }
 
     @Override
@@ -225,5 +270,29 @@ public class Generate implements BLauncherCmd {
     public void printUsage(StringBuilder stringBuilder) {
         stringBuilder.append("  ballerina " + PersistToolsConstants.COMPONENT_IDENTIFIER + " generate").
                 append(System.lineSeparator());
+    }
+
+    public static boolean hasPersistConfig(Path configPath) throws BalException {
+        TextDocument configDocument = null;
+        try {
+            configDocument = TextDocuments.from(Files.readString(configPath));
+        } catch (IOException e) {
+            errStream.println("ERROR: failed to read the toml file: " + e.getMessage());
+        }
+        SyntaxTree syntaxTree = SyntaxTree.from(configDocument);
+        DocumentNode rootNote = syntaxTree.rootNode();
+        NodeList<DocumentMemberDeclarationNode> nodeList = rootNote.members();
+        boolean dbConfigExists = false;
+        for (DocumentMemberDeclarationNode member : nodeList) {
+            if (member instanceof TableNode) {
+                TableNode node = (TableNode) member;
+                String tableName = node.identifier().toSourceCode().trim();
+                if (tableName.equals(PERSIST_DIRECTORY)) {
+                    dbConfigExists = true;
+                    break;
+                }
+            }
+        }
+        return dbConfigExists;
     }
 }

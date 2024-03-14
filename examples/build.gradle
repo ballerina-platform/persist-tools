@@ -24,6 +24,7 @@ description = 'Ballerina - Persist Examples'
 
 def ballerinaDist = "${project.buildDir}/ballerina-distribution"
 def examples = ["medical-center", "rainier"]
+def introspectionExamples = ["hospital"]
 
 configurations {
     balTools
@@ -124,6 +125,14 @@ task copyTestResources() {
                 }
             }
         }
+        copy {
+            introspectionExamples.each { example ->
+                into buildDir
+                into("generated-examples/${example}/") {
+                    from "${example}"
+                }
+            }
+        }
     }
 
 }
@@ -141,7 +150,7 @@ task initDbExamples {
                         delete "${project.projectDir}/build/generated-examples/${example}/generated"
                         workingDir "${project.projectDir}/build/generated-examples/${example}"
                         if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-                            commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist init --module=entities --datastore=mysql"
+                            commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate --module=entities --datastore=mysql"
                         } else {
                             commandLine 'cmd', 'slmgr /dlv'
                             println('\n' + "Windows Instance detected")
@@ -164,9 +173,9 @@ task initInMemoryExamples {
                     exec {
                         workingDir "${project.projectDir}/build/generated-examples/${example}"
                         if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-                            commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist init --module=entities"
+                            commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate --module=entities --datastore=inmemory"
                         } else {
-                            commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat persist init --module=entities"
+                            commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat persist generate --module=entities --datastore=inmemory"
                         }
                     }
                 } catch (Exception e) {
@@ -211,7 +220,7 @@ task generateDbExamples {
                     exec {
                         workingDir "${project.projectDir}/build/generated-examples/${example}"
                         if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-                            commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate"
+                            commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate --module=entities --datastore=inmemory"
                         } else {
                             commandLine 'cmd', 'slmgr /dlv'
                             println('\n' + "Windows Instance detected")
@@ -234,15 +243,35 @@ task generateInMemoryExamples {
                     exec {
                         workingDir "${project.projectDir}/build/generated-examples/${example}"
                         if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-                            commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate"
+                            commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate --datastore=inmemory --module=entities"
                         } else {
-                            commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat persist generate"
+                            commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat persist generate --datastore=inmemory --module=entities"
                         }
                     }
                 } catch (Exception e) {
                     println("Example '${example}' Generation failed: " + e.message)
                     throw e
                 }
+            }
+        }
+    }
+}
+
+task generateIntrospectionExamples {
+    doLast {
+        introspectionExamples.each { example ->
+            try {
+                exec {
+                    workingDir "${project.projectDir}/build/generated-examples/${example}"
+                    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate --datastore=mysql --module=entities"
+                    } else {
+                        commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat persist generate --datastore=mysql --module=entities"
+                    }
+                }
+            } catch (Exception e) {
+                println("Example '${example}' Generation failed: " + e.message)
+                throw e
             }
         }
     }
@@ -306,13 +335,13 @@ def checkExecResult(executionResult, failText, standardOutput) {
 task startTestDockerContainer(type: Exec) {
     if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
         def standardOutput = new ByteArrayOutputStream()
-        commandLine 'sh', '-c', 'docker run --platform linux/amd64 --rm -d --name ballerina-persist-tools-example -e MYSQL_ROOT_PASSWORD="Test123#" -p 3308:3306 -t mysql:8.0.21'
+        commandLine 'sh', '-c', 'docker run --platform linux/amd64 --rm -d --name ballerina-persist-tools-example -e MYSQL_ROOT_PASSWORD="Test123#" -e MYSQL_DATABASE="hospital" -p 3308:3306 -t mysql:8.0.21'
         def healthCheck = 1
         def counter = 0
         doLast {
             checkExecResult(executionResult, 'Error', standardOutput)
             while (healthCheck != 0 && counter < 12) {
-                sleep(60 * 1000)
+                sleep(30 * 1000)
                 healthCheck = checkTestDockerContainerStatus('ballerina-persist-tools-example')
                 counter = counter + 1
             }
@@ -406,6 +435,47 @@ task testInMemoryExamples {
     }
 }
 
+task testIntrospectionExamples {
+    dependsOn(startTestDockerContainer)
+    doLast {
+        introspectionExamples.each { example ->
+            try {
+                if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+                    //this part is not necessary. this is added so that the build will not fail due to the issue with
+                    //mysql connector for ballerina requiring a 'first login' on a different mysql client. This is a
+                    //temporary fix until the issue is resolved.
+                    try {
+                        exec {
+                            workingDir "${project.projectDir}/build/generated-examples/${example}"
+                            commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist pull --host localhost --database nonexistentdb --user root --port 3308"
+                            standardInput = new ByteArrayInputStream("Test123#\ny\n".getBytes())
+                        }
+                    } catch (Exception ignored) {}
+                    exec {
+                        workingDir "${project.projectDir}/build/generated-examples/${example}"
+                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal test"
+                    }
+                } else {
+                    try {
+                        exec {
+                            workingDir "${project.projectDir}/build/generated-examples/${example}"
+                            commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat persist pull --host localhost --database hris --user root --port 3308"
+                            standardInput = new ByteArrayInputStream("Test123#\ny\n".getBytes())
+                        }
+                    } catch (Exception ignored) {}
+                    exec {
+                        workingDir "${project.projectDir}/build/generated-examples/${example}"
+                        commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat test"
+                    }
+                }
+            } catch (Exception e) {
+                println("Example '${example}' Tests failed: " + e.message)
+                throw e
+            }
+        }
+    }
+}
+
 task automateGSheetTable {
     doLast {
         try {
@@ -450,6 +520,7 @@ copyPersistTool.dependsOn ":persist-cli:build"
 copyTestResources.dependsOn copyPersistTool
 
 initInMemoryExamples.dependsOn copyTestResources
+generateIntrospectionExamples.dependsOn copyTestResources
 generateInMemoryExamples.dependsOn initInMemoryExamples
 testInMemoryExamples.dependsOn generateInMemoryExamples
 
@@ -457,6 +528,7 @@ initDbExamples.dependsOn testInMemoryExamples
 generateDbExamples.dependsOn initDbExamples
 pushExamples.dependsOn generateDbExamples
 testDbExamples.dependsOn pushExamples
+testIntrospectionExamples.dependsOn generateIntrospectionExamples
 
 // initGSheetExamples.dependsOn testDbExamples
 // generateGSheetExamples.dependsOn initGSheetExamples
@@ -465,5 +537,6 @@ testDbExamples.dependsOn pushExamples
 
 build.dependsOn testInMemoryExamples
 build.dependsOn testDbExamples
+build.dependsOn testIntrospectionExamples
 //build.dependsOn testGSheetExamples
 build.finalizedBy stopTestDockerContainer

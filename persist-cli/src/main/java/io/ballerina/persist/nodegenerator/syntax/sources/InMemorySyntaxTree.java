@@ -57,7 +57,7 @@ public class InMemorySyntaxTree implements SyntaxTree {
         for (Entity entity : entityModule.getEntityMap().values()) {
             moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration(
                     String.format(BalSyntaxConstants.TABLE_PARAMETER_INIT_TEMPLATE, entity.getEntityName(),
-                            getPrimaryKeys(entity, false), entity.getResourceName())));
+                            getPrimaryKeys(entity, false), entity.getClientResourceName())));
         }
         Client clientObject = dbClientSyntax.getClientObject(entityModule);
         Collection<Entity> entityArray = entityModule.getEntityMap().values();
@@ -129,7 +129,7 @@ public class InMemorySyntaxTree implements SyntaxTree {
     }
 
     private static FunctionDefinitionNode[] createQueryFunctions(Entity entity) {
-        String resourceName = entity.getResourceName();
+        String resourceName = entity.getClientResourceName();
         String nameInCamelCase = resourceName.substring(0, 1).toUpperCase(Locale.ENGLISH) + resourceName.substring(1);
         String clonedTables = getQueryClonedTables(entity);
 
@@ -171,10 +171,10 @@ public class InMemorySyntaxTree implements SyntaxTree {
                     Entity assocEntity = relation.getAssocEntity();
                     String fieldName = field.getFieldName();
                     queryBuilder.append(String.format(BalSyntaxConstants.QUERY_OUTER_JOIN,
-                            fieldName.toLowerCase(Locale.ENGLISH), assocEntity.getResourceName()));
+                            fieldName.toLowerCase(Locale.ENGLISH), assocEntity.getClientResourceName()));
                     queryBuilder.append(BalSyntaxConstants.ON);
                     queryOneBuilder.append(String.format(BalSyntaxConstants.QUERY_OUTER_JOIN,
-                            fieldName.toLowerCase(Locale.ENGLISH), assocEntity.getResourceName()));
+                            fieldName.toLowerCase(Locale.ENGLISH), assocEntity.getClientResourceName()));
                     queryOneBuilder.append(BalSyntaxConstants.ON);
                     relationalRecordFields.append(String.format(BalSyntaxConstants.VARIABLE,
                             fieldName, fieldName.toLowerCase(Locale.ENGLISH)));
@@ -259,9 +259,9 @@ public class InMemorySyntaxTree implements SyntaxTree {
         StringBuilder clonedTable = new StringBuilder();
         clonedTable.append(String.format(BalSyntaxConstants.CLONED_TABLE_INIT_TEMPLATE,
                 entity.getEntityName(), getPrimaryKeys(entity, false),
-                entity.getResourceName()));
+                entity.getClientResourceName()));
         String clonedTableDeclaration = String.format(BalSyntaxConstants.CLONED_TABLE_DECLARATION_TEMPLATE,
-                entity.getResourceName(), entity.getResourceName());
+                entity.getClientResourceName(), entity.getClientResourceName());
         clonedTable.append(String.format(BalSyntaxConstants.LOCK_TEMPLATE, clonedTableDeclaration));
 
         return clonedTable.toString();

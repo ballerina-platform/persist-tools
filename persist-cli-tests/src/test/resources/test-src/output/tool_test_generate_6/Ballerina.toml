@@ -7,6 +7,8 @@ distribution = "2201.3.0"
 [build-options]
 observabilityIncluded = false
 
-[persist]
-datastore = "mysql"
-module = "persist_generate_6.entities"
+[[platform.java17.dependency]]
+groupId = "io.ballerina.stdlib"
+artifactId = "persist.sql-native"
+version = "1.3.0-SNAPSHOT"
+

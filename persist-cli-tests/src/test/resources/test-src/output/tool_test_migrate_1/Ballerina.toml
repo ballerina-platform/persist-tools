@@ -7,7 +7,9 @@ distribution = "2201.5.0"
 [build-options]
 observabilityIncluded = true
 
-[persist]
-datastore = "mysql"
-module = "persistTest6"
+[[tool.persist]]
+id = "persist"
+options.datastore = "mysql"
+targetModule = "persistTest6"
+filePath = "persist/model.bal"
 

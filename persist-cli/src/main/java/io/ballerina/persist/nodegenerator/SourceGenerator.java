@@ -22,6 +22,7 @@ import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
+import io.ballerina.persist.nodegenerator.syntax.sources.DbModelGenSyntaxTree;
 import io.ballerina.persist.nodegenerator.syntax.sources.DbSyntaxTree;
 import io.ballerina.persist.nodegenerator.syntax.sources.GSheetSyntaxTree;
 import io.ballerina.persist.nodegenerator.syntax.sources.InMemorySyntaxTree;
@@ -58,6 +59,7 @@ public class SourceGenerator {
 
     private static final String persistTypesBal = "persist_types.bal";
     private static final String persistClientBal = "persist_client.bal";
+    private static final String persistModelBal = "model.bal";
     private static final String NEW_LINE = System.lineSeparator();
     private final String sourcePath;
     private final String moduleNameWithPackageName;
@@ -70,6 +72,22 @@ public class SourceGenerator {
         this.moduleNameWithPackageName = moduleNameWithPackageName;
         this.entityModule = entityModule;
         this.generatedSourceDirPath = generatedSourceDirPath;
+    }
+
+    public void createDbModel() throws BalException {
+        DbModelGenSyntaxTree dbModelGenSyntaxTree = new DbModelGenSyntaxTree();
+        addModelFile(dbModelGenSyntaxTree.getDataModels(entityModule),
+                this.generatedSourceDirPath.resolve(persistModelBal).toAbsolutePath(),
+                this.moduleNameWithPackageName);
+    }
+
+    private void addModelFile(SyntaxTree syntaxTree, Path path, String moduleName) throws BalException {
+        try {
+            writeOutputFile(Formatter.format(syntaxTree.toSourceCode()), path);
+        } catch (FormatterException | IOException e) {
+            throw new BalException(String.format("could not write the records for the `%s` data model " +
+                    "to the model.bal file.", moduleName) + e.getMessage());
+        }
     }
 
     public void createDbSources(String datasource) throws BalException {
