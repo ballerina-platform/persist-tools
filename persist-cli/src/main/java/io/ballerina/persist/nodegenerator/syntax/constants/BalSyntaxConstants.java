@@ -403,7 +403,8 @@ public class BalSyntaxConstants {
 
     public static final String REDIS_METADATA_RECORD_COLLECTION_NAME_TEMPLATE = "collectionName: \"%s\", " 
     + System.lineSeparator();
-    public static final String REDIS_METADATA_RECORD_FIELD_TEMPLATE = "%s: {fieldName: \"%s\", fieldDataType: predis:%s}";
+    public static final String REDIS_METADATA_RECORD_FIELD_TEMPLATE 
+    = "%s: {fieldName: \"%s\", fieldDataType: predis:%s}";
     public static final String REFERENCE_METADATA_TEMPLATE = "refMetadata: {%s}";
     public static final String REDIS_METADATA_RECORD_TEMPLATE = 
         "private final record {|predis:RedisMetadata...;|} & readonly metadata = {%s};";

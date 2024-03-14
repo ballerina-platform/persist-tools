@@ -276,8 +276,8 @@ public class RedisClientSyntax  implements ClientSyntax {
                                     if (associateFieldMetaData.length() != 0) {
                                         associateFieldMetaData.append(BalSyntaxConstants.COMMA_WITH_NEWLINE);
                                     }
-                                    associateFieldMetaData.append(String.format((field.isArrayType() ?
-                                                    "\"%s[]" : "\"%s") + BalSyntaxConstants.REDIS_ASSOCIATED_FIELD_TEMPLATE,
+                                    associateFieldMetaData.append(String.format((field.isArrayType() 
+                                    ? "\"%s[]" : "\"%s") + BalSyntaxConstants.REDIS_ASSOCIATED_FIELD_TEMPLATE,
                                             field.getFieldName(), key.getField(),
                                             BalSyntaxUtils.stripEscapeCharacter(field.getFieldName()),
                                             BalSyntaxUtils.stripEscapeCharacter(key.getField()),
@@ -320,7 +320,8 @@ public class RedisClientSyntax  implements ClientSyntax {
                     BalSyntaxUtils.stripEscapeCharacter((BalSyntaxUtils.
                             getStringWithUnderScore(entity.getEntityName()))), entityMetaData));
         }
-        return NodeParser.parseObjectMember(String.format(BalSyntaxConstants.REDIS_METADATA_RECORD_TEMPLATE, mapBuilder));
+        return NodeParser.parseObjectMember(String.format(BalSyntaxConstants.REDIS_METADATA_RECORD_TEMPLATE, 
+        mapBuilder));
     }
 
     private static String getJoinMetaData(Entity entity) {
