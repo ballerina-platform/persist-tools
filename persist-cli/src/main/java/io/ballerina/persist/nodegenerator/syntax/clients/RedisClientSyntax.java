@@ -117,7 +117,7 @@ public class RedisClientSyntax  implements ClientSyntax {
     @Override
     public FunctionDefinitionNode getGetFunction(Entity entity) {
         return (FunctionDefinitionNode) NodeParser.parseObjectMember(
-                String.format(BalSyntaxConstants.EXTERNAL_REDIS_GET_METHOD_TEMPLATE, entity.getResourceName(),
+                String.format(BalSyntaxConstants.EXTERNAL_REDIS_GET_METHOD_TEMPLATE, entity.getClientResourceName(),
                         entity.getEntityName(), BalSyntaxConstants.REDIS, this.nativeClass));
     }
 
@@ -152,7 +152,7 @@ public class RedisClientSyntax  implements ClientSyntax {
     @Override
     public FunctionDefinitionNode getPutFunction(Entity entity) {
         StringBuilder filterKeys = new StringBuilder(BalSyntaxConstants.OPEN_BRACE);
-        StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH + entity.getResourceName());
+        StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH + entity.getClientResourceName());
         Function update = BalSyntaxUtils.generatePutFunction(entity, filterKeys, path);
 
         update.addStatement(NodeParser.parseStatement(BalSyntaxConstants.REDIS_CLIENT_DECLARATION));
@@ -180,7 +180,7 @@ public class RedisClientSyntax  implements ClientSyntax {
     @Override
     public FunctionDefinitionNode getDeleteFunction(Entity entity) {
         StringBuilder filterKeys = new StringBuilder(BalSyntaxConstants.OPEN_BRACE);
-        StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH + entity.getResourceName());
+        StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH + entity.getClientResourceName());
         Function delete = BalSyntaxUtils.generateDeleteFunction(entity, filterKeys, path);
         delete.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.GET_OBJECT_QUERY,
                 entity.getEntityName(), path)));

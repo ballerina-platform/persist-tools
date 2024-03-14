@@ -81,8 +81,6 @@ public class RedisSyntaxTree implements SyntaxTree  {
                 clientObject.addMember(function, false);
             });
         });
-        // clientObject.addMember(redisClientSyntax.getQueryNativeSQLFunction(), true);
-        // clientObject.addMember(redisClientSyntax.getExecuteNativeSQLFunction(), true);
         clientObject.addMember(redisClientSyntax.getCloseFunction(), true);
         moduleMembers = moduleMembers.add(clientObject.getClassDefinitionNode());
         return BalSyntaxUtils.generateSyntaxTree(imports, moduleMembers);

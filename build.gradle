@@ -166,16 +166,10 @@ task copyPersistTool(type: Copy) {
     }
 }
 
-// task copyPersist(type: Copy) {
-//     from "C:/Users/Public/BalProjects/module-ballerina-persist/target/ballerina-runtime/repo/bala/ballerina/persist"
-//     into "$project.rootDir/target/ballerina-distribution/repo/bala/ballerina/persist"
-// }
-
 copyPersistTool.dependsOn ":persist-cli-tests:build"
 copyPersistTool.dependsOn ":persist-cli:build"
 
 build.dependsOn copyPersistTool
-// build.finalizedBy copyPersist
-//build.dependsOn ":examples:build"
+build.dependsOn ":examples:build"
 
 publish.dependsOn build
