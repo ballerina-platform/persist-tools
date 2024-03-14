@@ -40,7 +40,7 @@ CREATE TABLE [Workspace] (
 	[workspaceType] VARCHAR(6) CHECK ([workspaceType] IN ('C', 'OFFICE', 'MR')) NOT NULL,
 	[locationBuildingCode] VARCHAR(191) NOT NULL,
 	FOREIGN KEY([locationBuildingCode]) REFERENCES [Building]([buildingCode]),
-	[workspaceEmpNo] VARCHAR(191) UNIQUE NOT NULL,
-	FOREIGN KEY([workspaceEmpNo]) REFERENCES [Employee]([empNo]),
+	[employeeEmpNo] VARCHAR(191) UNIQUE NOT NULL,
+	FOREIGN KEY([employeeEmpNo]) REFERENCES [Employee]([empNo]),
 	PRIMARY KEY([workspaceId])
 );

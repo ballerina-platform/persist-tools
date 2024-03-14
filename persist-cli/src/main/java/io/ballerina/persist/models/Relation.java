@@ -18,6 +18,7 @@
 
 package io.ballerina.persist.models;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -44,7 +45,6 @@ public class Relation {
     private final boolean owner;
     private RelationType relationType;
     private Entity assocEntity;
-
 
     private Relation(List<Key> keyColumns,
                      List<String> references, RelationType relationType,
@@ -101,7 +101,7 @@ public class Relation {
      */
     public static class Builder {
         List<Key> keys = null;
-        List<String> references = null;
+        List<String> references = new ArrayList<>();
         Entity assocEntity = null;
 
         RelationType relationType = RelationType.ONE;
@@ -138,12 +138,17 @@ public class Relation {
      */
     public static class Key {
         private final String field;
+
+        private final String columnName;
         private final String reference;
+        private final String referenceColumnName;
         private final String type;
 
-        public Key(String field, String reference, String type) {
+        public Key(String field, String columnName, String reference, String referenceColumnName, String type) {
             this.field = field;
+            this.columnName = columnName;
             this.reference = reference;
+            this.referenceColumnName = referenceColumnName;
             this.type = type;
         }
 
@@ -157,6 +162,14 @@ public class Relation {
 
         public String getType() {
             return type;
+        }
+
+        public String getColumnName() {
+            return columnName;
+        }
+
+        public String getReferenceColumnName() {
+            return referenceColumnName;
         }
     }
 }

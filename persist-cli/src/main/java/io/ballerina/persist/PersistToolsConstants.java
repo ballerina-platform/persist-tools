@@ -64,6 +64,7 @@ public class PersistToolsConstants {
     public static final String MSSQL_CONNECTOR_NAME_PREFIX = "mssql-jdbc";
     public static final String POSTGRESQL_CONNECTOR_NAME_PREFIX = "postgresql";
     public static final String SCHEMA_FILE_NAME = "model";
+
     public static final Set<String> SUPPORTED_DB_PROVIDERS =
            Set.of(SupportedDataSources.MYSQL_DB, SupportedDataSources.MSSQL_DB, SupportedDataSources.IN_MEMORY_TABLE,
                    SupportedDataSources.GOOGLE_SHEETS, SupportedDataSources.POSTGRESQL_DB);
@@ -100,12 +101,14 @@ public class PersistToolsConstants {
         public static final String DOUBLE = "DOUBLE";
         public static final String FLOAT = "FLOAT";
         public static final String VARCHAR = "VARCHAR";
+        public static final String CHAR = "CHAR";
         public static final String DATE = "DATE";
         public static final String TIME = "TIME";
         public static final String TIME_STAMP = "TIMESTAMP";
         public static final String DATE_TIME = "DATETIME";
         public static final String DATE_TIME2 = "DATETIME2";
         public static final String LONG_BLOB = "LONGBLOB";
+        public static final String BLOB = "BLOB";
         public static final String VARBINARY = "VARBINARY(MAX)";
         public static final String BYTEA = "BYTEA";
     }

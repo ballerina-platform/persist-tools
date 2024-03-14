@@ -1,0 +1,16 @@
+[package]
+org = "wso2"
+name = "Demo"
+version = "0.1.0"
+distribution = "2201.8.4"
+
+[build-options]
+observabilityIncluded = true
+
+[[platform.java17.repository]]
+id="wso2-nexus"
+url = "https://maven.wso2.org/nexus/content/groups/public/"
+
+[[platform.java17.repository]]
+id="wso2-nexus-snapshot"
+url = "https://maven.wso2.org/nexus/content/repositories/snapshots/"

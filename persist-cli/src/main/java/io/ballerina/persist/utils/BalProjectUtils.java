@@ -18,6 +18,7 @@
 
 package io.ballerina.persist.utils;
 
+import io.ballerina.compiler.syntax.tree.AnnotationNode;
 import io.ballerina.compiler.syntax.tree.ArrayTypeDescriptorNode;
 import io.ballerina.compiler.syntax.tree.BuiltinSimpleNameReferenceNode;
 import io.ballerina.compiler.syntax.tree.EnumDeclarationNode;
@@ -45,11 +46,14 @@ import io.ballerina.persist.models.Enum;
 import io.ballerina.persist.models.EnumMember;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.models.Relation;
+import io.ballerina.persist.models.SQLType;
 import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
+import io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils;
 import io.ballerina.projects.BuildOptions;
 import io.ballerina.projects.DiagnosticResult;
 import io.ballerina.projects.Package;
 import io.ballerina.projects.PackageCompilation;
+import io.ballerina.projects.Project;
 import io.ballerina.projects.directory.SingleFileProject;
 import io.ballerina.toml.syntax.tree.AbstractNodeFactory;
 import io.ballerina.toml.syntax.tree.DocumentMemberDeclarationNode;
@@ -63,17 +67,22 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static io.ballerina.compiler.syntax.tree.SyntaxKind.QUALIFIED_NAME_REFERENCE;
 import static io.ballerina.persist.PersistToolsConstants.GENERATE_CMD_FILE;
 import static io.ballerina.persist.PersistToolsConstants.TARGET_DIRECTORY;
+import static io.ballerina.persist.PersistToolsConstants.SqlTypes.CHAR;
+import static io.ballerina.persist.PersistToolsConstants.SqlTypes.VARCHAR;
 import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 
 /**
@@ -139,6 +148,20 @@ public class BalProjectUtils {
         }
     }
 
+    public static Project buildDriverFile(Path driverPath) throws BalException {
+        BuildOptions.BuildOptionsBuilder buildOptionsBuilder = BuildOptions.builder();
+        buildOptionsBuilder.setOffline(true);
+        SingleFileProject buildProject =  SingleFileProject.load(driverPath.toAbsolutePath(),
+                buildOptionsBuilder.build());
+        Package currentPackage = buildProject.currentPackage();
+        PackageCompilation compilation = currentPackage.getCompilation();
+        DiagnosticResult diagnosticResult = compilation.diagnosticResult();
+        if (diagnosticResult.hasErrors()) {
+            throw new BalException("ERROR: failed to build the driver file.");
+        }
+        return buildProject;
+    }
+
     public static void validateBallerinaProject(Path projectPath) throws BalException {
         Optional<Path> ballerinaToml;
         try (Stream<Path> stream = Files.list(projectPath)) {
@@ -190,6 +213,15 @@ public class BalProjectUtils {
             List<EntityField> keyArray = new ArrayList<>();
             RecordTypeDescriptorNode recordDesc = (RecordTypeDescriptorNode) ((TypeDefinitionNode) moduleNode)
                     .typeDescriptor();
+            Optional<MetadataNode> entityMetadataNode = typeDefinitionNode.metadata();
+            entityBuilder.setTableName(typeDefinitionNode.typeName().text().trim());
+            entityMetadataNode.ifPresent(value -> entityBuilder.setTableName(
+                    BalSyntaxUtils.readStringValueFromAnnotation(
+                            value.annotations().stream().toList(),
+                            BalSyntaxConstants.SQL_DB_MAPPING_ANNOTATION_NAME,
+                            "name"
+                    )
+            ));
             for (Node node : recordDesc.fields()) {
                 EntityField.Builder fieldBuilder;
                 RecordFieldNode fieldNode = (RecordFieldNode) node;
@@ -210,8 +242,121 @@ public class BalProjectUtils {
                 String qualifiedNamePrefix = getQualifiedModulePrefix(type);
                 fieldBuilder.setType(fType);
                 fieldBuilder.setOptionalType(fieldNode.typeName().kind().equals(SyntaxKind.OPTIONAL_TYPE_DESC));
+                fieldBuilder.setFieldColumnName(fieldNode.fieldName().text().trim());
                 Optional<MetadataNode> metadataNode = fieldNode.metadata();
-                metadataNode.ifPresent(value -> fieldBuilder.setAnnotation(value.annotations()));
+                metadataNode.ifPresent(value -> {
+                    //read the db generated annotation
+                    List<AnnotationNode> annotations = value.annotations().stream().toList();
+                    boolean dbGenerated = BalSyntaxUtils.isAnnotationPresent(
+                            annotations,
+                            BalSyntaxConstants.SQL_GENERATED_ANNOTATION_NAME
+                    );
+                    fieldBuilder.setIsDbGenerated(dbGenerated);
+
+                    //read the db mapping annotation
+                    String fieldResourceName = BalSyntaxUtils.readStringValueFromAnnotation(
+                            annotations,
+                            BalSyntaxConstants.SQL_DB_MAPPING_ANNOTATION_NAME,
+                            "name"
+                    );
+                    if (!fieldResourceName.isEmpty()) {
+                        fieldBuilder.setFieldColumnName(fieldResourceName);
+                    }
+                    //read the unique index annotation
+                    boolean isUniqueIndexPresent = BalSyntaxUtils.isAnnotationPresent(
+                            annotations,
+                            BalSyntaxConstants.SQL_UNIQUE_INDEX_MAPPING_ANNOTATION_NAME
+                    );
+                    List<String> uniqueIndexNames = BalSyntaxUtils.readStringArrayValueFromAnnotation(
+                            annotations,
+                            BalSyntaxConstants.SQL_UNIQUE_INDEX_MAPPING_ANNOTATION_NAME,
+                            "names"
+                    );
+                    if (uniqueIndexNames != null && !uniqueIndexNames.isEmpty()) {
+                        uniqueIndexNames.forEach(uniqueIndexName ->
+                                entityBuilder.upsertUniqueIndex(uniqueIndexName, fieldBuilder.build()));
+                    } else if (isUniqueIndexPresent) {
+                        entityBuilder.upsertUniqueIndex("unique_idx_" +
+                                fieldBuilder.getFieldName().toLowerCase(Locale.ENGLISH), fieldBuilder.build());
+                    }
+                    //read the relation annotation
+                    List<String> relationRefs = BalSyntaxUtils.readStringArrayValueFromAnnotation(
+                            annotations,
+                            BalSyntaxConstants.SQL_RELATION_MAPPING_ANNOTATION_NAME,
+                            "refs"
+                    );
+                    if (relationRefs != null) {
+                        fieldBuilder.setRelationRefs(relationRefs);
+                    }
+
+                    //read the index annotation
+                    boolean isIndexPresent = BalSyntaxUtils.isAnnotationPresent(
+                            annotations,
+                            BalSyntaxConstants.SQL_INDEX_MAPPING_ANNOTATION_NAME
+                    );
+                    List<String> indexNames = BalSyntaxUtils.readStringArrayValueFromAnnotation(
+                            annotations,
+                            BalSyntaxConstants.SQL_INDEX_MAPPING_ANNOTATION_NAME,
+                            "names"
+                    );
+                    if (indexNames != null && !indexNames.isEmpty()) {
+                        indexNames.forEach(indexName ->
+                                entityBuilder.upsertIndex(indexName, fieldBuilder.build()));
+                    } else if (isIndexPresent) {
+                        entityBuilder.upsertIndex("idx_" +
+                                fieldBuilder.getFieldName().toLowerCase(Locale.ENGLISH), fieldBuilder.build());
+                    }
+                    // read the varchar annotation
+                    String varcharLength = BalSyntaxUtils.readStringValueFromAnnotation(
+                            annotations,
+                            BalSyntaxConstants.SQL_VARCHAR_MAPPING_ANNOTATION_NAME,
+                            "length"
+                    );
+                    if (!varcharLength.isEmpty()) {
+                        fieldBuilder.setSqlType(
+                                new SQLType(
+                                        VARCHAR,
+                                        null,
+                                        0,
+                                        0,
+                                        null,
+                                        Integer.parseInt(varcharLength)));
+                    }
+                    //read the char annotation
+                    String charLength = BalSyntaxUtils.readStringValueFromAnnotation(
+                            annotations,
+                            BalSyntaxConstants.SQL_CHAR_MAPPING_ANNOTATION_NAME,
+                            "length"
+                    );
+                    if (!charLength.isEmpty()) {
+                        fieldBuilder.setSqlType(
+                                new SQLType(
+                                        CHAR,
+                                        null,
+                                        0,
+                                        0,
+                                        null,
+                                        Integer.parseInt(charLength)));
+                    }
+                    //read the decimal annotation
+                    List<String> decimal = BalSyntaxUtils.readStringArrayValueFromAnnotation(
+                            annotations,
+                            BalSyntaxConstants.SQL_DECIMAL_MAPPING_ANNOTATION_NAME,
+                            "precision"
+                    );
+                    if (decimal != null && decimal.size() == 2) {
+                        fieldBuilder.setSqlType(
+                                new SQLType(
+                                        PersistToolsConstants.SqlTypes.DECIMAL,
+                                        null,
+                                        Integer.parseInt(decimal.get(0).trim()),
+                                        Integer.parseInt(decimal.get(1).trim()),
+                                        null,
+                                        0)
+                        );
+                    }
+                    fieldBuilder.setAnnotations(annotations);
+                });
                 EntityField entityField = fieldBuilder.build();
                 entityBuilder.addField(entityField);
                 if (fieldNode.readonlyKeyword().isPresent()) {
@@ -305,65 +450,70 @@ public class BalProjectUtils {
         Map<String, Entity> entityMap = entityModule.getEntityMap();
         for (Entity entity : entityMap.values()) {
             List<EntityField> fields = entity.getFields();
-            fields.stream().filter(field -> entityMap.get(field.getFieldType()) != null)
+            HashMap<String, List<EntityField>> relationFields = new HashMap<>();
+            fields.stream().filter(field -> entityMap.get(field.getFieldType()) != null && field.getRelation() == null)
                     .forEach(field -> {
-                        String fieldType = field.getFieldType();
-                        Entity assocEntity = entityMap.get(fieldType);
-                        if (field.getRelation() == null) {
-                            // this branch only handles one-to-one or one-to-many or many-to-many with no relation
-                            // annotations
-                            assocEntity.getFields().stream().filter(assocfield -> assocfield.getFieldType()
-                                            .equals(entity.getEntityName()))
-                                    .filter(assocfield -> assocfield.getRelation() == null).forEach(assocfield -> {
-                                        // skip if the relation is already set for the entity field.
-                                        if (field.getRelation() != null) {
-                                            return;
-                                        }
-                                        // one-to-many or many-to-many with no relation annotations
-                                        if (field.isArrayType() && assocfield.isArrayType()) {
-                                            throw new RuntimeException("unsupported many to many relation between " +
-                                                    entity.getEntityName() + " and " + assocEntity.getEntityName());
-                                        }
-                                        // one-to-one
-                                        if (!field.isArrayType() && !assocfield.isArrayType()) {
-                                            if (!field.isOptionalType() && assocfield.isOptionalType()) {
-                                                field.setRelation(computeRelation(field.getFieldName(), entity,
-                                                        assocEntity, true, Relation.RelationType.ONE));
-                                                assocfield.setRelation(computeRelation(field.getFieldName(),
-                                                        assocEntity, entity, false, Relation.RelationType.ONE));
-                                            } else if (field.isOptionalType() && !assocfield.isOptionalType()) {
-                                                field.setRelation(computeRelation(field.getFieldName(), entity,
-                                                        assocEntity, false, Relation.RelationType.ONE));
-                                                assocfield.setRelation(computeRelation(field.getFieldName(),
-                                                        assocEntity, entity, true, Relation.RelationType.ONE));
-                                            } else {
-                                                throw new RuntimeException("unsupported ownership annotation " +
-                                                        "in the relation between " + entity.getEntityName() +
-                                                        " and " + assocEntity.getEntityName());
-                                            }
-                                        } else {
-                                            if (field.isArrayType() && field.isOptionalType()) {
-                                                // one-to-many relation. associated entity is the owner.
-                                                // first param should be always owner entities field name
-                                                field.setRelation(computeRelation(assocfield.getFieldName(), entity,
-                                                        assocEntity, false, Relation.RelationType.MANY));
-                                                assocfield.setRelation(computeRelation(assocfield.getFieldName(),
-                                                        assocEntity, entity, true, Relation.RelationType.ONE));
-                                            } else if (field.isArrayType() || field.getFieldType().equals("byte")) {
-                                                field.setRelation(null);
-                                            } else {
-                                                // one-to-many relation. entity is the owner.
-                                                // one-to-one relation. entity is the owner.
-                                                // first param should be always owner entities field name
-                                                field.setRelation(computeRelation(field.getFieldName(), entity,
-                                                        assocEntity, true, Relation.RelationType.ONE));
-                                                assocfield.setRelation(computeRelation(field.getFieldName(),
-                                                        assocEntity, entity, false, Relation.RelationType.MANY));
-                                            }
-                                        }
-                                    });
+                        if (relationFields.containsKey(field.getFieldType())) {
+                            relationFields.get(field.getFieldType()).add(field);
+                        } else {
+                            List<EntityField> fieldList = new ArrayList<>();
+                            fieldList.add(field);
+                            relationFields.put(field.getFieldType(), fieldList);
                         }
                     });
+            for (List<EntityField> fieldList : relationFields.values()) {
+                Entity assocEntity = entityMap.get(fieldList.get(0).getFieldType());
+                List<EntityField> assocFields = assocEntity.getFields().stream()
+                        .filter(assocField -> assocField.getFieldType()
+                                .equals(entity.getEntityName()) && assocField.getRelation() == null).toList();
+                for (int i = 0; i < fieldList.size(); i++) {
+                    EntityField field = fieldList.get(i);
+                    EntityField assocField = assocFields.get(i);
+                    if (field.isArrayType() && assocField.isArrayType()) {
+                        //both are array types. many-to-many is not supported
+                        throw new RuntimeException("unsupported many to many relation between " +
+                                entity.getEntityName() + " and " + assocEntity.getEntityName());
+                    }
+                    if (field.isArrayType() || assocField.isArrayType()) {
+                        // one of them is array type -> one-to-many or many-to-many relation
+                        if (field.isArrayType()) {
+                            // many-to-one -> associated entity is the owner
+                            field.setRelation(computeRelation(assocField.getFieldName(), entity, assocEntity, false,
+                                    Relation.RelationType.MANY, assocField.getRelationRefs()));
+                            assocField.setRelation(computeRelation(assocField.getFieldName(), assocEntity, entity,
+                                    true, Relation.RelationType.ONE, assocField.getRelationRefs()));
+
+                        } else {
+                            // one-to-many -> entity is the owner
+                            field.setRelation(computeRelation(field.getFieldName(), entity, assocEntity, true,
+                                    Relation.RelationType.ONE, field.getRelationRefs()));
+                            assocField.setRelation(computeRelation(field.getFieldName(), assocEntity, entity,
+                                    false, Relation.RelationType.MANY, field.getRelationRefs()));
+                        }
+                    } else {
+                        // one-to-one relation
+                        if (field.isOptionalType()) {
+                            // associated entity is the owner
+                            field.setRelation(computeRelation(assocField.getFieldName(), entity, assocEntity, false,
+                                    Relation.RelationType.ONE, assocField.getRelationRefs()));
+                            assocField.setRelation(computeRelation(assocField.getFieldName(), assocEntity, entity,
+                                    true, Relation.RelationType.ONE, assocField.getRelationRefs()));
+                        } else {
+                            // entity is the owner
+                            field.setRelation(computeRelation(field.getFieldName(), entity, assocEntity, true,
+                                    Relation.RelationType.ONE, field.getRelationRefs()));
+                            assocField.setRelation(computeRelation(field.getFieldName(), assocEntity, entity,
+                                    false, Relation.RelationType.ONE, field.getRelationRefs()));
+                        }
+                    }
+                    if (field.getRelationRefs() != null) {
+                        field.getRelationRefs().forEach(entity::removeField);
+                    }
+                    if (assocField.getRelationRefs() != null) {
+                        assocField.getRelationRefs().forEach(assocEntity::removeField);
+                    }
+                }
+            }
         }
     }
 
@@ -379,27 +529,54 @@ public class BalProjectUtils {
         }
     }
 
+
     private static Relation computeRelation(String fieldName, Entity entity, Entity assocEntity, boolean isOwner,
-                                            Relation.RelationType relationType) {
+                                            Relation.RelationType relationType, List<String> relationRefs) {
         Relation.Builder relBuilder = new Relation.Builder();
         relBuilder.setAssocEntity(assocEntity);
         if (isOwner) {
-            List<Relation.Key> keyColumns = assocEntity.getKeys().stream().map(key ->
-                    new Relation.Key(stripEscapeCharacter(fieldName.toLowerCase(Locale.ENGLISH))
-                            + stripEscapeCharacter(key.getFieldName()).substring(0, 1).toUpperCase(Locale.ENGLISH)
-                            + stripEscapeCharacter(key.getFieldName()).substring(1), key.getFieldName(),
-                            key.getFieldType())).collect(Collectors.toList());
+            List<Relation.Key> keyColumns = IntStream.range(0, assocEntity.getKeys().size())
+                    .mapToObj(i -> {
+
+                        EntityField key = assocEntity.getKeys().get(i);
+                        if (!relationRefs.isEmpty()) {
+                            String fkField = relationRefs.get(i);
+                            EntityField fkEntityField = entity.getFieldByName(fkField);
+                            return new Relation.Key(fkField,
+                                    fkEntityField.getFieldColumnName(), key.getFieldName(), key.getFieldColumnName(),
+                                    key.getFieldType());
+                        }
+                        String fkField = stripEscapeCharacter(fieldName.toLowerCase(Locale.ENGLISH))
+                                + stripEscapeCharacter(key.getFieldName()).substring(0, 1).toUpperCase(Locale.ENGLISH)
+                                + stripEscapeCharacter(key.getFieldName()).substring(1);
+
+                        return new Relation.Key(fkField,
+                                fkField, key.getFieldName(), key.getFieldColumnName(), key.getFieldType());
+
+                    })
+                    .collect(Collectors.toList());
             relBuilder.setOwner(true);
             relBuilder.setRelationType(relationType);
             relBuilder.setKeys(keyColumns);
             relBuilder.setReferences(assocEntity.getKeys().stream().map(EntityField::getFieldName)
                     .collect(Collectors.toList()));
         } else {
-            List<Relation.Key> keyColumns = entity.getKeys().stream().map(key -> new Relation.Key(key.getFieldName(),
-                            fieldName.toLowerCase(Locale.ENGLISH) +
-                                    stripEscapeCharacter(key.getFieldName()).substring(0, 1).toUpperCase(Locale.ENGLISH)
-                                    + stripEscapeCharacter(key.getFieldName()).substring(1),
-                            key.getFieldType()))
+            List<Relation.Key> keyColumns = IntStream.range(0, entity.getKeys().size())
+                    .mapToObj(i -> {
+
+                        EntityField key = entity.getKeys().get(i);
+                        String fkField = stripEscapeCharacter(fieldName.toLowerCase(Locale.ENGLISH))
+                                + stripEscapeCharacter(key.getFieldName()).substring(0, 1).toUpperCase(Locale.ENGLISH)
+                                + stripEscapeCharacter(key.getFieldName()).substring(1);
+                        if (!relationRefs.isEmpty()) {
+                            fkField = relationRefs.get(i);
+                            EntityField assocField = assocEntity.getFieldByName(fkField);
+                            return new Relation.Key(key.getFieldName(), key.getFieldColumnName(), fkField,
+                                    assocField.getFieldColumnName(), key.getFieldType());
+                        }
+                        return new Relation.Key(key.getFieldName(), key.getFieldColumnName(), fkField,
+                                fkField, key.getFieldType());
+                    })
                     .collect(Collectors.toList());
             relBuilder.setOwner(false);
             relBuilder.setRelationType(relationType);
@@ -440,4 +617,48 @@ public class BalProjectUtils {
 
         return schemaFilePaths.get(0);
     }
+
+    public static void validatePullCommandOptions(String datastore, String host, String port, String user,
+                                                  String database) throws BalException {
+        String nameRegex = "[A-Za-z]\\w*";
+        List<String> errors = new ArrayList<>();
+        if (datastore == null) {
+            errors.add("The datastore type is not provided.");
+        } else if (datastore.isEmpty()) {
+            errors.add("The datastore type cannot be empty.");
+        } else if (!datastore.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB)) {
+            errors.add("Unsupported data store: '" + datastore + "'");
+        }
+        if (host == null) {
+            errors.add("The host is not provided.");
+        } else if (host.isEmpty()) {
+            errors.add("The host cannot be empty.");
+        }
+        if (port == null) {
+            errors.add("The port is not provided.");
+        } else if (port.isEmpty()) {
+            errors.add("The port cannot be empty.");
+        } else if (!Pattern.matches("\\d+", port)) {
+            errors.add("The port is invalid. The port should be a number.");
+        } else if (Integer.parseInt(port) < 0 || Integer.parseInt(port) > 65535) {
+            errors.add("The port is invalid. The port should be in the range of 0 to 65535.");
+        }
+        if (user == null) {
+            errors.add("The user is not provided.");
+        } else if (user.isEmpty()) {
+            errors.add("The user cannot be empty.");
+        }
+        if (database == null) {
+            errors.add("The database is not provided.");
+        } else if (database.isEmpty()) {
+            errors.add("The database cannot be empty.");
+        } else if (!Pattern.matches(nameRegex, database)) {
+            errors.add("The database name is invalid. The database name should start with a letter or underscore (_)" +
+                    " and must contain only alphanumeric characters.");
+        }
+        if (!errors.isEmpty()) {
+            throw new BalException(String.join(System.lineSeparator(), errors));
+        }
+    }
+
 }

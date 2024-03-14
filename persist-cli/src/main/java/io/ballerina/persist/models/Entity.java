@@ -18,7 +18,7 @@
 
 package io.ballerina.persist.models;
 
-import io.ballerina.persist.plural.Pluralizer;
+import io.ballerina.persist.inflector.Pluralizer;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,26 +33,27 @@ import java.util.Locale;
 public class Entity {
 
     private final List<EntityField> keys;
-    private final String resourceName;
-
+    private final String tableName;
     private final String entityName;
-
-    private final List<EntityField> fields;
-
+    private List<EntityField> fields;
+    private final List<Index> indexes;
+    private final List<Index> uniqueIndexes;
     private Entity(String entityName, List<EntityField> keys,
-                   String resourceName, List<EntityField> fields) {
+                   String resourceName, List<EntityField> fields, List<Index> indexes, List<Index> uniqueIndexes) {
         this.entityName = entityName;
         this.keys = Collections.unmodifiableList(keys);
-        this.resourceName = resourceName;
+        this.tableName = resourceName;
         this.fields = Collections.unmodifiableList(fields);
+        this.indexes = Collections.unmodifiableList(indexes);
+        this.uniqueIndexes = Collections.unmodifiableList(uniqueIndexes);
     }
 
     public List<EntityField> getKeys() {
         return this.keys;
     }
 
-    public String getResourceName() {
-        return this.resourceName;
+    public String getTableName() {
+        return this.tableName;
     }
     public String getEntityName() {
         return this.entityName;
@@ -60,6 +61,18 @@ public class Entity {
 
     public List<EntityField> getFields() {
         return this.fields;
+    }
+
+    public String getClientResourceName() {
+        return Pluralizer.pluralize(entityName.toLowerCase(Locale.ENGLISH));
+    }
+
+    public List<Index> getIndexes() {
+        return this.indexes;
+    }
+
+    public List<Index> getUniqueIndexes() {
+        return this.uniqueIndexes;
     }
 
     public EntityField getFieldByName(String fieldName) {
@@ -71,22 +84,55 @@ public class Entity {
         return null;
     }
 
+    public EntityField getFieldByColumnName(String columnName) {
+        for (EntityField field : fields) {
+            if (field.getFieldColumnName().equals(columnName)) {
+                return field;
+            }
+        }
+        return null;
+    }
+
+    public boolean shouldTableMappingGenerated() {
+        if (tableName == null || tableName.isBlank()) {
+            return false;
+        }
+        return !entityName.equals(tableName);
+    }
+
+    public void removeField(String fieldName) {
+        List<EntityField> newFields = new ArrayList<>(this.fields);
+        newFields.removeIf(field -> field.getFieldName().equals(fieldName));
+        this.fields = Collections.unmodifiableList(newFields);
+    }
+
     public static Entity.Builder newBuilder(String entityName) {
         return new Entity.Builder(entityName);
     }
+
 
     /**
      * Entity Definition.Builder.
      */
     public static class Builder {
         String entityName;
-        String resourceName = null;
+        String tableName = null;
         List<EntityField> keys;
 
         List<EntityField> fieldList = null;
 
+        List<Index> indexes;
+
+        List<Index> uniqueIndexes;
+
         private Builder(String entityName) {
             this.entityName = entityName;
+            this.indexes = new ArrayList<>();
+            this.uniqueIndexes = new ArrayList<>();
+        }
+
+        public void setTableName(String tableName) {
+            this.tableName = tableName;
         }
 
         public void setKeys(List<EntityField> keys) {
@@ -100,12 +146,56 @@ public class Entity {
             fieldList.add(field);
         }
 
-        public Entity build() {
-            if (resourceName == null) {
-                resourceName = entityName.toLowerCase(Locale.ENGLISH);
-            }
-            resourceName = Pluralizer.pluralize(resourceName);
-            return new Entity(entityName, keys, resourceName, fieldList);
+        public void addIndex(Index index) {
+            indexes.add(index);
         }
+
+        public void upsertIndex(String indexName, EntityField field) {
+            List<EntityField> fields = new ArrayList<>();
+            fields.add(field);
+            Index existingIndex = this.indexes.stream()
+                    .filter(i -> i.getIndexName().equals(indexName)).findFirst().orElse(null);
+            if (existingIndex != null) {
+                existingIndex.addField(field);
+            } else {
+                Index index = new Index(indexName, fields, false);
+                indexes.add(index);
+            }
+        }
+
+        public void upsertUniqueIndex(String indexName, EntityField field) {
+            List<EntityField> fields = new ArrayList<>();
+            fields.add(field);
+            Index existingIndex = this.uniqueIndexes.stream()
+                    .filter(i -> i.getIndexName().equals(indexName)).findFirst().orElse(null);
+            if (existingIndex != null) {
+                existingIndex.addField(field);
+            } else {
+                Index index = new Index(indexName, fields, true);
+                uniqueIndexes.add(index);
+            }
+        }
+
+        public void addUniqueIndex(Index index) {
+            uniqueIndexes.add(index);
+        }
+
+        public Entity build() {
+            return new Entity(entityName, keys, tableName, fieldList, indexes, uniqueIndexes);
+        }
+
+        public EntityField getFieldByName(String fieldName) {
+            for (EntityField field : fieldList) {
+                if (field.getFieldName().equals(fieldName)) {
+                    return field;
+                }
+            }
+            return null;
+        }
+
+        public String getEntityName() {
+            return entityName;
+        }
+
     }
 }

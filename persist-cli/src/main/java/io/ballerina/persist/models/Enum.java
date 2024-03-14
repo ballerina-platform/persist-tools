@@ -45,8 +45,8 @@ public class Enum {
         return this.members;
     }
 
-    public static Enum.Builder newBuilder(String entityName) {
-        return new Enum.Builder(entityName);
+    public static Enum.Builder newBuilder(String enumName) {
+        return new Enum.Builder(enumName);
     }
 
     /**
