@@ -46,3 +46,6 @@ bin/
 # Ballerina
 velocity.log*
 *Ballerina.lock
+
+# Jar Dependency Versions
+version.properties
