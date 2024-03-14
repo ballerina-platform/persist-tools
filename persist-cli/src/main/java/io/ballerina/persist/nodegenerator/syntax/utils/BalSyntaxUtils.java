@@ -475,6 +475,9 @@ public class BalSyntaxUtils {
                 }
                 recordFields.append(BalSyntaxConstants.SPACE);
                 recordFields.append(field.getFieldName());
+                if (field.isOptionalField()) {
+                    recordFields.append(BalSyntaxConstants.QUESTION_MARK);
+                }
                 recordFields.append(BalSyntaxConstants.SEMICOLON);
                 recordFields.append(BalSyntaxConstants.SPACE);
             } else if (field.getRelation() != null) {
@@ -939,6 +942,7 @@ public class BalSyntaxUtils {
         recordFields.append(field.isOptionalType() ? BalSyntaxConstants.QUESTION_MARK : "");
         recordFields.append(BalSyntaxConstants.SPACE);
         recordFields.append(field.getFieldName());
+        recordFields.append(field.isOptionalField() ? BalSyntaxConstants.QUESTION_MARK : "");
         recordFields.append(BalSyntaxConstants.SEMICOLON);
         recordFields.append(BalSyntaxConstants.SPACE);
     }

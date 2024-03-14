@@ -1,0 +1,14 @@
+[package]
+org = "foo"
+name = "persist_generate_100"
+version = "0.1.0"
+distribution = "2201.9.0-20240118-000800-7398ff0b"
+
+[build-options]
+observabilityIncluded = false
+
+[[platform.java17.dependency]]
+groupId = "io.ballerina.stdlib"
+artifactId = "persist.redis-native"
+version = "0.1.0-SNAPSHOT"
+

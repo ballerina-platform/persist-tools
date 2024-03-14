@@ -243,6 +243,7 @@ public class BalProjectUtils {
                 fieldBuilder.setType(fType);
                 fieldBuilder.setOptionalType(fieldNode.typeName().kind().equals(SyntaxKind.OPTIONAL_TYPE_DESC));
                 fieldBuilder.setFieldColumnName(fieldNode.fieldName().text().trim());
+                fieldBuilder.setOptionalField(fieldNode.questionMarkToken().isPresent());
                 Optional<MetadataNode> metadataNode = fieldNode.metadata();
                 metadataNode.ifPresent(value -> {
                     //read the db generated annotation

@@ -80,6 +80,7 @@ subprojects {
         ballerinaStdLibs "io.ballerina.stdlib:persist.sql-ballerina:${stdlibPersistSqlVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:persist.inmemory-ballerina:${stdlibPersistInmemoryVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:persist.googlesheets-ballerina:${stdlibPersistGoogleSheetVersion}"
+        ballerinaStdLibs "io.ballerina.lib:persist.redis-ballerina:${stdlibPersistRedisVersion}"
 
         ballerinaStdLibs "io.ballerina.stdlib:mime-ballerina:${stdlibMimeVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:file-ballerina:${stdlibFileVersion}"
@@ -103,6 +104,7 @@ def moduleVersion = project.version.replace("-SNAPSHOT", "")
 def persistSqlNativeVersion = "${persistSqlNativeVersion}"
 def persistInMemoryNativeVersion = "${persistInMemoryNativeVersion}"
 def persistGoogleSheetsNativeVersion = "${persistGoogleSheetsNativeVersion}"
+def persistRedisNativeVersion = "${persistRedisNativeVersion}"
 
 release {
     versionPropertyFile = 'gradle.properties'
@@ -148,6 +150,7 @@ task createProperties(dependsOn: processResources) {
             it.writeLine 'persistSqlVersion = ' + persistSqlNativeVersion.toString()
             it.writeLine 'persistInMemoryVersion = ' + persistInMemoryNativeVersion.toString()
             it.writeLine 'persistGoogleSheetsVersion = ' + persistGoogleSheetsNativeVersion.toString()
+            it.writeLine 'persistRedisVersion = ' + persistRedisNativeVersion.toString()
         }
     }
 }

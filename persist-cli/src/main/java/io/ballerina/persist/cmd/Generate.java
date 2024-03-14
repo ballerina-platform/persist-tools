@@ -182,6 +182,12 @@ public class Generate implements BLauncherCmd {
                     "releases." + System.lineSeparator());
         }
 
+        if (datastore.equals(PersistToolsConstants.SupportedDataSources.REDIS)) {
+            errStream.printf(BalSyntaxConstants.EXPERIMENTAL_NOTICE, "The support for Redis data store " +
+                    "is currently an experimental feature, and its behavior may be subject to change in future " +
+                    "releases." + System.lineSeparator());
+        }
+
         try {
             schemaFilePath =  BalProjectUtils.getSchemaFilePath(this.sourcePath);
         } catch (BalException e) {
@@ -228,6 +234,9 @@ public class Generate implements BLauncherCmd {
                     break;
                 case PersistToolsConstants.SupportedDataSources.GOOGLE_SHEETS:
                     sourceCreator.createGSheetSources();
+                    break;
+                case PersistToolsConstants.SupportedDataSources.REDIS:
+                    sourceCreator.createRedisSources();
                     break;
                 default:
                     sourceCreator.createInMemorySources();
