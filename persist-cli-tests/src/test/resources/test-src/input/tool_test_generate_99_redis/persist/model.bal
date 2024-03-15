@@ -13,7 +13,6 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
 import ballerina/persist as _;
 import ballerina/time;
 
@@ -23,8 +22,8 @@ type User record {|
     time:Date birthDate;
     string mobileNumber;
     Post[] posts;
-	Follow? leader;
-	Follow? follower;
+    Follow? leader;
+    Follow? follower;
 |};
 
 type Post record {|

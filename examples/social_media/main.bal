@@ -13,8 +13,8 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
 import social_media.entities;
+
 import ballerina/http;
 import ballerina/persist;
 
@@ -24,7 +24,7 @@ public type User record {|
     string email;
 |};
 
-public type Post record{|
+public type Post record {|
     readonly int id;
     string title;
     string content;
@@ -91,10 +91,11 @@ service /social_media on new http:Listener(9090) {
     // Define the resource to handle GET requests for users
     resource function get users() returns User[]|error {
         stream<User, persist:Error?> users = self.dbClient->/users;
-        return from User user in users select user;
+        return from User user in users
+            select user;
     }
 
-    resource function delete users/[string firstName]/[string lastName]() returns http:NoContent | http:InternalServerError {
+    resource function delete users/[string firstName]/[string lastName]() returns http:NoContent|http:InternalServerError {
         entities:User|persist:Error result = self.dbClient->/users/[firstName]/[lastName].delete();
         if result is persist:Error {
             return http:INTERNAL_SERVER_ERROR;
@@ -137,7 +138,7 @@ service /social_media on new http:Listener(9090) {
     }
 
     // Define the resource to handle DELETE request for post by id
-    resource function delete posts/[int id]() returns http:NoContent | http:InternalServerError {
+    resource function delete posts/[int id]() returns http:NoContent|http:InternalServerError {
         entities:Post|persist:Error result = self.dbClient->/posts/[id].delete();
         if result is persist:Error {
             return http:INTERNAL_SERVER_ERROR;
@@ -166,7 +167,7 @@ service /social_media on new http:Listener(9090) {
     }
 
     // Define the resource to handle DELETE request for comment by id
-    resource function delete comments/[int id]() returns http:NoContent | http:InternalServerError {
+    resource function delete comments/[int id]() returns http:NoContent|http:InternalServerError {
         entities:Comment|persist:Error result = self.dbClient->/comments/[id].delete();
         if result is persist:Error {
             return http:INTERNAL_SERVER_ERROR;
