@@ -164,6 +164,7 @@ public class PersistToolsConstants {
         public static final String VERSION_PROPERTIES_FILE = "version.properties";
         public static final String KEYWORD_GROUP_ID = "groupId";
         public static final String PERSIST_GROUP_ID = "io.ballerina.stdlib";
+        public static final String PERSIST_LIB_GROUP_ID = "io.ballerina.lib";
         public static final String KEYWORD_ARTIFACT_ID = "artifactId";
         public static final String ARTIFACT_ID = "%s-native";
         public static final String PERSIST_SQL_VERSION = "persistSqlVersion";

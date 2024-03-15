@@ -242,7 +242,9 @@ public class TomlSyntaxUtils {
             throws BalException {
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
                 PersistToolsConstants.TomlFileConstants.KEYWORD_GROUP_ID,
-                PersistToolsConstants.TomlFileConstants.PERSIST_GROUP_ID, null));
+                datasource.equals(PersistToolsConstants.SupportedDataSources.REDIS)
+                ?  PersistToolsConstants.TomlFileConstants.PERSIST_LIB_GROUP_ID
+                : PersistToolsConstants.TomlFileConstants.PERSIST_GROUP_ID, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
                 PersistToolsConstants.TomlFileConstants.KEYWORD_ARTIFACT_ID,
                 String.format(PersistToolsConstants.TomlFileConstants.ARTIFACT_ID, artifactID), null));
