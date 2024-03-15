@@ -25,6 +25,7 @@ description = 'Ballerina - Persist Examples'
 def ballerinaDist = "${project.buildDir}/ballerina-distribution"
 def examples = ["medical-center", "rainier"]
 def introspectionExamples = ["hospital"]
+def redisDBExamples = ["social_media"]
 
 configurations {
     balTools
@@ -127,6 +128,14 @@ task copyTestResources() {
         }
         copy {
             introspectionExamples.each { example ->
+                into buildDir
+                into("generated-examples/${example}/") {
+                    from "${example}"
+                }
+            }
+        }
+        copy {
+            redisDBExamples.each { example ->
                 into buildDir
                 into("generated-examples/${example}/") {
                     from "${example}"
@@ -277,6 +286,26 @@ task generateIntrospectionExamples {
     }
 }
 
+task generateRedisDBExamples {
+    doLast {
+        redisDBExamples.each { example ->
+            try {
+                exec {
+                    workingDir "${project.projectDir}/build/generated-examples/${example}"
+                    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate --datastore=redis --module=entities"
+                    } else {
+                        commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat persist generate --datastore=redis --module=entities"
+                    }
+                }
+            } catch (Exception e) {
+                println("Example '${example}' Generation failed: " + e.message)
+                throw e
+            }
+        }
+    }
+}
+
 // task generateGSheetExamples {
 //     doLast {
 //         examples.each { example ->
@@ -332,6 +361,30 @@ def checkExecResult(executionResult, failText, standardOutput) {
     }
 }
 
+def checkRedisTestDockerContainerStatus(containerName) {
+    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+        try {
+            return exec {
+                commandLine 'sh', '-c', "docker exec ${containerName} redis-cli"
+            }.exitValue
+        } catch (all) {
+            return 1;
+        }
+    } else {
+        def standardOutput = new ByteArrayOutputStream()
+        def commandLine = "docker exec ${containerName} redis-cli"
+        def proc = commandLine.execute()
+        proc.waitForProcessOutput(standardOutput, System.err)
+        def exitCode = proc.exitValue()
+        if (exitCode != 0) {
+            println('\n' + "Windows Instance detected")
+            println('\n' + "Skipped checking status of the Redis docker container")
+            return 1
+        }
+        return 0
+    }
+}
+
 task startTestDockerContainer(type: Exec) {
     if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
         def standardOutput = new ByteArrayOutputStream()
@@ -356,6 +409,42 @@ task startTestDockerContainer(type: Exec) {
     }
 }
 
+task startTestRedisContainer(type: Exec) {
+    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+        def standardOutput = new ByteArrayOutputStream()
+        commandLine 'sh', '-c', 'docker run --platform linux/amd64 --rm -d --name persist-redis -p 6379:6379 redis:latest'
+        def healthCheck = 1
+        def counter = 0
+        doLast {
+            checkExecResult(executionResult, 'Error', standardOutput)
+            while (healthCheck != 0 && counter < 12) {
+                sleep(30 * 1000)
+                healthCheck = checkRedisTestDockerContainerStatus('persist-redis')
+                counter = counter + 1
+            }
+            if (healthCheck != 0) {
+                throw new GradleException("Docker container 'persist-redis' health test exceeded timeout!")
+            }
+        }
+    } else {
+        def standardOutput = new ByteArrayOutputStream()
+        commandLine 'cmd', '/c', 'docker run --rm -d --name persist-redis -p 6379:6379 redis:latest'
+        def healthCheck = 1
+        def counter = 0
+        doLast {
+            checkExecResult(executionResult, 'Error', standardOutput)
+            while (healthCheck != 0 && counter < 12) {
+                sleep(30 * 1000)
+                healthCheck = checkRedisTestDockerContainerStatus('persist-redis')
+                counter = counter + 1
+            }
+            if (healthCheck != 0) {
+                throw new GradleException("Docker container 'persist-redis' health test exceeded timeout!")
+            }
+        }
+    }
+}
+
 task stopTestDockerContainer() {
     doLast {
         if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
@@ -367,6 +456,32 @@ task stopTestDockerContainer() {
                 }
             } catch (all) {
                 println('Gradle process can safely ignore stopTestDockerContainer task')
+            }
+        }
+    }
+}
+
+task stopTestRedisContainer() {
+    doLast {
+        if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+            try {
+                def stdOut = new ByteArrayOutputStream()
+                exec {
+                    commandLine 'sh', '-c', 'docker stop persist-redis'
+                    standardOutput = stdOut
+                }
+            } catch (all) {
+                println('Gradle process can safely ignore stopTestRedisContainer task')
+            }
+        } else {
+            try {
+                def stdOut = new ByteArrayOutputStream()
+                exec {
+                    commandLine 'cmd', '/c', 'docker stop persist-redis'
+                    standardOutput = stdOut
+                }
+            } catch (all) {
+                println('Gradle process can safely ignore stopTestRedisContainer task')
             }
         }
     }
@@ -476,6 +591,27 @@ task testIntrospectionExamples {
     }
 }
 
+task testRedisDBExamples {
+    dependsOn(startTestRedisContainer)
+    doLast {
+        redisDBExamples.each { example ->
+            try {
+                exec {
+                    workingDir "${project.projectDir}/build/generated-examples/${example}"
+                    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal test"
+                    } else {
+                        commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat test"
+                    }
+                }
+            } catch (Exception e) {
+                println("Example '${example}' test failed: " + e.message)
+                throw e
+            }
+        }
+    }
+}
+
 task automateGSheetTable {
     doLast {
         try {
@@ -521,6 +657,7 @@ copyTestResources.dependsOn copyPersistTool
 
 initInMemoryExamples.dependsOn copyTestResources
 generateIntrospectionExamples.dependsOn copyTestResources
+generateRedisDBExamples.dependsOn copyTestResources
 generateInMemoryExamples.dependsOn initInMemoryExamples
 testInMemoryExamples.dependsOn generateInMemoryExamples
 
@@ -529,6 +666,7 @@ generateDbExamples.dependsOn initDbExamples
 pushExamples.dependsOn generateDbExamples
 testDbExamples.dependsOn pushExamples
 testIntrospectionExamples.dependsOn generateIntrospectionExamples
+testRedisDBExamples.dependsOn generateRedisDBExamples
 
 // initGSheetExamples.dependsOn testDbExamples
 // generateGSheetExamples.dependsOn initGSheetExamples
@@ -538,5 +676,7 @@ testIntrospectionExamples.dependsOn generateIntrospectionExamples
 build.dependsOn testInMemoryExamples
 build.dependsOn testDbExamples
 build.dependsOn testIntrospectionExamples
+build.dependsOn testRedisDBExamples
 //build.dependsOn testGSheetExamples
 build.finalizedBy stopTestDockerContainer
+build.finalizedBy stopTestRedisContainer

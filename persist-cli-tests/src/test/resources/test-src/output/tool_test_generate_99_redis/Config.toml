@@ -1,4 +1,2 @@
 [persist_generate_99.entities.redis]
 connection = "redis://localhost:6379"
-
-
