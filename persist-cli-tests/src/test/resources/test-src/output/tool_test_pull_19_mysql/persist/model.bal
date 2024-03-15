@@ -12,7 +12,7 @@ public type User record {|
     UserGender gender;
     decimal? salary;
     @sql:Name {value: "drives_car"}
-    @sql:Index {name: ["drives_car"]}
+    @sql:Index {name: "drives_car"}
     int? drivesCar;
     Car[] cars;
     @sql:Relation {keys: ["drivesCar"]}

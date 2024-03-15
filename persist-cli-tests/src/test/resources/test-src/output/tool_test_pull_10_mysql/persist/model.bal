@@ -14,7 +14,7 @@ public type Appointment record {|
     @sql:Index {name: "patient_Id"}
     int patientId;
     @sql:Name {value: "Doctor_Id"}
-    @sql:Index {name: ["Doctor_Id"]}
+    @sql:Index {name: "Doctor_Id"}
     int doctorId;
     time:Date date;
     @sql:Relation {keys: ["patientId"]}

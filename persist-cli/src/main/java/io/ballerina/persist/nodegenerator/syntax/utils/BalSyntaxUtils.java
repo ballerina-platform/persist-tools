@@ -70,6 +70,13 @@ import java.util.stream.Stream;
  */
 public class BalSyntaxUtils {
 
+    public record AnnotationUtilRecord(List<AnnotationNode> annotationNodes, String annotation, String field) {
+        public AnnotationUtilRecord (List<AnnotationNode> annotationNodes, String annotation, String field) {
+            this.annotationNodes = Collections.unmodifiableList(annotationNodes);
+            this.annotation = annotation;
+            this.field = field;
+        }
+    }
     public static NodeList<ImportDeclarationNode> generateImport(Module entityModule) {
         NodeList<ImportDeclarationNode> imports = AbstractNodeFactory.createEmptyNodeList();
         MinutiaeList commentMinutiaeList = createCommentMinutiaeList(String.format(
@@ -537,13 +544,23 @@ public class BalSyntaxUtils {
             }
         });
         if (!indexNames.isEmpty()) {
-            recordFields.append(String.format(BalSyntaxConstants.SQL_INDEX_MAPPING_ANNOTATION,
-                     formatToBalStringArray(indexNames)));
+            if (indexNames.size() == 1) {
+                recordFields.append(String.format(BalSyntaxConstants.SQL_INDEX_MAPPING_ANNOTATION,
+                        BalSyntaxConstants.DOUBLE_QUOTE + indexNames.get(0) + BalSyntaxConstants.DOUBLE_QUOTE));
+            } else {
+                recordFields.append(String.format(BalSyntaxConstants.SQL_INDEX_MAPPING_ANNOTATION,
+                        formatToBalStringArray(indexNames)));
+            }
             recordFields.append(BalSyntaxConstants.NEWLINE);
         }
         if (!uniqueIndexNames.isEmpty()) {
-            recordFields.append(String.format(BalSyntaxConstants.SQL_UNIQUE_INDEX_MAPPING_ANNOTATION,
-                    formatToBalStringArray(uniqueIndexNames)));
+            if (uniqueIndexNames.size() == 1) {
+                recordFields.append(String.format(BalSyntaxConstants.SQL_UNIQUE_INDEX_MAPPING_ANNOTATION,
+                        BalSyntaxConstants.DOUBLE_QUOTE + uniqueIndexNames.get(0) + BalSyntaxConstants.DOUBLE_QUOTE));
+            } else {
+                recordFields.append(String.format(BalSyntaxConstants.SQL_UNIQUE_INDEX_MAPPING_ANNOTATION,
+                        formatToBalStringArray(uniqueIndexNames)));
+            }
             recordFields.append(BalSyntaxConstants.NEWLINE);
         }
     }
@@ -641,16 +658,17 @@ public class BalSyntaxUtils {
 
     private static void addDbMappingAnnotationToField(EntityField field, StringBuilder recordFields) {
         if (field.shouldColumnMappingGenerated()) {
-            recordFields.append(String.format(BalSyntaxConstants.SQL_DB_MAPPING_ANNOTATION,
+            recordFields.append(String.format(BalSyntaxConstants.SQL_DB_NAME_ANNOTATION,
                     field.getFieldColumnName()));
+            recordFields.append(BalSyntaxConstants.NEWLINE);
         }
     }
 
     private static void addDbMappingAnnotationToEntity(Entity entity, StringBuilder recordString) {
         if (entity.shouldTableMappingGenerated()) {
-            recordString.append(String.format(BalSyntaxConstants.SQL_DB_MAPPING_ANNOTATION,
+            recordString.append(String.format(BalSyntaxConstants.SQL_DB_NAME_ANNOTATION,
                     entity.getTableName()));
-            recordString.append(System.lineSeparator());
+            recordString.append(BalSyntaxConstants.NEWLINE);
         }
     }
 
@@ -749,18 +767,16 @@ public class BalSyntaxUtils {
         }
     }
 
-    public static String readStringValueFromAnnotation
-            (List<AnnotationNode> annotationNodes, String annotation,
-             String field) {
-        for (AnnotationNode annotationNode : annotationNodes) {
+    public static String readStringValueFromAnnotation(AnnotationUtilRecord annotationMethodRecord) {
+        for (AnnotationNode annotationNode : annotationMethodRecord.annotationNodes) {
             String annotationName = annotationNode.annotReference().toSourceCode().trim();
-            if (annotationName.equals(annotation)) {
+            if (annotationName.equals(annotationMethodRecord.annotation)) {
                 Optional<MappingConstructorExpressionNode> annotationFieldNode = annotationNode.annotValue();
                 if (annotationFieldNode.isPresent()) {
                     for (MappingFieldNode mappingFieldNode : annotationFieldNode.get().fields()) {
                         SpecificFieldNode specificFieldNode = (SpecificFieldNode) mappingFieldNode;
                         String fieldName = specificFieldNode.fieldName().toSourceCode().trim();
-                        if (!fieldName.equals(field)) {
+                        if (!fieldName.equals(annotationMethodRecord.field)) {
                             return "";
                         }
                         Optional<ExpressionNode> valueExpr = specificFieldNode.valueExpr();
@@ -784,25 +800,76 @@ public class BalSyntaxUtils {
         }
         return false;
     }
-    public static List<String> readStringArrayValueFromAnnotation
-            (List<AnnotationNode> annotationNodes, String annotation,
-             String field) {
-        for (AnnotationNode annotationNode : annotationNodes) {
+    public static boolean isAnnotationFieldStringType(AnnotationUtilRecord annotationMethodRecord) {
+        for (AnnotationNode annotationNode : annotationMethodRecord.annotationNodes) {
             String annotationName = annotationNode.annotReference().toSourceCode().trim();
-            if (annotationName.equals(annotation)) {
+            if (annotationName.equals(annotationMethodRecord.annotation)) {
                 Optional<MappingConstructorExpressionNode> annotationFieldNode = annotationNode.annotValue();
                 if (annotationFieldNode.isPresent()) {
                     for (MappingFieldNode mappingFieldNode : annotationFieldNode.get().fields()) {
                         SpecificFieldNode specificFieldNode = (SpecificFieldNode) mappingFieldNode;
                         String fieldName = specificFieldNode.fieldName().toSourceCode().trim();
-                        if (!fieldName.equals(field)) {
+                        if (!fieldName.equals(annotationMethodRecord.field)) {
+                            return false;
+                        }
+                        Optional<ExpressionNode> valueExpr = specificFieldNode.valueExpr();
+                        if (valueExpr.isPresent()) {
+                            return valueExpr.get().toSourceCode().trim().startsWith("\"") &&
+                                    valueExpr.get().toSourceCode().trim().endsWith("\"");
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    public static boolean isAnnotationFieldArrayType(AnnotationUtilRecord annotationMethodRecord) {
+        for (AnnotationNode annotationNode : annotationMethodRecord.annotationNodes) {
+            String annotationName = annotationNode.annotReference().toSourceCode().trim();
+            if (annotationName.equals(annotationMethodRecord.annotation)) {
+                Optional<MappingConstructorExpressionNode> annotationFieldNode = annotationNode.annotValue();
+                if (annotationFieldNode.isPresent()) {
+                    for (MappingFieldNode mappingFieldNode : annotationFieldNode.get().fields()) {
+                        SpecificFieldNode specificFieldNode = (SpecificFieldNode) mappingFieldNode;
+                        String fieldName = specificFieldNode.fieldName().toSourceCode().trim();
+                        if (!fieldName.equals(annotationMethodRecord.field)) {
+                            return false;
+                        }
+                        Optional<ExpressionNode> valueExpr = specificFieldNode.valueExpr();
+                        if (valueExpr.isPresent()) {
+                            return valueExpr.get().toSourceCode().trim().startsWith("[") &&
+                                    valueExpr.get().toSourceCode().trim().endsWith("]");
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    public static List<String> readStringArrayValueFromAnnotation(AnnotationUtilRecord annotationUtilRecord) {
+        for (AnnotationNode annotationNode : annotationUtilRecord.annotationNodes) {
+            String annotationName = annotationNode.annotReference().toSourceCode().trim();
+            if (annotationName.equals(annotationUtilRecord.annotation)) {
+                Optional<MappingConstructorExpressionNode> annotationFieldNode = annotationNode.annotValue();
+                if (annotationFieldNode.isPresent()) {
+                    for (MappingFieldNode mappingFieldNode : annotationFieldNode.get().fields()) {
+                        SpecificFieldNode specificFieldNode = (SpecificFieldNode) mappingFieldNode;
+                        String fieldName = specificFieldNode.fieldName().toSourceCode().trim();
+                        if (!fieldName.equals(annotationUtilRecord.field)) {
                             return Collections.emptyList();
                         }
                         Optional<ExpressionNode> valueExpr = specificFieldNode.valueExpr();
                         if (valueExpr.isPresent()) {
-                            return Stream.of(valueExpr.get().toSourceCode().trim().replace("\"", "")
+                            String strings = valueExpr.get().toSourceCode().trim()
                                     .replace("[", "")
-                                    .replace("]", "").split(",")).map(String::trim).toList();
+                                    .replace("]", "");
+                            if (strings.trim().isEmpty()) {
+                                return Collections.emptyList();
+                            }
+                            return Stream.of(strings.replace("\"", "").split(","))
+                                    .map(String::trim).toList();
                         }
                     }
                 }

@@ -167,9 +167,7 @@ public class Pull implements BLauncherCmd {
 
         try (JdbcDriverLoader driverLoader = databaseConnector.getJdbcDriverLoader(driverProject)) {
             Driver driver = databaseConnector.getJdbcDriver(driverLoader);
-
             try (Connection connection = databaseConnector.getConnection(driver, persistConfigurations, true)) {
-
                 Introspector introspector = new MySqlIntrospector(connection,
                         persistConfigurations.getDbConfig().getDatabase());
 
@@ -178,20 +176,18 @@ public class Pull implements BLauncherCmd {
                 if (entityModule == null) {
                     throw new BalException("ERROR: failed to generate entity module.");
                 }
-
-            } catch (SQLException e) {
-                errStream.printf("ERROR: database failure. %s%n", e.getMessage());
-                deleteDriverFile(driverResolver);
-                return;
             }
+        } catch (SQLException e) {
+            errStream.printf("ERROR: database failure. %s%n", e.getMessage());
+            return;
         } catch (BalException e) {
             errStream.printf("ERROR: database introspection failed. %s%n", e.getMessage());
-            deleteDriverFile(driverResolver);
             return;
         } catch (IOException e) {
             errStream.printf("ERROR: failed to load the database driver. %s%n", e.getMessage());
-            deleteDriverFile(driverResolver);
             return;
+        } finally {
+            deleteDriverFile(driverResolver);
         }
 
         SourceGenerator sourceGenerator = new SourceGenerator(sourcePath, Paths.get(sourcePath, PERSIST_DIRECTORY),
@@ -202,11 +198,8 @@ public class Pull implements BLauncherCmd {
         } catch (BalException e) {
             errStream.printf(String.format("ERROR: failed to generate model for introspected database: %s%n",
                     e.getMessage()));
-            deleteDriverFile(driverResolver);
             return;
         }
-
-        deleteDriverFile(driverResolver);
         errStream.println("Introspection complete! The model.bal file created successfully.");
     }
 
