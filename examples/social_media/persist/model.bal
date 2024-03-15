@@ -13,7 +13,6 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
 import ballerina/persist as _;
 import ballerina/time;
 
@@ -22,7 +21,7 @@ public enum Gender {
     FEMALE
 }
 
-public type User record{|
+public type User record {|
     readonly string firstName;
     readonly string lastName;
     string email;
@@ -31,15 +30,15 @@ public type User record{|
     Gender gender;
     boolean isMarried;
     string spouseName?;
-	Post[] post;
+    Post[] post;
 |};
 
-public type Post record{|
+public type Post record {|
     readonly int id;
     string title;
     string content;
     User user;
-	Comment[] comment;
+    Comment[] comment;
 |};
 
 public type Comment record {|
