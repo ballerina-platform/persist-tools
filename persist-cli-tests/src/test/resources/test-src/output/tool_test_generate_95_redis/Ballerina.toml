@@ -8,6 +8,6 @@ distribution = "2201.9.0-20240118-000800-7398ff0b"
 observabilityIncluded = false
 
 [[platform.java17.dependency]]
-groupId = "io.ballerina.stdlib"
+groupId = "io.ballerina.lib"
 artifactId = "persist.redis-native"
 version = "0.1.0-SNAPSHOT"
