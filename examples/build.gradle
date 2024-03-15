@@ -134,6 +134,14 @@ task copyTestResources() {
                 }
             }
         }
+        copy {
+            redisDBExamples.each { example ->
+                into buildDir
+                into("generated-examples/${example}/") {
+                    from "${example}"
+                }
+            }
+        }
     }
 
 }
@@ -363,9 +371,17 @@ def checkRedisTestDockerContainerStatus(containerName) {
             return 1;
         }
     } else {
-        commandLine 'cmd','slmgr /dlv'
-        println('\n' + "Windows Instance detected")
-        println('\n' + "skippped checking status of the Redis docker container")
+        def standardOutput = new ByteArrayOutputStream()
+        def commandLine = "docker exec ${containerName} redis-cli"
+        def proc = commandLine.execute()
+        proc.waitForProcessOutput(standardOutput, System.err)
+        def exitCode = proc.exitValue()
+        if (exitCode != 0) {
+            println('\n' + "Windows Instance detected")
+            println('\n' + "Skipped checking status of the Redis docker container")
+            return 1
+        }
+        return 0
     }
 }
 
@@ -426,8 +442,6 @@ task startTestRedisContainer(type: Exec) {
                 throw new GradleException("Docker container 'persist-redis' health test exceeded timeout!")
             }
         }
-//        println('\n' + "Windows Instance detected")
-//        println('\n' + "Skipping starting the Docker container for Redis")
     }
 }
 
@@ -454,6 +468,16 @@ task stopTestRedisContainer() {
                 def stdOut = new ByteArrayOutputStream()
                 exec {
                     commandLine 'sh', '-c', 'docker stop persist-redis'
+                    standardOutput = stdOut
+                }
+            } catch (all) {
+                println('Gradle process can safely ignore stopTestRedisContainer task')
+            }
+        } else {
+            try {
+                def stdOut = new ByteArrayOutputStream()
+                exec {
+                    commandLine 'cmd', '/c', 'docker stop persist-redis'
                     standardOutput = stdOut
                 }
             } catch (all) {

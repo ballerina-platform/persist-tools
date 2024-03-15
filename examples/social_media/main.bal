@@ -1,7 +1,22 @@
+// Copyright (c) 2024 WSO2 LLC. (http://www.wso2.com).
+//
+// WSO2 LLC. licenses this file to you under the Apache License,
+// Version 2.0 (the "License"); you may not use this file except
+// in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+
 import social_media.entities;
 import ballerina/http;
 import ballerina/persist;
-import ballerina/time;
 
 public type User record {|
     readonly string firstName;
@@ -23,14 +38,13 @@ public type Post record{|
 public type Comment record {|
     readonly int id;
     string message;
-    time:Civil timeStamp;
     record {|
         readonly int id;
         string content;
     |} post;
 |};
 
-service /library on new http:Listener(9090) {
+service /social_media on new http:Listener(9090) {
     private final entities:Client dbClient;
 
     // Initialize the service
@@ -111,7 +125,7 @@ service /library on new http:Listener(9090) {
     }
 
     // Define the resource to handle PATCH requests for post by id
-    resource function patch posts/[int id](entities:PostUpdate post) returns http:InternalServerError & readonly|http:NotFound & readonly|http:NoContent & readonly {
+    resource function patch posts/[int id](entities:PostUpdate post) returns http:InternalServerError & readonly|http:NotFound & readonly|entities:Post {
         entities:Post|persist:Error result = self.dbClient->/posts/[id].put(post);
         if result is persist:Error {
             if result is persist:NotFoundError {
@@ -119,7 +133,7 @@ service /library on new http:Listener(9090) {
             }
             return http:INTERNAL_SERVER_ERROR;
         }
-        return http:NO_CONTENT;
+        return result;
     }
 
     // Define the resource to handle DELETE request for post by id
@@ -140,7 +154,7 @@ service /library on new http:Listener(9090) {
     }
 
     // Define the resource to handle PATCH requests for comment by id
-    resource function patch comments/[int id](entities:CommentUpdate comment) returns http:InternalServerError & readonly|http:NotFound & readonly|http:NoContent & readonly {
+    resource function patch comments/[int id](entities:CommentUpdate comment) returns http:InternalServerError & readonly|http:NotFound & readonly|entities:Comment {
         entities:Comment|persist:Error result = self.dbClient->/comments/[id].put(comment);
         if result is persist:Error {
             if result is persist:NotFoundError {
@@ -148,7 +162,7 @@ service /library on new http:Listener(9090) {
             }
             return http:INTERNAL_SERVER_ERROR;
         }
-        return http:NO_CONTENT;
+        return result;
     }
 
     // Define the resource to handle DELETE request for comment by id

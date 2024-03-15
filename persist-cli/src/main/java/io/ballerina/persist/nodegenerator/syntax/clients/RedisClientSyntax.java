@@ -253,7 +253,7 @@ public class RedisClientSyntax  implements ClientSyntax {
                                 String.format(BalSyntaxConstants.REDIS_METADATA_RECORD_FIELD_TEMPLATE,
                                 key.getField(), 
                                 BalSyntaxUtils.stripEscapeCharacter(key.getField()), 
-                                getDataTypeInAllCaps(field.getFieldType())));
+                                getDataTypeInAllCaps(key.getType())));
                         }
                     }
                     fieldMetaData.append(foreignKeyFields);
