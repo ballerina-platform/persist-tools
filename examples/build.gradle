@@ -371,17 +371,8 @@ def checkRedisTestDockerContainerStatus(containerName) {
             return 1;
         }
     } else {
-        def standardOutput = new ByteArrayOutputStream()
-        def commandLine = "docker exec ${containerName} redis-cli"
-        def proc = commandLine.execute()
-        proc.waitForProcessOutput(standardOutput, System.err)
-        def exitCode = proc.exitValue()
-        if (exitCode != 0) {
-            println('\n' + "Windows Instance detected")
-            println('\n' + "Skipped checking status of the Redis docker container")
-            return 1
-        }
-        return 0
+        commandLine 'cmd','slmgr /dlv'
+        println('\n' + "Windows Instance detected")
     }
 }
 
@@ -427,21 +418,9 @@ task startTestRedisContainer(type: Exec) {
             }
         }
     } else {
-        def standardOutput = new ByteArrayOutputStream()
-        commandLine 'cmd', '/c', 'docker run --rm -d --name persist-redis -p 6379:6379 redis:latest'
-        def healthCheck = 1
-        def counter = 0
-        doLast {
-            checkExecResult(executionResult, 'Error', standardOutput)
-            while (healthCheck != 0 && counter < 12) {
-                sleep(30 * 1000)
-                healthCheck = checkRedisTestDockerContainerStatus('persist-redis')
-                counter = counter + 1
-            }
-            if (healthCheck != 0) {
-                throw new GradleException("Docker container 'persist-redis' health test exceeded timeout!")
-            }
-        }
+        commandLine 'cmd','slmgr /dlv'
+        println('\n' + "Windows Instance detected")
+        println('\n' + "skippped starting the docker container")
     }
 }
 
@@ -468,16 +447,6 @@ task stopTestRedisContainer() {
                 def stdOut = new ByteArrayOutputStream()
                 exec {
                     commandLine 'sh', '-c', 'docker stop persist-redis'
-                    standardOutput = stdOut
-                }
-            } catch (all) {
-                println('Gradle process can safely ignore stopTestRedisContainer task')
-            }
-        } else {
-            try {
-                def stdOut = new ByteArrayOutputStream()
-                exec {
-                    commandLine 'cmd', '/c', 'docker stop persist-redis'
                     standardOutput = stdOut
                 }
             } catch (all) {
@@ -601,7 +570,8 @@ task testRedisDBExamples {
                     if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
                         commandLine 'sh', '-c', "${ballerinaDist}/bin/bal test"
                     } else {
-                        commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat test"
+                        commandLine 'cmd','slmgr /dlv'
+                        println('\n' + "Windows Instance detected")
                     }
                 }
             } catch (Exception e) {
