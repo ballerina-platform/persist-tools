@@ -17,6 +17,7 @@
  */
 package io.ballerina.persist.introspect;
 
+import io.ballerina.persist.BalException;
 import io.ballerina.persist.inflector.CaseConverter;
 import io.ballerina.persist.inflector.Pluralizer;
 import io.ballerina.persist.introspectiondto.SqlEnum;
@@ -37,6 +38,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -45,6 +47,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static java.lang.Integer.parseInt;
+import static java.lang.Integer.parseUnsignedInt;
 
 /**
  * Database Introspector class.
@@ -80,7 +83,7 @@ public abstract class Introspector {
         this.moduleBuilder = Module.newBuilder("db");
     }
 
-    public Module introspectDatabase() throws SQLException {
+    public Module introspectDatabase() throws SQLException, BalException {
         ScriptRunner sr = new ScriptRunner(connection);
         this.tables = sr.getSQLTables(this.getTablesQuery());
         this.sqlEnums = sr.getSQLEnums(this.getEnumsQuery());
@@ -132,7 +135,7 @@ public abstract class Introspector {
         return enumValues;
     }
 
-    private void mapEntities() {
+    private void mapEntities() throws BalException {
         Map<String, Entity.Builder> entityBuilderMap = new HashMap<>();
         tables.forEach(table -> {
             String entityName = CaseConverter.toSingularPascalCase(table.getTableName());
@@ -152,12 +155,12 @@ public abstract class Introspector {
                 } else {
                     SQLType sqlType = new SQLType(
                             column.getDataType().toUpperCase(Locale.ENGLISH),
+                            column.getFullDataType(),
                             column.getColumnDefault(),
                             column.getNumericPrecision() != null ? parseInt(column.getNumericPrecision()) : 0,
                             column.getNumericScale() != null ? parseInt(column.getNumericScale()) : 0,
-                            column.getDatetimePrecision(),
                             column.getCharacterMaximumLength() != null ?
-                                    parseInt(column.getCharacterMaximumLength()) : 0
+                                    parseUnsignedInt(column.getCharacterMaximumLength()) : 0
                     );
 
                     String balType = sqlType.getBalType();
@@ -195,11 +198,16 @@ public abstract class Introspector {
         });
         HashMap<String, Integer> ownerFieldNames = new HashMap<>();
         HashMap<String, Integer> assocFieldNames = new HashMap<>();
-        this.sqlForeignKeys.forEach(sqlForeignKey -> {
+        for (SqlForeignKey sqlForeignKey : this.sqlForeignKeys) {
             Entity.Builder ownerEntityBuilder = entityBuilderMap
                     .get(CaseConverter.toSingularPascalCase(sqlForeignKey.getTableName()));
             Entity.Builder assocEntityBuilder = entityBuilderMap
                     .get(CaseConverter.toSingularPascalCase(sqlForeignKey.getReferencedTableName()));
+            if (!new HashSet<>(sqlForeignKey.getReferencedColumnNames()).containsAll(assocEntityBuilder.getKeys()
+                    .stream().map(EntityField::getFieldColumnName).toList())) {
+                throw new BalException("bal persist does not support foreign key references to unique " +
+                        "keys.");
+            }
             boolean isReferenceMany = inferRelationshipCardinality
                     (ownerEntityBuilder.build(), sqlForeignKey)
                     == Relation.RelationType.MANY;
@@ -241,7 +249,7 @@ public abstract class Introspector {
 
             assocEntityBuilder.addField(assocFieldBuilder.build());
             ownerEntityBuilder.addField(ownerField);
-        });
+        }
 
         entityBuilderMap.forEach((key, value) -> entityMap.put(key, value.build()));
     }

@@ -132,6 +132,9 @@ public class DbClientSyntax implements ClientSyntax {
         init.addStatement(NodeParser.parseStatement(BalSyntaxConstants.ADD_CLIENT));
         StringBuilder persistClientMap = new StringBuilder();
         for (Entity entity : entityModule.getEntityMap().values()) {
+            if (entity.containsUnsupportedTypes()) {
+                continue;
+            }
             if (persistClientMap.length() != 0) {
                 persistClientMap.append(BalSyntaxConstants.COMMA_WITH_NEWLINE);
             }
@@ -254,6 +257,9 @@ public class DbClientSyntax implements ClientSyntax {
     private static Node generateMetadataRecord(Module entityModule) {
         StringBuilder mapBuilder = new StringBuilder();
         for (Entity entity : entityModule.getEntityMap().values()) {
+            if (entity.containsUnsupportedTypes()) {
+                continue;
+            }
             if (mapBuilder.length() != 0) {
                 mapBuilder.append(BalSyntaxConstants.COMMA_WITH_NEWLINE);
             }

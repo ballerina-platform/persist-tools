@@ -66,6 +66,9 @@ public class SqlScriptUtils {
         HashMap<String, List<String>> tableScripts = new HashMap<>();
         //generate create table
         for (Entity entity : entities) {
+            if (entity.containsUnsupportedTypes()) {
+                continue;
+            }
             List<String> tableScript = new ArrayList<>();
             String tableName = removeSingleQuote(entity.getTableName());
             tableScript.add(generateDropTableQuery(escape(tableName, datasource)));
@@ -410,7 +413,7 @@ public class SqlScriptUtils {
         // PostgreSQL --> BYTEA
         if (PersistToolsConstants.BallerinaTypes.BYTE.equals(field)) {
             if (datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
-                return PersistToolsConstants.SqlTypes.VARBINARY;
+                return PersistToolsConstants.SqlTypes.VARBINARY_WITH_MAX;
             }
             if (datasource.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB)) {
                 return PersistToolsConstants.SqlTypes.BYTEA;

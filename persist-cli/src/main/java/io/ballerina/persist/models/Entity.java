@@ -38,14 +38,16 @@ public class Entity {
     private List<EntityField> fields;
     private final List<Index> indexes;
     private final List<Index> uniqueIndexes;
-    private Entity(String entityName, List<EntityField> keys,
-                   String resourceName, List<EntityField> fields, List<Index> indexes, List<Index> uniqueIndexes) {
+    private final boolean containsUnsupportedTypes;
+    private Entity(String entityName, List<EntityField> keys, String resourceName, List<EntityField> fields,
+                   List<Index> indexes, List<Index> uniqueIndexes, boolean containsUnsupportedTypes) {
         this.entityName = entityName;
         this.keys = Collections.unmodifiableList(keys);
         this.tableName = resourceName;
         this.fields = Collections.unmodifiableList(fields);
         this.indexes = Collections.unmodifiableList(indexes);
         this.uniqueIndexes = Collections.unmodifiableList(uniqueIndexes);
+        this.containsUnsupportedTypes = containsUnsupportedTypes;
     }
 
     public List<EntityField> getKeys() {
@@ -82,6 +84,10 @@ public class Entity {
             }
         }
         return null;
+    }
+
+    public boolean containsUnsupportedTypes() {
+        return containsUnsupportedTypes;
     }
 
     public EntityField getFieldByColumnName(String columnName) {
@@ -124,6 +130,7 @@ public class Entity {
         List<Index> indexes;
 
         List<Index> uniqueIndexes;
+        boolean containsUnsupportedTypes = false;
 
         private Builder(String entityName) {
             this.entityName = entityName;
@@ -179,22 +186,19 @@ public class Entity {
         public void addUniqueIndex(Index index) {
             uniqueIndexes.add(index);
         }
-
-        public Entity build() {
-            return new Entity(entityName, keys, tableName, fieldList, indexes, uniqueIndexes);
+        public void setContainsUnsupportedTypes(boolean containsUnsupportedTypes) {
+            this.containsUnsupportedTypes = containsUnsupportedTypes;
         }
 
-        public EntityField getFieldByName(String fieldName) {
-            for (EntityField field : fieldList) {
-                if (field.getFieldName().equals(fieldName)) {
-                    return field;
-                }
-            }
-            return null;
+        public Entity build() {
+            return new Entity(entityName, keys, tableName, fieldList, indexes, uniqueIndexes, containsUnsupportedTypes);
         }
 
         public String getEntityName() {
             return entityName;
+        }
+        public List<EntityField> getKeys() {
+            return Collections.unmodifiableList(keys);
         }
 
     }

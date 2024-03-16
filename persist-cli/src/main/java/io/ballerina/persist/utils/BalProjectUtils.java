@@ -62,6 +62,7 @@ import io.ballerina.tools.diagnostics.Diagnostic;
 import io.ballerina.tools.text.TextDocuments;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -83,6 +84,7 @@ import static io.ballerina.persist.PersistToolsConstants.GENERATE_CMD_FILE;
 import static io.ballerina.persist.PersistToolsConstants.TARGET_DIRECTORY;
 import static io.ballerina.persist.PersistToolsConstants.SqlTypes.CHAR;
 import static io.ballerina.persist.PersistToolsConstants.SqlTypes.VARCHAR;
+import static io.ballerina.persist.PersistToolsConstants.UNSUPPORTED_TYPE_COMMENT_START;
 import static io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils.isAnnotationFieldArrayType;
 import static io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils.isAnnotationFieldStringType;
 import static io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils.isAnnotationPresent;
@@ -98,6 +100,7 @@ import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 public class BalProjectUtils {
 
     private BalProjectUtils() {}
+    private static final PrintStream errStream = System.out;
 
     public static Module getEntities(Path schemaFile) throws BalException {
         Path schemaFilename = schemaFile.getFileName();
@@ -227,6 +230,11 @@ public class BalProjectUtils {
                             BalSyntaxConstants.ANNOTATION_VALUE_FIELD)
                     )
             ));
+            if (recordDesc.toSourceCode().contains(UNSUPPORTED_TYPE_COMMENT_START)) {
+                errStream.println("WARNING the entity '" + entityBuilder.getEntityName() + "' contains " +
+                        "unsupported data types. client api for this entity will not be generated.");
+                entityBuilder.setContainsUnsupportedTypes(true);
+            }
             for (Node node : recordDesc.fields()) {
                 EntityField.Builder fieldBuilder;
                 RecordFieldNode fieldNode = (RecordFieldNode) node;
@@ -334,9 +342,9 @@ public class BalProjectUtils {
                                 new SQLType(
                                         VARCHAR,
                                         null,
-                                        0,
-                                        0,
                                         null,
+                                        0,
+                                        0,
                                         Integer.parseInt(varcharLength)));
                     }
                     //read the char annotation
@@ -350,9 +358,9 @@ public class BalProjectUtils {
                                 new SQLType(
                                         CHAR,
                                         null,
-                                        0,
-                                        0,
                                         null,
+                                        0,
+                                        0,
                                         Integer.parseInt(charLength)));
                     }
                     //read the decimal annotation
@@ -366,9 +374,9 @@ public class BalProjectUtils {
                                 new SQLType(
                                         PersistToolsConstants.SqlTypes.DECIMAL,
                                         null,
+                                        null,
                                         Integer.parseInt(decimal.get(0).trim()),
                                         Integer.parseInt(decimal.get(1).trim()),
-                                        null,
                                         0)
                         );
                     }

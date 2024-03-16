@@ -42,7 +42,6 @@ public class EntityField {
     private final SQLType sqlType;
     private final boolean arrayType;
     private final boolean optionalType;
-
     private final boolean isDbGenerated;
     private final boolean optionalField;
     private Relation relation;
