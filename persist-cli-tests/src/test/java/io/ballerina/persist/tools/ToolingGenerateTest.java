@@ -677,4 +677,46 @@ public class ToolingGenerateTest {
         assertGeneratedSources("tool_test_generate_94");
     }
 
+    @Test(enabled = true)
+    @Description("The model has all possible data types inlcuding optional fields")
+    public void testRedisEntity() {
+        executeGenerateCommand("tool_test_generate_95_redis", "redis", "entities");
+        assertGeneratedSources("tool_test_generate_95_redis");
+    }
+
+    @Test(enabled = true)
+    @Description("There is a generated client object with redis data source")
+    public void testRedisWithAssociatedEntity() {
+        executeGenerateCommand("tool_test_generate_96_redis", "redis", "entities");
+        assertGeneratedSources("tool_test_generate_96_redis");
+    }
+
+    @Test(enabled = true)
+    @Description("There is a generated client object with redis data source")
+    public void testRedisWithCompositeKeys() {
+        executeGenerateCommand("tool_test_generate_97_redis", "redis", "entities");
+        assertGeneratedSources("tool_test_generate_97_redis");
+    }
+
+    @Test(enabled = true)
+    @Description("There are multiple entities with multiple enums and imports with redis data source")
+    public void testGenerateWithEnumsRedis() {
+        executeGenerateCommand("tool_test_generate_98_redis", "redis", "entities");
+        assertGeneratedSources("tool_test_generate_98_redis");
+    }
+
+    @Test(enabled = true)
+    @Description("There is an entity which is associated with multiple relations")
+    public void testGenerateWithSameEntityMultipleRelationsRedis() {
+        executeGenerateCommand("tool_test_generate_99_redis", "redis", "entities");
+        assertGeneratedSources("tool_test_generate_99_redis");
+    }
+
+    @Test(enabled = true)
+    @Description("There is a model with an entity consisting of multiple relations of the same type")
+    public void testGenerateEntityWithMultipleRelationsSameTypeRedis() {
+        executeGenerateCommand("tool_test_generate_100_redis", "redis", "entities");
+        assertGeneratedSources("tool_test_generate_100_redis");
+    }
+
 }

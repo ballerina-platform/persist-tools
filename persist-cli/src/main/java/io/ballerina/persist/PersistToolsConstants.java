@@ -67,7 +67,7 @@ public class PersistToolsConstants {
 
     public static final Set<String> SUPPORTED_DB_PROVIDERS =
            Set.of(SupportedDataSources.MYSQL_DB, SupportedDataSources.MSSQL_DB, SupportedDataSources.IN_MEMORY_TABLE,
-                   SupportedDataSources.GOOGLE_SHEETS, SupportedDataSources.POSTGRESQL_DB);
+                   SupportedDataSources.GOOGLE_SHEETS, SupportedDataSources.POSTGRESQL_DB, SupportedDataSources.REDIS);
 
     /**
      * Constants related to Ballerina types.
@@ -164,11 +164,13 @@ public class PersistToolsConstants {
         public static final String VERSION_PROPERTIES_FILE = "version.properties";
         public static final String KEYWORD_GROUP_ID = "groupId";
         public static final String PERSIST_GROUP_ID = "io.ballerina.stdlib";
+        public static final String PERSIST_LIB_GROUP_ID = "io.ballerina.lib";
         public static final String KEYWORD_ARTIFACT_ID = "artifactId";
         public static final String ARTIFACT_ID = "%s-native";
         public static final String PERSIST_SQL_VERSION = "persistSqlVersion";
         public static final String PERSIST_IN_MEMORY_VERSION = "persistInMemoryVersion";
         public static final String PERSIST_GOOGLE_SHEETS_VERSION = "persistGoogleSheetsVersion";
+        public static final String PERSIST_REDIS_VERSION = "persistRedisVersion";
         public static final String KEYWORD_VERSION = "version";
     }
 
@@ -183,6 +185,7 @@ public class PersistToolsConstants {
         public static final String GOOGLE_SHEETS = "googlesheets";
         public static final String IN_MEMORY_TABLE = "inmemory";
         public static final String POSTGRESQL_DB = "postgresql";
+        public static final String REDIS = "redis";
     }
 
     /**
@@ -197,6 +200,7 @@ public class PersistToolsConstants {
         public static final String KEY_PASSWORD = "password";
         public static final String KEY_DATABASE = "database";
         public static final String KEY_HOST = "host";
+        public static final String KEY_CONNECTION = "connection";
 
         /**
          * Constants related to the MySQL configurations.
@@ -231,6 +235,16 @@ public class PersistToolsConstants {
             public static final String DEFAULT_HOST = "localhost";
             public static final String DEFAULT_PORT = "5432";
             public static final String DEFAULT_USER = "postgres";
+
+        }
+
+        /**
+         * Constants related to the PostgreSQL configurations.
+         */
+        public static final class REDIS {
+            private REDIS() {}
+
+            public static final String CONNECTION_URI = "redis://localhost:6379";
 
         }
 

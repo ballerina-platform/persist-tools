@@ -44,19 +44,21 @@ public class EntityField {
     private final boolean optionalType;
 
     private final boolean isDbGenerated;
+    private final boolean optionalField;
     private Relation relation;
     private Enum enumValue;
     private final List<AnnotationNode> annotationNodes;
     private final List<String> relationRefs;
 
     EntityField(String fieldName, String fieldColumnName, String fieldType, boolean arrayType, boolean optionalType,
-                List<AnnotationNode> annotationNodes, SQLType sqlType, List<String> relationRefs,
+    boolean optionalField, List<AnnotationNode> annotationNodes, SQLType sqlType, List<String> relationRefs,
                 boolean isDbGenerated) {
         this.fieldName = fieldName;
         this.fieldColumnName = fieldColumnName;
         this.fieldType = fieldType;
         this.arrayType = arrayType;
         this.optionalType = optionalType;
+        this.optionalField = optionalField;
         this.annotationNodes =
                 Collections.unmodifiableList(annotationNodes != null ? annotationNodes : new ArrayList<>());
         this.sqlType = sqlType;
@@ -124,6 +126,10 @@ public class EntityField {
         return optionalType;
     }
 
+    public boolean isOptionalField() {
+        return optionalField;
+    }
+
     public static EntityField.Builder newBuilder(String fieldName) {
         return new EntityField.Builder(fieldName);
     }
@@ -138,6 +144,7 @@ public class EntityField {
 
         private boolean arrayType = false;
         private boolean optionalType = false;
+        boolean optionalField = false;
 
         SQLType sqlType;
         private List<AnnotationNode> annotationNodes = null;
@@ -184,13 +191,16 @@ public class EntityField {
         public void setOptionalType(boolean optionalType) {
             this.optionalType = optionalType;
         }
+        public void setOptionalField(boolean optionalField) {
+            this.optionalField = optionalField;
+        }
         public void setAnnotations(List<AnnotationNode> annotationNodes) {
             this.annotationNodes = annotationNodes;
         }
 
         public EntityField build() {
-            return new EntityField(fieldName, fieldColumnName, fieldType, arrayType, optionalType, annotationNodes,
-                    sqlType, relationRefs, isDbGenerated);
+            return new EntityField(fieldName, fieldColumnName, fieldType, arrayType, optionalType, optionalField, 
+            annotationNodes, sqlType, relationRefs, isDbGenerated);
         }
 
         public String getFieldName() {

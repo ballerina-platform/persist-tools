@@ -242,7 +242,9 @@ public class TomlSyntaxUtils {
             throws BalException {
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
                 PersistToolsConstants.TomlFileConstants.KEYWORD_GROUP_ID,
-                PersistToolsConstants.TomlFileConstants.PERSIST_GROUP_ID, null));
+                datasource.equals(PersistToolsConstants.SupportedDataSources.REDIS)
+                ?  PersistToolsConstants.TomlFileConstants.PERSIST_LIB_GROUP_ID
+                : PersistToolsConstants.TomlFileConstants.PERSIST_GROUP_ID, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
                 PersistToolsConstants.TomlFileConstants.KEYWORD_ARTIFACT_ID,
                 String.format(PersistToolsConstants.TomlFileConstants.ARTIFACT_ID, artifactID), null));
@@ -266,6 +268,8 @@ public class TomlSyntaxUtils {
                 return properties.get(PersistToolsConstants.TomlFileConstants.PERSIST_IN_MEMORY_VERSION).toString();
             } else if (datasource.equals(PersistToolsConstants.SupportedDataSources.GOOGLE_SHEETS)) {
                 return properties.get(PersistToolsConstants.TomlFileConstants.PERSIST_GOOGLE_SHEETS_VERSION).toString();
+            } else if (datasource.equals(PersistToolsConstants.SupportedDataSources.REDIS)) {
+                return properties.get(PersistToolsConstants.TomlFileConstants.PERSIST_REDIS_VERSION).toString();
             } else {
                 throw new BalException("ERROR: invalid datasource: " + datasource);
             }
