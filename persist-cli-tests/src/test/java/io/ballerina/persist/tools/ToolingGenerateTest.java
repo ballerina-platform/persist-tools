@@ -678,13 +678,6 @@ public class ToolingGenerateTest {
     }
 
     @Test(enabled = true)
-    @Description("The model has entities with unsupported fields")
-    public void testGenerateEntitiesWithUnsupportedFields() {
-        executeGenerateCommand("tool_test_generate_95", "mysql", "entities");
-        assertGeneratedSources("tool_test_generate_95");
-    }
-
-    @Test(enabled = true)
     @Description("The model has all possible data types inlcuding optional fields")
     public void testRedisEntity() {
         executeGenerateCommand("tool_test_generate_95_redis", "redis", "entities");
@@ -724,6 +717,13 @@ public class ToolingGenerateTest {
     public void testGenerateEntityWithMultipleRelationsSameTypeRedis() {
         executeGenerateCommand("tool_test_generate_100_redis", "redis", "entities");
         assertGeneratedSources("tool_test_generate_100_redis");
+    }
+
+    @Test(enabled = true)
+    @Description("The model has entities with unsupported fields")
+    public void testGenerateEntitiesWithUnsupportedFields() {
+        executeGenerateCommand("tool_test_generate_101", "mysql", "entities");
+        assertGeneratedSources("tool_test_generate_101");
     }
 
 }
