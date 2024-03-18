@@ -1,4 +1,4 @@
-SET('Name', 'Age')-- Copyright (c) 2024 WSO2 LLC. (http://www.wso2.com).
+-- Copyright (c) 2024 WSO2 LLC. (http://www.wso2.com).
 --
 -- WSO2 LLC. licenses this file to you under the Apache License,
 -- Version 2.0 (the "License"); you may not use this file except
@@ -19,6 +19,7 @@ CREATE DATABASE persist;
 USE persist;
 
 CREATE TABLE ManyTypes (
+  jsonType JSON NOT NULL,
   id INT,
   name VARCHAR(191) NOT NULL,
   bigIntType BIGINT NOT NULL,
@@ -39,7 +40,6 @@ CREATE TABLE ManyTypes (
   blobType BLOB NOT NULL,
   tinyBlobType TINYBLOB NOT NULL,
   geometryType GEOMETRY NOT NULL,
-  jsonType JSON NOT NULL,
   bitType BIT(8) NOT NULL,
   PRIMARY KEY (id)
 );

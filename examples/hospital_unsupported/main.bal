@@ -62,6 +62,7 @@ service /hospital on new http:Listener(9090) {
         self.dbClient = check new ();
     }
 
+    // The below resource function is commented out due to Doctor entity having unsupported types, in which case would not generate the required client API for the service
     // Define the resource to handle POST requests
     // resource function post doctors(entities:DoctorInsert doctor) returns http:InternalServerError & readonly|http:Created & readonly|http:Conflict & readonly {
     //     int[]|persist:Error result = self.dbClient->/doctors.post([doctor]);
@@ -99,6 +100,7 @@ service /hospital on new http:Listener(9090) {
         return http:CREATED;
     }
 
+    // The below resource function is commented out due to Doctor entity having unsupported types, in which case would not generate the required client API for the service
     // Define the resource to handle GET requests for doctors
     // resource function get doctors() returns Doctor[]|error {
     //     stream<Doctor, persist:Error?> doctors = self.dbClient->/doctors.get();
@@ -182,6 +184,7 @@ service /hospital on new http:Listener(9090) {
         return http:NO_CONTENT;
     }
 
+    // The below resource function is commented out due to Doctor entity having unsupported types, in which case   would not generate the required client API for the service
     // resource function delete doctors/[int id]() returns http:NoContent | http:InternalServerError {
     //     entities:Doctor|persist:Error result = self.dbClient->/doctors/[id].delete();
     //     if result is persist:Error {

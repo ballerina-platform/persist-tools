@@ -3,6 +3,7 @@ import ballerinax/persist.sql;
 
 @sql:Name {value: "ManyTypes"}
 public type ManyType record {|
+    //Unsupported[json] jsonType;
     readonly int id;
     string name;
     int bigIntType;
@@ -23,7 +24,6 @@ public type ManyType record {|
     byte[] blobType;
     byte[] tinyBlobType;
     //Unsupported[geometry] geometryType;
-    //Unsupported[json] jsonType;
     //Unsupported[bit(8)] bitType;
 |};
 

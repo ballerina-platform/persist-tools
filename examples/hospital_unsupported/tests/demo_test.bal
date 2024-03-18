@@ -39,7 +39,7 @@ function initDatabase() returns error? {
 	        specialty VARCHAR(191) NOT NULL,
 	        phone_number VARCHAR(191) NOT NULL,
 	        salary DECIMAL(10,2),
-            favDrinks SET('COFFEE', 'TEA', 'WATER'),
+          favDrinks SET('COFFEE', 'TEA', 'WATER'),
 	        PRIMARY KEY(id)
       )`);
     _ = check dbClient->execute(`CREATE TABLE patients (
