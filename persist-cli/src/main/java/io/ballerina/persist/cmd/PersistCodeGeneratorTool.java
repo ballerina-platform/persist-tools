@@ -29,14 +29,21 @@ import io.ballerina.projects.buildtools.CodeGeneratorTool;
 import io.ballerina.projects.buildtools.ToolContext;
 import io.ballerina.projects.util.ProjectUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Locale;
 
+import static io.ballerina.persist.PersistToolsConstants.CACHE_FILE;
 import static io.ballerina.persist.PersistToolsConstants.TARGET_MODULE;
 import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 
@@ -76,6 +83,14 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
             }
             validatePersistDirectory(datastore, projectPath);
             printExperimentalFeatureInfo(datastore);
+            try {
+                if (validateCache(toolContext, schemaFilePath)) {
+                    errStream.println("INFO: no changes in the schema file. Generated sources are up to date.");
+                    return;
+                }
+            } catch (NoSuchAlgorithmException e) {
+                errStream.println("INFO: unable to validate the cache. Generating sources for the schema file.");
+            }
             entityModule = BalProjectUtils.getEntities(schemaFilePath);
             validateEntityModule(entityModule, schemaFilePath);
             createGeneratedSourceDirIfNotExists(generatedSourceDirPath);
@@ -95,6 +110,49 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
             throw new BalException("invalid module name : '" + moduleName + "' :" + System.lineSeparator() +
                     "maximum length of module name is 256 characters");
         }
+    }
+
+    /**
+     * This method uses to validate the cache.
+     */
+    private static boolean validateCache(ToolContext toolContext, Path schemaFilePath) throws IOException, NoSuchAlgorithmException {
+        Path cachePath = toolContext.cachePath();
+        String modelHashVal = getHashValue(schemaFilePath);
+        if (!Files.isDirectory(cachePath)) {
+            updateCacheFile(cachePath, modelHashVal);
+            return false;
+        }
+        // read the cache file
+        Path cacheFilePath = Paths.get(cachePath.toString(), CACHE_FILE);
+        String cacheContent = Files.readString(Paths.get(cacheFilePath.toString()));
+        boolean isCacheValid = cacheContent.equals(modelHashVal);
+        updateCacheFile(cachePath, modelHashVal);
+        return isCacheValid;
+    }
+
+    private static void updateCacheFile(Path cachePath, String modelHashVal) {
+        try {
+            Path cacheFilePath = Paths.get(cachePath.toString(), CACHE_FILE);
+            if (!Files.exists(cacheFilePath)) {
+                Files.createDirectories(cachePath);
+                Files.createFile(cacheFilePath);
+            }
+            Files.write(cacheFilePath, modelHashVal.getBytes(), StandardOpenOption.WRITE);
+        } catch (IOException e) {
+            errStream.println("ERROR: failed to update the cache file: " + e.getMessage());
+        }
+    }
+
+    private static String getHashValue(Path schemaFilePath) throws IOException, NoSuchAlgorithmException {
+        String schema = readFileToString(schemaFilePath);
+        MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
+        byte[] hashBytes = messageDigest.digest(schema.getBytes(StandardCharsets.UTF_8));
+        return new String(hashBytes, StandardCharsets.UTF_8);
+    }
+
+    public static String readFileToString(Path filePath) throws IOException {
+        byte[] fileContent = Files.readAllBytes(filePath);
+        return new String(fileContent, StandardCharsets.UTF_8);
     }
 
     @Override
