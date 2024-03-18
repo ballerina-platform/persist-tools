@@ -22,6 +22,7 @@ The conforming implementation of the specification is released and included in t
 2. [Initializing Persistence Layer in Bal Project](#2-initializing-the-bal-project-with-persistence-layer)
 3. [Generating Persistence Derived Types, Clients, and Database Schema](#3-generating-persistence-derived-types-and-clients)
 4. [Push Persistence Schema to the Data Provider](#4-push-persistence-schema-to-the-data-provider)
+5. [Pull Persistence Schema from the Data Provider](#5-pull-persistence-schema-from-the-data-provider)
 
 ## 1. Overview
 This specification elaborates on the `Persist CLI Tool` commands.
@@ -206,3 +207,34 @@ Behaviour of the `push` command,
 - User should add the relevant configuration to the Ballerina.toml file.
 - The user should have initiated the persistence layer in the project and executed the `generate` command to generate the SQL script.
 - If the user invokes the command twice, it will not fail. It will rerun the SQL script against the database.
+
+## 5. Pull Persistence Schema from the Data Provider
+
+```bash
+bal persist pull --datastore mysql --host localhost --port 3306 --user root --database persist
+```
+| Command Parameter |                                      Description                                      | Mandatory | Default Value |
+|:-----------------:|:-------------------------------------------------------------------------------------:|:---------:|:-------------:|
+|    --datastore    | used to indicate the preferred database client. Currently, only 'mysql' is supported. |    No     |     mysql     |
+|      --host       |                          used to indicate the database host                           |    Yes    |     None      |
+|      --port       |                          used to indicate the database port                           |    No     |     3306      |
+|      --user       |                          used to indicate the database user                           |    Yes    |     None      |
+|    --database     |                          used to indicate the database name                           |    Yes    |     None      |
+
+This command will introspect the schema of the database and create a `model.bal` file with the entities and relations based on the schema of the database. The database configuration should be provided as command-line arguments.
+
+This command should execute within a Ballerina project.  
+
+The `persist` directory is created if it is not already present. If a `model.bal` file is already present in the `persist` directory, it will prompt the user to confirm overwriting the existing `model.bal` file.
+
+Running the `pull` command will,
+1. Create a `model.bal` file with the entities and relations based on the introspected schema of the database.
+2. Not change the schema of the database in any way.
+
+Behaviour of the `pull` command,
+- User should invoke the command within a Ballerina project.
+- User should provide the relevant database configuration as command-line arguments.
+- The database password is not provided as a command-line argument. The user will be prompted to enter the password.
+- If the user invokes the command while a `model.bal` file exists in the `persist` directory, it will prompt the user to confirm overwriting the existing `model.bal` file.
+- If the user introspects a database with unsupported data types, it will inform the user by giving a warning and will comment out the relevant field with the tag `[Unsupported[DATA_TYPE]]`.
+- The user must execute the `generate` command to generate the derived types and client API after running the `pull` command in order to use the client API in the project.

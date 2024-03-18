@@ -1,0 +1,23 @@
+NAME
+       bal persist pull - Introspect the existing database schema and generate data model.
+
+SYNOPSIS
+       bal persist pull [--datastore <store type>]
+                        [--host <host address>]
+                        [--port <port number>]
+                        [--user <database user]
+                        [--database <database name>]
+                        [<-h> | <--help>]
+
+DESCRIPTION
+       This command introspects an existing database, generate the entity model and write it to a `model.bal`
+       file in the `persist` directory. If the file already exists, it will prompt the user to confirm overwriting the
+       file. The database configurations must be passed in as command line arguments. The user must enter the
+       database password when prompted.
+
+EXAMPLES
+       Print the usage details of the `bal persist pull` command.
+          $ bal persist pull --help
+
+       Generate data model by introspecting database.
+          $ bal persist pull --datastore mysql --host localhost --port 3306 --user root --database db

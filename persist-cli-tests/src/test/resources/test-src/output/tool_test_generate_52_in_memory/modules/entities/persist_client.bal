@@ -298,7 +298,7 @@ isolated function queryWorkspaces(string[] fields) returns stream<record {}, per
     }
     return from record {} 'object in workspacesClonedTable
         outer join var location in buildingsClonedTable on ['object.locationBuildingCode] equals [location?.buildingCode]
-        outer join var employee in employeesClonedTable on ['object.workspaceEmpNo] equals [employee?.empNo]
+        outer join var employee in employeesClonedTable on ['object.employeeEmpNo] equals [employee?.empNo]
         select persist:filterRecord({
                                         ...'object,
                                         "location": location,
@@ -322,7 +322,7 @@ isolated function queryOneWorkspaces(anydata key) returns record {}|persist:NotF
     from record {} 'object in workspacesClonedTable
     where persist:getKey('object, ["workspaceId"]) == key
     outer join var location in buildingsClonedTable on ['object.locationBuildingCode] equals [location?.buildingCode]
-    outer join var employee in employeesClonedTable on ['object.workspaceEmpNo] equals [employee?.empNo]
+    outer join var employee in employeesClonedTable on ['object.employeeEmpNo] equals [employee?.empNo]
     do {
         return {
             ...'object,

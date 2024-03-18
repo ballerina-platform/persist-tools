@@ -22,9 +22,11 @@ import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
+import io.ballerina.persist.nodegenerator.syntax.sources.DbModelGenSyntaxTree;
 import io.ballerina.persist.nodegenerator.syntax.sources.DbSyntaxTree;
 import io.ballerina.persist.nodegenerator.syntax.sources.GSheetSyntaxTree;
 import io.ballerina.persist.nodegenerator.syntax.sources.InMemorySyntaxTree;
+import io.ballerina.persist.nodegenerator.syntax.sources.RedisSyntaxTree;
 import io.ballerina.persist.nodegenerator.syntax.utils.AppScriptUtils;
 import io.ballerina.persist.nodegenerator.syntax.utils.SqlScriptUtils;
 import io.ballerina.toml.syntax.tree.DocumentMemberDeclarationNode;
@@ -57,6 +59,7 @@ public class SourceGenerator {
 
     private static final String persistTypesBal = "persist_types.bal";
     private static final String persistClientBal = "persist_client.bal";
+    private static final String persistModelBal = "model.bal";
     private static final String NEW_LINE = System.lineSeparator();
     private final String sourcePath;
     private final String moduleNameWithPackageName;
@@ -69,6 +72,22 @@ public class SourceGenerator {
         this.moduleNameWithPackageName = moduleNameWithPackageName;
         this.entityModule = entityModule;
         this.generatedSourceDirPath = generatedSourceDirPath;
+    }
+
+    public void createDbModel() throws BalException {
+        DbModelGenSyntaxTree dbModelGenSyntaxTree = new DbModelGenSyntaxTree();
+        addModelFile(dbModelGenSyntaxTree.getDataModels(entityModule),
+                this.generatedSourceDirPath.resolve(persistModelBal).toAbsolutePath(),
+                this.moduleNameWithPackageName);
+    }
+
+    private void addModelFile(SyntaxTree syntaxTree, Path path, String moduleName) throws BalException {
+        try {
+            writeOutputFile(Formatter.format(syntaxTree.toSourceCode()), path);
+        } catch (FormatterException | IOException e) {
+            throw new BalException(String.format("could not write the records for the `%s` data model " +
+                    "to the model.bal file.", moduleName) + e.getMessage());
+        }
     }
 
     public void createDbSources(String datasource) throws BalException {
@@ -87,6 +106,24 @@ public class SourceGenerator {
             addSqlScriptFile(this.entityModule.getModuleName(),
                     SqlScriptUtils.generateSqlScript(this.entityModule.getEntityMap().values(), datasource),
                     generatedSourceDirPath);
+        } catch (BalException e) {
+            throw new BalException(e.getMessage());
+        }
+    }
+
+    public void createRedisSources() throws BalException {
+        RedisSyntaxTree redisSyntaxTree = new RedisSyntaxTree();
+        try {
+            addDataSourceConfigBalFile(this.generatedSourceDirPath, BalSyntaxConstants.PATH_DB_CONFIGURATION_BAL_FILE,
+            redisSyntaxTree.getDataStoreConfigSyntax());
+            addConfigTomlFile(this.sourcePath, redisSyntaxTree.getConfigTomlSyntax(
+                    this.moduleNameWithPackageName), this.moduleNameWithPackageName);
+            addDataTypesBalFile(redisSyntaxTree.getDataTypesSyntax(this.entityModule),
+                    this.generatedSourceDirPath.resolve(persistTypesBal).toAbsolutePath(),
+                    this.moduleNameWithPackageName);
+            addClientFile(redisSyntaxTree.getClientSyntax(this.entityModule),
+                    this.generatedSourceDirPath.resolve(persistClientBal).toAbsolutePath(),
+                    this.moduleNameWithPackageName);
         } catch (BalException e) {
             throw new BalException(e.getMessage());
         }

@@ -79,7 +79,7 @@ public class GSheetSyntaxTree implements SyntaxTree {
             FunctionDefinitionNode[] functions = createQueryFunction(entity);
             resource.addFunction(functions[0], true);
             resource.addFunction(functions[1], true);
-            String entityResourceName = entity.getResourceName();
+            String entityResourceName = entity.getClientResourceName();
             resource.addFunction(NodeParser.parseStatement(String.format(
                     BalSyntaxConstants.EXTERNAL_QUERY_STREAM_METHOD_TEMPLATE, entityResourceName.substring(0, 1).
                             toUpperCase(Locale.ENGLISH) + entityResourceName.substring(1),
@@ -163,7 +163,7 @@ public class GSheetSyntaxTree implements SyntaxTree {
     }
 
     private FunctionDefinitionNode[] createQueryFunction(Entity entity) {
-        String resourceName = entity.getResourceName();
+        String resourceName = entity.getClientResourceName();
         String nameInCamelCase = resourceName.substring(0, 1).toUpperCase(Locale.ENGLISH) + resourceName.substring(1);
         StringBuilder queryBuilder = new StringBuilder();
         StringBuilder queryOneBuilder = new StringBuilder();
@@ -193,7 +193,7 @@ public class GSheetSyntaxTree implements SyntaxTree {
     private void createQuery(Entity entity, StringBuilder queryBuilder, StringBuilder queryOneBuilder) {
         StringBuilder relationalRecordFields = new StringBuilder();
         String entityName = entity.getEntityName();
-        String entityResourceName = entity.getResourceName();
+        String entityResourceName = entity.getClientResourceName();
         String resourceNameInCamelCase = entityResourceName.substring(0, 1).
                 toUpperCase(Locale.ENGLISH) + entityResourceName.substring(1);
         StringBuilder streamInitBuilder = new StringBuilder();
@@ -208,7 +208,7 @@ public class GSheetSyntaxTree implements SyntaxTree {
                 if (relation.isOwner()) {
                     Entity assocEntity = relation.getAssocEntity();
                     String assocEntityName = assocEntity.getEntityName();
-                    String assocEntityResourceName = assocEntity.getResourceName();
+                    String assocEntityResourceName = assocEntity.getClientResourceName();
                     String assocResourceNameInCamelCase = assocEntityResourceName.substring(0, 1).
                             toUpperCase(Locale.ENGLISH) + assocEntityResourceName.substring(1);
 

@@ -28,18 +28,20 @@ import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.Enum;
 import io.ballerina.persist.models.EnumMember;
+import io.ballerina.persist.models.Index;
 import io.ballerina.persist.models.Relation;
+import io.ballerina.persist.models.SQLType;
 import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Sql script generator.
@@ -62,14 +64,36 @@ public class SqlScriptUtils {
     public static String[] generateSqlScript(Collection<Entity> entities, String datasource) throws BalException {
         HashMap<String, List<String>> referenceTables = new HashMap<>();
         HashMap<String, List<String>> tableScripts = new HashMap<>();
+        //generate create table
         for (Entity entity : entities) {
+            if (entity.containsUnsupportedTypes()) {
+                continue;
+            }
             List<String> tableScript = new ArrayList<>();
-            String tableName = removeSingleQuote(entity.getEntityName());
+            String tableName = removeSingleQuote(entity.getTableName());
             tableScript.add(generateDropTableQuery(escape(tableName, datasource)));
             tableScript.add(generateCreateTableQuery(entity, referenceTables, datasource));
             tableScripts.put(tableName, tableScript);
         }
-        return rearrangeScriptsWithReference(tableScripts.keySet(), referenceTables, tableScripts);
+        //generate create index
+        List<String> indexScripts = new ArrayList<>();
+        for (Entity entity : entities) {
+            entity.getIndexes().forEach(index -> {
+                indexScripts.add(
+                        generateCreateIndexQuery(index, entity, datasource, index.isUnique())
+                );
+            });
+            entity.getUniqueIndexes().forEach(index -> {
+                indexScripts.add(
+                        generateCreateIndexQuery(index, entity, datasource, index.isUnique())
+                );
+            });
+        }
+        List<String> scripts = new ArrayList<>(Arrays.asList(
+                rearrangeScriptsWithReference(tableScripts.keySet(), referenceTables, tableScripts)));
+        scripts.add(NEW_LINE);
+        scripts.addAll(indexScripts);
+        return scripts.toArray(new String[0]);
     }
     private static String generateDropTableQuery(String tableName) {
         return MessageFormat.format("DROP TABLE IF EXISTS {0};", tableName);
@@ -81,7 +105,17 @@ public class SqlScriptUtils {
         String fieldDefinitions = generateFieldsDefinitionSegments(entity, referenceTables, datasource);
 
         return MessageFormat.format("{0}CREATE TABLE {1} ({2}{3});", NEW_LINE,
-                escape(removeSingleQuote(entity.getEntityName()), datasource), fieldDefinitions, NEW_LINE);
+                escape(removeSingleQuote(entity.getTableName()), datasource), fieldDefinitions, NEW_LINE);
+    }
+
+    private static String generateCreateIndexQuery(Index index, Entity entity, String datasource, boolean unique) {
+        return MessageFormat.format("CREATE{0} INDEX {1} ON {2} ({3});",
+                    unique ? " UNIQUE" : "",
+                    escape(index.getIndexName(), datasource),
+                    escape(removeSingleQuote(entity.getTableName()), datasource),
+                    index.getFields().stream()
+                            .map(field -> escape(removeSingleQuote(field.getFieldColumnName()), datasource))
+                            .reduce((s1, s2) -> s1 + COMMA_WITH_SPACE + s2).orElse(""));
     }
 
     private static String generateFieldsDefinitionSegments(Entity entity, HashMap<String, List<String>> referenceTables,
@@ -90,9 +124,9 @@ public class SqlScriptUtils {
         sqlScript.append(getColumnsScript(entity, datasource));
         List<EntityField> relationFields = entity.getFields().stream()
                 .filter(entityField -> entityField.getRelation() != null && entityField.getRelation().isOwner())
-                .collect(Collectors.toList());
+                .toList();
         for (EntityField entityField : relationFields) {
-            sqlScript.append(getRelationScripts(removeSingleQuote(entity.getEntityName()),
+            sqlScript.append(getRelationScripts(removeSingleQuote(entity.getTableName()),
                     entityField, referenceTables, datasource));
         }
         sqlScript.append(addPrimaryKey(entity.getKeys(), datasource));
@@ -106,7 +140,7 @@ public class SqlScriptUtils {
                 continue;
             }
 
-            String fieldName = escape(removeSingleQuote(entityField.getFieldName()), datasource);
+            String fieldName = escape(removeSingleQuote(entityField.getFieldColumnName()), datasource);
             String sqlType;
             Enum enumValue = entityField.getEnum();
             if (enumValue == null) {
@@ -120,7 +154,8 @@ public class SqlScriptUtils {
                         NEW_LINE, TAB, fieldName, sqlType));
             } else {
                 columnScript.append(MessageFormat.format("{0}{1}{2} {3}{4},",
-                        NEW_LINE, TAB, fieldName, sqlType, " NOT NULL"));
+                        NEW_LINE, TAB, fieldName, sqlType,
+                        entityField.isDbGenerated() ? " AUTO_INCREMENT" : " NOT NULL"));
             }
         }
         return columnScript.toString();
@@ -132,7 +167,8 @@ public class SqlScriptUtils {
         StringBuilder relationScripts = new StringBuilder();
         Relation relation = entityField.getRelation();
         List<Relation.Key> keyColumns = relation.getKeyColumns();
-        List<String> references = relation.getReferences();
+        List<String> references = relation.getKeyColumns().stream().map(Relation.Key::getReferenceColumnName)
+                .toList();
         Entity assocEntity = relation.getAssocEntity();
         StringBuilder foreignKey = new StringBuilder();
         StringBuilder referenceFieldName = new StringBuilder();
@@ -144,7 +180,7 @@ public class SqlScriptUtils {
                 if (assocField.getRelation() != null) {
                     continue;
                 }
-                if (assocField.getFieldName().equals(references.get(i))) {
+                if (assocField.getFieldColumnName().equals(references.get(i))) {
                     referenceSqlType = getSqlType(assocField, datasource);
                     break;
                 }
@@ -159,14 +195,14 @@ public class SqlScriptUtils {
                     associatedEntityRelationType.equals(Relation.RelationType.ONE) && noOfReferencesKey == 1) {
                 referenceSqlType += " UNIQUE";
             }
-            foreignKey.append(escape(removeSingleQuote(keyColumns.get(i).getField()), datasource));
+            foreignKey.append(escape(removeSingleQuote(keyColumns.get(i).getColumnName()), datasource));
             referenceFieldName.append(escape(removeSingleQuote(references.get(i)), datasource));
             if (i < noOfReferencesKey - 1) {
                 foreignKey.append(COMMA_WITH_SPACE);
                 referenceFieldName.append(COMMA_WITH_SPACE);
             }
             relationScripts.append(MessageFormat.format("{0}{1}{2} {3}{4},", NEW_LINE, TAB,
-                    escape(removeSingleQuote(keyColumns.get(i).getField()), datasource), referenceSqlType,
+                    escape(removeSingleQuote(keyColumns.get(i).getColumnName()), datasource), referenceSqlType,
                     " NOT NULL"));
         }
         if (noOfReferencesKey > 1 && relation.getRelationType().equals(Relation.RelationType.ONE) &&
@@ -175,8 +211,8 @@ public class SqlScriptUtils {
         }
         relationScripts.append(MessageFormat.format("{0}{1}FOREIGN KEY({2}) REFERENCES {3}({4}),",
                 NEW_LINE, TAB, foreignKey.toString(),
-                escape(removeSingleQuote(assocEntity.getEntityName()), datasource), referenceFieldName));
-        updateReferenceTable(tableName, assocEntity.getEntityName(), referenceTables);
+                escape(removeSingleQuote(assocEntity.getTableName()), datasource), referenceFieldName));
+        updateReferenceTable(tableName, assocEntity.getTableName(), referenceTables);
         return relationScripts.toString();
     }
 
@@ -209,7 +245,7 @@ public class SqlScriptUtils {
             keyScripts.append(MessageFormat.format("{0}", PRIMARY_KEY_START_SCRIPT));
             for (EntityField key : keys) {
                 keyScripts.append(MessageFormat.format("{0},",
-                        escape(removeSingleQuote(key.getFieldName()), datasource)));
+                        escape(removeSingleQuote(key.getFieldColumnName()), datasource)));
             }
             keyScripts.deleteCharAt(keyScripts.length() - 1).append("),");
         }
@@ -219,7 +255,7 @@ public class SqlScriptUtils {
     private static String getSqlType(EntityField entityField, String datasource) throws BalException {
         String sqlType;
         if (!entityField.isArrayType()) {
-            sqlType = getTypeNonArray(entityField.getFieldType(), datasource);
+            sqlType = getTypeNonArray(entityField, datasource);
         } else {
             sqlType = getTypeArray(entityField.getFieldType(), datasource);
         }
@@ -227,7 +263,6 @@ public class SqlScriptUtils {
             return sqlType;
         }
         String length = BalSyntaxConstants.VARCHAR_LENGTH;
-        if (entityField.getAnnotation() != null) {
             for (AnnotationNode annotationNode : entityField.getAnnotation()) {
                 String annotationName = annotationNode.annotReference().toSourceCode().trim();
                 if (annotationName.equals(BalSyntaxConstants.CONSTRAINT_STRING)) {
@@ -251,7 +286,6 @@ public class SqlScriptUtils {
                     }
                 }
             }
-        }
         return sqlType + (String.format("(%s)", length));
     }
 
@@ -353,6 +387,24 @@ public class SqlScriptUtils {
         }
     }
 
+    public static String getTypeNonArray(EntityField field, String datasource) throws BalException {
+        SQLType sqlType = field.getSqlType();
+        if (sqlType != null) {
+            switch (sqlType.getTypeName()) {
+                case PersistToolsConstants.SqlTypes.DECIMAL:
+                    return PersistToolsConstants.SqlTypes.DECIMAL + String.format("(%s,%s)",
+                                sqlType.getNumericPrecision(),
+                                sqlType.getNumericScale());
+                case PersistToolsConstants.SqlTypes.VARCHAR:
+                    return PersistToolsConstants.SqlTypes.VARCHAR + String.format("(%s)", sqlType.getMaxLength());
+                case PersistToolsConstants.SqlTypes.CHAR:
+                    return PersistToolsConstants.SqlTypes.CHAR + String.format("(%s)", sqlType.getMaxLength());
+                default: { }
+            }
+        }
+        return getTypeNonArray(field.getFieldType(), datasource);
+    }
+
     public static String getTypeArray(String field, String datasource) throws BalException {
 
         // Ballerina --> byte[]
@@ -361,7 +413,7 @@ public class SqlScriptUtils {
         // PostgreSQL --> BYTEA
         if (PersistToolsConstants.BallerinaTypes.BYTE.equals(field)) {
             if (datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
-                return PersistToolsConstants.SqlTypes.VARBINARY;
+                return PersistToolsConstants.SqlTypes.VARBINARY_WITH_MAX;
             }
             if (datasource.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB)) {
                 return PersistToolsConstants.SqlTypes.BYTEA;

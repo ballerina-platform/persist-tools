@@ -24,7 +24,9 @@ hs_err_pid*
 
 build
 .gradle/
-target
+
+/target/
+!persist-cli-tests/src/resources/test-src/**/target/
 
 # IDEA Files
 .idea/
@@ -33,6 +35,7 @@ target
 *.iws
 
 # VSCode files
+.vscode/
 .project
 .classpath
 .settings
@@ -44,3 +47,6 @@ bin/
 # Ballerina
 velocity.log*
 *Ballerina.lock
+
+# Jar Dependency Versions
+version.properties

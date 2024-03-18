@@ -29,8 +29,8 @@ CREATE TABLE `OrderItem` (
 	`orderItemId` VARCHAR(191) NOT NULL,
 	`quantity` INT NOT NULL,
 	`price` DECIMAL(65,30) NOT NULL,
-	`orderitemBookId` VARCHAR(191) UNIQUE NOT NULL,
-	FOREIGN KEY(`orderitemBookId`) REFERENCES `Book`(`bookId`),
+	`bookBookId` VARCHAR(191) UNIQUE NOT NULL,
+	FOREIGN KEY(`bookBookId`) REFERENCES `Book`(`bookId`),
 	`orderOrderId` VARCHAR(191) NOT NULL,
 	FOREIGN KEY(`orderOrderId`) REFERENCES `Order`(`orderId`),
 	PRIMARY KEY(`orderItemId`)
@@ -40,7 +40,7 @@ CREATE TABLE `Payment` (
 	`paymentId` VARCHAR(191) NOT NULL,
 	`paymentAmount` DECIMAL(65,30) NOT NULL,
 	`paymentDate` VARCHAR(191) NOT NULL,
-	`paymentOrderId` VARCHAR(191) UNIQUE NOT NULL,
-	FOREIGN KEY(`paymentOrderId`) REFERENCES `Order`(`orderId`),
+	`orderOrderId` VARCHAR(191) UNIQUE NOT NULL,
+	FOREIGN KEY(`orderOrderId`) REFERENCES `Order`(`orderId`),
 	PRIMARY KEY(`paymentId`)
 );

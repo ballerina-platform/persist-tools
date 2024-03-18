@@ -24,6 +24,8 @@ description = 'Ballerina - Persist Examples'
 
 def ballerinaDist = "${project.buildDir}/ballerina-distribution"
 def examples = ["medical-center", "rainier"]
+def introspectionExamples = ["hospital", "hospital_unsupported"]
+def redisDBExamples = ["social_media"]
 
 configurations {
     balTools
@@ -118,6 +120,22 @@ task copyTestResources() {
     doLast() {
         copy {
             examples.each { example ->
+                into buildDir
+                into("generated-examples/${example}/") {
+                    from "${example}"
+                }
+            }
+        }
+        copy {
+            introspectionExamples.each { example ->
+                into buildDir
+                into("generated-examples/${example}/") {
+                    from "${example}"
+                }
+            }
+        }
+        copy {
+            redisDBExamples.each { example ->
                 into buildDir
                 into("generated-examples/${example}/") {
                     from "${example}"
@@ -248,6 +266,46 @@ task generateInMemoryExamples {
     }
 }
 
+task generateIntrospectionExamples {
+    doLast {
+        introspectionExamples.each { example ->
+            try {
+                exec {
+                    workingDir "${project.projectDir}/build/generated-examples/${example}"
+                    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate --datastore=mysql --module=entities"
+                    } else {
+                        commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat persist generate --datastore=mysql --module=entities"
+                    }
+                }
+            } catch (Exception e) {
+                println("Example '${example}' Generation failed: " + e.message)
+                throw e
+            }
+        }
+    }
+}
+
+task generateRedisDBExamples {
+    doLast {
+        redisDBExamples.each { example ->
+            try {
+                exec {
+                    workingDir "${project.projectDir}/build/generated-examples/${example}"
+                    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate --datastore=redis --module=entities"
+                    } else {
+                        commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat persist generate --datastore=redis --module=entities"
+                    }
+                }
+            } catch (Exception e) {
+                println("Example '${example}' Generation failed: " + e.message)
+                throw e
+            }
+        }
+    }
+}
+
 // task generateGSheetExamples {
 //     doLast {
 //         examples.each { example ->
@@ -303,21 +361,60 @@ def checkExecResult(executionResult, failText, standardOutput) {
     }
 }
 
+def checkRedisTestDockerContainerStatus(containerName) {
+    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+        try {
+            return exec {
+                commandLine 'sh', '-c', "docker exec ${containerName} redis-cli"
+            }.exitValue
+        } catch (all) {
+            return 1;
+        }
+    } else {
+        commandLine 'cmd','slmgr /dlv'
+        println('\n' + "Windows Instance detected")
+    }
+}
+
 task startTestDockerContainer(type: Exec) {
     if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
         def standardOutput = new ByteArrayOutputStream()
-        commandLine 'sh', '-c', 'docker run --platform linux/amd64 --rm -d --name ballerina-persist-tools-example -e MYSQL_ROOT_PASSWORD="Test123#" -p 3308:3306 -t mysql:8.0.21'
+        commandLine 'sh', '-c', 'docker run --platform linux/amd64 --rm -d --name ballerina-persist-tools-example -e MYSQL_ROOT_PASSWORD="Test123#" -e MYSQL_DATABASE="hospital" -p 3308:3306 -t mysql:8.0.21'
         def healthCheck = 1
         def counter = 0
         doLast {
             checkExecResult(executionResult, 'Error', standardOutput)
             while (healthCheck != 0 && counter < 12) {
-                sleep(60 * 1000)
+                sleep(30 * 1000)
                 healthCheck = checkTestDockerContainerStatus('ballerina-persist-tools-example')
                 counter = counter + 1
             }
             if (healthCheck != 0) {
                 throw new GradleException("Docker container 'ballerina-mysql' health test exceeded timeout!")
+            }
+        }
+    } else {
+        commandLine 'cmd','slmgr /dlv'
+        println('\n' + "Windows Instance detected")
+        println('\n' + "skippped starting the docker container")
+    }
+}
+
+task startTestRedisContainer(type: Exec) {
+    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+        def standardOutput = new ByteArrayOutputStream()
+        commandLine 'sh', '-c', 'docker run --platform linux/amd64 --rm -d --name persist-redis -p 6379:6379 redis:latest'
+        def healthCheck = 1
+        def counter = 0
+        doLast {
+            checkExecResult(executionResult, 'Error', standardOutput)
+            while (healthCheck != 0 && counter < 12) {
+                sleep(30 * 1000)
+                healthCheck = checkRedisTestDockerContainerStatus('persist-redis')
+                counter = counter + 1
+            }
+            if (healthCheck != 0) {
+                throw new GradleException("Docker container 'persist-redis' health test exceeded timeout!")
             }
         }
     } else {
@@ -338,6 +435,22 @@ task stopTestDockerContainer() {
                 }
             } catch (all) {
                 println('Gradle process can safely ignore stopTestDockerContainer task')
+            }
+        }
+    }
+}
+
+task stopTestRedisContainer() {
+    doLast {
+        if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+            try {
+                def stdOut = new ByteArrayOutputStream()
+                exec {
+                    commandLine 'sh', '-c', 'docker stop persist-redis'
+                    standardOutput = stdOut
+                }
+            } catch (all) {
+                println('Gradle process can safely ignore stopTestRedisContainer task')
             }
         }
     }
@@ -406,6 +519,69 @@ task testInMemoryExamples {
     }
 }
 
+task testIntrospectionExamples {
+    dependsOn(startTestDockerContainer)
+    doLast {
+        introspectionExamples.each { example ->
+            try {
+                if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+                    //this part is not necessary. this is added so that the build will not fail due to the issue with
+                    //mysql connector for ballerina requiring a 'first login' on a different mysql client. This is a
+                    //temporary fix until the issue is resolved.
+                    try {
+                        exec {
+                            workingDir "${project.projectDir}/build/generated-examples/${example}"
+                            commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist pull --host localhost --database nonexistentdb --user root --port 3308"
+                            standardInput = new ByteArrayInputStream("Test123#\ny\n".getBytes())
+                        }
+                    } catch (Exception ignored) {}
+                    exec {
+                        workingDir "${project.projectDir}/build/generated-examples/${example}"
+                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal test"
+                    }
+                } else {
+                    try {
+                        exec {
+                            workingDir "${project.projectDir}/build/generated-examples/${example}"
+                            commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat persist pull --host localhost --database hris --user root --port 3308"
+                            standardInput = new ByteArrayInputStream("Test123#\ny\n".getBytes())
+                        }
+                    } catch (Exception ignored) {}
+                    exec {
+                        workingDir "${project.projectDir}/build/generated-examples/${example}"
+                        commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat test"
+                    }
+                }
+            } catch (Exception e) {
+                println("Example '${example}' Tests failed: " + e.message)
+                throw e
+            }
+        }
+    }
+}
+
+task testRedisDBExamples {
+    dependsOn(startTestRedisContainer)
+    doLast {
+        redisDBExamples.each { example ->
+            try {
+                exec {
+                    workingDir "${project.projectDir}/build/generated-examples/${example}"
+                    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal test"
+                    } else {
+                        commandLine 'cmd','slmgr /dlv'
+                        println('\n' + "Windows Instance detected")
+                    }
+                }
+            } catch (Exception e) {
+                println("Example '${example}' test failed: " + e.message)
+                throw e
+            }
+        }
+    }
+}
+
 task automateGSheetTable {
     doLast {
         try {
@@ -450,6 +626,8 @@ copyPersistTool.dependsOn ":persist-cli:build"
 copyTestResources.dependsOn copyPersistTool
 
 initInMemoryExamples.dependsOn copyTestResources
+generateIntrospectionExamples.dependsOn copyTestResources
+generateRedisDBExamples.dependsOn copyTestResources
 generateInMemoryExamples.dependsOn initInMemoryExamples
 testInMemoryExamples.dependsOn generateInMemoryExamples
 
@@ -457,6 +635,8 @@ initDbExamples.dependsOn testInMemoryExamples
 generateDbExamples.dependsOn initDbExamples
 pushExamples.dependsOn generateDbExamples
 testDbExamples.dependsOn pushExamples
+testIntrospectionExamples.dependsOn generateIntrospectionExamples
+testRedisDBExamples.dependsOn generateRedisDBExamples
 
 // initGSheetExamples.dependsOn testDbExamples
 // generateGSheetExamples.dependsOn initGSheetExamples
@@ -465,5 +645,8 @@ testDbExamples.dependsOn pushExamples
 
 build.dependsOn testInMemoryExamples
 build.dependsOn testDbExamples
+build.dependsOn testIntrospectionExamples
+build.dependsOn testRedisDBExamples
 //build.dependsOn testGSheetExamples
 build.finalizedBy stopTestDockerContainer
+build.finalizedBy stopTestRedisContainer

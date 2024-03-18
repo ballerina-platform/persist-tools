@@ -56,14 +56,14 @@ public type Workspace record {|
     readonly string workspaceId;
     string workspaceType;
     string locationBuildingCode;
-    string workspaceEmpNo;
+    string employeeEmpNo;
 |};
 
 public type WorkspaceOptionalized record {|
     string workspaceId?;
     string workspaceType?;
     string locationBuildingCode?;
-    string workspaceEmpNo?;
+    string employeeEmpNo?;
 |};
 
 public type WorkspaceWithRelations record {|
@@ -79,7 +79,7 @@ public type WorkspaceInsert Workspace;
 public type WorkspaceUpdate record {|
     string workspaceType?;
     string locationBuildingCode?;
-    string workspaceEmpNo?;
+    string employeeEmpNo?;
 |};
 
 public type Building record {|

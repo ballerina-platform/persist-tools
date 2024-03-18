@@ -40,6 +40,7 @@ import io.ballerina.compiler.syntax.tree.SpecificFieldNode;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.compiler.syntax.tree.Token;
+import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.components.Client;
 import io.ballerina.persist.components.Function;
 import io.ballerina.persist.components.TypeDescriptor;
@@ -49,15 +50,19 @@ import io.ballerina.persist.models.Enum;
 import io.ballerina.persist.models.EnumMember;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.models.Relation;
+import io.ballerina.persist.models.SQLType;
 import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
 import io.ballerina.persist.nodegenerator.syntax.constants.SyntaxTokenConstants;
 import io.ballerina.tools.text.TextDocument;
 import io.ballerina.tools.text.TextDocuments;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * This class is used to generate the common syntax tree for the client.
@@ -66,6 +71,13 @@ import java.util.Optional;
  */
 public class BalSyntaxUtils {
 
+    public record AnnotationUtilRecord(List<AnnotationNode> annotationNodes, String annotation, String field) {
+        public AnnotationUtilRecord (List<AnnotationNode> annotationNodes, String annotation, String field) {
+            this.annotationNodes = Collections.unmodifiableList(annotationNodes);
+            this.annotation = annotation;
+            this.field = field;
+        }
+    }
     public static NodeList<ImportDeclarationNode> generateImport(Module entityModule) {
         NodeList<ImportDeclarationNode> imports = AbstractNodeFactory.createEmptyNodeList();
         MinutiaeList commentMinutiaeList = createCommentMinutiaeList(String.format(
@@ -93,9 +105,12 @@ public class BalSyntaxUtils {
     public static NodeList<ModuleMemberDeclarationNode> generateConstantVariables(Module entityModule) {
         NodeList<ModuleMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
         for (Entity entity : entityModule.getEntityMap().values()) {
+            if (entity.containsUnsupportedTypes()) {
+                continue;
+            }
             moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration(String.format(
                     "const %s = \"%s\";", stripEscapeCharacter(getStringWithUnderScore(entity.getEntityName())),
-                    stripEscapeCharacter(entity.getResourceName()))));
+                    stripEscapeCharacter(entity.getClientResourceName()))));
         }
         return moduleMembers;
     }
@@ -140,7 +155,7 @@ public class BalSyntaxUtils {
     public static FunctionDefinitionNode generateGetFunction(Entity entity, String className, String moduleName) {
         return (FunctionDefinitionNode) NodeParser.parseObjectMember(
                 String.format(BalSyntaxConstants.EXTERNAL_GET_METHOD_TEMPLATE,
-                        entity.getResourceName(), entity.getEntityName(), moduleName, className));
+                        entity.getClientResourceName(), entity.getEntityName(), moduleName, className));
     }
 
     public static FunctionDefinitionNode generateGetByKeyFunction(Entity entity, String className, String moduleName) {
@@ -158,13 +173,15 @@ public class BalSyntaxUtils {
 
         return (FunctionDefinitionNode) NodeParser.parseObjectMember(
                 String.format(BalSyntaxConstants.EXTERNAL_GET_BY_KEY_METHOD_TEMPLATE,
-                        entity.getResourceName(), keyBuilder, entity.getEntityName(), moduleName, className));
+                        entity.getClientResourceName(),
+                        keyBuilder, entity.getEntityName(), moduleName, className));
     }
 
     public static Function generatePostFunction(Entity entity, List<EntityField> primaryKeys, String parameterType) {
         Function create = new Function(BalSyntaxConstants.POST, SyntaxKind.RESOURCE_ACCESSOR_DEFINITION);
         NodeList<Node> resourcePaths = AbstractNodeFactory.createEmptyNodeList();
-        resourcePaths = resourcePaths.add(AbstractNodeFactory.createIdentifierToken(entity.getResourceName()));
+        resourcePaths = resourcePaths.add(AbstractNodeFactory.createIdentifierToken(
+                entity.getClientResourceName()));
         create.addRelativeResourcePaths(resourcePaths);
         create.addRequiredParameter(
                 TypeDescriptor.getArrayTypeDescriptorNode(parameterType), BalSyntaxConstants.KEYWORD_VALUE);
@@ -183,7 +200,8 @@ public class BalSyntaxUtils {
         update.addRequiredParameter(TypeDescriptor.getSimpleNameReferenceNode(
             String.format(BalSyntaxConstants.UPDATE_RECORD, entity.getEntityName())), BalSyntaxConstants.VALUE);
         NodeList<Node> resourcePaths = AbstractNodeFactory.createEmptyNodeList();
-        resourcePaths = getResourcePath(resourcePaths, entity.getKeys(), filterKeys, path, entity.getResourceName());
+        resourcePaths = getResourcePath(resourcePaths, entity.getKeys(), filterKeys, path,
+                entity.getClientResourceName());
         update.addRelativeResourcePaths(resourcePaths);
         update.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(
                 TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()),
@@ -198,7 +216,8 @@ public class BalSyntaxUtils {
                 BalSyntaxConstants.KEYWORD_RESOURCE });
 
         NodeList<Node> resourcePaths = AbstractNodeFactory.createEmptyNodeList();
-        resourcePaths = getResourcePath(resourcePaths, entity.getKeys(), filterKeys, path, entity.getResourceName());
+        resourcePaths = getResourcePath(resourcePaths, entity.getKeys(), filterKeys, path,
+                entity.getClientResourceName());
         delete.addRelativeResourcePaths(resourcePaths);
         delete.addReturns(TypeDescriptor.getUnionTypeDescriptorNode(
                 TypeDescriptor.getSimpleNameReferenceNode(entity.getEntityName()),
@@ -285,13 +304,69 @@ public class BalSyntaxUtils {
                     null,
                     AbstractNodeFactory.createIdentifierToken(entry.getFieldName()),
                     AbstractNodeFactory.createToken(SyntaxKind.CLOSE_BRACKET_TOKEN)));
-            filterKeys.append(BalSyntaxConstants.DOUBLE_QUOTE).append(stripEscapeCharacter(entry.getFieldName()))
+            filterKeys.append(BalSyntaxConstants.DOUBLE_QUOTE)
+                    .append(stripEscapeCharacter(entry.getFieldName()))
                     .append(BalSyntaxConstants.DOUBLE_QUOTE).append(BalSyntaxConstants.COLON).
                     append(entry.getFieldName()).append(BalSyntaxConstants.COMMA_WITH_SPACE);
             path.append(BalSyntaxConstants.BACK_SLASH).append(BalSyntaxConstants.OPEN_BRACKET).
                     append(entry.getFieldName()).append(BalSyntaxConstants.CLOSE_BRACKET);
         }
         return resourcePaths;
+    }
+
+    public static SyntaxTree createDriverImportFile(String datasource) {
+        NodeList<ImportDeclarationNode> imports = AbstractNodeFactory.createEmptyNodeList();
+        NodeList<ModuleMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
+        imports = imports.add(NodeParser.parseImportDeclaration(("import ballerinax/mysql.driver as _;")));
+        Token eofToken = AbstractNodeFactory.createIdentifierToken(BalSyntaxConstants.EMPTY_STRING);
+        ModulePartNode modulePartNode = NodeFactory.createModulePartNode(imports, moduleMembers, eofToken);
+        TextDocument textDocument = TextDocuments.from(BalSyntaxConstants.EMPTY_STRING);
+        SyntaxTree balTree = SyntaxTree.from(textDocument);
+        return balTree.modifyWith(modulePartNode);
+    }
+
+    public static SyntaxTree generateModelSyntaxTree(Module entityModule) {
+        NodeList<ImportDeclarationNode> imports = AbstractNodeFactory.createEmptyNodeList();
+        NodeList<ModuleMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
+        imports = imports.add(NodeParser.parseImportDeclaration("import ballerina/persist as _;"));
+        boolean areAnnotationsAdded = false;
+        for (Entity entity : entityModule.getEntityMap().values()) {
+            if (entity.shouldTableMappingGenerated()
+                || (entity.getIndexes() != null && !entity.getIndexes().isEmpty())
+                || (entity.getUniqueIndexes() != null && !entity.getUniqueIndexes().isEmpty())) {
+                areAnnotationsAdded = true;
+                break;
+            }
+            for (EntityField field : entity.getFields()) {
+                if (field.shouldColumnMappingGenerated()
+                        || field.isDbGenerated()
+                        || isDbTypeMappingRequired(field)
+                        || (field.getRelationRefs() != null) && !field.getRelationRefs().isEmpty()) {
+                    areAnnotationsAdded = true;
+                    break;
+                }
+            }
+        }
+        if (areAnnotationsAdded) {
+            imports = imports.add(NodeParser.parseImportDeclaration(("import ballerinax/persist.sql;")));
+        }
+        if (entityModule.getEntityMap().values().stream().anyMatch(entity ->
+                entity.getFields().stream().anyMatch(field -> field.getFieldType().startsWith("time")))) {
+            imports = imports.add(NodeParser.parseImportDeclaration("import ballerina/time;"));
+        }
+        for (Enum enumValue: entityModule.getEnumMap().values()) {
+            moduleMembers = moduleMembers.add(createEnumDeclaration(enumValue, false,
+                    entityModule.getModuleName()));
+        }
+        for (Entity entity : entityModule.getEntityMap().values()) {
+            moduleMembers = moduleMembers.add(createEntityRecord(entity, false,
+                    entityModule.getModuleName(), true));
+        }
+        Token eofToken = AbstractNodeFactory.createIdentifierToken(BalSyntaxConstants.EMPTY_STRING);
+        ModulePartNode modulePartNode = NodeFactory.createModulePartNode(imports, moduleMembers, eofToken);
+        TextDocument textDocument = TextDocuments.from(BalSyntaxConstants.EMPTY_STRING);
+        SyntaxTree balTree = SyntaxTree.from(textDocument);
+        return balTree.modifyWith(modulePartNode);
     }
 
     public static SyntaxTree generateTypeSyntaxTree(Module entityModule) {
@@ -329,7 +404,7 @@ public class BalSyntaxUtils {
             }
 
             moduleMembers = moduleMembers.add(createEntityRecord(entity, includeAutoGeneratedComment,
-                    entityModule.getModuleName()));
+                    entityModule.getModuleName(), false));
 
             if (includeAutoGeneratedComment) {
                 includeAutoGeneratedComment = false;
@@ -340,9 +415,7 @@ public class BalSyntaxUtils {
                 moduleMembers = moduleMembers.add(createEntityRecordWithRelation(entity));
             }
             moduleMembers = moduleMembers.add(createEntityTargetType(entity, hasRelations));
-            moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration(
-                    String.format("public type %sInsert %s;", entity.getEntityName(),
-                            entity.getEntityName())));
+            moduleMembers = moduleMembers.add(createInsertRecord(entity));
             moduleMembers = moduleMembers.add(createUpdateRecord(entity));
         }
         Token eofToken = AbstractNodeFactory.createIdentifierToken(BalSyntaxConstants.EMPTY_STRING);
@@ -370,9 +443,30 @@ public class BalSyntaxUtils {
     }
 
     private static ModuleMemberDeclarationNode createEntityRecord(Entity entity, boolean includeAutogeneratedComment,
-                                                                  String moduleName) {
+                                                                  String moduleName, boolean withAnnotations) {
         StringBuilder recordFields = new StringBuilder();
+        recordFields.append(BalSyntaxConstants.NEWLINE);
         for (EntityField field : entity.getFields()) {
+            if (Objects.equals(field.getFieldType(), PersistToolsConstants.UNSUPPORTED_TYPE)) {
+                recordFields.append(BalSyntaxConstants.BACK_SLASH);
+                recordFields.append(BalSyntaxConstants.BACK_SLASH);
+                recordFields.append(PersistToolsConstants.UNSUPPORTED_TYPE);
+                recordFields.append(BalSyntaxConstants.OPEN_BRACKET);
+                recordFields.append(field.getSqlType().getFullDataType());
+                recordFields.append(BalSyntaxConstants.CLOSE_BRACKET);
+                recordFields.append(BalSyntaxConstants.SPACE);
+                recordFields.append(field.getFieldColumnName());
+                recordFields.append(BalSyntaxConstants.SEMICOLON);
+                recordFields.append(BalSyntaxConstants.NEWLINE);
+                continue;
+            }
+            if (withAnnotations) {
+                addDbMappingAnnotationToField(field, recordFields);
+                addDbTypeMappingAnnotationToField(field, recordFields);
+                addDbRelationMappingAnnotationToField(field, recordFields);
+                addDbIndexAnnotationToField(entity, field, recordFields);
+                addDbGeneratedAnnotationToField(field, recordFields);
+            }
             if (entity.getKeys().stream().anyMatch(key -> key == field)) {
                 addConstrainAnnotationToField(field, recordFields);
                 recordFields.append(BalSyntaxConstants.KEYWORD_READONLY);
@@ -383,6 +477,9 @@ public class BalSyntaxUtils {
                 }
                 recordFields.append(BalSyntaxConstants.SPACE);
                 recordFields.append(field.getFieldName());
+                if (field.isOptionalField()) {
+                    recordFields.append(BalSyntaxConstants.QUESTION_MARK);
+                }
                 recordFields.append(BalSyntaxConstants.SEMICOLON);
                 recordFields.append(BalSyntaxConstants.SPACE);
             } else if (field.getRelation() != null) {
@@ -398,15 +495,9 @@ public class BalSyntaxUtils {
                 }
             } else {
                 addConstrainAnnotationToField(field, recordFields);
-                recordFields.append(field.isOptionalType() ? field.getFieldType() + (field.isArrayType() ?
-                        BalSyntaxConstants.ARRAY : "") + BalSyntaxConstants.QUESTION_MARK : field.getFieldType() +
-                        (field.isArrayType() ? BalSyntaxConstants.ARRAY : ""));
-                recordFields.append(BalSyntaxConstants.SPACE);
-                recordFields.append(field.getFieldName());
-                recordFields.append(BalSyntaxConstants.SEMICOLON);
-                recordFields.append(BalSyntaxConstants.SPACE);
+                addFieldString(recordFields, field);
             }
-
+            recordFields.append(BalSyntaxConstants.NEWLINE);
         }
         if (includeAutogeneratedComment) {
             String commentBuilder = BalSyntaxConstants.AUTOGENERATED_FILE_COMMENT + System.lineSeparator() +
@@ -416,9 +507,166 @@ public class BalSyntaxUtils {
             return NodeParser.parseModuleMemberDeclaration(String.format(commentBuilder,
                     entity.getEntityName().trim(), recordFields));
         }
-        return NodeParser.parseModuleMemberDeclaration(String.format("public type %s record {| %s |};",
+
+        StringBuilder recordString = new StringBuilder();
+        if (withAnnotations) {
+            addDbMappingAnnotationToEntity(entity, recordString);
+        }
+        recordString.append(String.format("public type %s record {| %s |};",
                 entity.getEntityName().trim(), recordFields));
+        return NodeParser.parseModuleMemberDeclaration(recordString.toString());
     }
+
+    private static void addDbGeneratedAnnotationToField(EntityField field, StringBuilder recordFields) {
+        if (field.isDbGenerated()) {
+            recordFields.append(BalSyntaxConstants.SQL_GENERATED_ANNOTATION);
+            recordFields.append(BalSyntaxConstants.NEWLINE);
+        }
+    }
+
+    private static void addDbIndexAnnotationToField(Entity entity, EntityField field, StringBuilder recordFields) {
+        List<String> indexNames = new ArrayList<>();
+        List<String> uniqueIndexNames = new ArrayList<>();
+        entity.getUniqueIndexes().forEach(index -> {
+            if (index.getFields().contains(field)) {
+                uniqueIndexNames.add(index.getIndexName());
+            }
+        });
+        entity.getIndexes().forEach(index -> {
+            if (index.getFields().contains(field)) {
+                indexNames.add(index.getIndexName());
+            }
+        });
+        if (!indexNames.isEmpty()) {
+            if (indexNames.size() == 1) {
+                recordFields.append(String.format(BalSyntaxConstants.SQL_INDEX_MAPPING_ANNOTATION,
+                        BalSyntaxConstants.DOUBLE_QUOTE + indexNames.get(0) + BalSyntaxConstants.DOUBLE_QUOTE));
+            } else {
+                recordFields.append(String.format(BalSyntaxConstants.SQL_INDEX_MAPPING_ANNOTATION,
+                        formatToBalStringArray(indexNames)));
+            }
+            recordFields.append(BalSyntaxConstants.NEWLINE);
+        }
+        if (!uniqueIndexNames.isEmpty()) {
+            if (uniqueIndexNames.size() == 1) {
+                recordFields.append(String.format(BalSyntaxConstants.SQL_UNIQUE_INDEX_MAPPING_ANNOTATION,
+                        BalSyntaxConstants.DOUBLE_QUOTE + uniqueIndexNames.get(0) + BalSyntaxConstants.DOUBLE_QUOTE));
+            } else {
+                recordFields.append(String.format(BalSyntaxConstants.SQL_UNIQUE_INDEX_MAPPING_ANNOTATION,
+                        formatToBalStringArray(uniqueIndexNames)));
+            }
+            recordFields.append(BalSyntaxConstants.NEWLINE);
+        }
+    }
+
+    private static void addDbRelationMappingAnnotationToField(EntityField field, StringBuilder recordFields) {
+        if (!field.getRelationRefs().isEmpty()) {
+            recordFields.append(String.format(BalSyntaxConstants.SQL_RELATION_MAPPING_ANNOTATION,
+                    formatToBalStringArray(field.getRelationRefs())));
+        }
+    }
+
+    private static String formatToBalStringArray(List<String> list) {
+        StringBuilder stringArray = new StringBuilder();
+        stringArray.append(SyntaxTokenConstants.SYNTAX_TREE_OPEN_BRACKET);
+        for (String item : list) {
+            stringArray.append(BalSyntaxConstants.DOUBLE_QUOTE);
+            stringArray.append(item);
+            stringArray.append(BalSyntaxConstants.DOUBLE_QUOTE);
+            stringArray.append(BalSyntaxConstants.COMMA_WITH_SPACE);
+        }
+        stringArray.delete(stringArray.length() - 2, stringArray.length());
+        stringArray.append(SyntaxTokenConstants.SYNTAX_TREE_CLOSE_BRACKET);
+        return stringArray.toString();
+    }
+
+    private static void addDbTypeMappingAnnotationToField(EntityField field, StringBuilder recordFields) {
+        SQLType sqlType = field.getSqlType();
+        if (sqlType != null) {
+            switch (sqlType.getTypeName()) {
+                case PersistToolsConstants.SqlTypes.CHAR:
+                    recordFields.append(String.format
+                            (BalSyntaxConstants.SQL_CHAR_MAPPING_ANNOTATION, sqlType.getMaxLength()));
+                    break;
+                case PersistToolsConstants.SqlTypes.VARCHAR:
+                    if (PersistToolsConstants.DefaultMaxLength.VARCHAR_LENGTH != sqlType.getMaxLength()) {
+                        recordFields.append(String.format
+                                (BalSyntaxConstants.SQL_VARCHAR_MAPPING_ANNOTATION, sqlType.getMaxLength()));
+                    }
+                    break;
+                case PersistToolsConstants.SqlTypes.DECIMAL:
+                    // add later: check for default values for separate data sources
+                    String dataSource = PersistToolsConstants.SupportedDataSources.MYSQL_DB;
+                    int precision = PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION_MYSQL;
+                    int scale = PersistToolsConstants.DefaultMaxLength.DECIMAL_SCALE;
+                    switch (dataSource) {
+                        case PersistToolsConstants.SupportedDataSources.MYSQL_DB:
+                            precision = PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION_MYSQL;
+                            break;
+                        default: // do nothing
+                    }
+                    if (sqlType.getNumericPrecision() != precision || sqlType.getNumericScale() != scale) {
+                        recordFields.append(String.format
+                                (BalSyntaxConstants.SQL_DECIMAL_MAPPING_ANNOTATION, sqlType.getNumericPrecision(),
+                                        sqlType.getNumericScale()));
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    private static boolean isDbTypeMappingRequired(EntityField field) {
+        SQLType sqlType = field.getSqlType();
+        if (sqlType != null) {
+            switch (sqlType.getTypeName()) {
+                case PersistToolsConstants.SqlTypes.CHAR:
+                    return true;
+                case PersistToolsConstants.SqlTypes.VARCHAR:
+                    if (PersistToolsConstants.DefaultMaxLength.VARCHAR_LENGTH != sqlType.getMaxLength()) {
+                        return true;
+                    }
+                    return false;
+                case PersistToolsConstants.SqlTypes.DECIMAL:
+                    // add later: check for default values for separate data sources
+                    String dataSource = PersistToolsConstants.SupportedDataSources.MYSQL_DB;
+                    int precision = PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION_MYSQL;
+                    int scale = PersistToolsConstants.DefaultMaxLength.DECIMAL_SCALE;
+                    switch (dataSource) {
+                        case PersistToolsConstants.SupportedDataSources.MYSQL_DB:
+                            precision = PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION_MYSQL;
+                            break;
+                        default: // do nothing
+                    }
+                    if (sqlType.getNumericPrecision() != precision || sqlType.getNumericScale() != scale) {
+                        return true;
+                    }
+                    return false;
+                default:
+                    return false;
+            }
+        }
+        return false;
+    }
+
+    private static void addDbMappingAnnotationToField(EntityField field, StringBuilder recordFields) {
+        if (field.shouldColumnMappingGenerated()) {
+            recordFields.append(String.format(BalSyntaxConstants.SQL_DB_NAME_ANNOTATION,
+                    field.getFieldColumnName()));
+            recordFields.append(BalSyntaxConstants.NEWLINE);
+        }
+    }
+
+    private static void addDbMappingAnnotationToEntity(Entity entity, StringBuilder recordString) {
+        if (entity.shouldTableMappingGenerated()) {
+            recordString.append(String.format(BalSyntaxConstants.SQL_DB_NAME_ANNOTATION,
+                    entity.getTableName()));
+            recordString.append(BalSyntaxConstants.NEWLINE);
+        }
+    }
+
+
 
     private static ModuleMemberDeclarationNode createEnumDeclaration(Enum enumValue,
                                                                      boolean includeAutogeneratedComment,
@@ -461,14 +709,16 @@ public class BalSyntaxUtils {
             if (field.getRelation() != null) {
                 addConstraintsAnnotationForForeignKey(field, recordFields);
                 if (field.getRelation().isOwner()) {
-                    for (Relation.Key key : field.getRelation().getKeyColumns()) {
-                        recordFields.append(key.getType());
-                        recordFields.append(BalSyntaxConstants.SPACE);
-                        recordFields.append(key.getField());
-                        recordFields.append(BalSyntaxConstants.QUESTION_MARK);
-                        recordFields.append(BalSyntaxConstants.SEMICOLON);
-                        recordFields.append(BalSyntaxConstants.SPACE);
-                    }
+                        for (Relation.Key key : field.getRelation().getKeyColumns()) {
+                            recordFields.append(key.getType());
+                            recordFields.append(BalSyntaxConstants.SPACE);
+                            recordFields.append(key.getField());
+                            recordFields.append(BalSyntaxConstants.QUESTION_MARK);
+                            recordFields.append(BalSyntaxConstants.SEMICOLON);
+                            recordFields.append(BalSyntaxConstants.SPACE);
+                        }
+
+
                 }
             } else {
                 addConstrainAnnotationToField(field, recordFields);
@@ -493,13 +743,10 @@ public class BalSyntaxUtils {
         for (EntityField assocField : relation.getAssocEntity().getFields()) {
             for (String reference : references) {
                 if (assocField.getFieldName().equals(reference)) {
-                    NodeList<AnnotationNode> annotation = assocField.getAnnotation();
-                    if (annotation != null) {
-                        String params = getConstraintField(assocField);
-                        if (params != null) {
-                            recordFields.append(String.format(BalSyntaxConstants.CONSTRAINT_ANNOTATION,
+                    String params = getConstraintField(assocField);
+                    if (params != null) {
+                        recordFields.append(String.format(BalSyntaxConstants.CONSTRAINT_ANNOTATION,
                                     params));
-                        }
                     }
                     break;
                 }
@@ -508,13 +755,121 @@ public class BalSyntaxUtils {
     }
 
     private static void addConstrainAnnotationToField(EntityField field, StringBuilder recordFields) {
-        NodeList<AnnotationNode> annotation = field.getAnnotation();
-        if (annotation != null) {
-            String params = getConstraintField(field);
-            if (params != null) {
-                recordFields.append(String.format(BalSyntaxConstants.CONSTRAINT_ANNOTATION, params));
+        String params = getConstraintField(field);
+        if (params != null) {
+            recordFields.append(String.format(BalSyntaxConstants.CONSTRAINT_ANNOTATION, params));
+        }
+    }
+
+    public static String readStringValueFromAnnotation(AnnotationUtilRecord annotationMethodRecord) {
+        for (AnnotationNode annotationNode : annotationMethodRecord.annotationNodes) {
+            String annotationName = annotationNode.annotReference().toSourceCode().trim();
+            if (annotationName.equals(annotationMethodRecord.annotation)) {
+                Optional<MappingConstructorExpressionNode> annotationFieldNode = annotationNode.annotValue();
+                if (annotationFieldNode.isPresent()) {
+                    for (MappingFieldNode mappingFieldNode : annotationFieldNode.get().fields()) {
+                        SpecificFieldNode specificFieldNode = (SpecificFieldNode) mappingFieldNode;
+                        String fieldName = specificFieldNode.fieldName().toSourceCode().trim();
+                        if (!fieldName.equals(annotationMethodRecord.field)) {
+                            return "";
+                        }
+                        Optional<ExpressionNode> valueExpr = specificFieldNode.valueExpr();
+                        if (valueExpr.isPresent()) {
+                            return valueExpr.get().toSourceCode().trim().replace("\"", "").trim();
+                        }
+                    }
+                }
             }
         }
+        return "";
+    }
+
+    public static boolean isAnnotationPresent
+            (List<AnnotationNode> annotationNodes, String annotation) {
+        for (AnnotationNode annotationNode : annotationNodes) {
+            String annotationName = annotationNode.annotReference().toSourceCode().trim();
+            if (annotationName.equals(annotation)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    public static boolean isAnnotationFieldStringType(AnnotationUtilRecord annotationMethodRecord) {
+        for (AnnotationNode annotationNode : annotationMethodRecord.annotationNodes) {
+            String annotationName = annotationNode.annotReference().toSourceCode().trim();
+            if (annotationName.equals(annotationMethodRecord.annotation)) {
+                Optional<MappingConstructorExpressionNode> annotationFieldNode = annotationNode.annotValue();
+                if (annotationFieldNode.isPresent()) {
+                    for (MappingFieldNode mappingFieldNode : annotationFieldNode.get().fields()) {
+                        SpecificFieldNode specificFieldNode = (SpecificFieldNode) mappingFieldNode;
+                        String fieldName = specificFieldNode.fieldName().toSourceCode().trim();
+                        if (!fieldName.equals(annotationMethodRecord.field)) {
+                            return false;
+                        }
+                        Optional<ExpressionNode> valueExpr = specificFieldNode.valueExpr();
+                        if (valueExpr.isPresent()) {
+                            return valueExpr.get().toSourceCode().trim().startsWith("\"") &&
+                                    valueExpr.get().toSourceCode().trim().endsWith("\"");
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    public static boolean isAnnotationFieldArrayType(AnnotationUtilRecord annotationMethodRecord) {
+        for (AnnotationNode annotationNode : annotationMethodRecord.annotationNodes) {
+            String annotationName = annotationNode.annotReference().toSourceCode().trim();
+            if (annotationName.equals(annotationMethodRecord.annotation)) {
+                Optional<MappingConstructorExpressionNode> annotationFieldNode = annotationNode.annotValue();
+                if (annotationFieldNode.isPresent()) {
+                    for (MappingFieldNode mappingFieldNode : annotationFieldNode.get().fields()) {
+                        SpecificFieldNode specificFieldNode = (SpecificFieldNode) mappingFieldNode;
+                        String fieldName = specificFieldNode.fieldName().toSourceCode().trim();
+                        if (!fieldName.equals(annotationMethodRecord.field)) {
+                            return false;
+                        }
+                        Optional<ExpressionNode> valueExpr = specificFieldNode.valueExpr();
+                        if (valueExpr.isPresent()) {
+                            return valueExpr.get().toSourceCode().trim().startsWith("[") &&
+                                    valueExpr.get().toSourceCode().trim().endsWith("]");
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    public static List<String> readStringArrayValueFromAnnotation(AnnotationUtilRecord annotationUtilRecord) {
+        for (AnnotationNode annotationNode : annotationUtilRecord.annotationNodes) {
+            String annotationName = annotationNode.annotReference().toSourceCode().trim();
+            if (annotationName.equals(annotationUtilRecord.annotation)) {
+                Optional<MappingConstructorExpressionNode> annotationFieldNode = annotationNode.annotValue();
+                if (annotationFieldNode.isPresent()) {
+                    for (MappingFieldNode mappingFieldNode : annotationFieldNode.get().fields()) {
+                        SpecificFieldNode specificFieldNode = (SpecificFieldNode) mappingFieldNode;
+                        String fieldName = specificFieldNode.fieldName().toSourceCode().trim();
+                        if (!fieldName.equals(annotationUtilRecord.field)) {
+                            return Collections.emptyList();
+                        }
+                        Optional<ExpressionNode> valueExpr = specificFieldNode.valueExpr();
+                        if (valueExpr.isPresent()) {
+                            String strings = valueExpr.get().toSourceCode().trim()
+                                    .replace("[", "")
+                                    .replace("]", "");
+                            if (strings.trim().isEmpty()) {
+                                return Collections.emptyList();
+                            }
+                            return Stream.of(strings.replace("\"", "").split(","))
+                                    .map(String::trim).toList();
+                        }
+                    }
+                }
+            }
+        }
+        return Collections.emptyList();
     }
 
     private static String getConstraintField(EntityField field) {
@@ -579,15 +934,16 @@ public class BalSyntaxUtils {
             if (entity.getKeys().stream().noneMatch(key -> key == field)) {
                 if (field.getRelation() != null) {
                     if (field.getRelation().isOwner()) {
-                        for (Relation.Key key : field.getRelation().getKeyColumns()) {
-                            addConstraintsAnnotationForForeignKey(field, recordFields);
-                            recordFields.append(key.getType());
-                            recordFields.append(" ");
-                            recordFields.append(key.getField());
-                            recordFields.append(BalSyntaxConstants.QUESTION_MARK);
-                            recordFields.append(BalSyntaxConstants.SEMICOLON);
-                            recordFields.append(BalSyntaxConstants.SPACE);
-                        }
+                            for (Relation.Key key : field.getRelation().getKeyColumns()) {
+                                addConstraintsAnnotationForForeignKey(field, recordFields);
+                                recordFields.append(key.getType());
+                                recordFields.append(" ");
+                                recordFields.append(key.getField());
+                                recordFields.append(BalSyntaxConstants.QUESTION_MARK);
+                                recordFields.append(BalSyntaxConstants.SEMICOLON);
+                                recordFields.append(BalSyntaxConstants.SPACE);
+                            }
+
                     }
                 } else {
                     addConstrainAnnotationToField(field, recordFields);
@@ -606,6 +962,50 @@ public class BalSyntaxUtils {
         }
         return NodeParser.parseModuleMemberDeclaration(String.format("public type %sUpdate record {| %s |};",
                 entity.getEntityName().trim(), recordFields));
+    }
+
+    private static ModuleMemberDeclarationNode createInsertRecord(Entity entity) {
+        boolean isAutoGenerated = entity.getFields().stream().anyMatch(EntityField::isDbGenerated);
+        if (!isAutoGenerated) {
+            return NodeParser.parseModuleMemberDeclaration(
+                    String.format("public type %sInsert %s;", entity.getEntityName(),
+                            entity.getEntityName()));
+        }
+        StringBuilder recordFields = new StringBuilder();
+        for (EntityField field : entity.getFields()) {
+            if (entity.getKeys().stream().anyMatch(key -> key == field)) {
+                continue;
+            }
+            if (field.getRelation() != null) {
+                if (field.getRelation().isOwner()) {
+                        for (Relation.Key key : field.getRelation().getKeyColumns()) {
+                            recordFields.append(key.getType());
+                            recordFields.append(BalSyntaxConstants.SPACE);
+                            recordFields.append(key.getField());
+                            recordFields.append(BalSyntaxConstants.SEMICOLON);
+                            recordFields.append(BalSyntaxConstants.SPACE);
+                        }
+
+                }
+            } else {
+                addFieldString(recordFields, field);
+            }
+        }
+        StringBuilder recordString = new StringBuilder();
+        recordString.append(String.format("public type %sInsert record {| %s |};",
+                entity.getEntityName().trim(), recordFields));
+        return NodeParser.parseModuleMemberDeclaration(recordString.toString());
+    }
+
+    private static void addFieldString(StringBuilder recordFields, EntityField field) {
+        recordFields.append(field.getFieldType());
+        recordFields.append(field.isArrayType() ? BalSyntaxConstants.ARRAY : "");
+        recordFields.append(field.isOptionalType() ? BalSyntaxConstants.QUESTION_MARK : "");
+        recordFields.append(BalSyntaxConstants.SPACE);
+        recordFields.append(field.getFieldName());
+        recordFields.append(field.isOptionalField() ? BalSyntaxConstants.QUESTION_MARK : "");
+        recordFields.append(BalSyntaxConstants.SEMICOLON);
+        recordFields.append(BalSyntaxConstants.SPACE);
     }
 
     private static ImportDeclarationNode getImportDeclarationNodeWithAutogeneratedComment(

@@ -55,6 +55,8 @@ public class BalSyntaxConstants {
     public static final String G_SHEET_CREATE_SQL_RESULTS = "_ = check googleSheetsClient.runBatchInsertQuery(data);";
     public static final String SQL_CLIENT_DECLARATION = "psql:SQLClient sqlClient;";
     public static final String CREATE_SQL_RESULTS = "_ = check sqlClient.runBatchInsertQuery(data);";
+    public static final String CREATE_SQL_RESULTS_AUTO_INCREMENT =
+            "sql:ExecutionResult[] result = check sqlClient.runBatchInsertQuery(data);";
     public static final String GET_PERSIST_CLIENT = "sqlClient = self.persistClients.get(%s);";
 
     public static final String CREATE_ARRAY_VAR = "%s keys = [];";
@@ -78,6 +80,11 @@ public class BalSyntaxConstants {
     public static final String RETURN_STATEMENT = "return %s.clone();";
 
     public static final String RETURN_CREATED_KEY = "return from  %s inserted in data" + System.lineSeparator();
+    public static final String RETURN_CREATED_KEY_AUTO_INCREMENT =
+            "return from  %s inserted in result" + System.lineSeparator();
+    public static final String RETURN_FILTERED_AUTO_INCREMENT_KEYS =
+            "where inserted.lastInsertId != ()" + System.lineSeparator() +
+                    "select <%s>inserted.lastInsertId;" + System.lineSeparator();
     public static final String SELECT_WITH_SPACE = "\t\t\tselect ";
     public static final String UPDATE_RUN_UPDATE_QUERY = "_ = check sqlClient.runUpdateQuery(%s, value);";
     public static final String G_SHEET_UPDATE_RUN_UPDATE_QUERY = "_ = check googleSheetsClient." +
@@ -140,6 +147,7 @@ public class BalSyntaxConstants {
     public static final String JDBC_URL_WITH_DATABASE_MSSQL = "jdbc:%s://%s:%s;databaseName=%s";
     public static final String JDBC_URL_WITH_DATABASE_POSTGRESQL = "jdbc:%s://%s:%s/%s";
     public static final String CREATE_DATABASE_SQL_FORMAT_MYSQL = "CREATE DATABASE IF NOT EXISTS %s";
+    public static final String DROP_DATABASE_SQL_FORMAT_MYSQL = "DROP DATABASE IF EXISTS %s";
     public static final String CREATE_DATABASE_SQL_FORMAT_MSSQL =
             "IF NOT EXISTS(SELECT name FROM sys.databases WHERE name = '%1$s') CREATE DATABASE %1$s;";
     public static final String CREATE_DATABASE_SQL_FORMAT_POSTGRESQL = "CREATE DATABASE %s;";
@@ -248,6 +256,35 @@ public class BalSyntaxConstants {
     public static final String CONSTRAINT_ANNOTATION = "@constraint:String {" + System.lineSeparator() +
             "        %s" + System.lineSeparator() +
             "    }";
+
+    public static final String SQL_DB_NAME_ANNOTATION_NAME = "sql:Name";
+    public static final String SQL_VARCHAR_MAPPING_ANNOTATION_NAME = "sql:Varchar";
+    public static final String SQL_CHAR_MAPPING_ANNOTATION_NAME = "sql:Char";
+    public static final String SQL_DECIMAL_MAPPING_ANNOTATION_NAME = "sql:Decimal";
+    public static final String SQL_RELATION_MAPPING_ANNOTATION_NAME = "sql:Relation";
+    public static final String SQL_INDEX_MAPPING_ANNOTATION_NAME = "sql:Index";
+    public static final String SQL_UNIQUE_INDEX_MAPPING_ANNOTATION_NAME = "sql:UniqueIndex";
+    public static final String SQL_GENERATED_ANNOTATION_NAME = "sql:Generated";
+    public static final String SQL_DB_NAME_ANNOTATION =
+            String.format("@%s { value: \"%s\" }", SQL_DB_NAME_ANNOTATION_NAME, "%s");
+    public static final String SQL_VARCHAR_MAPPING_ANNOTATION =
+            String.format("@%s { length: %s }", SQL_VARCHAR_MAPPING_ANNOTATION_NAME, "%s");
+    public static final String SQL_CHAR_MAPPING_ANNOTATION =
+            String.format("@%s { length: %s }", SQL_CHAR_MAPPING_ANNOTATION_NAME, "%s");
+    public static final String SQL_DECIMAL_MAPPING_ANNOTATION =
+            String.format("@%s { precision: [%s,%s] }", SQL_DECIMAL_MAPPING_ANNOTATION_NAME, "%s", "%s");
+    public static final String SQL_RELATION_MAPPING_ANNOTATION =
+            String.format("@%s { keys: %s }", SQL_RELATION_MAPPING_ANNOTATION_NAME, "%s");
+    public static final String SQL_INDEX_MAPPING_ANNOTATION =
+            String.format("@%s { name: %s }", SQL_INDEX_MAPPING_ANNOTATION_NAME, "%s");
+    public static final String SQL_UNIQUE_INDEX_MAPPING_ANNOTATION =
+            String.format("@%s { name: %s }", SQL_UNIQUE_INDEX_MAPPING_ANNOTATION_NAME, "%s");
+    public static final String ANNOTATION_NAME_FIELD = "name";
+    public static final String ANNOTATION_VALUE_FIELD = "value";
+    public static final String ANNOTATION_PRECISION_FIELD = "precision";
+    public static final String ANNOTATION_KEYS_FIELD = "keys";
+    public static final String ANNOTATION_LENGTH_FIELD = "length";
+    public static final String SQL_GENERATED_ANNOTATION = String.format("@%s", SQL_GENERATED_ANNOTATION_NAME);
     public static final String FIELD_METADATA_TEMPLATE = "fieldMetadata: {%s}";
     public static final String JOIN_METADATA_TEMPLATE = "joinMetadata: {%s}";
 
@@ -380,5 +417,44 @@ public class BalSyntaxConstants {
     public static final String MYSQL_PROCESSOR = "MySQLProcessor";
     public static final String MSSQL_PROCESSOR = "MSSQLProcessor";
     public static final String POSTGRESQL_PROCESSOR = "PostgreSQLProcessor";
+
+    /**
+     * Constants related to persist Redis client.
+     */
+    public static final String REDIS_PROCESSOR = "RedisProcessor";
+    public static final String INIT_REDIS_DB_CLIENT_WITH_PARAMS = "%s:Client|error dbClient = new (redis);" +
+        System.lineSeparator();
+    public static final String INIT_REDIS_CLIENT_MAP = "private final map<predis:RedisClient> persistClients;";
+    public static final String EXTERNAL_REDIS_GET_METHOD_TEMPLATE = "isolated resource function get %s(" +
+        "%sTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {"
+        + System.lineSeparator()
+        + "'class: \"io.ballerina.stdlib.persist.%s.datastore.%s\"," + System.lineSeparator() +
+        " name: \"query\"} external;";
+    public static final String REDIS = "redis";
+    public static final String PERSIST_REDIS_CLIENT_MAP_ELEMENT =
+            "[%s]: check new (dbClient, self.metadata.get(%s))";
+    public static final String REDIS_CLIENT_DECLARATION = "predis:RedisClient redisClient;";
+    public static final String GET_PERSIST_REDIS_CLIENT = "redisClient = self.persistClients.get(%s);";
+    public static final String CREATE_REDIS_RESULTS = "_ = check redisClient.runBatchInsertQuery(data);";
+    public static final String REDIS_UPDATE_RUN_UPDATE_QUERY = "_ = check redisClient.runUpdateQuery(%s, value);";
+    public static final String REDIS_DELETE_RUN_DELETE_QUERY = "_ = check redisClient.runDeleteQuery(%s);";
+
+    public static final String REDIS_METADATA_RECORD_COLLECTION_NAME_TEMPLATE = "collectionName: \"%s\", " 
+    + System.lineSeparator();
+    public static final String REDIS_METADATA_RECORD_FIELD_TEMPLATE 
+    = "%s: {fieldName: \"%s\", fieldDataType: predis:%s}";
+    public static final String REFERENCE_METADATA_TEMPLATE = "refMetadata: {%s}";
+    public static final String REDIS_METADATA_RECORD_TEMPLATE = 
+        "private final record {|predis:RedisMetadata...;|} & readonly metadata = {%s};";
+    public static final String REDIS_ASSOCIATED_FIELD_TEMPLATE = 
+        ".%s\": {relation: {entityName: \"%s\", refField: \"%s\", refFieldDataType: predis:%s}}";
+    public static final String REDIS_JOIN_METADATA_FIELD_TEMPLATE = 
+        "%s: {entity: %s, fieldName: \"%s\", refCollection: \"%s\", refFields: [%s], joinFields: [%s], 'type: %s}";
+    public static final String REDIS_ONE_TO_ONE = "predis:ONE_TO_ONE";
+    public static final String REDIS_ONE_TO_MANY = "predis:ONE_TO_MANY";
+    public static final String REDIS_MANY_TO_ONE = "predis:MANY_TO_ONE";
+    public static final String REDIS_MANY_TO_MANY = "predis:MANY_TO_MANY";
+    public static final String REDIS_CONFIG = "configurable redis:ConnectionConfig & readonly redis = ?;"
+        + System.lineSeparator();
 }
 

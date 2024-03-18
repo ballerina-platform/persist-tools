@@ -23,6 +23,7 @@ import io.ballerina.persist.cmd.Generate;
 import io.ballerina.persist.cmd.Init;
 import io.ballerina.persist.cmd.Migrate;
 import io.ballerina.persist.cmd.PersistCmd;
+import io.ballerina.persist.cmd.Pull;
 import io.ballerina.persist.cmd.Push;
 import io.ballerina.projects.Package;
 import io.ballerina.projects.PackageCompilation;
@@ -45,6 +46,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+
 /**
  * persist tool test Utils.
  */
@@ -58,12 +60,18 @@ public class GeneratedSourcesTestUtils {
         ADD,
         GENERATE,
         DB_PUSH,
-        MIGRATE
+        MIGRATE,
+        PULL
     }
 
     private static final PrintStream errStream = System.err;
-    public static final String GENERATED_SOURCES_DIRECTORY = Paths.get("build", "generated-sources").toString();
-    public static final Path RESOURCES_EXPECTED_OUTPUT = Paths.get("src", "test", "resources", "test-src", "output")
+    public static final String GENERATED_SOURCES_DIRECTORY = Paths.get("build", "generated-sources")
+            .toString();
+
+    public static final String INPUT_RESOURCES_DIRECTORY =
+            Paths.get("src", "test", "resources", "test-src", "input").toString();
+    public static final Path RESOURCES_EXPECTED_OUTPUT =
+            Paths.get("src", "test", "resources", "test-src", "output")
             .toAbsolutePath();
 
     public static void assertGeneratedSources(String subDir) {
@@ -146,7 +154,8 @@ public class GeneratedSourcesTestUtils {
             persistCmd.printUsage(cmdLongDesc);
             String cmdLongDescription = cmdLongDesc.toString();
             Assert.assertEquals(initLongDescription.trim().replaceAll(System.lineSeparator(), ""),
-                    "Generate database configurations file inside the Ballerina project  ballerina persist init");
+                    "Generate database configurations file inside the Ballerina project  ballerina persist " +
+                            "init");
             Assert.assertEquals(cmdLongDescription.trim().replaceAll(System.lineSeparator(), ""),
                     "Perform operations on Ballerina Persistent Layer  ballerina persist");
             persistCmdInit.execute();
@@ -178,6 +187,11 @@ public class GeneratedSourcesTestUtils {
             } else if (cmd == Command.DB_PUSH) {
                 persistClass = Class.forName("io.ballerina.persist.cmd.Push");
                 Push persistCmd = (Push) persistClass.getDeclaredConstructor(String.class)
+                        .newInstance(sourcePath.toAbsolutePath().toString());
+                persistCmd.execute();
+            } else if (cmd == Command.PULL) {
+                persistClass = Class.forName("io.ballerina.persist.cmd.Pull");
+                Pull persistCmd = (Pull) persistClass.getDeclaredConstructor(String.class)
                         .newInstance(sourcePath.toAbsolutePath().toString());
                 persistCmd.execute();
             } else {
@@ -267,4 +281,5 @@ public class GeneratedSourcesTestUtils {
         }
         return content.replaceAll(System.lineSeparator(), "");
     }
+
 }

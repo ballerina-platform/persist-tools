@@ -20,11 +20,15 @@ package io.ballerina.persist.tools.utils;
 
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
+import io.ballerina.persist.configuration.DatabaseConfiguration;
 import io.ballerina.persist.configuration.PersistConfiguration;
 import io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils;
 import org.testng.Assert;
 
+import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -32,10 +36,12 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Locale;
 
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.GENERATED_SOURCES_DIRECTORY;
+import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.INPUT_RESOURCES_DIRECTORY;
 import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 
 /**
@@ -193,5 +199,38 @@ public class DatabaseTestUtils {
             Assert.assertEquals(persistTable.isNullable(columns.getString(columnName)),
                     columns.getString(nullable));
         }
+    }
+
+    public static void createFromDatabaseScript(String packageName, String datasource,
+                                                DatabaseConfiguration dbConfig) {
+        Path sourcePath = Paths.get(INPUT_RESOURCES_DIRECTORY, packageName);
+
+        String url;
+        if (datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
+            url = String.format("jdbc:sqlserver://%s:%s", dbConfig.getHost(), dbConfig.getPort());
+        } else if (datasource.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB)) {
+            url = String.format("jdbc:postgresql://%s:%s/", dbConfig.getHost(), dbConfig.getPort());
+        } else {
+            url = String.format("jdbc:mysql://%s:%s", dbConfig.getHost(), dbConfig.getPort());
+        }
+
+        try (Connection connection = DriverManager.getConnection(url, dbConfig.getUsername(), dbConfig.getPassword())) {
+            Path scriptFilePath = sourcePath.resolve("script.sql");
+            //15 lines skipped to avoid license headers
+            String scriptContent = Files.lines(scriptFilePath).skip(15).reduce("", String::concat);
+            try (Statement statement = connection.createStatement()) {
+                String sql = scriptContent.replace("\r\n", "\n");
+                String[] statements = sql.split(";");
+                for (String statementStr : statements) {
+                    statement.addBatch(statementStr);
+                }
+                statement.executeBatch();
+            }
+        } catch (SQLException e) {
+            errStream.println("Failed to create database connection: " + e.getMessage());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 }
