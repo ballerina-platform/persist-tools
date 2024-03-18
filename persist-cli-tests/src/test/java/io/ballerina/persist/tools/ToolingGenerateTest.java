@@ -719,4 +719,11 @@ public class ToolingGenerateTest {
         assertGeneratedSources("tool_test_generate_100_redis");
     }
 
+    @Test(enabled = true)
+    @Description("The model has entities with unsupported fields")
+    public void testGenerateEntitiesWithUnsupportedFields() {
+        executeGenerateCommand("tool_test_generate_101", "mysql", "entities");
+        assertGeneratedSources("tool_test_generate_101");
+    }
+
 }

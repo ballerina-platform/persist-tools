@@ -7,11 +7,11 @@ public enum UserGender {
 }
 
 public type User record {|
-    @sql:UniqueIndex {names: ["user"]}
+    @sql:UniqueIndex {name: "user"}
     readonly int id;
     string name;
     UserGender gender;
-    @sql:UniqueIndex {names: ["user", "user_nic"]}
+    @sql:UniqueIndex {name: ["user", "user_nic"]}
     string nic;
     decimal salary;
 |};

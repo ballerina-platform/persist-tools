@@ -35,11 +35,11 @@ public type Car record {|
     readonly int id;
     string name;
     string model;
-    @sql:Index {names: ["ownerId"]}
+    @sql:Index {name: ["ownerId"]}
     int ownerId;
-    @sql:Mapping {name: "OWNER_NIC"}
-    @sql:Index {names: ["ownerNic"]}
+    @sql:Name {value: "OWNER_NIC"}
+    @sql:Index {name: ["ownerNic"]}
     string ownerNic;
-    @sql:Relation {refs: ["ownerId", "ownerNic"]}
+    @sql:Relation {keys: ["ownerId", "ownerNic"]}
     User user;
 |};

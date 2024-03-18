@@ -236,4 +236,5 @@ Behaviour of the `pull` command,
 - User should provide the relevant database configuration as command-line arguments.
 - The database password is not provided as a command-line argument. The user will be prompted to enter the password.
 - If the user invokes the command while a `model.bal` file exists in the `persist` directory, it will prompt the user to confirm overwriting the existing `model.bal` file.
+- If the user introspects a database with unsupported data types, it will inform the user by giving a warning and will comment out the relevant field with the tag `[Unsupported[DATA_TYPE]]`.
 - The user must execute the `generate` command to generate the derived types and client API after running the `pull` command in order to use the client API in the project.

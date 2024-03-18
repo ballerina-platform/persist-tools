@@ -196,7 +196,7 @@ public class DatabaseConnector {
         String password;
         Console console = System.console();
         if (console == null) {
-            errStream.println("[WARNING] console could not be detected. falling back to standard input.");
+            errStream.println("WARNING console could not be detected. falling back to standard input.");
             errStream.print("Database Password: ");
             password = scanner.nextLine();
         } else {

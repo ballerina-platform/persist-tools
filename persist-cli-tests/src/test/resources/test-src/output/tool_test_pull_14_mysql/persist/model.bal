@@ -9,18 +9,18 @@ public enum PatientGender {
 
 public type Appointment record {|
     readonly int id;
-    @sql:Index {names: ["patientId"]}
+    @sql:Index {name: "patientId"}
     int patientId;
-    @sql:Index {names: ["doctorId"]}
+    @sql:Index {name: "doctorId"}
     int doctorId;
-    @sql:Index {names: ["assistantId"]}
+    @sql:Index {name: "assistantId"}
     int assistantId;
     time:Date date;
-    @sql:Relation {refs: ["patientId"]}
+    @sql:Relation {keys: ["patientId"]}
     Patient patient;
-    @sql:Relation {refs: ["doctorId"]}
+    @sql:Relation {keys: ["doctorId"]}
     Doctor doctor;
-    @sql:Relation {refs: ["assistantId"]}
+    @sql:Relation {keys: ["assistantId"]}
     Doctor doctor1;
 |};
 

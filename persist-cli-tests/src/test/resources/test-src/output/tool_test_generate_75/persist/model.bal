@@ -26,7 +26,7 @@ public type User record {|
     readonly int id;
     string name;
     UserGender gender;
-    @sql:VarChar {length: 12}
+    @sql:Varchar {length: 12}
     string nic;
     @sql:Decimal {precision: [10, 2]}
     decimal? salary;
@@ -38,8 +38,8 @@ public type Car record {|
     string name;
     @sql:Char {length: 10}
     string model;
-    @sql:Index {names: ["ownerId"]}
+    @sql:Index {name: "ownerId"}
     int ownerId;
-    @sql:Relation {refs: ["ownerId"]}
+    @sql:Relation {keys: ["ownerId"]}
     User user;
 |};

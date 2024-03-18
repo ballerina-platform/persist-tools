@@ -24,7 +24,7 @@ description = 'Ballerina - Persist Examples'
 
 def ballerinaDist = "${project.buildDir}/ballerina-distribution"
 def examples = ["medical-center", "rainier"]
-def introspectionExamples = ["hospital"]
+def introspectionExamples = ["hospital", "hospital_unsupported"]
 def redisDBExamples = ["social_media"]
 
 configurations {
