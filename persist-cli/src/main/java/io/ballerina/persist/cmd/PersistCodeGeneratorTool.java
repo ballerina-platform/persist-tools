@@ -29,7 +29,6 @@ import io.ballerina.projects.buildtools.CodeGeneratorTool;
 import io.ballerina.projects.buildtools.ToolContext;
 import io.ballerina.projects.util.ProjectUtils;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
@@ -41,7 +40,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Locale;
 
 import static io.ballerina.persist.PersistToolsConstants.CACHE_FILE;
 import static io.ballerina.persist.PersistToolsConstants.TARGET_MODULE;
@@ -115,7 +113,8 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
     /**
      * This method is used to validate the cache.
      */
-    private static boolean validateCache(ToolContext toolContext, Path schemaFilePath) throws IOException, NoSuchAlgorithmException {
+    private static boolean validateCache(ToolContext toolContext, Path schemaFilePath)
+            throws IOException, NoSuchAlgorithmException {
         Path cachePath = toolContext.cachePath();
         String modelHashVal = getHashValue(schemaFilePath);
         if (!Files.isDirectory(cachePath)) {
@@ -139,7 +138,7 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
                 Files.createDirectories(cachePath);
                 Files.createFile(cacheFilePath);
             }
-            Files.write(cacheFilePath, modelHashVal.getBytes(), StandardOpenOption.WRITE);
+            Files.writeString(cacheFilePath, modelHashVal, StandardOpenOption.WRITE);
         } catch (IOException e) {
             errStream.println("ERROR: failed to update the cache file: " + e.getMessage());
         }
