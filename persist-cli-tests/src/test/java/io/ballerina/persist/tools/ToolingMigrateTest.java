@@ -126,6 +126,15 @@ public class ToolingMigrateTest {
         assertGeneratedSources("tool_test_migrate_11");
     }
 
+    @Test(enabled = true)
+    @Description("Test execute command with SQL type annotations")
+    public void testTypeAnnotationsMigrateTest() {
+
+        executeCommand("tool_test_migrate_12");
+        assertGeneratedSources("tool_test_migrate_12");
+    }
+
+
     private void executeCommand(String subDir) {
         Class<?> persistClass;
         Path sourcePath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);

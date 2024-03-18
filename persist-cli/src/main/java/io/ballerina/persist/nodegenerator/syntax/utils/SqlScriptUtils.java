@@ -255,7 +255,7 @@ public class SqlScriptUtils {
     private static String getSqlType(EntityField entityField, String datasource) throws BalException {
         String sqlType;
         if (!entityField.isArrayType()) {
-            sqlType = getTypeNonArray(entityField, datasource);
+            sqlType = getTypeNonArray(entityField.getFieldType(), entityField.getSqlType(), datasource);
         } else {
             sqlType = getTypeArray(entityField.getFieldType(), datasource);
         }
@@ -289,7 +289,21 @@ public class SqlScriptUtils {
         return sqlType + (String.format("(%s)", length));
     }
 
-    public static String getTypeNonArray(String field, String datasource) throws BalException {
+
+    public static String getTypeNonArray(String field, SQLType sqlType, String datasource) throws BalException {
+        if (sqlType != null) {
+            switch (sqlType.getTypeName()) {
+                case PersistToolsConstants.SqlTypes.DECIMAL:
+                    return PersistToolsConstants.SqlTypes.DECIMAL + String.format("(%s,%s)",
+                                sqlType.getNumericPrecision(),
+                                sqlType.getNumericScale());
+                case PersistToolsConstants.SqlTypes.VARCHAR:
+                    return PersistToolsConstants.SqlTypes.VARCHAR + String.format("(%s)", sqlType.getMaxLength());
+                case PersistToolsConstants.SqlTypes.CHAR:
+                    return PersistToolsConstants.SqlTypes.CHAR + String.format("(%s)", sqlType.getMaxLength());
+                default: { }
+            }
+        }
         switch (removeSingleQuote(field)) {
 
             // Ballerina --> int
@@ -385,24 +399,6 @@ public class SqlScriptUtils {
             default:
                 throw new BalException("couldn't find equivalent SQL type for the field type: " + field);
         }
-    }
-
-    public static String getTypeNonArray(EntityField field, String datasource) throws BalException {
-        SQLType sqlType = field.getSqlType();
-        if (sqlType != null) {
-            switch (sqlType.getTypeName()) {
-                case PersistToolsConstants.SqlTypes.DECIMAL:
-                    return PersistToolsConstants.SqlTypes.DECIMAL + String.format("(%s,%s)",
-                                sqlType.getNumericPrecision(),
-                                sqlType.getNumericScale());
-                case PersistToolsConstants.SqlTypes.VARCHAR:
-                    return PersistToolsConstants.SqlTypes.VARCHAR + String.format("(%s)", sqlType.getMaxLength());
-                case PersistToolsConstants.SqlTypes.CHAR:
-                    return PersistToolsConstants.SqlTypes.CHAR + String.format("(%s)", sqlType.getMaxLength());
-                default: { }
-            }
-        }
-        return getTypeNonArray(field.getFieldType(), datasource);
     }
 
     public static String getTypeArray(String field, String datasource) throws BalException {

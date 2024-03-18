@@ -73,6 +73,8 @@ public class Migrate implements BLauncherCmd {
 
     @CommandLine.Parameters
     public List<String> argList;
+    @CommandLine.Option(names = {"--datastore"})
+    private String datastore = "mysql";
 
     public Migrate() {
         this("");
@@ -104,17 +106,8 @@ public class Migrate implements BLauncherCmd {
             return;
         }
 
-        try {
-            HashMap<String, String> ballerinaTomlConfig = TomlSyntaxUtils.readBallerinaTomlConfig(
-                    Paths.get(this.sourcePath, "Ballerina.toml"));
-            String dataStore = ballerinaTomlConfig.get("options.datastore").trim();
-            if (!dataStore.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB)) {
-                errStream.printf("ERROR: unsupported data store: expected: 'mysql' but found: '%s'%n", dataStore);
-                return;
-            }
-        } catch (BalException e) {
-            errStream.printf("ERROR: failed to locate Ballerina.toml: %s%n",
-                    e.getMessage());
+        if (!Objects.equals(datastore, PersistToolsConstants.SupportedDataSources.MYSQL_DB)) {
+            errStream.println("Error: invalid datastore: " + datastore + ". currently only MySQL is supported.");
             return;
         }
 
@@ -626,7 +619,7 @@ public class Migrate implements BLauncherCmd {
     }
 
     private static void addToMapNoTypeObject(Entity entity, EntityField field, Map<String, List<FieldMetadata>> map) {
-        FieldMetadata fieldMetadata = new FieldMetadata(field.getFieldName());
+        FieldMetadata fieldMetadata = new FieldMetadata(field.getFieldName(), field.getSqlType());
 
         if (!map.containsKey(entity.getEntityName())) {
             List<FieldMetadata> initialData = new ArrayList<>();
@@ -641,7 +634,7 @@ public class Migrate implements BLauncherCmd {
 
     private static void addToMapWithType(Entity entity, EntityField field, Map<String, List<FieldMetadata>> map) {
         FieldMetadata fieldMetadata = new FieldMetadata(field.getFieldName(), field.getFieldType(),
-                field.isArrayType());
+                field.isArrayType(), field.getSqlType());
 
         if (!map.containsKey(entity.getEntityName())) {
             List<FieldMetadata> initialData = new ArrayList<>();
@@ -655,8 +648,10 @@ public class Migrate implements BLauncherCmd {
     }
 
     private static void addToMapNewEntityFK(Entity entity, EntityField field, Map<String, List<FieldMetadata>> map) {
+        EntityField customFk = entity.getFieldByName(field.getRelation().getKeyColumns().get(0).getField());
         FieldMetadata fieldMetadata = new FieldMetadata(field.getRelation().getKeyColumns().get(0).getField(),
-                field.getRelation().getKeyColumns().get(0).getType(), field.isArrayType());
+                    field.getRelation().getKeyColumns().get(0).getType(), field.isArrayType(),
+                    customFk == null ? null : customFk.getSqlType());
 
         if (!map.containsKey(entity.getEntityName())) {
             List<FieldMetadata> initialData = new ArrayList<>();
@@ -682,7 +677,7 @@ public class Migrate implements BLauncherCmd {
                 try {
                     if (!primaryKey.isArrayType()) {
                         pKField = SqlScriptUtils.getTypeNonArray(primaryKey.getDataType(),
-                                PersistToolsConstants.SupportedDataSources.MYSQL_DB);
+                                primaryKey.getSqlType(), PersistToolsConstants.SupportedDataSources.MYSQL_DB);
                     } else {
                         pKField = SqlScriptUtils.getTypeArray(primaryKey.getDataType(),
                                 PersistToolsConstants.SupportedDataSources.MYSQL_DB);
@@ -701,7 +696,7 @@ public class Migrate implements BLauncherCmd {
                     for (FieldMetadata field : addedFields.get(entity)) {
                         try {
                             if (!field.isArrayType()) {
-                                addField = SqlScriptUtils.getTypeNonArray(field.getDataType(),
+                                addField = SqlScriptUtils.getTypeNonArray(field.getDataType(), field.getSqlType(),
                                         PersistToolsConstants.SupportedDataSources.MYSQL_DB);
                             } else {
                                 addField = SqlScriptUtils.getTypeArray(field.getDataType(),
@@ -783,7 +778,7 @@ public class Migrate implements BLauncherCmd {
                             String fieldType = "";
                             try {
                                 if (!field.isArrayType()) {
-                                    fieldType = SqlScriptUtils.getTypeNonArray(field.getDataType(),
+                                    fieldType = SqlScriptUtils.getTypeNonArray(field.getDataType(), field.getSqlType(),
                                             PersistToolsConstants.SupportedDataSources.MYSQL_DB);
                                 } else {
                                     fieldType = SqlScriptUtils.getTypeArray(field.getDataType(),
@@ -809,7 +804,7 @@ public class Migrate implements BLauncherCmd {
                         String fieldType = "";
                         try {
                             if (!field.isArrayType()) {
-                                fieldType = SqlScriptUtils.getTypeNonArray(field.getDataType(),
+                                fieldType = SqlScriptUtils.getTypeNonArray(field.getDataType(), field.getSqlType(),
                                         PersistToolsConstants.SupportedDataSources.MYSQL_DB);
                             } else {
                                 fieldType = SqlScriptUtils.getTypeArray(field.getDataType(),
