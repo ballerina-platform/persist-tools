@@ -430,12 +430,12 @@ public class Migrate implements BLauncherCmd {
 
         // Compare entities in previousModel and currentModel
         for (Entity previousModelEntity : previousModel.getEntityMap().values()) {
-            Entity currentModelEntity = currentModel.getEntityMap().get(previousModelEntity.getEntityName());
+            Entity currentModelEntity = currentModel.getEntityMap().get(previousModelEntity.getTableName());
 
             // Check if currentModelEntity exists
             if (currentModelEntity == null) {
                 differences.add("Entity " + previousModelEntity.getEntityName() + " has been removed");
-                removedEntities.add(previousModelEntity.getEntityName());
+                removedEntities.add(previousModelEntity.getTableName());
                 continue;
             }
 
@@ -458,10 +458,10 @@ public class Migrate implements BLauncherCmd {
                 }
 
                 // Compare data types
-                if (!previousModelField.getFieldType().equals(currentModelField.getFieldType())) {
+                if (!previousModelField.getFieldType().equals(currentModelField.getFieldType()) ||
+                        !Objects.equals(previousModelField.getSqlType(), currentModelField.getSqlType())) {
                     differences.add("Data type of field " + previousModelField.getFieldName() +
-                            " in entity " + previousModelEntity.getEntityName() + " has changed from " +
-                            previousModelField.getFieldType() + " to " + currentModelField.getFieldType());
+                            " in entity " + previousModelEntity.getEntityName() + " has changed");
                     addToMapWithType(previousModelEntity, currentModelField, changedFieldTypes);
                 }
 
@@ -520,7 +520,7 @@ public class Migrate implements BLauncherCmd {
 
             if (previousModelEntity == null) {
                 differences.add("Entity " + currentModelEntity.getEntityName() + " has been added");
-                addedEntities.add(currentModelEntity.getEntityName());
+                addedEntities.add(currentModelEntity.getTableName());
                 for (EntityField field : currentModelEntity.getFields()) {
                     if (field.getRelation() == null) {
                         if (currentModelEntity.getKeys().contains(field)) {
@@ -579,14 +579,14 @@ public class Migrate implements BLauncherCmd {
                 field.getRelation().getAssocEntity().getEntityName(),
                 field.getRelation().getKeyColumns().get(0).getReference());
 
-        if (!map.containsKey(entity.getEntityName())) {
+        if (!map.containsKey(entity.getTableName())) {
             List<ForeignKey> initialData = new ArrayList<>();
             initialData.add(foreignKey);
-            map.put(entity.getEntityName(), initialData);
+            map.put(entity.getTableName(), initialData);
         } else {
-            List<ForeignKey> existingData = map.get(entity.getEntityName());
+            List<ForeignKey> existingData = map.get(entity.getTableName());
             existingData.add(foreignKey);
-            map.put(entity.getEntityName(), existingData);
+            map.put(entity.getTableName(), existingData);
         }
     }
 
@@ -618,7 +618,8 @@ public class Migrate implements BLauncherCmd {
     }
 
     private static void addToMapNoTypeObject(Entity entity, EntityField field, Map<String, List<FieldMetadata>> map) {
-        FieldMetadata fieldMetadata = new FieldMetadata(field.getFieldName(), field.getSqlType());
+        FieldMetadata fieldMetadata = new FieldMetadata(field.getFieldColumnName(),
+                field.getSqlType(), field.isDbGenerated());
 
         if (!map.containsKey(entity.getEntityName())) {
             List<FieldMetadata> initialData = new ArrayList<>();
@@ -632,8 +633,8 @@ public class Migrate implements BLauncherCmd {
     }
 
     private static void addToMapWithType(Entity entity, EntityField field, Map<String, List<FieldMetadata>> map) {
-        FieldMetadata fieldMetadata = new FieldMetadata(field.getFieldName(), field.getFieldType(),
-                field.isArrayType(), field.getSqlType());
+        FieldMetadata fieldMetadata = new FieldMetadata(field.getFieldColumnName(),
+                field.getFieldType(), field.isArrayType(), field.getSqlType(), field.isDbGenerated());
 
         if (!map.containsKey(entity.getEntityName())) {
             List<FieldMetadata> initialData = new ArrayList<>();
@@ -650,7 +651,7 @@ public class Migrate implements BLauncherCmd {
         EntityField customFk = entity.getFieldByName(field.getRelation().getKeyColumns().get(0).getField());
         FieldMetadata fieldMetadata = new FieldMetadata(field.getRelation().getKeyColumns().get(0).getField(),
                     field.getRelation().getKeyColumns().get(0).getType(), field.isArrayType(),
-                    customFk == null ? null : customFk.getSqlType());
+                    customFk == null ? null : customFk.getSqlType(), false);
 
         if (!map.containsKey(entity.getEntityName())) {
             List<FieldMetadata> initialData = new ArrayList<>();
@@ -787,9 +788,10 @@ public class Migrate implements BLauncherCmd {
                                 errStream.println("ERROR: data type conversion failed: " + e.getMessage());
                                 return;
                             }
-                            String addFieldTemplate = "ALTER TABLE %s%nADD COLUMN %s %s;%n";
+                            String addFieldTemplate = "ALTER TABLE %s%nADD COLUMN %s %s %s;%n";
 
-                            queries.add(String.format(addFieldTemplate, entity, fieldName, fieldType));
+                            queries.add(String.format(addFieldTemplate, entity, fieldName, fieldType,
+                                    field.isDbGenerated() ? "AUTO_INCREMENT" : ""));
                         }
                     }
                 }
@@ -813,9 +815,10 @@ public class Migrate implements BLauncherCmd {
                             errStream.println("ERROR: data type conversion failed: " + e.getMessage());
                             return;
                         }
-                        String changeTypeTemplate = "ALTER TABLE %s%nMODIFY COLUMN %s %s;%n";
+                        String changeTypeTemplate = "ALTER TABLE %s%nMODIFY COLUMN %s %s %s;%n";
 
-                        queries.add(String.format(changeTypeTemplate, entity, fieldName, fieldType));
+                        queries.add(String.format(changeTypeTemplate, entity, fieldName, fieldType,
+                                field.isDbGenerated() ? "AUTO_INCREMENT" : ""));
                     }
                 }
                 break;

@@ -27,17 +27,21 @@ public class FieldMetadata {
     private String dataType;
     private Boolean arrayType;
     private final SQLType sqlType;
+    private final boolean isDbGenerated;
 
-    public FieldMetadata(String name, String dataType, Boolean arrayType, SQLType sqlType) {
+    public FieldMetadata(String name, String dataType, Boolean arrayType, SQLType sqlType,
+                         boolean isDbGenerated) {
         this.name = name;
         this.dataType = dataType;
         this.arrayType = arrayType;
         this.sqlType = sqlType;
+        this.isDbGenerated = isDbGenerated;
     }
 
-    public FieldMetadata(String name, SQLType sqlType) {
+    public FieldMetadata(String name, SQLType sqlType, boolean isDbGenerated) {
         this.name = name;
         this.sqlType = sqlType;
+        this.isDbGenerated = isDbGenerated;
     }
 
     public String getName() {
@@ -65,5 +69,9 @@ public class FieldMetadata {
     }
     public SQLType getSqlType() {
         return sqlType;
+    }
+
+    public boolean isDbGenerated() {
+        return isDbGenerated;
     }
 }
