@@ -70,6 +70,9 @@ public class PersistToolsConstants {
     public static final Set<String> SUPPORTED_DB_PROVIDERS =
            Set.of(SupportedDataSources.MYSQL_DB, SupportedDataSources.MSSQL_DB, SupportedDataSources.IN_MEMORY_TABLE,
                    SupportedDataSources.GOOGLE_SHEETS, SupportedDataSources.POSTGRESQL_DB, SupportedDataSources.REDIS);
+    public static final Set<String> SUPPORTED_NOSQL_DB_PROVIDERS = 
+            Set.of(SupportedDataSources.IN_MEMORY_TABLE, SupportedDataSources.GOOGLE_SHEETS, 
+            SupportedDataSources.REDIS);
 
     /**
      * Constants related to Ballerina types.

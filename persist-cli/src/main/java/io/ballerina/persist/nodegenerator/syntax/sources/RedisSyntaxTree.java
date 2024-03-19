@@ -90,7 +90,8 @@ public class RedisSyntaxTree implements SyntaxTree  {
     public io.ballerina.compiler.syntax.tree.SyntaxTree getDataTypesSyntax(Module entityModule) {
         Collection<Entity> entityArray = entityModule.getEntityMap().values();
         if (entityArray.size() != 0) {
-            return BalSyntaxUtils.generateTypeSyntaxTree(entityModule);
+            return BalSyntaxUtils.generateTypeSyntaxTree(entityModule, 
+            PersistToolsConstants.SupportedDataSources.REDIS);
         }
         return null;
     }
