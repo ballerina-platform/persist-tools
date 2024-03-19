@@ -83,7 +83,6 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
             printExperimentalFeatureInfo(datastore);
             try {
                 if (validateCache(toolContext, schemaFilePath)) {
-                    errStream.println("INFO: no changes in the schema file. Generated sources are up to date.");
                     return;
                 }
             } catch (NoSuchAlgorithmException e) {
