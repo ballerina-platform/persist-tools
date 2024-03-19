@@ -11,7 +11,7 @@ DESCRIPTION
        data persistence in a Ballerina package. This step creates the required
        directories and configuration files. For example:
 
-           $ bal persist init
+           $ bal persist add
 
        Define the application's data model as the next step. Use the generated
        definition file in the "persist" directory to define the data model
@@ -31,11 +31,25 @@ DESCRIPTION
                Department department;
            |};
 
-       Then, generate the client API based on the data model. Use the generated
-       API to query and manipulate the persistent data in the application.
+       Then, generate the client API based on the data model. You can use the `bal build` command to generate the client.
+       This process will automatically regenerate the client whenever you modify the data model during project builds.
+       Use the generated API to query and manipulate the persistent data in the application.
        For example:
 
-       $ bal persist generate
+       $ bal build
+
+       Apart from the above commands, the following commands are also available:
+
+       $ bal persist init
+
+       This command initializes the package for persistence and used in one time generation of the clients.
+       This command will create a new directory named 'persist' in the project directory. The 'persist' directory will
+       contain empty model definition file which can be used to define the data model of the Ballerina project.
+
+       $ bal persist generate --module persist --datastore mysql
+
+       This command generates the client API based on the data model defined in the "persist" directory. Usually used
+       for one time generation of the client.
 
 OPTIONS
        -h, --help
@@ -44,7 +58,9 @@ OPTIONS
 BALLERINA COMMANDS
        The below is a list of available subcommands:
 
-       init            Initialize the package for persistence
+       add             Initialize the package for persistence. Used along with `bal build` command.
+       init            Initialize the package for persistence for one time code generation. Used along with
+                       `generate` command.
        generate        Generate the client API based on the data model defined in the "persist" directory
 
 Use 'bal persist <command> --help' for more information on a specific command.

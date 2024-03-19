@@ -14,5 +14,5 @@ EXAMPLES
           $ bal persist generate --help
 
        Generate client objects for the model definition file inside persist directory.
-          $ bal persist generate
+          $ bal persist generate --module persist --datastore mysql
 
