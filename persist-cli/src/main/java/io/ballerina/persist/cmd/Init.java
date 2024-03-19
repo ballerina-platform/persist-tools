@@ -33,7 +33,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
-import static io.ballerina.persist.PersistToolsConstants.MIGRATIONS;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.BAL_EXTENSION;
 import static io.ballerina.persist.utils.BalProjectUtils.validateBallerinaProject;
@@ -76,13 +75,6 @@ public class Init implements BLauncherCmd {
         if (helpFlag) {
             String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMMAND_IDENTIFIER);
             errStream.println(commandUsageInfo);
-            return;
-        }
-
-        if (Files.isDirectory(Paths.get(sourcePath, PERSIST_DIRECTORY, MIGRATIONS))) {
-            errStream.println("ERROR: reinitializing persistence after executing the migrate command is not " +
-                    "permitted. please remove the migrations directory within the persist directory and try " +
-                    "executing the command again.");
             return;
         }
 
