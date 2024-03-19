@@ -343,6 +343,18 @@ public class ToolingDbPullTest {
         runIntrospectionTest("tool_test_pull_25_mysql");
     }
 
+    @Test(enabled = true)
+    @Description("Create a model.bal file consisting of new and unsupported types.")
+    public void pullTestWithNewAndUnsupportedTypes() throws BalException {
+        runIntrospectionTest("tool_test_pull_26_mysql");
+    }
+
+    @Test(enabled = true)
+    @Description("Create a model.bal file consisting of an unsupported foreign key referencing a unique key")
+    public void pullTestWithForeignKeyOnUniqueKey() throws BalException {
+        runIntrospectionTest("tool_test_pull_27_mysql");
+    }
+
     private static void runIntrospectionTest(String subDir) throws BalException {
         if (OS.WINDOWS.isCurrentOs()) {
             return;
@@ -351,7 +363,6 @@ public class ToolingDbPullTest {
         executeDefaultPullCommand(subDir);
         assertGeneratedSources(subDir);
     }
-
 
     private static void executeDefaultPullCommand(String subDir) throws BalException {
         try {

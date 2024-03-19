@@ -8,11 +8,11 @@ public type Employee record {|
     int? age;
     @sql:Decimal {precision: [10, 2]}
     decimal? salary;
-    @sql:Mapping {name: "managed_by"}
-    @sql:Index {names: ["managed_by"]}
+    @sql:Name {value: "managed_by"}
+    @sql:Index {name: "managed_by"}
     int? managedBy;
     Employee[] employees;
-    @sql:Relation {refs: ["managedBy"]}
+    @sql:Relation {keys: ["managedBy"]}
     Employee employee;
 |};
 

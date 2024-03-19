@@ -23,11 +23,11 @@ public enum UserGender {
 }
 
 public type User record {|
-    @sql:Index {names: ["user_index"]}
+    @sql:Index {name: "user_index"}
     readonly int id;
     string name;
     UserGender gender;
-    @sql:Index {names: ["user_index"]}
+    @sql:Index {name: ["user_index"]}
     string nic;
     decimal? salary;
     Car[] cars;
@@ -37,8 +37,8 @@ public type Car record {|
     readonly int id;
     string name;
     string model;
-    @sql:Index {names: ["ownerId"]}
+    @sql:Index {name: ["ownerId"]}
     int ownerId;
-    @sql:Relation {refs: ["ownerId"]}
+    @sql:Relation {keys: ["ownerId"]}
     User user;
 |};

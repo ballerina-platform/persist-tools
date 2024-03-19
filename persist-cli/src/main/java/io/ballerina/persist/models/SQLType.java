@@ -20,30 +20,30 @@ package io.ballerina.persist.models;
 
 import io.ballerina.persist.PersistToolsConstants;
 
+import java.io.PrintStream;
+import java.util.Objects;
+
 public class SQLType {
+    PrintStream errStream = System.err;
     private final String typeName;
-    protected final String columnDefaultValue;
+    private final String fullDataType;
+    private final String columnDefaultValue;
     private final int numericPrecision;
     private final int numericScale;
-    private final String dateTimePrecision;
     private final int maxLength;
 
-    public SQLType(String typeName, String columnDefaultValue, int numericPrecision, int numericScale,
-                   String dateTimePrecision, int maxCharLength) {
+    public SQLType(String typeName, String fullDataType, String columnDefaultValue, int numericPrecision,
+                   int numericScale, int maxCharLength) {
         this.typeName = typeName;
+        this.fullDataType = fullDataType;
         this.columnDefaultValue = columnDefaultValue;
         this.numericPrecision = numericPrecision;
         this.numericScale = numericScale;
-        this.dateTimePrecision = dateTimePrecision;
         this.maxLength = maxCharLength;
     }
 
     public String getTypeName() {
         return typeName;
-    }
-
-    public String getColumnDefaultValue() {
-        return columnDefaultValue;
     }
 
     public int getNumericPrecision() {
@@ -53,91 +53,81 @@ public class SQLType {
     public int getNumericScale() {
         return numericScale;
     }
-
-    public String getDateTimePrecisionLevel() {
-        return dateTimePrecision;
+    public String getColumnDefaultValue() {
+        return columnDefaultValue;
     }
 
     public int getMaxLength() {
         return maxLength;
     }
+    public String getFullDataType() {
+        return fullDataType;
+    }
 
     public boolean isArrayType() {
-        return this.typeName.equals(PersistToolsConstants.SqlTypes.BLOB) ||
-                this.typeName.equals(PersistToolsConstants.SqlTypes.LONG_BLOB);
+        return
+                this.typeName.equals(PersistToolsConstants.SqlTypes.BLOB) ||
+                this.typeName.equals(PersistToolsConstants.SqlTypes.LONG_BLOB) ||
+                this.typeName.equals(PersistToolsConstants.SqlTypes.MEDIUM_BLOB) ||
+                this.typeName.equals(PersistToolsConstants.SqlTypes.TINY_BLOB) ||
+                this.typeName.equals(PersistToolsConstants.SqlTypes.BINARY) ||
+                this.typeName.equals(PersistToolsConstants.SqlTypes.VARBINARY);
     }
     public String getBalType() {
+        if (Objects.equals(this.fullDataType, PersistToolsConstants.SqlTypes.BOOLEAN_ALT)) {
+            return PersistToolsConstants.BallerinaTypes.BOOLEAN;
+        }
         switch (this.typeName) {
 
-            // Ballerina --> int
-            // MySQL --> INT
-            // MSSQL --> INT
-            // PostgreSQL --> INT
             case PersistToolsConstants.SqlTypes.INT:
+            case PersistToolsConstants.SqlTypes.INTEGER:
+            case PersistToolsConstants.SqlTypes.TINYINT:
+            case PersistToolsConstants.SqlTypes.SMALLINT:
+            case PersistToolsConstants.SqlTypes.MEDIUMINT:
+            case PersistToolsConstants.SqlTypes.BIGINT:
                 return PersistToolsConstants.BallerinaTypes.INT;
 
-            // Ballerina --> boolean
-            // MySQL --> BOOLEAN
-            // MSSQL --> BIT
-            // PostgreSQL --> BOOLEAN
-            case PersistToolsConstants.SqlTypes.BIT:
             case PersistToolsConstants.SqlTypes.BOOLEAN:
                 return PersistToolsConstants.BallerinaTypes.BOOLEAN;
 
-            // Ballerina --> decimal
-            // MySQL --> DECIMAL(65,30)
-            // MSSQL --> DECIMAL(38,30)
-            // PostgreSQL --> DECIMAL(65,30)
             case PersistToolsConstants.SqlTypes.DECIMAL:
                 return PersistToolsConstants.BallerinaTypes.DECIMAL;
 
-            // Ballerina --> float
-            // MySQL --> DOUBLE
-            // MSSQL --> FLOAT
-            // PostgreSQL --> FLOAT
             case PersistToolsConstants.SqlTypes.DOUBLE:
             case PersistToolsConstants.SqlTypes.FLOAT:
                 return PersistToolsConstants.BallerinaTypes.FLOAT;
 
-            // Ballerina --> time:Date
-            // MySQL --> DATE
-            // MSSQL --> DATE
-            // PostgreSQL --> DATE
             case PersistToolsConstants.SqlTypes.DATE:
                 return PersistToolsConstants.BallerinaTypes.DATE;
 
-            // Ballerina --> time:TimeOfDay
-            // MySQL --> TIME
-            // MSSQL --> TIME
-            // PostgreSQL --> TIME
             case PersistToolsConstants.SqlTypes.TIME:
                 return PersistToolsConstants.BallerinaTypes.TIME_OF_DAY;
 
-            // Ballerina --> time:Utc
-            // MySQL --> TIMESTAMP
-            // MSSQL --> DATETIME2
-            // PostgreSQL --> TIMESTAMP
             case PersistToolsConstants.SqlTypes.TIME_STAMP:
                 return PersistToolsConstants.BallerinaTypes.UTC;
             case PersistToolsConstants.SqlTypes.DATE_TIME2:
             case PersistToolsConstants.SqlTypes.DATE_TIME:
                 return PersistToolsConstants.BallerinaTypes.CIVIL;
 
-            // Ballerina --> string
-            // MySQL --> VARCHAR
-            // MSSQL --> VARCHAR
-            // PostgreSQL --> VARCHAR
             case PersistToolsConstants.SqlTypes.VARCHAR:
             case PersistToolsConstants.SqlTypes.CHAR:
+            case PersistToolsConstants.SqlTypes.TEXT:
+            case PersistToolsConstants.SqlTypes.MEDIUMTEXT:
+            case PersistToolsConstants.SqlTypes.LONGTEXT:
+            case PersistToolsConstants.SqlTypes.TINYTEXT:
                 return PersistToolsConstants.BallerinaTypes.STRING;
 
             case PersistToolsConstants.SqlTypes.LONG_BLOB:
+            case PersistToolsConstants.SqlTypes.MEDIUM_BLOB:
+            case PersistToolsConstants.SqlTypes.TINY_BLOB:
+            case PersistToolsConstants.SqlTypes.BINARY:
+            case PersistToolsConstants.SqlTypes.VARBINARY:
             case PersistToolsConstants.SqlTypes.BLOB:
                 return PersistToolsConstants.BallerinaTypes.BYTE;
 
             default:
-                throw new RuntimeException
-                        ("ERROR: Couldn't find equivalent Ballerina type for the field type: " + this.typeName);
+                errStream.println("WARNING Unsupported SQL type found: " + this.fullDataType);
+                return PersistToolsConstants.UNSUPPORTED_TYPE;
         }
     }
 }

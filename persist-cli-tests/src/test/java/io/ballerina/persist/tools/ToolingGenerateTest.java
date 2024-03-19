@@ -720,6 +720,13 @@ public class ToolingGenerateTest {
     }
 
     @Test(enabled = true)
+    @Description("The model has entities with unsupported fields")
+    public void testGenerateEntitiesWithUnsupportedFields() {
+        executeGenerateCommand("tool_test_generate_101", "mysql", "entities");
+        assertGeneratedSources("tool_test_generate_101");
+    }
+
+    @Test(enabled = true)
     @Description("There are entities with 'sql' annotations")
     public void testGenerateIgnoreSQLAnnotationsForInmemory() {
         executeGenerateCommand("tool_test_generate_101_inmemory", "inmemory", "entities");

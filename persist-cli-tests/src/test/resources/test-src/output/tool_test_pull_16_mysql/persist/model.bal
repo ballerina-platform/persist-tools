@@ -7,11 +7,11 @@ public enum UserGender {
 }
 
 public type User record {|
-    @sql:Index {names: ["user"]}
+    @sql:Index {name: "user"}
     readonly int id;
     string name;
     UserGender gender;
-    @sql:Index {names: ["user", "user_nic"]}
+    @sql:Index {name: ["user", "user_nic"]}
     string nic;
     decimal salary;
 |};

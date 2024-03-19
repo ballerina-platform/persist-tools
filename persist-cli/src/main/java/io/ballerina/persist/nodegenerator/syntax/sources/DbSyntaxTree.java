@@ -73,6 +73,9 @@ public class DbSyntaxTree implements RDBMSSyntaxTree {
         clientObject.addMember(dbClientSyntax.getInitFunction(entityModule), true);
         List<ClientResource> resourceList = new ArrayList<>();
         for (Entity entity : entityArray) {
+            if (entity.containsUnsupportedTypes()) {
+                continue;
+            }
             ClientResource resource = new ClientResource();
             resource.addFunction(dbClientSyntax.getGetFunction(entity), true);
             resource.addFunction(dbClientSyntax.getGetByKeyFunction(entity), true);

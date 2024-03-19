@@ -62,6 +62,7 @@ import io.ballerina.tools.diagnostics.Diagnostic;
 import io.ballerina.tools.text.TextDocuments;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -83,6 +84,12 @@ import static io.ballerina.persist.PersistToolsConstants.GENERATE_CMD_FILE;
 import static io.ballerina.persist.PersistToolsConstants.TARGET_DIRECTORY;
 import static io.ballerina.persist.PersistToolsConstants.SqlTypes.CHAR;
 import static io.ballerina.persist.PersistToolsConstants.SqlTypes.VARCHAR;
+import static io.ballerina.persist.PersistToolsConstants.UNSUPPORTED_TYPE_COMMENT_START;
+import static io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils.isAnnotationFieldArrayType;
+import static io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils.isAnnotationFieldStringType;
+import static io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils.isAnnotationPresent;
+import static io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils.readStringArrayValueFromAnnotation;
+import static io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils.readStringValueFromAnnotation;
 import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 
 /**
@@ -93,6 +100,7 @@ import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 public class BalProjectUtils {
 
     private BalProjectUtils() {}
+    private static final PrintStream errStream = System.out;
 
     public static Module getEntities(Path schemaFile) throws BalException {
         Path schemaFilename = schemaFile.getFileName();
@@ -216,12 +224,17 @@ public class BalProjectUtils {
             Optional<MetadataNode> entityMetadataNode = typeDefinitionNode.metadata();
             entityBuilder.setTableName(typeDefinitionNode.typeName().text().trim());
             entityMetadataNode.ifPresent(value -> entityBuilder.setTableName(
-                    BalSyntaxUtils.readStringValueFromAnnotation(
-                            value.annotations().stream().toList(),
-                            BalSyntaxConstants.SQL_DB_MAPPING_ANNOTATION_NAME,
-                            "name"
+                    readStringValueFromAnnotation(
+                            new BalSyntaxUtils.AnnotationUtilRecord(value.annotations().stream().toList(),
+                            BalSyntaxConstants.SQL_DB_NAME_ANNOTATION_NAME,
+                            BalSyntaxConstants.ANNOTATION_VALUE_FIELD)
                     )
             ));
+            if (recordDesc.toSourceCode().contains(UNSUPPORTED_TYPE_COMMENT_START)) {
+                errStream.println("WARNING the entity '" + entityBuilder.getEntityName() + "' contains " +
+                        "unsupported data types. client api for this entity will not be generated.");
+                entityBuilder.setContainsUnsupportedTypes(true);
+            }
             for (Node node : recordDesc.fields()) {
                 EntityField.Builder fieldBuilder;
                 RecordFieldNode fieldNode = (RecordFieldNode) node;
@@ -248,111 +261,122 @@ public class BalProjectUtils {
                 metadataNode.ifPresent(value -> {
                     //read the db generated annotation
                     List<AnnotationNode> annotations = value.annotations().stream().toList();
-                    boolean dbGenerated = BalSyntaxUtils.isAnnotationPresent(
+                    boolean dbGenerated = isAnnotationPresent(
                             annotations,
                             BalSyntaxConstants.SQL_GENERATED_ANNOTATION_NAME
                     );
                     fieldBuilder.setIsDbGenerated(dbGenerated);
 
                     //read the db mapping annotation
-                    String fieldResourceName = BalSyntaxUtils.readStringValueFromAnnotation(
-                            annotations,
-                            BalSyntaxConstants.SQL_DB_MAPPING_ANNOTATION_NAME,
-                            "name"
+                    String fieldColumnName = readStringValueFromAnnotation(
+                            new BalSyntaxUtils.AnnotationUtilRecord(annotations,
+                            BalSyntaxConstants.SQL_DB_NAME_ANNOTATION_NAME,
+                            BalSyntaxConstants.ANNOTATION_VALUE_FIELD)
                     );
-                    if (!fieldResourceName.isEmpty()) {
-                        fieldBuilder.setFieldColumnName(fieldResourceName);
+                    if (!fieldColumnName.isEmpty()) {
+                        fieldBuilder.setFieldColumnName(fieldColumnName);
                     }
                     //read the unique index annotation
-                    boolean isUniqueIndexPresent = BalSyntaxUtils.isAnnotationPresent(
+                    boolean isUniqueIndexPresent = isAnnotationPresent(
                             annotations,
                             BalSyntaxConstants.SQL_UNIQUE_INDEX_MAPPING_ANNOTATION_NAME
                     );
-                    List<String> uniqueIndexNames = BalSyntaxUtils.readStringArrayValueFromAnnotation(
+
+                    if (isUniqueIndexPresent) {
+                        BalSyntaxUtils.AnnotationUtilRecord uniqueIndexAnnot =
+                                new BalSyntaxUtils.AnnotationUtilRecord(annotations,
+                                        BalSyntaxConstants.SQL_UNIQUE_INDEX_MAPPING_ANNOTATION_NAME,
+                                        BalSyntaxConstants.ANNOTATION_NAME_FIELD);
+                        if (isAnnotationFieldArrayType(uniqueIndexAnnot)) {
+                            List<String> uniqueIndexNames = readStringArrayValueFromAnnotation(uniqueIndexAnnot);
+                            uniqueIndexNames.forEach(uniqueIndexName ->
+                                    entityBuilder.upsertUniqueIndex(uniqueIndexName, fieldBuilder.build()));
+                        } else if (isAnnotationFieldStringType(uniqueIndexAnnot)) {
+                            entityBuilder.upsertUniqueIndex(readStringValueFromAnnotation(uniqueIndexAnnot),
+                                    fieldBuilder.build());
+                        } else {
+                            entityBuilder.upsertUniqueIndex("unique_idx_" +
+                                    fieldBuilder.getFieldName().toLowerCase(Locale.ENGLISH), fieldBuilder.build());
+                        }
+                    }
+                    //read the index annotation
+                    boolean isIndexPresent = isAnnotationPresent(
                             annotations,
-                            BalSyntaxConstants.SQL_UNIQUE_INDEX_MAPPING_ANNOTATION_NAME,
-                            "names"
+                            BalSyntaxConstants.SQL_INDEX_MAPPING_ANNOTATION_NAME
                     );
-                    if (uniqueIndexNames != null && !uniqueIndexNames.isEmpty()) {
-                        uniqueIndexNames.forEach(uniqueIndexName ->
-                                entityBuilder.upsertUniqueIndex(uniqueIndexName, fieldBuilder.build()));
-                    } else if (isUniqueIndexPresent) {
-                        entityBuilder.upsertUniqueIndex("unique_idx_" +
-                                fieldBuilder.getFieldName().toLowerCase(Locale.ENGLISH), fieldBuilder.build());
+
+                    if (isIndexPresent) {
+                        BalSyntaxUtils.AnnotationUtilRecord indexAnnot =
+                                new BalSyntaxUtils.AnnotationUtilRecord(annotations,
+                                        BalSyntaxConstants.SQL_INDEX_MAPPING_ANNOTATION_NAME,
+                                        BalSyntaxConstants.ANNOTATION_NAME_FIELD);
+                        if (isAnnotationFieldArrayType(indexAnnot)) {
+                            List<String> indexNames = readStringArrayValueFromAnnotation(indexAnnot);
+                            indexNames.forEach(indexName ->
+                                    entityBuilder.upsertIndex(indexName, fieldBuilder.build()));
+                        } else if (isAnnotationFieldStringType(indexAnnot)) {
+                            entityBuilder.upsertIndex(readStringValueFromAnnotation(indexAnnot),
+                                    fieldBuilder.build());
+                        } else {
+                            entityBuilder.upsertIndex("idx_" +
+                                    fieldBuilder.getFieldName().toLowerCase(Locale.ENGLISH), fieldBuilder.build());
+                        }
                     }
                     //read the relation annotation
-                    List<String> relationRefs = BalSyntaxUtils.readStringArrayValueFromAnnotation(
-                            annotations,
+                    List<String> relationRefs = readStringArrayValueFromAnnotation(
+                            new BalSyntaxUtils.AnnotationUtilRecord(annotations,
                             BalSyntaxConstants.SQL_RELATION_MAPPING_ANNOTATION_NAME,
-                            "refs"
+                            BalSyntaxConstants.ANNOTATION_KEYS_FIELD)
                     );
                     if (relationRefs != null) {
                         fieldBuilder.setRelationRefs(relationRefs);
                     }
-
-                    //read the index annotation
-                    boolean isIndexPresent = BalSyntaxUtils.isAnnotationPresent(
-                            annotations,
-                            BalSyntaxConstants.SQL_INDEX_MAPPING_ANNOTATION_NAME
-                    );
-                    List<String> indexNames = BalSyntaxUtils.readStringArrayValueFromAnnotation(
-                            annotations,
-                            BalSyntaxConstants.SQL_INDEX_MAPPING_ANNOTATION_NAME,
-                            "names"
-                    );
-                    if (indexNames != null && !indexNames.isEmpty()) {
-                        indexNames.forEach(indexName ->
-                                entityBuilder.upsertIndex(indexName, fieldBuilder.build()));
-                    } else if (isIndexPresent) {
-                        entityBuilder.upsertIndex("idx_" +
-                                fieldBuilder.getFieldName().toLowerCase(Locale.ENGLISH), fieldBuilder.build());
-                    }
                     // read the varchar annotation
-                    String varcharLength = BalSyntaxUtils.readStringValueFromAnnotation(
-                            annotations,
+                    String varcharLength = readStringValueFromAnnotation(
+                            new BalSyntaxUtils.AnnotationUtilRecord(annotations,
                             BalSyntaxConstants.SQL_VARCHAR_MAPPING_ANNOTATION_NAME,
-                            "length"
+                            BalSyntaxConstants.ANNOTATION_LENGTH_FIELD)
                     );
                     if (!varcharLength.isEmpty()) {
                         fieldBuilder.setSqlType(
                                 new SQLType(
                                         VARCHAR,
                                         null,
-                                        0,
-                                        0,
                                         null,
+                                        0,
+                                        0,
                                         Integer.parseInt(varcharLength)));
                     }
                     //read the char annotation
-                    String charLength = BalSyntaxUtils.readStringValueFromAnnotation(
-                            annotations,
+                    String charLength = readStringValueFromAnnotation(
+                            new BalSyntaxUtils.AnnotationUtilRecord(annotations,
                             BalSyntaxConstants.SQL_CHAR_MAPPING_ANNOTATION_NAME,
-                            "length"
+                            BalSyntaxConstants.ANNOTATION_LENGTH_FIELD)
                     );
                     if (!charLength.isEmpty()) {
                         fieldBuilder.setSqlType(
                                 new SQLType(
                                         CHAR,
                                         null,
-                                        0,
-                                        0,
                                         null,
+                                        0,
+                                        0,
                                         Integer.parseInt(charLength)));
                     }
                     //read the decimal annotation
-                    List<String> decimal = BalSyntaxUtils.readStringArrayValueFromAnnotation(
-                            annotations,
+                    List<String> decimal = readStringArrayValueFromAnnotation(
+                            new BalSyntaxUtils.AnnotationUtilRecord(annotations,
                             BalSyntaxConstants.SQL_DECIMAL_MAPPING_ANNOTATION_NAME,
-                            "precision"
+                            BalSyntaxConstants.ANNOTATION_PRECISION_FIELD)
                     );
                     if (decimal != null && decimal.size() == 2) {
                         fieldBuilder.setSqlType(
                                 new SQLType(
                                         PersistToolsConstants.SqlTypes.DECIMAL,
                                         null,
+                                        null,
                                         Integer.parseInt(decimal.get(0).trim()),
                                         Integer.parseInt(decimal.get(1).trim()),
-                                        null,
                                         0)
                         );
                     }

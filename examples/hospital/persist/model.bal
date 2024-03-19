@@ -29,32 +29,32 @@ public enum PatientGender {
     FEMALE = "FEMALE"
 }
 
-@sql:Mapping {name: "appointment"}
+@sql:Name {value: "appointment"}
 public type Appointment record {|
     readonly int id;
-    @sql:UniqueIndex {names: ["reason_index"]}
+    @sql:UniqueIndex {name: "reason_index"}
     string reason;
     time:Civil appointmentTime;
     AppointmentStatus status;
-    @sql:Mapping {name: "patient_id"}
-    @sql:Index {names: ["patientId"]}
+    @sql:Name {value: "patient_id"}
+    @sql:Index {name: "patientId"}
     int patientId;
-    @sql:Index {names: ["doctorId"]}
+    @sql:Index {name: "doctorId"}
     int doctorId;
-    @sql:Relation {refs: ["patientId"]}
+    @sql:Relation {keys: ["patientId"]}
     Patient patient;
-    @sql:Relation {refs: ["doctorId"]}
+    @sql:Relation {keys: ["doctorId"]}
     Doctor doctor;
 |};
 
-@sql:Mapping {name: "patients"}
+@sql:Name {value: "patients"}
 public type Patient record {|
-    @sql:Mapping {name: "ID"}
+    @sql:Name {value: "ID"}
     @sql:Generated
     readonly int id;
     string name;
     int age;
-    @sql:Mapping {name: "ADDRESS"}
+    @sql:Name {value: "ADDRESS"}
     string address;
     @sql:Char {length: 10}
     string phoneNumber;
@@ -65,9 +65,9 @@ public type Patient record {|
 public type Doctor record {|
     readonly int id;
     string name;
-    @sql:Index {names: ["specialty_index"]}
+    @sql:Index {name: ["specialty_index"]}
     string specialty;
-    @sql:Mapping {name: "phone_number"}
+    @sql:Name {value: "phone_number"}
     string phoneNumber;
     @sql:Decimal {precision: [10, 2]}
     decimal? salary;

@@ -64,6 +64,8 @@ public class PersistToolsConstants {
     public static final String MSSQL_CONNECTOR_NAME_PREFIX = "mssql-jdbc";
     public static final String POSTGRESQL_CONNECTOR_NAME_PREFIX = "postgresql";
     public static final String SCHEMA_FILE_NAME = "model";
+    public static final String UNSUPPORTED_TYPE = "Unsupported";
+    public static final String UNSUPPORTED_TYPE_COMMENT_START = "//" + UNSUPPORTED_TYPE + "[";
 
     public static final Set<String> SUPPORTED_DB_PROVIDERS =
            Set.of(SupportedDataSources.MYSQL_DB, SupportedDataSources.MSSQL_DB, SupportedDataSources.IN_MEMORY_TABLE,
@@ -98,6 +100,11 @@ public class PersistToolsConstants {
         private SqlTypes() {}
 
         public static final String INT = "INT";
+        public static final String BIGINT = "BIGINT";
+        public static final String TINYINT = "TINYINT";
+        public static final String SMALLINT = "SMALLINT";
+        public static final String MEDIUMINT = "MEDIUMINT";
+        public static final String INTEGER = "INTEGER";
         public static final String BIT = "BIT";
         public static final String BOOLEAN = "BOOLEAN";
         public static final String DECIMAL = "DECIMAL";
@@ -105,15 +112,24 @@ public class PersistToolsConstants {
         public static final String FLOAT = "FLOAT";
         public static final String VARCHAR = "VARCHAR";
         public static final String CHAR = "CHAR";
+        public static final String TINYTEXT = "TINYTEXT";
+        public static final String TEXT = "TEXT";
+        public static final String MEDIUMTEXT = "MEDIUMTEXT";
+        public static final String LONGTEXT = "LONGTEXT";
         public static final String DATE = "DATE";
         public static final String TIME = "TIME";
         public static final String TIME_STAMP = "TIMESTAMP";
         public static final String DATE_TIME = "DATETIME";
         public static final String DATE_TIME2 = "DATETIME2";
         public static final String LONG_BLOB = "LONGBLOB";
+        public static final String MEDIUM_BLOB = "MEDIUMBLOB";
+        public static final String TINY_BLOB = "TINYBLOB";
         public static final String BLOB = "BLOB";
-        public static final String VARBINARY = "VARBINARY(MAX)";
+        public static final String VARBINARY_WITH_MAX = "VARBINARY(MAX)";
+        public static final String BINARY = "BINARY";
+        public static final String VARBINARY = "VARBINARY";
         public static final String BYTEA = "BYTEA";
+        public static final String BOOLEAN_ALT = "tinyint(1)";
     }
 
     /**

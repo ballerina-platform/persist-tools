@@ -16,10 +16,10 @@ public type User record {|
 |};
 
 public type Phone record {|
-    @sql:Mapping {name: "user_id"}
+    @sql:Name {value: "user_id"}
     readonly int userId;
     readonly string number;
-    @sql:Relation {refs: ["userId"]}
+    @sql:Relation {keys: ["userId"]}
     User user;
 |};
 
