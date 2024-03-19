@@ -1,3 +1,0 @@
-[[tool.persist]]
-options.datastore = "inmemory"
-module = "persist_generate_101.entities"
