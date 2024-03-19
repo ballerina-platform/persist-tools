@@ -19,9 +19,6 @@ package io.ballerina.persist.cmd;
 
 import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.BalException;
-import io.ballerina.persist.PersistToolsConstants;
-import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
-import io.ballerina.projects.util.ProjectUtils;
 import picocli.CommandLine;
 
 import java.io.IOException;
@@ -29,7 +26,6 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -39,9 +35,7 @@ import java.util.stream.Stream;
 import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 import static io.ballerina.persist.PersistToolsConstants.MIGRATIONS;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
-import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_DB_PROVIDERS;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.BAL_EXTENSION;
-import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.readPackageName;
 import static io.ballerina.persist.utils.BalProjectUtils.validateBallerinaProject;
 
 /**
@@ -85,14 +79,6 @@ public class Init implements BLauncherCmd {
             return;
         }
 
-        if (datastore == null) {
-            datastore = PersistToolsConstants.SupportedDataSources.IN_MEMORY_TABLE;
-        } else if (!SUPPORTED_DB_PROVIDERS.contains(datastore)) {
-            errStream.printf("ERROR: the persist layer supports one of data stores: %s" +
-                    ". but found '%s' datasource.%n", Arrays.toString(SUPPORTED_DB_PROVIDERS.toArray()), datastore);
-            return;
-        }
-
         if (Files.isDirectory(Paths.get(sourcePath, PERSIST_DIRECTORY, MIGRATIONS))) {
             errStream.println("ERROR: reinitializing persistence after executing the migrate command is not " +
                     "permitted. please remove the migrations directory within the persist directory and try " +
@@ -100,38 +86,11 @@ public class Init implements BLauncherCmd {
             return;
         }
 
-        if (datastore.equals(PersistToolsConstants.SupportedDataSources.GOOGLE_SHEETS)) {
-            errStream.printf(BalSyntaxConstants.EXPERIMENTAL_NOTICE, "The support for Google Sheets data store " +
-                    "is currently an experimental feature, and its behavior may be subject to change in future " +
-                    "releases." + System.lineSeparator());
-        }
-
         Path projectPath = Paths.get(sourcePath);
         try {
             validateBallerinaProject(projectPath);
         } catch (BalException e) {
             errStream.println(e.getMessage());
-            return;
-        }
-        String packageName;
-        try {
-            packageName = readPackageName(this.sourcePath);
-        } catch (BalException e) {
-            errStream.println(e.getMessage());
-            return;
-        }
-        if (module == null) {
-            module = packageName;
-        } else {
-            module = module.replaceAll("\"", "");
-        }
-        if (!ProjectUtils.validateModuleName(module)) {
-            errStream.println("ERROR: invalid module name : '" + module + "' :\n" +
-                    "module name can only contain alphanumerics, underscores and periods");
-            return;
-        } else if (!ProjectUtils.validateNameLength(module)) {
-            errStream.println("ERROR: invalid module name : '" + module + "' :\n" +
-                    "maximum length of module name is 256 characters");
             return;
         }
 
@@ -171,13 +130,25 @@ public class Init implements BLauncherCmd {
                 return;
             }
         }
-        errStream.println("Initialized the package for persistence.");
-        errStream.println(System.lineSeparator() + "Next steps:");
+        if (datastore != null || module != null) {
+            errStream.println("The behavior of the `bal persist init` command has been updated starting " +
+                    "from Ballerina update 09.");
+            errStream.println("Now, you no longer need to provide any parameters. The command will exclusively " +
+                    "create the `persist` directory in the project's root directory. This directory contains the " +
+                    "data model definition file (`model.bal`) for the project." + System.lineSeparator());
+            errStream.println("If you have any questions or need further assistance, refer to the updated " +
+                    "documentation.");
+        } else {
+            errStream.println("Initialized the package for persistence.");
+            errStream.println(System.lineSeparator() + "Next steps:");
 
-        errStream.println("- Define your data model in \"persist/model.bal\".");
-        errStream.println("- Run \"bal persist generate\" to generate persist client and " +
-                "entity types for your data model.");
-
+            errStream.println("1. Define your data model in \"persist/model.bal\".");
+            errStream.println("2. Execute `bal persist add --datastore <datastore> --module <module>` to add an" +
+                    " entry to \"Ballerina.toml\" for integrating code generation with the package build process.");
+            errStream.println("OR");
+            errStream.println("Execute `bal persist generate --datastore <datastore> --module <module>` for " +
+                    "a one-time generation of the client.");
+        }
     }
 
     @Override
