@@ -42,7 +42,7 @@ DESCRIPTION
 
        $ bal persist init
 
-       This command initializes the package for persistence and used in one time generation of the clients.
+       This command initializes the package for persistence.
        This command will create a new directory named 'persist' in the project directory. The 'persist' directory will
        contain empty model definition file which can be used to define the data model of the Ballerina project.
 
@@ -60,8 +60,7 @@ BALLERINA COMMANDS
 
        add             Initialize the package for persistence and integrate the client generation to
                        the `bal build` command.
-       init            Initialize the package for persistence for one time code generation. Used along with
-                       `generate` command.
+       init            Initialize the package for persistence and create the "persist" directory and data model file.
        generate        Generate the client API based on the data model defined in the "persist" directory
 
 Use 'bal persist <command> --help' for more information on a specific command.
