@@ -58,7 +58,8 @@ OPTIONS
 BALLERINA COMMANDS
        The below is a list of available subcommands:
 
-       add             Initialize the package for persistence. Used along with `bal build` command.
+       add             Initialize the package for persistence and integrate the client generation to
+                       the `bal build` command.
        init            Initialize the package for persistence for one time code generation. Used along with
                        `generate` command.
        generate        Generate the client API based on the data model defined in the "persist" directory

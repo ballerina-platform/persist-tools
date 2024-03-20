@@ -2,8 +2,8 @@ NAME
        bal persist add - Initialize the Ballerina package for persistence.
 
 SYNOPSIS
-       bal persist add [--module]
-                        [--datastore]
+       bal persist add [--module <module name>]
+                        [--datastore <store type>]
                         [<-h> | <--help>]
 
 DESCRIPTION
@@ -12,9 +12,9 @@ DESCRIPTION
          This will also add persist configuration to the Ballerina.toml file.
 
 OPTIONS
-       --module
+       --module <module name>
               The name of the module to initialize the persistence layer. If not specified, the default module will be used.
-       --datastore
+       --datastore <store type>
               The type of the datastore to be used for persistence.
               The supported datastores are 'inmemory', 'mysql', 'mssql', 'postgresql', 'googlesheets' and 'redis'.
               If not specified, the 'inmemory' datastore will be used as the default.
