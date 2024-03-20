@@ -16,7 +16,7 @@ OPTIONS
               The name of the module to initialize the persistence layer. If not specified, the default module will be used.
        --datastore <store type>
               The type of the datastore to be used for persistence.
-              The supported datastores are 'inmemory', 'mysql', 'mssql', 'postgresql', and 'googlesheets'.
+              The supported datastores are 'inmemory', 'mysql', 'mssql', 'postgresql', 'googlesheets' and 'redis'.
               If not specified, the 'inmemory' datastore will be used as the default.
        -h, --help
            Print the usage details of all commands.
