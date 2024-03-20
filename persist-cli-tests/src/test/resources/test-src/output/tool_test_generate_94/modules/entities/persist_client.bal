@@ -32,12 +32,12 @@ public isolated client class Client {
                 "cars[].name": {relation: {entityName: "cars", refField: "name"}},
                 "cars[].model": {relation: {entityName: "cars", refField: "model"}},
                 "cars[].ownerId": {relation: {entityName: "cars", refField: "ownerId"}},
-                "cars[].driverId": {relation: {entityName: "cars", refField: "driverId"}},
+                "cars[].driverId": {relation: {entityName: "cars", refField: "driverId", refColumn: "DRIVER_ID"}},
                 "drives.id": {relation: {entityName: "drives", refField: "id"}},
                 "drives.name": {relation: {entityName: "drives", refField: "name"}},
                 "drives.model": {relation: {entityName: "drives", refField: "model"}},
                 "drives.ownerId": {relation: {entityName: "drives", refField: "ownerId"}},
-                "drives.driverId": {relation: {entityName: "drives", refField: "driverId"}}
+                "drives.driverId": {relation: {entityName: "drives", refField: "driverId", refColumn: "DRIVER_ID"}}
             },
             keyFields: ["id"],
             joinMetadata: {

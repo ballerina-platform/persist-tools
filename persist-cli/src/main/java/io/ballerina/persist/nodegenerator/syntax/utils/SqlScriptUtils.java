@@ -153,9 +153,24 @@ public class SqlScriptUtils {
                 columnScript.append(MessageFormat.format("{0}{1}{2} {3},",
                         NEW_LINE, TAB, fieldName, sqlType));
             } else {
-                columnScript.append(MessageFormat.format("{0}{1}{2} {3}{4},",
-                        NEW_LINE, TAB, fieldName, sqlType,
-                        entityField.isDbGenerated() ? " AUTO_INCREMENT" : " NOT NULL"));
+                switch (datasource) {
+                    case (PersistToolsConstants.SupportedDataSources.MSSQL_DB):
+                        columnScript.append(MessageFormat.format("{0}{1}{2} {3}{4},",
+                                NEW_LINE, TAB, fieldName, sqlType,
+                                entityField.isDbGenerated() ? " IDENTITY(1,1)" : " NOT NULL"));
+                        break;
+                    case (PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB):
+                        columnScript.append(MessageFormat.format("{0}{1}{2} {3}{4},",
+                                NEW_LINE, TAB, fieldName, "",
+                                entityField.isDbGenerated() ? " SERIAL" : sqlType + " NOT NULL"));
+                        break;
+                    case (PersistToolsConstants.SupportedDataSources.MYSQL_DB):
+                        columnScript.append(MessageFormat.format("{0}{1}{2} {3}{4},",
+                                NEW_LINE, TAB, fieldName, sqlType,
+                                entityField.isDbGenerated() ? " AUTO_INCREMENT" : " NOT NULL"));
+                        break;
+                    default: { }
+                }
             }
         }
         return columnScript.toString();
