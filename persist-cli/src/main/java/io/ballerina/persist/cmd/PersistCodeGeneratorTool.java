@@ -26,6 +26,7 @@ import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
 import io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils;
 import io.ballerina.persist.utils.BalProjectUtils;
 import io.ballerina.projects.buildtools.CodeGeneratorTool;
+import io.ballerina.projects.buildtools.ToolConfig;
 import io.ballerina.projects.buildtools.ToolContext;
 import io.ballerina.projects.util.ProjectUtils;
 
@@ -40,6 +41,7 @@ import java.util.HashMap;
 import static io.ballerina.persist.PersistToolsConstants.TARGET_MODULE;
 import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 
+@ToolConfig(name = "persist")
 public class PersistCodeGeneratorTool implements CodeGeneratorTool {
 
     private static final PrintStream errStream = System.err;
@@ -95,11 +97,6 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
             throw new BalException("invalid module name : '" + moduleName + "' :" + System.lineSeparator() +
                     "maximum length of module name is 256 characters");
         }
-    }
-
-    @Override
-    public String toolName() {
-        return "persist";
     }
 
     private void validateDatastore(String datastore) throws BalException {
