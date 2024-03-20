@@ -64,6 +64,7 @@ public class PersistToolsConstants {
     public static final String MSSQL_CONNECTOR_NAME_PREFIX = "mssql-jdbc";
     public static final String POSTGRESQL_CONNECTOR_NAME_PREFIX = "postgresql";
     public static final String SCHEMA_FILE_NAME = "model";
+    public static final String CACHE_FILE = "persist-cache.txt";
     public static final String UNSUPPORTED_TYPE = "Unsupported";
     public static final String UNSUPPORTED_TYPE_COMMENT_START = "//" + UNSUPPORTED_TYPE + "[";
 
