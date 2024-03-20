@@ -127,7 +127,7 @@ public class ToolingMigrateTest {
     }
 
     @Test(enabled = true)
-    @Description("Test execute command with SQL type annotations")
+    @Description("Test execute command with SQL type annotations in newly inserted fields")
     public void testTypeAnnotationsMigrateTest() {
 
         executeCommand("tool_test_migrate_12");

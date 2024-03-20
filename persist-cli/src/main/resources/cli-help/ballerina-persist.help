@@ -62,5 +62,8 @@ BALLERINA COMMANDS
                        the `bal build` command.
        init            Initialize the package for persistence and create the "persist" directory and data model file.
        generate        Generate the client API based on the data model defined in the "persist" directory
+       migrate         Migrate the database schema to the latest version by checking the current model file and the
+                       previous.
+       pull            Introspect the database to generate the data model file.
 
 Use 'bal persist <command> --help' for more information on a specific command.
