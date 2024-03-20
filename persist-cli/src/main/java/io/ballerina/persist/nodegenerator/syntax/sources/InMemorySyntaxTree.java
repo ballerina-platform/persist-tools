@@ -24,6 +24,7 @@ import io.ballerina.compiler.syntax.tree.NodeList;
 import io.ballerina.compiler.syntax.tree.NodeParser;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
 import io.ballerina.persist.BalException;
+import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.components.Client;
 import io.ballerina.persist.components.ClientResource;
 import io.ballerina.persist.components.Function;
@@ -113,7 +114,8 @@ public class InMemorySyntaxTree implements SyntaxTree {
     public io.ballerina.compiler.syntax.tree.SyntaxTree getDataTypesSyntax(Module entityModule) throws BalException {
         Collection<Entity> entityArray = entityModule.getEntityMap().values();
         if (entityArray.size() != 0) {
-            return BalSyntaxUtils.generateTypeSyntaxTree(entityModule);
+            return BalSyntaxUtils.generateTypeSyntaxTree(entityModule, 
+            PersistToolsConstants.SupportedDataSources.IN_MEMORY_TABLE);
         }
         return null;
     }

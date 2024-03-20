@@ -726,4 +726,25 @@ public class ToolingGenerateTest {
         assertGeneratedSources("tool_test_generate_101");
     }
 
+    @Test(enabled = true)
+    @Description("There are entities with 'sql' annotations")
+    public void testGenerateIgnoreSQLAnnotationsForInmemory() {
+        executeGenerateCommand("tool_test_generate_102_inmemory", "inmemory", "entities");
+        assertGeneratedSources("tool_test_generate_102_inmemory");
+    }
+
+    @Test(enabled = true)
+    @Description("There are entities with 'sql' annotations")
+    public void testGenerateIgnoreSQLAnnotationsForGoogleSheets() {
+        executeGenerateCommand("tool_test_generate_103_googlesheets", "googlesheets", "entities");
+        assertGeneratedSources("tool_test_generate_103_googlesheets");
+    }
+
+    @Test(enabled = true)
+    @Description("There are entities with 'sql' annotations")
+    public void testGenerateIgnoreSQLAnnotationsForRedis() {
+        executeGenerateCommand("tool_test_generate_104_redis", "redis", "entities");
+        assertGeneratedSources("tool_test_generate_104_redis");
+    }
+
 }
