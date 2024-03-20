@@ -64,6 +64,7 @@ public type Patient record {|
 
 public type Doctor record {|
     readonly int id;
+    @sql:Name {value: "doctor_name"}
     string name;
     @sql:Index {name: ["specialty_index"]}
     string specialty;
