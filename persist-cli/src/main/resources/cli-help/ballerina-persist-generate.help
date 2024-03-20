@@ -2,8 +2,8 @@ NAME
        bal persist generate - Generate the client API based on the data model.
 
 SYNOPSIS
-       bal persist generate [--module <module name>]
-                            [--datastore <store type>]
+       bal persist generate [--module]
+                            [--datastore]
                             [<-h> | <--help>]
 
 DESCRIPTION
@@ -12,9 +12,9 @@ DESCRIPTION
        The generated SQL script can be used to create the database tables.
 
 OPTIONS
-       --module <module name>
+       --module
               The name of the module to initialize the persistence layer. If not specified, the default module will be used.
-       --datastore <store type>
+       --datastore
               The type of the datastore to be used for persistence.
               The supported datastores are 'inmemory', 'mysql', 'mssql', 'postgresql', 'googlesheets', and 'redis'.
        -h, --help
