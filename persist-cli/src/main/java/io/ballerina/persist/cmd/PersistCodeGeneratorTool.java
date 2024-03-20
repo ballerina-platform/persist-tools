@@ -26,6 +26,7 @@ import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
 import io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils;
 import io.ballerina.persist.utils.BalProjectUtils;
 import io.ballerina.projects.buildtools.CodeGeneratorTool;
+import io.ballerina.projects.buildtools.ToolConfig;
 import io.ballerina.projects.buildtools.ToolContext;
 import io.ballerina.projects.util.ProjectUtils;
 
@@ -45,6 +46,7 @@ import static io.ballerina.persist.PersistToolsConstants.CACHE_FILE;
 import static io.ballerina.persist.PersistToolsConstants.TARGET_MODULE;
 import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 
+@ToolConfig(name = "persist")
 public class PersistCodeGeneratorTool implements CodeGeneratorTool {
 
     private static final PrintStream errStream = System.err;
@@ -153,11 +155,6 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
     public static String readFileToString(Path filePath) throws IOException {
         byte[] fileContent = Files.readAllBytes(filePath);
         return new String(fileContent, StandardCharsets.UTF_8);
-    }
-
-    @Override
-    public String toolName() {
-        return "persist";
     }
 
     private void validateDatastore(String datastore) throws BalException {
