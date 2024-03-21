@@ -26,15 +26,18 @@ public class FieldMetadata {
     private String name;
     private String dataType;
     private Boolean arrayType;
+    private final SQLType sqlType;
 
-    public FieldMetadata(String name, String dataType, Boolean arrayType) {
+    public FieldMetadata(String name, String dataType, Boolean arrayType, SQLType sqlType) {
         this.name = name;
         this.dataType = dataType;
         this.arrayType = arrayType;
+        this.sqlType = sqlType;
     }
 
-    public FieldMetadata(String name) {
+    public FieldMetadata(String name, SQLType sqlType) {
         this.name = name;
+        this.sqlType = sqlType;
     }
 
     public String getName() {
@@ -59,5 +62,8 @@ public class FieldMetadata {
 
     public void setArrayType(Boolean arrayType) {
         this.arrayType = arrayType;
+    }
+    public SQLType getSqlType() {
+        return sqlType;
     }
 }

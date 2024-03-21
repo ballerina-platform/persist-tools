@@ -44,7 +44,7 @@ public isolated client class Client {
                 name: {columnName: "name"},
                 model: {columnName: "model"},
                 ownerId: {columnName: "ownerId"},
-                "user.id": {relation: {entityName: "user", refField: "id"}},
+                "user.id": {relation: {entityName: "user", refField: "id", refColumn: "ID"}},
                 "user.name": {relation: {entityName: "user", refField: "name"}},
                 "user.gender": {relation: {entityName: "user", refField: "gender"}},
                 "user.nic": {relation: {entityName: "user", refField: "nic"}},

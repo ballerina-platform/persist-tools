@@ -42,13 +42,13 @@ function initDatabase() returns error? {
 	        PRIMARY KEY(id)
       )`);
     _ = check dbClient->execute(`CREATE TABLE patients (
-          ID INT AUTO_INCREMENT,
+          IDP INT AUTO_INCREMENT,
           name VARCHAR(191) NOT NULL,
           age INT NOT NULL,
           ADDRESS VARCHAR(191) NOT NULL,
           phoneNumber CHAR(10) NOT NULL,
           gender ENUM('MALE', 'FEMALE') NOT NULL,
-          PRIMARY KEY(ID)
+          PRIMARY KEY(IDP)
       )`);
     _ = check dbClient->execute(`CREATE TABLE appointment (
           id INT NOT NULL,
@@ -56,7 +56,7 @@ function initDatabase() returns error? {
           appointmentTime DATETIME NOT NULL,
           status ENUM('SCHEDULED', 'STARTED', 'ENDED') NOT NULL,
           patient_id INT NOT NULL,
-          FOREIGN KEY(patient_id) REFERENCES patients(ID),
+          FOREIGN KEY(patient_id) REFERENCES patients(IDP),
           doctorId INT NOT NULL,
           FOREIGN KEY(doctorId) REFERENCES Doctor(id),
           PRIMARY KEY(id)

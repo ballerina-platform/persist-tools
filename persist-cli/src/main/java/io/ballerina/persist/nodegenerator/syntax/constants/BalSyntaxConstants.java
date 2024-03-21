@@ -190,6 +190,7 @@ public class BalSyntaxConstants {
     public static final String TABLE_NAME_TEMPLATE = "tableName: \"%s\", " + System.lineSeparator();
     public static final String METADATA_RECORD_TABLE_NAME_TEMPLATE = "tableName: \"%s\", " + System.lineSeparator();
     public static final String METADATA_RECORD_FIELD_TEMPLATE = "%s: {columnName: \"%s\"}";
+    public static final String METADATA_RECORD_FIELD_WITH_DBGEN_TEMPLATE = "%s: {columnName: \"%s\", dbGenerated: %s}";
     public static final String METADATA_KEY_FIELDS_TEMPLATE = "keyFields: [%s], " + System.lineSeparator();
     public static final String G_SHEET_FIELD_METADATA_TEMPLATE = "%s: {columnName: \"%s\", columnId: \"%s\"}";
     public static final String FIELD_TYPE = "%s: \"%s\"";
@@ -253,6 +254,8 @@ public class BalSyntaxConstants {
     public static final String CONDITION_STATEMENT = "'object.%s == value[\"%s\"] ";
     public static final String VARIABLE = "\"%s\": %s,";
     public static final String ASSOCIATED_FIELD_TEMPLATE = ".%s\": {relation: {entityName: \"%s\", refField: \"%s\"}}";
+    public static final String ASSOCIATED_FIELD_TEMPLATE_MAPPED =
+            ".%s\": {relation: {entityName: \"%s\", refField: \"%s\", refColumn: \"%s\"}}";
     public static final String CONSTRAINT_ANNOTATION = "@constraint:String {" + System.lineSeparator() +
             "        %s" + System.lineSeparator() +
             "    }";
