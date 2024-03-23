@@ -332,8 +332,23 @@ public class RedisClientSyntax  implements ClientSyntax {
             if (entityField.getRelation() != null) {
                 String relationType = BalSyntaxConstants.REDIS_ONE_TO_ONE;
                 Entity associatedEntity = entityField.getRelation().getAssocEntity();
+//                List<String> references = entityField.getRelation().getReferences();
+                String associatedFieldName = "";
                 for (EntityField associatedEntityField : associatedEntity.getFields()) {
                     if (associatedEntityField.getFieldType().equals(entity.getEntityName())) {
+                        boolean isCorrectMapping = true;
+                        for (EntityField key : associatedEntity.getKeys()) {
+                            String fieldName = key.getFieldName();
+                            String capitalizedFieldName = Character.toUpperCase(fieldName.charAt(0))
+                                    + fieldName.substring(1);
+                            String associatedReference = entityField.getFieldName().toLowerCase(Locale.ENGLISH)
+                                    .concat(capitalizedFieldName);
+                            if (!associatedEntityField.getRelation().getReferences().contains(associatedReference)) {
+                                isCorrectMapping = false;
+                                break;
+                            }
+                        }
+
                         if (associatedEntityField.isArrayType() && !entityField.isArrayType()) {
                             relationType = BalSyntaxConstants.REDIS_ONE_TO_MANY;
                         } else if (!associatedEntityField.isArrayType() && entityField.isArrayType()) {
@@ -341,6 +356,11 @@ public class RedisClientSyntax  implements ClientSyntax {
                         } else if (associatedEntityField.isArrayType() && entityField.isArrayType()) {
                              relationType = BalSyntaxConstants.REDIS_MANY_TO_MANY;
                         }
+
+                        if (!isCorrectMapping) {
+                            continue;
+                        }
+                        associatedFieldName = associatedEntityField.getFieldName();
                     }
                 }
                 if (joinMetaData.length() > 0) {
@@ -358,10 +378,18 @@ public class RedisClientSyntax  implements ClientSyntax {
                     joinColumns.append(String.format(BalSyntaxConstants.COLUMN_ARRAY_ENTRY_TEMPLATE,
                             BalSyntaxUtils.stripEscapeCharacter(key.getField())));
                 }
-                joinMetaData.append(String.format(BalSyntaxConstants.REDIS_JOIN_METADATA_FIELD_TEMPLATE,
-                        entityField.getFieldName(), entityField.getFieldType(),
-                        entityField.getFieldName(), entityField.getFieldType(), refColumns,
-                        joinColumns, relationType));
+                if (associatedFieldName.isEmpty()) {
+                    joinMetaData.append(
+                            String.format(BalSyntaxConstants.REDIS_JOIN_METADATA_FIELD_TEMPLATE_WITHOUT_REF_KEY,
+                            entityField.getFieldName(), entityField.getFieldType(),
+                            entityField.getFieldName(), entityField.getFieldType(),
+                            refColumns, joinColumns, relationType));
+                } else {
+                    joinMetaData.append(String.format(BalSyntaxConstants.REDIS_JOIN_METADATA_FIELD_TEMPLATE,
+                            entityField.getFieldName(), entityField.getFieldType(),
+                            entityField.getFieldName(), entityField.getFieldType(), associatedFieldName,
+                            refColumns, joinColumns, relationType));
+                }
             }
         }
         return joinMetaData.toString();

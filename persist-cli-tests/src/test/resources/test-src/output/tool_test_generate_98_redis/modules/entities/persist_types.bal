@@ -28,6 +28,7 @@ public type Employee record {|
     Gender gender;
     time:Civil dateOfBirth;
     string departmentDeptNo;
+
 |};
 
 public type EmployeeOptionalized record {|
@@ -95,6 +96,7 @@ public type Building record {|
     State state;
     string country;
     string postalCode;
+
 |};
 
 public type BuildingOptionalized record {|
@@ -124,6 +126,7 @@ public type BuildingUpdate record {|
 public type Department record {|
     readonly string deptNo;
     string deptName;
+
 |};
 
 public type DepartmentOptionalized record {|

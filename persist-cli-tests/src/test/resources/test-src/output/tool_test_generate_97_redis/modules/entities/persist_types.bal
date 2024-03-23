@@ -7,6 +7,7 @@ public type Workspace record {|
     readonly string workspaceId;
     readonly string workspaceType;
     string locationBuildingCode;
+
 |};
 
 public type WorkspaceOptionalized record {|
@@ -36,6 +37,7 @@ public type Building record {|
     string country;
     string postalCode;
     string 'type;
+
 |};
 
 public type BuildingOptionalized record {|
@@ -68,6 +70,7 @@ public type Department record {|
     readonly string deptNo;
     readonly string deptName;
     string location;
+
 |};
 
 public type DepartmentOptionalized record {|
