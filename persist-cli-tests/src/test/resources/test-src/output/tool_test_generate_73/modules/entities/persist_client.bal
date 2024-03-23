@@ -30,7 +30,7 @@ public isolated client class Client {
                 salary: {columnName: "salary"},
                 "cars[].id": {relation: {entityName: "cars", refField: "id"}},
                 "cars[].name": {relation: {entityName: "cars", refField: "name"}},
-                "cars[].model": {relation: {entityName: "cars", refField: "model"}},
+                "cars[].model": {relation: {entityName: "cars", refField: "model", refColumn: "MODEL"}},
                 "cars[].ownerId": {relation: {entityName: "cars", refField: "ownerId"}}
             },
             keyFields: ["id"],

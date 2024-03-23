@@ -49,7 +49,7 @@ public type Appointment record {|
 
 @sql:Name {value: "patients"}
 public type Patient record {|
-    @sql:Name {value: "ID"}
+    @sql:Name {value: "IDP"}
     @sql:Generated
     readonly int id;
     string name;

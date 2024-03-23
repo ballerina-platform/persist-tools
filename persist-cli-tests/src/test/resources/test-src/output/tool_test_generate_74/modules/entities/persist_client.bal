@@ -30,8 +30,8 @@ public isolated client class Client {
                 salary: {columnName: "salary"},
                 "cars[].id": {relation: {entityName: "cars", refField: "id"}},
                 "cars[].name": {relation: {entityName: "cars", refField: "name"}},
-                "cars[].model": {relation: {entityName: "cars", refField: "model"}},
-                "cars[].ownerId": {relation: {entityName: "cars", refField: "ownerId"}}
+                "cars[].model": {relation: {entityName: "cars", refField: "model", refColumn: "MODEL"}},
+                "cars[].ownerId": {relation: {entityName: "cars", refField: "ownerId", refColumn: "OWNER_ID"}}
             },
             keyFields: ["id"],
             joinMetadata: {cars: {entity: Car, fieldName: "cars", refTable: "cars", refColumns: ["OWNER_ID"], joinColumns: ["id"], 'type: psql:MANY_TO_ONE}}

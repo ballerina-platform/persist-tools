@@ -138,7 +138,6 @@ public class Relation {
      */
     public static class Key {
         private final String field;
-
         private final String columnName;
         private final String reference;
         private final String referenceColumnName;

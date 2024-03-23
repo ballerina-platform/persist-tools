@@ -23,7 +23,7 @@ public isolated client class Client {
             entityName: "User",
             tableName: "User",
             fieldMetadata: {
-                id: {columnName: "id"},
+                id: {columnName: "id", dbGenerated: true},
                 name: {columnName: "name"},
                 gender: {columnName: "gender"},
                 nic: {columnName: "nic"},
