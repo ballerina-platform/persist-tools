@@ -4,4 +4,3 @@
 import ballerinax/redis;
 
 configurable redis:ConnectionConfig & readonly redis = ?;
-

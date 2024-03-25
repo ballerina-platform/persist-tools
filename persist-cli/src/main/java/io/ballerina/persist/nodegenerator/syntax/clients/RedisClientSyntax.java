@@ -332,7 +332,6 @@ public class RedisClientSyntax  implements ClientSyntax {
             if (entityField.getRelation() != null) {
                 String relationType = BalSyntaxConstants.REDIS_ONE_TO_ONE;
                 Entity associatedEntity = entityField.getRelation().getAssocEntity();
-//                List<String> references = entityField.getRelation().getReferences();
                 String associatedFieldName = "";
                 for (EntityField associatedEntityField : associatedEntity.getFields()) {
                     if (associatedEntityField.getFieldType().equals(entity.getEntityName())) {
