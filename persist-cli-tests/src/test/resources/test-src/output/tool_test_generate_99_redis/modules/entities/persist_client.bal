@@ -64,7 +64,7 @@ public isolated client class Client {
                 "user.mobileNumber": {relation: {entityName: "user", refField: "mobileNumber", refFieldDataType: predis:STRING}}
             },
             keyFields: ["id"],
-            refMetadata: {user: {entity: User, fieldName: "user", refCollection: "User", refFields: ["id"], joinFields: ["userId"], 'type: predis:ONE_TO_MANY}}
+            refMetadata: {user: {entity: User, fieldName: "user", refCollection: "User", refMetaDataKey: "posts", refFields: ["id"], joinFields: ["userId"], 'type: predis:ONE_TO_MANY}}
         },
         [FOLLOW]: {
             entityName: "Follow",
@@ -85,8 +85,8 @@ public isolated client class Client {
             },
             keyFields: ["id"],
             refMetadata: {
-                leader: {entity: User, fieldName: "leader", refCollection: "User", refFields: ["id"], joinFields: ["leaderId"], 'type: predis:ONE_TO_ONE},
-                follower: {entity: User, fieldName: "follower", refCollection: "User", refFields: ["id"], joinFields: ["followerId"], 'type: predis:ONE_TO_ONE}
+                leader: {entity: User, fieldName: "leader", refCollection: "User", refMetaDataKey: "leader", refFields: ["id"], joinFields: ["leaderId"], 'type: predis:ONE_TO_ONE},
+                follower: {entity: User, fieldName: "follower", refCollection: "User", refMetaDataKey: "follower", refFields: ["id"], joinFields: ["followerId"], 'type: predis:ONE_TO_ONE}
             }
         }
     };

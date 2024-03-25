@@ -3,11 +3,42 @@
 // It should not be modified by hand.
 import ballerina/time;
 
+public type Follow record {|
+    readonly int id;
+    int leaderId;
+    int followerId;
+    time:Civil timestamp;
+|};
+
+public type FollowOptionalized record {|
+    int id?;
+    int leaderId?;
+    int followerId?;
+    time:Civil timestamp?;
+|};
+
+public type FollowWithRelations record {|
+    *FollowOptionalized;
+    UserOptionalized leader?;
+    UserOptionalized follower?;
+|};
+
+public type FollowTargetType typedesc<FollowWithRelations>;
+
+public type FollowInsert Follow;
+
+public type FollowUpdate record {|
+    int leaderId?;
+    int followerId?;
+    time:Civil timestamp?;
+|};
+
 public type User record {|
     readonly int id;
     string name;
     time:Date birthDate;
     string mobileNumber;
+
 |};
 
 public type UserOptionalized record {|
@@ -42,6 +73,7 @@ public type Post record {|
     string category;
     time:Civil timestamp;
     int userId;
+
 |};
 
 public type PostOptionalized record {|
@@ -69,36 +101,6 @@ public type PostUpdate record {|
     string category?;
     time:Civil timestamp?;
     int userId?;
-|};
-
-public type Follow record {|
-    readonly int id;
-    int leaderId;
-    int followerId;
-    time:Civil timestamp;
-|};
-
-public type FollowOptionalized record {|
-    int id?;
-    int leaderId?;
-    int followerId?;
-    time:Civil timestamp?;
-|};
-
-public type FollowWithRelations record {|
-    *FollowOptionalized;
-    UserOptionalized leader?;
-    UserOptionalized follower?;
-|};
-
-public type FollowTargetType typedesc<FollowWithRelations>;
-
-public type FollowInsert Follow;
-
-public type FollowUpdate record {|
-    int leaderId?;
-    int followerId?;
-    time:Civil timestamp?;
 |};
 
 public type Comment record {|

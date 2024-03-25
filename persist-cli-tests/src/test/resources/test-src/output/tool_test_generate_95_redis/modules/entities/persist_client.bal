@@ -115,7 +115,7 @@ public isolated client class Client {
                 "allTypesIdRecord.randomField": {relation: {entityName: "allTypesIdRecord", refField: "randomField", refFieldDataType: predis:STRING}}
             },
             keyFields: ["id"],
-            refMetadata: {allTypesIdRecord: {entity: AllTypesIdRecord, fieldName: "allTypesIdRecord", refCollection: "AllTypesIdRecord", refFields: ["booleanType", "intType", "floatType", "decimalType", "stringType"], joinFields: ["alltypesidrecordBooleanType", "alltypesidrecordIntType", "alltypesidrecordFloatType", "alltypesidrecordDecimalType", "alltypesidrecordStringType"], 'type: predis:ONE_TO_ONE}}
+            refMetadata: {allTypesIdRecord: {entity: AllTypesIdRecord, fieldName: "allTypesIdRecord", refCollection: "AllTypesIdRecord", refMetaDataKey: "compositeAssociationRecord", refFields: ["booleanType", "intType", "floatType", "decimalType", "stringType"], joinFields: ["alltypesidrecordBooleanType", "alltypesidrecordIntType", "alltypesidrecordFloatType", "alltypesidrecordDecimalType", "alltypesidrecordStringType"], 'type: predis:ONE_TO_ONE}}
         },
         [ALL_TYPES_ID_RECORD]: {
             entityName: "AllTypesIdRecord",

@@ -8,6 +8,7 @@ public type User record {|
     string name;
     time:Date birthDate;
     string mobileNumber;
+
 |};
 
 public type UserOptionalized record {|
