@@ -310,4 +310,3 @@ public isolated client class Client {
         return result;
     }
 }
-

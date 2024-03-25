@@ -38,7 +38,6 @@ public type User record {|
     string name;
     time:Date birthDate;
     string mobileNumber;
-
 |};
 
 public type UserOptionalized record {|
@@ -73,7 +72,6 @@ public type Post record {|
     string category;
     time:Civil timestamp;
     int userId;
-
 |};
 
 public type PostOptionalized record {|
@@ -135,4 +133,3 @@ public type CommentUpdate record {|
     int userId?;
     int postId?;
 |};
-

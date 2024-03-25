@@ -11,4 +11,3 @@ observabilityIncluded = false
 groupId = "io.ballerina.lib"
 artifactId = "persist.redis-native"
 version = "0.1.0-SNAPSHOT"
-
