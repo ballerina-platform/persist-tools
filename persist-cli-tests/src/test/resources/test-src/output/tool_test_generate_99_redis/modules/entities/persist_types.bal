@@ -98,4 +98,3 @@ public type FollowUpdate record {|
     int followerId?;
     time:Date created_date?;
 |};
-

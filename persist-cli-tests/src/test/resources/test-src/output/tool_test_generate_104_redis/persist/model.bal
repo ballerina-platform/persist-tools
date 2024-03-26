@@ -57,4 +57,3 @@ public type Doctor record {|
     decimal salary;
     Appointment[] appointments;
 |};
-

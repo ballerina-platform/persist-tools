@@ -16,6 +16,13 @@
 import ballerina/persist as _;
 import ballerina/time;
 
+type Follow record {|
+    readonly int id;
+    User leader;
+    User follower;
+    time:Civil timestamp;
+|};
+
 type User record {|
     readonly int id;
     string name;
@@ -37,13 +44,6 @@ type Post record {|
     time:Civil timestamp;
     User user;
     Comment[] comments;
-|};
-
-type Follow record {|
-    readonly int id;
-    User leader;
-    User follower;
-    time:Civil timestamp;
 |};
 
 type Comment record {|

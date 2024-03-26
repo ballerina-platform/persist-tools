@@ -3,6 +3,36 @@
 // It should not be modified by hand.
 import ballerina/time;
 
+public type Follow record {|
+    readonly int id;
+    int leaderId;
+    int followerId;
+    time:Civil timestamp;
+|};
+
+public type FollowOptionalized record {|
+    int id?;
+    int leaderId?;
+    int followerId?;
+    time:Civil timestamp?;
+|};
+
+public type FollowWithRelations record {|
+    *FollowOptionalized;
+    UserOptionalized leader?;
+    UserOptionalized follower?;
+|};
+
+public type FollowTargetType typedesc<FollowWithRelations>;
+
+public type FollowInsert Follow;
+
+public type FollowUpdate record {|
+    int leaderId?;
+    int followerId?;
+    time:Civil timestamp?;
+|};
+
 public type User record {|
     readonly int id;
     string name;
@@ -71,36 +101,6 @@ public type PostUpdate record {|
     int userId?;
 |};
 
-public type Follow record {|
-    readonly int id;
-    int leaderId;
-    int followerId;
-    time:Civil timestamp;
-|};
-
-public type FollowOptionalized record {|
-    int id?;
-    int leaderId?;
-    int followerId?;
-    time:Civil timestamp?;
-|};
-
-public type FollowWithRelations record {|
-    *FollowOptionalized;
-    UserOptionalized leader?;
-    UserOptionalized follower?;
-|};
-
-public type FollowTargetType typedesc<FollowWithRelations>;
-
-public type FollowInsert Follow;
-
-public type FollowUpdate record {|
-    int leaderId?;
-    int followerId?;
-    time:Civil timestamp?;
-|};
-
 public type Comment record {|
     readonly int id;
     string comment;
@@ -133,4 +133,3 @@ public type CommentUpdate record {|
     int userId?;
     int postId?;
 |};
-

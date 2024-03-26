@@ -44,7 +44,7 @@ public isolated client class Client {
             },
             keyFields: ["workspaceId"],
             refMetadata: {
-                location: {entity: Building, fieldName: "location", refCollection: "Building", refFields: ["buildingCode"], joinFields: ["locationBuildingCode"], 'type: predis:ONE_TO_MANY},
+                location: {entity: Building, fieldName: "location", refCollection: "Building", refMetaDataKey: "workspaces", refFields: ["buildingCode"], joinFields: ["locationBuildingCode"], 'type: predis:ONE_TO_MANY},
                 employees: {entity: Employee, fieldName: "employees", refCollection: "Employee", refFields: ["workspaceWorkspaceId"], joinFields: ["workspaceId"], 'type: predis:MANY_TO_ONE}
             }
         },
@@ -114,8 +114,8 @@ public isolated client class Client {
             },
             keyFields: ["empNo"],
             refMetadata: {
-                department: {entity: Department, fieldName: "department", refCollection: "Department", refFields: ["deptNo"], joinFields: ["departmentDeptNo"], 'type: predis:ONE_TO_MANY},
-                workspace: {entity: Workspace, fieldName: "workspace", refCollection: "Workspace", refFields: ["workspaceId"], joinFields: ["workspaceWorkspaceId"], 'type: predis:ONE_TO_MANY}
+                department: {entity: Department, fieldName: "department", refCollection: "Department", refMetaDataKey: "employees", refFields: ["deptNo"], joinFields: ["departmentDeptNo"], 'type: predis:ONE_TO_MANY},
+                workspace: {entity: Workspace, fieldName: "workspace", refCollection: "Workspace", refMetaDataKey: "employees", refFields: ["workspaceId"], joinFields: ["workspaceWorkspaceId"], 'type: predis:ONE_TO_MANY}
             }
         }
     };
@@ -338,4 +338,3 @@ public isolated client class Client {
         return result;
     }
 }
-

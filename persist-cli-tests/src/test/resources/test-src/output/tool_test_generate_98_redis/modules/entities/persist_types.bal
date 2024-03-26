@@ -124,6 +124,7 @@ public type BuildingUpdate record {|
 public type Department record {|
     readonly string deptNo;
     string deptName;
+
 |};
 
 public type DepartmentOptionalized record {|
@@ -143,4 +144,3 @@ public type DepartmentInsert Department;
 public type DepartmentUpdate record {|
     string deptName?;
 |};
-

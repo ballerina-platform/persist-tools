@@ -42,8 +42,8 @@ public isolated client class Client {
             },
             keyFields: ["id"],
             refMetadata: {
-                patient: {entity: Patient, fieldName: "patient", refCollection: "Patient", refFields: ["id"], joinFields: ["patientId"], 'type: predis:ONE_TO_MANY},
-                doctor: {entity: Doctor, fieldName: "doctor", refCollection: "Doctor", refFields: ["id"], joinFields: ["doctorId"], 'type: predis:ONE_TO_MANY}
+                patient: {entity: Patient, fieldName: "patient", refCollection: "Patient", refMetaDataKey: "appointments", refFields: ["id"], joinFields: ["patientId"], 'type: predis:ONE_TO_MANY},
+                doctor: {entity: Doctor, fieldName: "doctor", refCollection: "Doctor", refMetaDataKey: "appointments", refFields: ["id"], joinFields: ["doctorId"], 'type: predis:ONE_TO_MANY}
             }
         },
         [PATIENT]: {
@@ -225,4 +225,3 @@ public isolated client class Client {
         return result;
     }
 }
-

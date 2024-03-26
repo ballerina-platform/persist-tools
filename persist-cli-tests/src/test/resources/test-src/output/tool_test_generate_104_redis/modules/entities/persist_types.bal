@@ -118,4 +118,3 @@ public type DoctorUpdate record {|
     string phoneNumber?;
     decimal salary?;
 |};
-

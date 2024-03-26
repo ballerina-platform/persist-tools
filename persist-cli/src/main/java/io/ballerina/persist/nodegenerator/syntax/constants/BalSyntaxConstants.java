@@ -452,7 +452,11 @@ public class BalSyntaxConstants {
     public static final String REDIS_ASSOCIATED_FIELD_TEMPLATE = 
         ".%s\": {relation: {entityName: \"%s\", refField: \"%s\", refFieldDataType: predis:%s}}";
     public static final String REDIS_JOIN_METADATA_FIELD_TEMPLATE = 
-        "%s: {entity: %s, fieldName: \"%s\", refCollection: \"%s\", refFields: [%s], joinFields: [%s], 'type: %s}";
+    "%s: {entity: %s, fieldName: \"%s\", refCollection: \"%s\", refMetaDataKey: \"%s\", refFields: [%s],"
+    + " joinFields: [%s], 'type: %s}";
+    public static final String REDIS_JOIN_METADATA_FIELD_TEMPLATE_WITHOUT_REF_KEY =
+            "%s: {entity: %s, fieldName: \"%s\", refCollection: \"%s\", refFields: [%s],"
+                    + " joinFields: [%s], 'type: %s}";
     public static final String REDIS_ONE_TO_ONE = "predis:ONE_TO_ONE";
     public static final String REDIS_ONE_TO_MANY = "predis:ONE_TO_MANY";
     public static final String REDIS_MANY_TO_ONE = "predis:MANY_TO_ONE";
