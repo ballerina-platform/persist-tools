@@ -525,28 +525,11 @@ task testIntrospectionExamples {
         introspectionExamples.each { example ->
             try {
                 if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-                    //this part is not necessary. this is added so that the build will not fail due to the issue with
-                    //mysql connector for ballerina requiring a 'first login' on a different mysql client. This is a
-                    //temporary fix until the issue is resolved.
-                    try {
-                        exec {
-                            workingDir "${project.projectDir}/build/generated-examples/${example}"
-                            commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist pull --host localhost --database nonexistentdb --user root --port 3308"
-                            standardInput = new ByteArrayInputStream("Test123#\ny\n".getBytes())
-                        }
-                    } catch (Exception ignored) {}
                     exec {
                         workingDir "${project.projectDir}/build/generated-examples/${example}"
                         commandLine 'sh', '-c', "${ballerinaDist}/bin/bal test"
                     }
                 } else {
-                    try {
-                        exec {
-                            workingDir "${project.projectDir}/build/generated-examples/${example}"
-                            commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat persist pull --host localhost --database hris --user root --port 3308"
-                            standardInput = new ByteArrayInputStream("Test123#\ny\n".getBytes())
-                        }
-                    } catch (Exception ignored) {}
                     exec {
                         workingDir "${project.projectDir}/build/generated-examples/${example}"
                         commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat test"
