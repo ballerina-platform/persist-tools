@@ -38,23 +38,23 @@ public class ToolingMigrateTest {
 
     private static final PrintStream errStream = System.err;
 
-    @Test(enabled = false)
-    @Description("There has been 1 previous migration")
-    public void testExistingMigrateTest() {
-        executeCommand("tool_test_migrate_1", "secondMigration");
+    @Test(enabled = true)
+    @Description("Test first time migration with no existing migrations")
+    public void testMigrateFirstTime() {
+        executeCommand("tool_test_migrate_1", "firstMigration");
         assertMigrateGeneratedSources("tool_test_migrate_1");
     }
 
-    @Test(enabled = false)
-    @Description("There has been no previous migrations")
-    public void testNewMigrateTest() {
-        executeCommand("tool_test_migrate_2", "firstMigration");
+    @Test(enabled = true)
+    @Description("Test third time migration with two existing migrations")
+    public void testMigrateThirdTime() {
+        executeCommand("tool_test_migrate_2", "thirdMigration");
         assertMigrateGeneratedSources("tool_test_migrate_2");
     }
 
     @Test(enabled = false)
     @Description("Create a new table and migrate")
-    public void testCreateTableMigrateTest() {
+    public void testMigrateWithNewTable() {
         executeCommand("tool_test_migrate_3", "secondMigration");
         assertMigrateGeneratedSources("tool_test_migrate_3");
     }

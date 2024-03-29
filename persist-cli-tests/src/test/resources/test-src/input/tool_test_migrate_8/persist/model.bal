@@ -13,10 +13,9 @@ public type MedicalNeed record {|
 
 public type MedicalItem record {|
     readonly string name;
-
     int itemId;
     string decrip;
     string unit;
     int num;
-    
+	  MedicalNeed medicalneed;
 |};

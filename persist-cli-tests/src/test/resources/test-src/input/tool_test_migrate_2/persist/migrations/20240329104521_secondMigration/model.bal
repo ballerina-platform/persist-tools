@@ -22,5 +22,4 @@ public type User record {|
     string email;
     string country;
     string city;
-    int age;
 |};
