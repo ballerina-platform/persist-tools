@@ -23,5 +23,15 @@ public type MedicalItem record {|
     int num;
     @sql:Decimal {precision: [10,2]}
     decimal price;
+    @sql:Decimal {precision:[10,4]}
+    decimal existDecimal;
+    @sql:Char {length:2}
+    string existChar;
+    @sql:Varchar {length:12}
+    string existVarchar;
+    @sql:Char {length:2}
+    string existVarcharToChar;
+    @sql:Varchar {length:15}
+    string existCharToVarchar;
     MedicalNeed need;
 |};
