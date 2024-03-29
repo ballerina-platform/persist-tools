@@ -8,7 +8,6 @@ public type MedicalNeed record {|
     string itemId;
     string name;
     time:Civil period;
-    MedicalItem[] items;
 |};
 
 public type MedicalItem record {|
@@ -18,7 +17,4 @@ public type MedicalItem record {|
     string decrip;
     string unit;
     int num;
-    decimal price;
-    MedicalNeed need;
 |};
-

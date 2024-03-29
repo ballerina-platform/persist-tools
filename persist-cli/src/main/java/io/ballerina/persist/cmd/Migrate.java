@@ -424,7 +424,7 @@ public class Migrate implements BLauncherCmd {
 
         // Compare entities in previousModel and currentModel
         for (Entity previousModelEntity : previousModel.getEntityMap().values()) {
-            Entity currentModelEntity = currentModel.getEntityMap().get(previousModelEntity.getTableName());
+            Entity currentModelEntity = currentModel.getEntityMap().get(previousModelEntity.getEntityName());
 
             // Check if currentModelEntity exists
             // ok
@@ -459,7 +459,9 @@ public class Migrate implements BLauncherCmd {
                 if (!previousModelField.getFieldType().equals(currentModelField.getFieldType()) ||
                         !Objects.equals(previousModelField.getSqlType(), currentModelField.getSqlType())) {
                     differences.add("Data type of column " + previousModelField.getFieldColumnName() +
-                            " in table " + previousModelEntity.getTableName() + " has changed");
+                            " in table " + previousModelEntity.getTableName() + " has changed to " +
+                            currentModelField.getFieldType() + (currentModelField.getSqlType() != null ?
+                            " " +  currentModelField.getSqlType().getFullDataType() : ""));
                     addToMapWithType(previousModelEntity, currentModelField, changedFieldTypes);
                 }
 
@@ -489,12 +491,12 @@ public class Migrate implements BLauncherCmd {
                     if (currentModelField.getRelation() == null) {
                         if (currentModelEntity.getKeys().contains(currentModelField)) {
                             differences.add("Column " + currentModelField.getFieldColumnName() + " of type " +
-                                    currentModelField.getFieldColumnName() + " has been added to table " +
+                                    currentModelField.getFieldType() + " has been added to table " +
                                     currentModelEntity.getTableName() + " as a primary key");
                             addToMapNoTypeObject(currentModelEntity, currentModelField, addedReadOnly);
                         } else {
                             differences.add("Column " + currentModelField.getFieldColumnName() + " of type " +
-                                    currentModelField.getFieldColumnName() + " has been added to table " +
+                                    currentModelField.getFieldType() + " has been added to table " +
                                     currentModelEntity.getTableName());
                         }
                         addToMapWithType(currentModelEntity, currentModelField, addedFields);
@@ -682,13 +684,8 @@ public class Migrate implements BLauncherCmd {
                 String addTableTemplate = "CREATE TABLE %s (%n    %s %s PRIMARY KEY";
 
                 try {
-                    if (!primaryKey.isArrayType()) {
-                        pKField = SqlScriptUtils.getTypeNonArray(primaryKey.getFieldType(),
-                                primaryKey.getSqlType(), PersistToolsConstants.SupportedDataSources.MYSQL_DB);
-                    } else {
-                        pKField = SqlScriptUtils.getTypeArray(primaryKey.getFieldType(),
-                                PersistToolsConstants.SupportedDataSources.MYSQL_DB);
-                    }
+                    pKField = SqlScriptUtils.getSqlType(primaryKey,
+                            PersistToolsConstants.SupportedDataSources.MYSQL_DB);
                 } catch (BalException e) {
                     errStream.println("ERROR: data type conversion failed: " + e.getMessage());
                     return;
@@ -702,13 +699,8 @@ public class Migrate implements BLauncherCmd {
                 if (addedFields.get(entity) != null) {
                     for (EntityField field : addedFields.get(entity)) {
                         try {
-                            if (!field.isArrayType()) {
-                                addField = SqlScriptUtils.getTypeNonArray(field.getFieldType(), field.getSqlType(),
-                                        PersistToolsConstants.SupportedDataSources.MYSQL_DB);
-                            } else {
-                                addField = SqlScriptUtils.getTypeArray(field.getFieldType(),
-                                        PersistToolsConstants.SupportedDataSources.MYSQL_DB);
-                            }
+                            addField = SqlScriptUtils.getSqlType(field,
+                                    PersistToolsConstants.SupportedDataSources.MYSQL_DB);
                         } catch (BalException e) {
                             errStream.println("ERROR: data type conversion failed: " + e.getMessage());
                             return;
@@ -784,21 +776,16 @@ public class Migrate implements BLauncherCmd {
                             String fieldName = field.getFieldColumnName();
                             String fieldType;
                             try {
-                                if (!field.isArrayType()) {
-                                    fieldType = SqlScriptUtils.getTypeNonArray(field.getFieldType(), field.getSqlType(),
-                                            PersistToolsConstants.SupportedDataSources.MYSQL_DB);
-                                } else {
-                                    fieldType = SqlScriptUtils.getTypeArray(field.getFieldType(),
-                                            PersistToolsConstants.SupportedDataSources.MYSQL_DB);
-                                }
+                                fieldType = SqlScriptUtils.getSqlType(field,
+                                        PersistToolsConstants.SupportedDataSources.MYSQL_DB);
                             } catch (BalException e) {
                                 errStream.println("ERROR: data type conversion failed: " + e.getMessage());
                                 return;
                             }
-                            String addFieldTemplate = "ALTER TABLE %s%nADD COLUMN %s %s %s;%n";
+                            String addFieldTemplate = "ALTER TABLE %s%nADD COLUMN %s %s%s;%n";
 
                             queries.add(String.format(addFieldTemplate, entity, fieldName, fieldType,
-                                    field.isDbGenerated() ? "AUTO_INCREMENT" : ""));
+                                    field.isDbGenerated() ? " AUTO_INCREMENT" : ""));
                         }
                     }
                 }
@@ -811,21 +798,16 @@ public class Migrate implements BLauncherCmd {
                         String fieldName = field.getFieldColumnName();
                         String fieldType;
                         try {
-                            if (!field.isArrayType()) {
-                                fieldType = SqlScriptUtils.getTypeNonArray(field.getFieldType(), field.getSqlType(),
-                                        PersistToolsConstants.SupportedDataSources.MYSQL_DB);
-                            } else {
-                                fieldType = SqlScriptUtils.getTypeArray(field.getFieldType(),
-                                        PersistToolsConstants.SupportedDataSources.MYSQL_DB);
-                            }
+                            fieldType = SqlScriptUtils.getSqlType(field,
+                                    PersistToolsConstants.SupportedDataSources.MYSQL_DB);
                         } catch (BalException e) {
                             errStream.println("ERROR: data type conversion failed: " + e.getMessage());
                             return;
                         }
-                        String changeTypeTemplate = "ALTER TABLE %s%nMODIFY COLUMN %s %s %s;%n";
+                        String changeTypeTemplate = "ALTER TABLE %s%nMODIFY COLUMN %s %s%s;%n";
 
                         queries.add(String.format(changeTypeTemplate, entity, fieldName, fieldType,
-                                field.isDbGenerated() ? "AUTO_INCREMENT" : ""));
+                                field.isDbGenerated() ? " AUTO_INCREMENT" : ""));
                     }
                 }
                 break;

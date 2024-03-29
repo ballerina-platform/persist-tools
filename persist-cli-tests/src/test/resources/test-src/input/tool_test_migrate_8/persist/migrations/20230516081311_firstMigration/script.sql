@@ -21,8 +21,5 @@ CREATE TABLE `MedicalItem` (
 	`decrip` VARCHAR(191) NOT NULL,
 	`unit` VARCHAR(191) NOT NULL,
 	`num` INT NOT NULL,
-	`needId` INT NOT NULL,
-	CONSTRAINT FK_NEED FOREIGN KEY(`needId`) REFERENCES `MedicalNeed`(`id`),
-	PRIMARY KEY(`name`)
 );
 

@@ -3,26 +3,26 @@
 -- Please verify the generated scripts and execute them against the target DB server.
 
 ALTER TABLE MedicalNeed
-MODIFY COLUMN name CHAR(10) ;
+MODIFY COLUMN name CHAR(10);
 
 ALTER TABLE MedicalItem
-MODIFY COLUMN unit VARCHAR(10) ;
+MODIFY COLUMN unit VARCHAR(10);
 
 ALTER TABLE MedicalItem
-MODIFY COLUMN price DECIMAL(10,2) ;
+MODIFY COLUMN price DECIMAL(10,2);
 
 ALTER TABLE MedicalItem
-MODIFY COLUMN existDecimal DECIMAL(10,4) ;
+MODIFY COLUMN existDecimal DECIMAL(10,4);
 
 ALTER TABLE MedicalItem
-MODIFY COLUMN existChar CHAR(2) ;
+MODIFY COLUMN existChar CHAR(2);
 
 ALTER TABLE MedicalItem
-MODIFY COLUMN existVarchar VARCHAR(12) ;
+MODIFY COLUMN existVarchar VARCHAR(12);
 
 ALTER TABLE MedicalItem
-MODIFY COLUMN existVarcharToChar CHAR(2) ;
+MODIFY COLUMN existVarcharToChar CHAR(2);
 
 ALTER TABLE MedicalItem
-MODIFY COLUMN existCharToVarchar VARCHAR(15) ;
+MODIFY COLUMN existCharToVarchar VARCHAR(15);
 

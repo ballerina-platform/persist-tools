@@ -6,9 +6,4 @@ public type Person record {|
     int age;
 |};
 
-public type Car record {|
-    readonly int id;
-    string make;
-    string model;
-    int year;
-|};
+

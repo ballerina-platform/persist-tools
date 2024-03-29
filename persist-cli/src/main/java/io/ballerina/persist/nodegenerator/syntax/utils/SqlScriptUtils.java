@@ -267,7 +267,7 @@ public class SqlScriptUtils {
         return keyScripts.toString();
     }
 
-    private static String getSqlType(EntityField entityField, String datasource) throws BalException {
+    public static String getSqlType(EntityField entityField, String datasource) throws BalException {
         String sqlType;
         if (!entityField.isArrayType()) {
             sqlType = getTypeNonArray(entityField.getFieldType(), entityField.getSqlType(), datasource);

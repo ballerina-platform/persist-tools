@@ -1,31 +1,14 @@
 import ballerina/persist as _;
-import ballerina/time;
 
-public type MedicalNeed record {|
+public type Person record {|
     readonly int id;
-
-    int needId;
-    string itemId;
     string name;
-    time:Civil period;
-    MedicalItem[] items;
+    int age;
 |};
 
-public type MedicalItem record {|
-    readonly string name;
-
-    int itemId;
-    string decrip;
-    string unit;
-    int num;
-    MedicalNeed need;
+public type Car record {|
+    readonly int id;
+    string make;
+    string model;
+    int year;
 |};
-
-public type MedicalObject record {|
-    readonly int objId;
-
-    string objName;
-    string objDecrip;
-    boolean inStock;
-|};
-

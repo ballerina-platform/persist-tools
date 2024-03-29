@@ -3,7 +3,6 @@ import ballerina/time;
 
 public type MedicalNeed record {|
     readonly int needId;
-
     boolean itemId;
     string beneficiaryId;
     time:Civil period;
@@ -12,7 +11,6 @@ public type MedicalNeed record {|
 
 public type MedicalItem record {|
     readonly string name;
-
     int itemId;
     string types;
     int unit;
