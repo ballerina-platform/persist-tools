@@ -115,6 +115,99 @@ public class ToolingMigrateTest {
         assertMigrateGeneratedSources("tool_test_migrate_11");
     }
 
+    @Test(enabled = true)
+    @Description("Make an optional column required and migrate")
+    public void testMigrateMakeOptionalColumnRequired() {
+        executeCommand("tool_test_migrate_12", "secondMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_12");
+    }
+
+    @Test(enabled = true)
+    @Description("Add an optional type field and migrate")
+    public void testMigrateAddOptionalTypeField() {
+        executeCommand("tool_test_migrate_13", "secondMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_13");
+    }
+
+    @Test(enabled = true)
+    @Description("Add a primary key to an existing table and migrate")
+    public void testMigrateAddPrimaryKey() {
+        executeCommand("tool_test_migrate_14", "secondMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_14");
+    }
+
+    @Test(enabled = true)
+    @Description("Remove a primary key from an existing table and migrate")
+    public void testMigrateRemovePrimaryKey() {
+        executeCommand("tool_test_migrate_15", "secondMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_15");
+    }
+
+    @Test(enabled = true)
+    @Description("Test add a foreign key to an existing table and migrate")
+    public void testMigrateAddFKToExistingTable() {
+        executeCommand("tool_test_migrate_16", "secondMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_16");
+    }
+
+    @Test(enabled = true)
+    @Description("Test add a foreign key to an existing table with a composite key and migrate")
+    public void testMigrateAddFKToExistingTableWithCompositeKey() {
+        executeCommand("tool_test_migrate_17", "secondMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_17");
+    }
+
+    @Test(enabled = true)
+    @Description("Test add a primary key to an existing table who's referred by another table and migrate")
+    // This scenario is not fully supported must change foreign keys as well
+    public void testAddPrimaryKeyToExistingTableReferredByAnother() {
+        executeCommand("tool_test_migrate_18", "secondMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_18");
+    }
+
+    @Test(enabled = true)
+    @Description("Test add a new table having a relationship with an existing owner table and migrate")
+    public void testMigrateNewTableRelatedWithExistingOwnerTable() {
+        executeCommand("tool_test_migrate_19", "secondMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_19");
+    }
+
+    @Test(enabled = true)
+    @Description("Test add a new owner table having a relationship with an existing table and migrate")
+    public void testMigrateNewOwnerTableRelatedWithExistingTable() {
+        executeCommand("tool_test_migrate_20", "secondMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_20");
+    }
+
+    @Test(enabled = true)
+    @Description("Test remove the relationship between two tables and migrate")
+    public void testMigrateRemoveRelationFromTable() {
+        executeCommand("tool_test_migrate_21", "secondMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_21");
+    }
+
+    @Test(enabled = true)
+    @Description("Test rename the foreign key field in the owner table and migrate")
+    public void testMigrateRenameForeignKeyField() {
+        executeCommand("tool_test_migrate_22", "secondMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_22");
+    }
+
+    @Test(enabled = true)
+    @Description("Test rename the foreign key field in the non owner table and migrate")
+    public void testMigrateRenameForeignKeyFieldNonOwner() {
+        executeCommand("tool_test_migrate_23", "secondMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_23");
+    }
+
+    @Test(enabled = true)
+    @Description("Test modify simple type of primary key")
+    // This scenario is not fully supported must change foreign keys as well
+    public void testMigrateModifySimpleTypeOfPK() {
+        executeCommand("tool_test_migrate_24", "secondMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_24");
+    }
+
     private void executeCommand(String subDir, String migrationLabel) {
         Class<?> persistClass;
         Path sourcePath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);

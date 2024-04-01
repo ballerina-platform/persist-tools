@@ -24,6 +24,7 @@ import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.ForeignKey;
 import io.ballerina.persist.models.Module;
+import io.ballerina.persist.models.Relation;
 import io.ballerina.persist.nodegenerator.SourceGenerator;
 import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
 import io.ballerina.persist.nodegenerator.syntax.utils.SqlScriptUtils;
@@ -47,10 +48,12 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 /**
@@ -418,9 +421,9 @@ public class Migrate implements BLauncherCmd {
         HashMap<String, List<EntityField>> addedFields = new HashMap<>();
         HashMap<String, List<String>> removedFields = new HashMap<>();
         HashMap<String, List<EntityField>> changedFieldTypes = new HashMap<>();
-        List<String> primaryKeyChangedEntities = new ArrayList<>();
+        Set<String> primaryKeyChangedEntities = new HashSet<>();
         HashMap<String, List<ForeignKey>> addedForeignKeys = new HashMap<>();
-        HashMap<String, List<String>> removedForeignKeys = new HashMap<>();
+        HashMap<String, List<ForeignKey>> removedForeignKeys = new HashMap<>();
 
         // Compare entities in previousModel and currentModel
         for (Entity previousModelEntity : previousModel.getEntityMap().values()) {
@@ -433,6 +436,12 @@ public class Migrate implements BLauncherCmd {
                 continue;
             }
 
+            // Check if the primary key fields has been removed
+            if (previousModelEntity.getKeys().size() > currentModelEntity.getKeys().size()) {
+                differences.add("Primary key of table " + currentModelEntity.getTableName() + " has changed");
+                primaryKeyChangedEntities.add(currentModelEntity.getTableName());
+            }
+
             // Compare fields in previousModelEntity and currentModelEntity
             for (EntityField previousModelField : previousModelEntity.getFields()) {
                 EntityField currentModelField = currentModelEntity
@@ -443,11 +452,11 @@ public class Migrate implements BLauncherCmd {
                     if (previousModelField.getRelation() == null) {
                         differences.add("Column " + previousModelField.getFieldColumnName() +
                                 " has been removed from table " + previousModelEntity.getTableName());
-                        addToMapNoTypeString(previousModelEntity, previousModelField, removedFields);
+                        removeField(previousModelEntity, previousModelField, removedFields);
                     } else if (previousModelField.getRelation().isOwner()) {
                         differences.add("Foreign key " + previousModelField.getFieldColumnName() +
                                 " has been removed from table " + previousModelEntity.getTableName());
-                        addToMapRemoveForeignKey(previousModelEntity, previousModelField, removedForeignKeys);
+                        addOrRemoveForeignKey(previousModelEntity, previousModelField, removedForeignKeys);
                     }
                     continue;
                 }
@@ -464,12 +473,13 @@ public class Migrate implements BLauncherCmd {
                             " " +  currentModelField.getSqlType().getFullDataType() : "") + " and is now " +
                             (currentModelField.isOptionalType() ? "nullable" : "not nullable"));
 
-                    addToMapWithType(previousModelEntity, currentModelField, changedFieldTypes);
+                    addOrModifyField(previousModelEntity, currentModelField, changedFieldTypes);
                 }
 
                 // Compare readonly fields
                 if (!previousModelEntity.getKeys().contains(previousModelField)
                         && currentModelEntity.getKeys().contains(currentModelField)) {
+                    differences.add("Primary key of table " + currentModelEntity.getTableName() + " has changed");
                     differences.add("Column " + previousModelField.getFieldColumnName() + " in table " +
                             previousModelEntity.getTableName() + " is now a primary key");
                     primaryKeyChangedEntities.add(previousModelEntity.getTableName());
@@ -478,7 +488,6 @@ public class Migrate implements BLauncherCmd {
             }
 
             // Check for added fields and for added foreign keys
-            // TEST
             for (EntityField currentModelField : currentModelEntity.getFields()) {
                 EntityField previousModelField = previousModelEntity
                         .getFieldByColumnName(currentModelField.getFieldColumnName());
@@ -495,18 +504,10 @@ public class Migrate implements BLauncherCmd {
                                     currentModelField.getFieldType() + " has been added to table " +
                                     currentModelEntity.getTableName());
                         }
-                        addToMapWithType(currentModelEntity, currentModelField, addedFields);
+                        addOrModifyField(currentModelEntity, currentModelField, addedFields);
                     } else if (currentModelField.getRelation().isOwner()) {
-                        differences.add("Column " + currentModelField.getRelation().getKeyColumns().get(0)
-                                .getColumnName() + " of type " + currentModelField.getRelation().getKeyColumns().get(0)
-                                .getType() + " has been added to table " + currentModelEntity.getTableName()
-                                + " as a foreign key");
-                        addToMapNewEntityFK(currentModelEntity, currentModelField, addedFields);
-
-                        differences.add("Foreign key " + currentModelField.getFieldColumnName() + " of type " +
-                                currentModelField.getFieldType() + " has been added to table " +
-                                currentModelEntity.getTableName());
-                        addToMapAddForeignKey(currentModelEntity, currentModelField, addedForeignKeys);
+                        createForeignKeys(currentModelField, differences, currentModelEntity, addedFields,
+                                addedForeignKeys);
                     }
                 }
             }
@@ -515,50 +516,22 @@ public class Migrate implements BLauncherCmd {
         // Check for added entities
         for (Entity currentModelEntity : currentModel.getEntityMap().values()) {
             Entity previousModelEntity = previousModel.getEntityMap().get(currentModelEntity.getTableName());
-
             if (previousModelEntity == null) {
                 differences.add("Table " + currentModelEntity.getTableName() + " has been added");
                 addedEntities.add(currentModelEntity.getTableName());
-                for (EntityField field : currentModelEntity.getFields()) {
-                    if (field.getRelation() == null) {
-                        if (currentModelEntity.getKeys().contains(field)) {
-                            differences.add("Column " + field.getFieldColumnName() + " of type " +
-                                    field.getFieldType() + " has been added to table " +
-                                    currentModelEntity.getTableName() + " as a primary key");
-                            primaryKeyChangedEntities.add(currentModelEntity.getTableName());
-
-                        } else {
-                            differences.add("Column " + field.getFieldColumnName() + " of type " +
-                                    field.getFieldType() + " has been added to table " +
-                                    currentModelEntity.getTableName());
-                            addToMapWithType(currentModelEntity, field, addedFields);
-                        }
-                    } else if (field.getRelation().isOwner()) {
-                        differences.add("Column " + field.getRelation().getKeyColumns().get(0).getColumnName() +
-                                " of type " + field.getRelation().getKeyColumns().get(0).getType() +
-                                " has been added to table " + currentModelEntity.getTableName()
-                                + " as a foreign key");
-                        addToMapNewEntityFK(currentModelEntity, field, addedFields);
-
-                        differences.add("Foreign key " + field.getFieldColumnName() + " of type " +
-                                field.getFieldType() + " has been added to table "
-                                + currentModelEntity.getTableName());
-                        addToMapAddForeignKey(currentModelEntity, field, addedForeignKeys);
-                    }
-                }
             }
         }
 
         // Convert differences to queries (ordered)
-        dropPrimaryKey(primaryKeyChangedEntities, addedEntities, queries);
-        convertCreateTableToQuery(addedEntities, currentModel, queries);
-        convertMapToQuery(QueryTypes.ADD_FIELD, addedFields, queries, addedEntities);
-        addPrimaryKeys(primaryKeyChangedEntities, addedEntities, currentModel, queries);
-        convertMapListToQuery(QueryTypes.REMOVE_FOREIGN_KEY, removedForeignKeys, queries);
-        convertFKMapToQuery(QueryTypes.ADD_FOREIGN_KEY, addedForeignKeys, queries);
-        convertMapListToQuery(QueryTypes.REMOVE_FIELD, removedFields, queries);
-        convertListToQuery(QueryTypes.REMOVE_TABLE, removedEntities, queries);
-        convertMapToQuery(QueryTypes.CHANGE_TYPE, changedFieldTypes, queries, addedEntities);
+        addDropPrimaryKeyQueries(primaryKeyChangedEntities, addedEntities, queries);
+        addCreateTableQueries(addedEntities, currentModel, queries);
+        addCreateFieldQueries(addedFields, queries);
+        addCreatePrimaryKeyQueries(primaryKeyChangedEntities, addedEntities, currentModel, queries);
+        addDropForeignKeyQueries(removedForeignKeys, queries);
+        addCreateForeignKeyQueries(addedForeignKeys, queries);
+        addDropColumnQueries(removedFields, queries);
+        addDropTableQueries(removedEntities, queries);
+        addModifyColumnTypeQueries(changedFieldTypes, queries);
 
         errStream.println(System.lineSeparator() + "Detailed list of differences: ");
         if (!differences.isEmpty()) {
@@ -571,8 +544,25 @@ public class Migrate implements BLauncherCmd {
         return queries;
     }
 
-    private static void addPrimaryKeys(List<String> entities, List<String> addedEntities, Module currentModel,
-                                       List<String> queries) {
+    private static void createForeignKeys(EntityField currentModelField, List<String> differences,
+                                          Entity currentModelEntity, HashMap<String, List<EntityField>> addedFields,
+                                          HashMap<String, List<ForeignKey>> addedForeignKeys) {
+        for (Relation.Key key : currentModelField.getRelation().getKeyColumns()) {
+            differences.add("Column " + key.getColumnName() + " of type " + key.getType() +
+                    " has been added to table " + currentModelEntity.getTableName()
+                    + " as a foreign key");
+        }
+
+        addToMapNewEntityFK(currentModelEntity, currentModelField, addedFields);
+
+        differences.add("Relation " + currentModelField.getFieldName() + " of type " +
+                currentModelField.getFieldType() + " has been added to table " +
+                currentModelEntity.getTableName());
+        addOrRemoveForeignKey(currentModelEntity, currentModelField, addedForeignKeys);
+    }
+
+    private static void addCreatePrimaryKeyQueries(Set<String> entities, List<String> addedEntities,
+                                                   Module currentModel, List<String> queries) {
         String addPrimaryKeyQuery = "ALTER TABLE %s%nADD PRIMARY KEY (%s);%n" + System.lineSeparator();
         for (String tableName : entities) {
             if (addedEntities.contains(tableName)) {
@@ -585,8 +575,8 @@ public class Migrate implements BLauncherCmd {
         }
     }
 
-    private static void dropPrimaryKey(List<String> changedPrimary, List<String> addedEntities,
-                                       List<String> queries) {
+    private static void addDropPrimaryKeyQueries(Set<String> changedPrimary, List<String> addedEntities,
+                                                 List<String> queries) {
         if (changedPrimary.isEmpty()) {
             return;
         }
@@ -598,12 +588,13 @@ public class Migrate implements BLauncherCmd {
         });
     }
 
-    private static void addToMapAddForeignKey(Entity entity, EntityField field, Map<String, List<ForeignKey>> map) {
-        String addKeyName = String.format("FK_%s_%s", entity.getTableName(),
+    private static void addOrRemoveForeignKey(Entity entity, EntityField field, Map<String, List<ForeignKey>> map) {
+        String removeKeyName = String.format("FK_%s_%s", entity.getTableName(),
                 field.getRelation().getAssocEntity().getTableName());
-        ForeignKey foreignKey = new ForeignKey(addKeyName, field.getRelation().getKeyColumns().get(0).getColumnName(),
+        ForeignKey foreignKey = new ForeignKey(removeKeyName,
+                field.getRelation().getKeyColumns().stream().map(Relation.Key::getColumnName).toList(),
                 field.getRelation().getAssocEntity().getTableName(),
-                field.getRelation().getKeyColumns().get(0).getReference());
+                field.getRelation().getKeyColumns().stream().map(Relation.Key::getReferenceColumnName).toList());
 
         if (!map.containsKey(entity.getTableName())) {
             List<ForeignKey> initialData = new ArrayList<>();
@@ -616,22 +607,7 @@ public class Migrate implements BLauncherCmd {
         }
     }
 
-    private static void addToMapRemoveForeignKey(Entity entity, EntityField field, Map<String, List<String>> map) {
-        String removeKeyName = String.format("FK_%s_%s", entity.getTableName(),
-                field.getRelation().getAssocEntity().getTableName());
-
-        if (!map.containsKey(entity.getTableName())) {
-            List<String> initialData = new ArrayList<>();
-            initialData.add(removeKeyName);
-            map.put(entity.getTableName(), initialData);
-        } else {
-            List<String> existingData = map.get(entity.getTableName());
-            existingData.add(removeKeyName);
-            map.put(entity.getTableName(), existingData);
-        }
-    }
-
-    private static void addToMapNoTypeString(Entity entity, EntityField field, Map<String, List<String>> map) {
+    private static void removeField(Entity entity, EntityField field, Map<String, List<String>> map) {
         if (!map.containsKey(entity.getTableName())) {
             List<String> initialData = new ArrayList<>();
             initialData.add(field.getFieldColumnName());
@@ -643,7 +619,7 @@ public class Migrate implements BLauncherCmd {
         }
     }
 
-    private static void addToMapWithType(Entity entity, EntityField field, Map<String, List<EntityField>> map) {
+    private static void addOrModifyField(Entity entity, EntityField field, Map<String, List<EntityField>> map) {
         if (!map.containsKey(entity.getTableName())) {
             List<EntityField> initialData = new ArrayList<>();
             initialData.add(field);
@@ -656,33 +632,35 @@ public class Migrate implements BLauncherCmd {
     }
 
     private static void addToMapNewEntityFK(Entity entity, EntityField field, Map<String, List<EntityField>> map) {
-        EntityField primaryKey = field.getRelation().getAssocEntity().getKeys().get(0);
-        EntityField.Builder customFkBuilder = EntityField.newBuilder(field.getRelation().getKeyColumns().get(0)
-                .getField());
-        customFkBuilder.setFieldColumnName(field.getRelation().getKeyColumns().get(0).getColumnName());
-        customFkBuilder.setType(primaryKey.getFieldType());
-        customFkBuilder.setArrayType(false);
-        customFkBuilder.setSqlType(primaryKey.getSqlType());
+        for (Relation.Key key : field.getRelation().getKeyColumns()) {
+            EntityField primaryKey = field.getRelation().getAssocEntity()
+                    .getFieldByColumnName(key.getReferenceColumnName());
+            EntityField.Builder customFkBuilder = EntityField.newBuilder(key.getField());
+            customFkBuilder.setFieldColumnName(key.getColumnName());
+            customFkBuilder.setType(primaryKey.getFieldType());
+            customFkBuilder.setArrayType(false);
+            customFkBuilder.setSqlType(primaryKey.getSqlType());
 
-        if (!map.containsKey(entity.getTableName())) {
-            List<EntityField> initialData = new ArrayList<>();
-            initialData.add(customFkBuilder.build());
-            map.put(entity.getTableName(), initialData);
-        } else {
-            List<EntityField> existingData = map.get(entity.getTableName());
-            existingData.add(customFkBuilder.build());
-            map.put(entity.getTableName(), existingData);
+            if (!map.containsKey(entity.getTableName())) {
+                List<EntityField> initialData = new ArrayList<>();
+                initialData.add(customFkBuilder.build());
+                map.put(entity.getTableName(), initialData);
+            } else {
+                List<EntityField> existingData = map.get(entity.getTableName());
+                existingData.add(customFkBuilder.build());
+                map.put(entity.getTableName(), existingData);
+            }
         }
     }
 
     // Convert Create Table List to Query
-    private static void convertCreateTableToQuery(List<String> addedEntities, Module currentModel,
-                                                  List<String> queries) {
+    private static void addCreateTableQueries(List<String> addedEntities, Module currentModel,
+                                              List<String> queries) {
         for (String tableName:addedEntities) {
             Optional<Entity> entity = currentModel.getEntityByTableName(tableName);
             if (entity.isPresent()) {
                 try {
-                    queries.add(SqlScriptUtils.generateCreateTableQuery(entity.get(), null,
+                    queries.add(SqlScriptUtils.generateCreateTableQuery(entity.get(), new HashMap<>(),
                             PersistToolsConstants.SupportedDataSources.MYSQL_DB) + System.lineSeparator());
                 } catch (BalException e) {
                     errStream.println("ERROR: failed to generate create table query: " + e.getMessage());
@@ -692,131 +670,95 @@ public class Migrate implements BLauncherCmd {
     }
 
     // Convert list to a MySQL query
-    private static void convertListToQuery(QueryTypes type, List<String> entities, List<String> queries) {
-        if (Objects.requireNonNull(type) == QueryTypes.REMOVE_TABLE) {
-            for (String entity : entities) {
-                String removeTableTemplate = "DROP TABLE %s;%n";
-                queries.add(String.format(removeTableTemplate, entity));
+    private static void addDropTableQueries(List<String> entities, List<String> queries) {
+        for (String entity : entities) {
+            String removeTableTemplate = "DROP TABLE %s;%n";
+            queries.add(String.format(removeTableTemplate, entity));
+        }
+    }
+
+    private static void addDropColumnQueries(Map<String, List<String>> map, List<String> queries) {
+        for (Map.Entry<String, List<String>> entry : map.entrySet()) {
+            String entity = entry.getKey();
+            for (String field : entry.getValue()) {
+                String removeFieldTemplate = "ALTER TABLE %s%nDROP COLUMN %s;%n";
+                queries.add(String.format(removeFieldTemplate, entity, field));
             }
         }
     }
 
-    // Convert map of String lists to a MySQL query
-    private static void convertMapListToQuery(QueryTypes type, Map<String, List<String>> map, List<String> queries) {
-        switch (type) {
-            case REMOVE_FIELD:
-                for (Map.Entry<String, List<String>> entry : map.entrySet()) {
-                    String entity = entry.getKey();
-                    for (String field : entry.getValue()) {
-                        String removeFieldTemplate = "ALTER TABLE %s%nDROP COLUMN %s;%n";
-                        queries.add(String.format(removeFieldTemplate, entity, field));
-                    }
-                }
-                break;
-
-            case REMOVE_FOREIGN_KEY:
-                for (Map.Entry<String, List<String>> entry : map.entrySet()) {
-                    String entity = entry.getKey();
-                    for (String field : entry.getValue()) {
-                        String[] fieldData = field.split(",");
-                        String foreignKeyName = fieldData[0];
-                        String removeForeignKeyTemplate = "ALTER TABLE %s%nDROP FOREIGN KEY %s;%n";
-                        queries.add(String.format(removeForeignKeyTemplate, entity, foreignKeyName));
-                    }
-                }
-                break;
-
-            default:
-                break;
+    private static void addDropForeignKeyQueries(Map<String, List<ForeignKey>> map, List<String> queries) {
+        for (Map.Entry<String, List<ForeignKey>> entry : map.entrySet()) {
+            String entity = entry.getKey();
+            for (ForeignKey foreignKey : entry.getValue()) {
+                String warningComment = "-- Please verify the foreign key constraint name before executing the query"
+                        + System.lineSeparator();
+                String removeForeignKeyTemplate = warningComment + "ALTER TABLE %s%nDROP FOREIGN KEY %s;%n";
+                queries.add(String.format(removeForeignKeyTemplate, entity, foreignKey.name()));
+                HashMap<String, List<String>> fieldMap = new HashMap<>();
+                fieldMap.put(entity, foreignKey.columnNames());
+                addDropColumnQueries(fieldMap, queries);
+            }
         }
     }
 
     // Convert map of FieldMetadata lists to a MySQL query
-    private static void convertMapToQuery(QueryTypes type, Map<String, List<EntityField>> map, List<String> queries,
-            List<String> addedEntities) {
-        switch (type) {
-            case ADD_FIELD:
-                for (Map.Entry<String, List<EntityField>> entry : map.entrySet()) {
-                    String entity = entry.getKey();
-                    if (!addedEntities.contains(entity)) {
-                        for (EntityField field : entry.getValue()) {
-                            String fieldName = field.getFieldColumnName();
-                            String fieldType;
-                            try {
-                                fieldType = SqlScriptUtils.getSqlType(field,
-                                        PersistToolsConstants.SupportedDataSources.MYSQL_DB);
-                            } catch (BalException e) {
-                                errStream.println("ERROR: data type conversion failed: " + e.getMessage());
-                                return;
-                            }
-                            String addFieldTemplate = "ALTER TABLE %s%nADD COLUMN %s %s%s%s;%n";
-
-                            queries.add(String.format(addFieldTemplate, entity, fieldName, fieldType,
-                                    field.isOptionalType() ? "" : " NOT NULL",
-                                    field.isDbGenerated() ? " AUTO_INCREMENT" : ""));
-                        }
-                    }
+    private static void addModifyColumnTypeQueries(Map<String, List<EntityField>> map, List<String> queries) {
+        for (Map.Entry<String, List<EntityField>> entry : map.entrySet()) {
+            String entity = entry.getKey();
+            for (EntityField field : entry.getValue()) {
+                String fieldName = field.getFieldColumnName();
+                String fieldType;
+                try {
+                    fieldType = SqlScriptUtils.getSqlType(field,
+                            PersistToolsConstants.SupportedDataSources.MYSQL_DB);
+                } catch (BalException e) {
+                    errStream.println("ERROR: data type conversion failed: " + e.getMessage());
+                    return;
                 }
-                break;
+                String changeTypeTemplate = "ALTER TABLE %s%nMODIFY COLUMN %s %s%s%s;%n";
 
-            case CHANGE_TYPE:
-                for (Map.Entry<String, List<EntityField>> entry : map.entrySet()) {
-                    String entity = entry.getKey();
-                    for (EntityField field : entry.getValue()) {
-                        String fieldName = field.getFieldColumnName();
-                        String fieldType;
-                        try {
-                            fieldType = SqlScriptUtils.getSqlType(field,
-                                    PersistToolsConstants.SupportedDataSources.MYSQL_DB);
-                        } catch (BalException e) {
-                            errStream.println("ERROR: data type conversion failed: " + e.getMessage());
-                            return;
-                        }
-                        String changeTypeTemplate = "ALTER TABLE %s%nMODIFY COLUMN %s %s%s%s;%n";
-
-                        queries.add(String.format(changeTypeTemplate, entity, fieldName, fieldType,
-                                field.isOptionalType() ? "" : " NOT NULL",
-                                field.isDbGenerated() ? " AUTO_INCREMENT" : ""));
-                    }
-                }
-                break;
-
-            default:
-                break;
-        }
-    }
-
-    // Convert map of ForeignKey lists to a MySQL query
-    private static void convertFKMapToQuery(QueryTypes type, Map<String, List<ForeignKey>> map, List<String> queries) {
-        if (Objects.requireNonNull(type) == QueryTypes.ADD_FOREIGN_KEY) {
-            for (Map.Entry<String, List<ForeignKey>> entry : map.entrySet()) {
-                String entity = entry.getKey();
-                for (ForeignKey foreignKey : entry.getValue()) {
-
-                    String foreignKeyName = foreignKey.getName();
-                    String childColumnName = foreignKey.getColumnName();
-                    String referenceTableName = foreignKey.getReferenceTable();
-                    String referenceColumnName = foreignKey.getReferenceColumn();
-                    String addFKTemplate = "ALTER TABLE %s%nADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s(%s);%n";
-
-                    queries.add(String.format(addFKTemplate, entity, foreignKeyName, childColumnName,
-                            referenceTableName, referenceColumnName));
-                }
+                queries.add(String.format(changeTypeTemplate, entity, fieldName, fieldType,
+                        field.isOptionalType() ? "" : " NOT NULL",
+                        field.isDbGenerated() ? " AUTO_INCREMENT" : ""));
             }
         }
     }
 
-    // Types of MySQL queries
-    private enum QueryTypes {
-        ADD_TABLE,
-        REMOVE_TABLE,
-        ADD_FIELD,
-        REMOVE_FIELD,
-        CHANGE_TYPE,
-        ADD_READONLY,
-        REMOVE_READONLY,
-        ADD_FOREIGN_KEY,
-        REMOVE_FOREIGN_KEY
+    private static void addCreateFieldQueries(Map<String, List<EntityField>> map, List<String> queries) {
+        for (Map.Entry<String, List<EntityField>> entry : map.entrySet()) {
+            String entity = entry.getKey();
+            for (EntityField field : entry.getValue()) {
+                String fieldName = field.getFieldColumnName();
+                String fieldType;
+                try {
+                    fieldType = SqlScriptUtils.getSqlType(field,
+                            PersistToolsConstants.SupportedDataSources.MYSQL_DB);
+                } catch (BalException e) {
+                    errStream.println("ERROR: data type conversion failed: " + e.getMessage());
+                            return;
+                }
+                String addFieldTemplate = "ALTER TABLE %s%nADD COLUMN %s %s%s%s;%n";
+
+                queries.add(String.format(addFieldTemplate, entity, fieldName, fieldType,
+                        field.isOptionalType() ? "" : " NOT NULL",
+                        field.isDbGenerated() ? " AUTO_INCREMENT" : ""));
+            }
+        }
+    }
+
+    // Convert map of ForeignKey lists to a MySQL query
+    private static void addCreateForeignKeyQueries(Map<String, List<ForeignKey>> map, List<String> queries) {
+        String addFKTemplate = "ALTER TABLE %s%nADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s(%s);%n";
+        for (Map.Entry<String, List<ForeignKey>> entry : map.entrySet()) {
+            String entity = entry.getKey();
+            for (ForeignKey foreignKey : entry.getValue()) {
+                queries.add(String.format(addFKTemplate, entity, foreignKey.name(),
+                        foreignKey.columnNames().stream().reduce((a, b) -> a + ", " + b).orElse(""),
+                        foreignKey.referenceTable(),
+                        foreignKey.referenceColumns().stream().reduce((a, b) -> a + ", " + b).orElse("")));
+            }
+        }
     }
 
     @Override

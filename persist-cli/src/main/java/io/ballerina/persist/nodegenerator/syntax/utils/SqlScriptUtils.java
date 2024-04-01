@@ -238,7 +238,7 @@ public class SqlScriptUtils {
         return fieldName;
     }
 
-    private static void updateReferenceTable(String tableName, String referenceTableName,
+    public static void updateReferenceTable(String tableName, String referenceTableName,
                                              HashMap<String, List<String>> referenceTables) {
         List<String> setOfReferenceTables;
         if (referenceTables.containsKey(tableName)) {
