@@ -50,6 +50,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
@@ -417,8 +418,7 @@ public class Migrate implements BLauncherCmd {
         HashMap<String, List<EntityField>> addedFields = new HashMap<>();
         HashMap<String, List<String>> removedFields = new HashMap<>();
         HashMap<String, List<EntityField>> changedFieldTypes = new HashMap<>();
-        HashMap<String, List<EntityField>> addedReadOnly = new HashMap<>();
-        HashMap<String, List<String>> removedReadOnly = new HashMap<>();
+        List<String> primaryKeyChangedEntities = new ArrayList<>();
         HashMap<String, List<ForeignKey>> addedForeignKeys = new HashMap<>();
         HashMap<String, List<String>> removedForeignKeys = new HashMap<>();
 
@@ -427,7 +427,6 @@ public class Migrate implements BLauncherCmd {
             Entity currentModelEntity = currentModel.getEntityMap().get(previousModelEntity.getEntityName());
 
             // Check if currentModelEntity exists
-            // ok
             if (currentModelEntity == null) {
                 differences.add("Table " + previousModelEntity.getTableName() + " has been removed");
                 removedEntities.add(previousModelEntity.getTableName());
@@ -440,7 +439,6 @@ public class Migrate implements BLauncherCmd {
                         .getFieldByColumnName(previousModelField.getFieldColumnName());
 
                 // Check if currentModelField exists and if foreign key was removed
-                // TEST
                 if (currentModelField == null) {
                     if (previousModelField.getRelation() == null) {
                         differences.add("Column " + previousModelField.getFieldColumnName() +
@@ -455,28 +453,26 @@ public class Migrate implements BLauncherCmd {
                 }
 
                 // Compare data types
-                // TEST
-                if (!previousModelField.getFieldType().equals(currentModelField.getFieldType()) ||
-                        !Objects.equals(previousModelField.getSqlType(), currentModelField.getSqlType())) {
+                if (
+                        !previousModelField.getFieldType().equals(currentModelField.getFieldType()) ||
+                        !Objects.equals(previousModelField.getSqlType(), currentModelField.getSqlType()) ||
+                        !Objects.equals(previousModelField.isOptionalType(), currentModelField.isOptionalType())
+                ) {
                     differences.add("Data type of column " + previousModelField.getFieldColumnName() +
                             " in table " + previousModelEntity.getTableName() + " has changed to " +
                             currentModelField.getFieldType() + (currentModelField.getSqlType() != null ?
-                            " " +  currentModelField.getSqlType().getFullDataType() : ""));
+                            " " +  currentModelField.getSqlType().getFullDataType() : "") + " and is now " +
+                            (currentModelField.isOptionalType() ? "nullable" : "not nullable"));
+
                     addToMapWithType(previousModelEntity, currentModelField, changedFieldTypes);
                 }
 
                 // Compare readonly fields
-                if (previousModelEntity.getKeys().contains(previousModelField)
-                        && !currentModelEntity.getKeys().contains(currentModelField)) {
-                    differences.add("Column " + previousModelField.getFieldColumnName() + " in table " +
-                            previousModelEntity.getTableName() + " is no longer a primary key");
-                    addToMapNoTypeString(previousModelEntity, previousModelField, removedReadOnly);
-
-                } else if (!previousModelEntity.getKeys().contains(previousModelField)
+                if (!previousModelEntity.getKeys().contains(previousModelField)
                         && currentModelEntity.getKeys().contains(currentModelField)) {
                     differences.add("Column " + previousModelField.getFieldColumnName() + " in table " +
                             previousModelEntity.getTableName() + " is now a primary key");
-                    addToMapNoTypeObject(previousModelEntity, currentModelField, addedReadOnly);
+                    primaryKeyChangedEntities.add(previousModelEntity.getTableName());
                 }
 
             }
@@ -493,7 +489,7 @@ public class Migrate implements BLauncherCmd {
                             differences.add("Column " + currentModelField.getFieldColumnName() + " of type " +
                                     currentModelField.getFieldType() + " has been added to table " +
                                     currentModelEntity.getTableName() + " as a primary key");
-                            addToMapNoTypeObject(currentModelEntity, currentModelField, addedReadOnly);
+                            primaryKeyChangedEntities.add(currentModelEntity.getTableName());
                         } else {
                             differences.add("Column " + currentModelField.getFieldColumnName() + " of type " +
                                     currentModelField.getFieldType() + " has been added to table " +
@@ -529,7 +525,7 @@ public class Migrate implements BLauncherCmd {
                             differences.add("Column " + field.getFieldColumnName() + " of type " +
                                     field.getFieldType() + " has been added to table " +
                                     currentModelEntity.getTableName() + " as a primary key");
-                            addToMapWithType(currentModelEntity, field, addedReadOnly);
+                            primaryKeyChangedEntities.add(currentModelEntity.getTableName());
 
                         } else {
                             differences.add("Column " + field.getFieldColumnName() + " of type " +
@@ -554,23 +550,14 @@ public class Migrate implements BLauncherCmd {
         }
 
         // Convert differences to queries (ordered)
-        // TEST
-        convertCreateTableToQuery(QueryTypes.ADD_TABLE, addedEntities, queries, addedReadOnly, addedFields);
-        // TEST
-        convertMapToQuery(QueryTypes.ADD_READONLY, addedReadOnly, queries, addedEntities);
-        // TEST
+        dropPrimaryKey(primaryKeyChangedEntities, addedEntities, queries);
+        convertCreateTableToQuery(addedEntities, currentModel, queries);
         convertMapToQuery(QueryTypes.ADD_FIELD, addedFields, queries, addedEntities);
-        // TEST
+        addPrimaryKeys(primaryKeyChangedEntities, addedEntities, currentModel, queries);
         convertMapListToQuery(QueryTypes.REMOVE_FOREIGN_KEY, removedForeignKeys, queries);
-        // TEST
-        convertMapListToQuery(QueryTypes.REMOVE_READONLY, removedReadOnly, queries);
-        // TEST
         convertFKMapToQuery(QueryTypes.ADD_FOREIGN_KEY, addedForeignKeys, queries);
-        // TEST
         convertMapListToQuery(QueryTypes.REMOVE_FIELD, removedFields, queries);
-        // TEST
         convertListToQuery(QueryTypes.REMOVE_TABLE, removedEntities, queries);
-        // TEST
         convertMapToQuery(QueryTypes.CHANGE_TYPE, changedFieldTypes, queries, addedEntities);
 
         errStream.println(System.lineSeparator() + "Detailed list of differences: ");
@@ -582,6 +569,33 @@ public class Migrate implements BLauncherCmd {
         }
 
         return queries;
+    }
+
+    private static void addPrimaryKeys(List<String> entities, List<String> addedEntities, Module currentModel,
+                                       List<String> queries) {
+        String addPrimaryKeyQuery = "ALTER TABLE %s%nADD PRIMARY KEY (%s);%n" + System.lineSeparator();
+        for (String tableName : entities) {
+            if (addedEntities.contains(tableName)) {
+                continue;
+            }
+            Optional<Entity> entity = currentModel.getEntityByTableName(tableName);
+            entity.ifPresent(value ->
+                    queries.add(String.format(addPrimaryKeyQuery, tableName, value.getKeys().stream().map(
+                    EntityField::getFieldColumnName).reduce((a, b) -> a + ", " + b).orElse(""))));
+        }
+    }
+
+    private static void dropPrimaryKey(List<String> changedPrimary, List<String> addedEntities,
+                                       List<String> queries) {
+        if (changedPrimary.isEmpty()) {
+            return;
+        }
+        String dropPrimaryKeyTemplate = "ALTER TABLE %s%nDROP PRIMARY KEY;%n";
+        changedPrimary.forEach(table -> {
+            if (!addedEntities.contains(table)) {
+                queries.add(String.format(dropPrimaryKeyTemplate, table));
+            }
+        });
     }
 
     private static void addToMapAddForeignKey(Entity entity, EntityField field, Map<String, List<ForeignKey>> map) {
@@ -629,18 +643,6 @@ public class Migrate implements BLauncherCmd {
         }
     }
 
-    private static void addToMapNoTypeObject(Entity entity, EntityField field, Map<String, List<EntityField>> map) {
-        if (!map.containsKey(entity.getTableName())) {
-            List<EntityField> initialData = new ArrayList<>();
-            initialData.add(field);
-            map.put(entity.getTableName(), initialData);
-        } else {
-            List<EntityField> existingData = map.get(entity.getTableName());
-            existingData.add(field);
-            map.put(entity.getTableName(), existingData);
-        }
-    }
-
     private static void addToMapWithType(Entity entity, EntityField field, Map<String, List<EntityField>> map) {
         if (!map.containsKey(entity.getTableName())) {
             List<EntityField> initialData = new ArrayList<>();
@@ -674,44 +676,17 @@ public class Migrate implements BLauncherCmd {
     }
 
     // Convert Create Table List to Query
-    private static void convertCreateTableToQuery(QueryTypes type, List<String> addedEntities, List<String> queries,
-            HashMap<String, List<EntityField>> addedReadOnly, HashMap<String, List<EntityField>> addedFields) {
-        String addField;
-        String pKField;
-        if (Objects.requireNonNull(type) == QueryTypes.ADD_TABLE) {
-            for (String entity : addedEntities) {
-                EntityField primaryKey = addedReadOnly.get(entity).get(0);
-                String addTableTemplate = "CREATE TABLE %s (%n    %s %s PRIMARY KEY";
-
+    private static void convertCreateTableToQuery(List<String> addedEntities, Module currentModel,
+                                                  List<String> queries) {
+        for (String tableName:addedEntities) {
+            Optional<Entity> entity = currentModel.getEntityByTableName(tableName);
+            if (entity.isPresent()) {
                 try {
-                    pKField = SqlScriptUtils.getSqlType(primaryKey,
-                            PersistToolsConstants.SupportedDataSources.MYSQL_DB);
+                    queries.add(SqlScriptUtils.generateCreateTableQuery(entity.get(), null,
+                            PersistToolsConstants.SupportedDataSources.MYSQL_DB) + System.lineSeparator());
                 } catch (BalException e) {
-                    errStream.println("ERROR: data type conversion failed: " + e.getMessage());
-                    return;
+                    errStream.println("ERROR: failed to generate create table query: " + e.getMessage());
                 }
-
-                StringBuilder query = new StringBuilder(
-                        String.format(addTableTemplate, entity, primaryKey.getFieldColumnName(), pKField));
-
-                String addFieldTemplate = ",%n    %s %s";
-
-                if (addedFields.get(entity) != null) {
-                    for (EntityField field : addedFields.get(entity)) {
-                        try {
-                            addField = SqlScriptUtils.getSqlType(field,
-                                    PersistToolsConstants.SupportedDataSources.MYSQL_DB);
-                        } catch (BalException e) {
-                            errStream.println("ERROR: data type conversion failed: " + e.getMessage());
-                            return;
-                        }
-
-                        query.append(String.format(addFieldTemplate, field.getFieldColumnName(), addField));
-                    }
-                }
-
-                query.append("\n);\n");
-                queries.add(query.toString());
             }
         }
     }
@@ -736,14 +711,6 @@ public class Migrate implements BLauncherCmd {
                         String removeFieldTemplate = "ALTER TABLE %s%nDROP COLUMN %s;%n";
                         queries.add(String.format(removeFieldTemplate, entity, field));
                     }
-                }
-                break;
-
-            case REMOVE_READONLY:
-                for (Map.Entry<String, List<String>> entry : map.entrySet()) {
-                    String entity = entry.getKey();
-                    String removeReadOnlyTemplate = "ALTER TABLE %s%nDROP PRIMARY KEY;%n";
-                    queries.add(String.format(removeReadOnlyTemplate, entity));
                 }
                 break;
 
@@ -782,9 +749,10 @@ public class Migrate implements BLauncherCmd {
                                 errStream.println("ERROR: data type conversion failed: " + e.getMessage());
                                 return;
                             }
-                            String addFieldTemplate = "ALTER TABLE %s%nADD COLUMN %s %s%s;%n";
+                            String addFieldTemplate = "ALTER TABLE %s%nADD COLUMN %s %s%s%s;%n";
 
                             queries.add(String.format(addFieldTemplate, entity, fieldName, fieldType,
+                                    field.isOptionalType() ? "" : " NOT NULL",
                                     field.isDbGenerated() ? " AUTO_INCREMENT" : ""));
                         }
                     }
@@ -804,24 +772,11 @@ public class Migrate implements BLauncherCmd {
                             errStream.println("ERROR: data type conversion failed: " + e.getMessage());
                             return;
                         }
-                        String changeTypeTemplate = "ALTER TABLE %s%nMODIFY COLUMN %s %s%s;%n";
+                        String changeTypeTemplate = "ALTER TABLE %s%nMODIFY COLUMN %s %s%s%s;%n";
 
                         queries.add(String.format(changeTypeTemplate, entity, fieldName, fieldType,
+                                field.isOptionalType() ? "" : " NOT NULL",
                                 field.isDbGenerated() ? " AUTO_INCREMENT" : ""));
-                    }
-                }
-                break;
-
-            case ADD_READONLY:
-                for (Map.Entry<String, List<EntityField>> entry : map.entrySet()) {
-                    String entity = entry.getKey();
-                    if (!addedEntities.contains(entity)) {
-                        for (EntityField field : entry.getValue()) {
-                            String primaryKey = field.getFieldColumnName();
-                            String addReadOnlyTemplate = "ALTER TABLE %s%nADD PRIMARY KEY (%s);%n";
-
-                            queries.add(String.format(addReadOnlyTemplate, entity, primaryKey));
-                        }
                     }
                 }
                 break;

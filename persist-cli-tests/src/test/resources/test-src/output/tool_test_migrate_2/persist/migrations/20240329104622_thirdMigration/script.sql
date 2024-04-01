@@ -3,5 +3,5 @@
 -- Please verify the generated scripts and execute them against the target DB server.
 
 ALTER TABLE User
-ADD COLUMN age INT;
+ADD COLUMN age INT NOT NULL;
 

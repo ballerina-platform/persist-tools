@@ -99,7 +99,7 @@ public class SqlScriptUtils {
         return MessageFormat.format("DROP TABLE IF EXISTS {0};", tableName);
     }
 
-    private static String generateCreateTableQuery(Entity entity, HashMap<String, List<String>> referenceTables,
+    public static String generateCreateTableQuery(Entity entity, HashMap<String, List<String>> referenceTables,
                                                    String datasource) throws BalException {
 
         String fieldDefinitions = generateFieldsDefinitionSegments(entity, referenceTables, datasource);

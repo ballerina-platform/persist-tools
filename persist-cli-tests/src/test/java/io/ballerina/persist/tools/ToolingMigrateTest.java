@@ -52,65 +52,65 @@ public class ToolingMigrateTest {
         assertMigrateGeneratedSources("tool_test_migrate_2");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("Create a new table and migrate")
     public void testMigrateWithNewTable() {
         executeCommand("tool_test_migrate_3", "secondMigration");
         assertMigrateGeneratedSources("tool_test_migrate_3");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("Remove a table and migrate")
-    public void testRemoveTableMigrateTest() {
+    public void testMigrateRemoveTable() {
         executeCommand("tool_test_migrate_4", "secondMigration");
         assertMigrateGeneratedSources("tool_test_migrate_4");
     }
 
-    @Test(enabled = false)
-    @Description("Add a new field to a table and migrate")
-    public void testAddFieldMigrateTest() {
+    @Test(enabled = true)
+    @Description("Rename a table and migrate")
+    public void testMigrateRenameTable() {
         executeCommand("tool_test_migrate_5", "secondMigration");
         assertMigrateGeneratedSources("tool_test_migrate_5");
     }
 
-    @Test(enabled = false)
-    @Description("Remove a field from a table and migrate")
-    public void testRemoveFieldMigrateTest() {
+    @Test(enabled = true)
+    @Description("Add a field to an existing table and migrate")
+    public void testMigrateAddField() {
         executeCommand("tool_test_migrate_6", "secondMigration");
         assertMigrateGeneratedSources("tool_test_migrate_6");
     }
 
-    @Test(enabled = false)
-    @Description("Change data type of a field and migrate")
-    public void testChangeTypeMigrateTest() {
+    @Test(enabled = true)
+    @Description("Remove a field from an existing table and migrate")
+    public void testMigrateRemoveField() {
         executeCommand("tool_test_migrate_7", "secondMigration");
         assertMigrateGeneratedSources("tool_test_migrate_7");
     }
 
-    @Test(enabled = false)
-    @Description("Add foreign key to a table and migrate")
-    public void testAddFKMigrateTest() {
+    @Test(enabled = true)
+    @Description("Change ballerina type of a column and migrate")
+    public void testMigrateChangeBallerinaTypeOfAColumn() {
         executeCommand("tool_test_migrate_8", "secondMigration");
         assertMigrateGeneratedSources("tool_test_migrate_8");
     }
 
-    @Test(enabled = false)
-    @Description("Remove foreign key from a table and migrate")
-    public void testRemoveFKMigrateTest() {
+    @Test(enabled = true)
+    @Description("Change the simple name of a column and migrate")
+    public void testMigrateChangeSimpleNameOfAColumn() {
         executeCommand("tool_test_migrate_9", "secondMigration");
         assertMigrateGeneratedSources("tool_test_migrate_9");
     }
 
-    @Test(enabled = false)
-    @Description("Add and Remove a primary key from a table and migrate")
-    public void testPrimaryKeyMigrateTest() {
+    @Test(enabled = true)
+    @Description("Rename a primary key and migrate")
+    public void testMigrateRenamePrimaryKey() {
         executeCommand("tool_test_migrate_10", "secondMigration");
         assertMigrateGeneratedSources("tool_test_migrate_10");
     }
 
-    @Test(enabled = false)
-    @Description("Test execute command with no difference")
-    public void testNoDifferenceMigrateTest() {
+    @Test(enabled = true)
+    @Description("Make an existing required column optional and migrate")
+    public void testMigrateMakeRequiredColumnOptional() {
         executeCommand("tool_test_migrate_11", "secondMigration");
         assertMigrateGeneratedSources("tool_test_migrate_11");
     }
