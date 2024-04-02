@@ -462,8 +462,7 @@ public class Migrate implements BLauncherCmd {
                 }
 
                 // Compare data types
-                if (
-                        !previousModelField.getFieldType().equals(currentModelField.getFieldType()) ||
+                if (!previousModelField.getFieldType().equals(currentModelField.getFieldType()) ||
                         !Objects.equals(previousModelField.getSqlType(), currentModelField.getSqlType()) ||
                         !Objects.equals(previousModelField.isOptionalType(), currentModelField.isOptionalType())
                 ) {
@@ -553,7 +552,7 @@ public class Migrate implements BLauncherCmd {
                     + " as a foreign key");
         }
 
-        addToMapNewEntityFK(currentModelEntity, currentModelField, addedFields);
+        addNewEntityFK(currentModelEntity, currentModelField, addedFields);
 
         differences.add("Relation " + currentModelField.getFieldName() + " of type " +
                 currentModelField.getFieldType() + " has been added to table " +
@@ -563,7 +562,7 @@ public class Migrate implements BLauncherCmd {
 
     private static void addCreatePrimaryKeyQueries(Set<String> entities, List<String> addedEntities,
                                                    Module currentModel, List<String> queries) {
-        String addPrimaryKeyQuery = "ALTER TABLE %s%nADD PRIMARY KEY (%s);%n" + System.lineSeparator();
+        String addPrimaryKeyQuery = "ALTER TABLE %s%nADD PRIMARY KEY (%s);%n";
         for (String tableName : entities) {
             if (addedEntities.contains(tableName)) {
                 continue;
@@ -631,7 +630,7 @@ public class Migrate implements BLauncherCmd {
         }
     }
 
-    private static void addToMapNewEntityFK(Entity entity, EntityField field, Map<String, List<EntityField>> map) {
+    private static void addNewEntityFK(Entity entity, EntityField field, Map<String, List<EntityField>> map) {
         for (Relation.Key key : field.getRelation().getKeyColumns()) {
             EntityField primaryKey = field.getRelation().getAssocEntity()
                     .getFieldByColumnName(key.getReferenceColumnName());

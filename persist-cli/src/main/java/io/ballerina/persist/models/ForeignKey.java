@@ -20,7 +20,7 @@ package io.ballerina.persist.models;
 import java.util.List;
 
 /**
- * Foreign Key class.
+ * Foreign Key record.
  * @param name name of the foreign key
  * @param columnNames list of columns taking part in the foreign key constraint
  * @param referenceTable reference table
