@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Changed
+- [Refactor migrate command and test cases to support more scenarios](https://github.com/ballerina-platform/ballerina-library/issues/6189)
 
 ### Added
 - [Added support for PostgreSQL as a datasource](https://github.com/ballerina-platform/ballerina-standard-library/issues/5829)
