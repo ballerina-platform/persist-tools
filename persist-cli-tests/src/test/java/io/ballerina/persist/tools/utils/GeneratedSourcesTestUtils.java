@@ -146,13 +146,11 @@ public class GeneratedSourcesTestUtils {
                             }
                         }
                     } catch (IOException e) {
-                        errStream.println(e.getMessage());
-                        Assert.fail();
+                        Assert.fail("IO Exception: " + e.getMessage());
                     }
                 });
             } catch (IOException e) {
-                errStream.println(e.getMessage());
-                Assert.fail();
+                Assert.fail("IO Exception: " + e.getMessage());
             }
             errStream.println(actualOutputFile);
         }
@@ -161,11 +159,11 @@ public class GeneratedSourcesTestUtils {
     private static String getDirectoryNameWithoutTimeStamp(Path generatedDirectory) {
         Path directory = generatedDirectory.getFileName();
         if (Objects.isNull(directory)) {
-            Assert.fail();
+            Assert.fail("Generated migration directory doesn't exist");
         }
         String[] directoryName = directory.toString().split("_");
         if (directoryName.length == 1) {
-            Assert.fail();
+            Assert.fail("Invalid directory name format. Expected format: <timestamp>_<migrationLabel>");
         }
         return directoryName[1];
     }
@@ -174,7 +172,7 @@ public class GeneratedSourcesTestUtils {
         try (Stream<Path> fileList = Files.list(path)) {
             return fileList.filter(Files::isDirectory).count();
         } catch (IOException e) {
-            errStream.println(e.getMessage());
+            Assert.fail("IO Exception: " + e.getMessage());
         }
         return 0;
     }
