@@ -435,7 +435,7 @@ public class BalSyntaxConstants {
         " name: \"query\"} external;";
     public static final String REDIS = "redis";
     public static final String PERSIST_REDIS_CLIENT_MAP_ELEMENT =
-            "[%s]: check new (dbClient, self.metadata.get(%s))";
+            "[%s]: check new (dbClient, self.metadata.get(%s), cache.ttl)";
     public static final String REDIS_CLIENT_DECLARATION = "predis:RedisClient redisClient;";
     public static final String GET_PERSIST_REDIS_CLIENT = "redisClient = self.persistClients.get(%s);";
     public static final String CREATE_REDIS_RESULTS = "_ = check redisClient.runBatchInsertQuery(data);";
@@ -463,5 +463,8 @@ public class BalSyntaxConstants {
     public static final String REDIS_MANY_TO_MANY = "predis:MANY_TO_MANY";
     public static final String REDIS_CONFIG = "configurable redis:ConnectionConfig & readonly redis = ?;"
         + System.lineSeparator();
+    public static final String CACHE_CONFIG = "configurable record {|"
+    + System.lineSeparator() + "\tint ttl;"
+    + System.lineSeparator() + "|} & readonly cache = ?;";
 }
 

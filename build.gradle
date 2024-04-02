@@ -80,7 +80,7 @@ subprojects {
         ballerinaStdLibs "io.ballerina.stdlib:persist.sql-ballerina:${stdlibPersistSqlVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:persist.inmemory-ballerina:${stdlibPersistInmemoryVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:persist.googlesheets-ballerina:${stdlibPersistGoogleSheetVersion}"
-        ballerinaStdLibs "io.ballerina.lib:persist.redis-ballerina:${stdlibPersistRedisVersion}"
+        // ballerinaStdLibs "io.ballerina.lib:persist.redis-ballerina:${stdlibPersistRedisVersion}"
 
         ballerinaStdLibs "io.ballerina.stdlib:mime-ballerina:${stdlibMimeVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:file-ballerina:${stdlibFileVersion}"
@@ -166,10 +166,26 @@ task copyPersistTool(type: Copy) {
     }
 }
 
+task copyPersist(type: Copy) {
+    into "$project.rootDir/target"
+    into("ballerina-distribution/repo/bala/ballerina/persist") {
+        from "C:/Users/Public/BalProjects/module-ballerina-persist/target/ballerina-runtime/repo/bala/ballerina/persist"
+    }
+}
+
+task copyPersistRedis(type: Copy) {
+    into "$project.rootDir/target"
+    into("ballerina-distribution/repo/bala/ballerinax/persist.redis") {
+        from "C:/Users/Public/BalProjects/module-ballerinax-persist.redis/target/ballerina-runtime/repo/bala/ballerinax/persist.redis"
+    }
+}
+
 copyPersistTool.dependsOn ":persist-cli-tests:build"
 copyPersistTool.dependsOn ":persist-cli:build"
 
 build.dependsOn copyPersistTool
+build.dependsOn copyPersist
+build.dependsOn copyPersistRedis
 build.dependsOn ":examples:build"
 
 publish.dependsOn build
