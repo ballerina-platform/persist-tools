@@ -222,6 +222,14 @@ public class ToolingMigrateTest {
         assertMigrateGeneratedSources("tool_test_migrate_26");
     }
 
+    @Test(enabled = true)
+    @Description("Test Char, Varchar and Decimal annotations on columns")
+    public void testMigrateWithTypeAnnotations() {
+        executeCommand("tool_test_migrate_27", "secondMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_27");
+    }
+
+
     private void executeCommand(String subDir, String migrationLabel) {
         Class<?> persistClass;
         Path sourcePath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);

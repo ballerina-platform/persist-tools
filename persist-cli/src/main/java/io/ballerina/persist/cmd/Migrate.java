@@ -499,8 +499,8 @@ public class Migrate implements BLauncherCmd {
                     differences.add("Data type of column " + previousModelField.getFieldColumnName() +
                             " in table " + previousModelEntity.getTableName() + " has changed to " +
                             currentModelField.getFieldType() + (currentModelField.getSqlType() != null ?
-                            " " +  currentModelField.getSqlType().getFullDataType() : "") + " and is now " +
-                            (currentModelField.isOptionalType() ? "nullable" : "not nullable"));
+                            " " +  currentModelField.getSqlType().getTypeName() : "") + " and is now " +
+                            (currentModelField.isOptionalType() ? "nullable" : "optional"));
 
                     addOrModifyField(previousModelEntity, currentModelField, changedFieldTypes);
                 }
