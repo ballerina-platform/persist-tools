@@ -160,7 +160,7 @@ public class ToolingMigrateTest {
     @Test(enabled = true)
     @Description("Test add a primary key to an existing table who's referred by another table and migrate")
     // This scenario is not fully supported must change foreign keys as well
-    public void testAddPrimaryKeyToExistingTableReferredByAnother() {
+    public void testMigrateAddPrimaryKeyToExistingTableReferredByAnother() {
         executeCommand("tool_test_migrate_18", "secondMigration");
         assertMigrateGeneratedSources("tool_test_migrate_18");
     }
@@ -229,6 +229,40 @@ public class ToolingMigrateTest {
         assertMigrateGeneratedSources("tool_test_migrate_27");
     }
 
+    @Test(enabled = true)
+    @Description("Test relation annotation with a new field")
+    public void testMigrateAddRelationAnnotationToNewField() {
+        executeCommand("tool_test_migrate_28", "secondMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_28");
+    }
+
+    @Test(enabled = true)
+    @Description("Test relation annotation on an existing field")
+    public void testMigrateAddRelationAnnotationToExistingField() {
+        executeCommand("tool_test_migrate_29", "secondMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_29");
+    }
+
+    @Test(enabled = true)
+    @Description("Test change of relation annotation on an existing field")
+    public void testMigrateChangeRelationAnnotationOnExistingField() {
+        executeCommand("tool_test_migrate_30", "secondMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_30");
+    }
+
+    @Test(enabled = true)
+    @Description("Test remove relation annotation from a field")
+    public void testMigrateRemoveRelationAnnotation() {
+        executeCommand("tool_test_migrate_31", "secondMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_31");
+    }
+
+    @Test(enabled = true)
+    @Description("Test add relation annotation referring to existing field")
+    public void testMigrateRelationAnnotationReferringToExistingField() {
+        executeCommand("tool_test_migrate_32", "secondMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_32");
+    }
 
     private void executeCommand(String subDir, String migrationLabel) {
         Class<?> persistClass;

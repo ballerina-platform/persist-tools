@@ -130,4 +130,25 @@ public class SQLType {
                 return PersistToolsConstants.UNSUPPORTED_TYPE;
         }
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        SQLType sqlType = (SQLType) obj;
+        return Objects.equals(typeName, sqlType.typeName) && Objects.equals(fullDataType, sqlType.fullDataType) &&
+                Objects.equals(columnDefaultValue, sqlType.columnDefaultValue) &&
+                Objects.equals(numericPrecision, sqlType.numericPrecision) &&
+                Objects.equals(numericScale, sqlType.numericScale) && Objects.equals(maxLength, sqlType.maxLength);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(typeName, fullDataType, columnDefaultValue, numericPrecision, numericScale, maxLength);
+    }
+
 }
