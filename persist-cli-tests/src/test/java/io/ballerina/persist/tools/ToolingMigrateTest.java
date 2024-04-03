@@ -208,6 +208,20 @@ public class ToolingMigrateTest {
         assertMigrateGeneratedSources("tool_test_migrate_24");
     }
 
+    @Test(enabled = true)
+    @Description("Test name annotation on tables")
+    public void testMigrateWithNameAnnotationsOnTables() {
+        executeCommand("tool_test_migrate_25", "secondMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_25");
+    }
+
+    @Test(enabled = true)
+    @Description("Test name annotation on columns and primary keys")
+    public void testMigrateWithNameAnnotationsOnColumns() {
+        executeCommand("tool_test_migrate_26", "secondMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_26");
+    }
+
     private void executeCommand(String subDir, String migrationLabel) {
         Class<?> persistClass;
         Path sourcePath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);

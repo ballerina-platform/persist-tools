@@ -1,0 +1,71 @@
+-- AUTO-GENERATED FILE.
+-- This file is an auto-generated file by Ballerina persistence layer for the migrate command.
+-- Please verify the generated scripts and execute them against the target DB server.
+
+ALTER TABLE Test8
+DROP PRIMARY KEY;
+
+ALTER TABLE Test6
+DROP PRIMARY KEY;
+
+ALTER TABLE Test3
+DROP PRIMARY KEY;
+
+ALTER TABLE Test1
+DROP COLUMN field_3;
+
+ALTER TABLE Test1
+DROP COLUMN field_5;
+
+ALTER TABLE Test8
+DROP COLUMN id8;
+
+ALTER TABLE Test6
+DROP COLUMN id6;
+
+
+CREATE TABLE `Test2` (
+	`id` VARCHAR(191) NOT NULL,
+	`field_1` VARCHAR(191) NOT NULL,
+	PRIMARY KEY(`id`)
+);
+
+ALTER TABLE Test1
+RENAME COLUMN field1 TO field_1;
+
+ALTER TABLE Test1
+RENAME COLUMN field_2 TO field2;
+
+ALTER TABLE Test1
+RENAME COLUMN field_4 TO fieldT_4;
+
+ALTER TABLE Test7
+RENAME COLUMN id7 TO idd;
+
+ALTER TABLE Test5
+RENAME COLUMN id5 TO id;
+
+ALTER TABLE Test4
+RENAME COLUMN id TO id4;
+
+ALTER TABLE Test1
+ADD COLUMN field_3 VARCHAR(191) NOT NULL;
+
+ALTER TABLE Test1
+ADD COLUMN field_6 VARCHAR(191) NOT NULL;
+
+ALTER TABLE Test6
+ADD COLUMN id6 INT NOT NULL;
+
+ALTER TABLE Test3
+ADD COLUMN test_nic VARCHAR(191) NOT NULL;
+
+ALTER TABLE Test8
+ADD PRIMARY KEY (nic);
+
+ALTER TABLE Test6
+ADD PRIMARY KEY (id6, nic);
+
+ALTER TABLE Test3
+ADD PRIMARY KEY (id, test_nic);
+
