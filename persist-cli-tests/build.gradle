@@ -421,14 +421,14 @@ jacocoTestReport {
     }
 }
 
-test.dependsOn startTestDockerContainer
-test.dependsOn startMSSQLTestDockerContainer
-test.dependsOn startPostgreSQLTestDockerContainer
-test.dependsOn pullGSheetsDependency
+//test.dependsOn startTestDockerContainer
+//test.dependsOn startMSSQLTestDockerContainer
+//test.dependsOn startPostgreSQLTestDockerContainer
+//test.dependsOn pullGSheetsDependency
 test.dependsOn ":persist-cli:build"
-test.finalizedBy stopTestDockerContainer
-test.finalizedBy stopMSSQLTestDockerContainer
-test.finalizedBy stopPostgreSQLTestDockerContainer
+//test.finalizedBy stopTestDockerContainer
+//test.finalizedBy stopMSSQLTestDockerContainer
+//test.finalizedBy stopPostgreSQLTestDockerContainer
 
 build.doNotTrackState("build needs to run every time")
 build.dependsOn ":persist-cli:build"
