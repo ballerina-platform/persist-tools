@@ -22,11 +22,6 @@ public type Person record {|
     int age;
 |};
 
-# Description.
-#
-# + id - field description  
-# + make - field description  
-# + year - field description
 public type Car record {|
     readonly int id;
     string make;

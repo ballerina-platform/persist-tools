@@ -196,7 +196,7 @@ public class Migrate implements BLauncherCmd {
                     Path relativePath = Paths.get("").toAbsolutePath().relativize(newMigrationPath);
 
                     List<String> differences = new ArrayList<>();
-                    differences.add("-- Table " + String.join(", ", model.getEntityMap().keySet())
+                    differences.add("Table " + String.join(", ", model.getEntityMap().keySet())
                             + " has been added");
                     printDetailedListOfDifferences(differences);
                     errStream.println(
