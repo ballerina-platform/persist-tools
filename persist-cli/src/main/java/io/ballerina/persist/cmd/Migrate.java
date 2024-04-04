@@ -25,6 +25,7 @@ import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.ForeignKey;
 import io.ballerina.persist.models.ModelDifferences;
 import io.ballerina.persist.models.Module;
+import io.ballerina.persist.models.Relation;
 import io.ballerina.persist.nodegenerator.SourceGenerator;
 import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
 import io.ballerina.persist.nodegenerator.syntax.utils.SqlScriptUtils;
@@ -194,9 +195,10 @@ public class Migrate implements BLauncherCmd {
                     //Get the relative path of the migration directory from the project root
                     Path relativePath = Paths.get("").toAbsolutePath().relativize(newMigrationPath);
 
-                    errStream.println(System.lineSeparator() + "Detailed list of differences: ");
-                    errStream.println("-- Table " + String.join(", ", model.getEntityMap().keySet())
-                            + " has been added" + System.lineSeparator());
+                    List<String> differences = new ArrayList<>();
+                    differences.add("-- Table " + String.join(", ", model.getEntityMap().keySet())
+                            + " has been added");
+                    printDetailedListOfDifferences(differences);
                     errStream.println(
                             "Generated migration script to " + relativePath +
                             " directory." + System.lineSeparator());
@@ -463,14 +465,25 @@ public class Migrate implements BLauncherCmd {
                         currentModelField.getRelation().isOwner() &&
                         !Objects.equals(currentModelField.getRelation().getKeyColumns(),
                                 previousModelField.getRelation().getKeyColumns())) {
+
+                    if (onlyColumnNamesChanged(previousModelField.getRelation().getKeyColumns(),
+                            currentModelField.getRelation().getKeyColumns())) {
+                        for (int i = 0; i < previousModelField.getRelation().getKeyColumns().size(); i++) {
+                            modelDifferences.renameColumn(currentModelEntity.getTableName(),
+                                    previousModelField.getRelation().getKeyColumns().get(i).getColumnName(),
+                                    currentModelField.getRelation().getKeyColumns().get(i).getColumnName());
+                        }
+                    } else {
                         modelDifferences.recreateForeignKey(currentModelEntity.getTableName(), previousModelField,
                                 currentModelField);
+                    }
                 }
 
                 // Compare data types
                 if (!previousModelField.getFieldType().equals(currentModelField.getFieldType()) ||
                         !Objects.equals(previousModelField.getSqlType(), currentModelField.getSqlType()) ||
-                        !Objects.equals(previousModelField.isOptionalType(), currentModelField.isOptionalType())
+                        !Objects.equals(previousModelField.isOptionalType(), currentModelField.isOptionalType()) ||
+                        !Objects.equals(previousModelField.isDbGenerated(), currentModelField.isDbGenerated())
                 ) {
                     modelDifferences.modifyColumn(currentModelEntity.getTableName(), previousModelField,
                             currentModelField);
@@ -522,15 +535,32 @@ public class Migrate implements BLauncherCmd {
         addCreateForeignKeyQueries(modelDifferences.getAddedForeignKeys(), queries);
         addModifyColumnTypeQueries(modelDifferences.getChangedFieldTypes(), queries);
 
+        printDetailedListOfDifferences(modelDifferences.getDifferences());
+
+        return queries;
+    }
+
+    private static boolean onlyColumnNamesChanged(List<Relation.Key> previousKeys, List<Relation.Key> currentKeys) {
+        if (!Objects.equals(previousKeys.size(), currentKeys.size())) {
+            return false;
+        }
+        for (int i = 0; i < previousKeys.size(); i++) {
+            if (!previousKeys.get(i).onlyColumnNameChanged(currentKeys.get(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+
+    private static void printDetailedListOfDifferences(List<String> differences) {
         errStream.println(System.lineSeparator() + "Detailed list of differences: ");
-        if (!modelDifferences.getDifferences().isEmpty()) {
-            modelDifferences.getDifferences().forEach(difference -> errStream.println("-- " + difference));
+        if (!differences.isEmpty()) {
+            differences.forEach(difference -> errStream.println("-- " + difference));
             errStream.println();
         } else {
             errStream.println("-- No differences found" + System.lineSeparator());
         }
-
-        return queries;
     }
 
     private static void addRenameFieldQueries(HashMap<String, List<ModelDifferences.NameMapping>> renamedFields,

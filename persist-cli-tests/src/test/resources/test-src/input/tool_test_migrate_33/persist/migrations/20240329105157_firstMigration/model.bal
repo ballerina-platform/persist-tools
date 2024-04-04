@@ -15,11 +15,13 @@
 // under the License.
 
 import ballerina/persist as _;
+import ballerinax/persist.sql;
 
 public type Person record {|
     readonly int id;
     string name;
     int age;
+    Car[] cars;
 |};
 
 public type Car record {|
@@ -27,4 +29,7 @@ public type Car record {|
     string make;
     string model;
     int year;
+    int userRef;
+    @sql:Relation {keys: ["userRef"]}
+    Person owner;
 |};

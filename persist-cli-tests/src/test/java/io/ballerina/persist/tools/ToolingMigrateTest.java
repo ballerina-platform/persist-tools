@@ -264,6 +264,62 @@ public class ToolingMigrateTest {
         assertMigrateGeneratedSources("tool_test_migrate_32");
     }
 
+    @Test(enabled = true)
+    @Description("Test change simple name of a custom foreign key field")
+    public void testMigrateChangeSimpleNameOfCustomForeignKey() {
+        executeCommand("tool_test_migrate_33", "secondMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_33");
+    }
+
+    @Test(enabled = true)
+    @Description("Test add name annotation to custom foreign key field")
+    public void testMigrateAddNameAnnotationToCustomForeignKey() {
+        executeCommand("tool_test_migrate_34", "secondMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_34");
+    }
+
+    @Test(enabled = true)
+    @Description("Test change name annotation in custom foreign key field")
+    public void testMigrateChangeNameAnnotationOnCustomFK() {
+        executeCommand("tool_test_migrate_35", "secondMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_35");
+    }
+
+    @Test(enabled = true)
+    @Description("Test remove name annotation from custom foreign key field")
+    public void testMigrateRemoveNameAnnotationFromCustomFK() {
+        executeCommand("tool_test_migrate_36", "secondMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_36");
+    }
+
+    @Test(enabled = true)
+    @Description("Test create custom foreign key with name annotation")
+    public void testMigrateCreateCustomFKWithNameAnnotation() {
+        executeCommand("tool_test_migrate_37", "secondMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_37");
+    }
+
+    @Test(enabled = true)
+    @Description("Test add generated annotation to existing field")
+    public void testMigrateAddGeneratedAnnotationToExistingField() {
+        executeCommand("tool_test_migrate_38", "secondMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_38");
+    }
+
+    @Test(enabled = true)
+    @Description("Test remove generated annotation from existing field")
+    public void testMigrateRemoveGeneratedAnnotationFromExistingField() {
+        executeCommand("tool_test_migrate_39", "secondMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_39");
+    }
+
+    @Test(enabled = true)
+    @Description("Test add new primary key with generated annotation")
+    public void testMigrateAddNewPrimaryKeyWithGeneratedAnnotation() {
+        executeCommand("tool_test_migrate_40", "secondMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_40");
+    }
+
     private void executeCommand(String subDir, String migrationLabel) {
         Class<?> persistClass;
         Path sourcePath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);
