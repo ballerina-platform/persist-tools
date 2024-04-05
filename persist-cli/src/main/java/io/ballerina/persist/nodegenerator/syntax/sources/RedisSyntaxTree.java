@@ -153,15 +153,15 @@ public class RedisSyntaxTree implements SyntaxTree  {
     private static io.ballerina.toml.syntax.tree.NodeList<DocumentMemberDeclarationNode> populateConfigNodeList(
         String moduleName, io.ballerina.toml.syntax.tree.NodeList<DocumentMemberDeclarationNode> moduleMembers) {
         String connectionUri = PersistToolsConstants.DBConfigs.REDIS.CONNECTION_URI;
-        String ttl = PersistToolsConstants.DBConfigs.REDIS.TTL;
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(moduleName + ".redis", null));
+        String maxAge = PersistToolsConstants.DBConfigs.REDIS.MAX_AGE;
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(moduleName + ".connectionConfig", null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
                 PersistToolsConstants.DBConfigs.KEY_CONNECTION, connectionUri, null));
         
         moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(moduleName + ".cache", null));
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(moduleName + ".cacheConfig", null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createNumericKV(
-                PersistToolsConstants.DBConfigs.KEY_TTL, ttl, null));
+                PersistToolsConstants.DBConfigs.KEY_MAX_AGE, maxAge, null));
         return moduleMembers;
     }
 

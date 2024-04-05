@@ -141,20 +141,20 @@ public isolated client class Client {
     };
 
     public isolated function init() returns persist:Error? {
-        redis:Client|error dbClient = new (redis);
+        redis:Client|error dbClient = new (connectionConfig);
         if dbClient is error {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
         self.persistClients = {
-            [ALL_TYPES]: check new (dbClient, self.metadata.get(ALL_TYPES)),
-            [STRING_ID_RECORD]: check new (dbClient, self.metadata.get(STRING_ID_RECORD)),
-            [INT_ID_RECORD]: check new (dbClient, self.metadata.get(INT_ID_RECORD)),
-            [FLOAT_ID_RECORD]: check new (dbClient, self.metadata.get(FLOAT_ID_RECORD)),
-            [DECIMAL_ID_RECORD]: check new (dbClient, self.metadata.get(DECIMAL_ID_RECORD)),
-            [BOOLEAN_ID_RECORD]: check new (dbClient, self.metadata.get(BOOLEAN_ID_RECORD)),
-            [COMPOSITE_ASSOCIATION_RECORD]: check new (dbClient, self.metadata.get(COMPOSITE_ASSOCIATION_RECORD)),
-            [ALL_TYPES_ID_RECORD]: check new (dbClient, self.metadata.get(ALL_TYPES_ID_RECORD))
+            [ALL_TYPES]: check new (dbClient, self.metadata.get(ALL_TYPES), cacheConfig.maxAge),
+            [STRING_ID_RECORD]: check new (dbClient, self.metadata.get(STRING_ID_RECORD), cacheConfig.maxAge),
+            [INT_ID_RECORD]: check new (dbClient, self.metadata.get(INT_ID_RECORD), cacheConfig.maxAge),
+            [FLOAT_ID_RECORD]: check new (dbClient, self.metadata.get(FLOAT_ID_RECORD), cacheConfig.maxAge),
+            [DECIMAL_ID_RECORD]: check new (dbClient, self.metadata.get(DECIMAL_ID_RECORD), cacheConfig.maxAge),
+            [BOOLEAN_ID_RECORD]: check new (dbClient, self.metadata.get(BOOLEAN_ID_RECORD), cacheConfig.maxAge),
+            [COMPOSITE_ASSOCIATION_RECORD]: check new (dbClient, self.metadata.get(COMPOSITE_ASSOCIATION_RECORD), cacheConfig.maxAge),
+            [ALL_TYPES_ID_RECORD]: check new (dbClient, self.metadata.get(ALL_TYPES_ID_RECORD), cacheConfig.maxAge)
         };
     }
 

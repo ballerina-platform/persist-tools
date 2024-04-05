@@ -221,7 +221,7 @@ public class PersistToolsConstants {
         public static final String KEY_DATABASE = "database";
         public static final String KEY_HOST = "host";
         public static final String KEY_CONNECTION = "connection";
-        public static final String KEY_TTL = "ttl";
+        public static final String KEY_MAX_AGE = "maxAge";
 
         /**
          * Constants related to the MySQL configurations.
@@ -266,7 +266,7 @@ public class PersistToolsConstants {
             private REDIS() {}
 
             public static final String CONNECTION_URI = "redis://localhost:6379";
-            public static final String TTL = "-1";
+            public static final String MAX_AGE = "-1";
 
         }
 

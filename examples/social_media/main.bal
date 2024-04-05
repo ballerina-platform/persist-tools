@@ -13,10 +13,9 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import social_media.entities;
-
 import ballerina/http;
 import ballerina/persist;
+import social_media.entities;
 
 public type User record {|
     readonly string firstName;

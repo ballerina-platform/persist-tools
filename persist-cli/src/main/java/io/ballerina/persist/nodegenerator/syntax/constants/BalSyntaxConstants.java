@@ -425,7 +425,7 @@ public class BalSyntaxConstants {
      * Constants related to persist Redis client.
      */
     public static final String REDIS_PROCESSOR = "RedisProcessor";
-    public static final String INIT_REDIS_DB_CLIENT_WITH_PARAMS = "%s:Client|error dbClient = new (redis);" +
+    public static final String INIT_REDIS_DB_CLIENT_WITH_PARAMS = "%s:Client|error dbClient = new (connectionConfig);" +
         System.lineSeparator();
     public static final String INIT_REDIS_CLIENT_MAP = "private final map<predis:RedisClient> persistClients;";
     public static final String EXTERNAL_REDIS_GET_METHOD_TEMPLATE = "isolated resource function get %s(" +
@@ -435,7 +435,7 @@ public class BalSyntaxConstants {
         " name: \"query\"} external;";
     public static final String REDIS = "redis";
     public static final String PERSIST_REDIS_CLIENT_MAP_ELEMENT =
-            "[%s]: check new (dbClient, self.metadata.get(%s), cache.ttl)";
+            "[%s]: check new (dbClient, self.metadata.get(%s), cacheConfig.maxAge)";
     public static final String REDIS_CLIENT_DECLARATION = "predis:RedisClient redisClient;";
     public static final String GET_PERSIST_REDIS_CLIENT = "redisClient = self.persistClients.get(%s);";
     public static final String CREATE_REDIS_RESULTS = "_ = check redisClient.runBatchInsertQuery(data);";
@@ -461,10 +461,10 @@ public class BalSyntaxConstants {
     public static final String REDIS_ONE_TO_MANY = "predis:ONE_TO_MANY";
     public static final String REDIS_MANY_TO_ONE = "predis:MANY_TO_ONE";
     public static final String REDIS_MANY_TO_MANY = "predis:MANY_TO_MANY";
-    public static final String REDIS_CONFIG = "configurable redis:ConnectionConfig & readonly redis = ?;"
+    public static final String REDIS_CONFIG = "configurable redis:ConnectionConfig & readonly connectionConfig = ?;"
         + System.lineSeparator();
     public static final String CACHE_CONFIG = "configurable record {|"
-    + System.lineSeparator() + "\tint ttl;"
-    + System.lineSeparator() + "|} & readonly cache = ?;";
+    + System.lineSeparator() + "\tint maxAge;"
+    + System.lineSeparator() + "|} & readonly cacheConfig = ?;";
 }
 
