@@ -119,7 +119,6 @@ public class RedisSyntaxTree implements SyntaxTree  {
     public io.ballerina.compiler.syntax.tree.SyntaxTree getConfigTomlSyntax(String moduleName) {
         io.ballerina.toml.syntax.tree.NodeList<DocumentMemberDeclarationNode> moduleMembers =
                 io.ballerina.toml.syntax.tree.AbstractNodeFactory.createEmptyNodeList();
-        // moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(moduleName + ".redis", null));
         moduleMembers = populateConfigNodeList(moduleName, moduleMembers);
         moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
         io.ballerina.toml.syntax.tree.Token eofToken = io.ballerina.toml.syntax.tree.AbstractNodeFactory.
