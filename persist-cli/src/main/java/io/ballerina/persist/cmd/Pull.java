@@ -45,6 +45,7 @@ import java.sql.SQLException;
 import java.util.Locale;
 import java.util.Scanner;
 
+import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 import static io.ballerina.persist.PersistToolsConstants.MYSQL_DRIVER_CLASS;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.JDBC_URL_WITH_DATABASE_MYSQL;
@@ -208,17 +209,19 @@ public class Pull implements BLauncherCmd {
 
     @Override
     public String getName() {
-        return null;
+        return COMPONENT_IDENTIFIER;
     }
 
     @Override
-    public void printLongDesc(StringBuilder stringBuilder) {
-
+    public void printLongDesc(StringBuilder out) {
+        out.append("Generate model definition by introspecting the database").append(System.lineSeparator());
+        out.append(System.lineSeparator());
     }
 
     @Override
     public void printUsage(StringBuilder stringBuilder) {
-
+        stringBuilder.append("  ballerina " + COMPONENT_IDENTIFIER +
+                " pull").append(System.lineSeparator());
     }
 
     @Override

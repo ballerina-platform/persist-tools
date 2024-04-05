@@ -1,6 +1,6 @@
 [package]
 org = "wso2"
-name = "persistTest6"
+name = "migrate-test"
 version = "0.1.0"
 distribution = "2201.5.0"
 
@@ -10,6 +10,10 @@ observabilityIncluded = true
 [[tool.persist]]
 id = "persist"
 options.datastore = "mysql"
-targetModule = "persistTest6"
+targetModule = "migrate-test"
 filePath = "persist/model.bal"
 
+[[platform.java17.dependency]]
+groupId = "io.ballerina.stdlib"
+artifactId = "persist.sql-native"
+version = "1.3.0-SNAPSHOT"

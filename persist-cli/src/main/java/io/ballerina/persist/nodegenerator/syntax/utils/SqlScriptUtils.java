@@ -99,7 +99,7 @@ public class SqlScriptUtils {
         return MessageFormat.format("DROP TABLE IF EXISTS {0};", tableName);
     }
 
-    private static String generateCreateTableQuery(Entity entity, HashMap<String, List<String>> referenceTables,
+    public static String generateCreateTableQuery(Entity entity, HashMap<String, List<String>> referenceTables,
                                                    String datasource) throws BalException {
 
         String fieldDefinitions = generateFieldsDefinitionSegments(entity, referenceTables, datasource);
@@ -238,7 +238,7 @@ public class SqlScriptUtils {
         return fieldName;
     }
 
-    private static void updateReferenceTable(String tableName, String referenceTableName,
+    public static void updateReferenceTable(String tableName, String referenceTableName,
                                              HashMap<String, List<String>> referenceTables) {
         List<String> setOfReferenceTables;
         if (referenceTables.containsKey(tableName)) {
@@ -267,7 +267,7 @@ public class SqlScriptUtils {
         return keyScripts.toString();
     }
 
-    private static String getSqlType(EntityField entityField, String datasource) throws BalException {
+    public static String getSqlType(EntityField entityField, String datasource) throws BalException {
         String sqlType;
         if (!entityField.isArrayType()) {
             sqlType = getTypeNonArray(entityField.getFieldType(), entityField.getSqlType(), datasource);

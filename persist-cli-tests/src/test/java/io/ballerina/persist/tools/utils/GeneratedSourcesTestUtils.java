@@ -43,6 +43,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -73,6 +74,7 @@ public class GeneratedSourcesTestUtils {
     public static final Path RESOURCES_EXPECTED_OUTPUT =
             Paths.get("src", "test", "resources", "test-src", "output")
             .toAbsolutePath();
+    public static final String PERSIST_MIGRATIONS_DIR = Paths.get("persist", "migrations").toString();
 
     public static void assertGeneratedSources(String subDir) {
         Assert.assertTrue(directoryContentEquals(Paths.get(RESOURCES_EXPECTED_OUTPUT.toString()).resolve(subDir),
@@ -110,6 +112,69 @@ public class GeneratedSourcesTestUtils {
                 errStream.println("Error occurred while executing the generated packages: " + e.getMessage());
             }
         }
+    }
+
+    public static void assertMigrateGeneratedSources(String subDir) {
+        Path generatedSources = Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir);
+        Path expectedSources = RESOURCES_EXPECTED_OUTPUT.resolve(subDir);
+
+        // check if directory content equals except the migrations directory
+        Assert.assertTrue(directoryContentEquals(expectedSources, generatedSources));
+
+        for (Path actualOutputFile: listFiles(generatedSources)) {
+            Path generatedMigrations = generatedSources.resolve(PERSIST_MIGRATIONS_DIR);
+            Path expectedMigrations = expectedSources.resolve(PERSIST_MIGRATIONS_DIR);
+            Assert.assertEquals(getNumOfSubDirectories(generatedMigrations),
+                    getNumOfSubDirectories(expectedMigrations));
+            try (Stream<Path> generatedFileList = Files.list(generatedMigrations)) {
+                generatedFileList.forEach(generatedDirectory -> {
+                    String generatedDirectoryNameWithoutTimeStamp =
+                            getDirectoryNameWithoutTimeStamp(generatedDirectory);
+                    assert(generatedDirectoryNameWithoutTimeStamp != null);
+                    try (Stream<Path> expectedFileList = Files.list(expectedMigrations)) {
+                        for (Path expectedDirectory : expectedFileList.toList()) {
+                            String expectedDirectoryNameWithoutTimeStamp =
+                                    getDirectoryNameWithoutTimeStamp(expectedDirectory);
+                            if (generatedDirectoryNameWithoutTimeStamp.equals(expectedDirectoryNameWithoutTimeStamp)) {
+                                Assert.assertTrue(directoryContentEquals(expectedDirectory, generatedDirectory));
+                                for (Path expectedFile : listFiles(expectedDirectory)) {
+                                    Path generatedFile = generatedDirectory.resolve(expectedFile.getFileName());
+                                    Assert.assertTrue(Files.exists(generatedFile));
+                                    Assert.assertEquals(readContent(generatedFile), readContent(expectedFile));
+                                }
+                                break;
+                            }
+                        }
+                    } catch (IOException e) {
+                        Assert.fail("IO Exception: " + e.getMessage());
+                    }
+                });
+            } catch (IOException e) {
+                Assert.fail("IO Exception: " + e.getMessage());
+            }
+            errStream.println(actualOutputFile);
+        }
+    }
+
+    private static String getDirectoryNameWithoutTimeStamp(Path generatedDirectory) {
+        Path directory = generatedDirectory.getFileName();
+        if (Objects.isNull(directory)) {
+            Assert.fail("Generated migration directory doesn't exist");
+        }
+        String[] directoryName = directory.toString().split("_");
+        if (directoryName.length == 1) {
+            Assert.fail("Invalid directory name format. Expected format: <timestamp>_<migrationLabel>");
+        }
+        return directoryName[1];
+    }
+
+    private static long getNumOfSubDirectories(Path path) {
+        try (Stream<Path> fileList = Files.list(path)) {
+            return fileList.filter(Files::isDirectory).count();
+        } catch (IOException e) {
+            Assert.fail("IO Exception: " + e.getMessage());
+        }
+        return 0;
     }
 
     public static void assertGeneratedSourcesNegative(String subDir, Command cmd, String[] relativeFilepaths,

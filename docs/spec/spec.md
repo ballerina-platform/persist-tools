@@ -213,13 +213,13 @@ Behaviour of the `push` command,
 ```bash
 bal persist pull --datastore mysql --host localhost --port 3306 --user root --database persist
 ```
-| Command Parameter |                                      Description                                      | Mandatory | Default Value |
-|:-----------------:|:-------------------------------------------------------------------------------------:|:---------:|:-------------:|
-|    --datastore    | used to indicate the preferred database client. Currently, only 'mysql' is supported. |    No     |     mysql     |
-|      --host       |                          used to indicate the database host                           |    Yes    |     None      |
-|      --port       |                          used to indicate the database port                           |    No     |     3306      |
-|      --user       |                          used to indicate the database user                           |    Yes    |     None      |
-|    --database     |                          used to indicate the database name                           |    Yes    |     None      |
+| Command Parameter |                                   Description                                    | Mandatory | Default Value |
+|:-----------------:|:--------------------------------------------------------------------------------:|:---------:|:-------------:|
+|    --datastore    | used to indicate the preferred data store. Currently, only 'mysql' is supported. |    No     |     mysql     |
+|      --host       |                        used to indicate the database host                        |    Yes    |     None      |
+|      --port       |                        used to indicate the database port                        |    No     |     3306      |
+|      --user       |                        used to indicate the database user                        |    Yes    |     None      |
+|    --database     |                        used to indicate the database name                        |    Yes    |     None      |
 
 This command will introspect the schema of the database and create a `model.bal` file with the entities and relations based on the schema of the database. The database configuration should be provided as command-line arguments.
 

@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -59,6 +60,11 @@ public class Module {
 
     public String getModuleName() {
         return moduleName;
+    }
+
+    public Optional<Entity> getEntityByTableName(String tableName) {
+        return entityMap.values().stream().filter(item -> item.getTableName()
+                .equals(tableName)).findAny();
     }
 
     public static Module.Builder newBuilder(String moduleName) {

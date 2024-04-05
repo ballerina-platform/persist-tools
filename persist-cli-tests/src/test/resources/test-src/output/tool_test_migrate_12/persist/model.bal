@@ -15,29 +15,16 @@
 // under the License.
 
 import ballerina/persist as _;
-import ballerinax/persist.sql;
-import ballerina/time;
 
-public type MedicalNeed record {|
+public type Person record {|
     readonly int id;
-    @sql:Char {length: 50}
-    string needDetails;
-    @sql:Varchar {length: 50}
-    string needType;
-    @sql:Decimal {precision: [10,2]}
-    decimal amount;
-    int needId;
-    string itemId;
     string name;
-    time:Civil period;
-    MedicalItem[] items;
+    int age;
 |};
 
-public type MedicalItem record {|
-    readonly string name;
-    int itemId;
-    string decrip;
-    string unit;
-    int num;
-    MedicalNeed need;
+public type Car record {|
+    readonly int id;
+    string make;
+    string model;
+    int year;
 |};
