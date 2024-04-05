@@ -263,8 +263,8 @@ public abstract class Introspector {
         foreignKey.getColumnNames().forEach(columnName ->
                 ownerColumns.add(ownerEntity.getFieldByColumnName(columnName)));
         boolean isUniqueIndexPresent = ownerEntity.getUniqueIndexes().stream()
-                .anyMatch(index -> areTwoFieldListsEqual(index.getFields(), ownerColumns));
-        if (areTwoFieldListsEqual(ownerEntity.getKeys(), ownerColumns)) {
+                .anyMatch(index -> index.getFields().equals(ownerColumns));
+        if (ownerEntity.getKeys().equals(ownerColumns)) {
             return Relation.RelationType.ONE;
         } else if (isUniqueIndexPresent) {
             return Relation.RelationType.ONE;
@@ -273,15 +273,4 @@ public abstract class Introspector {
         }
     }
 
-    private boolean areTwoFieldListsEqual(List<EntityField> list1, List<EntityField> list2) {
-        if (list1.size() != list2.size()) {
-            return false;
-        }
-        for (EntityField entityField : list1) {
-            if (!list2.contains(entityField)) {
-                return false;
-            }
-        }
-        return true;
-    }
 }

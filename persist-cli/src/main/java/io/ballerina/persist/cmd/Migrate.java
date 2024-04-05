@@ -23,6 +23,7 @@ import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.ForeignKey;
+import io.ballerina.persist.models.MigrationDataHolder;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.models.Relation;
 import io.ballerina.persist.nodegenerator.SourceGenerator;
@@ -48,7 +49,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -195,9 +195,10 @@ public class Migrate implements BLauncherCmd {
                     //Get the relative path of the migration directory from the project root
                     Path relativePath = Paths.get("").toAbsolutePath().relativize(newMigrationPath);
 
-                    errStream.println(System.lineSeparator() + "Detailed list of differences: ");
-                    errStream.println("[Entity " + String.join(", ", model.getEntityMap().keySet())
-                            + " has been added]" + System.lineSeparator());
+                    List<String> differences = new ArrayList<>();
+                    differences.add("Table " + String.join(", ", model.getEntityMap().keySet())
+                            + " has been added");
+                    printDetailedListOfDifferences(differences);
                     errStream.println(
                             "Generated migration script to " + relativePath +
                             " directory." + System.lineSeparator());
@@ -295,6 +296,7 @@ public class Migrate implements BLauncherCmd {
 
     private static void migrateWithTimestamp(File migrationsDir, String migrationName, Path currentModelPath,
             Path previousModelPath) {
+
         List<String> queries;
 
         String newMigration = createTimestampFolder(migrationName, migrationsDir);
@@ -413,100 +415,98 @@ public class Migrate implements BLauncherCmd {
     }
 
     private static List<String> findDifferences(Module previousModel, Module currentModel) {
+
         List<String> queries = new ArrayList<>();
-        List<String> differences = new ArrayList<>();
-
-        List<String> addedEntities = new ArrayList<>();
-        List<String> removedEntities = new ArrayList<>();
-        HashMap<String, List<EntityField>> addedFields = new HashMap<>();
-        HashMap<String, List<String>> removedFields = new HashMap<>();
-        HashMap<String, List<EntityField>> changedFieldTypes = new HashMap<>();
-        Set<String> primaryKeyChangedEntities = new HashSet<>();
-        HashMap<String, List<ForeignKey>> addedForeignKeys = new HashMap<>();
-        HashMap<String, List<ForeignKey>> removedForeignKeys = new HashMap<>();
-
+        MigrationDataHolder migrationDataHolder = new MigrationDataHolder();
         // Compare entities in previousModel and currentModel
         for (Entity previousModelEntity : previousModel.getEntityMap().values()) {
             Entity currentModelEntity = currentModel.getEntityMap().get(previousModelEntity.getEntityName());
 
             // Check if currentModelEntity exists
             if (currentModelEntity == null) {
-                differences.add("Table " + previousModelEntity.getTableName() + " has been removed");
-                removedEntities.add(previousModelEntity.getTableName());
+                migrationDataHolder.removeTable(previousModelEntity.getTableName());
                 continue;
+            }
+
+            // Check if their table names are changed (through annotations)
+            if (!Objects.equals(currentModelEntity.getTableName(), previousModelEntity.getTableName())) {
+                migrationDataHolder.renameTable(previousModelEntity.getTableName(), currentModelEntity.getTableName());
             }
 
             // Check if the primary key fields has been removed
             if (previousModelEntity.getKeys().size() > currentModelEntity.getKeys().size()) {
-                differences.add("Primary key of table " + currentModelEntity.getTableName() + " has changed");
-                primaryKeyChangedEntities.add(currentModelEntity.getTableName());
+                migrationDataHolder.changePrimaryKey(currentModelEntity.getTableName());
             }
 
             // Compare fields in previousModelEntity and currentModelEntity
             for (EntityField previousModelField : previousModelEntity.getFields()) {
                 EntityField currentModelField = currentModelEntity
-                        .getFieldByColumnName(previousModelField.getFieldColumnName());
+                        .getFieldByName(previousModelField.getFieldName());
 
                 // Check if currentModelField exists and if foreign key was removed
                 if (currentModelField == null) {
                     if (previousModelField.getRelation() == null) {
-                        differences.add("Column " + previousModelField.getFieldColumnName() +
-                                " has been removed from table " + previousModelEntity.getTableName());
-                        removeField(previousModelEntity, previousModelField, removedFields);
+                        migrationDataHolder.removeColumn(previousModelEntity.getTableName(),
+                                previousModelField.getFieldColumnName());
                     } else if (previousModelField.getRelation().isOwner()) {
-                        differences.add("Foreign key " + previousModelField.getFieldColumnName() +
-                                " has been removed from table " + previousModelEntity.getTableName());
-                        addOrRemoveForeignKey(previousModelEntity, previousModelField, removedForeignKeys);
+                        migrationDataHolder.removeForeignKey(previousModelEntity.getTableName(), previousModelField);
                     }
                     continue;
+                }
+
+                // Check if the field names are changed (through annotations)
+                if (!Objects.equals(currentModelField.getFieldColumnName(), previousModelField.getFieldColumnName())) {
+                    migrationDataHolder.renameColumn(currentModelEntity.getTableName(),
+                            previousModelField.getFieldColumnName(), currentModelField.getFieldColumnName());
+                }
+
+                if (currentModelField.getRelation() != null &&
+                        previousModelField.getRelation() != null &&
+                        currentModelField.getRelation().isOwner() &&
+                        !Objects.equals(currentModelField.getRelation().getKeyColumns(),
+                                previousModelField.getRelation().getKeyColumns())) {
+
+                    if (isOnlyColumnsRenamed(previousModelField.getRelation().getKeyColumns(),
+                            currentModelField.getRelation().getKeyColumns())) {
+                        for (int i = 0; i < previousModelField.getRelation().getKeyColumns().size(); i++) {
+                            migrationDataHolder.renameColumn(currentModelEntity.getTableName(),
+                                    previousModelField.getRelation().getKeyColumns().get(i).getColumnName(),
+                                    currentModelField.getRelation().getKeyColumns().get(i).getColumnName());
+                        }
+                    } else {
+                        migrationDataHolder.recreateForeignKey(currentModelEntity.getTableName(), previousModelField,
+                                currentModelField);
+                    }
                 }
 
                 // Compare data types
                 if (!previousModelField.getFieldType().equals(currentModelField.getFieldType()) ||
                         !Objects.equals(previousModelField.getSqlType(), currentModelField.getSqlType()) ||
-                        !Objects.equals(previousModelField.isOptionalType(), currentModelField.isOptionalType())
+                        !Objects.equals(previousModelField.isOptionalType(), currentModelField.isOptionalType()) ||
+                        !Objects.equals(previousModelField.isDbGenerated(), currentModelField.isDbGenerated())
                 ) {
-                    differences.add("Data type of column " + previousModelField.getFieldColumnName() +
-                            " in table " + previousModelEntity.getTableName() + " has changed to " +
-                            currentModelField.getFieldType() + (currentModelField.getSqlType() != null ?
-                            " " +  currentModelField.getSqlType().getFullDataType() : "") + " and is now " +
-                            (currentModelField.isOptionalType() ? "nullable" : "not nullable"));
-
-                    addOrModifyField(previousModelEntity, currentModelField, changedFieldTypes);
+                    migrationDataHolder.modifyColumn(currentModelEntity.getTableName(), previousModelField,
+                            currentModelField);
                 }
 
                 // Compare readonly fields
                 if (!previousModelEntity.getKeys().contains(previousModelField)
                         && currentModelEntity.getKeys().contains(currentModelField)) {
-                    differences.add("Primary key of table " + currentModelEntity.getTableName() + " has changed");
-                    differences.add("Column " + previousModelField.getFieldColumnName() + " in table " +
-                            previousModelEntity.getTableName() + " is now a primary key");
-                    primaryKeyChangedEntities.add(previousModelEntity.getTableName());
+                    migrationDataHolder.changePrimaryKey(currentModelEntity.getTableName());
                 }
 
             }
 
             // Check for added fields and for added foreign keys
             for (EntityField currentModelField : currentModelEntity.getFields()) {
-                EntityField previousModelField = previousModelEntity
-                        .getFieldByColumnName(currentModelField.getFieldColumnName());
+                EntityField previousModelField = previousModelEntity.getFieldByName(currentModelField.getFieldName());
 
                 if (previousModelField == null) {
                     if (currentModelField.getRelation() == null) {
-                        if (currentModelEntity.getKeys().contains(currentModelField)) {
-                            differences.add("Column " + currentModelField.getFieldColumnName() + " of type " +
-                                    currentModelField.getFieldType() + " has been added to table " +
-                                    currentModelEntity.getTableName() + " as a primary key");
-                            primaryKeyChangedEntities.add(currentModelEntity.getTableName());
-                        } else {
-                            differences.add("Column " + currentModelField.getFieldColumnName() + " of type " +
-                                    currentModelField.getFieldType() + " has been added to table " +
-                                    currentModelEntity.getTableName());
-                        }
-                        addOrModifyField(currentModelEntity, currentModelField, addedFields);
+                        migrationDataHolder.addColumn(currentModelEntity.getTableName(), currentModelField,
+                                currentModelEntity.getKeys().contains(currentModelField));
                     } else if (currentModelField.getRelation().isOwner()) {
-                        createForeignKeys(currentModelField, differences, currentModelEntity, addedFields,
-                                addedForeignKeys);
+                        migrationDataHolder.createForeignKeys(currentModelEntity.getTableName(), currentModelField);
                     }
                 }
             }
@@ -515,23 +515,46 @@ public class Migrate implements BLauncherCmd {
         // Check for added entities
         for (Entity currentModelEntity : currentModel.getEntityMap().values()) {
             Entity previousModelEntity = previousModel.getEntityMap().get(currentModelEntity.getTableName());
-            if (previousModelEntity == null) {
-                differences.add("Table " + currentModelEntity.getTableName() + " has been added");
-                addedEntities.add(currentModelEntity.getTableName());
+            if (previousModelEntity == null &&
+                    !migrationDataHolder.isEntityRenamed(currentModelEntity.getTableName())) {
+                migrationDataHolder.addTable(currentModelEntity.getTableName());
             }
         }
 
         // Convert differences to queries (ordered)
-        addDropPrimaryKeyQueries(primaryKeyChangedEntities, addedEntities, queries);
-        addCreateTableQueries(addedEntities, currentModel, queries);
-        addCreateFieldQueries(addedFields, queries);
-        addCreatePrimaryKeyQueries(primaryKeyChangedEntities, addedEntities, currentModel, queries);
-        addDropForeignKeyQueries(removedForeignKeys, queries);
-        addCreateForeignKeyQueries(addedForeignKeys, queries);
-        addDropColumnQueries(removedFields, queries);
-        addDropTableQueries(removedEntities, queries);
-        addModifyColumnTypeQueries(changedFieldTypes, queries);
+        addDropTableQueries(migrationDataHolder.getRemovedEntities(), queries);
+        addDropForeignKeyQueries(migrationDataHolder.getRemovedForeignKeys(), queries);
+        addDropPrimaryKeyQueries(migrationDataHolder.getPrimaryKeyChangedEntities(),
+                migrationDataHolder.getAddedEntities(), queries);
+        addDropColumnQueries(migrationDataHolder.getRemovedFields(), queries);
+        addCreateTableQueries(migrationDataHolder.getAddedEntities(), currentModel, queries);
+        addRenameTableQueries(migrationDataHolder.getRenamedEntities(), queries);
+        addRenameFieldQueries(migrationDataHolder.getRenamedFields(), queries);
+        addCreateFieldQueries(migrationDataHolder.getAddedFields(), queries);
+        addCreatePrimaryKeyQueries(migrationDataHolder.getPrimaryKeyChangedEntities(),
+                migrationDataHolder.getAddedEntities(), currentModel, queries);
+        addCreateForeignKeyQueries(migrationDataHolder.getAddedForeignKeys(), queries);
+        addModifyColumnTypeQueries(migrationDataHolder.getChangedFieldTypes(), queries);
 
+        printDetailedListOfDifferences(migrationDataHolder.getDifferences());
+
+        return queries;
+    }
+
+    private static boolean isOnlyColumnsRenamed(List<Relation.Key> previousKeys, List<Relation.Key> currentKeys) {
+        if (!Objects.equals(previousKeys.size(), currentKeys.size())) {
+            return false;
+        }
+        for (int i = 0; i < previousKeys.size(); i++) {
+            if (!previousKeys.get(i).isOnlyColumnRenamed(currentKeys.get(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+
+    private static void printDetailedListOfDifferences(List<String> differences) {
         errStream.println(System.lineSeparator() + "Detailed list of differences: ");
         if (!differences.isEmpty()) {
             differences.forEach(difference -> errStream.println("-- " + difference));
@@ -539,25 +562,25 @@ public class Migrate implements BLauncherCmd {
         } else {
             errStream.println("-- No differences found" + System.lineSeparator());
         }
-
-        return queries;
     }
 
-    private static void createForeignKeys(EntityField currentModelField, List<String> differences,
-                                          Entity currentModelEntity, HashMap<String, List<EntityField>> addedFields,
-                                          HashMap<String, List<ForeignKey>> addedForeignKeys) {
-        for (Relation.Key key : currentModelField.getRelation().getKeyColumns()) {
-            differences.add("Column " + key.getColumnName() + " of type " + key.getType() +
-                    " has been added to table " + currentModelEntity.getTableName()
-                    + " as a foreign key");
+    private static void addRenameFieldQueries(HashMap<String, List<MigrationDataHolder.NameMapping>> renamedFields,
+                                              List<String> queries) {
+        String renameFieldTemplate = "ALTER TABLE %s%nRENAME COLUMN %s TO %s;%n";
+        for (Map.Entry<String, List<MigrationDataHolder.NameMapping>> entry : renamedFields.entrySet()) {
+            for (MigrationDataHolder.NameMapping nameMapping : entry.getValue()) {
+                queries.add(String.format(renameFieldTemplate, entry.getKey(), nameMapping.oldName(),
+                        nameMapping.newName()));
+            }
         }
+    }
 
-        addNewEntityFK(currentModelEntity, currentModelField, addedFields);
-
-        differences.add("Relation " + currentModelField.getFieldName() + " of type " +
-                currentModelField.getFieldType() + " has been added to table " +
-                currentModelEntity.getTableName());
-        addOrRemoveForeignKey(currentModelEntity, currentModelField, addedForeignKeys);
+    private static void addRenameTableQueries(List<MigrationDataHolder.NameMapping> renamedEntities,
+                                              List<String> queries) {
+        String renameTableTemplate = "RENAME TABLE %s TO %s;%n";
+        for (MigrationDataHolder.NameMapping nameMapping : renamedEntities) {
+            queries.add(String.format(renameTableTemplate, nameMapping.oldName(), nameMapping.newName()));
+        }
     }
 
     private static void addCreatePrimaryKeyQueries(Set<String> entities, List<String> addedEntities,
@@ -585,71 +608,6 @@ public class Migrate implements BLauncherCmd {
                 queries.add(String.format(dropPrimaryKeyTemplate, table));
             }
         });
-    }
-
-    private static void addOrRemoveForeignKey(Entity entity, EntityField field, Map<String, List<ForeignKey>> map) {
-        String removeKeyName = String.format("FK_%s_%s", entity.getTableName(),
-                field.getRelation().getAssocEntity().getTableName());
-        ForeignKey foreignKey = new ForeignKey(removeKeyName,
-                field.getRelation().getKeyColumns().stream().map(Relation.Key::getColumnName).toList(),
-                field.getRelation().getAssocEntity().getTableName(),
-                field.getRelation().getKeyColumns().stream().map(Relation.Key::getReferenceColumnName).toList());
-
-        if (!map.containsKey(entity.getTableName())) {
-            List<ForeignKey> initialData = new ArrayList<>();
-            initialData.add(foreignKey);
-            map.put(entity.getTableName(), initialData);
-        } else {
-            List<ForeignKey> existingData = map.get(entity.getTableName());
-            existingData.add(foreignKey);
-            map.put(entity.getTableName(), existingData);
-        }
-    }
-
-    private static void removeField(Entity entity, EntityField field, Map<String, List<String>> map) {
-        if (!map.containsKey(entity.getTableName())) {
-            List<String> initialData = new ArrayList<>();
-            initialData.add(field.getFieldColumnName());
-            map.put(entity.getTableName(), initialData);
-        } else {
-            List<String> existingData = map.get(entity.getTableName());
-            existingData.add(field.getFieldColumnName());
-            map.put(entity.getTableName(), existingData);
-        }
-    }
-
-    private static void addOrModifyField(Entity entity, EntityField field, Map<String, List<EntityField>> map) {
-        if (!map.containsKey(entity.getTableName())) {
-            List<EntityField> initialData = new ArrayList<>();
-            initialData.add(field);
-            map.put(entity.getTableName(), initialData);
-        } else {
-            List<EntityField> existingData = map.get(entity.getTableName());
-            existingData.add(field);
-            map.put(entity.getTableName(), existingData);
-        }
-    }
-
-    private static void addNewEntityFK(Entity entity, EntityField field, Map<String, List<EntityField>> map) {
-        for (Relation.Key key : field.getRelation().getKeyColumns()) {
-            EntityField primaryKey = field.getRelation().getAssocEntity()
-                    .getFieldByColumnName(key.getReferenceColumnName());
-            EntityField.Builder customFkBuilder = EntityField.newBuilder(key.getField());
-            customFkBuilder.setFieldColumnName(key.getColumnName());
-            customFkBuilder.setType(primaryKey.getFieldType());
-            customFkBuilder.setArrayType(false);
-            customFkBuilder.setSqlType(primaryKey.getSqlType());
-
-            if (!map.containsKey(entity.getTableName())) {
-                List<EntityField> initialData = new ArrayList<>();
-                initialData.add(customFkBuilder.build());
-                map.put(entity.getTableName(), initialData);
-            } else {
-                List<EntityField> existingData = map.get(entity.getTableName());
-                existingData.add(customFkBuilder.build());
-                map.put(entity.getTableName(), existingData);
-            }
-        }
     }
 
     // Convert Create Table List to Query

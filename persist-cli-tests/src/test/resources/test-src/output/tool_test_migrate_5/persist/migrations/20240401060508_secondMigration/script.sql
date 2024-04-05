@@ -2,6 +2,8 @@
 -- This file is an auto-generated file by Ballerina persistence layer for the migrate command.
 -- Please verify the generated scripts and execute them against the target DB server.
 
+DROP TABLE Person;
+
 
 CREATE TABLE `User` (
 	`id` INT NOT NULL,
@@ -9,6 +11,4 @@ CREATE TABLE `User` (
 	`age` INT NOT NULL,
 	PRIMARY KEY(`id`)
 );
-
-DROP TABLE Person;
 
