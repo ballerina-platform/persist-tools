@@ -190,7 +190,7 @@ public class Relation {
             return Objects.hash(field, columnName, reference, referenceColumnName, type);
         }
 
-        public boolean onlyColumnNameChanged(Key key) {
+        public boolean isOnlyColumnRenamed(Key key) {
             return Objects.equals(field, key.field) && !Objects.equals(columnName, key.columnName) &&
                     Objects.equals(reference, key.reference) &&
                     Objects.equals(referenceColumnName, key.referenceColumnName) && Objects.equals(type, key.type);

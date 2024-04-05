@@ -29,7 +29,7 @@ import java.util.Set;
  *
  *
  */
-public class ModelDifferences {
+public class MigrationDataHolder {
     private final List<String> addedEntities = new ArrayList<>();
     private final List<NameMapping> renamedEntities = new ArrayList<>();
     private final List<String> removedEntities = new ArrayList<>();
