@@ -204,9 +204,7 @@ public class TomlSyntaxUtils {
                             }
                         }
                     }
-                    if (!dependencyExists) {
-                        moduleMembers = moduleMembers.add(member);
-                    }
+                    moduleMembers = moduleMembers.add(member);
                 } else {
                     moduleMembers = moduleMembers.add(member);
                 }
@@ -217,15 +215,84 @@ public class TomlSyntaxUtils {
                         PersistToolsConstants.PERSIST_TOOL_CONFIG, null));
                 moduleMembers = populateBallerinaNodeList(moduleMembers, module, datasource, id[0]);
                 moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
+            } else {
+                moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray(
+                        BalSyntaxConstants.PERSIST_DEPENDENCY, null));
+                moduleMembers = populatePersistDependency(moduleMembers, artifactId, datasource);
             }
-            moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray(
-                    BalSyntaxConstants.PERSIST_DEPENDENCY, null));
-            moduleMembers = populatePersistDependency(moduleMembers, artifactId, datasource);
         }
         Token eofToken = AbstractNodeFactory.createIdentifierToken("");
         DocumentNode documentNode = NodeFactory.createDocumentNode(moduleMembers, eofToken);
         TextDocument textDocument = TextDocuments.from(documentNode.toSourceCode());
         return SyntaxTree.from(textDocument).toSourceCode();
+    }
+
+    public static String addPersistNativeDependency(Path configPath, String datasource)
+            throws BalException, IOException {
+        Path fileNamePath = configPath.getFileName();
+        TextDocument configDocument = TextDocuments.from(Files.readString(configPath));
+        String artifactId = BalSyntaxConstants.PERSIST_MODULE + "." + datasource;
+        if (datasource.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB) ||
+                datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB) ||
+                datasource.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB)) {
+            artifactId = BalSyntaxConstants.PERSIST_MODULE + "." + BalSyntaxConstants.SQL;
+        }
+        NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
+        if (Objects.nonNull(fileNamePath)) {
+            SyntaxTree syntaxTree = SyntaxTree.from(configDocument, fileNamePath.toString());
+            DocumentNode rootNote = syntaxTree.rootNode();
+            NodeList<DocumentMemberDeclarationNode> nodeList = rootNote.members();
+            for (DocumentMemberDeclarationNode member : nodeList) {
+                boolean dependencyExists = false;
+                if (member instanceof TableArrayNode) {
+                    TableArrayNode node = (TableArrayNode) member;
+                    if (node.identifier().toSourceCode().trim().equals("platform.java17.dependency")) {
+                        NodeList<KeyValueNode> fields = ((TableArrayNode) member).fields();
+                        for (KeyValueNode field : fields) {
+                            String value = field.value().toSourceCode().trim();
+                            if (field.identifier().toSourceCode().trim().equals(
+                                    PersistToolsConstants.TomlFileConstants.KEYWORD_ARTIFACT_ID) &&
+                                    (value).substring(1, value.length() - 1).equals(
+                                            String.format(PersistToolsConstants.TomlFileConstants.ARTIFACT_ID,
+                                                    artifactId))) {
+                                dependencyExists = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!dependencyExists) {
+                        moduleMembers = moduleMembers.add(member);
+                    } else {
+                        validateTheDependency(node, datasource);
+                    }
+                } else {
+                    moduleMembers = moduleMembers.add(member);
+                }
+            }
+        }
+        moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray(
+                BalSyntaxConstants.PERSIST_DEPENDENCY, null));
+        moduleMembers = populatePersistDependency(moduleMembers, artifactId, datasource);
+        Token eofToken = AbstractNodeFactory.createIdentifierToken("");
+        DocumentNode documentNode = NodeFactory.createDocumentNode(moduleMembers, eofToken);
+        TextDocument textDocument = TextDocuments.from(documentNode.toSourceCode());
+        return SyntaxTree.from(textDocument).toSourceCode();
+    }
+
+    private static void validateTheDependency(DocumentMemberDeclarationNode node, String datasource)
+            throws BalException {
+        NodeList<KeyValueNode> fields = ((TableArrayNode) node).fields();
+        for (KeyValueNode field : fields) {
+            String value = field.value().toSourceCode().trim().replaceAll("\"", "");
+            if (field.identifier().toSourceCode().trim().equals(
+                    PersistToolsConstants.TomlFileConstants.KEYWORD_VERSION) &&
+                    !(value.equals(getPersistVersion(datasource)))) {
+                throw new BalException("the 'Ballerina.toml' file is already updated with the Persist client native " +
+                        "dependency but the version is different from the current version. Please remove the " +
+                        "existing dependency and try again.");
+            }
+        }
     }
 
     private static NodeList<DocumentMemberDeclarationNode> populateBallerinaNodeList(
