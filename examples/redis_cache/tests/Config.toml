@@ -1,0 +1,5 @@
+[redis_cache.entities.connectionConfig]
+connection = "redis://localhost:6379"
+
+[redis_cache.entities.cacheConfig]
+maxAge = 4

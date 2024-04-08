@@ -92,15 +92,15 @@ public isolated client class Client {
     };
 
     public isolated function init() returns persist:Error? {
-        redis:Client|error dbClient = new (redis);
+        redis:Client|error dbClient = new (connectionConfig);
         if dbClient is error {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
         self.persistClients = {
-            [USER]: check new (dbClient, self.metadata.get(USER)),
-            [POST]: check new (dbClient, self.metadata.get(POST)),
-            [FOLLOW]: check new (dbClient, self.metadata.get(FOLLOW))
+            [USER]: check new (dbClient, self.metadata.get(USER), cacheConfig.maxAge),
+            [POST]: check new (dbClient, self.metadata.get(POST), cacheConfig.maxAge),
+            [FOLLOW]: check new (dbClient, self.metadata.get(FOLLOW), cacheConfig.maxAge)
         };
     }
 
