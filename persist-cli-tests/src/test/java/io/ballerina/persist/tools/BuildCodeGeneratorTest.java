@@ -41,8 +41,8 @@ public class BuildCodeGeneratorTest {
 
     @Test(enabled = true)
     public void testBuildWithMysql() throws IOException, InterruptedException {
-        String log = "Persist client and entity types generated successfully in " +
-                "the persist_build_1 directory.";
+        String log = "the 'Ballerina.toml' file is already updated with the Persist client native dependency but the " +
+                "version is different from the current version. Please remove the existing dependency and try again.";
         Path project = TARGET_DIR.resolve("generated-sources/tool_test_build_1");
         assertContainLogs(log, project);
     }
