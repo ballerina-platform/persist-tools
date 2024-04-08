@@ -118,11 +118,11 @@ public class BuildCodeGeneratorTest {
 
     private void updateOutputBallerinaToml(String fileName) {
         String tomlFileName = "Ballerina.toml";
-        Path filePath = Paths.get("src", "test", "resources", "test-src", "output", fileName, tomlFileName);
+        Path filePath = Paths.get("src", "test", "resources", "test-src", "input", fileName, tomlFileName);
         if (filePath.endsWith(tomlFileName)) {
             try {
                 String content = Files.readString(filePath);
-                String dataStore = "mysql";
+                String dataStore = "persist.sql";
                 String version = persistSqlVersion;
                 content = content.replaceAll(
                         "artifactId\\s=\\s\"" + dataStore + "-native\"\nversion\\s=\\s\\\"\\d+(\\.\\d+)+" +
