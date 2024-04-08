@@ -31,7 +31,7 @@ public isolated client class Client {
                 "cars[].id": {relation: {entityName: "cars", refField: "id"}},
                 "cars[].name": {relation: {entityName: "cars", refField: "name"}},
                 "cars[].model": {relation: {entityName: "cars", refField: "model"}},
-                "cars[].ownerId": {relation: {entityName: "cars", refField: "ownerId"}}
+                "cars[].ownerId": {relation: {entityName: "cars", refField: "ownerId", refColumn: "OWNER_ID"}}
             },
             keyFields: ["id"],
             joinMetadata: {cars: {entity: Car, fieldName: "cars", refTable: "Car", refColumns: ["OWNER_ID"], joinColumns: ["ID"], 'type: psql:MANY_TO_ONE}}
@@ -44,7 +44,7 @@ public isolated client class Client {
                 name: {columnName: "name"},
                 model: {columnName: "model"},
                 ownerId: {columnName: "OWNER_ID"},
-                "user.id": {relation: {entityName: "user", refField: "id"}},
+                "user.id": {relation: {entityName: "user", refField: "id", refColumn: "ID"}},
                 "user.name": {relation: {entityName: "user", refField: "name"}},
                 "user.gender": {relation: {entityName: "user", refField: "gender"}},
                 "user.nic": {relation: {entityName: "user", refField: "nic"}},

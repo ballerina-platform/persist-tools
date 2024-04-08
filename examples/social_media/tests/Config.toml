@@ -1,2 +1,5 @@
-[social_media.entities.redis]
+[social_media.entities.connectionConfig]
 connection = "redis://localhost:6379"
+
+[social_media.entities.cacheConfig]
+maxAge = -1

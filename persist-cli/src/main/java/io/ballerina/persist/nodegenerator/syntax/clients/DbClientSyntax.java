@@ -43,6 +43,7 @@ import io.ballerina.persist.nodegenerator.syntax.constants.SyntaxTokenConstants;
 import io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * This class is used to generate the DB client syntax tree.
@@ -295,24 +296,46 @@ public class DbClientSyntax implements ClientSyntax {
                             if (associateFieldMetaData.length() != 0) {
                                 associateFieldMetaData.append(BalSyntaxConstants.COMMA_WITH_NEWLINE);
                             }
-                            associateFieldMetaData.append(String.format((field.isArrayType() ? "\"%s[]" : "\"%s") +
-                                            BalSyntaxConstants.ASSOCIATED_FIELD_TEMPLATE,
-                                    BalSyntaxUtils.stripEscapeCharacter(field.getFieldName()),
-                                    BalSyntaxUtils.stripEscapeCharacter(associatedEntityField.getFieldName()),
-                                    BalSyntaxUtils.stripEscapeCharacter(field.getFieldName()),
-                                    BalSyntaxUtils.stripEscapeCharacter(associatedEntityField.getFieldName())));
+                            if (Objects.equals(associatedEntityField.getFieldName(),
+                                    associatedEntityField.getFieldColumnName())) {
+                                associateFieldMetaData.append(String.format((field.isArrayType() ? "\"%s[]" : "\"%s") +
+                                                BalSyntaxConstants.ASSOCIATED_FIELD_TEMPLATE,
+                                        BalSyntaxUtils.stripEscapeCharacter(field.getFieldName()),
+                                        BalSyntaxUtils.stripEscapeCharacter(associatedEntityField.getFieldName()),
+                                        BalSyntaxUtils.stripEscapeCharacter(field.getFieldName()),
+                                        BalSyntaxUtils.stripEscapeCharacter(associatedEntityField.getFieldName())));
+                            } else {
+                                associateFieldMetaData.append(String.format((field.isArrayType() ? "\"%s[]" : "\"%s") +
+                                                BalSyntaxConstants.ASSOCIATED_FIELD_TEMPLATE_MAPPED,
+                                        BalSyntaxUtils.stripEscapeCharacter(field.getFieldName()),
+                                        BalSyntaxUtils.stripEscapeCharacter(associatedEntityField.getFieldName()),
+                                        BalSyntaxUtils.stripEscapeCharacter(field.getFieldName()),
+                                        BalSyntaxUtils.stripEscapeCharacter(associatedEntityField.getFieldName()),
+                                        BalSyntaxUtils.stripEscapeCharacter(associatedEntityField.getFieldColumnName())
+                                ));
+                            }
                         } else {
                             if (associatedEntityField.getRelation().isOwner()) {
                                     for (Relation.Key key : associatedEntityField.getRelation().getKeyColumns()) {
                                         if (associateFieldMetaData.length() != 0) {
                                             associateFieldMetaData.append(BalSyntaxConstants.COMMA_WITH_NEWLINE);
                                         }
-                                        associateFieldMetaData.append(String.format((field.isArrayType() ?
-                                                        "\"%s[]" : "\"%s") +
-                                                        BalSyntaxConstants.ASSOCIATED_FIELD_TEMPLATE,
-                                                field.getFieldName(), key.getField(),
-                                                BalSyntaxUtils.stripEscapeCharacter(field.getFieldName()),
-                                                BalSyntaxUtils.stripEscapeCharacter(key.getField())));
+                                        if (Objects.equals(key.getField(), key.getColumnName())) {
+                                            associateFieldMetaData.append(String.format((field.isArrayType() ?
+                                                            "\"%s[]" : "\"%s") +
+                                                            BalSyntaxConstants.ASSOCIATED_FIELD_TEMPLATE,
+                                                    field.getFieldName(), key.getField(),
+                                                    BalSyntaxUtils.stripEscapeCharacter(field.getFieldName()),
+                                                    BalSyntaxUtils.stripEscapeCharacter(key.getField())));
+                                        } else {
+                                            associateFieldMetaData.append(String.format((field.isArrayType() ?
+                                                            "\"%s[]" : "\"%s") +
+                                                            BalSyntaxConstants.ASSOCIATED_FIELD_TEMPLATE_MAPPED,
+                                                    field.getFieldName(), key.getField(),
+                                                    BalSyntaxUtils.stripEscapeCharacter(field.getFieldName()),
+                                                    BalSyntaxUtils.stripEscapeCharacter(key.getField()),
+                                                    BalSyntaxUtils.stripEscapeCharacter(key.getColumnName())));
+                                        }
                                     }
                             }
                         }
@@ -321,8 +344,15 @@ public class DbClientSyntax implements ClientSyntax {
                     if (fieldMetaData.length() != 0) {
                         fieldMetaData.append(BalSyntaxConstants.COMMA_WITH_NEWLINE);
                     }
-                    fieldMetaData.append(String.format(BalSyntaxConstants.METADATA_RECORD_FIELD_TEMPLATE,
-                            field.getFieldName(), BalSyntaxUtils.stripEscapeCharacter(field.getFieldColumnName())));
+                    if (field.isDbGenerated()) {
+                        fieldMetaData.append(String.format(BalSyntaxConstants.METADATA_RECORD_FIELD_WITH_DBGEN_TEMPLATE,
+                                field.getFieldName(), BalSyntaxUtils.stripEscapeCharacter(field.getFieldColumnName()),
+                                "true"));
+                    } else {
+                        fieldMetaData.append(String.format(BalSyntaxConstants.METADATA_RECORD_FIELD_TEMPLATE,
+                                field.getFieldName(), BalSyntaxUtils.stripEscapeCharacter(field.getFieldColumnName())));
+                    }
+
                 }
             }
             if (associateFieldMetaData.length() > 1) {

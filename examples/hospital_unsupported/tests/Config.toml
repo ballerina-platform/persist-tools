@@ -3,6 +3,7 @@ port = 3308
 user = "root"
 password = "Test123#"
 database = "hospital"
+connectionOptions = {ssl = {}}
 
 [DemoUnsupported.entities]
 host = "localhost"
@@ -10,3 +11,4 @@ port = 3308
 user = "root"
 password = "Test123#"
 database = "hospital"
+connectionOptions = {ssl = {}}

@@ -5,3 +5,18 @@ user = "root"
 password = ""
 database = ""
 
+[tool_test_generate_87.mssql_entities]
+host = "localhost"
+port = 1433
+user = "sa"
+password = ""
+database = ""
+
+[tool_test_generate_87.postgresql_entities]
+host = "localhost"
+port = 5432
+user = "postgres"
+password = ""
+database = ""
+
+

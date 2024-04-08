@@ -220,6 +220,7 @@ public type AllTypesIdRecord record {|
     readonly decimal decimalType;
     readonly string stringType;
     string randomField;
+
 |};
 
 public type AllTypesIdRecordOptionalized record {|
@@ -243,4 +244,3 @@ public type AllTypesIdRecordInsert AllTypesIdRecord;
 public type AllTypesIdRecordUpdate record {|
     string randomField?;
 |};
-

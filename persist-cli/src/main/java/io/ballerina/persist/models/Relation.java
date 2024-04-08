@@ -21,6 +21,7 @@ package io.ballerina.persist.models;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Class to store entity relations.
@@ -138,7 +139,6 @@ public class Relation {
      */
     public static class Key {
         private final String field;
-
         private final String columnName;
         private final String reference;
         private final String referenceColumnName;
@@ -170,6 +170,30 @@ public class Relation {
 
         public String getReferenceColumnName() {
             return referenceColumnName;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null || getClass() != obj.getClass()) {
+                return false;
+            }
+            Key key = (Key) obj;
+            return Objects.equals(field, key.field) && Objects.equals(columnName, key.columnName) &&
+                    Objects.equals(reference, key.reference) &&
+                    Objects.equals(referenceColumnName, key.referenceColumnName) && Objects.equals(type, key.type);
+        }
+        @Override
+        public int hashCode() {
+            return Objects.hash(field, columnName, reference, referenceColumnName, type);
+        }
+
+        public boolean isOnlyColumnRenamed(Key key) {
+            return Objects.equals(field, key.field) && !Objects.equals(columnName, key.columnName) &&
+                    Objects.equals(reference, key.reference) &&
+                    Objects.equals(referenceColumnName, key.referenceColumnName) && Objects.equals(type, key.type);
         }
     }
 }

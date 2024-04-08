@@ -518,163 +518,232 @@ public class ToolingGenerateTest {
     @Test
     @Description("The model has a relation with relation annotation")
     public void testGenerateEntitiesWithRelationAnnotations() {
-        executeGenerateCommand("tool_test_generate_72", "mysql", "entities");
-        assertGeneratedSources("tool_test_generate_72");
+        String subDir = "tool_test_generate_72";
+        executeGenerateCommand(subDir, "mysql", "entities");
+        executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        assertGeneratedSources(subDir);
     }
 
     @Test(enabled = true)
     @Description("The model has Mapping annotations on entities")
     public void testGenerateEntitiesWithMappingAnnotations() {
-        executeGenerateCommand("tool_test_generate_73", "mysql", "entities");
-        assertGeneratedSources("tool_test_generate_73");
+        String subDir = "tool_test_generate_73";
+        executeGenerateCommand(subDir, "mysql", "entities");
+        executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        assertGeneratedSources(subDir);
     }
 
     @Test(enabled = true)
     @Description("The model has Mapping annotations on foreign keys.")
     public void testGenerateEntitiesWithMappingAnnotationOnForeignKeys() {
-        executeGenerateCommand("tool_test_generate_74", "mysql", "entities");
-        assertGeneratedSources("tool_test_generate_74");
+        String subDir = "tool_test_generate_74";
+        executeGenerateCommand(subDir, "mysql", "entities");
+        executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        assertGeneratedSources(subDir);
     }
 
     @Test(enabled = true)
     @Description("The model has type mapping annotations Char, VarChar and Decimal")
     public void testGenerateEntitiesWithTypeMappingAnnotations() {
-        executeGenerateCommand("tool_test_generate_75", "mysql", "entities");
-        assertGeneratedSources("tool_test_generate_75");
+        String subDir = "tool_test_generate_75";
+        executeGenerateCommand(subDir, "mysql", "entities");
+        executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        assertGeneratedSources(subDir);
     }
 
     @Test(enabled = true)
     @Description("The model has a unique index on a field")
     public void testGenerateEntitiesWithUniqueIndexesOnOneField() {
-        executeGenerateCommand("tool_test_generate_76", "mysql", "entities");
-        assertGeneratedSources("tool_test_generate_76");
+        String subDir = "tool_test_generate_76";
+        executeGenerateCommand(subDir, "mysql", "entities");
+        executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        assertGeneratedSources(subDir);
     }
 
     @Test(enabled = true)
     @Description("The model has a single unique index on two fields")
     public void testGenerateEntitiesSameUniqueIndexOnTwoFields() {
-        executeGenerateCommand("tool_test_generate_77", "mysql", "entities");
-        assertGeneratedSources("tool_test_generate_77");
+        String subDir = "tool_test_generate_77";
+        executeGenerateCommand(subDir, "mysql", "entities");
+        executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        assertGeneratedSources(subDir);
     }
 
     @Test(enabled = true)
     @Description("The model has a single Index on two fields")
     public void testGenerateEntitiesSameIndexOnTwoFields() {
-        executeGenerateCommand("tool_test_generate_78", "mysql", "entities");
-        assertGeneratedSources("tool_test_generate_78");
+        String subDir = "tool_test_generate_78";
+        executeGenerateCommand(subDir, "mysql", "entities");
+        executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        assertGeneratedSources(subDir);
     }
 
     @Test(enabled = true)
     @Description("The model has an entity whose id field is renamed")
     public void testGenerateEntitiesWithRenamedIdField() {
-        executeGenerateCommand("tool_test_generate_79", "mysql", "entities");
-        assertGeneratedSources("tool_test_generate_79");
+        String subDir = "tool_test_generate_79";
+        executeGenerateCommand(subDir, "mysql", "entities");
+        executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        assertGeneratedSources(subDir);
     }
 
     @Test(enabled = true)
     @Description("The model has a renamed Id field and a renamed foreign key")
     public void testGenerateEntitiesWithRenamedIdFieldAndForeignKey() {
-        executeGenerateCommand("tool_test_generate_80", "mysql", "entities");
-        assertGeneratedSources("tool_test_generate_80");
+        String subDir = "tool_test_generate_80";
+        executeGenerateCommand(subDir, "mysql", "entities");
+        executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        assertGeneratedSources(subDir);
     }
 
     @Test(enabled = true)
     @Description("The model has a relation with a composite foreign key")
     public void testGenerateEntitiesCompositeForeignKey() {
-        executeGenerateCommand("tool_test_generate_81", "mysql", "entities");
-        assertGeneratedSources("tool_test_generate_81");
+        String subDir = "tool_test_generate_81";
+        executeGenerateCommand(subDir, "mysql", "entities");
+        executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        assertGeneratedSources(subDir);
     }
 
     @Test(enabled = true)
     @Description("The model has a relation with a composite foreign key with one key renamed")
     public void testGenerateEntitiesRenamedCompositeForeignKeyPartial() {
-        executeGenerateCommand("tool_test_generate_82", "mysql", "entities");
-        assertGeneratedSources("tool_test_generate_82");
+        String subDir = "tool_test_generate_82";
+        executeGenerateCommand(subDir, "mysql", "entities");
+        executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        assertGeneratedSources(subDir);
     }
 
     @Test(enabled = true)
     @Description("The model has a relation with a composite foreign key with both keys renamed")
     public void testGenerateEntitiesRenamedCompositeForeignKey() {
-        executeGenerateCommand("tool_test_generate_83", "mysql", "entities");
-        assertGeneratedSources("tool_test_generate_83");
+        String subDir = "tool_test_generate_83";
+        executeGenerateCommand(subDir, "mysql", "entities");
+        executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        assertGeneratedSources(subDir);
     }
 
     @Test(enabled = true)
     @Description("The model has a relation with a composite foreign key with both keys renamed along with part " +
             "of primary key")
     public void testGenerateEntitiesCompositeForeignKeyWithRenamedKeysPartial() {
-        executeGenerateCommand("tool_test_generate_84", "mysql", "entities");
-        assertGeneratedSources("tool_test_generate_84");
+        String subDir = "tool_test_generate_84";
+        executeGenerateCommand(subDir, "mysql", "entities");
+        executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        assertGeneratedSources(subDir);
     }
 
     @Test(enabled = true)
     @Description("The model has a relation with a composite foreign key with both keys renamed along with primary keys")
     public void testGenerateEntitiesCompositeForeignKeyWithRenamedKeys() {
-        executeGenerateCommand("tool_test_generate_85", "mysql", "entities");
-        assertGeneratedSources("tool_test_generate_85");
+        String subDir = "tool_test_generate_85";
+        executeGenerateCommand(subDir, "mysql", "entities");
+        executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        assertGeneratedSources(subDir);
     }
 
     @Test(enabled = true)
     @Description("The model has an Entity with auto generated index on a field")
     public void testGenerateEntitiesWithAutoGeneratedIndex() {
-        executeGenerateCommand("tool_test_generate_86", "mysql", "entities");
-        assertGeneratedSources("tool_test_generate_86");
+        String subDir = "tool_test_generate_86";
+        executeGenerateCommand(subDir, "mysql", "entities");
+        executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        assertGeneratedSources(subDir);
     }
 
     @Test(enabled = true)
-    @Description("The model has an Entity with auto generated index on a field")
+    @Description("The model has an Entity with auto generated unique index on a field")
     public void testGenerateEntitiesWithAutoGeneratedUniqueIndex() {
-        executeGenerateCommand("tool_test_generate_87", "mysql", "entities");
-        assertGeneratedSources("tool_test_generate_87");
+        String subDir = "tool_test_generate_87";
+        executeGenerateCommand(subDir, "mysql", "entities");
+        executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        assertGeneratedSources(subDir);
     }
 
     @Test(enabled = true)
     @Description("The model has Entities with both index types on same field")
     public void testGenerateEntitiesWithBothIndexTypesOnSameField() {
-        executeGenerateCommand("tool_test_generate_88", "mysql", "entities");
-        assertGeneratedSources("tool_test_generate_88");
+        String subDir = "tool_test_generate_88";
+        executeGenerateCommand(subDir, "mysql", "entities");
+        executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        assertGeneratedSources(subDir);
     }
 
     @Test(enabled = true)
     @Description("The model has Entities with both index types on same field and one with a name")
     public void testGenerateEntitiesWithBothIndexTypesAndOneWithAName() {
-        executeGenerateCommand("tool_test_generate_89", "mysql", "entities");
-        assertGeneratedSources("tool_test_generate_89");
+        String subDir = "tool_test_generate_89";
+        executeGenerateCommand(subDir, "mysql", "entities");
+        executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        assertGeneratedSources(subDir);
     }
 
     @Test(enabled = true)
     @Description("The model has Entity with auto generated ID field")
     public void testGenerateEntityWithAutoGeneratedId() {
-        executeGenerateCommand("tool_test_generate_90", "mysql", "entities");
-        assertGeneratedSources("tool_test_generate_90");
+        String subDir = "tool_test_generate_90";
+        executeGenerateCommand(subDir, "mysql", "entities");
+        executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        assertGeneratedSources(subDir);
     }
 
     @Test(enabled = true)
     @Description("The model has Entity with auto generated ID field with a relation")
     public void testGenerateEntityWithAutoGeneratedIdWithRelation() {
-        executeGenerateCommand("tool_test_generate_91", "mysql", "entities");
-        assertGeneratedSources("tool_test_generate_91");
+        String subDir = "tool_test_generate_91";
+        executeGenerateCommand(subDir, "mysql", "entities");
+        executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        assertGeneratedSources(subDir);
     }
 
     @Test(enabled = true)
     @Description("The model has Entity with auto generated ID field with a renamed relation")
     public void testGenerateEntityWithAutoGeneratedIdWithRenamedRelation() {
-        executeGenerateCommand("tool_test_generate_92", "mysql", "entities");
-        assertGeneratedSources("tool_test_generate_92");
+        String subDir = "tool_test_generate_92";
+        executeGenerateCommand(subDir, "mysql", "entities");
+        executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        assertGeneratedSources(subDir);
     }
 
     @Test(enabled = true)
     @Description("The model has multiple relations with relation annotations")
     public void testGenerateEntitiesWithMultipleRelationsOnSame() {
-        executeGenerateCommand("tool_test_generate_93", "mysql", "entities");
-        assertGeneratedSources("tool_test_generate_93");
+        String subDir = "tool_test_generate_93";
+        executeGenerateCommand(subDir, "mysql", "entities");
+        executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        assertGeneratedSources(subDir);
     }
 
     @Test(enabled = true)
     @Description("The model has multiple relations with relation annotations and renamed foreign keys")
     public void testGenerateEntitiesWithMultipleRenamedRelationsOnSame() {
-        executeGenerateCommand("tool_test_generate_94", "mysql", "entities");
-        assertGeneratedSources("tool_test_generate_94");
+        String subDir = "tool_test_generate_94";
+        executeGenerateCommand(subDir, "mysql", "entities");
+        executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        assertGeneratedSources(subDir);
     }
 
     @Test(enabled = true)
@@ -722,8 +791,32 @@ public class ToolingGenerateTest {
     @Test(enabled = true)
     @Description("The model has entities with unsupported fields")
     public void testGenerateEntitiesWithUnsupportedFields() {
-        executeGenerateCommand("tool_test_generate_101", "mysql", "entities");
-        assertGeneratedSources("tool_test_generate_101");
+        String subDir = "tool_test_generate_101";
+        executeGenerateCommand(subDir, "mysql", "entities");
+        executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        assertGeneratedSources(subDir);
+    }
+
+    @Test(enabled = true)
+    @Description("There are entities with 'sql' annotations")
+    public void testGenerateIgnoreSQLAnnotationsForInmemory() {
+        executeGenerateCommand("tool_test_generate_102_inmemory", "inmemory", "entities");
+        assertGeneratedSources("tool_test_generate_102_inmemory");
+    }
+
+    @Test(enabled = true)
+    @Description("There are entities with 'sql' annotations")
+    public void testGenerateIgnoreSQLAnnotationsForGoogleSheets() {
+        executeGenerateCommand("tool_test_generate_103_googlesheets", "googlesheets", "entities");
+        assertGeneratedSources("tool_test_generate_103_googlesheets");
+    }
+
+    @Test(enabled = true)
+    @Description("There are entities with 'sql' annotations")
+    public void testGenerateIgnoreSQLAnnotationsForRedis() {
+        executeGenerateCommand("tool_test_generate_104_redis", "redis", "entities");
+        assertGeneratedSources("tool_test_generate_104_redis");
     }
 
 }

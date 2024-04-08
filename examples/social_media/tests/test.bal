@@ -1,6 +1,3 @@
-import social_media.entities;
-
-import ballerina/http;
 // Copyright (c) 2024 WSO2 LLC. (http://www.wso2.com).
 //
 // WSO2 LLC. licenses this file to you under the Apache License,
@@ -17,6 +14,8 @@ import ballerina/http;
 // specific language governing permissions and limitations
 // under the License.
 import ballerina/test;
+import ballerina/http;
+import social_media.entities;
 
 http:Client socialMediaEndpoint = check new ("http://localhost:9090/social_media");
 

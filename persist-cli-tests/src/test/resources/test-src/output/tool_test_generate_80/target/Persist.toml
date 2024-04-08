@@ -1,3 +1,3 @@
 [[tool.persist]]
-options.datastore = "mysql"
-module = "tool_test_generate_80.entities"
+options.datastore = "postgresql"
+module = "tool_test_generate_80.postgresql_entities"

@@ -7,12 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Changed
+- [Refactor migrate command and test cases to support more scenarios](https://github.com/ballerina-platform/ballerina-library/issues/6189)
 
 ### Added
 - [Added support for PostgreSQL as a datasource](https://github.com/ballerina-platform/ballerina-standard-library/issues/5829)
 - [Integrate the persist code generation to the bal build command](https://github.com/ballerina-platform/ballerina-library/issues/5784)
 - [Added introspection support for MySQL databases](https://github.com/ballerina-platform/ballerina-library/issues/6014)
 - [Added advanced annotation support for SQL databases](https://github.com/ballerina-platform/ballerina-library/issues/6013)
+- [Added support for name, type, generated and relation annotations in migrate command](https://github.com/ballerina-platform/ballerina-library/issues/6189)
 
 ## [1.2.1] - 2021-11-21
 

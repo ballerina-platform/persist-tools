@@ -32,7 +32,7 @@ public isolated client class Client {
                 "cars[].name": {relation: {entityName: "cars", refField: "name"}},
                 "cars[].model": {relation: {entityName: "cars", refField: "model"}},
                 "cars[].ownerId": {relation: {entityName: "cars", refField: "ownerId"}},
-                "cars[].ownerNic": {relation: {entityName: "cars", refField: "ownerNic"}}
+                "cars[].ownerNic": {relation: {entityName: "cars", refField: "ownerNic", refColumn: "OWNER_NIC"}}
             },
             keyFields: ["id", "nic"],
             joinMetadata: {cars: {entity: Car, fieldName: "cars", refTable: "Car", refColumns: ["ownerId", "OWNER_NIC"], joinColumns: ["id", "nic"], 'type: psql:MANY_TO_ONE}}

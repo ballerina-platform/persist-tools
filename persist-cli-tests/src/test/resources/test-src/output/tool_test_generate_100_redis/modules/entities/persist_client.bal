@@ -6,9 +6,9 @@ import ballerina/persist;
 import ballerinax/persist.redis as predis;
 import ballerinax/redis;
 
+const FOLLOW = "follows";
 const USER = "users";
 const POST = "posts";
-const FOLLOW = "follows";
 const COMMENT = "comments";
 
 public isolated client class Client {
@@ -19,6 +19,29 @@ public isolated client class Client {
     private final map<predis:RedisClient> persistClients;
 
     private final record {|predis:RedisMetadata...;|} & readonly metadata = {
+        [FOLLOW]: {
+            entityName: "Follow",
+            collectionName: "Follow",
+            fieldMetadata: {
+                id: {fieldName: "id", fieldDataType: predis:INT},
+                leaderId: {fieldName: "leaderId", fieldDataType: predis:INT},
+                followerId: {fieldName: "followerId", fieldDataType: predis:INT},
+                timestamp: {fieldName: "timestamp", fieldDataType: predis:STRING},
+                "leader.id": {relation: {entityName: "leader", refField: "id", refFieldDataType: predis:INT}},
+                "leader.name": {relation: {entityName: "leader", refField: "name", refFieldDataType: predis:STRING}},
+                "leader.birthDate": {relation: {entityName: "leader", refField: "birthDate", refFieldDataType: predis:DATE}},
+                "leader.mobileNumber": {relation: {entityName: "leader", refField: "mobileNumber", refFieldDataType: predis:STRING}},
+                "follower.id": {relation: {entityName: "follower", refField: "id", refFieldDataType: predis:INT}},
+                "follower.name": {relation: {entityName: "follower", refField: "name", refFieldDataType: predis:STRING}},
+                "follower.birthDate": {relation: {entityName: "follower", refField: "birthDate", refFieldDataType: predis:DATE}},
+                "follower.mobileNumber": {relation: {entityName: "follower", refField: "mobileNumber", refFieldDataType: predis:STRING}}
+            },
+            keyFields: ["id"],
+            refMetadata: {
+                leader: {entity: User, fieldName: "leader", refCollection: "User", refMetaDataKey: "followers", refFields: ["id"], joinFields: ["leaderId"], 'type: predis:ONE_TO_MANY},
+                follower: {entity: User, fieldName: "follower", refCollection: "User", refMetaDataKey: "following", refFields: ["id"], joinFields: ["followerId"], 'type: predis:ONE_TO_MANY}
+            }
+        },
         [USER]: {
             entityName: "User",
             collectionName: "User",
@@ -77,31 +100,8 @@ public isolated client class Client {
             },
             keyFields: ["id"],
             refMetadata: {
-                user: {entity: User, fieldName: "user", refCollection: "User", refFields: ["id"], joinFields: ["userId"], 'type: predis:ONE_TO_MANY},
+                user: {entity: User, fieldName: "user", refCollection: "User", refMetaDataKey: "posts", refFields: ["id"], joinFields: ["userId"], 'type: predis:ONE_TO_MANY},
                 comments: {entity: Comment, fieldName: "comments", refCollection: "Comment", refFields: ["postId"], joinFields: ["id"], 'type: predis:MANY_TO_ONE}
-            }
-        },
-        [FOLLOW]: {
-            entityName: "Follow",
-            collectionName: "Follow",
-            fieldMetadata: {
-                id: {fieldName: "id", fieldDataType: predis:INT},
-                leaderId: {fieldName: "leaderId", fieldDataType: predis:INT},
-                followerId: {fieldName: "followerId", fieldDataType: predis:INT},
-                timestamp: {fieldName: "timestamp", fieldDataType: predis:STRING},
-                "leader.id": {relation: {entityName: "leader", refField: "id", refFieldDataType: predis:INT}},
-                "leader.name": {relation: {entityName: "leader", refField: "name", refFieldDataType: predis:STRING}},
-                "leader.birthDate": {relation: {entityName: "leader", refField: "birthDate", refFieldDataType: predis:DATE}},
-                "leader.mobileNumber": {relation: {entityName: "leader", refField: "mobileNumber", refFieldDataType: predis:STRING}},
-                "follower.id": {relation: {entityName: "follower", refField: "id", refFieldDataType: predis:INT}},
-                "follower.name": {relation: {entityName: "follower", refField: "name", refFieldDataType: predis:STRING}},
-                "follower.birthDate": {relation: {entityName: "follower", refField: "birthDate", refFieldDataType: predis:DATE}},
-                "follower.mobileNumber": {relation: {entityName: "follower", refField: "mobileNumber", refFieldDataType: predis:STRING}}
-            },
-            keyFields: ["id"],
-            refMetadata: {
-                leader: {entity: User, fieldName: "leader", refCollection: "User", refFields: ["id"], joinFields: ["leaderId"], 'type: predis:ONE_TO_MANY},
-                follower: {entity: User, fieldName: "follower", refCollection: "User", refFields: ["id"], joinFields: ["followerId"], 'type: predis:ONE_TO_MANY}
             }
         },
         [COMMENT]: {
@@ -126,24 +126,63 @@ public isolated client class Client {
             },
             keyFields: ["id"],
             refMetadata: {
-                user: {entity: User, fieldName: "user", refCollection: "User", refFields: ["id"], joinFields: ["userId"], 'type: predis:ONE_TO_MANY},
-                post: {entity: Post, fieldName: "post", refCollection: "Post", refFields: ["id"], joinFields: ["postId"], 'type: predis:ONE_TO_MANY}
+                user: {entity: User, fieldName: "user", refCollection: "User", refMetaDataKey: "comments", refFields: ["id"], joinFields: ["userId"], 'type: predis:ONE_TO_MANY},
+                post: {entity: Post, fieldName: "post", refCollection: "Post", refMetaDataKey: "comments", refFields: ["id"], joinFields: ["postId"], 'type: predis:ONE_TO_MANY}
             }
         }
     };
 
     public isolated function init() returns persist:Error? {
-        redis:Client|error dbClient = new (redis);
+        redis:Client|error dbClient = new (connectionConfig);
         if dbClient is error {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
         self.persistClients = {
-            [USER]: check new (dbClient, self.metadata.get(USER)),
-            [POST]: check new (dbClient, self.metadata.get(POST)),
-            [FOLLOW]: check new (dbClient, self.metadata.get(FOLLOW)),
-            [COMMENT]: check new (dbClient, self.metadata.get(COMMENT))
+            [FOLLOW]: check new (dbClient, self.metadata.get(FOLLOW), cacheConfig.maxAge),
+            [USER]: check new (dbClient, self.metadata.get(USER), cacheConfig.maxAge),
+            [POST]: check new (dbClient, self.metadata.get(POST), cacheConfig.maxAge),
+            [COMMENT]: check new (dbClient, self.metadata.get(COMMENT), cacheConfig.maxAge)
         };
+    }
+
+    isolated resource function get follows(FollowTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
+        'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
+        name: "query"
+    } external;
+
+    isolated resource function get follows/[int id](FollowTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
+        'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
+        name: "queryOne"
+    } external;
+
+    isolated resource function post follows(FollowInsert[] data) returns int[]|persist:Error {
+        predis:RedisClient redisClient;
+        lock {
+            redisClient = self.persistClients.get(FOLLOW);
+        }
+        _ = check redisClient.runBatchInsertQuery(data);
+        return from FollowInsert inserted in data
+            select inserted.id;
+    }
+
+    isolated resource function put follows/[int id](FollowUpdate value) returns Follow|persist:Error {
+        predis:RedisClient redisClient;
+        lock {
+            redisClient = self.persistClients.get(FOLLOW);
+        }
+        _ = check redisClient.runUpdateQuery(id, value);
+        return self->/follows/[id].get();
+    }
+
+    isolated resource function delete follows/[int id]() returns Follow|persist:Error {
+        Follow result = check self->/follows/[id].get();
+        predis:RedisClient redisClient;
+        lock {
+            redisClient = self.persistClients.get(FOLLOW);
+        }
+        _ = check redisClient.runDeleteQuery(id);
+        return result;
     }
 
     isolated resource function get users(UserTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
@@ -224,45 +263,6 @@ public isolated client class Client {
         return result;
     }
 
-    isolated resource function get follows(FollowTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
-        name: "query"
-    } external;
-
-    isolated resource function get follows/[int id](FollowTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
-        name: "queryOne"
-    } external;
-
-    isolated resource function post follows(FollowInsert[] data) returns int[]|persist:Error {
-        predis:RedisClient redisClient;
-        lock {
-            redisClient = self.persistClients.get(FOLLOW);
-        }
-        _ = check redisClient.runBatchInsertQuery(data);
-        return from FollowInsert inserted in data
-            select inserted.id;
-    }
-
-    isolated resource function put follows/[int id](FollowUpdate value) returns Follow|persist:Error {
-        predis:RedisClient redisClient;
-        lock {
-            redisClient = self.persistClients.get(FOLLOW);
-        }
-        _ = check redisClient.runUpdateQuery(id, value);
-        return self->/follows/[id].get();
-    }
-
-    isolated resource function delete follows/[int id]() returns Follow|persist:Error {
-        Follow result = check self->/follows/[id].get();
-        predis:RedisClient redisClient;
-        lock {
-            redisClient = self.persistClients.get(FOLLOW);
-        }
-        _ = check redisClient.runDeleteQuery(id);
-        return result;
-    }
-
     isolated resource function get comments(CommentTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
         name: "query"
@@ -310,4 +310,3 @@ public isolated client class Client {
         return result;
     }
 }
-

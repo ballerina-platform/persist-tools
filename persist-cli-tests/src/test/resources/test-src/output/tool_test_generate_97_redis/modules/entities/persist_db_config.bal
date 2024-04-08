@@ -3,5 +3,7 @@
 // It should not be modified by hand.
 import ballerinax/redis;
 
-configurable redis:ConnectionConfig & readonly redis = ?;
-
+configurable redis:ConnectionConfig & readonly connectionConfig = ?;
+configurable record {|
+    int maxAge;
+|} & readonly cacheConfig = ?;

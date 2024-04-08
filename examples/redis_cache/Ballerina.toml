@@ -1,0 +1,16 @@
+[package]
+org = "foo"
+name = "redis_cache"
+version = "0.1.0"
+distribution = "2201.9.0-20240118-000800-7398ff0b"
+
+[build-options]
+observabilityIncluded = false
+
+[[platform.java17.repository]]
+id="wso2-nexus"
+url = "https://maven.wso2.org/nexus/content/groups/public/"
+
+[[platform.java17.repository]]
+id="wso2-nexus-snapshot"
+url = "https://maven.wso2.org/nexus/content/repositories/snapshots/"

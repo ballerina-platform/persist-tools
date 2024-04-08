@@ -158,4 +158,3 @@ public type EmployeeUpdate record {|
     string workspaceWorkspaceId?;
     string workspaceWorkspaceType?;
 |};
-

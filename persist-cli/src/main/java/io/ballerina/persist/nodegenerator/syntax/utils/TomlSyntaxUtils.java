@@ -181,8 +181,8 @@ public class TomlSyntaxUtils {
             SyntaxTree syntaxTree = SyntaxTree.from(configDocument, fileNamePath.toString());
             DocumentNode rootNote = syntaxTree.rootNode();
             NodeList<DocumentMemberDeclarationNode> nodeList = rootNote.members();
+            boolean dependencyExists = false;
             for (DocumentMemberDeclarationNode member : nodeList) {
-                boolean dependencyExists = false;
                 if (member instanceof KeyValueNode) {
                     moduleMembers = moduleMembers.add(member);
                 } else if (member instanceof TableArrayNode) {
@@ -215,7 +215,7 @@ public class TomlSyntaxUtils {
                         PersistToolsConstants.PERSIST_TOOL_CONFIG, null));
                 moduleMembers = populateBallerinaNodeList(moduleMembers, module, datasource, id[0]);
                 moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
-            } else {
+            } else if (!dependencyExists) {
                 moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray(
                         BalSyntaxConstants.PERSIST_DEPENDENCY, null));
                 moduleMembers = populatePersistDependency(moduleMembers, artifactId, datasource);

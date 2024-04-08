@@ -46,7 +46,7 @@ public isolated client class Client {
             },
             keyFields: ["workspaceId", "workspaceType"],
             refMetadata: {
-                location: {entity: Building, fieldName: "location", refCollection: "Building", refFields: ["buildingCode"], joinFields: ["locationBuildingCode"], 'type: predis:ONE_TO_MANY},
+                location: {entity: Building, fieldName: "location", refCollection: "Building", refMetaDataKey: "workspaces", refFields: ["buildingCode"], joinFields: ["locationBuildingCode"], 'type: predis:ONE_TO_MANY},
                 employees: {entity: Employee, fieldName: "employees", refCollection: "Employee", refFields: ["workspaceWorkspaceId", "workspaceWorkspaceType"], joinFields: ["workspaceId", "workspaceType"], 'type: predis:MANY_TO_ONE}
             }
         },
@@ -122,24 +122,24 @@ public isolated client class Client {
             },
             keyFields: ["empNo", "firstName"],
             refMetadata: {
-                department: {entity: Department, fieldName: "department", refCollection: "Department", refFields: ["deptNo", "deptName"], joinFields: ["departmentDeptNo", "departmentDeptName"], 'type: predis:ONE_TO_MANY},
-                workspace: {entity: Workspace, fieldName: "workspace", refCollection: "Workspace", refFields: ["workspaceId", "workspaceType"], joinFields: ["workspaceWorkspaceId", "workspaceWorkspaceType"], 'type: predis:ONE_TO_MANY}
+                department: {entity: Department, fieldName: "department", refCollection: "Department", refMetaDataKey: "employees", refFields: ["deptNo", "deptName"], joinFields: ["departmentDeptNo", "departmentDeptName"], 'type: predis:ONE_TO_MANY},
+                workspace: {entity: Workspace, fieldName: "workspace", refCollection: "Workspace", refMetaDataKey: "employees", refFields: ["workspaceId", "workspaceType"], joinFields: ["workspaceWorkspaceId", "workspaceWorkspaceType"], 'type: predis:ONE_TO_MANY}
             }
         }
     };
 
     public isolated function init() returns persist:Error? {
-        redis:Client|error dbClient = new (redis);
+        redis:Client|error dbClient = new (connectionConfig);
         if dbClient is error {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
         self.persistClients = {
-            [WORKSPACE]: check new (dbClient, self.metadata.get(WORKSPACE)),
-            [BUILDING]: check new (dbClient, self.metadata.get(BUILDING)),
-            [DEPARTMENT]: check new (dbClient, self.metadata.get(DEPARTMENT)),
-            [ORDER_ITEM]: check new (dbClient, self.metadata.get(ORDER_ITEM)),
-            [EMPLOYEE]: check new (dbClient, self.metadata.get(EMPLOYEE))
+            [WORKSPACE]: check new (dbClient, self.metadata.get(WORKSPACE), cacheConfig.maxAge),
+            [BUILDING]: check new (dbClient, self.metadata.get(BUILDING), cacheConfig.maxAge),
+            [DEPARTMENT]: check new (dbClient, self.metadata.get(DEPARTMENT), cacheConfig.maxAge),
+            [ORDER_ITEM]: check new (dbClient, self.metadata.get(ORDER_ITEM), cacheConfig.maxAge),
+            [EMPLOYEE]: check new (dbClient, self.metadata.get(EMPLOYEE), cacheConfig.maxAge)
         };
     }
 
@@ -346,4 +346,3 @@ public isolated client class Client {
         return result;
     }
 }
-

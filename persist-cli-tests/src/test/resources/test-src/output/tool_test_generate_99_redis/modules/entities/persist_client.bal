@@ -64,7 +64,7 @@ public isolated client class Client {
                 "user.mobileNumber": {relation: {entityName: "user", refField: "mobileNumber", refFieldDataType: predis:STRING}}
             },
             keyFields: ["id"],
-            refMetadata: {user: {entity: User, fieldName: "user", refCollection: "User", refFields: ["id"], joinFields: ["userId"], 'type: predis:ONE_TO_MANY}}
+            refMetadata: {user: {entity: User, fieldName: "user", refCollection: "User", refMetaDataKey: "posts", refFields: ["id"], joinFields: ["userId"], 'type: predis:ONE_TO_MANY}}
         },
         [FOLLOW]: {
             entityName: "Follow",
@@ -85,22 +85,22 @@ public isolated client class Client {
             },
             keyFields: ["id"],
             refMetadata: {
-                leader: {entity: User, fieldName: "leader", refCollection: "User", refFields: ["id"], joinFields: ["leaderId"], 'type: predis:ONE_TO_ONE},
-                follower: {entity: User, fieldName: "follower", refCollection: "User", refFields: ["id"], joinFields: ["followerId"], 'type: predis:ONE_TO_ONE}
+                leader: {entity: User, fieldName: "leader", refCollection: "User", refMetaDataKey: "leader", refFields: ["id"], joinFields: ["leaderId"], 'type: predis:ONE_TO_ONE},
+                follower: {entity: User, fieldName: "follower", refCollection: "User", refMetaDataKey: "follower", refFields: ["id"], joinFields: ["followerId"], 'type: predis:ONE_TO_ONE}
             }
         }
     };
 
     public isolated function init() returns persist:Error? {
-        redis:Client|error dbClient = new (redis);
+        redis:Client|error dbClient = new (connectionConfig);
         if dbClient is error {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
         self.persistClients = {
-            [USER]: check new (dbClient, self.metadata.get(USER)),
-            [POST]: check new (dbClient, self.metadata.get(POST)),
-            [FOLLOW]: check new (dbClient, self.metadata.get(FOLLOW))
+            [USER]: check new (dbClient, self.metadata.get(USER), cacheConfig.maxAge),
+            [POST]: check new (dbClient, self.metadata.get(POST), cacheConfig.maxAge),
+            [FOLLOW]: check new (dbClient, self.metadata.get(FOLLOW), cacheConfig.maxAge)
         };
     }
 
@@ -229,4 +229,3 @@ public isolated client class Client {
         return result;
     }
 }
-
