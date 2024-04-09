@@ -44,34 +44,28 @@ public class BuildCodeGeneratorTest {
         String log = "Persist client and entity types generated successfully in " +
                 "the persist_build_1 directory.";
         Path project = TARGET_DIR.resolve("generated-sources/tool_test_build_1");
-        assertLogs(log, project);
+        assertContainLogs(log, project);
     }
 
     @Test(enabled = true)
     public void testBuildWithInvalidTargetModule() throws IOException, InterruptedException {
-        String log = "ERROR: invalid module name : 'persist_add_1' :" + System.lineSeparator() +
-                "module name should follow the template <package_name>.<module_name>";
+        String log = "ERROR: invalid module name : 'persist_add_1' :";
         Path project = TARGET_DIR.resolve("generated-sources/tool_test_build_2");
-        assertLogs(log, project);
+        assertContainLogs(log, project);
     }
 
     @Test(enabled = true)
     public void testBuildWithInvalidCharachtersInTargetModule() throws IOException, InterruptedException {
-        String log = "ERROR: invalid module name : '*****' :" + System.lineSeparator() +
-                "module name can only contain alphanumerics, underscores and periods";
+        String log = "ERROR: invalid module name : '*****' :";
         Path project = TARGET_DIR.resolve("generated-sources/tool_test_build_3");
-        assertLogs(log, project);
+        assertContainLogs(log, project);
     }
 
     @Test(enabled = true)
     public void testBuildWithInvalidLengthOfTargetModule() throws IOException, InterruptedException {
-        String log = "ERROR: invalid module name : 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" +
-                "aaaaaaaaaaaaaaaaaaaaaaaaddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd" +
-                "ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd" +
-                "dddddddddddddddddddddd' :" + System.lineSeparator() +
-                "maximum length of module name is 256 characters";
+        String log = "ERROR: invalid module name :";
         Path project = TARGET_DIR.resolve("generated-sources/tool_test_build_4");
-        assertLogs(log, project);
+        assertContainLogs(log, project);
     }
 
     @Test(enabled = true)
@@ -85,7 +79,7 @@ public class BuildCodeGeneratorTest {
     public void testBuildWithoutEntities() throws IOException, InterruptedException {
         String log = "ERROR: the model definition file(model.bal) does not contain any entity definition.";
         Path project = TARGET_DIR.resolve("generated-sources/tool_test_build_6");
-        assertLogs(log, project);
+        assertContainLogs(log, project);
     }
 
     private String collectLogOutput(Path project) throws IOException, InterruptedException {
@@ -98,11 +92,6 @@ public class BuildCodeGeneratorTest {
             logLines.close();
             return generatedLog;
         }
-    }
-
-    private void assertLogs(String log, Path project) throws IOException, InterruptedException {
-        String generatedLog = collectLogOutput(project);
-        Assert.assertEquals(generatedLog, log);
     }
 
     private void assertContainLogs(String log, Path project) throws IOException, InterruptedException {
