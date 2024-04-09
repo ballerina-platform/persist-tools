@@ -92,6 +92,10 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
             }
             entityModule = BalProjectUtils.getEntities(schemaFilePath);
             validateEntityModule(entityModule, schemaFilePath);
+            String syntaxTree = TomlSyntaxUtils.addPersistNativeDependency(
+                    Paths.get(projectPath.toString(), BALLERINA_TOML), datastore);
+            Utils.writeOutputString(syntaxTree,
+                    Paths.get(projectPath.toString(), BALLERINA_TOML).toAbsolutePath().toString());
             createGeneratedSourceDirIfNotExists(generatedSourceDirPath);
             generateSources(datastore, entityModule, targetModule, projectPath, generatedSourceDirPath);
             errStream.println("Persist client and entity types generated successfully in the " + targetModule +

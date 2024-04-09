@@ -19,16 +19,20 @@
 package io.ballerina.persist.tools;
 
 import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Properties;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -38,11 +42,25 @@ import java.util.stream.Stream;
 public class BuildCodeGeneratorTest {
     public static final Path TARGET_DIR = Paths.get(System.getProperty("user.dir"), "build");
     public static final Path TEST_DISTRIBUTION_PATH = TARGET_DIR.resolve("ballerina-distribution");
+    private String persistSqlVersion;
+
+    @BeforeClass
+    public void findLatestPersistVersion() {
+        Path versionPropertiesFile = Paths.get("../", "persist-cli", "src", "main", "resources",
+                "version.properties").toAbsolutePath();
+        try (InputStream inputStream = Files.newInputStream(versionPropertiesFile)) {
+            Properties properties = new Properties();
+            properties.load(inputStream);
+            persistSqlVersion = properties.get("persistSqlVersion").toString();
+        } catch (IOException e) {
+            // ignore
+        }
+    }
 
     @Test(enabled = true)
     public void testBuildWithMysql() throws IOException, InterruptedException {
-        String log = "Persist client and entity types generated successfully in " +
-                "the persist_build_1 directory.";
+        updateOutputBallerinaToml("tool_test_build_1");
+        String log = "Persist client and entity types generated successfully in the persist_build_1 directory.";
         Path project = TARGET_DIR.resolve("generated-sources/tool_test_build_1");
         assertContainLogs(log, project);
     }
@@ -80,6 +98,35 @@ public class BuildCodeGeneratorTest {
         String log = "ERROR: the model definition file(model.bal) does not contain any entity definition.";
         Path project = TARGET_DIR.resolve("generated-sources/tool_test_build_6");
         assertContainLogs(log, project);
+    }
+
+    @Test(enabled = true)
+    public void testBuildWithExistingDependency() throws IOException, InterruptedException {
+        updateOutputBallerinaToml("tool_test_build_7");
+        String log = "ERROR: the 'Ballerina.toml' file is already updated with the Persist client native dependency" +
+                " but the version is different from the current version. Please remove the existing dependency and " +
+                "try again.";
+        Path project = TARGET_DIR.resolve("generated-sources/tool_test_build_7");
+        assertContainLogs(log, project);
+    }
+
+    private void updateOutputBallerinaToml(String fileName) {
+        String tomlFileName = "Ballerina.toml";
+        Path filePath = Paths.get("src", "test", "resources", "test-src", "input", fileName, tomlFileName);
+        if (filePath.endsWith(tomlFileName)) {
+            try {
+                String content = Files.readString(filePath);
+                String dataStore = "persist.sql";
+                String version = persistSqlVersion;
+                content = content.replaceAll(
+                        "artifactId\\s=\\s\"" + dataStore + "-native\"\nversion\\s=\\s\\\"\\d+(\\.\\d+)+" +
+                                "(-SNAPSHOT)?\\\"",  "artifactId = \"" + dataStore +
+                                "-native\"\nversion = \"" + version + "\"");
+                Files.writeString(filePath, content);
+            } catch (IOException e) {
+                // ignore
+            }
+        }
     }
 
     private String collectLogOutput(Path project) throws IOException, InterruptedException {

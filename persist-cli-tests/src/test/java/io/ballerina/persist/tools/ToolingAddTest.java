@@ -20,18 +20,13 @@ package io.ballerina.persist.tools;
 
 import io.ballerina.persist.cmd.Add;
 import jdk.jfr.Description;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import picocli.CommandLine;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Properties;
 
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.Command.ADD;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertGeneratedSources;
@@ -42,31 +37,12 @@ import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertG
  */
 public class ToolingAddTest {
 
-    private String persistSqlVersion;
-    private String persistInMemoryVersion;
-    private String persistGoogleSheetsVersion;
     private static final PrintStream errStream = System.err;
     public static final String GENERATED_SOURCES_DIRECTORY = Paths.get("build", "generated-sources").toString();
-
-    @BeforeClass
-    public void findLatestPersistVersion() {
-        Path versionPropertiesFile = Paths.get("../", "persist-cli", "src", "main", "resources",
-                "version.properties").toAbsolutePath();
-        try (InputStream inputStream = Files.newInputStream(versionPropertiesFile)) {
-            Properties properties = new Properties();
-            properties.load(inputStream);
-            persistSqlVersion = properties.get("persistSqlVersion").toString();
-            persistInMemoryVersion = properties.get("persistInMemoryVersion").toString();
-            persistGoogleSheetsVersion = properties.get("persistGoogleSheetsVersion").toString();
-        } catch (IOException e) {
-            // ignore
-        }
-    }
 
     @Test(enabled = true)
     @Description("When the project is not initiated")
     public void testAdd() {
-        updateOutputBallerinaToml("tool_test_add_1");
         executeCommand("tool_test_add_1");
         assertGeneratedSources("tool_test_add_1");
     }
@@ -81,7 +57,6 @@ public class ToolingAddTest {
     @Description("When there is a database config files inside the directories and there are missing database " +
             "configurations")
     public void testsInitUpdateConfigWithPartialyInitiatedFiles() {
-        updateOutputBallerinaToml("tool_test_add_3");
         executeCommand("tool_test_add_3");
         assertGeneratedSources("tool_test_add_3");
     }
@@ -95,7 +70,6 @@ public class ToolingAddTest {
     @Test(enabled = true)
     @Description("When the configs are already updated")
     public void testsInitUpdateConfigWithUpdatedDbConfigurations() {
-        updateOutputBallerinaToml("tool_test_add_5");
         executeCommand("tool_test_add_5");
         assertGeneratedSources("tool_test_add_5");
     }
@@ -110,7 +84,6 @@ public class ToolingAddTest {
     @Test(enabled = true)
     @Description("Running init on a already initialized project with database configurations missing")
     public void testInitAlreadyInitializedProjectWithOutPersistConfiguration() {
-        updateOutputBallerinaToml("tool_test_add_7");
         executeCommand("tool_test_add_7");
         assertGeneratedSources("tool_test_add_7");
     }
@@ -118,7 +91,6 @@ public class ToolingAddTest {
     @Test(enabled = true)
     @Description("Running init on a project with manually created definition file")
     public void testInitWithManuallyCreatedDefinitionFile() {
-        updateOutputBallerinaToml("tool_test_add_9");
         executeCommand("tool_test_add_9");
         assertGeneratedSources("tool_test_add_9");
     }
@@ -162,7 +134,6 @@ public class ToolingAddTest {
     @Test
     public void testInitWithModuleArg() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
             InstantiationException, IllegalAccessException {
-        updateOutputBallerinaToml("tool_test_add_12");
         Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Add");
         Add persistCmd = (Add) persistClass.getDeclaredConstructor(String.class).
                 newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, "tool_test_add_12").toAbsolutePath().
@@ -175,7 +146,6 @@ public class ToolingAddTest {
     @Test(enabled = true)
     public void testInitWithMssql() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
             InstantiationException, IllegalAccessException {
-        updateOutputBallerinaToml("tool_test_add_13");
         Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Add");
         Add persistCmd = (Add) persistClass.getDeclaredConstructor(String.class).
                 newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, "tool_test_add_13").toAbsolutePath().
@@ -188,7 +158,6 @@ public class ToolingAddTest {
     @Test
     public void testInitWithPostgresql() throws ClassNotFoundException, NoSuchMethodException,
             InvocationTargetException, InstantiationException, IllegalAccessException {
-        updateOutputBallerinaToml("tool_test_add_14");
         Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Add");
         Add persistCmd = (Add) persistClass.getDeclaredConstructor(String.class).
                 newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, "tool_test_add_14").toAbsolutePath().
@@ -196,33 +165,6 @@ public class ToolingAddTest {
         new CommandLine(persistCmd).parseArgs("--datastore", "postgresql");
         persistCmd.execute();
         assertGeneratedSources("tool_test_add_14");
-    }
-
-    private void updateOutputBallerinaToml(String fileName) {
-        String tomlFileName = "Ballerina.toml";
-        Path filePath = Paths.get("src", "test", "resources", "test-src", "output", fileName, tomlFileName);
-        if (filePath.endsWith(tomlFileName)) {
-           try {
-               String content = Files.readString(filePath);
-               String dataStore = "persist.inmemory";
-               String version = persistInMemoryVersion;
-               if (content.contains("datastore = \"mysql\"") || content.contains("datastore = \"mssql\"") ||
-                       content.contains("datastore = \"postgresql\"")) {
-                   dataStore = "persist.sql";
-                   version = persistSqlVersion;
-               } else if (content.contains("datastore = \"googlesheets\"")) {
-                   dataStore = "persist.googlesheets";
-                     version = persistGoogleSheetsVersion;
-               }
-               content = content.replaceAll(
-                        "artifactId\\s=\\s\"" + dataStore + "-native\"\nversion\\s=\\s\\\"\\d+(\\.\\d+)+" +
-                                "(-SNAPSHOT)?\\\"",  "artifactId = \"" + dataStore +
-                               "-native\"\nversion = \"" + version + "\"");
-               Files.writeString(filePath, content);
-            } catch (IOException e) {
-                // ignore
-            }
-        }
     }
 
     private void executeCommand(String subDir) {
