@@ -553,7 +553,6 @@ public class Migrate implements BLauncherCmd {
         return true;
     }
 
-
     private static void printDetailedListOfDifferences(List<String> differences) {
         errStream.println(System.lineSeparator() + "Detailed list of differences: ");
         if (!differences.isEmpty()) {
@@ -610,7 +609,6 @@ public class Migrate implements BLauncherCmd {
         });
     }
 
-    // Convert Create Table List to Query
     private static void addCreateTableQueries(List<String> addedEntities, Module currentModel,
                                               List<String> queries) {
         for (String tableName:addedEntities) {
@@ -626,7 +624,6 @@ public class Migrate implements BLauncherCmd {
         }
     }
 
-    // Convert list to a MySQL query
     private static void addDropTableQueries(List<String> entities, List<String> queries) {
         for (String entity : entities) {
             String removeTableTemplate = "DROP TABLE %s;%n";
@@ -659,7 +656,6 @@ public class Migrate implements BLauncherCmd {
         }
     }
 
-    // Convert map of FieldMetadata lists to a MySQL query
     private static void addModifyColumnTypeQueries(Map<String, List<EntityField>> map, List<String> queries) {
         for (Map.Entry<String, List<EntityField>> entry : map.entrySet()) {
             String entity = entry.getKey();
@@ -704,7 +700,6 @@ public class Migrate implements BLauncherCmd {
         }
     }
 
-    // Convert map of ForeignKey lists to a MySQL query
     private static void addCreateForeignKeyQueries(Map<String, List<ForeignKey>> map, List<String> queries) {
         String addFKTemplate = "ALTER TABLE %s%nADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s(%s);%n";
         for (Map.Entry<String, List<ForeignKey>> entry : map.entrySet()) {
