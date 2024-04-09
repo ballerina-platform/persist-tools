@@ -23,6 +23,7 @@ import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.ForeignKey;
+import io.ballerina.persist.models.Index;
 import io.ballerina.persist.models.MigrationDataHolder;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.models.Relation;
@@ -521,6 +522,15 @@ public class Migrate implements BLauncherCmd {
             }
         }
 
+        // Check for index changes
+        HashMap<String, List<Index>> previousIndexes = getIndexesFromModule(previousModel);
+        HashMap<String, List<Index>> currentIndexes = getIndexesFromModule(currentModel);
+        processIndexDifferences(previousIndexes, currentIndexes, migrationDataHolder);
+
+        HashMap<String, List<Index>> previousUniqueIndexes = getUniqueIndexesFromModule(previousModel);
+        HashMap<String, List<Index>> currentUniqueIndexes = getUniqueIndexesFromModule(currentModel);
+        processIndexDifferences(previousUniqueIndexes, currentUniqueIndexes, migrationDataHolder);
+
         // Convert differences to queries (ordered)
         addDropTableQueries(migrationDataHolder.getRemovedEntities(), queries);
         addDropForeignKeyQueries(migrationDataHolder.getRemovedForeignKeys(), queries);
@@ -535,10 +545,67 @@ public class Migrate implements BLauncherCmd {
                 migrationDataHolder.getAddedEntities(), currentModel, queries);
         addCreateForeignKeyQueries(migrationDataHolder.getAddedForeignKeys(), queries);
         addModifyColumnTypeQueries(migrationDataHolder.getChangedFieldTypes(), queries);
-
+        addDropIndexQueries(migrationDataHolder.getRemovedIndexes(), queries);
+        addCreateIndexQueries(migrationDataHolder.getAddedIndexes(), queries);
         printDetailedListOfDifferences(migrationDataHolder.getDifferences());
 
         return queries;
+    }
+
+    private static void processIndexDifferences(HashMap<String, List<Index>> previousIndexes,
+                                                HashMap<String, List<Index>> currentIndexes,
+                                                MigrationDataHolder migrationDataHolder) {
+        for (Map.Entry<String, List<Index>> entry : previousIndexes.entrySet()) {
+            if (migrationDataHolder.getRemovedEntities().contains(entry.getKey())) {
+                continue;
+            }
+            List<Index> previousIndexList = entry.getValue();
+            List<Index> currentIndexList = currentIndexes.get(entry.getKey());
+            // if all the indexes are removed from the entity
+            if (Objects.isNull(currentIndexList)) {
+                for (Index index : previousIndexList) {
+                    migrationDataHolder.removeIndex(entry.getKey(), index);
+                }
+                continue;
+            }
+            for (Index previousIndex : previousIndexList) {
+                boolean isIndexFound = false;
+                for (Index currentIndex : currentIndexList) {
+                    if (previousIndex.getIndexName().equals(currentIndex.getIndexName())) {
+                        isIndexFound = true;
+                        // Check if the fields are changed
+                        if (!Objects.equals(currentIndex.getFields().size(), previousIndex.getFields().size())) {
+                            migrationDataHolder.removeIndex(entry.getKey(), previousIndex);
+                            migrationDataHolder.addIndex(entry.getKey(), currentIndex);
+                        } else {
+                            for (int i = 0; i < currentIndex.getFields().size(); i++) {
+                                if (!currentIndex.getFields().get(i).getFieldName()
+                                        .equals(previousIndex.getFields().get(i).getFieldName())) {
+                                    migrationDataHolder.removeIndex(entry.getKey(), previousIndex);
+                                    migrationDataHolder.addIndex(entry.getKey(), currentIndex);
+                                    break;
+                                }
+                            }
+                        }
+                        break;
+                    }
+                }
+                // Remove indexes that are not found in the current model
+                if (!isIndexFound) {
+                    migrationDataHolder.removeIndex(entry.getKey(), previousIndex);
+                }
+            }
+        }
+        // Add new indexes
+        for (Map.Entry<String, List<Index>> entry : currentIndexes.entrySet()) {
+            String entity = entry.getKey();
+            for (Index index : entry.getValue()) {
+                if (previousIndexes.get(entity) == null || previousIndexes.get(entity).stream()
+                        .noneMatch(previousIndex -> previousIndex.getIndexName().equals(index.getIndexName()))) {
+                    migrationDataHolder.addIndex(entity, index);
+                }
+            }
+        }
     }
 
     private static boolean isOnlyColumnsRenamed(List<Relation.Key> previousKeys, List<Relation.Key> currentKeys) {
@@ -561,6 +628,28 @@ public class Migrate implements BLauncherCmd {
         } else {
             errStream.println("-- No differences found" + System.lineSeparator());
         }
+    }
+
+    private static HashMap<String, List<Index>> getIndexesFromModule(Module module) {
+        HashMap<String, List<Index>> indexMap = new HashMap<>();
+        for (Entity entity : module.getEntityMap().values()) {
+            if (entity.getIndexes().isEmpty()) {
+                continue;
+            }
+            indexMap.put(entity.getTableName(), entity.getIndexes());
+        }
+        return indexMap;
+    }
+
+    private static HashMap<String, List<Index>> getUniqueIndexesFromModule(Module module) {
+        HashMap<String, List<Index>> indexMap = new HashMap<>();
+        for (Entity entity : module.getEntityMap().values()) {
+            if (entity.getUniqueIndexes().isEmpty()) {
+                continue;
+            }
+            indexMap.put(entity.getTableName(), entity.getUniqueIndexes());
+        }
+        return indexMap;
     }
 
     private static void addRenameFieldQueries(HashMap<String, List<MigrationDataHolder.NameMapping>> renamedFields,
@@ -709,6 +798,28 @@ public class Migrate implements BLauncherCmd {
                         foreignKey.columnNames().stream().reduce((a, b) -> a + ", " + b).orElse(""),
                         foreignKey.referenceTable(),
                         foreignKey.referenceColumns().stream().reduce((a, b) -> a + ", " + b).orElse("")));
+            }
+        }
+    }
+
+    private static void addCreateIndexQueries(Map<String, List<Index>> map, List<String> queries) {
+        String addIndexTemplate = "CREATE%s INDEX %s ON %s(%s);%n";
+        for (Map.Entry<String, List<Index>> entry : map.entrySet()) {
+            String entity = entry.getKey();
+            for (Index index : entry.getValue()) {
+                queries.add(String.format(addIndexTemplate, index.isUnique() ? " UNIQUE" : "", index.getIndexName(),
+                        entity, index.getFields().stream().map(EntityField::getFieldColumnName)
+                                .reduce((a, b) -> a + ", " + b).orElse("")));
+            }
+        }
+    }
+
+    private static void addDropIndexQueries(Map<String, List<Index>> map, List<String> queries) {
+        String dropIndexTemplate = "DROP INDEX %s ON %s;%n";
+        for (Map.Entry<String, List<Index>> entry : map.entrySet()) {
+            String entity = entry.getKey();
+            for (Index index : entry.getValue()) {
+                queries.add(String.format(dropIndexTemplate, index.getIndexName(), entity));
             }
         }
     }

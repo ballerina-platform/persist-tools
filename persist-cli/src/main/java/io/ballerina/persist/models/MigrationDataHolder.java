@@ -41,6 +41,8 @@ public class MigrationDataHolder {
     private final HashMap<String, List<ForeignKey>> addedForeignKeys = new HashMap<>();
     private final HashMap<String, List<ForeignKey>> removedForeignKeys = new HashMap<>();
     private final List<String> differences = new ArrayList<>();
+    private final HashMap<String, List<Index>> addedIndexes = new HashMap<>();
+    private final HashMap<String, List<Index>> removedIndexes = new HashMap<>();
     public record NameMapping(String oldName, String newName) { }
 
     public void addTable(String tableName) {
@@ -155,6 +157,30 @@ public class MigrationDataHolder {
         }
     }
 
+    public void removeIndex(String tableName, Index index) {
+        differences.add("Index " + index.getIndexName() + " has been removed from table " + tableName);
+        addOrRemoveIndex(tableName, index, removedIndexes);
+    }
+
+    public void addIndex(String tableName, Index index) {
+        differences.add("Index " + index.getIndexName() + " on column(s) " + index.getFields().stream()
+                .map(EntityField::getFieldColumnName).reduce((a, b) -> a + ", " + b).orElse("") +
+                " has been added to table " + tableName);
+        addOrRemoveIndex(tableName, index, addedIndexes);
+    }
+
+    private void addOrRemoveIndex(String tableName, Index index, Map<String, List<Index>> map) {
+        if (!map.containsKey(tableName)) {
+            List<Index> initialData = new ArrayList<>();
+            initialData.add(index);
+            map.put(tableName, initialData);
+        } else {
+            List<Index> existingData = map.get(tableName);
+            existingData.add(index);
+            map.put(tableName, existingData);
+        }
+    }
+
     public void createForeignKeys(String tableName, EntityField currentModelField) {
 
         for (Relation.Key key : currentModelField.getRelation().getKeyColumns()) {
@@ -231,5 +257,13 @@ public class MigrationDataHolder {
 
     public List<String> getDifferences() {
         return differences;
+    }
+
+    public HashMap<String, List<Index>> getAddedIndexes() {
+        return addedIndexes;
+    }
+
+    public HashMap<String, List<Index>> getRemovedIndexes() {
+        return removedIndexes;
     }
 }
