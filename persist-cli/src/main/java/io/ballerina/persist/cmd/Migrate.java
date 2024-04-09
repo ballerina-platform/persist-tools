@@ -652,7 +652,7 @@ public class Migrate implements BLauncherCmd {
         return indexMap;
     }
 
-    private static void addRenameFieldQueries(HashMap<String, List<MigrationDataHolder.NameMapping>> renamedFields,
+    private static void addRenameFieldQueries(Map<String, List<MigrationDataHolder.NameMapping>> renamedFields,
                                               List<String> queries) {
         String renameFieldTemplate = "ALTER TABLE %s%nRENAME COLUMN %s TO %s;%n";
         for (Map.Entry<String, List<MigrationDataHolder.NameMapping>> entry : renamedFields.entrySet()) {
