@@ -102,7 +102,6 @@ public class BuildCodeGeneratorTest {
 
     @Test(enabled = true)
     public void testBuildWithExistingDependency() throws IOException, InterruptedException {
-        updateOutputBallerinaToml("tool_test_build_7");
         String log = "ERROR: the 'Ballerina.toml' file is already updated with the Persist client native dependency" +
                 " but the version is different from the current version. Please remove the existing dependency and " +
                 "try again.";
