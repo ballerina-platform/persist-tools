@@ -958,9 +958,10 @@ public class ToolingGenerateTest {
                     version = persistRedisVersion;
                 }
                 content = content.replaceAll(
-                        "artifactId\\s=\\s\"" + dataStore + "-native\"\nversion\\s=\\s\\\"\\d+(\\.\\d+)+" +
+                        "artifactId\\s=\\s\"" + dataStore + "-native\"" + System.lineSeparator() +
+                                "version\\s=\\s\\\"\\d+(\\.\\d+)+" +
                                 "(-SNAPSHOT)?\\\"",  "artifactId = \"" + dataStore +
-                                "-native\"\nversion = \"" + version + "\"");
+                                "-native\"" + System.lineSeparator() + "version = \"" + version + "\"");
                 Files.writeString(filePath, content);
             } catch (IOException e) {
                 // ignore
