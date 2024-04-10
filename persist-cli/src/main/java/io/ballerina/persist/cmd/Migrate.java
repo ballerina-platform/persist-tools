@@ -700,7 +700,7 @@ public class Migrate implements BLauncherCmd {
 
     private static void addCreateTableQueries(List<String> addedEntities, Module currentModel,
                                               List<String> queries) {
-        for (String tableName:addedEntities) {
+        for (String tableName : addedEntities) {
             Optional<Entity> entity = currentModel.getEntityByTableName(tableName);
             if (entity.isPresent()) {
                 try {
