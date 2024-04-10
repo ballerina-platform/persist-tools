@@ -1,18 +1,18 @@
-[tool_test_generate_95.entities]
+[tool_test_generate_101.entities]
 host = "localhost"
 port = 3306
 user = "root"
 password = ""
 database = ""
 
-[tool_test_generate_95.mssql_entities]
+[tool_test_generate_101.mssql_entities]
 host = "localhost"
 port = 1433
 user = "sa"
 password = ""
 database = ""
 
-[tool_test_generate_95.postgresql_entities]
+[tool_test_generate_101.postgresql_entities]
 host = "localhost"
 port = 5432
 user = "postgres"
