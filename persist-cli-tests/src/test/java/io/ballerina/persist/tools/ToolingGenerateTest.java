@@ -395,7 +395,7 @@ public class ToolingGenerateTest {
         assertGeneratedSources("tool_test_generate_46");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("There is a generated client object with in memory data source")
     public void testInMemoryEntity() {
         updateOutputBallerinaToml("tool_test_generate_47_in_memory");
@@ -403,7 +403,7 @@ public class ToolingGenerateTest {
         assertGeneratedSources("tool_test_generate_47_in_memory");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("There is a generated client object with in memory data source")
     public void testInMemoryWithAssociatedEntity() {
         updateOutputBallerinaToml("tool_test_generate_48_in_memory");
@@ -411,7 +411,7 @@ public class ToolingGenerateTest {
         assertGeneratedSources("tool_test_generate_48_in_memory");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("There is a generated client object with in memory data source")
     public void testInMemoryWithCompositeKeys() {
         updateOutputBallerinaToml("tool_test_generate_49_in_memory");
@@ -435,7 +435,7 @@ public class ToolingGenerateTest {
         assertGeneratedSources("tool_test_generate_51");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("There is multiple entities with multiple enums and imports with in memory data source")
     public void testGenerateWithEnumsInMemory() {
         updateOutputBallerinaToml("tool_test_generate_52_in_memory");
@@ -443,7 +443,7 @@ public class ToolingGenerateTest {
         assertGeneratedSources("tool_test_generate_52_in_memory");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("There is an entity which is associated with multiple relations")
     public void testGenerateWithSameEntityMultipleRelationsInMemory() {
         updateOutputBallerinaToml("tool_test_generate_53_in_memory");
@@ -459,7 +459,7 @@ public class ToolingGenerateTest {
         assertGeneratedSources("tool_test_generate_54_gsheet");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("There is a model with an entity consisting of multiple relations of the same type")
     public void testGenerateEntityWithMultipleRelationsSameTypeInMemory() {
         updateOutputBallerinaToml("tool_test_generate_55_in_memory");
@@ -915,7 +915,7 @@ public class ToolingGenerateTest {
         assertGeneratedSources(subDir);
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("There are entities with 'sql' annotations")
     public void testGenerateIgnoreSQLAnnotationsForInmemory() {
         updateOutputBallerinaToml("tool_test_generate_102_inmemory");
@@ -958,9 +958,10 @@ public class ToolingGenerateTest {
                     version = persistRedisVersion;
                 }
                 content = content.replaceAll(
-                        "artifactId\\s=\\s\"" + dataStore + "-native\"\nversion\\s=\\s\\\"\\d+(\\.\\d+)+" +
+                        "artifactId\\s=\\s\"" + dataStore + "-native\"" + System.lineSeparator() +
+                                "version\\s=\\s\\\"\\d+(\\.\\d+)+" +
                                 "(-SNAPSHOT)?\\\"",  "artifactId = \"" + dataStore +
-                                "-native\"\nversion = \"" + version + "\"");
+                                "-native\"" + System.lineSeparator() + "version = \"" + version + "\"");
                 Files.writeString(filePath, content);
             } catch (IOException e) {
                 // ignore
