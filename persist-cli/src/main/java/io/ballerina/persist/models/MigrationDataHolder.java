@@ -33,14 +33,16 @@ public class MigrationDataHolder {
     private final List<String> addedEntities = new ArrayList<>();
     private final List<NameMapping> renamedEntities = new ArrayList<>();
     private final List<String> removedEntities = new ArrayList<>();
-    private final HashMap<String, List<EntityField>> addedFields = new HashMap<>();
-    private final HashMap<String, List<NameMapping>> renamedFields = new HashMap<>();
-    private final HashMap<String, List<String>> removedFields = new HashMap<>();
-    private final HashMap<String, List<EntityField>> changedFieldTypes = new HashMap<>();
+    private final Map<String, List<EntityField>> addedFields = new HashMap<>();
+    private final Map<String, List<NameMapping>> renamedFields = new HashMap<>();
+    private final Map<String, List<String>> removedFields = new HashMap<>();
+    private final Map<String, List<EntityField>> changedFieldTypes = new HashMap<>();
     private final Set<String> primaryKeyChangedEntities = new HashSet<>();
-    private final HashMap<String, List<ForeignKey>> addedForeignKeys = new HashMap<>();
-    private final HashMap<String, List<ForeignKey>> removedForeignKeys = new HashMap<>();
+    private final Map<String, List<ForeignKey>> addedForeignKeys = new HashMap<>();
+    private final Map<String, List<ForeignKey>> removedForeignKeys = new HashMap<>();
     private final List<String> differences = new ArrayList<>();
+    private final Map<String, List<Index>> addedIndexes = new HashMap<>();
+    private final Map<String, List<Index>> removedIndexes = new HashMap<>();
     public record NameMapping(String oldName, String newName) { }
 
     public void addTable(String tableName) {
@@ -83,7 +85,7 @@ public class MigrationDataHolder {
         addOrModifyColumn(tableName, currentModelField, changedFieldTypes);
     }
 
-    private void addOrModifyColumn(String tableName, EntityField field, HashMap<String, List<EntityField>> fieldMap) {
+    private void addOrModifyColumn(String tableName, EntityField field, Map<String, List<EntityField>> fieldMap) {
         if (!fieldMap.containsKey(tableName)) {
             List<EntityField> initialData = new ArrayList<>();
             initialData.add(field);
@@ -155,6 +157,30 @@ public class MigrationDataHolder {
         }
     }
 
+    public void removeIndex(String tableName, Index index) {
+        differences.add("Index " + index.getIndexName() + " has been removed from table " + tableName);
+        addOrRemoveIndex(tableName, index, removedIndexes);
+    }
+
+    public void addIndex(String tableName, Index index) {
+        differences.add("Index " + index.getIndexName() + " on column(s) " + index.getFields().stream()
+                .map(EntityField::getFieldColumnName).reduce((a, b) -> a + ", " + b).orElse("") +
+                " has been added to table " + tableName);
+        addOrRemoveIndex(tableName, index, addedIndexes);
+    }
+
+    private void addOrRemoveIndex(String tableName, Index index, Map<String, List<Index>> map) {
+        if (!map.containsKey(tableName)) {
+            List<Index> initialData = new ArrayList<>();
+            initialData.add(index);
+            map.put(tableName, initialData);
+        } else {
+            List<Index> existingData = map.get(tableName);
+            existingData.add(index);
+            map.put(tableName, existingData);
+        }
+    }
+
     public void createForeignKeys(String tableName, EntityField currentModelField) {
 
         for (Relation.Key key : currentModelField.getRelation().getKeyColumns()) {
@@ -201,19 +227,19 @@ public class MigrationDataHolder {
         return removedEntities;
     }
 
-    public HashMap<String, List<EntityField>> getAddedFields() {
+    public Map<String, List<EntityField>> getAddedFields() {
         return addedFields;
     }
 
-    public HashMap<String, List<NameMapping>> getRenamedFields() {
+    public Map<String, List<NameMapping>> getRenamedFields() {
         return renamedFields;
     }
 
-    public HashMap<String, List<String>> getRemovedFields() {
+    public Map<String, List<String>> getRemovedFields() {
         return removedFields;
     }
 
-    public HashMap<String, List<EntityField>> getChangedFieldTypes() {
+    public Map<String, List<EntityField>> getChangedFieldTypes() {
         return changedFieldTypes;
     }
 
@@ -221,15 +247,23 @@ public class MigrationDataHolder {
         return primaryKeyChangedEntities;
     }
 
-    public HashMap<String, List<ForeignKey>> getAddedForeignKeys() {
+    public Map<String, List<ForeignKey>> getAddedForeignKeys() {
         return addedForeignKeys;
     }
 
-    public HashMap<String, List<ForeignKey>> getRemovedForeignKeys() {
+    public Map<String, List<ForeignKey>> getRemovedForeignKeys() {
         return removedForeignKeys;
     }
 
     public List<String> getDifferences() {
         return differences;
+    }
+
+    public Map<String, List<Index>> getAddedIndexes() {
+        return addedIndexes;
+    }
+
+    public Map<String, List<Index>> getRemovedIndexes() {
+        return removedIndexes;
     }
 }

@@ -320,6 +320,41 @@ public class ToolingMigrateTest {
         assertMigrateGeneratedSources("tool_test_migrate_40");
     }
 
+    @Test(enabled = true)
+    @Description("Test add new index columns")
+    public void testMigrateAddNewIndexColumns() {
+        executeCommand("tool_test_migrate_41", "secondMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_41");
+    }
+
+    @Test(enabled = true)
+    @Description("Test modify and remove index columns")
+    public void testMigrateModifyAndRemoveIndexColumns() {
+        executeCommand("tool_test_migrate_42", "secondMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_42");
+    }
+
+    @Test(enabled = true)
+    @Description("Test add new unique index columns")
+    public void testMigrateAddNewUniqueIndexColumns() {
+        executeCommand("tool_test_migrate_43", "secondMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_43");
+    }
+
+    @Test(enabled = true)
+    @Description("Test modify and remove unique index columns")
+    public void testMigrateModifyAndRemoveUniqueIndexColumns() {
+        executeCommand("tool_test_migrate_44", "secondMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_44");
+    }
+
+    @Test(enabled = true)
+    @Description("Test add table with index columns")
+    public void testMigrateAddTableWithIndexColumns() {
+        executeCommand("tool_test_migrate_45", "secondMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_45");
+    }
+
     private void executeCommand(String subDir, String migrationLabel) {
         Class<?> persistClass;
         Path sourcePath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);

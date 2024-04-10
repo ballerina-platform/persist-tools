@@ -3,7 +3,7 @@
 _Owners_: @daneshk @sahanHe  
 _Reviewers_: @daneshk  
 _Created_: 2022/07/26   
-_Updated_: 2023/01/29  
+_Updated_: 2024/04/10  
 _Edition_: Swan Lake  
 
 ## Introduction
@@ -20,9 +20,10 @@ The conforming implementation of the specification is released and included in t
 
 1. [Overview](#1-overview)
 2. [Initializing Persistence Layer in Bal Project](#2-initializing-the-bal-project-with-persistence-layer)
-3. [Generating Persistence Derived Types, Clients, and Database Schema](#3-generating-persistence-derived-types-and-clients)
+3. [Generating Persistence Derived Types, Clients, and Database Schema](#3-generating-persistence-derived-types-clients-and-database-schema)
 4. [Push Persistence Schema to the Data Provider](#4-push-persistence-schema-to-the-data-provider)
 5. [Pull Persistence Schema from the Data Provider](#5-pull-persistence-schema-from-the-data-provider)
+6. [Migrate Persistence Schema changes to the Data Provider](#6-migrate-persistence-schema-to-the-data-provider)
 
 ## 1. Overview
 This specification elaborates on the `Persist CLI Tool` commands.
@@ -238,3 +239,40 @@ Behaviour of the `pull` command,
 - If the user invokes the command while a `model.bal` file exists in the `persist` directory, it will prompt the user to confirm overwriting the existing `model.bal` file.
 - If the user introspects a database with unsupported data types, it will inform the user by giving a warning and will comment out the relevant field with the tag `[Unsupported[DATA_TYPE]]`.
 - The user must execute the `generate` command to generate the derived types and client API after running the `pull` command in order to use the client API in the project.
+
+## 6. Migrate Persistence Schema to the Data Provider
+
+```bash
+bal persist migrate --datastore mysql migrationLabel
+```
+| Command Parameter |                                   Description                                    | Mandatory | Default Value |
+|:-----------------:|:--------------------------------------------------------------------------------:|:---------:|:-------------:|
+|    --datastore    | used to indicate the preferred data store. Currently, only 'mysql' is supported. |    No     |     mysql     |
+
+This command will generate the required migration scripts based on the changes in the `model.bal` file.
+
+This command should execute within a Ballerina project.
+
+The file structure of the project should be similar to the following after running the command.
+
+```
+rainier
+   ├── persist
+         └── model.bal
+         └── migrations
+               └── 20240410120000_migrationLabel
+                  ├── model.bal
+                  └── script.sql     
+   ├── Ballerina.toml
+   └── main.bal
+```
+
+The `persist/migrations` directory is created if it is not already present. If the `persist/migrations` directory already contains any migrations, the tool will look at the last migration and generate the next migration script based on the last `model.bal` file that was migrated.
+
+Running the `migrate` command will,
+1. Generate a migration script based on the changes in the `model.bal` file. These can be found at `persist/migrations` directory, within another directory named in the format `[TIMESTAMP]_[migrationLabel]` where the `migrationLabel` is provided as a positional CLI argument. This directory will contain the latest `model.bal` file and the migration script.
+2. Not run the migration script against the database. The user should run the migration script against the database manually after reviewing the script.
+
+Behaviour of the `migrate` command,
+- User should invoke the command within a Ballerina project.
+- User should provide the migration label as a positional argument. The user also can provide the data store to the `--datastore` parameter to indicate the preferred data store. However, as only `mysql` is currently supported, it is optional and is set to `mysql` by default.
