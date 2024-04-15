@@ -213,6 +213,9 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
             case PersistToolsConstants.SupportedDataSources.GOOGLE_SHEETS:
                 sourceCreator.createGSheetSources();
                 break;
+            case PersistToolsConstants.SupportedDataSources.REDIS:
+                sourceCreator.createRedisSources();
+                break;
             default:
                 sourceCreator.createInMemorySources();
                 break;
