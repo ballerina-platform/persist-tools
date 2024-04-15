@@ -90,6 +90,11 @@ public class Add implements BLauncherCmd {
                     Paths.get(sourcePath, BALLERINA_TOML).toAbsolutePath().toString());
             createPersistDirectoryIfNotExists();
             createDefaultSchemaBalFile();
+            errStream.printf("Integrated the persist client and entity types generation with the package " +
+                    "build process." + System.lineSeparator());
+            errStream.println(System.lineSeparator() + "Next steps:");
+            errStream.println("1. Define your data model in \"persist/model.bal\".");
+            errStream.println("2. Execute `bal build` for a package build with the persist client generation.");
         } catch (BalException | IOException e) {
             errStream.printf("ERROR: %s%n", e.getMessage());
         }
