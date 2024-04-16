@@ -186,7 +186,7 @@ public abstract class Introspector {
                         indexFields.add(entityField);
                     }
                 }));
-                Index index = new Index(sqlIndex.getIndexName(), indexFields, sqlIndex.getNonUnique().equals("0"));
+                Index index = new Index(sqlIndex.getIndexName(), indexFields, sqlIndex.getUnique());
                 if (index.isUnique()) {
                     entityBuilder.addUniqueIndex(index);
                 } else {

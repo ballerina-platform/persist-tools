@@ -112,25 +112,47 @@ public class PostgreSqlIntrospector extends Introspector {
     @Override
     public String getIndexesQuery(String tableName) {
         String formatQuery = """
-        SELECT
-            table_name AS table_name,
-            index_name AS index_name,
-            column_name AS column_name,
-            sub_part AS partial,
-            seq_in_index AS seq_in_index,
-            collation AS column_order,
-            non_unique AS non_unique,
-            index_type AS index_type
-        FROM
-            information_schema.statistics
-        WHERE
-            table_schema = '%s'
-            AND table_name = '%s'
-            AND index_name != 'PRIMARY'
-        ORDER BY
-            BINARY index_name,
-            seq_in_index;
-              """;
+            WITH rawindex AS (
+                SELECT
+                    indrelid,\s
+                    indexrelid,
+                    indisunique,
+                    indisprimary,
+                    unnest(indkey) AS indkeyid,
+                    generate_subscripts(indkey, 1) AS indkeyidx,
+                    unnest(indclass) AS indclass,
+                    unnest(indoption) AS indoption
+                FROM pg_index\s
+                WHERE
+                    indpred IS NULL\s
+                    AND NOT indisexclusion
+            )
+            SELECT
+                indexinfo.relname AS index_name,
+                tableinfo.relname AS table_name,
+                columninfo.attname AS column_name,
+                rawindex.indisunique AS is_unique,
+                rawindex.indkeyidx AS seq_in_index,
+                CASE rawindex.indoption & 1
+                    WHEN 1 THEN 'DESC'
+                    ELSE 'ASC' END
+                    AS column_order
+            FROM
+                rawindex
+                INNER JOIN pg_class AS tableinfo ON tableinfo.oid = rawindex.indrelid
+                INNER JOIN pg_class AS indexinfo ON indexinfo.oid = rawindex.indexrelid
+                INNER JOIN pg_namespace AS schemainfo ON schemainfo.oid = tableinfo.relnamespace
+                LEFT JOIN pg_attribute AS columninfo
+                    ON columninfo.attrelid = tableinfo.oid AND columninfo.attnum = rawindex.indkeyid
+                INNER JOIN pg_am AS indexaccess ON indexaccess.oid = indexinfo.relam
+                LEFT JOIN pg_opclass AS opclass
+                    ON opclass.oid = rawindex.indclass
+                LEFT JOIN pg_constraint pc ON rawindex.indexrelid = pc.conindid AND pc.contype <> 'f'
+            WHERE\s
+                schemainfo.nspname = 'public' AND
+                rawindex.indisprimary = false
+            ORDER BY table_name, index_name;
+            """;
         formatQuery = formatQuery.replace("\r\n", "%n");
         return String.format(formatQuery, this.databaseName, tableName);
     }

@@ -80,25 +80,23 @@ public class MySqlIntrospector extends Introspector {
     @Override
     public String getIndexesQuery(String tableName) {
         String formatQuery = """
-        SELECT
-            table_name AS table_name,
-            index_name AS index_name,
-            column_name AS column_name,
-            sub_part AS partial,
-            seq_in_index AS seq_in_index,
-            collation AS column_order,
-            non_unique AS non_unique,
-            index_type AS index_type
-        FROM
-            information_schema.statistics
-        WHERE
-            table_schema = '%s'
-            AND table_name = '%s'
-            AND index_name != 'PRIMARY'
-        ORDER BY
-            BINARY index_name,
-            seq_in_index;
-              """;
+            SELECT
+                table_name AS table_name,
+                index_name AS index_name,
+                column_name AS column_name,
+                seq_in_index AS seq_in_index,
+                collation AS column_order,
+                IF(non_unique = '1', 0, 1) AS is_unique
+            FROM
+                information_schema.statistics
+            WHERE
+                table_schema = '%s'
+                AND table_name = '%s'
+                AND index_name != 'PRIMARY'
+            ORDER BY
+                BINARY index_name,
+                seq_in_index;
+            """;
         formatQuery = formatQuery.replace("\r\n", "%n");
         return String.format(formatQuery, this.databaseName, tableName);
     }
