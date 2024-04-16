@@ -256,10 +256,8 @@ public class ScriptRunner {
                         table.addIndex(SqlIndex.Builder.newBuilder(results.getString("index_name"))
                                 .setTableName(results.getString("table_name"))
                                 .addColumnName(results.getString("column_name"))
-                                .setPartial(results.getString("partial"))
                                 .setColumnOrder(results.getString("column_order"))
-                                .setNonUnique(results.getString("non_unique"))
-                                .setIndexType(results.getString("index_type"))
+                                .setUnique(results.getBoolean("is_unique"))
                                 .build()
                         );
                     } else {
