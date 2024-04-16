@@ -145,9 +145,7 @@ public class ScriptRunner {
         try (Statement statement = connection.createStatement()) {
             try (ResultSet results = statement.executeQuery(query)) {
                 while (results.next()) {
-                    tables.add(SqlTable.newBuilder(results.getString("table_name"))
-                            .setTableComment(results.getString("table_comment"))
-                            .setCreateOptions(results.getString("create_options")).build());
+                    tables.add(SqlTable.newBuilder(results.getString("table_name")).build());
                 }
                 if (tables.isEmpty()) {
                     throw new SQLException("No tables found in the database.");
