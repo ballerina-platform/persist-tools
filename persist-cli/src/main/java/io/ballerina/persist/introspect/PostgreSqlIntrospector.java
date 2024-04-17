@@ -161,31 +161,38 @@ public class PostgreSqlIntrospector extends Introspector {
     public String getForeignKeysQuery(String tableName) {
         String formatQuery = """
                 SELECT
-                    kcu.constraint_name constraint_name,
-                    kcu.column_name column_name,
-                    kcu.referenced_table_name referenced_table_name,
-                    kcu.referenced_column_name referenced_column_name,
-                    kcu.ordinal_position ordinal_position,
-                    kcu.table_name table_name,
-                    rc.delete_rule delete_rule,
-                    rc.update_rule update_rule
-                FROM
-                    information_schema.key_column_usage AS kcu
-                    INNER JOIN information_schema.referential_constraints AS rc ON
-                    BINARY kcu.constraint_name = BINARY rc.constraint_name
-                WHERE
-                    BINARY kcu.table_schema = '%s'
-                    AND rc.constraint_schema = '%s'
-                    AND kcu.table_name = '%s'
-                    AND kcu.referenced_column_name IS NOT NULL
-                ORDER BY
-                    BINARY kcu.table_schema,
-                    BINARY kcu.table_name,
-                    BINARY kcu.constraint_name,
-                kcu.ordinal_position;
+                    table_name,
+                    att2.attname    AS column_name,
+                    cl.relname      AS referenced_table_name,
+                    att.attname     AS referenced_column_name,
+                    conname         AS constraint_name,
+                    NULL            AS update_rule,
+                    NULL            AS delete_rule
+                FROM (SELECT\s
+                            ns.nspname AS "namespace",
+                            unnest(con1.conkey)                AS parent,
+                            unnest(con1.confkey)                AS child,
+                            cl.relname                          AS table_name,
+                            generate_subscripts(con1.conkey, 1) AS colidx,
+                            con1.confrelid,
+                            con1.conrelid,
+                            con1.conname
+                    FROM pg_class cl
+                            join pg_constraint con1 on con1.conrelid = cl.oid
+                            join pg_namespace ns on cl.relnamespace = ns.oid
+                    WHERE
+                        ns.nspname = 'public'
+                        and con1.contype = 'f'
+                    ORDER BY colidx
+                    ) con
+                        JOIN pg_attribute att on att.attrelid = con.confrelid and att.attnum = con.child
+                        JOIN pg_class cl on cl.oid = con.confrelid
+                        JOIN pg_attribute att2 on att2.attrelid = con.conrelid and att2.attnum = con.parent
+                WHERE table_name = '%s'
+                ORDER BY table_name, constraint_name, con.colidx;
                 """;
         formatQuery = formatQuery.replace("\r\n", "%n");
-        return String.format(formatQuery, this.databaseName, this.databaseName, tableName);
+        return String.format(formatQuery, tableName);
     }
 
     @Override
