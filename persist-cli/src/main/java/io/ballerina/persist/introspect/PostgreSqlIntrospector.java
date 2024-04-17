@@ -17,12 +17,16 @@
  */
 package io.ballerina.persist.introspect;
 
-import java.sql.Connection;
+import io.ballerina.persist.models.SQLType;
+import io.ballerina.persist.utils.DatabaseConnector;
+
+import static io.ballerina.persist.PersistToolsConstants.POSTGRESQL_DRIVER_CLASS;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.JDBC_URL_WITH_DATABASE_POSTGRESQL;
 
 public class PostgreSqlIntrospector extends Introspector {
 
-    public PostgreSqlIntrospector(Connection connection, String databaseName) {
-        super(connection, databaseName);
+    public PostgreSqlIntrospector() {
+        databaseConnector = new DatabaseConnector(JDBC_URL_WITH_DATABASE_POSTGRESQL, POSTGRESQL_DRIVER_CLASS);
     }
 
     @Override
@@ -114,7 +118,7 @@ public class PostgreSqlIntrospector extends Introspector {
         String formatQuery = """
             WITH rawindex AS (
                 SELECT
-                    indrelid,\s
+                    indrelid,
                     indexrelid,
                     indisunique,
                     indisprimary,
@@ -122,9 +126,9 @@ public class PostgreSqlIntrospector extends Introspector {
                     generate_subscripts(indkey, 1) AS indkeyidx,
                     unnest(indclass) AS indclass,
                     unnest(indoption) AS indoption
-                FROM pg_index\s
+                FROM pg_index
                 WHERE
-                    indpred IS NULL\s
+                    indpred IS NULL
                     AND NOT indisexclusion
             )
             SELECT
@@ -148,13 +152,14 @@ public class PostgreSqlIntrospector extends Introspector {
                 LEFT JOIN pg_opclass AS opclass
                     ON opclass.oid = rawindex.indclass
                 LEFT JOIN pg_constraint pc ON rawindex.indexrelid = pc.conindid AND pc.contype <> 'f'
-            WHERE\s
+            WHERE
                 schemainfo.nspname = 'public' AND
-                rawindex.indisprimary = false
-            ORDER BY table_name, index_name;
+                rawindex.indisprimary = false AND
+                table_name = '%s'
+            ORDER BY index_name;
             """;
         formatQuery = formatQuery.replace("\r\n", "%n");
-        return String.format(formatQuery, this.databaseName, tableName);
+        return String.format(formatQuery, tableName);
     }
 
     @Override
@@ -225,6 +230,10 @@ public class PostgreSqlIntrospector extends Introspector {
             """;
         formatQuery = formatQuery.replace("\r\n", "%n");
         return formatQuery;
+    }
+
+    protected String getBalType(SQLType sqlType) {
+        return getBalTypeForCommonDataTypes(sqlType);
     }
 
 }

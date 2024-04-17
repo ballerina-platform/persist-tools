@@ -314,10 +314,16 @@ public class BalSyntaxUtils {
         return resourcePaths;
     }
 
-    public static SyntaxTree createDriverImportFile(String datasource) {
+    public static SyntaxTree createDriverImportFile(String datastore) {
         NodeList<ImportDeclarationNode> imports = AbstractNodeFactory.createEmptyNodeList();
         NodeList<ModuleMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
-        imports = imports.add(NodeParser.parseImportDeclaration(("import ballerinax/mysql.driver as _;")));
+        imports = switch (datastore) {
+            case PersistToolsConstants.SupportedDataSources.MYSQL_DB ->
+                    imports.add(NodeParser.parseImportDeclaration(("import ballerinax/mysql.driver as _;")));
+            case PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB ->
+                    imports.add(NodeParser.parseImportDeclaration(("import ballerinax/postgres.driver as _;")));
+            default -> imports;
+        };
         Token eofToken = AbstractNodeFactory.createIdentifierToken(BalSyntaxConstants.EMPTY_STRING);
         ModulePartNode modulePartNode = NodeFactory.createModulePartNode(imports, moduleMembers, eofToken);
         TextDocument textDocument = TextDocuments.from(BalSyntaxConstants.EMPTY_STRING);

@@ -18,6 +18,8 @@
 package io.ballerina.persist.introspect;
 
 import io.ballerina.persist.BalException;
+import io.ballerina.persist.PersistToolsConstants;
+import io.ballerina.persist.configuration.PersistConfiguration;
 import io.ballerina.persist.inflector.CaseConverter;
 import io.ballerina.persist.inflector.Pluralizer;
 import io.ballerina.persist.introspectiondto.SqlEnum;
@@ -31,9 +33,16 @@ import io.ballerina.persist.models.Index;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.models.Relation;
 import io.ballerina.persist.models.SQLType;
+import io.ballerina.persist.nodegenerator.DriverResolver;
+import io.ballerina.persist.utils.DatabaseConnector;
+import io.ballerina.persist.utils.JdbcDriverLoader;
 import io.ballerina.persist.utils.ScriptRunner;
+import io.ballerina.projects.Project;
 
+import java.io.IOException;
+import java.io.PrintStream;
 import java.sql.Connection;
+import java.sql.Driver;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,26 +65,29 @@ import static java.lang.Integer.parseUnsignedInt;
  */
 public abstract class Introspector {
 
-    protected final Connection connection;
-    protected String databaseName;
+    protected DatabaseConnector databaseConnector;
+    protected PersistConfiguration persistConfigurations;
     protected abstract String getTablesQuery();
+
     protected abstract String getColumnsQuery(String tableName);
+
     protected abstract String getIndexesQuery(String tableName);
+
     protected abstract String getForeignKeysQuery(String tableName);
+
     protected abstract String getEnumsQuery();
 
-    private List<SqlTable> tables;
+    protected abstract String getBalType(SQLType sqlType);
 
+    private List<SqlTable> tables;
     private List<SqlEnum> sqlEnums;
     private final Module.Builder moduleBuilder;
-
     private final Map<String, Entity> entityMap;
-
     private final List<SqlForeignKey> sqlForeignKeys;
 
-    public Introspector(Connection connection, String databaseName) {
-        this.connection = connection;
-        this.databaseName = databaseName;
+    protected PrintStream errStream = System.err;
+
+    public Introspector() {
         this.tables = new ArrayList<>();
         this.entityMap = new HashMap<>();
         this.sqlForeignKeys = new ArrayList<>();
@@ -83,7 +95,42 @@ public abstract class Introspector {
         this.moduleBuilder = Module.newBuilder("db");
     }
 
-    public Module introspectDatabase() throws SQLException, BalException {
+    public Module introspectDatabase(PersistConfiguration persistConfiguration) throws BalException {
+        this.persistConfigurations = persistConfiguration;
+        DriverResolver driverResolver = new DriverResolver(this.persistConfigurations.getSourcePath(),
+                this.persistConfigurations.getProvider());
+        try {
+            Project driverProject = resolveDatabaseDrivers(driverResolver);
+            try (Connection connection = prepareDatabaseConnection(driverProject)) {
+                readDatabaseSchema(connection);
+            } catch (SQLException e) {
+                throw new BalException("failed to read database schema: " + e.getMessage());
+            }
+            mapDatabaseSchemaToModule();
+            return moduleBuilder.build();
+        } finally {
+            driverResolver.deleteDriverFile();
+        }
+    }
+
+    private Connection prepareDatabaseConnection(Project driverProject) throws BalException {
+        try (JdbcDriverLoader driverLoader = databaseConnector.getJdbcDriverLoader(driverProject)) {
+            Driver driver = databaseConnector.getJdbcDriver(driverLoader);
+            try {
+                return databaseConnector.getConnection(driver, persistConfigurations, true);
+            } catch (SQLException e) {
+                throw new BalException("failed to connect to the database: " + e.getMessage());
+            }
+        } catch (IOException e) {
+            throw new BalException("failed to load the database driver: " + e.getMessage());
+        }
+    }
+
+    private Project resolveDatabaseDrivers(DriverResolver driverResolver) throws BalException {
+        return driverResolver.resolveDriverDependencies();
+    }
+
+    public void readDatabaseSchema(Connection connection) throws SQLException {
         ScriptRunner sr = new ScriptRunner(connection);
         this.tables = sr.getSQLTables(this.getTablesQuery());
         this.sqlEnums = sr.getSQLEnums(this.getEnumsQuery());
@@ -93,12 +140,12 @@ public abstract class Introspector {
                     (table, this.getForeignKeysQuery(table.getTableName())));
             sr.readIndexesOfSQLTable(table, this.getIndexesQuery(table.getTableName()));
         }
+    }
 
+    public void mapDatabaseSchemaToModule() throws BalException {
         mapEnums();
         mapEntities();
-
         entityMap.forEach(moduleBuilder::addEntity);
-        return moduleBuilder.build();
     }
 
     private void mapEnums() {
@@ -163,7 +210,7 @@ public abstract class Introspector {
                                     parseUnsignedInt(column.getCharacterMaximumLength()) : 0
                     );
 
-                    String balType = sqlType.getBalType();
+                    String balType = this.getBalType(sqlType);
                     fieldBuilder.setType(balType);
                     fieldBuilder.setSqlType(sqlType);
                     fieldBuilder.setArrayType(sqlType.isArrayType());
@@ -272,5 +319,49 @@ public abstract class Introspector {
             return Relation.RelationType.MANY;
         }
     }
+
+    protected String getBalTypeForCommonDataTypes(SQLType sqlType) {
+        return switch (sqlType.getTypeName()) {
+            case PersistToolsConstants.SqlTypes.INT,
+                    PersistToolsConstants.SqlTypes.INTEGER,
+                    PersistToolsConstants.SqlTypes.TINYINT,
+                    PersistToolsConstants.SqlTypes.SMALLINT,
+                    PersistToolsConstants.SqlTypes.MEDIUMINT,
+                    PersistToolsConstants.SqlTypes.BIGINT,
+                    PersistToolsConstants.SqlTypes.SERIAL,
+                    PersistToolsConstants.SqlTypes.BIGSERIAL ->
+                    PersistToolsConstants.BallerinaTypes.INT;
+            case PersistToolsConstants.SqlTypes.BOOLEAN -> PersistToolsConstants.BallerinaTypes.BOOLEAN;
+            case PersistToolsConstants.SqlTypes.DECIMAL -> PersistToolsConstants.BallerinaTypes.DECIMAL;
+            case PersistToolsConstants.SqlTypes.DOUBLE,
+                    PersistToolsConstants.SqlTypes.FLOAT ->
+                    PersistToolsConstants.BallerinaTypes.FLOAT;
+            case PersistToolsConstants.SqlTypes.DATE -> PersistToolsConstants.BallerinaTypes.DATE;
+            case PersistToolsConstants.SqlTypes.TIME -> PersistToolsConstants.BallerinaTypes.TIME_OF_DAY;
+            case PersistToolsConstants.SqlTypes.TIME_STAMP -> PersistToolsConstants.BallerinaTypes.UTC;
+            case PersistToolsConstants.SqlTypes.DATE_TIME2,
+                    PersistToolsConstants.SqlTypes.DATE_TIME ->
+                    PersistToolsConstants.BallerinaTypes.CIVIL;
+            case PersistToolsConstants.SqlTypes.VARCHAR,
+                    PersistToolsConstants.SqlTypes.CHAR,
+                    PersistToolsConstants.SqlTypes.TEXT,
+                    PersistToolsConstants.SqlTypes.MEDIUMTEXT,
+                    PersistToolsConstants.SqlTypes.LONGTEXT,
+                    PersistToolsConstants.SqlTypes.TINYTEXT ->
+                    PersistToolsConstants.BallerinaTypes.STRING;
+            case PersistToolsConstants.SqlTypes.LONG_BLOB,
+                    PersistToolsConstants.SqlTypes.MEDIUM_BLOB,
+                    PersistToolsConstants.SqlTypes.TINY_BLOB,
+                    PersistToolsConstants.SqlTypes.BINARY,
+                    PersistToolsConstants.SqlTypes.VARBINARY,
+                    PersistToolsConstants.SqlTypes.BLOB ->
+                    PersistToolsConstants.BallerinaTypes.BYTE;
+            default -> {
+                errStream.println("WARNING Unsupported SQL type found: " + sqlType.getFullDataType());
+                yield PersistToolsConstants.UNSUPPORTED_TYPE;
+            }
+        };
+    }
+
 
 }

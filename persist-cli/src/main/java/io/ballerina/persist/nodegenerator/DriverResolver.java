@@ -33,9 +33,11 @@ import java.nio.file.Paths;
 public class DriverResolver {
 
     private final Path driverImportFile;
+    private final String datastore;
 
-    public DriverResolver(String sourcePath) {
+    public DriverResolver(String sourcePath, String datastore) {
         driverImportFile = Paths.get(sourcePath, "persist/driver.bal");
+        this.datastore = datastore;
     }
 
     public Project resolveDriverDependencies() throws BalException {
@@ -47,10 +49,10 @@ public class DriverResolver {
         DbModelGenSyntaxTree dbModelGenSyntaxTree = new DbModelGenSyntaxTree();
         try {
             writeOutputFile
-                    (Formatter.format(dbModelGenSyntaxTree.createInitialDriverImportFile().toSourceCode()),
+                    (Formatter.format(dbModelGenSyntaxTree.createInitialDriverImportFile(datastore).toSourceCode()),
                             driverImportFile);
         } catch (Exception e) {
-            throw new BalException("ERROR: failed to create driver import file. " + e.getMessage());
+            throw new BalException("failed to create driver import file: " + e.getMessage());
         }
     }
     private void writeOutputFile(String syntaxTree, Path outPath) throws IOException {
@@ -63,7 +65,7 @@ public class DriverResolver {
         try {
             Files.deleteIfExists(driverImportFile);
         } catch (IOException e) {
-            throw new BalException("ERROR: failed to delete driver import file. " + e.getMessage());
+            throw new BalException("failed to delete driver import file: " + e.getMessage());
         }
     }
 
