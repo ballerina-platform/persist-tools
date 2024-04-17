@@ -133,6 +133,8 @@ public class PersistToolsConstants {
         public static final String VARBINARY = "VARBINARY";
         public static final String BYTEA = "BYTEA";
         public static final String BOOLEAN_ALT = "tinyint(1)";
+        public static final String SERIAL = "SERIAL";
+        public static final String BIGSERIAL = "BIGSERIAL";
     }
 
     /**

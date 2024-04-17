@@ -20,11 +20,9 @@ package io.ballerina.persist.models;
 
 import io.ballerina.persist.PersistToolsConstants;
 
-import java.io.PrintStream;
 import java.util.Objects;
 
 public class SQLType {
-    PrintStream errStream = System.err;
     private final String typeName;
     private final String fullDataType;
     private final String columnDefaultValue;
@@ -72,63 +70,6 @@ public class SQLType {
                 this.typeName.equals(PersistToolsConstants.SqlTypes.TINY_BLOB) ||
                 this.typeName.equals(PersistToolsConstants.SqlTypes.BINARY) ||
                 this.typeName.equals(PersistToolsConstants.SqlTypes.VARBINARY);
-    }
-    public String getBalType() {
-        if (Objects.equals(this.fullDataType, PersistToolsConstants.SqlTypes.BOOLEAN_ALT)) {
-            return PersistToolsConstants.BallerinaTypes.BOOLEAN;
-        }
-        switch (this.typeName) {
-
-            case PersistToolsConstants.SqlTypes.INT:
-            case PersistToolsConstants.SqlTypes.INTEGER:
-            case PersistToolsConstants.SqlTypes.TINYINT:
-            case PersistToolsConstants.SqlTypes.SMALLINT:
-            case PersistToolsConstants.SqlTypes.MEDIUMINT:
-            case PersistToolsConstants.SqlTypes.BIGINT:
-                return PersistToolsConstants.BallerinaTypes.INT;
-
-            case PersistToolsConstants.SqlTypes.BOOLEAN:
-                return PersistToolsConstants.BallerinaTypes.BOOLEAN;
-
-            case PersistToolsConstants.SqlTypes.DECIMAL:
-                return PersistToolsConstants.BallerinaTypes.DECIMAL;
-
-            case PersistToolsConstants.SqlTypes.DOUBLE:
-            case PersistToolsConstants.SqlTypes.FLOAT:
-                return PersistToolsConstants.BallerinaTypes.FLOAT;
-
-            case PersistToolsConstants.SqlTypes.DATE:
-                return PersistToolsConstants.BallerinaTypes.DATE;
-
-            case PersistToolsConstants.SqlTypes.TIME:
-                return PersistToolsConstants.BallerinaTypes.TIME_OF_DAY;
-
-            case PersistToolsConstants.SqlTypes.TIME_STAMP:
-                return PersistToolsConstants.BallerinaTypes.UTC;
-            case PersistToolsConstants.SqlTypes.DATE_TIME2:
-            case PersistToolsConstants.SqlTypes.DATE_TIME:
-                return PersistToolsConstants.BallerinaTypes.CIVIL;
-
-            case PersistToolsConstants.SqlTypes.VARCHAR:
-            case PersistToolsConstants.SqlTypes.CHAR:
-            case PersistToolsConstants.SqlTypes.TEXT:
-            case PersistToolsConstants.SqlTypes.MEDIUMTEXT:
-            case PersistToolsConstants.SqlTypes.LONGTEXT:
-            case PersistToolsConstants.SqlTypes.TINYTEXT:
-                return PersistToolsConstants.BallerinaTypes.STRING;
-
-            case PersistToolsConstants.SqlTypes.LONG_BLOB:
-            case PersistToolsConstants.SqlTypes.MEDIUM_BLOB:
-            case PersistToolsConstants.SqlTypes.TINY_BLOB:
-            case PersistToolsConstants.SqlTypes.BINARY:
-            case PersistToolsConstants.SqlTypes.VARBINARY:
-            case PersistToolsConstants.SqlTypes.BLOB:
-                return PersistToolsConstants.BallerinaTypes.BYTE;
-
-            default:
-                errStream.println("WARNING Unsupported SQL type found: " + this.fullDataType);
-                return PersistToolsConstants.UNSUPPORTED_TYPE;
-        }
     }
 
     @Override

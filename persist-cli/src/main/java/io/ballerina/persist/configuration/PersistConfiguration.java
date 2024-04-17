@@ -28,6 +28,7 @@ public class PersistConfiguration {
 
     private String provider;
     private DatabaseConfiguration dbConfig;
+    private String sourcePath;
 
     public PersistConfiguration() {
     }
@@ -51,4 +52,13 @@ public class PersistConfiguration {
         }
         this.provider = provider;
     }
+
+    public String getSourcePath() {
+        return sourcePath;
+    }
+
+    public void setSourcePath(String sourcePath) {
+        this.sourcePath = sourcePath;
+    }
+
 }
