@@ -137,7 +137,6 @@ public class MySqlIntrospector extends Introspector {
         String formatQuery = """
             SELECT
                 column_name column_name,
-                data_type data_type,
                 column_type full_enum_type,
                 table_name table_name
             FROM

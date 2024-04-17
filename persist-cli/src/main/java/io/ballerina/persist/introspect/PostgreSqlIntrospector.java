@@ -199,20 +199,32 @@ public class PostgreSqlIntrospector extends Introspector {
     protected String getEnumsQuery() {
         String formatQuery = """
             SELECT
-                column_name column_name,
-                data_type data_type,
-                column_type full_enum_type,
-                table_name table_name
-            FROM
-                information_schema.columns
-            WHERE
-                table_schema = '%s'
-                AND data_type = 'enum'
-            ORDER BY
-                ordinal_position ASC;
+                subquery.relname AS table_name,
+                subquery.attname AS column_name,
+                'enum(' || string_agg(quote_literal(match[1]), ',') || ')' AS full_enum_type
+            FROM (
+                SELECT
+                    con.oid,
+                    rel.relname,
+                    a.attname,
+                    regexp_matches(pg_get_constraintdef(con.oid),'''([A-Z]+)''','g') AS match
+                FROM
+                    pg_catalog.pg_constraint con
+                INNER JOIN
+                    pg_catalog.pg_class rel ON rel.oid = con.conrelid
+                INNER JOIN
+                    pg_catalog.pg_namespace nsp ON nsp.oid = connamespace
+                INNER JOIN
+                    pg_catalog.pg_attribute a ON a.attrelid = rel.oid AND a.attnum = ANY(con.conkey)
+                WHERE
+                    nsp.nspname = 'public'
+                    AND con.contype = 'c'
+                    AND pg_get_constraintdef(con.oid) LIKE '%ANY ((ARRAY[%::text[]%'
+            ) AS subquery
+            GROUP BY subquery.oid, subquery.relname, subquery.attname;
             """;
         formatQuery = formatQuery.replace("\r\n", "%n");
-        return String.format(formatQuery, this.databaseName);
+        return formatQuery;
     }
 
 }
