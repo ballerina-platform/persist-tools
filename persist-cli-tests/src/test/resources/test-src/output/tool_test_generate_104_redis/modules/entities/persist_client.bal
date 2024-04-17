@@ -24,7 +24,7 @@ public isolated client class Client {
             fieldMetadata: {
                 id: {fieldName: "id", fieldDataType: predis:INT},
                 reason: {fieldName: "reason", fieldDataType: predis:STRING},
-                appointmentTime: {fieldName: "appointmentTime", fieldDataType: predis:STRING},
+                appointmentTime: {fieldName: "appointmentTime", fieldDataType: predis:CIVIL},
                 status: {fieldName: "status", fieldDataType: predis:STRING},
                 patientId: {fieldName: "patientId", fieldDataType: predis:INT},
                 doctorId: {fieldName: "doctorId", fieldDataType: predis:INT},
@@ -58,7 +58,7 @@ public isolated client class Client {
                 gender: {fieldName: "gender", fieldDataType: predis:STRING},
                 "appointments[].id": {relation: {entityName: "appointments", refField: "id", refFieldDataType: predis:INT}},
                 "appointments[].reason": {relation: {entityName: "appointments", refField: "reason", refFieldDataType: predis:STRING}},
-                "appointments[].appointmentTime": {relation: {entityName: "appointments", refField: "appointmentTime", refFieldDataType: predis:STRING}},
+                "appointments[].appointmentTime": {relation: {entityName: "appointments", refField: "appointmentTime", refFieldDataType: predis:CIVIL}},
                 "appointments[].status": {relation: {entityName: "appointments", refField: "status", refFieldDataType: predis:STRING}},
                 "appointments[].patientId": {relation: {entityName: "appointments", refField: "patientId", refFieldDataType: predis:INT}},
                 "appointments[].doctorId": {relation: {entityName: "appointments", refField: "doctorId", refFieldDataType: predis:INT}}
@@ -77,7 +77,7 @@ public isolated client class Client {
                 salary: {fieldName: "salary", fieldDataType: predis:DECIMAL},
                 "appointments[].id": {relation: {entityName: "appointments", refField: "id", refFieldDataType: predis:INT}},
                 "appointments[].reason": {relation: {entityName: "appointments", refField: "reason", refFieldDataType: predis:STRING}},
-                "appointments[].appointmentTime": {relation: {entityName: "appointments", refField: "appointmentTime", refFieldDataType: predis:STRING}},
+                "appointments[].appointmentTime": {relation: {entityName: "appointments", refField: "appointmentTime", refFieldDataType: predis:CIVIL}},
                 "appointments[].status": {relation: {entityName: "appointments", refField: "status", refFieldDataType: predis:STRING}},
                 "appointments[].patientId": {relation: {entityName: "appointments", refField: "patientId", refFieldDataType: predis:INT}},
                 "appointments[].doctorId": {relation: {entityName: "appointments", refField: "doctorId", refFieldDataType: predis:INT}}
