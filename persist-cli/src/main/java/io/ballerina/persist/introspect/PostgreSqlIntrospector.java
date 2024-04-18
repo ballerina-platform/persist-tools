@@ -50,14 +50,40 @@ public class PostgreSqlIntrospector extends Introspector {
             SELECT
                 info.table_name AS table_name,
                 info.column_name AS column_name,
-                format_type(att.atttypid, att.atttypmod) AS formatted_type,
+                UPPER(format_type(att.atttypid, att.atttypmod)) AS full_data_type,
                 info.numeric_precision AS numeric_precision,
                 info.numeric_scale AS numeric_scale,
                 info.numeric_precision_radix,
                 info.datetime_precision AS datetime_precision,
-                info.data_type AS data_type,
                 info.udt_schema AS type_schema_name,
-                info.udt_name AS full_data_type,
+                CASE
+                    WHEN (
+                        SELECT
+                            1 AS isEnum
+                        FROM (
+                            SELECT
+                                con.oid,
+                                rel.relname,
+                                a.attname
+                            FROM
+                                pg_catalog.pg_constraint con
+                            INNER JOIN
+                                pg_catalog.pg_class rel ON rel.oid = con.conrelid
+                            INNER JOIN
+                                pg_catalog.pg_namespace nsp ON nsp.oid = connamespace
+                            INNER JOIN
+                                pg_catalog.pg_attribute a ON a.attrelid = rel.oid AND a.attnum = ANY(con.conkey)
+                            WHERE
+                                nsp.nspname = 'public'
+                                AND con.contype = 'c'
+                                AND pg_get_constraintdef(con.oid) LIKE '%%ANY ((ARRAY[%%::text[]%%'
+                                AND a.attname = info.column_name
+                                AND rel.relname = info.table_name
+                        ) AS subquery
+                        GROUP BY subquery.oid
+                    ) = 1 THEN 'enum'
+                    ELSE UPPER(info.udt_name)
+                END AS data_type,
                 pg_get_expr(attdef.adbin, attdef.adrelid) AS column_default,
                 info.is_nullable AS is_nullable,
                 CASE
@@ -82,9 +108,10 @@ public class PostgreSqlIntrospector extends Introspector {
                 info.character_maximum_length AS character_maximum_length,
                 col_description(att.attrelid, ordinal_position) AS column_comment,
                 CASE
-                    WHEN pg_get_expr(attdef.adbin, attdef.adrelid) LIKE 'nextval(%'
+                    WHEN pg_get_expr(attdef.adbin, attdef.adrelid) IS NOT NULL
+                    AND pg_get_expr(attdef.adbin, attdef.adrelid) LIKE 'nextval(%%'
                     AND pg_get_serial_sequence(info.table_name, info.column_name) IS NOT NULL
-                    AND pg_get_serial_sequence(info.table_name, info.column_name) LIKE 'public.%'
+                    AND pg_get_serial_sequence(info.table_name, info.column_name) LIKE 'public.%%'
                     AND (
                         SELECT increment_by FROM pg_sequences
                         WHERE
@@ -155,7 +182,7 @@ public class PostgreSqlIntrospector extends Introspector {
             WHERE
                 schemainfo.nspname = 'public' AND
                 rawindex.indisprimary = false AND
-                table_name = '%s'
+                tableinfo.relname = '%s'
             ORDER BY index_name;
             """;
         formatQuery = formatQuery.replace("\r\n", "%n");
@@ -224,7 +251,7 @@ public class PostgreSqlIntrospector extends Introspector {
                 WHERE
                     nsp.nspname = 'public'
                     AND con.contype = 'c'
-                    AND pg_get_constraintdef(con.oid) LIKE '%ANY ((ARRAY[%::text[]%'
+                    AND pg_get_constraintdef(con.oid) LIKE '%%ANY ((ARRAY[%::text[]%%'
             ) AS subquery
             GROUP BY subquery.oid, subquery.relname, subquery.attname;
             """;

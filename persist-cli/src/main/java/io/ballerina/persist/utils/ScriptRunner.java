@@ -193,7 +193,6 @@ public class ScriptRunner {
                             .setDatetimePrecision(results.getString("datetime_precision"))
                             .setColumnDefault(results.getString("column_default"))
                             .setIsNullable(results.getString("is_nullable"))
-                            .setExtra(results.getString("extra"))
                             .setColumnComment(results.getString("column_comment"))
                             .setIsPrimaryKey(results.getString("column_key").equals("PRI"))
                             .setIsDbGenerated(results.getBoolean("dbgenerated"))
@@ -266,7 +265,7 @@ public class ScriptRunner {
                 }
             }
         } catch (SQLException e) {
-            throw new SQLException("Error while retrieving indexes for table: " + e.getMessage());
+            throw new SQLException("error while retrieving indexes for table: " + e.getMessage());
         } finally {
             rollbackConnection();
         }

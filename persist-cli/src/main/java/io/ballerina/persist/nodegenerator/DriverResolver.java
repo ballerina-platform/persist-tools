@@ -55,6 +55,7 @@ public class DriverResolver {
             throw new BalException("failed to create driver import file: " + e.getMessage());
         }
     }
+
     private void writeOutputFile(String syntaxTree, Path outPath) throws IOException {
         try (PrintWriter writer = new PrintWriter(outPath.toString(), StandardCharsets.UTF_8)) {
             writer.println(syntaxTree);

@@ -100,9 +100,11 @@ public class PersistToolsConstants {
      * Constants related to SQL types.
      */
     public static final class SqlTypes {
+
         private SqlTypes() {}
 
         public static final String INT = "INT";
+        public static final String INT4 = "INT4";
         public static final String BIGINT = "BIGINT";
         public static final String TINYINT = "TINYINT";
         public static final String SMALLINT = "SMALLINT";
@@ -111,6 +113,7 @@ public class PersistToolsConstants {
         public static final String BIT = "BIT";
         public static final String BOOLEAN = "BOOLEAN";
         public static final String DECIMAL = "DECIMAL";
+        public static final String NUMERIC = "NUMERIC";
         public static final String DOUBLE = "DOUBLE";
         public static final String FLOAT = "FLOAT";
         public static final String VARCHAR = "VARCHAR";
