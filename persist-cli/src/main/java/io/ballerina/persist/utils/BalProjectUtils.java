@@ -165,7 +165,7 @@ public class BalProjectUtils {
         PackageCompilation compilation = currentPackage.getCompilation();
         DiagnosticResult diagnosticResult = compilation.diagnosticResult();
         if (diagnosticResult.hasErrors()) {
-            throw new BalException("ERROR: failed to build the driver file.");
+            throw new BalException("failed to build the driver file.");
         }
         return buildProject;
     }
@@ -651,7 +651,8 @@ public class BalProjectUtils {
             errors.add("The datastore type is not provided.");
         } else if (datastore.isEmpty()) {
             errors.add("The datastore type cannot be empty.");
-        } else if (!datastore.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB)) {
+        } else if (!(datastore.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB) || datastore.equals(
+                PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB))) {
             errors.add("Unsupported data store: '" + datastore + "'");
         }
         if (host == null) {

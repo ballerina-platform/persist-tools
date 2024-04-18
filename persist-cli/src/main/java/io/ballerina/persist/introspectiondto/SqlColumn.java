@@ -28,15 +28,14 @@ public class SqlColumn {
     private final String datetimePrecision;
     private final String columnDefault;
     private final String isNullable;
-    private final String extra;
     private final String columnComment;
     private final boolean isPrimaryKey;
     private final boolean isDbGenerated;
 
     private SqlColumn(String columnName, String tableName, String dataType, String fullDataType,
                       String characterMaximumLength, String numericPrecision, String numericScale,
-                      String datetimePrecision, String columnDefault, String isNullable, String extra,
-                      String columnComment, Boolean isPrimaryKey, Boolean isDbGenerated) {
+                      String datetimePrecision, String columnDefault, String isNullable, String columnComment,
+                      Boolean isPrimaryKey, Boolean isDbGenerated) {
         this.columnName = columnName;
         this.tableName = tableName;
         this.dataType = dataType;
@@ -47,7 +46,6 @@ public class SqlColumn {
         this.datetimePrecision = datetimePrecision;
         this.columnDefault = columnDefault;
         this.isNullable = isNullable;
-        this.extra = extra;
         this.columnComment = columnComment;
         this.isPrimaryKey = isPrimaryKey;
         this.isDbGenerated = isDbGenerated;
@@ -97,10 +95,6 @@ public class SqlColumn {
         return isDbGenerated;
     }
 
-    public String getExtra() {
-        return extra;
-    }
-
     public String getColumnComment() {
         return columnComment;
     }
@@ -123,7 +117,6 @@ public class SqlColumn {
         private String datetimePrecision;
         private String columnDefault;
         private String isNullable;
-        private String extra;
         private String columnComment;
         private String tableName;
         private Boolean isPrimaryKey;
@@ -183,11 +176,6 @@ public class SqlColumn {
             return this;
         }
 
-        public Builder setExtra(String extra) {
-            this.extra = extra;
-            return this;
-        }
-
         public Builder setColumnComment(String columnComment) {
             this.columnComment = columnComment;
             return this;
@@ -200,7 +188,7 @@ public class SqlColumn {
         public SqlColumn build() {
             return new SqlColumn(this.columnName, this.tableName, this.dataType, this.fullDataType,
                     this.characterMaximumLength, this.numericPrecision, this.numericScale, this.datetimePrecision,
-                    this.columnDefault, this.isNullable, this.extra, this.columnComment, this.isPrimaryKey,
+                    this.columnDefault, this.isNullable, this.columnComment, this.isPrimaryKey,
                     this.isDbGenerated);
         }
     }

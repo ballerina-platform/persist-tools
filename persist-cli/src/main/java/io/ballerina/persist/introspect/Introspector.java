@@ -39,7 +39,6 @@ import io.ballerina.persist.utils.JdbcDriverLoader;
 import io.ballerina.persist.utils.ScriptRunner;
 import io.ballerina.projects.Project;
 
-import java.io.IOException;
 import java.io.PrintStream;
 import java.sql.Connection;
 import java.sql.Driver;
@@ -114,15 +113,13 @@ public abstract class Introspector {
     }
 
     private Connection prepareDatabaseConnection(Project driverProject) throws BalException {
-        try (JdbcDriverLoader driverLoader = databaseConnector.getJdbcDriverLoader(driverProject)) {
-            Driver driver = databaseConnector.getJdbcDriver(driverLoader);
-            try {
-                return databaseConnector.getConnection(driver, persistConfigurations, true);
-            } catch (SQLException e) {
-                throw new BalException("failed to connect to the database: " + e.getMessage());
-            }
-        } catch (IOException e) {
-            throw new BalException("failed to load the database driver: " + e.getMessage());
+        JdbcDriverLoader driverLoader;
+        driverLoader = databaseConnector.getJdbcDriverLoader(driverProject);
+        Driver driver = databaseConnector.getJdbcDriver(driverLoader);
+        try {
+            return databaseConnector.getConnection(driver, persistConfigurations, true);
+        } catch (SQLException e) {
+            throw new BalException("failed to connect to the database: " + e.getMessage());
         }
     }
 
@@ -256,8 +253,7 @@ public abstract class Introspector {
                         "keys.");
             }
             boolean isReferenceMany = inferRelationshipCardinality
-                    (ownerEntityBuilder.build(), sqlForeignKey)
-                    == Relation.RelationType.MANY;
+                    (ownerEntityBuilder.build(), sqlForeignKey) == Relation.RelationType.MANY;
             String assocFieldName = isReferenceMany ?
                     Pluralizer.pluralize(ownerEntityBuilder.getEntityName().toLowerCase(Locale.ENGLISH))
                     : ownerEntityBuilder.getEntityName().toLowerCase(Locale.ENGLISH);
@@ -329,10 +325,12 @@ public abstract class Introspector {
                     PersistToolsConstants.SqlTypes.MEDIUMINT,
                     PersistToolsConstants.SqlTypes.BIGINT,
                     PersistToolsConstants.SqlTypes.SERIAL,
-                    PersistToolsConstants.SqlTypes.BIGSERIAL ->
+                    PersistToolsConstants.SqlTypes.BIGSERIAL,
+                    PersistToolsConstants.SqlTypes.INT4 ->
                     PersistToolsConstants.BallerinaTypes.INT;
             case PersistToolsConstants.SqlTypes.BOOLEAN -> PersistToolsConstants.BallerinaTypes.BOOLEAN;
-            case PersistToolsConstants.SqlTypes.DECIMAL -> PersistToolsConstants.BallerinaTypes.DECIMAL;
+            case PersistToolsConstants.SqlTypes.DECIMAL,
+                    PersistToolsConstants.SqlTypes.NUMERIC -> PersistToolsConstants.BallerinaTypes.DECIMAL;
             case PersistToolsConstants.SqlTypes.DOUBLE,
                     PersistToolsConstants.SqlTypes.FLOAT ->
                     PersistToolsConstants.BallerinaTypes.FLOAT;

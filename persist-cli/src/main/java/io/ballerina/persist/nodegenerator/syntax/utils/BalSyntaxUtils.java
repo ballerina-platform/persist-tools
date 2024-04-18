@@ -321,7 +321,7 @@ public class BalSyntaxUtils {
             case PersistToolsConstants.SupportedDataSources.MYSQL_DB ->
                     imports.add(NodeParser.parseImportDeclaration(("import ballerinax/mysql.driver as _;")));
             case PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB ->
-                    imports.add(NodeParser.parseImportDeclaration(("import ballerinax/postgres.driver as _;")));
+                    imports.add(NodeParser.parseImportDeclaration(("import ballerinax/postgresql.driver as _;")));
             default -> imports;
         };
         Token eofToken = AbstractNodeFactory.createIdentifierToken(BalSyntaxConstants.EMPTY_STRING);
