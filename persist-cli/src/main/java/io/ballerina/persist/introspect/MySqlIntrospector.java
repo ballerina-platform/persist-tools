@@ -134,7 +134,7 @@ public class MySqlIntrospector extends Introspector {
                     BINARY kcu.table_schema,
                     BINARY kcu.table_name,
                     BINARY kcu.constraint_name,
-                kcu.ordinal_position;
+                    kcu.ordinal_position;
                 """;
         formatQuery = formatQuery.replace("\r\n", "%n");
         return String.format(formatQuery, this.persistConfigurations.getDbConfig().getDatabase(),

@@ -7,12 +7,21 @@ public enum UserGender {
 }
 
 public type User record {|
-    @sql:UniqueIndex {name: "user"}
-    readonly int id;
+    readonly string email;
+    readonly string nic;
     string name;
     UserGender gender;
-    @sql:UniqueIndex {name: ["user", "user_nic"]}
-    string nic;
-    decimal salary;
+    decimal? salary;
+    Car[] cars;
+|};
+
+public type Car record {|
+    readonly int id;
+    string name;
+    string model;
+    string ownerEmail;
+    string ownerNic;
+    @sql:Relation {keys: ["ownerEmail", "ownerNic"]}
+    User user;
 |};
 
