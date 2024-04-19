@@ -591,6 +591,8 @@ public class BalSyntaxUtils {
         if (sqlType != null) {
             switch (sqlType.getTypeName()) {
                 case PersistToolsConstants.SqlTypes.CHAR:
+                case PersistToolsConstants.SqlTypes.BPCHAR:
+                case PersistToolsConstants.SqlTypes.CHARACTER:
                     recordFields.append(String.format
                             (BalSyntaxConstants.SQL_CHAR_MAPPING_ANNOTATION, sqlType.getMaxLength()));
                     break;
@@ -601,6 +603,7 @@ public class BalSyntaxUtils {
                     }
                     break;
                 case PersistToolsConstants.SqlTypes.DECIMAL:
+                case PersistToolsConstants.SqlTypes.NUMERIC:
                     // add later: check for default values for separate data sources
                     String dataSource = PersistToolsConstants.SupportedDataSources.MYSQL_DB;
                     int precision = PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION_MYSQL;
@@ -628,6 +631,8 @@ public class BalSyntaxUtils {
         if (sqlType != null) {
             switch (sqlType.getTypeName()) {
                 case PersistToolsConstants.SqlTypes.CHAR:
+                case PersistToolsConstants.SqlTypes.BPCHAR:
+                case PersistToolsConstants.SqlTypes.CHARACTER:
                     return true;
                 case PersistToolsConstants.SqlTypes.VARCHAR:
                     if (PersistToolsConstants.DefaultMaxLength.VARCHAR_LENGTH != sqlType.getMaxLength()) {
@@ -635,6 +640,7 @@ public class BalSyntaxUtils {
                     }
                     return false;
                 case PersistToolsConstants.SqlTypes.DECIMAL:
+                case PersistToolsConstants.SqlTypes.NUMERIC:
                     // add later: check for default values for separate data sources
                     String dataSource = PersistToolsConstants.SupportedDataSources.MYSQL_DB;
                     int precision = PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION_MYSQL;

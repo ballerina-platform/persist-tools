@@ -19,7 +19,6 @@ public type Car record {|
     readonly int id;
     string name;
     string model;
-    @sql:Index {name: "ownerId"}
     int ownerId;
     @sql:Relation {keys: ["ownerId"]}
     User user;

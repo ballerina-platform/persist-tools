@@ -1,18 +1,17 @@
 import ballerina/persist as _;
 import ballerinax/persist.sql;
 
-public enum UserGender {
-    MALE = "MALE",
-    FEMALE = "FEMALE"
-}
-
-public type User record {|
-    @sql:Index {name: "user"}
+public type Employee record {|
     readonly int id;
-    string name;
-    UserGender gender;
-    @sql:Index {name: ["user", "user_nic"]}
-    string nic;
-    decimal salary;
+    string? name;
+    string? email;
+    int? age;
+    @sql:Decimal {precision: [10, 2]}
+    decimal? salary;
+    @sql:Name {value: "managed_by"}
+    int? managedBy;
+    Employee[] employees;
+    @sql:Relation {keys: ["managedBy"]}
+    Employee employee;
 |};
 

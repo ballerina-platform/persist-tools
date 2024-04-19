@@ -12,15 +12,16 @@ public type User record {|
     UserGender gender;
     string nic;
     decimal? salary;
-    Car[] cars;
+    Car? car;
 |};
 
 public type Car record {|
     readonly int id;
     string name;
     string model;
-    @sql:Index {name: "ownerId"}
+    @sql:UniqueIndex {name: "Car_ownerId_key"}
     int ownerId;
     @sql:Relation {keys: ["ownerId"]}
     User user;
 |};
+

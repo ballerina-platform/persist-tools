@@ -204,9 +204,9 @@ public abstract class Introspector {
                             column.getNumericPrecision() != null ? parseInt(column.getNumericPrecision()) : 0,
                             column.getNumericScale() != null ? parseInt(column.getNumericScale()) : 0,
                             column.getCharacterMaximumLength() != null ?
-                                    parseUnsignedInt(column.getCharacterMaximumLength()) : 0
+                                    parseUnsignedInt(column.getCharacterMaximumLength()) : 0,
+                            persistConfigurations.getProvider()
                     );
-
                     String balType = this.getBalType(sqlType);
                     fieldBuilder.setType(balType);
                     fieldBuilder.setSqlType(sqlType);
@@ -326,22 +326,30 @@ public abstract class Introspector {
                     PersistToolsConstants.SqlTypes.BIGINT,
                     PersistToolsConstants.SqlTypes.SERIAL,
                     PersistToolsConstants.SqlTypes.BIGSERIAL,
-                    PersistToolsConstants.SqlTypes.INT4 ->
+                    PersistToolsConstants.SqlTypes.INT4,
+                    PersistToolsConstants.SqlTypes.INT2,
+                    PersistToolsConstants.SqlTypes.INT8 ->
                     PersistToolsConstants.BallerinaTypes.INT;
-            case PersistToolsConstants.SqlTypes.BOOLEAN -> PersistToolsConstants.BallerinaTypes.BOOLEAN;
+            case PersistToolsConstants.SqlTypes.BOOLEAN,
+                    PersistToolsConstants.SqlTypes.BOOL -> PersistToolsConstants.BallerinaTypes.BOOLEAN;
             case PersistToolsConstants.SqlTypes.DECIMAL,
                     PersistToolsConstants.SqlTypes.NUMERIC -> PersistToolsConstants.BallerinaTypes.DECIMAL;
             case PersistToolsConstants.SqlTypes.DOUBLE,
-                    PersistToolsConstants.SqlTypes.FLOAT ->
-                    PersistToolsConstants.BallerinaTypes.FLOAT;
+                    PersistToolsConstants.SqlTypes.FLOAT,
+                    PersistToolsConstants.SqlTypes.FLOAT4,
+                    PersistToolsConstants.SqlTypes.FLOAT8-> PersistToolsConstants.BallerinaTypes.FLOAT;
             case PersistToolsConstants.SqlTypes.DATE -> PersistToolsConstants.BallerinaTypes.DATE;
-            case PersistToolsConstants.SqlTypes.TIME -> PersistToolsConstants.BallerinaTypes.TIME_OF_DAY;
-            case PersistToolsConstants.SqlTypes.TIME_STAMP -> PersistToolsConstants.BallerinaTypes.UTC;
+            case PersistToolsConstants.SqlTypes.TIME,
+                    PersistToolsConstants.SqlTypes.TIMETZ -> PersistToolsConstants.BallerinaTypes.TIME_OF_DAY;
+            case PersistToolsConstants.SqlTypes.TIME_STAMP,
+                    PersistToolsConstants.SqlTypes.TIME_STAMPTZ -> PersistToolsConstants.BallerinaTypes.UTC;
             case PersistToolsConstants.SqlTypes.DATE_TIME2,
                     PersistToolsConstants.SqlTypes.DATE_TIME ->
                     PersistToolsConstants.BallerinaTypes.CIVIL;
             case PersistToolsConstants.SqlTypes.VARCHAR,
                     PersistToolsConstants.SqlTypes.CHAR,
+                    PersistToolsConstants.SqlTypes.CHARACTER,
+                    PersistToolsConstants.SqlTypes.BPCHAR,
                     PersistToolsConstants.SqlTypes.TEXT,
                     PersistToolsConstants.SqlTypes.MEDIUMTEXT,
                     PersistToolsConstants.SqlTypes.LONGTEXT,
@@ -352,7 +360,8 @@ public abstract class Introspector {
                     PersistToolsConstants.SqlTypes.TINY_BLOB,
                     PersistToolsConstants.SqlTypes.BINARY,
                     PersistToolsConstants.SqlTypes.VARBINARY,
-                    PersistToolsConstants.SqlTypes.BLOB ->
+                    PersistToolsConstants.SqlTypes.BLOB,
+                    PersistToolsConstants.SqlTypes.BYTEA->
                     PersistToolsConstants.BallerinaTypes.BYTE;
             default -> {
                 errStream.println("WARNING Unsupported SQL type found: " + sqlType.getFullDataType());

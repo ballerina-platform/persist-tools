@@ -1,25 +1,35 @@
 import ballerina/persist as _;
+import ballerina/time;
 import ballerinax/persist.sql;
 
-public enum UserGender {
+public enum PatientGender {
     MALE = "MALE",
     FEMALE = "FEMALE"
 }
 
-public type User record {|
+public type Appointment record {|
     readonly int id;
-    string name;
-    UserGender gender;
-    string nic;
-    decimal? salary;
-    Phone? phone;
+    int patientId;
+    int doctorId;
+    time:Date date;
+    @sql:Relation {keys: ["doctorId"]}
+    Doctor doctor;
+    @sql:Relation {keys: ["patientId"]}
+    Patient patient;
 |};
 
-public type Phone record {|
-    @sql:Name {value: "user_id"}
-    readonly int userId;
-    string number;
-    @sql:Relation {keys: ["userId"]}
-    User user;
+public type Patient record {|
+    readonly int id;
+    string name;
+    PatientGender gender;
+    string nic;
+    Appointment[] appointments;
+|};
+
+public type Doctor record {|
+    readonly int id;
+    string name;
+    string specialty;
+    Appointment[] appointments;
 |};
 

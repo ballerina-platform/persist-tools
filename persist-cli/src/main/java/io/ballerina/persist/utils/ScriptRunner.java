@@ -183,6 +183,7 @@ public class ScriptRunner {
         try (Statement statement = connection.createStatement()) {
             try (ResultSet results = statement.executeQuery(query)) {
                 while (results.next()) {
+
                     SqlColumn column = SqlColumn.newBuilder(results.getString("column_name"))
                             .setTableName(results.getString("table_name"))
                             .setDataType(results.getString("data_type"))

@@ -110,15 +110,7 @@ public class PostgreSqlIntrospector extends Introspector {
                 CASE
                     WHEN pg_get_expr(attdef.adbin, attdef.adrelid) IS NOT NULL
                     AND pg_get_expr(attdef.adbin, attdef.adrelid) LIKE 'nextval(%%'
-                    AND pg_get_serial_sequence(info.table_name, info.column_name) IS NOT NULL
-                    AND pg_get_serial_sequence(info.table_name, info.column_name) LIKE 'public.%%'
-                    AND (
-                        SELECT increment_by FROM pg_sequences
-                        WHERE
-                            sequencename =
-                                TRIM('"' FROM
-                                SPLIT_PART(pg_get_serial_sequence(info.table_name, info.column_name), '.', 2))
-                    ) = 1 THEN 1
+                    THEN 1
                     ELSE 0
                 END AS dbGenerated
                 FROM information_schema.columns info
@@ -134,7 +126,7 @@ public class PostgreSqlIntrospector extends Introspector {
                 LEFT OUTER JOIN pg_attrdef attdef
                 ON attdef.adrelid = att.attrelid AND attdef.adnum = att.attnum AND table_schema = namespace
                 WHERE table_schema = 'public' AND table_name = '%s'
-                ORDER BY namespace, table_name, ordinal_position;
+                ORDER BY ordinal_position;
             """;
         formatQuery = formatQuery.replace("\r\n", "%n");
         return String.format(formatQuery, tableName, tableName);
@@ -200,7 +192,7 @@ public class PostgreSqlIntrospector extends Introspector {
                     conname         AS constraint_name,
                     NULL            AS update_rule,
                     NULL            AS delete_rule
-                FROM (SELECT\s
+                FROM (SELECT
                             ns.nspname AS "namespace",
                             unnest(con1.conkey)                AS parent,
                             unnest(con1.confkey)                AS child,
@@ -220,8 +212,7 @@ public class PostgreSqlIntrospector extends Introspector {
                         JOIN pg_attribute att on att.attrelid = con.confrelid and att.attnum = con.child
                         JOIN pg_class cl on cl.oid = con.confrelid
                         JOIN pg_attribute att2 on att2.attrelid = con.conrelid and att2.attnum = con.parent
-                WHERE table_name = '%s'
-                ORDER BY table_name, constraint_name, con.colidx;
+                WHERE table_name = '%s';
                 """;
         formatQuery = formatQuery.replace("\r\n", "%n");
         return String.format(formatQuery, tableName);

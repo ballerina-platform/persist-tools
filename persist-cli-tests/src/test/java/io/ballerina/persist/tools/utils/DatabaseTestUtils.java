@@ -40,6 +40,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Locale;
 
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.JDBC_URL_WITH_DATABASE_POSTGRESQL;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.GENERATED_SOURCES_DIRECTORY;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.INPUT_RESOURCES_DIRECTORY;
 import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
@@ -201,15 +202,37 @@ public class DatabaseTestUtils {
         }
     }
 
-    public static void createFromDatabaseScript(String packageName, String datasource,
+    public static void resetPostgreSqlDatabase(DatabaseConfiguration dbConfig, boolean recreate) {
+
+        String url = String.format(JDBC_URL_WITH_DATABASE_POSTGRESQL, "postgresql",  dbConfig.getHost(),
+                dbConfig.getPort(), "postgres");
+
+        try (Connection connection = DriverManager.getConnection(url, dbConfig.getUsername(), dbConfig.getPassword())) {
+            try (Statement statement = connection.createStatement()) {
+                statement.execute("DROP DATABASE IF EXISTS " + dbConfig.getDatabase());
+                if (recreate) {
+                    statement.execute("CREATE DATABASE " + dbConfig.getDatabase());
+                }
+                statement.executeBatch();
+                PrintStream outStream = System.out;
+                outStream.println("Database created successfully");
+            }
+        } catch (SQLException e) {
+            errStream.println("Failed to create database: " + e.getMessage());
+        }
+
+    }
+
+    public static void createFromDatabaseScript(String packageName, String datastore,
                                                 DatabaseConfiguration dbConfig) {
         Path sourcePath = Paths.get(INPUT_RESOURCES_DIRECTORY, packageName);
 
         String url;
-        if (datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
+        if (datastore.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
             url = String.format("jdbc:sqlserver://%s:%s", dbConfig.getHost(), dbConfig.getPort());
-        } else if (datasource.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB)) {
-            url = String.format("jdbc:postgresql://%s:%s/", dbConfig.getHost(), dbConfig.getPort());
+        } else if (datastore.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB)) {
+            url = String.format(JDBC_URL_WITH_DATABASE_POSTGRESQL, "postgresql",  dbConfig.getHost(),
+                    dbConfig.getPort(), dbConfig.getDatabase());
         } else {
             url = String.format("jdbc:mysql://%s:%s", dbConfig.getHost(), dbConfig.getPort());
         }

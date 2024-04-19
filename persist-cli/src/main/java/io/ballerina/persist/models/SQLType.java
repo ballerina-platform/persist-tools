@@ -31,6 +31,20 @@ public class SQLType {
     private final int maxLength;
 
     public SQLType(String typeName, String fullDataType, String columnDefaultValue, int numericPrecision,
+                   int numericScale, int maxCharLength, String datastore) {
+        this.typeName = typeName;
+        this.fullDataType = fullDataType;
+        this.columnDefaultValue = columnDefaultValue;
+        int precisionValue = PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION_POSTGRESQL;
+        if (datastore.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
+            precisionValue = PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION_MSSQL;
+        }
+        this.numericPrecision = numericPrecision > 0 ? numericPrecision : precisionValue;
+        this.numericScale = numericScale > 0 ? numericScale : PersistToolsConstants.DefaultMaxLength.DECIMAL_SCALE;
+        this.maxLength = maxCharLength > 0 ? maxCharLength : PersistToolsConstants.DefaultMaxLength.VARCHAR_LENGTH;
+    }
+
+    public SQLType(String typeName, String fullDataType, String columnDefaultValue, int numericPrecision,
                    int numericScale, int maxCharLength) {
         this.typeName = typeName;
         this.fullDataType = fullDataType;
@@ -69,6 +83,7 @@ public class SQLType {
                 this.typeName.equals(PersistToolsConstants.SqlTypes.MEDIUM_BLOB) ||
                 this.typeName.equals(PersistToolsConstants.SqlTypes.TINY_BLOB) ||
                 this.typeName.equals(PersistToolsConstants.SqlTypes.BINARY) ||
+                this.typeName.equals(PersistToolsConstants.SqlTypes.BYTEA) ||
                 this.typeName.equals(PersistToolsConstants.SqlTypes.VARBINARY);
     }
 
