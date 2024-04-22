@@ -515,7 +515,7 @@ public class Migrate implements BLauncherCmd {
 
         // Check for added entities
         for (Entity currentModelEntity : currentModel.getEntityMap().values()) {
-            Entity previousModelEntity = previousModel.getEntityMap().get(currentModelEntity.getTableName());
+            Entity previousModelEntity = previousModel.getEntityMap().get(currentModelEntity.getEntityName());
             if (previousModelEntity == null &&
                     !migrationDataHolder.isEntityRenamed(currentModelEntity.getTableName())) {
                 migrationDataHolder.addTable(currentModelEntity.getTableName());
