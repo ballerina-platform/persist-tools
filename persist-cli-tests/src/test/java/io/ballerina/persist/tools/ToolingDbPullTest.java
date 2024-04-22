@@ -49,7 +49,7 @@ public class ToolingDbPullTest {
         try {
             mysqlDbConfig = new DatabaseConfiguration("localhost", "root", "Test123#",
                     "3307", "persist");
-            postgresDbConfig = new DatabaseConfiguration("localhost", "postgres", "Test123#",
+            postgresDbConfig = new DatabaseConfiguration("localhost", "postgres", "postgres",
                     "5432", "persist");
         } catch (BalException e) {
             throw new RuntimeException(e);
@@ -549,7 +549,7 @@ public class ToolingDbPullTest {
             new CommandLine(persistCmd).parseArgs("--port", String.valueOf(dbConfig.getPort()));
             new CommandLine(persistCmd).parseArgs("--user", dbConfig.getUsername());
             new CommandLine(persistCmd).parseArgs("--database", dbConfig.getDatabase());
-            String password = mysqlDbConfig.getPassword() + "\n";
+            String password = dbConfig.getPassword() + "\n";
             InputStream originalSystemIn = System.in;
             try (InputStream inputStream = new ByteArrayInputStream(password.getBytes(StandardCharsets.UTF_8))) {
                 System.setIn(inputStream);

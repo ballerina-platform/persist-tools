@@ -15,10 +15,10 @@ public type Appointment record {|
     int patientId;
     @sql:Name {value: "Doctor_Id"}
     int doctorId;
-    @sql:Relation {keys: ["doctorId"]}
-    Doctor doctor;
     @sql:Relation {keys: ["patientId"]}
     Patient patient;
+    @sql:Relation {keys: ["doctorId"]}
+    Doctor doctor;
 |};
 
 @sql:Name {value: "patients"}
