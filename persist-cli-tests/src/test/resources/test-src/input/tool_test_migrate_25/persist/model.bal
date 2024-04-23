@@ -81,3 +81,14 @@ public type Test6 record {|
     float salary;
     boolean isEmployed;
 |};
+
+@sql:Name {value: "test_8"}
+public type Test8 record {|
+    readonly string nic;
+    @sql:Name {value: "user_name"}
+    string name;
+    @sql:Name {value: "user_age"}
+    int age;
+    float salary;
+    boolean isEmployed;
+|};
