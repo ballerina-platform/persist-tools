@@ -29,6 +29,10 @@ import io.ballerina.projects.buildtools.CodeGeneratorTool;
 import io.ballerina.projects.buildtools.ToolConfig;
 import io.ballerina.projects.buildtools.ToolContext;
 import io.ballerina.projects.util.ProjectUtils;
+import io.ballerina.toml.semantic.diagnostics.TomlNodeLocation;
+import io.ballerina.tools.diagnostics.DiagnosticFactory;
+import io.ballerina.tools.diagnostics.DiagnosticInfo;
+import io.ballerina.tools.diagnostics.Location;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -59,6 +63,7 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
         String packageName;
         String targetModule;
 
+        TomlNodeLocation location = toolContext.currentPackage().ballerinaToml().get().tomlAstNode().location();
         Path projectPath = toolContext.currentPackage().project().sourceRoot();
         Path generatedSourceDirPath = Paths.get(projectPath.toString(), BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);
         try {
@@ -72,9 +77,8 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
             validateDatastore(datastore);
             if (!targetModule.equals(packageName)) {
                 if (!targetModule.startsWith(packageName + ".")) {
-                    errStream.println("ERROR: invalid module name : '" + ballerinaTomlConfig.get(TARGET_MODULE)
-                            + "' :" + System.lineSeparator() + "module name should follow the template " +
-                            "<package_name>.<module_name>");
+                    createDiagnostics(toolContext, PersistToolsConstants.DiagnosticMessages.INVALID_MODULE_NAME,
+                            location, ballerinaTomlConfig.get(TARGET_MODULE));
                     return;
                 }
                 String moduleName = targetModule.replace(packageName + ".", "");
@@ -84,12 +88,13 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
             validatePersistDirectory(datastore, projectPath);
             printExperimentalFeatureInfo(datastore);
             try {
-                if (validateCache(toolContext, schemaFilePath)) {
+                if (validateCache(toolContext, schemaFilePath) && Files.exists(generatedSourceDirPath)) {
                     return;
                 }
             } catch (NoSuchAlgorithmException e) {
                 errStream.println("INFO: unable to validate the cache. Generating sources for the schema file.");
             }
+            BalProjectUtils.validateSchemaFile(schemaFilePath);
             entityModule = BalProjectUtils.getEntities(schemaFilePath);
             validateEntityModule(entityModule, schemaFilePath);
             String syntaxTree = TomlSyntaxUtils.addPersistNativeDependency(
@@ -98,10 +103,14 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
                     Paths.get(projectPath.toString(), BALLERINA_TOML).toAbsolutePath().toString());
             createGeneratedSourceDirIfNotExists(generatedSourceDirPath);
             generateSources(datastore, entityModule, targetModule, projectPath, generatedSourceDirPath);
+            String modelHashVal = getHashValue(schemaFilePath);
+            Path cachePath = toolContext.cachePath();
+            updateCacheFile(cachePath, modelHashVal);
             errStream.println("Persist client and entity types generated successfully in the " + targetModule +
                     " directory.");
-        } catch (BalException | IOException e) {
-            errStream.printf("ERROR: %s%n", e.getMessage());
+        } catch (BalException | IOException | NoSuchAlgorithmException e) {
+            createDiagnostics(toolContext, PersistToolsConstants.DiagnosticMessages.ERROR_WHILE_GENERATING_CLIENT,
+                    location, e.getMessage());
         }
     }
 
@@ -123,17 +132,12 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
         Path cachePath = toolContext.cachePath();
         String modelHashVal = getHashValue(schemaFilePath);
         if (!Files.isDirectory(cachePath)) {
-            updateCacheFile(cachePath, modelHashVal);
             return false;
         }
         // read the cache file
         Path cacheFilePath = Paths.get(cachePath.toString(), CACHE_FILE);
         String cacheContent = Files.readString(Paths.get(cacheFilePath.toString()));
-        boolean isCacheValid = cacheContent.equals(modelHashVal);
-        if (!isCacheValid) {
-            updateCacheFile(cachePath, modelHashVal);
-        }
-        return isCacheValid;
+        return cacheContent.equals(modelHashVal);
     }
 
     private static void updateCacheFile(Path cachePath, String modelHashVal) {
@@ -143,7 +147,7 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
                 Files.createDirectories(cachePath);
                 Files.createFile(cacheFilePath);
             }
-            Files.writeString(cacheFilePath, modelHashVal, StandardOpenOption.WRITE);
+            Files.writeString(cacheFilePath, modelHashVal, StandardCharsets.UTF_8, StandardOpenOption.WRITE);
         } catch (IOException e) {
             errStream.println("ERROR: failed to update the cache file: " + e.getMessage());
         }
@@ -220,5 +224,13 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
                 sourceCreator.createInMemorySources();
                 break;
         }
+    }
+
+    private static void createDiagnostics(ToolContext toolContext, PersistToolsConstants.DiagnosticMessages error,
+                                          Location location, String... args) {
+        String message = String.format(error.getDescription(), (Object[]) args);
+        DiagnosticInfo diagnosticInfo = new DiagnosticInfo(error.getCode(), message,
+                error.getSeverity());
+        toolContext.reportDiagnostic(DiagnosticFactory.createDiagnostic(diagnosticInfo, location));
     }
 }

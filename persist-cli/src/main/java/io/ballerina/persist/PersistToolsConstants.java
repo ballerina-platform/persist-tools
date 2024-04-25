@@ -17,6 +17,8 @@
  */
 package io.ballerina.persist;
 
+import io.ballerina.tools.diagnostics.DiagnosticSeverity;
+
 import java.util.Set;
 
 /**
@@ -269,7 +271,39 @@ public class PersistToolsConstants {
             public static final String MAX_AGE = "-1";
 
         }
+    }
 
+    /**
+     * Enum class for containing diagnostic messages.
+     */
+    public enum DiagnosticMessages {
+        INVALID_MODULE_NAME("PERSIST_CLIENT_01", "invalid module name : `%s`" + System.lineSeparator() +
+                "module name should follow the template \"<package_name>.<module_name>\"",
+                DiagnosticSeverity.ERROR),
+        ERROR_WHILE_GENERATING_CLIENT("PERSIST_CLIENT_02", "unexpected error occurred while generating the client"
+                + System.lineSeparator() + "%s",
+                DiagnosticSeverity.ERROR);
 
+        private final String code;
+        private final String description;
+        private final DiagnosticSeverity severity;
+
+        DiagnosticMessages(String code, String description, DiagnosticSeverity severity) {
+            this.code = code;
+            this.description = description;
+            this.severity = severity;
+        }
+
+        public String getCode() {
+            return code;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public DiagnosticSeverity getSeverity() {
+            return severity;
+        }
     }
 }
