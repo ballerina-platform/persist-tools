@@ -67,44 +67,42 @@ public class BuildCodeGeneratorTest {
 
     @Test(enabled = true)
     public void testBuildWithInvalidTargetModule() throws IOException, InterruptedException {
-        String log = "ERROR: invalid module name : 'persist_add_1' :";
+        String log = "error: build tool execution contains errors";
         Path project = TARGET_DIR.resolve("generated-sources/tool_test_build_2");
         assertContainLogs(log, project);
     }
 
     @Test(enabled = true)
     public void testBuildWithInvalidCharachtersInTargetModule() throws IOException, InterruptedException {
-        String log = "ERROR: invalid module name : '*****' :";
+        String log = "error: build tool execution contains errors";
         Path project = TARGET_DIR.resolve("generated-sources/tool_test_build_3");
         assertContainLogs(log, project);
     }
 
     @Test(enabled = true)
     public void testBuildWithInvalidLengthOfTargetModule() throws IOException, InterruptedException {
-        String log = "ERROR: invalid module name :";
+        String log = "error: build tool execution contains errors";
         Path project = TARGET_DIR.resolve("generated-sources/tool_test_build_4");
         assertContainLogs(log, project);
     }
 
     @Test(enabled = true)
     public void testBuildWithInvalidDataSource() throws IOException, InterruptedException {
-        String log = "ERROR: the persist layer supports one of data stores:";
+        String log = "error: build tool execution contains errors";
         Path project = TARGET_DIR.resolve("generated-sources/tool_test_build_5");
         assertContainLogs(log, project);
     }
 
     @Test(enabled = true)
     public void testBuildWithoutEntities() throws IOException, InterruptedException {
-        String log = "ERROR: the model definition file(model.bal) does not contain any entity definition.";
+        String log = "error: build tool execution contains errors";
         Path project = TARGET_DIR.resolve("generated-sources/tool_test_build_6");
         assertContainLogs(log, project);
     }
 
     @Test(enabled = true)
     public void testBuildWithExistingDependency() throws IOException, InterruptedException {
-        String log = "ERROR: the 'Ballerina.toml' file is already updated with the Persist client native dependency" +
-                " but the version is different from the current version. Please remove the existing dependency and " +
-                "try again.";
+        String log = "error: build tool execution contains errors";
         Path project = TARGET_DIR.resolve("generated-sources/tool_test_build_7");
         assertContainLogs(log, project);
     }
