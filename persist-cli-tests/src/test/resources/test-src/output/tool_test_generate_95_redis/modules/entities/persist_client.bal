@@ -35,8 +35,8 @@ public isolated client class Client {
                 stringType: {fieldName: "stringType", fieldDataType: predis:STRING},
                 dateType: {fieldName: "dateType", fieldDataType: predis:DATE},
                 timeOfDayType: {fieldName: "timeOfDayType", fieldDataType: predis:TIME_OF_DAY},
-                utcType: {fieldName: "utcType", fieldDataType: predis:STRING},
-                civilType: {fieldName: "civilType", fieldDataType: predis:STRING},
+                utcType: {fieldName: "utcType", fieldDataType: predis:UTC},
+                civilType: {fieldName: "civilType", fieldDataType: predis:CIVIL},
                 enumType: {fieldName: "enumType", fieldDataType: predis:STRING},
                 booleanTypeOptional: {fieldName: "booleanTypeOptional", fieldDataType: predis:BOOLEAN},
                 intTypeOptional: {fieldName: "intTypeOptional", fieldDataType: predis:INT},
@@ -45,8 +45,8 @@ public isolated client class Client {
                 stringTypeOptional: {fieldName: "stringTypeOptional", fieldDataType: predis:STRING},
                 dateTypeOptional: {fieldName: "dateTypeOptional", fieldDataType: predis:DATE},
                 timeOfDayTypeOptional: {fieldName: "timeOfDayTypeOptional", fieldDataType: predis:TIME_OF_DAY},
-                utcTypeOptional: {fieldName: "utcTypeOptional", fieldDataType: predis:STRING},
-                civilTypeOptional: {fieldName: "civilTypeOptional", fieldDataType: predis:STRING},
+                utcTypeOptional: {fieldName: "utcTypeOptional", fieldDataType: predis:UTC},
+                civilTypeOptional: {fieldName: "civilTypeOptional", fieldDataType: predis:CIVIL},
                 enumTypeOptional: {fieldName: "enumTypeOptional", fieldDataType: predis:STRING}
             },
             keyFields: ["id"]

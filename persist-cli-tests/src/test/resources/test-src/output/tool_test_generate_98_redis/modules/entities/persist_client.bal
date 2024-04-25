@@ -28,7 +28,7 @@ public isolated client class Client {
                 lastName: {fieldName: "lastName", fieldDataType: predis:STRING},
                 hireDate: {fieldName: "hireDate", fieldDataType: predis:DATE},
                 gender: {fieldName: "gender", fieldDataType: predis:STRING},
-                dateOfBirth: {fieldName: "dateOfBirth", fieldDataType: predis:STRING},
+                dateOfBirth: {fieldName: "dateOfBirth", fieldDataType: predis:CIVIL},
                 departmentDeptNo: {fieldName: "departmentDeptNo", fieldDataType: predis:STRING},
                 "department.deptNo": {relation: {entityName: "department", refField: "deptNo", refFieldDataType: predis:STRING}},
                 "department.deptName": {relation: {entityName: "department", refField: "deptName", refFieldDataType: predis:STRING}},
@@ -61,7 +61,7 @@ public isolated client class Client {
                 "employee.lastName": {relation: {entityName: "employee", refField: "lastName", refFieldDataType: predis:STRING}},
                 "employee.hireDate": {relation: {entityName: "employee", refField: "hireDate", refFieldDataType: predis:DATE}},
                 "employee.gender": {relation: {entityName: "employee", refField: "gender", refFieldDataType: predis:STRING}},
-                "employee.dateOfBirth": {relation: {entityName: "employee", refField: "dateOfBirth", refFieldDataType: predis:STRING}},
+                "employee.dateOfBirth": {relation: {entityName: "employee", refField: "dateOfBirth", refFieldDataType: predis:CIVIL}},
                 "employee.departmentDeptNo": {relation: {entityName: "employee", refField: "departmentDeptNo", refFieldDataType: predis:STRING}}
             },
             keyFields: ["workspaceId"],
@@ -98,7 +98,7 @@ public isolated client class Client {
                 "employees[].lastName": {relation: {entityName: "employees", refField: "lastName", refFieldDataType: predis:STRING}},
                 "employees[].hireDate": {relation: {entityName: "employees", refField: "hireDate", refFieldDataType: predis:DATE}},
                 "employees[].gender": {relation: {entityName: "employees", refField: "gender", refFieldDataType: predis:STRING}},
-                "employees[].dateOfBirth": {relation: {entityName: "employees", refField: "dateOfBirth", refFieldDataType: predis:STRING}},
+                "employees[].dateOfBirth": {relation: {entityName: "employees", refField: "dateOfBirth", refFieldDataType: predis:CIVIL}},
                 "employees[].departmentDeptNo": {relation: {entityName: "employees", refField: "departmentDeptNo", refFieldDataType: predis:STRING}}
             },
             keyFields: ["deptNo"],

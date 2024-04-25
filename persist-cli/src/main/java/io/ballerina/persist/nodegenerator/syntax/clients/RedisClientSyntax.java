@@ -218,6 +218,10 @@ public class RedisClientSyntax  implements ClientSyntax {
                 return "DATE";
             case "time:TimeOfDay":
                 return "TIME_OF_DAY";
+            case "time:Utc":
+                return "UTC";
+            case "time:Civil":
+                return "CIVIL";
             default:
                 return "STRING";
         }
