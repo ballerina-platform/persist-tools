@@ -191,10 +191,8 @@ public class ScriptRunner {
                             .setCharacterMaximumLength(results.getString("character_maximum_length"))
                             .setNumericPrecision(results.getString("numeric_precision"))
                             .setNumericScale(results.getString("numeric_scale"))
-                            .setDatetimePrecision(results.getString("datetime_precision"))
                             .setColumnDefault(results.getString("column_default"))
                             .setIsNullable(results.getString("is_nullable"))
-                            .setColumnComment(results.getString("column_comment"))
                             .setIsPrimaryKey(results.getString("column_key").equals("PRI"))
                             .setIsDbGenerated(results.getBoolean("dbgenerated"))
                             .build();
@@ -256,7 +254,6 @@ public class ScriptRunner {
                         table.addIndex(SqlIndex.Builder.newBuilder(results.getString("index_name"))
                                 .setTableName(results.getString("table_name"))
                                 .addColumnName(results.getString("column_name"))
-                                .setColumnOrder(results.getString("column_order"))
                                 .setUnique(results.getBoolean("is_unique"))
                                 .build()
                         );

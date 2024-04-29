@@ -25,15 +25,13 @@ public class SqlIndex {
     private final String tableName;
     private final String indexName;
     private final List<String> columnNames;
-    private final String columnOrder;
     private final boolean unique;
 
-    private SqlIndex(String indexName, String tableName, List<String> columnNames, String columnOrder,
+    private SqlIndex(String indexName, String tableName, List<String> columnNames,
                      boolean unique) {
         this.indexName = indexName;
         this.tableName = tableName;
         this.columnNames = columnNames;
-        this.columnOrder = columnOrder;
         this.unique = unique;
     }
 
@@ -47,10 +45,6 @@ public class SqlIndex {
 
     public List<String> getColumnNames() {
         return Collections.unmodifiableList(columnNames);
-    }
-
-    public String getColumnOrder() {
-        return columnOrder;
     }
 
     public boolean getUnique() {
@@ -69,7 +63,6 @@ public class SqlIndex {
         private final String indexName;
         private String tableName;
         private final List<String> columnNames;
-        private String columnOrder;
         private boolean unique;
 
         public static Builder newBuilder(String indexName) {
@@ -91,18 +84,13 @@ public class SqlIndex {
             return this;
         }
 
-        public Builder setColumnOrder(String columnOrder) {
-            this.columnOrder = columnOrder;
-            return this;
-        }
-
         public Builder setUnique(boolean unique) {
             this.unique = unique;
             return this;
         }
 
         public SqlIndex build() {
-            return new SqlIndex(indexName, tableName, columnNames, columnOrder, unique);
+            return new SqlIndex(indexName, tableName, columnNames, unique);
         }
     }
 }

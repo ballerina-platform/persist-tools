@@ -25,17 +25,15 @@ public class SqlColumn {
     private final String characterMaximumLength;
     private final String numericPrecision;
     private final String numericScale;
-    private final String datetimePrecision;
     private final String columnDefault;
     private final String isNullable;
-    private final String columnComment;
     private final boolean isPrimaryKey;
     private final boolean isDbGenerated;
 
     private SqlColumn(String columnName, String tableName, String dataType, String fullDataType,
                       String characterMaximumLength, String numericPrecision, String numericScale,
-                      String datetimePrecision, String columnDefault, String isNullable, String columnComment,
-                      Boolean isPrimaryKey, Boolean isDbGenerated) {
+                      String columnDefault, String isNullable, Boolean isPrimaryKey,
+                      Boolean isDbGenerated) {
         this.columnName = columnName;
         this.tableName = tableName;
         this.dataType = dataType;
@@ -43,10 +41,8 @@ public class SqlColumn {
         this.characterMaximumLength = characterMaximumLength;
         this.numericPrecision = numericPrecision;
         this.numericScale = numericScale;
-        this.datetimePrecision = datetimePrecision;
         this.columnDefault = columnDefault;
         this.isNullable = isNullable;
-        this.columnComment = columnComment;
         this.isPrimaryKey = isPrimaryKey;
         this.isDbGenerated = isDbGenerated;
     }
@@ -79,10 +75,6 @@ public class SqlColumn {
         return numericScale;
     }
 
-    public String getDatetimePrecision() {
-        return datetimePrecision;
-    }
-
     public String getColumnDefault() {
         return columnDefault;
     }
@@ -93,10 +85,6 @@ public class SqlColumn {
 
     public Boolean isDbGenerated() {
         return isDbGenerated;
-    }
-
-    public String getColumnComment() {
-        return columnComment;
     }
 
     public Boolean getIsPrimaryKey() {
@@ -114,10 +102,8 @@ public class SqlColumn {
         private String characterMaximumLength;
         private String numericPrecision;
         private String numericScale;
-        private String datetimePrecision;
         private String columnDefault;
         private String isNullable;
-        private String columnComment;
         private String tableName;
         private Boolean isPrimaryKey;
         private Boolean isDbGenerated;
@@ -161,11 +147,6 @@ public class SqlColumn {
             return this;
         }
 
-        public Builder setDatetimePrecision(String datetimePrecision) {
-            this.datetimePrecision = datetimePrecision;
-            return this;
-        }
-
         public Builder setColumnDefault(String columnDefault) {
             this.columnDefault = columnDefault;
             return this;
@@ -176,10 +157,6 @@ public class SqlColumn {
             return this;
         }
 
-        public Builder setColumnComment(String columnComment) {
-            this.columnComment = columnComment;
-            return this;
-        }
         public Builder setIsPrimaryKey(Boolean isPrimaryKey) {
             this.isPrimaryKey = isPrimaryKey;
             return this;
@@ -187,9 +164,8 @@ public class SqlColumn {
 
         public SqlColumn build() {
             return new SqlColumn(this.columnName, this.tableName, this.dataType, this.fullDataType,
-                    this.characterMaximumLength, this.numericPrecision, this.numericScale, this.datetimePrecision,
-                    this.columnDefault, this.isNullable, this.columnComment, this.isPrimaryKey,
-                    this.isDbGenerated);
+                    this.characterMaximumLength, this.numericPrecision, this.numericScale, this.columnDefault,
+                    this.isNullable, this.isPrimaryKey, this.isDbGenerated);
         }
     }
 }
