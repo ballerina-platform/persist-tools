@@ -1,0 +1,13 @@
+[package]
+distribution = "2201.8.4"
+name = "tool_test_pull_62_mssql"
+org = "wso2"
+version = "0.1.0"
+
+[build-options]
+observabilityIncluded = true
+
+[[platform.java17.dependency]]
+artifactId = "persist.sql-native"
+groupId = "io.ballerina.stdlib"
+version = "1.2.0"
