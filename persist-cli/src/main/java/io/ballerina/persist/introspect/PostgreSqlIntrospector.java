@@ -17,6 +17,7 @@
  */
 package io.ballerina.persist.introspect;
 
+import io.ballerina.persist.introspectiondto.SqlColumn;
 import io.ballerina.persist.models.SQLType;
 import io.ballerina.persist.utils.DatabaseConnector;
 
@@ -250,6 +251,13 @@ public class PostgreSqlIntrospector extends Introspector {
         return formatQuery;
     }
 
+    @Override
+    protected boolean isEnumType(SqlColumn column) {
+        return "enum".equalsIgnoreCase(column.getDataType());
+    }
+
+
+    @Override
     protected String getBalType(SQLType sqlType) {
         return getBalTypeForCommonDataTypes(sqlType);
     }

@@ -652,7 +652,8 @@ public class BalProjectUtils {
         } else if (datastore.isEmpty()) {
             errors.add("The datastore type cannot be empty.");
         } else if (!(datastore.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB) || datastore.equals(
-                PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB))) {
+                PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB) || datastore.equals(
+                PersistToolsConstants.SupportedDataSources.MSSQL_DB))) {
             errors.add("Unsupported data store: '" + datastore + "'");
         }
         if (host == null) {

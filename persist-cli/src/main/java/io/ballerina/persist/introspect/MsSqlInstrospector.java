@@ -17,16 +17,23 @@
  */
 package io.ballerina.persist.introspect;
 
+import io.ballerina.persist.introspectiondto.SqlColumn;
 import io.ballerina.persist.models.SQLType;
 import io.ballerina.persist.utils.DatabaseConnector;
 
-import static io.ballerina.persist.PersistToolsConstants.POSTGRESQL_DRIVER_CLASS;
-import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.JDBC_URL_WITH_DATABASE_POSTGRESQL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-public class MSSqlInstrospector extends Introspector {
+import static io.ballerina.persist.PersistToolsConstants.MSSQL_DRIVER_CLASS;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.JDBC_URL_WITH_DATABASE_MSSQL;
 
-    public MSSqlInstrospector() {
-        databaseConnector = new DatabaseConnector(JDBC_URL_WITH_DATABASE_POSTGRESQL, POSTGRESQL_DRIVER_CLASS);
+public class MsSqlInstrospector extends Introspector {
+
+    public MsSqlInstrospector() {
+        databaseConnector = new DatabaseConnector(JDBC_URL_WITH_DATABASE_MSSQL, MSSQL_DRIVER_CLASS);
     }
 
     @Override
@@ -102,12 +109,12 @@ public class MSSqlInstrospector extends Introspector {
                     AND c.column_id = cc.parent_column_id
             WHERE
                 obj.is_ms_shipped = 0
-              AND OBJECT_NAME(c.object_id) = 'Doctor'
+              AND OBJECT_NAME(c.object_id) = '%s'
             ORDER BY
                 table_name, COLUMNPROPERTY(c.object_id, c.name, 'ordinal');
             """;
         formatQuery = formatQuery.replace("\r\n", "%n");
-        return String.format(formatQuery, tableName, tableName);
+        return String.format(formatQuery, tableName);
     }
 
     @Override
@@ -139,7 +146,7 @@ public class MSSqlInstrospector extends Introspector {
                     'CLUSTERED COLUMNSTORE',
                     'NONCLUSTERED COLUMNSTORE'
                 )
-              AND t.name = 'patients'
+              AND t.name = '%s'
             ORDER BY table_name, index_name, seq_in_index;
             """;
         formatQuery = formatQuery.replace("\r\n", "%n");
@@ -149,35 +156,32 @@ public class MSSqlInstrospector extends Introspector {
     @Override
     public String getForeignKeysQuery(String tableName) {
         String formatQuery = """
-                SELECT
-                    table_name,
-                    att2.attname    AS column_name,
-                    cl.relname      AS referenced_table_name,
-                    att.attname     AS referenced_column_name,
-                    conname         AS constraint_name,
-                    NULL            AS update_rule,
-                    NULL            AS delete_rule
-                FROM (SELECT
-                            ns.nspname AS "namespace",
-                            unnest(con1.conkey)                AS parent,
-                            unnest(con1.confkey)                AS child,
-                            cl.relname                          AS table_name,
-                            generate_subscripts(con1.conkey, 1) AS colidx,
-                            con1.confrelid,
-                            con1.conrelid,
-                            con1.conname
-                    FROM pg_class cl
-                            join pg_constraint con1 on con1.conrelid = cl.oid
-                            join pg_namespace ns on cl.relnamespace = ns.oid
-                    WHERE
-                        ns.nspname = 'public'
-                        and con1.contype = 'f'
-                    ORDER BY colidx
-                    ) con
-                        JOIN pg_attribute att on att.attrelid = con.confrelid and att.attnum = con.child
-                        JOIN pg_class cl on cl.oid = con.confrelid
-                        JOIN pg_attribute att2 on att2.attrelid = con.conrelid and att2.attnum = con.parent
-                WHERE table_name = '%s';
+                SELECT OBJECT_NAME(fkc.constraint_object_id) AS constraint_name,
+                       parent_table.name                        AS table_name,
+                       referenced_table.name                    AS referenced_table_name,
+                       parent_column.name                       AS column_name,
+                       referenced_column.name                   AS referenced_column_name,
+                       fk.delete_referential_action             AS delete_referential_action,
+                       fk.update_referential_action             AS update_referential_action,
+                       fkc.constraint_column_id                 AS ordinal_position
+                FROM sys.foreign_key_columns AS fkc
+                         INNER JOIN sys.tables AS parent_table
+                                    ON fkc.parent_object_id = parent_table.object_id
+                         INNER JOIN sys.tables AS referenced_table
+                                    ON fkc.referenced_object_id = referenced_table.object_id
+                         INNER JOIN sys.columns AS parent_column
+                                    ON fkc.parent_object_id = parent_column.object_id
+                                        AND fkc.parent_column_id = parent_column.column_id
+                         INNER JOIN sys.columns AS referenced_column
+                                    ON fkc.referenced_object_id = referenced_column.object_id
+                                        AND fkc.referenced_column_id = referenced_column.column_id
+                         INNER JOIN sys.foreign_keys AS fk
+                                    ON fkc.constraint_object_id = fk.object_id
+                                        AND fkc.parent_object_id = fk.parent_object_id
+                WHERE parent_table.is_ms_shipped = 0
+                  AND referenced_table.is_ms_shipped = 0
+                  AND parent_table.name = '%s'
+                ORDER BY table_name, constraint_name, ordinal_position;
                 """;
         formatQuery = formatQuery.replace("\r\n", "%n");
         return String.format(formatQuery, tableName);
@@ -187,32 +191,48 @@ public class MSSqlInstrospector extends Introspector {
     protected String getEnumsQuery() {
         String formatQuery = """
             SELECT
-                subquery.relname AS table_name,
-                subquery.attname AS column_name,
-                'enum(' || string_agg(quote_literal(match[1]), ',') || ')' AS full_enum_type
-            FROM (
-                SELECT
-                    con.oid,
-                    rel.relname,
-                    a.attname,
-                    regexp_matches(pg_get_constraintdef(con.oid),'''([A-Z]+)''','g') AS match
-                FROM
-                    pg_catalog.pg_constraint con
-                INNER JOIN
-                    pg_catalog.pg_class rel ON rel.oid = con.conrelid
-                INNER JOIN
-                    pg_catalog.pg_namespace nsp ON nsp.oid = connamespace
-                INNER JOIN
-                    pg_catalog.pg_attribute a ON a.attrelid = rel.oid AND a.attnum = ANY(con.conkey)
-                WHERE
-                    nsp.nspname = 'public'
-                    AND con.contype = 'c'
-                    AND pg_get_constraintdef(con.oid) LIKE '%%ANY ((ARRAY[%::text[]%%'
-            ) AS subquery
-            GROUP BY subquery.oid, subquery.relname, subquery.attname;
+                OBJECT_NAME(parent_object_id) AS table_name,
+                COL_NAME(parent_object_id, parent_column_id) AS column_name,
+                definition AS full_enum_type
+            FROM sys.check_constraints
+            WHERE definition LIKE '%OR%'
+                AND definition LIKE '%=%'
+                AND definition NOT LIKE '%AND%'
+                AND definition NOT LIKE '%>%'
+                AND definition NOT LIKE '%<%';
             """;
         formatQuery = formatQuery.replace("\r\n", "%n");
         return formatQuery;
+    }
+
+    @Override
+    protected boolean isEnumType(SqlColumn column) {
+        return "enum".equalsIgnoreCase(column.getDataType());
+    }
+
+    protected List<String> extractEnumValues(String enumString) {
+        //expected input ->
+        // ([status]='ENDED' OR [status]='STARTED' OR [status]='SCHEDULED')
+        List<String> enumValues = new ArrayList<>();
+
+        // Using regex to extract values inside parentheses
+        Pattern pattern = Pattern.compile("\\((.*?)\\)");
+        Matcher matcher = pattern.matcher(enumString);
+
+        if (matcher.find()) {
+            // Group 1 contains the values inside parentheses
+            String valuesInsideParentheses = matcher.group(1);
+
+            // Split the values by comma
+            String[] valuesArray = valuesInsideParentheses.split("OR");
+            Arrays.stream(valuesArray).map(value -> {
+                //[status]='ENDED'
+                String[] splitValue =  value.split("=");
+                return splitValue[0].replace("'", "");
+            }).forEach(enumValues::add);
+        }
+        errStream.println(enumValues);
+        return enumValues;
     }
 
     protected String getBalType(SQLType sqlType) {

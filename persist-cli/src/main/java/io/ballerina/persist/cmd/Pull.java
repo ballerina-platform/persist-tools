@@ -23,6 +23,7 @@ import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.configuration.DatabaseConfiguration;
 import io.ballerina.persist.configuration.PersistConfiguration;
 import io.ballerina.persist.introspect.Introspector;
+import io.ballerina.persist.introspect.MsSqlInstrospector;
 import io.ballerina.persist.introspect.MySqlIntrospector;
 import io.ballerina.persist.introspect.PostgreSqlIntrospector;
 import io.ballerina.persist.models.Module;
@@ -105,6 +106,13 @@ public class Pull implements BLauncherCmd {
                 if (Objects.isNull(port)) {
                     port = "5432";
                     errStream.println("INFO default port 5432 is used for PostgreSQL database");
+                }
+                break;
+            case PersistToolsConstants.SupportedDataSources.MSSQL_DB:
+                introspector = new MsSqlInstrospector();
+                if (Objects.isNull(port)) {
+                    port = "1433";
+                    errStream.println("INFO default port 1433 is used for MSSQL database");
                 }
                 break;
             default:

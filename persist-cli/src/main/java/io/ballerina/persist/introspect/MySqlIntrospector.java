@@ -18,6 +18,7 @@
 package io.ballerina.persist.introspect;
 
 import io.ballerina.persist.PersistToolsConstants;
+import io.ballerina.persist.introspectiondto.SqlColumn;
 import io.ballerina.persist.models.SQLType;
 import io.ballerina.persist.utils.DatabaseConnector;
 
@@ -160,6 +161,12 @@ public class MySqlIntrospector extends Introspector {
         return String.format(formatQuery, this.persistConfigurations.getDbConfig().getDatabase());
     }
 
+    @Override
+    protected boolean isEnumType(SqlColumn column) {
+        return "enum".equalsIgnoreCase(column.getDataType());
+    }
+
+    @Override
     protected String getBalType(SQLType sqlType) {
         if (Objects.equals(sqlType.getFullDataType(), PersistToolsConstants.SqlTypes.BOOLEAN_ALT)) {
             return PersistToolsConstants.BallerinaTypes.BOOLEAN;

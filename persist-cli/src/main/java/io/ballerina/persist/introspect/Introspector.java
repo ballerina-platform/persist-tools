@@ -22,6 +22,7 @@ import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.configuration.PersistConfiguration;
 import io.ballerina.persist.inflector.CaseConverter;
 import io.ballerina.persist.inflector.Pluralizer;
+import io.ballerina.persist.introspectiondto.SqlColumn;
 import io.ballerina.persist.introspectiondto.SqlEnum;
 import io.ballerina.persist.introspectiondto.SqlForeignKey;
 import io.ballerina.persist.introspectiondto.SqlTable;
@@ -50,7 +51,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -77,6 +77,8 @@ public abstract class Introspector {
     protected abstract String getEnumsQuery();
 
     protected abstract String getBalType(SQLType sqlType);
+
+    protected abstract boolean isEnumType(SqlColumn column);
 
     private List<SqlTable> tables;
     private List<SqlEnum> sqlEnums;
@@ -156,7 +158,7 @@ public abstract class Introspector {
         });
     }
 
-    private List<String> extractEnumValues(String enumString) {
+    protected List<String> extractEnumValues(String enumString) {
         List<String> enumValues = new ArrayList<>();
 
         // Using regex to extract values inside parentheses
@@ -194,7 +196,7 @@ public abstract class Introspector {
 
                 fieldBuilder.setFieldColumnName(column.getColumnName());
                 fieldBuilder.setArrayType(false);
-                if (Objects.equals(column.getDataType(), "enum")) {
+                if (isEnumType(column)) {
                     fieldBuilder.setType(createEnumName(table.getTableName(), column.getColumnName()));
                 } else {
                     SQLType sqlType = new SQLType(

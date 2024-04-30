@@ -322,13 +322,11 @@ public class BalSyntaxUtils {
                     imports.add(NodeParser.parseImportDeclaration(("import ballerinax/mysql.driver as _;")));
             case PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB ->
                     imports.add(NodeParser.parseImportDeclaration(("import ballerinax/postgresql.driver as _;")));
+            case PersistToolsConstants.SupportedDataSources.MSSQL_DB ->
+                    imports.add(NodeParser.parseImportDeclaration(("import ballerinax/mssql.driver as _;")));
             default -> imports;
         };
-        Token eofToken = AbstractNodeFactory.createIdentifierToken(BalSyntaxConstants.EMPTY_STRING);
-        ModulePartNode modulePartNode = NodeFactory.createModulePartNode(imports, moduleMembers, eofToken);
-        TextDocument textDocument = TextDocuments.from(BalSyntaxConstants.EMPTY_STRING);
-        SyntaxTree balTree = SyntaxTree.from(textDocument);
-        return balTree.modifyWith(modulePartNode);
+        return generateSyntaxTree(imports, moduleMembers);
     }
 
     public static SyntaxTree generateModelSyntaxTree(Module entityModule) {
