@@ -322,7 +322,7 @@ public class BalSyntaxUtils {
                     imports.add(NodeParser.parseImportDeclaration(("import ballerinax/mysql.driver as _;")));
             case PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB ->
                     imports.add(NodeParser.parseImportDeclaration(("import ballerinax/postgresql.driver as _;")));
-            case PersistToolsConstants.SupportedDataSources.MSSQL_DB ->
+            case "sqlserver" ->
                     imports.add(NodeParser.parseImportDeclaration(("import ballerinax/mssql.driver as _;")));
             default -> imports;
         };

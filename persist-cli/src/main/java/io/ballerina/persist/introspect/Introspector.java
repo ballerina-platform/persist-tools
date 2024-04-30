@@ -67,25 +67,17 @@ public abstract class Introspector {
     protected DatabaseConnector databaseConnector;
     protected PersistConfiguration persistConfigurations;
     protected abstract String getTablesQuery();
-
     protected abstract String getColumnsQuery(String tableName);
-
     protected abstract String getIndexesQuery(String tableName);
-
     protected abstract String getForeignKeysQuery(String tableName);
-
     protected abstract String getEnumsQuery();
-
     protected abstract String getBalType(SQLType sqlType);
-
     protected abstract boolean isEnumType(SqlColumn column);
-
     private List<SqlTable> tables;
     private List<SqlEnum> sqlEnums;
     private final Module.Builder moduleBuilder;
     private final Map<String, Entity> entityMap;
     private final List<SqlForeignKey> sqlForeignKeys;
-
     protected PrintStream errStream = System.err;
 
     public Introspector() {
@@ -101,7 +93,7 @@ public abstract class Introspector {
         DriverResolver driverResolver = new DriverResolver(this.persistConfigurations.getSourcePath(),
                 this.persistConfigurations.getProvider());
         try {
-            Project driverProject = resolveDatabaseDrivers(driverResolver);
+            Project driverProject = driverResolver.resolveDriverDependencies();
             try (Connection connection = prepareDatabaseConnection(driverProject)) {
                 readDatabaseSchema(connection);
             } catch (SQLException e) {
@@ -123,10 +115,6 @@ public abstract class Introspector {
         } catch (SQLException e) {
             throw new BalException("failed to connect to the database: " + e.getMessage());
         }
-    }
-
-    private Project resolveDatabaseDrivers(DriverResolver driverResolver) throws BalException {
-        return driverResolver.resolveDriverDependencies();
     }
 
     public void readDatabaseSchema(Connection connection) throws SQLException {
