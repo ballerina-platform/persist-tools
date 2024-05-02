@@ -29,11 +29,12 @@ public class SqlColumn {
     private final String isNullable;
     private final boolean isPrimaryKey;
     private final boolean isDbGenerated;
+    private final String checkConstraint;
 
     private SqlColumn(String columnName, String tableName, String dataType, String fullDataType,
                       String characterMaximumLength, String numericPrecision, String numericScale,
                       String columnDefault, String isNullable, Boolean isPrimaryKey,
-                      Boolean isDbGenerated) {
+                      Boolean isDbGenerated, String checkConstraint) {
         this.columnName = columnName;
         this.tableName = tableName;
         this.dataType = dataType;
@@ -45,6 +46,7 @@ public class SqlColumn {
         this.isNullable = isNullable;
         this.isPrimaryKey = isPrimaryKey;
         this.isDbGenerated = isDbGenerated;
+        this.checkConstraint = checkConstraint;
     }
 
     public String getColumnName() {
@@ -91,6 +93,10 @@ public class SqlColumn {
         return isPrimaryKey;
     }
 
+    public String getCheckConstraint() {
+        return checkConstraint;
+    }
+
     public static SqlColumn.Builder newBuilder(String columnName) {
         return new Builder(columnName);
     }
@@ -107,6 +113,7 @@ public class SqlColumn {
         private String tableName;
         private Boolean isPrimaryKey;
         private Boolean isDbGenerated;
+        private String checkConstraint;
 
         private Builder(String columnName) {
             this.columnName = columnName;
@@ -162,10 +169,15 @@ public class SqlColumn {
             return this;
         }
 
+        public Builder setCheckConstraint(String checkConstraint) {
+            this.checkConstraint = checkConstraint;
+            return this;
+        }
+
         public SqlColumn build() {
             return new SqlColumn(this.columnName, this.tableName, this.dataType, this.fullDataType,
                     this.characterMaximumLength, this.numericPrecision, this.numericScale, this.columnDefault,
-                    this.isNullable, this.isPrimaryKey, this.isDbGenerated);
+                    this.isNullable, this.isPrimaryKey, this.isDbGenerated, checkConstraint);
         }
     }
 }

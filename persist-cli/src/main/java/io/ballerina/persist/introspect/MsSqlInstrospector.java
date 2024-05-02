@@ -24,6 +24,7 @@ import io.ballerina.persist.utils.DatabaseConnector;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -72,7 +73,7 @@ public class MsSqlInstrospector extends Introspector {
                     END AS full_data_type,
                 COLUMNPROPERTY(c.object_id, c.name, 'charmaxlen') AS character_maximum_length,
                 OBJECT_DEFINITION(c.default_object_id) AS column_default,
-                c.is_nullable AS is_nullable,
+                IIF(c.is_nullable = 1, 'YES', 'NO') AS is_nullable,
                 COLUMNPROPERTY(c.object_id, c.name, 'IsIdentity') AS dbGenerated,
                 OBJECT_NAME(c.object_id) AS table_name,
                 CONVERT(TINYINT, CASE
@@ -161,8 +162,8 @@ public class MsSqlInstrospector extends Introspector {
                        referenced_table.name                    AS referenced_table_name,
                        parent_column.name                       AS column_name,
                        referenced_column.name                   AS referenced_column_name,
-                       fk.delete_referential_action             AS delete_referential_action,
-                       fk.update_referential_action             AS update_referential_action,
+                       fk.delete_referential_action             AS delete_rule,
+                       fk.update_referential_action             AS update_rule,
                        fkc.constraint_column_id                 AS ordinal_position
                 FROM sys.foreign_key_columns AS fkc
                          INNER JOIN sys.tables AS parent_table
@@ -207,7 +208,12 @@ public class MsSqlInstrospector extends Introspector {
 
     @Override
     protected boolean isEnumType(SqlColumn column) {
-        return "enum".equalsIgnoreCase(column.getDataType());
+        if (Objects.isNull(column.getCheckConstraint())) {
+            return false;
+        }
+        Pattern pattern = Pattern.compile("^\\((\\[(\\w+(\\s+\\w+)*)]='(\\w+(\\s+\\w+)*)')(\\sOR\\s\\[(\\w" +
+                "+(\\s+\\w+)*)]='(\\w+(\\s+\\w+)*)')*\\)$");
+        return pattern.matcher(column.getCheckConstraint()).find();
     }
 
     protected List<String> extractEnumValues(String enumString) {
@@ -226,9 +232,9 @@ public class MsSqlInstrospector extends Introspector {
             // Split the values by comma
             String[] valuesArray = valuesInsideParentheses.split("OR");
             Arrays.stream(valuesArray).map(value -> {
-                //[status]='ENDED'
+                //you get -> [status]='ENDED'
                 String[] splitValue =  value.split("=");
-                return splitValue[0].replace("'", "");
+                return splitValue[1].replace("'", "").trim();
             }).forEach(enumValues::add);
         }
         errStream.println(enumValues);

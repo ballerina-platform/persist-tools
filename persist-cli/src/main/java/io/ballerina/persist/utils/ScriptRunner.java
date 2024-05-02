@@ -195,6 +195,7 @@ public class ScriptRunner {
                             .setIsNullable(results.getString("is_nullable"))
                             .setIsPrimaryKey(results.getString("column_key").equals("PRI"))
                             .setIsDbGenerated(results.getBoolean("dbgenerated"))
+                            .setCheckConstraint(results.getString("check_constraint"))
                             .build();
                     table.addColumn(column);
                     }

@@ -113,7 +113,8 @@ public class PostgreSqlIntrospector extends Introspector {
                     AND pg_get_expr(attdef.adbin, attdef.adrelid) LIKE 'nextval(%%'
                     THEN 1
                     ELSE 0
-                END AS dbGenerated
+                END AS dbGenerated,
+                NULL AS check_constraint
                 FROM information_schema.columns info
                 JOIN pg_attribute att ON att.attname = info.column_name
                 JOIN (
