@@ -40,6 +40,9 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Locale;
 
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.CREATE_DATABASE_SQL_FORMAT;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.DROP_DATABASE_SQL_FORMAT;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.JDBC_URL_WITH_DATABASE_MSSQL;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.JDBC_URL_WITH_DATABASE_POSTGRESQL;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.GENERATED_SOURCES_DIRECTORY;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.INPUT_RESOURCES_DIRECTORY;
@@ -206,21 +209,30 @@ public class DatabaseTestUtils {
 
         String url = String.format(JDBC_URL_WITH_DATABASE_POSTGRESQL, "postgresql",  dbConfig.getHost(),
                 dbConfig.getPort(), "postgres");
+        resetDatabase(dbConfig, recreate, url);
+    }
 
+    public static void resetMsSqlDatabase(DatabaseConfiguration dbConfig, boolean recreate) {
+
+        String url = String.format(JDBC_URL_WITH_DATABASE_MSSQL, "sqlserver",  dbConfig.getHost(),
+                dbConfig.getPort(), "master");
+        resetDatabase(dbConfig, recreate, url);
+    }
+
+    private static void resetDatabase(DatabaseConfiguration dbConfig, boolean recreate, String url) {
         try (Connection connection = DriverManager.getConnection(url, dbConfig.getUsername(), dbConfig.getPassword())) {
             try (Statement statement = connection.createStatement()) {
-                statement.execute("DROP DATABASE IF EXISTS " + dbConfig.getDatabase());
+                statement.execute(String.format(DROP_DATABASE_SQL_FORMAT, dbConfig.getDatabase()));
                 if (recreate) {
-                    statement.execute("CREATE DATABASE " + dbConfig.getDatabase());
+                    statement.execute(String.format(CREATE_DATABASE_SQL_FORMAT, dbConfig.getDatabase()));
                 }
                 statement.executeBatch();
                 PrintStream outStream = System.out;
-                outStream.println("Database created successfully");
+                outStream.println("Database reset successfully");
             }
         } catch (SQLException e) {
-            errStream.println("Failed to create database: " + e.getMessage());
+            errStream.println("Failed to reset database: " + e.getMessage());
         }
-
     }
 
     public static void createFromDatabaseScript(String packageName, String datastore,

@@ -26,6 +26,7 @@ import org.testng.annotations.Test;
 import picocli.CommandLine;
 
 
+import javax.xml.crypto.Data;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -34,23 +35,22 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static io.ballerina.persist.tools.utils.DatabaseTestUtils.createFromDatabaseScript;
+import static io.ballerina.persist.tools.utils.DatabaseTestUtils.resetMsSqlDatabase;
 import static io.ballerina.persist.tools.utils.DatabaseTestUtils.resetPostgreSqlDatabase;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertGeneratedSources;
 
 public class ToolingDbPullTest {
-    private static final String GENERATED_SOURCES_DIRECTORY = Paths.get("build", "generated-sources")
-            .toString();
 
+    private static final String GENERATED_SOURCES_DIRECTORY = Paths.get("build", "generated-sources").toString();
     private static final DatabaseConfiguration mysqlDbConfig;
-
     private static final DatabaseConfiguration postgresDbConfig;
+    private static final DatabaseConfiguration mssqlDbConfig;
 
     static {
         try {
-            mysqlDbConfig = new DatabaseConfiguration("localhost", "root", "Test123#",
-                    "3307", "persist");
-            postgresDbConfig = new DatabaseConfiguration("localhost", "postgres", "postgres",
-                    "5432", "persist");
+            mysqlDbConfig = new DatabaseConfiguration("localhost", "root", "Test123#", "3307", "persist");
+            postgresDbConfig = new DatabaseConfiguration("localhost", "postgres", "postgres", "5432", "persist");
+            mssqlDbConfig = new DatabaseConfiguration("localhost", "sa", "Test123#", "3500", "persist");
         } catch (BalException e) {
             throw new RuntimeException(e);
         }
@@ -361,128 +361,128 @@ public class ToolingDbPullTest {
     }
 
     @Test(enabled = true)
-    @Description("[Postgresql] Create a model.bal file consisting of one Entity with no annotations and not null " +
+    @Description("[PosgreSql] Create a model.bal file consisting of one Entity with no annotations and not null " +
             "fields.")
     public void pullTestPostgreSqlBasic() throws BalException {
         runIntrospectionTestPostgreSql("tool_test_pull_28_postgresql");
     }
 
     @Test(enabled = true)
-    @Description("[Postgresql] Create a model.bal file consisting of one Entity with no annotations and one nullable " +
+    @Description("[PosgreSql] Create a model.bal file consisting of one Entity with no annotations and one nullable " +
             "field.")
     public void pullTestPostgreSqlNullableField() throws BalException {
         runIntrospectionTestPostgreSql("tool_test_pull_29_postgresql");
     }
 
     @Test(enabled = true)
-    @Description("[Postgresql] Create a model.bal file consisting of two Entities with a one to many relation.")
+    @Description("[PosgreSql] Create a model.bal file consisting of two Entities with a one to many relation.")
     public void pullTestPostgreSqlOneToMany() throws BalException {
         runIntrospectionTestPostgreSql("tool_test_pull_30_postgresql");
     }
 
     @Test(enabled = true)
-    @Description("[Postgresql] Create a model.bal file consisting of two Entities with a one to one relation " +
-            "by making foreign key unique.")
+    @Description("[PosgreSql] Create a model.bal file consisting of two Entities with a one to one relation by " +
+            "making foreign key unique.")
     public void pullTestPostgreSqlOneToOneUniqueKey() throws BalException {
         runIntrospectionTestPostgreSql("tool_test_pull_31_postgresql");
     }
 
     @Test(enabled = true)
-    @Description("[Postgresql] Create a model.bal file consisting of two Entities with a one to one relation by " +
+    @Description("[PosgreSql] Create a model.bal file consisting of two Entities with a one to one relation by " +
             "making foreign key primary.")
     public void pullTestPostgreSqlOneToOnePrimaryKey() throws BalException {
         runIntrospectionTestPostgreSql("tool_test_pull_32_postgresql");
     }
 
     @Test(enabled = true)
-    @Description("[Postgresql] Create a model.bal file consisting of two Entities with a one to many relation by " +
+    @Description("[PosgreSql] Create a model.bal file consisting of two Entities with a one to many relation by " +
             "making foreign key a partial key.")
     public void pullTestPostgreSqlPartialPrimaryKey() throws BalException {
         runIntrospectionTestPostgreSql("tool_test_pull_33_postgresql");
     }
 
     @Test(enabled = true)
-    @Description("[Postgresql] Create a model.bal file three Entities with two one to many relations.")
+    @Description("[PosgreSql] Create a model.bal file three Entities with two one to many relations.")
     public void pullTestPostgreSqlMultipleRelations() throws BalException {
         runIntrospectionTestPostgreSql("tool_test_pull_34_postgresql");
     }
 
     @Test(enabled = true)
-    @Description("[Postgresql] Create a model.bal file consisting of name mapping annotations.")
+    @Description("[PosgreSql] Create a model.bal file consisting of name mapping annotations.")
     public void pullTestPostgreSqlNameMappingAnnotation() throws BalException {
         runIntrospectionTestPostgreSql("tool_test_pull_35_postgresql");
     }
 
     @Test(enabled = true)
-    @Description("[Postgresql] Create a model.bal file consisting of type mapping annotations Char, VarChar and " +
+    @Description("[PosgreSql] Create a model.bal file consisting of type mapping annotations Char, VarChar and " +
             "Decimal.")
     public void pullTestPostgreSqlTypeMappingAnnotation() throws BalException {
         runIntrospectionTestPostgreSql("tool_test_pull_36_postgresql");
     }
 
     @Test(enabled = true)
-    @Description("[Postgresql] Create a model.bal file consisting of unique index annotation.")
+    @Description("[PosgreSql] Create a model.bal file consisting of unique index annotation.")
     public void pullTestPostgreSqlUniqueIndexAnnotation() throws BalException {
         runIntrospectionTestPostgreSql("tool_test_pull_37_postgresql");
     }
 
     @Test(enabled = true)
-    @Description("[Postgresql] Create a model.bal file consisting of index annotation.")
+    @Description("[PosgreSql] Create a model.bal file consisting of index annotation.")
     public void pullTestPostgreSqlIndexAnnotation() throws BalException {
         runIntrospectionTestPostgreSql("tool_test_pull_38_postgresql");
     }
 
     @Test(enabled = true)
-    @Description("[Postgresql] Create a model.bal file consisting of multiple relations between same entities.")
+    @Description("[PosgreSql] Create a model.bal file consisting of multiple relations between same entities.")
     public void pullTestPostgreSqlMultipleRelationsBetweenSameEntities() throws BalException {
         runIntrospectionTestPostgreSql("tool_test_pull_39_postgresql");
     }
 
     @Test(enabled = true)
-    @Description("[Postgresql] Create a model.bal file consisting of multiple unique indexes on same column.")
+    @Description("[PosgreSql] Create a model.bal file consisting of multiple unique indexes on same column.")
     public void pullTestPostgreSqlMultipleUniqueIndexes() throws BalException {
         runIntrospectionTestPostgreSql("tool_test_pull_40_postgresql");
     }
 
     @Test(enabled = true)
-    @Description("[Postgresql] Create a model.bal file consisting of multiple indexes on same column.")
+    @Description("[PosgreSql] Create a model.bal file consisting of multiple indexes on same column.")
     public void pullTestPostgreSqlMultipleIndexes() throws BalException {
         runIntrospectionTestPostgreSql("tool_test_pull_41_postgresql");
     }
 
     @Test(enabled = true)
-    @Description("[Postgresql] Create a model.bal file consisting of a one to many relation with composite foreign " +
+    @Description("[PosgreSql] Create a model.bal file consisting of a one to many relation with composite foreign " +
             "key.")
     public void pullTestPostgreSqlCompositeForeignKeys() throws BalException {
         runIntrospectionTestPostgreSql("tool_test_pull_42_postgresql");
     }
 
     @Test(enabled = true)
-    @Description("[Postgresql] Create a model.bal file consisting of an entity with self-referenced relation.")
+    @Description("[PosgreSql] Create a model.bal file consisting of an entity with self-referenced relation.")
     public void pullTestPostgreSqlSelfReferencedRelation() throws BalException {
         runIntrospectionTestPostgreSql("tool_test_pull_43_postgresql");
     }
 
     @Test(enabled = true)
-    @Description("[Postgresql] Create a model.bal file consisting of two relations which cross-reference each other.")
+    @Description("[PosgreSql] Create a model.bal file consisting of two relations which cross-reference each other.")
     public void pullTestPostgreSqlCrossReferencedRelations() throws BalException {
         runIntrospectionTestPostgreSql("tool_test_pull_44_postgresql");
     }
 
     @Test(enabled = true)
-    @Description("[Postgresql] Create a model.bal file consisting of keyword field names which are to be escaped.")
+    @Description("[PosgreSql] Create a model.bal file consisting of keyword field names which are to be escaped.")
     public void pullTestPostgreSqlEscapedFieldNames() throws BalException {
         runIntrospectionTestPostgreSql("tool_test_pull_45_postgresql");
     }
 
     @Test(enabled = true)
-    @Description("[Postgresql] When the database does not contain any tables.")
+    @Description("[PosgreSql] When the database does not contain any tables.")
     public void pullTestPostgreSqlNoTablesInDatabase() throws BalException {
         runIntrospectionTestPostgreSql("tool_test_pull_46_postgresql");
     }
 
     @Test(enabled = true)
-    @Description("[Postgresql] When the database does not exist.")
+    @Description("[PosgreSql] When the database does not exist.")
     public void pullTestPostgreSqlDatabaseDoesNotExist() throws BalException {
         String subDir = "tool_test_pull_47_postgresql";
         if (OS.WINDOWS.isCurrentOs()) {
@@ -490,33 +490,188 @@ public class ToolingDbPullTest {
         }
         resetPostgreSqlDatabase(postgresDbConfig, false);
         createFromDatabaseScript(subDir, "postgresql", postgresDbConfig);
-        executeDefaultPullCommand(subDir, postgresDbConfig, "postgresql");
+        executeDefaultPullCommand(subDir, "postgresql", postgresDbConfig);
         assertGeneratedSources(subDir);
     }
 
     @Test(enabled = true)
-    @Description("[Postgresql] Create a model.bal file consisting of a generated primary key field.")
+    @Description("[PosgreSql] Create a model.bal file consisting of a generated primary key field.")
     public void pullTestPostgreSqlWithGeneratedId() throws BalException {
         runIntrospectionTestPostgreSql("tool_test_pull_48_postgresql");
     }
 
     @Test(enabled = true)
-    @Description("[Postgresql] Create a model.bal file consisting of a blob type field.")
+    @Description("[PosgreSql] Create a model.bal file consisting of a blob type field.")
     public void pullTestPostgreSqlWithBlobTypeField() throws BalException {
         runIntrospectionTestPostgreSql("tool_test_pull_49_postgresql");
     }
 
     @Test(enabled = true)
-    @Description("[Postgresql] Create a model.bal file consisting of new and unsupported types.")
+    @Description("[PosgreSql] Create a model.bal file consisting of new and unsupported types.")
     public void pullTestPostgreSqlWithNewAndUnsupportedTypes() throws BalException {
         runIntrospectionTestPostgreSql("tool_test_pull_50_postgresql");
     }
 
     @Test(enabled = true)
-    @Description("[Postgresql] Create a model.bal file consisting of an unsupported foreign key referencing a unique " +
+    @Description("[PosgreSql] Create a model.bal file consisting of an unsupported foreign key referencing a unique " +
             "key")
     public void pullTestPostgreSqlWithForeignKeyOnUniqueKey() throws BalException {
         runIntrospectionTestPostgreSql("tool_test_pull_51_postgresql");
+    }
+
+    @Test(enabled = false)
+    @Description("[MsSql] Create a model.bal file consisting of one Entity with no annotations and not null fields.")
+    public void pullTestMsSqlBasic() throws BalException {
+        runIntrospectionTestMsSql("tool_test_pull_52_mssql");
+    }
+
+    @Test(enabled = false)
+    @Description("[MsSql] Create a model.bal file consisting of one Entity with no annotations and one nullable field.")
+    public void pullTestMsSqlNullableField() throws BalException {
+        runIntrospectionTestMsSql("tool_test_pull_53_mssql");
+    }
+
+    @Test(enabled = false)
+    @Description("[MsSql] Create a model.bal file consisting of two Entities with a one to many relation.")
+    public void pullTestMsSqlOneToMany() throws BalException {
+        runIntrospectionTestMsSql("tool_test_pull_54_mssql");
+    }
+
+    @Test(enabled = false)
+    @Description("[MsSql] Create a model.bal file consisting of two Entities with a one to one relation by making " +
+            "foreign key unique.")
+    public void pullTestMsSqlOneToOneUniqueKey() throws BalException {
+        runIntrospectionTestMsSql("tool_test_pull_55_mssql");
+    }
+
+    @Test(enabled = false)
+    @Description("[MsSql] Create a model.bal file consisting of two Entities with a one to one relation by making " +
+            "foreign key primary.")
+    public void pullTestMsSqlOneToOnePrimaryKey() throws BalException {
+        runIntrospectionTestMsSql("tool_test_pull_56_mssql");
+    }
+
+    @Test(enabled = false)
+    @Description("[MsSql] Create a model.bal file consisting of two Entities with a one to many relation by making " +
+            "foreign key a partial key.")
+    public void pullTestMsSqlPartialPrimaryKey() throws BalException {
+        runIntrospectionTestMsSql("tool_test_pull_57_mssql");
+    }
+
+    @Test(enabled = false)
+    @Description("[MsSql] Create a model.bal file three Entities with two one to many relations.")
+    public void pullTestMsSqlMultipleRelations() throws BalException {
+        runIntrospectionTestMsSql("tool_test_pull_58_mssql");
+    }
+
+    @Test(enabled = false)
+    @Description("[MsSql] Create a model.bal file consisting of name mapping annotations.")
+    public void pullTestMsSqlNameMappingAnnotation() throws BalException {
+        runIntrospectionTestMsSql("tool_test_pull_59_mssql");
+    }
+
+    @Test(enabled = false)
+    @Description("[MsSql] Create a model.bal file consisting of type mapping annotations Char, VarChar and Decimal.")
+    public void pullTestMsSqlTypeMappingAnnotation() throws BalException {
+        runIntrospectionTestMsSql("tool_test_pull_60_mssql");
+    }
+
+    @Test(enabled = false)
+    @Description("[MsSql] Create a model.bal file consisting of unique index annotation.")
+    public void pullTestMsSqlUniqueIndexAnnotation() throws BalException {
+        runIntrospectionTestMsSql("tool_test_pull_61_mssql");
+    }
+
+    @Test(enabled = false)
+    @Description("[MsSql] Create a model.bal file consisting of index annotation.")
+    public void pullTestMsSqlIndexAnnotation() throws BalException {
+        runIntrospectionTestMsSql("tool_test_pull_62_mssql");
+    }
+
+    @Test(enabled = false)
+    @Description("[MsSql] Create a model.bal file consisting of multiple relations between same entities.")
+    public void pullTestMsSqlMultipleRelationsBetweenSameEntities() throws BalException {
+        runIntrospectionTestMsSql("tool_test_pull_63_mssql");
+    }
+
+    @Test(enabled = false)
+    @Description("[MsSql] Create a model.bal file consisting of multiple unique indexes on same column.")
+    public void pullTestMsSqlMultipleUniqueIndexes() throws BalException {
+        runIntrospectionTestMsSql("tool_test_pull_64_mssql");
+    }
+
+    @Test(enabled = false)
+    @Description("[MsSql] Create a model.bal file consisting of multiple indexes on same column.")
+    public void pullTestMsSqlMultipleIndexes() throws BalException {
+        runIntrospectionTestMsSql("tool_test_pull_65_mssql");
+    }
+
+    @Test(enabled = false)
+    @Description("[MsSql] Create a model.bal file consisting of a one to many relation with composite foreign key.")
+    public void pullTestMsSqlCompositeForeignKeys() throws BalException {
+        runIntrospectionTestMsSql("tool_test_pull_66_mssql");
+    }
+
+    @Test(enabled = false)
+    @Description("[MsSql] Create a model.bal file consisting of an entity with self-referenced relation.")
+    public void pullTestMsSqlSelfReferencedRelation() throws BalException {
+        runIntrospectionTestMsSql("tool_test_pull_67_mssql");
+    }
+
+    @Test(enabled = false)
+    @Description("[MsSql] Create a model.bal file consisting of two relations which cross-reference each other.")
+    public void pullTestMsSqlCrossReferencedRelations() throws BalException {
+        runIntrospectionTestMsSql("tool_test_pull_68_mssql");
+    }
+
+    @Test(enabled = false)
+    @Description("[MsSql] Create a model.bal file consisting of keyword field names which are to be escaped.")
+    public void pullTestMsSqlEscapedFieldNames() throws BalException {
+        runIntrospectionTestMsSql("tool_test_pull_69_mssql");
+    }
+
+    @Test(enabled = false)
+    @Description("[MsSql] When the database does not contain any tables.")
+    public void pullTestMsSqlNoTablesInDatabase() throws BalException {
+        runIntrospectionTestMsSql("tool_test_pull_70_mssql");
+    }
+
+    @Test(enabled = false)
+    @Description("[MsSql] When the database does not exist.")
+    public void pullTestMsSqlDatabaseDoesNotExist() throws BalException {
+        String subDir = "tool_test_pull_71_mssql";
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        resetMsSqlDatabase(postgresDbConfig, false);
+        createFromDatabaseScript(subDir, "mssql", postgresDbConfig);
+        executeDefaultPullCommand(subDir, "mssql", postgresDbConfig);
+        assertGeneratedSources(subDir);
+    }
+
+    @Test(enabled = false)
+    @Description("[MsSql] Create a model.bal file consisting of a generated primary key field.")
+    public void pullTestMsSqlWithGeneratedId() throws BalException {
+        runIntrospectionTestMsSql("tool_test_pull_72_mssql");
+    }
+
+    @Test(enabled = false)
+    @Description("[MsSql] Create a model.bal file consisting of a blob type field.")
+    public void pullTestMsSqlWithBlobTypeField() throws BalException {
+        runIntrospectionTestMsSql("tool_test_pull_73_mssql");
+    }
+
+    @Test(enabled = false)
+    @Description("[MsSql] Create a model.bal file consisting of new and unsupported types.")
+    public void pullTestMsSqlWithNewAndUnsupportedTypes() throws BalException {
+        runIntrospectionTestMsSql("tool_test_pull_74_mssql");
+    }
+
+    @Test(enabled = false)
+    @Description("[MsSql] Create a model.bal file consisting of an unsupported foreign key referencing a unique " +
+            "key")
+    public void pullTestMsSqlWithForeignKeyOnUniqueKey() throws BalException {
+        runIntrospectionTestMsSql("tool_test_pull_75_mssql");
     }
 
     private static void runIntrospectionTestMySql(String subDir) throws BalException {
@@ -524,7 +679,7 @@ public class ToolingDbPullTest {
             return;
         }
         createFromDatabaseScript(subDir, "mysql", mysqlDbConfig);
-        executeDefaultPullCommand(subDir, mysqlDbConfig, "mysql");
+        executeDefaultPullCommand(subDir, "mysql", mysqlDbConfig);
         assertGeneratedSources(subDir);
     }
 
@@ -534,11 +689,21 @@ public class ToolingDbPullTest {
         }
         resetPostgreSqlDatabase(postgresDbConfig, true);
         createFromDatabaseScript(subDir, "postgresql", postgresDbConfig);
-        executeDefaultPullCommand(subDir, postgresDbConfig, "postgresql");
+        executeDefaultPullCommand(subDir, "postgresql", postgresDbConfig);
         assertGeneratedSources(subDir);
     }
 
-    private static void executeDefaultPullCommand(String subDir, DatabaseConfiguration dbConfig, String datastore)
+    private static void runIntrospectionTestMsSql(String subDir) throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        resetMsSqlDatabase(mssqlDbConfig, true);
+        createFromDatabaseScript(subDir, "mssql", mssqlDbConfig);
+        executeDefaultPullCommand(subDir, "mssql", mssqlDbConfig);
+        assertGeneratedSources(subDir);
+    }
+
+    private static void executeDefaultPullCommand(String subDir, String datastore, DatabaseConfiguration dbConfig)
             throws BalException {
         try {
             Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Pull");

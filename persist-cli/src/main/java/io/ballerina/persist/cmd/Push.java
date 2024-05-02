@@ -80,7 +80,7 @@ import static io.ballerina.persist.PersistToolsConstants.SQL_SCHEMA_FILE;
 import static io.ballerina.persist.PersistToolsConstants.USER;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.CREATE_DATABASE_SQL_FORMAT_MSSQL;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.CREATE_DATABASE_SQL_FORMAT_MYSQL;
-import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.CREATE_DATABASE_SQL_FORMAT_POSTGRESQL;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.CREATE_DATABASE_SQL_FORMAT;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.JDBC_URL_WITHOUT_DATABASE;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.JDBC_URL_WITH_DATABASE_MSSQL;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.JDBC_URL_WITH_DATABASE_MYSQL;
@@ -154,7 +154,7 @@ public class Push implements BLauncherCmd {
             this.driverClass = MSSQL_DRIVER_CLASS;
         } else if (this.datastore.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB)) {
             this.jdbcUrlWithDatabaseFormat = JDBC_URL_WITH_DATABASE_POSTGRESQL;
-            this.createDatabaseSqlFormat = CREATE_DATABASE_SQL_FORMAT_POSTGRESQL;
+            this.createDatabaseSqlFormat = CREATE_DATABASE_SQL_FORMAT;
             this.driverClass = POSTGRESQL_DRIVER_CLASS;
         } else {
             errStream.printf("ERROR: unsupported data store: '%s'%n", datastore);
