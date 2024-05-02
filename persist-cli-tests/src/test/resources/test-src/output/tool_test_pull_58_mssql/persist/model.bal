@@ -3,8 +3,8 @@ import ballerina/time;
 import ballerinax/persist.sql;
 
 public enum PatientGender {
-    MALE = "MALE",
-    FEMALE = "FEMALE"
+    FEMALE = "FEMALE",
+    MALE = "MALE"
 }
 
 public type Appointment record {|
@@ -12,10 +12,10 @@ public type Appointment record {|
     int patientId;
     int doctorId;
     time:Date date;
-    @sql:Relation {keys: ["patientId"]}
-    Patient patient;
     @sql:Relation {keys: ["doctorId"]}
     Doctor doctor;
+    @sql:Relation {keys: ["patientId"]}
+    Patient patient;
 |};
 
 public type Patient record {|

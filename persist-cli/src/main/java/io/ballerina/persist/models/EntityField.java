@@ -39,7 +39,7 @@ public class EntityField {
     private final String fieldName;
     private final String fieldColumnName;
     private final String fieldType;
-    private final SQLType sqlType;
+    private final SqlType sqlType;
     private final boolean arrayType;
     private final boolean optionalType;
     private final boolean isDbGenerated;
@@ -50,7 +50,7 @@ public class EntityField {
     private final List<String> relationRefs;
 
     EntityField(String fieldName, String fieldColumnName, String fieldType, boolean arrayType, boolean optionalType,
-    boolean optionalField, List<AnnotationNode> annotationNodes, SQLType sqlType, List<String> relationRefs,
+                boolean optionalField, List<AnnotationNode> annotationNodes, SqlType sqlType, List<String> relationRefs,
                 boolean isDbGenerated) {
         this.fieldName = fieldName;
         this.fieldColumnName = fieldColumnName;
@@ -81,7 +81,7 @@ public class EntityField {
         return relation;
     }
 
-    public SQLType getSqlType() {
+    public SqlType getSqlType() {
         return sqlType;
     }
 
@@ -145,7 +145,7 @@ public class EntityField {
         private boolean optionalType = false;
         boolean optionalField = false;
 
-        SQLType sqlType;
+        SqlType sqlType;
         private List<AnnotationNode> annotationNodes = null;
 
         private List<String> relationRefs;
@@ -167,7 +167,7 @@ public class EntityField {
             this.fieldType = fieldType;
         }
 
-        public void setSqlType(SQLType sqlType) {
+        public void setSqlType(SqlType sqlType) {
             this.sqlType = sqlType;
         }
         public void setFieldColumnName(String fieldColumnName) {

@@ -22,15 +22,16 @@ import io.ballerina.persist.PersistToolsConstants;
 
 import java.util.Objects;
 
-public class SQLType {
+public class SqlType {
     private final String typeName;
     private final String fullDataType;
     private final String columnDefaultValue;
     private final int numericPrecision;
     private final int numericScale;
     private final int maxLength;
+    private final String datastore;
 
-    public SQLType(String typeName, String fullDataType, String columnDefaultValue, int numericPrecision,
+    public SqlType(String typeName, String fullDataType, String columnDefaultValue, int numericPrecision,
                    int numericScale, int maxCharLength, String datastore) {
         this.typeName = typeName;
         this.fullDataType = fullDataType;
@@ -42,9 +43,10 @@ public class SQLType {
         this.numericPrecision = numericPrecision > 0 ? numericPrecision : precisionValue;
         this.numericScale = numericScale > 0 ? numericScale : PersistToolsConstants.DefaultMaxLength.DECIMAL_SCALE;
         this.maxLength = maxCharLength > 0 ? maxCharLength : PersistToolsConstants.DefaultMaxLength.VARCHAR_LENGTH;
+        this.datastore = datastore;
     }
 
-    public SQLType(String typeName, String fullDataType, String columnDefaultValue, int numericPrecision,
+    public SqlType(String typeName, String fullDataType, String columnDefaultValue, int numericPrecision,
                    int numericScale, int maxCharLength) {
         this.typeName = typeName;
         this.fullDataType = fullDataType;
@@ -52,6 +54,7 @@ public class SQLType {
         this.numericPrecision = numericPrecision;
         this.numericScale = numericScale;
         this.maxLength = maxCharLength;
+        this.datastore = null;
     }
 
     public String getTypeName() {
@@ -65,13 +68,19 @@ public class SQLType {
     public int getNumericScale() {
         return numericScale;
     }
+
     public String getColumnDefaultValue() {
         return columnDefaultValue;
+    }
+
+    public String getDatastore() {
+        return datastore;
     }
 
     public int getMaxLength() {
         return maxLength;
     }
+
     public String getFullDataType() {
         return fullDataType;
     }
@@ -95,7 +104,7 @@ public class SQLType {
         if (obj == null || getClass() != obj.getClass()) {
             return false;
         }
-        SQLType sqlType = (SQLType) obj;
+        SqlType sqlType = (SqlType) obj;
         return Objects.equals(typeName, sqlType.typeName) && Objects.equals(fullDataType, sqlType.fullDataType) &&
                 Objects.equals(columnDefaultValue, sqlType.columnDefaultValue) &&
                 Objects.equals(numericPrecision, sqlType.numericPrecision) &&

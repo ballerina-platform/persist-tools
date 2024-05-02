@@ -33,7 +33,7 @@ import io.ballerina.persist.models.EnumMember;
 import io.ballerina.persist.models.Index;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.models.Relation;
-import io.ballerina.persist.models.SQLType;
+import io.ballerina.persist.models.SqlType;
 import io.ballerina.persist.nodegenerator.DriverResolver;
 import io.ballerina.persist.utils.DatabaseConnector;
 import io.ballerina.persist.utils.JdbcDriverLoader;
@@ -71,7 +71,7 @@ public abstract class Introspector {
     protected abstract String getIndexesQuery(String tableName);
     protected abstract String getForeignKeysQuery(String tableName);
     protected abstract String getEnumsQuery();
-    protected abstract String getBalType(SQLType sqlType);
+    protected abstract String getBalType(SqlType sqlType);
     protected abstract boolean isEnumType(SqlColumn column);
     private List<SqlTable> tables;
     private List<SqlEnum> sqlEnums;
@@ -187,14 +187,14 @@ public abstract class Introspector {
                 if (isEnumType(column)) {
                     fieldBuilder.setType(createEnumName(table.getTableName(), column.getColumnName()));
                 } else {
-                    SQLType sqlType = new SQLType(
+                    String maxLen = column.getCharacterMaximumLength();
+                    SqlType sqlType = new SqlType(
                             column.getDataType().toUpperCase(Locale.ENGLISH),
                             column.getFullDataType(),
                             column.getColumnDefault(),
                             column.getNumericPrecision() != null ? parseInt(column.getNumericPrecision()) : 0,
                             column.getNumericScale() != null ? parseInt(column.getNumericScale()) : 0,
-                            column.getCharacterMaximumLength() != null ?
-                                    parseUnsignedInt(column.getCharacterMaximumLength()) : 0,
+                            (maxLen != null) ? parseUnsignedInt(maxLen) : 0,
                             persistConfigurations.getProvider()
                     );
                     String balType = this.getBalType(sqlType);
@@ -306,7 +306,7 @@ public abstract class Introspector {
         }
     }
 
-    protected String getBalTypeForCommonDataTypes(SQLType sqlType) {
+    protected String getBalTypeForCommonDataTypes(SqlType sqlType) {
         return switch (sqlType.getTypeName()) {
             case PersistToolsConstants.SqlTypes.INT,
                     PersistToolsConstants.SqlTypes.INTEGER,

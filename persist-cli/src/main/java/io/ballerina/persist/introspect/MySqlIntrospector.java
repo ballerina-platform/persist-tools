@@ -19,7 +19,7 @@ package io.ballerina.persist.introspect;
 
 import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.introspectiondto.SqlColumn;
-import io.ballerina.persist.models.SQLType;
+import io.ballerina.persist.models.SqlType;
 import io.ballerina.persist.utils.DatabaseConnector;
 
 import java.util.Objects;
@@ -168,7 +168,7 @@ public class MySqlIntrospector extends Introspector {
     }
 
     @Override
-    protected String getBalType(SQLType sqlType) {
+    protected String getBalType(SqlType sqlType) {
         if (Objects.equals(sqlType.getFullDataType(), PersistToolsConstants.SqlTypes.BOOLEAN_ALT)) {
             return PersistToolsConstants.BallerinaTypes.BOOLEAN;
         }

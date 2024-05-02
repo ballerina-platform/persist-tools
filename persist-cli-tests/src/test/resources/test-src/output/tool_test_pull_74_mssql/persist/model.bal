@@ -4,46 +4,45 @@ import ballerinax/persist.sql;
 
 @sql:Name {value: "ManyTypes"}
 public type ManyType record {|
+    @sql:Generated
     readonly int id;
+    int? bigIntType;
+    @sql:Decimal {precision: [18, 30]}
+    decimal? decimalType;
+    @sql:Decimal {precision: [18, 30]}
+    decimal? numericType;
+    @sql:Decimal {precision: [10, 8]}
+    decimal? numericTypeLen;
+    //Unsupported[BIT] bitType;
     int? smallIntType;
     int? intType;
-    int? integerType;
-    int? bigIntType;
-    decimal? decimalType;
-    decimal? numericType;
-    float? realType;
-    float? doublePrecisionType;
-    @sql:Generated
-    int smallSerialType;
-    @sql:Generated
-    int serialType;
-    @sql:Generated
-    int bigSerialType;
-    //Unsupported[MONEY] moneyType;
-    string? characterVaryingType;
-    string? varcharType;
-    @sql:Char {length: 1}
-    string? characterType;
+    int? tinyIntType;
+    //Unsupported[MONEY(19)] moneyType;
+    //Unsupported[SMALLMONEY(10)] smallMoneyType;
+    float? floatType;
+    //Unsupported[REAL(24)] floatTypeLen;
+    //Unsupported[REAL(24)] realType;
+    time:Date? dateType;
+    time:Civil? dateTimeType;
+    time:Civil? dateTime2Type;
+    //Unsupported[SMALLDATETIME] smallDateTimeType;
+    time:TimeOfDay? timeType;
+    //Unsupported[DATETIMEOFFSET] dateTimeOffsetType;
     @sql:Char {length: 1}
     string? charType;
-    @sql:Char {length: 3}
-    string? bpCharType;
-    string? textType;
-    byte[]? byteaType;
-    time:Utc? timestampType;
-    time:Utc? timestampWithTimeZoneType;
-    time:Utc? timestampWithOutTimeZoneType;
-    time:Date? dateType;
-    time:TimeOfDay? timeType;
-    time:TimeOfDay? timeWithTimeZoneType;
-    time:TimeOfDay? timeWithOutTimeZoneType;
-    //Unsupported[INTERVAL] intervalType;
-    boolean? booleanType;
-    //Unsupported[MOOD] enumType;
-    //Unsupported[CIRCLE] circleType;
-    //Unsupported[BIT(1)] bitType;
-    //Unsupported[BIT VARYING] bitVaryingType;
-    //Unsupported[UUID] uuidType;
-    //Unsupported[INTEGER[]] arrayType;
+    @sql:Char {length: 10}
+    string? charTypeLen;
+    @sql:Varchar {length: 1}
+    string? varcharType;
+    @sql:Varchar {length: 10}
+    string? varcharTypeLen;
+    //Unsupported[NCHAR] ncharType;
+    //Unsupported[NCHAR] ncharTypeLen;
+    //Unsupported[NVARCHAR] nvarcharType;
+    //Unsupported[NVARCHAR] nvarcharTypeLen;
+    byte[]? binaryType;
+    byte[]? binaryTypeLen;
+    byte[]? varBinaryType;
+    byte[]? varBinaryTypeLen;
 |};
 

@@ -50,7 +50,7 @@ import io.ballerina.persist.models.Enum;
 import io.ballerina.persist.models.EnumMember;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.models.Relation;
-import io.ballerina.persist.models.SQLType;
+import io.ballerina.persist.models.SqlType;
 import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
 import io.ballerina.persist.nodegenerator.syntax.constants.SyntaxTokenConstants;
 import io.ballerina.tools.text.TextDocument;
@@ -322,7 +322,7 @@ public class BalSyntaxUtils {
                     imports.add(NodeParser.parseImportDeclaration(("import ballerinax/mysql.driver as _;")));
             case PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB ->
                     imports.add(NodeParser.parseImportDeclaration(("import ballerinax/postgresql.driver as _;")));
-            case "sqlserver" ->
+            case PersistToolsConstants.SupportedDataSources.MSSQL_DB_ALT ->
                     imports.add(NodeParser.parseImportDeclaration(("import ballerinax/mssql.driver as _;")));
             default -> imports;
         };
@@ -585,7 +585,7 @@ public class BalSyntaxUtils {
     }
 
     private static void addDbTypeMappingAnnotationToField(EntityField field, StringBuilder recordFields) {
-        SQLType sqlType = field.getSqlType();
+        SqlType sqlType = field.getSqlType();
         if (sqlType != null) {
             switch (sqlType.getTypeName()) {
                 case PersistToolsConstants.SqlTypes.CHAR:
@@ -602,15 +602,10 @@ public class BalSyntaxUtils {
                     break;
                 case PersistToolsConstants.SqlTypes.DECIMAL:
                 case PersistToolsConstants.SqlTypes.NUMERIC:
-                    // add later: check for default values for separate data sources
-                    String dataSource = PersistToolsConstants.SupportedDataSources.MYSQL_DB;
                     int precision = PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION_MYSQL;
                     int scale = PersistToolsConstants.DefaultMaxLength.DECIMAL_SCALE;
-                    switch (dataSource) {
-                        case PersistToolsConstants.SupportedDataSources.MYSQL_DB:
-                            precision = PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION_MYSQL;
-                            break;
-                        default: // do nothing
+                    if (sqlType.getDatastore().equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB_ALT)) {
+                        precision = PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION_MSSQL;
                     }
                     if (sqlType.getNumericPrecision() != precision || sqlType.getNumericScale() != scale) {
                         recordFields.append(String.format
@@ -625,7 +620,7 @@ public class BalSyntaxUtils {
     }
 
     private static boolean isDbTypeMappingRequired(EntityField field) {
-        SQLType sqlType = field.getSqlType();
+        SqlType sqlType = field.getSqlType();
         if (sqlType != null) {
             switch (sqlType.getTypeName()) {
                 case PersistToolsConstants.SqlTypes.CHAR:
@@ -639,20 +634,12 @@ public class BalSyntaxUtils {
                     return false;
                 case PersistToolsConstants.SqlTypes.DECIMAL:
                 case PersistToolsConstants.SqlTypes.NUMERIC:
-                    // add later: check for default values for separate data sources
-                    String dataSource = PersistToolsConstants.SupportedDataSources.MYSQL_DB;
                     int precision = PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION_MYSQL;
                     int scale = PersistToolsConstants.DefaultMaxLength.DECIMAL_SCALE;
-                    switch (dataSource) {
-                        case PersistToolsConstants.SupportedDataSources.MYSQL_DB:
-                            precision = PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION_MYSQL;
-                            break;
-                        default: // do nothing
+                    if (sqlType.getDatastore().equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB_ALT)) {
+                        precision = PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION_MSSQL;
                     }
-                    if (sqlType.getNumericPrecision() != precision || sqlType.getNumericScale() != scale) {
-                        return true;
-                    }
-                    return false;
+                    return sqlType.getNumericPrecision() != precision || sqlType.getNumericScale() != scale;
                 default:
                     return false;
             }

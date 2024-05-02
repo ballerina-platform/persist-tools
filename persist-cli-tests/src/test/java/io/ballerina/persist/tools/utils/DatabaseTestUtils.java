@@ -215,8 +215,9 @@ public class DatabaseTestUtils {
 
     public static void resetMsSqlDatabase(DatabaseConfiguration dbConfig, boolean recreate) {
 
-        String url = String.format(JDBC_URL_WITH_DATABASE_MSSQL, "sqlserver",  dbConfig.getHost(),
-                dbConfig.getPort(), "master");
+        String url = String.format(JDBC_URL_WITH_DATABASE_MSSQL,
+                PersistToolsConstants.SupportedDataSources.MSSQL_DB_ALT,  dbConfig.getHost(), dbConfig.getPort(),
+                "master");
         resetDatabase(dbConfig, recreate, url);
     }
 
@@ -242,7 +243,8 @@ public class DatabaseTestUtils {
 
         String url;
         if (datastore.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
-            url = String.format(JDBC_URL_WITH_DATABASE_MSSQL, "sqlserver", dbConfig.getHost(), dbConfig.getPort(),
+            url = String.format(JDBC_URL_WITH_DATABASE_MSSQL, PersistToolsConstants.SupportedDataSources.MSSQL_DB_ALT,
+                    dbConfig.getHost(), dbConfig.getPort(),
                     "master");
         } else if (datastore.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB)) {
             url = String.format(JDBC_URL_WITH_DATABASE_POSTGRESQL, "postgresql",  dbConfig.getHost(),

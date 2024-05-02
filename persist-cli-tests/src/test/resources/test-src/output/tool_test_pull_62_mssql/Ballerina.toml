@@ -11,3 +11,5 @@ observabilityIncluded = true
 artifactId = "persist.sql-native"
 groupId = "io.ballerina.stdlib"
 version = "1.2.0"
+
+

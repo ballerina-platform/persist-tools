@@ -2,8 +2,8 @@ import ballerina/persist as _;
 import ballerinax/persist.sql;
 
 public enum UserGender {
-    MALE = "MALE",
-    FEMALE = "FEMALE"
+    FEMALE = "FEMALE",
+    MALE = "MALE"
 }
 
 public type User record {|
@@ -23,3 +23,4 @@ public type Car record {|
     @sql:Relation {keys: ["ownerId"]}
     User user;
 |};
+

@@ -14,16 +14,16 @@
 -- specific language governing permissions and limitations
 -- under the License.
 
-CREATE TABLE "User" (
-	"id" INT NOT NULL,
-	"name" VARCHAR(191) NOT NULL,
-	"gender" VARCHAR(6) CHECK ("gender" IN ('MALE', 'FEMALE')) NOT NULL,
-	"nic" VARCHAR(191) NOT NULL,
-	"salary" DECIMAL(65,30) NOT NULL,
-	"favColor" VARCHAR(191) NOT NULL,
-	"favCar" VARCHAR(191) NOT NULL,
-	PRIMARY KEY("id")
+CREATE TABLE [User] (
+	[id] INT NOT NULL,
+	[name] VARCHAR(191) NOT NULL,
+	[gender] VARCHAR(6) CHECK ([gender] IN ('MALE', 'FEMALE')) NOT NULL,
+	[nic] VARCHAR(191) NOT NULL,
+	[salary] DECIMAL(38,30) NOT NULL,
+	[favColor] VARCHAR(191) NOT NULL,
+	[favCar] VARCHAR(191) NOT NULL,
+	PRIMARY KEY([id])
 );
 
 
-CREATE INDEX "favorite" ON "User" ("favColor", "favCar");
+CREATE INDEX [favorite] ON [User] ([favColor], [favCar]);

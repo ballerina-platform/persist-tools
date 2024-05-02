@@ -18,7 +18,7 @@
 package io.ballerina.persist.introspect;
 
 import io.ballerina.persist.introspectiondto.SqlColumn;
-import io.ballerina.persist.models.SQLType;
+import io.ballerina.persist.models.SqlType;
 import io.ballerina.persist.utils.DatabaseConnector;
 
 import static io.ballerina.persist.PersistToolsConstants.POSTGRESQL_DRIVER_CLASS;
@@ -259,7 +259,7 @@ public class PostgreSqlIntrospector extends Introspector {
 
 
     @Override
-    protected String getBalType(SQLType sqlType) {
+    protected String getBalType(SqlType sqlType) {
         return getBalTypeForCommonDataTypes(sqlType);
     }
 

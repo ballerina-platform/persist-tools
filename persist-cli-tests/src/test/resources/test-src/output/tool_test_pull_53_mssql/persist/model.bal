@@ -1,8 +1,8 @@
 import ballerina/persist as _;
 
 public enum UserGender {
-    MALE = "MALE",
-    FEMALE = "FEMALE"
+    FEMALE = "FEMALE",
+    MALE = "MALE"
 }
 
 public type User record {|

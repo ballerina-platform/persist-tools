@@ -2,8 +2,8 @@ import ballerina/persist as _;
 import ballerinax/persist.sql;
 
 public enum UserGender {
-    MALE = "MALE",
-    FEMALE = "FEMALE"
+    FEMALE = "FEMALE",
+    MALE = "MALE"
 }
 
 public type User record {|
@@ -17,6 +17,7 @@ public type User record {|
 
 public type Phone record {|
     @sql:Name {value: "user_id"}
+    @sql:UniqueIndex {name: "UQ__Phone__B9BE370E1A7ABFEC"}
     readonly int userId;
     string number;
     @sql:Relation {keys: ["userId"]}

@@ -46,7 +46,7 @@ import io.ballerina.persist.models.Enum;
 import io.ballerina.persist.models.EnumMember;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.models.Relation;
-import io.ballerina.persist.models.SQLType;
+import io.ballerina.persist.models.SqlType;
 import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
 import io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils;
 import io.ballerina.projects.BuildOptions;
@@ -339,7 +339,7 @@ public class BalProjectUtils {
                     );
                     if (!varcharLength.isEmpty()) {
                         fieldBuilder.setSqlType(
-                                new SQLType(
+                                new SqlType(
                                         VARCHAR,
                                         null,
                                         null,
@@ -355,7 +355,7 @@ public class BalProjectUtils {
                     );
                     if (!charLength.isEmpty()) {
                         fieldBuilder.setSqlType(
-                                new SQLType(
+                                new SqlType(
                                         CHAR,
                                         null,
                                         null,
@@ -371,7 +371,7 @@ public class BalProjectUtils {
                     );
                     if (decimal != null && decimal.size() == 2) {
                         fieldBuilder.setSqlType(
-                                new SQLType(
+                                new SqlType(
                                         PersistToolsConstants.SqlTypes.DECIMAL,
                                         null,
                                         null,

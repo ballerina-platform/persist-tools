@@ -30,7 +30,7 @@ import io.ballerina.persist.models.Enum;
 import io.ballerina.persist.models.EnumMember;
 import io.ballerina.persist.models.Index;
 import io.ballerina.persist.models.Relation;
-import io.ballerina.persist.models.SQLType;
+import io.ballerina.persist.models.SqlType;
 import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
 
 import java.text.MessageFormat;
@@ -305,7 +305,7 @@ public class SqlScriptUtils {
     }
 
 
-    public static String getTypeNonArray(String field, SQLType sqlType, String datasource) throws BalException {
+    public static String getTypeNonArray(String field, SqlType sqlType, String datasource) throws BalException {
         if (sqlType != null) {
             switch (sqlType.getTypeName()) {
                 case PersistToolsConstants.SqlTypes.DECIMAL:

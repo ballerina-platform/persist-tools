@@ -218,6 +218,7 @@ public class PersistToolsConstants {
 
         public static final String MYSQL_DB = "mysql";
         public static final String MSSQL_DB = "mssql";
+        public static final String MSSQL_DB_ALT = "sqlserver";
         public static final String GOOGLE_SHEETS = "googlesheets";
         public static final String IN_MEMORY_TABLE = "inmemory";
         public static final String POSTGRESQL_DB = "postgresql";

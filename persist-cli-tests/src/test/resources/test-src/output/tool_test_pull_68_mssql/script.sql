@@ -14,22 +14,22 @@
 -- specific language governing permissions and limitations
 -- under the License.
 
-CREATE TABLE "User" (
-  "id" INT,
-  "name" VARCHAR(191) NOT NULL,
-  "gender" VARCHAR(6) CHECK ("gender" IN ('MALE', 'FEMALE')) NOT NULL,
-  "salary" DECIMAL(65,30),
-  "drives_car" INT,
-  PRIMARY KEY (id)
+CREATE TABLE [User] (
+  [id] INT,
+  [name] VARCHAR(191) NOT NULL,
+  [gender] VARCHAR(6) CHECK ([gender] IN ('MALE', 'FEMALE')) NOT NULL,
+  [salary] DECIMAL(38,30),
+  [drives_car] INT,
+  PRIMARY KEY ([id])
 );
 
-CREATE TABLE "Car" (
-  "id" INT,
-  "name" VARCHAR(191) NOT NULL,
-  "model" VARCHAR(191) NOT NULL,
-  "ownerId" INT NOT NULL,
-  FOREIGN KEY ("ownerId") REFERENCES "User"("id"),
-  PRIMARY KEY ("id")
+CREATE TABLE Car (
+  [id] INT,
+  [name] VARCHAR(191) NOT NULL,
+  [model] VARCHAR(191) NOT NULL,
+  [ownerId] INT NOT NULL,
+  FOREIGN KEY ([ownerId]) REFERENCES [User]([id]),
+  PRIMARY KEY ([id])
 );
 
-ALTER TABLE "User" ADD FOREIGN KEY ("drives_car") REFERENCES "Car"("id");
+ALTER TABLE [User] ADD FOREIGN KEY ([drives_car]) REFERENCES [Car]([id]);

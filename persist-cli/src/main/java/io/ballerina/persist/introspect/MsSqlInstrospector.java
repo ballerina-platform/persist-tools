@@ -18,7 +18,7 @@
 package io.ballerina.persist.introspect;
 
 import io.ballerina.persist.introspectiondto.SqlColumn;
-import io.ballerina.persist.models.SQLType;
+import io.ballerina.persist.models.SqlType;
 import io.ballerina.persist.utils.DatabaseConnector;
 
 import java.util.ArrayList;
@@ -71,7 +71,8 @@ public class MsSqlInstrospector extends Introspector {
                     ELSE
                         UPPER(TYPE_NAME(c.system_type_id))
                     END AS full_data_type,
-                COLUMNPROPERTY(c.object_id, c.name, 'charmaxlen') AS character_maximum_length,
+                IIF(COLUMNPROPERTY(c.object_id, c.name, 'charmaxlen') = -1, 0,
+                    COLUMNPROPERTY(c.object_id, c.name, 'charmaxlen'))  AS character_maximum_length,
                 OBJECT_DEFINITION(c.default_object_id) AS column_default,
                 IIF(c.is_nullable = 1, 'YES', 'NO') AS is_nullable,
                 COLUMNPROPERTY(c.object_id, c.name, 'IsIdentity') AS dbGenerated,
@@ -182,7 +183,7 @@ public class MsSqlInstrospector extends Introspector {
                 WHERE parent_table.is_ms_shipped = 0
                   AND referenced_table.is_ms_shipped = 0
                   AND parent_table.name = '%s'
-                ORDER BY table_name, constraint_name, ordinal_position;
+                ORDER BY table_name, ordinal_position;
                 """;
         formatQuery = formatQuery.replace("\r\n", "%n");
         return String.format(formatQuery, tableName);
@@ -237,11 +238,10 @@ public class MsSqlInstrospector extends Introspector {
                 return splitValue[1].replace("'", "").trim();
             }).forEach(enumValues::add);
         }
-        errStream.println(enumValues);
         return enumValues;
     }
 
-    protected String getBalType(SQLType sqlType) {
+    protected String getBalType(SqlType sqlType) {
         return getBalTypeForCommonDataTypes(sqlType);
     }
 
