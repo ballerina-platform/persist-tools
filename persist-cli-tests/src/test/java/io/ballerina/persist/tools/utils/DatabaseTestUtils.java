@@ -43,6 +43,7 @@ import java.util.Locale;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.CREATE_DATABASE_SQL_FORMAT;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.DROP_DATABASE_SQL_FORMAT;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.JDBC_URL_WITH_DATABASE_MSSQL;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.JDBC_URL_WITH_DATABASE_MYSQL;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.JDBC_URL_WITH_DATABASE_POSTGRESQL;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.GENERATED_SOURCES_DIRECTORY;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.INPUT_RESOURCES_DIRECTORY;
@@ -241,12 +242,13 @@ public class DatabaseTestUtils {
 
         String url;
         if (datastore.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
-            url = String.format("jdbc:sqlserver://%s:%s", dbConfig.getHost(), dbConfig.getPort());
+            url = String.format(JDBC_URL_WITH_DATABASE_MSSQL, "sqlserver", dbConfig.getHost(), dbConfig.getPort(),
+                    "master");
         } else if (datastore.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB)) {
             url = String.format(JDBC_URL_WITH_DATABASE_POSTGRESQL, "postgresql",  dbConfig.getHost(),
                     dbConfig.getPort(), dbConfig.getDatabase());
         } else {
-            url = String.format("jdbc:mysql://%s:%s", dbConfig.getHost(), dbConfig.getPort());
+            url = String.format(JDBC_URL_WITH_DATABASE_MYSQL, "mysql", dbConfig.getHost(), dbConfig.getPort(), "mysql");
         }
 
         try (Connection connection = DriverManager.getConnection(url, dbConfig.getUsername(), dbConfig.getPassword())) {

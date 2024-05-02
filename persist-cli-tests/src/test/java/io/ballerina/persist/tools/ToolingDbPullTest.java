@@ -26,7 +26,6 @@ import org.testng.annotations.Test;
 import picocli.CommandLine;
 
 
-import javax.xml.crypto.Data;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -519,7 +518,7 @@ public class ToolingDbPullTest {
         runIntrospectionTestPostgreSql("tool_test_pull_51_postgresql");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("[MsSql] Create a model.bal file consisting of one Entity with no annotations and not null fields.")
     public void pullTestMsSqlBasic() throws BalException {
         runIntrospectionTestMsSql("tool_test_pull_52_mssql");
