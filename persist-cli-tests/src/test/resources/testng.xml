@@ -21,11 +21,8 @@
 
 <suite name="BallerinaPersistToolingTests">
     <test name="persist-tools-test-suite" preserve-order="true" parallel="false">
-<!--        <packages>-->
-<!--            <package name="io.ballerina.persist.tools.*"/>-->
-<!--        </packages>-->
-        <classes>
-            <class name="io.ballerina.persist.tools.ToolingDbPullTest"/>
-        </classes>
+        <packages>
+            <package name="io.ballerina.persist.tools.*"/>
+        </packages>
     </test>
 </suite>

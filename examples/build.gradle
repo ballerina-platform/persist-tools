@@ -626,10 +626,10 @@ testRedisDBExamples.dependsOn generateRedisDBExamples
 // automateGSheetTable.dependsOn generateGSheetExamples
 // testGSheetExamples.dependsOn automateGSheetTable
 
-//build.dependsOn testInMemoryExamples
-//build.dependsOn testDbExamples
-//build.dependsOn testIntrospectionExamples
-//build.dependsOn testRedisDBExamples
+build.dependsOn testInMemoryExamples
+build.dependsOn testDbExamples
+build.dependsOn testIntrospectionExamples
+build.dependsOn testRedisDBExamples
 //build.dependsOn testGSheetExamples
-//build.finalizedBy stopTestDockerContainer
-//build.finalizedBy stopTestRedisContainer
+build.finalizedBy stopTestDockerContainer
+build.finalizedBy stopTestRedisContainer

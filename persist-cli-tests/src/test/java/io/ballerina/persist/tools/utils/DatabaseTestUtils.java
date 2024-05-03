@@ -244,8 +244,7 @@ public class DatabaseTestUtils {
         String url;
         if (datastore.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
             url = String.format(JDBC_URL_WITH_DATABASE_MSSQL, PersistToolsConstants.SupportedDataSources.MSSQL_DB_ALT,
-                    dbConfig.getHost(), dbConfig.getPort(),
-                    "master");
+                    dbConfig.getHost(), dbConfig.getPort(), dbConfig.getDatabase());
         } else if (datastore.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB)) {
             url = String.format(JDBC_URL_WITH_DATABASE_POSTGRESQL, "postgresql",  dbConfig.getHost(),
                     dbConfig.getPort(), dbConfig.getDatabase());

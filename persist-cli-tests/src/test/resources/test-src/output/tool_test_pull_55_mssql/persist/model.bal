@@ -19,7 +19,7 @@ public type Car record {|
     readonly int id;
     string name;
     string model;
-    @sql:UniqueIndex {name: "UQ__Car__7E4B714DBF97A590"}
+    @sql:UniqueIndex {name: "unique_owner"}
     int ownerId;
     @sql:Relation {keys: ["ownerId"]}
     User user;

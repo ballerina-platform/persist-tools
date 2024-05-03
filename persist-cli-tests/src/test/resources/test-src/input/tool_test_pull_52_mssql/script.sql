@@ -14,11 +14,6 @@
 -- specific language governing permissions and limitations
 -- under the License.
 
-USE [master];
-DROP DATABASE IF EXISTS [persist];
-CREATE DATABASE [persist];
-USE [persist];
-
 CREATE TABLE [User] (
 	[id] INT NOT NULL,
 	[name] VARCHAR(191) NOT NULL,
