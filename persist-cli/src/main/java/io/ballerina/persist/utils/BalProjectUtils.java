@@ -117,6 +117,9 @@ public class BalProjectUtils {
             populateEnums(moduleBuilder, balSyntaxTree);
             populateEntities(moduleBuilder, balSyntaxTree);
             Module entityModule = moduleBuilder.build();
+            if (entityModule.getEntityMap().values().stream().allMatch(Entity::containsUnsupportedTypes)) {
+                throw new BalException("all entities contain at least one unsupported data type.");
+            }
             inferEnumDetails(entityModule);
             inferRelationDetails(entityModule);
             return entityModule;
