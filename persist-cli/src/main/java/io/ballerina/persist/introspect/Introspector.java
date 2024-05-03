@@ -45,14 +45,11 @@ import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static java.lang.Integer.parseInt;
 import static java.lang.Integer.parseUnsignedInt;
@@ -73,6 +70,7 @@ public abstract class Introspector {
     protected abstract String getEnumsQuery();
     protected abstract String getBalType(SqlType sqlType);
     protected abstract boolean isEnumType(SqlColumn column);
+    protected abstract List<String> extractEnumValues(String enumString);
     private List<SqlTable> tables;
     private List<SqlEnum> sqlEnums;
     private final Module.Builder moduleBuilder;
@@ -141,32 +139,9 @@ public abstract class Introspector {
             Enum.Builder enumBuilder = Enum.newBuilder(enumName);
             extractEnumValues(sqlEnum.getFullEnumText())
                     .forEach(enumValue ->
-                    enumBuilder.addMember(new EnumMember(enumValue.toUpperCase(Locale.ENGLISH), enumValue)));
+                    enumBuilder.addMember(new EnumMember(CaseConverter.toUpperSnakeCase(enumValue), enumValue)));
             moduleBuilder.addEnum(enumName, enumBuilder.build());
         });
-    }
-
-    protected List<String> extractEnumValues(String enumString) {
-        List<String> enumValues = new ArrayList<>();
-
-        // Using regex to extract values inside parentheses
-        Pattern pattern = Pattern.compile("\\((.*?)\\)");
-        Matcher matcher = pattern.matcher(enumString);
-
-        if (matcher.find()) {
-            // Group 1 contains the values inside parentheses
-            String valuesInsideParentheses = matcher.group(1);
-
-            // Split the values by comma
-            String[] valuesArray = valuesInsideParentheses.split(",");
-            Arrays.stream(valuesArray).map(value -> {
-                value = value.trim();
-                value = value.replace("'", "");
-                return value.trim();
-            }).forEach(enumValues::add);
-        }
-
-        return enumValues;
     }
 
     private void mapEntities() throws BalException {

@@ -21,6 +21,13 @@ import io.ballerina.persist.introspectiondto.SqlColumn;
 import io.ballerina.persist.models.SqlType;
 import io.ballerina.persist.utils.DatabaseConnector;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import static io.ballerina.persist.PersistToolsConstants.POSTGRESQL_DRIVER_CLASS;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.JDBC_URL_WITH_DATABASE_POSTGRESQL;
 
@@ -57,34 +64,7 @@ public class PostgreSqlIntrospector extends Introspector {
                 info.numeric_precision_radix,
                 info.datetime_precision AS datetime_precision,
                 info.udt_schema AS type_schema_name,
-                CASE
-                    WHEN (
-                        SELECT
-                            1 AS isEnum
-                        FROM (
-                            SELECT
-                                con.oid,
-                                rel.relname,
-                                a.attname
-                            FROM
-                                pg_catalog.pg_constraint con
-                            INNER JOIN
-                                pg_catalog.pg_class rel ON rel.oid = con.conrelid
-                            INNER JOIN
-                                pg_catalog.pg_namespace nsp ON nsp.oid = connamespace
-                            INNER JOIN
-                                pg_catalog.pg_attribute a ON a.attrelid = rel.oid AND a.attnum = ANY(con.conkey)
-                            WHERE
-                                nsp.nspname = 'public'
-                                AND con.contype = 'c'
-                                AND pg_get_constraintdef(con.oid) LIKE '%%ANY ((ARRAY[%%::text[]%%'
-                                AND a.attname = info.column_name
-                                AND rel.relname = info.table_name
-                        ) AS subquery
-                        GROUP BY subquery.oid
-                    ) = 1 THEN 'enum'
-                    ELSE UPPER(info.udt_name)
-                END AS data_type,
+                UPPER(info.udt_name) AS data_type,
                 pg_get_expr(attdef.adbin, attdef.adrelid) AS column_default,
                 info.is_nullable AS is_nullable,
                 CASE
@@ -114,7 +94,7 @@ public class PostgreSqlIntrospector extends Introspector {
                     THEN 1
                     ELSE 0
                 END AS dbGenerated,
-                NULL AS check_constraint
+                pg_get_constraintdef(con.oid) AS check_constraint
                 FROM information_schema.columns info
                 JOIN pg_attribute att ON att.attname = info.column_name
                 JOIN (
@@ -127,6 +107,8 @@ public class PostgreSqlIntrospector extends Introspector {
                 AND namespace = info.table_schema
                 LEFT OUTER JOIN pg_attrdef attdef
                 ON attdef.adrelid = att.attrelid AND attdef.adnum = att.attnum AND table_schema = namespace
+                LEFT OUTER JOIN pg_catalog.pg_constraint con
+                ON con.conrelid = att.attrelid AND att.attnum = ANY(con.conkey) AND con.contype = 'c'
                 WHERE table_schema = 'public' AND table_name = '%s'
                 ORDER BY ordinal_position;
             """;
@@ -224,29 +206,20 @@ public class PostgreSqlIntrospector extends Introspector {
     protected String getEnumsQuery() {
         String formatQuery = """
             SELECT
-                subquery.relname AS table_name,
-                subquery.attname AS column_name,
-                'enum(' || string_agg(quote_literal(match[1]), ',') || ')' AS full_enum_type
-            FROM (
-                SELECT
-                    con.oid,
-                    rel.relname,
-                    a.attname,
-                    regexp_matches(pg_get_constraintdef(con.oid),'''([A-Z]+)''','g') AS match
-                FROM
-                    pg_catalog.pg_constraint con
-                INNER JOIN
-                    pg_catalog.pg_class rel ON rel.oid = con.conrelid
-                INNER JOIN
-                    pg_catalog.pg_namespace nsp ON nsp.oid = connamespace
-                INNER JOIN
-                    pg_catalog.pg_attribute a ON a.attrelid = rel.oid AND a.attnum = ANY(con.conkey)
-                WHERE
-                    nsp.nspname = 'public'
-                    AND con.contype = 'c'
-                    AND pg_get_constraintdef(con.oid) LIKE '%%ANY ((ARRAY[%::text[]%%'
-            ) AS subquery
-            GROUP BY subquery.oid, subquery.relname, subquery.attname;
+                rel.relname AS table_name,
+                a.attname AS column_name,
+                pg_get_constraintdef(con.oid) AS full_enum_type
+            FROM
+                pg_catalog.pg_constraint con
+            INNER JOIN
+                pg_catalog.pg_class rel ON rel.oid = con.conrelid
+            INNER JOIN
+                pg_catalog.pg_namespace nsp ON nsp.oid = connamespace
+            INNER JOIN
+                pg_catalog.pg_attribute a ON a.attrelid = rel.oid AND a.attnum = ANY(con.conkey)
+            WHERE
+                nsp.nspname = 'public'
+                AND con.contype = 'c'
             """;
         formatQuery = formatQuery.replace("\r\n", "%n");
         return formatQuery;
@@ -254,9 +227,40 @@ public class PostgreSqlIntrospector extends Introspector {
 
     @Override
     protected boolean isEnumType(SqlColumn column) {
-        return "enum".equalsIgnoreCase(column.getDataType());
+        if (Objects.isNull(column.getCheckConstraint())) {
+            return false;
+        }
+        Pattern pattern = Pattern.compile("^CHECK \\(\\(\\((\\w+(\\s+\\w+)*)\\)::text = ANY \\(\\(ARRAY" +
+                "\\['(\\w+(\\s+\\w+)*)'::character varying(, '(\\w+(\\s+\\w+)*)'::character varying)*]\\)::" +
+                "text\\[]\\)\\)\\)$");
+        return pattern.matcher(column.getCheckConstraint()).find();
     }
 
+    @Override
+    protected List<String> extractEnumValues(String enumString) {
+        List<String> enumValues = new ArrayList<>();
+        // input ->
+        // CHECK (((gender)::text = ANY ((ARRAY['MALE'::character varying, 'FEMALE'::character varying])::text[])))
+        enumString = enumString.substring(5);
+        Pattern pattern = Pattern.compile("ARRAY\\[(.*?)]");
+        Matcher matcher = pattern.matcher(enumString);
+
+        if (matcher.find()) {
+            // Group 1 contains the values inside ARRAY []
+            String valuesInArray = matcher.group(1);
+            // Split the values by comma
+            String[] valuesArray = valuesInArray.split(",");
+            // 'MALE'::character varying
+            Arrays.stream(valuesArray).map(value -> {
+                value = value.split("::")[0];
+                value = value.trim();
+                value = value.replace("'", "");
+                return value.trim();
+            }).forEach(enumValues::add);
+        }
+
+        return enumValues;
+    }
 
     @Override
     protected String getBalType(SqlType sqlType) {

@@ -22,7 +22,12 @@ import io.ballerina.persist.introspectiondto.SqlColumn;
 import io.ballerina.persist.models.SqlType;
 import io.ballerina.persist.utils.DatabaseConnector;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static io.ballerina.persist.PersistToolsConstants.MYSQL_DRIVER_CLASS;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.JDBC_URL_WITH_DATABASE_MYSQL;
@@ -165,6 +170,30 @@ public class MySqlIntrospector extends Introspector {
     @Override
     protected boolean isEnumType(SqlColumn column) {
         return "enum".equalsIgnoreCase(column.getDataType());
+    }
+
+    @Override
+    protected List<String> extractEnumValues(String enumString) {
+        List<String> enumValues = new ArrayList<>();
+
+        // Using regex to extract values inside parentheses
+        Pattern pattern = Pattern.compile("\\((.*?)\\)");
+        Matcher matcher = pattern.matcher(enumString);
+
+        if (matcher.find()) {
+            // Group 1 contains the values inside parentheses
+            String valuesInsideParentheses = matcher.group(1);
+
+            // Split the values by comma
+            String[] valuesArray = valuesInsideParentheses.split(",");
+            Arrays.stream(valuesArray).map(value -> {
+                value = value.trim();
+                value = value.replace("'", "");
+                return value.trim();
+            }).forEach(enumValues::add);
+        }
+
+        return enumValues;
     }
 
     @Override

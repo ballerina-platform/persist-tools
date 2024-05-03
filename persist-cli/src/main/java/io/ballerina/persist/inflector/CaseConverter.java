@@ -47,6 +47,8 @@ public class CaseConverter {
         }
         return result.toString();
     }
+
+
     private static String[] split(String value) {
         String splitUpperUpperRe = "([\\p{Ll}\\d])(\\p{Lu})";
         String splitLowerUpperRe = "([\\p{Ll}\\d])(\\p{Lu})";
@@ -68,5 +70,11 @@ public class CaseConverter {
                 .map(String::trim)
                 .map(String::toLowerCase)
                 .toArray(String[]::new);
+    }
+
+    public static String toUpperSnakeCase(String word) {
+        String[] words = split(word);
+        words = Arrays.stream(words).map(String::toUpperCase).toArray(String[]::new);
+        return String.join("_", words);
     }
 }

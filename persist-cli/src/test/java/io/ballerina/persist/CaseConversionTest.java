@@ -109,6 +109,28 @@ public class CaseConversionTest {
             "SnakeAndLadder"
     };
 
+    private static final String[] upperSnakeCase = {
+            "THIS_IS_A_TEST",
+            "SNAKE_CASE",
+            "TITLE_CASE",
+            "DOT_CASE",
+            "PATH_CASE",
+            "SENTENCES_CASE",
+            "RANDOM_CASE",
+            "UPPERCASE",
+            "THE_QUICK_BROWN_FOX_JUMPS_OVER_THE_LAZY_DOG",
+            "THE_QUICK_BROWN_FOX_JUMPS_OVER_THE_LAZY_DOG",
+            "THE_QUICK_BROWN_FOX_JUMPS_OVER_THE_LAZY_DOG",
+            "THE_QUICK_BROWN_FOX_JUMPS_OVER_THE_LAZY_DOG",
+            "THE_QUICK_BROWN_FOX_JUMPS_OVER_THE_LAZY_DOG",
+            "THE_QUICK_BROWN_FOXES_JUMPS_OVER_THE_LAZY_DOG",
+            "SNAKES_AND_LADDERS",
+            "SNAKES_AND_LADDERS",
+            "SNAKES_AND_LADDERS",
+            "SNAKES_AND_LADDERS",
+            "SNAKES_AND_LADDERS"
+    };
+
     @Test
     public void testToPascalCase() {
         for (int i = 0; i < randomWords.length; i++) {
@@ -127,6 +149,13 @@ public class CaseConversionTest {
     public void testToSingularPascalCase() {
         for (int i = 0; i < randomWords.length; i++) {
             assert CaseConverter.toSingularPascalCase(randomWords[i]).equals(singularPascalCase[i]);
+        }
+    }
+
+    @Test
+    public void testToUpperSnakeCase() {
+        for (int i = 0; i < randomWords.length; i++) {
+            assert CaseConverter.toUpperSnakeCase(randomWords[i]).equals(upperSnakeCase[i]);
         }
     }
 
