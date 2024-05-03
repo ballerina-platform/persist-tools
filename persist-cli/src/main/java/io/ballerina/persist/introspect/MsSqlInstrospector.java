@@ -17,6 +17,7 @@
  */
 package io.ballerina.persist.introspect;
 
+import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.introspectiondto.SqlColumn;
 import io.ballerina.persist.models.SqlType;
 import io.ballerina.persist.utils.DatabaseConnector;
@@ -242,6 +243,9 @@ public class MsSqlInstrospector extends Introspector {
     }
 
     protected String getBalType(SqlType sqlType) {
+        if (Objects.equals(sqlType.getTypeName(), PersistToolsConstants.SqlTypes.BIT)) {
+            return PersistToolsConstants.BallerinaTypes.BOOLEAN;
+        }
         return getBalTypeForCommonDataTypes(sqlType);
     }
 

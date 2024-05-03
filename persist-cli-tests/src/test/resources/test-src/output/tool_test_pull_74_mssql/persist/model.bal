@@ -13,7 +13,7 @@ public type ManyType record {|
     decimal? numericType;
     @sql:Decimal {precision: [10, 8]}
     decimal? numericTypeLen;
-    //Unsupported[BIT] bitType;
+    boolean? bitType;
     int? smallIntType;
     int? intType;
     int? tinyIntType;
