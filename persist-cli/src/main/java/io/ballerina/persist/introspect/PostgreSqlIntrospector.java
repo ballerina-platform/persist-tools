@@ -230,9 +230,9 @@ public class PostgreSqlIntrospector extends Introspector {
         if (Objects.isNull(column.getCheckConstraint())) {
             return false;
         }
-        Pattern pattern = Pattern.compile("^CHECK \\(\\(\\(\"?(\\w+(\\s+\\w+)*)\"?\\)::text = ANY \\(\\(" +
-                "ARRAY\\['(\\w+(\\s+\\w+)*)'::character varying(, '(\\w+(\\s+\\w+)*)'::character varying)*\\]\\)::" +
-                "text\\[\\]\\)\\)\\)$");
+        Pattern pattern = Pattern.compile("^CHECK \\(\\(\\(\"?(\\w+(\\s+\\w+){0,3})\"?\\)::text = ANY \\(\\(" +
+                "ARRAY\\['(\\w+(\\s+\\w+){0,3})'::character varying(, '(\\w+(\\s+\\w+){0,3})'::character varying)*" +
+                "\\]\\)::text\\[\\]\\)\\)\\)$");
         return pattern.matcher(column.getCheckConstraint()).find();
     }
 

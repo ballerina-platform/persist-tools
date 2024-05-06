@@ -78,7 +78,7 @@ public abstract class Introspector {
     private final List<SqlForeignKey> sqlForeignKeys;
     protected PrintStream errStream = System.err;
 
-    public Introspector() {
+    protected Introspector() {
         this.tables = new ArrayList<>();
         this.entityMap = new HashMap<>();
         this.sqlForeignKeys = new ArrayList<>();

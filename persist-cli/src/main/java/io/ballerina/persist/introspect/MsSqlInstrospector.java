@@ -213,8 +213,8 @@ public class MsSqlInstrospector extends Introspector {
         if (Objects.isNull(column.getCheckConstraint())) {
             return false;
         }
-        Pattern pattern = Pattern.compile("^\\((\\[(\\w+(\\s+\\w+)*)]='(\\w+(\\s+\\w+)*)')(\\sOR\\s\\[(\\w" +
-                "+(\\s+\\w+)*)]='(\\w+(\\s+\\w+)*)')*\\)$");
+        Pattern pattern = Pattern.compile("^\\((\\[(\\w+(\\s+\\w+){0,3})]='(\\w+(\\s+\\w+){0,3})')(\\sOR\\s" +
+                "\\[(\\w+(\\s+\\w+){0,3})]='(\\w+(\\s+\\w+){0,3})')*\\)$");
         return pattern.matcher(column.getCheckConstraint()).find();
     }
 
