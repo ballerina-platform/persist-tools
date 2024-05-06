@@ -30,6 +30,7 @@ import java.util.List;
 public class Enum {
 
     private final String enumName;
+
     private final List<EnumMember> members;
 
     private Enum(String enumName, List<EnumMember> members) {
@@ -53,6 +54,7 @@ public class Enum {
      * Enum definition builder.
      */
     public static class Builder {
+
         private final String enumName;
         private List<EnumMember> members;
 

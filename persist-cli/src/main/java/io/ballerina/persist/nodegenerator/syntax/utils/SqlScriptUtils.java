@@ -126,8 +126,8 @@ public class SqlScriptUtils {
                 .filter(entityField -> entityField.getRelation() != null && entityField.getRelation().isOwner())
                 .toList();
         for (EntityField entityField : relationFields) {
-            sqlScript.append(getRelationScripts(removeSingleQuote(entity.getTableName()),
-                    entityField, referenceTables, datasource));
+            sqlScript.append(getRelationScripts(removeSingleQuote(entity.getTableName()), entityField,
+                    entity.getUniqueIndexes(), referenceTables, datasource));
         }
         sqlScript.append(addPrimaryKey(entity.getKeys(), datasource));
         return sqlScript.substring(0, sqlScript.length() - 1);
@@ -176,9 +176,9 @@ public class SqlScriptUtils {
         return columnScript.toString();
     }
 
-    private static String getRelationScripts(String tableName, EntityField entityField,
-                                             HashMap<String, List<String>> referenceTables,
-                                             String datasource) throws BalException {
+    private static String getRelationScripts(String tableName, EntityField entityField, List<Index> uniqueIndexes,
+                                             HashMap<String, List<String>> referenceTables, String datasource)
+            throws BalException {
         StringBuilder relationScripts = new StringBuilder();
         Relation relation = entityField.getRelation();
         List<Relation.Key> keyColumns = relation.getKeyColumns();
@@ -189,6 +189,9 @@ public class SqlScriptUtils {
         StringBuilder referenceFieldName = new StringBuilder();
         Relation.RelationType associatedEntityRelationType = Relation.RelationType.NONE;
         int noOfReferencesKey = references.size();
+        boolean uniqueIndexExists = uniqueIndexes.stream().anyMatch(index -> index.getFields().stream()
+                .map(EntityField::getFieldColumnName).toList()
+                .equals(keyColumns.stream().map(Relation.Key::getColumnName).toList()));
         for (int i = 0; i < noOfReferencesKey; i++) {
             String referenceSqlType = null;
             for (EntityField assocField : assocEntity.getFields()) {
@@ -206,8 +209,10 @@ public class SqlScriptUtils {
                     break;
                 }
             }
+
             if (relation.getRelationType().equals(Relation.RelationType.ONE) &&
-                    associatedEntityRelationType.equals(Relation.RelationType.ONE) && noOfReferencesKey == 1) {
+                    associatedEntityRelationType.equals(Relation.RelationType.ONE) &&
+                    noOfReferencesKey == 1 && !uniqueIndexExists) {
                 referenceSqlType += " UNIQUE";
             }
             foreignKey.append(escape(removeSingleQuote(keyColumns.get(i).getColumnName()), datasource));
@@ -221,7 +226,7 @@ public class SqlScriptUtils {
                     " NOT NULL"));
         }
         if (noOfReferencesKey > 1 && relation.getRelationType().equals(Relation.RelationType.ONE) &&
-                associatedEntityRelationType.equals(Relation.RelationType.ONE)) {
+                associatedEntityRelationType.equals(Relation.RelationType.ONE) && !uniqueIndexExists) {
             relationScripts.append(MessageFormat.format("{0}{1}UNIQUE ({2}),", NEW_LINE, TAB, foreignKey));
         }
         relationScripts.append(MessageFormat.format("{0}{1}FOREIGN KEY({2}) REFERENCES {3}({4}),",

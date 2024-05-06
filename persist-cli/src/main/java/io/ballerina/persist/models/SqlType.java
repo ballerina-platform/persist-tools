@@ -23,6 +23,7 @@ import io.ballerina.persist.PersistToolsConstants;
 import java.util.Objects;
 
 public class SqlType {
+
     private final String typeName;
     private final String fullDataType;
     private final String columnDefaultValue;

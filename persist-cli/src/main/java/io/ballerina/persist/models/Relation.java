@@ -138,6 +138,7 @@ public class Relation {
      * Entity Field Relation Key Definition.
      */
     public static class Key {
+
         private final String field;
         private final String columnName;
         private final String reference;

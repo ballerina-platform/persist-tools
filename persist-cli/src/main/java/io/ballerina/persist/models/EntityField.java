@@ -36,6 +36,7 @@ import static io.ballerina.persist.utils.StubUtils.isLiteralName;
  *
  */
 public class EntityField {
+
     private final String fieldName;
     private final String fieldColumnName;
     private final String fieldType;
@@ -137,19 +138,16 @@ public class EntityField {
      * Entity Field Definition.Builder.
      */
     public static class Builder {
+
         String fieldName;
         String fieldColumnName;
         String fieldType;
-
         private boolean arrayType = false;
         private boolean optionalType = false;
         boolean optionalField = false;
-
         SqlType sqlType;
         private List<AnnotationNode> annotationNodes = null;
-
         private List<String> relationRefs;
-
         private boolean isDbGenerated = false;
 
         Builder(String fieldName) {
@@ -170,6 +168,7 @@ public class EntityField {
         public void setSqlType(SqlType sqlType) {
             this.sqlType = sqlType;
         }
+
         public void setFieldColumnName(String fieldColumnName) {
             this.fieldColumnName = fieldColumnName;
         }
@@ -190,9 +189,11 @@ public class EntityField {
         public void setOptionalType(boolean optionalType) {
             this.optionalType = optionalType;
         }
+
         public void setOptionalField(boolean optionalField) {
             this.optionalField = optionalField;
         }
+
         public void setAnnotations(List<AnnotationNode> annotationNodes) {
             this.annotationNodes = annotationNodes;
         }

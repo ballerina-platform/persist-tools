@@ -21,9 +21,11 @@ import java.util.Collections;
 import java.util.List;
 
 public class Index {
+
     private final String indexName;
-    private List<EntityField> fields;
-    private boolean unique;
+    private final List<EntityField> fields;
+    private final boolean unique;
+
     public Index(String indexName, List<EntityField> fields, boolean unique) {
         this.indexName = indexName;
         this.fields = fields;
