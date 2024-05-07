@@ -145,7 +145,7 @@ public class BalSyntaxConstants {
     public static final String JDBC_URL_WITHOUT_DATABASE = "jdbc:%s://%s:%s/";
     public static final String JDBC_URL_WITH_DATABASE_MYSQL = "jdbc:%s://%s:%s/%s";
     public static final String JDBC_URL_WITH_DATABASE_MSSQL =
-            "jdbc:%s://%s:%s;databaseName=%s;trustServerCertificate=true";
+            "jdbc:%s://%s:%s;databaseName=%s;trustServerCertificate=true;encrypt=false";
     public static final String JDBC_URL_WITH_DATABASE_POSTGRESQL = "jdbc:%s://%s:%s/%s";
     public static final String CREATE_DATABASE_SQL_FORMAT_MYSQL = "CREATE DATABASE IF NOT EXISTS %s";
     public static final String DROP_DATABASE_SQL_FORMAT = "DROP DATABASE IF EXISTS %s";

@@ -24,4 +24,4 @@ CREATE TABLE "Employee" (
   PRIMARY KEY ("id")
 );
 
-Alter table "Employee" ADD FOREIGN KEY ("managed_by") REFERENCES "Employee"("id");
+ALTER TABLE "Employee" ADD FOREIGN KEY ("managed_by") REFERENCES "Employee"("id");
