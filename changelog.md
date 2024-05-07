@@ -7,9 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Changed
-- Fixes an issue where client API is still generated even if all entities contain unsupported field(s)
-- Fixes an issue where unique indexes are declared twice in script.sql in one-to-one associations
-- Fixes an issue where the cardinality of the first association is taken as the cardinality of all the other associations between same entities
+- Fix an issue where client API is still generated even if all entities contain unsupported field(s)
+- Fix an issue where unique indexes are declared twice in script.sql in one-to-one associations
+- Fix an issue where the cardinality of the first association is taken as the cardinality of all the other associations between same entities
+- [Fix an issue where table name of the entity becomes empty when doc comments are above the entity definition](https://github.com/ballerina-platform/ballerina-library/issues/6497)
 
 ### Added
 - [Add introspection support for PostgreSQL databases](https://github.com/ballerina-platform/ballerina-library/issues/6333)
