@@ -15,10 +15,10 @@
 -- under the License.
 
 CREATE TABLE "User" (
-	"id"  SERIAL,
-	"name" VARCHAR(191) NOT NULL,
-	"gender" VARCHAR(6) CHECK ("gender" IN ('MALE', 'FEMALE')) NOT NULL,
-	"nic" VARCHAR(191) NOT NULL,
-	"salary" DECIMAL(65,30) NOT NULL,
-	PRIMARY KEY("id")
+    "id" SERIAL,
+    "name" VARCHAR(191) NOT NULL,
+    "gender" VARCHAR(6) CHECK ("gender" IN ('MALE', 'FEMALE')) NOT NULL,
+    "nic" VARCHAR(191) NOT NULL,
+    "salary" DECIMAL(65, 30) NOT NULL,
+    PRIMARY KEY("id")
 );

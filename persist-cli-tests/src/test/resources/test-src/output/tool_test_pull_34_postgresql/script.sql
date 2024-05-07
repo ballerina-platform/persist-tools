@@ -15,26 +15,26 @@
 -- under the License.
 
 CREATE TABLE "Doctor" (
-	"id" INT NOT NULL,
-	"name" VARCHAR(191) NOT NULL,
-	"specialty" VARCHAR(191) NOT NULL,
-	PRIMARY KEY("id")
+    "id" INT NOT NULL,
+    "name" VARCHAR(191) NOT NULL,
+    "specialty" VARCHAR(191) NOT NULL,
+    PRIMARY KEY("id")
 );
 
 CREATE TABLE "Patient" (
-	"id" INT NOT NULL,
-	"name" VARCHAR(191) NOT NULL,
-	"gender" VARCHAR(6) CHECK ("gender" IN ('MALE', 'FEMALE')) NOT NULL,
-	"nic" VARCHAR(191) NOT NULL,
-	PRIMARY KEY("id")
+    "id" INT NOT NULL,
+    "name" VARCHAR(191) NOT NULL,
+    "gender" VARCHAR(6) CHECK ("gender" IN ('MALE', 'FEMALE')) NOT NULL,
+    "nic" VARCHAR(191) NOT NULL,
+    PRIMARY KEY("id")
 );
 
 CREATE TABLE "Appointment" (
-	"id" INT NOT NULL,
-	"patientId" INT NOT NULL,
-	FOREIGN KEY("patientId") REFERENCES "Patient"("id"),
-	"doctorId" INT NOT NULL,
-	FOREIGN KEY("doctorId") REFERENCES "Doctor"("id"),
-	PRIMARY KEY("id"),
+    "id" INT NOT NULL,
+    "patientId" INT NOT NULL,
+    FOREIGN KEY("patientId") REFERENCES "Patient"("id"),
+    "doctorId" INT NOT NULL,
+    FOREIGN KEY("doctorId") REFERENCES "Doctor"("id"),
+    PRIMARY KEY("id"),
     "date" DATE NOT NULL
 );

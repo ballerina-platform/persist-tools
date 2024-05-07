@@ -15,17 +15,17 @@
 -- under the License.
 
 CREATE TABLE [User] (
-  [id] INT,
-  [name] VARCHAR(191) NOT NULL,
-  [nic] VARCHAR(12) UNIQUE NOT NULL,
-  PRIMARY KEY ([id])
+    [id] INT,
+    [name] VARCHAR(191) NOT NULL,
+    [nic] VARCHAR(12) UNIQUE NOT NULL,
+    PRIMARY KEY ([id])
 );
 
 CREATE TABLE [Car] (
-  [id] INT,
-  [name] VARCHAR(191) NOT NULL,
-  [model] VARCHAR(191) NOT NULL,
-  [ownerNic] VARCHAR(12) NOT NULL,
-  FOREIGN KEY([ownerNic]) REFERENCES [User]([nic]),
-  PRIMARY KEY ([id])
+    [id] INT,
+    [name] VARCHAR(191) NOT NULL,
+    [model] VARCHAR(191) NOT NULL,
+    [ownerNic] VARCHAR(12) NOT NULL,
+    FOREIGN KEY([ownerNic]) REFERENCES [User]([nic]),
+    PRIMARY KEY ([id])
 );

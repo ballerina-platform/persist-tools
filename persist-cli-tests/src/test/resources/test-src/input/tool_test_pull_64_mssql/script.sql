@@ -15,14 +15,13 @@
 -- under the License.
 
 CREATE TABLE [User] (
-	[id] INT NOT NULL,
-	[name] VARCHAR(191) NOT NULL,
-	[gender] VARCHAR(6) CHECK ([gender] IN ('MALE', 'FEMALE')) NOT NULL,
-	[nic] VARCHAR(191) NOT NULL,
-	[salary] DECIMAL(38,30) NOT NULL,
-	PRIMARY KEY([id])
+    [id] INT NOT NULL,
+    [name] VARCHAR(191) NOT NULL,
+    [gender] VARCHAR(6) CHECK ([gender] IN ('MALE', 'FEMALE')) NOT NULL,
+    [nic] VARCHAR(191) NOT NULL,
+    [salary] DECIMAL(38, 30) NOT NULL,
+    PRIMARY KEY([id])
 );
-
 
 CREATE UNIQUE INDEX [user] ON [User] ([id], [nic]);
 CREATE UNIQUE INDEX [user_nic] ON [User] ([nic]);

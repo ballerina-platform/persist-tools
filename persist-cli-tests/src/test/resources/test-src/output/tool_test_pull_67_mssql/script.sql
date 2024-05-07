@@ -15,13 +15,13 @@
 -- under the License.
 
 CREATE TABLE [Employee] (
-  [id] INT,
-  [name] VARCHAR(191),
-  [email] VARCHAR(191),
-  [age] INT,
-  [salary] DECIMAL(10,2),
-  [managed_by] INT,
-  PRIMARY KEY ([id])
+    [id] INT,
+    [name] VARCHAR(191),
+    [email] VARCHAR(191),
+    [age] INT,
+    [salary] DECIMAL(10, 2),
+    [managed_by] INT,
+    PRIMARY KEY ([id])
 );
 
 ALTER TABLE [Employee] ADD FOREIGN KEY ([managed_by]) REFERENCES [Employee]([id]);

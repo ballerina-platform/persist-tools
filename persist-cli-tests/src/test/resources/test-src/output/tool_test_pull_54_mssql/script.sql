@@ -15,19 +15,19 @@
 -- under the License.
 
 CREATE TABLE [User] (
-	[id] INT NOT NULL,
-	[name] VARCHAR(191) NOT NULL,
-	[gender] VARCHAR(6) CHECK ([gender] IN ('MALE', 'FEMALE')) NOT NULL,
-	[nic] VARCHAR(191) NOT NULL,
-	[salary] DECIMAL(38,30),
-	PRIMARY KEY([id])
+    [id] INT NOT NULL,
+    [name] VARCHAR(191) NOT NULL,
+    [gender] VARCHAR(6) CHECK ([gender] IN ('MALE', 'FEMALE')) NOT NULL,
+    [nic] VARCHAR(191) NOT NULL,
+    [salary] DECIMAL(38, 30),
+    PRIMARY KEY([id])
 );
 
 CREATE TABLE [Car] (
-	[id] INT NOT NULL,
-	[name] VARCHAR(191) NOT NULL,
-	[model] VARCHAR(191) NOT NULL,
-	[ownerId] INT NOT NULL,
-	FOREIGN KEY([ownerId]) REFERENCES [User]([id]),
-	PRIMARY KEY([id])
+    [id] INT NOT NULL,
+    [name] VARCHAR(191) NOT NULL,
+    [model] VARCHAR(191) NOT NULL,
+    [ownerId] INT NOT NULL,
+    FOREIGN KEY([ownerId]) REFERENCES [User]([id]),
+    PRIMARY KEY([id])
 );

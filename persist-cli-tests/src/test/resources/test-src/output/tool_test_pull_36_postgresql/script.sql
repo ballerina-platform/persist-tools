@@ -15,28 +15,28 @@
 -- under the License.
 
 CREATE TABLE "Doctor" (
-	"id" INT NOT NULL,
-	"name" VARCHAR(20) NOT NULL,
-	"specialty" VARCHAR(191) NOT NULL,
-	"salary" DECIMAL(10,2),
-	PRIMARY KEY("id")
+    "id" INT NOT NULL,
+    "name" VARCHAR(20) NOT NULL,
+    "specialty" VARCHAR(191) NOT NULL,
+    "salary" DECIMAL(10, 2),
+    PRIMARY KEY("id")
 );
 
 CREATE TABLE "Patient" (
-	"id" INT NOT NULL,
-	"name" VARCHAR(191) NOT NULL,
-	"gender" VARCHAR(6) CHECK ("gender" IN ('MALE', 'FEMALE')) NOT NULL,
-	"nic" VARCHAR(12) NOT NULL,
-	"contact" CHAR(10) NOT NULL,
-	PRIMARY KEY("id")
+    "id" INT NOT NULL,
+    "name" VARCHAR(191) NOT NULL,
+    "gender" VARCHAR(6) CHECK ("gender" IN ('MALE', 'FEMALE')) NOT NULL,
+    "nic" VARCHAR(12) NOT NULL,
+    "contact" CHAR(10) NOT NULL,
+    PRIMARY KEY("id")
 );
 
 CREATE TABLE "Appointment" (
-	"id" INT NOT NULL,
-	"date" DATE NOT NULL,
-	"patientId" INT NOT NULL,
-	FOREIGN KEY("patientId") REFERENCES "Patient"("id"),
-	"doctorId" INT NOT NULL,
-	FOREIGN KEY("doctorId") REFERENCES "Doctor"("id"),
-	PRIMARY KEY("id")
+    "id" INT NOT NULL,
+    "date" DATE NOT NULL,
+    "patientId" INT NOT NULL,
+    FOREIGN KEY("patientId") REFERENCES "Patient"("id"),
+    "doctorId" INT NOT NULL,
+    FOREIGN KEY("doctorId") REFERENCES "Doctor"("id"),
+    PRIMARY KEY("id")
 );

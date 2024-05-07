@@ -15,10 +15,10 @@
 -- under the License.
 
 CREATE TABLE "Car" (
-	"id" INT NOT NULL,
-	"name" VARCHAR(191) NOT NULL,
-	"type" VARCHAR(191) NOT NULL,
-	"model" VARCHAR(191) NOT NULL,
-	"ownerId" INT NOT NULL,
-	PRIMARY KEY("id")
+    "id" INT NOT NULL,
+    "name" VARCHAR(191) NOT NULL,
+    "type" VARCHAR(191) NOT NULL,
+    "model" VARCHAR(191) NOT NULL,
+    "ownerId" INT NOT NULL,
+    PRIMARY KEY("id")
 );

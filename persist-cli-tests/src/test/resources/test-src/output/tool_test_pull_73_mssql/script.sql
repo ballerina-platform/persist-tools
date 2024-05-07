@@ -15,11 +15,11 @@
 -- under the License.
 
 CREATE TABLE [User] (
-	[id] INT NOT NULL,
-	[name] VARCHAR(191) NOT NULL,
-	[gender] VARCHAR(6) CHECK ([gender] IN ('MALE', 'FEMALE')) NOT NULL,
-	[nic] VARCHAR(191) NOT NULL,
-	[salary] DECIMAL(38,30) NOT NULL,
-	[userProfilePic] VARBINARY(MAX),
-	PRIMARY KEY([id])
+    [id] INT NOT NULL,
+    [name] VARCHAR(191) NOT NULL,
+    [gender] VARCHAR(6) CHECK ([gender] IN ('MALE', 'FEMALE')) NOT NULL,
+    [nic] VARCHAR(191) NOT NULL,
+    [salary] DECIMAL(38, 30) NOT NULL,
+    [userProfilePic] VARBINARY(MAX),
+    PRIMARY KEY([id])
 );
