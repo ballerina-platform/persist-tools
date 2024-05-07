@@ -14,6 +14,7 @@ public type User record {|
     UserGender gender;
     string nic;
     decimal? salary;
+
 |};
 
 public type UserOptionalized record {|
@@ -67,5 +68,53 @@ public type CarUpdate record {|
     string name?;
     string model?;
     int ownerId?;
+|};
+
+public type Person record {|
+    readonly string name;
+    int age;
+    string nic;
+    decimal salary;
+|};
+
+public type PersonOptionalized record {|
+    string name?;
+    int age?;
+    string nic?;
+    decimal salary?;
+|};
+
+public type PersonTargetType typedesc<PersonOptionalized>;
+
+public type PersonInsert Person;
+
+public type PersonUpdate record {|
+    int age?;
+    string nic?;
+    decimal salary?;
+|};
+
+public type Person2 record {|
+    readonly string name;
+    int age;
+    string nic;
+    decimal salary;
+|};
+
+public type Person2Optionalized record {|
+    string name?;
+    int age?;
+    string nic?;
+    decimal salary?;
+|};
+
+public type Person2TargetType typedesc<Person2Optionalized>;
+
+public type Person2Insert Person2;
+
+public type Person2Update record {|
+    int age?;
+    string nic?;
+    decimal salary?;
 |};
 

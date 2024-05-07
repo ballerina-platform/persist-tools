@@ -42,3 +42,30 @@ public type Car record {|
     @sql:Relation {keys: ["ownerId"]}
     User owner;
 |};
+
+# Description.
+#
+# + name - field description  
+# + age - field description  
+# + nic - field description  
+# + salary - field description
+public type Person record {|
+    readonly string name;
+    int age;
+    string nic;
+    decimal salary;
+|};
+
+# Description.
+#
+# + name - field description  
+# + age - field description  
+# + nic - field description  
+# + salary - field description
+@sql:Name {value: "people2"}
+public type Person2 record {|
+    readonly string name;
+    int age;
+    string nic;
+    decimal salary;
+|};
