@@ -5,6 +5,24 @@
 
 DROP TABLE IF EXISTS [cars];
 DROP TABLE IF EXISTS [User];
+DROP TABLE IF EXISTS [people2];
+DROP TABLE IF EXISTS [Person];
+
+CREATE TABLE [Person] (
+	[name] VARCHAR(191) NOT NULL,
+	[age] INT NOT NULL,
+	[nic] VARCHAR(191) NOT NULL,
+	[salary] DECIMAL(38,30) NOT NULL,
+	PRIMARY KEY([name])
+);
+
+CREATE TABLE [people2] (
+	[name] VARCHAR(191) NOT NULL,
+	[age] INT NOT NULL,
+	[nic] VARCHAR(191) NOT NULL,
+	[salary] DECIMAL(38,30) NOT NULL,
+	PRIMARY KEY([name])
+);
 
 CREATE TABLE [User] (
 	[id] INT NOT NULL,

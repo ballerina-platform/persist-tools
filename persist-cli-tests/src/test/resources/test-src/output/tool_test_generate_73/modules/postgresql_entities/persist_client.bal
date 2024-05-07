@@ -1,6 +1,8 @@
 // AUTO-GENERATED FILE. DO NOT MODIFY.
+
 // This file is an auto-generated file by Ballerina persistence layer for model.
 // It should not be modified by hand.
+
 import ballerina/jballerina.java;
 import ballerina/persist;
 import ballerina/sql;
@@ -10,6 +12,8 @@ import ballerinax/postgresql.driver as _;
 
 const USER = "users";
 const CAR = "cars";
+const PERSON = "people";
+const PERSON2 = "person2s";
 
 public isolated client class Client {
     *persist:AbstractPersistClient;
@@ -52,6 +56,28 @@ public isolated client class Client {
             },
             keyFields: ["id"],
             joinMetadata: {owner: {entity: User, fieldName: "owner", refTable: "User", refColumns: ["id"], joinColumns: ["ownerId"], 'type: psql:ONE_TO_MANY}}
+        },
+        [PERSON]: {
+            entityName: "Person",
+            tableName: "Person",
+            fieldMetadata: {
+                name: {columnName: "name"},
+                age: {columnName: "age"},
+                nic: {columnName: "nic"},
+                salary: {columnName: "salary"}
+            },
+            keyFields: ["name"]
+        },
+        [PERSON2]: {
+            entityName: "Person2",
+            tableName: "people2",
+            fieldMetadata: {
+                name: {columnName: "name"},
+                age: {columnName: "age"},
+                nic: {columnName: "nic"},
+                salary: {columnName: "salary"}
+            },
+            keyFields: ["name"]
         }
     };
 
@@ -63,7 +89,9 @@ public isolated client class Client {
         self.dbClient = dbClient;
         self.persistClients = {
             [USER]: check new (dbClient, self.metadata.get(USER), psql:POSTGRESQL_SPECIFICS),
-            [CAR]: check new (dbClient, self.metadata.get(CAR), psql:POSTGRESQL_SPECIFICS)
+            [CAR]: check new (dbClient, self.metadata.get(CAR), psql:POSTGRESQL_SPECIFICS),
+            [PERSON]: check new (dbClient, self.metadata.get(PERSON), psql:POSTGRESQL_SPECIFICS),
+            [PERSON2]: check new (dbClient, self.metadata.get(PERSON2), psql:POSTGRESQL_SPECIFICS)
         };
     }
 
@@ -142,6 +170,84 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(CAR);
         }
         _ = check sqlClient.runDeleteQuery(id);
+        return result;
+    }
+
+    isolated resource function get people(PersonTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
+        'class: "io.ballerina.stdlib.persist.sql.datastore.PostgreSQLProcessor",
+        name: "query"
+    } external;
+
+    isolated resource function get people/[string name](PersonTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
+        'class: "io.ballerina.stdlib.persist.sql.datastore.PostgreSQLProcessor",
+        name: "queryOne"
+    } external;
+
+    isolated resource function post people(PersonInsert[] data) returns string[]|persist:Error {
+        psql:SQLClient sqlClient;
+        lock {
+            sqlClient = self.persistClients.get(PERSON);
+        }
+        _ = check sqlClient.runBatchInsertQuery(data);
+        return from PersonInsert inserted in data
+            select inserted.name;
+    }
+
+    isolated resource function put people/[string name](PersonUpdate value) returns Person|persist:Error {
+        psql:SQLClient sqlClient;
+        lock {
+            sqlClient = self.persistClients.get(PERSON);
+        }
+        _ = check sqlClient.runUpdateQuery(name, value);
+        return self->/people/[name].get();
+    }
+
+    isolated resource function delete people/[string name]() returns Person|persist:Error {
+        Person result = check self->/people/[name].get();
+        psql:SQLClient sqlClient;
+        lock {
+            sqlClient = self.persistClients.get(PERSON);
+        }
+        _ = check sqlClient.runDeleteQuery(name);
+        return result;
+    }
+
+    isolated resource function get person2s(Person2TargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
+        'class: "io.ballerina.stdlib.persist.sql.datastore.PostgreSQLProcessor",
+        name: "query"
+    } external;
+
+    isolated resource function get person2s/[string name](Person2TargetType targetType = <>) returns targetType|persist:Error = @java:Method {
+        'class: "io.ballerina.stdlib.persist.sql.datastore.PostgreSQLProcessor",
+        name: "queryOne"
+    } external;
+
+    isolated resource function post person2s(Person2Insert[] data) returns string[]|persist:Error {
+        psql:SQLClient sqlClient;
+        lock {
+            sqlClient = self.persistClients.get(PERSON2);
+        }
+        _ = check sqlClient.runBatchInsertQuery(data);
+        return from Person2Insert inserted in data
+            select inserted.name;
+    }
+
+    isolated resource function put person2s/[string name](Person2Update value) returns Person2|persist:Error {
+        psql:SQLClient sqlClient;
+        lock {
+            sqlClient = self.persistClients.get(PERSON2);
+        }
+        _ = check sqlClient.runUpdateQuery(name, value);
+        return self->/person2s/[name].get();
+    }
+
+    isolated resource function delete person2s/[string name]() returns Person2|persist:Error {
+        Person2 result = check self->/person2s/[name].get();
+        psql:SQLClient sqlClient;
+        lock {
+            sqlClient = self.persistClients.get(PERSON2);
+        }
+        _ = check sqlClient.runDeleteQuery(name);
         return result;
     }
 
