@@ -17,12 +17,25 @@
  */
 package io.ballerina.persist.introspect;
 
-import java.sql.Connection;
+import io.ballerina.persist.PersistToolsConstants;
+import io.ballerina.persist.introspectiondto.SqlColumn;
+import io.ballerina.persist.models.SqlType;
+import io.ballerina.persist.utils.DatabaseConnector;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static io.ballerina.persist.PersistToolsConstants.MYSQL_DRIVER_CLASS;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.JDBC_URL_WITH_DATABASE_MYSQL;
 
 public class MySqlIntrospector extends Introspector {
 
-    public MySqlIntrospector(Connection connection, String databaseName) {
-        super(connection, databaseName);
+    public MySqlIntrospector() {
+        databaseConnector = new DatabaseConnector(JDBC_URL_WITH_DATABASE_MYSQL, MYSQL_DRIVER_CLASS);
     }
 
     @Override
@@ -44,7 +57,8 @@ public class MySqlIntrospector extends Introspector {
                 table_info.table_name;
             """;
         formatQuery = formatQuery.replace("\r\n", "%n");
-        return String.format(formatQuery, this.databaseName, this.databaseName);
+        return String.format(formatQuery, this.persistConfigurations.getDbConfig().getDatabase(),
+                this.persistConfigurations.getDbConfig().getDatabase());
     }
 
     @Override
@@ -64,7 +78,8 @@ public class MySqlIntrospector extends Introspector {
                 table_name table_name,
                 column_key column_key,
                 IF(column_comment = '', NULL, column_comment) AS column_comment,
-                IF(extra = 'auto_increment', 1, 0) AS dbgenerated
+                IF(extra = 'auto_increment', 1, 0) AS dbgenerated,
+                NULL AS check_constraint
             FROM
                 information_schema.columns
             WHERE
@@ -74,33 +89,31 @@ public class MySqlIntrospector extends Introspector {
                 ordinal_position ASC;
             """;
         formatQuery = formatQuery.replace("\r\n", "%n");
-        return String.format(formatQuery, this.databaseName, tableName);
+        return String.format(formatQuery, this.persistConfigurations.getDbConfig().getDatabase(), tableName);
     }
 
     @Override
     public String getIndexesQuery(String tableName) {
         String formatQuery = """
-        SELECT
-            table_name AS table_name,
-            index_name AS index_name,
-            column_name AS column_name,
-            sub_part AS partial,
-            seq_in_index AS seq_in_index,
-            collation AS column_order,
-            non_unique AS non_unique,
-            index_type AS index_type
-        FROM
-            information_schema.statistics
-        WHERE
-            table_schema = '%s'
-            AND table_name = '%s'
-            AND index_name != 'PRIMARY'
-        ORDER BY
-            BINARY index_name,
-            seq_in_index;
-              """;
+            SELECT
+                table_name AS table_name,
+                index_name AS index_name,
+                column_name AS column_name,
+                seq_in_index AS seq_in_index,
+                collation AS column_order,
+                IF(non_unique = '1', 0, 1) AS is_unique
+            FROM
+                information_schema.statistics
+            WHERE
+                table_schema = '%s'
+                AND table_name = '%s'
+                AND index_name != 'PRIMARY'
+            ORDER BY
+                BINARY index_name,
+                seq_in_index;
+            """;
         formatQuery = formatQuery.replace("\r\n", "%n");
-        return String.format(formatQuery, this.databaseName, tableName);
+        return String.format(formatQuery, this.persistConfigurations.getDbConfig().getDatabase(), tableName);
     }
 
     @Override
@@ -128,10 +141,11 @@ public class MySqlIntrospector extends Introspector {
                     BINARY kcu.table_schema,
                     BINARY kcu.table_name,
                     BINARY kcu.constraint_name,
-                kcu.ordinal_position;
+                    kcu.ordinal_position;
                 """;
         formatQuery = formatQuery.replace("\r\n", "%n");
-        return String.format(formatQuery, this.databaseName, this.databaseName, tableName);
+        return String.format(formatQuery, this.persistConfigurations.getDbConfig().getDatabase(),
+                this.persistConfigurations.getDbConfig().getDatabase(), tableName);
     }
 
     @Override
@@ -139,7 +153,6 @@ public class MySqlIntrospector extends Introspector {
         String formatQuery = """
             SELECT
                 column_name column_name,
-                data_type data_type,
                 column_type full_enum_type,
                 table_name table_name
             FROM
@@ -151,7 +164,44 @@ public class MySqlIntrospector extends Introspector {
                 ordinal_position ASC;
             """;
         formatQuery = formatQuery.replace("\r\n", "%n");
-        return String.format(formatQuery, this.databaseName);
+        return String.format(formatQuery, this.persistConfigurations.getDbConfig().getDatabase());
+    }
+
+    @Override
+    protected boolean isEnumType(SqlColumn column) {
+        return "enum".equalsIgnoreCase(column.getDataType());
+    }
+
+    @Override
+    protected List<String> extractEnumValues(String enumString) {
+        List<String> enumValues = new ArrayList<>();
+
+        // Using regex to extract values inside parentheses
+        Pattern pattern = Pattern.compile("\\((.*?)\\)");
+        Matcher matcher = pattern.matcher(enumString);
+
+        if (matcher.find()) {
+            // Group 1 contains the values inside parentheses
+            String valuesInsideParentheses = matcher.group(1);
+
+            // Split the values by comma
+            String[] valuesArray = valuesInsideParentheses.split(",");
+            Arrays.stream(valuesArray).map(value -> {
+                value = value.trim();
+                value = value.replace("'", "");
+                return value.trim();
+            }).forEach(enumValues::add);
+        }
+
+        return enumValues;
+    }
+
+    @Override
+    protected String getBalType(SqlType sqlType) {
+        if (Objects.equals(sqlType.getFullDataType(), PersistToolsConstants.SqlTypes.BOOLEAN_ALT)) {
+            return PersistToolsConstants.BallerinaTypes.BOOLEAN;
+        }
+        return getBalTypeForCommonDataTypes(sqlType);
     }
 
 }

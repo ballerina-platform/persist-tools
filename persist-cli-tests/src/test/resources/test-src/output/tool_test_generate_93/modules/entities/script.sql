@@ -21,7 +21,7 @@ CREATE TABLE `Car` (
 	`model` VARCHAR(191) NOT NULL,
 	`ownerId` INT NOT NULL,
 	FOREIGN KEY(`ownerId`) REFERENCES `User`(`id`),
-	`driverId` INT NOT NULL,
+	`driverId` INT UNIQUE NOT NULL,
 	FOREIGN KEY(`driverId`) REFERENCES `User`(`id`),
 	PRIMARY KEY(`id`)
 );

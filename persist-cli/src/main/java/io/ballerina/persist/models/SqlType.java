@@ -20,19 +20,34 @@ package io.ballerina.persist.models;
 
 import io.ballerina.persist.PersistToolsConstants;
 
-import java.io.PrintStream;
 import java.util.Objects;
 
-public class SQLType {
-    PrintStream errStream = System.err;
+public class SqlType {
+
     private final String typeName;
     private final String fullDataType;
     private final String columnDefaultValue;
     private final int numericPrecision;
     private final int numericScale;
     private final int maxLength;
+    private final String datastore;
 
-    public SQLType(String typeName, String fullDataType, String columnDefaultValue, int numericPrecision,
+    public SqlType(String typeName, String fullDataType, String columnDefaultValue, int numericPrecision,
+                   int numericScale, int maxCharLength, String datastore) {
+        this.typeName = typeName;
+        this.fullDataType = fullDataType;
+        this.columnDefaultValue = columnDefaultValue;
+        int precisionValue = PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION_POSTGRESQL;
+        if (datastore.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
+            precisionValue = PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION_MSSQL;
+        }
+        this.numericPrecision = numericPrecision > 0 ? numericPrecision : precisionValue;
+        this.numericScale = numericScale > 0 ? numericScale : PersistToolsConstants.DefaultMaxLength.DECIMAL_SCALE;
+        this.maxLength = maxCharLength > 0 ? maxCharLength : PersistToolsConstants.DefaultMaxLength.VARCHAR_LENGTH;
+        this.datastore = datastore;
+    }
+
+    public SqlType(String typeName, String fullDataType, String columnDefaultValue, int numericPrecision,
                    int numericScale, int maxCharLength) {
         this.typeName = typeName;
         this.fullDataType = fullDataType;
@@ -40,6 +55,7 @@ public class SQLType {
         this.numericPrecision = numericPrecision;
         this.numericScale = numericScale;
         this.maxLength = maxCharLength;
+        this.datastore = null;
     }
 
     public String getTypeName() {
@@ -53,13 +69,19 @@ public class SQLType {
     public int getNumericScale() {
         return numericScale;
     }
+
     public String getColumnDefaultValue() {
         return columnDefaultValue;
+    }
+
+    public String getDatastore() {
+        return datastore;
     }
 
     public int getMaxLength() {
         return maxLength;
     }
+
     public String getFullDataType() {
         return fullDataType;
     }
@@ -71,64 +93,8 @@ public class SQLType {
                 this.typeName.equals(PersistToolsConstants.SqlTypes.MEDIUM_BLOB) ||
                 this.typeName.equals(PersistToolsConstants.SqlTypes.TINY_BLOB) ||
                 this.typeName.equals(PersistToolsConstants.SqlTypes.BINARY) ||
+                this.typeName.equals(PersistToolsConstants.SqlTypes.BYTEA) ||
                 this.typeName.equals(PersistToolsConstants.SqlTypes.VARBINARY);
-    }
-    public String getBalType() {
-        if (Objects.equals(this.fullDataType, PersistToolsConstants.SqlTypes.BOOLEAN_ALT)) {
-            return PersistToolsConstants.BallerinaTypes.BOOLEAN;
-        }
-        switch (this.typeName) {
-
-            case PersistToolsConstants.SqlTypes.INT:
-            case PersistToolsConstants.SqlTypes.INTEGER:
-            case PersistToolsConstants.SqlTypes.TINYINT:
-            case PersistToolsConstants.SqlTypes.SMALLINT:
-            case PersistToolsConstants.SqlTypes.MEDIUMINT:
-            case PersistToolsConstants.SqlTypes.BIGINT:
-                return PersistToolsConstants.BallerinaTypes.INT;
-
-            case PersistToolsConstants.SqlTypes.BOOLEAN:
-                return PersistToolsConstants.BallerinaTypes.BOOLEAN;
-
-            case PersistToolsConstants.SqlTypes.DECIMAL:
-                return PersistToolsConstants.BallerinaTypes.DECIMAL;
-
-            case PersistToolsConstants.SqlTypes.DOUBLE:
-            case PersistToolsConstants.SqlTypes.FLOAT:
-                return PersistToolsConstants.BallerinaTypes.FLOAT;
-
-            case PersistToolsConstants.SqlTypes.DATE:
-                return PersistToolsConstants.BallerinaTypes.DATE;
-
-            case PersistToolsConstants.SqlTypes.TIME:
-                return PersistToolsConstants.BallerinaTypes.TIME_OF_DAY;
-
-            case PersistToolsConstants.SqlTypes.TIME_STAMP:
-                return PersistToolsConstants.BallerinaTypes.UTC;
-            case PersistToolsConstants.SqlTypes.DATE_TIME2:
-            case PersistToolsConstants.SqlTypes.DATE_TIME:
-                return PersistToolsConstants.BallerinaTypes.CIVIL;
-
-            case PersistToolsConstants.SqlTypes.VARCHAR:
-            case PersistToolsConstants.SqlTypes.CHAR:
-            case PersistToolsConstants.SqlTypes.TEXT:
-            case PersistToolsConstants.SqlTypes.MEDIUMTEXT:
-            case PersistToolsConstants.SqlTypes.LONGTEXT:
-            case PersistToolsConstants.SqlTypes.TINYTEXT:
-                return PersistToolsConstants.BallerinaTypes.STRING;
-
-            case PersistToolsConstants.SqlTypes.LONG_BLOB:
-            case PersistToolsConstants.SqlTypes.MEDIUM_BLOB:
-            case PersistToolsConstants.SqlTypes.TINY_BLOB:
-            case PersistToolsConstants.SqlTypes.BINARY:
-            case PersistToolsConstants.SqlTypes.VARBINARY:
-            case PersistToolsConstants.SqlTypes.BLOB:
-                return PersistToolsConstants.BallerinaTypes.BYTE;
-
-            default:
-                errStream.println("WARNING Unsupported SQL type found: " + this.fullDataType);
-                return PersistToolsConstants.UNSUPPORTED_TYPE;
-        }
     }
 
     @Override
@@ -139,7 +105,7 @@ public class SQLType {
         if (obj == null || getClass() != obj.getClass()) {
             return false;
         }
-        SQLType sqlType = (SQLType) obj;
+        SqlType sqlType = (SqlType) obj;
         return Objects.equals(typeName, sqlType.typeName) && Objects.equals(fullDataType, sqlType.fullDataType) &&
                 Objects.equals(columnDefaultValue, sqlType.columnDefaultValue) &&
                 Objects.equals(numericPrecision, sqlType.numericPrecision) &&

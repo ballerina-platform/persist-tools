@@ -46,7 +46,7 @@ import io.ballerina.persist.models.Enum;
 import io.ballerina.persist.models.EnumMember;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.models.Relation;
-import io.ballerina.persist.models.SQLType;
+import io.ballerina.persist.models.SqlType;
 import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
 import io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils;
 import io.ballerina.projects.BuildOptions;
@@ -117,6 +117,9 @@ public class BalProjectUtils {
             populateEnums(moduleBuilder, balSyntaxTree);
             populateEntities(moduleBuilder, balSyntaxTree);
             Module entityModule = moduleBuilder.build();
+            if (entityModule.getEntityMap().values().stream().allMatch(Entity::containsUnsupportedTypes)) {
+                throw new BalException("all entities contain at least one unsupported data type.");
+            }
             inferEnumDetails(entityModule);
             inferRelationDetails(entityModule);
             return entityModule;
@@ -165,7 +168,7 @@ public class BalProjectUtils {
         PackageCompilation compilation = currentPackage.getCompilation();
         DiagnosticResult diagnosticResult = compilation.diagnosticResult();
         if (diagnosticResult.hasErrors()) {
-            throw new BalException("ERROR: failed to build the driver file.");
+            throw new BalException("failed to build the driver file.");
         }
         return buildProject;
     }
@@ -339,7 +342,7 @@ public class BalProjectUtils {
                     );
                     if (!varcharLength.isEmpty()) {
                         fieldBuilder.setSqlType(
-                                new SQLType(
+                                new SqlType(
                                         VARCHAR,
                                         null,
                                         null,
@@ -355,7 +358,7 @@ public class BalProjectUtils {
                     );
                     if (!charLength.isEmpty()) {
                         fieldBuilder.setSqlType(
-                                new SQLType(
+                                new SqlType(
                                         CHAR,
                                         null,
                                         null,
@@ -371,7 +374,7 @@ public class BalProjectUtils {
                     );
                     if (decimal != null && decimal.size() == 2) {
                         fieldBuilder.setSqlType(
-                                new SQLType(
+                                new SqlType(
                                         PersistToolsConstants.SqlTypes.DECIMAL,
                                         null,
                                         null,
@@ -651,7 +654,9 @@ public class BalProjectUtils {
             errors.add("The datastore type is not provided.");
         } else if (datastore.isEmpty()) {
             errors.add("The datastore type cannot be empty.");
-        } else if (!datastore.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB)) {
+        } else if (!(datastore.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB) || datastore.equals(
+                PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB) || datastore.equals(
+                PersistToolsConstants.SupportedDataSources.MSSQL_DB))) {
             errors.add("Unsupported data store: '" + datastore + "'");
         }
         if (host == null) {

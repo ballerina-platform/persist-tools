@@ -31,11 +31,10 @@ import java.util.Set;
  * @since 0.1.0
  */
 public class Module {
+
     private final Map<String, Entity> entityMap;
     private final Map<String, Enum> enumMap;
-
     private final String moduleName;
-
     private final Set<String> importModulePrefixes;
 
     private Module(String moduleName, Set<String> importModulePrefixes,
@@ -75,6 +74,7 @@ public class Module {
      * Module Definition.Builder.
      */
     public static class Builder {
+
         String moduleName;
         Map<String, Entity> entityMap = new LinkedHashMap<>();
         Map<String, Enum> enumMap = new LinkedHashMap<>();

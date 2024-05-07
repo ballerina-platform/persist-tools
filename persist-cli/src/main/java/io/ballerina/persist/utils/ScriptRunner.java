@@ -145,9 +145,7 @@ public class ScriptRunner {
         try (Statement statement = connection.createStatement()) {
             try (ResultSet results = statement.executeQuery(query)) {
                 while (results.next()) {
-                    tables.add(SqlTable.newBuilder(results.getString("table_name"))
-                            .setTableComment(results.getString("table_comment"))
-                            .setCreateOptions(results.getString("create_options")).build());
+                    tables.add(SqlTable.newBuilder(results.getString("table_name")).build());
                 }
                 if (tables.isEmpty()) {
                     throw new SQLException("No tables found in the database.");
@@ -185,6 +183,7 @@ public class ScriptRunner {
         try (Statement statement = connection.createStatement()) {
             try (ResultSet results = statement.executeQuery(query)) {
                 while (results.next()) {
+
                     SqlColumn column = SqlColumn.newBuilder(results.getString("column_name"))
                             .setTableName(results.getString("table_name"))
                             .setDataType(results.getString("data_type"))
@@ -192,13 +191,11 @@ public class ScriptRunner {
                             .setCharacterMaximumLength(results.getString("character_maximum_length"))
                             .setNumericPrecision(results.getString("numeric_precision"))
                             .setNumericScale(results.getString("numeric_scale"))
-                            .setDatetimePrecision(results.getString("datetime_precision"))
                             .setColumnDefault(results.getString("column_default"))
                             .setIsNullable(results.getString("is_nullable"))
-                            .setExtra(results.getString("extra"))
-                            .setColumnComment(results.getString("column_comment"))
                             .setIsPrimaryKey(results.getString("column_key").equals("PRI"))
                             .setIsDbGenerated(results.getBoolean("dbgenerated"))
+                            .setCheckConstraint(results.getString("check_constraint"))
                             .build();
                     table.addColumn(column);
                     }
@@ -258,10 +255,7 @@ public class ScriptRunner {
                         table.addIndex(SqlIndex.Builder.newBuilder(results.getString("index_name"))
                                 .setTableName(results.getString("table_name"))
                                 .addColumnName(results.getString("column_name"))
-                                .setPartial(results.getString("partial"))
-                                .setColumnOrder(results.getString("column_order"))
-                                .setNonUnique(results.getString("non_unique"))
-                                .setIndexType(results.getString("index_type"))
+                                .setUnique(results.getBoolean("is_unique"))
                                 .build()
                         );
                     } else {
@@ -270,7 +264,7 @@ public class ScriptRunner {
                 }
             }
         } catch (SQLException e) {
-            throw new SQLException("Error while retrieving indexes for table: " + e.getMessage());
+            throw new SQLException("error while retrieving indexes for table: " + e.getMessage());
         } finally {
             rollbackConnection();
         }

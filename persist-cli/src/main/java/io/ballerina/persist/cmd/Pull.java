@@ -23,14 +23,12 @@ import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.configuration.DatabaseConfiguration;
 import io.ballerina.persist.configuration.PersistConfiguration;
 import io.ballerina.persist.introspect.Introspector;
+import io.ballerina.persist.introspect.MsSqlInstrospector;
 import io.ballerina.persist.introspect.MySqlIntrospector;
+import io.ballerina.persist.introspect.PostgreSqlIntrospector;
 import io.ballerina.persist.models.Module;
-import io.ballerina.persist.nodegenerator.DriverResolver;
 import io.ballerina.persist.nodegenerator.SourceGenerator;
 import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
-import io.ballerina.persist.utils.DatabaseConnector;
-import io.ballerina.persist.utils.JdbcDriverLoader;
-import io.ballerina.projects.Project;
 import picocli.CommandLine;
 
 import java.io.IOException;
@@ -39,16 +37,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.Driver;
-import java.sql.SQLException;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Scanner;
 
 import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
-import static io.ballerina.persist.PersistToolsConstants.MYSQL_DRIVER_CLASS;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
-import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.JDBC_URL_WITH_DATABASE_MYSQL;
 import static io.ballerina.persist.utils.BalProjectUtils.validateBallerinaProject;
 import static io.ballerina.persist.utils.BalProjectUtils.validatePullCommandOptions;
 import static io.ballerina.persist.utils.DatabaseConnector.readDatabasePassword;
@@ -62,8 +56,6 @@ public class Pull implements BLauncherCmd {
     private final String sourcePath;
 
     private static final String COMMAND_IDENTIFIER = "persist-pull";
-
-    DatabaseConnector databaseConnector;
 
     public Pull() {
         this("");
@@ -80,7 +72,7 @@ public class Pull implements BLauncherCmd {
     private String host;
 
     @CommandLine.Option(names = {"--port"})
-    private String port = "3306";
+    private String port;
 
     @CommandLine.Option(names = {"--user"})
     private String user;
@@ -99,6 +91,36 @@ public class Pull implements BLauncherCmd {
             errStream.println(commandUsageInfo);
             return;
         }
+
+        Introspector introspector;
+        switch (this.datastore) {
+            case PersistToolsConstants.SupportedDataSources.MYSQL_DB:
+                introspector = new MySqlIntrospector();
+                if (Objects.isNull(port)) {
+                    port = "3306";
+                    errStream.println("MySQL database introspection operates on the default port 3306");
+                }
+                break;
+            case PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB:
+                introspector = new PostgreSqlIntrospector();
+                if (Objects.isNull(port)) {
+                    port = "5432";
+                    errStream.println("PostgreSQL database introspection operates on the default port 5432");
+                }
+                break;
+            case PersistToolsConstants.SupportedDataSources.MSSQL_DB:
+                introspector = new MsSqlInstrospector();
+                if (Objects.isNull(port)) {
+                    port = "1433";
+                    errStream.println("MSSQL database introspection operates on the default port 1433");
+                }
+                break;
+            default:
+                errStream.printf("ERROR: unsupported data store: '%s'%n", datastore);
+                return;
+        }
+
+
         try {
             validatePullCommandOptions(datastore, host, port, user, database);
         } catch (BalException e) {
@@ -114,13 +136,6 @@ public class Pull implements BLauncherCmd {
             validateBallerinaProject(Paths.get(this.sourcePath));
         } catch (BalException e) {
             errStream.println(e.getMessage());
-            return;
-        }
-
-        if (this.datastore.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB)) {
-            this.databaseConnector = new DatabaseConnector(JDBC_URL_WITH_DATABASE_MYSQL, MYSQL_DRIVER_CLASS);
-        } else {
-            errStream.printf("ERROR: unsupported data store: '%s'%n", datastore);
             return;
         }
 
@@ -150,6 +165,7 @@ public class Pull implements BLauncherCmd {
 
         PersistConfiguration persistConfigurations = new PersistConfiguration();
         persistConfigurations.setProvider(datastore);
+        persistConfigurations.setSourcePath(this.sourcePath);
         try {
             persistConfigurations.setDbConfig(new DatabaseConfiguration(this.host, this.user, password, this.port,
                     this.database));
@@ -158,40 +174,12 @@ public class Pull implements BLauncherCmd {
             return;
         }
 
-        Module entityModule;
-        DriverResolver driverResolver = new DriverResolver(this.sourcePath);
-        Project driverProject;
+        Module entityModule = null;
         try {
-            driverProject = driverResolver.resolveDriverDependencies();
+            entityModule = introspector.introspectDatabase(persistConfigurations);
         } catch (BalException e) {
-            errStream.println(e.getMessage());
-            deleteDriverFile(driverResolver);
+            errStream.printf("ERROR: failed to introspect database: %s%n", e.getMessage());
             return;
-        }
-
-        try (JdbcDriverLoader driverLoader = databaseConnector.getJdbcDriverLoader(driverProject)) {
-            Driver driver = databaseConnector.getJdbcDriver(driverLoader);
-            try (Connection connection = databaseConnector.getConnection(driver, persistConfigurations, true)) {
-                Introspector introspector = new MySqlIntrospector(connection,
-                        persistConfigurations.getDbConfig().getDatabase());
-
-                entityModule = introspector.introspectDatabase();
-
-                if (entityModule == null) {
-                    throw new BalException("ERROR: failed to generate entity module.");
-                }
-            }
-        } catch (SQLException e) {
-            errStream.printf("ERROR: database failure. %s%n", e.getMessage());
-            return;
-        } catch (BalException e) {
-            errStream.printf("ERROR: database introspection failed. %s%n", e.getMessage());
-            return;
-        } catch (IOException e) {
-            errStream.printf("ERROR: failed to load the database driver. %s%n", e.getMessage());
-            return;
-        } finally {
-            deleteDriverFile(driverResolver);
         }
 
         SourceGenerator sourceGenerator = new SourceGenerator(sourcePath, Paths.get(sourcePath, PERSIST_DIRECTORY),
@@ -229,11 +217,4 @@ public class Pull implements BLauncherCmd {
 
     }
 
-    public void deleteDriverFile(DriverResolver driverResolver) {
-        try {
-            driverResolver.deleteDriverFile();
-        } catch (BalException e) {
-            errStream.println(e.getMessage());
-        }
-    }
 }

@@ -40,6 +40,11 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Locale;
 
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.CREATE_DATABASE_SQL_FORMAT;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.DROP_DATABASE_SQL_FORMAT;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.JDBC_URL_WITH_DATABASE_MSSQL;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.JDBC_URL_WITH_DATABASE_MYSQL;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.JDBC_URL_WITH_DATABASE_POSTGRESQL;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.GENERATED_SOURCES_DIRECTORY;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.INPUT_RESOURCES_DIRECTORY;
 import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
@@ -201,17 +206,50 @@ public class DatabaseTestUtils {
         }
     }
 
-    public static void createFromDatabaseScript(String packageName, String datasource,
+    public static void resetPostgreSqlDatabase(DatabaseConfiguration dbConfig, boolean recreate) {
+
+        String url = String.format(JDBC_URL_WITH_DATABASE_POSTGRESQL, "postgresql",  dbConfig.getHost(),
+                dbConfig.getPort(), "postgres");
+        resetDatabase(dbConfig, recreate, url);
+    }
+
+    public static void resetMsSqlDatabase(DatabaseConfiguration dbConfig, boolean recreate) {
+
+        String url = String.format(JDBC_URL_WITH_DATABASE_MSSQL,
+                PersistToolsConstants.SupportedDataSources.MSSQL_DB_ALT,  dbConfig.getHost(), dbConfig.getPort(),
+                "master");
+        resetDatabase(dbConfig, recreate, url);
+    }
+
+    private static void resetDatabase(DatabaseConfiguration dbConfig, boolean recreate, String url) {
+        try (Connection connection = DriverManager.getConnection(url, dbConfig.getUsername(), dbConfig.getPassword())) {
+            try (Statement statement = connection.createStatement()) {
+                statement.execute(String.format(DROP_DATABASE_SQL_FORMAT, dbConfig.getDatabase()));
+                if (recreate) {
+                    statement.execute(String.format(CREATE_DATABASE_SQL_FORMAT, dbConfig.getDatabase()));
+                }
+                statement.executeBatch();
+                PrintStream outStream = System.out;
+                outStream.println("Database reset successfully");
+            }
+        } catch (SQLException e) {
+            errStream.println("Failed to reset database: " + e.getMessage());
+        }
+    }
+
+    public static void createFromDatabaseScript(String packageName, String datastore,
                                                 DatabaseConfiguration dbConfig) {
         Path sourcePath = Paths.get(INPUT_RESOURCES_DIRECTORY, packageName);
 
         String url;
-        if (datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
-            url = String.format("jdbc:sqlserver://%s:%s", dbConfig.getHost(), dbConfig.getPort());
-        } else if (datasource.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB)) {
-            url = String.format("jdbc:postgresql://%s:%s/", dbConfig.getHost(), dbConfig.getPort());
+        if (datastore.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
+            url = String.format(JDBC_URL_WITH_DATABASE_MSSQL, PersistToolsConstants.SupportedDataSources.MSSQL_DB_ALT,
+                    dbConfig.getHost(), dbConfig.getPort(), dbConfig.getDatabase());
+        } else if (datastore.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB)) {
+            url = String.format(JDBC_URL_WITH_DATABASE_POSTGRESQL, "postgresql",  dbConfig.getHost(),
+                    dbConfig.getPort(), dbConfig.getDatabase());
         } else {
-            url = String.format("jdbc:mysql://%s:%s", dbConfig.getHost(), dbConfig.getPort());
+            url = String.format(JDBC_URL_WITH_DATABASE_MYSQL, "mysql", dbConfig.getHost(), dbConfig.getPort(), "mysql");
         }
 
         try (Connection connection = DriverManager.getConnection(url, dbConfig.getUsername(), dbConfig.getPassword())) {

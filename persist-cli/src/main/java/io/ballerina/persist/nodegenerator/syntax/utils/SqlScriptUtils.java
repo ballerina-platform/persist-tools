@@ -30,7 +30,7 @@ import io.ballerina.persist.models.Enum;
 import io.ballerina.persist.models.EnumMember;
 import io.ballerina.persist.models.Index;
 import io.ballerina.persist.models.Relation;
-import io.ballerina.persist.models.SQLType;
+import io.ballerina.persist.models.SqlType;
 import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
 
 import java.text.MessageFormat;
@@ -40,6 +40,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -122,15 +123,45 @@ public class SqlScriptUtils {
                                                            String datasource) throws BalException {
         StringBuilder sqlScript = new StringBuilder();
         sqlScript.append(getColumnsScript(entity, datasource));
-        List<EntityField> relationFields = entity.getFields().stream()
-                .filter(entityField -> entityField.getRelation() != null && entityField.getRelation().isOwner())
-                .toList();
-        for (EntityField entityField : relationFields) {
-            sqlScript.append(getRelationScripts(removeSingleQuote(entity.getTableName()),
-                    entityField, referenceTables, datasource));
+
+        HashMap<String, List<EntityField>> relationFields = getMapOfRelationFields(entity, true);
+        // this is done to retain the original order of the associations
+        List<String> associations = entity.getFields().stream().filter(entityField ->
+                entityField.getRelation() != null && entityField.getRelation().isOwner())
+                .map(EntityField::getFieldType).toList();
+        for (int i = 0; i < associations.size(); i++) {
+            int occurrence = findOccurrence(associations, i);
+            sqlScript.append(getRelationScripts(entity, relationFields.get(associations.get(i)).get(occurrence),
+                    occurrence, referenceTables, datasource));
         }
         sqlScript.append(addPrimaryKey(entity.getKeys(), datasource));
         return sqlScript.substring(0, sqlScript.length() - 1);
+    }
+
+    private static int findOccurrence(List<String> associations, int index) {
+        int occured = 0;
+        for (int i = 0; i < index; i++) {
+            if (Objects.equals(associations.get(i), associations.get(index))) {
+                occured++;
+            }
+        }
+        return occured;
+    }
+
+    private static HashMap<String, List<EntityField>> getMapOfRelationFields(Entity entity, boolean isOwner) {
+        HashMap<String, List<EntityField>> relationFields = new HashMap<>();
+        for (EntityField entityField: entity.getFields()) {
+            if (entityField.getRelation() != null && entityField.getRelation().isOwner() == isOwner) {
+                if (relationFields.containsKey(entityField.getFieldType())) {
+                    relationFields.get(entityField.getFieldType()).add(entityField);
+                } else {
+                    List<EntityField> fields = new ArrayList<>();
+                    fields.add(entityField);
+                    relationFields.put(entityField.getFieldType(), fields);
+                }
+            }
+        }
+        return relationFields;
     }
 
     private static String getColumnsScript(Entity entity, String datasource) throws BalException {
@@ -176,19 +207,22 @@ public class SqlScriptUtils {
         return columnScript.toString();
     }
 
-    private static String getRelationScripts(String tableName, EntityField entityField,
-                                             HashMap<String, List<String>> referenceTables,
-                                             String datasource) throws BalException {
+    private static String getRelationScripts(Entity entity,  EntityField entityField, int index, HashMap<String,
+            List<String>> referenceTables, String datasource) throws BalException {
         StringBuilder relationScripts = new StringBuilder();
         Relation relation = entityField.getRelation();
         List<Relation.Key> keyColumns = relation.getKeyColumns();
-        List<String> references = relation.getKeyColumns().stream().map(Relation.Key::getReferenceColumnName)
-                .toList();
+        List<String> references = relation.getKeyColumns().stream().map(Relation.Key::getReferenceColumnName).toList();
         Entity assocEntity = relation.getAssocEntity();
+        EntityField assocEntityField = getMapOfRelationFields(assocEntity, false).get(entity.getEntityName())
+                .get(index);
+        Relation.RelationType associatedEntityRelationType = assocEntityField.getRelation().getRelationType();
         StringBuilder foreignKey = new StringBuilder();
         StringBuilder referenceFieldName = new StringBuilder();
-        Relation.RelationType associatedEntityRelationType = Relation.RelationType.NONE;
         int noOfReferencesKey = references.size();
+        boolean uniqueIndexExists = entity.getUniqueIndexes().stream().anyMatch(idx -> idx.getFields().stream()
+                .map(EntityField::getFieldColumnName).toList()
+                .equals(keyColumns.stream().map(Relation.Key::getColumnName).toList()));
         for (int i = 0; i < noOfReferencesKey; i++) {
             String referenceSqlType = null;
             for (EntityField assocField : assocEntity.getFields()) {
@@ -200,14 +234,10 @@ public class SqlScriptUtils {
                     break;
                 }
             }
-            for (EntityField field: assocEntity.getFields()) {
-                if (escape(removeSingleQuote(field.getFieldType()), datasource).equals(escape(tableName, datasource))) {
-                    associatedEntityRelationType = field.getRelation().getRelationType();
-                    break;
-                }
-            }
+
             if (relation.getRelationType().equals(Relation.RelationType.ONE) &&
-                    associatedEntityRelationType.equals(Relation.RelationType.ONE) && noOfReferencesKey == 1) {
+                    associatedEntityRelationType.equals(Relation.RelationType.ONE) &&
+                    noOfReferencesKey == 1 && !uniqueIndexExists) {
                 referenceSqlType += " UNIQUE";
             }
             foreignKey.append(escape(removeSingleQuote(keyColumns.get(i).getColumnName()), datasource));
@@ -221,13 +251,13 @@ public class SqlScriptUtils {
                     " NOT NULL"));
         }
         if (noOfReferencesKey > 1 && relation.getRelationType().equals(Relation.RelationType.ONE) &&
-                associatedEntityRelationType.equals(Relation.RelationType.ONE)) {
+                associatedEntityRelationType.equals(Relation.RelationType.ONE) && !uniqueIndexExists) {
             relationScripts.append(MessageFormat.format("{0}{1}UNIQUE ({2}),", NEW_LINE, TAB, foreignKey));
         }
         relationScripts.append(MessageFormat.format("{0}{1}FOREIGN KEY({2}) REFERENCES {3}({4}),",
                 NEW_LINE, TAB, foreignKey.toString(),
                 escape(removeSingleQuote(assocEntity.getTableName()), datasource), referenceFieldName));
-        updateReferenceTable(tableName, assocEntity.getTableName(), referenceTables);
+        updateReferenceTable(removeSingleQuote(entity.getTableName()), assocEntity.getTableName(), referenceTables);
         return relationScripts.toString();
     }
 
@@ -305,7 +335,7 @@ public class SqlScriptUtils {
     }
 
 
-    public static String getTypeNonArray(String field, SQLType sqlType, String datasource) throws BalException {
+    public static String getTypeNonArray(String field, SqlType sqlType, String datasource) throws BalException {
         if (sqlType != null) {
             switch (sqlType.getTypeName()) {
                 case PersistToolsConstants.SqlTypes.DECIMAL:

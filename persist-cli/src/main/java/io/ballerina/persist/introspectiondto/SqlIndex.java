@@ -25,20 +25,14 @@ public class SqlIndex {
     private final String tableName;
     private final String indexName;
     private final List<String> columnNames;
-    private final String partial;
-    private final String columnOrder;
-    private final String nonUnique;
-    private final String indexType;
+    private final boolean unique;
 
-    private SqlIndex(String indexName, String tableName, List<String> columnNames, String partial,
-                     String columnOrder, String nonUnique, String indexType) {
+    private SqlIndex(String indexName, String tableName, List<String> columnNames,
+                     boolean unique) {
         this.indexName = indexName;
         this.tableName = tableName;
         this.columnNames = columnNames;
-        this.partial = partial;
-        this.columnOrder = columnOrder;
-        this.nonUnique = nonUnique;
-        this.indexType = indexType;
+        this.unique = unique;
     }
 
     public String getTableName() {
@@ -53,20 +47,8 @@ public class SqlIndex {
         return Collections.unmodifiableList(columnNames);
     }
 
-    public String getPartial() {
-        return partial;
-    }
-
-    public String getColumnOrder() {
-        return columnOrder;
-    }
-
-    public String getNonUnique() {
-        return nonUnique;
-    }
-
-    public String getIndexType() {
-        return indexType;
+    public boolean getUnique() {
+        return unique;
     }
 
     public void addColumnName(String columnName) {
@@ -81,10 +63,7 @@ public class SqlIndex {
         private final String indexName;
         private String tableName;
         private final List<String> columnNames;
-        private String partial;
-        private String columnOrder;
-        private String nonUnique;
-        private String indexType;
+        private boolean unique;
 
         public static Builder newBuilder(String indexName) {
             return new Builder(indexName);
@@ -93,7 +72,6 @@ public class SqlIndex {
         private Builder(String indexName) {
             this.indexName = indexName;
             this.columnNames = new ArrayList<>();
-
         }
 
         public Builder setTableName(String tableName) {
@@ -106,29 +84,13 @@ public class SqlIndex {
             return this;
         }
 
-        public Builder setPartial(String partial) {
-            this.partial = partial;
-            return this;
-        }
-
-        public Builder setColumnOrder(String columnOrder) {
-            this.columnOrder = columnOrder;
-            return this;
-        }
-
-        public Builder setNonUnique(String nonUnique) {
-            this.nonUnique = nonUnique;
-            return this;
-        }
-
-        public Builder setIndexType(String indexType) {
-            this.indexType = indexType;
+        public Builder setUnique(boolean unique) {
+            this.unique = unique;
             return this;
         }
 
         public SqlIndex build() {
-            return new SqlIndex(indexName, tableName, columnNames, partial,
-                     columnOrder, nonUnique, indexType);
+            return new SqlIndex(indexName, tableName, columnNames, unique);
         }
     }
 }

@@ -23,17 +23,13 @@ import java.util.List;
 
 public class SqlTable {
     private final String tableName;
-    private final String createOptions;
-    private final String tableComment;
     private final List<SqlColumn> columns;
     private final List<SqlForeignKey> sqlForeignKeys;
 
     private final List<SqlIndex> indexes;
 
-    public SqlTable(String tableName, String createOptions, String tableComment) {
+    public SqlTable(String tableName) {
         this.tableName = tableName;
-        this.createOptions = createOptions;
-        this.tableComment = tableComment;
         this.columns = new ArrayList<>();
         this.sqlForeignKeys = new ArrayList<>();
         this.indexes = new ArrayList<>();
@@ -41,14 +37,6 @@ public class SqlTable {
 
     public String getTableName() {
         return tableName;
-    }
-
-    public String getCreateOptions() {
-        return createOptions;
-    }
-
-    public String getTableComment() {
-        return tableComment;
     }
 
     public List<SqlColumn> getColumns() {
@@ -81,26 +69,13 @@ public class SqlTable {
 
     public static class Builder {
         private final String tableName;
-        private String createOptions;
-        private String tableComment;
 
         private Builder(String tableName) {
             this.tableName = tableName;
         }
 
-        public Builder setCreateOptions(String createOptions) {
-            this.createOptions = createOptions;
-            return this;
-        }
-
-        public Builder setTableComment(String tableComment) {
-            this.tableComment = tableComment;
-            return this;
-        }
-
         public SqlTable build() {
-            return new SqlTable(tableName, createOptions,
-                    tableComment);
+            return new SqlTable(tableName);
         }
     }
 }

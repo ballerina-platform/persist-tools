@@ -939,6 +939,25 @@ public class ToolingGenerateTest {
         assertGeneratedSources("tool_test_generate_104_redis");
     }
 
+    @Test(enabled = true)
+    @Description("There are entities with 'sql' annotations")
+    public void testGenerateWithAllUnsupportedEntities() {
+        updateOutputBallerinaToml("tool_test_generate_105");
+        executeGenerateCommand("tool_test_generate_105", "mysql", "entities");
+        assertGeneratedSources("tool_test_generate_105");
+    }
+
+    @Test(enabled = true)
+    @Description("The model has a one-to-one relation where the unique index name is managed")
+    public void testGenerateEntitiesWithUniqueIndexAnnotatedForeignKeys() {
+        String subDir = "tool_test_generate_106";
+        updateOutputBallerinaToml(subDir);
+        executeGenerateCommand(subDir, "mysql", "entities");
+        executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        assertGeneratedSources(subDir);
+    }
+
     private void updateOutputBallerinaToml(String fileName) {
         String tomlFileName = "Ballerina.toml";
         Path filePath = Paths.get("src", "test", "resources", "test-src", "output", fileName, tomlFileName);

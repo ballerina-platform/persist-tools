@@ -144,13 +144,14 @@ public class BalSyntaxConstants {
     public static final String KEYWORD_READONLY = "readonly";
     public static final String JDBC_URL_WITHOUT_DATABASE = "jdbc:%s://%s:%s/";
     public static final String JDBC_URL_WITH_DATABASE_MYSQL = "jdbc:%s://%s:%s/%s";
-    public static final String JDBC_URL_WITH_DATABASE_MSSQL = "jdbc:%s://%s:%s;databaseName=%s";
+    public static final String JDBC_URL_WITH_DATABASE_MSSQL =
+            "jdbc:%s://%s:%s;databaseName=%s;trustServerCertificate=true;encrypt=false";
     public static final String JDBC_URL_WITH_DATABASE_POSTGRESQL = "jdbc:%s://%s:%s/%s";
     public static final String CREATE_DATABASE_SQL_FORMAT_MYSQL = "CREATE DATABASE IF NOT EXISTS %s";
-    public static final String DROP_DATABASE_SQL_FORMAT_MYSQL = "DROP DATABASE IF EXISTS %s";
+    public static final String DROP_DATABASE_SQL_FORMAT = "DROP DATABASE IF EXISTS %s";
     public static final String CREATE_DATABASE_SQL_FORMAT_MSSQL =
             "IF NOT EXISTS(SELECT name FROM sys.databases WHERE name = '%1$s') CREATE DATABASE %1$s;";
-    public static final String CREATE_DATABASE_SQL_FORMAT_POSTGRESQL = "CREATE DATABASE %s;";
+    public static final String CREATE_DATABASE_SQL_FORMAT = "CREATE DATABASE %s;";
     public static final String RESULT_IS_BALLERINA_ERROR = "%s is error";
     public static final String RESULT = "result";
     public static final String DB_CLIENT = "dbClient";

@@ -25,6 +25,7 @@ package io.ballerina.persist.models;
  */
 
 public class EnumMember {
+
     private final String identifier;
     private final String value;
 

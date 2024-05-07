@@ -57,6 +57,7 @@ public class Entity {
     public String getTableName() {
         return this.tableName;
     }
+
     public String getEntityName() {
         return this.entityName;
     }
@@ -121,14 +122,12 @@ public class Entity {
      * Entity Definition.Builder.
      */
     public static class Builder {
+
         String entityName;
         String tableName = null;
         List<EntityField> keys;
-
         List<EntityField> fieldList = null;
-
         List<Index> indexes;
-
         List<Index> uniqueIndexes;
         boolean containsUnsupportedTypes = false;
 
@@ -186,6 +185,7 @@ public class Entity {
         public void addUniqueIndex(Index index) {
             uniqueIndexes.add(index);
         }
+
         public void setContainsUnsupportedTypes(boolean containsUnsupportedTypes) {
             this.containsUnsupportedTypes = containsUnsupportedTypes;
         }
@@ -197,6 +197,7 @@ public class Entity {
         public String getEntityName() {
             return entityName;
         }
+
         public List<EntityField> getKeys() {
             return Collections.unmodifiableList(keys);
         }

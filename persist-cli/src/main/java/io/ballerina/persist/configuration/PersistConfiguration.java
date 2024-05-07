@@ -28,6 +28,7 @@ public class PersistConfiguration {
 
     private String provider;
     private DatabaseConfiguration dbConfig;
+    private String sourcePath;
 
     public PersistConfiguration() {
     }
@@ -46,9 +47,18 @@ public class PersistConfiguration {
 
     public void setProvider(String provider) {
         if (provider.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
-            this.provider = "sqlserver";
+            this.provider = PersistToolsConstants.SupportedDataSources.MSSQL_DB_ALT;
             return;
         }
         this.provider = provider;
     }
+
+    public String getSourcePath() {
+        return sourcePath;
+    }
+
+    public void setSourcePath(String sourcePath) {
+        this.sourcePath = sourcePath;
+    }
+
 }

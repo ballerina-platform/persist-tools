@@ -3,7 +3,7 @@
 _Owners_: @daneshk @sahanHe  
 _Reviewers_: @daneshk  
 _Created_: 2022/07/26   
-_Updated_: 2024/04/10  
+_Updated_: 2024/05/06  
 _Edition_: Swan Lake  
 
 ## Introduction
@@ -214,13 +214,13 @@ Behaviour of the `push` command,
 ```bash
 bal persist pull --datastore mysql --host localhost --port 3306 --user root --database persist
 ```
-| Command Parameter |                                   Description                                    | Mandatory | Default Value |
-|:-----------------:|:--------------------------------------------------------------------------------:|:---------:|:-------------:|
-|    --datastore    | used to indicate the preferred data store. Currently, only 'mysql' is supported. |    No     |     mysql     |
-|      --host       |                        used to indicate the database host                        |    Yes    |     None      |
-|      --port       |                        used to indicate the database port                        |    No     |     3306      |
-|      --user       |                        used to indicate the database user                        |    Yes    |     None      |
-|    --database     |                        used to indicate the database name                        |    Yes    |     None      |
+| Command Parameter |                                       Description                                       | Mandatory |   Default Value    |
+|:-----------------:|:---------------------------------------------------------------------------------------:|:---------:|:------------------:|
+|    --datastore    | used to indicate the preferred data store. supports `mysql`, `postgresql`, and `mssql`. |    No     |       mysql        |
+|      --host       |                           used to indicate the database host                            |    Yes    |        None        |
+|      --port       |                           used to indicate the database port                            |    No     | datastore specific |
+|      --user       |                           used to indicate the database user                            |    Yes    |        None        |
+|    --database     |                           used to indicate the database name                            |    Yes    |        None        |
 
 This command will introspect the schema of the database and create a `model.bal` file with the entities and relations based on the schema of the database. The database configuration should be provided as command-line arguments.
 

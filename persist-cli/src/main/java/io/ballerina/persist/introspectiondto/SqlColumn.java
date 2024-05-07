@@ -25,18 +25,16 @@ public class SqlColumn {
     private final String characterMaximumLength;
     private final String numericPrecision;
     private final String numericScale;
-    private final String datetimePrecision;
     private final String columnDefault;
     private final String isNullable;
-    private final String extra;
-    private final String columnComment;
     private final boolean isPrimaryKey;
     private final boolean isDbGenerated;
+    private final String checkConstraint;
 
     private SqlColumn(String columnName, String tableName, String dataType, String fullDataType,
                       String characterMaximumLength, String numericPrecision, String numericScale,
-                      String datetimePrecision, String columnDefault, String isNullable, String extra,
-                      String columnComment, Boolean isPrimaryKey, Boolean isDbGenerated) {
+                      String columnDefault, String isNullable, Boolean isPrimaryKey,
+                      Boolean isDbGenerated, String checkConstraint) {
         this.columnName = columnName;
         this.tableName = tableName;
         this.dataType = dataType;
@@ -44,13 +42,11 @@ public class SqlColumn {
         this.characterMaximumLength = characterMaximumLength;
         this.numericPrecision = numericPrecision;
         this.numericScale = numericScale;
-        this.datetimePrecision = datetimePrecision;
         this.columnDefault = columnDefault;
         this.isNullable = isNullable;
-        this.extra = extra;
-        this.columnComment = columnComment;
         this.isPrimaryKey = isPrimaryKey;
         this.isDbGenerated = isDbGenerated;
+        this.checkConstraint = checkConstraint;
     }
 
     public String getColumnName() {
@@ -81,10 +77,6 @@ public class SqlColumn {
         return numericScale;
     }
 
-    public String getDatetimePrecision() {
-        return datetimePrecision;
-    }
-
     public String getColumnDefault() {
         return columnDefault;
     }
@@ -97,16 +89,12 @@ public class SqlColumn {
         return isDbGenerated;
     }
 
-    public String getExtra() {
-        return extra;
-    }
-
-    public String getColumnComment() {
-        return columnComment;
-    }
-
     public Boolean getIsPrimaryKey() {
         return isPrimaryKey;
+    }
+
+    public String getCheckConstraint() {
+        return checkConstraint;
     }
 
     public static SqlColumn.Builder newBuilder(String columnName) {
@@ -120,14 +108,12 @@ public class SqlColumn {
         private String characterMaximumLength;
         private String numericPrecision;
         private String numericScale;
-        private String datetimePrecision;
         private String columnDefault;
         private String isNullable;
-        private String extra;
-        private String columnComment;
         private String tableName;
         private Boolean isPrimaryKey;
         private Boolean isDbGenerated;
+        private String checkConstraint;
 
         private Builder(String columnName) {
             this.columnName = columnName;
@@ -168,11 +154,6 @@ public class SqlColumn {
             return this;
         }
 
-        public Builder setDatetimePrecision(String datetimePrecision) {
-            this.datetimePrecision = datetimePrecision;
-            return this;
-        }
-
         public Builder setColumnDefault(String columnDefault) {
             this.columnDefault = columnDefault;
             return this;
@@ -183,25 +164,20 @@ public class SqlColumn {
             return this;
         }
 
-        public Builder setExtra(String extra) {
-            this.extra = extra;
-            return this;
-        }
-
-        public Builder setColumnComment(String columnComment) {
-            this.columnComment = columnComment;
-            return this;
-        }
         public Builder setIsPrimaryKey(Boolean isPrimaryKey) {
             this.isPrimaryKey = isPrimaryKey;
             return this;
         }
 
+        public Builder setCheckConstraint(String checkConstraint) {
+            this.checkConstraint = checkConstraint;
+            return this;
+        }
+
         public SqlColumn build() {
             return new SqlColumn(this.columnName, this.tableName, this.dataType, this.fullDataType,
-                    this.characterMaximumLength, this.numericPrecision, this.numericScale, this.datetimePrecision,
-                    this.columnDefault, this.isNullable, this.extra, this.columnComment, this.isPrimaryKey,
-                    this.isDbGenerated);
+                    this.characterMaximumLength, this.numericPrecision, this.numericScale, this.columnDefault,
+                    this.isNullable, this.isPrimaryKey, this.isDbGenerated, checkConstraint);
         }
     }
 }

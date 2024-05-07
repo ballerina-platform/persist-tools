@@ -100,9 +100,13 @@ public class PersistToolsConstants {
      * Constants related to SQL types.
      */
     public static final class SqlTypes {
+
         private SqlTypes() {}
 
         public static final String INT = "INT";
+        public static final String INT4 = "INT4";
+        public static final String INT2 = "INT2";
+        public static final String INT8 = "INT8";
         public static final String BIGINT = "BIGINT";
         public static final String TINYINT = "TINYINT";
         public static final String SMALLINT = "SMALLINT";
@@ -110,18 +114,26 @@ public class PersistToolsConstants {
         public static final String INTEGER = "INTEGER";
         public static final String BIT = "BIT";
         public static final String BOOLEAN = "BOOLEAN";
+        public static final String BOOL = "BOOL";
         public static final String DECIMAL = "DECIMAL";
+        public static final String NUMERIC = "NUMERIC";
         public static final String DOUBLE = "DOUBLE";
         public static final String FLOAT = "FLOAT";
+        public static final String FLOAT4 = "FLOAT4";
+        public static final String FLOAT8 = "FLOAT8";
         public static final String VARCHAR = "VARCHAR";
         public static final String CHAR = "CHAR";
+        public static final String CHARACTER = "CHARACTER";
+        public static final String BPCHAR = "BPCHAR";
         public static final String TINYTEXT = "TINYTEXT";
         public static final String TEXT = "TEXT";
         public static final String MEDIUMTEXT = "MEDIUMTEXT";
         public static final String LONGTEXT = "LONGTEXT";
         public static final String DATE = "DATE";
         public static final String TIME = "TIME";
+        public static final String TIMETZ = "TIMETZ";
         public static final String TIME_STAMP = "TIMESTAMP";
+        public static final String TIME_STAMPTZ = "TIMESTAMPTZ";
         public static final String DATE_TIME = "DATETIME";
         public static final String DATE_TIME2 = "DATETIME2";
         public static final String LONG_BLOB = "LONGBLOB";
@@ -133,6 +145,8 @@ public class PersistToolsConstants {
         public static final String VARBINARY = "VARBINARY";
         public static final String BYTEA = "BYTEA";
         public static final String BOOLEAN_ALT = "tinyint(1)";
+        public static final String SERIAL = "SERIAL";
+        public static final String BIGSERIAL = "BIGSERIAL";
     }
 
     /**
@@ -204,6 +218,7 @@ public class PersistToolsConstants {
 
         public static final String MYSQL_DB = "mysql";
         public static final String MSSQL_DB = "mssql";
+        public static final String MSSQL_DB_ALT = "sqlserver";
         public static final String GOOGLE_SHEETS = "googlesheets";
         public static final String IN_MEMORY_TABLE = "inmemory";
         public static final String POSTGRESQL_DB = "postgresql";

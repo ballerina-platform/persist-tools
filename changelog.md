@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Changed
+- Fixes an issue where client API is still generated even if all entities contain unsupported field(s)
+- Fixes an issue where unique indexes are declared twice in script.sql in one-to-one associations
+- Fixes an issue where the cardinality of the first association is taken as the cardinality of all the other associations between same entities
+
+### Added
+- [Add introspection support for PostgreSQL databases](https://github.com/ballerina-platform/ballerina-library/issues/6333)
+- [Add introspection support for MSSQL databases](https://github.com/ballerina-platform/ballerina-library/issues/6460)
+
+## [1.3.0] - 2024-05-03
+
+### Changed
 - [Refactor migrate command and test cases to support more scenarios](https://github.com/ballerina-platform/ballerina-library/issues/6189)
 - [Fix a bug in the `migrate` command where tables with `@sql:Name` annotations are recreated](https://github.com/ballerina-platform/ballerina-library/issues/6374)
 
