@@ -98,21 +98,21 @@ public class Pull implements BLauncherCmd {
                 introspector = new MySqlIntrospector();
                 if (Objects.isNull(port)) {
                     port = "3306";
-                    errStream.println("INFO default port 3306 is used for MySQL database");
+                    errStream.println("MySQL database introspection operates on the default port 3306");
                 }
                 break;
             case PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB:
                 introspector = new PostgreSqlIntrospector();
                 if (Objects.isNull(port)) {
                     port = "5432";
-                    errStream.println("INFO default port 5432 is used for PostgreSQL database");
+                    errStream.println("PostgreSQL database introspection operates on the default port 5432");
                 }
                 break;
             case PersistToolsConstants.SupportedDataSources.MSSQL_DB:
                 introspector = new MsSqlInstrospector();
                 if (Objects.isNull(port)) {
                     port = "1433";
-                    errStream.println("INFO default port 1433 is used for MSSQL database");
+                    errStream.println("MSSQL database introspection operates on the default port 1433");
                 }
                 break;
             default:
