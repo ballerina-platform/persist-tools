@@ -96,12 +96,12 @@ public class BalSyntaxConstants {
     public static final String RETURN_DELETED_OBJECT = "return result;";
     public static final String DELETED_OBJECT = "return %sTable.remove(%s).clone();";
     public static final String GET_OBJECT_QUERY = "%s result = check self->%s.get();";
-
     public static final String CONFIGURABLE_PORT = "configurable int port = ?;";
     public static final String CONFIGURABLE_HOST = "configurable string host = ?;";
     public static final String CONFIGURABLE_USER = "configurable string user = ?;";
     public static final String CONFIGURABLE_PASSWORD = "configurable string password = ?;";
     public static final String CONFIGURABLE_DATABASE = "configurable string database = ?;";
+
     public static final String CONFIGURABLE_CLIENT_ID = "configurable string clientId = ?;" + System.lineSeparator();
     public static final String CONFIGURABLE_CLIENT_SECRET = "configurable string clientSecret = ?;" +
             System.lineSeparator();
@@ -110,6 +110,11 @@ public class BalSyntaxConstants {
     public static final String CONFIGURABLE_WORK_SHEET_ID = "configurable string spreadsheetId = ?;" +
             System.lineSeparator();
     public static final String CONFIGURABLE_OPTIONS = "configurable %s:Options & readonly connectionOptions = {};";
+
+    // jdbc(h2) connector use url instead of host, port, database
+    public static final String CONFIGURABLE_JDBC_URL = "configurable string url = ?;";
+
+
     public static final String INIT = "init";
     public static final String POST = "post";
     public static final String DELETE = "delete";
@@ -174,6 +179,7 @@ public class BalSyntaxConstants {
     public static final String MYSQL_DRIVER = "mysql.driver";
     public static final String MSSQL_DRIVER = "mssql.driver";
     public static final String POSTGRESQL_DRIVER = "postgresql.driver";
+    public static final String H2_DRIVER = "h2.driver";
     public static final String GOOGLE_API_SHEET = "googleapis.sheets";
     public static final String HTTP = "http";
     public static final String GOOGLE_SHEETS = "googlesheets";
@@ -340,6 +346,8 @@ public class BalSyntaxConstants {
     public static final String POSTGRESQL_INIT_DB_CLIENT_WITH_PARAMS = "%s:Client|error dbClient = new (host = host, " +
             "username = user, password = password, database = database, port = port, options = connectionOptions);" +
             System.lineSeparator();
+    public static final String JDBC_URL_INIT_DB_CLIENT_WITH_PARAMS = "%s:Client|error dbClient = new (url = url, " +
+            "user = user, password = password, options = connectionOptions);" + System.lineSeparator();
     public static final String GOOGLE_SHEET_CLIENT_MAP = "[%s]: check new (self.googleSheetClient, self.httpClient, " +
             "metadata.get(%s).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(%s).cloneReadOnly())";
     public static final String TABLE_PARAMETER_INIT_TEMPLATE = "final isolated table<%s> key(%s) %sTable = table[];";
@@ -417,10 +425,12 @@ public class BalSyntaxConstants {
     public static final String MYSQL_SPECIFICS = "psql:MYSQL_SPECIFICS";
     public static final String MSSQL_SPECIFICS = "psql:MSSQL_SPECIFICS";
     public static final String POSTGRESQL_SPECIFICS = "psql:POSTGRESQL_SPECIFICS";
+    public static final String H2_SPECIFICS = "psql:H2_SPECIFICS";
 
     public static final String MYSQL_PROCESSOR = "MySQLProcessor";
     public static final String MSSQL_PROCESSOR = "MSSQLProcessor";
     public static final String POSTGRESQL_PROCESSOR = "PostgreSQLProcessor";
+    public static final String H2_PROCESSOR = "H2Processor";
 
     /**
      * Constants related to persist Redis client.

@@ -65,23 +65,32 @@ public class DbClientSyntax implements ClientSyntax {
         this.datasource = datasource;
         this.importPackage = datasource;
 
-        if (datasource.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB)) {
-            this.importDriver = BalSyntaxConstants.MYSQL_DRIVER;
-            this.dbSpecifics = BalSyntaxConstants.MYSQL_SPECIFICS;
-            this.nativeClass = BalSyntaxConstants.MYSQL_PROCESSOR;
-            this.initDbClientMethodTemplate = BalSyntaxConstants.INIT_DB_CLIENT_WITH_PARAMS;
-        } else if (datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
-            this.importDriver = BalSyntaxConstants.MSSQL_DRIVER;
-            this.dbSpecifics = BalSyntaxConstants.MSSQL_SPECIFICS;
-            this.nativeClass = BalSyntaxConstants.MSSQL_PROCESSOR;
-            this.initDbClientMethodTemplate = BalSyntaxConstants.INIT_DB_CLIENT_WITH_PARAMS;
-        } else if (datasource.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB)) {
-            this.importDriver = BalSyntaxConstants.POSTGRESQL_DRIVER;
-            this.dbSpecifics = BalSyntaxConstants.POSTGRESQL_SPECIFICS;
-            this.nativeClass = BalSyntaxConstants.POSTGRESQL_PROCESSOR;
-            this.initDbClientMethodTemplate = BalSyntaxConstants.POSTGRESQL_INIT_DB_CLIENT_WITH_PARAMS;
-        } else {
-            throw new BalException("Unsupported datasource: " + datasource);
+        switch (datasource) {
+            case PersistToolsConstants.SupportedDataSources.MYSQL_DB -> {
+                this.importDriver = BalSyntaxConstants.MYSQL_DRIVER;
+                this.dbSpecifics = BalSyntaxConstants.MYSQL_SPECIFICS;
+                this.nativeClass = BalSyntaxConstants.MYSQL_PROCESSOR;
+                this.initDbClientMethodTemplate = BalSyntaxConstants.INIT_DB_CLIENT_WITH_PARAMS;
+            }
+            case PersistToolsConstants.SupportedDataSources.MSSQL_DB -> {
+                this.importDriver = BalSyntaxConstants.MSSQL_DRIVER;
+                this.dbSpecifics = BalSyntaxConstants.MSSQL_SPECIFICS;
+                this.nativeClass = BalSyntaxConstants.MSSQL_PROCESSOR;
+                this.initDbClientMethodTemplate = BalSyntaxConstants.INIT_DB_CLIENT_WITH_PARAMS;
+            }
+            case PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB -> {
+                this.importDriver = BalSyntaxConstants.POSTGRESQL_DRIVER;
+                this.dbSpecifics = BalSyntaxConstants.POSTGRESQL_SPECIFICS;
+                this.nativeClass = BalSyntaxConstants.POSTGRESQL_PROCESSOR;
+                this.initDbClientMethodTemplate = BalSyntaxConstants.POSTGRESQL_INIT_DB_CLIENT_WITH_PARAMS;
+            }
+            case PersistToolsConstants.SupportedDataSources.H2_DB -> {
+                this.importDriver = BalSyntaxConstants.H2_DRIVER;
+                this.dbSpecifics = BalSyntaxConstants.H2_SPECIFICS;
+                this.nativeClass = BalSyntaxConstants.H2_PROCESSOR;
+                this.initDbClientMethodTemplate = BalSyntaxConstants.JDBC_URL_INIT_DB_CLIENT_WITH_PARAMS;
+            }
+            default -> throw new BalException("Unsupported datasource: " + datasource);
         }
 
     }
