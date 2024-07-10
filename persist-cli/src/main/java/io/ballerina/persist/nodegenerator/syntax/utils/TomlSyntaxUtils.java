@@ -174,7 +174,8 @@ public class TomlSyntaxUtils {
         String artifactId = BalSyntaxConstants.PERSIST_MODULE + "." + datasource;
         if (datasource.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB) ||
                 datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB) ||
-                datasource.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB)) {
+                datasource.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB) ||
+                datasource.equals(PersistToolsConstants.SupportedDataSources.H2_DB)) {
             artifactId = BalSyntaxConstants.PERSIST_MODULE + "." + BalSyntaxConstants.SQL;
         }
         if (Objects.nonNull(fileNamePath)) {
@@ -234,7 +235,8 @@ public class TomlSyntaxUtils {
         String artifactId = BalSyntaxConstants.PERSIST_MODULE + "." + datasource;
         if (datasource.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB) ||
                 datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB) ||
-                datasource.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB)) {
+                datasource.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB) ||
+                datasource.equals(PersistToolsConstants.SupportedDataSources.H2_DB)) {
             artifactId = BalSyntaxConstants.PERSIST_MODULE + "." + BalSyntaxConstants.SQL;
         }
         NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
@@ -327,19 +329,21 @@ public class TomlSyntaxUtils {
                 PersistToolsConstants.TomlFileConstants.VERSION_PROPERTIES_FILE)) {
             Properties properties = new Properties();
             properties.load(inputStream);
-            if (datasource.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB) ||
-                    datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB) ||
-                    datasource.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB)) {
-                return properties.get(PersistToolsConstants.TomlFileConstants.PERSIST_SQL_VERSION).toString();
-            } else if (datasource.equals(PersistToolsConstants.SupportedDataSources.IN_MEMORY_TABLE)) {
-                return properties.get(PersistToolsConstants.TomlFileConstants.PERSIST_IN_MEMORY_VERSION).toString();
-            } else if (datasource.equals(PersistToolsConstants.SupportedDataSources.GOOGLE_SHEETS)) {
-                return properties.get(PersistToolsConstants.TomlFileConstants.PERSIST_GOOGLE_SHEETS_VERSION).toString();
-            } else if (datasource.equals(PersistToolsConstants.SupportedDataSources.REDIS)) {
-                return properties.get(PersistToolsConstants.TomlFileConstants.PERSIST_REDIS_VERSION).toString();
-            } else {
-                throw new BalException("ERROR: invalid datasource: " + datasource);
-            }
+            return switch (datasource) {
+                case PersistToolsConstants.SupportedDataSources.MYSQL_DB,
+                        PersistToolsConstants.SupportedDataSources.MSSQL_DB,
+                        PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB,
+                        PersistToolsConstants.SupportedDataSources.H2_DB ->
+                        properties.get(PersistToolsConstants.TomlFileConstants.PERSIST_SQL_VERSION).toString();
+                case PersistToolsConstants.SupportedDataSources.IN_MEMORY_TABLE ->
+                        properties.get(PersistToolsConstants.TomlFileConstants.PERSIST_IN_MEMORY_VERSION).toString();
+                case PersistToolsConstants.SupportedDataSources.GOOGLE_SHEETS ->
+                        properties.get(
+                                PersistToolsConstants.TomlFileConstants.PERSIST_GOOGLE_SHEETS_VERSION).toString();
+                case PersistToolsConstants.SupportedDataSources.REDIS ->
+                        properties.get(PersistToolsConstants.TomlFileConstants.PERSIST_REDIS_VERSION).toString();
+                default -> throw new BalException("ERROR: invalid datasource: " + datasource);
+            };
         } catch (IOException e) {
             throw new BalException("ERROR: couldn't read the version.properties file. " + e.getMessage());
         }

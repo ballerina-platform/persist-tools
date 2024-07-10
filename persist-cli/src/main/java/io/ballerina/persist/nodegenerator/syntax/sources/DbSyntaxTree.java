@@ -51,6 +51,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import static io.ballerina.persist.PersistToolsConstants.JDBC_CONNECTOR_MODULE_NAME;
 import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_VIA_JDBC_CONNECTOR;
 
 /**
@@ -171,7 +172,11 @@ public class DbSyntaxTree implements RDBMSSyntaxTree {
         ImportOrgNameNode importOrgNameNode = NodeFactory.createImportOrgNameNode(
                 orgNameToken,
                 SyntaxTokenConstants.SYNTAX_TREE_SLASH);
-        Token moduleNameToken = AbstractNodeFactory.createIdentifierToken(datasource);
+        String moduleName = datasource;
+        if (SUPPORTED_VIA_JDBC_CONNECTOR.contains(datasource)) {
+            moduleName = JDBC_CONNECTOR_MODULE_NAME;
+        }
+        Token moduleNameToken = AbstractNodeFactory.createIdentifierToken(moduleName);
         SeparatedNodeList<IdentifierToken> moduleNodeList = AbstractNodeFactory
                 .createSeparatedNodeList(moduleNameToken);
         Token importToken = NodeFactory.createToken(SyntaxKind.IMPORT_KEYWORD,

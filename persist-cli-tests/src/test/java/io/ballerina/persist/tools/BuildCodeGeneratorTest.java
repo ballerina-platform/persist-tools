@@ -107,6 +107,14 @@ public class BuildCodeGeneratorTest {
         assertContainLogs(log, project);
     }
 
+    @Test(enabled = true, description = "Test build with H2 data store")
+    public void testBuildWithH2DataStore() throws IOException, InterruptedException {
+        updateOutputBallerinaToml("tool_test_build_8");
+        String log = "Persist client and entity types generated successfully in the persist_build_8 directory.";
+        Path project = TARGET_DIR.resolve("generated-sources/tool_test_build_8");
+        assertContainLogs(log, project);
+    }
+
     private void updateOutputBallerinaToml(String fileName) {
         String tomlFileName = "Ballerina.toml";
         Path filePath = Paths.get("src", "test", "resources", "test-src", "input", fileName, tomlFileName);

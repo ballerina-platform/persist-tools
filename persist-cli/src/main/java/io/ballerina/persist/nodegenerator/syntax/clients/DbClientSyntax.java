@@ -45,6 +45,9 @@ import io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils;
 import java.util.List;
 import java.util.Objects;
 
+import static io.ballerina.persist.PersistToolsConstants.JDBC_CONNECTOR_MODULE_NAME;
+import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_VIA_JDBC_CONNECTOR;
+
 /**
  * This class is used to generate the DB client syntax tree.
  *
@@ -53,7 +56,7 @@ import java.util.Objects;
 public class DbClientSyntax implements ClientSyntax {
 
     private final Module entityModule;
-    private final String datasource;
+    private final String dbNamePrefix;
     private final String importPackage;
     private final String importDriver;
     private final String dbSpecifics;
@@ -62,8 +65,10 @@ public class DbClientSyntax implements ClientSyntax {
 
     public DbClientSyntax(Module entityModule, String datasource) throws BalException {
         this.entityModule = entityModule;
-        this.datasource = datasource;
-        this.importPackage = datasource;
+        this.dbNamePrefix = SUPPORTED_VIA_JDBC_CONNECTOR.contains(datasource) ?
+                PersistToolsConstants.SupportedDataSources.JDBC : datasource;
+        this.importPackage = SUPPORTED_VIA_JDBC_CONNECTOR.contains(datasource) ?
+                JDBC_CONNECTOR_MODULE_NAME : datasource;
 
         switch (datasource) {
             case PersistToolsConstants.SupportedDataSources.MYSQL_DB -> {
@@ -121,7 +126,7 @@ public class DbClientSyntax implements ClientSyntax {
     public Client getClientObject(Module entityModule) {
         Client clientObject = BalSyntaxUtils.generateClientSignature(true);
         clientObject.addMember(NodeParser.parseObjectMember(
-                String.format(BalSyntaxConstants.INIT_DB_CLIENT, this.datasource)), true);
+                String.format(BalSyntaxConstants.INIT_DB_CLIENT, this.dbNamePrefix)), true);
         clientObject.addMember(NodeParser.parseObjectMember(BalSyntaxConstants.INIT_SQL_CLIENT_MAP), true);
         clientObject.addMember(generateMetadataRecord(entityModule), true);
         return clientObject;
@@ -133,7 +138,7 @@ public class DbClientSyntax implements ClientSyntax {
         init.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PUBLIC, BalSyntaxConstants.KEYWORD_ISOLATED });
         init.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode(BalSyntaxConstants.EMPTY_STRING,
                 BalSyntaxConstants.PERSIST_ERROR));
-        init.addStatement(NodeParser.parseStatement(String.format(this.initDbClientMethodTemplate, this.datasource)));
+        init.addStatement(NodeParser.parseStatement(String.format(this.initDbClientMethodTemplate, this.dbNamePrefix)));
         IfElse errorCheck = new IfElse(NodeParser.parseExpression(String.format(
                 BalSyntaxConstants.RESULT_IS_BALLERINA_ERROR, BalSyntaxConstants.DB_CLIENT)));
         errorCheck.addIfStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.RETURN_ERROR,

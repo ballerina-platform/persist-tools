@@ -81,6 +81,8 @@ public class PersistToolsConstants {
     public static final Set<String> SUPPORTED_VIA_JDBC_CONNECTOR =
             Set.of(SupportedDataSources.H2_DB);
 
+    public static final String JDBC_CONNECTOR_MODULE_NAME = "java.jdbc";
+
     /**
      * Constants related to Ballerina types.
      */
