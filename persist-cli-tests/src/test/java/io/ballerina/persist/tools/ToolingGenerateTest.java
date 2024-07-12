@@ -500,6 +500,14 @@ public class ToolingGenerateTest {
     }
 
     @Test(enabled = true)
+    @Description("There is a generated client object with h2 data source")
+    public void testH2Entity() {
+        updateOutputBallerinaToml("tool_test_generate_107_h2");
+        executeGenerateCommand("tool_test_generate_107_h2", "h2", "entities");
+        assertGeneratedSources("tool_test_generate_107_h2");
+    }
+
+    @Test(enabled = true)
     @Description("There is a generated client object with mssql data source")
     public void testMSSQLWithAssociatedEntity() {
         updateOutputBallerinaToml("tool_test_generate_59_mssql");
@@ -513,6 +521,14 @@ public class ToolingGenerateTest {
         updateOutputBallerinaToml("tool_test_generate_67_postgresql");
         executeGenerateCommand("tool_test_generate_67_postgresql", "postgresql", "entities");
         assertGeneratedSources("tool_test_generate_67_postgresql");
+    }
+
+    @Test(enabled = true)
+    @Description("There is a generated client object with h2 data source")
+    public void testH2WithAssociatedEntity() {
+        updateOutputBallerinaToml("tool_test_generate_108_h2");
+        executeGenerateCommand("tool_test_generate_108_h2", "h2", "entities");
+        assertGeneratedSources("tool_test_generate_108_h2");
     }
 
     @Test(enabled = true)
@@ -532,6 +548,14 @@ public class ToolingGenerateTest {
     }
 
     @Test(enabled = true)
+    @Description("There is a generated client object with h2 data source")
+    public void testH2WithCompositeKeys() {
+        updateOutputBallerinaToml("tool_test_generate_109_h2");
+        executeGenerateCommand("tool_test_generate_109_h2", "h2", "entities");
+        assertGeneratedSources("tool_test_generate_109_h2");
+    }
+
+    @Test(enabled = true)
     @Description("There is multiple entities with multiple enums and imports with mssql data source")
     public void testGenerateWithEnumsMSSQL() {
         updateOutputBallerinaToml("tool_test_generate_61_mssql");
@@ -545,6 +569,14 @@ public class ToolingGenerateTest {
         updateOutputBallerinaToml("tool_test_generate_69_postgresql");
         executeGenerateCommand("tool_test_generate_69_postgresql", "postgresql", "entities");
         assertGeneratedSources("tool_test_generate_69_postgresql");
+    }
+
+    @Test(enabled = true)
+    @Description("There is multiple entities with multiple enums and imports with h2 data source")
+    public void testGenerateWithEnumsH2() {
+        updateOutputBallerinaToml("tool_test_generate_110_h2");
+        executeGenerateCommand("tool_test_generate_110_h2", "h2", "entities");
+        assertGeneratedSources("tool_test_generate_110_h2");
     }
 
     @Test(enabled = true)
@@ -564,6 +596,14 @@ public class ToolingGenerateTest {
     }
 
     @Test(enabled = true)
+    @Description("There is an entity which is associated with multiple relations")
+    public void testGenerateWithSameEntityMultipleRelationsH2() {
+        updateOutputBallerinaToml("tool_test_generate_111_h2");
+        executeGenerateCommand("tool_test_generate_111_h2", "h2", "entities");
+        assertGeneratedSources("tool_test_generate_111_h2");
+    }
+
+    @Test(enabled = true)
     @Description("There is a model with an entity consisting of multiple relations of the same type")
     public void testGenerateEntityWithMultipleRelationsSameTypeMSSQL() {
         updateOutputBallerinaToml("tool_test_generate_63_mssql");
@@ -577,6 +617,14 @@ public class ToolingGenerateTest {
         updateOutputBallerinaToml("tool_test_generate_71_postgresql");
         executeGenerateCommand("tool_test_generate_71_postgresql", "postgresql", "entities");
         assertGeneratedSources("tool_test_generate_71_postgresql");
+    }
+
+    @Test(enabled = true)
+    @Description("There is a model with an entity consisting of multiple relations of the same type")
+    public void testGenerateEntityWithMultipleRelationsSameTypeH2() {
+        updateOutputBallerinaToml("tool_test_generate_112_h2");
+        executeGenerateCommand("tool_test_generate_112_h2", "h2", "entities");
+        assertGeneratedSources("tool_test_generate_112_h2");
     }
 
     @Test(enabled = true)
@@ -609,6 +657,7 @@ public class ToolingGenerateTest {
         updateOutputBallerinaToml(subDir);
         executeGenerateCommand(subDir, "mysql", "entities");
         executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "h2", "h2_entities");
         executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
@@ -620,6 +669,7 @@ public class ToolingGenerateTest {
         updateOutputBallerinaToml(subDir);
         executeGenerateCommand(subDir, "mysql", "entities");
         executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "h2", "h2_entities");
         executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
@@ -631,6 +681,7 @@ public class ToolingGenerateTest {
         updateOutputBallerinaToml(subDir);
         executeGenerateCommand(subDir, "mysql", "entities");
         executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "h2", "h2_entities");
         executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
@@ -642,6 +693,7 @@ public class ToolingGenerateTest {
         updateOutputBallerinaToml(subDir);
         executeGenerateCommand(subDir, "mysql", "entities");
         executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "h2", "h2_entities");
         executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
@@ -653,6 +705,7 @@ public class ToolingGenerateTest {
         updateOutputBallerinaToml(subDir);
         executeGenerateCommand(subDir, "mysql", "entities");
         executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "h2", "h2_entities");
         executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
@@ -664,6 +717,7 @@ public class ToolingGenerateTest {
         updateOutputBallerinaToml(subDir);
         executeGenerateCommand(subDir, "mysql", "entities");
         executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "h2", "h2_entities");
         executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
@@ -675,6 +729,7 @@ public class ToolingGenerateTest {
         updateOutputBallerinaToml(subDir);
         executeGenerateCommand(subDir, "mysql", "entities");
         executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "h2", "h2_entities");
         executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
@@ -686,6 +741,7 @@ public class ToolingGenerateTest {
         updateOutputBallerinaToml(subDir);
         executeGenerateCommand(subDir, "mysql", "entities");
         executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "h2", "h2_entities");
         executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
@@ -697,6 +753,7 @@ public class ToolingGenerateTest {
         updateOutputBallerinaToml(subDir);
         executeGenerateCommand(subDir, "mysql", "entities");
         executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "h2", "h2_entities");
         executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
@@ -708,6 +765,7 @@ public class ToolingGenerateTest {
         updateOutputBallerinaToml(subDir);
         executeGenerateCommand(subDir, "mysql", "entities");
         executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "h2", "h2_entities");
         executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
@@ -719,6 +777,7 @@ public class ToolingGenerateTest {
         updateOutputBallerinaToml(subDir);
         executeGenerateCommand(subDir, "mysql", "entities");
         executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "h2", "h2_entities");
         executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
@@ -730,6 +789,7 @@ public class ToolingGenerateTest {
         updateOutputBallerinaToml(subDir);
         executeGenerateCommand(subDir, "mysql", "entities");
         executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "h2", "h2_entities");
         executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
@@ -742,6 +802,7 @@ public class ToolingGenerateTest {
         updateOutputBallerinaToml(subDir);
         executeGenerateCommand(subDir, "mysql", "entities");
         executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "h2", "h2_entities");
         executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
@@ -753,6 +814,7 @@ public class ToolingGenerateTest {
         updateOutputBallerinaToml(subDir);
         executeGenerateCommand(subDir, "mysql", "entities");
         executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "h2", "h2_entities");
         executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
@@ -764,6 +826,7 @@ public class ToolingGenerateTest {
         updateOutputBallerinaToml(subDir);
         executeGenerateCommand(subDir, "mysql", "entities");
         executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "h2", "h2_entities");
         executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
@@ -775,6 +838,7 @@ public class ToolingGenerateTest {
         updateOutputBallerinaToml(subDir);
         executeGenerateCommand(subDir, "mysql", "entities");
         executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "h2", "h2_entities");
         executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
@@ -786,6 +850,7 @@ public class ToolingGenerateTest {
         updateOutputBallerinaToml(subDir);
         executeGenerateCommand(subDir, "mysql", "entities");
         executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "h2", "h2_entities");
         executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
@@ -797,6 +862,7 @@ public class ToolingGenerateTest {
         updateOutputBallerinaToml(subDir);
         executeGenerateCommand(subDir, "mysql", "entities");
         executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "h2", "h2_entities");
         executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
@@ -808,6 +874,7 @@ public class ToolingGenerateTest {
         updateOutputBallerinaToml(subDir);
         executeGenerateCommand(subDir, "mysql", "entities");
         executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "h2", "h2_entities");
         executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
@@ -819,6 +886,7 @@ public class ToolingGenerateTest {
         updateOutputBallerinaToml(subDir);
         executeGenerateCommand(subDir, "mysql", "entities");
         executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "h2", "h2_entities");
         executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
@@ -830,6 +898,7 @@ public class ToolingGenerateTest {
         updateOutputBallerinaToml(subDir);
         executeGenerateCommand(subDir, "mysql", "entities");
         executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "h2", "h2_entities");
         executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
@@ -841,6 +910,7 @@ public class ToolingGenerateTest {
         updateOutputBallerinaToml(subDir);
         executeGenerateCommand(subDir, "mysql", "entities");
         executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "h2", "h2_entities");
         executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
@@ -852,6 +922,7 @@ public class ToolingGenerateTest {
         updateOutputBallerinaToml(subDir);
         executeGenerateCommand(subDir, "mysql", "entities");
         executeGenerateCommand(subDir, "mssql", "mssql_entities");
+        executeGenerateCommand(subDir, "h2", "h2_entities");
         executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
@@ -912,6 +983,7 @@ public class ToolingGenerateTest {
         executeGenerateCommand(subDir, "mysql", "entities");
         executeGenerateCommand(subDir, "mssql", "mssql_entities");
         executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        executeGenerateCommand(subDir, "h2", "h2_entities");
         assertGeneratedSources(subDir);
     }
 
@@ -955,6 +1027,7 @@ public class ToolingGenerateTest {
         executeGenerateCommand(subDir, "mysql", "entities");
         executeGenerateCommand(subDir, "mssql", "mssql_entities");
         executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        executeGenerateCommand(subDir, "h2", "h2_entities");
         assertGeneratedSources(subDir);
     }
 

@@ -12,6 +12,11 @@ user = "sa"
 password = ""
 database = ""
 
+[tool_test_generate_87.h2_entities]
+url = ""
+user = ""
+password = ""
+
 [tool_test_generate_87.postgresql_entities]
 host = "localhost"
 port = 5432

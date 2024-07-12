@@ -1,0 +1,14 @@
+[package]
+org = "foo"
+name = "persist_generate_112"
+version = "0.1.0"
+distribution = "2201.10.0"
+
+[build-options]
+observabilityIncluded = false
+
+[[platform.java17.dependency]]
+groupId = "io.ballerina.stdlib"
+artifactId = "persist.sql-native"
+version = "1.4.0-SNAPSHOT"
+

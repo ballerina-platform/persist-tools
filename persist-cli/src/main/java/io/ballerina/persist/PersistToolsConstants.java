@@ -191,7 +191,7 @@ public class PersistToolsConstants {
         private DefaultMaxLength() {}
 
         public static final int VARCHAR_LENGTH = 191;
-        public static final int DECIMAL_PRECISION_MYSQL = 65;
+        public static final int DECIMAL_PRECISION = 65;
         public static final int DECIMAL_PRECISION_MSSQL = 38;
         public static final int DECIMAL_PRECISION_POSTGRESQL = 65;
         public static final int DECIMAL_SCALE = 30;
