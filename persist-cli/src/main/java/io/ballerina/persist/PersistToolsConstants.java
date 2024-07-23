@@ -72,10 +72,16 @@ public class PersistToolsConstants {
 
     public static final Set<String> SUPPORTED_DB_PROVIDERS =
            Set.of(SupportedDataSources.MYSQL_DB, SupportedDataSources.MSSQL_DB, SupportedDataSources.IN_MEMORY_TABLE,
-                   SupportedDataSources.GOOGLE_SHEETS, SupportedDataSources.POSTGRESQL_DB, SupportedDataSources.REDIS);
+                   SupportedDataSources.GOOGLE_SHEETS, SupportedDataSources.POSTGRESQL_DB, SupportedDataSources.REDIS,
+                   SupportedDataSources.H2_DB);
     public static final Set<String> SUPPORTED_NOSQL_DB_PROVIDERS = 
             Set.of(SupportedDataSources.IN_MEMORY_TABLE, SupportedDataSources.GOOGLE_SHEETS, 
             SupportedDataSources.REDIS);
+
+    public static final Set<String> SUPPORTED_VIA_JDBC_CONNECTOR =
+            Set.of(SupportedDataSources.H2_DB);
+
+    public static final String JDBC_CONNECTOR_MODULE_NAME = "java.jdbc";
 
     /**
      * Constants related to Ballerina types.
@@ -185,7 +191,7 @@ public class PersistToolsConstants {
         private DefaultMaxLength() {}
 
         public static final int VARCHAR_LENGTH = 191;
-        public static final int DECIMAL_PRECISION_MYSQL = 65;
+        public static final int DECIMAL_PRECISION = 65;
         public static final int DECIMAL_PRECISION_MSSQL = 38;
         public static final int DECIMAL_PRECISION_POSTGRESQL = 65;
         public static final int DECIMAL_SCALE = 30;
@@ -223,6 +229,8 @@ public class PersistToolsConstants {
         public static final String IN_MEMORY_TABLE = "inmemory";
         public static final String POSTGRESQL_DB = "postgresql";
         public static final String REDIS = "redis";
+        public static final String H2_DB = "h2";
+        public static final String JDBC = "jdbc";
     }
 
     /**
@@ -234,6 +242,7 @@ public class PersistToolsConstants {
 
         public static final String KEY_USER = "user";
         public static final String KEY_PORT = "port";
+        public static final String KEY_URL = "url";
         public static final String KEY_PASSWORD = "password";
         public static final String KEY_DATABASE = "database";
         public static final String KEY_HOST = "host";

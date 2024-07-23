@@ -230,6 +230,7 @@ public class Generate implements BLauncherCmd {
                 case PersistToolsConstants.SupportedDataSources.MYSQL_DB:
                 case PersistToolsConstants.SupportedDataSources.MSSQL_DB:
                 case PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB:
+                case PersistToolsConstants.SupportedDataSources.H2_DB:
                     sourceCreator.createDbSources(datastore);
                     break;
                 case PersistToolsConstants.SupportedDataSources.GOOGLE_SHEETS:

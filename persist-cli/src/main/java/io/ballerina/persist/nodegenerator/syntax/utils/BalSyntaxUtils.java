@@ -324,6 +324,8 @@ public class BalSyntaxUtils {
                     imports.add(NodeParser.parseImportDeclaration(("import ballerinax/postgresql.driver as _;")));
             case PersistToolsConstants.SupportedDataSources.MSSQL_DB_ALT ->
                     imports.add(NodeParser.parseImportDeclaration(("import ballerinax/mssql.driver as _;")));
+            case PersistToolsConstants.SupportedDataSources.H2_DB ->
+                    imports.add(NodeParser.parseImportDeclaration(("import ballerinax/h2.driver as _;")));
             default -> imports;
         };
         return generateSyntaxTree(imports, moduleMembers);
@@ -602,7 +604,7 @@ public class BalSyntaxUtils {
                     break;
                 case PersistToolsConstants.SqlTypes.DECIMAL:
                 case PersistToolsConstants.SqlTypes.NUMERIC:
-                    int precision = PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION_MYSQL;
+                    int precision = PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION;
                     int scale = PersistToolsConstants.DefaultMaxLength.DECIMAL_SCALE;
                     if (sqlType.getDatastore().equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB_ALT)) {
                         precision = PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION_MSSQL;
@@ -634,7 +636,7 @@ public class BalSyntaxUtils {
                     return false;
                 case PersistToolsConstants.SqlTypes.DECIMAL:
                 case PersistToolsConstants.SqlTypes.NUMERIC:
-                    int precision = PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION_MYSQL;
+                    int precision = PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION;
                     int scale = PersistToolsConstants.DefaultMaxLength.DECIMAL_SCALE;
                     if (sqlType.getDatastore().equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB_ALT)) {
                         precision = PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION_MSSQL;

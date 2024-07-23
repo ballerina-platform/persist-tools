@@ -19,4 +19,9 @@ user = "postgres"
 password = ""
 database = ""
 
+[tool_test_generate_101.h2_entities]
+url = ""
+user = ""
+password = ""
+
 
