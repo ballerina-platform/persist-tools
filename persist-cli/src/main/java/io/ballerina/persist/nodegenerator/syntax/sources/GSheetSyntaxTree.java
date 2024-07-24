@@ -49,6 +49,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.CLIENT_NAME;
+
 /**
  * This class is used to generate the syntax tree for google sheet.
  *
@@ -62,7 +64,7 @@ public class GSheetSyntaxTree implements SyntaxTree {
         NodeList<ImportDeclarationNode> imports = gSheetClientSyntax.getImports();
         NodeList<ModuleMemberDeclarationNode> moduleMembers = gSheetClientSyntax.getConstantVariables();
 
-        Client clientObject = gSheetClientSyntax.getClientObject(entityModule);
+        Client clientObject = gSheetClientSyntax.getClientObject(entityModule, CLIENT_NAME);
         Collection<Entity> entityArray = entityModule.getEntityMap().values();
         if (entityArray.size() == 0) {
             throw new BalException("data definition file() does not contain any entities.");
@@ -106,6 +108,12 @@ public class GSheetSyntaxTree implements SyntaxTree {
         moduleMembers = moduleMembers.add(clientObject.getClassDefinitionNode());
         return BalSyntaxUtils.generateSyntaxTree(imports, moduleMembers);
     }
+
+    @Override
+    public io.ballerina.compiler.syntax.tree.SyntaxTree getMockClientSyntax(Module entityModule) throws BalException {
+        throw new BalException("Not supported yet.");
+    }
+
 
     @Override
     public io.ballerina.compiler.syntax.tree.SyntaxTree getDataTypesSyntax(Module entityModule) throws BalException {

@@ -123,8 +123,8 @@ public class DbClientSyntax implements ClientSyntax {
     }
 
     @Override
-    public Client getClientObject(Module entityModule) {
-        Client clientObject = BalSyntaxUtils.generateClientSignature(true);
+    public Client getClientObject(Module entityModule, String clientName) {
+        Client clientObject = BalSyntaxUtils.generateClientSignature(clientName, true);
         clientObject.addMember(NodeParser.parseObjectMember(
                 String.format(BalSyntaxConstants.INIT_DB_CLIENT, this.dbNamePrefix)), true);
         clientObject.addMember(NodeParser.parseObjectMember(BalSyntaxConstants.INIT_SQL_CLIENT_MAP), true);

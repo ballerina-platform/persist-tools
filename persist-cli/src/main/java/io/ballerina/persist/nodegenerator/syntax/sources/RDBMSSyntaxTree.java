@@ -30,6 +30,9 @@ public interface RDBMSSyntaxTree {
     io.ballerina.compiler.syntax.tree.SyntaxTree getClientSyntax(Module entityModule, String datasource)
             throws BalException;
 
+    io.ballerina.compiler.syntax.tree.SyntaxTree getMockClientSyntax(Module entityModule, String datasource)
+            throws BalException;
+
     io.ballerina.compiler.syntax.tree.SyntaxTree getDataTypesSyntax(Module entityModule) throws BalException;
 
     io.ballerina.compiler.syntax.tree.SyntaxTree getConfigTomlSyntax(String moduleName, String datasource)

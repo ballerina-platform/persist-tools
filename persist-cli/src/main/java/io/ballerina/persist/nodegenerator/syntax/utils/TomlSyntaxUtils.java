@@ -167,22 +167,26 @@ public class TomlSyntaxUtils {
      * Method to update the Ballerina.toml with database configurations and persist dependency.
      */
     public static String updateBallerinaToml(Path configPath, String module, String datasource,
-                                             boolean generateCmd, String... id) throws IOException, BalException {
+                                             boolean generateCmd, boolean includeMockClient, String... id)
+            throws IOException, BalException {
         NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
         Path fileNamePath = configPath.getFileName();
         TextDocument configDocument = TextDocuments.from(Files.readString(configPath));
         String artifactId = BalSyntaxConstants.PERSIST_MODULE + "." + datasource;
+        String mockArtifactId = BalSyntaxConstants.PERSIST_MODULE + "." + BalSyntaxConstants.PERSIST_IN_MEMORY;
         if (datasource.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB) ||
                 datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB) ||
                 datasource.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB) ||
                 datasource.equals(PersistToolsConstants.SupportedDataSources.H2_DB)) {
             artifactId = BalSyntaxConstants.PERSIST_MODULE + "." + BalSyntaxConstants.SQL;
+            mockArtifactId = BalSyntaxConstants.PERSIST_MODULE + "." + BalSyntaxConstants.SQL;
         }
         if (Objects.nonNull(fileNamePath)) {
             SyntaxTree syntaxTree = SyntaxTree.from(configDocument, fileNamePath.toString());
             DocumentNode rootNote = syntaxTree.rootNode();
             NodeList<DocumentMemberDeclarationNode> nodeList = rootNote.members();
             boolean dependencyExists = false;
+            boolean mockDependencyExists = false;
             for (DocumentMemberDeclarationNode member : nodeList) {
                 if (member instanceof KeyValueNode) {
                     moduleMembers = moduleMembers.add(member);
@@ -196,11 +200,19 @@ public class TomlSyntaxUtils {
                         for (KeyValueNode field : fields) {
                             String value = field.value().toSourceCode().trim();
                             if (field.identifier().toSourceCode().trim().equals(
-                                    PersistToolsConstants.TomlFileConstants.KEYWORD_ARTIFACT_ID) &&
-                                    (value).substring(1, value.length() - 1).equals(
-                                            String.format(PersistToolsConstants.TomlFileConstants.ARTIFACT_ID,
-                                                    artifactId))) {
-                                dependencyExists = true;
+                                    PersistToolsConstants.TomlFileConstants.KEYWORD_ARTIFACT_ID)) {
+                                if (value.substring(1, value.length() - 1).equals(
+                                        String.format(PersistToolsConstants.TomlFileConstants.ARTIFACT_ID,
+                                                artifactId))) {
+                                    dependencyExists = true;
+                                }
+                                if (value.substring(1, value.length() - 1).equals(
+                                        String.format(PersistToolsConstants.TomlFileConstants.ARTIFACT_ID,
+                                                mockArtifactId))) {
+                                    mockDependencyExists = true;
+                                }
+                            }
+                            if (dependencyExists && (includeMockClient == mockDependencyExists)) {
                                 break;
                             }
                         }
@@ -216,10 +228,19 @@ public class TomlSyntaxUtils {
                         PersistToolsConstants.PERSIST_TOOL_CONFIG, null));
                 moduleMembers = populateBallerinaNodeList(moduleMembers, module, datasource, id[0]);
                 moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
-            } else if (!dependencyExists) {
-                moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray(
-                        BalSyntaxConstants.PERSIST_DEPENDENCY, null));
-                moduleMembers = populatePersistDependency(moduleMembers, artifactId, datasource);
+            } else {
+                if (!dependencyExists) {
+                    moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray(
+                            BalSyntaxConstants.PERSIST_DEPENDENCY, null));
+                    moduleMembers = populatePersistDependency(moduleMembers, artifactId, datasource);
+                }
+                if (includeMockClient && !mockDependencyExists && !mockArtifactId.equals(artifactId)) {
+                    moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
+                    moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray(
+                            BalSyntaxConstants.PERSIST_DEPENDENCY, null));
+                    moduleMembers = populatePersistDependency(moduleMembers, mockArtifactId,
+                            PersistToolsConstants.SupportedDataSources.IN_MEMORY_TABLE);
+                }
             }
         }
         Token eofToken = AbstractNodeFactory.createIdentifierToken("");

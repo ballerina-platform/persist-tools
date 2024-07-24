@@ -65,6 +65,9 @@ public class Add implements BLauncherCmd {
     @CommandLine.Option(names = {"--id"}, description = "ID for the generated Ballerina client")
     private String id;
 
+    @CommandLine.Option(names = {"--with-mock-client"}, hidden = true, description = "Generate mock client")
+    private boolean includeMockClient;
+
     public Add() {
         this("");
     }
@@ -85,7 +88,7 @@ public class Add implements BLauncherCmd {
             validateAndProcessModule();
             createDefaultClientId();
             String syntaxTree = TomlSyntaxUtils.updateBallerinaToml(Paths.get(this.sourcePath, BALLERINA_TOML), module,
-                    datastore, false, id);
+                    datastore, false, includeMockClient, id);
             Utils.writeOutputString(syntaxTree,
                     Paths.get(sourcePath, BALLERINA_TOML).toAbsolutePath().toString());
             createPersistDirectoryIfNotExists();

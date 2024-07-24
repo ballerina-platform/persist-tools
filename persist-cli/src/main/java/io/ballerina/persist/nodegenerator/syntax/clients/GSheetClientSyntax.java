@@ -69,8 +69,8 @@ public class GSheetClientSyntax implements ClientSyntax {
     }
 
     @Override
-    public Client getClientObject(Module entityModule) {
-        Client clientObject = BalSyntaxUtils.generateClientSignature(true);
+    public Client getClientObject(Module entityModule, String clientName) {
+        Client clientObject = BalSyntaxUtils.generateClientSignature(clientName, true);
         clientObject.addMember(NodeParser.parseObjectMember(BalSyntaxConstants.GOOGLE_SHEET_CLIENT), true);
         clientObject.addMember(NodeParser.parseObjectMember(BalSyntaxConstants.HTTP_CLIENT), true);
         clientObject.addMember(NodeParser.parseObjectMember(BalSyntaxConstants.INIT_GOOGLE_SHEET_CLIENT_MAP), true);
@@ -208,6 +208,16 @@ public class GSheetClientSyntax implements ClientSyntax {
         }
         delete.addStatement(NodeParser.parseStatement(BalSyntaxConstants.RETURN_DELETED_OBJECT));
         return delete.getFunctionDefinitionNode();
+    }
+
+    @Override
+    public FunctionDefinitionNode getQueryNativeSQLFunction() {
+        throw new UnsupportedOperationException("Query native SQL function is not supported for Google Sheets");
+    }
+
+    @Override
+    public FunctionDefinitionNode getExecuteNativeSQLFunction() {
+        throw new UnsupportedOperationException("Execute native SQL function is not supported for Google Sheets");
     }
 
     private String generateMetadataRecord(Module entityModule) {

@@ -49,6 +49,7 @@ import java.util.Objects;
 
 import static io.ballerina.persist.PersistToolsConstants.GOOGLE_SHEETS_SCHEMA_FILE;
 import static io.ballerina.persist.PersistToolsConstants.SQL_SCHEMA_FILE;
+import static io.ballerina.persist.PersistToolsConstants.SupportedDataSources.H2_DB;
 
 /**
  * This class is used to generate the all files to data source type.
@@ -90,7 +91,7 @@ public class SourceGenerator {
         }
     }
 
-    public void createDbSources(String datasource) throws BalException {
+    public void createDbSources(String datasource, boolean includeMockClient) throws BalException {
         DbSyntaxTree dbSyntaxTree = new DbSyntaxTree();
         try {
             addDataSourceConfigBalFile(this.generatedSourceDirPath, BalSyntaxConstants.PATH_DB_CONFIGURATION_BAL_FILE,
@@ -106,12 +107,20 @@ public class SourceGenerator {
             addSqlScriptFile(this.entityModule.getModuleName(),
                     SqlScriptUtils.generateSqlScript(this.entityModule.getEntityMap().values(), datasource),
                     generatedSourceDirPath);
+            if (includeMockClient && !datasource.equals(H2_DB)) {
+                addClientFile(dbSyntaxTree.getMockClientSyntax(entityModule, datasource),
+                        this.generatedSourceDirPath.resolve("persist_mock_client.bal").toAbsolutePath(),
+                        this.moduleNameWithPackageName);
+                addTestInitFile(dbSyntaxTree.getTestInitSyntax(SqlScriptUtils.
+                                generateSqlScript(this.entityModule.getEntityMap().values(), H2_DB)),
+                        this.generatedSourceDirPath.resolve("persist_test_init.bal").toAbsolutePath());
+            }
         } catch (BalException e) {
             throw new BalException(e.getMessage());
         }
     }
 
-    public void createRedisSources() throws BalException {
+    public void createRedisSources(boolean withMockClient) throws BalException {
         RedisSyntaxTree redisSyntaxTree = new RedisSyntaxTree();
         try {
             addDataSourceConfigBalFile(this.generatedSourceDirPath, BalSyntaxConstants.PATH_DB_CONFIGURATION_BAL_FILE,
@@ -124,6 +133,12 @@ public class SourceGenerator {
             addClientFile(redisSyntaxTree.getClientSyntax(this.entityModule),
                     this.generatedSourceDirPath.resolve(persistClientBal).toAbsolutePath(),
                     this.moduleNameWithPackageName);
+            if (withMockClient) {
+                InMemorySyntaxTree inMemorySyntaxTree = new InMemorySyntaxTree();
+                addClientFile(inMemorySyntaxTree.getMockClientSyntax(entityModule),
+                        this.generatedSourceDirPath.resolve("persist_mock_client.bal").toAbsolutePath(),
+                        this.moduleNameWithPackageName);
+            }
         } catch (BalException e) {
             throw new BalException(e.getMessage());
         }
@@ -144,7 +159,7 @@ public class SourceGenerator {
         }
     }
 
-    public void createGSheetSources() throws BalException {
+    public void createGSheetSources(boolean withMockClient) throws BalException {
         GSheetSyntaxTree gSheetSyntaxTree = new GSheetSyntaxTree();
         try {
             addDataSourceConfigBalFile(this.generatedSourceDirPath,
@@ -160,6 +175,12 @@ public class SourceGenerator {
             addGoogleScriptFile(this.entityModule.getModuleName(),
                     AppScriptUtils.generateJavaScriptFile(this.entityModule.getEntityMap().values()),
                     generatedSourceDirPath);
+            if (withMockClient) {
+                InMemorySyntaxTree inMemorySyntaxTree = new InMemorySyntaxTree();
+                addClientFile(inMemorySyntaxTree.getMockClientSyntax(entityModule),
+                        this.generatedSourceDirPath.resolve("persist_mock_client.bal").toAbsolutePath(),
+                        this.moduleNameWithPackageName);
+            }
         } catch (BalException e) {
             throw new BalException(e.getMessage());
         }
@@ -208,6 +229,15 @@ public class SourceGenerator {
         } catch (FormatterException | IOException e) {
             throw new BalException(String.format("could not write the client code for the `%s` data model " +
                     "to the persist_client.bal file.", moduleName) + e.getMessage());
+        }
+    }
+
+    private void addTestInitFile(SyntaxTree syntaxTree, Path path) throws BalException {
+        try {
+            writeOutputFile(Formatter.format(syntaxTree.toSourceCode()), path);
+        } catch (FormatterException | IOException e) {
+            throw new BalException(String.format("could not write the db initialization scripts to the `%s` file.",
+                    path.getFileName()) + e.getMessage());
         }
     }
     
@@ -286,8 +316,7 @@ public class SourceGenerator {
             for (DocumentMemberDeclarationNode member : nodeList) {
                 if (member instanceof KeyValueNode) {
                     moduleMembers = moduleMembers.add(member);
-                } else if (member instanceof TableNode) {
-                    TableNode node = (TableNode) member;
+                } else if (member instanceof TableNode node) {
                     moduleMembers = moduleMembers.add(member);
                     if (node.identifier().toSourceCode().trim().equals(moduleName)) {
                         configExists = true;

@@ -62,6 +62,7 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
         Path schemaFilePath;
         String packageName;
         String targetModule;
+        boolean includeMockClient;
 
         TomlNodeLocation location = toolContext.currentPackage().ballerinaToml().get().tomlAstNode().location();
         Path projectPath = toolContext.currentPackage().project().sourceRoot();
@@ -74,6 +75,9 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
                     Paths.get(projectPath.toString(), BALLERINA_TOML));
             targetModule = ballerinaTomlConfig.get(TARGET_MODULE).trim();
             datastore = ballerinaTomlConfig.get("options.datastore").trim();
+            includeMockClient = ballerinaTomlConfig.get("options.withMockClient") != null &&
+                    ballerinaTomlConfig.get("options.withMockClient").trim().equals("true");
+
             validateDatastore(datastore);
             if (!targetModule.equals(packageName)) {
                 if (!targetModule.startsWith(packageName + ".")) {
@@ -102,7 +106,8 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
             Utils.writeOutputString(syntaxTree,
                     Paths.get(projectPath.toString(), BALLERINA_TOML).toAbsolutePath().toString());
             createGeneratedSourceDirIfNotExists(generatedSourceDirPath);
-            generateSources(datastore, entityModule, targetModule, projectPath, generatedSourceDirPath);
+            generateSources(datastore, entityModule, targetModule, projectPath, generatedSourceDirPath,
+                    includeMockClient);
             String modelHashVal = getHashValue(schemaFilePath);
             Path cachePath = toolContext.cachePath();
             updateCacheFile(cachePath, modelHashVal);
@@ -205,7 +210,7 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
     }
 
     private void generateSources(String datastore, Module entityModule, String targetModule, Path projectPath,
-                                 Path generatedSourceDirPath) throws BalException {
+                                 Path generatedSourceDirPath, boolean includeMockClient) throws BalException {
         SourceGenerator sourceCreator = new SourceGenerator(projectPath.toString(), generatedSourceDirPath,
                 targetModule, entityModule);
         switch (datastore) {
@@ -213,13 +218,13 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
             case PersistToolsConstants.SupportedDataSources.MSSQL_DB:
             case PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB:
             case PersistToolsConstants.SupportedDataSources.H2_DB:
-                sourceCreator.createDbSources(datastore);
+                sourceCreator.createDbSources(datastore, includeMockClient);
                 break;
             case PersistToolsConstants.SupportedDataSources.GOOGLE_SHEETS:
-                sourceCreator.createGSheetSources();
+                sourceCreator.createGSheetSources(includeMockClient);
                 break;
             case PersistToolsConstants.SupportedDataSources.REDIS:
-                sourceCreator.createRedisSources();
+                sourceCreator.createRedisSources(includeMockClient);
                 break;
             default:
                 sourceCreator.createInMemorySources();

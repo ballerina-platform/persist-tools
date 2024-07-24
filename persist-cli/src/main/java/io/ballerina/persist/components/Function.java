@@ -112,6 +112,22 @@ public class Function {
         );
     }
 
+    public void addDefaultableParameter(Node typeName, String name, Node defaultValue) {
+        if (parameters.size() > 0) {
+            parameters.add(SyntaxTokenConstants.SYNTAX_TREE_COMMA);
+        }
+        NodeList<AnnotationNode> annotations = NodeFactory.createEmptyNodeList();
+        parameters.add(
+                NodeFactory.createDefaultableParameterNode(
+                        annotations,
+                        typeName,
+                        AbstractNodeFactory.createIdentifierToken(name),
+                        AbstractNodeFactory.createToken(SyntaxKind.EQUAL_TOKEN),
+                        defaultValue
+                )
+        );
+    }
+
     public void addReturns(TypeDescriptorNode node) {
         returnTypeDescriptorNode = getReturnTypeDescriptorNode(node);
     }

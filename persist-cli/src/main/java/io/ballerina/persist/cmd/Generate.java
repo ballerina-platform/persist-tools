@@ -40,9 +40,13 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.MessageFormat;
 import java.util.Arrays;
 
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
+import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_NOSQL_DB_PROVIDERS;
+import static io.ballerina.persist.PersistToolsConstants.SupportedDataSources.H2_DB;
+import static io.ballerina.persist.PersistToolsConstants.SupportedDataSources.IN_MEMORY_TABLE;
 import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 
 /**
@@ -79,6 +83,9 @@ public class Generate implements BLauncherCmd {
 
     @CommandLine.Option(names = {"--datastore"})
     private String datastore;
+
+    @CommandLine.Option(names = {"--with-mock-client"}, hidden = true, description = "Generate mock client")
+    private boolean includeMockClient;
 
     @Override
     public void execute() {
@@ -198,7 +205,7 @@ public class Generate implements BLauncherCmd {
         try {
             BalProjectUtils.updateToml(sourcePath, datastore, moduleNameWithPackage);
             String syntaxTree = TomlSyntaxUtils.updateBallerinaToml(Paths.get(this.sourcePath, BALLERINA_TOML), module,
-                    datastore, true);
+                    datastore, true, includeMockClient);
             Utils.writeOutputString(syntaxTree,
                     Paths.get(this.sourcePath, BALLERINA_TOML).toAbsolutePath().toString());
             BalProjectUtils.validateSchemaFile(schemaFilePath);
@@ -230,14 +237,14 @@ public class Generate implements BLauncherCmd {
                 case PersistToolsConstants.SupportedDataSources.MYSQL_DB:
                 case PersistToolsConstants.SupportedDataSources.MSSQL_DB:
                 case PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB:
-                case PersistToolsConstants.SupportedDataSources.H2_DB:
-                    sourceCreator.createDbSources(datastore);
+                case H2_DB:
+                    sourceCreator.createDbSources(datastore, includeMockClient);
                     break;
                 case PersistToolsConstants.SupportedDataSources.GOOGLE_SHEETS:
-                    sourceCreator.createGSheetSources();
+                    sourceCreator.createGSheetSources(includeMockClient);
                     break;
                 case PersistToolsConstants.SupportedDataSources.REDIS:
-                    sourceCreator.createRedisSources();
+                    sourceCreator.createRedisSources(includeMockClient);
                     break;
                 default:
                     sourceCreator.createInMemorySources();
@@ -249,6 +256,72 @@ public class Generate implements BLauncherCmd {
             return;
         }
         errStream.println("Persist client and entity types generated successfully in the " + module +  " directory.");
+
+        if (includeMockClient) {
+            printMockClientGuide(datastore, packageName, module);
+        }
+    }
+
+    private void printMockClientGuide(String datastore, String packageName, String module) {
+
+        if (datastore.equals(H2_DB) || datastore.equals(IN_MEMORY_TABLE)) {
+            errStream.println(String.format("The mock client is not generated for %s as it is not " +
+                    "supported. Please use the generated client in your tests.", datastore));
+            return;
+        }
+        String yellowColor = "\u001B[33m";
+        String resetColor = "\u001B[0m";
+        if (SUPPORTED_NOSQL_DB_PROVIDERS.contains(datastore)) {
+            errStream.println("Ballerina table based mock client is generated successfully in the " +
+                    module + " directory.");
+        } else {
+            errStream.println("H2 DB based mock client and setup db scripts generated successfully in the " +
+                    module + " directory.");
+        }
+        errStream.println(System.lineSeparator() + "To use the generated mock client in your tests, " +
+                "please follow the steps below");
+        errStream.println(System.lineSeparator() + "1. Initialize the persist client in a function.");
+
+        String modulePrefix = packageName.equals(module) ? "" : module + ":";
+
+        errStream.println(MessageFormat.format("""
+                {0}final {2}Client dbClient = check initializeClient();
+
+                function initializeClient() returns {2}Client|error '{'
+                    return new ();
+                '}'{1}""", yellowColor, resetColor, modulePrefix));
+
+        errStream.println(System.lineSeparator() + "2. Mock the client instance with the mock client instance " +
+                "using Ballerina function mocking");
+
+        if (SUPPORTED_NOSQL_DB_PROVIDERS.contains(datastore)) {
+            errStream.println(MessageFormat.format("""
+                    {0}@test:Mock '{'functionName: "initializeClient"'}'
+                    isolated function getMockClient() returns {2}Client|error '{'
+                        return test:mock({2}Client, check new {2}MockClient());
+                    '}'{1}""", yellowColor, resetColor, modulePrefix));
+            return;
+        } else {
+            errStream.println(MessageFormat.format("""
+                    {0}@test:Mock '{'functionName: "initializeClient"'}'
+                    isolated function getMockClient() returns {2}Client|error '{'
+                        return test:mock({2}Client, check new {2}MockClient("jdbc:h2:./test", "sa", ""));
+                    '}'{1}""", yellowColor, resetColor, modulePrefix));
+
+            errStream.println(System.lineSeparator() + "3. Call the setup and cleanup DB scripts in " +
+                    "tests before and after suites");
+
+            errStream.println(MessageFormat.format("""
+                    {0}@test:BeforeSuite
+                    isolated function beforeSuite() returns error? '{'
+                        check {2}setupTestDB();
+                    '}'
+
+                    @test:AfterSuite
+                    function afterSuite() returns error? '{'
+                        check {2}cleanupTestDB();
+                    '}'{1}""", yellowColor, resetColor, modulePrefix));
+        }
     }
 
     @Override
