@@ -52,7 +52,6 @@ import io.ballerina.toml.validator.SampleNodeGenerator;
 import io.ballerina.tools.text.TextDocument;
 import io.ballerina.tools.text.TextDocuments;
 
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -73,8 +72,6 @@ import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConst
  * @since 0.3.1
  */
 public class DbSyntaxTree implements RDBMSSyntaxTree {
-
-    private final PrintStream out = System.out;
 
     @Override
     public io.ballerina.compiler.syntax.tree.SyntaxTree getClientSyntax(Module entityModule, String datasource)
@@ -295,7 +292,6 @@ public class DbSyntaxTree implements RDBMSSyntaxTree {
 
         ModuleMemberDeclarationNode moduleMemberDeclarationNode =
                 NodeParser.parseModuleMemberDeclaration(MOCK_H2_CLIENT_INIT);
-        out.println(moduleMemberDeclarationNode.syntaxTree().toSourceCode());
         moduleMembers = moduleMembers.add(moduleMemberDeclarationNode);
         Function beforeFunction = new Function("setupTestDB", SyntaxKind.METHOD_DECLARATION);
         beforeFunction.addQualifiers(new String[] { KEYWORD_PUBLIC, KEYWORD_ISOLATED});

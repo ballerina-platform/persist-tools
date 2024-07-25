@@ -76,7 +76,7 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
             targetModule = ballerinaTomlConfig.get(TARGET_MODULE).trim();
             datastore = ballerinaTomlConfig.get("options.datastore").trim();
             includeMockClient = ballerinaTomlConfig.get("options.withMockClient") != null &&
-                    ballerinaTomlConfig.get("options.withMockClient").trim().equals("true");
+                    ballerinaTomlConfig.get("options.withMockClient").trim().equalsIgnoreCase("true");
 
             validateDatastore(datastore);
             if (!targetModule.equals(packageName)) {

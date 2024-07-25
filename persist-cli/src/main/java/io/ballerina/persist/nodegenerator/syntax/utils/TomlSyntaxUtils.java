@@ -226,7 +226,7 @@ public class TomlSyntaxUtils {
             if (!generateCmd) {
                 moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray(
                         PersistToolsConstants.PERSIST_TOOL_CONFIG, null));
-                moduleMembers = populateBallerinaNodeList(moduleMembers, module, datasource, id[0]);
+                moduleMembers = populateBallerinaNodeList(moduleMembers, module, datasource, includeMockClient, id[0]);
                 moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
             } else {
                 if (!dependencyExists) {
@@ -319,10 +319,15 @@ public class TomlSyntaxUtils {
     }
 
     private static NodeList<DocumentMemberDeclarationNode> populateBallerinaNodeList(
-            NodeList<DocumentMemberDeclarationNode> moduleMembers, String module, String dataStore, String id) {
+            NodeList<DocumentMemberDeclarationNode> moduleMembers, String module, String dataStore,
+            boolean withMockClient, String id) {
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("id", id, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("targetModule", module, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("options.datastore", dataStore, null));
+        if (withMockClient) {
+            moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("options.withMockClient",
+                    "true", null));
+        }
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("filePath", "persist/model.bal", null));
         return moduleMembers;
     }

@@ -179,6 +179,20 @@ public class ToolingAddTest {
         assertGeneratedSources("tool_test_add_15");
     }
 
+    @Test
+    public void testInitWithMockClient() throws ClassNotFoundException, NoSuchMethodException,
+            InvocationTargetException, InstantiationException, IllegalAccessException {
+        Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Add");
+        Add persistCmd = (Add) persistClass.getDeclaredConstructor(String.class).
+                newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, "tool_test_add_16").toAbsolutePath().
+                        toString());
+        new CommandLine(persistCmd).parseArgs("--with-mock-client");
+        new CommandLine(persistCmd).parseArgs("--datastore", "mysql");
+        new CommandLine(persistCmd).parseArgs("--module", "test");
+        persistCmd.execute();
+        assertGeneratedSources("tool_test_add_16");
+    }
+
     private void executeCommand(String subDir) {
         Class<?> persistClass;
         Path sourcePath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);

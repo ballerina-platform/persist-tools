@@ -4,6 +4,9 @@
   "properties": {
     "datastore": {
       "type": "string"
+    },
+    "withMockClient": {
+      "type": "boolean"
     }
   },
   "additionalProperties": false

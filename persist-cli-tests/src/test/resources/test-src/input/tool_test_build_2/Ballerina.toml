@@ -14,13 +14,22 @@ value = 2
 
 array = [ [1, 0], [0, 1] ]
 
+[[platform.java17.repository]]
+id="wso2-nexus"
+url = "https://maven.wso2.org/nexus/content/groups/public/"
+
+[[platform.java17.repository]]
+id="wso2-nexus-snapshot"
+url = "https://maven.wso2.org/nexus/content/repositories/snapshots/"
+
 [[tool.persist]]
 id = "generate-db-client"
 targetModule = "persist_add_1"
 options.datastore = "mysql"
+options.withMockClient = true
 filePath = "persist/model.bal"
 
 [[platform.java17.dependency]]
 groupId = "io.ballerina.stdlib"
 artifactId = "persist.sql-native"
-version = "1.2.1"
+version = "1.4.0-SNAPSHOT"
