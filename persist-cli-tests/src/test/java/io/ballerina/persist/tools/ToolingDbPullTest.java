@@ -518,124 +518,124 @@ public class ToolingDbPullTest {
         runIntrospectionTestPostgreSql("tool_test_pull_51_postgresql");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("[MsSql] Create a model.bal file consisting of one Entity with no annotations and not null fields.")
     public void pullTestMsSqlBasic() throws BalException {
         runIntrospectionTestMsSql("tool_test_pull_52_mssql");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("[MsSql] Create a model.bal file consisting of one Entity with no annotations and one nullable field.")
     public void pullTestMsSqlNullableField() throws BalException {
         runIntrospectionTestMsSql("tool_test_pull_53_mssql");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("[MsSql] Create a model.bal file consisting of two Entities with a one to many relation.")
     public void pullTestMsSqlOneToMany() throws BalException {
         runIntrospectionTestMsSql("tool_test_pull_54_mssql");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("[MsSql] Create a model.bal file consisting of two Entities with a one to one relation by making " +
             "foreign key unique.")
     public void pullTestMsSqlOneToOneUniqueKey() throws BalException {
         runIntrospectionTestMsSql("tool_test_pull_55_mssql");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("[MsSql] Create a model.bal file consisting of two Entities with a one to one relation by making " +
             "foreign key primary.")
     public void pullTestMsSqlOneToOnePrimaryKey() throws BalException {
         runIntrospectionTestMsSql("tool_test_pull_56_mssql");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("[MsSql] Create a model.bal file consisting of two Entities with a one to many relation by making " +
             "foreign key a partial key.")
     public void pullTestMsSqlPartialPrimaryKey() throws BalException {
         runIntrospectionTestMsSql("tool_test_pull_57_mssql");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("[MsSql] Create a model.bal file three Entities with two one to many relations.")
     public void pullTestMsSqlMultipleRelations() throws BalException {
         runIntrospectionTestMsSql("tool_test_pull_58_mssql");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("[MsSql] Create a model.bal file consisting of name mapping annotations.")
     public void pullTestMsSqlNameMappingAnnotation() throws BalException {
         runIntrospectionTestMsSql("tool_test_pull_59_mssql");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("[MsSql] Create a model.bal file consisting of type mapping annotations Char, VarChar and Decimal.")
     public void pullTestMsSqlTypeMappingAnnotation() throws BalException {
         runIntrospectionTestMsSql("tool_test_pull_60_mssql");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("[MsSql] Create a model.bal file consisting of unique index annotation.")
     public void pullTestMsSqlUniqueIndexAnnotation() throws BalException {
         runIntrospectionTestMsSql("tool_test_pull_61_mssql");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("[MsSql] Create a model.bal file consisting of index annotation.")
     public void pullTestMsSqlIndexAnnotation() throws BalException {
         runIntrospectionTestMsSql("tool_test_pull_62_mssql");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("[MsSql] Create a model.bal file consisting of multiple relations between same entities.")
     public void pullTestMsSqlMultipleRelationsBetweenSameEntities() throws BalException {
         runIntrospectionTestMsSql("tool_test_pull_63_mssql");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("[MsSql] Create a model.bal file consisting of multiple unique indexes on same column.")
     public void pullTestMsSqlMultipleUniqueIndexes() throws BalException {
         runIntrospectionTestMsSql("tool_test_pull_64_mssql");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("[MsSql] Create a model.bal file consisting of multiple indexes on same column.")
     public void pullTestMsSqlMultipleIndexes() throws BalException {
         runIntrospectionTestMsSql("tool_test_pull_65_mssql");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("[MsSql] Create a model.bal file consisting of a one to many relation with composite foreign key.")
     public void pullTestMsSqlCompositeForeignKeys() throws BalException {
         runIntrospectionTestMsSql("tool_test_pull_66_mssql");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("[MsSql] Create a model.bal file consisting of an entity with self-referenced relation.")
     public void pullTestMsSqlSelfReferencedRelation() throws BalException {
         runIntrospectionTestMsSql("tool_test_pull_67_mssql");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("[MsSql] Create a model.bal file consisting of two relations which cross-reference each other.")
     public void pullTestMsSqlCrossReferencedRelations() throws BalException {
         runIntrospectionTestMsSql("tool_test_pull_68_mssql");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("[MsSql] Create a model.bal file consisting of keyword field names which are to be escaped.")
     public void pullTestMsSqlEscapedFieldNames() throws BalException {
         runIntrospectionTestMsSql("tool_test_pull_69_mssql");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("[MsSql] When the database does not contain any tables.")
     public void pullTestMsSqlNoTablesInDatabase() throws BalException {
         runIntrospectionTestMsSql("tool_test_pull_70_mssql");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("[MsSql] When the database does not exist.")
     public void pullTestMsSqlDatabaseDoesNotExist() throws BalException {
         String subDir = "tool_test_pull_71_mssql";
@@ -648,25 +648,25 @@ public class ToolingDbPullTest {
         assertGeneratedSources(subDir);
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("[MsSql] Create a model.bal file consisting of a generated primary key field.")
     public void pullTestMsSqlWithGeneratedId() throws BalException {
         runIntrospectionTestMsSql("tool_test_pull_72_mssql");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("[MsSql] Create a model.bal file consisting of a blob type field.")
     public void pullTestMsSqlWithBlobTypeField() throws BalException {
         runIntrospectionTestMsSql("tool_test_pull_73_mssql");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("[MsSql] Create a model.bal file consisting of new and unsupported types.")
     public void pullTestMsSqlWithNewAndUnsupportedTypes() throws BalException {
         runIntrospectionTestMsSql("tool_test_pull_74_mssql");
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     @Description("[MsSql] Create a model.bal file consisting of an unsupported foreign key referencing a unique " +
             "key")
     public void pullTestMsSqlWithForeignKeyOnUniqueKey() throws BalException {
