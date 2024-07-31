@@ -16,7 +16,7 @@ const DEPARTMENT = "departments";
 const ORDER_ITEM = "orderitems";
 const EMPLOYEE = "employees";
 
-public isolated client class MockClient {
+public isolated client class H2Client {
     *persist:AbstractPersistClient;
 
     private final jdbc:Client dbClient;

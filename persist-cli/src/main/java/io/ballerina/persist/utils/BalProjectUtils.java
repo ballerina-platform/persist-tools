@@ -67,7 +67,9 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -81,6 +83,9 @@ import java.util.stream.Stream;
 
 import static io.ballerina.compiler.syntax.tree.SyntaxKind.QUALIFIED_NAME_REFERENCE;
 import static io.ballerina.persist.PersistToolsConstants.GENERATE_CMD_FILE;
+import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_DB_PROVIDERS;
+import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_TEST_DB_PROVIDERS;
+import static io.ballerina.persist.PersistToolsConstants.SupportedDataSources.IN_MEMORY_TABLE;
 import static io.ballerina.persist.PersistToolsConstants.TARGET_DIRECTORY;
 import static io.ballerina.persist.PersistToolsConstants.SqlTypes.CHAR;
 import static io.ballerina.persist.PersistToolsConstants.SqlTypes.VARCHAR;
@@ -100,7 +105,7 @@ import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 public class BalProjectUtils {
 
     private BalProjectUtils() {}
-    private static final PrintStream errStream = System.out;
+    private static final PrintStream errStream = System.err;
 
     public static Module getEntities(Path schemaFile) throws BalException {
         Path schemaFilename = schemaFile.getFileName();
@@ -688,6 +693,69 @@ public class BalProjectUtils {
         }
         if (!errors.isEmpty()) {
             throw new BalException(String.join(System.lineSeparator(), errors));
+        }
+    }
+
+    public static void validateDatastore(String datastore) throws BalException {
+        if (!SUPPORTED_DB_PROVIDERS.contains(datastore)) {
+            throw new BalException(String.format("the persist layer supports one of data stores: %s" +
+                    ". but found '%s' datasource.", Arrays.toString(SUPPORTED_DB_PROVIDERS.toArray()), datastore));
+        }
+    }
+
+    public static void validateTestDatastore(String testDatastore) throws BalException {
+        if (testDatastore != null && !SUPPORTED_TEST_DB_PROVIDERS.contains(testDatastore)) {
+            throw new BalException(String.format("the persist layer supports one of test data stores: %s. but found " +
+                    "'%s' datasource.", Arrays.toString(SUPPORTED_TEST_DB_PROVIDERS.toArray()), testDatastore));
+        }
+    }
+
+    public static void printTestClientUsageSteps(String testDatastore, String packageName, String module) {
+
+        String yellowColor = "\u001B[33m";
+        String resetColor = "\u001B[0m";
+        errStream.println(System.lineSeparator() + "To use the generated test client in your tests, " +
+                "please follow the steps below");
+        errStream.println(System.lineSeparator() + "1. Initialize the persist client in a function.");
+
+        String modulePrefix = packageName.equals(module) ? "" : module + ":";
+
+        errStream.println(MessageFormat.format("""
+                {0}final {2}Client dbClient = check initializeClient();
+
+                function initializeClient() returns {2}Client|error '{'
+                    return new ();
+                '}'{1}""", yellowColor, resetColor, modulePrefix));
+
+        errStream.println(System.lineSeparator() + "2. Mock the client instance with the test client instance " +
+                "using Ballerina function mocking");
+
+        if (IN_MEMORY_TABLE.equals(testDatastore)) {
+            errStream.println(MessageFormat.format("""
+                    {0}@test:Mock '{'functionName: "initializeClient"'}'
+                    isolated function getMockClient() returns {2}Client|error '{'
+                        return test:mock({2}Client, check new {2}InMemoryClient());
+                    '}'{1}""", yellowColor, resetColor, modulePrefix));
+        } else {
+            errStream.println(MessageFormat.format("""
+                    {0}@test:Mock '{'functionName: "initializeClient"'}'
+                    isolated function getMockClient() returns {2}Client|error '{'
+                        return test:mock({2}Client, check new {2}H2Client("jdbc:h2:./test", "sa", ""));
+                    '}'{1}""", yellowColor, resetColor, modulePrefix));
+
+            errStream.println(System.lineSeparator() + "3. Call the setup and cleanup DB scripts in " +
+                    "tests before and after suites");
+
+            errStream.println(MessageFormat.format("""
+                    {0}@test:BeforeSuite
+                    isolated function beforeSuite() returns error? '{'
+                        check {2}setupTestDB();
+                    '}'
+
+                    @test:AfterSuite
+                    function afterSuite() returns error? '{'
+                        check {2}cleanupTestDB();
+                    '}'{1}""", yellowColor, resetColor, modulePrefix));
         }
     }
 

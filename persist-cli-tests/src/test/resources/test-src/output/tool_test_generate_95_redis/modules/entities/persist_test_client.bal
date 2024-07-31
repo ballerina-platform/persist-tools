@@ -24,7 +24,7 @@ final isolated table<BooleanIdRecord> key(id) booleanidrecordsTable = table [];
 final isolated table<CompositeAssociationRecord> key(id) compositeassociationrecordsTable = table [];
 final isolated table<AllTypesIdRecord> key(booleanType, intType, floatType, decimalType, stringType) alltypesidrecordsTable = table [];
 
-public isolated client class MockClient {
+public isolated client class InMemoryClient {
     *persist:AbstractPersistClient;
 
     private final map<inmemory:InMemoryClient> persistClients;

@@ -62,7 +62,7 @@ import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConst
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.EXECUTE_NATIVE_SQL_QUERY;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.KEYWORD_ISOLATED;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.KEYWORD_PUBLIC;
-import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.MOCK_CLIENT_NAME;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.H2_CLIENT_NAME;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.MOCK_H2_CLIENT_INIT;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.NEWLINE;
 
@@ -85,12 +85,12 @@ public class DbSyntaxTree implements RDBMSSyntaxTree {
         return BalSyntaxUtils.generateSyntaxTree(imports, moduleMembers);
     }
 
-    public SyntaxTree getMockClientSyntax(Module entityModule, String datasource) throws BalException {
+    public SyntaxTree getTestClientSyntax(Module entityModule) throws BalException {
         DbMockClientSyntax dbClientSyntax = new DbMockClientSyntax(entityModule);
         NodeList<ImportDeclarationNode> imports = dbClientSyntax.getImports();
         NodeList<ModuleMemberDeclarationNode> moduleMembers = dbClientSyntax.getConstantVariables();
 
-        Client clientObject = getClientObject(entityModule, dbClientSyntax, MOCK_CLIENT_NAME);
+        Client clientObject = getClientObject(entityModule, dbClientSyntax, H2_CLIENT_NAME);
         moduleMembers = moduleMembers.add(clientObject.getClassDefinitionNode());
         return BalSyntaxUtils.generateSyntaxTree(imports, moduleMembers);
     }

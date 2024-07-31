@@ -5,8 +5,8 @@
     "datastore": {
       "type": "string"
     },
-    "withMockClient": {
-      "type": "boolean"
+    "testDatastore": {
+      "type": "string"
     }
   },
   "additionalProperties": false

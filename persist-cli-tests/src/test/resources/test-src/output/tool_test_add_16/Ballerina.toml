@@ -11,7 +11,7 @@ observabilityIncluded = true
 id = "generate-db-client"
 targetModule = "persist_add_16.test"
 options.datastore = "mysql"
-options.withMockClient = "true"
+options.testDatastore = "h2"
 filePath = "persist/model.bal"
 
 

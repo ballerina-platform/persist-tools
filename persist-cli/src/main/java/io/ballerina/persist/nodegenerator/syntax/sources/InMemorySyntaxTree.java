@@ -44,7 +44,7 @@ import java.util.List;
 import java.util.Locale;
 
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.CLIENT_NAME;
-import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.MOCK_CLIENT_NAME;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.IN_MEMORY_CLIENT_NAME;
 
 /**
  * This class is used to generate the syntax tree for in-memory.
@@ -62,9 +62,9 @@ public class InMemorySyntaxTree implements SyntaxTree {
     }
 
     @Override
-    public io.ballerina.compiler.syntax.tree.SyntaxTree getMockClientSyntax(Module entityModule) throws BalException {
+    public io.ballerina.compiler.syntax.tree.SyntaxTree getTestClientSyntax(Module entityModule) throws BalException {
         InMemoryClientSyntax dbClientSyntax = new InMemoryClientSyntax(entityModule);
-        Client clientObject = dbClientSyntax.getClientObject(entityModule, MOCK_CLIENT_NAME);
+        Client clientObject = dbClientSyntax.getClientObject(entityModule, IN_MEMORY_CLIENT_NAME);
 
         return getSyntaxTree(entityModule, dbClientSyntax, clientObject);
     }

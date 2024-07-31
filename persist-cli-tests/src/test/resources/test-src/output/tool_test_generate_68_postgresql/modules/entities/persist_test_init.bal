@@ -5,7 +5,7 @@
 
 import ballerina/persist;
 
-isolated final MockClient h2Client = check new ("jdbc:h2:./test", "sa", "");
+isolated final H2Client h2Client = check new ("jdbc:h2:./test", "sa", "");
 
 public isolated function setupTestDB() returns persist:Error? {
     _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "Employee";`);

@@ -167,19 +167,23 @@ public class TomlSyntaxUtils {
      * Method to update the Ballerina.toml with database configurations and persist dependency.
      */
     public static String updateBallerinaToml(Path configPath, String module, String datasource,
-                                             boolean generateCmd, boolean includeMockClient, String... id)
+                                             String testDatasource, boolean generateCmd, String... id)
             throws IOException, BalException {
         NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
         Path fileNamePath = configPath.getFileName();
         TextDocument configDocument = TextDocuments.from(Files.readString(configPath));
         String artifactId = BalSyntaxConstants.PERSIST_MODULE + "." + datasource;
-        String mockArtifactId = BalSyntaxConstants.PERSIST_MODULE + "." + BalSyntaxConstants.PERSIST_IN_MEMORY;
         if (datasource.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB) ||
                 datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB) ||
                 datasource.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB) ||
                 datasource.equals(PersistToolsConstants.SupportedDataSources.H2_DB)) {
             artifactId = BalSyntaxConstants.PERSIST_MODULE + "." + BalSyntaxConstants.SQL;
-            mockArtifactId = BalSyntaxConstants.PERSIST_MODULE + "." + BalSyntaxConstants.SQL;
+        }
+        String mockArtifactId = null;
+        if (Objects.nonNull(testDatasource)) {
+            mockArtifactId = PersistToolsConstants.SupportedDataSources.H2_DB.equals(testDatasource) ?
+                    BalSyntaxConstants.PERSIST_MODULE + "." + BalSyntaxConstants.SQL :
+                    BalSyntaxConstants.PERSIST_MODULE + "." + testDatasource;
         }
         if (Objects.nonNull(fileNamePath)) {
             SyntaxTree syntaxTree = SyntaxTree.from(configDocument, fileNamePath.toString());
@@ -206,13 +210,13 @@ public class TomlSyntaxUtils {
                                                 artifactId))) {
                                     dependencyExists = true;
                                 }
-                                if (value.substring(1, value.length() - 1).equals(
+                                if (mockArtifactId != null && value.substring(1, value.length() - 1).equals(
                                         String.format(PersistToolsConstants.TomlFileConstants.ARTIFACT_ID,
                                                 mockArtifactId))) {
                                     mockDependencyExists = true;
                                 }
                             }
-                            if (dependencyExists && (includeMockClient == mockDependencyExists)) {
+                            if (dependencyExists && ((mockArtifactId != null) == mockDependencyExists)) {
                                 break;
                             }
                         }
@@ -226,7 +230,7 @@ public class TomlSyntaxUtils {
             if (!generateCmd) {
                 moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray(
                         PersistToolsConstants.PERSIST_TOOL_CONFIG, null));
-                moduleMembers = populateBallerinaNodeList(moduleMembers, module, datasource, includeMockClient, id[0]);
+                moduleMembers = populateBallerinaNodeList(moduleMembers, module, datasource, testDatasource, id[0]);
                 moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
             } else {
                 if (!dependencyExists) {
@@ -234,12 +238,11 @@ public class TomlSyntaxUtils {
                             BalSyntaxConstants.PERSIST_DEPENDENCY, null));
                     moduleMembers = populatePersistDependency(moduleMembers, artifactId, datasource);
                 }
-                if (includeMockClient && !mockDependencyExists && !mockArtifactId.equals(artifactId)) {
+                if ((mockArtifactId != null) && !mockDependencyExists && !mockArtifactId.equals(artifactId)) {
                     moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
                     moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray(
                             BalSyntaxConstants.PERSIST_DEPENDENCY, null));
-                    moduleMembers = populatePersistDependency(moduleMembers, mockArtifactId,
-                            PersistToolsConstants.SupportedDataSources.IN_MEMORY_TABLE);
+                    moduleMembers = populatePersistDependency(moduleMembers, mockArtifactId, datasource);
                 }
             }
         }
@@ -320,13 +323,13 @@ public class TomlSyntaxUtils {
 
     private static NodeList<DocumentMemberDeclarationNode> populateBallerinaNodeList(
             NodeList<DocumentMemberDeclarationNode> moduleMembers, String module, String dataStore,
-            boolean withMockClient, String id) {
+            String testDatastore, String id) {
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("id", id, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("targetModule", module, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("options.datastore", dataStore, null));
-        if (withMockClient) {
-            moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("options.withMockClient",
-                    "true", null));
+        if (testDatastore != null) {
+            moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("options.testDatastore",
+                    testDatastore, null));
         }
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("filePath", "persist/model.bal", null));
         return moduleMembers;

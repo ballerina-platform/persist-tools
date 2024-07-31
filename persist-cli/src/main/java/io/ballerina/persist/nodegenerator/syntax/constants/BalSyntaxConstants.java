@@ -116,7 +116,8 @@ public class BalSyntaxConstants {
 
 
     public static final String CLIENT_NAME = "Client";
-    public static final String MOCK_CLIENT_NAME = "MockClient";
+    public static final String H2_CLIENT_NAME = "H2Client";
+    public static final String IN_MEMORY_CLIENT_NAME = "InMemoryClient";
     public static final String INIT = "init";
     public static final String POST = "post";
     public static final String DELETE = "delete";
@@ -481,7 +482,7 @@ public class BalSyntaxConstants {
     + System.lineSeparator() + "|} & readonly cacheConfig = ?;";
 
     public static final String MOCK_H2_CLIENT_INIT =
-            "isolated final MockClient h2Client = check new (\"jdbc:h2:./test\", \"sa\", \"\");"
+            "isolated final H2Client h2Client = check new (\"jdbc:h2:./test\", \"sa\", \"\");"
             + System.lineSeparator();
 
     public static final String EXECUTE_NATIVE_SQL_QUERY = "_ = check h2Client->executeNativeSQL(`%s`);";

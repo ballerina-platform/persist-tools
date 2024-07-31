@@ -25,8 +25,7 @@ CREATE TABLE "OrderItem" (
 CREATE TABLE "Department" (
 	"deptNo" VARCHAR(191) NOT NULL,
 	"deptName" VARCHAR(191) NOT NULL,
-	"location" VARCHAR(191) NOT NULL,
-	PRIMARY KEY("deptNo","deptName")
+	PRIMARY KEY("deptNo")
 );`);
     _ = check h2Client->executeNativeSQL(`
 CREATE TABLE "Building" (
@@ -44,7 +43,7 @@ CREATE TABLE "Workspace" (
 	"workspaceType" VARCHAR(191) NOT NULL,
 	"locationBuildingCode" VARCHAR(191) NOT NULL,
 	FOREIGN KEY("locationBuildingCode") REFERENCES "Building"("buildingCode"),
-	PRIMARY KEY("workspaceId","workspaceType")
+	PRIMARY KEY("workspaceId")
 );`);
     _ = check h2Client->executeNativeSQL(`
 CREATE TABLE "Employee" (
@@ -55,12 +54,10 @@ CREATE TABLE "Employee" (
 	"gender" VARCHAR(191) NOT NULL,
 	"hireDate" DATE NOT NULL,
 	"departmentDeptNo" VARCHAR(191) NOT NULL,
-	"departmentDeptName" VARCHAR(191) NOT NULL,
-	FOREIGN KEY("departmentDeptNo", "departmentDeptName") REFERENCES "Department"("deptNo", "deptName"),
+	FOREIGN KEY("departmentDeptNo") REFERENCES "Department"("deptNo"),
 	"workspaceWorkspaceId" VARCHAR(191) NOT NULL,
-	"workspaceWorkspaceType" VARCHAR(191) NOT NULL,
-	FOREIGN KEY("workspaceWorkspaceId", "workspaceWorkspaceType") REFERENCES "Workspace"("workspaceId", "workspaceType"),
-	PRIMARY KEY("empNo","firstName")
+	FOREIGN KEY("workspaceWorkspaceId") REFERENCES "Workspace"("workspaceId"),
+	PRIMARY KEY("empNo")
 );`);
 }
 

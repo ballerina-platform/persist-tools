@@ -16,7 +16,7 @@ const DEPARTMENT = "departments";
 const ORDER_ITEM = "orderitems";
 const EMPLOYEE = "employees";
 
-public isolated client class MockClient {
+public isolated client class H2Client {
     *persist:AbstractPersistClient;
 
     private final jdbc:Client dbClient;
@@ -44,14 +44,12 @@ public isolated client class MockClient {
                 "employees[].gender": {relation: {entityName: "employees", refField: "gender"}},
                 "employees[].hireDate": {relation: {entityName: "employees", refField: "hireDate"}},
                 "employees[].departmentDeptNo": {relation: {entityName: "employees", refField: "departmentDeptNo"}},
-                "employees[].departmentDeptName": {relation: {entityName: "employees", refField: "departmentDeptName"}},
-                "employees[].workspaceWorkspaceId": {relation: {entityName: "employees", refField: "workspaceWorkspaceId"}},
-                "employees[].workspaceWorkspaceType": {relation: {entityName: "employees", refField: "workspaceWorkspaceType"}}
+                "employees[].workspaceWorkspaceId": {relation: {entityName: "employees", refField: "workspaceWorkspaceId"}}
             },
-            keyFields: ["workspaceId", "workspaceType"],
+            keyFields: ["workspaceId"],
             joinMetadata: {
                 location: {entity: Building, fieldName: "location", refTable: "Building", refColumns: ["buildingCode"], joinColumns: ["locationBuildingCode"], 'type: psql:ONE_TO_MANY},
-                employees: {entity: Employee, fieldName: "employees", refTable: "Employee", refColumns: ["workspaceWorkspaceId", "workspaceWorkspaceType"], joinColumns: ["workspaceId", "workspaceType"], 'type: psql:MANY_TO_ONE}
+                employees: {entity: Employee, fieldName: "employees", refTable: "Employee", refColumns: ["workspaceWorkspaceId"], joinColumns: ["workspaceId"], 'type: psql:MANY_TO_ONE}
             }
         },
         [BUILDING]: {
@@ -77,7 +75,6 @@ public isolated client class MockClient {
             fieldMetadata: {
                 deptNo: {columnName: "deptNo"},
                 deptName: {columnName: "deptName"},
-                location: {columnName: "location"},
                 "employees[].empNo": {relation: {entityName: "employees", refField: "empNo"}},
                 "employees[].firstName": {relation: {entityName: "employees", refField: "firstName"}},
                 "employees[].lastName": {relation: {entityName: "employees", refField: "lastName"}},
@@ -85,12 +82,10 @@ public isolated client class MockClient {
                 "employees[].gender": {relation: {entityName: "employees", refField: "gender"}},
                 "employees[].hireDate": {relation: {entityName: "employees", refField: "hireDate"}},
                 "employees[].departmentDeptNo": {relation: {entityName: "employees", refField: "departmentDeptNo"}},
-                "employees[].departmentDeptName": {relation: {entityName: "employees", refField: "departmentDeptName"}},
-                "employees[].workspaceWorkspaceId": {relation: {entityName: "employees", refField: "workspaceWorkspaceId"}},
-                "employees[].workspaceWorkspaceType": {relation: {entityName: "employees", refField: "workspaceWorkspaceType"}}
+                "employees[].workspaceWorkspaceId": {relation: {entityName: "employees", refField: "workspaceWorkspaceId"}}
             },
-            keyFields: ["deptNo", "deptName"],
-            joinMetadata: {employees: {entity: Employee, fieldName: "employees", refTable: "Employee", refColumns: ["departmentDeptNo", "departmentDeptName"], joinColumns: ["deptNo", "deptName"], 'type: psql:MANY_TO_ONE}}
+            keyFields: ["deptNo"],
+            joinMetadata: {employees: {entity: Employee, fieldName: "employees", refTable: "Employee", refColumns: ["departmentDeptNo"], joinColumns: ["deptNo"], 'type: psql:MANY_TO_ONE}}
         },
         [ORDER_ITEM]: {
             entityName: "OrderItem",
@@ -114,20 +109,17 @@ public isolated client class MockClient {
                 gender: {columnName: "gender"},
                 hireDate: {columnName: "hireDate"},
                 departmentDeptNo: {columnName: "departmentDeptNo"},
-                departmentDeptName: {columnName: "departmentDeptName"},
                 workspaceWorkspaceId: {columnName: "workspaceWorkspaceId"},
-                workspaceWorkspaceType: {columnName: "workspaceWorkspaceType"},
                 "department.deptNo": {relation: {entityName: "department", refField: "deptNo"}},
                 "department.deptName": {relation: {entityName: "department", refField: "deptName"}},
-                "department.location": {relation: {entityName: "department", refField: "location"}},
                 "workspace.workspaceId": {relation: {entityName: "workspace", refField: "workspaceId"}},
                 "workspace.workspaceType": {relation: {entityName: "workspace", refField: "workspaceType"}},
                 "workspace.locationBuildingCode": {relation: {entityName: "workspace", refField: "locationBuildingCode"}}
             },
-            keyFields: ["empNo", "firstName"],
+            keyFields: ["empNo"],
             joinMetadata: {
-                department: {entity: Department, fieldName: "department", refTable: "Department", refColumns: ["deptNo", "deptName"], joinColumns: ["departmentDeptNo", "departmentDeptName"], 'type: psql:ONE_TO_MANY},
-                workspace: {entity: Workspace, fieldName: "workspace", refTable: "Workspace", refColumns: ["workspaceId", "workspaceType"], joinColumns: ["workspaceWorkspaceId", "workspaceWorkspaceType"], 'type: psql:ONE_TO_MANY}
+                department: {entity: Department, fieldName: "department", refTable: "Department", refColumns: ["deptNo"], joinColumns: ["departmentDeptNo"], 'type: psql:ONE_TO_MANY},
+                workspace: {entity: Workspace, fieldName: "workspace", refTable: "Workspace", refColumns: ["workspaceId"], joinColumns: ["workspaceWorkspaceId"], 'type: psql:ONE_TO_MANY}
             }
         }
     };
@@ -152,37 +144,37 @@ public isolated client class MockClient {
         name: "query"
     } external;
 
-    isolated resource function get workspaces/[string workspaceId]/[string workspaceType](WorkspaceTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
+    isolated resource function get workspaces/[string workspaceId](WorkspaceTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.H2Processor",
         name: "queryOne"
     } external;
 
-    isolated resource function post workspaces(WorkspaceInsert[] data) returns [string, string][]|persist:Error {
+    isolated resource function post workspaces(WorkspaceInsert[] data) returns string[]|persist:Error {
         psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(WORKSPACE);
         }
         _ = check sqlClient.runBatchInsertQuery(data);
         return from WorkspaceInsert inserted in data
-            select [inserted.workspaceId, inserted.workspaceType];
+            select inserted.workspaceId;
     }
 
-    isolated resource function put workspaces/[string workspaceId]/[string workspaceType](WorkspaceUpdate value) returns Workspace|persist:Error {
+    isolated resource function put workspaces/[string workspaceId](WorkspaceUpdate value) returns Workspace|persist:Error {
         psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(WORKSPACE);
         }
-        _ = check sqlClient.runUpdateQuery({"workspaceId": workspaceId, "workspaceType": workspaceType}, value);
-        return self->/workspaces/[workspaceId]/[workspaceType].get();
+        _ = check sqlClient.runUpdateQuery(workspaceId, value);
+        return self->/workspaces/[workspaceId].get();
     }
 
-    isolated resource function delete workspaces/[string workspaceId]/[string workspaceType]() returns Workspace|persist:Error {
-        Workspace result = check self->/workspaces/[workspaceId]/[workspaceType].get();
+    isolated resource function delete workspaces/[string workspaceId]() returns Workspace|persist:Error {
+        Workspace result = check self->/workspaces/[workspaceId].get();
         psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(WORKSPACE);
         }
-        _ = check sqlClient.runDeleteQuery({"workspaceId": workspaceId, "workspaceType": workspaceType});
+        _ = check sqlClient.runDeleteQuery(workspaceId);
         return result;
     }
 
@@ -230,37 +222,37 @@ public isolated client class MockClient {
         name: "query"
     } external;
 
-    isolated resource function get departments/[string deptNo]/[string deptName](DepartmentTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
+    isolated resource function get departments/[string deptNo](DepartmentTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.H2Processor",
         name: "queryOne"
     } external;
 
-    isolated resource function post departments(DepartmentInsert[] data) returns [string, string][]|persist:Error {
+    isolated resource function post departments(DepartmentInsert[] data) returns string[]|persist:Error {
         psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(DEPARTMENT);
         }
         _ = check sqlClient.runBatchInsertQuery(data);
         return from DepartmentInsert inserted in data
-            select [inserted.deptNo, inserted.deptName];
+            select inserted.deptNo;
     }
 
-    isolated resource function put departments/[string deptNo]/[string deptName](DepartmentUpdate value) returns Department|persist:Error {
+    isolated resource function put departments/[string deptNo](DepartmentUpdate value) returns Department|persist:Error {
         psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(DEPARTMENT);
         }
-        _ = check sqlClient.runUpdateQuery({"deptNo": deptNo, "deptName": deptName}, value);
-        return self->/departments/[deptNo]/[deptName].get();
+        _ = check sqlClient.runUpdateQuery(deptNo, value);
+        return self->/departments/[deptNo].get();
     }
 
-    isolated resource function delete departments/[string deptNo]/[string deptName]() returns Department|persist:Error {
-        Department result = check self->/departments/[deptNo]/[deptName].get();
+    isolated resource function delete departments/[string deptNo]() returns Department|persist:Error {
+        Department result = check self->/departments/[deptNo].get();
         psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(DEPARTMENT);
         }
-        _ = check sqlClient.runDeleteQuery({"deptNo": deptNo, "deptName": deptName});
+        _ = check sqlClient.runDeleteQuery(deptNo);
         return result;
     }
 
@@ -308,37 +300,37 @@ public isolated client class MockClient {
         name: "query"
     } external;
 
-    isolated resource function get employees/[string empNo]/[string firstName](EmployeeTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
+    isolated resource function get employees/[string empNo](EmployeeTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.H2Processor",
         name: "queryOne"
     } external;
 
-    isolated resource function post employees(EmployeeInsert[] data) returns [string, string][]|persist:Error {
+    isolated resource function post employees(EmployeeInsert[] data) returns string[]|persist:Error {
         psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(EMPLOYEE);
         }
         _ = check sqlClient.runBatchInsertQuery(data);
         return from EmployeeInsert inserted in data
-            select [inserted.empNo, inserted.firstName];
+            select inserted.empNo;
     }
 
-    isolated resource function put employees/[string empNo]/[string firstName](EmployeeUpdate value) returns Employee|persist:Error {
+    isolated resource function put employees/[string empNo](EmployeeUpdate value) returns Employee|persist:Error {
         psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(EMPLOYEE);
         }
-        _ = check sqlClient.runUpdateQuery({"empNo": empNo, "firstName": firstName}, value);
-        return self->/employees/[empNo]/[firstName].get();
+        _ = check sqlClient.runUpdateQuery(empNo, value);
+        return self->/employees/[empNo].get();
     }
 
-    isolated resource function delete employees/[string empNo]/[string firstName]() returns Employee|persist:Error {
-        Employee result = check self->/employees/[empNo]/[firstName].get();
+    isolated resource function delete employees/[string empNo]() returns Employee|persist:Error {
+        Employee result = check self->/employees/[empNo].get();
         psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(EMPLOYEE);
         }
-        _ = check sqlClient.runDeleteQuery({"empNo": empNo, "firstName": firstName});
+        _ = check sqlClient.runDeleteQuery(empNo);
         return result;
     }
 

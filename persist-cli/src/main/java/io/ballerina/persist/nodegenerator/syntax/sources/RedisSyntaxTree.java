@@ -89,7 +89,7 @@ public class RedisSyntaxTree implements SyntaxTree  {
     }
 
     @Override
-    public io.ballerina.compiler.syntax.tree.SyntaxTree getMockClientSyntax(Module entityModule) throws BalException {
+    public io.ballerina.compiler.syntax.tree.SyntaxTree getTestClientSyntax(Module entityModule) throws BalException {
         throw new BalException("Not supported yet.");
     }
 
