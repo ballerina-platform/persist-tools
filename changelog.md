@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - [Add introspection support for PostgreSQL databases](https://github.com/ballerina-platform/ballerina-library/issues/6333)
 - [Add introspection support for MSSQL databases](https://github.com/ballerina-platform/ballerina-library/issues/6460)
+- [Add h2 database support as a datastore](https://github.com/ballerina-platform/ballerina-library/issues/5715)
+- [Add support for generating client APIs for the test datastore](https://github.com/ballerina-platform/ballerina-library/issues/5840)
 
 ## [1.3.0] - 2024-05-03
 
