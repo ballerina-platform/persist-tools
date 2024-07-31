@@ -234,8 +234,8 @@ public class SourceGenerator {
         try {
             writeOutputFile(Formatter.format(syntaxTree.toSourceCode()), path);
         } catch (FormatterException | IOException e) {
-            throw new BalException(String.format("could not write the db initialization scripts to the `%s` file.",
-                    path.getFileName()) + e.getMessage());
+            throw new BalException(String.format("could not write the db initialization scripts to the `%s` file. %s",
+                    path.getFileName(), e.getMessage()));
         }
     }
     

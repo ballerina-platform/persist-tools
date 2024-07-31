@@ -98,7 +98,7 @@ public class Generate implements BLauncherCmd {
             errStream.println(commandUsageInfo);
             return;
         }
-        if (datastore == null || datastore.isBlank()) {
+        if (Objects.isNull(datastore) || datastore.isBlank()) {
             errStream.println("ERROR: datastore is required");
             return;
         } else {

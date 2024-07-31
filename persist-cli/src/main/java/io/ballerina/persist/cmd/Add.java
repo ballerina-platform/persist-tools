@@ -88,7 +88,7 @@ public class Add implements BLauncherCmd {
             return;
         }
         try {
-            if (datastore == null) {
+            if (Objects.isNull(datastore)) {
                 datastore = PersistToolsConstants.SupportedDataSources.IN_MEMORY_TABLE;
             } else {
                 validateDatastore(datastore);
@@ -115,7 +115,7 @@ public class Add implements BLauncherCmd {
             errStream.println("1. Define your data model in \"persist/model.bal\".");
             errStream.println("2. Execute `bal build` to generate the persist client during package build.");
 
-            if (testDatastore != null) {
+            if (Objects.nonNull(testDatastore)) {
                 errStream.printf(System.lineSeparator() +
                         "The test client for the %s datastore will be generated in the %s module.%n",
                         testDatastore, module);
@@ -144,7 +144,7 @@ public class Add implements BLauncherCmd {
     }
 
     private String validateAndProcessModule(String packageName, String module) throws BalException {
-        if (module != null) {
+        if (Objects.nonNull(module)) {
             if (!ProjectUtils.validateModuleName(module)) {
                 throw new BalException(String.format("invalid module name : '%s' :" + System.lineSeparator() +
                         "module name can only contain alphanumerics, underscores and periods", module));
@@ -153,7 +153,7 @@ public class Add implements BLauncherCmd {
                         "maximum length of module name is 256 characters", module));
             }
         }
-        return module == null ? packageName :
+        return Objects.isNull(module) ? packageName :
                 String.format("%s.%s", packageName.replaceAll("\"", ""),
                         module.replaceAll("\"", ""));
     }
