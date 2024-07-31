@@ -31,14 +31,15 @@ This specification elaborates on the `Persist CLI Tool` commands.
 ## 2. Initializing the Bal Project with Persistence Layer
 
 ```bash
-bal persist add --datastore="datastore" --module="module_name"
+bal persist add --datastore="datastore" --module="module_name" --test-datastore="test_datastore"
 ```
 
-| Command Parameter |                                       Description                                        | Mandatory | Default Value  |
-|:-----------------:|:----------------------------------------------------------------------------------------:|:---------:|:--------------:|
-|    --datastore    |  used to indicate the preferred database client. Currently, 'mysql', 'mssql', 'google sheets' and 'postgresql' are supported.   |    No     |    inmemory    |
-|     --module      |      used to indicate the persist enabled module in which the files are generated.       |    No     | <package_name> |
-| --id  | Used as an identifier | No | generate-db-client |
+| Command Parameter |                                                         Description                                                          | Mandatory |   Default Value    |
+|:-----------------:|:----------------------------------------------------------------------------------------------------------------------------:|:---------:|:------------------:|
+|    --datastore    | used to indicate the preferred database client. Currently, 'mysql', 'mssql', 'google sheets' and 'postgresql' are supported. |    No     |      inmemory      |
+|     --module      |                        used to indicate the persist enabled module in which the files are generated.                         |    No     |   <package_name>   |
+| --id  |                                                    Used as an identifier                                                     | No | generate-db-client |
+| --test-datastore |            used to indicate the preferred database client for testing. Currently, 'h2', 'inmemory' are supported.            | No |         No         |
 
 
 The command initializes the bal project with the persistence layer. This command includes the following steps,
@@ -54,6 +55,7 @@ The command initializes the bal project with the persistence layer. This command
     id = "generate-db-client"
     targetModule = "<package_name>.<module_name>"
     options.datastore = "<datastore>"
+    options.testDatastore = "<test_datastore>"
     filePath = "persist/model.bal"
    ```
 
@@ -69,6 +71,7 @@ medical-center
 Behaviour of the `add` command,
 - Users should invoke the command within a Ballerina project.
 - Users can use optional arguments to indicate the preferred module name and data store; otherwise, default values will be used.
+- User can use test-datastore to indicate the preferred database client for testing. Currently, 'h2', 'inmemory' are supported. If specified it will update the Ballerina.toml file with the testDatastore option to generate the test client along with the main client at the build time.
 - Users cannot execute the command multiple times within the same project. They need to remove the persist configurations from the Ballerina.toml if they want to reinitialize the project.
 
 Apart from the `bal persist add` command, if you want to use the `bal persist generate` command you can initialize the project with the following `init` command,
@@ -109,6 +112,8 @@ It will add generated files under the conventions,
    ├── generated
          ├── persist_client.bal
          ├── persist_db_config.bal
+         ├── persist_test_client.bal (This file will be generated if the test-datastore is provided)
+         ├── persist_test_init.bal (This file will be generated if h2 is provided as the test-datastore)
          ├── persist_types.bal
          └── script.sql
    ├── persist
@@ -124,6 +129,8 @@ It will add generated files under the conventions,
         └── medical-item
               ├── persist_client.bal
               ├── persist_db_config.bal
+              ├── persist_test_client.bal (This file will be generated if the test-datastore is provided)
+              ├── persist_test_init.bal (This file will be generated if h2 is provided as the test-datastore)
               ├── persist_types.bal
               └── script.sql
    ├── persist
@@ -132,7 +139,8 @@ It will add generated files under the conventions,
    ├── Config.toml
    └── main.bal
    ```
-   
+
+`persist_client.bal` file will contain the client API for the entities defined in the model file.
 `persist_db_config.bal` file will contain the configurable variables required for the database access.
  ```ballerina
  import ballerinax/mysql.driver as _;
@@ -143,6 +151,10 @@ It will add generated files under the conventions,
  configurable string database = ?;
  configurable string password = ?;
 ```
+`persist_types.bal` file will contain the derived entity types based on the entities defined in the model file.
+`persist_test_client.bal` file will contain the client API for the entities defined in the model file for the test-datastore.
+`persist_test_init.bal` file will contain the initialization of the test database schema based on the entities defined in the model file for the test-datastore.
+`script.sql` file will contain the SQL script to create the database schema based on the entities defined in the model file.
 
 The database schema will contain the code to create,
 1. Tables for each entity with defined primary keys
@@ -151,13 +163,14 @@ The database schema will contain the code to create,
 Apart from the `bal build` users can also use the following command to generate the same as above mentioned,
 
 ```bash
-bal persist generate --datastore mysql --module db
+bal persist generate --datastore mysql --module db --test-datastore="test_datastore"
 ```
 
 | Command Parameter |                                       Description                                        | Mandatory | Default Value  |
 |:-----------------:|:----------------------------------------------------------------------------------------:|:---------:|:--------------:|
 |    --datastore    |  used to indicate the preferred database client. Currently, 'mysql', 'mssql', 'google sheets' and 'postgresql' are supported.   |    Yes     |        |
 |     --module      |      used to indicate the persist enabled module in which the files are generated.       |    No     | <package_name> |
+| --test-datastore |            used to indicate the preferred database client for testing. Currently, 'h2', 'inmemory' are supported.            | No |         No         | 
 
 Behaviour of the `generate` command,
 - User should invoke the command within a Ballerina project
@@ -167,7 +180,7 @@ Behaviour of the `generate` command,
 
 ## 4. Push Persistence Schema to the Data Provider
 
->**Info:** This command is only supported yet. The SQL script generated by the `generate` command can be used to create the database schema.
+>**Info:** This command is not supported yet. The SQL script generated by the `generate` command can be used to create the database schema.
 > 
 ```bash
 bal persist push
