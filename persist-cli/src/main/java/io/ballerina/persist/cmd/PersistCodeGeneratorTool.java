@@ -230,14 +230,13 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
 
     private void generateTestSources(String testDatastore, Module entityModule, String targetModule,
                                      Path projectPath, Path generatedSourceDirPath) {
-        SourceGenerator sourceCreator = new SourceGenerator(projectPath.toString(), generatedSourceDirPath,
-                targetModule, entityModule);
         if (testDatastore != null) {
             try {
+                SourceGenerator sourceCreator = new SourceGenerator(projectPath.toString(), generatedSourceDirPath,
+                        targetModule, entityModule);
                 sourceCreator.createTestDataSources(testDatastore);
             } catch (BalException e) {
                 errStream.printf("ERROR: %s%n", e.getMessage());
-                return;
             }
         }
     }

@@ -117,7 +117,8 @@ public class Add implements BLauncherCmd {
 
             if (testDatastore != null) {
                 errStream.printf(System.lineSeparator() +
-                        "The test client for %s datastore will generate in the %s module.%n", testDatastore, module);
+                        "The test client for the %s datastore will be generated in the %s module.%n",
+                        testDatastore, module);
                 printTestClientUsageSteps(testDatastore, packageName, module);
             }
         } catch (BalException | IOException e) {

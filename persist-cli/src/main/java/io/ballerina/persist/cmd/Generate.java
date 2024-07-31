@@ -42,7 +42,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
-import static io.ballerina.persist.PersistToolsConstants.SupportedDataSources.H2_DB;
 import static io.ballerina.persist.utils.BalProjectUtils.printTestClientUsageSteps;
 import static io.ballerina.persist.utils.BalProjectUtils.validateDatastore;
 import static io.ballerina.persist.utils.BalProjectUtils.validateTestDatastore;
@@ -239,7 +238,7 @@ public class Generate implements BLauncherCmd {
                 case PersistToolsConstants.SupportedDataSources.MYSQL_DB:
                 case PersistToolsConstants.SupportedDataSources.MSSQL_DB:
                 case PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB:
-                case H2_DB:
+                case PersistToolsConstants.SupportedDataSources.H2_DB:
                     sourceCreator.createDbSources(datastore);
                     break;
                 case PersistToolsConstants.SupportedDataSources.GOOGLE_SHEETS:
@@ -267,7 +266,7 @@ public class Generate implements BLauncherCmd {
                 errStream.printf("ERROR: %s%n", e.getMessage());
                 return;
             }
-            errStream.printf("The test client for %s datastore is generated successfully in the %s module.%n",
+            errStream.printf("The test client for the %s datastore is successfully generated in the %s module.%n",
                     testDatastore, module);
             printTestClientUsageSteps(testDatastore, packageName, module);
         }
