@@ -13,7 +13,7 @@ import ballerinax/persist.sql as psql;
 const MEDICAL_NEED = "medicalneeds";
 const MEDICAL_ITEM = "medicalitems";
 
-public isolated client class MockClient {
+public isolated client class H2Client {
     *persist:AbstractPersistClient;
 
     private final jdbc:Client dbClient;

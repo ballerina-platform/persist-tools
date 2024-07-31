@@ -26,7 +26,7 @@ url = "https://maven.wso2.org/nexus/content/repositories/snapshots/"
 id = "generate-db-client"
 targetModule = "persist_add_1"
 options.datastore = "mysql"
-options.withMockClient = true
+options.testDatastore = "inmemory"
 filePath = "persist/model.bal"
 
 [[platform.java17.dependency]]

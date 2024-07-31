@@ -40,13 +40,12 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.MessageFormat;
-import java.util.Arrays;
 
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
-import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_NOSQL_DB_PROVIDERS;
 import static io.ballerina.persist.PersistToolsConstants.SupportedDataSources.H2_DB;
-import static io.ballerina.persist.PersistToolsConstants.SupportedDataSources.IN_MEMORY_TABLE;
+import static io.ballerina.persist.utils.BalProjectUtils.printTestClientUsageSteps;
+import static io.ballerina.persist.utils.BalProjectUtils.validateDatastore;
+import static io.ballerina.persist.utils.BalProjectUtils.validateTestDatastore;
 import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 
 /**
@@ -84,8 +83,9 @@ public class Generate implements BLauncherCmd {
     @CommandLine.Option(names = {"--datastore"})
     private String datastore;
 
-    @CommandLine.Option(names = {"--with-mock-client"}, hidden = true, description = "Generate mock client")
-    private boolean includeMockClient;
+    @CommandLine.Option(names = {"--test-datastore"}, description = "Test data store for the " +
+            "generated Ballerina client")
+    private String testDatastore;
 
     @Override
     public void execute() {
@@ -99,10 +99,18 @@ public class Generate implements BLauncherCmd {
             errStream.println(commandUsageInfo);
             return;
         }
-        if (datastore == null) {
+        if (datastore == null || datastore.isBlank()) {
             errStream.println("ERROR: datastore is required");
             return;
+        } else {
+            try {
+                validateDatastore(datastore);
+            } catch (BalException e) {
+                errStream.printf("ERROR: %s%n", e.getMessage());
+                return;
+            }
         }
+
         Path projectPath = Paths.get(sourcePath);
         try {
             BalProjectUtils.validateBallerinaProject(projectPath);
@@ -131,7 +139,7 @@ public class Generate implements BLauncherCmd {
         try {
             hasPersistConfig = hasPersistConfig(Paths.get(this.sourcePath, "Ballerina.toml"));
         } catch (BalException e) {
-            errStream.printf("ERROR: The project does not contain a toml file");
+            errStream.println("ERROR: The project does not contain a toml file");
             return;
         }
         // Check if there are previous persist configurations.
@@ -168,12 +176,6 @@ public class Generate implements BLauncherCmd {
             generatedSourceDirPath = generatedSourceDirPath.resolve(module);
         }
 
-        if (!PersistToolsConstants.SUPPORTED_DB_PROVIDERS.contains(datastore)) {
-            errStream.printf("ERROR: the persist layer supports one of data stores: %s" +
-                            ". but found '%s' datasource.%n",
-                    Arrays.toString(PersistToolsConstants.SUPPORTED_DB_PROVIDERS.toArray()), datastore);
-            return;
-        }
         if (Files.isDirectory(Paths.get(sourcePath, PersistToolsConstants.PERSIST_TOOL_CONFIG,
                 PersistToolsConstants.MIGRATIONS)) &&
                 !datastore.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB)) {
@@ -205,7 +207,7 @@ public class Generate implements BLauncherCmd {
         try {
             BalProjectUtils.updateToml(sourcePath, datastore, moduleNameWithPackage);
             String syntaxTree = TomlSyntaxUtils.updateBallerinaToml(Paths.get(this.sourcePath, BALLERINA_TOML), module,
-                    datastore, true, includeMockClient);
+                    datastore, testDatastore, true);
             Utils.writeOutputString(syntaxTree,
                     Paths.get(this.sourcePath, BALLERINA_TOML).toAbsolutePath().toString());
             BalProjectUtils.validateSchemaFile(schemaFilePath);
@@ -238,13 +240,13 @@ public class Generate implements BLauncherCmd {
                 case PersistToolsConstants.SupportedDataSources.MSSQL_DB:
                 case PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB:
                 case H2_DB:
-                    sourceCreator.createDbSources(datastore, includeMockClient);
+                    sourceCreator.createDbSources(datastore);
                     break;
                 case PersistToolsConstants.SupportedDataSources.GOOGLE_SHEETS:
-                    sourceCreator.createGSheetSources(includeMockClient);
+                    sourceCreator.createGSheetSources();
                     break;
                 case PersistToolsConstants.SupportedDataSources.REDIS:
-                    sourceCreator.createRedisSources(includeMockClient);
+                    sourceCreator.createRedisSources();
                     break;
                 default:
                     sourceCreator.createInMemorySources();
@@ -257,70 +259,17 @@ public class Generate implements BLauncherCmd {
         }
         errStream.println("Persist client and entity types generated successfully in the " + module +  " directory.");
 
-        if (includeMockClient) {
-            printMockClientGuide(datastore, packageName, module);
-        }
-    }
-
-    private void printMockClientGuide(String datastore, String packageName, String module) {
-
-        if (datastore.equals(H2_DB) || datastore.equals(IN_MEMORY_TABLE)) {
-            errStream.println(String.format("The mock client is not generated for %s as it is not " +
-                    "supported. Please use the generated client in your tests.", datastore));
-            return;
-        }
-        String yellowColor = "\u001B[33m";
-        String resetColor = "\u001B[0m";
-        if (SUPPORTED_NOSQL_DB_PROVIDERS.contains(datastore)) {
-            errStream.println("Ballerina table based mock client is generated successfully in the " +
-                    module + " directory.");
-        } else {
-            errStream.println("H2 DB based mock client and setup db scripts generated successfully in the " +
-                    module + " directory.");
-        }
-        errStream.println(System.lineSeparator() + "To use the generated mock client in your tests, " +
-                "please follow the steps below");
-        errStream.println(System.lineSeparator() + "1. Initialize the persist client in a function.");
-
-        String modulePrefix = packageName.equals(module) ? "" : module + ":";
-
-        errStream.println(MessageFormat.format("""
-                {0}final {2}Client dbClient = check initializeClient();
-
-                function initializeClient() returns {2}Client|error '{'
-                    return new ();
-                '}'{1}""", yellowColor, resetColor, modulePrefix));
-
-        errStream.println(System.lineSeparator() + "2. Mock the client instance with the mock client instance " +
-                "using Ballerina function mocking");
-
-        if (SUPPORTED_NOSQL_DB_PROVIDERS.contains(datastore)) {
-            errStream.println(MessageFormat.format("""
-                    {0}@test:Mock '{'functionName: "initializeClient"'}'
-                    isolated function getMockClient() returns {2}Client|error '{'
-                        return test:mock({2}Client, check new {2}MockClient());
-                    '}'{1}""", yellowColor, resetColor, modulePrefix));
-            return;
-        } else {
-            errStream.println(MessageFormat.format("""
-                    {0}@test:Mock '{'functionName: "initializeClient"'}'
-                    isolated function getMockClient() returns {2}Client|error '{'
-                        return test:mock({2}Client, check new {2}MockClient("jdbc:h2:./test", "sa", ""));
-                    '}'{1}""", yellowColor, resetColor, modulePrefix));
-
-            errStream.println(System.lineSeparator() + "3. Call the setup and cleanup DB scripts in " +
-                    "tests before and after suites");
-
-            errStream.println(MessageFormat.format("""
-                    {0}@test:BeforeSuite
-                    isolated function beforeSuite() returns error? '{'
-                        check {2}setupTestDB();
-                    '}'
-
-                    @test:AfterSuite
-                    function afterSuite() returns error? '{'
-                        check {2}cleanupTestDB();
-                    '}'{1}""", yellowColor, resetColor, modulePrefix));
+        if (testDatastore != null) {
+            try {
+                validateTestDatastore(testDatastore);
+                sourceCreator.createTestDataSources(testDatastore);
+            } catch (BalException e) {
+                errStream.printf("ERROR: %s%n", e.getMessage());
+                return;
+            }
+            errStream.printf("The test client for %s datastore is generated successfully in the %s module.%n",
+                    testDatastore, module);
+            printTestClientUsageSteps(testDatastore, packageName, module);
         }
     }
 

@@ -181,7 +181,7 @@ public class GeneratedSourcesTestUtils {
                                                       String... args) {
         Path sourceDirPath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);
         if (cmd == Command.GENERATE) {
-            executeGenerateCommand(subDir, false, args);
+            executeGenerateCommand(subDir, args);
         } else {
             executeCommand(subDir, cmd);
         }
@@ -273,26 +273,14 @@ public class GeneratedSourcesTestUtils {
         return new HashMap<>();
     }
 
-    public static void executeGenerateCommand(String subDir, boolean withMockClient, String... args) {
+    public static void executeGenerateCommand(String subDir, String... args) {
         Class<?> persistClass;
         Path sourcePath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);
         try {
             persistClass = Class.forName("io.ballerina.persist.cmd.Generate");
             Generate persistCmd = (Generate) persistClass.getDeclaredConstructor(String.class)
                     .newInstance(sourcePath.toAbsolutePath().toString());
-            String[] commandArgs;
-            if (args.length > 1) {
-                // ballerina persist generate --datastore <datastore> --module <module>
-                commandArgs = withMockClient ?
-                        new String[]{"--datastore", args[0], "--module", args[1], "--with-mock-client"} :
-                        new String[]{"--datastore", args[0], "--module", args[1]};
-            } else {
-                // ballerina persist generate --datastore <datastore>
-                commandArgs = withMockClient ?
-                        new String[]{"--datastore", args[0], "--with-mock-client"} :
-                        new String[]{"--datastore", args[0]};
-            }
-            new CommandLine(persistCmd).parseArgs(commandArgs);
+            new CommandLine(persistCmd).parseArgs(args);
             persistCmd.execute();
         } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException | IllegalAccessException
                 | InvocationTargetException e) {

@@ -242,7 +242,7 @@ public class TomlSyntaxUtils {
                     moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
                     moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray(
                             BalSyntaxConstants.PERSIST_DEPENDENCY, null));
-                    moduleMembers = populatePersistDependency(moduleMembers, mockArtifactId, datasource);
+                    moduleMembers = populatePersistDependency(moduleMembers, mockArtifactId, testDatasource);
                 }
             }
         }

@@ -18,7 +18,7 @@ final isolated table<Building> key(buildingCode) buildingsTable = table [];
 final isolated table<Department> key(deptNo) departmentsTable = table [];
 final isolated table<OrderItem> key(orderId, itemId) orderitemsTable = table [];
 
-public isolated client class MockClient {
+public isolated client class InMemoryClient {
     *persist:AbstractPersistClient;
 
     private final map<inmemory:InMemoryClient> persistClients;

@@ -57,6 +57,8 @@ public class PersistToolsConstants {
     public static final String PERSIST_TOOL_CONFIG = "tool.persist";
     public static final String GENERATED_DIRECTORY = "generated";
     public static final String TARGET_MODULE = "targetModule";
+    public static final String OPTION_DATASTORE = "options.datastore";
+    public static final String OPTION_TEST_DATASTORE = "options.testDatastore";
     public static final String MIGRATIONS = "migrations";
     public static final String BALLERINA_MYSQL_DRIVER_NAME = "ballerinax/mysql.driver";
     public static final String BALLERINA_MSSQL_DRIVER_NAME = "ballerinax/mssql.driver";
@@ -74,6 +76,9 @@ public class PersistToolsConstants {
            Set.of(SupportedDataSources.MYSQL_DB, SupportedDataSources.MSSQL_DB, SupportedDataSources.IN_MEMORY_TABLE,
                    SupportedDataSources.GOOGLE_SHEETS, SupportedDataSources.POSTGRESQL_DB, SupportedDataSources.REDIS,
                    SupportedDataSources.H2_DB);
+
+    public static final Set<String> SUPPORTED_TEST_DB_PROVIDERS =
+            Set.of(SupportedDataSources.IN_MEMORY_TABLE, SupportedDataSources.H2_DB);
     public static final Set<String> SUPPORTED_NOSQL_DB_PROVIDERS = 
             Set.of(SupportedDataSources.IN_MEMORY_TABLE, SupportedDataSources.GOOGLE_SHEETS, 
             SupportedDataSources.REDIS);

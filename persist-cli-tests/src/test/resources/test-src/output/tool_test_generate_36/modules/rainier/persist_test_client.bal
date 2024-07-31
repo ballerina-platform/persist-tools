@@ -16,7 +16,7 @@ const EMPLOYEE = "employees";
 const ORDER_ITEM = "orderitems";
 const WORKSPACE = "workspaces";
 
-public isolated client class MockClient {
+public isolated client class H2Client {
     *persist:AbstractPersistClient;
 
     private final jdbc:Client dbClient;

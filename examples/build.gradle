@@ -277,9 +277,9 @@ task generateDBMockExamples {
                     delete "${project.projectDir}/build/generated-examples/${example}/modules"
                     workingDir "${project.projectDir}/build/generated-examples/${example}"
                     if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate --datastore=mysql --module=entities --with-mock-client"
+                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate --datastore=mysql --module=entities --test-datastore=h2"
                     } else {
-                        commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat persist generate --datastore=mysql --module=entities --with-mock-client"
+                        commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat persist generate --datastore=mysql --module=entities --test-datastore=h2"
                     }
                 }
             } catch (Exception e) {
@@ -302,9 +302,9 @@ task generateRedisMockExamples {
                     delete "${project.projectDir}/build/generated-examples/${example}/modules"
                     workingDir "${project.projectDir}/build/generated-examples/${example}"
                     if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate --datastore=redis --module=entities --with-mock-client"
+                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate --datastore=redis --module=entities --test-datastore=inmemory"
                     } else {
-                        commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat persist generate --datastore=redis --module=entities --with-mock-client"
+                        commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat persist generate --datastore=redis --module=entities --test-datastore=inmemory"
                     }
                 }
             } catch (Exception e) {

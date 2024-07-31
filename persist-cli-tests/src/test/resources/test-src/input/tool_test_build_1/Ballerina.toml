@@ -26,7 +26,7 @@ array = [ [1, 0], [0, 1] ]
 id = "generate-db-client"
 targetModule = "persist_build_1"
 options.datastore = "mysql"
-options.withMockClient = true
+options.testDatastore = "h2"
 filePath = "persist/model.bal"
 
 [[platform.java17.dependency]]

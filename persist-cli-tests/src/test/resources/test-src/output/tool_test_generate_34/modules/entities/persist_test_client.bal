@@ -12,9 +12,8 @@ import ballerinax/persist.sql as psql;
 
 const PROFILE = "profiles";
 const USER = "users";
-const MULTIPLE_ASSOCIATIONS = "multipleassociations";
 
-public isolated client class MockClient {
+public isolated client class H2Client {
     *persist:AbstractPersistClient;
 
     private final jdbc:Client dbClient;
@@ -28,59 +27,25 @@ public isolated client class MockClient {
             fieldMetadata: {
                 id: {columnName: "id"},
                 name: {columnName: "name"},
+                gender: {columnName: "gender"},
                 ownerId: {columnName: "ownerId"},
-                multipleassociationsId: {columnName: "multipleassociationsId"},
-                "owner.id": {relation: {entityName: "owner", refField: "id"}},
-                "owner.name": {relation: {entityName: "owner", refField: "name"}},
-                "owner.multipleassociationsId": {relation: {entityName: "owner", refField: "multipleassociationsId"}},
-                "multipleAssociations.id": {relation: {entityName: "multipleAssociations", refField: "id"}},
-                "multipleAssociations.name": {relation: {entityName: "multipleAssociations", refField: "name"}}
+                "owner.id": {relation: {entityName: "owner", refField: "id"}}
             },
             keyFields: ["id"],
-            joinMetadata: {
-                owner: {entity: User, fieldName: "owner", refTable: "User", refColumns: ["id"], joinColumns: ["ownerId"], 'type: psql:ONE_TO_ONE},
-                multipleAssociations: {entity: MultipleAssociations, fieldName: "multipleAssociations", refTable: "MultipleAssociations", refColumns: ["id"], joinColumns: ["multipleassociationsId"], 'type: psql:ONE_TO_ONE}
-            }
+            joinMetadata: {owner: {entity: User, fieldName: "owner", refTable: "User", refColumns: ["id"], joinColumns: ["ownerId"], 'type: psql:ONE_TO_ONE}}
         },
         [USER]: {
             entityName: "User",
             tableName: "User",
             fieldMetadata: {
                 id: {columnName: "id"},
-                name: {columnName: "name"},
-                multipleassociationsId: {columnName: "multipleassociationsId"},
                 "profile.id": {relation: {entityName: "profile", refField: "id"}},
                 "profile.name": {relation: {entityName: "profile", refField: "name"}},
-                "profile.ownerId": {relation: {entityName: "profile", refField: "ownerId"}},
-                "profile.multipleassociationsId": {relation: {entityName: "profile", refField: "multipleassociationsId"}},
-                "multipleAssociations.id": {relation: {entityName: "multipleAssociations", refField: "id"}},
-                "multipleAssociations.name": {relation: {entityName: "multipleAssociations", refField: "name"}}
+                "profile.gender": {relation: {entityName: "profile", refField: "gender"}},
+                "profile.ownerId": {relation: {entityName: "profile", refField: "ownerId"}}
             },
             keyFields: ["id"],
-            joinMetadata: {
-                profile: {entity: Profile, fieldName: "profile", refTable: "Profile", refColumns: ["ownerId"], joinColumns: ["id"], 'type: psql:ONE_TO_ONE},
-                multipleAssociations: {entity: MultipleAssociations, fieldName: "multipleAssociations", refTable: "MultipleAssociations", refColumns: ["id"], joinColumns: ["multipleassociationsId"], 'type: psql:ONE_TO_ONE}
-            }
-        },
-        [MULTIPLE_ASSOCIATIONS]: {
-            entityName: "MultipleAssociations",
-            tableName: "MultipleAssociations",
-            fieldMetadata: {
-                id: {columnName: "id"},
-                name: {columnName: "name"},
-                "profile.id": {relation: {entityName: "profile", refField: "id"}},
-                "profile.name": {relation: {entityName: "profile", refField: "name"}},
-                "profile.ownerId": {relation: {entityName: "profile", refField: "ownerId"}},
-                "profile.multipleassociationsId": {relation: {entityName: "profile", refField: "multipleassociationsId"}},
-                "owner.id": {relation: {entityName: "owner", refField: "id"}},
-                "owner.name": {relation: {entityName: "owner", refField: "name"}},
-                "owner.multipleassociationsId": {relation: {entityName: "owner", refField: "multipleassociationsId"}}
-            },
-            keyFields: ["id"],
-            joinMetadata: {
-                profile: {entity: Profile, fieldName: "profile", refTable: "Profile", refColumns: ["multipleassociationsId"], joinColumns: ["id"], 'type: psql:ONE_TO_ONE},
-                owner: {entity: User, fieldName: "owner", refTable: "User", refColumns: ["multipleassociationsId"], joinColumns: ["id"], 'type: psql:ONE_TO_ONE}
-            }
+            joinMetadata: {profile: {entity: Profile, fieldName: "profile", refTable: "Profile", refColumns: ["ownerId"], joinColumns: ["id"], 'type: psql:ONE_TO_ONE}}
         }
     };
 
@@ -92,8 +57,7 @@ public isolated client class MockClient {
         self.dbClient = dbClient;
         self.persistClients = {
             [PROFILE]: check new (dbClient, self.metadata.get(PROFILE), psql:H2_SPECIFICS),
-            [USER]: check new (dbClient, self.metadata.get(USER), psql:H2_SPECIFICS),
-            [MULTIPLE_ASSOCIATIONS]: check new (dbClient, self.metadata.get(MULTIPLE_ASSOCIATIONS), psql:H2_SPECIFICS)
+            [USER]: check new (dbClient, self.metadata.get(USER), psql:H2_SPECIFICS)
         };
     }
 
@@ -170,45 +134,6 @@ public isolated client class MockClient {
         psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(USER);
-        }
-        _ = check sqlClient.runDeleteQuery(id);
-        return result;
-    }
-
-    isolated resource function get multipleassociations(MultipleAssociationsTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
-        'class: "io.ballerina.stdlib.persist.sql.datastore.H2Processor",
-        name: "query"
-    } external;
-
-    isolated resource function get multipleassociations/[int id](MultipleAssociationsTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
-        'class: "io.ballerina.stdlib.persist.sql.datastore.H2Processor",
-        name: "queryOne"
-    } external;
-
-    isolated resource function post multipleassociations(MultipleAssociationsInsert[] data) returns int[]|persist:Error {
-        psql:SQLClient sqlClient;
-        lock {
-            sqlClient = self.persistClients.get(MULTIPLE_ASSOCIATIONS);
-        }
-        _ = check sqlClient.runBatchInsertQuery(data);
-        return from MultipleAssociationsInsert inserted in data
-            select inserted.id;
-    }
-
-    isolated resource function put multipleassociations/[int id](MultipleAssociationsUpdate value) returns MultipleAssociations|persist:Error {
-        psql:SQLClient sqlClient;
-        lock {
-            sqlClient = self.persistClients.get(MULTIPLE_ASSOCIATIONS);
-        }
-        _ = check sqlClient.runUpdateQuery(id, value);
-        return self->/multipleassociations/[id].get();
-    }
-
-    isolated resource function delete multipleassociations/[int id]() returns MultipleAssociations|persist:Error {
-        MultipleAssociations result = check self->/multipleassociations/[id].get();
-        psql:SQLClient sqlClient;
-        lock {
-            sqlClient = self.persistClients.get(MULTIPLE_ASSOCIATIONS);
         }
         _ = check sqlClient.runDeleteQuery(id);
         return result;

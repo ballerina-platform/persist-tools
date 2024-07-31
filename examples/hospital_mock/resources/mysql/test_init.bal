@@ -19,7 +19,7 @@ import Demo.entities;
 
 @test:Mock {functionName: "initializeClient"}
 isolated function getMockClient() returns entities:Client|error {
-    return test:mock(entities:Client, check new entities:MockClient("jdbc:h2:./test", "sa", ""));
+    return test:mock(entities:Client, check new entities:H2Client("jdbc:h2:./test", "sa", ""));
 }
 
 @test:BeforeSuite

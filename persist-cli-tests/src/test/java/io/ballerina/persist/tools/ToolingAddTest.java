@@ -180,17 +180,31 @@ public class ToolingAddTest {
     }
 
     @Test
-    public void testInitWithMockClient() throws ClassNotFoundException, NoSuchMethodException,
+    public void testInitWithValidateDatastore() throws ClassNotFoundException, NoSuchMethodException,
             InvocationTargetException, InstantiationException, IllegalAccessException {
         Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Add");
         Add persistCmd = (Add) persistClass.getDeclaredConstructor(String.class).
                 newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, "tool_test_add_16").toAbsolutePath().
                         toString());
-        new CommandLine(persistCmd).parseArgs("--with-mock-client");
+        new CommandLine(persistCmd).parseArgs("--test-datastore", "h2");
         new CommandLine(persistCmd).parseArgs("--datastore", "mysql");
         new CommandLine(persistCmd).parseArgs("--module", "test");
         persistCmd.execute();
         assertGeneratedSources("tool_test_add_16");
+    }
+
+    @Test
+    public void testInitWithInvalidateDatastore() throws ClassNotFoundException, NoSuchMethodException,
+            InvocationTargetException, InstantiationException, IllegalAccessException {
+        Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Add");
+        Add persistCmd = (Add) persistClass.getDeclaredConstructor(String.class).
+                newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, "tool_test_add_17").toAbsolutePath().
+                        toString());
+        new CommandLine(persistCmd).parseArgs("--test-datastore", "sqllite");
+        new CommandLine(persistCmd).parseArgs("--datastore", "mysql");
+        new CommandLine(persistCmd).parseArgs("--module", "test");
+        persistCmd.execute();
+        assertGeneratedSources("tool_test_add_17");
     }
 
     private void executeCommand(String subDir) {

@@ -13,7 +13,7 @@ import ballerinax/persist.sql as psql;
 const COMPANY = "companies";
 const EMPLOYEE = "employees";
 
-public isolated client class MockClient {
+public isolated client class H2Client {
     *persist:AbstractPersistClient;
 
     private final jdbc:Client dbClient;

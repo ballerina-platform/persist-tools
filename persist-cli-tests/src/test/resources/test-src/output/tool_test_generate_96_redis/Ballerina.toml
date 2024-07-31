@@ -13,7 +13,7 @@ artifactId = "persist.redis-native"
 version = "0.1.0"
 
 [[platform.java17.dependency]]
-groupId = "io.ballerina.lib"
+groupId = "io.ballerina.stdlib"
 artifactId = "persist.sql-native"
 version = "1.4.0-SNAPSHOT"
 

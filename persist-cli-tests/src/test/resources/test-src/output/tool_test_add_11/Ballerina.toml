@@ -7,10 +7,3 @@ distribution = "2201.3.0"
 [build-options]
 observabilityIncluded = true
 
-[[tool.persist]]
-id = "generate-db-client"
-targetModule = "persist_add_11"
-options.datastore = "inmemory"
-filePath = "persist/model.bal"
-
-

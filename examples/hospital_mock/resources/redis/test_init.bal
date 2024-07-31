@@ -19,5 +19,5 @@ import Demo.entities;
 
 @test:Mock {functionName: "initializeClient"}
 isolated function getMockClient() returns entities:Client|error {
-    return test:mock(entities:Client, check new entities:MockClient());
+    return test:mock(entities:Client, check new entities:InMemoryClient());
 }
