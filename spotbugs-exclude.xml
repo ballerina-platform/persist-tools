@@ -53,4 +53,7 @@
         <Class name="io.ballerina.persist.tools.utils.DatabaseTestUtils" />
         <Bug pattern="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE" />
     </Match>
+    <Match>
+        <Class name="io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils$ConfigDeclaration"/>
+    </Match>
 </FindBugsFilter>

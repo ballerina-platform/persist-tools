@@ -22,7 +22,18 @@ import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils;
+import io.ballerina.persist.utils.BalProjectUtils;
 import io.ballerina.projects.util.ProjectUtils;
+import io.ballerina.toml.syntax.tree.AbstractNodeFactory;
+import io.ballerina.toml.syntax.tree.DocumentMemberDeclarationNode;
+import io.ballerina.toml.syntax.tree.DocumentNode;
+import io.ballerina.toml.syntax.tree.NodeFactory;
+import io.ballerina.toml.syntax.tree.NodeList;
+import io.ballerina.toml.syntax.tree.SyntaxTree;
+import io.ballerina.toml.syntax.tree.Token;
+import io.ballerina.toml.validator.SampleNodeGenerator;
+import io.ballerina.tools.text.TextDocument;
+import io.ballerina.tools.text.TextDocuments;
 import picocli.CommandLine;
 
 import java.io.IOException;
@@ -39,6 +50,8 @@ import java.util.stream.Stream;
 import static io.ballerina.persist.PersistToolsConstants.BAL_PERSIST_ADD_CMD;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.BAL_EXTENSION;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
+import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.getConfigDeclaration;
+import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.getDependencyConfig;
 import static io.ballerina.persist.utils.BalProjectUtils.printTestClientUsageSteps;
 import static io.ballerina.persist.utils.BalProjectUtils.validateDatastore;
 import static io.ballerina.persist.utils.BalProjectUtils.validateTestDatastore;
@@ -103,8 +116,8 @@ public class Add implements BLauncherCmd {
             }
             String moduleNameWithPackage = validateAndProcessModule(packageName, module);
             createDefaultClientId();
-            String syntaxTree = TomlSyntaxUtils.updateBallerinaToml(Paths.get(this.sourcePath, BALLERINA_TOML),
-                    moduleNameWithPackage, datastore, testDatastore, false, id);
+            String syntaxTree = updateBallerinaToml(Paths.get(this.sourcePath, BALLERINA_TOML),
+                    moduleNameWithPackage, datastore, testDatastore, id);
             Utils.writeOutputString(syntaxTree,
                     Paths.get(sourcePath, BALLERINA_TOML).toAbsolutePath().toString());
             createPersistDirectoryIfNotExists();
@@ -124,6 +137,45 @@ public class Add implements BLauncherCmd {
         } catch (BalException | IOException e) {
             errStream.printf("ERROR: %s%n", e.getMessage());
         }
+    }
+
+    /**
+     * Method to update the Ballerina.toml with persist tool configurations.
+     */
+    private String updateBallerinaToml(Path tomlPath, String module, String datastore, String testDatastore, String id)
+            throws BalException, IOException {
+        TomlSyntaxUtils.NativeDependency dependency = getDependencyConfig(datastore, testDatastore);
+        TomlSyntaxUtils.ConfigDeclaration declaration = getConfigDeclaration(tomlPath, dependency);
+        if (declaration.persistConfigExists()) {
+            throw new BalException("persist configuration already exists in the Ballerina.toml. " +
+                    "remove the existing configuration and try again.");
+        }
+        NodeList<DocumentMemberDeclarationNode> moduleMembers = declaration.moduleMembers();
+        if (!moduleMembers.isEmpty()) {
+            moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
+            moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray(
+                    PersistToolsConstants.PERSIST_TOOL_CONFIG, null));
+            moduleMembers = populateBallerinaNodeList(moduleMembers, module, datastore, testDatastore, id);
+            moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
+        }
+        Token eofToken = AbstractNodeFactory.createIdentifierToken("");
+        DocumentNode documentNode = NodeFactory.createDocumentNode(moduleMembers, eofToken);
+        TextDocument textDocument = TextDocuments.from(documentNode.toSourceCode());
+        return SyntaxTree.from(textDocument).toSourceCode();
+    }
+
+    private static NodeList<DocumentMemberDeclarationNode> populateBallerinaNodeList(
+            NodeList<DocumentMemberDeclarationNode> moduleMembers, String module, String dataStore,
+            String testDatastore, String id) {
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("id", id, null));
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("targetModule", module, null));
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("options.datastore", dataStore, null));
+        if (testDatastore != null) {
+            moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("options.testDatastore",
+                    testDatastore, null));
+        }
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("filePath", "persist/model.bal", null));
+        return moduleMembers;
     }
 
     @Override

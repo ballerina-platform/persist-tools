@@ -30,9 +30,19 @@ import io.ballerina.projects.buildtools.ToolConfig;
 import io.ballerina.projects.buildtools.ToolContext;
 import io.ballerina.projects.util.ProjectUtils;
 import io.ballerina.toml.semantic.diagnostics.TomlNodeLocation;
+import io.ballerina.toml.syntax.tree.AbstractNodeFactory;
+import io.ballerina.toml.syntax.tree.DocumentMemberDeclarationNode;
+import io.ballerina.toml.syntax.tree.DocumentNode;
+import io.ballerina.toml.syntax.tree.NodeFactory;
+import io.ballerina.toml.syntax.tree.NodeList;
+import io.ballerina.toml.syntax.tree.SyntaxTree;
+import io.ballerina.toml.syntax.tree.Token;
+import io.ballerina.toml.validator.SampleNodeGenerator;
 import io.ballerina.tools.diagnostics.DiagnosticFactory;
 import io.ballerina.tools.diagnostics.DiagnosticInfo;
 import io.ballerina.tools.diagnostics.Location;
+import io.ballerina.tools.text.TextDocument;
+import io.ballerina.tools.text.TextDocuments;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -49,6 +59,10 @@ import static io.ballerina.persist.PersistToolsConstants.CACHE_FILE;
 import static io.ballerina.persist.PersistToolsConstants.OPTION_DATASTORE;
 import static io.ballerina.persist.PersistToolsConstants.OPTION_TEST_DATASTORE;
 import static io.ballerina.persist.PersistToolsConstants.TARGET_MODULE;
+import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.getConfigDeclaration;
+import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.getDependencyConfig;
+import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.populatePersistDependency;
+import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.validateDependency;
 import static io.ballerina.persist.utils.BalProjectUtils.validateDatastore;
 import static io.ballerina.persist.utils.BalProjectUtils.validateTestDatastore;
 import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
@@ -105,8 +119,8 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
             BalProjectUtils.validateSchemaFile(schemaFilePath);
             entityModule = BalProjectUtils.getEntities(schemaFilePath);
             validateEntityModule(entityModule, schemaFilePath);
-            String syntaxTree = TomlSyntaxUtils.addPersistNativeDependency(
-                    Paths.get(projectPath.toString(), BALLERINA_TOML), datastore);
+            String syntaxTree = updateBallerinaToml(
+                    Paths.get(projectPath.toString(), BALLERINA_TOML), datastore, testDatastore);
             Utils.writeOutputString(syntaxTree,
                     Paths.get(projectPath.toString(), BALLERINA_TOML).toAbsolutePath().toString());
             createGeneratedSourceDirIfNotExists(generatedSourceDirPath);
@@ -121,6 +135,43 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
             createDiagnostics(toolContext, PersistToolsConstants.DiagnosticMessages.ERROR_WHILE_GENERATING_CLIENT,
                     location, e.getMessage());
         }
+    }
+
+    /**
+     * Method to update the Ballerina.toml with persist native dependency.
+     */
+    private String updateBallerinaToml(Path tomlPath, String datastore, String testDatastore)
+            throws BalException, IOException {
+        TomlSyntaxUtils.NativeDependency dependency = getDependencyConfig(datastore, testDatastore);
+        TomlSyntaxUtils.ConfigDeclaration declaration = getConfigDeclaration(tomlPath, dependency);
+
+        NodeList<DocumentMemberDeclarationNode> moduleMembers = declaration.moduleMembers();
+        if (!moduleMembers.isEmpty()) {
+            moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
+            if (declaration.dependencyNode() == null) {
+                moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray(
+                        BalSyntaxConstants.PERSIST_DEPENDENCY, null));
+                moduleMembers = populatePersistDependency(moduleMembers, dependency.artifactId(), datastore);
+            } else {
+                validateDependency(declaration.dependencyNode(), datastore);
+            }
+            if ((dependency.testArtifactId() != null) &&
+                    !dependency.testArtifactId().equals(dependency.artifactId())) {
+                if (declaration.testDependencyNode() == null) {
+                    moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
+                    moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray(
+                            BalSyntaxConstants.PERSIST_DEPENDENCY, null));
+                    moduleMembers = populatePersistDependency(
+                            moduleMembers, dependency.testArtifactId(), testDatastore);
+                } else {
+                    validateDependency(declaration.testDependencyNode(), testDatastore);
+                }
+            }
+        }
+        Token eofToken = AbstractNodeFactory.createIdentifierToken("");
+        DocumentNode documentNode = NodeFactory.createDocumentNode(moduleMembers, eofToken);
+        TextDocument textDocument = TextDocuments.from(documentNode.toSourceCode());
+        return SyntaxTree.from(textDocument).toSourceCode();
     }
 
     private void validateModuleName(String moduleName) throws BalException {
