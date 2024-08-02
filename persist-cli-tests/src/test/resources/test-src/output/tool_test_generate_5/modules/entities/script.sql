@@ -24,3 +24,5 @@ CREATE TABLE `MedicalNeed` (
 	`quantity` VARCHAR(191) NOT NULL,
 	PRIMARY KEY(`needId`)
 );
+
+

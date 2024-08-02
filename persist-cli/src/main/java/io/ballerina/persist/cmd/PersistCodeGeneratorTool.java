@@ -96,7 +96,7 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
                     ballerinaTomlConfig.get(OPTION_TEST_DATASTORE).trim();
 
             validateDatastore(datastore);
-            validateTestDatastore(testDatastore);
+            validateTestDatastore(datastore, testDatastore);
             if (!targetModule.equals(packageName)) {
                 if (!targetModule.startsWith(packageName + ".")) {
                     createDiagnostics(toolContext, PersistToolsConstants.DiagnosticMessages.INVALID_MODULE_NAME,

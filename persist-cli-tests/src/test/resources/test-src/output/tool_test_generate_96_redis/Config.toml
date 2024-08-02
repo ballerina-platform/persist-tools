@@ -1,7 +1,0 @@
-[persist_generate_96.entities.connectionConfig]
-connection = "redis://localhost:6379"
-
-[persist_generate_96.entities.cacheConfig]
-maxAge = -1
-
-

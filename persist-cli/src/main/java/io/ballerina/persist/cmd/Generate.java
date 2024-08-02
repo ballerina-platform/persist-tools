@@ -118,6 +118,12 @@ public class Generate implements BLauncherCmd {
                 return;
             }
         }
+        try {
+            validateTestDatastore(datastore, testDatastore);
+        } catch (BalException e) {
+            errStream.printf("ERROR: %s%n", e.getMessage());
+            return;
+        }
 
         Path projectPath = Paths.get(sourcePath);
         try {
@@ -269,7 +275,6 @@ public class Generate implements BLauncherCmd {
 
         if (testDatastore != null) {
             try {
-                validateTestDatastore(testDatastore);
                 sourceCreator.createTestDataSources(testDatastore);
             } catch (BalException e) {
                 errStream.printf("ERROR: %s%n", e.getMessage());

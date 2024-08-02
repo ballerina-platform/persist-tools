@@ -106,7 +106,7 @@ public class Add implements BLauncherCmd {
             } else {
                 validateDatastore(datastore);
             }
-            validateTestDatastore(testDatastore);
+            validateTestDatastore(datastore, testDatastore);
 
             try {
                 packageName = TomlSyntaxUtils.readPackageName(this.sourcePath);

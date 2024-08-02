@@ -83,6 +83,10 @@ public class PersistToolsConstants {
             Set.of(SupportedDataSources.IN_MEMORY_TABLE, SupportedDataSources.GOOGLE_SHEETS, 
             SupportedDataSources.REDIS);
 
+    public static final Set<String> SUPPORTED_SQL_DB_PROVIDERS =
+            Set.of(SupportedDataSources.MYSQL_DB, SupportedDataSources.MSSQL_DB, SupportedDataSources.POSTGRESQL_DB,
+                    SupportedDataSources.H2_DB);
+
     public static final Set<String> SUPPORTED_VIA_JDBC_CONNECTOR =
             Set.of(SupportedDataSources.H2_DB);
 

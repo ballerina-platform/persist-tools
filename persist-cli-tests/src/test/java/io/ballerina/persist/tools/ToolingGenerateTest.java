@@ -105,7 +105,7 @@ public class ToolingGenerateTest {
     public void testGenerateUpdateEntity() {
         updateOutputBallerinaToml("tool_test_generate_5");
         executeGenerateCommand("tool_test_generate_5",
-                "--datastore", "mysql", "--module", "entities", "--test-datastore", "inmemory");
+                "--datastore", "mysql", "--module", "entities", "--test-datastore", "h2");
         assertGeneratedSources("tool_test_generate_5");
     }
 
@@ -114,7 +114,7 @@ public class ToolingGenerateTest {
     public void testGenerateAllEntityFieldTypes() {
         updateOutputBallerinaToml("tool_test_generate_6");
         executeGenerateCommand("tool_test_generate_6",
-                "--datastore", "mysql", "--module", "entities", "--test-datastore", "h2");
+                "--datastore", "mysql", "--module", "entities", "--test-datastore", "inmemory");
         assertGeneratedSources("tool_test_generate_6");
     }
 

@@ -84,7 +84,10 @@ import java.util.stream.Stream;
 import static io.ballerina.compiler.syntax.tree.SyntaxKind.QUALIFIED_NAME_REFERENCE;
 import static io.ballerina.persist.PersistToolsConstants.GENERATE_CMD_FILE;
 import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_DB_PROVIDERS;
+import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_NOSQL_DB_PROVIDERS;
+import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_SQL_DB_PROVIDERS;
 import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_TEST_DB_PROVIDERS;
+import static io.ballerina.persist.PersistToolsConstants.SupportedDataSources.H2_DB;
 import static io.ballerina.persist.PersistToolsConstants.SupportedDataSources.IN_MEMORY_TABLE;
 import static io.ballerina.persist.PersistToolsConstants.TARGET_DIRECTORY;
 import static io.ballerina.persist.PersistToolsConstants.SqlTypes.CHAR;
@@ -703,10 +706,24 @@ public class BalProjectUtils {
         }
     }
 
-    public static void validateTestDatastore(String testDatastore) throws BalException {
-        if (testDatastore != null && !SUPPORTED_TEST_DB_PROVIDERS.contains(testDatastore)) {
+    public static void validateTestDatastore(String datastore, String testDatastore) throws BalException {
+        if (testDatastore == null) {
+            return;
+        }
+
+        if (!SUPPORTED_TEST_DB_PROVIDERS.contains(testDatastore)) {
             throw new BalException(String.format("the persist layer supports one of test data stores: %s. but found " +
                     "'%s' datasource.", Arrays.toString(SUPPORTED_TEST_DB_PROVIDERS.toArray()), testDatastore));
+        }
+
+        if (testDatastore.equals(IN_MEMORY_TABLE) && !SUPPORTED_NOSQL_DB_PROVIDERS.contains(datastore)) {
+            throw new BalException(String.format("in-memory table is the only supported test data store for " +
+                    "nosql data stores. but found '%s' datasource.", datastore));
+        }
+
+        if (testDatastore.equals(H2_DB) && !SUPPORTED_SQL_DB_PROVIDERS.contains(datastore)) {
+            throw new BalException(String.format("H2 is the only supported test data store for " +
+                    "sql data stores. but found '%s' datasource.", datastore));
         }
     }
 
