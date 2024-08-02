@@ -713,17 +713,19 @@ public class BalProjectUtils {
 
         if (!SUPPORTED_TEST_DB_PROVIDERS.contains(testDatastore)) {
             throw new BalException(String.format("the persist layer supports one of test data stores: %s. but found " +
-                    "'%s' datasource.", Arrays.toString(SUPPORTED_TEST_DB_PROVIDERS.toArray()), testDatastore));
+                    "'%s' datastore.", Arrays.toString(SUPPORTED_TEST_DB_PROVIDERS.toArray()), testDatastore));
         }
 
         if (testDatastore.equals(IN_MEMORY_TABLE) && !SUPPORTED_NOSQL_DB_PROVIDERS.contains(datastore)) {
-            throw new BalException(String.format("in-memory table is the only supported test data store for " +
-                    "nosql data stores. but found '%s' datasource.", datastore));
+            throw new BalException(String.format("the in-memory datastore is supported as the test data store for " +
+                    "data stores: %s. but found '%s' datasource.",
+                    Arrays.toString(SUPPORTED_NOSQL_DB_PROVIDERS.toArray()), datastore));
         }
 
         if (testDatastore.equals(H2_DB) && !SUPPORTED_SQL_DB_PROVIDERS.contains(datastore)) {
-            throw new BalException(String.format("H2 is the only supported test data store for " +
-                    "sql data stores. but found '%s' datasource.", datastore));
+            throw new BalException(String.format("the H2 datastore is supported as the test data store for " +
+                    "data stores: %s. but found '%s' datastore.",
+                    Arrays.toString(SUPPORTED_SQL_DB_PROVIDERS.toArray()), datastore));
         }
     }
 

@@ -31,7 +31,7 @@ This specification elaborates on the `Persist CLI Tool` commands.
 ## 2. Initializing the Bal Project with Persistence Layer
 
 ```bash
-bal persist add --datastore="datastore" --module="module_name" --test-datastore="test_datastore"
+bal persist add --datastore mysql --module db --test-datastore h2
 ```
 
 | Command Parameter |                                                         Description                                                          | Mandatory |   Default Value    |
@@ -163,7 +163,7 @@ The database schema will contain the code to create,
 Apart from the `bal build` users can also use the following command to generate the same as above mentioned,
 
 ```bash
-bal persist generate --datastore mysql --module db --test-datastore="test_datastore"
+bal persist generate --datastore mysql --module db --test-datastore h2
 ```
 
 | Command Parameter |                                       Description                                        | Mandatory | Default Value  |

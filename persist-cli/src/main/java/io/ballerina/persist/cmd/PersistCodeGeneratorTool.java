@@ -250,7 +250,7 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
                         targetModule, entityModule);
                 sourceCreator.createTestDataSources(testDatastore);
             } catch (BalException e) {
-                errStream.printf("ERROR: %s%n", e.getMessage());
+                errStream.printf("ERROR: the test data source creation failed. %s%n", e.getMessage());
             }
         }
     }

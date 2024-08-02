@@ -272,7 +272,7 @@ public class Generate implements BLauncherCmd {
             try {
                 sourceCreator.createTestDataSources(testDatastore);
             } catch (BalException e) {
-                errStream.printf("ERROR: %s%n", e.getMessage());
+                errStream.printf("ERROR: the test data source creation failed. %s%n", e.getMessage());
                 return;
             }
             errStream.printf("The test client for the %s datastore is successfully generated in the %s module.%n",
