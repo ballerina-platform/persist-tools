@@ -26,15 +26,11 @@ import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
 import io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils;
 import io.ballerina.persist.utils.BalProjectUtils;
 import io.ballerina.projects.util.ProjectUtils;
-import io.ballerina.toml.syntax.tree.AbstractNodeFactory;
 import io.ballerina.toml.syntax.tree.DocumentMemberDeclarationNode;
 import io.ballerina.toml.syntax.tree.DocumentNode;
-import io.ballerina.toml.syntax.tree.NodeFactory;
 import io.ballerina.toml.syntax.tree.NodeList;
 import io.ballerina.toml.syntax.tree.SyntaxTree;
 import io.ballerina.toml.syntax.tree.TableNode;
-import io.ballerina.toml.syntax.tree.Token;
-import io.ballerina.toml.validator.SampleNodeGenerator;
 import io.ballerina.tools.text.TextDocument;
 import io.ballerina.tools.text.TextDocuments;
 import picocli.CommandLine;
@@ -49,8 +45,7 @@ import java.util.Objects;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.getConfigDeclaration;
 import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.getDependencyConfig;
-import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.populatePersistDependency;
-import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.validateDependency;
+import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.populateNativeDependencyConfig;
 import static io.ballerina.persist.utils.BalProjectUtils.printTestClientUsageSteps;
 import static io.ballerina.persist.utils.BalProjectUtils.validateDatastore;
 import static io.ballerina.persist.utils.BalProjectUtils.validateTestDatastore;
@@ -303,33 +298,7 @@ public class Generate implements BLauncherCmd {
                     "remove the existing configuration and try again.");
         }
 
-        NodeList<DocumentMemberDeclarationNode> moduleMembers = declaration.moduleMembers();
-        if (!moduleMembers.isEmpty()) {
-            moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
-            if (declaration.dependencyNode() == null) {
-                moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray(
-                        BalSyntaxConstants.PERSIST_DEPENDENCY, null));
-                moduleMembers = populatePersistDependency(moduleMembers, dependency.artifactId(), datastore);
-            } else {
-                validateDependency(declaration.dependencyNode(), datastore);
-            }
-            if ((dependency.testArtifactId() != null) &&
-                    !dependency.testArtifactId().equals(dependency.artifactId())) {
-                if (declaration.testDependencyNode() == null) {
-                    moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
-                    moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray(
-                            BalSyntaxConstants.PERSIST_DEPENDENCY, null));
-                    moduleMembers = populatePersistDependency(
-                            moduleMembers, dependency.testArtifactId(), testDatastore);
-                } else {
-                    validateDependency(declaration.testDependencyNode(), testDatastore);
-                }
-            }
-        }
-        Token eofToken = AbstractNodeFactory.createIdentifierToken("");
-        DocumentNode documentNode = NodeFactory.createDocumentNode(moduleMembers, eofToken);
-        TextDocument textDocument = TextDocuments.from(documentNode.toSourceCode());
-        return SyntaxTree.from(textDocument).toSourceCode();
+        return populateNativeDependencyConfig(datastore, testDatastore, declaration, dependency);
     }
 
     @Override
