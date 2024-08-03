@@ -71,7 +71,7 @@ function testCreateAppointment() returns error? {
       id: 1,
       patientId: 1,
       doctorId: 1,
-      appointmentTime: {year: 2023, month: 7, day: 1, hour: 10, minute: 30},
+      appointmentTime: {year: 2023, month: 7, day: 1, hour: 10, minute: 30, second: 0},
       status: "SCHEDULED",
       reason: "Headache"
     };
@@ -87,7 +87,7 @@ function testCreateAppointmentAlreadyExists() returns error? {
       id: 1,
       patientId: 1,
       doctorId: 1,
-      appointmentTime: {year: 2023, month: 7, day: 1, hour: 10, minute: 30},
+      appointmentTime: {year: 2023, month: 7, day: 1, hour: 10, minute: 30, second: 0},
       status: "SCHEDULED",
       reason: "Headache"
     };
@@ -123,28 +123,26 @@ function testGetPatientNotFound() returns error? {
   dependsOn: [testCreateAppointment]
 }
 function testGetAppointmentByDoctor() returns error? {
-    http:Response result = check hospitalEndpoint->/doctors/[1]/appointments(year=2023, month=7, day=1);
-    test:assertEquals(result.statusCode, 200, "Status code should be 200");
-    test:assertEquals(result.getJsonPayload(), [
-      {
-        "id": 1,
-        "doctorId": 1,
-        "appointmentTime": {
-          "year": 2023,
-          "month": 7,
-          "day": 1,
-          "hour": 10,
-          "minute": 30,
-          "second": 0
+    Appointment[] actual = check hospitalEndpoint->/doctors/[1]/appointments(year=2023, month=7, day=1);
+    Appointment[] expected = [{
+        id: 1,
+        doctorId: 1,
+        appointmentTime: {
+          year: 2023,
+          month: 7,
+          day: 1,
+          hour: 10,
+          minute: 30,
+          second: 0
         },
-        "status": "SCHEDULED",
-        "patient": {
-          "id": 1,
-          "name": "John Doe",
-          "phoneNumber": "0771690000"
+        status: "SCHEDULED",
+        patient: {
+          id: 1,
+          name: "John Doe",
+          phoneNumber: "0771690000"
         }
-      }
-    ], "Appointment details should be returned");
+      }];
+    test:assertEquals(actual, expected, "Appointment details should be returned");
     http:Response result2 = check hospitalEndpoint->/doctors/[5]/appointments(year=2023, month=7, day=1);
     test:assertEquals(result2.statusCode, 200, "Status code should be 200");
     test:assertEquals(result2.getJsonPayload(), [], "Appointment details should be empty");
@@ -154,28 +152,26 @@ function testGetAppointmentByDoctor() returns error? {
   dependsOn: [testCreateAppointment]
 }
 function testGetAppointmentByPatient() returns error? {
-    http:Response result = check hospitalEndpoint->/patients/[1]/appointments;
-    test:assertEquals(result.statusCode, 200, "Status code should be 200");
-    test:assertEquals(result.getJsonPayload(), [
-      {
-        "id": 1,
-        "patientId": 1,
-        "appointmentTime": {
-          "year": 2023,
-          "month": 7,
-          "day": 1,
-          "hour": 10,
-          "minute": 30,
-          "second": 0
+    PatientAppointment[] actual = check hospitalEndpoint->/patients/[1]/appointments;
+    PatientAppointment[] expected = [{
+        id: 1,
+        patientId: 1,
+        appointmentTime: {
+          year: 2023,
+          month: 7,
+          day: 1,
+          hour: 10,
+          minute: 30,
+          second: 0
         },
-        "status": "SCHEDULED",
-        "doctor": {
-          "id": 1,
-          "name": "Doctor Mouse",
-          "specialty": "Physician"
+        status: "SCHEDULED",
+        doctor: {
+          id: 1,
+          name: "Doctor Mouse",
+          specialty: "Physician"
         }
-      }
-    ], "Appointment details should be returned");
+      }];
+    test:assertEquals(actual, expected, "Appointment details should be returned");
     http:Response result2 = check hospitalEndpoint->/patients/[5]/appointments;
     test:assertEquals(result2.statusCode, 200, "Status code should be 200");
     test:assertEquals(result2.getJsonPayload(), [], "Appointment details should be empty");
@@ -187,28 +183,26 @@ function testGetAppointmentByPatient() returns error? {
 function testPatchAppointment() returns error? {
     http:Response result = check hospitalEndpoint->/appointments/[1].patch("STARTED");
     test:assertEquals(result.statusCode, 204, "Status code should be 204");
-    http:Response result2 = check hospitalEndpoint->/patients/[1]/appointments;
-    test:assertEquals(result2.statusCode, 200, "Status code should be 200");
-    test:assertEquals(result2.getJsonPayload(), [
-      {
-        "id": 1,
-        "patientId": 1,
-        "appointmentTime": {
-          "year": 2023,
-          "month": 7,
-          "day": 1,
-          "hour": 10,
-          "minute": 30,
-          "second": 0
+    PatientAppointment[] actual = check hospitalEndpoint->/patients/[1]/appointments;
+    PatientAppointment[] expected = [{
+        id: 1,
+        patientId: 1,
+        appointmentTime: {
+          year: 2023,
+          month: 7,
+          day: 1,
+          hour: 10,
+          minute: 30,
+          second: 0
         },
-        "status": "STARTED",
-        "doctor": {
-          "id": 1,
-          "name": "Doctor Mouse",
-          "specialty": "Physician"
+        status: "STARTED",
+        doctor: {
+          id: 1,
+          name: "Doctor Mouse",
+          specialty: "Physician"
         }
-      }
-    ], "Appointment details should be returned");
+      }];
+    test:assertEquals(actual, expected, "Appointment details should be returned");
     http:Response result3 = check hospitalEndpoint->/appointments/[10].patch("STARTED");
     test:assertEquals(result3.statusCode, 404, "Status code should be 404");
 }
