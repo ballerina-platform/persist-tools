@@ -51,6 +51,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.CLIENT_NAME;
+
 public class RedisSyntaxTree implements SyntaxTree  {
 
     @Override
@@ -60,7 +62,7 @@ public class RedisSyntaxTree implements SyntaxTree  {
         NodeList<ImportDeclarationNode> imports = redisClientSyntax.getImports();
         NodeList<ModuleMemberDeclarationNode> moduleMembers = redisClientSyntax.getConstantVariables();
 
-        Client clientObject = redisClientSyntax.getClientObject(entityModule);
+        Client clientObject = redisClientSyntax.getClientObject(entityModule, CLIENT_NAME);
         Collection<Entity> entityArray = entityModule.getEntityMap().values();
         if (entityArray.size() == 0) {
             throw new BalException("data definition file() does not contain any entities.");
@@ -85,6 +87,12 @@ public class RedisSyntaxTree implements SyntaxTree  {
         moduleMembers = moduleMembers.add(clientObject.getClassDefinitionNode());
         return BalSyntaxUtils.generateSyntaxTree(imports, moduleMembers);
     }
+
+    @Override
+    public io.ballerina.compiler.syntax.tree.SyntaxTree getTestClientSyntax(Module entityModule) throws BalException {
+        throw new BalException("Not supported yet.");
+    }
+
 
     @Override
     public io.ballerina.compiler.syntax.tree.SyntaxTree getDataTypesSyntax(Module entityModule) {

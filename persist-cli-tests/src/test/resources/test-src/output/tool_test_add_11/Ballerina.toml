@@ -6,3 +6,4 @@ distribution = "2201.3.0"
 
 [build-options]
 observabilityIncluded = true
+

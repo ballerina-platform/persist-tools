@@ -29,14 +29,19 @@ import io.ballerina.compiler.syntax.tree.NodeList;
 import io.ballerina.compiler.syntax.tree.NodeParser;
 import io.ballerina.compiler.syntax.tree.SeparatedNodeList;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
+import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.compiler.syntax.tree.Token;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.components.Client;
 import io.ballerina.persist.components.ClientResource;
+import io.ballerina.persist.components.Function;
+import io.ballerina.persist.components.TypeDescriptor;
 import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.Module;
+import io.ballerina.persist.nodegenerator.syntax.clients.ClientSyntax;
 import io.ballerina.persist.nodegenerator.syntax.clients.DbClientSyntax;
+import io.ballerina.persist.nodegenerator.syntax.clients.DbMockClientSyntax;
 import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
 import io.ballerina.persist.nodegenerator.syntax.constants.SyntaxTokenConstants;
 import io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils;
@@ -53,6 +58,13 @@ import java.util.List;
 
 import static io.ballerina.persist.PersistToolsConstants.JDBC_CONNECTOR_MODULE_NAME;
 import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_VIA_JDBC_CONNECTOR;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.CLIENT_NAME;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.EXECUTE_NATIVE_SQL_QUERY;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.KEYWORD_ISOLATED;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.KEYWORD_PUBLIC;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.H2_CLIENT_NAME;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.MOCK_H2_CLIENT_INIT;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.NEWLINE;
 
 /**
  * This class is used to generate the syntax tree for database.
@@ -68,9 +80,26 @@ public class DbSyntaxTree implements RDBMSSyntaxTree {
         NodeList<ImportDeclarationNode> imports = dbClientSyntax.getImports();
         NodeList<ModuleMemberDeclarationNode> moduleMembers = dbClientSyntax.getConstantVariables();
 
-        Client clientObject = dbClientSyntax.getClientObject(entityModule);
+        Client clientObject = getClientObject(entityModule, dbClientSyntax, CLIENT_NAME);
+        moduleMembers = moduleMembers.add(clientObject.getClassDefinitionNode());
+        return BalSyntaxUtils.generateSyntaxTree(imports, moduleMembers);
+    }
+
+    public SyntaxTree getTestClientSyntax(Module entityModule) throws BalException {
+        DbMockClientSyntax dbClientSyntax = new DbMockClientSyntax(entityModule);
+        NodeList<ImportDeclarationNode> imports = dbClientSyntax.getImports();
+        NodeList<ModuleMemberDeclarationNode> moduleMembers = dbClientSyntax.getConstantVariables();
+
+        Client clientObject = getClientObject(entityModule, dbClientSyntax, H2_CLIENT_NAME);
+        moduleMembers = moduleMembers.add(clientObject.getClassDefinitionNode());
+        return BalSyntaxUtils.generateSyntaxTree(imports, moduleMembers);
+    }
+
+    private static Client getClientObject(Module entityModule, ClientSyntax dbClientSyntax, String clientName)
+            throws BalException {
+        Client clientObject = dbClientSyntax.getClientObject(entityModule, clientName);
         Collection<Entity> entityArray = entityModule.getEntityMap().values();
-        if (entityArray.size() == 0) {
+        if (entityArray.isEmpty()) {
             throw new BalException("data definition file() does not contain any entities.");
         }
         clientObject.addMember(dbClientSyntax.getInitFunction(entityModule), true);
@@ -95,14 +124,13 @@ public class DbSyntaxTree implements RDBMSSyntaxTree {
         clientObject.addMember(dbClientSyntax.getQueryNativeSQLFunction(), true);
         clientObject.addMember(dbClientSyntax.getExecuteNativeSQLFunction(), true);
         clientObject.addMember(dbClientSyntax.getCloseFunction(), true);
-        moduleMembers = moduleMembers.add(clientObject.getClassDefinitionNode());
-        return BalSyntaxUtils.generateSyntaxTree(imports, moduleMembers);
+        return clientObject;
     }
 
     @Override
     public io.ballerina.compiler.syntax.tree.SyntaxTree getDataTypesSyntax(Module entityModule) {
         Collection<Entity> entityArray = entityModule.getEntityMap().values();
-        if (entityArray.size() != 0) {
+        if (!entityArray.isEmpty()) {
             return BalSyntaxUtils.generateTypeSyntaxTree(entityModule, "");
         }
         return null;
@@ -252,5 +280,42 @@ public class DbSyntaxTree implements RDBMSSyntaxTree {
                 AbstractNodeFactory.createCommentMinutiae(BalSyntaxConstants.COMMENT_SHOULD_NOT_BE_MODIFIED),
                 AbstractNodeFactory.createEndOfLineMinutiae(System.lineSeparator()),
                 AbstractNodeFactory.createEndOfLineMinutiae(System.lineSeparator()));
+    }
+
+    public SyntaxTree getTestInitSyntax(String[] dbScripts) {
+        NodeList<ImportDeclarationNode> imports = AbstractNodeFactory.createEmptyNodeList();
+        NodeList<ModuleMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
+        MinutiaeList commentMinutiaeList = createCommentMinutiaeList(String.
+                format(BalSyntaxConstants.AUTO_GENERATED_COMMENT));
+        imports = imports.add(BalSyntaxUtils.getImportDeclarationNodeWithAutogeneratedComment(
+                BalSyntaxConstants.PERSIST_MODULE, commentMinutiaeList));
+
+        ModuleMemberDeclarationNode moduleMemberDeclarationNode =
+                NodeParser.parseModuleMemberDeclaration(MOCK_H2_CLIENT_INIT);
+        moduleMembers = moduleMembers.add(moduleMemberDeclarationNode);
+        Function beforeFunction = new Function("setupTestDB", SyntaxKind.METHOD_DECLARATION);
+        beforeFunction.addQualifiers(new String[] { KEYWORD_PUBLIC, KEYWORD_ISOLATED});
+        beforeFunction.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode(BalSyntaxConstants.EMPTY_STRING,
+                BalSyntaxConstants.PERSIST_ERROR));
+        for (String dbScript : dbScripts) {
+            if (dbScript.equals(NEWLINE)) {
+                continue;
+            }
+            beforeFunction.addStatement(NodeParser.parseStatement(String.format(EXECUTE_NATIVE_SQL_QUERY, dbScript)));
+        }
+        moduleMembers = moduleMembers.add(beforeFunction.getFunctionDefinitionNode());
+
+        Function afterFunction = new Function("cleanupTestDB", SyntaxKind.METHOD_DECLARATION);
+        afterFunction.addQualifiers(new String[] { KEYWORD_PUBLIC, KEYWORD_ISOLATED});
+        afterFunction.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode(BalSyntaxConstants.EMPTY_STRING,
+                BalSyntaxConstants.PERSIST_ERROR));
+        for (String dbScript : dbScripts) {
+            if (dbScript.startsWith("DROP")) {
+                afterFunction.addStatement(NodeParser.parseStatement(
+                        String.format(EXECUTE_NATIVE_SQL_QUERY, dbScript)));
+            }
+        }
+        moduleMembers = moduleMembers.add(afterFunction.getFunctionDefinitionNode());
+        return BalSyntaxUtils.generateSyntaxTree(imports, moduleMembers);
     }
 }

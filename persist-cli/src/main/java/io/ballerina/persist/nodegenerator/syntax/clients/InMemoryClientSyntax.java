@@ -71,8 +71,8 @@ public class InMemoryClientSyntax implements ClientSyntax {
     }
 
     @Override
-    public Client getClientObject(Module entityModule) {
-        Client clientObject = BalSyntaxUtils.generateClientSignature(true);
+    public Client getClientObject(Module entityModule, String clientName) {
+        Client clientObject = BalSyntaxUtils.generateClientSignature(clientName, true);
         clientObject.addMember(NodeParser.parseObjectMember(BalSyntaxConstants.INIT_IN_MEMORY_CLIENT_MAP), true);
         clientObject.addMember(NodeParser.parseObjectMember(""), true);
         return clientObject;
@@ -198,6 +198,16 @@ public class InMemoryClientSyntax implements ClientSyntax {
                 entity.getClientResourceName(), primaryKeysTuple)));
         delete.addStatement(NodeParser.parseStatement(BalSyntaxConstants.CLOSE_BRACE));
         return delete.getFunctionDefinitionNode();
+    }
+
+    @Override
+    public FunctionDefinitionNode getQueryNativeSQLFunction() {
+        throw new UnsupportedOperationException("Query native SQL is not supported for in-memory database");
+    }
+
+    @Override
+    public FunctionDefinitionNode getExecuteNativeSQLFunction() {
+        throw new UnsupportedOperationException("Execute native SQL is not supported for in-memory database");
     }
 
     private static void addFunctionBodyToInMemoryPostResource(Function create, List<EntityField> primaryKeys,

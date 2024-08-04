@@ -43,11 +43,17 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 import java.util.HashMap;
 
 import static io.ballerina.persist.PersistToolsConstants.CACHE_FILE;
+import static io.ballerina.persist.PersistToolsConstants.OPTION_DATASTORE;
+import static io.ballerina.persist.PersistToolsConstants.OPTION_TEST_DATASTORE;
 import static io.ballerina.persist.PersistToolsConstants.TARGET_MODULE;
+import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.getConfigDeclaration;
+import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.getDependencyConfig;
+import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.populateNativeDependencyConfig;
+import static io.ballerina.persist.utils.BalProjectUtils.validateDatastore;
+import static io.ballerina.persist.utils.BalProjectUtils.validateTestDatastore;
 import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 
 @ToolConfig(name = "persist")
@@ -62,6 +68,7 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
         Path schemaFilePath;
         String packageName;
         String targetModule;
+        String testDatastore;
 
         TomlNodeLocation location = toolContext.currentPackage().ballerinaToml().get().tomlAstNode().location();
         Path projectPath = toolContext.currentPackage().project().sourceRoot();
@@ -73,8 +80,12 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
             HashMap<String, String> ballerinaTomlConfig = TomlSyntaxUtils.readBallerinaTomlConfig(
                     Paths.get(projectPath.toString(), BALLERINA_TOML));
             targetModule = ballerinaTomlConfig.get(TARGET_MODULE).trim();
-            datastore = ballerinaTomlConfig.get("options.datastore").trim();
+            datastore = ballerinaTomlConfig.get(OPTION_DATASTORE).trim();
+            testDatastore = ballerinaTomlConfig.get(OPTION_TEST_DATASTORE) == null ? null :
+                    ballerinaTomlConfig.get(OPTION_TEST_DATASTORE).trim();
+
             validateDatastore(datastore);
+            validateTestDatastore(datastore, testDatastore);
             if (!targetModule.equals(packageName)) {
                 if (!targetModule.startsWith(packageName + ".")) {
                     createDiagnostics(toolContext, PersistToolsConstants.DiagnosticMessages.INVALID_MODULE_NAME,
@@ -97,12 +108,13 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
             BalProjectUtils.validateSchemaFile(schemaFilePath);
             entityModule = BalProjectUtils.getEntities(schemaFilePath);
             validateEntityModule(entityModule, schemaFilePath);
-            String syntaxTree = TomlSyntaxUtils.addPersistNativeDependency(
-                    Paths.get(projectPath.toString(), BALLERINA_TOML), datastore);
+            String syntaxTree = updateBallerinaToml(
+                    Paths.get(projectPath.toString(), BALLERINA_TOML), datastore, testDatastore);
             Utils.writeOutputString(syntaxTree,
                     Paths.get(projectPath.toString(), BALLERINA_TOML).toAbsolutePath().toString());
             createGeneratedSourceDirIfNotExists(generatedSourceDirPath);
             generateSources(datastore, entityModule, targetModule, projectPath, generatedSourceDirPath);
+            generateTestSources(testDatastore, entityModule, targetModule, projectPath, generatedSourceDirPath);
             String modelHashVal = getHashValue(schemaFilePath);
             Path cachePath = toolContext.cachePath();
             updateCacheFile(cachePath, modelHashVal);
@@ -112,6 +124,17 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
             createDiagnostics(toolContext, PersistToolsConstants.DiagnosticMessages.ERROR_WHILE_GENERATING_CLIENT,
                     location, e.getMessage());
         }
+    }
+
+    /**
+     * Method to update the Ballerina.toml with persist native dependency.
+     */
+    private String updateBallerinaToml(Path tomlPath, String datastore, String testDatastore)
+            throws BalException, IOException {
+        TomlSyntaxUtils.NativeDependency dependency = getDependencyConfig(datastore, testDatastore);
+        TomlSyntaxUtils.ConfigDeclaration declaration = getConfigDeclaration(tomlPath, dependency);
+
+        return populateNativeDependencyConfig(datastore, testDatastore, declaration, dependency);
     }
 
     private void validateModuleName(String moduleName) throws BalException {
@@ -165,14 +188,6 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
         return new String(fileContent, StandardCharsets.UTF_8);
     }
 
-    private void validateDatastore(String datastore) throws BalException {
-        if (!PersistToolsConstants.SUPPORTED_DB_PROVIDERS.contains(datastore)) {
-            throw new BalException(String.format("the persist layer supports one of data stores: %s" +
-                    ". but found '%s' datasource.", Arrays.toString(PersistToolsConstants.SUPPORTED_DB_PROVIDERS
-                    .toArray()), datastore));
-        }
-    }
-
     private void validatePersistDirectory(String datastore, Path projectPath) throws BalException {
         if (Files.isDirectory(Paths.get(projectPath.toString(), PersistToolsConstants.PERSIST_DIRECTORY,
                 PersistToolsConstants.MIGRATIONS)) &&
@@ -224,6 +239,19 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
             default:
                 sourceCreator.createInMemorySources();
                 break;
+        }
+    }
+
+    private void generateTestSources(String testDatastore, Module entityModule, String targetModule,
+                                     Path projectPath, Path generatedSourceDirPath) {
+        if (testDatastore != null) {
+            try {
+                SourceGenerator sourceCreator = new SourceGenerator(projectPath.toString(), generatedSourceDirPath,
+                        targetModule, entityModule);
+                sourceCreator.createTestDataSources(testDatastore);
+            } catch (BalException e) {
+                errStream.printf("ERROR: the test data source creation failed. %s%n", e.getMessage());
+            }
         }
     }
 

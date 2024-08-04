@@ -69,7 +69,8 @@ public class ToolingGenerateTest {
     @Description("There is multiple entities with associations in the Ballerina project")
     public void testGenerateAssociatedEntities() {
         updateOutputBallerinaToml("tool_test_generate_1");
-        executeGenerateCommand("tool_test_generate_1", "mysql", "persist_generate_1");
+        executeGenerateCommand("tool_test_generate_1",
+                "--datastore", "mysql", "--module", "persist_generate_1");
         assertGeneratedSources("tool_test_generate_1");
     }
 
@@ -77,7 +78,8 @@ public class ToolingGenerateTest {
     @Description("There are multiple entities in the Ballerina project")
     public void testGenerateMultipleEntities() {
         updateOutputBallerinaToml("tool_test_generate_2");
-        executeGenerateCommand("tool_test_generate_2", "mysql", "entities");
+        executeGenerateCommand("tool_test_generate_2",
+                "--datastore", "mysql", "--module", "entities");
         assertGeneratedSources("tool_test_generate_2");
     }
 
@@ -85,7 +87,8 @@ public class ToolingGenerateTest {
     @Description("There are no entities nor already generated client objects in the Ballerina project")
     public void testGenerateWithoutEntitiesWithoutClients() {
         updateOutputBallerinaToml("tool_test_generate_3");
-        executeGenerateCommand("tool_test_generate_3", "mysql", "entities");
+        executeGenerateCommand("tool_test_generate_3",
+                "--datastore", "mysql", "--module", "entities");
         assertGeneratedSources("tool_test_generate_3");
     }
 
@@ -101,7 +104,8 @@ public class ToolingGenerateTest {
     @Description("There is a generated client object and the corresponding entity is updated")
     public void testGenerateUpdateEntity() {
         updateOutputBallerinaToml("tool_test_generate_5");
-        executeGenerateCommand("tool_test_generate_5", "mysql", "entities");
+        executeGenerateCommand("tool_test_generate_5",
+                "--datastore", "mysql", "--module", "entities", "--test-datastore", "h2");
         assertGeneratedSources("tool_test_generate_5");
     }
 
@@ -109,7 +113,8 @@ public class ToolingGenerateTest {
     @Description("A persist entity with all the supported fields data types")
     public void testGenerateAllEntityFieldTypes() {
         updateOutputBallerinaToml("tool_test_generate_6");
-        executeGenerateCommand("tool_test_generate_6", "mysql", "entities");
+        executeGenerateCommand("tool_test_generate_6",
+                "--datastore", "mysql", "--module", "entities", "--test-datastore", "inmemory");
         assertGeneratedSources("tool_test_generate_6");
     }
 
@@ -117,15 +122,15 @@ public class ToolingGenerateTest {
     @Description("Use case where unsupported datatypes are used")
     public void testGenerateClientWithUnsupportedDataTypes() {
         updateOutputBallerinaToml("tool_test_generate_7");
-        assertGeneratedSourcesNegative("tool_test_generate_7", GENERATE, new String[]{}, "mysql",
-                "entities");
+        assertGeneratedSourcesNegative("tool_test_generate_7", GENERATE, new String[]{},
+                "--datastore", "mysql", "--module", "entities");
     }
 
     @Test(enabled = true)
     @Description("There is only a single entity in the Ballerina project where key is a string")
     public void testGenerateSingleEntityWithStringKey() {
         updateOutputBallerinaToml("tool_test_generate_8");
-        executeGenerateCommand("tool_test_generate_8", "mysql", "entities");
+        executeGenerateCommand("tool_test_generate_8", "--datastore", "mysql", "--module", "entities");
         assertGeneratedSources("tool_test_generate_8");
     }
 
@@ -133,7 +138,7 @@ public class ToolingGenerateTest {
     @Description("There is only a single entity in the Ballerina project with two keys")
     public void testGenerateSingleEntityWithMultipleKeysAndAutoInc() {
         updateOutputBallerinaToml("tool_test_generate_9");
-        executeGenerateCommand("tool_test_generate_9", "mysql", "entities");
+        executeGenerateCommand("tool_test_generate_9", "--datastore", "mysql", "--module", "entities");
         assertGeneratedSources("tool_test_generate_9");
     }
 
@@ -141,23 +146,24 @@ public class ToolingGenerateTest {
     @Description("There is only a single entity in the Ballerina project and there are errors in the project")
     public void testGenerateSingleEntityWithErrors() {
         updateOutputBallerinaToml("tool_test_generate_11");
-        assertGeneratedSourcesNegative("tool_test_generate_11", GENERATE, new String[]{}, "mysql",
-                "entities");
+        assertGeneratedSourcesNegative("tool_test_generate_11", GENERATE, new String[]{},
+                "--datastore", "mysql", "--module", "entities");
     }
 
     @Test(enabled = true)
     @Description("There is only a single entity in the schema with wrong import")
     public void testGenerateSingleEntityWithWrongImport() {
         updateOutputBallerinaToml("tool_test_generate_12");
-        assertGeneratedSourcesNegative("tool_test_generate_12", GENERATE, new String[]{}, "mysql",
-                "entities");
+        assertGeneratedSourcesNegative("tool_test_generate_12", GENERATE, new String[]{},
+                "--datastore", "mysql", "--module", "entities");
     }
 
     @Test(enabled = true)
     @Description("There are three entities with one to one associations between each other")
     public void testGenerateThreeEntitiesWith1To1Associations() {
         updateOutputBallerinaToml("tool_test_generate_13");
-        executeGenerateCommand("tool_test_generate_13", "mysql", "entities");
+        executeGenerateCommand("tool_test_generate_13",
+                "--datastore", "mysql", "--module", "entities", "--test-datastore", "h2");
         assertGeneratedSources("tool_test_generate_13");
     }
 
@@ -165,15 +171,16 @@ public class ToolingGenerateTest {
     @Description("There are three entities in two schema files")
     public void testGenerateThreeEntitiesWith1To1AssociationsWithChildEntityInSubModule() {
         updateOutputBallerinaToml("tool_test_generate_15");
-        assertGeneratedSourcesNegative("tool_test_generate_15", GENERATE, new String[]{}, "mysql",
-                "entities");
+        assertGeneratedSourcesNegative("tool_test_generate_15", GENERATE, new String[]{},
+                "--datastore", "mysql", "--module", "entities");
     }
 
     @Test(enabled = true)
     @Description("There are two entities with one to many associations between each other")
     public void testGenerateClientsWith1ToManyAssociations() {
         updateOutputBallerinaToml("tool_test_generate_16");
-        executeGenerateCommand("tool_test_generate_16", "mysql", "entities");
+        executeGenerateCommand("tool_test_generate_16",
+                "--datastore", "mysql", "--module", "entities", "--test-datastore", "h2");
         assertGeneratedSources("tool_test_generate_16");
     }
 
@@ -181,7 +188,7 @@ public class ToolingGenerateTest {
     @Description("There are three entities with one to many associations between each other")
     public void testGenerateThreeClientsWith1ToManyAssociations() {
         updateOutputBallerinaToml("tool_test_generate_17");
-        executeGenerateCommand("tool_test_generate_17", "mysql", "entities");
+        executeGenerateCommand("tool_test_generate_17", "--datastore", "mysql", "--module", "entities");
         assertGeneratedSources("tool_test_generate_17");
     }
 
@@ -189,15 +196,16 @@ public class ToolingGenerateTest {
     @Description("There are three entities with one to one associations between each other without nullable fields")
     public void testGenerateThreeEntitiesWith1To1AssociationsWithOutAnnotationValue() {
         updateOutputBallerinaToml("tool_test_generate_19");
-        assertGeneratedSourcesNegative("tool_test_generate_19", GENERATE, new String[]{}, "mysql",
-                "entities");
+        assertGeneratedSourcesNegative("tool_test_generate_19", GENERATE, new String[]{},
+                "--datastore", "mysql", "--module", "entities");
     }
 
     @Test(enabled = true)
     @Description("There are two special entities with special characters in field names")
     public void testGenerateRelatedClientsWithSpecialCharactersInName() {
         updateOutputBallerinaToml("tool_test_generate_22");
-        executeGenerateCommand("tool_test_generate_22", "mysql", "entities");
+        executeGenerateCommand("tool_test_generate_22",
+                "--datastore", "mysql", "--module", "entities", "--test-datastore", "h2");
         assertGeneratedSources("tool_test_generate_22");
     }
 
@@ -205,15 +213,15 @@ public class ToolingGenerateTest {
     @Description("Negative test case where init command was not run before generate command")
     public void testGenerateWithoutInit() {
         updateOutputBallerinaToml("tool_test_generate_23");
-        assertGeneratedSourcesNegative("tool_test_generate_23", GENERATE, new String[]{}, "mysql",
-                "entities");
+        assertGeneratedSourcesNegative("tool_test_generate_23", GENERATE, new String[]{},
+                "--datastore", "mysql", "--module", "entities");
     }
 
     @Test(enabled = true)
     @Description("Test the generate command with entities containing byte[] fields")
     public void testGenerateWithByteArrays() {
         updateOutputBallerinaToml("tool_test_generate_24");
-        executeGenerateCommand("tool_test_generate_24", "mysql", "foo");
+        executeGenerateCommand("tool_test_generate_24", "--datastore", "mysql", "--module", "foo");
         assertGeneratedSources("tool_test_generate_24");
     }
 
@@ -221,7 +229,7 @@ public class ToolingGenerateTest {
     @Description("There are two entities with one to many associations between each other without relation annotation")
     public void testGenerateOneToManyAssociationsWithoutRelationAnnotation() {
         updateOutputBallerinaToml("tool_test_generate_25");
-        executeGenerateCommand("tool_test_generate_25", "mysql", "entities");
+        executeGenerateCommand("tool_test_generate_25", "--datastore", "mysql", "--module", "entities");
         assertGeneratedSources("tool_test_generate_25");
     }
 
@@ -229,7 +237,7 @@ public class ToolingGenerateTest {
     @Description("There are two entities with one to one associations between each other without relation annotation")
     public void testGenerateOneToOneAssociationsWithoutRelationAnnotation() {
         updateOutputBallerinaToml("tool_test_generate_26");
-        executeGenerateCommand("tool_test_generate_26", "mysql", "entities");
+        executeGenerateCommand("tool_test_generate_26", "--datastore", "mysql", "--module", "entities");
         assertGeneratedSources("tool_test_generate_26");
     }
 
@@ -238,7 +246,7 @@ public class ToolingGenerateTest {
             "in entity fields")
     public void testGenerateThreeEntitiesWith1To1AssociationsWithComments() {
         updateOutputBallerinaToml("tool_test_generate_27");
-        executeGenerateCommand("tool_test_generate_27", "mysql", "entities");
+        executeGenerateCommand("tool_test_generate_27", "--datastore", "mysql", "--module", "entities");
         assertGeneratedSources("tool_test_generate_27");
     }
 
@@ -247,7 +255,7 @@ public class ToolingGenerateTest {
             "in entity fields")
     public void testGenerateThreeEntitiesWith1ToManyAssociationsWithComments() {
         updateOutputBallerinaToml("tool_test_generate_28");
-        executeGenerateCommand("tool_test_generate_28", "mysql", "entities");
+        executeGenerateCommand("tool_test_generate_28", "--datastore", "mysql", "--module", "entities");
         assertGeneratedSources("tool_test_generate_28");
     }
 
@@ -255,7 +263,8 @@ public class ToolingGenerateTest {
     @Description("There is a entity inside the project with comments inside entity")
     public void testGenerateWithComments() {
         updateOutputBallerinaToml("tool_test_generate_29");
-        executeGenerateCommand("tool_test_generate_29", "mysql", "entities");
+        executeGenerateCommand("tool_test_generate_29",
+                "--datastore", "mysql", "--module", "entities", "--test-datastore", "h2");
         assertGeneratedSources("tool_test_generate_29");
     }
 
@@ -263,7 +272,8 @@ public class ToolingGenerateTest {
     @Description("Test the generate command with out defining any schema files inside persist directory")
     public void testGenerateWithoutSchemaFile() {
         updateOutputBallerinaToml("tool_test_generate_30");
-        executeGenerateCommand("tool_test_generate_30", "mysql", "entities");
+        executeGenerateCommand("tool_test_generate_30",
+                "--datastore", "mysql", "--module", "entities", "--test-datastore", "h2");
         assertGeneratedSources("tool_test_generate_30");
     }
 
@@ -271,7 +281,8 @@ public class ToolingGenerateTest {
     @Description("Test the generate command with empty schema file inside persist directory")
     public void testGenerateWithEmptySchemaFile() {
         updateOutputBallerinaToml("tool_test_generate_31");
-        executeGenerateCommand("tool_test_generate_31", "mysql", "entities");
+        executeGenerateCommand("tool_test_generate_31",
+                "--datastore", "mysql", "--module", "entities", "--test-datastore", "h2");
         assertGeneratedSources("tool_test_generate_31");
     }
 
@@ -279,7 +290,8 @@ public class ToolingGenerateTest {
     @Description("Test the generate command without persist import in schema file")
     public void testGenerateWithoutPersistImport() {
         updateOutputBallerinaToml("tool_test_generate_33");
-        executeGenerateCommand("tool_test_generate_33", "mysql", "entities");
+        executeGenerateCommand("tool_test_generate_33",
+                "--datastore", "mysql", "--module", "entities", "--test-datastore", "h2");
         assertGeneratedSources("tool_test_generate_33");
     }
 
@@ -287,7 +299,8 @@ public class ToolingGenerateTest {
     @Description("Test the generate command with optional type in schema file")
     public void testGenerateWithOptionalType() {
         updateOutputBallerinaToml("tool_test_generate_34");
-        executeGenerateCommand("tool_test_generate_34", "mysql", "entities");
+        executeGenerateCommand("tool_test_generate_34",
+                "--datastore", "mysql", "--module", "entities", "--test-datastore", "h2");
         assertGeneratedSources("tool_test_generate_34");
     }
 
@@ -295,7 +308,7 @@ public class ToolingGenerateTest {
     @Description("Test the generate command in default Ballerina package")
     public void testGenerateInDefaultPackage() {
         updateOutputBallerinaToml("tool_test_generate_35");
-        executeGenerateCommand("tool_test_generate_35", "mysql");
+        executeGenerateCommand("tool_test_generate_35", "--datastore", "mysql", "--test-datastore", "h2");
         assertGeneratedSources("tool_test_generate_35");
     }
 
@@ -303,7 +316,8 @@ public class ToolingGenerateTest {
     @Description("Test the generate command with escape character in entity fields, and names")
     public void testGenerateRelationsWithSingleQuote() {
         updateOutputBallerinaToml("tool_test_generate_36");
-        executeGenerateCommand("tool_test_generate_36", "mysql", "rainier");
+        executeGenerateCommand("tool_test_generate_36", "--datastore", "mysql", "--module", "rainier",
+                "--test-datastore", "h2");
         assertGeneratedSources("tool_test_generate_36");
     }
 
@@ -311,7 +325,8 @@ public class ToolingGenerateTest {
     @Description("Test the created sql script content for relations and byte[] type")
     public void testSqlGen() {
         updateOutputBallerinaToml("tool_test_generate_37");
-        executeGenerateCommand("tool_test_generate_37", "mysql", "entities");
+        executeGenerateCommand("tool_test_generate_37",
+                "--datastore", "mysql", "--module", "entities", "--test-datastore", "h2");
         assertGeneratedSources("tool_test_generate_37");
     }
 
@@ -319,7 +334,7 @@ public class ToolingGenerateTest {
     @Description("Test the created sql script content with out defining any schema files inside persist directory")
     public void testSqlGenWithoutSchemaFile() {
         updateOutputBallerinaToml("tool_test_generate_38");
-        executeGenerateCommand("tool_test_generate_38", "mysql", "entities");
+        executeGenerateCommand("tool_test_generate_38", "--datastore", "mysql", "--module", "entities");
         assertGeneratedSources("tool_test_generate_38");
     }
 
@@ -327,7 +342,7 @@ public class ToolingGenerateTest {
     @Description("Test the created sql script with one to many relation entity")
     public void testSqlGenWithOneToManyRelationship() {
         updateOutputBallerinaToml("tool_test_generate_39");
-        executeGenerateCommand("tool_test_generate_39", "mysql", "entities");
+        executeGenerateCommand("tool_test_generate_39", "--datastore", "mysql", "--module", "entities");
         assertGeneratedSources("tool_test_generate_39");
     }
 
@@ -335,7 +350,7 @@ public class ToolingGenerateTest {
     @Description("Test the created sql script with optional type fields")
     public void testSqlGenWithOptionalTypeFields() {
         updateOutputBallerinaToml("tool_test_generate_40");
-        executeGenerateCommand("tool_test_generate_40", "mysql", "entities");
+        executeGenerateCommand("tool_test_generate_40", "--datastore", "mysql", "--module", "entities");
         assertGeneratedSources("tool_test_generate_40");
     }
 
@@ -343,7 +358,7 @@ public class ToolingGenerateTest {
     @Description("Test the created sql script with composite reference keys")
     public void testSqlGenWithCompositeReferenceKeys() {
         updateOutputBallerinaToml("tool_test_generate_41");
-        executeGenerateCommand("tool_test_generate_41", "mysql", "entities");
+        executeGenerateCommand("tool_test_generate_41", "--datastore", "mysql", "--module", "entities");
         assertGeneratedSources("tool_test_generate_41");
     }
 
@@ -361,7 +376,7 @@ public class ToolingGenerateTest {
 
     @Test(enabled = true)
     public void testInvalidDataStore() {
-        executeGenerateCommand("tool_test_generate_42", "my", "entities");
+        executeGenerateCommand("tool_test_generate_42", "--datastore", "my", "--module", "entities");
         assertGeneratedSources("tool_test_generate_42");
     }
 
@@ -371,19 +386,20 @@ public class ToolingGenerateTest {
                 "esttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttestt" +
                 "esttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttestt" +
                 "esttesttesttesttesttesttesttest";
-        executeGenerateCommand("tool_test_generate_43", "mysql", invalidModuleName);
+        executeGenerateCommand("tool_test_generate_43",
+                "--datastore", "my", "--module", invalidModuleName);
         assertGeneratedSources("tool_test_generate_43");
     }
 
     @Test(enabled = true)
     public void testInvalidModuleName1() {
-        executeGenerateCommand("tool_test_generate_44", "mysql", ".<test");
+        executeGenerateCommand("tool_test_generate_44", "--datastore", "mysql", "--module", ".<test");
         assertGeneratedSources("tool_test_generate_44");
     }
 
     @Test(enabled = true)
     public void testInvalidModuleName2() {
-        executeGenerateCommand("tool_test_generate_45", "mysql", "^^^");
+        executeGenerateCommand("tool_test_generate_45", "--datastore", "mysql", "--module", "^^^");
         assertGeneratedSources("tool_test_generate_45");
     }
 
@@ -391,7 +407,7 @@ public class ToolingGenerateTest {
     @Description("Test the generated types for multiple association between same entities")
     public void testGenerateMultipleAssociationBetweenSameEntities() {
         updateOutputBallerinaToml("tool_test_generate_46");
-        executeGenerateCommand("tool_test_generate_46", "mysql", "entities");
+        executeGenerateCommand("tool_test_generate_46", "--datastore", "mysql", "--module", "entities");
         assertGeneratedSources("tool_test_generate_46");
     }
 
@@ -399,7 +415,8 @@ public class ToolingGenerateTest {
     @Description("There is a generated client object with in memory data source")
     public void testInMemoryEntity() {
         updateOutputBallerinaToml("tool_test_generate_47_in_memory");
-        executeGenerateCommand("tool_test_generate_47_in_memory", "inmemory", "entities");
+        executeGenerateCommand("tool_test_generate_47_in_memory", "--datastore",
+                "inmemory", "--module", "entities");
         assertGeneratedSources("tool_test_generate_47_in_memory");
     }
 
@@ -407,7 +424,8 @@ public class ToolingGenerateTest {
     @Description("There is a generated client object with in memory data source")
     public void testInMemoryWithAssociatedEntity() {
         updateOutputBallerinaToml("tool_test_generate_48_in_memory");
-        executeGenerateCommand("tool_test_generate_48_in_memory", "inmemory", "entities");
+        executeGenerateCommand("tool_test_generate_48_in_memory", "--datastore",
+                "inmemory", "--module", "entities");
         assertGeneratedSources("tool_test_generate_48_in_memory");
     }
 
@@ -415,7 +433,8 @@ public class ToolingGenerateTest {
     @Description("There is a generated client object with in memory data source")
     public void testInMemoryWithCompositeKeys() {
         updateOutputBallerinaToml("tool_test_generate_49_in_memory");
-        executeGenerateCommand("tool_test_generate_49_in_memory", "inmemory", "entities");
+        executeGenerateCommand("tool_test_generate_49_in_memory", "--datastore",
+                "inmemory", "--module", "entities");
         assertGeneratedSources("tool_test_generate_49_in_memory");
     }
 
@@ -423,7 +442,7 @@ public class ToolingGenerateTest {
     @Description("There is multiple entities with multiple enums and no imports")
     public void testGenerateWithEnums() {
         updateOutputBallerinaToml("tool_test_generate_50");
-        executeGenerateCommand("tool_test_generate_50", "mysql");
+        executeGenerateCommand("tool_test_generate_50", "--datastore", "mysql");
         assertGeneratedSources("tool_test_generate_50");
     }
 
@@ -431,7 +450,7 @@ public class ToolingGenerateTest {
     @Description("There is multiple entities with multiple enums and imports")
     public void testGenerateWithEnumsWithImports() {
         updateOutputBallerinaToml("tool_test_generate_51");
-        executeGenerateCommand("tool_test_generate_51", "mysql");
+        executeGenerateCommand("tool_test_generate_51", "--datastore", "mysql");
         assertGeneratedSources("tool_test_generate_51");
     }
 
@@ -439,7 +458,8 @@ public class ToolingGenerateTest {
     @Description("There is multiple entities with multiple enums and imports with in memory data source")
     public void testGenerateWithEnumsInMemory() {
         updateOutputBallerinaToml("tool_test_generate_52_in_memory");
-        executeGenerateCommand("tool_test_generate_52_in_memory", "inmemory", "entities");
+        executeGenerateCommand("tool_test_generate_52_in_memory",
+                "--datastore", "inmemory",  "--module", "entities");
         assertGeneratedSources("tool_test_generate_52_in_memory");
     }
 
@@ -447,7 +467,8 @@ public class ToolingGenerateTest {
     @Description("There is an entity which is associated with multiple relations")
     public void testGenerateWithSameEntityMultipleRelationsInMemory() {
         updateOutputBallerinaToml("tool_test_generate_53_in_memory");
-        executeGenerateCommand("tool_test_generate_53_in_memory", "inmemory", "entities");
+        executeGenerateCommand("tool_test_generate_53_in_memory",
+                "--datastore", "inmemory",  "--module", "entities");
         assertGeneratedSources("tool_test_generate_53_in_memory");
     }
 
@@ -455,7 +476,8 @@ public class ToolingGenerateTest {
     @Description("There is a generated client object with google sheets data source")
     public void testGoogleSheet() {
         updateOutputBallerinaToml("tool_test_generate_54_gsheet");
-        executeGenerateCommand("tool_test_generate_54_gsheet", "googlesheets", "entities");
+        executeGenerateCommand("tool_test_generate_54_gsheet",
+                "--datastore", "googlesheets",  "--module", "entities", "--test-datastore", "inmemory");
         assertGeneratedSources("tool_test_generate_54_gsheet");
     }
 
@@ -463,7 +485,8 @@ public class ToolingGenerateTest {
     @Description("There is a model with an entity consisting of multiple relations of the same type")
     public void testGenerateEntityWithMultipleRelationsSameTypeInMemory() {
         updateOutputBallerinaToml("tool_test_generate_55_in_memory");
-        executeGenerateCommand("tool_test_generate_55_in_memory", "inmemory", "entities");
+        executeGenerateCommand("tool_test_generate_55_in_memory",
+                "--datastore", "inmemory",  "--module", "entities");
         assertGeneratedSources("tool_test_generate_55_in_memory");
     }
 
@@ -471,7 +494,8 @@ public class ToolingGenerateTest {
     @Description("There is a model with an entity consisting of multiple relations of the same type")
     public void testGenerateEntityWithMultipleRelationsSameTypeGoogleSheet() {
         updateOutputBallerinaToml("tool_test_generate_56_gsheets");
-        executeGenerateCommand("tool_test_generate_56_gsheets", "googlesheets", "entities");
+        executeGenerateCommand("tool_test_generate_56_gsheets",
+                "--datastore", "googlesheets",  "--module", "entities");
         assertGeneratedSources("tool_test_generate_56_gsheets");
     }
 
@@ -479,7 +503,8 @@ public class ToolingGenerateTest {
     @Description("There is a generated client object with google sheets data source and ENUM as field type.")
     public void testGoogleSheetWithEnum() {
         updateOutputBallerinaToml("tool_test_generate_57_gsheets");
-        executeGenerateCommand("tool_test_generate_57_gsheets", "googlesheets", "entities");
+        executeGenerateCommand("tool_test_generate_57_gsheets",
+                "--datastore", "googlesheets",  "--module", "entities");
         assertGeneratedSources("tool_test_generate_57_gsheets");
     }
 
@@ -487,7 +512,8 @@ public class ToolingGenerateTest {
     @Description("There is a generated client object with mssql data source")
     public void testMssqlEntity() {
         updateOutputBallerinaToml("tool_test_generate_58_mssql");
-        executeGenerateCommand("tool_test_generate_58_mssql", "mssql", "entities");
+        executeGenerateCommand("tool_test_generate_58_mssql",
+                "--datastore", "mssql", "--module", "entities", "--test-datastore", "h2");
         assertGeneratedSources("tool_test_generate_58_mssql");
     }
 
@@ -495,7 +521,8 @@ public class ToolingGenerateTest {
     @Description("There is a generated client object with postgresql data source")
     public void testPostgresqlEntity() {
         updateOutputBallerinaToml("tool_test_generate_66_postgresql");
-        executeGenerateCommand("tool_test_generate_66_postgresql", "postgresql", "entities");
+        executeGenerateCommand("tool_test_generate_66_postgresql",
+                "--datastore", "postgresql", "--module", "entities", "--test-datastore", "h2");
         assertGeneratedSources("tool_test_generate_66_postgresql");
     }
 
@@ -503,7 +530,8 @@ public class ToolingGenerateTest {
     @Description("There is a generated client object with h2 data source")
     public void testH2Entity() {
         updateOutputBallerinaToml("tool_test_generate_107_h2");
-        executeGenerateCommand("tool_test_generate_107_h2", "h2", "entities");
+        executeGenerateCommand("tool_test_generate_107_h2",
+                "--datastore", "h2", "--module", "entities");
         assertGeneratedSources("tool_test_generate_107_h2");
     }
 
@@ -511,7 +539,8 @@ public class ToolingGenerateTest {
     @Description("There is a generated client object with mssql data source")
     public void testMSSQLWithAssociatedEntity() {
         updateOutputBallerinaToml("tool_test_generate_59_mssql");
-        executeGenerateCommand("tool_test_generate_59_mssql", "mssql", "entities");
+        executeGenerateCommand("tool_test_generate_59_mssql",
+                "--datastore", "mssql", "--module", "entities");
         assertGeneratedSources("tool_test_generate_59_mssql");
     }
 
@@ -519,7 +548,8 @@ public class ToolingGenerateTest {
     @Description("There is a generated client object with postgresql data source")
     public void testPostgreSQLWithAssociatedEntity() {
         updateOutputBallerinaToml("tool_test_generate_67_postgresql");
-        executeGenerateCommand("tool_test_generate_67_postgresql", "postgresql", "entities");
+        executeGenerateCommand("tool_test_generate_67_postgresql",
+                "--datastore", "postgresql", "--module", "entities");
         assertGeneratedSources("tool_test_generate_67_postgresql");
     }
 
@@ -527,7 +557,8 @@ public class ToolingGenerateTest {
     @Description("There is a generated client object with h2 data source")
     public void testH2WithAssociatedEntity() {
         updateOutputBallerinaToml("tool_test_generate_108_h2");
-        executeGenerateCommand("tool_test_generate_108_h2", "h2", "entities");
+        executeGenerateCommand("tool_test_generate_108_h2",
+                "--datastore", "h2", "--module", "entities");
         assertGeneratedSources("tool_test_generate_108_h2");
     }
 
@@ -535,7 +566,8 @@ public class ToolingGenerateTest {
     @Description("There is a generated client object with mssql data source")
     public void testMSSQLWithCompositeKeys() {
         updateOutputBallerinaToml("tool_test_generate_60_mssql");
-        executeGenerateCommand("tool_test_generate_60_mssql", "mssql", "entities");
+        executeGenerateCommand("tool_test_generate_60_mssql",
+                "--datastore", "mssql", "--module", "entities", "--test-datastore", "h2");
         assertGeneratedSources("tool_test_generate_60_mssql");
     }
 
@@ -543,7 +575,8 @@ public class ToolingGenerateTest {
     @Description("There is a generated client object with postgresql data source")
     public void testPostgreSQLWithCompositeKeys() {
         updateOutputBallerinaToml("tool_test_generate_68_postgresql");
-        executeGenerateCommand("tool_test_generate_68_postgresql", "postgresql", "entities");
+        executeGenerateCommand("tool_test_generate_68_postgresql",
+                "--datastore", "postgresql", "--module", "entities", "--test-datastore", "h2");
         assertGeneratedSources("tool_test_generate_68_postgresql");
     }
 
@@ -551,7 +584,8 @@ public class ToolingGenerateTest {
     @Description("There is a generated client object with h2 data source")
     public void testH2WithCompositeKeys() {
         updateOutputBallerinaToml("tool_test_generate_109_h2");
-        executeGenerateCommand("tool_test_generate_109_h2", "h2", "entities");
+        executeGenerateCommand("tool_test_generate_109_h2",
+                "--datastore", "h2", "--module", "entities", "--test-datastore", "h2");
         assertGeneratedSources("tool_test_generate_109_h2");
     }
 
@@ -559,7 +593,8 @@ public class ToolingGenerateTest {
     @Description("There is multiple entities with multiple enums and imports with mssql data source")
     public void testGenerateWithEnumsMSSQL() {
         updateOutputBallerinaToml("tool_test_generate_61_mssql");
-        executeGenerateCommand("tool_test_generate_61_mssql", "mssql", "entities");
+        executeGenerateCommand("tool_test_generate_61_mssql",
+                "--datastore", "mssql", "--module", "entities");
         assertGeneratedSources("tool_test_generate_61_mssql");
     }
 
@@ -567,7 +602,8 @@ public class ToolingGenerateTest {
     @Description("There is multiple entities with multiple enums and imports with postgresql data source")
     public void testGenerateWithEnumsPostgresSQL() {
         updateOutputBallerinaToml("tool_test_generate_69_postgresql");
-        executeGenerateCommand("tool_test_generate_69_postgresql", "postgresql", "entities");
+        executeGenerateCommand("tool_test_generate_69_postgresql",
+                "--datastore", "postgresql", "--module", "entities");
         assertGeneratedSources("tool_test_generate_69_postgresql");
     }
 
@@ -575,7 +611,7 @@ public class ToolingGenerateTest {
     @Description("There is multiple entities with multiple enums and imports with h2 data source")
     public void testGenerateWithEnumsH2() {
         updateOutputBallerinaToml("tool_test_generate_110_h2");
-        executeGenerateCommand("tool_test_generate_110_h2", "h2", "entities");
+        executeGenerateCommand("tool_test_generate_110_h2", "--datastore", "h2", "--module", "entities");
         assertGeneratedSources("tool_test_generate_110_h2");
     }
 
@@ -583,7 +619,8 @@ public class ToolingGenerateTest {
     @Description("There is an entity which is associated with multiple relations")
     public void testGenerateWithSameEntityMultipleRelationsMSSQL() {
         updateOutputBallerinaToml("tool_test_generate_62_mssql");
-        executeGenerateCommand("tool_test_generate_62_mssql", "mssql", "entities");
+        executeGenerateCommand("tool_test_generate_62_mssql",
+                "--datastore", "mssql", "--module", "entities");
         assertGeneratedSources("tool_test_generate_62_mssql");
     }
 
@@ -591,7 +628,8 @@ public class ToolingGenerateTest {
     @Description("There is an entity which is associated with multiple relations")
     public void testGenerateWithSameEntityMultipleRelationsPostgresql() {
         updateOutputBallerinaToml("tool_test_generate_70_postgresql");
-        executeGenerateCommand("tool_test_generate_70_postgresql", "postgresql", "entities");
+        executeGenerateCommand("tool_test_generate_70_postgresql",
+                "--datastore", "postgresql", "--module", "entities");
         assertGeneratedSources("tool_test_generate_70_postgresql");
     }
 
@@ -599,7 +637,7 @@ public class ToolingGenerateTest {
     @Description("There is an entity which is associated with multiple relations")
     public void testGenerateWithSameEntityMultipleRelationsH2() {
         updateOutputBallerinaToml("tool_test_generate_111_h2");
-        executeGenerateCommand("tool_test_generate_111_h2", "h2", "entities");
+        executeGenerateCommand("tool_test_generate_111_h2", "--datastore", "h2", "--module", "entities");
         assertGeneratedSources("tool_test_generate_111_h2");
     }
 
@@ -607,7 +645,8 @@ public class ToolingGenerateTest {
     @Description("There is a model with an entity consisting of multiple relations of the same type")
     public void testGenerateEntityWithMultipleRelationsSameTypeMSSQL() {
         updateOutputBallerinaToml("tool_test_generate_63_mssql");
-        executeGenerateCommand("tool_test_generate_63_mssql", "mssql", "entities");
+        executeGenerateCommand("tool_test_generate_63_mssql",
+                "--datastore", "mssql", "--module", "entities");
         assertGeneratedSources("tool_test_generate_63_mssql");
     }
 
@@ -615,7 +654,8 @@ public class ToolingGenerateTest {
     @Description("There is a model with an entity consisting of multiple relations of the same type")
     public void testGenerateEntityWithMultipleRelationsSameTypePostgreSQL() {
         updateOutputBallerinaToml("tool_test_generate_71_postgresql");
-        executeGenerateCommand("tool_test_generate_71_postgresql", "postgresql", "entities");
+        executeGenerateCommand("tool_test_generate_71_postgresql",
+                "--datastore", "postgresql", "--module", "entities");
         assertGeneratedSources("tool_test_generate_71_postgresql");
     }
 
@@ -623,7 +663,7 @@ public class ToolingGenerateTest {
     @Description("There is a model with an entity consisting of multiple relations of the same type")
     public void testGenerateEntityWithMultipleRelationsSameTypeH2() {
         updateOutputBallerinaToml("tool_test_generate_112_h2");
-        executeGenerateCommand("tool_test_generate_112_h2", "h2", "entities");
+        executeGenerateCommand("tool_test_generate_112_h2", "--datastore", "h2", "--module", "entities");
         assertGeneratedSources("tool_test_generate_112_h2");
     }
 
@@ -631,7 +671,7 @@ public class ToolingGenerateTest {
     @Description("module name is in the shape x.y.z")
     public void testGenerateEntityDotSeperatedModuleNames() {
         updateOutputBallerinaToml("tool_test_generate_64");
-        executeGenerateCommand("tool_test_generate_64", "mysql", "x.y.z");
+        executeGenerateCommand("tool_test_generate_64", "--datastore", "mysql", "--module", "x.y.z");
         assertGeneratedSources("tool_test_generate_64");
     }
 
@@ -639,7 +679,7 @@ public class ToolingGenerateTest {
     @Description("The model has multiple relations of various types")
     public void testGenerateEntitiesWithMultipleRelations() {
         updateOutputBallerinaToml("tool_test_generate_65");
-        executeGenerateCommand("tool_test_generate_65", "mysql");
+        executeGenerateCommand("tool_test_generate_65", "--datastore", "mysql");
         assertGeneratedSources("tool_test_generate_65");
     }
 
@@ -655,10 +695,10 @@ public class ToolingGenerateTest {
     public void testGenerateEntitiesWithRelationAnnotations() {
         String subDir = "tool_test_generate_72";
         updateOutputBallerinaToml(subDir);
-        executeGenerateCommand(subDir, "mysql", "entities");
-        executeGenerateCommand(subDir, "mssql", "mssql_entities");
-        executeGenerateCommand(subDir, "h2", "h2_entities");
-        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        executeGenerateCommand(subDir, "--datastore", "mysql", "--module", "entities");
+        executeGenerateCommand(subDir, "--datastore", "mssql", "--module", "mssql_entities");
+        executeGenerateCommand(subDir, "--datastore", "h2", "--module", "h2_entities");
+        executeGenerateCommand(subDir, "--datastore", "postgresql", "--module", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
 
@@ -667,10 +707,10 @@ public class ToolingGenerateTest {
     public void testGenerateEntitiesWithMappingAnnotations() {
         String subDir = "tool_test_generate_73";
         updateOutputBallerinaToml(subDir);
-        executeGenerateCommand(subDir, "mysql", "entities");
-        executeGenerateCommand(subDir, "mssql", "mssql_entities");
-        executeGenerateCommand(subDir, "h2", "h2_entities");
-        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        executeGenerateCommand(subDir, "--datastore", "mysql", "--module", "entities");
+        executeGenerateCommand(subDir, "--datastore", "mssql", "--module", "mssql_entities");
+        executeGenerateCommand(subDir, "--datastore", "h2", "--module", "h2_entities");
+        executeGenerateCommand(subDir, "--datastore", "postgresql", "--module", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
 
@@ -679,10 +719,10 @@ public class ToolingGenerateTest {
     public void testGenerateEntitiesWithMappingAnnotationOnForeignKeys() {
         String subDir = "tool_test_generate_74";
         updateOutputBallerinaToml(subDir);
-        executeGenerateCommand(subDir, "mysql", "entities");
-        executeGenerateCommand(subDir, "mssql", "mssql_entities");
-        executeGenerateCommand(subDir, "h2", "h2_entities");
-        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        executeGenerateCommand(subDir, "--datastore", "mysql", "--module", "entities");
+        executeGenerateCommand(subDir, "--datastore", "mssql", "--module", "mssql_entities");
+        executeGenerateCommand(subDir, "--datastore", "h2", "--module", "h2_entities");
+        executeGenerateCommand(subDir, "--datastore", "postgresql", "--module", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
 
@@ -691,10 +731,10 @@ public class ToolingGenerateTest {
     public void testGenerateEntitiesWithTypeMappingAnnotations() {
         String subDir = "tool_test_generate_75";
         updateOutputBallerinaToml(subDir);
-        executeGenerateCommand(subDir, "mysql", "entities");
-        executeGenerateCommand(subDir, "mssql", "mssql_entities");
-        executeGenerateCommand(subDir, "h2", "h2_entities");
-        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        executeGenerateCommand(subDir, "--datastore", "mysql", "--module", "entities");
+        executeGenerateCommand(subDir, "--datastore", "mssql", "--module", "mssql_entities");
+        executeGenerateCommand(subDir, "--datastore", "h2", "--module", "h2_entities");
+        executeGenerateCommand(subDir, "--datastore", "postgresql", "--module", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
 
@@ -703,10 +743,10 @@ public class ToolingGenerateTest {
     public void testGenerateEntitiesWithUniqueIndexesOnOneField() {
         String subDir = "tool_test_generate_76";
         updateOutputBallerinaToml(subDir);
-        executeGenerateCommand(subDir, "mysql", "entities");
-        executeGenerateCommand(subDir, "mssql", "mssql_entities");
-        executeGenerateCommand(subDir, "h2", "h2_entities");
-        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        executeGenerateCommand(subDir, "--datastore", "mysql", "--module", "entities");
+        executeGenerateCommand(subDir, "--datastore", "mssql", "--module", "mssql_entities");
+        executeGenerateCommand(subDir, "--datastore", "h2", "--module", "h2_entities");
+        executeGenerateCommand(subDir, "--datastore", "postgresql", "--module", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
 
@@ -715,10 +755,10 @@ public class ToolingGenerateTest {
     public void testGenerateEntitiesSameUniqueIndexOnTwoFields() {
         String subDir = "tool_test_generate_77";
         updateOutputBallerinaToml(subDir);
-        executeGenerateCommand(subDir, "mysql", "entities");
-        executeGenerateCommand(subDir, "mssql", "mssql_entities");
-        executeGenerateCommand(subDir, "h2", "h2_entities");
-        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        executeGenerateCommand(subDir, "--datastore", "mysql", "--module", "entities");
+        executeGenerateCommand(subDir, "--datastore", "mssql", "--module", "mssql_entities");
+        executeGenerateCommand(subDir, "--datastore", "h2", "--module", "h2_entities");
+        executeGenerateCommand(subDir, "--datastore", "postgresql", "--module", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
 
@@ -727,10 +767,10 @@ public class ToolingGenerateTest {
     public void testGenerateEntitiesSameIndexOnTwoFields() {
         String subDir = "tool_test_generate_78";
         updateOutputBallerinaToml(subDir);
-        executeGenerateCommand(subDir, "mysql", "entities");
-        executeGenerateCommand(subDir, "mssql", "mssql_entities");
-        executeGenerateCommand(subDir, "h2", "h2_entities");
-        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        executeGenerateCommand(subDir, "--datastore", "mysql", "--module", "entities");
+        executeGenerateCommand(subDir, "--datastore", "mssql", "--module", "mssql_entities");
+        executeGenerateCommand(subDir, "--datastore", "h2", "--module", "h2_entities");
+        executeGenerateCommand(subDir, "--datastore", "postgresql", "--module", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
 
@@ -739,10 +779,10 @@ public class ToolingGenerateTest {
     public void testGenerateEntitiesWithRenamedIdField() {
         String subDir = "tool_test_generate_79";
         updateOutputBallerinaToml(subDir);
-        executeGenerateCommand(subDir, "mysql", "entities");
-        executeGenerateCommand(subDir, "mssql", "mssql_entities");
-        executeGenerateCommand(subDir, "h2", "h2_entities");
-        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        executeGenerateCommand(subDir, "--datastore", "mysql", "--module", "entities");
+        executeGenerateCommand(subDir, "--datastore", "mssql", "--module", "mssql_entities");
+        executeGenerateCommand(subDir, "--datastore", "h2", "--module", "h2_entities");
+        executeGenerateCommand(subDir, "--datastore", "postgresql", "--module", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
 
@@ -751,10 +791,10 @@ public class ToolingGenerateTest {
     public void testGenerateEntitiesWithRenamedIdFieldAndForeignKey() {
         String subDir = "tool_test_generate_80";
         updateOutputBallerinaToml(subDir);
-        executeGenerateCommand(subDir, "mysql", "entities");
-        executeGenerateCommand(subDir, "mssql", "mssql_entities");
-        executeGenerateCommand(subDir, "h2", "h2_entities");
-        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        executeGenerateCommand(subDir, "--datastore", "mysql", "--module", "entities");
+        executeGenerateCommand(subDir, "--datastore", "mssql", "--module", "mssql_entities");
+        executeGenerateCommand(subDir, "--datastore", "h2", "--module", "h2_entities");
+        executeGenerateCommand(subDir, "--datastore", "postgresql", "--module", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
 
@@ -763,10 +803,10 @@ public class ToolingGenerateTest {
     public void testGenerateEntitiesCompositeForeignKey() {
         String subDir = "tool_test_generate_81";
         updateOutputBallerinaToml(subDir);
-        executeGenerateCommand(subDir, "mysql", "entities");
-        executeGenerateCommand(subDir, "mssql", "mssql_entities");
-        executeGenerateCommand(subDir, "h2", "h2_entities");
-        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        executeGenerateCommand(subDir, "--datastore", "mysql", "--module", "entities");
+        executeGenerateCommand(subDir, "--datastore", "mssql", "--module", "mssql_entities");
+        executeGenerateCommand(subDir, "--datastore", "h2", "--module", "h2_entities");
+        executeGenerateCommand(subDir, "--datastore", "postgresql", "--module", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
 
@@ -775,10 +815,10 @@ public class ToolingGenerateTest {
     public void testGenerateEntitiesRenamedCompositeForeignKeyPartial() {
         String subDir = "tool_test_generate_82";
         updateOutputBallerinaToml(subDir);
-        executeGenerateCommand(subDir, "mysql", "entities");
-        executeGenerateCommand(subDir, "mssql", "mssql_entities");
-        executeGenerateCommand(subDir, "h2", "h2_entities");
-        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        executeGenerateCommand(subDir, "--datastore", "mysql", "--module", "entities");
+        executeGenerateCommand(subDir, "--datastore", "mssql", "--module", "mssql_entities");
+        executeGenerateCommand(subDir, "--datastore", "h2", "--module", "h2_entities");
+        executeGenerateCommand(subDir, "--datastore", "postgresql", "--module", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
 
@@ -787,10 +827,10 @@ public class ToolingGenerateTest {
     public void testGenerateEntitiesRenamedCompositeForeignKey() {
         String subDir = "tool_test_generate_83";
         updateOutputBallerinaToml(subDir);
-        executeGenerateCommand(subDir, "mysql", "entities");
-        executeGenerateCommand(subDir, "mssql", "mssql_entities");
-        executeGenerateCommand(subDir, "h2", "h2_entities");
-        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        executeGenerateCommand(subDir, "--datastore", "mysql", "--module", "entities");
+        executeGenerateCommand(subDir, "--datastore", "mssql", "--module", "mssql_entities");
+        executeGenerateCommand(subDir, "--datastore", "h2", "--module", "h2_entities");
+        executeGenerateCommand(subDir, "--datastore", "postgresql", "--module", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
 
@@ -800,10 +840,10 @@ public class ToolingGenerateTest {
     public void testGenerateEntitiesCompositeForeignKeyWithRenamedKeysPartial() {
         String subDir = "tool_test_generate_84";
         updateOutputBallerinaToml(subDir);
-        executeGenerateCommand(subDir, "mysql", "entities");
-        executeGenerateCommand(subDir, "mssql", "mssql_entities");
-        executeGenerateCommand(subDir, "h2", "h2_entities");
-        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        executeGenerateCommand(subDir, "--datastore", "mysql", "--module", "entities");
+        executeGenerateCommand(subDir, "--datastore", "mssql", "--module", "mssql_entities");
+        executeGenerateCommand(subDir, "--datastore", "h2", "--module", "h2_entities");
+        executeGenerateCommand(subDir, "--datastore", "postgresql", "--module", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
 
@@ -812,10 +852,10 @@ public class ToolingGenerateTest {
     public void testGenerateEntitiesCompositeForeignKeyWithRenamedKeys() {
         String subDir = "tool_test_generate_85";
         updateOutputBallerinaToml(subDir);
-        executeGenerateCommand(subDir, "mysql", "entities");
-        executeGenerateCommand(subDir, "mssql", "mssql_entities");
-        executeGenerateCommand(subDir, "h2", "h2_entities");
-        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        executeGenerateCommand(subDir, "--datastore", "mysql", "--module", "entities");
+        executeGenerateCommand(subDir, "--datastore", "mssql", "--module", "mssql_entities");
+        executeGenerateCommand(subDir, "--datastore", "h2", "--module", "h2_entities");
+        executeGenerateCommand(subDir, "--datastore", "postgresql", "--module", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
 
@@ -824,10 +864,10 @@ public class ToolingGenerateTest {
     public void testGenerateEntitiesWithAutoGeneratedIndex() {
         String subDir = "tool_test_generate_86";
         updateOutputBallerinaToml(subDir);
-        executeGenerateCommand(subDir, "mysql", "entities");
-        executeGenerateCommand(subDir, "mssql", "mssql_entities");
-        executeGenerateCommand(subDir, "h2", "h2_entities");
-        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        executeGenerateCommand(subDir, "--datastore", "mysql", "--module", "entities");
+        executeGenerateCommand(subDir, "--datastore", "mssql", "--module", "mssql_entities");
+        executeGenerateCommand(subDir, "--datastore", "h2", "--module", "h2_entities");
+        executeGenerateCommand(subDir, "--datastore", "postgresql", "--module", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
 
@@ -836,10 +876,10 @@ public class ToolingGenerateTest {
     public void testGenerateEntitiesWithAutoGeneratedUniqueIndex() {
         String subDir = "tool_test_generate_87";
         updateOutputBallerinaToml(subDir);
-        executeGenerateCommand(subDir, "mysql", "entities");
-        executeGenerateCommand(subDir, "mssql", "mssql_entities");
-        executeGenerateCommand(subDir, "h2", "h2_entities");
-        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        executeGenerateCommand(subDir, "--datastore", "mysql", "--module", "entities");
+        executeGenerateCommand(subDir, "--datastore", "mssql", "--module", "mssql_entities");
+        executeGenerateCommand(subDir, "--datastore", "h2", "--module", "h2_entities");
+        executeGenerateCommand(subDir, "--datastore", "postgresql", "--module", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
 
@@ -848,10 +888,10 @@ public class ToolingGenerateTest {
     public void testGenerateEntitiesWithBothIndexTypesOnSameField() {
         String subDir = "tool_test_generate_88";
         updateOutputBallerinaToml(subDir);
-        executeGenerateCommand(subDir, "mysql", "entities");
-        executeGenerateCommand(subDir, "mssql", "mssql_entities");
-        executeGenerateCommand(subDir, "h2", "h2_entities");
-        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        executeGenerateCommand(subDir, "--datastore", "mysql", "--module", "entities");
+        executeGenerateCommand(subDir, "--datastore", "mssql", "--module", "mssql_entities");
+        executeGenerateCommand(subDir, "--datastore", "h2", "--module", "h2_entities");
+        executeGenerateCommand(subDir, "--datastore", "postgresql", "--module", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
 
@@ -860,10 +900,10 @@ public class ToolingGenerateTest {
     public void testGenerateEntitiesWithBothIndexTypesAndOneWithAName() {
         String subDir = "tool_test_generate_89";
         updateOutputBallerinaToml(subDir);
-        executeGenerateCommand(subDir, "mysql", "entities");
-        executeGenerateCommand(subDir, "mssql", "mssql_entities");
-        executeGenerateCommand(subDir, "h2", "h2_entities");
-        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        executeGenerateCommand(subDir, "--datastore", "mysql", "--module", "entities");
+        executeGenerateCommand(subDir, "--datastore", "mssql", "--module", "mssql_entities");
+        executeGenerateCommand(subDir, "--datastore", "h2", "--module", "h2_entities");
+        executeGenerateCommand(subDir, "--datastore", "postgresql", "--module", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
 
@@ -872,10 +912,10 @@ public class ToolingGenerateTest {
     public void testGenerateEntityWithAutoGeneratedId() {
         String subDir = "tool_test_generate_90";
         updateOutputBallerinaToml(subDir);
-        executeGenerateCommand(subDir, "mysql", "entities");
-        executeGenerateCommand(subDir, "mssql", "mssql_entities");
-        executeGenerateCommand(subDir, "h2", "h2_entities");
-        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        executeGenerateCommand(subDir, "--datastore", "mysql", "--module", "entities");
+        executeGenerateCommand(subDir, "--datastore", "mssql", "--module", "mssql_entities");
+        executeGenerateCommand(subDir, "--datastore", "h2", "--module", "h2_entities");
+        executeGenerateCommand(subDir, "--datastore", "postgresql", "--module", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
 
@@ -884,10 +924,10 @@ public class ToolingGenerateTest {
     public void testGenerateEntityWithAutoGeneratedIdWithRelation() {
         String subDir = "tool_test_generate_91";
         updateOutputBallerinaToml(subDir);
-        executeGenerateCommand(subDir, "mysql", "entities");
-        executeGenerateCommand(subDir, "mssql", "mssql_entities");
-        executeGenerateCommand(subDir, "h2", "h2_entities");
-        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        executeGenerateCommand(subDir, "--datastore", "mysql", "--module", "entities");
+        executeGenerateCommand(subDir, "--datastore", "mssql", "--module", "mssql_entities");
+        executeGenerateCommand(subDir, "--datastore", "h2", "--module", "h2_entities");
+        executeGenerateCommand(subDir, "--datastore", "postgresql", "--module", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
 
@@ -896,10 +936,10 @@ public class ToolingGenerateTest {
     public void testGenerateEntityWithAutoGeneratedIdWithRenamedRelation() {
         String subDir = "tool_test_generate_92";
         updateOutputBallerinaToml(subDir);
-        executeGenerateCommand(subDir, "mysql", "entities");
-        executeGenerateCommand(subDir, "mssql", "mssql_entities");
-        executeGenerateCommand(subDir, "h2", "h2_entities");
-        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        executeGenerateCommand(subDir, "--datastore", "mysql", "--module", "entities");
+        executeGenerateCommand(subDir, "--datastore", "mssql", "--module", "mssql_entities");
+        executeGenerateCommand(subDir, "--datastore", "h2", "--module", "h2_entities");
+        executeGenerateCommand(subDir, "--datastore", "postgresql", "--module", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
 
@@ -908,10 +948,10 @@ public class ToolingGenerateTest {
     public void testGenerateEntitiesWithMultipleRelationsOnSame() {
         String subDir = "tool_test_generate_93";
         updateOutputBallerinaToml(subDir);
-        executeGenerateCommand(subDir, "mysql", "entities");
-        executeGenerateCommand(subDir, "mssql", "mssql_entities");
-        executeGenerateCommand(subDir, "h2", "h2_entities");
-        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        executeGenerateCommand(subDir, "--datastore", "mysql", "--module", "entities");
+        executeGenerateCommand(subDir, "--datastore", "mssql", "--module", "mssql_entities");
+        executeGenerateCommand(subDir, "--datastore", "h2", "--module", "h2_entities");
+        executeGenerateCommand(subDir, "--datastore", "postgresql", "--module", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
 
@@ -920,10 +960,10 @@ public class ToolingGenerateTest {
     public void testGenerateEntitiesWithMultipleRenamedRelationsOnSame() {
         String subDir = "tool_test_generate_94";
         updateOutputBallerinaToml(subDir);
-        executeGenerateCommand(subDir, "mysql", "entities");
-        executeGenerateCommand(subDir, "mssql", "mssql_entities");
-        executeGenerateCommand(subDir, "h2", "h2_entities");
-        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
+        executeGenerateCommand(subDir, "--datastore", "mysql", "--module", "entities");
+        executeGenerateCommand(subDir, "--datastore", "mssql", "--module", "mssql_entities");
+        executeGenerateCommand(subDir, "--datastore", "h2", "--module", "h2_entities");
+        executeGenerateCommand(subDir, "--datastore", "postgresql", "--module", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
 
@@ -931,7 +971,8 @@ public class ToolingGenerateTest {
     @Description("The model has all possible data types inlcuding optional fields")
     public void testRedisEntity() {
         updateOutputBallerinaToml("tool_test_generate_95_redis");
-        executeGenerateCommand("tool_test_generate_95_redis", "redis", "entities");
+        executeGenerateCommand("tool_test_generate_95_redis",
+                "--datastore", "redis", "--module", "entities", "--test-datastore", "inmemory");
         assertGeneratedSources("tool_test_generate_95_redis");
     }
 
@@ -939,7 +980,8 @@ public class ToolingGenerateTest {
     @Description("There is a generated client object with redis data source")
     public void testRedisWithAssociatedEntity() {
         updateOutputBallerinaToml("tool_test_generate_96_redis");
-        executeGenerateCommand("tool_test_generate_96_redis", "redis", "entities");
+        executeGenerateCommand("tool_test_generate_96_redis",
+                "--datastore", "redis", "--module", "entities", "--test-datastore", "h2");
         assertGeneratedSources("tool_test_generate_96_redis");
     }
 
@@ -947,7 +989,8 @@ public class ToolingGenerateTest {
     @Description("There is a generated client object with redis data source")
     public void testRedisWithCompositeKeys() {
         updateOutputBallerinaToml("tool_test_generate_97_redis");
-        executeGenerateCommand("tool_test_generate_97_redis", "redis", "entities");
+        executeGenerateCommand("tool_test_generate_97_redis",
+                "--datastore", "redis", "--module", "entities");
         assertGeneratedSources("tool_test_generate_97_redis");
     }
 
@@ -955,7 +998,8 @@ public class ToolingGenerateTest {
     @Description("There are multiple entities with multiple enums and imports with redis data source")
     public void testGenerateWithEnumsRedis() {
         updateOutputBallerinaToml("tool_test_generate_98_redis");
-        executeGenerateCommand("tool_test_generate_98_redis", "redis", "entities");
+        executeGenerateCommand("tool_test_generate_98_redis",
+                "--datastore", "redis", "--module", "entities");
         assertGeneratedSources("tool_test_generate_98_redis");
     }
 
@@ -963,7 +1007,8 @@ public class ToolingGenerateTest {
     @Description("There is an entity which is associated with multiple relations")
     public void testGenerateWithSameEntityMultipleRelationsRedis() {
         updateOutputBallerinaToml("tool_test_generate_99_redis");
-        executeGenerateCommand("tool_test_generate_99_redis", "redis", "entities");
+        executeGenerateCommand("tool_test_generate_99_redis",
+                "--datastore", "redis", "--module", "entities");
         assertGeneratedSources("tool_test_generate_99_redis");
     }
 
@@ -971,7 +1016,8 @@ public class ToolingGenerateTest {
     @Description("There is a model with an entity consisting of multiple relations of the same type")
     public void testGenerateEntityWithMultipleRelationsSameTypeRedis() {
         updateOutputBallerinaToml("tool_test_generate_100_redis");
-        executeGenerateCommand("tool_test_generate_100_redis", "redis", "entities");
+        executeGenerateCommand("tool_test_generate_100_redis",
+                "--datastore", "redis", "--module", "entities");
         assertGeneratedSources("tool_test_generate_100_redis");
     }
 
@@ -980,10 +1026,12 @@ public class ToolingGenerateTest {
     public void testGenerateEntitiesWithUnsupportedFields() {
         String subDir = "tool_test_generate_101";
         updateOutputBallerinaToml(subDir);
-        executeGenerateCommand(subDir, "mysql", "entities");
-        executeGenerateCommand(subDir, "mssql", "mssql_entities");
-        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
-        executeGenerateCommand(subDir, "h2", "h2_entities");
+        executeGenerateCommand(subDir, "--datastore", "mysql", "--module", "entities", "--test-datastore", "h2");
+        executeGenerateCommand(subDir,
+                "--datastore", "mssql", "--module", "mssql_entities", "--test-datastore", "h2");
+        executeGenerateCommand(subDir, "--datastore", "h2", "--module", "h2_entities", "--test-datastore", "h2");
+        executeGenerateCommand(subDir,
+                "--datastore", "postgresql", "--module", "postgresql_entities", "--test-datastore", "h2");
         assertGeneratedSources(subDir);
     }
 
@@ -991,7 +1039,8 @@ public class ToolingGenerateTest {
     @Description("There are entities with 'sql' annotations")
     public void testGenerateIgnoreSQLAnnotationsForInmemory() {
         updateOutputBallerinaToml("tool_test_generate_102_inmemory");
-        executeGenerateCommand("tool_test_generate_102_inmemory", "inmemory", "entities");
+        executeGenerateCommand("tool_test_generate_102_inmemory",
+                "--datastore", "inmemory", "--module", "entities");
         assertGeneratedSources("tool_test_generate_102_inmemory");
     }
 
@@ -999,7 +1048,8 @@ public class ToolingGenerateTest {
     @Description("There are entities with 'sql' annotations")
     public void testGenerateIgnoreSQLAnnotationsForGoogleSheets() {
         updateOutputBallerinaToml("tool_test_generate_103_googlesheets");
-        executeGenerateCommand("tool_test_generate_103_googlesheets", "googlesheets", "entities");
+        executeGenerateCommand("tool_test_generate_103_googlesheets",
+                "--datastore", "googlesheets", "--module", "entities");
         assertGeneratedSources("tool_test_generate_103_googlesheets");
     }
 
@@ -1007,7 +1057,8 @@ public class ToolingGenerateTest {
     @Description("There are entities with 'sql' annotations")
     public void testGenerateIgnoreSQLAnnotationsForRedis() {
         updateOutputBallerinaToml("tool_test_generate_104_redis");
-        executeGenerateCommand("tool_test_generate_104_redis", "redis", "entities");
+        executeGenerateCommand("tool_test_generate_104_redis",
+                "--datastore", "redis", "--module", "entities");
         assertGeneratedSources("tool_test_generate_104_redis");
     }
 
@@ -1015,7 +1066,7 @@ public class ToolingGenerateTest {
     @Description("There are entities with 'sql' annotations")
     public void testGenerateWithAllUnsupportedEntities() {
         updateOutputBallerinaToml("tool_test_generate_105");
-        executeGenerateCommand("tool_test_generate_105", "mysql", "entities");
+        executeGenerateCommand("tool_test_generate_105", "--datastore", "mysql", "--module", "entities");
         assertGeneratedSources("tool_test_generate_105");
     }
 
@@ -1024,10 +1075,10 @@ public class ToolingGenerateTest {
     public void testGenerateEntitiesWithUniqueIndexAnnotatedForeignKeys() {
         String subDir = "tool_test_generate_106";
         updateOutputBallerinaToml(subDir);
-        executeGenerateCommand(subDir, "mysql", "entities");
-        executeGenerateCommand(subDir, "mssql", "mssql_entities");
-        executeGenerateCommand(subDir, "postgresql", "postgresql_entities");
-        executeGenerateCommand(subDir, "h2", "h2_entities");
+        executeGenerateCommand(subDir, "--datastore", "mysql", "--module", "entities");
+        executeGenerateCommand(subDir, "--datastore", "mssql", "--module", "mssql_entities");
+        executeGenerateCommand(subDir, "--datastore", "h2", "--module", "h2_entities");
+        executeGenerateCommand(subDir, "--datastore", "postgresql", "--module", "postgresql_entities");
         assertGeneratedSources(subDir);
     }
 

@@ -76,8 +76,8 @@ public class RedisClientSyntax  implements ClientSyntax {
     }
 
     @Override
-    public Client getClientObject(Module entityModule) {
-        Client clientObject = BalSyntaxUtils.generateClientSignature(true);
+    public Client getClientObject(Module entityModule, String clientName) {
+        Client clientObject = BalSyntaxUtils.generateClientSignature(clientName, true);
         clientObject.addMember(NodeParser.parseObjectMember(
                 String.format(BalSyntaxConstants.INIT_DB_CLIENT, this.datasource)), true);
         clientObject.addMember(NodeParser.parseObjectMember(BalSyntaxConstants.INIT_REDIS_CLIENT_MAP), true);
@@ -204,6 +204,16 @@ public class RedisClientSyntax  implements ClientSyntax {
 
         delete.addStatement(NodeParser.parseStatement(BalSyntaxConstants.RETURN_DELETED_OBJECT));
         return delete.getFunctionDefinitionNode();
+    }
+
+    @Override
+    public FunctionDefinitionNode getQueryNativeSQLFunction() {
+        throw new UnsupportedOperationException("Query native SQL is not supported for Redis DB");
+    }
+
+    @Override
+    public FunctionDefinitionNode getExecuteNativeSQLFunction() {
+        throw new UnsupportedOperationException("Execute native SQL is not supported for Redis DB");
     }
 
     private static String getDataTypeInAllCaps(String fieldType) {

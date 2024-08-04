@@ -60,7 +60,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static io.ballerina.persist.PersistToolsConstants.BALLERINA_MSSQL_DRIVER_NAME;
@@ -172,7 +171,7 @@ public class Push implements BLauncherCmd {
         try (Stream<Path> stream = Files.list(persistDir)) {
             schemaFilePaths = stream.filter(file -> !Files.isDirectory(file))
                     .filter(file -> file.toString().toLowerCase(Locale.ENGLISH).endsWith(".bal"))
-                    .collect(Collectors.toList());
+                    .toList();
         } catch (IOException e) {
             errStream.printf("ERROR: failed to list the model definition files in the persist directory. %s%n",
                     e.getMessage());

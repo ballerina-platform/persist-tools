@@ -1,0 +1,5 @@
+[Demo.entities.connectionConfig]
+connection = "redis://localhost:6379"
+
+[Demo.entities.cacheConfig]
+maxAge = 4

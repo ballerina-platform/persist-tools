@@ -49,6 +49,7 @@ import java.util.Objects;
 
 import static io.ballerina.persist.PersistToolsConstants.GOOGLE_SHEETS_SCHEMA_FILE;
 import static io.ballerina.persist.PersistToolsConstants.SQL_SCHEMA_FILE;
+import static io.ballerina.persist.PersistToolsConstants.SupportedDataSources.H2_DB;
 
 /**
  * This class is used to generate the all files to data source type.
@@ -109,6 +110,24 @@ public class SourceGenerator {
         } catch (BalException e) {
             throw new BalException(e.getMessage());
         }
+    }
+
+    public void createTestDataSources(String testDatastore) throws BalException {
+        if (testDatastore.equals(H2_DB)) {
+            DbSyntaxTree dbSyntaxTree = new DbSyntaxTree();
+            addClientFile(dbSyntaxTree.getTestClientSyntax(entityModule),
+                    this.generatedSourceDirPath.resolve("persist_test_client.bal").toAbsolutePath(),
+                    this.moduleNameWithPackageName);
+            addTestInitFile(dbSyntaxTree.getTestInitSyntax(SqlScriptUtils.
+                            generateSqlScript(this.entityModule.getEntityMap().values(), testDatastore)),
+                    this.generatedSourceDirPath.resolve("persist_test_init.bal").toAbsolutePath());
+        } else {
+            InMemorySyntaxTree inMemorySyntaxTree = new InMemorySyntaxTree();
+            addClientFile(inMemorySyntaxTree.getTestClientSyntax(entityModule),
+            this.generatedSourceDirPath.resolve("persist_test_client.bal").toAbsolutePath(),
+            this.moduleNameWithPackageName);
+        }
+
     }
 
     public void createRedisSources() throws BalException {
@@ -210,6 +229,15 @@ public class SourceGenerator {
                     "to the persist_client.bal file.", moduleName) + e.getMessage());
         }
     }
+
+    private void addTestInitFile(SyntaxTree syntaxTree, Path path) throws BalException {
+        try {
+            writeOutputFile(Formatter.format(syntaxTree.toSourceCode()), path);
+        } catch (FormatterException | IOException e) {
+            throw new BalException(String.format("could not write the db initialization scripts to the `%s` file. %s",
+                    path.getFileName(), e.getMessage()));
+        }
+    }
     
     private void createGeneratedDirectory(Path path) throws BalException {
         if (Objects.nonNull(path)) {
@@ -286,8 +314,7 @@ public class SourceGenerator {
             for (DocumentMemberDeclarationNode member : nodeList) {
                 if (member instanceof KeyValueNode) {
                     moduleMembers = moduleMembers.add(member);
-                } else if (member instanceof TableNode) {
-                    TableNode node = (TableNode) member;
+                } else if (member instanceof TableNode node) {
                     moduleMembers = moduleMembers.add(member);
                     if (node.identifier().toSourceCode().trim().equals(moduleName)) {
                         configExists = true;

@@ -43,6 +43,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.CLIENT_NAME;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.IN_MEMORY_CLIENT_NAME;
+
 /**
  * This class is used to generate the syntax tree for in-memory.
  *
@@ -53,6 +56,21 @@ public class InMemorySyntaxTree implements SyntaxTree {
     @Override
     public io.ballerina.compiler.syntax.tree.SyntaxTree getClientSyntax(Module entityModule) throws BalException {
         InMemoryClientSyntax dbClientSyntax = new InMemoryClientSyntax(entityModule);
+        Client clientObject = dbClientSyntax.getClientObject(entityModule, CLIENT_NAME);
+
+        return getSyntaxTree(entityModule, dbClientSyntax, clientObject);
+    }
+
+    @Override
+    public io.ballerina.compiler.syntax.tree.SyntaxTree getTestClientSyntax(Module entityModule) throws BalException {
+        InMemoryClientSyntax dbClientSyntax = new InMemoryClientSyntax(entityModule);
+        Client clientObject = dbClientSyntax.getClientObject(entityModule, IN_MEMORY_CLIENT_NAME);
+
+        return getSyntaxTree(entityModule, dbClientSyntax, clientObject);
+    }
+
+    private static io.ballerina.compiler.syntax.tree.SyntaxTree getSyntaxTree(
+            Module entityModule, InMemoryClientSyntax dbClientSyntax, Client clientObject) throws BalException {
         NodeList<ImportDeclarationNode> imports = dbClientSyntax.getImports();
         NodeList<ModuleMemberDeclarationNode> moduleMembers = dbClientSyntax.getConstantVariables();
         for (Entity entity : entityModule.getEntityMap().values()) {
@@ -60,9 +78,8 @@ public class InMemorySyntaxTree implements SyntaxTree {
                     String.format(BalSyntaxConstants.TABLE_PARAMETER_INIT_TEMPLATE, entity.getEntityName(),
                             getPrimaryKeys(entity, false), entity.getClientResourceName())));
         }
-        Client clientObject = dbClientSyntax.getClientObject(entityModule);
         Collection<Entity> entityArray = entityModule.getEntityMap().values();
-        if (entityArray.size() == 0) {
+        if (entityArray.isEmpty()) {
             throw new BalException("data definition file() does not contain any entities.");
         }
 
@@ -113,7 +130,7 @@ public class InMemorySyntaxTree implements SyntaxTree {
     @Override
     public io.ballerina.compiler.syntax.tree.SyntaxTree getDataTypesSyntax(Module entityModule) throws BalException {
         Collection<Entity> entityArray = entityModule.getEntityMap().values();
-        if (entityArray.size() != 0) {
+        if (!entityArray.isEmpty()) {
             return BalSyntaxUtils.generateTypeSyntaxTree(entityModule, 
             PersistToolsConstants.SupportedDataSources.IN_MEMORY_TABLE);
         }
@@ -163,8 +180,8 @@ public class InMemorySyntaxTree implements SyntaxTree {
         return new FunctionDefinitionNode[]{query.getFunctionDefinitionNode(), queryOne.getFunctionDefinitionNode()};
     }
 
-    private static StringBuilder[] createQuery(Entity entity, StringBuilder queryBuilder,
-                                               StringBuilder queryOneBuilder) {
+    private static void createQuery(Entity entity, StringBuilder queryBuilder,
+                                    StringBuilder queryOneBuilder) {
         StringBuilder relationalRecordFields = new StringBuilder();
         for (EntityField field : entity.getFields()) {
             if (field.getRelation() != null) {
@@ -206,7 +223,7 @@ public class InMemorySyntaxTree implements SyntaxTree {
                 }
             }
         }
-        if (relationalRecordFields.length() > 0) {
+        if (!relationalRecordFields.isEmpty()) {
             queryBuilder.append(String.format(BalSyntaxConstants.SELECT_QUERY, "," + System.lineSeparator() +
                     relationalRecordFields.substring(0, relationalRecordFields.length() - 1)));
             queryOneBuilder.append(String.format(BalSyntaxConstants.DO_QUERY, "," + System.lineSeparator() +
@@ -215,13 +232,12 @@ public class InMemorySyntaxTree implements SyntaxTree {
             queryBuilder.append(String.format(BalSyntaxConstants.SELECT_QUERY, ""));
             queryOneBuilder.append(String.format(BalSyntaxConstants.DO_QUERY, ""));
         }
-        return new StringBuilder[]{queryBuilder, queryOneBuilder};
     }
 
-    public static String getPrimaryKeys(Entity entity, boolean addDoubleQuotes) {
+    private static String getPrimaryKeys(Entity entity, boolean addDoubleQuotes) {
         StringBuilder keyFields = new StringBuilder();
         for (EntityField key : entity.getKeys()) {
-            if (keyFields.length() != 0) {
+            if (!keyFields.isEmpty()) {
                 keyFields.append(BalSyntaxConstants.COMMA_WITH_SPACE);
             }
             if (addDoubleQuotes) {
@@ -233,7 +249,7 @@ public class InMemorySyntaxTree implements SyntaxTree {
         return keyFields.toString();
     }
 
-    public static String getQueryClonedTables(Entity entity) {
+    private static String getQueryClonedTables(Entity entity) {
         StringBuilder clonedTables = new StringBuilder();
         ArrayList<Entity> clonedTablesList = new ArrayList<>();
 
@@ -257,7 +273,7 @@ public class InMemorySyntaxTree implements SyntaxTree {
         return clonedTables.toString();
     }
 
-    public static String getClonedTable(Entity entity) {
+    private static String getClonedTable(Entity entity) {
         StringBuilder clonedTable = new StringBuilder();
         clonedTable.append(String.format(BalSyntaxConstants.CLONED_TABLE_INIT_TEMPLATE,
                 entity.getEntityName(), getPrimaryKeys(entity, false),

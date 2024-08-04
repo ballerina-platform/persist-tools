@@ -4,6 +4,9 @@
   "properties": {
     "datastore": {
       "type": "string"
+    },
+    "testDatastore": {
+      "type": "string"
     }
   },
   "additionalProperties": false

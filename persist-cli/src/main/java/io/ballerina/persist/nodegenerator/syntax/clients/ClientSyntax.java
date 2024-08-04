@@ -37,7 +37,7 @@ public interface ClientSyntax {
 
     NodeList<ModuleMemberDeclarationNode> getConstantVariables();
 
-    Client getClientObject(Module entityModule);
+    Client getClientObject(Module entityModule, String clientName);
 
     FunctionDefinitionNode getInitFunction(Module entityModule);
 
@@ -52,4 +52,8 @@ public interface ClientSyntax {
     FunctionDefinitionNode getPutFunction(Entity entity);
 
     FunctionDefinitionNode getDeleteFunction(Entity entity);
+
+    FunctionDefinitionNode getQueryNativeSQLFunction();
+
+    FunctionDefinitionNode getExecuteNativeSQLFunction();
 }

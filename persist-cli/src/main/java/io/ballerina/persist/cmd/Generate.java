@@ -40,9 +40,15 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
+import java.util.Objects;
 
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
+import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.getConfigDeclaration;
+import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.getDependencyConfig;
+import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.populateNativeDependencyConfig;
+import static io.ballerina.persist.utils.BalProjectUtils.printTestClientUsageSteps;
+import static io.ballerina.persist.utils.BalProjectUtils.validateDatastore;
+import static io.ballerina.persist.utils.BalProjectUtils.validateTestDatastore;
 import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 
 /**
@@ -80,6 +86,10 @@ public class Generate implements BLauncherCmd {
     @CommandLine.Option(names = {"--datastore"})
     private String datastore;
 
+    @CommandLine.Option(names = {"--test-datastore"}, description = "Test data store for the " +
+            "generated Ballerina client")
+    private String testDatastore;
+
     @Override
     public void execute() {
         Path generatedSourceDirPath;
@@ -92,10 +102,24 @@ public class Generate implements BLauncherCmd {
             errStream.println(commandUsageInfo);
             return;
         }
-        if (datastore == null) {
+        if (Objects.isNull(datastore) || datastore.isBlank()) {
             errStream.println("ERROR: datastore is required");
             return;
+        } else {
+            try {
+                validateDatastore(datastore);
+            } catch (BalException e) {
+                errStream.printf("ERROR: %s%n", e.getMessage());
+                return;
+            }
         }
+        try {
+            validateTestDatastore(datastore, testDatastore);
+        } catch (BalException e) {
+            errStream.printf("ERROR: %s%n", e.getMessage());
+            return;
+        }
+
         Path projectPath = Paths.get(sourcePath);
         try {
             BalProjectUtils.validateBallerinaProject(projectPath);
@@ -124,7 +148,7 @@ public class Generate implements BLauncherCmd {
         try {
             hasPersistConfig = hasPersistConfig(Paths.get(this.sourcePath, "Ballerina.toml"));
         } catch (BalException e) {
-            errStream.printf("ERROR: The project does not contain a toml file");
+            errStream.println("ERROR: The project does not contain a toml file");
             return;
         }
         // Check if there are previous persist configurations.
@@ -161,12 +185,6 @@ public class Generate implements BLauncherCmd {
             generatedSourceDirPath = generatedSourceDirPath.resolve(module);
         }
 
-        if (!PersistToolsConstants.SUPPORTED_DB_PROVIDERS.contains(datastore)) {
-            errStream.printf("ERROR: the persist layer supports one of data stores: %s" +
-                            ". but found '%s' datasource.%n",
-                    Arrays.toString(PersistToolsConstants.SUPPORTED_DB_PROVIDERS.toArray()), datastore);
-            return;
-        }
         if (Files.isDirectory(Paths.get(sourcePath, PersistToolsConstants.PERSIST_TOOL_CONFIG,
                 PersistToolsConstants.MIGRATIONS)) &&
                 !datastore.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB)) {
@@ -197,8 +215,8 @@ public class Generate implements BLauncherCmd {
 
         try {
             BalProjectUtils.updateToml(sourcePath, datastore, moduleNameWithPackage);
-            String syntaxTree = TomlSyntaxUtils.updateBallerinaToml(Paths.get(this.sourcePath, BALLERINA_TOML), module,
-                    datastore, true);
+            String syntaxTree = updateBallerinaToml(Paths.get(this.sourcePath, BALLERINA_TOML),
+                    datastore, testDatastore);
             Utils.writeOutputString(syntaxTree,
                     Paths.get(this.sourcePath, BALLERINA_TOML).toAbsolutePath().toString());
             BalProjectUtils.validateSchemaFile(schemaFilePath);
@@ -249,11 +267,38 @@ public class Generate implements BLauncherCmd {
             return;
         }
         errStream.println("Persist client and entity types generated successfully in the " + module +  " directory.");
+
+        if (testDatastore != null) {
+            try {
+                sourceCreator.createTestDataSources(testDatastore);
+            } catch (BalException e) {
+                errStream.printf("ERROR: the test data source creation failed. %s%n", e.getMessage());
+                return;
+            }
+            errStream.printf("The test client for the %s datastore is successfully generated in the %s module.%n",
+                    testDatastore, module);
+            printTestClientUsageSteps(testDatastore, packageName, module);
+        }
     }
 
     @Override
     public void setParentCmdParser(CommandLine parentCmdParser) {
 
+    }
+
+    /**
+     * Method to update the Ballerina.toml with persist native dependency.
+     */
+    private String updateBallerinaToml(Path tomlPath, String datastore, String testDatastore)
+            throws BalException, IOException {
+        TomlSyntaxUtils.NativeDependency dependency = getDependencyConfig(datastore, testDatastore);
+        TomlSyntaxUtils.ConfigDeclaration declaration = getConfigDeclaration(tomlPath, dependency);
+        if (declaration.persistConfigExists()) {
+            throw new BalException("persist configuration already exists in the Ballerina.toml. " +
+                    "remove the existing configuration and try again.");
+        }
+
+        return populateNativeDependencyConfig(datastore, testDatastore, declaration, dependency);
     }
 
     @Override

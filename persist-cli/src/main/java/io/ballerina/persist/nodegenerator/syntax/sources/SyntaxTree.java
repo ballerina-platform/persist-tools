@@ -29,6 +29,9 @@ public interface SyntaxTree {
 
     io.ballerina.compiler.syntax.tree.SyntaxTree getClientSyntax(Module entityModule) throws BalException;
 
+    io.ballerina.compiler.syntax.tree.SyntaxTree getTestClientSyntax(Module entityModule)
+            throws BalException;
+
     io.ballerina.compiler.syntax.tree.SyntaxTree getDataTypesSyntax(Module entityModule) throws BalException;
 
     io.ballerina.compiler.syntax.tree.SyntaxTree getDataStoreConfigSyntax();
