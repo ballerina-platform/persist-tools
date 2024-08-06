@@ -28,7 +28,6 @@ import io.ballerina.persist.introspect.MySqlIntrospector;
 import io.ballerina.persist.introspect.PostgreSqlIntrospector;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.SourceGenerator;
-import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
 import picocli.CommandLine;
 
 import java.io.IOException;
@@ -127,8 +126,6 @@ public class Pull implements BLauncherCmd {
             errStream.println("ERROR: invalid option(s): " + System.lineSeparator() + e.getMessage());
             return;
         }
-        errStream.printf(BalSyntaxConstants.EXPERIMENTAL_NOTICE, "The support for database introspection is " +
-                "currently an experimental feature, and its behavior may be subject to change in future releases.");
 
         String password = readDatabasePassword(scanner, errStream);
 
