@@ -28,7 +28,6 @@ import io.ballerina.persist.introspect.MySqlIntrospector;
 import io.ballerina.persist.introspect.PostgreSqlIntrospector;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.SourceGenerator;
-import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
 import picocli.CommandLine;
 
 import java.io.IOException;
