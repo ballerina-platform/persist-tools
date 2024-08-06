@@ -127,8 +127,6 @@ public class Pull implements BLauncherCmd {
             errStream.println("ERROR: invalid option(s): " + System.lineSeparator() + e.getMessage());
             return;
         }
-        errStream.printf(BalSyntaxConstants.EXPERIMENTAL_NOTICE, "The support for database introspection is " +
-                "currently an experimental feature, and its behavior may be subject to change in future releases.");
 
         String password = readDatabasePassword(scanner, errStream);
 
