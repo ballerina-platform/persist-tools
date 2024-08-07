@@ -4,6 +4,7 @@ NAME
 SYNOPSIS
        bal persist add [--module <module name>]
                         [--datastore <store type>]
+                        [--test-datastore <store type>]
                         [<-h> | <--help>]
 
 DESCRIPTION
@@ -16,8 +17,12 @@ OPTIONS
               The name of the module to initialize the persistence layer. If not specified, the default module will be used.
        --datastore <store type>
               The type of the datastore to be used for persistence.
-              The supported datastores are 'inmemory', 'mysql', 'mssql', 'postgresql', 'googlesheets' and 'redis'.
+              The supported datastores are 'inmemory', 'mysql', 'mssql', 'postgresql', 'h2', 'googlesheets' and 'redis'.
               If not specified, the 'inmemory' datastore will be used as the default.
+       --test-datastore <store type>
+              The type of the datastore to be used for testing.
+              The supported datastores are 'inmemory' and 'h2'.
+              The 'h2' for SQL datastores and 'inmemory' for non-SQL datastores.
        -h, --help
            Print the usage details of all commands.
 
@@ -30,3 +35,6 @@ EXAMPLES
 
        Initialize the Ballerina package for persistence with the 'db' module.
           $ bal persist add --module db --datastore mysql
+
+       Initialize the Ballerina package for persistence with the 'db' module, 'mysql' datastore, and 'h2' test datastore.
+          $ bal persist add --module db --datastore mysql --test-datastore h2
