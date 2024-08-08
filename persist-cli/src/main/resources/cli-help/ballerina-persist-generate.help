@@ -16,7 +16,10 @@ OPTIONS
               The name of the module to initialize the persistence layer. If not specified, the default module will be used.
        --datastore <store type>
               The type of the datastore to be used for persistence.
-              The supported datastores are 'inmemory', 'mysql', 'mssql', 'postgresql', 'googlesheets', and 'redis'.
+              The supported datastores are 'inmemory', 'mysql', 'mssql', 'postgresql', 'h2', 'googlesheets', and 'redis'.
+       --test-datastore <store type>
+              The type of the datastore to be used for testing.
+              It can be either 'inmemory' for non-SQL or 'h2' for SQL, as these are the supported datastores.
        -h, --help
            Print the usage details of all commands.
 
@@ -24,6 +27,8 @@ EXAMPLES
        Print the usage details of the `bal persist generate` command.
           $ bal persist generate --help
 
-       Generate client objects for the model definition file inside persist directory.
-          $ bal persist generate --module persist --datastore mysql
+       Generate client objects for the model definition file with the 'db' module and 'mysql' datastore
+          $ bal persist generate --module db --datastore mysql
 
+       Generate client objects for the model definition file with the 'db' module, 'mysql' datastore, and 'h2' test datastore.
+          $ bal persist add --module db --datastore mysql --test-datastore h2
