@@ -21,8 +21,7 @@ OPTIONS
               If not specified, the 'inmemory' datastore will be used as the default.
        --test-datastore <store type>
               The type of the datastore to be used for testing.
-              The supported datastores are 'inmemory' and 'h2'.
-              The 'h2' for SQL datastores and 'inmemory' for non-SQL datastores.
+              It can be either 'inmemory' for non-SQL or 'h2' for SQL, as these are the supported datastores.
        -h, --help
            Print the usage details of all commands.
 
