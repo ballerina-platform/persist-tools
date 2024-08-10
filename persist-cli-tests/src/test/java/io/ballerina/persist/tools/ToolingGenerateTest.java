@@ -1105,6 +1105,14 @@ public class ToolingGenerateTest {
                                 "version\\s=\\s\\\"\\d+(\\.\\d+)+" +
                                 "(-SNAPSHOT)?\\\"",  "artifactId = \"" + dataStore +
                                 "-native\"" + System.lineSeparator() + "version = \"" + version + "\"");
+                // Update inmemory test datastore dependency if exists
+                // For H2 database, related persist.sql version is resolved earlier
+                String testDatastore = "persist.inmemory";
+                String testVersion = persistInMemoryVersion;
+                content = content.replaceAll("artifactId\\s=\\s\"" + testDatastore + "-native\""
+                        + System.lineSeparator() + "version\\s=\\s\\\"\\d+(\\.\\d+)+" +
+                        "(-SNAPSHOT)?\\\"",  "artifactId = \"" + testDatastore +
+                        "-native\"" + System.lineSeparator() + "version = \"" + testVersion + "\"");
                 Files.writeString(filePath, content);
             } catch (IOException e) {
                 // ignore
