@@ -13,7 +13,7 @@ targetModule = "persist_build_7"
 options.datastore = "mysql"
 filePath = "persist/model.bal"
 
-[[platform.java17.dependency]]
+[[platform.java21.dependency]]
 groupId = "io.ballerina.stdlib"
 artifactId = "persist.sql-native"
 version = "1.2.1"

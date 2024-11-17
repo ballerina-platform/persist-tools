@@ -46,7 +46,7 @@ import java.util.Map;
  */
 public class GSheetClientSyntax implements ClientSyntax {
 
-    public final Map<String, String> queryMethodStatement = new HashMap<>();
+    private final Map<String, String> queryMethodStatement = new HashMap<>();
     private final Module entityModule;
     public GSheetClientSyntax(Module entityModule) {
         this.entityModule = entityModule;
@@ -428,5 +428,9 @@ public class GSheetClientSyntax implements ClientSyntax {
             default:
                 throw new IllegalStateException("Unexpected value: " + index);
         }
+    }
+
+    public Iterable<? extends Map.Entry<String, String>> getQueryMethodStatementEntries() {
+        return queryMethodStatement.entrySet();
     }
 }
