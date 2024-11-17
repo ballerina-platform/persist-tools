@@ -430,7 +430,7 @@ public class GSheetClientSyntax implements ClientSyntax {
         }
     }
 
-    public Iterable<? extends Map.Entry<String, String>> getQueryMethodStatementEntries() {
+    public Iterable<Map.Entry<String, String>> getQueryMethodStatementEntries() {
         return queryMethodStatement.entrySet();
     }
 }
