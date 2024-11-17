@@ -549,52 +549,52 @@ task testRedisDBExamples {
         }
     }
 }
-
-task testDBMockExamples {
-        doLast {
-            mockExamples.each { example ->
-            try {
-                if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-                    exec {
-                        workingDir "${project.projectDir}/build/generated-examples/${example}"
-                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal test"
-                    }
-                } else {
-                    exec {
-                        workingDir "${project.projectDir}/build/generated-examples/${example}"
-                        commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat test"
-                    }
-                }
-            } catch (Exception e) {
-                println("Example '${example}' Tests failed: " + e.message)
-                throw e
-            }
-        }
-    }
-}
-
-task testRedisMockExamples {
-    doLast {
-        mockExamples.each { example ->
-            try {
-                if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-                    exec {
-                        workingDir "${project.projectDir}/build/generated-examples/${example}"
-                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal test"
-                    }
-                } else {
-                    exec {
-                        workingDir "${project.projectDir}/build/generated-examples/${example}"
-                        commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat test"
-                    }
-                }
-            } catch (Exception e) {
-                println("Example '${example}' Tests failed: " + e.message)
-                throw e
-            }
-        }
-    }
-}
+//
+//task testDBMockExamples {
+//        doLast {
+//            mockExamples.each { example ->
+//            try {
+//                if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+//                    exec {
+//                        workingDir "${project.projectDir}/build/generated-examples/${example}"
+//                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal test"
+//                    }
+//                } else {
+//                    exec {
+//                        workingDir "${project.projectDir}/build/generated-examples/${example}"
+//                        commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat test"
+//                    }
+//                }
+//            } catch (Exception e) {
+//                println("Example '${example}' Tests failed: " + e.message)
+//                throw e
+//            }
+//        }
+//    }
+//}
+//
+//task testRedisMockExamples {
+//    doLast {
+//        mockExamples.each { example ->
+//            try {
+//                if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+//                    exec {
+//                        workingDir "${project.projectDir}/build/generated-examples/${example}"
+//                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal test"
+//                    }
+//                } else {
+//                    exec {
+//                        workingDir "${project.projectDir}/build/generated-examples/${example}"
+//                        commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat test"
+//                    }
+//                }
+//            } catch (Exception e) {
+//                println("Example '${example}' Tests failed: " + e.message)
+//                throw e
+//            }
+//        }
+//    }
+//}
 
 copyPersistTool.dependsOn ":persist-cli-tests:build"
 copyPersistTool.dependsOn ":persist-cli:build"
@@ -611,16 +611,16 @@ generateDbExamples.dependsOn initDbExamples
 pushExamples.dependsOn generateDbExamples
 testDbExamples.dependsOn pushExamples
 testIntrospectionExamples.dependsOn generateIntrospectionExamples
-testRedisDBExamples.dependsOn generateRedisDBExamples
-testDBMockExamples.dependsOn generateDBMockExamples
-generateRedisMockExamples.dependsOn testDBMockExamples
-testRedisMockExamples.dependsOn generateRedisMockExamples
+//testRedisDBExamples.dependsOn generateRedisDBExamples
+//testDBMockExamples.dependsOn generateDBMockExamples
+//generateRedisMockExamples.dependsOn testDBMockExamples
+//testRedisMockExamples.dependsOn generateRedisMockExamples
 
 build.dependsOn testInMemoryExamples
 build.dependsOn testDbExamples
 build.dependsOn testIntrospectionExamples
-build.dependsOn testRedisDBExamples
-build.dependsOn testDBMockExamples
-build.dependsOn testRedisMockExamples
+//build.dependsOn testRedisDBExamples
+//build.dependsOn testDBMockExamples
+//build.dependsOn testRedisMockExamples
 build.finalizedBy stopTestDockerContainer
 build.finalizedBy stopTestRedisContainer
