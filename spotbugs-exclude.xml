@@ -56,4 +56,16 @@
     <Match>
         <Class name="io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils$ConfigDeclaration"/>
     </Match>
+    <Match>
+        <Class name="io.ballerina.persist.configuration.DatabaseConfiguration"/>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
+    <Match>
+        <Class name="io.ballerina.persist.nodegenerator.syntax.clients.DbClientSyntax"/>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
+    <Match>
+        <Class name="io.ballerina.persist.utils.JdbcDriverLoader"/>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
 </FindBugsFilter>

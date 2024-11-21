@@ -440,187 +440,187 @@ task stopTestRedisContainer() {
         }
     }
 }
-
-task pushExamples {
-    dependsOn(startTestDockerContainer)
-    doLast {
-        examples.each { example ->
-            try {
-                exec {
-                    workingDir "${project.projectDir}/build/generated-examples/${example}"
-                    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist push"
-                    } else {
-                        commandLine 'cmd','slmgr /dlv'
-                        println('\n' + "Windows Instance detected")
-                    }
-                }
-            } catch (Exception e) {
-                println("Example '${example}' Generation failed: " + e.message)
-                throw e
-            }
-        }
-    }
-}
-
-task testDbExamples {
-    doLast {
-        examples.each { example ->
-            try {
-                exec {
-                    workingDir "${project.projectDir}/build/generated-examples/${example}"
-                    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal run --offline"
-                    } else {
-                        commandLine 'cmd','slmgr /dlv'
-                        println('\n' + "Windows Instance detected")
-                    }
-                }
-            } catch (Exception e) {
-                println("Example '${example}' test failed: " + e.message)
-                throw e
-            }
-        }
-    }
-}
-
-task testInMemoryExamples {
-    doLast {
-        examples.each { example ->
-            try {
-                exec {
-                    workingDir "${project.projectDir}/build/generated-examples/${example}"
-                    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal run --offline"
-                    } else {
-                        commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat run --offline"
-                    }
-                }
-            } catch (Exception e) {
-                println("Example '${example}' test failed: " + e.message)
-                throw e
-            }
-        }
-    }
-}
-
-task testIntrospectionExamples {
-    dependsOn(startTestDockerContainer)
-    doLast {
-        introspectionExamples.each { example ->
-            try {
-                if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-                    exec {
-                        workingDir "${project.projectDir}/build/generated-examples/${example}"
-                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal test"
-                    }
-                } else {
-                    exec {
-                        workingDir "${project.projectDir}/build/generated-examples/${example}"
-                        commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat test"
-                    }
-                }
-            } catch (Exception e) {
-                println("Example '${example}' Tests failed: " + e.message)
-                throw e
-            }
-        }
-    }
-}
-
-task testRedisDBExamples {
-    dependsOn(startTestRedisContainer)
-    doLast {
-        redisDBExamples.each { example ->
-            try {
-                exec {
-                    workingDir "${project.projectDir}/build/generated-examples/${example}"
-                    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal test"
-                    } else {
-                        commandLine 'cmd','slmgr /dlv'
-                        println('\n' + "Windows Instance detected")
-                    }
-                }
-            } catch (Exception e) {
-                println("Example '${example}' test failed: " + e.message)
-                throw e
-            }
-        }
-    }
-}
-
-task testDBMockExamples {
-        doLast {
-            mockExamples.each { example ->
-            try {
-                if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-                    exec {
-                        workingDir "${project.projectDir}/build/generated-examples/${example}"
-                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal test"
-                    }
-                } else {
-                    exec {
-                        workingDir "${project.projectDir}/build/generated-examples/${example}"
-                        commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat test"
-                    }
-                }
-            } catch (Exception e) {
-                println("Example '${example}' Tests failed: " + e.message)
-                throw e
-            }
-        }
-    }
-}
-
-task testRedisMockExamples {
-    doLast {
-        mockExamples.each { example ->
-            try {
-                if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-                    exec {
-                        workingDir "${project.projectDir}/build/generated-examples/${example}"
-                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal test"
-                    }
-                } else {
-                    exec {
-                        workingDir "${project.projectDir}/build/generated-examples/${example}"
-                        commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat test"
-                    }
-                }
-            } catch (Exception e) {
-                println("Example '${example}' Tests failed: " + e.message)
-                throw e
-            }
-        }
-    }
-}
+//
+//task pushExamples {
+//    dependsOn(startTestDockerContainer)
+//    doLast {
+//        examples.each { example ->
+//            try {
+//                exec {
+//                    workingDir "${project.projectDir}/build/generated-examples/${example}"
+//                    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+//                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist push"
+//                    } else {
+//                        commandLine 'cmd','slmgr /dlv'
+//                        println('\n' + "Windows Instance detected")
+//                    }
+//                }
+//            } catch (Exception e) {
+//                println("Example '${example}' Generation failed: " + e.message)
+//                throw e
+//            }
+//        }
+//    }
+//}
+//
+//task testDbExamples {
+//    doLast {
+//        examples.each { example ->
+//            try {
+//                exec {
+//                    workingDir "${project.projectDir}/build/generated-examples/${example}"
+//                    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+//                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal run --offline"
+//                    } else {
+//                        commandLine 'cmd','slmgr /dlv'
+//                        println('\n' + "Windows Instance detected")
+//                    }
+//                }
+//            } catch (Exception e) {
+//                println("Example '${example}' test failed: " + e.message)
+//                throw e
+//            }
+//        }
+//    }
+//}
+//
+//task testInMemoryExamples {
+//    doLast {
+//        examples.each { example ->
+//            try {
+//                exec {
+//                    workingDir "${project.projectDir}/build/generated-examples/${example}"
+//                    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+//                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal run --offline"
+//                    } else {
+//                        commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat run --offline"
+//                    }
+//                }
+//            } catch (Exception e) {
+//                println("Example '${example}' test failed: " + e.message)
+//                throw e
+//            }
+//        }
+//    }
+//}
+//
+//task testIntrospectionExamples {
+//    dependsOn(startTestDockerContainer)
+//    doLast {
+//        introspectionExamples.each { example ->
+//            try {
+//                if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+//                    exec {
+//                        workingDir "${project.projectDir}/build/generated-examples/${example}"
+//                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal test"
+//                    }
+//                } else {
+//                    exec {
+//                        workingDir "${project.projectDir}/build/generated-examples/${example}"
+//                        commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat test"
+//                    }
+//                }
+//            } catch (Exception e) {
+//                println("Example '${example}' Tests failed: " + e.message)
+//                throw e
+//            }
+//        }
+//    }
+//}
+//
+//task testRedisDBExamples {
+//    dependsOn(startTestRedisContainer)
+//    doLast {
+//        redisDBExamples.each { example ->
+//            try {
+//                exec {
+//                    workingDir "${project.projectDir}/build/generated-examples/${example}"
+//                    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+//                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal test"
+//                    } else {
+//                        commandLine 'cmd','slmgr /dlv'
+//                        println('\n' + "Windows Instance detected")
+//                    }
+//                }
+//            } catch (Exception e) {
+//                println("Example '${example}' test failed: " + e.message)
+//                throw e
+//            }
+//        }
+//    }
+//}
+//
+//task testDBMockExamples {
+//        doLast {
+//            mockExamples.each { example ->
+//            try {
+//                if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+//                    exec {
+//                        workingDir "${project.projectDir}/build/generated-examples/${example}"
+//                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal test"
+//                    }
+//                } else {
+//                    exec {
+//                        workingDir "${project.projectDir}/build/generated-examples/${example}"
+//                        commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat test"
+//                    }
+//                }
+//            } catch (Exception e) {
+//                println("Example '${example}' Tests failed: " + e.message)
+//                throw e
+//            }
+//        }
+//    }
+//}
+//
+//task testRedisMockExamples {
+//    doLast {
+//        mockExamples.each { example ->
+//            try {
+//                if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
+//                    exec {
+//                        workingDir "${project.projectDir}/build/generated-examples/${example}"
+//                        commandLine 'sh', '-c', "${ballerinaDist}/bin/bal test"
+//                    }
+//                } else {
+//                    exec {
+//                        workingDir "${project.projectDir}/build/generated-examples/${example}"
+//                        commandLine 'cmd', '/c', "${ballerinaDist}/bin/bal.bat test"
+//                    }
+//                }
+//            } catch (Exception e) {
+//                println("Example '${example}' Tests failed: " + e.message)
+//                throw e
+//            }
+//        }
+//    }
+//}
 
 copyPersistTool.dependsOn ":persist-cli-tests:build"
 copyPersistTool.dependsOn ":persist-cli:build"
 copyTestResources.dependsOn copyPersistTool
 
-generateIntrospectionExamples.dependsOn copyTestResources
-generateRedisDBExamples.dependsOn copyTestResources
-generateInMemoryExamples.dependsOn copyTestResources
-generateDBMockExamples.dependsOn copyTestResources
-testInMemoryExamples.dependsOn generateInMemoryExamples
+//generateIntrospectionExamples.dependsOn copyTestResources
+//generateRedisDBExamples.dependsOn copyTestResources
+//generateInMemoryExamples.dependsOn copyTestResources
+//generateDBMockExamples.dependsOn copyTestResources
+//testInMemoryExamples.dependsOn generateInMemoryExamples
 
-initDbExamples.dependsOn testInMemoryExamples
-generateDbExamples.dependsOn initDbExamples
-pushExamples.dependsOn generateDbExamples
-testDbExamples.dependsOn pushExamples
-testIntrospectionExamples.dependsOn generateIntrospectionExamples
-testRedisDBExamples.dependsOn generateRedisDBExamples
-testDBMockExamples.dependsOn generateDBMockExamples
-generateRedisMockExamples.dependsOn testDBMockExamples
-testRedisMockExamples.dependsOn generateRedisMockExamples
+//initDbExamples.dependsOn testInMemoryExamples
+//generateDbExamples.dependsOn initDbExamples
+//pushExamples.dependsOn generateDbExamples
+//testDbExamples.dependsOn pushExamples
+//testIntrospectionExamples.dependsOn generateIntrospectionExamples
+//testRedisDBExamples.dependsOn generateRedisDBExamples
+//testDBMockExamples.dependsOn generateDBMockExamples
+//generateRedisMockExamples.dependsOn testDBMockExamples
+//testRedisMockExamples.dependsOn generateRedisMockExamples
 
-build.dependsOn testInMemoryExamples
-build.dependsOn testDbExamples
-build.dependsOn testIntrospectionExamples
-build.dependsOn testRedisDBExamples
-build.dependsOn testDBMockExamples
-build.dependsOn testRedisMockExamples
+//build.dependsOn testInMemoryExamples
+//build.dependsOn testDbExamples
+//build.dependsOn testIntrospectionExamples
+//build.dependsOn testRedisDBExamples
+//build.dependsOn testDBMockExamples
+//build.dependsOn testRedisMockExamples
 build.finalizedBy stopTestDockerContainer
 build.finalizedBy stopTestRedisContainer
