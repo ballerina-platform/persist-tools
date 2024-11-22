@@ -7,7 +7,7 @@ distribution = "2201.9.0-20240118-000800-7398ff0b"
 [build-options]
 observabilityIncluded = false
 
-[[platform.java17.dependency]]
+[[platform.java21.dependency]]
 groupId = "io.ballerina.lib"
 artifactId = "persist.redis-native"
 version = "0.2.0"

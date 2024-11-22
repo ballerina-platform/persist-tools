@@ -85,6 +85,7 @@ subprojects {
         ballerinaStdLibs "io.ballerina.stdlib:persist.inmemory-ballerina:${stdlibPersistInmemoryVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:persist.googlesheets-ballerina:${stdlibPersistGoogleSheetVersion}"
         ballerinaStdLibs "io.ballerina.lib:persist.redis-ballerina:${stdlibPersistRedisVersion}"
+        ballerinaStdLibs "io.ballerina.lib:data.jsondata-ballerina:${stdlibDataJsonDataVersion}"
 
         ballerinaStdLibs "io.ballerina.stdlib:mime-ballerina:${stdlibMimeVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:file-ballerina:${stdlibFileVersion}"
