@@ -93,7 +93,7 @@ public class GSheetSyntaxTree implements SyntaxTree {
                 clientObject.addMember(function, false);
             });
         });
-        for (Map.Entry<String, String> entry : gSheetClientSyntax.queryMethodStatement.entrySet()) {
+        for (Map.Entry<String, String> entry : gSheetClientSyntax.getQueryMethodStatementEntries()) {
             Function query = new Function(entry.getKey(), SyntaxKind.OBJECT_METHOD_DEFINITION);
             query.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PRIVATE,
                     BalSyntaxConstants.KEYWORD_ISOLATED });

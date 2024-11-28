@@ -7,7 +7,7 @@ distribution = "2201.4.0"
 [build-options]
 observabilityIncluded = false
 
-[[platform.java17.dependency]]
+[[platform.java21.dependency]]
 groupId = "io.ballerina.stdlib"
 artifactId = "persist.sql-native"
 version = "1.4.1"

@@ -179,7 +179,7 @@ public class TomlSyntaxUtils {
                 if (member instanceof TableArrayNode node) {
                     if (node.identifier().toSourceCode().trim().equals(PersistToolsConstants.PERSIST_TOOL_CONFIG)) {
                         persistConfigExists = true;
-                    } else if (node.identifier().toSourceCode().trim().equals("platform.java17.dependency")) {
+                    } else if (node.identifier().toSourceCode().trim().equals("platform.java21.dependency")) {
                         NodeList<KeyValueNode> fields = ((TableArrayNode) member).fields();
                         for (KeyValueNode field : fields) {
                             String value = field.value().toSourceCode().trim();
