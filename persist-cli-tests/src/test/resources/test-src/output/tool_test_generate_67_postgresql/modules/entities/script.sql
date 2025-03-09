@@ -54,3 +54,5 @@ CREATE TABLE "Employee" (
 	FOREIGN KEY("workspaceWorkspaceId") REFERENCES "Workspace"("workspaceId"),
 	PRIMARY KEY("empNo")
 );
+
+

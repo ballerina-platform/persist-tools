@@ -1,6 +1,8 @@
 // AUTO-GENERATED FILE. DO NOT MODIFY.
+
 // This file is an auto-generated file by Ballerina persistence layer for model.
 // It should not be modified by hand.
+
 import ballerina/jballerina.java;
 import ballerina/persist;
 import ballerina/sql;
@@ -33,7 +35,7 @@ public isolated client class Client {
 
     private final map<psql:SQLClient> persistClients;
 
-    private final record {|psql:SQLMetadata...;|} & readonly metadata = {
+    private final record {|psql:SQLMetadata...;|} metadata = {
         [ALL_TYPES]: {
             entityName: "AllTypes",
             tableName: "AllTypes",
@@ -368,24 +370,43 @@ public isolated client class Client {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
+        if defaultSchema != () {
+            lock {
+                foreach string key in self.metadata.keys() {
+                    psql:SQLMetadata metadata = self.metadata.get(key);
+                    if metadata.schemaName == () {
+                        metadata.schemaName = defaultSchema;
+                    }
+                    map<psql:JoinMetadata>? joinMetadataMap = metadata.joinMetadata;
+                    if joinMetadataMap != () {
+                        foreach string joinKey in joinMetadataMap.keys() {
+                            psql:JoinMetadata joinMetadata = joinMetadataMap.get(joinKey);
+                            if joinMetadata.refSchema == () {
+                                joinMetadata.refSchema = defaultSchema;
+                            }
+                        }
+                    }
+                }
+            }
+        }
         self.persistClients = {
-            [ALL_TYPES]: check new (dbClient, self.metadata.get(ALL_TYPES), psql:POSTGRESQL_SPECIFICS),
-            [STRING_ID_RECORD]: check new (dbClient, self.metadata.get(STRING_ID_RECORD), psql:POSTGRESQL_SPECIFICS),
-            [INT_ID_RECORD]: check new (dbClient, self.metadata.get(INT_ID_RECORD), psql:POSTGRESQL_SPECIFICS),
-            [FLOAT_ID_RECORD]: check new (dbClient, self.metadata.get(FLOAT_ID_RECORD), psql:POSTGRESQL_SPECIFICS),
-            [DECIMAL_ID_RECORD]: check new (dbClient, self.metadata.get(DECIMAL_ID_RECORD), psql:POSTGRESQL_SPECIFICS),
-            [BOOLEAN_ID_RECORD]: check new (dbClient, self.metadata.get(BOOLEAN_ID_RECORD), psql:POSTGRESQL_SPECIFICS),
-            [COMPOSITE_ASSOCIATION_RECORD]: check new (dbClient, self.metadata.get(COMPOSITE_ASSOCIATION_RECORD), psql:POSTGRESQL_SPECIFICS),
-            [ALL_TYPES_ID_RECORD]: check new (dbClient, self.metadata.get(ALL_TYPES_ID_RECORD), psql:POSTGRESQL_SPECIFICS),
-            [USER]: check new (dbClient, self.metadata.get(USER), psql:POSTGRESQL_SPECIFICS),
-            [POST]: check new (dbClient, self.metadata.get(POST), psql:POSTGRESQL_SPECIFICS),
-            [FOLLOW]: check new (dbClient, self.metadata.get(FOLLOW), psql:POSTGRESQL_SPECIFICS),
-            [COMMENT]: check new (dbClient, self.metadata.get(COMMENT), psql:POSTGRESQL_SPECIFICS),
-            [EMPLOYEE]: check new (dbClient, self.metadata.get(EMPLOYEE), psql:POSTGRESQL_SPECIFICS),
-            [WORKSPACE]: check new (dbClient, self.metadata.get(WORKSPACE), psql:POSTGRESQL_SPECIFICS),
-            [BUILDING]: check new (dbClient, self.metadata.get(BUILDING), psql:POSTGRESQL_SPECIFICS),
-            [DEPARTMENT]: check new (dbClient, self.metadata.get(DEPARTMENT), psql:POSTGRESQL_SPECIFICS),
-            [ORDER_ITEM]: check new (dbClient, self.metadata.get(ORDER_ITEM), psql:POSTGRESQL_SPECIFICS)
+            [ALL_TYPES]: check new (dbClient, self.metadata.get(ALL_TYPES).cloneReadOnly(), psql:POSTGRESQL_SPECIFICS),
+            [STRING_ID_RECORD]: check new (dbClient, self.metadata.get(STRING_ID_RECORD).cloneReadOnly(), psql:POSTGRESQL_SPECIFICS),
+            [INT_ID_RECORD]: check new (dbClient, self.metadata.get(INT_ID_RECORD).cloneReadOnly(), psql:POSTGRESQL_SPECIFICS),
+            [FLOAT_ID_RECORD]: check new (dbClient, self.metadata.get(FLOAT_ID_RECORD).cloneReadOnly(), psql:POSTGRESQL_SPECIFICS),
+            [DECIMAL_ID_RECORD]: check new (dbClient, self.metadata.get(DECIMAL_ID_RECORD).cloneReadOnly(), psql:POSTGRESQL_SPECIFICS),
+            [BOOLEAN_ID_RECORD]: check new (dbClient, self.metadata.get(BOOLEAN_ID_RECORD).cloneReadOnly(), psql:POSTGRESQL_SPECIFICS),
+            [COMPOSITE_ASSOCIATION_RECORD]: check new (dbClient, self.metadata.get(COMPOSITE_ASSOCIATION_RECORD).cloneReadOnly(), psql:POSTGRESQL_SPECIFICS),
+            [ALL_TYPES_ID_RECORD]: check new (dbClient, self.metadata.get(ALL_TYPES_ID_RECORD).cloneReadOnly(), psql:POSTGRESQL_SPECIFICS),
+            [USER]: check new (dbClient, self.metadata.get(USER).cloneReadOnly(), psql:POSTGRESQL_SPECIFICS),
+            [POST]: check new (dbClient, self.metadata.get(POST).cloneReadOnly(), psql:POSTGRESQL_SPECIFICS),
+            [FOLLOW]: check new (dbClient, self.metadata.get(FOLLOW).cloneReadOnly(), psql:POSTGRESQL_SPECIFICS),
+            [COMMENT]: check new (dbClient, self.metadata.get(COMMENT).cloneReadOnly(), psql:POSTGRESQL_SPECIFICS),
+            [EMPLOYEE]: check new (dbClient, self.metadata.get(EMPLOYEE).cloneReadOnly(), psql:POSTGRESQL_SPECIFICS),
+            [WORKSPACE]: check new (dbClient, self.metadata.get(WORKSPACE).cloneReadOnly(), psql:POSTGRESQL_SPECIFICS),
+            [BUILDING]: check new (dbClient, self.metadata.get(BUILDING).cloneReadOnly(), psql:POSTGRESQL_SPECIFICS),
+            [DEPARTMENT]: check new (dbClient, self.metadata.get(DEPARTMENT).cloneReadOnly(), psql:POSTGRESQL_SPECIFICS),
+            [ORDER_ITEM]: check new (dbClient, self.metadata.get(ORDER_ITEM).cloneReadOnly(), psql:POSTGRESQL_SPECIFICS)
         };
     }
 

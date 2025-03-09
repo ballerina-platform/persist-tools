@@ -22,7 +22,7 @@ public isolated client class Client {
 
     private final map<psql:SQLClient> persistClients;
 
-    private final record {|psql:SQLMetadata...;|} & readonly metadata = {
+    private final record {|psql:SQLMetadata...;|} metadata = {
         [USER]: {
             entityName: "User",
             tableName: "User",
@@ -87,11 +87,30 @@ public isolated client class Client {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
+        if defaultSchema != () {
+            lock {
+                foreach string key in self.metadata.keys() {
+                    psql:SQLMetadata metadata = self.metadata.get(key);
+                    if metadata.schemaName == () {
+                        metadata.schemaName = defaultSchema;
+                    }
+                    map<psql:JoinMetadata>? joinMetadataMap = metadata.joinMetadata;
+                    if joinMetadataMap != () {
+                        foreach string joinKey in joinMetadataMap.keys() {
+                            psql:JoinMetadata joinMetadata = joinMetadataMap.get(joinKey);
+                            if joinMetadata.refSchema == () {
+                                joinMetadata.refSchema = defaultSchema;
+                            }
+                        }
+                    }
+                }
+            }
+        }
         self.persistClients = {
-            [USER]: check new (dbClient, self.metadata.get(USER), psql:MSSQL_SPECIFICS),
-            [CAR]: check new (dbClient, self.metadata.get(CAR), psql:MSSQL_SPECIFICS),
-            [PERSON]: check new (dbClient, self.metadata.get(PERSON), psql:MSSQL_SPECIFICS),
-            [PERSON2]: check new (dbClient, self.metadata.get(PERSON2), psql:MSSQL_SPECIFICS)
+            [USER]: check new (dbClient, self.metadata.get(USER).cloneReadOnly(), psql:MSSQL_SPECIFICS),
+            [CAR]: check new (dbClient, self.metadata.get(CAR).cloneReadOnly(), psql:MSSQL_SPECIFICS),
+            [PERSON]: check new (dbClient, self.metadata.get(PERSON).cloneReadOnly(), psql:MSSQL_SPECIFICS),
+            [PERSON2]: check new (dbClient, self.metadata.get(PERSON2).cloneReadOnly(), psql:MSSQL_SPECIFICS)
         };
     }
 

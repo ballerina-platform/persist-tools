@@ -1,6 +1,8 @@
 // AUTO-GENERATED FILE. DO NOT MODIFY.
+
 // This file is an auto-generated file by Ballerina persistence layer for model.
 // It should not be modified by hand.
+
 import ballerina/jballerina.java;
 import ballerina/persist;
 import ballerina/sql;
@@ -33,7 +35,7 @@ public isolated client class Client {
 
     private final map<psql:SQLClient> persistClients;
 
-    private final record {|psql:SQLMetadata...;|} & readonly metadata = {
+    private final record {|psql:SQLMetadata...;|} metadata = {
         [ALL_TYPES]: {
             entityName: "AllTypes",
             tableName: "AllTypes",
@@ -368,24 +370,43 @@ public isolated client class Client {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
+        if defaultSchema != () {
+            lock {
+                foreach string key in self.metadata.keys() {
+                    psql:SQLMetadata metadata = self.metadata.get(key);
+                    if metadata.schemaName == () {
+                        metadata.schemaName = defaultSchema;
+                    }
+                    map<psql:JoinMetadata>? joinMetadataMap = metadata.joinMetadata;
+                    if joinMetadataMap != () {
+                        foreach string joinKey in joinMetadataMap.keys() {
+                            psql:JoinMetadata joinMetadata = joinMetadataMap.get(joinKey);
+                            if joinMetadata.refSchema == () {
+                                joinMetadata.refSchema = defaultSchema;
+                            }
+                        }
+                    }
+                }
+            }
+        }
         self.persistClients = {
-            [ALL_TYPES]: check new (dbClient, self.metadata.get(ALL_TYPES), psql:MSSQL_SPECIFICS),
-            [STRING_ID_RECORD]: check new (dbClient, self.metadata.get(STRING_ID_RECORD), psql:MSSQL_SPECIFICS),
-            [INT_ID_RECORD]: check new (dbClient, self.metadata.get(INT_ID_RECORD), psql:MSSQL_SPECIFICS),
-            [FLOAT_ID_RECORD]: check new (dbClient, self.metadata.get(FLOAT_ID_RECORD), psql:MSSQL_SPECIFICS),
-            [DECIMAL_ID_RECORD]: check new (dbClient, self.metadata.get(DECIMAL_ID_RECORD), psql:MSSQL_SPECIFICS),
-            [BOOLEAN_ID_RECORD]: check new (dbClient, self.metadata.get(BOOLEAN_ID_RECORD), psql:MSSQL_SPECIFICS),
-            [COMPOSITE_ASSOCIATION_RECORD]: check new (dbClient, self.metadata.get(COMPOSITE_ASSOCIATION_RECORD), psql:MSSQL_SPECIFICS),
-            [ALL_TYPES_ID_RECORD]: check new (dbClient, self.metadata.get(ALL_TYPES_ID_RECORD), psql:MSSQL_SPECIFICS),
-            [USER]: check new (dbClient, self.metadata.get(USER), psql:MSSQL_SPECIFICS),
-            [POST]: check new (dbClient, self.metadata.get(POST), psql:MSSQL_SPECIFICS),
-            [FOLLOW]: check new (dbClient, self.metadata.get(FOLLOW), psql:MSSQL_SPECIFICS),
-            [COMMENT]: check new (dbClient, self.metadata.get(COMMENT), psql:MSSQL_SPECIFICS),
-            [EMPLOYEE]: check new (dbClient, self.metadata.get(EMPLOYEE), psql:MSSQL_SPECIFICS),
-            [WORKSPACE]: check new (dbClient, self.metadata.get(WORKSPACE), psql:MSSQL_SPECIFICS),
-            [BUILDING]: check new (dbClient, self.metadata.get(BUILDING), psql:MSSQL_SPECIFICS),
-            [DEPARTMENT]: check new (dbClient, self.metadata.get(DEPARTMENT), psql:MSSQL_SPECIFICS),
-            [ORDER_ITEM]: check new (dbClient, self.metadata.get(ORDER_ITEM), psql:MSSQL_SPECIFICS)
+            [ALL_TYPES]: check new (dbClient, self.metadata.get(ALL_TYPES).cloneReadOnly(), psql:MSSQL_SPECIFICS),
+            [STRING_ID_RECORD]: check new (dbClient, self.metadata.get(STRING_ID_RECORD).cloneReadOnly(), psql:MSSQL_SPECIFICS),
+            [INT_ID_RECORD]: check new (dbClient, self.metadata.get(INT_ID_RECORD).cloneReadOnly(), psql:MSSQL_SPECIFICS),
+            [FLOAT_ID_RECORD]: check new (dbClient, self.metadata.get(FLOAT_ID_RECORD).cloneReadOnly(), psql:MSSQL_SPECIFICS),
+            [DECIMAL_ID_RECORD]: check new (dbClient, self.metadata.get(DECIMAL_ID_RECORD).cloneReadOnly(), psql:MSSQL_SPECIFICS),
+            [BOOLEAN_ID_RECORD]: check new (dbClient, self.metadata.get(BOOLEAN_ID_RECORD).cloneReadOnly(), psql:MSSQL_SPECIFICS),
+            [COMPOSITE_ASSOCIATION_RECORD]: check new (dbClient, self.metadata.get(COMPOSITE_ASSOCIATION_RECORD).cloneReadOnly(), psql:MSSQL_SPECIFICS),
+            [ALL_TYPES_ID_RECORD]: check new (dbClient, self.metadata.get(ALL_TYPES_ID_RECORD).cloneReadOnly(), psql:MSSQL_SPECIFICS),
+            [USER]: check new (dbClient, self.metadata.get(USER).cloneReadOnly(), psql:MSSQL_SPECIFICS),
+            [POST]: check new (dbClient, self.metadata.get(POST).cloneReadOnly(), psql:MSSQL_SPECIFICS),
+            [FOLLOW]: check new (dbClient, self.metadata.get(FOLLOW).cloneReadOnly(), psql:MSSQL_SPECIFICS),
+            [COMMENT]: check new (dbClient, self.metadata.get(COMMENT).cloneReadOnly(), psql:MSSQL_SPECIFICS),
+            [EMPLOYEE]: check new (dbClient, self.metadata.get(EMPLOYEE).cloneReadOnly(), psql:MSSQL_SPECIFICS),
+            [WORKSPACE]: check new (dbClient, self.metadata.get(WORKSPACE).cloneReadOnly(), psql:MSSQL_SPECIFICS),
+            [BUILDING]: check new (dbClient, self.metadata.get(BUILDING).cloneReadOnly(), psql:MSSQL_SPECIFICS),
+            [DEPARTMENT]: check new (dbClient, self.metadata.get(DEPARTMENT).cloneReadOnly(), psql:MSSQL_SPECIFICS),
+            [ORDER_ITEM]: check new (dbClient, self.metadata.get(ORDER_ITEM).cloneReadOnly(), psql:MSSQL_SPECIFICS)
         };
     }
 

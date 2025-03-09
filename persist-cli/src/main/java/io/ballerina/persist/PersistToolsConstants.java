@@ -90,6 +90,9 @@ public class PersistToolsConstants {
     public static final Set<String> SUPPORTED_VIA_JDBC_CONNECTOR =
             Set.of(SupportedDataSources.H2_DB);
 
+    public static final Set<String> CUSTOM_SCHEMA_SUPPORTED_DB_PROVIDERS =
+            Set.of(SupportedDataSources.MSSQL_DB, SupportedDataSources.POSTGRESQL_DB);
+
     public static final String JDBC_CONNECTOR_MODULE_NAME = "java.jdbc";
 
     /**
@@ -254,6 +257,7 @@ public class PersistToolsConstants {
         public static final String KEY_URL = "url";
         public static final String KEY_PASSWORD = "password";
         public static final String KEY_DATABASE = "database";
+        public static final String KEY_DEFAULT_SCHEMA = "defaultSchema";
         public static final String KEY_HOST = "host";
         public static final String KEY_CONNECTION = "connection";
         public static final String KEY_MAX_AGE = "maxAge";

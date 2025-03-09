@@ -12,7 +12,6 @@ user = "sa"
 password = ""
 database = ""
 
-
 [tool_test_generate_76.h2_entities]
 url = ""
 user = ""
