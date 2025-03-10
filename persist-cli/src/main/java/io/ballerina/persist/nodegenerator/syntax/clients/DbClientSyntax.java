@@ -172,7 +172,7 @@ public class DbClientSyntax implements ClientSyntax {
             joinMetadataCheck.addIfStatement(NodeParser.parseStatement(
                     BalSyntaxConstants.GET_JOIN_METADATA_VALUE_FOR_KEY));
             IfElse joinSchemaNameCheck = new IfElse(NodeParser.parseExpression(String.format(
-                    BalSyntaxConstants.NIL_CHECK, BalSyntaxConstants.JOIN_METADATA_SCHEMA)));
+                    BalSyntaxConstants.NIL_CHECK, BalSyntaxConstants.JOIN_METADATA_REF_SCHEMA)));
             joinSchemaNameCheck.addIfStatement(NodeParser.parseStatement(String.format(
                     BalSyntaxConstants.UPDATE_SCHEMA_NAME, BalSyntaxConstants.JOIN_METADATA_REF_SCHEMA,
                     BalSyntaxConstants.DEFAULT_SCHEMA)));

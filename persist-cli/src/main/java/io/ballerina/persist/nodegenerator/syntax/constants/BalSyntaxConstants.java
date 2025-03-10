@@ -23,7 +23,6 @@ package io.ballerina.persist.nodegenerator.syntax.constants;
  * @since 0.1.0
  */
 public class BalSyntaxConstants {
-    public static final Object JOIN_METADATA_SCHEMA = "joinMetadata.refSchema";
 
     private BalSyntaxConstants() {}
 
