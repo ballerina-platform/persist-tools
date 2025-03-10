@@ -1,12 +1,15 @@
 // AUTO-GENERATED FILE. DO NOT MODIFY.
+
 // This file is an auto-generated file by Ballerina persistence layer for model.
 // It should not be modified by hand.
+
 import ballerina/time;
 
 public type Workspace record {|
     readonly string workspaceId;
     string workspaceType;
     string locationBuildingCode;
+
 |};
 
 public type WorkspaceOptionalized record {|
@@ -37,6 +40,7 @@ public type Building record {|
     string country;
     string postalCode;
     string 'type;
+
 |};
 
 public type BuildingOptionalized record {|
@@ -68,6 +72,7 @@ public type BuildingUpdate record {|
 public type Department record {|
     readonly string deptNo;
     string deptName;
+
 |};
 
 public type DepartmentOptionalized record {|

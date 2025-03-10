@@ -1,6 +1,8 @@
 // AUTO-GENERATED FILE. DO NOT MODIFY.
+
 // This file is an auto-generated file by Ballerina persistence layer for model.
 // It should not be modified by hand.
+
 import ballerina/jballerina.java;
 import ballerina/persist;
 import ballerina/sql;
@@ -21,7 +23,7 @@ public isolated client class Client {
 
     private final map<psql:SQLClient> persistClients;
 
-    private final record {|psql:SQLMetadata...;|} & readonly metadata = {
+    private final record {|psql:SQLMetadata...;|} metadata = {
         [WORKSPACE]: {
             entityName: "Workspace",
             tableName: "Workspace",
@@ -136,12 +138,31 @@ public isolated client class Client {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
+        if defaultSchema != () {
+            lock {
+                foreach string key in self.metadata.keys() {
+                    psql:SQLMetadata metadata = self.metadata.get(key);
+                    if metadata.schemaName == () {
+                        metadata.schemaName = defaultSchema;
+                    }
+                    map<psql:JoinMetadata>? joinMetadataMap = metadata.joinMetadata;
+                    if joinMetadataMap == () {
+                        continue;
+                    }
+                    foreach [string, psql:JoinMetadata] [_, joinMetadata] in joinMetadataMap.entries() {
+                        if joinMetadata.refSchema == () {
+                            joinMetadata.refSchema = defaultSchema;
+                        }
+                    }
+                }
+            }
+        }
         self.persistClients = {
-            [WORKSPACE]: check new (dbClient, self.metadata.get(WORKSPACE), psql:POSTGRESQL_SPECIFICS),
-            [BUILDING]: check new (dbClient, self.metadata.get(BUILDING), psql:POSTGRESQL_SPECIFICS),
-            [DEPARTMENT]: check new (dbClient, self.metadata.get(DEPARTMENT), psql:POSTGRESQL_SPECIFICS),
-            [ORDER_ITEM]: check new (dbClient, self.metadata.get(ORDER_ITEM), psql:POSTGRESQL_SPECIFICS),
-            [EMPLOYEE]: check new (dbClient, self.metadata.get(EMPLOYEE), psql:POSTGRESQL_SPECIFICS)
+            [WORKSPACE]: check new (dbClient, self.metadata.get(WORKSPACE).cloneReadOnly(), psql:POSTGRESQL_SPECIFICS),
+            [BUILDING]: check new (dbClient, self.metadata.get(BUILDING).cloneReadOnly(), psql:POSTGRESQL_SPECIFICS),
+            [DEPARTMENT]: check new (dbClient, self.metadata.get(DEPARTMENT).cloneReadOnly(), psql:POSTGRESQL_SPECIFICS),
+            [ORDER_ITEM]: check new (dbClient, self.metadata.get(ORDER_ITEM).cloneReadOnly(), psql:POSTGRESQL_SPECIFICS),
+            [EMPLOYEE]: check new (dbClient, self.metadata.get(EMPLOYEE).cloneReadOnly(), psql:POSTGRESQL_SPECIFICS)
         };
     }
 

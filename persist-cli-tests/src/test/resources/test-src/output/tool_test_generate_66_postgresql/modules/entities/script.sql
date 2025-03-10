@@ -186,3 +186,5 @@ CREATE TABLE "CompositeAssociationRecord" (
 	FOREIGN KEY("alltypesidrecordBooleanType", "alltypesidrecordIntType", "alltypesidrecordFloatType", "alltypesidrecordDecimalType", "alltypesidrecordStringType") REFERENCES "AllTypesIdRecord"("booleanType", "intType", "floatType", "decimalType", "stringType"),
 	PRIMARY KEY("id")
 );
+
+

@@ -241,6 +241,10 @@ public class BalProjectUtils {
             if (!annotatedTableName.isEmpty()) {
                 entityBuilder.setTableName(annotatedTableName);
             }
+            entityMetadataNode.map(metaData -> readStringValueFromAnnotation(
+                    new BalSyntaxUtils.AnnotationUtilRecord(metaData.annotations().stream().toList(),
+                            BalSyntaxConstants.SQL_SCHEMA_NAME_ANNOTATION_NAME,
+                            BalSyntaxConstants.ANNOTATION_VALUE_FIELD))).ifPresent(entityBuilder::setSchemaName);
             if (recordDesc.toSourceCode().contains(UNSUPPORTED_TYPE_COMMENT_START)) {
                 errStream.println("WARNING the entity '" + entityBuilder.getEntityName() + "' contains " +
                         "unsupported data types. client api for this entity will not be generated.");

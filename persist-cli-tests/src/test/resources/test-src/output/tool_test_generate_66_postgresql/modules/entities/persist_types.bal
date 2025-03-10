@@ -1,6 +1,8 @@
 // AUTO-GENERATED FILE. DO NOT MODIFY.
+
 // This file is an auto-generated file by Ballerina persistence layer for model.
 // It should not be modified by hand.
+
 import ballerina/time;
 
 public enum EnumType {
@@ -240,6 +242,7 @@ public type AllTypesIdRecord record {|
     readonly decimal decimalType;
     readonly string stringType;
     string randomField;
+
 |};
 
 public type AllTypesIdRecordOptionalized record {|
@@ -269,6 +272,7 @@ public type User record {|
     string name;
     time:Date birthDate;
     string mobileNumber;
+
 |};
 
 public type UserOptionalized record {|
@@ -303,6 +307,7 @@ public type Post record {|
     Category category;
     time:Civil timestamp;
     int userId;
+
 |};
 
 public type PostOptionalized record {|
@@ -441,6 +446,7 @@ public type Workspace record {|
     readonly string workspaceId;
     string workspaceType;
     string locationBuildingCode;
+
 |};
 
 public type WorkspaceOptionalized record {|
@@ -502,6 +508,7 @@ public type BuildingUpdate record {|
 public type Department record {|
     readonly string deptNo;
     string deptName;
+
 |};
 
 public type DepartmentOptionalized record {|

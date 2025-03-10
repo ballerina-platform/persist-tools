@@ -1,6 +1,8 @@
 // AUTO-GENERATED FILE. DO NOT MODIFY.
+
 // This file is an auto-generated file by Ballerina persistence layer for model.
 // It should not be modified by hand.
+
 import ballerina/time;
 
 public type Workspace record {|
@@ -37,6 +39,7 @@ public type Building record {|
     string country;
     string postalCode;
     string 'type;
+
 |};
 
 public type BuildingOptionalized record {|

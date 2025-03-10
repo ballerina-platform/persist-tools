@@ -1,0 +1,15 @@
+[package]
+org = "foo"
+name = "tool_test_generate_113_schema"
+version = "0.1.0"
+distribution = "2201.11.0"
+
+[build-options]
+observabilityIncluded = true
+
+[[platform.java21.dependency]]
+groupId = "io.ballerina.stdlib"
+artifactId = "persist.sql-native"
+version = "1.6.0-SNAPSHOT"
+
+

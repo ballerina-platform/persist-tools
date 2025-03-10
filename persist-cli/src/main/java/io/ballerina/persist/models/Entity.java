@@ -34,16 +34,19 @@ public class Entity {
 
     private final List<EntityField> keys;
     private final String tableName;
+    private final String schemaName;
     private final String entityName;
     private List<EntityField> fields;
     private final List<Index> indexes;
     private final List<Index> uniqueIndexes;
     private final boolean containsUnsupportedTypes;
-    private Entity(String entityName, List<EntityField> keys, String resourceName, List<EntityField> fields,
-                   List<Index> indexes, List<Index> uniqueIndexes, boolean containsUnsupportedTypes) {
+    private Entity(String entityName, List<EntityField> keys, String resourceName, String schemaName,
+                   List<EntityField> fields, List<Index> indexes, List<Index> uniqueIndexes,
+                   boolean containsUnsupportedTypes) {
         this.entityName = entityName;
         this.keys = Collections.unmodifiableList(keys);
         this.tableName = resourceName;
+        this.schemaName = schemaName;
         this.fields = Collections.unmodifiableList(fields);
         this.indexes = Collections.unmodifiableList(indexes);
         this.uniqueIndexes = Collections.unmodifiableList(uniqueIndexes);
@@ -117,6 +120,9 @@ public class Entity {
         return new Entity.Builder(entityName);
     }
 
+    public String getSchemaName() {
+        return this.schemaName;
+    }
 
     /**
      * Entity Definition.Builder.
@@ -125,6 +131,7 @@ public class Entity {
 
         String entityName;
         String tableName = null;
+        String schemaName = null;
         List<EntityField> keys;
         List<EntityField> fieldList = null;
         List<Index> indexes;
@@ -139,6 +146,10 @@ public class Entity {
 
         public void setTableName(String tableName) {
             this.tableName = tableName;
+        }
+
+        public void setSchemaName(String schemaName) {
+            this.schemaName = schemaName;
         }
 
         public void setKeys(List<EntityField> keys) {
@@ -191,7 +202,8 @@ public class Entity {
         }
 
         public Entity build() {
-            return new Entity(entityName, keys, tableName, fieldList, indexes, uniqueIndexes, containsUnsupportedTypes);
+            return new Entity(entityName, keys, tableName, schemaName, fieldList, indexes, uniqueIndexes,
+                    containsUnsupportedTypes);
         }
 
         public String getEntityName() {

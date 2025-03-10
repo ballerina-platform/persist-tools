@@ -1,6 +1,8 @@
 // AUTO-GENERATED FILE. DO NOT MODIFY.
+
 // This file is an auto-generated file by Ballerina persistence layer for model.
 // It should not be modified by hand.
+
 import ballerina/jballerina.java;
 import ballerina/persist;
 import ballerina/sql;
@@ -19,7 +21,7 @@ public isolated client class Client {
 
     private final map<psql:SQLClient> persistClients;
 
-    private final record {|psql:SQLMetadata...;|} & readonly metadata = {
+    private final record {|psql:SQLMetadata...;|} metadata = {
         [USER]: {
             entityName: "User",
             tableName: "User",
@@ -99,10 +101,29 @@ public isolated client class Client {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
+        if defaultSchema != () {
+            lock {
+                foreach string key in self.metadata.keys() {
+                    psql:SQLMetadata metadata = self.metadata.get(key);
+                    if metadata.schemaName == () {
+                        metadata.schemaName = defaultSchema;
+                    }
+                    map<psql:JoinMetadata>? joinMetadataMap = metadata.joinMetadata;
+                    if joinMetadataMap == () {
+                        continue;
+                    }
+                    foreach [string, psql:JoinMetadata] [_, joinMetadata] in joinMetadataMap.entries() {
+                        if joinMetadata.refSchema == () {
+                            joinMetadata.refSchema = defaultSchema;
+                        }
+                    }
+                }
+            }
+        }
         self.persistClients = {
-            [USER]: check new (dbClient, self.metadata.get(USER), psql:MSSQL_SPECIFICS),
-            [POST]: check new (dbClient, self.metadata.get(POST), psql:MSSQL_SPECIFICS),
-            [FOLLOW]: check new (dbClient, self.metadata.get(FOLLOW), psql:MSSQL_SPECIFICS)
+            [USER]: check new (dbClient, self.metadata.get(USER).cloneReadOnly(), psql:MSSQL_SPECIFICS),
+            [POST]: check new (dbClient, self.metadata.get(POST).cloneReadOnly(), psql:MSSQL_SPECIFICS),
+            [FOLLOW]: check new (dbClient, self.metadata.get(FOLLOW).cloneReadOnly(), psql:MSSQL_SPECIFICS)
         };
     }
 
