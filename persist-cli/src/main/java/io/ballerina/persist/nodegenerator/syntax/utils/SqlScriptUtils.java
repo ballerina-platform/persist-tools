@@ -44,6 +44,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static io.ballerina.persist.PersistToolsConstants.BallerinaTypes;
+import static io.ballerina.persist.PersistToolsConstants.CUSTOM_SCHEMA_SUPPORTED_DB_PROVIDERS;
 import static io.ballerina.persist.PersistToolsConstants.DefaultMaxLength;
 import static io.ballerina.persist.PersistToolsConstants.SqlTypes;
 import static io.ballerina.persist.PersistToolsConstants.SupportedDataSources.H2_DB;
@@ -78,10 +79,10 @@ public class SqlScriptUtils {
                 continue;
             }
             List<String> tableScript = new ArrayList<>();
-            String tableName = removeSingleQuote(entity.getTableName());
-            tableScript.add(generateDropTableQuery(escape(tableName, datasource)));
-            tableScript.add(generateCreateTableQuery(entity, referenceTables, datasource));
-            tableScripts.put(tableName, tableScript);
+            String tableName = getTableNameWithSchema(entity, datasource);
+            tableScript.add(generateDropTableQuery(tableName));
+            tableScript.add(generateCreateTableQuery(entity, referenceTables, tableName, datasource));
+            tableScripts.put(removeSingleQuote(entity.getTableName()), tableScript);
         }
         //generate create index
         List<String> indexScripts = new ArrayList<>();
@@ -103,27 +104,39 @@ public class SqlScriptUtils {
         scripts.addAll(indexScripts);
         return scripts.toArray(new String[0]);
     }
+
     private static String generateDropTableQuery(String tableName) {
         return MessageFormat.format("DROP TABLE IF EXISTS {0};", tableName);
     }
 
     public static String generateCreateTableQuery(Entity entity, HashMap<String, List<String>> referenceTables,
-                                                   String datasource) throws BalException {
+                                                  String tableName, String datasource) throws BalException {
 
         String fieldDefinitions = generateFieldsDefinitionSegments(entity, referenceTables, datasource);
 
         return MessageFormat.format("{0}CREATE TABLE {1} ({2}{3});", NEW_LINE,
-                escape(removeSingleQuote(entity.getTableName()), datasource), fieldDefinitions, NEW_LINE);
+                tableName, fieldDefinitions, NEW_LINE);
     }
 
     private static String generateCreateIndexQuery(Index index, Entity entity, String datasource, boolean unique) {
+        String tableName = getTableNameWithSchema(entity, datasource);
         return MessageFormat.format("CREATE{0} INDEX {1} ON {2} ({3});",
-                    unique ? " UNIQUE" : "",
-                    escape(index.getIndexName(), datasource),
-                    escape(removeSingleQuote(entity.getTableName()), datasource),
-                    index.getFields().stream()
-                            .map(field -> escape(removeSingleQuote(field.getFieldColumnName()), datasource))
-                            .reduce((s1, s2) -> s1 + COMMA_WITH_SPACE + s2).orElse(""));
+                unique ? " UNIQUE" : "",
+                escape(index.getIndexName(), datasource),
+                tableName,
+                index.getFields().stream()
+                        .map(field -> escape(removeSingleQuote(field.getFieldColumnName()), datasource))
+                        .reduce((s1, s2) -> s1 + COMMA_WITH_SPACE + s2).orElse(""));
+    }
+
+    public static String getTableNameWithSchema(Entity entity, String datasource) {
+        String tableName = escape(removeSingleQuote(entity.getTableName()), datasource);
+        String schemaName = entity.getSchemaName();
+        if (CUSTOM_SCHEMA_SUPPORTED_DB_PROVIDERS.contains(datasource) &&
+                schemaName != null && !schemaName.isEmpty()) {
+            tableName = schemaName + "." + tableName;
+        }
+        return tableName;
     }
 
     private static String generateFieldsDefinitionSegments(Entity entity, HashMap<String, List<String>> referenceTables,
@@ -134,7 +147,7 @@ public class SqlScriptUtils {
         HashMap<String, List<EntityField>> relationFields = getMapOfRelationFields(entity, true);
         // this is done to retain the original order of the associations
         List<String> associations = entity.getFields().stream().filter(entityField ->
-                entityField.getRelation() != null && entityField.getRelation().isOwner())
+                        entityField.getRelation() != null && entityField.getRelation().isOwner())
                 .map(EntityField::getFieldType).toList();
         for (int i = 0; i < associations.size(); i++) {
             int occurrence = findOccurrence(associations, i);
@@ -157,7 +170,7 @@ public class SqlScriptUtils {
 
     private static HashMap<String, List<EntityField>> getMapOfRelationFields(Entity entity, boolean isOwner) {
         HashMap<String, List<EntityField>> relationFields = new HashMap<>();
-        for (EntityField entityField: entity.getFields()) {
+        for (EntityField entityField : entity.getFields()) {
             if (entityField.getRelation() != null && entityField.getRelation().isOwner() == isOwner) {
                 if (relationFields.containsKey(entityField.getFieldType())) {
                     relationFields.get(entityField.getFieldType()).add(entityField);
@@ -173,7 +186,7 @@ public class SqlScriptUtils {
 
     private static String getColumnsScript(Entity entity, String datasource) throws BalException {
         StringBuilder columnScript = new StringBuilder();
-        for (EntityField entityField :entity.getFields()) {
+        for (EntityField entityField : entity.getFields()) {
             if (entityField.getRelation() != null) {
                 continue;
             }
@@ -215,7 +228,7 @@ public class SqlScriptUtils {
         return columnScript.toString();
     }
 
-    private static String getRelationScripts(Entity entity,  EntityField entityField, int index, HashMap<String,
+    private static String getRelationScripts(Entity entity, EntityField entityField, int index, HashMap<String,
             List<String>> referenceTables, String datasource) throws BalException {
         StringBuilder relationScripts = new StringBuilder();
         Relation relation = entityField.getRelation();
@@ -264,7 +277,7 @@ public class SqlScriptUtils {
         }
         relationScripts.append(MessageFormat.format("{0}{1}FOREIGN KEY({2}) REFERENCES {3}({4}),",
                 NEW_LINE, TAB, foreignKey.toString(),
-                escape(removeSingleQuote(assocEntity.getTableName()), datasource), referenceFieldName));
+                getTableNameWithSchema(assocEntity, datasource), referenceFieldName));
         updateReferenceTable(removeSingleQuote(entity.getTableName()), assocEntity.getTableName(), referenceTables);
         return relationScripts.toString();
     }
@@ -277,7 +290,7 @@ public class SqlScriptUtils {
     }
 
     public static void updateReferenceTable(String tableName, String referenceTableName,
-                                             HashMap<String, List<String>> referenceTables) {
+                                            HashMap<String, List<String>> referenceTables) {
         List<String> setOfReferenceTables;
         if (referenceTables.containsKey(tableName)) {
             setOfReferenceTables = referenceTables.get(tableName);
@@ -316,29 +329,29 @@ public class SqlScriptUtils {
             return sqlType;
         }
         String length = BalSyntaxConstants.VARCHAR_LENGTH;
-            for (AnnotationNode annotationNode : entityField.getAnnotation()) {
-                String annotationName = annotationNode.annotReference().toSourceCode().trim();
-                if (annotationName.equals(BalSyntaxConstants.CONSTRAINT_STRING)) {
-                    Optional<MappingConstructorExpressionNode> annotationFieldNode = annotationNode.annotValue();
-                    if (annotationFieldNode.isPresent()) {
-                        for (MappingFieldNode mappingFieldNode : annotationFieldNode.get().fields()) {
-                            SpecificFieldNode specificFieldNode = (SpecificFieldNode) mappingFieldNode;
-                            String fieldName = specificFieldNode.fieldName().toSourceCode().trim();
-                            if (fieldName.equals(BalSyntaxConstants.MAX_LENGTH)) {
-                                Optional<ExpressionNode> valueExpr = specificFieldNode.valueExpr();
-                                if (valueExpr.isPresent()) {
-                                    length = valueExpr.get().toSourceCode().trim();
-                                }
-                            } else if (fieldName.equals(BalSyntaxConstants.LENGTH)) {
-                                Optional<ExpressionNode> valueExpr = specificFieldNode.valueExpr();
-                                if (valueExpr.isPresent()) {
-                                    length = valueExpr.get().toSourceCode().trim();
-                                }
+        for (AnnotationNode annotationNode : entityField.getAnnotation()) {
+            String annotationName = annotationNode.annotReference().toSourceCode().trim();
+            if (annotationName.equals(BalSyntaxConstants.CONSTRAINT_STRING)) {
+                Optional<MappingConstructorExpressionNode> annotationFieldNode = annotationNode.annotValue();
+                if (annotationFieldNode.isPresent()) {
+                    for (MappingFieldNode mappingFieldNode : annotationFieldNode.get().fields()) {
+                        SpecificFieldNode specificFieldNode = (SpecificFieldNode) mappingFieldNode;
+                        String fieldName = specificFieldNode.fieldName().toSourceCode().trim();
+                        if (fieldName.equals(BalSyntaxConstants.MAX_LENGTH)) {
+                            Optional<ExpressionNode> valueExpr = specificFieldNode.valueExpr();
+                            if (valueExpr.isPresent()) {
+                                length = valueExpr.get().toSourceCode().trim();
+                            }
+                        } else if (fieldName.equals(BalSyntaxConstants.LENGTH)) {
+                            Optional<ExpressionNode> valueExpr = specificFieldNode.valueExpr();
+                            if (valueExpr.isPresent()) {
+                                length = valueExpr.get().toSourceCode().trim();
                             }
                         }
                     }
                 }
             }
+        }
         return sqlType + (String.format("(%s)", length));
     }
 
@@ -348,13 +361,14 @@ public class SqlScriptUtils {
             switch (sqlType.getTypeName()) {
                 case SqlTypes.DECIMAL:
                     return SqlTypes.DECIMAL + String.format("(%s,%s)",
-                                sqlType.getNumericPrecision(),
-                                sqlType.getNumericScale());
+                            sqlType.getNumericPrecision(),
+                            sqlType.getNumericScale());
                 case SqlTypes.VARCHAR:
                     return SqlTypes.VARCHAR + String.format("(%s)", sqlType.getMaxLength());
                 case SqlTypes.CHAR:
                     return SqlTypes.CHAR + String.format("(%s)", sqlType.getMaxLength());
-                default: { }
+                default: {
+                }
             }
         }
         switch (removeSingleQuote(field)) {
@@ -484,7 +498,7 @@ public class SqlScriptUtils {
 
     private static String getEnumType(Enum enumValue, String fieldName, String datasource) {
         if (datasource.equals(MSSQL_DB) ||
-            datasource.equals(POSTGRESQL_DB) ||
+                datasource.equals(POSTGRESQL_DB) ||
                 datasource.equals(H2_DB)) {
             int maxLength = 0;
             List<EnumMember> members = enumValue.getMembers();
@@ -550,7 +564,7 @@ public class SqlScriptUtils {
             } else {
                 int firstIndex = 0;
                 List<String> referenceTableNames = referenceTables.get(entry.getKey());
-                for (String referenceTableName: referenceTableNames) {
+                for (String referenceTableName : referenceTableNames) {
                     int index = tableOrder.indexOf(referenceTableName);
                     if ((firstIndex == 0 || index > firstIndex) && index >= 0) {
                         firstIndex = index + 1;
@@ -568,7 +582,7 @@ public class SqlScriptUtils {
         int size = tableOrder.size();
         String[] tableScriptsInOrder = new String[length];
         for (int i = 0; i <= tableOrder.size() - 1; i++) {
-            List<String> script =  tableScripts.get(removeSingleQuote(tableOrder.get(size - (i + 1))));
+            List<String> script = tableScripts.get(removeSingleQuote(tableOrder.get(size - (i + 1))));
             tableScriptsInOrder[i] = script.get(0);
             tableScriptsInOrder[length - (i + 1)] = script.get(1);
         }
@@ -580,7 +594,7 @@ public class SqlScriptUtils {
             return "[" + name + "]";
         }
         if (datasource.equals(POSTGRESQL_DB) ||
-        datasource.equals(H2_DB)) {
+                datasource.equals(H2_DB)) {
             return "\"" + name + "\"";
         }
         return "`" + name + "`";

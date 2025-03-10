@@ -3,11 +3,11 @@
 -- This file is an auto-generated file by Ballerina persistence layer for model.
 -- Please verify the generated scripts and execute them against the target DB server.
 
-DROP TABLE IF EXISTS [appointment];
+DROP TABLE IF EXISTS hospital.[appointment];
 DROP TABLE IF EXISTS [patients];
-DROP TABLE IF EXISTS [Doctor];
+DROP TABLE IF EXISTS gmoa.[Doctor];
 
-CREATE TABLE [Doctor] (
+CREATE TABLE gmoa.[Doctor] (
 	[id] INT NOT NULL,
 	[name] VARCHAR(191) NOT NULL,
 	[specialty] VARCHAR(20) NOT NULL,
@@ -26,7 +26,7 @@ CREATE TABLE [patients] (
 	PRIMARY KEY([IDP])
 );
 
-CREATE TABLE [appointment] (
+CREATE TABLE hospital.[appointment] (
 	[id] INT NOT NULL,
 	[reason] VARCHAR(191) NOT NULL,
 	[appointmentTime] DATETIME2 NOT NULL,
@@ -34,12 +34,12 @@ CREATE TABLE [appointment] (
 	[patient_id] INT NOT NULL,
 	FOREIGN KEY([patient_id]) REFERENCES [patients]([IDP]),
 	[doctorId] INT NOT NULL,
-	FOREIGN KEY([doctorId]) REFERENCES [Doctor]([id]),
+	FOREIGN KEY([doctorId]) REFERENCES gmoa.[Doctor]([id]),
 	PRIMARY KEY([id])
 );
 
 
-CREATE INDEX [patient_id] ON [appointment] ([patient_id]);
-CREATE INDEX [doctorId] ON [appointment] ([doctorId]);
-CREATE UNIQUE INDEX [reason_index] ON [appointment] ([reason]);
-CREATE INDEX [specialty_index] ON [Doctor] ([specialty]);
+CREATE INDEX [patient_id] ON hospital.[appointment] ([patient_id]);
+CREATE INDEX [doctorId] ON hospital.[appointment] ([doctorId]);
+CREATE UNIQUE INDEX [reason_index] ON hospital.[appointment] ([reason]);
+CREATE INDEX [specialty_index] ON gmoa.[Doctor] ([specialty]);

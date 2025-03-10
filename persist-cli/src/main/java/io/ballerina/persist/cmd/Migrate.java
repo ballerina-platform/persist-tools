@@ -57,6 +57,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import static io.ballerina.persist.nodegenerator.syntax.utils.SqlScriptUtils.getTableNameWithSchema;
+
 /**
  * This Class implements the `persist migrate` command in Ballerina
  * persist-tool.
@@ -705,6 +707,7 @@ public class Migrate implements BLauncherCmd {
             if (entity.isPresent()) {
                 try {
                     queries.add(SqlScriptUtils.generateCreateTableQuery(entity.get(), new HashMap<>(),
+                            getTableNameWithSchema(entity.get(), PersistToolsConstants.SupportedDataSources.MYSQL_DB),
                             PersistToolsConstants.SupportedDataSources.MYSQL_DB) + System.lineSeparator());
                 } catch (BalException e) {
                     errStream.println("ERROR: failed to generate create table query: " + e.getMessage());
