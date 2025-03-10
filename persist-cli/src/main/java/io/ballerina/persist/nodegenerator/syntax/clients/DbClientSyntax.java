@@ -166,18 +166,17 @@ public class DbClientSyntax implements ClientSyntax {
             schemaCheck.addIfStatement(schemaNameCheck.getIfElseStatementNode());
             schemaCheck.addIfStatement(NodeParser.parseStatement(BalSyntaxConstants.GET_JOIN_METADATA));
             IfElse joinMetadataCheck = new IfElse(NodeParser.parseExpression(String.format(
-                    BalSyntaxConstants.NOT_NIL_CHECK, BalSyntaxConstants.JOIN_METADATA)));
-            joinMetadataCheck.addIfStatement(NodeParser.parseStatement(String.format(
+                    BalSyntaxConstants.NIL_CHECK, BalSyntaxConstants.JOIN_METADATA)));
+            joinMetadataCheck.addIfStatement(NodeParser.parseStatement("continue;"));
+            schemaCheck.addIfStatement(joinMetadataCheck.getIfElseStatementNode());
+            schemaCheck.addIfStatement(NodeParser.parseStatement(String.format(
                     BalSyntaxConstants.FOREACH_JOIN_METADATA, BalSyntaxConstants.JOIN_METADATA)));
-            joinMetadataCheck.addIfStatement(NodeParser.parseStatement(
-                    BalSyntaxConstants.GET_JOIN_METADATA_VALUE_FOR_KEY));
             IfElse joinSchemaNameCheck = new IfElse(NodeParser.parseExpression(String.format(
                     BalSyntaxConstants.NIL_CHECK, BalSyntaxConstants.JOIN_METADATA_REF_SCHEMA)));
             joinSchemaNameCheck.addIfStatement(NodeParser.parseStatement(String.format(
                     BalSyntaxConstants.UPDATE_SCHEMA_NAME, BalSyntaxConstants.JOIN_METADATA_REF_SCHEMA,
                     BalSyntaxConstants.DEFAULT_SCHEMA)));
-            joinMetadataCheck.addIfStatement(joinSchemaNameCheck.getIfElseStatementNode());
-            schemaCheck.addIfStatement(joinMetadataCheck.getIfElseStatementNode());
+            schemaCheck.addIfStatement(joinSchemaNameCheck.getIfElseStatementNode());
             schemaCheck.addIfStatement(NodeParser.parseStatement(BalSyntaxConstants.CLOSE_BRACE));
             schemaCheck.addIfStatement(NodeParser.parseStatement(BalSyntaxConstants.CLOSE_BRACE));
             init.addStatement(schemaCheck.getIfElseStatementNode());

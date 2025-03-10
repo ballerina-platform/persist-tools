@@ -174,7 +174,8 @@ public class BalSyntaxConstants {
     public static final String NOT_NIL_CHECK = "%s != ()";
     public static final String DEFAULT_SCHEMA = "defaultSchema";
     public static final String FOREACH_METADATA = "foreach string key in %s.keys() {";
-    public static final String FOREACH_JOIN_METADATA = "foreach string joinKey in %s.keys() {";
+    public static final String FOREACH_JOIN_METADATA =
+            "foreach [string, psql:JoinMetadata][_, joinMetadata] in %s.entries() {";
     public static final String SELF_METADATA = "self.metadata";
     public static final String GET_METADATA_VALUE_FOR_KEY = "psql:SQLMetadata metadata = self.metadata.get(key);";
     public static final String GET_JOIN_METADATA_VALUE_FOR_KEY =

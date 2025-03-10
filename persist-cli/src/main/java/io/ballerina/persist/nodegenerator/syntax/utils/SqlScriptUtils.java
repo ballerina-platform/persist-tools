@@ -18,8 +18,6 @@
 package io.ballerina.persist.nodegenerator.syntax.utils;
 
 import io.ballerina.compiler.syntax.tree.AnnotationNode;
-import io.ballerina.compiler.syntax.tree.ExpressionNode;
-import io.ballerina.compiler.syntax.tree.MappingConstructorExpressionNode;
 import io.ballerina.compiler.syntax.tree.MappingFieldNode;
 import io.ballerina.compiler.syntax.tree.SpecificFieldNode;
 import io.ballerina.persist.BalException;
@@ -40,7 +38,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 
 import static io.ballerina.persist.PersistToolsConstants.BallerinaTypes;
@@ -332,22 +329,22 @@ public class SqlScriptUtils {
         for (AnnotationNode annotationNode : entityField.getAnnotation()) {
             String annotationName = annotationNode.annotReference().toSourceCode().trim();
             if (annotationName.equals(BalSyntaxConstants.CONSTRAINT_STRING)) {
-                Optional<MappingConstructorExpressionNode> annotationFieldNode = annotationNode.annotValue();
-                if (annotationFieldNode.isPresent()) {
-                    for (MappingFieldNode mappingFieldNode : annotationFieldNode.get().fields()) {
-                        SpecificFieldNode specificFieldNode = (SpecificFieldNode) mappingFieldNode;
-                        String fieldName = specificFieldNode.fieldName().toSourceCode().trim();
-                        if (fieldName.equals(BalSyntaxConstants.MAX_LENGTH)) {
-                            Optional<ExpressionNode> valueExpr = specificFieldNode.valueExpr();
-                            if (valueExpr.isPresent()) {
-                                length = valueExpr.get().toSourceCode().trim();
-                            }
-                        } else if (fieldName.equals(BalSyntaxConstants.LENGTH)) {
-                            Optional<ExpressionNode> valueExpr = specificFieldNode.valueExpr();
-                            if (valueExpr.isPresent()) {
-                                length = valueExpr.get().toSourceCode().trim();
-                            }
+                if (annotationNode.annotValue().isEmpty()) {
+                    continue;
+                }
+                for (MappingFieldNode mappingFieldNode : annotationNode.annotValue().get().fields()) {
+                    SpecificFieldNode specificFieldNode = (SpecificFieldNode) mappingFieldNode;
+                    String fieldName = specificFieldNode.fieldName().toSourceCode().trim();
+                    if (fieldName.equals(BalSyntaxConstants.MAX_LENGTH)) {
+                        if (specificFieldNode.valueExpr().isEmpty()) {
+                            continue;
                         }
+                        length = specificFieldNode.valueExpr().get().toSourceCode().trim();
+                    } else if (fieldName.equals(BalSyntaxConstants.LENGTH)) {
+                        if (specificFieldNode.valueExpr().isEmpty()) {
+                            continue;
+                        }
+                        length = specificFieldNode.valueExpr().get().toSourceCode().trim();
                     }
                 }
             }

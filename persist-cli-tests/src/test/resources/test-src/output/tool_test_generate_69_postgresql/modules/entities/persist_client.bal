@@ -124,12 +124,12 @@ public isolated client class Client {
                         metadata.schemaName = defaultSchema;
                     }
                     map<psql:JoinMetadata>? joinMetadataMap = metadata.joinMetadata;
-                    if joinMetadataMap != () {
-                        foreach string joinKey in joinMetadataMap.keys() {
-                            psql:JoinMetadata joinMetadata = joinMetadataMap.get(joinKey);
-                            if joinMetadata.refSchema == () {
-                                joinMetadata.refSchema = defaultSchema;
-                            }
+                    if joinMetadataMap == () {
+                        continue;
+                    }
+                    foreach [string, psql:JoinMetadata] [_, joinMetadata] in joinMetadataMap.entries() {
+                        if joinMetadata.refSchema == () {
+                            joinMetadata.refSchema = defaultSchema;
                         }
                     }
                 }
