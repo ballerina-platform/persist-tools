@@ -6,6 +6,7 @@
 public type Company record {|
     readonly int id;
     string name;
+
 |};
 
 public type CompanyOptionalized record {|

@@ -19,7 +19,7 @@ public isolated client class Client {
 
     private final map<psql:SQLClient> persistClients;
 
-    private final record {|psql:SQLMetadata...;|} & readonly metadata = {
+    private final record {|psql:SQLMetadata...;|} metadata = {
         [CAR]: {
             entityName: "Car",
             tableName: "Car",
@@ -44,7 +44,26 @@ public isolated client class Client {
             return <persist:Error>error(dbClient.message());
         }
         self.dbClient = dbClient;
-        self.persistClients = {[CAR]: check new (dbClient, self.metadata.get(CAR), psql:POSTGRESQL_SPECIFICS)};
+        if defaultSchema != () {
+            lock {
+                foreach string key in self.metadata.keys() {
+                    psql:SQLMetadata metadata = self.metadata.get(key);
+                    if metadata.schemaName == () {
+                        metadata.schemaName = defaultSchema;
+                    }
+                    map<psql:JoinMetadata>? joinMetadataMap = metadata.joinMetadata;
+                    if joinMetadataMap == () {
+                        continue;
+                    }
+                    foreach [string, psql:JoinMetadata] [_, joinMetadata] in joinMetadataMap.entries() {
+                        if joinMetadata.refSchema == () {
+                            joinMetadata.refSchema = defaultSchema;
+                        }
+                    }
+                }
+            }
+        }
+        self.persistClients = {[CAR]: check new (dbClient, self.metadata.get(CAR).cloneReadOnly(), psql:POSTGRESQL_SPECIFICS)};
     }
 
     isolated resource function get cars(CarTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {

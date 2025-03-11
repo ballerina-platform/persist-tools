@@ -56,13 +56,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import static io.ballerina.persist.PersistToolsConstants.CUSTOM_SCHEMA_SUPPORTED_DB_PROVIDERS;
 import static io.ballerina.persist.PersistToolsConstants.JDBC_CONNECTOR_MODULE_NAME;
 import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_VIA_JDBC_CONNECTOR;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.CLIENT_NAME;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.EXECUTE_NATIVE_SQL_QUERY;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.H2_CLIENT_NAME;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.KEYWORD_ISOLATED;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.KEYWORD_PUBLIC;
-import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.H2_CLIENT_NAME;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.MOCK_H2_CLIENT_INIT;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.NEWLINE;
 
@@ -170,6 +171,11 @@ public class DbSyntaxTree implements RDBMSSyntaxTree {
                     String.format(BalSyntaxConstants.CONFIGURABLE_OPTIONS, datasource)));
         }
 
+        if (CUSTOM_SCHEMA_SUPPORTED_DB_PROVIDERS.contains(datasource)) {
+            moduleMembers = moduleMembers.add(NodeParser.parseModuleMemberDeclaration(
+                    BalSyntaxConstants.CONFIGURABLE_DEFAULT_SCHEMA));
+        }
+
         Token eofToken = AbstractNodeFactory.createIdentifierToken(BalSyntaxConstants.EMPTY_STRING);
         ModulePartNode modulePartNode = NodeFactory.createModulePartNode(imports, moduleMembers, eofToken);
         TextDocument textDocument = TextDocuments.from(BalSyntaxConstants.EMPTY_STRING);
@@ -232,41 +238,43 @@ public class DbSyntaxTree implements RDBMSSyntaxTree {
             moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
                     PersistToolsConstants.DBConfigs.KEY_PASSWORD,
                     PersistToolsConstants.EMPTY_VALUE, null));
-            return moduleMembers;
-        }
-
-        String host;
-        String port;
-        String user;
-        String password = PersistToolsConstants.EMPTY_VALUE;
-        String database = PersistToolsConstants.EMPTY_VALUE;
-
-        if (datasource.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB)) {
-            host = PersistToolsConstants.DBConfigs.MySQL.DEFAULT_HOST;
-            port = PersistToolsConstants.DBConfigs.MySQL.DEFAULT_PORT;
-            user = PersistToolsConstants.DBConfigs.MySQL.DEFAULT_USER;
-        } else if (datasource.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB)) {
-            host = PersistToolsConstants.DBConfigs.MSSQL.DEFAULT_HOST;
-            port = PersistToolsConstants.DBConfigs.MSSQL.DEFAULT_PORT;
-            user = PersistToolsConstants.DBConfigs.MSSQL.DEFAULT_USER;
-        } else if (datasource.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB)) {
-            host = PersistToolsConstants.DBConfigs.POSTGRESQL.DEFAULT_HOST;
-            port = PersistToolsConstants.DBConfigs.POSTGRESQL.DEFAULT_PORT;
-            user = PersistToolsConstants.DBConfigs.POSTGRESQL.DEFAULT_USER;
         } else {
-            throw new BalException("Unsupported datasource: " + datasource);
-        }
+            String host;
+            String port;
+            String user;
+            String password = PersistToolsConstants.EMPTY_VALUE;
+            String database = PersistToolsConstants.EMPTY_VALUE;
 
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
-                PersistToolsConstants.DBConfigs.KEY_HOST, host, null));
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createNumericKV(
-                PersistToolsConstants.DBConfigs.KEY_PORT, port, null));
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
-                PersistToolsConstants.DBConfigs.KEY_USER, user, null));
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
-                PersistToolsConstants.DBConfigs.KEY_PASSWORD, password, null));
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
-                PersistToolsConstants.DBConfigs.KEY_DATABASE, database, null));
+            switch (datasource) {
+                case PersistToolsConstants.SupportedDataSources.MYSQL_DB -> {
+                    host = PersistToolsConstants.DBConfigs.MySQL.DEFAULT_HOST;
+                    port = PersistToolsConstants.DBConfigs.MySQL.DEFAULT_PORT;
+                    user = PersistToolsConstants.DBConfigs.MySQL.DEFAULT_USER;
+                }
+                case PersistToolsConstants.SupportedDataSources.MSSQL_DB -> {
+                    host = PersistToolsConstants.DBConfigs.MSSQL.DEFAULT_HOST;
+                    port = PersistToolsConstants.DBConfigs.MSSQL.DEFAULT_PORT;
+                    user = PersistToolsConstants.DBConfigs.MSSQL.DEFAULT_USER;
+                }
+                case PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB -> {
+                    host = PersistToolsConstants.DBConfigs.POSTGRESQL.DEFAULT_HOST;
+                    port = PersistToolsConstants.DBConfigs.POSTGRESQL.DEFAULT_PORT;
+                    user = PersistToolsConstants.DBConfigs.POSTGRESQL.DEFAULT_USER;
+                }
+                default -> throw new BalException("Unsupported datasource: " + datasource);
+            }
+
+            moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
+                    PersistToolsConstants.DBConfigs.KEY_HOST, host, null));
+            moduleMembers = moduleMembers.add(SampleNodeGenerator.createNumericKV(
+                    PersistToolsConstants.DBConfigs.KEY_PORT, port, null));
+            moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
+                    PersistToolsConstants.DBConfigs.KEY_USER, user, null));
+            moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
+                    PersistToolsConstants.DBConfigs.KEY_PASSWORD, password, null));
+            moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
+                    PersistToolsConstants.DBConfigs.KEY_DATABASE, database, null));
+        }
         return moduleMembers;
     }
 

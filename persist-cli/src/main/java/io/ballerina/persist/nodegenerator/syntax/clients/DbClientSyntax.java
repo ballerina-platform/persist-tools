@@ -45,6 +45,7 @@ import io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils;
 import java.util.List;
 import java.util.Objects;
 
+import static io.ballerina.persist.PersistToolsConstants.CUSTOM_SCHEMA_SUPPORTED_DB_PROVIDERS;
 import static io.ballerina.persist.PersistToolsConstants.JDBC_CONNECTOR_MODULE_NAME;
 import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_VIA_JDBC_CONNECTOR;
 
@@ -62,9 +63,11 @@ public class DbClientSyntax implements ClientSyntax {
     private final String dbSpecifics;
     private final String nativeClass;
     private final String initDbClientMethodTemplate;
+    private final String dataSource;
 
     public DbClientSyntax(Module entityModule, String datasource) throws BalException {
         this.entityModule = entityModule;
+        this.dataSource = datasource;
         this.dbNamePrefix = SUPPORTED_VIA_JDBC_CONNECTOR.contains(datasource) ?
                 PersistToolsConstants.SupportedDataSources.JDBC : datasource;
         this.importPackage = SUPPORTED_VIA_JDBC_CONNECTOR.contains(datasource) ?
@@ -145,6 +148,40 @@ public class DbClientSyntax implements ClientSyntax {
                 BalSyntaxConstants.DB_CLIENT)));
         init.addIfElseStatement(errorCheck.getIfElseStatementNode());
         init.addStatement(NodeParser.parseStatement(BalSyntaxConstants.ADD_CLIENT));
+
+        if (CUSTOM_SCHEMA_SUPPORTED_DB_PROVIDERS.contains(dataSource)) {
+            init.addStatement(NodeParser.parseStatement(BalSyntaxConstants.COMMENT_METADATA_UPDATE_SCHEMA_NAME));
+            IfElse schemaCheck = new IfElse(NodeParser.parseExpression(String.format(
+                    BalSyntaxConstants.NOT_NIL_CHECK, BalSyntaxConstants.DEFAULT_SCHEMA)));
+            schemaCheck.addIfStatement(NodeParser.parseStatement(BalSyntaxConstants.LOCK));
+            schemaCheck.addIfStatement(NodeParser.parseStatement(BalSyntaxConstants.OPEN_BRACE));
+            schemaCheck.addIfStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.FOREACH_METADATA,
+                    BalSyntaxConstants.SELF_METADATA)));
+            schemaCheck.addIfStatement(NodeParser.parseStatement(BalSyntaxConstants.GET_METADATA_VALUE_FOR_KEY));
+            IfElse schemaNameCheck = new IfElse(NodeParser.parseExpression(String.format(
+                    BalSyntaxConstants.NIL_CHECK, BalSyntaxConstants.METADATA_SCHEMA)));
+            schemaNameCheck.addIfStatement(NodeParser.parseStatement(String.format(
+                    BalSyntaxConstants.UPDATE_SCHEMA_NAME, BalSyntaxConstants.METADATA_SCHEMA,
+                    BalSyntaxConstants.DEFAULT_SCHEMA)));
+            schemaCheck.addIfStatement(schemaNameCheck.getIfElseStatementNode());
+            schemaCheck.addIfStatement(NodeParser.parseStatement(BalSyntaxConstants.GET_JOIN_METADATA));
+            IfElse joinMetadataCheck = new IfElse(NodeParser.parseExpression(String.format(
+                    BalSyntaxConstants.NIL_CHECK, BalSyntaxConstants.JOIN_METADATA)));
+            joinMetadataCheck.addIfStatement(NodeParser.parseStatement("continue;"));
+            schemaCheck.addIfStatement(joinMetadataCheck.getIfElseStatementNode());
+            schemaCheck.addIfStatement(NodeParser.parseStatement(String.format(
+                    BalSyntaxConstants.FOREACH_JOIN_METADATA, BalSyntaxConstants.JOIN_METADATA)));
+            IfElse joinSchemaNameCheck = new IfElse(NodeParser.parseExpression(String.format(
+                    BalSyntaxConstants.NIL_CHECK, BalSyntaxConstants.JOIN_METADATA_REF_SCHEMA)));
+            joinSchemaNameCheck.addIfStatement(NodeParser.parseStatement(String.format(
+                    BalSyntaxConstants.UPDATE_SCHEMA_NAME, BalSyntaxConstants.JOIN_METADATA_REF_SCHEMA,
+                    BalSyntaxConstants.DEFAULT_SCHEMA)));
+            schemaCheck.addIfStatement(joinSchemaNameCheck.getIfElseStatementNode());
+            schemaCheck.addIfStatement(NodeParser.parseStatement(BalSyntaxConstants.CLOSE_BRACE));
+            schemaCheck.addIfStatement(NodeParser.parseStatement(BalSyntaxConstants.CLOSE_BRACE));
+            init.addStatement(schemaCheck.getIfElseStatementNode());
+            init.addStatement(NodeParser.parseStatement(BalSyntaxConstants.CLOSE_BRACE));
+        }
         StringBuilder persistClientMap = new StringBuilder();
         for (Entity entity : entityModule.getEntityMap().values()) {
             if (entity.containsUnsupportedTypes()) {
@@ -155,9 +192,13 @@ public class DbClientSyntax implements ClientSyntax {
             }
             String constantName = BalSyntaxUtils.stripEscapeCharacter(BalSyntaxUtils.
                     getStringWithUnderScore(entity.getEntityName()));
-            String clientMapElement = String.format(BalSyntaxConstants.PERSIST_CLIENT_MAP_ELEMENT,
-                    constantName, constantName, this.dbSpecifics);
-            persistClientMap.append(clientMapElement);
+            if (CUSTOM_SCHEMA_SUPPORTED_DB_PROVIDERS.contains(dataSource)) {
+                persistClientMap.append(String.format(BalSyntaxConstants.PERSIST_CLIENT_MAP_ELEMENT_WITH_SCHEMA,
+                        constantName, constantName, this.dbSpecifics));
+            } else {
+                persistClientMap.append(String.format(BalSyntaxConstants.PERSIST_CLIENT_MAP_ELEMENT,
+                        constantName, constantName, this.dbSpecifics));
+            }
         }
         init.addStatement(NodeParser.parseStatement(String.format(
                 BalSyntaxConstants.PERSIST_CLIENT_TEMPLATE, persistClientMap)));
@@ -269,7 +310,7 @@ public class DbClientSyntax implements ClientSyntax {
                 String.format(BalSyntaxConstants.EXECUTE_NATIVE_SQL_METHOD_TEMPLATE, this.nativeClass));
     }
 
-    private static Node generateMetadataRecord(Module entityModule) {
+    private Node generateMetadataRecord(Module entityModule) {
         StringBuilder mapBuilder = new StringBuilder();
         for (Entity entity : entityModule.getEntityMap().values()) {
             if (entity.containsUnsupportedTypes()) {
@@ -283,6 +324,11 @@ public class DbClientSyntax implements ClientSyntax {
                     BalSyntaxUtils.stripEscapeCharacter(entity.getEntityName())));
             entityMetaData.append(String.format(BalSyntaxConstants.METADATA_RECORD_TABLE_NAME_TEMPLATE,
                     BalSyntaxUtils.stripEscapeCharacter(entity.getTableName())));
+            if (CUSTOM_SCHEMA_SUPPORTED_DB_PROVIDERS.contains(dataSource) &&
+                    entity.getSchemaName() != null && !entity.getSchemaName().isEmpty()) {
+                entityMetaData.append(String.format(BalSyntaxConstants.METADATA_RECORD_SCHEMA_NAME_TEMPLATE,
+                        BalSyntaxUtils.stripEscapeCharacter(entity.getSchemaName())));
+            }
             StringBuilder fieldMetaData = new StringBuilder();
             StringBuilder associateFieldMetaData = new StringBuilder();
             boolean relationsExists = false;
@@ -394,10 +440,18 @@ public class DbClientSyntax implements ClientSyntax {
                     BalSyntaxUtils.stripEscapeCharacter((BalSyntaxUtils.
                             getStringWithUnderScore(entity.getEntityName()))), entityMetaData));
         }
-        return NodeParser.parseObjectMember(String.format(BalSyntaxConstants.METADATA_RECORD_TEMPLATE, mapBuilder));
+
+        Node node;
+        if (CUSTOM_SCHEMA_SUPPORTED_DB_PROVIDERS.contains(dataSource)) {
+            node = NodeParser.parseObjectMember(String.format(BalSyntaxConstants.METADATA_RECORD_TEMPLATE, mapBuilder));
+        } else {
+            node = NodeParser.parseObjectMember(String.format(BalSyntaxConstants.METADATA_RECORD_TEMPLATE_WITH_READONLY,
+                    mapBuilder));
+        }
+        return node;
     }
 
-    private static String getJoinMetaData(Entity entity) {
+    private String getJoinMetaData(Entity entity) {
         StringBuilder joinMetaData = new StringBuilder();
         for (EntityField entityField : entity.getFields()) {
             StringBuilder refColumns = new StringBuilder();
@@ -431,10 +485,20 @@ public class DbClientSyntax implements ClientSyntax {
                     joinColumns.append(String.format(BalSyntaxConstants.COLUMN_ARRAY_ENTRY_TEMPLATE,
                             BalSyntaxUtils.stripEscapeCharacter(key.getColumnName())));
                 }
-                joinMetaData.append(String.format(BalSyntaxConstants.JOIN_METADATA_FIELD_TEMPLATE,
-                        entityField.getFieldName(), entityField.getFieldType(), entityField.getFieldName(),
-                        entityField.getRelation().getAssocEntity().getTableName(), refColumns,
-                        joinColumns, relationType));
+                if (CUSTOM_SCHEMA_SUPPORTED_DB_PROVIDERS.contains(dataSource) &&
+                        entityField.getRelation().getAssocEntity().getSchemaName() != null &&
+                        !entityField.getRelation().getAssocEntity().getSchemaName().isEmpty()) {
+                    joinMetaData.append(String.format(BalSyntaxConstants.JOIN_METADATA_FIELD_TEMPLATE_WITH_SCHEMA,
+                            entityField.getFieldName(), entityField.getFieldType(), entityField.getFieldName(),
+                            entityField.getRelation().getAssocEntity().getSchemaName(),
+                            entityField.getRelation().getAssocEntity().getTableName(), refColumns,
+                            joinColumns, relationType));
+                } else {
+                    joinMetaData.append(String.format(BalSyntaxConstants.JOIN_METADATA_FIELD_TEMPLATE,
+                            entityField.getFieldName(), entityField.getFieldType(), entityField.getFieldName(),
+                            entityField.getRelation().getAssocEntity().getTableName(), refColumns,
+                            joinColumns, relationType));
+                }
             }
         }
         return joinMetaData.toString();
