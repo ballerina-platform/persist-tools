@@ -17,13 +17,14 @@
  */
 
 plugins {
-    id 'java'
     id 'jacoco'
-    id "com.github.spotbugs" version "${githubSpotbugsVersion}"
-    id "com.github.johnrengelman.shadow" version "${githubJohnrengelmanShadowVersion}"
-    id "de.undercouch.download" version "${underCouchDownloadVersion}"
-    id "net.researchgate.release" version "${researchgateReleaseVersion}"
+    id "com.github.spotbugs"
+    id "com.github.johnrengelman.shadow"
+    id "de.undercouch.download"
+    id "net.researchgate.release"
 }
+
+def packageName = "persist"
 
 ext.testngVersion = project.testngVersion
 
@@ -61,16 +62,26 @@ allprojects {
             url = 'https://mvnrepository.com/artifact/org.testng/testng'
         }
     }
+
+    ext {
+        snapshotVersion= '-SNAPSHOT'
+        timestampedVersionRegex = '.*-\\d{8}-\\d{6}-\\w.*\$'
+    }
 }
 
 subprojects {
-    apply plugin: 'java'
     configurations {
         externalJars
         ballerinaStdLibs
+        jbalTools
     }
 
     dependencies {
+        /* JBallerina Tools */
+        jbalTools("org.ballerinalang:jballerina-tools:${ballerinaLangVersion}") {
+            transitive = false
+        }
+
         ballerinaStdLibs "io.ballerina.stdlib:io-ballerina:${stdlibIoVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:time-ballerina:${stdlibTimeVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:sql-ballerina:${stdlibSqlVersion}"
@@ -112,6 +123,7 @@ def persistGoogleSheetsNativeVersion = "${persistGoogleSheetsNativeVersion}"
 def persistRedisNativeVersion = "${persistRedisNativeVersion}"
 
 release {
+    buildTasks = ['build']
     versionPropertyFile = 'gradle.properties'
     tagTemplate = 'v${version}'
     git {
@@ -126,13 +138,8 @@ tasks.withType(JavaCompile) {
 }
 
 task codeCoverageReport(type: JacocoReport) {
-    dependsOn = subprojects.test
 
     executionData fileTree(project.rootDir.absolutePath).include("**/build/coverage-reports/*.exec")
-
-    subprojects.each {
-        sourceSets it.sourceSets.main
-    }
     reports {
         xml.required = true
         html.required = true
@@ -147,7 +154,7 @@ task codeCoverageReport(type: JacocoReport) {
     }
 }
 
-task createProperties(dependsOn: processResources) {
+task createProperties() {
     doLast {
         def file = new File("$project.rootDir/persist-cli/src/main/resources/version.properties")
         file.withWriter('UTF-8') {
@@ -160,21 +167,13 @@ task createProperties(dependsOn: processResources) {
     }
 }
 
-classes {
-    dependsOn createProperties
+//classes {
+//    dependsOn createProperties
+//}
+
+task build {
+    dependsOn(":${packageName}-tool:build")
+    dependsOn(":examples:build")
 }
-
-task copyPersistTool(type: Copy) {
-    into "$project.rootDir/target"
-    into("ballerina-distribution/bre/lib") {
-        from "$project.rootDir/persist-cli/build/libs/persist-cli-${project.version}.jar"
-    }
-}
-
-copyPersistTool.dependsOn ":persist-cli-tests:build"
-copyPersistTool.dependsOn ":persist-cli:build"
-
-build.dependsOn copyPersistTool
-build.dependsOn ":examples:build"
 
 publish.dependsOn build

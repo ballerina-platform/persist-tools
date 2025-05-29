@@ -140,6 +140,11 @@ compileJava {
     }
 }
 
+manifest {
+    attributes('Implementation-Title': project.name,
+            'Implementation-Version': project.version)
+}
+
 task createArtifactZip(type: Zip) {
     dependsOn build
     from 'build/libs/'

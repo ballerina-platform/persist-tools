@@ -38,6 +38,7 @@ include ':checkstyle'
 include ':persist-cli'
 include ':persist-cli-tests'
 include ':examples'
+include ':persist-tool'
 
 project(':checkstyle').projectDir = file("build-config${File.separator}checkstyle")
 project(':persist-cli').projectDir = file('persist-cli')
