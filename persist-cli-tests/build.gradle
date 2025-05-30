@@ -27,7 +27,12 @@ description = 'Ballerina - persist-tools Tooling Test'
 def buildDir = "build";
 def ballerinaDist = "$project.buildDir/jballerina-tools-${ballerinaLangVersion}"
 
-def packageName = "persist"
+configurations {
+    balTools
+    dist {
+        transitive true
+    }
+}
 
 dependencies {
     checkstyle project(':checkstyle')
@@ -37,7 +42,7 @@ dependencies {
     testImplementation "org.ballerinalang:ballerina-cli:${ballerinaLangVersion}"
     testImplementation group: 'info.picocli', name: 'picocli', version: '4.7.1'
 
-    jbalTools ("org.ballerinalang:jballerina-tools:${ballerinaLangVersion}") {
+    balTools ("org.ballerinalang:jballerina-tools:${ballerinaLangVersion}") {
         transitive = false
     }
 
@@ -62,7 +67,7 @@ clean {
 
 task jBallerinaPack {
     doLast {
-        configurations.jbalTools.resolvedConfiguration.resolvedArtifacts.each { artifact ->
+        configurations.balTools.resolvedConfiguration.resolvedArtifacts.each { artifact ->
             copy {
                 from project.zipTree(artifact.getFile())
                 into new File("${project.buildDir}")
