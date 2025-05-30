@@ -24,8 +24,6 @@ plugins {
     id "net.researchgate.release"
 }
 
-def packageName = "persist"
-
 ext.testngVersion = project.testngVersion
 
 allprojects {
@@ -172,7 +170,7 @@ task createProperties() {
 //}
 
 task build {
-    dependsOn(":${packageName}-tool:build")
+    dependsOn(":persist-tool:build")
     dependsOn(":examples:build")
 }
 
