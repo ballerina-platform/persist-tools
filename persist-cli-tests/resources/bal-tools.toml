@@ -1,0 +1,6 @@
+[[tool]]
+id = "persist"
+org = "ballerina"
+name = "tool_persist"
+version = "@toml.version@"
+active = true
