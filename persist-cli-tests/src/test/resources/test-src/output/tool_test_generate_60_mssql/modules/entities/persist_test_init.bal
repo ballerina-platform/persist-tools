@@ -10,24 +10,9 @@ isolated final H2Client h2Client = check new ("jdbc:h2:./test", "sa", "");
 public isolated function setupTestDB() returns persist:Error? {
     _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "Employee";`);
     _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "Workspace";`);
-    _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "Building";`);
-    _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "Department";`);
     _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "OrderItem";`);
-    _ = check h2Client->executeNativeSQL(`
-CREATE TABLE "OrderItem" (
-	"orderId" VARCHAR(191) NOT NULL,
-	"itemId" VARCHAR(191) NOT NULL,
-	"quantity" INT NOT NULL,
-	"notes" VARCHAR(191) NOT NULL,
-	PRIMARY KEY("orderId","itemId")
-);`);
-    _ = check h2Client->executeNativeSQL(`
-CREATE TABLE "Department" (
-	"deptNo" VARCHAR(191) NOT NULL,
-	"deptName" VARCHAR(191) NOT NULL,
-	"location" VARCHAR(191) NOT NULL,
-	PRIMARY KEY("deptNo","deptName")
-);`);
+    _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "Department";`);
+    _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "Building";`);
     _ = check h2Client->executeNativeSQL(`
 CREATE TABLE "Building" (
 	"buildingCode" VARCHAR(191) NOT NULL,
@@ -37,6 +22,21 @@ CREATE TABLE "Building" (
 	"postalCode" VARCHAR(191) NOT NULL,
 	"type" VARCHAR(191) NOT NULL,
 	PRIMARY KEY("buildingCode")
+);`);
+    _ = check h2Client->executeNativeSQL(`
+CREATE TABLE "Department" (
+	"deptNo" VARCHAR(191) NOT NULL,
+	"deptName" VARCHAR(191) NOT NULL,
+	"location" VARCHAR(191) NOT NULL,
+	PRIMARY KEY("deptNo","deptName")
+);`);
+    _ = check h2Client->executeNativeSQL(`
+CREATE TABLE "OrderItem" (
+	"orderId" VARCHAR(191) NOT NULL,
+	"itemId" VARCHAR(191) NOT NULL,
+	"quantity" INT NOT NULL,
+	"notes" VARCHAR(191) NOT NULL,
+	PRIMARY KEY("orderId","itemId")
 );`);
     _ = check h2Client->executeNativeSQL(`
 CREATE TABLE "Workspace" (
@@ -67,8 +67,8 @@ CREATE TABLE "Employee" (
 public isolated function cleanupTestDB() returns persist:Error? {
     _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "Employee";`);
     _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "Workspace";`);
-    _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "Building";`);
-    _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "Department";`);
     _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "OrderItem";`);
+    _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "Department";`);
+    _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "Building";`);
 }
 

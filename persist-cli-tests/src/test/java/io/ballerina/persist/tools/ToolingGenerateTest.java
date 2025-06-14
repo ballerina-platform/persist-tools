@@ -1094,6 +1094,18 @@ public class ToolingGenerateTest {
         assertGeneratedSources(subDir);
     }
 
+    @Test(enabled = true)
+    @Description("The model has multiple tables with different relations and test table creation order")
+    public void testGenerateSQLScriptWithRelations() {
+        String subDir = "tool_test_generate_114";
+        updateOutputBallerinaToml(subDir);
+        executeGenerateCommand(subDir, "--datastore", "mysql", "--module", "entities");
+        executeGenerateCommand(subDir, "--datastore", "mssql", "--module", "mssql_entities");
+        executeGenerateCommand(subDir, "--datastore", "h2", "--module", "h2_entities");
+        executeGenerateCommand(subDir, "--datastore", "postgresql", "--module", "postgresql_entities");
+        assertGeneratedSources(subDir);
+    }
+
     private void updateOutputBallerinaToml(String fileName) {
         String tomlFileName = "Ballerina.toml";
         Path filePath = Paths.get("src", "test", "resources", "test-src", "output", fileName, tomlFileName);

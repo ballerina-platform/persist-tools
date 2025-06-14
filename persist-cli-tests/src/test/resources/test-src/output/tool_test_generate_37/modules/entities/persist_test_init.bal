@@ -9,11 +9,17 @@ isolated final H2Client h2Client = check new ("jdbc:h2:./test", "sa", "");
 
 public isolated function setupTestDB() returns persist:Error? {
     _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "Profile";`);
-    _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "User";`);
-    _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "Dept";`);
     _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "Customer";`);
-    _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "MultipleAssociations";`);
+    _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "Dept";`);
+    _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "User";`);
     _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "Student";`);
+    _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "MultipleAssociations";`);
+    _ = check h2Client->executeNativeSQL(`
+CREATE TABLE "MultipleAssociations" (
+	"id" INT NOT NULL,
+	"name" VARCHAR(191) NOT NULL,
+	PRIMARY KEY("id")
+);`);
     _ = check h2Client->executeNativeSQL(`
 CREATE TABLE "Student" (
 	"id" INT NOT NULL,
@@ -24,16 +30,9 @@ CREATE TABLE "Student" (
 	PRIMARY KEY("id","firstName")
 );`);
     _ = check h2Client->executeNativeSQL(`
-CREATE TABLE "MultipleAssociations" (
+CREATE TABLE "User" (
 	"id" INT NOT NULL,
 	"name" VARCHAR(191) NOT NULL,
-	PRIMARY KEY("id")
-);`);
-    _ = check h2Client->executeNativeSQL(`
-CREATE TABLE "Customer" (
-	"id" INT NOT NULL,
-	"name" VARCHAR(191) NOT NULL,
-	"age" INT NOT NULL,
 	"multipleassociationsId" INT UNIQUE NOT NULL,
 	FOREIGN KEY("multipleassociationsId") REFERENCES "MultipleAssociations"("id"),
 	PRIMARY KEY("id")
@@ -47,9 +46,10 @@ CREATE TABLE "Dept" (
 	PRIMARY KEY("id")
 );`);
     _ = check h2Client->executeNativeSQL(`
-CREATE TABLE "User" (
+CREATE TABLE "Customer" (
 	"id" INT NOT NULL,
 	"name" VARCHAR(191) NOT NULL,
+	"age" INT NOT NULL,
 	"multipleassociationsId" INT UNIQUE NOT NULL,
 	FOREIGN KEY("multipleassociationsId") REFERENCES "MultipleAssociations"("id"),
 	PRIMARY KEY("id")
@@ -70,10 +70,10 @@ CREATE TABLE "Profile" (
 
 public isolated function cleanupTestDB() returns persist:Error? {
     _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "Profile";`);
-    _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "User";`);
-    _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "Dept";`);
     _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "Customer";`);
-    _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "MultipleAssociations";`);
+    _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "Dept";`);
+    _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "User";`);
     _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "Student";`);
+    _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "MultipleAssociations";`);
 }
 

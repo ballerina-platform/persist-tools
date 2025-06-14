@@ -5,16 +5,8 @@
 
 DROP TABLE IF EXISTS `Car2`;
 DROP TABLE IF EXISTS `Car`;
-DROP TABLE IF EXISTS `User`;
 DROP TABLE IF EXISTS `User2`;
-
-CREATE TABLE `User2` (
-	`id` INT NOT NULL,
-	`nic` VARCHAR(191) NOT NULL,
-	`name` VARCHAR(191) NOT NULL,
-	`salary` DECIMAL(65,30),
-	PRIMARY KEY(`id`,`nic`)
-);
+DROP TABLE IF EXISTS `User`;
 
 CREATE TABLE `User` (
 	`id` INT NOT NULL,
@@ -22,6 +14,14 @@ CREATE TABLE `User` (
 	`nic` VARCHAR(191) NOT NULL,
 	`salary` DECIMAL(65,30),
 	PRIMARY KEY(`id`)
+);
+
+CREATE TABLE `User2` (
+	`id` INT NOT NULL,
+	`nic` VARCHAR(191) NOT NULL,
+	`name` VARCHAR(191) NOT NULL,
+	`salary` DECIMAL(65,30),
+	PRIMARY KEY(`id`,`nic`)
 );
 
 CREATE TABLE `Car` (

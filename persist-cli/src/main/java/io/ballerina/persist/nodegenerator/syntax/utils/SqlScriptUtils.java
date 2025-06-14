@@ -34,10 +34,13 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Queue;
 import java.util.Set;
 
 import static io.ballerina.persist.PersistToolsConstants.BallerinaTypes;
@@ -232,6 +235,10 @@ public class SqlScriptUtils {
         List<Relation.Key> keyColumns = relation.getKeyColumns();
         List<String> references = relation.getKeyColumns().stream().map(Relation.Key::getReferenceColumnName).toList();
         Entity assocEntity = relation.getAssocEntity();
+        // if the association entity has unsupported types, skip the relation
+        if (assocEntity.containsUnsupportedTypes()) {
+            return "";
+        }
         EntityField assocEntityField = getMapOfRelationFields(assocEntity, false).get(entity.getEntityName())
                 .get(index);
         Relation.RelationType associatedEntityRelationType = assocEntityField.getRelation().getRelationType();
@@ -275,7 +282,8 @@ public class SqlScriptUtils {
         relationScripts.append(MessageFormat.format("{0}{1}FOREIGN KEY({2}) REFERENCES {3}({4}),",
                 NEW_LINE, TAB, foreignKey.toString(),
                 getTableNameWithSchema(assocEntity, datasource), referenceFieldName));
-        updateReferenceTable(removeSingleQuote(entity.getTableName()), assocEntity.getTableName(), referenceTables);
+        updateReferenceTable(removeSingleQuote(entity.getTableName()), removeSingleQuote(assocEntity.getTableName()),
+                referenceTables);
         return relationScripts.toString();
     }
 
@@ -553,36 +561,62 @@ public class SqlScriptUtils {
     private static String[] rearrangeScriptsWithReference(Set<String> tables,
                                                           HashMap<String, List<String>> referenceTables,
                                                           HashMap<String, List<String>> tableScripts) {
-        List<String> tableOrder = new ArrayList<>();
+        // Step 1: Build the dependency graph
+        Map<String, List<String>> graph = new HashMap<>();
+        Map<String, Integer> inDegree = new HashMap<>();
 
+        // Initialize graph and in-degree map
+        for (String table : tables) {
+            graph.put(table, new ArrayList<>());
+            inDegree.put(table, 0);
+        }
+
+        // Populate the graph and in-degree map
         for (Map.Entry<String, List<String>> entry : referenceTables.entrySet()) {
-            if (tableOrder.isEmpty()) {
-                tableOrder.add(removeSingleQuote(entry.getKey()));
-            } else {
-                int firstIndex = 0;
-                List<String> referenceTableNames = referenceTables.get(entry.getKey());
-                for (String referenceTableName : referenceTableNames) {
-                    int index = tableOrder.indexOf(referenceTableName);
-                    if ((firstIndex == 0 || index > firstIndex) && index >= 0) {
-                        firstIndex = index + 1;
-                    }
+            String table = entry.getKey();
+            for (String referenceTable : entry.getValue()) {
+                graph.get(referenceTable).add(table);
+                inDegree.put(table, inDegree.get(table) + 1);
+            }
+        }
+
+        // Step 2: Perform topological sorting using Kahn's Algorithm
+        Queue<String> queue = new LinkedList<>();
+        List<String> sortedOrder = new ArrayList<>();
+
+        // Add nodes with in-degree 0 to the queue
+        for (Map.Entry<String, Integer> entry : inDegree.entrySet()) {
+            if (entry.getValue() == 0) {
+                queue.add(entry.getKey());
+            }
+        }
+
+        // Process the graph
+        while (!queue.isEmpty()) {
+            String current = queue.poll();
+            sortedOrder.add(current);
+
+            for (String neighbor : graph.get(current)) {
+                inDegree.put(neighbor, inDegree.get(neighbor) - 1);
+                if (inDegree.get(neighbor) == 0) {
+                    queue.add(neighbor);
                 }
-                tableOrder.add(firstIndex, removeSingleQuote(entry.getKey()));
             }
         }
-        for (String tableName : tables) {
-            if (!tableOrder.contains(tableName)) {
-                tableOrder.add(0, tableName);
-            }
-        }
+
+        // Reverse the sorted order for reverse dependency processing
+        Collections.reverse(sortedOrder);
+
+        // Step 3: Rearrange table scripts based on the sorted order
         int length = tables.size() * 2;
-        int size = tableOrder.size();
         String[] tableScriptsInOrder = new String[length];
-        for (int i = 0; i <= tableOrder.size() - 1; i++) {
-            List<String> script = tableScripts.get(removeSingleQuote(tableOrder.get(size - (i + 1))));
-            tableScriptsInOrder[i] = script.get(0);
-            tableScriptsInOrder[length - (i + 1)] = script.get(1);
+        for (int i = 0; i < sortedOrder.size(); i++) {
+            String tableName = sortedOrder.get(i);
+            List<String> script = tableScripts.get(removeSingleQuote(tableName));
+            tableScriptsInOrder[i] = script.get(0); // DROP TABLE script
+            tableScriptsInOrder[length - (i + 1)] = script.get(1); // CREATE TABLE script
         }
+
         return tableScriptsInOrder;
     }
 

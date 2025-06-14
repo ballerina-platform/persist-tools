@@ -4,17 +4,8 @@
 -- Please verify the generated scripts and execute them against the target DB server.
 
 DROP TABLE IF EXISTS `appointment`;
-DROP TABLE IF EXISTS `patients`;
 DROP TABLE IF EXISTS `Doctor`;
-
-CREATE TABLE `Doctor` (
-	`id` INT NOT NULL,
-	`name` VARCHAR(191) NOT NULL,
-	`specialty` VARCHAR(20) NOT NULL,
-	`phone_number` VARCHAR(191) NOT NULL,
-	`salary` DECIMAL(10,2),
-	PRIMARY KEY(`id`)
-);
+DROP TABLE IF EXISTS `patients`;
 
 CREATE TABLE `patients` (
 	`IDP` INT AUTO_INCREMENT,
@@ -24,6 +15,15 @@ CREATE TABLE `patients` (
 	`phoneNumber` CHAR(10) NOT NULL,
 	`gender` ENUM('MALE', 'FEMALE') NOT NULL,
 	PRIMARY KEY(`IDP`)
+);
+
+CREATE TABLE `Doctor` (
+	`id` INT NOT NULL,
+	`name` VARCHAR(191) NOT NULL,
+	`specialty` VARCHAR(20) NOT NULL,
+	`phone_number` VARCHAR(191) NOT NULL,
+	`salary` DECIMAL(10,2),
+	PRIMARY KEY(`id`)
 );
 
 CREATE TABLE `appointment` (
