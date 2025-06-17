@@ -4,16 +4,17 @@
 -- Please verify the generated scripts and execute them against the target DB server.
 
 DROP TABLE IF EXISTS [cars];
-DROP TABLE IF EXISTS [User];
-DROP TABLE IF EXISTS [people2];
 DROP TABLE IF EXISTS [Person];
+DROP TABLE IF EXISTS [people2];
+DROP TABLE IF EXISTS [User];
 
-CREATE TABLE [Person] (
+CREATE TABLE [User] (
+	[id] INT NOT NULL,
 	[name] VARCHAR(191) NOT NULL,
-	[age] INT NOT NULL,
+	[gender] VARCHAR(6) CHECK ([gender] IN ('MALE', 'FEMALE')) NOT NULL,
 	[nic] VARCHAR(191) NOT NULL,
-	[salary] DECIMAL(38,30) NOT NULL,
-	PRIMARY KEY([name])
+	[salary] DECIMAL(38,30),
+	PRIMARY KEY([id])
 );
 
 CREATE TABLE [people2] (
@@ -24,13 +25,12 @@ CREATE TABLE [people2] (
 	PRIMARY KEY([name])
 );
 
-CREATE TABLE [User] (
-	[id] INT NOT NULL,
+CREATE TABLE [Person] (
 	[name] VARCHAR(191) NOT NULL,
-	[gender] VARCHAR(6) CHECK ([gender] IN ('MALE', 'FEMALE')) NOT NULL,
+	[age] INT NOT NULL,
 	[nic] VARCHAR(191) NOT NULL,
-	[salary] DECIMAL(38,30),
-	PRIMARY KEY([id])
+	[salary] DECIMAL(38,30) NOT NULL,
+	PRIMARY KEY([name])
 );
 
 CREATE TABLE [cars] (

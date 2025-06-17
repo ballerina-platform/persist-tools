@@ -4,8 +4,8 @@
 -- Please verify the generated scripts and execute them against the target DB server.
 
 DROP TABLE IF EXISTS "Comment";
-DROP TABLE IF EXISTS "Follow";
 DROP TABLE IF EXISTS "Post";
+DROP TABLE IF EXISTS "Follow";
 DROP TABLE IF EXISTS "User";
 
 CREATE TABLE "User" (
@@ -13,6 +13,16 @@ CREATE TABLE "User" (
 	"name" VARCHAR(191) NOT NULL,
 	"birthDate" DATE NOT NULL,
 	"mobileNumber" VARCHAR(191) NOT NULL,
+	PRIMARY KEY("id")
+);
+
+CREATE TABLE "Follow" (
+	"id" INT NOT NULL,
+	"timestamp" DATETIME NOT NULL,
+	"leaderId" INT NOT NULL,
+	FOREIGN KEY("leaderId") REFERENCES "User"("id"),
+	"followerId" INT NOT NULL,
+	FOREIGN KEY("followerId") REFERENCES "User"("id"),
 	PRIMARY KEY("id")
 );
 
@@ -24,16 +34,6 @@ CREATE TABLE "Post" (
 	"timestamp" DATETIME NOT NULL,
 	"userId" INT NOT NULL,
 	FOREIGN KEY("userId") REFERENCES "User"("id"),
-	PRIMARY KEY("id")
-);
-
-CREATE TABLE "Follow" (
-	"id" INT NOT NULL,
-	"timestamp" DATETIME NOT NULL,
-	"leaderId" INT NOT NULL,
-	FOREIGN KEY("leaderId") REFERENCES "User"("id"),
-	"followerId" INT NOT NULL,
-	FOREIGN KEY("followerId") REFERENCES "User"("id"),
 	PRIMARY KEY("id")
 );
 

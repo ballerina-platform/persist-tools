@@ -1,0 +1,27 @@
+[tool_test_generate_114.entities]
+host = "localhost"
+port = 3306
+user = "root"
+password = ""
+database = ""
+
+[tool_test_generate_114.mssql_entities]
+host = "localhost"
+port = 1433
+user = "sa"
+password = ""
+database = ""
+
+[tool_test_generate_114.h2_entities]
+url = ""
+user = ""
+password = ""
+
+[tool_test_generate_114.postgresql_entities]
+host = "localhost"
+port = 5432
+user = "postgres"
+password = ""
+database = ""
+
+

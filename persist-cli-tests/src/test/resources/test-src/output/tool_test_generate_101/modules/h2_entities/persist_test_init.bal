@@ -14,8 +14,6 @@ CREATE TABLE "Car" (
 	"id" INT NOT NULL,
 	"make" VARCHAR(191) NOT NULL,
 	"model" VARCHAR(191) NOT NULL,
-	"ownerId" INT NOT NULL,
-	FOREIGN KEY("ownerId") REFERENCES "User"("id"),
 	PRIMARY KEY("id")
 );`);
 }

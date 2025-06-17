@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Changed
+- [Fix an SQL script generation order issue when there are multiple associations](https://github.com/ballerina-platform/ballerina-library/issues/7921)
+
+## [1.4.0] - 2024-08-20
+
+### Changed
 - Fix an issue where client API is still generated even if all entities contain unsupported field(s)
 - Fix an issue where unique indexes are declared twice in script.sql in one-to-one associations
 - Fix an issue where the cardinality of the first association is taken as the cardinality of all the other associations between same entities
