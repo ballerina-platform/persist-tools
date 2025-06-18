@@ -4,11 +4,17 @@
 -- Please verify the generated scripts and execute them against the target DB server.
 
 DROP TABLE IF EXISTS `Profile`;
-DROP TABLE IF EXISTS `User`;
-DROP TABLE IF EXISTS `Dept`;
 DROP TABLE IF EXISTS `Customer`;
-DROP TABLE IF EXISTS `MultipleAssociations`;
+DROP TABLE IF EXISTS `Dept`;
+DROP TABLE IF EXISTS `User`;
 DROP TABLE IF EXISTS `Student`;
+DROP TABLE IF EXISTS `MultipleAssociations`;
+
+CREATE TABLE `MultipleAssociations` (
+	`id` INT NOT NULL,
+	`name` VARCHAR(191) NOT NULL,
+	PRIMARY KEY(`id`)
+);
 
 CREATE TABLE `Student` (
 	`id` INT NOT NULL,
@@ -19,16 +25,9 @@ CREATE TABLE `Student` (
 	PRIMARY KEY(`id`,`firstName`)
 );
 
-CREATE TABLE `MultipleAssociations` (
+CREATE TABLE `User` (
 	`id` INT NOT NULL,
 	`name` VARCHAR(191) NOT NULL,
-	PRIMARY KEY(`id`)
-);
-
-CREATE TABLE `Customer` (
-	`id` INT NOT NULL,
-	`name` VARCHAR(191) NOT NULL,
-	`age` INT NOT NULL,
 	`multipleassociationsId` INT UNIQUE NOT NULL,
 	FOREIGN KEY(`multipleassociationsId`) REFERENCES `MultipleAssociations`(`id`),
 	PRIMARY KEY(`id`)
@@ -42,9 +41,10 @@ CREATE TABLE `Dept` (
 	PRIMARY KEY(`id`)
 );
 
-CREATE TABLE `User` (
+CREATE TABLE `Customer` (
 	`id` INT NOT NULL,
 	`name` VARCHAR(191) NOT NULL,
+	`age` INT NOT NULL,
 	`multipleassociationsId` INT UNIQUE NOT NULL,
 	FOREIGN KEY(`multipleassociationsId`) REFERENCES `MultipleAssociations`(`id`),
 	PRIMARY KEY(`id`)
@@ -61,3 +61,5 @@ CREATE TABLE `Profile` (
 	FOREIGN KEY(`ownerId`) REFERENCES `User`(`id`),
 	PRIMARY KEY(`id`)
 );
+
+

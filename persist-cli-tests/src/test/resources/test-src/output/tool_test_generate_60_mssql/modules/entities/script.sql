@@ -5,24 +5,9 @@
 
 DROP TABLE IF EXISTS [Employee];
 DROP TABLE IF EXISTS [Workspace];
-DROP TABLE IF EXISTS [Building];
-DROP TABLE IF EXISTS [Department];
 DROP TABLE IF EXISTS [OrderItem];
-
-CREATE TABLE [OrderItem] (
-	[orderId] VARCHAR(191) NOT NULL,
-	[itemId] VARCHAR(191) NOT NULL,
-	[quantity] INT NOT NULL,
-	[notes] VARCHAR(191) NOT NULL,
-	PRIMARY KEY([orderId],[itemId])
-);
-
-CREATE TABLE [Department] (
-	[deptNo] VARCHAR(191) NOT NULL,
-	[deptName] VARCHAR(191) NOT NULL,
-	[location] VARCHAR(191) NOT NULL,
-	PRIMARY KEY([deptNo],[deptName])
-);
+DROP TABLE IF EXISTS [Department];
+DROP TABLE IF EXISTS [Building];
 
 CREATE TABLE [Building] (
 	[buildingCode] VARCHAR(191) NOT NULL,
@@ -32,6 +17,21 @@ CREATE TABLE [Building] (
 	[postalCode] VARCHAR(191) NOT NULL,
 	[type] VARCHAR(191) NOT NULL,
 	PRIMARY KEY([buildingCode])
+);
+
+CREATE TABLE [Department] (
+	[deptNo] VARCHAR(191) NOT NULL,
+	[deptName] VARCHAR(191) NOT NULL,
+	[location] VARCHAR(191) NOT NULL,
+	PRIMARY KEY([deptNo],[deptName])
+);
+
+CREATE TABLE [OrderItem] (
+	[orderId] VARCHAR(191) NOT NULL,
+	[itemId] VARCHAR(191) NOT NULL,
+	[quantity] INT NOT NULL,
+	[notes] VARCHAR(191) NOT NULL,
+	PRIMARY KEY([orderId],[itemId])
 );
 
 CREATE TABLE [Workspace] (
@@ -57,3 +57,5 @@ CREATE TABLE [Employee] (
 	FOREIGN KEY([workspaceWorkspaceId], [workspaceWorkspaceType]) REFERENCES [Workspace]([workspaceId], [workspaceType]),
 	PRIMARY KEY([empNo],[firstName])
 );
+
+

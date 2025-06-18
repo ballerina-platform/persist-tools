@@ -4,17 +4,8 @@
 -- Please verify the generated scripts and execute them against the target DB server.
 
 DROP TABLE IF EXISTS hospital."appointment";
-DROP TABLE IF EXISTS "patients";
 DROP TABLE IF EXISTS gmoa."Doctor";
-
-CREATE TABLE gmoa."Doctor" (
-	"id" INT NOT NULL,
-	"name" VARCHAR(191) NOT NULL,
-	"specialty" VARCHAR(20) NOT NULL,
-	"phone_number" VARCHAR(191) NOT NULL,
-	"salary" DECIMAL(10,2),
-	PRIMARY KEY("id")
-);
+DROP TABLE IF EXISTS "patients";
 
 CREATE TABLE "patients" (
 	"IDP"  SERIAL,
@@ -24,6 +15,15 @@ CREATE TABLE "patients" (
 	"phoneNumber" CHAR(10) NOT NULL,
 	"gender" VARCHAR(6) CHECK ("gender" IN ('MALE', 'FEMALE')) NOT NULL,
 	PRIMARY KEY("IDP")
+);
+
+CREATE TABLE gmoa."Doctor" (
+	"id" INT NOT NULL,
+	"name" VARCHAR(191) NOT NULL,
+	"specialty" VARCHAR(20) NOT NULL,
+	"phone_number" VARCHAR(191) NOT NULL,
+	"salary" DECIMAL(10,2),
+	PRIMARY KEY("id")
 );
 
 CREATE TABLE hospital."appointment" (

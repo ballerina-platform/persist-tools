@@ -5,23 +5,9 @@
 
 DROP TABLE IF EXISTS `Workspace`;
 DROP TABLE IF EXISTS `Employee`;
-DROP TABLE IF EXISTS `Building`;
-DROP TABLE IF EXISTS `Department`;
 DROP TABLE IF EXISTS `OrderItem`;
-
-CREATE TABLE `OrderItem` (
-	`orderId` VARCHAR(191) NOT NULL,
-	`itemId` VARCHAR(191) NOT NULL,
-	`quantity` INT NOT NULL,
-	`notes` VARCHAR(191) NOT NULL,
-	PRIMARY KEY(`orderId`,`itemId`)
-);
-
-CREATE TABLE `Department` (
-	`deptNo` VARCHAR(191) NOT NULL,
-	`deptName` VARCHAR(191) NOT NULL,
-	PRIMARY KEY(`deptNo`)
-);
+DROP TABLE IF EXISTS `Department`;
+DROP TABLE IF EXISTS `Building`;
 
 CREATE TABLE `Building` (
 	`buildingCode` VARCHAR(191) NOT NULL,
@@ -30,6 +16,20 @@ CREATE TABLE `Building` (
 	`country` VARCHAR(191) NOT NULL,
 	`postalCode` VARCHAR(191) NOT NULL,
 	PRIMARY KEY(`buildingCode`)
+);
+
+CREATE TABLE `Department` (
+	`deptNo` VARCHAR(191) NOT NULL,
+	`deptName` VARCHAR(191) NOT NULL,
+	PRIMARY KEY(`deptNo`)
+);
+
+CREATE TABLE `OrderItem` (
+	`orderId` VARCHAR(191) NOT NULL,
+	`itemId` VARCHAR(191) NOT NULL,
+	`quantity` INT NOT NULL,
+	`notes` VARCHAR(191) NOT NULL,
+	PRIMARY KEY(`orderId`,`itemId`)
 );
 
 CREATE TABLE `Employee` (
@@ -57,3 +57,5 @@ CREATE TABLE `Workspace` (
 	FOREIGN KEY(`employeeEmpNo`) REFERENCES `Employee`(`empNo`),
 	PRIMARY KEY(`workspaceId`)
 );
+
+

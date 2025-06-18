@@ -10,14 +10,8 @@ isolated final H2Client h2Client = check new ("jdbc:h2:./test", "sa", "");
 public isolated function setupTestDB() returns persist:Error? {
     _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "Workspace";`);
     _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "Employee";`);
-    _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "Building";`);
     _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "Department";`);
-    _ = check h2Client->executeNativeSQL(`
-CREATE TABLE "Department" (
-	"deptNo" VARCHAR(191) NOT NULL,
-	"deptName" VARCHAR(191) NOT NULL,
-	PRIMARY KEY("deptNo")
-);`);
+    _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "Building";`);
     _ = check h2Client->executeNativeSQL(`
 CREATE TABLE "Building" (
 	"buildingCode" VARCHAR(191) NOT NULL,
@@ -26,6 +20,12 @@ CREATE TABLE "Building" (
 	"country" VARCHAR(191) NOT NULL,
 	"postalCode" VARCHAR(191) NOT NULL,
 	PRIMARY KEY("buildingCode")
+);`);
+    _ = check h2Client->executeNativeSQL(`
+CREATE TABLE "Department" (
+	"deptNo" VARCHAR(191) NOT NULL,
+	"deptName" VARCHAR(191) NOT NULL,
+	PRIMARY KEY("deptNo")
 );`);
     _ = check h2Client->executeNativeSQL(`
 CREATE TABLE "Employee" (
@@ -54,7 +54,7 @@ CREATE TABLE "Workspace" (
 public isolated function cleanupTestDB() returns persist:Error? {
     _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "Workspace";`);
     _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "Employee";`);
-    _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "Building";`);
     _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "Department";`);
+    _ = check h2Client->executeNativeSQL(`DROP TABLE IF EXISTS "Building";`);
 }
 
