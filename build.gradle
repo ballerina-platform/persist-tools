@@ -165,11 +165,8 @@ task createProperties() {
     }
 }
 
-//classes {
-//    dependsOn createProperties
-//}
-
 task build {
+    dependsOn createProperties
     dependsOn(":persist-tool:build")
     dependsOn(":examples:build")
 }
