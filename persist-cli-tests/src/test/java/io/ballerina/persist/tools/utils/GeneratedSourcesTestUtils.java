@@ -278,11 +278,8 @@ public class GeneratedSourcesTestUtils {
         Path sourcePath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);
         try {
             persistClass = Class.forName("io.ballerina.persist.cmd.Generate");
-            errStream.println("Class found: " + persistClass != null);
-            errStream.println("Source path: " + sourcePath.toAbsolutePath());
             Generate persistCmd = (Generate) persistClass.getDeclaredConstructor(String.class)
                     .newInstance(sourcePath.toAbsolutePath().toString());
-
             new CommandLine(persistCmd).parseArgs(args);
             persistCmd.execute();
         } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException | IllegalAccessException

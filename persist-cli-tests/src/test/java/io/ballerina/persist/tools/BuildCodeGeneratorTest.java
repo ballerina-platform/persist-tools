@@ -26,7 +26,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -44,8 +43,6 @@ public class BuildCodeGeneratorTest {
     public static final Path TARGET_DIR = Paths.get(System.getProperty("user.dir"), "build");
     public static final Path TEST_DISTRIBUTION_PATH = TARGET_DIR.resolve("ballerina-distribution");
     private String persistSqlVersion;
-
-    PrintStream out = System.out;
 
     @BeforeClass
     public void findLatestPersistVersion() {
@@ -151,8 +148,6 @@ public class BuildCodeGeneratorTest {
 
     private void assertContainLogs(String log, Path project) throws IOException, InterruptedException {
         String generatedLog = collectLogOutput(project);
-        out.println(generatedLog);
-        out.println("Log contains: " + log);
         Assert.assertTrue(generatedLog.contains(log));
     }
 
