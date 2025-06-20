@@ -1,0 +1,8 @@
+[package]
+org = "ballerina"
+name = "tool_persist"
+version = "@toml.version@"
+authors = ["Ballerina"]
+keywords = ["persist", "persist tool"]
+license = ["Apache-2.0"]
+distribution = "2201.12.4"

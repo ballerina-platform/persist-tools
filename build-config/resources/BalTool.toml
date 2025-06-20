@@ -1,0 +1,5 @@
+[tool]
+id = "persist"
+
+[[dependency]]
+path = "../persist-cli/build/libs/persist-cli-@project.version@.jar"

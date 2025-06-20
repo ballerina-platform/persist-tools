@@ -23,6 +23,8 @@ apply plugin: 'java'
 description = 'Ballerina - Persist Examples'
 
 def ballerinaDist = "${project.buildDir}/ballerina-distribution"
+def tomlVersion = stripBallerinaExtensionVersion("${project.version}")
+def balToolFile = new File("$project.projectDir/resources/bal-tools.toml")
 def examples = ["medical-center", "rainier"]
 def introspectionExamples = ["hospital", "hospital_unsupported"]
 def redisDBExamples = ["social_media", "redis_cache"]
@@ -38,6 +40,20 @@ configurations {
 dependencies {
     balTools ("org.ballerinalang:jballerina-tools:${ballerinaLangVersion}") {
         transitive = false
+    }
+}
+
+def stripBallerinaExtensionVersion(String extVersion) {
+    if (extVersion.matches(project.ext.timestampedVersionRegex)) {
+        def splitVersion = extVersion.split('-')
+        if (splitVersion.length > 3) {
+            def strippedValues = splitVersion[0..-4]
+            return strippedValues.join('-')
+        } else {
+            return extVersion
+        }
+    } else {
+        return extVersion.replace("${project.ext.snapshotVersion}", "")
     }
 }
 
@@ -105,16 +121,30 @@ task copyStdlibs() {
     }
 }
 
-task copyPersistTool() {
-    dependsOn(copyStdlibs)
-    doLast() {
-        copy {
-            into "$project.buildDir"
-            into("ballerina-distribution/bre/lib") {
-                from "$project.rootDir/persist-cli/build/libs/persist-cli-${project.version}.jar"
-            }
+task updateBalToolTomlFile {
+    doLast {
+        def newBallerinaToml = balToolFile.text.replace("@toml.version@", tomlVersion)
+        // Add new bal-tools.toml file to the ballerina-distribution/resources directory
+        def ballerinaTomlFile = new File("${ballerinaDist}/resources/bal-tools.toml")
+        // create new file if it does not exist
+        if (!ballerinaTomlFile.exists()) {
+            ballerinaTomlFile.getParentFile().mkdirs()
+            ballerinaTomlFile.createNewFile()
         }
+        ballerinaTomlFile.text = newBallerinaToml
     }
+}
+
+// copy bala files from persist-tool/build/bala_unzipped/bala to ballerina-distribution/repo/bala
+task copyPersistTool(type: Copy) {
+    dependsOn(":persist-tool:build")
+    // copy bal-tools.toml file to ballerina-distribution/resources directory
+    dependsOn(updateBalToolTomlFile)
+    into ballerinaDist
+    into("repo/bala") {
+        from "${project.rootDir}/persist-tool/build/bala_unzipped/bala"
+    }
+    doNotTrackState("build needs to run every time")
 }
 
 task copyTestResources() {
@@ -598,6 +628,7 @@ task stopTestRedisContainer() {
 
 copyPersistTool.dependsOn ":persist-cli-tests:build"
 copyPersistTool.dependsOn ":persist-cli:build"
+copyPersistTool.dependsOn ":persist-tool:build"
 copyTestResources.dependsOn copyPersistTool
 
 //generateIntrospectionExamples.dependsOn copyTestResources
