@@ -57,7 +57,7 @@ public class BuildCodeGeneratorTest {
         }
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     public void testBuildWithMysql() throws IOException, InterruptedException {
         updateOutputBallerinaToml("tool_test_build_1");
         String log = "Persist client and entity types generated successfully in the persist_build_1 directory.";
