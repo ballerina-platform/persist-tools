@@ -36,6 +36,8 @@ import java.util.Properties;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertGeneratedSources;
+
 /**
  * persist tool in `bal build` command tests.
  */
@@ -62,7 +64,8 @@ public class BuildCodeGeneratorTest {
         updateOutputBallerinaToml("tool_test_build_1");
         String log = "Persist client and entity types generated successfully in the persist_build_1 directory.";
         Path project = TARGET_DIR.resolve("generated-sources/tool_test_build_1");
-        assertContainLogs(log, project);
+        collectLogOutput(project);
+        assertGeneratedSources("tool_test_build_1");
     }
 
     @Test(enabled = true)
@@ -112,12 +115,13 @@ public class BuildCodeGeneratorTest {
         updateOutputBallerinaToml("tool_test_build_8");
         String log = "Persist client and entity types generated successfully in the persist_build_8 directory.";
         Path project = TARGET_DIR.resolve("generated-sources/tool_test_build_8");
-        assertContainLogs(log, project);
+        collectLogOutput(project);
+        assertGeneratedSources("tool_test_build_8");
     }
 
     private void updateOutputBallerinaToml(String fileName) {
         String tomlFileName = "Ballerina.toml";
-        Path filePath = Paths.get("src", "test", "resources", "test-src", "input", fileName, tomlFileName);
+        Path filePath = Paths.get("src", "test", "resources", "test-src", "output", fileName, tomlFileName);
         if (filePath.endsWith(tomlFileName)) {
             try {
                 String content = Files.readString(filePath);

@@ -40,6 +40,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -77,6 +78,10 @@ public class GeneratedSourcesTestUtils {
     public static final String PERSIST_MIGRATIONS_DIR = Paths.get("persist", "migrations").toString();
 
     public static void assertGeneratedSources(String subDir) {
+        if (subDir.startsWith("tool_test_build")) {
+            // Delete the target directory if it exists
+            deleteTargetDirectory(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir).resolve("target"));
+        }
         Assert.assertTrue(directoryContentEquals(Paths.get(RESOURCES_EXPECTED_OUTPUT.toString()).resolve(subDir),
                 Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)));
         for (Path actualOutputFile: listFiles(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir))) {
@@ -111,6 +116,21 @@ public class GeneratedSourcesTestUtils {
             } catch (Exception e) {
                 errStream.println("Error occurred while executing the generated packages: " + e.getMessage());
             }
+        }
+    }
+
+    private static void deleteTargetDirectory(Path targetDir) {
+        if (Files.exists(targetDir)) {
+            try (Stream<Path> files = Files.walk(targetDir)) {
+                files.sorted(Comparator.reverseOrder())
+                        .map(Path::toFile)
+                        .forEach(File::delete);
+                errStream.println("Deleted target directory: " + targetDir);
+            } catch (IOException e) {
+                errStream.println("Failed to delete target directory: " + e.getMessage());
+            }
+        } else {
+            errStream.println("Target directory does not exist: " + targetDir);
         }
     }
 
