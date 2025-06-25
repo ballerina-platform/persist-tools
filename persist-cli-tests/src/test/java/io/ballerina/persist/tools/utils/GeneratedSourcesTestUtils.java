@@ -70,6 +70,9 @@ public class GeneratedSourcesTestUtils {
     public static final String GENERATED_SOURCES_DIRECTORY = Paths.get("build", "generated-sources")
             .toString();
 
+    public static final String TARGET_DIIRECTORY = "target";
+    public static final String DEPENDENCIES_TOML_FILE = "Dependencies.toml";
+
     public static final String INPUT_RESOURCES_DIRECTORY =
             Paths.get("src", "test", "resources", "test-src", "input").toString();
     public static final Path RESOURCES_EXPECTED_OUTPUT =
@@ -80,7 +83,16 @@ public class GeneratedSourcesTestUtils {
     public static void assertGeneratedSources(String subDir) {
         if (subDir.startsWith("tool_test_build")) {
             // Delete the target directory if it exists
-            deleteTargetDirectory(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir).resolve("target"));
+            deleteTargetDirectory(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir).resolve(TARGET_DIIRECTORY));
+            // Delete Dependencies.toml file
+            Path dependenciesTomlPath = Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)
+                    .resolve(DEPENDENCIES_TOML_FILE);
+            try {
+                Files.deleteIfExists(dependenciesTomlPath);
+                errStream.println("Deleted Dependencies.toml file: " + dependenciesTomlPath);
+            } catch (IOException e) {
+                errStream.println("Failed to delete Dependencies.toml file: " + e.getMessage());
+            }
         }
         Assert.assertTrue(directoryContentEquals(Paths.get(RESOURCES_EXPECTED_OUTPUT.toString()).resolve(subDir),
                 Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)));
