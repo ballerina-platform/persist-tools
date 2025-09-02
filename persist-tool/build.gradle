@@ -100,5 +100,10 @@ build.dependsOn updateTomlFiles
 build.dependsOn "generatePomFileForMavenPublication"
 build.dependsOn ":persist-cli:build"
 
+clean {
+    delete layout.buildDirectory
+    delete "$project.projectDir/target"
+}
+
 publishToMavenLocal.dependsOn build
 publish.dependsOn build

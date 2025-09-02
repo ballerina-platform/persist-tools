@@ -138,7 +138,7 @@ public class BuildCodeGeneratorTest {
 
     private String collectLogOutput(Path project) throws IOException, InterruptedException {
         List<String> buildArgs = new LinkedList<>();
-        Process process = executeBuild(TEST_DISTRIBUTION_PATH.toString(), project, buildArgs);
+        Process process = executeBuild("", project, buildArgs);
         try (BufferedReader br = new BufferedReader(new InputStreamReader(process.getErrorStream(),
                 StandardCharsets.UTF_8))) {
             Stream<String> logLines = br.lines();
