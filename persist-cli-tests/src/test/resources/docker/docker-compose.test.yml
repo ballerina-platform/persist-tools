@@ -1,0 +1,95 @@
+services:
+  mysql-tests:
+    image: mysql:8.0.21
+    container_name: ballerina-persist-tools
+    platform: linux/amd64
+    environment:
+      MYSQL_ROOT_PASSWORD: "Test123#"
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pTest123#", "--silent"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  mysql-examples:
+    image: mysql:8.0.21
+    container_name: ballerina-persist-tools-example
+    platform: linux/amd64
+    environment:
+      MYSQL_ROOT_PASSWORD: "Test123#"
+      MYSQL_DATABASE: "hospital"
+    ports:
+      - "3308:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pTest123#", "--silent"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: ballerina-persist-tools-mssql
+    platform: linux/amd64
+    environment:
+      ACCEPT_EULA: 1
+      SA_PASSWORD: "Test123#"
+      MSSQL_PID: Express
+    ports:
+      - "1434:1433"
+    healthcheck:
+      test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-C", "-S", "localhost", "-U", "sa", "-P", "Test123#", "-Q", "SELECT 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  postgresql:
+    image: postgres:latest
+    container_name: ballerina-persist-tools-postgresql
+    platform: linux/amd64
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -h localhost -p 5432"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  redis:
+    image: redis:latest
+    container_name: persist-redis
+    platform: linux/amd64
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+networks:
+  default:
+    name: ballerina-persist-tools-network
+    driver: bridge
+
+volumes:
+  mysql-tests-data:
+  mysql-examples-data:
+  mssql-data:
+  postgresql-data:
+  redis-data:

@@ -24,6 +24,8 @@ plugins {
     id "net.researchgate.release"
 }
 
+apply from: 'gradle/docker-compose-helper.gradle'
+
 ext.testngVersion = project.testngVersion
 
 allprojects {
