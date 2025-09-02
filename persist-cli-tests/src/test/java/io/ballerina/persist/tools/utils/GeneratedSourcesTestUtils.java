@@ -81,12 +81,12 @@ public class GeneratedSourcesTestUtils {
     public static final String PERSIST_MIGRATIONS_DIR = Paths.get("persist", "migrations").toString();
 
     public static void assertGeneratedSources(String subDir) {
+        Path path = Paths.get(GENERATED_SOURCES_DIRECTORY);
         if (subDir.startsWith("tool_test_build")) {
             // Delete the target directory if it exists
-            deleteTargetDirectory(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir).resolve(TARGET_DIIRECTORY));
+            deleteTargetDirectory(path.resolve(subDir).resolve(TARGET_DIIRECTORY));
             // Delete Dependencies.toml file
-            Path dependenciesTomlPath = Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)
-                    .resolve(DEPENDENCIES_TOML_FILE);
+            Path dependenciesTomlPath = path.resolve(subDir).resolve(DEPENDENCIES_TOML_FILE);
             try {
                 Files.deleteIfExists(dependenciesTomlPath);
                 errStream.println("Deleted Dependencies.toml file: " + dependenciesTomlPath);
@@ -95,8 +95,8 @@ public class GeneratedSourcesTestUtils {
             }
         }
         Assert.assertTrue(directoryContentEquals(Paths.get(RESOURCES_EXPECTED_OUTPUT.toString()).resolve(subDir),
-                Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)));
-        for (Path actualOutputFile: listFiles(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir))) {
+                path.resolve(subDir)));
+        for (Path actualOutputFile: listFiles(path.resolve(subDir))) {
             errStream.println(actualOutputFile);
             if ((actualOutputFile.toString().contains("persist_db_scripts.sql") ||
                     actualOutputFile.toString().contains("model.bal")) &&
@@ -114,7 +114,7 @@ public class GeneratedSourcesTestUtils {
         if (!(subDir.equals("tool_test_generate_4") || subDir.equals("tool_test_generate_26") ||
                 subDir.equals("tool_test_generate_18"))) {
 
-            BuildProject buildProject = BuildProject.load(Paths.get(GENERATED_SOURCES_DIRECTORY).resolve(subDir)
+            BuildProject buildProject = BuildProject.load(path.resolve(subDir)
                     .toAbsolutePath());
             Package currentPackage = buildProject.currentPackage();
             try {
@@ -343,7 +343,7 @@ public class GeneratedSourcesTestUtils {
                 dir2Paths.put(dir2.relativize(p), p);
             }
             if (dir1Paths.size() != dir2Paths.size()) {
-                errStream.println("files in directories doesn't match");
+                errStream.println("files in directories don't match");
                 errStream.println(dir1Paths);
                 errStream.println(dir2Paths);
                 return false;

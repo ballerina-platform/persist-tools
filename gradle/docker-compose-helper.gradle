@@ -1,0 +1,209 @@
+// Docker Compose Helper Tasks for Ballerina Persist Tools
+// This file provides centralized Docker Compose management
+
+import org.apache.tools.ant.taskdefs.condition.Os
+
+ext {
+    dockerComposeFile = "${project.rootDir}/persist-cli-tests/src/test/resources/docker/docker-compose.test.yml"
+}
+
+def getDockerComposeCommand() {
+    // For Unix-like systems, try to detect available command
+    try {
+        def result = exec {
+            ignoreExitValue = true
+            commandLine 'sh', '-c', 'command -v docker-compose'
+            standardOutput = new ByteArrayOutputStream()
+        }
+        if (result.exitValue == 0) {
+            return "docker-compose"
+        }
+    } catch (Exception ignored) {
+        // Fallback to modern compose
+    }
+    
+    // Default to modern 'docker compose' for GitHub Actions and newer environments
+    return "docker compose"
+}
+
+task dockerComposeUp {
+    group = 'Docker'
+    description = 'Start all test database services using Docker Compose'
+    doLast {
+        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+            println('Windows detected - Docker containers skipped')
+            return
+        }
+        
+        def composeCmd = getDockerComposeCommand()
+        exec {
+            commandLine 'sh', '-c', "${composeCmd} -f ${dockerComposeFile} up -d"
+        }
+        println('Started all test database services')
+    }
+}
+
+task dockerComposeDown {
+    group = 'Docker'
+    description = 'Stop and remove all test database services'
+    doLast {
+        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+            println('Windows detected - Docker containers skipped')
+            return
+        }
+        
+        def composeCmd = getDockerComposeCommand()
+        exec {
+            ignoreExitValue = true
+            commandLine 'sh', '-c', "${composeCmd} -f ${dockerComposeFile} down"
+        }
+        println('Stopped all test database services')
+    }
+}
+
+task dockerComposeClean {
+    group = 'Docker'
+    description = 'Stop and remove all services with volumes'
+    doLast {
+        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+            println('Windows detected - Docker containers skipped')
+            return
+        }
+        
+        def composeCmd = getDockerComposeCommand()
+        exec {
+            ignoreExitValue = true
+            commandLine 'sh', '-c', "${composeCmd} -f ${dockerComposeFile} down -v --remove-orphans"
+        }
+        println('Cleaned all test database services and volumes')
+    }
+}
+
+task dockerComposeStatus {
+    group = 'Docker'
+    description = 'Show status of all test database services'
+    doLast {
+        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+            println('Windows detected - Docker containers skipped')
+            return
+        }
+        
+        def composeCmd = getDockerComposeCommand()
+        exec {
+            commandLine 'sh', '-c', "${composeCmd} -f ${dockerComposeFile} ps"
+        }
+    }
+}
+
+task dockerComposeLogs {
+    group = 'Docker'
+    description = 'Show logs from all test database services'
+    doLast {
+        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+            println('Windows detected - Docker containers skipped')
+            return
+        }
+        
+        def composeCmd = getDockerComposeCommand()
+        exec {
+            commandLine 'sh', '-c', "${composeCmd} -f ${dockerComposeFile} logs -f"
+        }
+    }
+}
+
+def checkServiceHealth(String service) {
+    if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+        return true // Skip health checks on Windows
+    }
+    
+    try {
+        def composeCmd = getDockerComposeCommand()
+        def output = new ByteArrayOutputStream()
+        def result = exec {
+            ignoreExitValue = true
+            commandLine 'sh', '-c', "${composeCmd} -f ${dockerComposeFile} ps -q ${service} | xargs docker inspect --format='{{.State.Health.Status}}'"
+            standardOutput = output
+        }
+        def healthStatus = output.toString().trim()
+        println("Service ${service} health status: '${healthStatus}' (exit code: ${result.exitValue})")
+        return result.exitValue == 0 && healthStatus == 'healthy'
+    } catch (Exception e) {
+        println("Health check failed for service ${service}: ${e.message}")
+        return false
+    }
+}
+
+task waitForServices {
+    group = 'Docker'
+    description = 'Wait for all services to be healthy'
+    doLast {
+        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+            println('Windows detected - Docker health checks skipped')
+            return
+        }
+        
+        def services = ['mysql-tests', 'mysql-examples', 'mssql', 'postgresql', 'redis']
+        def maxAttempts = 30
+        def attempt = 0
+        def allHealthy = false
+        
+        println('Waiting for all services to be healthy...')
+        while (!allHealthy && attempt < maxAttempts) {
+            sleep(10000) // 10 seconds
+            attempt++
+            
+            def healthyServices = 0
+            services.each { service ->
+                if (checkServiceHealth(service)) {
+                    healthyServices++
+                }
+            }
+            
+            println("Attempt ${attempt}/${maxAttempts}: ${healthyServices}/${services.size()} services healthy")
+            
+            if (healthyServices == services.size()) {
+                allHealthy = true
+                println('All services are healthy and ready!')
+            }
+        }
+        
+        if (!allHealthy) {
+            throw new GradleException('Services health check timeout after ' + maxAttempts * 10 + ' seconds!')
+        }
+    }
+}
+
+task dockerComposeUpExamples {
+    group = 'Docker'
+    description = 'Start example services only (MySQL examples + Redis)'
+    doLast {
+        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+            println('Windows detected - Docker containers skipped')
+            return
+        }
+        
+        def composeCmd = getDockerComposeCommand()
+        exec {
+            commandLine 'sh', '-c', "${composeCmd} -f ${dockerComposeFile} up -d mysql-examples redis"
+        }
+        println('Started example services (mysql-examples, redis)')
+    }
+}
+
+task dockerComposeStopExamples {
+    group = 'Docker'  
+    description = 'Stop example services only'
+    doLast {
+        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+            println('Windows detected - Docker containers skipped')
+            return
+        }
+        
+        def composeCmd = getDockerComposeCommand()
+        exec {
+            ignoreExitValue = true
+            commandLine 'sh', '-c', "${composeCmd} -f ${dockerComposeFile} stop mysql-examples redis"
+        }
+        println('Stopped example services')
+    }
+}

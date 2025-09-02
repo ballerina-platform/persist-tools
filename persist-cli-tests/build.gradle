@@ -15,12 +15,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 import org.apache.tools.ant.taskdefs.condition.Os
+
 plugins {
     id 'java'
     id 'checkstyle'
     id 'com.github.spotbugs'
 }
+
+apply from: "${rootDir}/gradle/docker-compose-helper.gradle"
 
 description = 'Ballerina - persist-tools Tooling Test'
 
@@ -211,177 +215,18 @@ task copyTestPack(type: Copy) {
     doNotTrackState("build needs to run every time")
 }
 
-def checkExecResult(executionResult, failText, standardOutput) {
-    if (executionResult) {
-        Provider<ExecResult> execResultProvider = executionResult.getProvider()
-        int exitCode = execResultProvider.get().getExitValue()
-        if (exitCode != 0) {
-            throw new GradleException('Non-zero exit value: ' + exitCode)
-        }
-        if (standardOutput.toString().contains(failText)) {
-            throw new GradleException('"' + failText + '" string in output: ' + standardOutput.toString())
-        }
-    } else {
-        throw new GradleException('Returned a null execResult object')
-    }
+task startDockerContainers {
+    group = 'Docker'
+    description = 'Start test databases and wait for health checks'
+    dependsOn dockerComposeUp
+    dependsOn waitForServices
+    waitForServices.mustRunAfter dockerComposeUp
 }
 
-def checkTestDockerContainerStatus(dockerName) {
-    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-        try {
-            return exec {
-                commandLine 'sh', '-c',
-                        "docker exec ${dockerName} mysqladmin ping -hlocalhost -uroot -pTest123# --silent"
-            }.exitValue
-        } catch (all) {
-            return 1
-        }
-    }
-}
-
-task startTestDockerContainer(type: Exec) {
-    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-        def standardOutput = new ByteArrayOutputStream()
-        commandLine 'sh', '-c', 'docker run --platform linux/amd64 --rm -d --name ballerina-persist-tools -e MYSQL_ROOT_PASSWORD="Test123#" -p 3307:3306 -t mysql:8.0.21'
-        def healthCheck = 1
-        def counter = 0
-        doLast {
-            checkExecResult(executionResult, 'Error', standardOutput)
-            while (healthCheck != 0 && counter < 12) {
-                sleep(30 * 1000)
-                healthCheck = checkTestDockerContainerStatus('ballerina-persist-tools')
-                counter = counter + 1
-            }
-            if (healthCheck != 0) {
-                throw new GradleException("Docker container 'ballerina-mysql' health test exceeded timeout!")
-            }
-        }
-    } else {
-        commandLine 'cmd','slmgr /dlv'
-        println('\n' + "Windows Instance detected")
-        println('\n' + "skippped starting the docker container")
-    }
-}
-
-task stopTestDockerContainer() {
-    doLast {
-        if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-            try {
-                def stdOut = new ByteArrayOutputStream()
-                exec {
-                    commandLine 'sh', '-c', 'docker stop ballerina-persist-tools'
-                    standardOutput = stdOut
-                }
-            } catch (all) {
-                println('Gradle process can safely ignore stopTestDockerContainer task')
-            }
-        }
-    }
-}
-
-task startMSSQLTestDockerContainer(type: Exec) {
-    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-        def standardOutput = new ByteArrayOutputStream()
-        commandLine 'sh', '-c', 'docker run --platform linux/amd64 --rm -d --name ballerina-persist-tools-mssql -e ACCEPT_EULA=1 -e SA_PASSWORD=Test123# -p 1434:1433 -t mcr.microsoft.com/mssql/server:2019-latest'
-        def healthCheck = 1
-        def counter = 0
-        doLast {
-            checkExecResult(executionResult, 'Error', standardOutput)
-            while (healthCheck != 0 && counter < 12) {
-                sleep(30 * 1000)
-                healthCheck = checkMSSQLTestDockerContainerStatus('ballerina-persist-tools-mssql')
-                counter = counter + 1
-            }
-            if (healthCheck != 0) {
-                throw new GradleException("Docker container 'ballerina-persist-tools-mssql' health test exceeded timeout!")
-            }
-        }
-    } else {
-        commandLine 'cmd','slmgr /dlv'
-        println('\n' + "Windows Instance detected")
-        println('\n' + "skippped starting the docker container")
-    }
-}
-
-def checkMSSQLTestDockerContainerStatus(containerName) {
-    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-        try {
-            return exec {
-                commandLine 'sh', '-c',
-                        "docker exec ${containerName} /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P Test123#"
-            }.exitValue
-        } catch (all) {
-            return 1;
-        }
-    }
-}
-
-task stopMSSQLTestDockerContainer() {
-    doLast {
-        if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-            try {
-                def stdOut = new ByteArrayOutputStream()
-                exec {
-                    commandLine 'sh', '-c', "docker stop ballerina-persist-tools-mssql"
-                    standardOutput = stdOut
-                }
-            } catch (all) {
-                println("Process can safely ignore stopMSSQLTestDockerContainer task")
-            }
-        }
-    }
-}
-
-task startPostgreSQLTestDockerContainer(type: Exec) {
-    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-        def standardOutput = new ByteArrayOutputStream()
-        commandLine 'sh', '-c', 'docker run --platform linux/amd64 --rm -d --name ballerina-persist-tools-postgresql -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres'
-        def healthCheck = 1;
-        def counter = 0;
-        doLast {
-            checkExecResult(executionResult, 'Error', standardOutput)
-            while (healthCheck != 0 && counter < 12) {
-                sleep(30 * 1000)
-                healthCheck = checkPostgreSQLTestDockerContainerStatus("ballerina-persist-tools-postgresql")
-                counter = counter + 1;
-            }
-            if (healthCheck != 0) {
-                throw new GradleException("Docker container 'ballerina-persist-tools-postgresql' health test exceeded timeout!")
-            }
-        }
-    } else {
-        commandLine 'cmd','slmgr /dlv'
-        println('\n' + "Windows Instance detected")
-        println('\n' + "skipped starting the docker container")
-    }
-}
-
-def checkPostgreSQLTestDockerContainerStatus(containerName) {
-    if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-        try {
-            return exec {
-                commandLine 'sh', '-c', "docker exec ${containerName} psql -U postgres -h localhost -p 5432"
-            }.exitValue
-        } catch (all) {
-            return 1;
-        }
-    }
-}
-
-task stopPostgreSQLTestDockerContainer() {
-    doLast {
-        if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-            try {
-                def stdOut = new ByteArrayOutputStream()
-                exec {
-                    commandLine 'sh', '-c', "docker stop ballerina-persist-tools-postgresql"
-                    standardOutput = stdOut
-                }
-            } catch (all) {
-                println("Process can safely ignore stopPostgreSQLTestDockerContainer task")
-            }
-        }
-    }
+task stopDockerContainers {
+    group = 'Docker'
+    description = 'Stop test databases'
+    dependsOn dockerComposeDown
 }
 
 checkstyle {
@@ -459,14 +304,10 @@ jacocoTestReport {
     }
 }
 
-test.dependsOn startTestDockerContainer
-test.dependsOn startMSSQLTestDockerContainer
-test.dependsOn startPostgreSQLTestDockerContainer
+test.dependsOn startDockerContainers
 test.dependsOn pullGSheetsDependency
 test.dependsOn ":persist-cli:build"
-test.finalizedBy stopTestDockerContainer
-test.finalizedBy stopMSSQLTestDockerContainer
-test.finalizedBy stopPostgreSQLTestDockerContainer
+test.finalizedBy stopDockerContainers
 
 build.doNotTrackState("build needs to run every time")
 build.dependsOn ":persist-cli:build"

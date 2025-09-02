@@ -59,61 +59,59 @@ public class BuildCodeGeneratorTest {
         }
     }
 
-    @Test(enabled = true)
+    @Test
     public void testBuildWithMysql() throws IOException, InterruptedException {
         updateOutputBallerinaToml("tool_test_build_1");
-        String log = "Persist client and entity types generated successfully in the persist_build_1 directory.";
         Path project = TARGET_DIR.resolve("generated-sources/tool_test_build_1");
         collectLogOutput(project);
         assertGeneratedSources("tool_test_build_1");
     }
 
-    @Test(enabled = true)
+    @Test
     public void testBuildWithInvalidTargetModule() throws IOException, InterruptedException {
         String log = "error: build tool execution contains errors";
         Path project = TARGET_DIR.resolve("generated-sources/tool_test_build_2");
         assertContainLogs(log, project);
     }
 
-    @Test(enabled = true)
-    public void testBuildWithInvalidCharachtersInTargetModule() throws IOException, InterruptedException {
+    @Test
+    public void testBuildWithInvalidCharactersInTargetModule() throws IOException, InterruptedException {
         String log = "error: build tool execution contains errors";
         Path project = TARGET_DIR.resolve("generated-sources/tool_test_build_3");
         assertContainLogs(log, project);
     }
 
-    @Test(enabled = true)
+    @Test
     public void testBuildWithInvalidLengthOfTargetModule() throws IOException, InterruptedException {
         String log = "error: build tool execution contains errors";
         Path project = TARGET_DIR.resolve("generated-sources/tool_test_build_4");
         assertContainLogs(log, project);
     }
 
-    @Test(enabled = true)
+    @Test
     public void testBuildWithInvalidDataSource() throws IOException, InterruptedException {
         String log = "error: build tool execution contains errors";
         Path project = TARGET_DIR.resolve("generated-sources/tool_test_build_5");
         assertContainLogs(log, project);
     }
 
-    @Test(enabled = true)
+    @Test
     public void testBuildWithoutEntities() throws IOException, InterruptedException {
         String log = "error: build tool execution contains errors";
         Path project = TARGET_DIR.resolve("generated-sources/tool_test_build_6");
         assertContainLogs(log, project);
     }
 
-    @Test(enabled = true)
+    @Test
     public void testBuildWithExistingDependency() throws IOException, InterruptedException {
         String log = "error: build tool execution contains errors";
         Path project = TARGET_DIR.resolve("generated-sources/tool_test_build_7");
         assertContainLogs(log, project);
     }
 
-    @Test(enabled = true, description = "Test build with H2 data store")
+    @Test(description = "Test build with H2 data store")
     public void testBuildWithH2DataStore() throws IOException, InterruptedException {
         updateOutputBallerinaToml("tool_test_build_8");
-        String log = "Persist client and entity types generated successfully in the persist_build_8 directory.";
         Path project = TARGET_DIR.resolve("generated-sources/tool_test_build_8");
         collectLogOutput(project);
         assertGeneratedSources("tool_test_build_8");
