@@ -29,7 +29,7 @@ apply from: "${rootDir}/gradle/docker-compose-helper.gradle"
 description = 'Ballerina - persist-tools Tooling Test'
 
 def buildDir = "build";
-def ballerinaDist = "$project.buildDir/jballerina-tools-${ballerinaLangVersion}"
+def ballerinaDist = "${layout.buildDirectory.get()}/jballerina-tools-${ballerinaLangVersion}"
 def tomlVersion = stripBallerinaExtensionVersion("${project.version}")
 def balToolFile = new File("$project.projectDir/resources/bal-tools.toml")
 
@@ -90,7 +90,7 @@ task jBallerinaPack {
         configurations.balTools.resolvedConfiguration.resolvedArtifacts.each { artifact ->
             copy {
                 from project.zipTree(artifact.getFile())
-                into new File("${project.buildDir}")
+                into layout.buildDirectory
             }
             copy {
                 from(project.zipTree(artifact.getFile())) {
@@ -112,7 +112,7 @@ task unpackStdLibs() {
         configurations.ballerinaStdLibs.resolvedConfiguration.resolvedArtifacts.each { artifact ->
             copy {
                 from project.zipTree(artifact.getFile())
-                into new File("${project.buildDir}/extracted-stdlibs/" + artifact.name + "-zip")
+                into layout.buildDirectory.dir("extracted-stdlibs/" + artifact.name + "-zip")
             }
         }
     }
@@ -142,7 +142,7 @@ task copyStdlibs() {
     /* Standard Libraries */
     doLast {
         configurations.ballerinaStdLibs.resolvedConfiguration.resolvedArtifacts.each { artifact ->
-            def artifactExtractedPath = "${project.buildDir}/extracted-stdlibs/" + artifact.name + "-zip"
+            def artifactExtractedPath = "${layout.buildDirectory.get()}/extracted-stdlibs/" + artifact.name + "-zip"
             copy {
                 into ballerinaDist
                 into("repo/bala") {
@@ -249,10 +249,10 @@ spotbugsTest {
     def SpotBugsEffort = classLoader.findLoadedClass("com.github.spotbugs.snom.Effort")
     effort = SpotBugsEffort.MAX
     reportLevel = SpotBugsConfidence.LOW
-    reportsDir = file("$project.buildDir/reports/spotbugs")
+    reportsDir = layout.buildDirectory.dir("reports/spotbugs")
     reports {
-        html.enabled true
-        text.enabled = true
+        html.required = true
+        text.required = true
     }
     def excludeFile = file("${rootDir}/spotbugs-exclude.xml")
     if(excludeFile.exists()) {
@@ -270,9 +270,11 @@ checkstyleMain {
 
 test {
     dependsOn(copyTestPack)
-    systemProperty "ballerina.home", ballerinaDist
     dependsOn(copyTestResources)
     systemProperty "ballerina.offline.flag", "true"
+    doFirst {
+        systemProperty "ballerina.home", file("${buildDir}/ballerina-distribution").absolutePath
+    }
     useTestNG() {
         suites 'src/test/resources/testng.xml'
     }

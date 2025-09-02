@@ -22,7 +22,7 @@ apply plugin: 'java'
 
 description = 'Ballerina - Persist Examples'
 
-def ballerinaDist = "${project.buildDir}/ballerina-distribution"
+def ballerinaDist = "${layout.buildDirectory.get()}/ballerina-distribution"
 def tomlVersion = stripBallerinaExtensionVersion("${project.version}")
 def balToolFile = new File("$project.projectDir/resources/bal-tools.toml")
 def examples = ["medical-center", "rainier"]
@@ -62,7 +62,7 @@ task jBallerinaPack {
         configurations.balTools.resolvedConfiguration.resolvedArtifacts.each { artifact ->
             copy {
                 from project.zipTree(artifact.getFile())
-                into new File("${project.buildDir}")
+                into layout.buildDirectory
             }
             copy {
                 from(project.zipTree(artifact.getFile())) {
@@ -71,7 +71,7 @@ task jBallerinaPack {
                     }
                     includeEmptyDirs = false
                 }
-                into "${project.buildDir}/ballerina-distribution"
+                into layout.buildDirectory.dir("ballerina-distribution")
             }
         }
     }
@@ -85,7 +85,7 @@ task unpackStdLibs() {
         configurations.ballerinaStdLibs.resolvedConfiguration.resolvedArtifacts.each { artifact ->
             copy {
                 from project.zipTree(artifact.getFile())
-                into new File("${project.buildDir}/extracted-stdlibs/" + artifact.name + "-zip")
+                into layout.buildDirectory.dir("extracted-stdlibs/" + artifact.name + "-zip")
             }
         }
     }
@@ -97,7 +97,7 @@ task copyStdlibs() {
     /* Standard Libraries */
     doLast {
         configurations.ballerinaStdLibs.resolvedConfiguration.resolvedArtifacts.each { artifact ->
-            def artifactExtractedPath = "${project.buildDir}/extracted-stdlibs/" + artifact.name + "-zip"
+            def artifactExtractedPath = "${layout.buildDirectory.get()}/extracted-stdlibs/" + artifact.name + "-zip"
             copy {
                 into ballerinaDist
                 into("repo/bala") {
@@ -108,7 +108,7 @@ task copyStdlibs() {
                 }
             }
             copy {
-                def runtimePath = "${project.buildDir}/ballerina-distribution"
+                def runtimePath = "${layout.buildDirectory.get()}/ballerina-distribution"
                 into runtimePath
                 into("repo/bala") {
                     from "${artifactExtractedPath}/bala"
@@ -343,6 +343,10 @@ task generateRedisMockExamples {
             }
         }
     }
+}
+
+clean {
+    delete layout.buildDirectory
 }
 
 copyPersistTool.dependsOn ":persist-cli-tests:build"
