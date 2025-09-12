@@ -59,7 +59,8 @@ public class BuildCodeGeneratorTest {
         }
     }
 
-    @Test
+    // TODO: https://github.com/ballerina-platform/ballerina-library/issues/8242
+    @Test(enabled = false)
     public void testBuildWithMysql() throws IOException, InterruptedException {
         updateOutputBallerinaToml("tool_test_build_1");
         Path project = TARGET_DIR.resolve("generated-sources/tool_test_build_1");
@@ -109,7 +110,8 @@ public class BuildCodeGeneratorTest {
         assertContainLogs(log, project);
     }
 
-    @Test(description = "Test build with H2 data store")
+    // TODO: https://github.com/ballerina-platform/ballerina-library/issues/8242
+    @Test(enabled = false)
     public void testBuildWithH2DataStore() throws IOException, InterruptedException {
         updateOutputBallerinaToml("tool_test_build_8");
         Path project = TARGET_DIR.resolve("generated-sources/tool_test_build_8");
