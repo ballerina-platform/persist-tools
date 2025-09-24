@@ -49,7 +49,7 @@ public class PersistCmd implements BLauncherCmd {
     @Override
     public void execute() {
         if (helpFlag) {
-            String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(getName());
+            String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(getName(), PersistCmd.class.getClassLoader());
             errStream.println(commandUsageInfo);
             return;
         }
