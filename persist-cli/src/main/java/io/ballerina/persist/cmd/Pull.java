@@ -86,7 +86,7 @@ public class Pull implements BLauncherCmd {
     public void execute() {
         Scanner scanner = new Scanner(System.in, StandardCharsets.UTF_8);
         if (helpFlag) {
-            String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMMAND_IDENTIFIER);
+            String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMMAND_IDENTIFIER, Pull.class.getClassLoader());
             errStream.println(commandUsageInfo);
             return;
         }

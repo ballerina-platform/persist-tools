@@ -98,7 +98,8 @@ public class Generate implements BLauncherCmd {
         String packageName;
         String moduleNameWithPackage;
         if (helpFlag) {
-            String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMMAND_IDENTIFIER);
+            String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMMAND_IDENTIFIER,
+                    Generate.class.getClassLoader());
             errStream.println(commandUsageInfo);
             return;
         }

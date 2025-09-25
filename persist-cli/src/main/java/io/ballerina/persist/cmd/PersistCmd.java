@@ -35,7 +35,7 @@ import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
         name = "persist",
         description = "generate database configurations.",
         subcommands = {Init.class, Generate.class, Push.class, Migrate.class, Add.class, Pull.class}
-        )
+)
 
 public class PersistCmd implements BLauncherCmd {
 
@@ -44,32 +44,36 @@ public class PersistCmd implements BLauncherCmd {
     @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
     private boolean helpFlag;
 
-    public PersistCmd() {}
+    public PersistCmd() {
+    }
 
     @Override
     public void execute() {
         if (helpFlag) {
-            String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(getName());
+            String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(getName(), PersistCmd.class.getClassLoader());
             errStream.println(commandUsageInfo);
             return;
         }
-        String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMPONENT_IDENTIFIER);
+        String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMPONENT_IDENTIFIER,
+                PersistCmd.class.getClassLoader());
         errStream.println(commandUsageInfo);
     }
+
     @Override
     public void setParentCmdParser(CommandLine parentCmdParser) {
     }
+
     @Override
     public String getName() {
         return PersistToolsConstants.COMPONENT_IDENTIFIER;
     }
-    
+
     @Override
     public void printLongDesc(StringBuilder out) {
         out.append("Perform operations on Ballerina Persistent Layer").append(System.lineSeparator());
         out.append(System.lineSeparator());
     }
-    
+
     @Override
     public void printUsage(StringBuilder stringBuilder) {
         stringBuilder.append("  ballerina " + PersistToolsConstants.COMPONENT_IDENTIFIER).

@@ -96,7 +96,7 @@ public class Add implements BLauncherCmd {
         String packageName;
 
         if (helpFlag) {
-            String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMMAND_IDENTIFIER);
+            String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMMAND_IDENTIFIER, Add.class.getClassLoader());
             errStream.println(commandUsageInfo);
             return;
         }

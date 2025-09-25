@@ -73,7 +73,7 @@ public class Init implements BLauncherCmd {
     @Override
     public void execute() {
         if (helpFlag) {
-            String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMMAND_IDENTIFIER);
+            String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMMAND_IDENTIFIER, Init.class.getClassLoader());
             errStream.println(commandUsageInfo);
             return;
         }

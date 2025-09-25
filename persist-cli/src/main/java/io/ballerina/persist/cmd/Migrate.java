@@ -94,7 +94,8 @@ public class Migrate implements BLauncherCmd {
     @Override
     public void execute() {
         if (helpFlag) {
-            String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMMAND_IDENTIFIER);
+            String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMMAND_IDENTIFIER,
+                    Migrate.class.getClassLoader());
             errStream.println(commandUsageInfo);
             return;
         }
