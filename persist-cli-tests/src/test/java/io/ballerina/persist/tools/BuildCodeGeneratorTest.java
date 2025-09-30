@@ -26,6 +26,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -152,7 +153,15 @@ public class BuildCodeGeneratorTest {
 
     private void assertContainLogs(String log, Path project) throws IOException, InterruptedException {
         String generatedLog = collectLogOutput(project);
-        Assert.assertTrue(generatedLog.contains(log));
+        PrintStream out = System.out;
+        if (!generatedLog.contains(log)) {
+            out.println("=== Build Log Output for " + project + " ===");
+            out.println(generatedLog);
+            out.println("=== End Build Log ===");
+        }
+        Assert.assertTrue(generatedLog.contains(log),
+            "Expected log message not found.\nExpected substring: '" + log +
+            "'\nActual log output (" + generatedLog.length() + " chars):\n" + generatedLog);
     }
 
     public static Process executeBuild(String distributionName, Path sourceDirectory,
