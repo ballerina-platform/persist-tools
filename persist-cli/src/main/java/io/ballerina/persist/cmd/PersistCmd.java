@@ -40,11 +40,43 @@ import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 public class PersistCmd implements BLauncherCmd {
 
     private static final PrintStream errStream = System.err;
+    private static final int EXIT_CODE_0 = 0;
+    private static final int EXIT_CODE_2 = 2;
+    private static final ExitHandler DEFAULT_EXIT_HANDLER = code -> Runtime.getRuntime().exit(code);
+
+    private final ExitHandler exitHandler;
 
     @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
     private boolean helpFlag;
 
+    /**
+     * Functional interface for handling exit behavior.
+     * Public to allow test access from other packages.
+     */
+    @FunctionalInterface
+    public interface ExitHandler {
+        void exit(int code);
+    }
+
+    /**
+     * Default constructor for production use.
+     */
     public PersistCmd() {
+        this(DEFAULT_EXIT_HANDLER);
+    }
+
+    /**
+     * Constructor for testing with custom exit handler.
+     * This is public to allow tests in other packages to use it.
+     *
+     * @param exitHandler custom exit handler (for testing)
+     */
+    public PersistCmd(ExitHandler exitHandler) {
+        this.exitHandler = exitHandler;
+    }
+
+    private void exit(int code) {
+        exitHandler.exit(code);
     }
 
     @Override
@@ -52,11 +84,13 @@ public class PersistCmd implements BLauncherCmd {
         if (helpFlag) {
             String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(getName(), PersistCmd.class.getClassLoader());
             errStream.println(commandUsageInfo);
+            exit(EXIT_CODE_0);
             return;
         }
         String commandUsageInfo = BLauncherCmd.getCommandUsageInfo(COMPONENT_IDENTIFIER,
                 PersistCmd.class.getClassLoader());
         errStream.println(commandUsageInfo);
+        exit(EXIT_CODE_2);
     }
 
     @Override
