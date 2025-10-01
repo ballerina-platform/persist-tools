@@ -171,6 +171,9 @@ tasks.withType(Checkstyle) {
 }
 
 task copyTestResources(type: Copy) {
+    doFirst {
+        delete "${buildDir}/generated-sources"
+    }
     into buildDir
     into("generated-sources/") {
         from "src/test/resources/test-src/input"

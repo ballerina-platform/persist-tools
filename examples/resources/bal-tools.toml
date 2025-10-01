@@ -1,6 +1,6 @@
 [[tool]]
 id = "persist"
 org = "ballerina"
-name = "tool_persist"
+name = "tool.persist"
 version = "@toml.version@"
 active = true
