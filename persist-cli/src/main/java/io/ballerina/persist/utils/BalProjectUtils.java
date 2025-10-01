@@ -54,7 +54,9 @@ import io.ballerina.projects.DiagnosticResult;
 import io.ballerina.projects.Package;
 import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.Project;
+import io.ballerina.projects.TomlDocument;
 import io.ballerina.projects.directory.SingleFileProject;
+import io.ballerina.projects.util.ProjectPaths;
 import io.ballerina.toml.syntax.tree.AbstractNodeFactory;
 import io.ballerina.toml.syntax.tree.DocumentMemberDeclarationNode;
 import io.ballerina.toml.syntax.tree.NodeList;
@@ -74,7 +76,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -182,20 +183,21 @@ public class BalProjectUtils {
     }
 
     public static void validateBallerinaProject(Path projectPath) throws BalException {
-        Optional<Path> ballerinaToml;
-        try (Stream<Path> stream = Files.list(projectPath)) {
-            ballerinaToml = stream.filter(file -> !Files.isDirectory(file))
-                    .map(Path::getFileName)
-                    .filter(Objects::nonNull)
-                    .filter(file -> BALLERINA_TOML.equals(file.toString()))
-                    .findFirst();
+        try {
+            Path ballerinaToml = projectPath.resolve(BALLERINA_TOML);
+            if (!Files.exists(ballerinaToml)) {
+                throw new BalException(String.format("ERROR: invalid Ballerina package directory: %s, " +
+                        "cannot find 'Ballerina.toml' file.%n", projectPath.toAbsolutePath()));
+            }
+
+            TomlDocument tomlDocument = TomlDocument.from(BALLERINA_TOML, Files.readString(ballerinaToml));
+            if (tomlDocument.toml().getTable(ProjectPaths.WORKSPACE_KEY).isPresent()) {
+                throw new BalException(String.format("ERROR: invalid Ballerina package directory: %s, " +
+                        "the persist tool does not support Ballerina workspaces.%n", projectPath.toAbsolutePath()));
+            }
         } catch (IOException e) {
             throw new BalException(String.format("ERROR: invalid Ballerina package directory: %s, " +
                     "%s.%n", projectPath.toAbsolutePath(), e.getMessage()));
-        }
-        if (ballerinaToml.isEmpty()) {
-            throw new BalException(String.format("ERROR: invalid Ballerina package directory: %s, " +
-                    "cannot find 'Ballerina.toml' file.%n", projectPath.toAbsolutePath()));
         }
     }
 
