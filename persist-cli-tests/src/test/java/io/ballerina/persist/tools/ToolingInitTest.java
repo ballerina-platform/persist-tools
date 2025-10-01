@@ -19,6 +19,8 @@
 package io.ballerina.persist.tools;
 
 import io.ballerina.persist.cmd.Init;
+import io.ballerina.persist.utils.BalProjectUtils;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 import picocli.CommandLine;
 
@@ -50,6 +52,32 @@ public class ToolingInitTest {
     public void testInitWithBothDatastoreAndModule() {
         executeInitCommand("tool_test_init_1", "mysql", "test_module");
         assertGeneratedSources("tool_test_init_1");
+    }
+
+    @Test
+    public void testValidateBallerinaProjectWithoutBallerinaToml() {
+        Path sourcePath = Paths.get(GENERATED_SOURCES_DIRECTORY, "tool_test_init_workspace", "package2");
+        try {
+            BalProjectUtils.validateBallerinaProject(sourcePath);
+            Assert.fail("Expected exception was not thrown");
+        } catch (Exception e) {
+            String exceptionMessage = e.getMessage();
+            Assert.assertTrue(exceptionMessage.contains("ERROR: invalid Ballerina package directory:"));
+            Assert.assertTrue(exceptionMessage.contains("cannot find 'Ballerina.toml' file"));
+        }
+    }
+
+    @Test
+    public void testValidateBallerinaProjectInsideWorkspace() {
+        Path sourcePath = Paths.get(GENERATED_SOURCES_DIRECTORY, "tool_test_init_workspace");
+        try {
+            BalProjectUtils.validateBallerinaProject(sourcePath);
+            Assert.fail("Expected exception was not thrown");
+        } catch (Exception e) {
+            String exceptionMessage = e.getMessage();
+            Assert.assertTrue(exceptionMessage.contains("ERROR: invalid Ballerina package directory:"));
+            Assert.assertTrue(exceptionMessage.contains("the persist tool does not support Ballerina workspaces"));
+        }
     }
 
     public static void executeInitCommand(String subDir, String... args) {
