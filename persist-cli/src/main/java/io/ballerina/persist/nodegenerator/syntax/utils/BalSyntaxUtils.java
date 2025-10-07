@@ -337,14 +337,14 @@ public class BalSyntaxUtils {
         imports = imports.add(NodeParser.parseImportDeclaration("import ballerina/persist as _;"));
         boolean areAnnotationsAdded = false;
         for (Entity entity : entityModule.getEntityMap().values()) {
-            if (entity.shouldTableMappingGenerated()
+            if (entity.shouldTableMappingGenerated() 
                 || (entity.getIndexes() != null && !entity.getIndexes().isEmpty())
                 || (entity.getUniqueIndexes() != null && !entity.getUniqueIndexes().isEmpty())) {
                 areAnnotationsAdded = true;
                 break;
             }
             for (EntityField field : entity.getFields()) {
-                if (field.shouldColumnMappingGenerated()
+                if (field.shouldColumnMappingGenerated() 
                         || field.isDbGenerated()
                         || isDbTypeMappingRequired(field)
                         || (field.getRelationRefs() != null) && !field.getRelationRefs().isEmpty()) {
@@ -615,6 +615,9 @@ public class BalSyntaxUtils {
                                         sqlType.getNumericScale()));
                     }
                     break;
+                case PersistToolsConstants.SqlTypes.TEXT:
+                    recordFields.append(BalSyntaxConstants.SQL_TEXT_MAPPING_ANNOTATION_NAME);
+                    break;
                 default:
                     break;
             }
@@ -642,6 +645,8 @@ public class BalSyntaxUtils {
                         precision = PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION_MSSQL;
                     }
                     return sqlType.getNumericPrecision() != precision || sqlType.getNumericScale() != scale;
+                case PersistToolsConstants.SqlTypes.TEXT:
+                    return true;
                 default:
                     return false;
             }
@@ -718,7 +723,7 @@ public class BalSyntaxUtils {
                         }
 
 
-                }
+                } 
             } else {
                 addConstrainAnnotationToField(field, recordFields);
                 recordFields.append(field.isOptionalType() ? field.getFieldType() + (field.isArrayType() ?
@@ -946,9 +951,9 @@ public class BalSyntaxUtils {
                     }
                 } else {
                     addConstrainAnnotationToField(field, recordFields);
-                    recordFields.append(field.isOptionalType()
-                            ? field.getFieldType() + (field.isArrayType() ? BalSyntaxConstants.ARRAY : "") +
-                            BalSyntaxConstants.QUESTION_MARK : field.getFieldType() + (field.isArrayType() ?
+                    recordFields.append(field.isOptionalType() 
+                            ? field.getFieldType() + (field.isArrayType() ? BalSyntaxConstants.ARRAY : "") + 
+                            BalSyntaxConstants.QUESTION_MARK : field.getFieldType() + (field.isArrayType() ? 
                             BalSyntaxConstants.ARRAY : ""));
                     recordFields.append(BalSyntaxConstants.SPACE);
                     recordFields.append(field.getFieldName());
