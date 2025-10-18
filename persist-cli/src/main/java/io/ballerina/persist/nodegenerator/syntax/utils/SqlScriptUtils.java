@@ -3,8 +3,8 @@
  *
  * WSO2 LLC. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License.
- * You may obtain a copy of the License at
+ * in compliance with the License. You may obtain a copy of the
+ * License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -279,7 +279,7 @@ public class SqlScriptUtils {
                 associatedEntityRelationType.equals(Relation.RelationType.ONE) && !uniqueIndexExists) {
             relationScripts.append(MessageFormat.format("{0}{1}UNIQUE ({2}),", NEW_LINE, TAB, foreignKey));
         }
-        relationScripts.append(MessageFormat.format("{0}{1}FOREIGN KEY({2}) REFERENCES {3}({4}),",
+        relationScripts.append(MessageFormat.format("{0}{1}FOREIGN KEY({2})REFERENCES {3}({4}),",
                 NEW_LINE, TAB, foreignKey.toString(),
                 getTableNameWithSchema(assocEntity, datasource), referenceFieldName));
         updateReferenceTable(removeSingleQuote(entity.getTableName()), removeSingleQuote(assocEntity.getTableName()),
@@ -336,6 +336,9 @@ public class SqlScriptUtils {
         String length = BalSyntaxConstants.VARCHAR_LENGTH;
         for (AnnotationNode annotationNode : entityField.getAnnotation()) {
             String annotationName = annotationNode.annotReference().toSourceCode().trim();
+            if (annotationName.equals(BalSyntaxConstants.SQL_TEXT_MAPPING_ANNOTATION_NAME)) {
+                return SqlTypes.TEXT;
+            }
             if (annotationName.equals(BalSyntaxConstants.CONSTRAINT_STRING)) {
                 if (annotationNode.annotValue().isEmpty()) {
                     continue;
@@ -626,8 +629,8 @@ public class SqlScriptUtils {
         }
         if (datasource.equals(POSTGRESQL_DB) ||
                 datasource.equals(H2_DB)) {
-            return "\"" + name + "\"";
+            return '"' + name + '"';
         }
-        return "`" + name + "`";
+        return '`' + name + '`';
     }
 }

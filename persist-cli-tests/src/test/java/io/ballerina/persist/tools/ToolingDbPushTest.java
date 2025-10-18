@@ -432,4 +432,11 @@ public class ToolingDbPushTest {
         executeCommand("tool_test_db_push_28", DB_PUSH);
         assertGeneratedSources("tool_test_db_push_28");
     }
+
+    @Test(enabled = true)
+    @Description("Test the created sql script with text type fields")
+    public void testDbPushWithTextTypeFields() {
+        executeCommand("tool_test_db_push_29", DB_PUSH);
+        assertGeneratedSources("tool_test_db_push_29");
+    }
 }
