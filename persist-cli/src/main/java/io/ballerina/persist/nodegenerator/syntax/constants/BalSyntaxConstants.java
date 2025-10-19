@@ -41,7 +41,7 @@ public class BalSyntaxConstants {
     public static final String EMPTY_STRING = "";
     public static final String SPACE = " ";
     public static final String UNDERSCORE = "_";
-    public static final String SINGLE_QUOTE = "'" ;
+    public static final String SINGLE_QUOTE = "'";
     public static final String COMMA_WITH_SPACE = ", ";
     public static final String COLON = ":";
     public static final String SEMICOLON = ";";
