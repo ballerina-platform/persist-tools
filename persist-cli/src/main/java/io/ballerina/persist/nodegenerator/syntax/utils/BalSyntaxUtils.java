@@ -337,14 +337,14 @@ public class BalSyntaxUtils {
         imports = imports.add(NodeParser.parseImportDeclaration("import ballerina/persist as _;"));
         boolean areAnnotationsAdded = false;
         for (Entity entity : entityModule.getEntityMap().values()) {
-            if (entity.shouldTableMappingGenerated() 
+            if (entity.shouldTableMappingGenerated()
                 || (entity.getIndexes() != null && !entity.getIndexes().isEmpty())
                 || (entity.getUniqueIndexes() != null && !entity.getUniqueIndexes().isEmpty())) {
                 areAnnotationsAdded = true;
                 break;
             }
             for (EntityField field : entity.getFields()) {
-                if (field.shouldColumnMappingGenerated() 
+                if (field.shouldColumnMappingGenerated()
                         || field.isDbGenerated()
                         || isDbTypeMappingRequired(field)
                         || (field.getRelationRefs() != null) && !field.getRelationRefs().isEmpty()) {
@@ -723,7 +723,7 @@ public class BalSyntaxUtils {
                         }
 
 
-                } 
+                }
             } else {
                 addConstrainAnnotationToField(field, recordFields);
                 recordFields.append(field.isOptionalType() ? field.getFieldType() + (field.isArrayType() ?
