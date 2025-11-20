@@ -110,10 +110,6 @@ public isolated client class Client {
     # Get rows from User key space.
     #
     # + targetType - Defines which fields to retrieve from the results
-    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
-    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
-    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
-    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
     # + return - A collection of matching records or an error
     isolated resource function get users(UserTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
@@ -175,10 +171,6 @@ public isolated client class Client {
     # Get rows from Post key space.
     #
     # + targetType - Defines which fields to retrieve from the results
-    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
-    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
-    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
-    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
     # + return - A collection of matching records or an error
     isolated resource function get posts(PostTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
@@ -240,10 +232,6 @@ public isolated client class Client {
     # Get rows from Follow key space.
     #
     # + targetType - Defines which fields to retrieve from the results
-    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
-    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
-    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
-    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
     # + return - A collection of matching records or an error
     isolated resource function get follows(FollowTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",

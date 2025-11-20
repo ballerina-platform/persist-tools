@@ -88,10 +88,6 @@ public isolated client class InMemoryClient {
     # Get rows from AllTypes table.
     #
     # + targetType - Defines which fields to retrieve from the results
-    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
-    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
-    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
-    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
     # + return - A collection of matching records or an error
     isolated resource function get alltypes(AllTypesTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
@@ -161,10 +157,6 @@ public isolated client class InMemoryClient {
     # Get rows from StringIdRecord table.
     #
     # + targetType - Defines which fields to retrieve from the results
-    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
-    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
-    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
-    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
     # + return - A collection of matching records or an error
     isolated resource function get stringidrecords(StringIdRecordTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
@@ -234,10 +226,6 @@ public isolated client class InMemoryClient {
     # Get rows from IntIdRecord table.
     #
     # + targetType - Defines which fields to retrieve from the results
-    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
-    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
-    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
-    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
     # + return - A collection of matching records or an error
     isolated resource function get intidrecords(IntIdRecordTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
@@ -307,10 +295,6 @@ public isolated client class InMemoryClient {
     # Get rows from FloatIdRecord table.
     #
     # + targetType - Defines which fields to retrieve from the results
-    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
-    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
-    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
-    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
     # + return - A collection of matching records or an error
     isolated resource function get floatidrecords(FloatIdRecordTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
@@ -380,10 +364,6 @@ public isolated client class InMemoryClient {
     # Get rows from DecimalIdRecord table.
     #
     # + targetType - Defines which fields to retrieve from the results
-    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
-    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
-    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
-    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
     # + return - A collection of matching records or an error
     isolated resource function get decimalidrecords(DecimalIdRecordTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
@@ -453,10 +433,6 @@ public isolated client class InMemoryClient {
     # Get rows from BooleanIdRecord table.
     #
     # + targetType - Defines which fields to retrieve from the results
-    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
-    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
-    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
-    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
     # + return - A collection of matching records or an error
     isolated resource function get booleanidrecords(BooleanIdRecordTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
@@ -526,10 +502,6 @@ public isolated client class InMemoryClient {
     # Get rows from CompositeAssociationRecord table.
     #
     # + targetType - Defines which fields to retrieve from the results
-    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
-    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
-    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
-    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
     # + return - A collection of matching records or an error
     isolated resource function get compositeassociationrecords(CompositeAssociationRecordTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
@@ -599,10 +571,6 @@ public isolated client class InMemoryClient {
     # Get rows from AllTypesIdRecord table.
     #
     # + targetType - Defines which fields to retrieve from the results
-    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
-    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
-    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
-    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
     # + return - A collection of matching records or an error
     isolated resource function get alltypesidrecords(AllTypesIdRecordTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",

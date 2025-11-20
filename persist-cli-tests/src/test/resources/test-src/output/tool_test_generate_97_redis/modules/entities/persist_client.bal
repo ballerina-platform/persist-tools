@@ -149,10 +149,6 @@ public isolated client class Client {
     # Get rows from Workspace key space.
     #
     # + targetType - Defines which fields to retrieve from the results
-    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
-    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
-    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
-    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
     # + return - A collection of matching records or an error
     isolated resource function get workspaces(WorkspaceTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
@@ -217,10 +213,6 @@ public isolated client class Client {
     # Get rows from Building key space.
     #
     # + targetType - Defines which fields to retrieve from the results
-    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
-    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
-    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
-    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
     # + return - A collection of matching records or an error
     isolated resource function get buildings(BuildingTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
@@ -282,10 +274,6 @@ public isolated client class Client {
     # Get rows from Department key space.
     #
     # + targetType - Defines which fields to retrieve from the results
-    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
-    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
-    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
-    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
     # + return - A collection of matching records or an error
     isolated resource function get departments(DepartmentTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
@@ -350,10 +338,6 @@ public isolated client class Client {
     # Get rows from OrderItem key space.
     #
     # + targetType - Defines which fields to retrieve from the results
-    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
-    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
-    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
-    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
     # + return - A collection of matching records or an error
     isolated resource function get orderitems(OrderItemTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
@@ -418,10 +402,6 @@ public isolated client class Client {
     # Get rows from Employee key space.
     #
     # + targetType - Defines which fields to retrieve from the results
-    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
-    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
-    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
-    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
     # + return - A collection of matching records or an error
     isolated resource function get employees(EmployeeTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
