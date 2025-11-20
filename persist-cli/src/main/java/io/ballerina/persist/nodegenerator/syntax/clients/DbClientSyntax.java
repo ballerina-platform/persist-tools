@@ -48,6 +48,7 @@ import java.util.Objects;
 import static io.ballerina.persist.PersistToolsConstants.CUSTOM_SCHEMA_SUPPORTED_DB_PROVIDERS;
 import static io.ballerina.persist.PersistToolsConstants.JDBC_CONNECTOR_MODULE_NAME;
 import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_VIA_JDBC_CONNECTOR;
+import static io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils.EntityType.TABLE;
 
 /**
  * This class is used to generate the DB client syntax tree.
@@ -56,7 +57,6 @@ import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_VIA_JDBC_CONN
  */
 public class DbClientSyntax implements ClientSyntax {
 
-    public static final String ENTITY_TYPE = "table";
     private final Module entityModule;
     private final String dbNamePrefix;
     private final String importPackage;
@@ -213,7 +213,7 @@ public class DbClientSyntax implements ClientSyntax {
                         entity.getClientResourceName(),
                         entity.getEntityName(), BalSyntaxConstants.SQL, this.nativeClass));
 
-        String doc = BalSyntaxUtils.createGetResourceDocumentation(entity, ENTITY_TYPE);
+        String doc = BalSyntaxUtils.createGetResourceDocumentation(entity, TABLE, true);
         return BalSyntaxUtils.addDocumentationToFunction(functionNode, doc);
     }
 
@@ -222,7 +222,7 @@ public class DbClientSyntax implements ClientSyntax {
         FunctionDefinitionNode functionNode = BalSyntaxUtils.generateGetByKeyFunction(entity, this.nativeClass,
                 BalSyntaxConstants.SQL);
 
-        String doc = BalSyntaxUtils.createGetByKeyResourceDocumentation(entity, ENTITY_TYPE);
+        String doc = BalSyntaxUtils.createGetByKeyResourceDocumentation(entity, TABLE);
         return BalSyntaxUtils.addDocumentationToFunction(functionNode, doc);
     }
 
@@ -246,7 +246,7 @@ public class DbClientSyntax implements ClientSyntax {
         String parameterType = String.format(BalSyntaxConstants.INSERT_RECORD, entity.getEntityName());
         List<EntityField> primaryKeys = entity.getKeys();
         Function create = BalSyntaxUtils.generatePostFunction(entity, primaryKeys, parameterType);
-        String doc = BalSyntaxUtils.createPostResourceDocumentation(entity, ENTITY_TYPE);
+        String doc = BalSyntaxUtils.createPostResourceDocumentation(entity, TABLE);
         create.addDocumentation(BalSyntaxUtils.createMarkdownDocumentationNode(doc));
         addFunctionBodyToPostResource(create, primaryKeys,
                 BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()), parameterType);
@@ -259,7 +259,7 @@ public class DbClientSyntax implements ClientSyntax {
         StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH +
                 entity.getClientResourceName());
         Function update = BalSyntaxUtils.generatePutFunction(entity, filterKeys, path);
-        String doc = BalSyntaxUtils.createPutResourceDocumentation(entity, ENTITY_TYPE);
+        String doc = BalSyntaxUtils.createPutResourceDocumentation(entity, TABLE);
         update.addDocumentation(BalSyntaxUtils.createMarkdownDocumentationNode(doc));
 
         update.addStatement(NodeParser.parseStatement(BalSyntaxConstants.SQL_CLIENT_DECLARATION));
@@ -290,7 +290,7 @@ public class DbClientSyntax implements ClientSyntax {
         StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH +
                 entity.getClientResourceName());
         Function delete = BalSyntaxUtils.generateDeleteFunction(entity, filterKeys, path);
-        String doc = BalSyntaxUtils.createDeleteResourceDocumentation(entity, ENTITY_TYPE);
+        String doc = BalSyntaxUtils.createDeleteResourceDocumentation(entity, TABLE);
         delete.addDocumentation(BalSyntaxUtils.createMarkdownDocumentationNode(doc));
         delete.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.GET_OBJECT_QUERY,
                 entity.getEntityName(), path)));

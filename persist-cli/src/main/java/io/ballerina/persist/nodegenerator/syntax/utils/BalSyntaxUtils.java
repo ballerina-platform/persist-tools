@@ -1115,22 +1115,46 @@ public class BalSyntaxUtils {
         return NodeFactory.createMarkdownDocumentationNode(NodeFactory.createNodeList(documentElements));
     }
 
+    public enum EntityType {
+        TABLE ("table"),
+        SHEET("sheet"),
+        KEY_SPACE ("key space");
+
+        private final String name;
+
+        EntityType(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
+    }
+
     /**
      * Create documentation for GET resource method.
      *
      * @param entity The entity
      * @param entityType The type of entity (table, sheet, key space)
+     * @param isSQLDataStore Whether the data store is SQL-based
      * @return Documentation string
      */
-    public static String createGetResourceDocumentation(Entity entity, String entityType) {
-        return String.format("Get rows from %s %s.%n%n" +
-                        "+ targetType - Defines which fields to retrieve from the results%n" +
-                        "+ whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)%n" +
-                        "+ orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)%n" +
-                        "+ limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)%n" +
-                        "+ groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)%n" +
-                        "+ return - A collection of matching records or an error",
-                entity.getTableName(), entityType);
+    public static String createGetResourceDocumentation(Entity entity, EntityType entityType, boolean isSQLDataStore) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format("Get rows from %s %s.%n%n+ targetType - Defines which fields to retrieve from " +
+                        "the results%n", entity.getTableName(), entityType.getName()));
+        if (isSQLDataStore) {
+            sb.append("+ whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)")
+                    .append(System.lineSeparator())
+                    .append("+ orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)")
+                    .append(System.lineSeparator())
+                    .append("+ limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)")
+                    .append(System.lineSeparator())
+                    .append("+ groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)")
+                    .append(System.lineSeparator());
+        }
+        sb.append("+ return - A collection of matching records or an error");
+        return sb.toString();
     }
 
     /**
@@ -1140,9 +1164,9 @@ public class BalSyntaxUtils {
      * @param entityType The type of entity (table, sheet, key space)
      * @return Documentation string
      */
-    public static String createGetByKeyResourceDocumentation(Entity entity, String entityType) {
+    public static String createGetByKeyResourceDocumentation(Entity entity, EntityType entityType) {
         StringBuilder doc = new StringBuilder();
-        doc.append(String.format("Get row from %s %s.%n", entity.getTableName(), entityType));
+        doc.append(String.format("Get row from %s %s.%n", entity.getTableName(), entityType.getName()));
 
         // Add parameter documentation for each key field
         for (EntityField key : entity.getKeys()) {
@@ -1163,11 +1187,11 @@ public class BalSyntaxUtils {
      * @param entityType The type of entity (table, sheet, key space)
      * @return Documentation string
      */
-    public static String createPostResourceDocumentation(Entity entity, String entityType) {
+    public static String createPostResourceDocumentation(Entity entity, EntityType entityType) {
         return String.format("Insert rows into %s %s.%n%n" +
                         "+ data - A list of records to be inserted%n" +
                         "+ return - The primary key value(s) of the inserted rows or an error",
-                entity.getTableName(), entityType);
+                entity.getTableName(), entityType.getName());
     }
 
     /**
@@ -1177,9 +1201,9 @@ public class BalSyntaxUtils {
      * @param entityType The type of entity (table, sheet, key space)
      * @return Documentation string
      */
-    public static String createPutResourceDocumentation(Entity entity, String entityType) {
+    public static String createPutResourceDocumentation(Entity entity, EntityType entityType) {
         StringBuilder doc = new StringBuilder();
-        doc.append(String.format("Update row in %s %s.%n", entity.getTableName(), entityType));
+        doc.append(String.format("Update row in %s %s.%n", entity.getTableName(), entityType.getName()));
 
         // Add parameter documentation for each key field
         for (EntityField key : entity.getKeys()) {
@@ -1200,9 +1224,9 @@ public class BalSyntaxUtils {
      * @param entityType The type of entity (table, sheet, key space)
      * @return Documentation string
      */
-    public static String createDeleteResourceDocumentation(Entity entity, String entityType) {
+    public static String createDeleteResourceDocumentation(Entity entity, EntityType entityType) {
         StringBuilder doc = new StringBuilder();
-        doc.append(String.format("Delete row from %s %s.%n", entity.getTableName(), entityType));
+        doc.append(String.format("Delete row from %s %s.%n", entity.getTableName(), entityType.getName()));
 
         // Add parameter documentation for each key field
         for (EntityField key : entity.getKeys()) {

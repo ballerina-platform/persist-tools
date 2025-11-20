@@ -45,10 +45,9 @@ import java.util.List;
 import java.util.Locale;
 
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.REDIS;
+import static io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils.EntityType.KEY_SPACE;
 
 public class RedisClientSyntax  implements ClientSyntax {
-    public static final String ENTITY_TYPE = "key space";
-
     private final Module entityModule;
     private final String datasource;
     private final String importPackage;
@@ -124,7 +123,7 @@ public class RedisClientSyntax  implements ClientSyntax {
                 String.format(BalSyntaxConstants.EXTERNAL_REDIS_GET_METHOD_TEMPLATE, entity.getClientResourceName(),
                         entity.getEntityName(), REDIS, this.nativeClass));
 
-        String doc = BalSyntaxUtils.createGetResourceDocumentation(entity, ENTITY_TYPE);
+        String doc = BalSyntaxUtils.createGetResourceDocumentation(entity, KEY_SPACE, false);
         return BalSyntaxUtils.addDocumentationToFunction(functionNode, doc);
     }
 
@@ -133,7 +132,7 @@ public class RedisClientSyntax  implements ClientSyntax {
         FunctionDefinitionNode functionNode = BalSyntaxUtils.generateGetByKeyFunction(entity, this.nativeClass,
                 REDIS);
 
-        String doc = BalSyntaxUtils.createGetByKeyResourceDocumentation(entity, ENTITY_TYPE);
+        String doc = BalSyntaxUtils.createGetByKeyResourceDocumentation(entity, KEY_SPACE);
         return BalSyntaxUtils.addDocumentationToFunction(functionNode, doc);
     }
 
@@ -157,7 +156,7 @@ public class RedisClientSyntax  implements ClientSyntax {
         String parameterType = String.format(BalSyntaxConstants.INSERT_RECORD, entity.getEntityName());
         List<EntityField> primaryKeys = entity.getKeys();
         Function create = BalSyntaxUtils.generatePostFunction(entity, primaryKeys, parameterType);
-        String doc = BalSyntaxUtils.createPostResourceDocumentation(entity, ENTITY_TYPE);
+        String doc = BalSyntaxUtils.createPostResourceDocumentation(entity, KEY_SPACE);
         create.addDocumentation(BalSyntaxUtils.createMarkdownDocumentationNode(doc));
         addFunctionBodyToPostResource(create, primaryKeys,
                 BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()), parameterType);
@@ -169,7 +168,7 @@ public class RedisClientSyntax  implements ClientSyntax {
         StringBuilder filterKeys = new StringBuilder(BalSyntaxConstants.OPEN_BRACE);
         StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH + entity.getClientResourceName());
         Function update = BalSyntaxUtils.generatePutFunction(entity, filterKeys, path);
-        String doc = BalSyntaxUtils.createPutResourceDocumentation(entity, ENTITY_TYPE);
+        String doc = BalSyntaxUtils.createPutResourceDocumentation(entity, KEY_SPACE);
         update.addDocumentation(BalSyntaxUtils.createMarkdownDocumentationNode(doc));
 
         update.addStatement(NodeParser.parseStatement(BalSyntaxConstants.REDIS_CLIENT_DECLARATION));
@@ -199,7 +198,7 @@ public class RedisClientSyntax  implements ClientSyntax {
         StringBuilder filterKeys = new StringBuilder(BalSyntaxConstants.OPEN_BRACE);
         StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH + entity.getClientResourceName());
         Function delete = BalSyntaxUtils.generateDeleteFunction(entity, filterKeys, path);
-        String doc = BalSyntaxUtils.createDeleteResourceDocumentation(entity, ENTITY_TYPE);
+        String doc = BalSyntaxUtils.createDeleteResourceDocumentation(entity, KEY_SPACE);
         delete.addDocumentation(BalSyntaxUtils.createMarkdownDocumentationNode(doc));
         delete.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.GET_OBJECT_QUERY,
                 entity.getEntityName(), path)));

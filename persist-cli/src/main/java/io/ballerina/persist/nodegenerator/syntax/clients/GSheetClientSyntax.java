@@ -40,6 +40,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.GOOGLE_SHEETS;
+import static io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils.EntityType.SHEET;
 
 /**
  * This class is used to generate the DB client syntax tree.
@@ -49,7 +50,6 @@ import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConst
 public class GSheetClientSyntax implements ClientSyntax {
 
     public static final String GOOGLE_SHEETS_PROCESSOR = "GoogleSheetsProcessor";
-    public static final String ENTITY_TYPE = "sheet";
     private final Map<String, String> queryMethodStatement = new HashMap<>();
     private final Module entityModule;
     public GSheetClientSyntax(Module entityModule) {
@@ -125,7 +125,7 @@ public class GSheetClientSyntax implements ClientSyntax {
         FunctionDefinitionNode functionNode = BalSyntaxUtils.generateGetFunction(entity, GOOGLE_SHEETS_PROCESSOR,
                 GOOGLE_SHEETS);
 
-        String doc = BalSyntaxUtils.createGetResourceDocumentation(entity, ENTITY_TYPE);
+        String doc = BalSyntaxUtils.createGetResourceDocumentation(entity, SHEET, false);
         return BalSyntaxUtils.addDocumentationToFunction(functionNode, doc);
     }
 
@@ -134,7 +134,7 @@ public class GSheetClientSyntax implements ClientSyntax {
         FunctionDefinitionNode functionNode = BalSyntaxUtils.generateGetByKeyFunction(entity, GOOGLE_SHEETS_PROCESSOR,
                 GOOGLE_SHEETS);
 
-        String doc = BalSyntaxUtils.createGetByKeyResourceDocumentation(entity, ENTITY_TYPE);
+        String doc = BalSyntaxUtils.createGetByKeyResourceDocumentation(entity, SHEET);
         return BalSyntaxUtils.addDocumentationToFunction(functionNode, doc);
     }
 
@@ -152,7 +152,7 @@ public class GSheetClientSyntax implements ClientSyntax {
         String parameterType = String.format(BalSyntaxConstants.INSERT_RECORD, entity.getEntityName());
         List<EntityField> primaryKeys = entity.getKeys();
         Function create = BalSyntaxUtils.generatePostFunction(entity, primaryKeys, parameterType);
-        String doc = BalSyntaxUtils.createPostResourceDocumentation(entity, ENTITY_TYPE);
+        String doc = BalSyntaxUtils.createPostResourceDocumentation(entity, SHEET);
         create.addDocumentation(BalSyntaxUtils.createMarkdownDocumentationNode(doc));
         addFunctionBodyToPostResource(create, primaryKeys,
                 BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()), parameterType);
@@ -164,7 +164,7 @@ public class GSheetClientSyntax implements ClientSyntax {
         StringBuilder filterKeys = new StringBuilder(BalSyntaxConstants.OPEN_BRACE);
         StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH + entity.getClientResourceName());
         Function update = BalSyntaxUtils.generatePutFunction(entity, filterKeys, path);
-        String doc = BalSyntaxUtils.createPutResourceDocumentation(entity, ENTITY_TYPE);
+        String doc = BalSyntaxUtils.createPutResourceDocumentation(entity, SHEET);
         update.addDocumentation(BalSyntaxUtils.createMarkdownDocumentationNode(doc));
         if (entity.getKeys().size() > 1) {
 
@@ -198,7 +198,7 @@ public class GSheetClientSyntax implements ClientSyntax {
         StringBuilder filterKeys = new StringBuilder(BalSyntaxConstants.OPEN_BRACE);
         StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH + entity.getClientResourceName());
         Function delete = BalSyntaxUtils.generateDeleteFunction(entity, filterKeys, path);
-        String doc = BalSyntaxUtils.createDeleteResourceDocumentation(entity, ENTITY_TYPE);
+        String doc = BalSyntaxUtils.createDeleteResourceDocumentation(entity, SHEET);
         delete.addDocumentation(BalSyntaxUtils.createMarkdownDocumentationNode(doc));
         delete.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.GET_OBJECT_QUERY,
                 entity.getEntityName(), path)));
