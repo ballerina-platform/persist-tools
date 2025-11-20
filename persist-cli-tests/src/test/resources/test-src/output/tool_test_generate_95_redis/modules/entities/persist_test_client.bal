@@ -24,6 +24,7 @@ final isolated table<BooleanIdRecord> key(id) booleanidrecordsTable = table [];
 final isolated table<CompositeAssociationRecord> key(id) compositeassociationrecordsTable = table [];
 final isolated table<AllTypesIdRecord> key(booleanType, intType, floatType, decimalType, stringType) alltypesidrecordsTable = table [];
 
+# In-Memory persist client.
 public isolated client class InMemoryClient {
     *persist:AbstractPersistClient;
 
@@ -84,16 +85,33 @@ public isolated client class InMemoryClient {
         };
     }
 
+    # Get rows from AllTypes table.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
+    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
+    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
+    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + return - A collection of matching records or an error
     isolated resource function get alltypes(AllTypesTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "query"
     } external;
 
+    # Get row from AllTypes table.
+    #
+    # + id - The value of the primary key field id
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get alltypes/[int id](AllTypesTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into AllTypes table.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post alltypes(AllTypesInsert[] data) returns int[]|persist:Error {
         int[] keys = [];
         foreach AllTypesInsert value in data {
@@ -108,6 +126,11 @@ public isolated client class InMemoryClient {
         return keys;
     }
 
+    # Update row in AllTypes table.
+    #
+    # + id - The value of the primary key field id
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put alltypes/[int id](AllTypesUpdate value) returns AllTypes|persist:Error {
         lock {
             if !alltypesTable.hasKey(id) {
@@ -122,6 +145,10 @@ public isolated client class InMemoryClient {
         }
     }
 
+    # Delete row from AllTypes table.
+    #
+    # + id - The value of the primary key field id
+    # + return - The deleted record or an error
     isolated resource function delete alltypes/[int id]() returns AllTypes|persist:Error {
         lock {
             if !alltypesTable.hasKey(id) {
@@ -131,16 +158,33 @@ public isolated client class InMemoryClient {
         }
     }
 
+    # Get rows from StringIdRecord table.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
+    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
+    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
+    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + return - A collection of matching records or an error
     isolated resource function get stringidrecords(StringIdRecordTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "query"
     } external;
 
+    # Get row from StringIdRecord table.
+    #
+    # + id - The value of the primary key field id
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get stringidrecords/[string id](StringIdRecordTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into StringIdRecord table.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post stringidrecords(StringIdRecordInsert[] data) returns string[]|persist:Error {
         string[] keys = [];
         foreach StringIdRecordInsert value in data {
@@ -155,6 +199,11 @@ public isolated client class InMemoryClient {
         return keys;
     }
 
+    # Update row in StringIdRecord table.
+    #
+    # + id - The value of the primary key field id
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put stringidrecords/[string id](StringIdRecordUpdate value) returns StringIdRecord|persist:Error {
         lock {
             if !stringidrecordsTable.hasKey(id) {
@@ -169,6 +218,10 @@ public isolated client class InMemoryClient {
         }
     }
 
+    # Delete row from StringIdRecord table.
+    #
+    # + id - The value of the primary key field id
+    # + return - The deleted record or an error
     isolated resource function delete stringidrecords/[string id]() returns StringIdRecord|persist:Error {
         lock {
             if !stringidrecordsTable.hasKey(id) {
@@ -178,16 +231,33 @@ public isolated client class InMemoryClient {
         }
     }
 
+    # Get rows from IntIdRecord table.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
+    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
+    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
+    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + return - A collection of matching records or an error
     isolated resource function get intidrecords(IntIdRecordTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "query"
     } external;
 
+    # Get row from IntIdRecord table.
+    #
+    # + id - The value of the primary key field id
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get intidrecords/[int id](IntIdRecordTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into IntIdRecord table.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post intidrecords(IntIdRecordInsert[] data) returns int[]|persist:Error {
         int[] keys = [];
         foreach IntIdRecordInsert value in data {
@@ -202,6 +272,11 @@ public isolated client class InMemoryClient {
         return keys;
     }
 
+    # Update row in IntIdRecord table.
+    #
+    # + id - The value of the primary key field id
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put intidrecords/[int id](IntIdRecordUpdate value) returns IntIdRecord|persist:Error {
         lock {
             if !intidrecordsTable.hasKey(id) {
@@ -216,6 +291,10 @@ public isolated client class InMemoryClient {
         }
     }
 
+    # Delete row from IntIdRecord table.
+    #
+    # + id - The value of the primary key field id
+    # + return - The deleted record or an error
     isolated resource function delete intidrecords/[int id]() returns IntIdRecord|persist:Error {
         lock {
             if !intidrecordsTable.hasKey(id) {
@@ -225,16 +304,33 @@ public isolated client class InMemoryClient {
         }
     }
 
+    # Get rows from FloatIdRecord table.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
+    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
+    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
+    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + return - A collection of matching records or an error
     isolated resource function get floatidrecords(FloatIdRecordTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "query"
     } external;
 
+    # Get row from FloatIdRecord table.
+    #
+    # + id - The value of the primary key field id
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get floatidrecords/[float id](FloatIdRecordTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into FloatIdRecord table.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post floatidrecords(FloatIdRecordInsert[] data) returns float[]|persist:Error {
         float[] keys = [];
         foreach FloatIdRecordInsert value in data {
@@ -249,6 +345,11 @@ public isolated client class InMemoryClient {
         return keys;
     }
 
+    # Update row in FloatIdRecord table.
+    #
+    # + id - The value of the primary key field id
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put floatidrecords/[float id](FloatIdRecordUpdate value) returns FloatIdRecord|persist:Error {
         lock {
             if !floatidrecordsTable.hasKey(id) {
@@ -263,6 +364,10 @@ public isolated client class InMemoryClient {
         }
     }
 
+    # Delete row from FloatIdRecord table.
+    #
+    # + id - The value of the primary key field id
+    # + return - The deleted record or an error
     isolated resource function delete floatidrecords/[float id]() returns FloatIdRecord|persist:Error {
         lock {
             if !floatidrecordsTable.hasKey(id) {
@@ -272,16 +377,33 @@ public isolated client class InMemoryClient {
         }
     }
 
+    # Get rows from DecimalIdRecord table.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
+    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
+    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
+    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + return - A collection of matching records or an error
     isolated resource function get decimalidrecords(DecimalIdRecordTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "query"
     } external;
 
+    # Get row from DecimalIdRecord table.
+    #
+    # + id - The value of the primary key field id
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get decimalidrecords/[decimal id](DecimalIdRecordTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into DecimalIdRecord table.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post decimalidrecords(DecimalIdRecordInsert[] data) returns decimal[]|persist:Error {
         decimal[] keys = [];
         foreach DecimalIdRecordInsert value in data {
@@ -296,6 +418,11 @@ public isolated client class InMemoryClient {
         return keys;
     }
 
+    # Update row in DecimalIdRecord table.
+    #
+    # + id - The value of the primary key field id
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put decimalidrecords/[decimal id](DecimalIdRecordUpdate value) returns DecimalIdRecord|persist:Error {
         lock {
             if !decimalidrecordsTable.hasKey(id) {
@@ -310,6 +437,10 @@ public isolated client class InMemoryClient {
         }
     }
 
+    # Delete row from DecimalIdRecord table.
+    #
+    # + id - The value of the primary key field id
+    # + return - The deleted record or an error
     isolated resource function delete decimalidrecords/[decimal id]() returns DecimalIdRecord|persist:Error {
         lock {
             if !decimalidrecordsTable.hasKey(id) {
@@ -319,16 +450,33 @@ public isolated client class InMemoryClient {
         }
     }
 
+    # Get rows from BooleanIdRecord table.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
+    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
+    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
+    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + return - A collection of matching records or an error
     isolated resource function get booleanidrecords(BooleanIdRecordTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "query"
     } external;
 
+    # Get row from BooleanIdRecord table.
+    #
+    # + id - The value of the primary key field id
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get booleanidrecords/[boolean id](BooleanIdRecordTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into BooleanIdRecord table.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post booleanidrecords(BooleanIdRecordInsert[] data) returns boolean[]|persist:Error {
         boolean[] keys = [];
         foreach BooleanIdRecordInsert value in data {
@@ -343,6 +491,11 @@ public isolated client class InMemoryClient {
         return keys;
     }
 
+    # Update row in BooleanIdRecord table.
+    #
+    # + id - The value of the primary key field id
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put booleanidrecords/[boolean id](BooleanIdRecordUpdate value) returns BooleanIdRecord|persist:Error {
         lock {
             if !booleanidrecordsTable.hasKey(id) {
@@ -357,6 +510,10 @@ public isolated client class InMemoryClient {
         }
     }
 
+    # Delete row from BooleanIdRecord table.
+    #
+    # + id - The value of the primary key field id
+    # + return - The deleted record or an error
     isolated resource function delete booleanidrecords/[boolean id]() returns BooleanIdRecord|persist:Error {
         lock {
             if !booleanidrecordsTable.hasKey(id) {
@@ -366,16 +523,33 @@ public isolated client class InMemoryClient {
         }
     }
 
+    # Get rows from CompositeAssociationRecord table.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
+    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
+    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
+    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + return - A collection of matching records or an error
     isolated resource function get compositeassociationrecords(CompositeAssociationRecordTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "query"
     } external;
 
+    # Get row from CompositeAssociationRecord table.
+    #
+    # + id - The value of the primary key field id
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get compositeassociationrecords/[string id](CompositeAssociationRecordTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into CompositeAssociationRecord table.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post compositeassociationrecords(CompositeAssociationRecordInsert[] data) returns string[]|persist:Error {
         string[] keys = [];
         foreach CompositeAssociationRecordInsert value in data {
@@ -390,6 +564,11 @@ public isolated client class InMemoryClient {
         return keys;
     }
 
+    # Update row in CompositeAssociationRecord table.
+    #
+    # + id - The value of the primary key field id
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put compositeassociationrecords/[string id](CompositeAssociationRecordUpdate value) returns CompositeAssociationRecord|persist:Error {
         lock {
             if !compositeassociationrecordsTable.hasKey(id) {
@@ -404,6 +583,10 @@ public isolated client class InMemoryClient {
         }
     }
 
+    # Delete row from CompositeAssociationRecord table.
+    #
+    # + id - The value of the primary key field id
+    # + return - The deleted record or an error
     isolated resource function delete compositeassociationrecords/[string id]() returns CompositeAssociationRecord|persist:Error {
         lock {
             if !compositeassociationrecordsTable.hasKey(id) {
@@ -413,16 +596,37 @@ public isolated client class InMemoryClient {
         }
     }
 
+    # Get rows from AllTypesIdRecord table.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
+    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
+    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
+    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + return - A collection of matching records or an error
     isolated resource function get alltypesidrecords(AllTypesIdRecordTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "query"
     } external;
 
+    # Get row from AllTypesIdRecord table.
+    #
+    # + booleanType - The value of the primary key field booleanType
+    # + intType - The value of the primary key field intType
+    # + floatType - The value of the primary key field floatType
+    # + decimalType - The value of the primary key field decimalType
+    # + stringType - The value of the primary key field stringType
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get alltypesidrecords/[boolean booleanType]/[int intType]/[float floatType]/[decimal decimalType]/[string stringType](AllTypesIdRecordTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into AllTypesIdRecord table.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post alltypesidrecords(AllTypesIdRecordInsert[] data) returns [boolean, int, float, decimal, string][]|persist:Error {
         [boolean, int, float, decimal, string][] keys = [];
         foreach AllTypesIdRecordInsert value in data {
@@ -437,6 +641,15 @@ public isolated client class InMemoryClient {
         return keys;
     }
 
+    # Update row in AllTypesIdRecord table.
+    #
+    # + booleanType - The value of the primary key field booleanType
+    # + intType - The value of the primary key field intType
+    # + floatType - The value of the primary key field floatType
+    # + decimalType - The value of the primary key field decimalType
+    # + stringType - The value of the primary key field stringType
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put alltypesidrecords/[boolean booleanType]/[int intType]/[float floatType]/[decimal decimalType]/[string stringType](AllTypesIdRecordUpdate value) returns AllTypesIdRecord|persist:Error {
         lock {
             if !alltypesidrecordsTable.hasKey([booleanType, intType, floatType, decimalType, stringType]) {
@@ -451,6 +664,14 @@ public isolated client class InMemoryClient {
         }
     }
 
+    # Delete row from AllTypesIdRecord table.
+    #
+    # + booleanType - The value of the primary key field booleanType
+    # + intType - The value of the primary key field intType
+    # + floatType - The value of the primary key field floatType
+    # + decimalType - The value of the primary key field decimalType
+    # + stringType - The value of the primary key field stringType
+    # + return - The deleted record or an error
     isolated resource function delete alltypesidrecords/[boolean booleanType]/[int intType]/[float floatType]/[decimal decimalType]/[string stringType]() returns AllTypesIdRecord|persist:Error {
         lock {
             if !alltypesidrecordsTable.hasKey([booleanType, intType, floatType, decimalType, stringType]) {
@@ -460,6 +681,9 @@ public isolated client class InMemoryClient {
         }
     }
 
+    # Close the database client and release connections.
+    #
+    # + return - An error if closing fails
     public isolated function close() returns persist:Error? {
         return ();
     }

@@ -17,6 +17,7 @@ const VALUE_SET_COMPOSE_INCLUDE = "valuesetcomposeincludes";
 const VALUE_SET_COMPOSE_INCLUDE_VALUE_SET = "valuesetcomposeincludevaluesets";
 const VALUE_SET_COMPOSE_INCLUDE_CONCEPT = "valuesetcomposeincludeconcepts";
 
+# MySQL persist client.
 public isolated client class Client {
     *persist:AbstractPersistClient;
 
@@ -214,16 +215,33 @@ public isolated client class Client {
         };
     }
 
+    # Get rows from codesystems table.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
+    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
+    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
+    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + return - A collection of matching records or an error
     isolated resource function get codesystems(CodeSystemTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "query"
     } external;
 
+    # Get row from codesystems table.
+    #
+    # + codeSystemId - The value of the primary key field codeSystemId
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get codesystems/[int codeSystemId](CodeSystemTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into codesystems table.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post codesystems(CodeSystemInsert[] data) returns int[]|persist:Error {
         psql:SQLClient sqlClient;
         lock {
@@ -235,6 +253,11 @@ public isolated client class Client {
             select <int>inserted.lastInsertId;
     }
 
+    # Update row in codesystems table.
+    #
+    # + codeSystemId - The value of the primary key field codeSystemId
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put codesystems/[int codeSystemId](CodeSystemUpdate value) returns CodeSystem|persist:Error {
         psql:SQLClient sqlClient;
         lock {
@@ -244,6 +267,10 @@ public isolated client class Client {
         return self->/codesystems/[codeSystemId].get();
     }
 
+    # Delete row from codesystems table.
+    #
+    # + codeSystemId - The value of the primary key field codeSystemId
+    # + return - The deleted record or an error
     isolated resource function delete codesystems/[int codeSystemId]() returns CodeSystem|persist:Error {
         CodeSystem result = check self->/codesystems/[codeSystemId].get();
         psql:SQLClient sqlClient;
@@ -254,16 +281,33 @@ public isolated client class Client {
         return result;
     }
 
+    # Get rows from concepts table.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
+    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
+    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
+    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + return - A collection of matching records or an error
     isolated resource function get concepts(ConceptTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "query"
     } external;
 
+    # Get row from concepts table.
+    #
+    # + conceptId - The value of the primary key field conceptId
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get concepts/[int conceptId](ConceptTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into concepts table.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post concepts(ConceptInsert[] data) returns int[]|persist:Error {
         psql:SQLClient sqlClient;
         lock {
@@ -275,6 +319,11 @@ public isolated client class Client {
             select <int>inserted.lastInsertId;
     }
 
+    # Update row in concepts table.
+    #
+    # + conceptId - The value of the primary key field conceptId
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put concepts/[int conceptId](ConceptUpdate value) returns Concept|persist:Error {
         psql:SQLClient sqlClient;
         lock {
@@ -284,6 +333,10 @@ public isolated client class Client {
         return self->/concepts/[conceptId].get();
     }
 
+    # Delete row from concepts table.
+    #
+    # + conceptId - The value of the primary key field conceptId
+    # + return - The deleted record or an error
     isolated resource function delete concepts/[int conceptId]() returns Concept|persist:Error {
         Concept result = check self->/concepts/[conceptId].get();
         psql:SQLClient sqlClient;
@@ -294,16 +347,33 @@ public isolated client class Client {
         return result;
     }
 
+    # Get rows from valuesets table.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
+    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
+    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
+    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + return - A collection of matching records or an error
     isolated resource function get valuesets(ValueSetTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "query"
     } external;
 
+    # Get row from valuesets table.
+    #
+    # + valueSetId - The value of the primary key field valueSetId
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get valuesets/[int valueSetId](ValueSetTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into valuesets table.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post valuesets(ValueSetInsert[] data) returns int[]|persist:Error {
         psql:SQLClient sqlClient;
         lock {
@@ -315,6 +385,11 @@ public isolated client class Client {
             select <int>inserted.lastInsertId;
     }
 
+    # Update row in valuesets table.
+    #
+    # + valueSetId - The value of the primary key field valueSetId
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put valuesets/[int valueSetId](ValueSetUpdate value) returns ValueSet|persist:Error {
         psql:SQLClient sqlClient;
         lock {
@@ -324,6 +399,10 @@ public isolated client class Client {
         return self->/valuesets/[valueSetId].get();
     }
 
+    # Delete row from valuesets table.
+    #
+    # + valueSetId - The value of the primary key field valueSetId
+    # + return - The deleted record or an error
     isolated resource function delete valuesets/[int valueSetId]() returns ValueSet|persist:Error {
         ValueSet result = check self->/valuesets/[valueSetId].get();
         psql:SQLClient sqlClient;
@@ -334,16 +413,33 @@ public isolated client class Client {
         return result;
     }
 
+    # Get rows from valueset_compose_includes table.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
+    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
+    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
+    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + return - A collection of matching records or an error
     isolated resource function get valuesetcomposeincludes(ValueSetComposeIncludeTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "query"
     } external;
 
+    # Get row from valueset_compose_includes table.
+    #
+    # + valueSetComposeIncludeId - The value of the primary key field valueSetComposeIncludeId
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get valuesetcomposeincludes/[int valueSetComposeIncludeId](ValueSetComposeIncludeTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into valueset_compose_includes table.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post valuesetcomposeincludes(ValueSetComposeIncludeInsert[] data) returns int[]|persist:Error {
         psql:SQLClient sqlClient;
         lock {
@@ -355,6 +451,11 @@ public isolated client class Client {
             select <int>inserted.lastInsertId;
     }
 
+    # Update row in valueset_compose_includes table.
+    #
+    # + valueSetComposeIncludeId - The value of the primary key field valueSetComposeIncludeId
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put valuesetcomposeincludes/[int valueSetComposeIncludeId](ValueSetComposeIncludeUpdate value) returns ValueSetComposeInclude|persist:Error {
         psql:SQLClient sqlClient;
         lock {
@@ -364,6 +465,10 @@ public isolated client class Client {
         return self->/valuesetcomposeincludes/[valueSetComposeIncludeId].get();
     }
 
+    # Delete row from valueset_compose_includes table.
+    #
+    # + valueSetComposeIncludeId - The value of the primary key field valueSetComposeIncludeId
+    # + return - The deleted record or an error
     isolated resource function delete valuesetcomposeincludes/[int valueSetComposeIncludeId]() returns ValueSetComposeInclude|persist:Error {
         ValueSetComposeInclude result = check self->/valuesetcomposeincludes/[valueSetComposeIncludeId].get();
         psql:SQLClient sqlClient;
@@ -374,16 +479,33 @@ public isolated client class Client {
         return result;
     }
 
+    # Get rows from valueset_compose_include_value_sets table.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
+    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
+    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
+    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + return - A collection of matching records or an error
     isolated resource function get valuesetcomposeincludevaluesets(ValueSetComposeIncludeValueSetTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "query"
     } external;
 
+    # Get row from valueset_compose_include_value_sets table.
+    #
+    # + valueSetComposeIncludeValueSetId - The value of the primary key field valueSetComposeIncludeValueSetId
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get valuesetcomposeincludevaluesets/[int valueSetComposeIncludeValueSetId](ValueSetComposeIncludeValueSetTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into valueset_compose_include_value_sets table.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post valuesetcomposeincludevaluesets(ValueSetComposeIncludeValueSetInsert[] data) returns int[]|persist:Error {
         psql:SQLClient sqlClient;
         lock {
@@ -395,6 +517,11 @@ public isolated client class Client {
             select <int>inserted.lastInsertId;
     }
 
+    # Update row in valueset_compose_include_value_sets table.
+    #
+    # + valueSetComposeIncludeValueSetId - The value of the primary key field valueSetComposeIncludeValueSetId
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put valuesetcomposeincludevaluesets/[int valueSetComposeIncludeValueSetId](ValueSetComposeIncludeValueSetUpdate value) returns ValueSetComposeIncludeValueSet|persist:Error {
         psql:SQLClient sqlClient;
         lock {
@@ -404,6 +531,10 @@ public isolated client class Client {
         return self->/valuesetcomposeincludevaluesets/[valueSetComposeIncludeValueSetId].get();
     }
 
+    # Delete row from valueset_compose_include_value_sets table.
+    #
+    # + valueSetComposeIncludeValueSetId - The value of the primary key field valueSetComposeIncludeValueSetId
+    # + return - The deleted record or an error
     isolated resource function delete valuesetcomposeincludevaluesets/[int valueSetComposeIncludeValueSetId]() returns ValueSetComposeIncludeValueSet|persist:Error {
         ValueSetComposeIncludeValueSet result = check self->/valuesetcomposeincludevaluesets/[valueSetComposeIncludeValueSetId].get();
         psql:SQLClient sqlClient;
@@ -414,16 +545,33 @@ public isolated client class Client {
         return result;
     }
 
+    # Get rows from valueset_compose_include_concepts table.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
+    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
+    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
+    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + return - A collection of matching records or an error
     isolated resource function get valuesetcomposeincludeconcepts(ValueSetComposeIncludeConceptTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "query"
     } external;
 
+    # Get row from valueset_compose_include_concepts table.
+    #
+    # + valueSetComposeIncludeConceptId - The value of the primary key field valueSetComposeIncludeConceptId
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get valuesetcomposeincludeconcepts/[int valueSetComposeIncludeConceptId](ValueSetComposeIncludeConceptTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into valueset_compose_include_concepts table.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post valuesetcomposeincludeconcepts(ValueSetComposeIncludeConceptInsert[] data) returns int[]|persist:Error {
         psql:SQLClient sqlClient;
         lock {
@@ -435,6 +583,11 @@ public isolated client class Client {
             select <int>inserted.lastInsertId;
     }
 
+    # Update row in valueset_compose_include_concepts table.
+    #
+    # + valueSetComposeIncludeConceptId - The value of the primary key field valueSetComposeIncludeConceptId
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put valuesetcomposeincludeconcepts/[int valueSetComposeIncludeConceptId](ValueSetComposeIncludeConceptUpdate value) returns ValueSetComposeIncludeConcept|persist:Error {
         psql:SQLClient sqlClient;
         lock {
@@ -444,6 +597,10 @@ public isolated client class Client {
         return self->/valuesetcomposeincludeconcepts/[valueSetComposeIncludeConceptId].get();
     }
 
+    # Delete row from valueset_compose_include_concepts table.
+    #
+    # + valueSetComposeIncludeConceptId - The value of the primary key field valueSetComposeIncludeConceptId
+    # + return - The deleted record or an error
     isolated resource function delete valuesetcomposeincludeconcepts/[int valueSetComposeIncludeConceptId]() returns ValueSetComposeIncludeConcept|persist:Error {
         ValueSetComposeIncludeConcept result = check self->/valuesetcomposeincludeconcepts/[valueSetComposeIncludeConceptId].get();
         psql:SQLClient sqlClient;
@@ -454,14 +611,26 @@ public isolated client class Client {
         return result;
     }
 
+    # Execute a custom SQL query and return results.
+    #
+    # + sqlQuery - The SQL query to execute
+    # + rowType - Defines the structure of the result rows
+    # + return - A collection of result rows or an error
     remote isolated function queryNativeSQL(sql:ParameterizedQuery sqlQuery, typedesc<record {}> rowType = <>) returns stream<rowType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor"
     } external;
 
+    # Execute a custom SQL command (INSERT, UPDATE, DELETE, etc.).
+    #
+    # + sqlQuery - The SQL command to execute
+    # + return - The execution result or an error
     remote isolated function executeNativeSQL(sql:ParameterizedQuery sqlQuery) returns psql:ExecutionResult|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor"
     } external;
 
+    # Close the database client and release connections.
+    #
+    # + return - An error if closing fails
     public isolated function close() returns persist:Error? {
         error? result = self.dbClient.close();
         if result is error {

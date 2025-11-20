@@ -1,6 +1,8 @@
 // AUTO-GENERATED FILE. DO NOT MODIFY.
+
 // This file is an auto-generated file by Ballerina persistence layer for model.
 // It should not be modified by hand.
+
 import ballerina/jballerina.java;
 import ballerina/persist;
 import ballerinax/persist.redis as predis;
@@ -12,6 +14,7 @@ const DEPARTMENT = "departments";
 const ORDER_ITEM = "orderitems";
 const EMPLOYEE = "employees";
 
+# Redis persist client.
 public isolated client class Client {
     *persist:AbstractPersistClient;
 
@@ -143,16 +146,34 @@ public isolated client class Client {
         };
     }
 
+    # Get rows from Workspace key space.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
+    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
+    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
+    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + return - A collection of matching records or an error
     isolated resource function get workspaces(WorkspaceTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
         name: "query"
     } external;
 
+    # Get row from Workspace key space.
+    #
+    # + workspaceId - The value of the primary key field workspaceId
+    # + workspaceType - The value of the primary key field workspaceType
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get workspaces/[string workspaceId]/[string workspaceType](WorkspaceTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into Workspace key space.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post workspaces(WorkspaceInsert[] data) returns [string, string][]|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -163,6 +184,12 @@ public isolated client class Client {
             select [inserted.workspaceId, inserted.workspaceType];
     }
 
+    # Update row in Workspace key space.
+    #
+    # + workspaceId - The value of the primary key field workspaceId
+    # + workspaceType - The value of the primary key field workspaceType
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put workspaces/[string workspaceId]/[string workspaceType](WorkspaceUpdate value) returns Workspace|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -172,6 +199,11 @@ public isolated client class Client {
         return self->/workspaces/[workspaceId]/[workspaceType].get();
     }
 
+    # Delete row from Workspace key space.
+    #
+    # + workspaceId - The value of the primary key field workspaceId
+    # + workspaceType - The value of the primary key field workspaceType
+    # + return - The deleted record or an error
     isolated resource function delete workspaces/[string workspaceId]/[string workspaceType]() returns Workspace|persist:Error {
         Workspace result = check self->/workspaces/[workspaceId]/[workspaceType].get();
         predis:RedisClient redisClient;
@@ -182,16 +214,33 @@ public isolated client class Client {
         return result;
     }
 
+    # Get rows from Building key space.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
+    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
+    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
+    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + return - A collection of matching records or an error
     isolated resource function get buildings(BuildingTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
         name: "query"
     } external;
 
+    # Get row from Building key space.
+    #
+    # + buildingCode - The value of the primary key field buildingCode
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get buildings/[string buildingCode](BuildingTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into Building key space.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post buildings(BuildingInsert[] data) returns string[]|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -202,6 +251,11 @@ public isolated client class Client {
             select inserted.buildingCode;
     }
 
+    # Update row in Building key space.
+    #
+    # + buildingCode - The value of the primary key field buildingCode
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put buildings/[string buildingCode](BuildingUpdate value) returns Building|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -211,6 +265,10 @@ public isolated client class Client {
         return self->/buildings/[buildingCode].get();
     }
 
+    # Delete row from Building key space.
+    #
+    # + buildingCode - The value of the primary key field buildingCode
+    # + return - The deleted record or an error
     isolated resource function delete buildings/[string buildingCode]() returns Building|persist:Error {
         Building result = check self->/buildings/[buildingCode].get();
         predis:RedisClient redisClient;
@@ -221,16 +279,34 @@ public isolated client class Client {
         return result;
     }
 
+    # Get rows from Department key space.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
+    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
+    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
+    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + return - A collection of matching records or an error
     isolated resource function get departments(DepartmentTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
         name: "query"
     } external;
 
+    # Get row from Department key space.
+    #
+    # + deptNo - The value of the primary key field deptNo
+    # + deptName - The value of the primary key field deptName
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get departments/[string deptNo]/[string deptName](DepartmentTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into Department key space.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post departments(DepartmentInsert[] data) returns [string, string][]|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -241,6 +317,12 @@ public isolated client class Client {
             select [inserted.deptNo, inserted.deptName];
     }
 
+    # Update row in Department key space.
+    #
+    # + deptNo - The value of the primary key field deptNo
+    # + deptName - The value of the primary key field deptName
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put departments/[string deptNo]/[string deptName](DepartmentUpdate value) returns Department|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -250,6 +332,11 @@ public isolated client class Client {
         return self->/departments/[deptNo]/[deptName].get();
     }
 
+    # Delete row from Department key space.
+    #
+    # + deptNo - The value of the primary key field deptNo
+    # + deptName - The value of the primary key field deptName
+    # + return - The deleted record or an error
     isolated resource function delete departments/[string deptNo]/[string deptName]() returns Department|persist:Error {
         Department result = check self->/departments/[deptNo]/[deptName].get();
         predis:RedisClient redisClient;
@@ -260,16 +347,34 @@ public isolated client class Client {
         return result;
     }
 
+    # Get rows from OrderItem key space.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
+    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
+    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
+    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + return - A collection of matching records or an error
     isolated resource function get orderitems(OrderItemTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
         name: "query"
     } external;
 
+    # Get row from OrderItem key space.
+    #
+    # + orderId - The value of the primary key field orderId
+    # + itemId - The value of the primary key field itemId
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get orderitems/[string orderId]/[string itemId](OrderItemTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into OrderItem key space.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post orderitems(OrderItemInsert[] data) returns [string, string][]|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -280,6 +385,12 @@ public isolated client class Client {
             select [inserted.orderId, inserted.itemId];
     }
 
+    # Update row in OrderItem key space.
+    #
+    # + orderId - The value of the primary key field orderId
+    # + itemId - The value of the primary key field itemId
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put orderitems/[string orderId]/[string itemId](OrderItemUpdate value) returns OrderItem|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -289,6 +400,11 @@ public isolated client class Client {
         return self->/orderitems/[orderId]/[itemId].get();
     }
 
+    # Delete row from OrderItem key space.
+    #
+    # + orderId - The value of the primary key field orderId
+    # + itemId - The value of the primary key field itemId
+    # + return - The deleted record or an error
     isolated resource function delete orderitems/[string orderId]/[string itemId]() returns OrderItem|persist:Error {
         OrderItem result = check self->/orderitems/[orderId]/[itemId].get();
         predis:RedisClient redisClient;
@@ -299,16 +415,34 @@ public isolated client class Client {
         return result;
     }
 
+    # Get rows from Employee key space.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
+    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
+    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
+    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + return - A collection of matching records or an error
     isolated resource function get employees(EmployeeTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
         name: "query"
     } external;
 
+    # Get row from Employee key space.
+    #
+    # + empNo - The value of the primary key field empNo
+    # + firstName - The value of the primary key field firstName
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get employees/[string empNo]/[string firstName](EmployeeTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into Employee key space.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post employees(EmployeeInsert[] data) returns [string, string][]|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -319,6 +453,12 @@ public isolated client class Client {
             select [inserted.empNo, inserted.firstName];
     }
 
+    # Update row in Employee key space.
+    #
+    # + empNo - The value of the primary key field empNo
+    # + firstName - The value of the primary key field firstName
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put employees/[string empNo]/[string firstName](EmployeeUpdate value) returns Employee|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -328,6 +468,11 @@ public isolated client class Client {
         return self->/employees/[empNo]/[firstName].get();
     }
 
+    # Delete row from Employee key space.
+    #
+    # + empNo - The value of the primary key field empNo
+    # + firstName - The value of the primary key field firstName
+    # + return - The deleted record or an error
     isolated resource function delete employees/[string empNo]/[string firstName]() returns Employee|persist:Error {
         Employee result = check self->/employees/[empNo]/[firstName].get();
         predis:RedisClient redisClient;
@@ -338,6 +483,9 @@ public isolated client class Client {
         return result;
     }
 
+    # Close the database client and release connections.
+    #
+    # + return - An error if closing fails
     public isolated function close() returns persist:Error? {
         error? result = self.dbClient.close();
         if result is error {
@@ -346,3 +494,4 @@ public isolated client class Client {
         return result;
     }
 }
+

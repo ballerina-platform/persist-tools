@@ -1,6 +1,8 @@
 // AUTO-GENERATED FILE. DO NOT MODIFY.
+
 // This file is an auto-generated file by Ballerina persistence layer for model.
 // It should not be modified by hand.
+
 import ballerina/jballerina.java;
 import ballerina/persist;
 import ballerinax/persist.inmemory;
@@ -12,6 +14,7 @@ final isolated table<Appointment> key(id) appointmentsTable = table [];
 final isolated table<Patient> key(id) patientsTable = table [];
 final isolated table<Doctor> key(id) doctorsTable = table [];
 
+# In-Memory persist client.
 public isolated client class Client {
     *persist:AbstractPersistClient;
 
@@ -44,16 +47,33 @@ public isolated client class Client {
         };
     }
 
+    # Get rows from appointment table.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
+    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
+    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
+    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + return - A collection of matching records or an error
     isolated resource function get appointments(AppointmentTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "query"
     } external;
 
+    # Get row from appointment table.
+    #
+    # + id - The value of the primary key field id
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get appointments/[int id](AppointmentTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into appointment table.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post appointments(AppointmentInsert[] data) returns int[]|persist:Error {
         int[] keys = [];
         foreach AppointmentInsert value in data {
@@ -68,6 +88,11 @@ public isolated client class Client {
         return keys;
     }
 
+    # Update row in appointment table.
+    #
+    # + id - The value of the primary key field id
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put appointments/[int id](AppointmentUpdate value) returns Appointment|persist:Error {
         lock {
             if !appointmentsTable.hasKey(id) {
@@ -82,6 +107,10 @@ public isolated client class Client {
         }
     }
 
+    # Delete row from appointment table.
+    #
+    # + id - The value of the primary key field id
+    # + return - The deleted record or an error
     isolated resource function delete appointments/[int id]() returns Appointment|persist:Error {
         lock {
             if !appointmentsTable.hasKey(id) {
@@ -91,16 +120,33 @@ public isolated client class Client {
         }
     }
 
+    # Get rows from patients table.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
+    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
+    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
+    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + return - A collection of matching records or an error
     isolated resource function get patients(PatientTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "query"
     } external;
 
+    # Get row from patients table.
+    #
+    # + id - The value of the primary key field ID
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get patients/[int id](PatientTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into patients table.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post patients(PatientInsert[] data) returns int[]|persist:Error {
         int[] keys = [];
         foreach PatientInsert value in data {
@@ -115,6 +161,11 @@ public isolated client class Client {
         return keys;
     }
 
+    # Update row in patients table.
+    #
+    # + id - The value of the primary key field ID
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put patients/[int id](PatientUpdate value) returns Patient|persist:Error {
         lock {
             if !patientsTable.hasKey(id) {
@@ -129,6 +180,10 @@ public isolated client class Client {
         }
     }
 
+    # Delete row from patients table.
+    #
+    # + id - The value of the primary key field ID
+    # + return - The deleted record or an error
     isolated resource function delete patients/[int id]() returns Patient|persist:Error {
         lock {
             if !patientsTable.hasKey(id) {
@@ -138,16 +193,33 @@ public isolated client class Client {
         }
     }
 
+    # Get rows from Doctor table.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
+    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
+    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
+    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + return - A collection of matching records or an error
     isolated resource function get doctors(DoctorTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "query"
     } external;
 
+    # Get row from Doctor table.
+    #
+    # + id - The value of the primary key field id
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get doctors/[int id](DoctorTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into Doctor table.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post doctors(DoctorInsert[] data) returns int[]|persist:Error {
         int[] keys = [];
         foreach DoctorInsert value in data {
@@ -162,6 +234,11 @@ public isolated client class Client {
         return keys;
     }
 
+    # Update row in Doctor table.
+    #
+    # + id - The value of the primary key field id
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put doctors/[int id](DoctorUpdate value) returns Doctor|persist:Error {
         lock {
             if !doctorsTable.hasKey(id) {
@@ -176,6 +253,10 @@ public isolated client class Client {
         }
     }
 
+    # Delete row from Doctor table.
+    #
+    # + id - The value of the primary key field id
+    # + return - The deleted record or an error
     isolated resource function delete doctors/[int id]() returns Doctor|persist:Error {
         lock {
             if !doctorsTable.hasKey(id) {
@@ -185,6 +266,9 @@ public isolated client class Client {
         }
     }
 
+    # Close the database client and release connections.
+    #
+    # + return - An error if closing fails
     public isolated function close() returns persist:Error? {
         return ();
     }
