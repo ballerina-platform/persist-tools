@@ -20,11 +20,22 @@ package io.ballerina.persist.components;
 
 import io.ballerina.compiler.syntax.tree.AbstractNodeFactory;
 import io.ballerina.compiler.syntax.tree.ClassDefinitionNode;
+import io.ballerina.compiler.syntax.tree.LiteralValueToken;
+import io.ballerina.compiler.syntax.tree.MetadataNode;
 import io.ballerina.compiler.syntax.tree.Node;
 import io.ballerina.compiler.syntax.tree.NodeFactory;
 import io.ballerina.compiler.syntax.tree.NodeList;
+import io.ballerina.compiler.syntax.tree.SyntaxKind;
 import io.ballerina.compiler.syntax.tree.Token;
 import io.ballerina.persist.nodegenerator.syntax.constants.SyntaxTokenConstants;
+
+import static io.ballerina.persist.PersistToolsConstants.SupportedDataSources.GOOGLE_SHEETS;
+import static io.ballerina.persist.PersistToolsConstants.SupportedDataSources.H2_DB;
+import static io.ballerina.persist.PersistToolsConstants.SupportedDataSources.IN_MEMORY_TABLE;
+import static io.ballerina.persist.PersistToolsConstants.SupportedDataSources.MSSQL_DB;
+import static io.ballerina.persist.PersistToolsConstants.SupportedDataSources.MYSQL_DB;
+import static io.ballerina.persist.PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB;
+import static io.ballerina.persist.PersistToolsConstants.SupportedDataSources.REDIS;
 
 /**
  * Class encapsulating methods to create Ballerina Classes.
@@ -38,17 +49,40 @@ public class Client {
     private final Token classKeyWord = AbstractNodeFactory.createIdentifierToken(ComponentConstants.TAG_CLASS);
     private final Token className;
     private NodeList<Node> members;
+    private final MetadataNode metadata;
 
-    public Client(String name) {
+    public Client(String name, String dataStore) {
         visibilityQualifier = AbstractNodeFactory.createIdentifierToken(ComponentConstants.TAG_PUBLIC);
         classTypeQualifiers = AbstractNodeFactory.createEmptyNodeList();
         className = AbstractNodeFactory.createIdentifierToken(name + " ");
         members = NodeFactory.createEmptyNodeList();
+        String documentation = String.format("# %s persist client.", getDatasourceTypeName(dataStore));
+        LiteralValueToken documentationToken =
+                AbstractNodeFactory.createLiteralValueToken(
+                        SyntaxKind.DOCUMENTATION_DESCRIPTION,
+                        documentation,
+                        NodeFactory.createEmptyMinutiaeList(),
+                        NodeFactory.createMinutiaeList(
+                                AbstractNodeFactory.createEndOfLineMinutiae(System.lineSeparator())));
+        metadata = NodeFactory.createMetadataNode(documentationToken, NodeFactory.createEmptyNodeList());
+    }
+
+    private static String getDatasourceTypeName(String dataSource) {
+        return switch (dataSource) {
+            case MYSQL_DB -> "MySQL";
+            case MSSQL_DB -> "MSSQL";
+            case GOOGLE_SHEETS -> "Google Sheets";
+            case IN_MEMORY_TABLE -> "In-Memory";
+            case POSTGRESQL_DB -> "PostgreSQL";
+            case REDIS -> "Redis";
+            case H2_DB -> "H2";
+            default -> dataSource;
+        };
     }
 
     public ClassDefinitionNode getClassDefinitionNode() {
         return NodeFactory.createClassDefinitionNode(
-                null,
+                metadata,
                 visibilityQualifier,
                 classTypeQualifiers,
                 classKeyWord,

@@ -26,8 +26,12 @@ import io.ballerina.compiler.syntax.tree.IdentifierToken;
 import io.ballerina.compiler.syntax.tree.ImportDeclarationNode;
 import io.ballerina.compiler.syntax.tree.ImportOrgNameNode;
 import io.ballerina.compiler.syntax.tree.ImportPrefixNode;
+import io.ballerina.compiler.syntax.tree.LiteralValueToken;
 import io.ballerina.compiler.syntax.tree.MappingConstructorExpressionNode;
 import io.ballerina.compiler.syntax.tree.MappingFieldNode;
+import io.ballerina.compiler.syntax.tree.MarkdownDocumentationLineNode;
+import io.ballerina.compiler.syntax.tree.MarkdownDocumentationNode;
+import io.ballerina.compiler.syntax.tree.MetadataNode;
 import io.ballerina.compiler.syntax.tree.MinutiaeList;
 import io.ballerina.compiler.syntax.tree.ModuleMemberDeclarationNode;
 import io.ballerina.compiler.syntax.tree.ModulePartNode;
@@ -124,8 +128,8 @@ public class BalSyntaxUtils {
         return balTree.modifyWith(modulePartNode);
     }
 
-    public static Client generateClientSignature(String clientName, boolean isIsolated) {
-        Client clientObject = new Client(clientName);
+    public static Client generateClientSignature(String clientName, boolean isIsolated, String datastore) {
+        Client clientObject = new Client(clientName, datastore);
         if (isIsolated) {
             clientObject.addQualifiers(new String[] {
                     BalSyntaxConstants.KEYWORD_ISOLATED, BalSyntaxConstants.KEYWORD_CLIENT });
@@ -1078,5 +1082,183 @@ public class BalSyntaxUtils {
             }
         }
         return keyFields.toString();
+    }
+
+    /**
+     * Create a markdown documentation node for a resource method.
+     *
+     * @param description The description of the resource method
+     * @return MarkdownDocumentationNode
+     */
+    public static MarkdownDocumentationNode createMarkdownDocumentationNode(
+            String description) {
+        List<Node> documentElements = new ArrayList<>();
+
+        // Add documentation comment lines
+        String[] lines = description.split("\n");
+        for (String line : lines) {
+            LiteralValueToken descriptionToken =
+                    AbstractNodeFactory.createLiteralValueToken(
+                            SyntaxKind.DOCUMENTATION_DESCRIPTION,
+                            " " + line,
+                            NodeFactory.createEmptyMinutiaeList(),
+                            NodeFactory.createMinutiaeList(
+                                    AbstractNodeFactory.createEndOfLineMinutiae(System.lineSeparator())));
+            MarkdownDocumentationLineNode docLine =
+                    NodeFactory.createMarkdownDocumentationLineNode(
+                            SyntaxKind.MARKDOWN_DOCUMENTATION_LINE,
+                            AbstractNodeFactory.createToken(SyntaxKind.HASH_TOKEN),
+                            NodeFactory.createNodeList(descriptionToken));
+            documentElements.add(docLine);
+        }
+
+        return NodeFactory.createMarkdownDocumentationNode(NodeFactory.createNodeList(documentElements));
+    }
+
+    /**
+     * Create documentation for GET resource method.
+     *
+     * @param entity The entity
+     * @param entityType The type of entity (table, sheet, key space)
+     * @return Documentation string
+     */
+    public static String createGetResourceDocumentation(Entity entity, String entityType) {
+        return String.format("Get rows from %s %s.%n%n" +
+                        "+ targetType - Defines which fields to retrieve from the results%n" +
+                        "+ whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)%n" +
+                        "+ orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)%n" +
+                        "+ limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)%n" +
+                        "+ groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)%n" +
+                        "+ return - A collection of matching records or an error",
+                entity.getTableName(), entityType);
+    }
+
+    /**
+     * Create documentation for GET by key resource method.
+     *
+     * @param entity The entity
+     * @param entityType The type of entity (table, sheet, key space)
+     * @return Documentation string
+     */
+    public static String createGetByKeyResourceDocumentation(Entity entity, String entityType) {
+        StringBuilder doc = new StringBuilder();
+        doc.append(String.format("Get row from %s %s.%n", entity.getTableName(), entityType));
+
+        // Add parameter documentation for each key field
+        for (EntityField key : entity.getKeys()) {
+            doc.append(String.format("%n+ %s - The value of the primary key field %s",
+                    key.getFieldName(), key.getFieldColumnName()));
+        }
+
+        doc.append(String.format("%n+ targetType - Defines which fields to retrieve from the result"));
+        doc.append(String.format("%n+ return - The matching record or an error"));
+
+        return doc.toString();
+    }
+
+    /**
+     * Create documentation for POST resource method.
+     *
+     * @param entity The entity
+     * @param entityType The type of entity (table, sheet, key space)
+     * @return Documentation string
+     */
+    public static String createPostResourceDocumentation(Entity entity, String entityType) {
+        return String.format("Insert rows into %s %s.%n%n" +
+                        "+ data - A list of records to be inserted%n" +
+                        "+ return - The primary key value(s) of the inserted rows or an error",
+                entity.getTableName(), entityType);
+    }
+
+    /**
+     * Create documentation for PUT resource method.
+     *
+     * @param entity The entity
+     * @param entityType The type of entity (table, sheet, key space)
+     * @return Documentation string
+     */
+    public static String createPutResourceDocumentation(Entity entity, String entityType) {
+        StringBuilder doc = new StringBuilder();
+        doc.append(String.format("Update row in %s %s.%n", entity.getTableName(), entityType));
+
+        // Add parameter documentation for each key field
+        for (EntityField key : entity.getKeys()) {
+            doc.append(String.format("%n+ %s - The value of the primary key field %s",
+                    key.getFieldName(), key.getFieldColumnName()));
+        }
+
+        doc.append(String.format("%n+ value - The record containing updated field values"));
+        doc.append(String.format("%n+ return - The updated record or an error"));
+
+        return doc.toString();
+    }
+
+    /**
+     * Create documentation for DELETE resource method.
+     *
+     * @param entity The entity
+     * @param entityType The type of entity (table, sheet, key space)
+     * @return Documentation string
+     */
+    public static String createDeleteResourceDocumentation(Entity entity, String entityType) {
+        StringBuilder doc = new StringBuilder();
+        doc.append(String.format("Delete row from %s %s.%n", entity.getTableName(), entityType));
+
+        // Add parameter documentation for each key field
+        for (EntityField key : entity.getKeys()) {
+            doc.append(String.format("%n+ %s - The value of the primary key field %s",
+                    key.getFieldName(), key.getFieldColumnName()));
+        }
+
+        doc.append(String.format("%n+ return - The deleted record or an error"));
+
+        return doc.toString();
+    }
+
+    /**
+     * Create documentation for close method.
+     *
+     * @return Documentation string
+     */
+    public static String createCloseMethodDocumentation() {
+        return String.format("Close the database client and release connections.%n%n" +
+                "+ return - An error if closing fails");
+    }
+
+    /**
+     * Create documentation for queryNativeSQL method.
+     *
+     * @return Documentation string
+     */
+    public static String createQueryNativeSQLDocumentation() {
+        return String.format("Execute a custom SQL query and return results.%n%n" +
+                "+ sqlQuery - The SQL query to execute%n" +
+                "+ rowType - Defines the structure of the result rows%n" +
+                "+ return - A collection of result rows or an error");
+    }
+
+    /**
+     * Create documentation for executeNativeSQL method.
+     *
+     * @return Documentation string
+     */
+    public static String createExecuteNativeSQLDocumentation() {
+        return String.format("Execute a custom SQL command (INSERT, UPDATE, DELETE, etc.).%n%n" +
+                "+ sqlQuery - The SQL command to execute%n" +
+                "+ return - The execution result or an error");
+    }
+
+    /**
+     * Add documentation to a function definition node.
+     *
+     * @param functionNode The function definition node
+     * @param documentation The documentation string
+     * @return The function definition node with documentation
+     */
+    public static FunctionDefinitionNode addDocumentationToFunction(FunctionDefinitionNode functionNode,
+                                                                      String documentation) {
+        MarkdownDocumentationNode markdownDoc = createMarkdownDocumentationNode(documentation);
+        MetadataNode metadata = NodeFactory.createMetadataNode(markdownDoc, NodeFactory.createEmptyNodeList());
+        return functionNode.modify().withMetadata(metadata).apply();
     }
 }
