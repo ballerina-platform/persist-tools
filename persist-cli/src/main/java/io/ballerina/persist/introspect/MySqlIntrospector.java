@@ -32,6 +32,13 @@ import java.util.regex.Pattern;
 import static io.ballerina.persist.PersistToolsConstants.MYSQL_DRIVER_CLASS;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.JDBC_URL_WITH_DATABASE_MYSQL;
 
+/**
+ * MySQL-specific implementation of the database introspector.
+ * Provides MySQL-specific SQL queries for introspecting tables, columns, indexes,
+ * foreign keys, and enum types from MySQL databases.
+ *
+ * @since 0.1.0
+ */
 public class MySqlIntrospector extends Introspector {
 
     public MySqlIntrospector() {

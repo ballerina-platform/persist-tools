@@ -22,9 +22,9 @@ import io.ballerina.persist.cmd.Pull;
 import io.ballerina.persist.configuration.DatabaseConfiguration;
 import jdk.jfr.Description;
 import org.junit.jupiter.api.condition.OS;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picocli.CommandLine;
-
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -185,6 +185,242 @@ public class ToolingDbPullTest {
         Pull persistCmd12 = (Pull) persistClass.getDeclaredConstructor(String.class).newInstance(path.toAbsolutePath()
                 .toString());
         persistCmd12.execute();
+        assertGeneratedSources(subDir);
+    }
+
+    @Test(enabled = true)
+    @Description("Test the --tables option to introspect only selected tables.")
+    public void pullTestMysqlWithTablesOption() throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        String subDir = "tool_test_pull_tables_mysql";
+        createFromDatabaseScript(subDir, "mysql", mysqlDbConfig);
+        executePullCommandWithTables(subDir, "User,Department", mysqlDbConfig, "mysql");
+        assertGeneratedSources(subDir);
+    }
+
+    @DataProvider(name = "interactiveModeInputs")
+    public Object[][] provideInteractiveModeInputs() {
+        return new Object[][] {
+                { "all\n", "tool_test_pull_1_mysql" },
+                { "1,3\n", "tool_test_pull_tables_mysql" },
+                { "User,Department\n", "tool_test_pull_tables_mysql" }
+        };
+    }
+
+    @Test(enabled = true, dataProvider = "interactiveModeInputs")
+    @Description("Test interactive mode with different table selection inputs.")
+    public void pullTestMysqlInteractiveMode(String input, String subDir) throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        createFromDatabaseScript(subDir, "mysql", mysqlDbConfig);
+        executePullCommandInteractive(subDir, input, mysqlDbConfig, "mysql");
+        assertGeneratedSources(subDir);
+    }
+
+    @Test(enabled = true)
+    @Description("Test automatic inclusion of referenced tables via foreign keys when selecting tables.")
+    public void pullTestMysqlForeignKeyAutoInclude() throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        String subDir = "tool_test_pull_fk_auto_include_mysql";
+        createFromDatabaseScript(subDir, "mysql", mysqlDbConfig);
+        // Selecting only album_ratings table should automatically include albums table
+        executePullCommandWithTables(subDir, "album_ratings", mysqlDbConfig, "mysql");
+        assertGeneratedSources(subDir);
+    }
+
+    @Test(enabled = true)
+    @Description("Test interactive mode aborting with 'quit' command.")
+    public void pullTestMysqlInteractiveModeQuit() throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        String subDir = "tool_test_pull_tables_mysql";
+        createFromDatabaseScript(subDir, "mysql", mysqlDbConfig);
+        executePullCommandInteractive(subDir, "quit\n", mysqlDbConfig, "mysql");
+        assertGeneratedSources(subDir);
+    }
+
+    @Test(enabled = true)
+    @Description("Test interactive mode with empty input selecting all tables.")
+    public void pullTestMysqlInteractiveModeEmpty() throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        String subDir = "tool_test_pull_1_mysql";
+        createFromDatabaseScript(subDir, "mysql", mysqlDbConfig);
+        executePullCommandInteractive(subDir, "\n", mysqlDbConfig, "mysql");
+        assertGeneratedSources(subDir);
+    }
+
+    @Test(enabled = true)
+    @Description("Test --tables option with single table selection.")
+    public void pullTestMysqlSingleTableSelection() throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        String subDir = "tool_test_pull_single_table_mysql";
+        createFromDatabaseScript(subDir, "mysql", mysqlDbConfig);
+        executePullCommandWithTables(subDir, "User", mysqlDbConfig, "mysql");
+        assertGeneratedSources(subDir);
+    }
+
+    @Test(enabled = true)
+    @Description("Test --tables option with partial invalid table names (should continue with valid ones).")
+    public void pullTestMysqlPartialInvalidTables() throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        String subDir = "tool_test_pull_tables_mysql";
+        createFromDatabaseScript(subDir, "mysql", mysqlDbConfig);
+        // User and Department exist, InvalidTable does not
+        executePullCommandWithTables(subDir, "User,InvalidTable,Department", mysqlDbConfig, "mysql");
+        assertGeneratedSources(subDir);
+    }
+
+    @Test(enabled = true)
+    @Description("Test interactive mode with partial invalid indices (should continue with valid ones).")
+    public void pullTestMysqlInteractiveModePartialInvalidIndices() throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        String subDir = "tool_test_pull_tables_mysql";
+        createFromDatabaseScript(subDir, "mysql", mysqlDbConfig);
+        // Indices 1,3 are valid, 99 is out of range
+        executePullCommandInteractive(subDir, "1,99,3\n", mysqlDbConfig, "mysql");
+        assertGeneratedSources(subDir);
+    }
+
+    @Test(enabled = true)
+    @Description("Test --tables option with all invalid table names (should fail).")
+    public void pullTestMysqlAllInvalidTables() throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        String subDir = "tool_test_pull_invalid_tables_mysql";
+        createFromDatabaseScript(subDir, "mysql", mysqlDbConfig);
+        executePullCommandWithTables(subDir, "InvalidTable1,InvalidTable2", mysqlDbConfig, "mysql");
+        assertGeneratedSources(subDir);
+    }
+
+    @Test(enabled = true)
+    @Description("Test interactive mode with all invalid indices (should fail).")
+    public void pullTestMysqlInteractiveModeAllInvalidIndices() throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        String subDir = "tool_test_pull_invalid_indices_mysql";
+        createFromDatabaseScript(subDir, "mysql", mysqlDbConfig);
+        // All indices out of range
+        executePullCommandInteractive(subDir, "99,100,101\n", mysqlDbConfig, "mysql");
+        assertGeneratedSources(subDir);
+    }
+
+    @Test(enabled = true)
+    @Description("Test interactive mode with all invalid table names (should fail).")
+    public void pullTestMysqlInteractiveModeAllInvalidNames() throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        String subDir = "tool_test_pull_invalid_names_mysql";
+        createFromDatabaseScript(subDir, "mysql", mysqlDbConfig);
+        executePullCommandInteractive(subDir, "InvalidTable1,InvalidTable2\n", mysqlDbConfig, "mysql");
+        assertGeneratedSources(subDir);
+    }
+
+    @Test(enabled = true)
+    @Description("Test interactive mode with mixed invalid formats (should skip invalid and fail if all invalid).")
+    public void pullTestMysqlInteractiveModeMixedInvalidFormats() throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        String subDir = "tool_test_pull_mixed_invalid_mysql";
+        createFromDatabaseScript(subDir, "mysql", mysqlDbConfig);
+        // Mix of invalid indices and non-numeric (treated as table names, but invalid)
+        executePullCommandInteractive(subDir, "abc,999\n", mysqlDbConfig, "mysql");
+        assertGeneratedSources(subDir);
+    }
+
+    @Test(enabled = true)
+    @Description("Test --tables option with whitespace in table list.")
+    public void pullTestMysqlTablesWithWhitespace() throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        String subDir = "tool_test_pull_tables_mysql";
+        createFromDatabaseScript(subDir, "mysql", mysqlDbConfig);
+        // Test whitespace handling
+        executePullCommandWithTables(subDir, " User , Department ", mysqlDbConfig, "mysql");
+        assertGeneratedSources(subDir);
+    }
+
+    @Test(enabled = true)
+    @Description("Test interactive mode with 'q' to abort.")
+    public void pullTestMysqlInteractiveModeAbortWithQ() throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        String subDir = "tool_test_pull_abort_mysql";
+        createFromDatabaseScript(subDir, "mysql", mysqlDbConfig);
+        executePullCommandInteractive(subDir, "q\n", mysqlDbConfig, "mysql");
+        assertGeneratedSources(subDir);
+    }
+
+    @Test(enabled = true)
+    @Description("Test foreign key dependency with multi-level chain (Address->City->Country).")
+    public void pullTestMysqlForeignKeyChain() throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        String subDir = "tool_test_pull_fk_chain_mysql";
+        createFromDatabaseScript(subDir, "mysql", mysqlDbConfig);
+        // Selecting the deepest table should auto-include all parent tables
+        executePullCommandWithTables(subDir, "Address", mysqlDbConfig, "mysql");
+        assertGeneratedSources(subDir);
+    }
+
+    @Test(enabled = true)
+    @Description("Test cyclic foreign key dependencies (User <-> Department circular reference).")
+    public void pullTestMysqlCyclicForeignKeys() throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        String subDir = "tool_test_pull_cyclic_fk_mysql";
+        createFromDatabaseScript(subDir, "mysql", mysqlDbConfig);
+        // Selecting User should auto-include Department, which references back to User
+        executePullCommandWithTables(subDir, "User", mysqlDbConfig, "mysql");
+        assertGeneratedSources(subDir);
+        // Even though we generate the model file, the persist generate tool may not support cyclic FKs fully
+    }
+
+    @Test(enabled = true)
+    @Description("Test self-referential foreign key (Employee table with manager_id FK to itself).")
+    public void pullTestMysqlSelfReferentialForeignKey() throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        String subDir = "tool_test_pull_self_ref_fk_mysql";
+        createFromDatabaseScript(subDir, "mysql", mysqlDbConfig);
+        // Selecting Employee should handle self-referential FK without infinite loop
+        executePullCommandWithTables(subDir, "Employee", mysqlDbConfig, "mysql");
+        assertGeneratedSources(subDir);
+        // Even though we generate the model file, the persist generate tool may not support self-referential FKs fully
+    }
+
+    @Test(enabled = true)
+    @Description("Test --tables with whitespace and proper case matching.")
+    public void pullTestMysqlTablesCaseSensitivity() throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        String subDir = "tool_test_pull_case_sensitive_mysql";
+        createFromDatabaseScript(subDir, "mysql", mysqlDbConfig);
+        // Test with correct case - MySQL table names are case-sensitive on Linux/Mac
+        executePullCommandWithTables(subDir, "User,Department", mysqlDbConfig, "mysql");
         assertGeneratedSources(subDir);
     }
 
@@ -519,6 +755,32 @@ public class ToolingDbPullTest {
     }
 
     @Test(enabled = true)
+    @Description("[PostgreSQL] Test the --tables option to introspect only selected tables.")
+    public void pullTestPostgreSqlWithTablesOption() throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        String subDir = "tool_test_pull_tables_postgresql";
+        resetPostgreSqlDatabase(postgresDbConfig, true);
+        createFromDatabaseScript(subDir, "postgresql", postgresDbConfig);
+        executePullCommandWithTables(subDir, "User,Department", postgresDbConfig, "postgresql");
+        assertGeneratedSources(subDir);
+    }
+
+    @Test(enabled = true)
+    @Description("[PostgreSQL] Test automatic inclusion of referenced tables via foreign keys when selecting tables.")
+    public void pullTestPostgreSqlForeignKeyAutoInclude() throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        String subDir = "tool_test_pull_fk_auto_include_postgresql";
+        resetPostgreSqlDatabase(postgresDbConfig, true);
+        createFromDatabaseScript(subDir, "postgresql", postgresDbConfig);
+        executePullCommandWithTables(subDir, "album_ratings", postgresDbConfig, "postgresql");
+        assertGeneratedSources(subDir);
+    }
+
+    @Test(enabled = true)
     @Description("[MsSql] Create a model.bal file consisting of one Entity with no annotations and not null fields.")
     public void pullTestMsSqlBasic() throws BalException {
         runIntrospectionTestMsSql("tool_test_pull_52_mssql");
@@ -673,6 +935,32 @@ public class ToolingDbPullTest {
         runIntrospectionTestMsSql("tool_test_pull_75_mssql");
     }
 
+    @Test(enabled = true)
+    @Description("[MSSQL] Test the --tables option to introspect only selected tables.")
+    public void pullTestMsSqlWithTablesOption() throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        String subDir = "tool_test_pull_tables_mssql";
+        resetMsSqlDatabase(mssqlDbConfig, true);
+        createFromDatabaseScript(subDir, "mssql", mssqlDbConfig);
+        executePullCommandWithTables(subDir, "User,Department", mssqlDbConfig, "mssql");
+        assertGeneratedSources(subDir);
+    }
+
+    @Test(enabled = true)
+    @Description("[MSSQL] Test automatic inclusion of referenced tables via foreign keys when selecting tables.")
+    public void pullTestMsSqlForeignKeyAutoInclude() throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        String subDir = "tool_test_pull_fk_auto_include_mssql";
+        resetMsSqlDatabase(mssqlDbConfig, true);
+        createFromDatabaseScript(subDir, "mssql", mssqlDbConfig);
+        executePullCommandWithTables(subDir, "album_ratings", mssqlDbConfig, "mssql");
+        assertGeneratedSources(subDir);
+    }
+
     private static void runIntrospectionTestMySql(String subDir) throws BalException {
         if (OS.WINDOWS.isCurrentOs()) {
             return;
@@ -706,8 +994,8 @@ public class ToolingDbPullTest {
             throws BalException {
         try {
             Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Pull");
-            Pull persistCmd = (Pull) persistClass.getDeclaredConstructor(String.class).
-                    newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir).toAbsolutePath().toString());
+            Pull persistCmd = (Pull) persistClass.getDeclaredConstructor(String.class)
+                    .newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir).toAbsolutePath().toString());
             new CommandLine(persistCmd).parseArgs("--datastore", datastore);
             new CommandLine(persistCmd).parseArgs("--host", dbConfig.getHost());
             new CommandLine(persistCmd).parseArgs("--port", String.valueOf(dbConfig.getPort()));
@@ -730,12 +1018,12 @@ public class ToolingDbPullTest {
     }
 
     private static void executeDefaultPullCommand(String subDir, String simulatedInput, DatabaseConfiguration dbConfig,
-                                                  String datastore)
+            String datastore)
             throws BalException {
         try {
             Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Pull");
-            Pull persistCmd = (Pull) persistClass.getDeclaredConstructor(String.class).
-                    newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir).toAbsolutePath().toString());
+            Pull persistCmd = (Pull) persistClass.getDeclaredConstructor(String.class)
+                    .newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir).toAbsolutePath().toString());
             new CommandLine(persistCmd).parseArgs("--datastore", datastore);
             new CommandLine(persistCmd).parseArgs("--host", dbConfig.getHost());
             new CommandLine(persistCmd).parseArgs("--port", String.valueOf(dbConfig.getPort()));
@@ -756,5 +1044,64 @@ public class ToolingDbPullTest {
             throw new BalException("Error occurred while executing pull command: " + e.getMessage());
         }
     }
-}
 
+    private static void executePullCommandWithTables(String subDir, String tables, DatabaseConfiguration dbConfig,
+            String datastore)
+            throws BalException {
+        try {
+            Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Pull");
+            Pull persistCmd = (Pull) persistClass.getDeclaredConstructor(String.class)
+                    .newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir).toAbsolutePath().toString());
+            new CommandLine(persistCmd).parseArgs("--datastore", datastore,
+                    "--host", dbConfig.getHost(),
+                    "--port", String.valueOf(dbConfig.getPort()),
+                    "--user", dbConfig.getUsername(),
+                    "--database", dbConfig.getDatabase(),
+                    "--tables", tables);
+            // Include "y\n" for potential model.bal overwrite confirmation
+            String input = dbConfig.getPassword() + "\ny\n";
+            InputStream originalSystemIn = System.in;
+            try (InputStream inputStream = new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8))) {
+                System.setIn(inputStream);
+                persistCmd.execute();
+            } finally {
+                System.setIn(originalSystemIn);
+            }
+        } catch (RuntimeException e) {
+            throw new RuntimeException("Error occurred while executing pull command with tables: " + e.getMessage());
+        } catch (Exception e) {
+            throw new BalException("Error occurred while executing pull command with tables: " + e.getMessage());
+        }
+    }
+
+    private static void executePullCommandInteractive(String subDir, String tableSelection,
+            DatabaseConfiguration dbConfig, String datastore)
+            throws BalException {
+        try {
+            Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Pull");
+            Pull persistCmd = (Pull) persistClass.getDeclaredConstructor(String.class)
+                    .newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir).toAbsolutePath().toString());
+            new CommandLine(persistCmd).parseArgs("--datastore", datastore,
+                    "--host", dbConfig.getHost(),
+                    "--port", String.valueOf(dbConfig.getPort()),
+                    "--user", dbConfig.getUsername(),
+                    "--database", dbConfig.getDatabase(),
+                    "--tables");
+            // Note: --tables with no value triggers interactive mode
+            String input = dbConfig.getPassword() + "\n" + tableSelection;
+            InputStream originalSystemIn = System.in;
+            try (InputStream inputStream = new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8))) {
+                System.setIn(inputStream);
+                persistCmd.execute();
+            } finally {
+                System.setIn(originalSystemIn);
+            }
+        } catch (RuntimeException e) {
+            throw new RuntimeException("Error occurred while executing pull command in interactive mode: " +
+                    e.getMessage());
+        } catch (Exception e) {
+            throw new BalException("Error occurred while executing pull command in interactive mode: " +
+                    e.getMessage());
+        }
+    }
+}

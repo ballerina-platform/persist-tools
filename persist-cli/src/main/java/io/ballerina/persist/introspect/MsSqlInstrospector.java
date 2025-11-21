@@ -32,6 +32,13 @@ import java.util.regex.Pattern;
 import static io.ballerina.persist.PersistToolsConstants.MSSQL_DRIVER_CLASS;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.JDBC_URL_WITH_DATABASE_MSSQL;
 
+/**
+ * Microsoft SQL Server-specific implementation of the database introspector.
+ * Provides MSSQL-specific SQL queries for introspecting tables, columns, indexes,
+ * foreign keys, and check constraints (used for enum-like types) from SQL Server databases.
+ *
+ * @since 0.1.0
+ */
 public class MsSqlInstrospector extends Introspector {
 
     public MsSqlInstrospector() {
