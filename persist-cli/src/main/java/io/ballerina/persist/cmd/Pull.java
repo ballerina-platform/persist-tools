@@ -79,6 +79,9 @@ public class Pull implements BLauncherCmd {
     @CommandLine.Option(names = {"--database"})
     private String database;
 
+    @CommandLine.Option(names = {"--tables"}, description = "Comma-separated list of table names to include")
+    private String tables;
+
     @CommandLine.Option(names = { "-h", "--help" }, hidden = true)
     private boolean helpFlag;
 
@@ -163,6 +166,9 @@ public class Pull implements BLauncherCmd {
         PersistConfiguration persistConfigurations = new PersistConfiguration();
         persistConfigurations.setProvider(datastore);
         persistConfigurations.setSourcePath(this.sourcePath);
+        if (this.tables != null && !this.tables.trim().isEmpty()) {
+            persistConfigurations.setSelectedTables(this.tables);
+        }
         try {
             persistConfigurations.setDbConfig(new DatabaseConfiguration(this.host, this.user, password, this.port,
                     this.database));

@@ -86,6 +86,17 @@ public abstract class Introspector {
         this.moduleBuilder = Module.newBuilder("db");
     }
 
+    /**
+     * Introspects a database and generates a complete Ballerina persist module.
+     * This method connects to the database, reads the schema including tables, columns,
+     * indexes, foreign keys, and enums, then maps them to Ballerina entities and types.
+     *
+     * @param persistConfiguration the configuration containing database connection details,
+     *                            source path, provider type, and optional table filtering
+     * @return a Module object containing all entities, enums, and relationships mapped from the database schema
+     * @throws BalException if there is an error connecting to the database, reading the schema,
+     *                     or mapping database structures to Ballerina types
+     */
     public Module introspectDatabase(PersistConfiguration persistConfiguration) throws BalException {
         this.persistConfigurations = persistConfiguration;
         DriverResolver driverResolver = new DriverResolver(this.persistConfigurations.getSourcePath(),
@@ -104,6 +115,35 @@ public abstract class Introspector {
         }
     }
 
+    /**
+     * Introspects the database and returns an array of available table names.
+     * This method can be used by other libraries to discover what tables exist in a database
+     * without performing a full introspection and model generation.
+     *
+     * @param persistConfiguration the persist configuration containing database connection details
+     * @return an array of table names found in the database
+     * @throws BalException if there is an error connecting to the database or reading table information
+     */
+    public String[] getAvailableTables(PersistConfiguration persistConfiguration) throws BalException {
+        this.persistConfigurations = persistConfiguration;
+        DriverResolver driverResolver = new DriverResolver(this.persistConfigurations.getSourcePath(),
+                this.persistConfigurations.getProvider());
+        try {
+            Project driverProject = driverResolver.resolveDriverDependencies();
+            try (Connection connection = prepareDatabaseConnection(driverProject)) {
+                ScriptRunner sr = new ScriptRunner(connection);
+                List<SqlTable> availableTables = sr.getSQLTables(this.getTablesQuery());
+                return availableTables.stream()
+                        .map(SqlTable::getTableName)
+                        .toArray(String[]::new);
+            } catch (SQLException e) {
+                throw new BalException("failed to read available tables: " + e.getMessage());
+            }
+        } finally {
+            driverResolver.deleteDriverFile();
+        }
+    }
+
     private Connection prepareDatabaseConnection(Project driverProject) throws BalException {
         JdbcDriverLoader driverLoader;
         driverLoader = databaseConnector.getJdbcDriverLoader(driverProject);
@@ -115,9 +155,39 @@ public abstract class Introspector {
         }
     }
 
+    /**
+     * Reads the database schema by querying tables, columns, indexes, foreign keys, and enums.
+     * If specific tables are configured in persistConfigurations, only those tables are processed.
+     * Warnings are issued for any specified tables that are not found in the database.
+     *
+     * @param connection the active database connection to use for querying schema information
+     * @throws SQLException if there is an error executing queries or reading result sets
+     */
     public void readDatabaseSchema(Connection connection) throws SQLException {
         ScriptRunner sr = new ScriptRunner(connection);
         this.tables = sr.getSQLTables(this.getTablesQuery());
+        
+        // Filter tables if specific tables are selected
+        if (persistConfigurations.getSelectedTables() != null && 
+            !persistConfigurations.getSelectedTables().isEmpty()) {
+            List<String> selectedTableNames = persistConfigurations.getSelectedTables();
+            this.tables = this.tables.stream()
+                    .filter(table -> selectedTableNames.contains(table.getTableName()))
+                    .collect(java.util.stream.Collectors.toList());
+            
+            // Warn about tables that were specified but not found
+            List<String> foundTableNames = this.tables.stream()
+                    .map(SqlTable::getTableName)
+                    .collect(java.util.stream.Collectors.toList());
+            List<String> notFoundTables = selectedTableNames.stream()
+                    .filter(name -> !foundTableNames.contains(name))
+                    .collect(java.util.stream.Collectors.toList());
+            if (!notFoundTables.isEmpty()) {
+                errStream.println("WARNING: The following specified tables were not found in the database: " +
+                        String.join(", ", notFoundTables));
+            }
+        }
+        
         this.sqlEnums = sr.getSQLEnums(this.getEnumsQuery());
         for (SqlTable table : tables) {
             sr.readColumnsOfSQLTable(table, this.getColumnsQuery(table.getTableName()));
@@ -127,6 +197,14 @@ public abstract class Introspector {
         }
     }
 
+    /**
+     * Maps the database schema information (tables, columns, relationships) to a Ballerina persist module.
+     * This includes mapping database enums to Ballerina enums and database tables to Ballerina entities
+     * with proper field types, relationships, and constraints.
+     *
+     * @throws BalException if there is an error during the mapping process, such as unsupported
+     *                     data types or invalid relationship configurations
+     */
     public void mapDatabaseSchemaToModule() throws BalException {
         mapEnums();
         mapEntities();
@@ -281,6 +359,14 @@ public abstract class Introspector {
         }
     }
 
+    /**
+     * Maps common SQL data types to their corresponding Ballerina types.
+     * Handles standard types like integers, strings, dates, times, and binary data.
+     * If a SQL type is not supported, returns UNSUPPORTED_TYPE and prints a warning.
+     *
+     * @param sqlType the SQL type information including type name, precision, scale, etc.
+     * @return the corresponding Ballerina type as a string (e.g., "int", "string", "decimal")
+     */
     protected String getBalTypeForCommonDataTypes(SqlType sqlType) {
         return switch (sqlType.getTypeName()) {
             case PersistToolsConstants.SqlTypes.INT,

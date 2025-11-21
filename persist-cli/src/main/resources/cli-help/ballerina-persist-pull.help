@@ -7,6 +7,7 @@ SYNOPSIS
                         [--port <port number>]
                         [--user <database user]
                         [--database <database name>]
+                        [--tables <table1,table2,...>]
                         [<-h> | <--help>]
 
 DESCRIPTION
@@ -15,9 +16,15 @@ DESCRIPTION
        file. The database configurations must be passed in as command line arguments. The user must enter the
        database password when prompted.
 
+       Use the --tables option to specify a comma-separated list of table names to include in the introspection.
+       If not specified, all tables in the database will be introspected.
+
 EXAMPLES
        Print the usage details of the `bal persist pull` command.
           $ bal persist pull --help
 
        Generate data model by introspecting database.
           $ bal persist pull --datastore mysql --host localhost --port 3306 --user root --database db
+
+       Generate data model by introspecting only specific tables.
+          $ bal persist pull --datastore mysql --host localhost --port 3306 --user root --database db --tables users,orders

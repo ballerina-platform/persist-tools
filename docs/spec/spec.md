@@ -226,6 +226,9 @@ Behaviour of the `push` command,
 
 ```bash
 bal persist pull --datastore mysql --host localhost --port 3306 --user root --database persist
+
+# To introspect only specific tables
+bal persist pull --datastore mysql --host localhost --port 3306 --user root --database persist --tables users,orders
 ```
 | Command Parameter |                                       Description                                       | Mandatory |   Default Value    |
 |:-----------------:|:---------------------------------------------------------------------------------------:|:---------:|:------------------:|
@@ -234,6 +237,7 @@ bal persist pull --datastore mysql --host localhost --port 3306 --user root --da
 |      --port       |                           used to indicate the database port                            |    No     | datastore specific |
 |      --user       |                           used to indicate the database user                            |    Yes    |        None        |
 |    --database     |                           used to indicate the database name                            |    Yes    |        None        |
+|     --tables      |             comma-separated list of table names to include in introspection             |    No     |     all tables     |
 
 This command will introspect the schema of the database and create a `model.bal` file with the entities and relations based on the schema of the database. The database configuration should be provided as command-line arguments.
 

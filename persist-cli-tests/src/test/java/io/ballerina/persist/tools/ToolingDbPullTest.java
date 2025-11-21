@@ -189,6 +189,18 @@ public class ToolingDbPullTest {
     }
 
     @Test(enabled = true)
+    @Description("Test the --tables option to introspect only selected tables.")
+    public void pullTestMysqlWithTablesOption() throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        String subDir = "tool_test_pull_tables_mysql";
+        createFromDatabaseScript(subDir, "mysql", mysqlDbConfig);
+        executePullCommandWithTables(subDir, "User,Department", mysqlDbConfig, "mysql");
+        assertGeneratedSources(subDir);
+    }
+
+    @Test(enabled = true)
     @Description("Create a model.bal file consisting of one Entity with no annotations and not null fields.")
     public void pullTestMysqlBasic() throws BalException {
         runIntrospectionTestMySql("tool_test_pull_1_mysql");
@@ -754,6 +766,34 @@ public class ToolingDbPullTest {
             throw new RuntimeException("Error occurred while executing pull command: " + e.getMessage());
         } catch (Exception e) {
             throw new BalException("Error occurred while executing pull command: " + e.getMessage());
+        }
+    }
+
+    private static void executePullCommandWithTables(String subDir, String tables, DatabaseConfiguration dbConfig,
+                                                     String datastore)
+            throws BalException {
+        try {
+            Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Pull");
+            Pull persistCmd = (Pull) persistClass.getDeclaredConstructor(String.class).
+                    newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir).toAbsolutePath().toString());
+            new CommandLine(persistCmd).parseArgs("--datastore", datastore);
+            new CommandLine(persistCmd).parseArgs("--host", dbConfig.getHost());
+            new CommandLine(persistCmd).parseArgs("--port", String.valueOf(dbConfig.getPort()));
+            new CommandLine(persistCmd).parseArgs("--user", dbConfig.getUsername());
+            new CommandLine(persistCmd).parseArgs("--database", dbConfig.getDatabase());
+            new CommandLine(persistCmd).parseArgs("--tables", tables);
+            String password = dbConfig.getPassword() + "\n";
+            InputStream originalSystemIn = System.in;
+            try (InputStream inputStream = new ByteArrayInputStream(password.getBytes(StandardCharsets.UTF_8))) {
+                System.setIn(inputStream);
+                persistCmd.execute();
+            } finally {
+                System.setIn(originalSystemIn);
+            }
+        } catch (RuntimeException e) {
+            throw new RuntimeException("Error occurred while executing pull command with tables: " + e.getMessage());
+        } catch (Exception e) {
+            throw new BalException("Error occurred while executing pull command with tables: " + e.getMessage());
         }
     }
 }
