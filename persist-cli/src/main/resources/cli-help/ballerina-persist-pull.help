@@ -7,7 +7,7 @@ SYNOPSIS
                         [--port <port number>]
                         [--user <database user]
                         [--database <database name>]
-                        [--tables <table1,table2,...>]
+                        [--tables[=<table1,table2,...>]]
                         [<-h> | <--help>]
 
 DESCRIPTION
@@ -16,8 +16,15 @@ DESCRIPTION
        file. The database configurations must be passed in as command line arguments. The user must enter the
        database password when prompted.
 
-       Use the --tables option to specify a comma-separated list of table names to include in the introspection.
-       If not specified, all tables in the database will be introspected.
+       Table Selection:
+       • By default (without --tables), all tables in the database are introspected
+       • Use --tables=table1,table2 to specify specific tables to introspect
+       • Use --tables without a value to trigger interactive table selection mode
+       • In interactive mode, you can:
+         - Enter table names separated by commas (e.g., users,orders,products)
+         - Enter table numbers separated by commas (e.g., 1,3,5)
+         - Enter 'all' or press Enter to introspect all tables
+       • If the database has more than 50 tables, only the first 50 will be displayed
 
 EXAMPLES
        Print the usage details of the `bal persist pull` command.
@@ -26,5 +33,11 @@ EXAMPLES
        Generate data model by introspecting database.
           $ bal persist pull --datastore mysql --host localhost --port 3306 --user root --database db
 
+       Generate data model by introspecting all tables (default behavior).
+          $ bal persist pull --datastore mysql --host localhost --port 3306 --user root --database db
+
        Generate data model by introspecting only specific tables.
-          $ bal persist pull --datastore mysql --host localhost --port 3306 --user root --database db --tables users,orders
+          $ bal persist pull --datastore mysql --host localhost --port 3306 --user root --database db --tables=users,orders
+
+       Use interactive mode to select tables.
+          $ bal persist pull --datastore mysql --host localhost --port 3306 --user root --database db --tables

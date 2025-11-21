@@ -225,10 +225,14 @@ Behaviour of the `push` command,
 ## 5. Pull Persistence Schema from the Data Provider
 
 ```bash
+# Introspect all tables (default behavior)
 bal persist pull --datastore mysql --host localhost --port 3306 --user root --database persist
 
-# To introspect only specific tables
-bal persist pull --datastore mysql --host localhost --port 3306 --user root --database persist --tables users,orders
+# Introspect only specific tables
+bal persist pull --datastore mysql --host localhost --port 3306 --user root --database persist --tables=users,orders
+
+# Use interactive mode to select tables
+bal persist pull --datastore mysql --host localhost --port 3306 --user root --database persist --tables
 ```
 | Command Parameter |                                       Description                                       | Mandatory |   Default Value    |
 |:-----------------:|:---------------------------------------------------------------------------------------:|:---------:|:------------------:|
@@ -237,7 +241,7 @@ bal persist pull --datastore mysql --host localhost --port 3306 --user root --da
 |      --port       |                           used to indicate the database port                            |    No     | datastore specific |
 |      --user       |                           used to indicate the database user                            |    Yes    |        None        |
 |    --database     |                           used to indicate the database name                            |    Yes    |        None        |
-|     --tables      |             comma-separated list of table names to include in introspection             |    No     |     all tables     |
+|     --tables      | enable table selection. accepts table names or triggers interactive mode if no value    |    No     |    all tables      |
 
 This command will introspect the schema of the database and create a `model.bal` file with the entities and relations based on the schema of the database. The database configuration should be provided as command-line arguments.
 
@@ -252,6 +256,13 @@ Running the `pull` command will,
 Behaviour of the `pull` command,
 - User should invoke the command within a Ballerina project.
 - User should provide the relevant database configuration as command-line arguments.
+- By default (without `--tables`), all tables in the database will be introspected.
+- If `--tables=table1,table2` is provided, only the specified tables will be introspected.
+- If `--tables` is provided without a value, an interactive prompt will display available tables (up to 50) and allow the user to select which tables to introspect. Users can:
+  - Enter table names separated by commas
+  - Enter table numbers separated by commas
+  - Enter 'all' or press Enter to select all tables
+  - Enter 'q' or 'quit' to abort the operation
 - The database password is not provided as a command-line argument. The user will be prompted to enter the password.
 - If the user invokes the command while a `model.bal` file exists in the `persist` directory, it will prompt the user to confirm overwriting the existing `model.bal` file.
 - If the user introspects a database with unsupported data types, it will inform the user by giving a warning and will comment out the relevant field with the tag `[Unsupported[DATA_TYPE]]`.

@@ -121,7 +121,10 @@ The command below generates the data model for an existing database. The generat
 $ bal persist pull --datastore mysql --host localhost --port 3306 --user root --database db
 
 # To introspect only specific tables
-$ bal persist pull --datastore mysql --host localhost --port 3306 --user root --database db --tables employees,departments
+$ bal persist pull --datastore mysql --host localhost --port 3306 --user root --database db --tables=employees,departments
+
+# To use interactive mode to select tables
+$ bal persist pull --datastore mysql --host localhost --port 3306 --user root --database db --tables
 ```
 
 | Command option |                                               Description                                               | Mandatory | Default Value |
@@ -131,7 +134,7 @@ $ bal persist pull --datastore mysql --host localhost --port 3306 --user root --
 |     --port     |                                   Used to indicate the database port                                    |    No     |     3306      |
 |     --user     |                                   Used to indicate the database user                                    |    Yes    |     None      |
 |   --database   |                                   Used to indicate the database name                                    |    Yes    |     None      |
-|    --tables    |                      Comma-separated list of table names to include in introspection                    |    No     |  All tables   |
+|    --tables    |  Enable table selection. Accepts comma-separated table names or triggers interactive mode if no value  |    No     |  All tables   |
 
 The file structure of the project after executing the command will be as follows.
 

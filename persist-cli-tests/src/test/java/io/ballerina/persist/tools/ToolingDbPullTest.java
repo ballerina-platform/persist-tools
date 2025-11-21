@@ -201,6 +201,42 @@ public class ToolingDbPullTest {
     }
 
     @Test(enabled = true)
+    @Description("Test interactive mode with table names input.")
+    public void pullTestMysqlInteractiveModeWithNames() throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        String subDir = "tool_test_pull_tables_mysql";
+        createFromDatabaseScript(subDir, "mysql", mysqlDbConfig);
+        executePullCommandInteractive(subDir, "User,Department\n", mysqlDbConfig, "mysql");
+        assertGeneratedSources(subDir);
+    }
+
+    @Test(enabled = true)
+    @Description("Test interactive mode with table indices input.")
+    public void pullTestMysqlInteractiveModeWithIndices() throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        String subDir = "tool_test_pull_tables_mysql";
+        createFromDatabaseScript(subDir, "mysql", mysqlDbConfig);
+        executePullCommandInteractive(subDir, "1,2\n", mysqlDbConfig, "mysql");
+        assertGeneratedSources(subDir);
+    }
+
+    @Test(enabled = true)
+    @Description("Test interactive mode with 'all' keyword.")
+    public void pullTestMysqlInteractiveModeAll() throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        String subDir = "tool_test_pull_1_mysql";
+        createFromDatabaseScript(subDir, "mysql", mysqlDbConfig);
+        executePullCommandInteractive(subDir, "all\n", mysqlDbConfig, "mysql");
+        assertGeneratedSources(subDir);
+    }
+
+    @Test(enabled = true)
     @Description("Create a model.bal file consisting of one Entity with no annotations and not null fields.")
     public void pullTestMysqlBasic() throws BalException {
         runIntrospectionTestMySql("tool_test_pull_1_mysql");
@@ -794,6 +830,36 @@ public class ToolingDbPullTest {
             throw new RuntimeException("Error occurred while executing pull command with tables: " + e.getMessage());
         } catch (Exception e) {
             throw new BalException("Error occurred while executing pull command with tables: " + e.getMessage());
+        }
+    }
+
+    private static void executePullCommandInteractive(String subDir, String tableSelection, 
+                                                      DatabaseConfiguration dbConfig, String datastore)
+            throws BalException {
+        try {
+            Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Pull");
+            Pull persistCmd = (Pull) persistClass.getDeclaredConstructor(String.class).
+                    newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir).toAbsolutePath().toString());
+            new CommandLine(persistCmd).parseArgs("--datastore", datastore);
+            new CommandLine(persistCmd).parseArgs("--host", dbConfig.getHost());
+            new CommandLine(persistCmd).parseArgs("--port", String.valueOf(dbConfig.getPort()));
+            new CommandLine(persistCmd).parseArgs("--user", dbConfig.getUsername());
+            new CommandLine(persistCmd).parseArgs("--database", dbConfig.getDatabase());
+            // Note: No --tables argument to trigger interactive mode
+            String input = dbConfig.getPassword() + "\n" + tableSelection;
+            InputStream originalSystemIn = System.in;
+            try (InputStream inputStream = new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8))) {
+                System.setIn(inputStream);
+                persistCmd.execute();
+            } finally {
+                System.setIn(originalSystemIn);
+            }
+        } catch (RuntimeException e) {
+            throw new RuntimeException("Error occurred while executing pull command in interactive mode: " + 
+                                     e.getMessage());
+        } catch (Exception e) {
+            throw new BalException("Error occurred while executing pull command in interactive mode: " + 
+                                 e.getMessage());
         }
     }
 }

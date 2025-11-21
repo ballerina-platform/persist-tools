@@ -36,6 +36,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Scanner;
@@ -79,7 +81,8 @@ public class Pull implements BLauncherCmd {
     @CommandLine.Option(names = {"--database"})
     private String database;
 
-    @CommandLine.Option(names = {"--tables"}, description = "Comma-separated list of table names to include")
+    @CommandLine.Option(names = {"--tables"}, arity = "0..1", 
+                        description = "Enable table selection. Accepts comma-separated table names or triggers interactive mode if no value provided")
     private String tables;
 
     @CommandLine.Option(names = { "-h", "--help" }, hidden = true)
@@ -166,9 +169,7 @@ public class Pull implements BLauncherCmd {
         PersistConfiguration persistConfigurations = new PersistConfiguration();
         persistConfigurations.setProvider(datastore);
         persistConfigurations.setSourcePath(this.sourcePath);
-        if (this.tables != null && !this.tables.trim().isEmpty()) {
-            persistConfigurations.setSelectedTables(this.tables);
-        }
+        
         try {
             persistConfigurations.setDbConfig(new DatabaseConfiguration(this.host, this.user, password, this.port,
                     this.database));
@@ -176,6 +177,40 @@ public class Pull implements BLauncherCmd {
             errStream.println(e.getMessage());
             return;
         }
+
+        // Handle table selection: --tables flag controls the behavior
+        if (this.tables != null) {
+            // --tables flag is present
+            if (!this.tables.trim().isEmpty()) {
+                // Tables specified via --tables=table1,table2
+                persistConfigurations.setSelectedTables(this.tables);
+            } else {
+                // --tables with no value: trigger interactive mode
+                try {
+                    String[] availableTables = introspector.getAvailableTables(persistConfigurations);
+                    if (availableTables.length == 0) {
+                        errStream.println("ERROR: No tables found in the database.");
+                        return;
+                    }
+                    
+                    String selectedTablesInput = promptForTableSelection(scanner, availableTables);
+                    if (selectedTablesInput == null) {
+                        errStream.println("Introspection aborted.");
+                        return;
+                    }
+                    
+                    if (!selectedTablesInput.trim().isEmpty() && 
+                        !selectedTablesInput.trim().equalsIgnoreCase("all")) {
+                        persistConfigurations.setSelectedTables(selectedTablesInput);
+                    }
+                    // If "all" or empty, proceed with all tables (no filter set)
+                } catch (BalException e) {
+                    errStream.printf("ERROR: failed to fetch available tables: %s%n", e.getMessage());
+                    return;
+                }
+            }
+        }
+        // If --tables is not provided, proceed with all tables (default behavior)
 
         Module entityModule = null;
         try {
@@ -196,6 +231,96 @@ public class Pull implements BLauncherCmd {
             return;
         }
         errStream.println("Introspection complete! The model.bal file created successfully.");
+    }
+
+    /**
+     * Prompts the user to select tables from the available tables list.
+     * Displays up to 50 tables and allows users to enter table names, indices, or "all".
+     *
+     * @param scanner the Scanner for reading user input
+     * @param availableTables array of all available table names
+     * @return comma-separated string of selected table names, "all", or null if aborted
+     */
+    private String promptForTableSelection(Scanner scanner, String[] availableTables) {
+        String cyanColor = "\u001B[36m";
+        String yellowColor = "\u001B[33m";
+        String resetColor = "\u001B[0m";
+        
+        int totalTables = availableTables.length;
+        int displayLimit = 50;
+        boolean isLimited = totalTables > displayLimit;
+        
+        errStream.println(cyanColor + "\nAvailable tables in the database:" + resetColor);
+        errStream.println("──────────────────────────────────");
+        
+        for (int i = 0; i < Math.min(totalTables, displayLimit); i++) {
+            errStream.printf("  %d. %s%n", i + 1, availableTables[i]);
+        }
+        
+        if (isLimited) {
+            errStream.println(yellowColor + "  ... and " + (totalTables - displayLimit) + 
+                            " more tables" + resetColor);
+        }
+        
+        errStream.println("──────────────────────────────────");
+        errStream.printf("Total: %d table%s%n%n", totalTables, totalTables == 1 ? "" : "s");
+        
+        errStream.println("Select tables to introspect:");
+        errStream.println("  • Enter table names separated by commas (e.g., users,orders,products)");
+        errStream.println("  • Enter table numbers separated by commas (e.g., 1,3,5)");
+        errStream.println("  • Enter 'all' to introspect all tables");
+        errStream.println("  • Press Enter without input to introspect all tables");
+        errStream.println("  • Enter 'q' or 'quit' to abort");
+        errStream.print("\nYour selection: ");
+        
+        String input = scanner.nextLine().trim();
+        
+        // Handle abort
+        if (input.equalsIgnoreCase("q") || input.equalsIgnoreCase("quit")) {
+            return null;
+        }
+        
+        // Handle empty input or "all" - means select all tables
+        if (input.isEmpty() || input.equalsIgnoreCase("all")) {
+            return "all";
+        }
+        
+        // Check if input contains numbers (indices)
+        if (input.matches("[0-9,\\s]+")) {
+            return parseTableIndices(input, availableTables);
+        }
+        
+        // Otherwise, treat as table names
+        return input;
+    }
+
+    /**
+     * Parses comma-separated table indices and returns the corresponding table names.
+     *
+     * @param input comma-separated indices (e.g., "1,3,5")
+     * @param availableTables array of available table names
+     * @return comma-separated table names
+     */
+    private String parseTableIndices(String input, String[] availableTables) {
+        String[] indices = input.split(",");
+        List<String> selectedTables = new ArrayList<>();
+        
+        for (String indexStr : indices) {
+            try {
+                int index = Integer.parseInt(indexStr.trim());
+                if (index >= 1 && index <= availableTables.length) {
+                    selectedTables.add(availableTables[index - 1]);
+                } else {
+                    errStream.println(yellowColor + "WARNING: Index " + index + 
+                                    " is out of range. Skipping." + "\u001B[0m");
+                }
+            } catch (NumberFormatException e) {
+                errStream.println(yellowColor + "WARNING: Invalid index '" + indexStr.trim() + 
+                                "'. Skipping." + "\u001B[0m");
+            }
+        }
+        
+        return String.join(",", selectedTables);
     }
 
     @Override
