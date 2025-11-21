@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 
 /**
  * The configuration class for the persist tool.
+ * 
  * @since 0.1.0
  */
 public class PersistConfiguration {
@@ -41,7 +42,8 @@ public class PersistConfiguration {
     /**
      * Gets the database configuration containing connection details.
      *
-     * @return the DatabaseConfiguration object with host, port, user, password, and database name
+     * @return the DatabaseConfiguration object with host, port, user, password, and
+     *         database name
      */
     public DatabaseConfiguration getDbConfig() {
         return dbConfig;
@@ -50,7 +52,8 @@ public class PersistConfiguration {
     /**
      * Sets the database configuration with connection details.
      *
-     * @param dbConfig the DatabaseConfiguration object containing host, port, user, password, and database name
+     * @param dbConfig the DatabaseConfiguration object containing host, port, user,
+     *                 password, and database name
      */
     public void setDbConfig(DatabaseConfiguration dbConfig) {
         this.dbConfig = dbConfig;
@@ -66,7 +69,8 @@ public class PersistConfiguration {
     }
 
     /**
-     * Sets the data store provider type. Automatically converts "mssql" to "sqlserver" for compatibility.
+     * Sets the data store provider type. Automatically converts "mssql" to
+     * "sqlserver" for compatibility.
      *
      * @param provider the provider type (e.g., "mysql", "postgresql", "mssql")
      */
@@ -100,7 +104,8 @@ public class PersistConfiguration {
      * Gets the list of selected table names to introspect.
      * If null or empty, all tables in the database will be introspected.
      *
-     * @return the list of table names to include, or null if all tables should be included
+     * @return the list of table names to include, or null if all tables should be
+     *         included
      */
     public List<String> getSelectedTables() {
         return selectedTables == null ? null : new java.util.ArrayList<>(selectedTables);
@@ -110,7 +115,8 @@ public class PersistConfiguration {
      * Sets the list of tables to introspect from a comma-separated string.
      * Table names are trimmed of whitespace and empty entries are filtered out.
      *
-     * @param tables a comma-separated string of table names (e.g., "users,orders,products")
+     * @param tables a comma-separated string of table names (e.g.,
+     *               "users,orders,products")
      */
     public void setSelectedTables(String tables) {
         this.selectedTables = Arrays.stream(tables.split(","))

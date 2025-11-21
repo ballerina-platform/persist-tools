@@ -25,7 +25,6 @@ import org.junit.jupiter.api.condition.OS;
 import org.testng.annotations.Test;
 import picocli.CommandLine;
 
-
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -754,8 +753,8 @@ public class ToolingDbPullTest {
             throws BalException {
         try {
             Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Pull");
-            Pull persistCmd = (Pull) persistClass.getDeclaredConstructor(String.class).
-                    newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir).toAbsolutePath().toString());
+            Pull persistCmd = (Pull) persistClass.getDeclaredConstructor(String.class)
+                    .newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir).toAbsolutePath().toString());
             new CommandLine(persistCmd).parseArgs("--datastore", datastore);
             new CommandLine(persistCmd).parseArgs("--host", dbConfig.getHost());
             new CommandLine(persistCmd).parseArgs("--port", String.valueOf(dbConfig.getPort()));
@@ -778,12 +777,12 @@ public class ToolingDbPullTest {
     }
 
     private static void executeDefaultPullCommand(String subDir, String simulatedInput, DatabaseConfiguration dbConfig,
-                                                  String datastore)
+            String datastore)
             throws BalException {
         try {
             Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Pull");
-            Pull persistCmd = (Pull) persistClass.getDeclaredConstructor(String.class).
-                    newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir).toAbsolutePath().toString());
+            Pull persistCmd = (Pull) persistClass.getDeclaredConstructor(String.class)
+                    .newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir).toAbsolutePath().toString());
             new CommandLine(persistCmd).parseArgs("--datastore", datastore);
             new CommandLine(persistCmd).parseArgs("--host", dbConfig.getHost());
             new CommandLine(persistCmd).parseArgs("--port", String.valueOf(dbConfig.getPort()));
@@ -806,12 +805,12 @@ public class ToolingDbPullTest {
     }
 
     private static void executePullCommandWithTables(String subDir, String tables, DatabaseConfiguration dbConfig,
-                                                     String datastore)
+            String datastore)
             throws BalException {
         try {
             Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Pull");
-            Pull persistCmd = (Pull) persistClass.getDeclaredConstructor(String.class).
-                    newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir).toAbsolutePath().toString());
+            Pull persistCmd = (Pull) persistClass.getDeclaredConstructor(String.class)
+                    .newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir).toAbsolutePath().toString());
             new CommandLine(persistCmd).parseArgs("--datastore", datastore,
                     "--host", dbConfig.getHost(),
                     "--port", String.valueOf(dbConfig.getPort()),
@@ -834,13 +833,13 @@ public class ToolingDbPullTest {
         }
     }
 
-    private static void executePullCommandInteractive(String subDir, String tableSelection, 
-                                                      DatabaseConfiguration dbConfig, String datastore)
+    private static void executePullCommandInteractive(String subDir, String tableSelection,
+            DatabaseConfiguration dbConfig, String datastore)
             throws BalException {
         try {
             Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Pull");
-            Pull persistCmd = (Pull) persistClass.getDeclaredConstructor(String.class).
-                    newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir).toAbsolutePath().toString());
+            Pull persistCmd = (Pull) persistClass.getDeclaredConstructor(String.class)
+                    .newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir).toAbsolutePath().toString());
             new CommandLine(persistCmd).parseArgs("--datastore", datastore,
                     "--host", dbConfig.getHost(),
                     "--port", String.valueOf(dbConfig.getPort()),
@@ -857,12 +856,11 @@ public class ToolingDbPullTest {
                 System.setIn(originalSystemIn);
             }
         } catch (RuntimeException e) {
-            throw new RuntimeException("Error occurred while executing pull command in interactive mode: " + 
-                                     e.getMessage());
+            throw new RuntimeException("Error occurred while executing pull command in interactive mode: " +
+                    e.getMessage());
         } catch (Exception e) {
-            throw new BalException("Error occurred while executing pull command in interactive mode: " + 
-                                 e.getMessage());
+            throw new BalException("Error occurred while executing pull command in interactive mode: " +
+                    e.getMessage());
         }
     }
 }
-
