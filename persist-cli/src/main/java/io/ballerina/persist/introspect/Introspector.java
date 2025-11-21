@@ -198,7 +198,7 @@ public abstract class Introspector {
             List<String> selectedTableNames = new ArrayList<>(persistConfigurations.getSelectedTables());
 
             // Resolve foreign key dependencies - automatically include referenced tables
-            List<String> resolvedTableNames = resolveForeignKeyDependencies(connection, sr, selectedTableNames);
+            List<String> resolvedTableNames = resolveForeignKeyDependencies(sr, selectedTableNames);
 
             this.tables = this.tables.stream()
                     .filter(table -> resolvedTableNames.contains(table.getTableName()))
@@ -233,14 +233,13 @@ public abstract class Introspector {
      * referenced
      * tables are automatically added to ensure valid model generation.
      *
-     * @param connection         the active database connection
      * @param sr                 the ScriptRunner for executing queries
      * @param selectedTableNames the initially selected table names
      * @return expanded list of table names including all foreign key dependencies
      * @throws SQLException if there is an error reading foreign keys
      */
-    private List<String> resolveForeignKeyDependencies(Connection connection, ScriptRunner sr,
-            List<String> selectedTableNames) throws SQLException {
+    private List<String> resolveForeignKeyDependencies(ScriptRunner sr, List<String> selectedTableNames)
+            throws SQLException {
         List<String> resolvedTables = new ArrayList<>(selectedTableNames);
         List<String> tablesToProcess = new ArrayList<>(selectedTableNames);
         HashSet<String> processedTables = new HashSet<>();
@@ -253,7 +252,7 @@ public abstract class Introspector {
 
         // Process tables iteratively to handle chains of dependencies
         while (!tablesToProcess.isEmpty()) {
-            String currentTable = tablesToProcess.remove(0);
+            String currentTable = tablesToProcess.removeFirst();
 
             if (processedTables.contains(currentTable) || !availableTableNames.contains(currentTable)) {
                 continue;

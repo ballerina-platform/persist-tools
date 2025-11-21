@@ -22,6 +22,7 @@ import io.ballerina.persist.cmd.Pull;
 import io.ballerina.persist.configuration.DatabaseConfiguration;
 import jdk.jfr.Description;
 import org.junit.jupiter.api.condition.OS;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import picocli.CommandLine;
 
@@ -199,39 +200,23 @@ public class ToolingDbPullTest {
         assertGeneratedSources(subDir);
     }
 
-    @Test(enabled = true)
-    @Description("Test interactive mode with table names input.")
-    public void pullTestMysqlInteractiveModeWithNames() throws BalException {
-        if (OS.WINDOWS.isCurrentOs()) {
-            return;
-        }
-        String subDir = "tool_test_pull_tables_mysql";
-        createFromDatabaseScript(subDir, "mysql", mysqlDbConfig);
-        executePullCommandInteractive(subDir, "User,Department\n", mysqlDbConfig, "mysql");
-        assertGeneratedSources(subDir);
+    @DataProvider(name = "interactiveModeInputs")
+    public Object[][] provideInteractiveModeInputs() {
+        return new Object[][] {
+            {"all\n", "tool_test_pull_1_mysql"},
+            {"1,3\n", "tool_test_pull_tables_mysql"},
+            {"User,Department\n", "tool_test_pull_tables_mysql"}
+        };
     }
 
-    @Test(enabled = true)
-    @Description("Test interactive mode with table indices input.")
-    public void pullTestMysqlInteractiveModeWithIndices() throws BalException {
+    @Test(enabled = true, dataProvider = "interactiveModeInputs")
+    @Description("Test interactive mode with different table selection inputs.")
+    public void pullTestMysqlInteractiveMode(String input, String subDir) throws BalException {
         if (OS.WINDOWS.isCurrentOs()) {
             return;
         }
-        String subDir = "tool_test_pull_tables_mysql";
         createFromDatabaseScript(subDir, "mysql", mysqlDbConfig);
-        executePullCommandInteractive(subDir, "1,3\n", mysqlDbConfig, "mysql");
-        assertGeneratedSources(subDir);
-    }
-
-    @Test(enabled = true)
-    @Description("Test interactive mode with 'all' keyword.")
-    public void pullTestMysqlInteractiveModeAll() throws BalException {
-        if (OS.WINDOWS.isCurrentOs()) {
-            return;
-        }
-        String subDir = "tool_test_pull_1_mysql";
-        createFromDatabaseScript(subDir, "mysql", mysqlDbConfig);
-        executePullCommandInteractive(subDir, "all\n", mysqlDbConfig, "mysql");
+        executePullCommandInteractive(subDir, input, mysqlDbConfig, "mysql");
         assertGeneratedSources(subDir);
     }
 

@@ -51,10 +51,23 @@ import static io.ballerina.persist.utils.DatabaseConnector.readDatabasePassword;
 @CommandLine.Command(name = "pull", description = "Create model.bal file according to given database schema")
 public class Pull implements BLauncherCmd {
     private static final PrintStream errStream = System.err;
+    public static final String YELLOW_COLOR = "\u001B[33m";
+    public static final String RESET_COLOR = "\u001B[0m";
+    public static final String CYAN_COLOR = "\u001B[36m";
 
     private final String sourcePath;
 
     private static final String COMMAND_IDENTIFIER = "persist-pull";
+
+    // Table selection prompt message
+    private static final String TABLE_SELECTION_PROMPT =
+            "Select tables to introspect:" + System.lineSeparator() +
+            "  • Enter table names separated by commas (e.g., users,orders,products)" + System.lineSeparator() +
+            "  • Enter table numbers separated by commas (e.g., 1,3,5)" + System.lineSeparator() +
+            "  • Enter 'all' to introspect all tables" + System.lineSeparator() +
+            "  • Press Enter without input to introspect all tables" + System.lineSeparator() +
+            "  • Enter 'q' or 'quit' to abort" + System.lineSeparator() +
+            System.lineSeparator() + "Your selection: ";
 
     public Pull() {
         this("");
@@ -79,9 +92,7 @@ public class Pull implements BLauncherCmd {
     @CommandLine.Option(names = { "--database" })
     private String database;
 
-    @CommandLine.Option(names = {
-            "--tables" }, arity = "0..1", description = "Enable table selection. Accepts comma-separated table names " +
-                    "or triggers interactive mode if no value provided")
+    @CommandLine.Option(names = { "--tables" }, arity = "0..1")
     private String tables;
 
     @CommandLine.Option(names = { "-h", "--help" }, hidden = true)
@@ -152,10 +163,8 @@ public class Pull implements BLauncherCmd {
 
         boolean modelFile = Files.exists(Path.of(String.valueOf(persistDir), "model.bal"));
         if (modelFile) {
-            String yellowColor = "\u001B[33m";
-            String resetColor = "\u001B[0m";
-            errStream.print(yellowColor + "WARNING A model.bal file already exists. " +
-                    "Continuing would overwrite it. Do you wish to continue? (y/n) " + resetColor);
+            errStream.print(YELLOW_COLOR + "WARNING A model.bal file already exists. " +
+                    "Continuing would overwrite it. Do you wish to continue? (y/n) " + RESET_COLOR);
             String input = scanner.nextLine();
             if (!(input.toLowerCase(Locale.ENGLISH).equals("y") || input.toLowerCase(Locale.ENGLISH).equals("yes"))) {
                 errStream.println("Introspection aborted.");
@@ -177,44 +186,15 @@ public class Pull implements BLauncherCmd {
         }
 
         // Handle table selection: --tables flag controls the behavior
-        if (this.tables != null) {
-            // --tables flag is present
-            if (!this.tables.trim().isEmpty()) {
-                // Tables specified via --tables=table1,table2
-                persistConfigurations.setSelectedTables(this.tables);
-            } else {
-                // --tables with no value: trigger interactive mode
-                try {
-                    String[] availableTables = introspector.getAvailableTables(persistConfigurations);
-                    if (availableTables.length == 0) {
-                        errStream.println("ERROR: No tables found in the database.");
-                        return;
-                    }
-
-                    String selectedTablesInput = promptForTableSelection(scanner, availableTables);
-                    if (selectedTablesInput == null) {
-                        errStream.println("Introspection aborted.");
-                        return;
-                    }
-
-                    // Check if selection resulted in no valid tables
-                    if (selectedTablesInput.trim().isEmpty()) {
-                        errStream.println("ERROR: No valid tables selected. " +
-                                "Please provide valid table names or indices.");
-                        return;
-                    }
-
-                    if (!selectedTablesInput.trim().equalsIgnoreCase("all")) {
-                        persistConfigurations.setSelectedTables(selectedTablesInput);
-                    }
-                    // If "all", proceed with all tables (no filter set)
-                } catch (BalException e) {
-                    errStream.printf("ERROR: failed to fetch available tables: %s%n", e.getMessage());
-                    return;
-                }
+        if (this.tables != null && this.tables.trim().isEmpty()) {
+            // --tables with no value: trigger interactive mode
+            if (!handleInteractiveTableSelection(scanner, introspector, persistConfigurations)) {
+                return;
             }
+        } else if (this.tables != null) {
+            // Tables specified via --tables=table1,table2
+            persistConfigurations.setSelectedTables(this.tables);
         }
-        // If --tables is not provided, proceed with all tables (default behavior)
 
         Module entityModule = null;
         try {
@@ -238,6 +218,45 @@ public class Pull implements BLauncherCmd {
     }
 
     /**
+     * Handles interactive table selection when --tables flag is present without a value.
+     * Fetches available tables, prompts the user, and updates the configuration.
+     *
+     * @param scanner               the Scanner for reading user input
+     * @param introspector          the database introspector
+     * @param persistConfigurations the persist configuration to update
+     * @return true if selection was successful, false if operation should abort
+     */
+    private boolean handleInteractiveTableSelection(Scanner scanner, Introspector introspector,
+                                                     PersistConfiguration persistConfigurations) {
+        try {
+            String[] availableTables = introspector.getAvailableTables(persistConfigurations);
+            if (availableTables.length == 0) {
+                errStream.println("ERROR: No tables found in the database.");
+                return false;
+            }
+
+            String selectedTablesInput = promptForTableSelection(scanner, availableTables);
+            if (selectedTablesInput == null) {
+                errStream.println("Introspection aborted.");
+                return false;
+            }
+
+            if (selectedTablesInput.trim().isEmpty()) {
+                errStream.println("ERROR: No valid tables selected. Please provide valid table names or indices.");
+                return false;
+            }
+
+            if (!selectedTablesInput.equalsIgnoreCase("all")) {
+                persistConfigurations.setSelectedTables(selectedTablesInput);
+            }
+            return true;
+        } catch (BalException e) {
+            errStream.printf("ERROR: failed to fetch available tables: %s%n", e.getMessage());
+            return false;
+        }
+    }
+
+    /**
      * Prompts the user to select tables from the available tables list.
      * Displays up to 50 tables and allows users to enter table names, indices, or
      * "all".
@@ -248,15 +267,11 @@ public class Pull implements BLauncherCmd {
      *         aborted
      */
     private String promptForTableSelection(Scanner scanner, String[] availableTables) {
-        String cyanColor = "\u001B[36m";
-        String yellowColor = "\u001B[33m";
-        String resetColor = "\u001B[0m";
-
         int totalTables = availableTables.length;
         int displayLimit = 50;
         boolean isLimited = totalTables > displayLimit;
 
-        errStream.println(cyanColor + "\nAvailable tables in the database:" + resetColor);
+        errStream.println(CYAN_COLOR + "\nAvailable tables in the database:" + RESET_COLOR);
         errStream.println("──────────────────────────────────");
 
         for (int i = 0; i < Math.min(totalTables, displayLimit); i++) {
@@ -264,20 +279,14 @@ public class Pull implements BLauncherCmd {
         }
 
         if (isLimited) {
-            errStream.println(yellowColor + "  ... and " + (totalTables - displayLimit) +
-                    " more tables" + resetColor);
+            errStream.println(YELLOW_COLOR + "  ... and " + (totalTables - displayLimit) +
+                    " more tables" + RESET_COLOR);
         }
 
         errStream.println("──────────────────────────────────");
         errStream.printf("Total: %d table%s%n%n", totalTables, totalTables == 1 ? "" : "s");
 
-        errStream.println("Select tables to introspect:");
-        errStream.println("  • Enter table names separated by commas (e.g., users,orders,products)");
-        errStream.println("  • Enter table numbers separated by commas (e.g., 1,3,5)");
-        errStream.println("  • Enter 'all' to introspect all tables");
-        errStream.println("  • Press Enter without input to introspect all tables");
-        errStream.println("  • Enter 'q' or 'quit' to abort");
-        errStream.print("\nYour selection: ");
+        errStream.print(TABLE_SELECTION_PROMPT);
 
         String input = scanner.nextLine().trim();
 
@@ -309,8 +318,8 @@ public class Pull implements BLauncherCmd {
      * @return comma-separated table names
      */
     private String parseTableIndices(String input, String[] availableTables) {
-        String yellowColor = "\u001B[33m";
-        String resetColor = "\u001B[0m";
+        String yellowColor = YELLOW_COLOR;
+        String resetColor = RESET_COLOR;
         String[] indices = input.split(",");
         List<String> selectedTables = new ArrayList<>();
 

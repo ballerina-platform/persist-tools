@@ -32,10 +32,7 @@ EXAMPLES
        Print the usage details of the `bal persist pull` command.
           $ bal persist pull --help
 
-       Generate data model by introspecting database.
-          $ bal persist pull --datastore mysql --host localhost --port 3306 --user root --database db
-
-       Generate data model by introspecting all tables (default behavior).
+       Generate data model by introspecting database with all tables.
           $ bal persist pull --datastore mysql --host localhost --port 3306 --user root --database db
 
        Generate data model by introspecting only specific tables.
