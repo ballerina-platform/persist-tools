@@ -673,6 +673,12 @@ public class ToolingDbPullTest {
         runIntrospectionTestMsSql("tool_test_pull_75_mssql");
     }
 
+    @Test(enabled = true)
+    @Description("Create a model.bal file consisting of a text type field.")
+    public void pullTestMysqlWithTextType() throws BalException {
+        runIntrospectionTestMySql("tool_test_pull_28_mysql");
+    }
+
     private static void runIntrospectionTestMySql(String subDir) throws BalException {
         if (OS.WINDOWS.isCurrentOs()) {
             return;

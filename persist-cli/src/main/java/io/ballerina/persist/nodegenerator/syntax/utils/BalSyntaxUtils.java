@@ -619,6 +619,9 @@ public class BalSyntaxUtils {
                                         sqlType.getNumericScale()));
                     }
                     break;
+                case PersistToolsConstants.SqlTypes.TEXT:
+                    recordFields.append(BalSyntaxConstants.SQL_TEXT_MAPPING_ANNOTATION_NAME);
+                    break;
                 default:
                     break;
             }
@@ -646,6 +649,8 @@ public class BalSyntaxUtils {
                         precision = PersistToolsConstants.DefaultMaxLength.DECIMAL_PRECISION_MSSQL;
                     }
                     return sqlType.getNumericPrecision() != precision || sqlType.getNumericScale() != scale;
+                case PersistToolsConstants.SqlTypes.TEXT:
+                    return true;
                 default:
                     return false;
             }
@@ -950,9 +955,9 @@ public class BalSyntaxUtils {
                     }
                 } else {
                     addConstrainAnnotationToField(field, recordFields);
-                    recordFields.append(field.isOptionalType()
-                            ? field.getFieldType() + (field.isArrayType() ? BalSyntaxConstants.ARRAY : "") +
-                            BalSyntaxConstants.QUESTION_MARK : field.getFieldType() + (field.isArrayType() ?
+                    recordFields.append(field.isOptionalType() 
+                            ? field.getFieldType() + (field.isArrayType() ? BalSyntaxConstants.ARRAY : "") + 
+                            BalSyntaxConstants.QUESTION_MARK : field.getFieldType() + (field.isArrayType() ? 
                             BalSyntaxConstants.ARRAY : ""));
                     recordFields.append(BalSyntaxConstants.SPACE);
                     recordFields.append(field.getFieldName());

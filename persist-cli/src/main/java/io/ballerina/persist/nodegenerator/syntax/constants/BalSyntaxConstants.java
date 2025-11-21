@@ -56,12 +56,12 @@ public class BalSyntaxConstants {
     public static final String SQL_CLIENT_DECLARATION = "psql:SQLClient sqlClient;";
     public static final String CREATE_SQL_RESULTS = "_ = check sqlClient.runBatchInsertQuery(data);";
     public static final String CREATE_SQL_RESULTS_AUTO_INCREMENT =
-            "sql:ExecutionResult[] result = check sqlClient.runBatchInsertQuery(data);";
+            "sql:ExecutionResult[] result = check sqlClient.runBatchInsertQuery(data) ;";
     public static final String GET_PERSIST_CLIENT = "sqlClient = self.persistClients.get(%s);";
 
     public static final String CREATE_ARRAY_VAR = "%s keys = [];";
     public static final String POST_RETURN = "return keys;";
-    public static final String HAS_KEY = "\tif %sTable.hasKey(%s) {";
+    public static final String HAS_KEY = "\t if %sTable.hasKey(%s) {";
     public static final String VARIABLE_TYPE = "%s[]";
     public static final String FIELD = "value.%s";
     public static final String FIELD_WITH_KEY = "%s: value.%s";
@@ -69,10 +69,9 @@ public class BalSyntaxConstants {
     public static final String FOREACH_STMT_START = "foreach %s value in data {" + System.lineSeparator();
     public static final String HAS_NOT_KEY = "!%sTable.hasKey(%s)";
     public static final String UPDATE_RECORD_FIELD_VALUE = "foreach var [k, v] in value.clone().entries() {" +
-            System.lineSeparator() + "        %s[k] = v;" + System.lineSeparator() +
-            "    }" + System.lineSeparator();
-    public static final String HAS_KEY_ERROR = "\t\treturn persist:getAlreadyExistsError(\"%s\", %s);"
-            + System.lineSeparator() + "\t}" + System.lineSeparator();
+            System.lineSeparator() + "        %s[k] = v;" + System.lineSeparator() + "    }" + System.lineSeparator();
+    public static final String HAS_KEY_ERROR = "\t\treturn persist:getAlreadyExistsError(\"%s\", %s);" +
+            System.lineSeparator() + "\t}" + System.lineSeparator();
     public static final String HAS_NOT_KEY_ERROR = "\t\treturn persist:getNotFoundError(\"%s\", %s);";
     public static final String PUSH_VALUES = System.lineSeparator() + "\tkeys.push(%s);" + System.lineSeparator();
     public static final String GET_UPDATE_RECORD = "%s %s = %sTable.get(%s);" + System.lineSeparator();
@@ -84,14 +83,14 @@ public class BalSyntaxConstants {
             "return from  %s inserted in result" + System.lineSeparator();
     public static final String RETURN_FILTERED_AUTO_INCREMENT_KEYS =
             "where inserted.lastInsertId != ()" + System.lineSeparator() +
-                    "select <%s>inserted.lastInsertId;" + System.lineSeparator();
+                    "select <%%s>inserted.lastInsertId;" + System.lineSeparator();
     public static final String SELECT_WITH_SPACE = "\t\t\tselect ";
     public static final String UPDATE_RUN_UPDATE_QUERY = "_ = check sqlClient.runUpdateQuery(%s, value);";
-    public static final String G_SHEET_UPDATE_RUN_UPDATE_QUERY = "_ = check googleSheetsClient." +
-            "runUpdateQuery(%s, value);";
+    public static final String G_SHEET_UPDATE_RUN_UPDATE_QUERY = "_ = check googleSheetsClient."
+            +"runUpdateQuery(%s, value);";
     public static final String UPDATE_RETURN_UPDATE_QUERY = "return self->%s.get();";
-    public static final String G_SHEET_DELETE_RUN_DELETE_QUERY = "_ = check googleSheetsClient." +
-            "runDeleteQuery(%s);";
+    public static final String G_SHEET_DELETE_RUN_DELETE_QUERY = "_ = check googleSheetsClient."
+            +"runDeleteQuery(%s);";
     public static final String DELETE_RUN_DELETE_QUERY = "_ = check sqlClient.runDeleteQuery(%s);";
     public static final String RETURN_DELETED_OBJECT = "return result;";
     public static final String DELETED_OBJECT = "return %sTable.remove(%s).clone();";
@@ -264,17 +263,19 @@ public class BalSyntaxConstants {
             "           ...'object" +
             "           %s" + System.lineSeparator() +
             "        };" + System.lineSeparator() +
-            "    };";
+            "    }";
     public static final String G_SHEET_RETURN_STATEMENT_FOR_RELATIONAL_ENTITY = "return from record{} 'object in %s%s" +
             System.lineSeparator() +
-            "            where %s" + System.lineSeparator() +
+            "            where %s" +
+            System.lineSeparator() +
             "            select persist:filterRecord({" + System.lineSeparator() +
             "                ...'object" + System.lineSeparator() +
             "            }, fields);";
     public static final String RETURN_STATEMENT_FOR_RELATIONAL_ENTITY =
             "return from record{} 'object in %sClonedTable" +
                     System.lineSeparator() +
-                    "            where %s" + System.lineSeparator() +
+                    "            where %s" +
+                    System.lineSeparator() +
                     "            select persist:filterRecord({" + System.lineSeparator() +
                     "                ...'object" + System.lineSeparator() +
                     "            }, fields);";
@@ -285,9 +286,9 @@ public class BalSyntaxConstants {
     public static final String COMMA = ",";
     public static final String CONDITION_STATEMENT = "'object.%s == value[\"%s\"] ";
     public static final String VARIABLE = "\"%s\": %s,";
-    public static final String ASSOCIATED_FIELD_TEMPLATE = ".%s\": {relation: {entityName: \"%s\", refField: \"%s\"}}";
+    public static final String ASSOCIATED_FIELD_TEMPLATE = ".%s": {relation: {entityName: \"%s\", refField: \"%s\"}}";
     public static final String ASSOCIATED_FIELD_TEMPLATE_MAPPED =
-            ".%s\": {relation: {entityName: \"%s\", refField: \"%s\", refColumn: \"%s\"}}";
+            ".%s": {relation: {entityName: \"%s\", refField: \"%s\", refColumn: \"%s\"}}";
     public static final String CONSTRAINT_ANNOTATION = "@constraint:String {" + System.lineSeparator() +
             "        %s" + System.lineSeparator() +
             "    }";
@@ -297,6 +298,7 @@ public class BalSyntaxConstants {
     public static final String SQL_VARCHAR_MAPPING_ANNOTATION_NAME = "sql:Varchar";
     public static final String SQL_CHAR_MAPPING_ANNOTATION_NAME = "sql:Char";
     public static final String SQL_DECIMAL_MAPPING_ANNOTATION_NAME = "sql:Decimal";
+    public static final String SQL_TEXT_MAPPING_ANNOTATION_NAME = "sql:Text";
     public static final String SQL_RELATION_MAPPING_ANNOTATION_NAME = "sql:Relation";
     public static final String SQL_INDEX_MAPPING_ANNOTATION_NAME = "sql:Index";
     public static final String SQL_UNIQUE_INDEX_MAPPING_ANNOTATION_NAME = "sql:UniqueIndex";
@@ -308,7 +310,7 @@ public class BalSyntaxConstants {
     public static final String SQL_CHAR_MAPPING_ANNOTATION =
             String.format("@%s { length: %s }", SQL_CHAR_MAPPING_ANNOTATION_NAME, "%s");
     public static final String SQL_DECIMAL_MAPPING_ANNOTATION =
-            String.format("@%s { precision: [%s,%s] }", SQL_DECIMAL_MAPPING_ANNOTATION_NAME, "%s", "%s");
+            String.format("@%s { precision: [%%s,%%s] }", SQL_DECIMAL_MAPPING_ANNOTATION_NAME, "%s", "%s");
     public static final String SQL_RELATION_MAPPING_ANNOTATION =
             String.format("@%s { keys: %s }", SQL_RELATION_MAPPING_ANNOTATION_NAME, "%s");
     public static final String SQL_INDEX_MAPPING_ANNOTATION =
@@ -340,24 +342,38 @@ public class BalSyntaxConstants {
     public static final String SHEET_METADATA_RECORD_TEMPLATE =
             "final record {|googlesheets:SheetMetadata...;|} & readonly metadata = {%s};";
     public static final String SHEET_CLIENT_CONFIG_TEMPLATE = " sheets:ConnectionConfig sheetsClientConfig = {" +
-            System.lineSeparator() + "            auth: {" +
-            System.lineSeparator() + "                clientId: clientId," +
-            System.lineSeparator() + "                clientSecret: clientSecret," +
-            System.lineSeparator() + "                refreshUrl: sheets:REFRESH_URL," +
-            System.lineSeparator() + "                refreshToken: refreshToken" +
-            System.lineSeparator() + "            }" +
-            System.lineSeparator() + "        };";
+            System.lineSeparator() +
+            "            auth: {" +
+            System.lineSeparator() +
+            "                clientId: clientId," +
+            System.lineSeparator() +
+            "                clientSecret: clientSecret," +
+            System.lineSeparator() +
+            "                refreshUrl: sheets:REFRESH_URL," +
+            System.lineSeparator() +
+            "                refreshToken: refreshToken" +
+            System.lineSeparator() +
+            "            }" +
+            System.lineSeparator() +
+            "        }";
     public static final String HTTP_CLIENT_CONFIG_TEMPLATE = "http:ClientConfiguration httpClientConfiguration = {" +
-            System.lineSeparator() + "            auth: {" +
-            System.lineSeparator() + "                clientId: clientId," +
-            System.lineSeparator() + "                clientSecret: clientSecret," +
-            System.lineSeparator() + "                refreshUrl: sheets:REFRESH_URL," +
-            System.lineSeparator() + "                refreshToken: refreshToken" +
-            System.lineSeparator() + "            }" +
-            System.lineSeparator() + "        };";
-    public static final String HTTP_CLIENT_INIT_TEMPLATE = "http:Client|error httpClient = new (string " + 
-            "`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values`, httpClientConfiguration);" 
-            + System.lineSeparator();
+            System.lineSeparator() +
+            "            auth: {" +
+            System.lineSeparator() +
+            "                clientId: clientId," +
+            System.lineSeparator() +
+            "                clientSecret: clientSecret," +
+            System.lineSeparator() +
+            "                refreshUrl: sheets:REFRESH_URL," +
+            System.lineSeparator() +
+            "                refreshToken: refreshToken" +
+            System.lineSeparator() +
+            "            }" +
+            System.lineSeparator() +
+            "        }";
+    public static final String HTTP_CLIENT_INIT_TEMPLATE = "http:Client|error httpClient = new (string " +
+            "\`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values\`, httpClientConfiguration);" +
+            System.lineSeparator();
     public static final String SHEET_CLIENT_INIT_TEMPLATE =
             "sheets:Client|error googleSheetClient = new (sheetsClientConfig);" + System.lineSeparator();
     public static final String SELF_HTTP_CLIENT_INIT_TEMPLATE =
@@ -380,7 +396,7 @@ public class BalSyntaxConstants {
     public static final String JDBC_URL_INIT_DB_CLIENT_WITH_PARAMS = "%s:Client|error dbClient = new (url = url, " +
             "user = user, password = password, options = connectionOptions);" + System.lineSeparator();
     public static final String GOOGLE_SHEET_CLIENT_MAP = "[%s]: check new (self.googleSheetClient, self.httpClient, " +
-            "metadata.get(%s).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(%s).cloneReadOnly())";
+            "metadata.get(%s).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(%s).cloneReadOnly()";
     public static final String TABLE_PARAMETER_INIT_TEMPLATE = "final isolated table<%s> key(%s) %sTable = table[];";
     public static final String CLONED_TABLE_INIT_TEMPLATE = "table<%s> key(%s) %sClonedTable;";
     public static final String CLONED_TABLE_DECLARATION_TEMPLATE = "%sClonedTable = %sTable.clone();";
@@ -408,113 +424,10 @@ public class BalSyntaxConstants {
     public static final String MANY_TO_ONE = "psql:MANY_TO_ONE";
     public static final String MANY_TO_MANY = "psql:MANY_TO_MANY";
 
-    public static final String EXTERNAL_GET_BY_KEY_METHOD_TEMPLATE = "isolated resource function get %s/%s(" +
-            "%sTargetType targetType = <>) returns targetType|persist:Error = @java:Method {"
+    public static final String EXTERNAL_GET_BY_KEY_METHOD_TEMPLATE = "isolated resource function get %s/%s("
+            +"%sTargetType targetType = <>)"
+            + " returns targetType|persist:Error = @java:Method {"
             + System.lineSeparator()
-            + "'class: \"io.ballerina.stdlib.persist.%s.datastore.%s\"," + System.lineSeparator() +
-             " name: \"queryOne\"} external;";
+            +"'class: \"io.ballerina.stdlib.persist.%s.datastore.%s\","
 
-    public static final String EXTERNAL_GET_METHOD_TEMPLATE = "isolated resource function get %s(" +
-            "%sTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {"
-            + System.lineSeparator()
-            + "'class: \"io.ballerina.stdlib.persist.%s.datastore.%s\"," + System.lineSeparator() +
-            " name: \"query\"} external;";
-    public static final String EXTERNAL_SQL_GET_METHOD_TEMPLATE = "isolated resource function get %s(" +
-            "%sTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, " +
-            "sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, " +
-            "sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {"
-            + System.lineSeparator()
-            + "'class: \"io.ballerina.stdlib.persist.%s.datastore.%s\"," + System.lineSeparator() +
-            " name: \"query\"} external;";
-    public static final String EXTERNAL_QUERY_STREAM_METHOD_TEMPLATE =
-            "private isolated function query%sStream(%sTargetType targetType = <>) returns " +
-                    "stream<targetType, persist:Error?> = @java:Method {" + System.lineSeparator() +
-            "        'class: \"io.ballerina.stdlib.persist.%s.datastore.GoogleSheetsProcessor\"," +
-                    System.lineSeparator() +
-            "        name: \"queryStream\"" + System.lineSeparator() +
-            "    } external;";
-
-    public static final String QUERY_NATIVE_SQL_METHOD_TEMPLATE =
-            "remote isolated function " +
-                    "queryNativeSQL(sql:ParameterizedQuery sqlQuery, typedesc<record {}> rowType = <>) " +
-                    "returns stream<rowType, persist:Error?> = @java:Method {" + System.lineSeparator() +
-                    "        'class: \"io.ballerina.stdlib.persist.sql.datastore.%s\""
-                    + System.lineSeparator() +
-                    "    } external;";
-
-    public static final String EXECUTE_NATIVE_SQL_METHOD_TEMPLATE =
-            "remote isolated function executeNativeSQL(sql:ParameterizedQuery sqlQuery) " +
-                    "returns psql:ExecutionResult|persist:Error = @java:Method {" + System.lineSeparator() +
-                    "        'class: \"io.ballerina.stdlib.persist.sql.datastore.%s\"" + System.lineSeparator() +
-                    "    } external;\n";
-
-    public static final String CONSTRAINT_STRING = "constraint:String";
-    public static final String CONSTRAINT = "constraint";
-    public static final String LENGTH = "length";
-    public static final String MAX_LENGTH = "maxLength";
-    public static final String VARCHAR_LENGTH = "191";
-    public static final String EXPERIMENTAL_NOTICE = System.lineSeparator() + "WARNING %s" + System.lineSeparator();
-
-    public static final String MYSQL_SPECIFICS = "psql:MYSQL_SPECIFICS";
-    public static final String MSSQL_SPECIFICS = "psql:MSSQL_SPECIFICS";
-    public static final String POSTGRESQL_SPECIFICS = "psql:POSTGRESQL_SPECIFICS";
-    public static final String H2_SPECIFICS = "psql:H2_SPECIFICS";
-
-    public static final String MYSQL_PROCESSOR = "MySQLProcessor";
-    public static final String MSSQL_PROCESSOR = "MSSQLProcessor";
-    public static final String POSTGRESQL_PROCESSOR = "PostgreSQLProcessor";
-    public static final String H2_PROCESSOR = "H2Processor";
-
-    /**
-     * Constants related to persist Redis client.
-     */
-    public static final String REDIS_PROCESSOR = "RedisProcessor";
-    public static final String INIT_REDIS_DB_CLIENT_WITH_PARAMS = "%s:Client|error dbClient = new (connectionConfig);" +
-        System.lineSeparator();
-    public static final String INIT_REDIS_CLIENT_MAP = "private final map<predis:RedisClient> persistClients;";
-    public static final String EXTERNAL_REDIS_GET_METHOD_TEMPLATE = "isolated resource function get %s(" +
-        "%sTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {"
-        + System.lineSeparator()
-        + "'class: \"io.ballerina.stdlib.persist.%s.datastore.%s\"," + System.lineSeparator() +
-        " name: \"query\"} external;";
-    public static final String REDIS = "redis";
-    public static final String PERSIST_REDIS_CLIENT_MAP_ELEMENT =
-            "[%s]: check new (dbClient, self.metadata.get(%s), cacheConfig.maxAge)";
-    public static final String REDIS_CLIENT_DECLARATION = "predis:RedisClient redisClient;";
-    public static final String GET_PERSIST_REDIS_CLIENT = "redisClient = self.persistClients.get(%s);";
-    public static final String CREATE_REDIS_RESULTS = "_ = check redisClient.runBatchInsertQuery(data);";
-    public static final String REDIS_UPDATE_RUN_UPDATE_QUERY = "_ = check redisClient.runUpdateQuery(%s, value);";
-    public static final String REDIS_DELETE_RUN_DELETE_QUERY = "_ = check redisClient.runDeleteQuery(%s);";
-
-    public static final String REDIS_METADATA_RECORD_COLLECTION_NAME_TEMPLATE = "collectionName: \"%s\", " 
-    + System.lineSeparator();
-    public static final String REDIS_METADATA_RECORD_FIELD_TEMPLATE 
-    = "%s: {fieldName: \"%s\", fieldDataType: predis:%s}";
-    public static final String REFERENCE_METADATA_TEMPLATE = "refMetadata: {%s}";
-    public static final String REDIS_METADATA_RECORD_TEMPLATE = 
-        "private final record {|predis:RedisMetadata...;|} & readonly metadata = {%s};";
-    public static final String REDIS_ASSOCIATED_FIELD_TEMPLATE = 
-        ".%s\": {relation: {entityName: \"%s\", refField: \"%s\", refFieldDataType: predis:%s}}";
-    public static final String REDIS_JOIN_METADATA_FIELD_TEMPLATE = 
-    "%s: {entity: %s, fieldName: \"%s\", refCollection: \"%s\", refMetaDataKey: \"%s\", refFields: [%s],"
-    + " joinFields: [%s], 'type: %s}";
-    public static final String REDIS_JOIN_METADATA_FIELD_TEMPLATE_WITHOUT_REF_KEY =
-            "%s: {entity: %s, fieldName: \"%s\", refCollection: \"%s\", refFields: [%s],"
-                    + " joinFields: [%s], 'type: %s}";
-    public static final String REDIS_ONE_TO_ONE = "predis:ONE_TO_ONE";
-    public static final String REDIS_ONE_TO_MANY = "predis:ONE_TO_MANY";
-    public static final String REDIS_MANY_TO_ONE = "predis:MANY_TO_ONE";
-    public static final String REDIS_MANY_TO_MANY = "predis:MANY_TO_MANY";
-    public static final String REDIS_CONFIG = "configurable redis:ConnectionConfig & readonly connectionConfig = ?;"
-        + System.lineSeparator();
-    public static final String CACHE_CONFIG = "configurable record {|"
-    + System.lineSeparator() + "\tint maxAge;"
-    + System.lineSeparator() + "|} & readonly cacheConfig = ?;";
-
-    public static final String MOCK_H2_CLIENT_INIT =
-            "isolated final H2Client h2Client = check new (\"jdbc:h2:./test\", \"sa\", \"\");"
-            + System.lineSeparator();
-
-    public static final String EXECUTE_NATIVE_SQL_QUERY = "_ = check h2Client->executeNativeSQL(`%s`);";
 }
-
