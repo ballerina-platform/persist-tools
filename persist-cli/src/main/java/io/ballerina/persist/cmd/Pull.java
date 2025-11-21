@@ -197,11 +197,17 @@ public class Pull implements BLauncherCmd {
                         return;
                     }
 
-                    if (!selectedTablesInput.trim().isEmpty() &&
-                            !selectedTablesInput.trim().equalsIgnoreCase("all")) {
+                    // Check if selection resulted in no valid tables
+                    if (selectedTablesInput.trim().isEmpty()) {
+                        errStream.println("ERROR: No valid tables selected. " +
+                                "Please provide valid table names or indices.");
+                        return;
+                    }
+
+                    if (!selectedTablesInput.trim().equalsIgnoreCase("all")) {
                         persistConfigurations.setSelectedTables(selectedTablesInput);
                     }
-                    // If "all" or empty, proceed with all tables (no filter set)
+                    // If "all", proceed with all tables (no filter set)
                 } catch (BalException e) {
                     errStream.printf("ERROR: failed to fetch available tables: %s%n", e.getMessage());
                     return;
