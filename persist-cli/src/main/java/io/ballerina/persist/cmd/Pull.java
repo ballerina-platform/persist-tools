@@ -81,8 +81,9 @@ public class Pull implements BLauncherCmd {
     @CommandLine.Option(names = {"--database"})
     private String database;
 
-    @CommandLine.Option(names = {"--tables"}, arity = "0..1", 
-                        description = "Enable table selection. Accepts comma-separated table names or triggers interactive mode if no value provided")
+    @CommandLine.Option(names = {"--tables"}, arity = "0..1",
+                        description = "Enable table selection. Accepts comma-separated table names " +
+                                "or triggers interactive mode if no value provided")
     private String tables;
 
     @CommandLine.Option(names = { "-h", "--help" }, hidden = true)
@@ -302,6 +303,8 @@ public class Pull implements BLauncherCmd {
      * @return comma-separated table names
      */
     private String parseTableIndices(String input, String[] availableTables) {
+        String yellowColor = "\u001B[33m";
+        String resetColor = "\u001B[0m";
         String[] indices = input.split(",");
         List<String> selectedTables = new ArrayList<>();
         
@@ -312,11 +315,11 @@ public class Pull implements BLauncherCmd {
                     selectedTables.add(availableTables[index - 1]);
                 } else {
                     errStream.println(yellowColor + "WARNING: Index " + index + 
-                                    " is out of range. Skipping." + "\u001B[0m");
+                                    " is out of range. Skipping." + resetColor);
                 }
             } catch (NumberFormatException e) {
                 errStream.println(yellowColor + "WARNING: Invalid index '" + indexStr.trim() + 
-                                "'. Skipping." + "\u001B[0m");
+                                "'. Skipping." + resetColor);
             }
         }
         

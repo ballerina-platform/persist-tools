@@ -220,7 +220,7 @@ public class ToolingDbPullTest {
         }
         String subDir = "tool_test_pull_tables_mysql";
         createFromDatabaseScript(subDir, "mysql", mysqlDbConfig);
-        executePullCommandInteractive(subDir, "1,2\n", mysqlDbConfig, "mysql");
+        executePullCommandInteractive(subDir, "1,3\n", mysqlDbConfig, "mysql");
         assertGeneratedSources(subDir);
     }
 
@@ -812,15 +812,16 @@ public class ToolingDbPullTest {
             Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Pull");
             Pull persistCmd = (Pull) persistClass.getDeclaredConstructor(String.class).
                     newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir).toAbsolutePath().toString());
-            new CommandLine(persistCmd).parseArgs("--datastore", datastore);
-            new CommandLine(persistCmd).parseArgs("--host", dbConfig.getHost());
-            new CommandLine(persistCmd).parseArgs("--port", String.valueOf(dbConfig.getPort()));
-            new CommandLine(persistCmd).parseArgs("--user", dbConfig.getUsername());
-            new CommandLine(persistCmd).parseArgs("--database", dbConfig.getDatabase());
-            new CommandLine(persistCmd).parseArgs("--tables", tables);
-            String password = dbConfig.getPassword() + "\n";
+            new CommandLine(persistCmd).parseArgs("--datastore", datastore,
+                    "--host", dbConfig.getHost(),
+                    "--port", String.valueOf(dbConfig.getPort()),
+                    "--user", dbConfig.getUsername(),
+                    "--database", dbConfig.getDatabase(),
+                    "--tables", tables);
+            // Include "y\n" for potential model.bal overwrite confirmation
+            String input = dbConfig.getPassword() + "\ny\n";
             InputStream originalSystemIn = System.in;
-            try (InputStream inputStream = new ByteArrayInputStream(password.getBytes(StandardCharsets.UTF_8))) {
+            try (InputStream inputStream = new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8))) {
                 System.setIn(inputStream);
                 persistCmd.execute();
             } finally {
@@ -840,12 +841,13 @@ public class ToolingDbPullTest {
             Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Pull");
             Pull persistCmd = (Pull) persistClass.getDeclaredConstructor(String.class).
                     newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir).toAbsolutePath().toString());
-            new CommandLine(persistCmd).parseArgs("--datastore", datastore);
-            new CommandLine(persistCmd).parseArgs("--host", dbConfig.getHost());
-            new CommandLine(persistCmd).parseArgs("--port", String.valueOf(dbConfig.getPort()));
-            new CommandLine(persistCmd).parseArgs("--user", dbConfig.getUsername());
-            new CommandLine(persistCmd).parseArgs("--database", dbConfig.getDatabase());
-            // Note: No --tables argument to trigger interactive mode
+            new CommandLine(persistCmd).parseArgs("--datastore", datastore,
+                    "--host", dbConfig.getHost(),
+                    "--port", String.valueOf(dbConfig.getPort()),
+                    "--user", dbConfig.getUsername(),
+                    "--database", dbConfig.getDatabase(),
+                    "--tables");
+            // Note: --tables with no value triggers interactive mode
             String input = dbConfig.getPassword() + "\n" + tableSelection;
             InputStream originalSystemIn = System.in;
             try (InputStream inputStream = new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8))) {

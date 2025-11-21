@@ -103,7 +103,7 @@ public class PersistConfiguration {
      * @return the list of table names to include, or null if all tables should be included
      */
     public List<String> getSelectedTables() {
-        return selectedTables;
+        return selectedTables == null ? null : new java.util.ArrayList<>(selectedTables);
     }
 
     /**
