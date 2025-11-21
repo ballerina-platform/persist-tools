@@ -257,12 +257,13 @@ Behaviour of the `pull` command,
 - User should invoke the command within a Ballerina project.
 - User should provide the relevant database configuration as command-line arguments.
 - By default (without `--tables`), all tables in the database will be introspected.
-- If `--tables=table1,table2` is provided, only the specified tables will be introspected.
+- If `--tables=table1,table2` is provided, only the specified tables will be introspected. **Note:** Tables referenced by foreign keys are automatically included to ensure valid model generation.
 - If `--tables` is provided without a value, an interactive prompt will display available tables (up to 50) and allow the user to select which tables to introspect. Users can:
   - Enter table names separated by commas
   - Enter table numbers separated by commas
   - Enter 'all' or press Enter to select all tables
   - Enter 'q' or 'quit' to abort the operation
+- When specific tables are selected, the system automatically includes any tables referenced by foreign keys from the selected tables. INFO messages will be logged for each auto-included table.
 - The database password is not provided as a command-line argument. The user will be prompted to enter the password.
 - If the user invokes the command while a `model.bal` file exists in the `persist` directory, it will prompt the user to confirm overwriting the existing `model.bal` file.
 - If the user introspects a database with unsupported data types, it will inform the user by giving a warning and will comment out the relevant field with the tag `[Unsupported[DATA_TYPE]]`.

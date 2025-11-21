@@ -25,6 +25,8 @@ DESCRIPTION
          - Enter table numbers separated by commas (e.g., 1,3,5)
          - Enter 'all' or press Enter to introspect all tables
        • If the database has more than 50 tables, only the first 50 will be displayed
+       • When specific tables are selected, any tables referenced by foreign keys are automatically included
+         to ensure valid model generation. INFO messages will be logged for auto-included tables.
 
 EXAMPLES
        Print the usage details of the `bal persist pull` command.

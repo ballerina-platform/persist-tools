@@ -236,6 +236,19 @@ public class ToolingDbPullTest {
     }
 
     @Test(enabled = true)
+    @Description("Test automatic inclusion of referenced tables via foreign keys when selecting tables.")
+    public void pullTestMysqlForeignKeyAutoInclude() throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        String subDir = "tool_test_pull_fk_auto_include_mysql";
+        createFromDatabaseScript(subDir, "mysql", mysqlDbConfig);
+        // Selecting only album_ratings table should automatically include albums table
+        executePullCommandWithTables(subDir, "album_ratings", mysqlDbConfig, "mysql");
+        assertGeneratedSources(subDir);
+    }
+
+    @Test(enabled = true)
     @Description("Create a model.bal file consisting of one Entity with no annotations and not null fields.")
     public void pullTestMysqlBasic() throws BalException {
         runIntrospectionTestMySql("tool_test_pull_1_mysql");

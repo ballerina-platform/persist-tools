@@ -134,7 +134,7 @@ $ bal persist pull --datastore mysql --host localhost --port 3306 --user root --
 |     --port     |                                   Used to indicate the database port                                    |    No     |     3306      |
 |     --user     |                                   Used to indicate the database user                                    |    Yes    |     None      |
 |   --database   |                                   Used to indicate the database name                                    |    Yes    |     None      |
-|    --tables    |  Enable table selection. Accepts comma-separated table names or triggers interactive mode if no value  |    No     |  All tables   |
+|    --tables    |  Enable table selection. Accepts comma-separated table names or triggers interactive mode if no value. Tables referenced by foreign keys are automatically included.  |    No     |  All tables   |
 
 The file structure of the project after executing the command will be as follows.
 
