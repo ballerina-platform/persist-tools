@@ -25,6 +25,8 @@ import io.ballerina.compiler.syntax.tree.FunctionDefinitionNode;
 import io.ballerina.compiler.syntax.tree.FunctionSignatureNode;
 import io.ballerina.compiler.syntax.tree.IdentifierToken;
 import io.ballerina.compiler.syntax.tree.IfElseStatementNode;
+import io.ballerina.compiler.syntax.tree.MarkdownDocumentationNode;
+import io.ballerina.compiler.syntax.tree.MetadataNode;
 import io.ballerina.compiler.syntax.tree.Node;
 import io.ballerina.compiler.syntax.tree.NodeFactory;
 import io.ballerina.compiler.syntax.tree.NodeList;
@@ -55,6 +57,7 @@ public class Function {
     private final List<Node> parameters;
     private ReturnTypeDescriptorNode returnTypeDescriptorNode;
     private NodeList<StatementNode> statements;
+    private MetadataNode metadataNode;
 
     public Function(String name, SyntaxKind kind) {
         qualifierList = AbstractNodeFactory.createEmptyNodeList();
@@ -63,12 +66,13 @@ public class Function {
         parameters = new ArrayList<>();
         statements = NodeFactory.createEmptyNodeList();
         this.kind = kind;
+        this.metadataNode = null;
     }
 
     public FunctionDefinitionNode getFunctionDefinitionNode() {
         return NodeFactory.createFunctionDefinitionNode(
                 kind,
-                null,
+                metadataNode,
                 qualifierList,
                 finalKeyWord,
                 functionName,
@@ -77,6 +81,10 @@ public class Function {
                 getFunctionBody()
 
         );
+    }
+
+    public void addDocumentation(MarkdownDocumentationNode documentation) {
+        this.metadataNode = NodeFactory.createMetadataNode(documentation, NodeFactory.createEmptyNodeList());
     }
 
     public void addRelativeResourcePaths(NodeList<Node> paths) {

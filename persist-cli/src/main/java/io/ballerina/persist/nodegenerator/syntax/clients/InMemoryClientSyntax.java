@@ -40,6 +40,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 
+import static io.ballerina.persist.PersistToolsConstants.SupportedDataSources.IN_MEMORY_TABLE;
+import static io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils.EntityType.TABLE;
+
 /**
  * This class is used to generate the in-memory client syntax tree.
  *
@@ -47,6 +50,7 @@ import java.util.Locale;
  */
 public class InMemoryClientSyntax implements ClientSyntax {
 
+    public static final String IN_MEMORY_PROCESSOR = "InMemoryProcessor";
     public final List<QueryMethod> queryMethodList = new ArrayList<>();
     private StringBuilder primaryKeysTuple = new StringBuilder();
     private StringBuilder primaryKeysRecord = new StringBuilder();
@@ -72,7 +76,7 @@ public class InMemoryClientSyntax implements ClientSyntax {
 
     @Override
     public Client getClientObject(Module entityModule, String clientName) {
-        Client clientObject = BalSyntaxUtils.generateClientSignature(clientName, true);
+        Client clientObject = BalSyntaxUtils.generateClientSignature(clientName, true, IN_MEMORY_TABLE);
         clientObject.addMember(NodeParser.parseObjectMember(BalSyntaxConstants.INIT_IN_MEMORY_CLIENT_MAP), true);
         clientObject.addMember(NodeParser.parseObjectMember(""), true);
         return clientObject;
@@ -107,18 +111,26 @@ public class InMemoryClientSyntax implements ClientSyntax {
 
     @Override
     public FunctionDefinitionNode getGetFunction(Entity entity) {
-        return BalSyntaxUtils.generateGetFunction(entity, "InMemoryProcessor",
+        FunctionDefinitionNode functionNode = BalSyntaxUtils.generateGetFunction(entity, IN_MEMORY_PROCESSOR,
                 BalSyntaxConstants.PERSIST_IN_MEMORY);
+
+        String doc = BalSyntaxUtils.createGetResourceDocumentation(entity, TABLE, false);
+        return BalSyntaxUtils.addDocumentationToFunction(functionNode, doc);
     }
 
     @Override
     public FunctionDefinitionNode getGetByKeyFunction(Entity entity) {
-        return BalSyntaxUtils.generateGetByKeyFunction(entity, "InMemoryProcessor",
+        FunctionDefinitionNode functionNode = BalSyntaxUtils.generateGetByKeyFunction(entity, IN_MEMORY_PROCESSOR,
                 BalSyntaxConstants.PERSIST_IN_MEMORY);
+
+        String doc = BalSyntaxUtils.createGetByKeyResourceDocumentation(entity, TABLE);
+        return BalSyntaxUtils.addDocumentationToFunction(functionNode, doc);
     }
 
     public FunctionDefinitionNode getCloseFunction() {
         Function close = BalSyntaxUtils.generateCloseFunction();
+        String doc = BalSyntaxUtils.createCloseMethodDocumentation();
+        close.addDocumentation(BalSyntaxUtils.createMarkdownDocumentationNode(doc));
         close.addStatement(NodeParser.parseStatement(BalSyntaxConstants.RETURN_NIL));
         return close.getFunctionDefinitionNode();
     }
@@ -128,6 +140,8 @@ public class InMemoryClientSyntax implements ClientSyntax {
         String parameterType = String.format(BalSyntaxConstants.INSERT_RECORD, entity.getEntityName());
         List<EntityField> primaryKeys = entity.getKeys();
         Function create = BalSyntaxUtils.generatePostFunction(entity, primaryKeys, parameterType);
+        String doc = BalSyntaxUtils.createPostResourceDocumentation(entity, TABLE);
+        create.addDocumentation(BalSyntaxUtils.createMarkdownDocumentationNode(doc));
         addFunctionBodyToInMemoryPostResource(create, primaryKeys, entity, parameterType);
         return create.getFunctionDefinitionNode();
     }
@@ -161,6 +175,8 @@ public class InMemoryClientSyntax implements ClientSyntax {
             primaryKeysRecord.append(BalSyntaxConstants.CLOSE_BRACE);
         }
         Function update = BalSyntaxUtils.generatePutFunction(entity, path, filterKeys);
+        String doc = BalSyntaxUtils.createPutResourceDocumentation(entity, TABLE);
+        update.addDocumentation(BalSyntaxUtils.createMarkdownDocumentationNode(doc));
         update.addStatement(NodeParser.parseStatement(BalSyntaxConstants.LOCK));
         update.addStatement(NodeParser.parseStatement(BalSyntaxConstants.OPEN_BRACE));
         IfElse hasCheck = new IfElse(NodeParser.parseExpression(String.format(BalSyntaxConstants.HAS_NOT_KEY,
@@ -187,6 +203,8 @@ public class InMemoryClientSyntax implements ClientSyntax {
         StringBuilder filterKeys = new StringBuilder(BalSyntaxConstants.OPEN_BRACE);
         StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH + entity.getClientResourceName());
         Function delete = BalSyntaxUtils.generateDeleteFunction(entity, path, filterKeys);
+        String doc = BalSyntaxUtils.createDeleteResourceDocumentation(entity, TABLE);
+        delete.addDocumentation(BalSyntaxUtils.createMarkdownDocumentationNode(doc));
         delete.addStatement(NodeParser.parseStatement(BalSyntaxConstants.LOCK));
         delete.addStatement(NodeParser.parseStatement(BalSyntaxConstants.OPEN_BRACE));
         IfElse hasCheck = new IfElse(NodeParser.parseExpression(String.format(BalSyntaxConstants.HAS_NOT_KEY,

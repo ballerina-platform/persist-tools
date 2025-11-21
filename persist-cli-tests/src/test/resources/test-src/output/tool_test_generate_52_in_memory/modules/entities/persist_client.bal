@@ -1,6 +1,8 @@
 // AUTO-GENERATED FILE. DO NOT MODIFY.
+
 // This file is an auto-generated file by Ballerina persistence layer for model.
 // It should not be modified by hand.
+
 import ballerina/jballerina.java;
 import ballerina/persist;
 import ballerinax/persist.inmemory;
@@ -14,6 +16,7 @@ final isolated table<Workspace> key(workspaceId) workspacesTable = table [];
 final isolated table<Building> key(buildingCode) buildingsTable = table [];
 final isolated table<Department> key(deptNo) departmentsTable = table [];
 
+# In-Memory persist client.
 public isolated client class Client {
     *persist:AbstractPersistClient;
 
@@ -52,16 +55,29 @@ public isolated client class Client {
         };
     }
 
+    # Get rows from Employee table.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + return - A collection of matching records or an error
     isolated resource function get employees(EmployeeTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "query"
     } external;
 
+    # Get row from Employee table.
+    #
+    # + empNo - The value of the primary key field empNo
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get employees/[string empNo](EmployeeTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into Employee table.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post employees(EmployeeInsert[] data) returns string[]|persist:Error {
         string[] keys = [];
         foreach EmployeeInsert value in data {
@@ -76,6 +92,11 @@ public isolated client class Client {
         return keys;
     }
 
+    # Update row in Employee table.
+    #
+    # + empNo - The value of the primary key field empNo
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put employees/[string empNo](EmployeeUpdate value) returns Employee|persist:Error {
         lock {
             if !employeesTable.hasKey(empNo) {
@@ -90,6 +111,10 @@ public isolated client class Client {
         }
     }
 
+    # Delete row from Employee table.
+    #
+    # + empNo - The value of the primary key field empNo
+    # + return - The deleted record or an error
     isolated resource function delete employees/[string empNo]() returns Employee|persist:Error {
         lock {
             if !employeesTable.hasKey(empNo) {
@@ -99,16 +124,29 @@ public isolated client class Client {
         }
     }
 
+    # Get rows from Workspace table.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + return - A collection of matching records or an error
     isolated resource function get workspaces(WorkspaceTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "query"
     } external;
 
+    # Get row from Workspace table.
+    #
+    # + workspaceId - The value of the primary key field workspaceId
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get workspaces/[string workspaceId](WorkspaceTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into Workspace table.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post workspaces(WorkspaceInsert[] data) returns string[]|persist:Error {
         string[] keys = [];
         foreach WorkspaceInsert value in data {
@@ -123,6 +161,11 @@ public isolated client class Client {
         return keys;
     }
 
+    # Update row in Workspace table.
+    #
+    # + workspaceId - The value of the primary key field workspaceId
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put workspaces/[string workspaceId](WorkspaceUpdate value) returns Workspace|persist:Error {
         lock {
             if !workspacesTable.hasKey(workspaceId) {
@@ -137,6 +180,10 @@ public isolated client class Client {
         }
     }
 
+    # Delete row from Workspace table.
+    #
+    # + workspaceId - The value of the primary key field workspaceId
+    # + return - The deleted record or an error
     isolated resource function delete workspaces/[string workspaceId]() returns Workspace|persist:Error {
         lock {
             if !workspacesTable.hasKey(workspaceId) {
@@ -146,16 +193,29 @@ public isolated client class Client {
         }
     }
 
+    # Get rows from Building table.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + return - A collection of matching records or an error
     isolated resource function get buildings(BuildingTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "query"
     } external;
 
+    # Get row from Building table.
+    #
+    # + buildingCode - The value of the primary key field buildingCode
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get buildings/[string buildingCode](BuildingTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into Building table.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post buildings(BuildingInsert[] data) returns string[]|persist:Error {
         string[] keys = [];
         foreach BuildingInsert value in data {
@@ -170,6 +230,11 @@ public isolated client class Client {
         return keys;
     }
 
+    # Update row in Building table.
+    #
+    # + buildingCode - The value of the primary key field buildingCode
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put buildings/[string buildingCode](BuildingUpdate value) returns Building|persist:Error {
         lock {
             if !buildingsTable.hasKey(buildingCode) {
@@ -184,6 +249,10 @@ public isolated client class Client {
         }
     }
 
+    # Delete row from Building table.
+    #
+    # + buildingCode - The value of the primary key field buildingCode
+    # + return - The deleted record or an error
     isolated resource function delete buildings/[string buildingCode]() returns Building|persist:Error {
         lock {
             if !buildingsTable.hasKey(buildingCode) {
@@ -193,16 +262,29 @@ public isolated client class Client {
         }
     }
 
+    # Get rows from Department table.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + return - A collection of matching records or an error
     isolated resource function get departments(DepartmentTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "query"
     } external;
 
+    # Get row from Department table.
+    #
+    # + deptNo - The value of the primary key field deptNo
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get departments/[string deptNo](DepartmentTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.inmemory.datastore.InMemoryProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into Department table.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post departments(DepartmentInsert[] data) returns string[]|persist:Error {
         string[] keys = [];
         foreach DepartmentInsert value in data {
@@ -217,6 +299,11 @@ public isolated client class Client {
         return keys;
     }
 
+    # Update row in Department table.
+    #
+    # + deptNo - The value of the primary key field deptNo
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put departments/[string deptNo](DepartmentUpdate value) returns Department|persist:Error {
         lock {
             if !departmentsTable.hasKey(deptNo) {
@@ -231,6 +318,10 @@ public isolated client class Client {
         }
     }
 
+    # Delete row from Department table.
+    #
+    # + deptNo - The value of the primary key field deptNo
+    # + return - The deleted record or an error
     isolated resource function delete departments/[string deptNo]() returns Department|persist:Error {
         lock {
             if !departmentsTable.hasKey(deptNo) {
@@ -240,6 +331,9 @@ public isolated client class Client {
         }
     }
 
+    # Close the database client and release connections.
+    #
+    # + return - An error if closing fails
     public isolated function close() returns persist:Error? {
         return ();
     }

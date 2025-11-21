@@ -1,6 +1,8 @@
 // AUTO-GENERATED FILE. DO NOT MODIFY.
+
 // This file is an auto-generated file by Ballerina persistence layer for model.
 // It should not be modified by hand.
+
 import ballerina/http;
 import ballerina/jballerina.java;
 import ballerina/persist;
@@ -11,6 +13,7 @@ const APPOINTMENT = "appointments";
 const PATIENT = "patients";
 const DOCTOR = "doctors";
 
+# Google Sheets persist client.
 public isolated client class Client {
     *persist:AbstractPersistClient;
 
@@ -130,16 +133,29 @@ public isolated client class Client {
         };
     }
 
+    # Get rows from appointment sheet.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + return - A collection of matching records or an error
     isolated resource function get appointments(AppointmentTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.googlesheets.datastore.GoogleSheetsProcessor",
         name: "query"
     } external;
 
+    # Get row from appointment sheet.
+    #
+    # + id - The value of the primary key field id
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get appointments/[int id](AppointmentTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.googlesheets.datastore.GoogleSheetsProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into appointment sheet.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post appointments(AppointmentInsert[] data) returns int[]|persist:Error {
         googlesheets:GoogleSheetsClient googleSheetsClient;
         lock {
@@ -150,6 +166,11 @@ public isolated client class Client {
             select inserted.id;
     }
 
+    # Update row in appointment sheet.
+    #
+    # + id - The value of the primary key field id
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put appointments/[int id](AppointmentUpdate value) returns Appointment|persist:Error {
         googlesheets:GoogleSheetsClient googleSheetsClient;
         lock {
@@ -159,6 +180,10 @@ public isolated client class Client {
         return self->/appointments/[id].get();
     }
 
+    # Delete row from appointment sheet.
+    #
+    # + id - The value of the primary key field id
+    # + return - The deleted record or an error
     isolated resource function delete appointments/[int id]() returns Appointment|persist:Error {
         Appointment result = check self->/appointments/[id].get();
         googlesheets:GoogleSheetsClient googleSheetsClient;
@@ -210,16 +235,29 @@ public isolated client class Client {
         name: "queryStream"
     } external;
 
+    # Get rows from patients sheet.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + return - A collection of matching records or an error
     isolated resource function get patients(PatientTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.googlesheets.datastore.GoogleSheetsProcessor",
         name: "query"
     } external;
 
+    # Get row from patients sheet.
+    #
+    # + id - The value of the primary key field ID
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get patients/[int id](PatientTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.googlesheets.datastore.GoogleSheetsProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into patients sheet.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post patients(PatientInsert[] data) returns int[]|persist:Error {
         googlesheets:GoogleSheetsClient googleSheetsClient;
         lock {
@@ -230,6 +268,11 @@ public isolated client class Client {
             select inserted.id;
     }
 
+    # Update row in patients sheet.
+    #
+    # + id - The value of the primary key field ID
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put patients/[int id](PatientUpdate value) returns Patient|persist:Error {
         googlesheets:GoogleSheetsClient googleSheetsClient;
         lock {
@@ -239,6 +282,10 @@ public isolated client class Client {
         return self->/patients/[id].get();
     }
 
+    # Delete row from patients sheet.
+    #
+    # + id - The value of the primary key field ID
+    # + return - The deleted record or an error
     isolated resource function delete patients/[int id]() returns Patient|persist:Error {
         Patient result = check self->/patients/[id].get();
         googlesheets:GoogleSheetsClient googleSheetsClient;
@@ -278,16 +325,29 @@ public isolated client class Client {
         name: "queryStream"
     } external;
 
+    # Get rows from Doctor sheet.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + return - A collection of matching records or an error
     isolated resource function get doctors(DoctorTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.googlesheets.datastore.GoogleSheetsProcessor",
         name: "query"
     } external;
 
+    # Get row from Doctor sheet.
+    #
+    # + id - The value of the primary key field id
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get doctors/[int id](DoctorTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.googlesheets.datastore.GoogleSheetsProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into Doctor sheet.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post doctors(DoctorInsert[] data) returns int[]|persist:Error {
         googlesheets:GoogleSheetsClient googleSheetsClient;
         lock {
@@ -298,6 +358,11 @@ public isolated client class Client {
             select inserted.id;
     }
 
+    # Update row in Doctor sheet.
+    #
+    # + id - The value of the primary key field id
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put doctors/[int id](DoctorUpdate value) returns Doctor|persist:Error {
         googlesheets:GoogleSheetsClient googleSheetsClient;
         lock {
@@ -307,6 +372,10 @@ public isolated client class Client {
         return self->/doctors/[id].get();
     }
 
+    # Delete row from Doctor sheet.
+    #
+    # + id - The value of the primary key field id
+    # + return - The deleted record or an error
     isolated resource function delete doctors/[int id]() returns Doctor|persist:Error {
         Doctor result = check self->/doctors/[id].get();
         googlesheets:GoogleSheetsClient googleSheetsClient;
@@ -364,6 +433,9 @@ public isolated client class Client {
                                         }, fields);
     }
 
+    # Close the database client and release connections.
+    #
+    # + return - An error if closing fails
     public isolated function close() returns persist:Error? {
         return ();
     }

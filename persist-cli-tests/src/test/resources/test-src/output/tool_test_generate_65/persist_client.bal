@@ -1,6 +1,8 @@
 // AUTO-GENERATED FILE. DO NOT MODIFY.
+
 // This file is an auto-generated file by Ballerina persistence layer for model.
 // It should not be modified by hand.
+
 import ballerina/jballerina.java;
 import ballerina/persist;
 import ballerina/sql;
@@ -13,6 +15,7 @@ const ORDER = "orders";
 const ORDER_ITEM = "orderitems";
 const PAYMENT = "payments";
 
+# MySQL persist client.
 public isolated client class Client {
     *persist:AbstractPersistClient;
 
@@ -120,16 +123,33 @@ public isolated client class Client {
         };
     }
 
+    # Get rows from Book table.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
+    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
+    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
+    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + return - A collection of matching records or an error
     isolated resource function get books(BookTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "query"
     } external;
 
+    # Get row from Book table.
+    #
+    # + bookId - The value of the primary key field bookId
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get books/[string bookId](BookTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into Book table.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post books(BookInsert[] data) returns string[]|persist:Error {
         psql:SQLClient sqlClient;
         lock {
@@ -140,6 +160,11 @@ public isolated client class Client {
             select inserted.bookId;
     }
 
+    # Update row in Book table.
+    #
+    # + bookId - The value of the primary key field bookId
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put books/[string bookId](BookUpdate value) returns Book|persist:Error {
         psql:SQLClient sqlClient;
         lock {
@@ -149,6 +174,10 @@ public isolated client class Client {
         return self->/books/[bookId].get();
     }
 
+    # Delete row from Book table.
+    #
+    # + bookId - The value of the primary key field bookId
+    # + return - The deleted record or an error
     isolated resource function delete books/[string bookId]() returns Book|persist:Error {
         Book result = check self->/books/[bookId].get();
         psql:SQLClient sqlClient;
@@ -159,16 +188,33 @@ public isolated client class Client {
         return result;
     }
 
+    # Get rows from Order table.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
+    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
+    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
+    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + return - A collection of matching records or an error
     isolated resource function get orders(OrderTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "query"
     } external;
 
+    # Get row from Order table.
+    #
+    # + orderId - The value of the primary key field orderId
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get orders/[string orderId](OrderTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into Order table.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post orders(OrderInsert[] data) returns string[]|persist:Error {
         psql:SQLClient sqlClient;
         lock {
@@ -179,6 +225,11 @@ public isolated client class Client {
             select inserted.orderId;
     }
 
+    # Update row in Order table.
+    #
+    # + orderId - The value of the primary key field orderId
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put orders/[string orderId](OrderUpdate value) returns Order|persist:Error {
         psql:SQLClient sqlClient;
         lock {
@@ -188,6 +239,10 @@ public isolated client class Client {
         return self->/orders/[orderId].get();
     }
 
+    # Delete row from Order table.
+    #
+    # + orderId - The value of the primary key field orderId
+    # + return - The deleted record or an error
     isolated resource function delete orders/[string orderId]() returns Order|persist:Error {
         Order result = check self->/orders/[orderId].get();
         psql:SQLClient sqlClient;
@@ -198,16 +253,33 @@ public isolated client class Client {
         return result;
     }
 
+    # Get rows from OrderItem table.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
+    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
+    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
+    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + return - A collection of matching records or an error
     isolated resource function get orderitems(OrderItemTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "query"
     } external;
 
+    # Get row from OrderItem table.
+    #
+    # + orderItemId - The value of the primary key field orderItemId
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get orderitems/[string orderItemId](OrderItemTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into OrderItem table.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post orderitems(OrderItemInsert[] data) returns string[]|persist:Error {
         psql:SQLClient sqlClient;
         lock {
@@ -218,6 +290,11 @@ public isolated client class Client {
             select inserted.orderItemId;
     }
 
+    # Update row in OrderItem table.
+    #
+    # + orderItemId - The value of the primary key field orderItemId
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put orderitems/[string orderItemId](OrderItemUpdate value) returns OrderItem|persist:Error {
         psql:SQLClient sqlClient;
         lock {
@@ -227,6 +304,10 @@ public isolated client class Client {
         return self->/orderitems/[orderItemId].get();
     }
 
+    # Delete row from OrderItem table.
+    #
+    # + orderItemId - The value of the primary key field orderItemId
+    # + return - The deleted record or an error
     isolated resource function delete orderitems/[string orderItemId]() returns OrderItem|persist:Error {
         OrderItem result = check self->/orderitems/[orderItemId].get();
         psql:SQLClient sqlClient;
@@ -237,16 +318,33 @@ public isolated client class Client {
         return result;
     }
 
+    # Get rows from Payment table.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
+    # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
+    # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
+    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + return - A collection of matching records or an error
     isolated resource function get payments(PaymentTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "query"
     } external;
 
+    # Get row from Payment table.
+    #
+    # + paymentId - The value of the primary key field paymentId
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get payments/[string paymentId](PaymentTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into Payment table.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post payments(PaymentInsert[] data) returns string[]|persist:Error {
         psql:SQLClient sqlClient;
         lock {
@@ -257,6 +355,11 @@ public isolated client class Client {
             select inserted.paymentId;
     }
 
+    # Update row in Payment table.
+    #
+    # + paymentId - The value of the primary key field paymentId
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put payments/[string paymentId](PaymentUpdate value) returns Payment|persist:Error {
         psql:SQLClient sqlClient;
         lock {
@@ -266,6 +369,10 @@ public isolated client class Client {
         return self->/payments/[paymentId].get();
     }
 
+    # Delete row from Payment table.
+    #
+    # + paymentId - The value of the primary key field paymentId
+    # + return - The deleted record or an error
     isolated resource function delete payments/[string paymentId]() returns Payment|persist:Error {
         Payment result = check self->/payments/[paymentId].get();
         psql:SQLClient sqlClient;
@@ -276,14 +383,26 @@ public isolated client class Client {
         return result;
     }
 
+    # Execute a custom SQL query and return results.
+    #
+    # + sqlQuery - The SQL query to execute
+    # + rowType - Defines the structure of the result rows
+    # + return - A collection of result rows or an error
     remote isolated function queryNativeSQL(sql:ParameterizedQuery sqlQuery, typedesc<record {}> rowType = <>) returns stream<rowType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor"
     } external;
 
+    # Execute a custom SQL command (INSERT, UPDATE, DELETE, etc.).
+    #
+    # + sqlQuery - The SQL command to execute
+    # + return - The execution result or an error
     remote isolated function executeNativeSQL(sql:ParameterizedQuery sqlQuery) returns psql:ExecutionResult|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor"
     } external;
 
+    # Close the database client and release connections.
+    #
+    # + return - An error if closing fails
     public isolated function close() returns persist:Error? {
         error? result = self.dbClient.close();
         if result is error {

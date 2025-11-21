@@ -44,6 +44,9 @@ import io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils;
 import java.util.List;
 import java.util.Locale;
 
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.REDIS;
+import static io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils.EntityType.KEY_SPACE;
+
 public class RedisClientSyntax  implements ClientSyntax {
     private final Module entityModule;
     private final String datasource;
@@ -67,7 +70,7 @@ public class RedisClientSyntax  implements ClientSyntax {
         Token prefixToken = AbstractNodeFactory.createIdentifierToken("predis");
         ImportPrefixNode prefix = NodeFactory.createImportPrefixNode(SyntaxTokenConstants.SYNTAX_TREE_AS, prefixToken);
         imports = imports.add(BalSyntaxUtils.getImportDeclarationNode(BalSyntaxConstants.KEYWORD_BALLERINAX,
-                BalSyntaxConstants.PERSIST_MODULE + "." + BalSyntaxConstants.REDIS, prefix));
+                BalSyntaxConstants.PERSIST_MODULE + "." + REDIS, prefix));
         return imports;
     }
 
@@ -77,7 +80,7 @@ public class RedisClientSyntax  implements ClientSyntax {
 
     @Override
     public Client getClientObject(Module entityModule, String clientName) {
-        Client clientObject = BalSyntaxUtils.generateClientSignature(clientName, true);
+        Client clientObject = BalSyntaxUtils.generateClientSignature(clientName, true, REDIS);
         clientObject.addMember(NodeParser.parseObjectMember(
                 String.format(BalSyntaxConstants.INIT_DB_CLIENT, this.datasource)), true);
         clientObject.addMember(NodeParser.parseObjectMember(BalSyntaxConstants.INIT_REDIS_CLIENT_MAP), true);
@@ -116,19 +119,28 @@ public class RedisClientSyntax  implements ClientSyntax {
 
     @Override
     public FunctionDefinitionNode getGetFunction(Entity entity) {
-        return (FunctionDefinitionNode) NodeParser.parseObjectMember(
+        FunctionDefinitionNode functionNode = (FunctionDefinitionNode) NodeParser.parseObjectMember(
                 String.format(BalSyntaxConstants.EXTERNAL_REDIS_GET_METHOD_TEMPLATE, entity.getClientResourceName(),
-                        entity.getEntityName(), BalSyntaxConstants.REDIS, this.nativeClass));
+                        entity.getEntityName(), REDIS, this.nativeClass));
+
+        String doc = BalSyntaxUtils.createGetResourceDocumentation(entity, KEY_SPACE, false);
+        return BalSyntaxUtils.addDocumentationToFunction(functionNode, doc);
     }
 
     @Override
     public FunctionDefinitionNode getGetByKeyFunction(Entity entity) {
-        return BalSyntaxUtils.generateGetByKeyFunction(entity, this.nativeClass, BalSyntaxConstants.REDIS);
+        FunctionDefinitionNode functionNode = BalSyntaxUtils.generateGetByKeyFunction(entity, this.nativeClass,
+                REDIS);
+
+        String doc = BalSyntaxUtils.createGetByKeyResourceDocumentation(entity, KEY_SPACE);
+        return BalSyntaxUtils.addDocumentationToFunction(functionNode, doc);
     }
 
     @Override
     public FunctionDefinitionNode getCloseFunction() {
         Function close = BalSyntaxUtils.generateCloseFunction();
+        String doc = BalSyntaxUtils.createCloseMethodDocumentation();
+        close.addDocumentation(BalSyntaxUtils.createMarkdownDocumentationNode(doc));
         close.addStatement(NodeParser.parseStatement(BalSyntaxConstants.PERSIST_CLIENT_CLOSE_STATEMENT));
         IfElse errorCheck = new IfElse(NodeParser.parseExpression(String.format(
                 BalSyntaxConstants.RESULT_IS_BALLERINA_ERROR, BalSyntaxConstants.RESULT)));
@@ -144,6 +156,8 @@ public class RedisClientSyntax  implements ClientSyntax {
         String parameterType = String.format(BalSyntaxConstants.INSERT_RECORD, entity.getEntityName());
         List<EntityField> primaryKeys = entity.getKeys();
         Function create = BalSyntaxUtils.generatePostFunction(entity, primaryKeys, parameterType);
+        String doc = BalSyntaxUtils.createPostResourceDocumentation(entity, KEY_SPACE);
+        create.addDocumentation(BalSyntaxUtils.createMarkdownDocumentationNode(doc));
         addFunctionBodyToPostResource(create, primaryKeys,
                 BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()), parameterType);
         return create.getFunctionDefinitionNode();
@@ -154,6 +168,8 @@ public class RedisClientSyntax  implements ClientSyntax {
         StringBuilder filterKeys = new StringBuilder(BalSyntaxConstants.OPEN_BRACE);
         StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH + entity.getClientResourceName());
         Function update = BalSyntaxUtils.generatePutFunction(entity, filterKeys, path);
+        String doc = BalSyntaxUtils.createPutResourceDocumentation(entity, KEY_SPACE);
+        update.addDocumentation(BalSyntaxUtils.createMarkdownDocumentationNode(doc));
 
         update.addStatement(NodeParser.parseStatement(BalSyntaxConstants.REDIS_CLIENT_DECLARATION));
 
@@ -182,6 +198,8 @@ public class RedisClientSyntax  implements ClientSyntax {
         StringBuilder filterKeys = new StringBuilder(BalSyntaxConstants.OPEN_BRACE);
         StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH + entity.getClientResourceName());
         Function delete = BalSyntaxUtils.generateDeleteFunction(entity, filterKeys, path);
+        String doc = BalSyntaxUtils.createDeleteResourceDocumentation(entity, KEY_SPACE);
+        delete.addDocumentation(BalSyntaxUtils.createMarkdownDocumentationNode(doc));
         delete.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.GET_OBJECT_QUERY,
                 entity.getEntityName(), path)));
 

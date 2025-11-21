@@ -1,6 +1,8 @@
 // AUTO-GENERATED FILE. DO NOT MODIFY.
+
 // This file is an auto-generated file by Ballerina persistence layer for model.
 // It should not be modified by hand.
+
 import ballerina/jballerina.java;
 import ballerina/persist;
 import ballerinax/persist.redis as predis;
@@ -11,6 +13,7 @@ const USER = "users";
 const POST = "posts";
 const COMMENT = "comments";
 
+# Redis persist client.
 public isolated client class Client {
     *persist:AbstractPersistClient;
 
@@ -146,16 +149,29 @@ public isolated client class Client {
         };
     }
 
+    # Get rows from Follow key space.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + return - A collection of matching records or an error
     isolated resource function get follows(FollowTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
         name: "query"
     } external;
 
+    # Get row from Follow key space.
+    #
+    # + id - The value of the primary key field id
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get follows/[int id](FollowTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into Follow key space.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post follows(FollowInsert[] data) returns int[]|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -166,6 +182,11 @@ public isolated client class Client {
             select inserted.id;
     }
 
+    # Update row in Follow key space.
+    #
+    # + id - The value of the primary key field id
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put follows/[int id](FollowUpdate value) returns Follow|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -175,6 +196,10 @@ public isolated client class Client {
         return self->/follows/[id].get();
     }
 
+    # Delete row from Follow key space.
+    #
+    # + id - The value of the primary key field id
+    # + return - The deleted record or an error
     isolated resource function delete follows/[int id]() returns Follow|persist:Error {
         Follow result = check self->/follows/[id].get();
         predis:RedisClient redisClient;
@@ -185,16 +210,29 @@ public isolated client class Client {
         return result;
     }
 
+    # Get rows from User key space.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + return - A collection of matching records or an error
     isolated resource function get users(UserTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
         name: "query"
     } external;
 
+    # Get row from User key space.
+    #
+    # + id - The value of the primary key field id
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get users/[int id](UserTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into User key space.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post users(UserInsert[] data) returns int[]|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -205,6 +243,11 @@ public isolated client class Client {
             select inserted.id;
     }
 
+    # Update row in User key space.
+    #
+    # + id - The value of the primary key field id
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put users/[int id](UserUpdate value) returns User|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -214,6 +257,10 @@ public isolated client class Client {
         return self->/users/[id].get();
     }
 
+    # Delete row from User key space.
+    #
+    # + id - The value of the primary key field id
+    # + return - The deleted record or an error
     isolated resource function delete users/[int id]() returns User|persist:Error {
         User result = check self->/users/[id].get();
         predis:RedisClient redisClient;
@@ -224,16 +271,29 @@ public isolated client class Client {
         return result;
     }
 
+    # Get rows from Post key space.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + return - A collection of matching records or an error
     isolated resource function get posts(PostTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
         name: "query"
     } external;
 
+    # Get row from Post key space.
+    #
+    # + id - The value of the primary key field id
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get posts/[int id](PostTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into Post key space.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post posts(PostInsert[] data) returns int[]|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -244,6 +304,11 @@ public isolated client class Client {
             select inserted.id;
     }
 
+    # Update row in Post key space.
+    #
+    # + id - The value of the primary key field id
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put posts/[int id](PostUpdate value) returns Post|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -253,6 +318,10 @@ public isolated client class Client {
         return self->/posts/[id].get();
     }
 
+    # Delete row from Post key space.
+    #
+    # + id - The value of the primary key field id
+    # + return - The deleted record or an error
     isolated resource function delete posts/[int id]() returns Post|persist:Error {
         Post result = check self->/posts/[id].get();
         predis:RedisClient redisClient;
@@ -263,16 +332,29 @@ public isolated client class Client {
         return result;
     }
 
+    # Get rows from Comment key space.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + return - A collection of matching records or an error
     isolated resource function get comments(CommentTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
         name: "query"
     } external;
 
+    # Get row from Comment key space.
+    #
+    # + id - The value of the primary key field id
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get comments/[int id](CommentTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into Comment key space.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post comments(CommentInsert[] data) returns int[]|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -283,6 +365,11 @@ public isolated client class Client {
             select inserted.id;
     }
 
+    # Update row in Comment key space.
+    #
+    # + id - The value of the primary key field id
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put comments/[int id](CommentUpdate value) returns Comment|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -292,6 +379,10 @@ public isolated client class Client {
         return self->/comments/[id].get();
     }
 
+    # Delete row from Comment key space.
+    #
+    # + id - The value of the primary key field id
+    # + return - The deleted record or an error
     isolated resource function delete comments/[int id]() returns Comment|persist:Error {
         Comment result = check self->/comments/[id].get();
         predis:RedisClient redisClient;
@@ -302,6 +393,9 @@ public isolated client class Client {
         return result;
     }
 
+    # Close the database client and release connections.
+    #
+    # + return - An error if closing fails
     public isolated function close() returns persist:Error? {
         error? result = self.dbClient.close();
         if result is error {
@@ -310,3 +404,4 @@ public isolated client class Client {
         return result;
     }
 }
+

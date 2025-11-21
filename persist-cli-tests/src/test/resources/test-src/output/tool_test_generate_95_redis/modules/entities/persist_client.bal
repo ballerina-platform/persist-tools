@@ -1,6 +1,8 @@
 // AUTO-GENERATED FILE. DO NOT MODIFY.
+
 // This file is an auto-generated file by Ballerina persistence layer for model.
 // It should not be modified by hand.
+
 import ballerina/jballerina.java;
 import ballerina/persist;
 import ballerinax/persist.redis as predis;
@@ -15,6 +17,7 @@ const BOOLEAN_ID_RECORD = "booleanidrecords";
 const COMPOSITE_ASSOCIATION_RECORD = "compositeassociationrecords";
 const ALL_TYPES_ID_RECORD = "alltypesidrecords";
 
+# Redis persist client.
 public isolated client class Client {
     *persist:AbstractPersistClient;
 
@@ -158,16 +161,29 @@ public isolated client class Client {
         };
     }
 
+    # Get rows from AllTypes key space.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + return - A collection of matching records or an error
     isolated resource function get alltypes(AllTypesTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
         name: "query"
     } external;
 
+    # Get row from AllTypes key space.
+    #
+    # + id - The value of the primary key field id
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get alltypes/[int id](AllTypesTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into AllTypes key space.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post alltypes(AllTypesInsert[] data) returns int[]|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -178,6 +194,11 @@ public isolated client class Client {
             select inserted.id;
     }
 
+    # Update row in AllTypes key space.
+    #
+    # + id - The value of the primary key field id
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put alltypes/[int id](AllTypesUpdate value) returns AllTypes|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -187,6 +208,10 @@ public isolated client class Client {
         return self->/alltypes/[id].get();
     }
 
+    # Delete row from AllTypes key space.
+    #
+    # + id - The value of the primary key field id
+    # + return - The deleted record or an error
     isolated resource function delete alltypes/[int id]() returns AllTypes|persist:Error {
         AllTypes result = check self->/alltypes/[id].get();
         predis:RedisClient redisClient;
@@ -197,16 +222,29 @@ public isolated client class Client {
         return result;
     }
 
+    # Get rows from StringIdRecord key space.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + return - A collection of matching records or an error
     isolated resource function get stringidrecords(StringIdRecordTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
         name: "query"
     } external;
 
+    # Get row from StringIdRecord key space.
+    #
+    # + id - The value of the primary key field id
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get stringidrecords/[string id](StringIdRecordTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into StringIdRecord key space.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post stringidrecords(StringIdRecordInsert[] data) returns string[]|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -217,6 +255,11 @@ public isolated client class Client {
             select inserted.id;
     }
 
+    # Update row in StringIdRecord key space.
+    #
+    # + id - The value of the primary key field id
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put stringidrecords/[string id](StringIdRecordUpdate value) returns StringIdRecord|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -226,6 +269,10 @@ public isolated client class Client {
         return self->/stringidrecords/[id].get();
     }
 
+    # Delete row from StringIdRecord key space.
+    #
+    # + id - The value of the primary key field id
+    # + return - The deleted record or an error
     isolated resource function delete stringidrecords/[string id]() returns StringIdRecord|persist:Error {
         StringIdRecord result = check self->/stringidrecords/[id].get();
         predis:RedisClient redisClient;
@@ -236,16 +283,29 @@ public isolated client class Client {
         return result;
     }
 
+    # Get rows from IntIdRecord key space.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + return - A collection of matching records or an error
     isolated resource function get intidrecords(IntIdRecordTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
         name: "query"
     } external;
 
+    # Get row from IntIdRecord key space.
+    #
+    # + id - The value of the primary key field id
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get intidrecords/[int id](IntIdRecordTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into IntIdRecord key space.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post intidrecords(IntIdRecordInsert[] data) returns int[]|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -256,6 +316,11 @@ public isolated client class Client {
             select inserted.id;
     }
 
+    # Update row in IntIdRecord key space.
+    #
+    # + id - The value of the primary key field id
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put intidrecords/[int id](IntIdRecordUpdate value) returns IntIdRecord|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -265,6 +330,10 @@ public isolated client class Client {
         return self->/intidrecords/[id].get();
     }
 
+    # Delete row from IntIdRecord key space.
+    #
+    # + id - The value of the primary key field id
+    # + return - The deleted record or an error
     isolated resource function delete intidrecords/[int id]() returns IntIdRecord|persist:Error {
         IntIdRecord result = check self->/intidrecords/[id].get();
         predis:RedisClient redisClient;
@@ -275,16 +344,29 @@ public isolated client class Client {
         return result;
     }
 
+    # Get rows from FloatIdRecord key space.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + return - A collection of matching records or an error
     isolated resource function get floatidrecords(FloatIdRecordTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
         name: "query"
     } external;
 
+    # Get row from FloatIdRecord key space.
+    #
+    # + id - The value of the primary key field id
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get floatidrecords/[float id](FloatIdRecordTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into FloatIdRecord key space.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post floatidrecords(FloatIdRecordInsert[] data) returns float[]|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -295,6 +377,11 @@ public isolated client class Client {
             select inserted.id;
     }
 
+    # Update row in FloatIdRecord key space.
+    #
+    # + id - The value of the primary key field id
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put floatidrecords/[float id](FloatIdRecordUpdate value) returns FloatIdRecord|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -304,6 +391,10 @@ public isolated client class Client {
         return self->/floatidrecords/[id].get();
     }
 
+    # Delete row from FloatIdRecord key space.
+    #
+    # + id - The value of the primary key field id
+    # + return - The deleted record or an error
     isolated resource function delete floatidrecords/[float id]() returns FloatIdRecord|persist:Error {
         FloatIdRecord result = check self->/floatidrecords/[id].get();
         predis:RedisClient redisClient;
@@ -314,16 +405,29 @@ public isolated client class Client {
         return result;
     }
 
+    # Get rows from DecimalIdRecord key space.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + return - A collection of matching records or an error
     isolated resource function get decimalidrecords(DecimalIdRecordTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
         name: "query"
     } external;
 
+    # Get row from DecimalIdRecord key space.
+    #
+    # + id - The value of the primary key field id
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get decimalidrecords/[decimal id](DecimalIdRecordTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into DecimalIdRecord key space.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post decimalidrecords(DecimalIdRecordInsert[] data) returns decimal[]|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -334,6 +438,11 @@ public isolated client class Client {
             select inserted.id;
     }
 
+    # Update row in DecimalIdRecord key space.
+    #
+    # + id - The value of the primary key field id
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put decimalidrecords/[decimal id](DecimalIdRecordUpdate value) returns DecimalIdRecord|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -343,6 +452,10 @@ public isolated client class Client {
         return self->/decimalidrecords/[id].get();
     }
 
+    # Delete row from DecimalIdRecord key space.
+    #
+    # + id - The value of the primary key field id
+    # + return - The deleted record or an error
     isolated resource function delete decimalidrecords/[decimal id]() returns DecimalIdRecord|persist:Error {
         DecimalIdRecord result = check self->/decimalidrecords/[id].get();
         predis:RedisClient redisClient;
@@ -353,16 +466,29 @@ public isolated client class Client {
         return result;
     }
 
+    # Get rows from BooleanIdRecord key space.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + return - A collection of matching records or an error
     isolated resource function get booleanidrecords(BooleanIdRecordTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
         name: "query"
     } external;
 
+    # Get row from BooleanIdRecord key space.
+    #
+    # + id - The value of the primary key field id
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get booleanidrecords/[boolean id](BooleanIdRecordTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into BooleanIdRecord key space.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post booleanidrecords(BooleanIdRecordInsert[] data) returns boolean[]|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -373,6 +499,11 @@ public isolated client class Client {
             select inserted.id;
     }
 
+    # Update row in BooleanIdRecord key space.
+    #
+    # + id - The value of the primary key field id
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put booleanidrecords/[boolean id](BooleanIdRecordUpdate value) returns BooleanIdRecord|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -382,6 +513,10 @@ public isolated client class Client {
         return self->/booleanidrecords/[id].get();
     }
 
+    # Delete row from BooleanIdRecord key space.
+    #
+    # + id - The value of the primary key field id
+    # + return - The deleted record or an error
     isolated resource function delete booleanidrecords/[boolean id]() returns BooleanIdRecord|persist:Error {
         BooleanIdRecord result = check self->/booleanidrecords/[id].get();
         predis:RedisClient redisClient;
@@ -392,16 +527,29 @@ public isolated client class Client {
         return result;
     }
 
+    # Get rows from CompositeAssociationRecord key space.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + return - A collection of matching records or an error
     isolated resource function get compositeassociationrecords(CompositeAssociationRecordTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
         name: "query"
     } external;
 
+    # Get row from CompositeAssociationRecord key space.
+    #
+    # + id - The value of the primary key field id
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get compositeassociationrecords/[string id](CompositeAssociationRecordTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into CompositeAssociationRecord key space.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post compositeassociationrecords(CompositeAssociationRecordInsert[] data) returns string[]|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -412,6 +560,11 @@ public isolated client class Client {
             select inserted.id;
     }
 
+    # Update row in CompositeAssociationRecord key space.
+    #
+    # + id - The value of the primary key field id
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put compositeassociationrecords/[string id](CompositeAssociationRecordUpdate value) returns CompositeAssociationRecord|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -421,6 +574,10 @@ public isolated client class Client {
         return self->/compositeassociationrecords/[id].get();
     }
 
+    # Delete row from CompositeAssociationRecord key space.
+    #
+    # + id - The value of the primary key field id
+    # + return - The deleted record or an error
     isolated resource function delete compositeassociationrecords/[string id]() returns CompositeAssociationRecord|persist:Error {
         CompositeAssociationRecord result = check self->/compositeassociationrecords/[id].get();
         predis:RedisClient redisClient;
@@ -431,16 +588,33 @@ public isolated client class Client {
         return result;
     }
 
+    # Get rows from AllTypesIdRecord key space.
+    #
+    # + targetType - Defines which fields to retrieve from the results
+    # + return - A collection of matching records or an error
     isolated resource function get alltypesidrecords(AllTypesIdRecordTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
         name: "query"
     } external;
 
+    # Get row from AllTypesIdRecord key space.
+    #
+    # + booleanType - The value of the primary key field booleanType
+    # + intType - The value of the primary key field intType
+    # + floatType - The value of the primary key field floatType
+    # + decimalType - The value of the primary key field decimalType
+    # + stringType - The value of the primary key field stringType
+    # + targetType - Defines which fields to retrieve from the result
+    # + return - The matching record or an error
     isolated resource function get alltypesidrecords/[boolean booleanType]/[int intType]/[float floatType]/[decimal decimalType]/[string stringType](AllTypesIdRecordTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.redis.datastore.RedisProcessor",
         name: "queryOne"
     } external;
 
+    # Insert rows into AllTypesIdRecord key space.
+    #
+    # + data - A list of records to be inserted
+    # + return - The primary key value(s) of the inserted rows or an error
     isolated resource function post alltypesidrecords(AllTypesIdRecordInsert[] data) returns [boolean, int, float, decimal, string][]|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -451,6 +625,15 @@ public isolated client class Client {
             select [inserted.booleanType, inserted.intType, inserted.floatType, inserted.decimalType, inserted.stringType];
     }
 
+    # Update row in AllTypesIdRecord key space.
+    #
+    # + booleanType - The value of the primary key field booleanType
+    # + intType - The value of the primary key field intType
+    # + floatType - The value of the primary key field floatType
+    # + decimalType - The value of the primary key field decimalType
+    # + stringType - The value of the primary key field stringType
+    # + value - The record containing updated field values
+    # + return - The updated record or an error
     isolated resource function put alltypesidrecords/[boolean booleanType]/[int intType]/[float floatType]/[decimal decimalType]/[string stringType](AllTypesIdRecordUpdate value) returns AllTypesIdRecord|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -460,6 +643,14 @@ public isolated client class Client {
         return self->/alltypesidrecords/[booleanType]/[intType]/[floatType]/[decimalType]/[stringType].get();
     }
 
+    # Delete row from AllTypesIdRecord key space.
+    #
+    # + booleanType - The value of the primary key field booleanType
+    # + intType - The value of the primary key field intType
+    # + floatType - The value of the primary key field floatType
+    # + decimalType - The value of the primary key field decimalType
+    # + stringType - The value of the primary key field stringType
+    # + return - The deleted record or an error
     isolated resource function delete alltypesidrecords/[boolean booleanType]/[int intType]/[float floatType]/[decimal decimalType]/[string stringType]() returns AllTypesIdRecord|persist:Error {
         AllTypesIdRecord result = check self->/alltypesidrecords/[booleanType]/[intType]/[floatType]/[decimalType]/[stringType].get();
         predis:RedisClient redisClient;
@@ -470,6 +661,9 @@ public isolated client class Client {
         return result;
     }
 
+    # Close the database client and release connections.
+    #
+    # + return - An error if closing fails
     public isolated function close() returns persist:Error? {
         error? result = self.dbClient.close();
         if result is error {
@@ -478,3 +672,4 @@ public isolated client class Client {
         return result;
     }
 }
+
