@@ -304,10 +304,12 @@ public abstract class Introspector {
         this.sqlEnums.forEach(sqlEnum -> {
             String enumName = createEnumName(sqlEnum.getEnumTableName(), sqlEnum.getEnumColumnName());
             Enum.Builder enumBuilder = Enum.newBuilder(enumName);
-            extractEnumValues(sqlEnum.getFullEnumText())
-                    .forEach(enumValue -> enumBuilder
-                            .addMember(new EnumMember(CaseConverter.toUpperSnakeCase(enumValue), enumValue)));
-            moduleBuilder.addEnum(enumName, enumBuilder.build());
+            List<String> enumValues = extractEnumValues(sqlEnum.getFullEnumText());
+            if (!enumValues.isEmpty()) {
+                enumValues.forEach(enumValue -> enumBuilder
+                        .addMember(new EnumMember(CaseConverter.toUpperSnakeCase(enumValue), enumValue)));
+                moduleBuilder.addEnum(enumName, enumBuilder.build());
+            }
         });
     }
 
