@@ -798,8 +798,8 @@ public class BalProjectUtils {
         if (eagerLoading) {
             if (!SUPPORTED_SQL_DB_PROVIDERS.contains(datastore)) {
                 errStream.printf("WARNING: The --eager-loading flag is only supported for SQL datastores " +
-                        "(mysql, mssql, postgresql, h2). This flag will be ignored for the '%s' datastore.%n",
-                        datastore);
+                        "(%s). This flag will be ignored for the '%s' datastore.%n",
+                        String.join(", ", SUPPORTED_SQL_DB_PROVIDERS), datastore);
                 return false;
             }
         }
