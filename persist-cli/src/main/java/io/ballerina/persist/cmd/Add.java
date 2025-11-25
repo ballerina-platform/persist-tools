@@ -53,6 +53,7 @@ import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.getConfigDeclaration;
 import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.getDependencyConfig;
 import static io.ballerina.persist.utils.BalProjectUtils.printTestClientUsageSteps;
+import static io.ballerina.persist.utils.BalProjectUtils.validateAndResetEagerLoadingForDatastore;
 import static io.ballerina.persist.utils.BalProjectUtils.validateDatastore;
 import static io.ballerina.persist.utils.BalProjectUtils.validateTestDatastore;
 import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
@@ -113,17 +114,7 @@ public class Add implements BLauncherCmd {
             validateTestDatastore(datastore, testDatastore);
 
             // Validate eager loading is only used with SQL datastores
-            if (eagerLoading) {
-                if (!datastore.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB) &&
-                    !datastore.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB) &&
-                    !datastore.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB) &&
-                    !datastore.equals(PersistToolsConstants.SupportedDataSources.H2_DB)) {
-                    errStream.printf("WARNING: The --eager-loading flag is only supported for SQL datastores " +
-                            "(mysql, mssql, postgresql, h2). This flag will be ignored for the '%s' datastore.%n",
-                            datastore);
-                    eagerLoading = false; // Reset to false so it doesn't get written to Ballerina.toml
-                }
-            }
+            eagerLoading = validateAndResetEagerLoadingForDatastore(datastore, eagerLoading, errStream);
 
             try {
                 packageName = TomlSyntaxUtils.readPackageName(this.sourcePath);

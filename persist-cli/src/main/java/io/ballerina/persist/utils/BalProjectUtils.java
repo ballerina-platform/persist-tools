@@ -784,4 +784,26 @@ public class BalProjectUtils {
         }
     }
 
+    /**
+     * Validates the eager loading flag for the given datastore and resets it if not supported.
+     * Eager loading is only supported for SQL datastores (mysql, mssql, postgresql, h2).
+     *
+     * @param datastore the datastore type
+     * @param eagerLoading the current eager loading flag value
+     * @param errStream the PrintStream to write warning messages
+     * @return the validated eager loading value (false if not supported, original value otherwise)
+     */
+    public static boolean validateAndResetEagerLoadingForDatastore(String datastore, boolean eagerLoading,
+                                                                    PrintStream errStream) {
+        if (eagerLoading) {
+            if (!SUPPORTED_SQL_DB_PROVIDERS.contains(datastore)) {
+                errStream.printf("WARNING: The --eager-loading flag is only supported for SQL datastores " +
+                        "(mysql, mssql, postgresql, h2). This flag will be ignored for the '%s' datastore.%n",
+                        datastore);
+                return false;
+            }
+        }
+        return eagerLoading;
+    }
+
 }
