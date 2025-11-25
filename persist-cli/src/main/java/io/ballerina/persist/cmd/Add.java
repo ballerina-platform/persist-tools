@@ -84,8 +84,8 @@ public class Add implements BLauncherCmd {
             "generated Ballerina client")
     private String testDatastore;
 
-    @CommandLine.Option(names = {"--eager-loading"}, description = "Enable eager loading to return arrays " +
-            "instead of streams for get-all methods")
+    @CommandLine.Option(names = {"--eager-loading"}, hidden = true, description = "Enable eager loading to return " +
+            "arrays instead of streams for get-all methods")
     private boolean eagerLoading;
 
     public Add() {
