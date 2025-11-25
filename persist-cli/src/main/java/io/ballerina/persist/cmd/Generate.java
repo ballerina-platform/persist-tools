@@ -47,6 +47,7 @@ import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.ge
 import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.getDependencyConfig;
 import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.populateNativeDependencyConfig;
 import static io.ballerina.persist.utils.BalProjectUtils.printTestClientUsageSteps;
+import static io.ballerina.persist.utils.BalProjectUtils.validateAndResetEagerLoadingForDatastore;
 import static io.ballerina.persist.utils.BalProjectUtils.validateDatastore;
 import static io.ballerina.persist.utils.BalProjectUtils.validateTestDatastore;
 import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
@@ -90,8 +91,8 @@ public class Generate implements BLauncherCmd {
             "generated Ballerina client")
     private String testDatastore;
 
-    @CommandLine.Option(names = {"--eager-loading"}, hidden = true, description = "Enable eager loading to return arrays " +
-            "instead of streams for get-all methods")
+    @CommandLine.Option(names = {"--eager-loading"}, hidden = true, description = "Enable eager loading to return " +
+            "arrays instead of streams for get-all methods")
     private boolean eagerLoading;
 
     @Override
