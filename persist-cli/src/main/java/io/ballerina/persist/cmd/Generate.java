@@ -134,6 +134,7 @@ public class Generate implements BLauncherCmd {
                 errStream.printf("WARNING: The --eager-loading flag is only supported for SQL datastores " +
                         "(mysql, mssql, postgresql, h2). This flag will be ignored for the '%s' datastore.%n",
                         datastore);
+                eagerLoading = false; // Reset to false so it doesn't affect code generation
             }
         }
 
