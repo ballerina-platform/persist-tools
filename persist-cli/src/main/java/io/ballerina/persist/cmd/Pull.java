@@ -36,6 +36,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Scanner;
@@ -46,15 +48,26 @@ import static io.ballerina.persist.utils.BalProjectUtils.validateBallerinaProjec
 import static io.ballerina.persist.utils.BalProjectUtils.validatePullCommandOptions;
 import static io.ballerina.persist.utils.DatabaseConnector.readDatabasePassword;
 
-@CommandLine.Command(
-        name = "pull",
-        description = "Create model.bal file according to given database schema")
+@CommandLine.Command(name = "pull", description = "Create model.bal file according to given database schema")
 public class Pull implements BLauncherCmd {
     private static final PrintStream errStream = System.err;
+    public static final String YELLOW_COLOR = "\u001B[33m";
+    public static final String RESET_COLOR = "\u001B[0m";
+    public static final String CYAN_COLOR = "\u001B[36m";
 
     private final String sourcePath;
 
     private static final String COMMAND_IDENTIFIER = "persist-pull";
+
+    // Table selection prompt message
+    private static final String TABLE_SELECTION_PROMPT =
+            "Select tables to introspect:" + System.lineSeparator() +
+            "  • Enter table names separated by commas (e.g., users,orders,products)" + System.lineSeparator() +
+            "  • Enter table numbers separated by commas (e.g., 1,3,5)" + System.lineSeparator() +
+            "  • Enter 'all' to introspect all tables" + System.lineSeparator() +
+            "  • Press Enter without input to introspect all tables" + System.lineSeparator() +
+            "  • Enter 'q' or 'quit' to abort" + System.lineSeparator() +
+            System.lineSeparator() + "Your selection: ";
 
     public Pull() {
         this("");
@@ -64,20 +77,23 @@ public class Pull implements BLauncherCmd {
         this.sourcePath = sourcePath;
     }
 
-    @CommandLine.Option(names = {"--datastore"})
+    @CommandLine.Option(names = { "--datastore" })
     private String datastore = "mysql";
 
-    @CommandLine.Option(names = {"--host"})
+    @CommandLine.Option(names = { "--host" })
     private String host;
 
-    @CommandLine.Option(names = {"--port"})
+    @CommandLine.Option(names = { "--port" })
     private String port;
 
-    @CommandLine.Option(names = {"--user"})
+    @CommandLine.Option(names = { "--user" })
     private String user;
 
-    @CommandLine.Option(names = {"--database"})
+    @CommandLine.Option(names = { "--database" })
     private String database;
+
+    @CommandLine.Option(names = { "--tables" }, arity = "0..1")
+    private String tables;
 
     @CommandLine.Option(names = { "-h", "--help" }, hidden = true)
     private boolean helpFlag;
@@ -119,7 +135,6 @@ public class Pull implements BLauncherCmd {
                 return;
         }
 
-
         try {
             validatePullCommandOptions(datastore, host, port, user, database);
         } catch (BalException e) {
@@ -148,10 +163,8 @@ public class Pull implements BLauncherCmd {
 
         boolean modelFile = Files.exists(Path.of(String.valueOf(persistDir), "model.bal"));
         if (modelFile) {
-            String yellowColor = "\u001B[33m";
-            String resetColor = "\u001B[0m";
-            errStream.print(yellowColor + "WARNING A model.bal file already exists. " +
-                    "Continuing would overwrite it. Do you wish to continue? (y/n) " + resetColor);
+            errStream.print(YELLOW_COLOR + "WARNING A model.bal file already exists. " +
+                    "Continuing would overwrite it. Do you wish to continue? (y/n) " + RESET_COLOR);
             String input = scanner.nextLine();
             if (!(input.toLowerCase(Locale.ENGLISH).equals("y") || input.toLowerCase(Locale.ENGLISH).equals("yes"))) {
                 errStream.println("Introspection aborted.");
@@ -163,12 +176,24 @@ public class Pull implements BLauncherCmd {
         PersistConfiguration persistConfigurations = new PersistConfiguration();
         persistConfigurations.setProvider(datastore);
         persistConfigurations.setSourcePath(this.sourcePath);
+
         try {
             persistConfigurations.setDbConfig(new DatabaseConfiguration(this.host, this.user, password, this.port,
                     this.database));
         } catch (BalException e) {
             errStream.println(e.getMessage());
             return;
+        }
+
+        // Handle table selection: --tables flag controls the behavior
+        if (this.tables != null && this.tables.trim().isEmpty()) {
+            // --tables with no value: trigger interactive mode
+            if (!handleInteractiveTableSelection(scanner, introspector, persistConfigurations)) {
+                return;
+            }
+        } else if (this.tables != null) {
+            // Tables specified via --tables=table1,table2
+            persistConfigurations.setSelectedTables(this.tables);
         }
 
         Module entityModule = null;
@@ -190,6 +215,130 @@ public class Pull implements BLauncherCmd {
             return;
         }
         errStream.println("Introspection complete! The model.bal file created successfully.");
+    }
+
+    /**
+     * Handles interactive table selection when --tables flag is present without a value.
+     * Fetches available tables, prompts the user, and updates the configuration.
+     *
+     * @param scanner               the Scanner for reading user input
+     * @param introspector          the database introspector
+     * @param persistConfigurations the persist configuration to update
+     * @return true if selection was successful, false if operation should abort
+     */
+    private boolean handleInteractiveTableSelection(Scanner scanner, Introspector introspector,
+                                                     PersistConfiguration persistConfigurations) {
+        try {
+            String[] availableTables = introspector.getAvailableTables(persistConfigurations);
+            if (availableTables.length == 0) {
+                errStream.println("ERROR: No tables found in the database.");
+                return false;
+            }
+
+            String selectedTablesInput = promptForTableSelection(scanner, availableTables);
+            if (selectedTablesInput == null) {
+                errStream.println("Introspection aborted.");
+                return false;
+            }
+
+            if (selectedTablesInput.trim().isEmpty()) {
+                errStream.println("ERROR: No valid tables selected. Please provide valid table names or indices.");
+                return false;
+            }
+
+            if (!selectedTablesInput.equalsIgnoreCase("all")) {
+                persistConfigurations.setSelectedTables(selectedTablesInput);
+            }
+            return true;
+        } catch (BalException e) {
+            errStream.printf("ERROR: failed to fetch available tables: %s%n", e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Prompts the user to select tables from the available tables list.
+     * Displays up to 50 tables and allows users to enter table names, indices, or
+     * "all".
+     *
+     * @param scanner         the Scanner for reading user input
+     * @param availableTables array of all available table names
+     * @return comma-separated string of selected table names, "all", or null if
+     *         aborted
+     */
+    private String promptForTableSelection(Scanner scanner, String[] availableTables) {
+        int totalTables = availableTables.length;
+        int displayLimit = 50;
+        boolean isLimited = totalTables > displayLimit;
+
+        errStream.println(CYAN_COLOR + "\nAvailable tables in the database:" + RESET_COLOR);
+        errStream.println("──────────────────────────────────");
+
+        for (int i = 0; i < Math.min(totalTables, displayLimit); i++) {
+            errStream.printf("  %d. %s%n", i + 1, availableTables[i]);
+        }
+
+        if (isLimited) {
+            errStream.println(YELLOW_COLOR + "  ... and " + (totalTables - displayLimit) +
+                    " more tables" + RESET_COLOR);
+        }
+
+        errStream.println("──────────────────────────────────");
+        errStream.printf("Total: %d table%s%n%n", totalTables, totalTables == 1 ? "" : "s");
+
+        errStream.print(TABLE_SELECTION_PROMPT);
+
+        String input = scanner.nextLine().trim();
+
+        // Handle abort
+        if (input.equalsIgnoreCase("q") || input.equalsIgnoreCase("quit")) {
+            return null;
+        }
+
+        // Handle empty input or "all" - means select all tables
+        if (input.isEmpty() || input.equalsIgnoreCase("all")) {
+            return "all";
+        }
+
+        // Check if input contains numbers (indices)
+        if (input.matches("[0-9,\\s]+")) {
+            return parseTableIndices(input, availableTables);
+        }
+
+        // Otherwise, treat as table names
+        return input;
+    }
+
+    /**
+     * Parses comma-separated table indices and returns the corresponding table
+     * names.
+     *
+     * @param input           comma-separated indices (e.g., "1,3,5")
+     * @param availableTables array of available table names
+     * @return comma-separated table names
+     */
+    private String parseTableIndices(String input, String[] availableTables) {
+        String yellowColor = YELLOW_COLOR;
+        String resetColor = RESET_COLOR;
+        String[] indices = input.split(",");
+        List<String> selectedTables = new ArrayList<>();
+
+        for (String indexStr : indices) {
+            try {
+                int index = Integer.parseInt(indexStr.trim());
+                if (index >= 1 && index <= availableTables.length) {
+                    selectedTables.add(availableTables[index - 1]);
+                } else {
+                    errStream.println(yellowColor + "WARNING: Index " + index +
+                            " is out of range. Skipping." + resetColor);
+                }
+            } catch (NumberFormatException e) {
+                errStream.println(yellowColor + "WARNING: Invalid index '" + indexStr.trim() +
+                        "'. Skipping." + resetColor);
+            }
+        }
+
+        return String.join(",", selectedTables);
     }
 
     @Override

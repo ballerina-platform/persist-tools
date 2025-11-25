@@ -63,14 +63,23 @@ public abstract class Introspector {
 
     protected DatabaseConnector databaseConnector;
     protected PersistConfiguration persistConfigurations;
+
     protected abstract String getTablesQuery();
+
     protected abstract String getColumnsQuery(String tableName);
+
     protected abstract String getIndexesQuery(String tableName);
+
     protected abstract String getForeignKeysQuery(String tableName);
+
     protected abstract String getEnumsQuery();
+
     protected abstract String getBalType(SqlType sqlType);
+
     protected abstract boolean isEnumType(SqlColumn column);
+
     protected abstract List<String> extractEnumValues(String enumString);
+
     private List<SqlTable> tables;
     private List<SqlEnum> sqlEnums;
     private final Module.Builder moduleBuilder;
@@ -86,6 +95,23 @@ public abstract class Introspector {
         this.moduleBuilder = Module.newBuilder("db");
     }
 
+    /**
+     * Introspects a database and generates a complete Ballerina persist module.
+     * This method connects to the database, reads the schema including tables,
+     * columns,
+     * indexes, foreign keys, and enums, then maps them to Ballerina entities and
+     * types.
+     *
+     * @param persistConfiguration the configuration containing database connection
+     *                             details,
+     *                             source path, provider type, and optional table
+     *                             filtering
+     * @return a Module object containing all entities, enums, and relationships
+     *         mapped from the database schema
+     * @throws BalException if there is an error connecting to the database, reading
+     *                      the schema,
+     *                      or mapping database structures to Ballerina types
+     */
     public Module introspectDatabase(PersistConfiguration persistConfiguration) throws BalException {
         this.persistConfigurations = persistConfiguration;
         DriverResolver driverResolver = new DriverResolver(this.persistConfigurations.getSourcePath(),
@@ -104,6 +130,38 @@ public abstract class Introspector {
         }
     }
 
+    /**
+     * Introspects the database and returns an array of available table names.
+     * This method can be used by other libraries to discover what tables exist in a
+     * database
+     * without performing a full introspection and model generation.
+     *
+     * @param persistConfiguration the persist configuration containing database
+     *                             connection details
+     * @return an array of table names found in the database
+     * @throws BalException if there is an error connecting to the database or
+     *                      reading table information
+     */
+    public String[] getAvailableTables(PersistConfiguration persistConfiguration) throws BalException {
+        this.persistConfigurations = persistConfiguration;
+        DriverResolver driverResolver = new DriverResolver(this.persistConfigurations.getSourcePath(),
+                this.persistConfigurations.getProvider());
+        try {
+            Project driverProject = driverResolver.resolveDriverDependencies();
+            try (Connection connection = prepareDatabaseConnection(driverProject)) {
+                ScriptRunner sr = new ScriptRunner(connection);
+                List<SqlTable> availableTables = sr.getSQLTables(this.getTablesQuery());
+                return availableTables.stream()
+                        .map(SqlTable::getTableName)
+                        .toArray(String[]::new);
+            } catch (SQLException e) {
+                throw new BalException("failed to read available tables: " + e.getMessage());
+            }
+        } finally {
+            driverResolver.deleteDriverFile();
+        }
+    }
+
     private Connection prepareDatabaseConnection(Project driverProject) throws BalException {
         JdbcDriverLoader driverLoader;
         driverLoader = databaseConnector.getJdbcDriverLoader(driverProject);
@@ -115,18 +173,127 @@ public abstract class Introspector {
         }
     }
 
+    /**
+     * Reads the database schema by querying tables, columns, indexes, foreign keys,
+     * and enums.
+     * If specific tables are configured in persistConfigurations, only those tables
+     * are processed.
+     * Warnings are issued for any specified tables that are not found in the
+     * database.
+     * Automatically includes referenced tables when foreign key relationships are
+     * detected.
+     *
+     * @param connection the active database connection to use for querying schema
+     *                   information
+     * @throws SQLException if there is an error executing queries or reading result
+     *                      sets
+     */
     public void readDatabaseSchema(Connection connection) throws SQLException {
         ScriptRunner sr = new ScriptRunner(connection);
         this.tables = sr.getSQLTables(this.getTablesQuery());
+
+        // Filter tables if specific tables are selected
+        if (persistConfigurations.getSelectedTables() != null &&
+                !persistConfigurations.getSelectedTables().isEmpty()) {
+            List<String> selectedTableNames = new ArrayList<>(persistConfigurations.getSelectedTables());
+
+            // Resolve foreign key dependencies - automatically include referenced tables
+            List<String> resolvedTableNames = resolveForeignKeyDependencies(sr, selectedTableNames);
+
+            this.tables = this.tables.stream()
+                    .filter(table -> resolvedTableNames.contains(table.getTableName()))
+                    .collect(java.util.stream.Collectors.toList());
+
+            // Warn about tables that were specified but not found
+            List<String> foundTableNames = this.tables.stream()
+                    .map(SqlTable::getTableName)
+                    .collect(java.util.stream.Collectors.toList());
+            List<String> notFoundTables = selectedTableNames.stream()
+                    .filter(name -> !foundTableNames.contains(name))
+                    .collect(java.util.stream.Collectors.toList());
+            if (!notFoundTables.isEmpty()) {
+                errStream.println("WARNING: The following specified tables were not found in the database: " +
+                        String.join(", ", notFoundTables));
+            }
+        }
+
         this.sqlEnums = sr.getSQLEnums(this.getEnumsQuery());
         for (SqlTable table : tables) {
             sr.readColumnsOfSQLTable(table, this.getColumnsQuery(table.getTableName()));
-            this.sqlForeignKeys.addAll(sr.readForeignKeysOfSQLTable
-                    (table, this.getForeignKeysQuery(table.getTableName())));
+            this.sqlForeignKeys
+                    .addAll(sr.readForeignKeysOfSQLTable(table, this.getForeignKeysQuery(table.getTableName())));
             sr.readIndexesOfSQLTable(table, this.getIndexesQuery(table.getTableName()));
         }
     }
 
+    /**
+     * Resolves foreign key dependencies by automatically including referenced
+     * tables.
+     * When a selected table has foreign keys referencing other tables, those
+     * referenced
+     * tables are automatically added to ensure valid model generation.
+     *
+     * @param sr                 the ScriptRunner for executing queries
+     * @param selectedTableNames the initially selected table names
+     * @return expanded list of table names including all foreign key dependencies
+     * @throws SQLException if there is an error reading foreign keys
+     */
+    private List<String> resolveForeignKeyDependencies(ScriptRunner sr, List<String> selectedTableNames)
+            throws SQLException {
+        List<String> resolvedTables = new ArrayList<>(selectedTableNames);
+        List<String> tablesToProcess = new ArrayList<>(selectedTableNames);
+        HashSet<String> processedTables = new HashSet<>();
+
+        // Get all available tables for reference validation
+        List<SqlTable> allTables = this.tables;
+        HashSet<String> availableTableNames = allTables.stream()
+                .map(SqlTable::getTableName)
+                .collect(java.util.stream.Collectors.toCollection(HashSet::new));
+
+        // Process tables iteratively to handle chains of dependencies
+        while (!tablesToProcess.isEmpty()) {
+            String currentTable = tablesToProcess.removeFirst();
+
+            if (processedTables.contains(currentTable) || !availableTableNames.contains(currentTable)) {
+                continue;
+            }
+
+            processedTables.add(currentTable);
+
+            // Read foreign keys for current table
+            SqlTable tempTable = new SqlTable(currentTable);
+            List<SqlForeignKey> foreignKeys = sr.readForeignKeysOfSQLTable(tempTable,
+                    this.getForeignKeysQuery(currentTable));
+
+            // Check each foreign key and add referenced tables
+            for (SqlForeignKey fk : foreignKeys) {
+                String referencedTable = fk.getReferencedTableName();
+
+                if (!resolvedTables.contains(referencedTable) && availableTableNames.contains(referencedTable)) {
+                    resolvedTables.add(referencedTable);
+                    tablesToProcess.add(referencedTable);
+
+                    // Log info about auto-included table
+                    errStream.println("INFO: Automatically including table '" + referencedTable +
+                            "' due to foreign key relationship from '" + currentTable + "'");
+                }
+            }
+        }
+
+        return resolvedTables;
+    }
+
+    /**
+     * Maps the database schema information (tables, columns, relationships) to a
+     * Ballerina persist module.
+     * This includes mapping database enums to Ballerina enums and database tables
+     * to Ballerina entities
+     * with proper field types, relationships, and constraints.
+     *
+     * @throws BalException if there is an error during the mapping process, such as
+     *                      unsupported
+     *                      data types or invalid relationship configurations
+     */
     public void mapDatabaseSchemaToModule() throws BalException {
         mapEnums();
         mapEntities();
@@ -137,10 +304,12 @@ public abstract class Introspector {
         this.sqlEnums.forEach(sqlEnum -> {
             String enumName = createEnumName(sqlEnum.getEnumTableName(), sqlEnum.getEnumColumnName());
             Enum.Builder enumBuilder = Enum.newBuilder(enumName);
-            extractEnumValues(sqlEnum.getFullEnumText())
-                    .forEach(enumValue ->
-                    enumBuilder.addMember(new EnumMember(CaseConverter.toUpperSnakeCase(enumValue), enumValue)));
-            moduleBuilder.addEnum(enumName, enumBuilder.build());
+            List<String> enumValues = extractEnumValues(sqlEnum.getFullEnumText());
+            if (!enumValues.isEmpty()) {
+                enumValues.forEach(enumValue -> enumBuilder
+                        .addMember(new EnumMember(CaseConverter.toUpperSnakeCase(enumValue), enumValue)));
+                moduleBuilder.addEnum(enumName, enumBuilder.build());
+            }
         });
     }
 
@@ -170,8 +339,7 @@ public abstract class Introspector {
                             column.getNumericPrecision() != null ? parseInt(column.getNumericPrecision()) : 0,
                             column.getNumericScale() != null ? parseInt(column.getNumericScale()) : 0,
                             (maxLen != null) ? parseUnsignedInt(maxLen) : 0,
-                            persistConfigurations.getProvider()
-                    );
+                            persistConfigurations.getProvider());
                     String balType = this.getBalType(sqlType);
                     fieldBuilder.setType(balType);
                     fieldBuilder.setSqlType(sqlType);
@@ -217,10 +385,10 @@ public abstract class Introspector {
                 throw new BalException("bal persist does not support foreign key references to unique " +
                         "keys.");
             }
-            boolean isReferenceMany = inferRelationshipCardinality
-                    (ownerEntityBuilder.build(), sqlForeignKey) == Relation.RelationType.MANY;
-            String assocFieldName = isReferenceMany ?
-                    Pluralizer.pluralize(ownerEntityBuilder.getEntityName().toLowerCase(Locale.ENGLISH))
+            boolean isReferenceMany = inferRelationshipCardinality(ownerEntityBuilder.build(),
+                    sqlForeignKey) == Relation.RelationType.MANY;
+            String assocFieldName = isReferenceMany
+                    ? Pluralizer.pluralize(ownerEntityBuilder.getEntityName().toLowerCase(Locale.ENGLISH))
                     : ownerEntityBuilder.getEntityName().toLowerCase(Locale.ENGLISH);
             if (assocFieldNames.containsKey(assocEntityBuilder.getEntityName() + assocFieldName)) {
                 assocFieldNames.put(assocEntityBuilder.getEntityName() + assocFieldName,
@@ -250,8 +418,9 @@ public abstract class Introspector {
 
             assocFieldBuilder.setArrayType(isReferenceMany);
             assocFieldBuilder.setOptionalType(!isReferenceMany);
-            ownerFieldBuilder.setRelationRefs(sqlForeignKey.getColumnNames().stream().map(columnName ->
-                    ownerEntityBuilder.build().getFieldByColumnName(columnName).getFieldName()).toList());
+            ownerFieldBuilder.setRelationRefs(sqlForeignKey.getColumnNames().stream()
+                    .map(columnName -> ownerEntityBuilder.build().getFieldByColumnName(columnName).getFieldName())
+                    .toList());
 
             EntityField ownerField = ownerFieldBuilder.build();
 
@@ -268,8 +437,8 @@ public abstract class Introspector {
 
     private Relation.RelationType inferRelationshipCardinality(Entity ownerEntity, SqlForeignKey foreignKey) {
         List<EntityField> ownerColumns = new ArrayList<>();
-        foreignKey.getColumnNames().forEach(columnName ->
-                ownerColumns.add(ownerEntity.getFieldByColumnName(columnName)));
+        foreignKey.getColumnNames()
+                .forEach(columnName -> ownerColumns.add(ownerEntity.getFieldByColumnName(columnName)));
         boolean isUniqueIndexPresent = ownerEntity.getUniqueIndexes().stream()
                 .anyMatch(index -> index.getFields().equals(ownerColumns));
         if (ownerEntity.getKeys().equals(ownerColumns)) {
@@ -281,6 +450,17 @@ public abstract class Introspector {
         }
     }
 
+    /**
+     * Maps common SQL data types to their corresponding Ballerina types.
+     * Handles standard types like integers, strings, dates, times, and binary data.
+     * If a SQL type is not supported, returns UNSUPPORTED_TYPE and prints a
+     * warning.
+     *
+     * @param sqlType the SQL type information including type name, precision,
+     *                scale, etc.
+     * @return the corresponding Ballerina type as a string (e.g., "int", "string",
+     *         "decimal")
+     */
     protected String getBalTypeForCommonDataTypes(SqlType sqlType) {
         return switch (sqlType.getTypeName()) {
             case PersistToolsConstants.SqlTypes.INT,
@@ -294,23 +474,28 @@ public abstract class Introspector {
                     PersistToolsConstants.SqlTypes.INT4,
                     PersistToolsConstants.SqlTypes.INT2,
                     PersistToolsConstants.SqlTypes.INT8 ->
-                    PersistToolsConstants.BallerinaTypes.INT;
+                PersistToolsConstants.BallerinaTypes.INT;
             case PersistToolsConstants.SqlTypes.BOOLEAN,
-                    PersistToolsConstants.SqlTypes.BOOL -> PersistToolsConstants.BallerinaTypes.BOOLEAN;
+                    PersistToolsConstants.SqlTypes.BOOL ->
+                PersistToolsConstants.BallerinaTypes.BOOLEAN;
             case PersistToolsConstants.SqlTypes.DECIMAL,
-                    PersistToolsConstants.SqlTypes.NUMERIC -> PersistToolsConstants.BallerinaTypes.DECIMAL;
+                    PersistToolsConstants.SqlTypes.NUMERIC ->
+                PersistToolsConstants.BallerinaTypes.DECIMAL;
             case PersistToolsConstants.SqlTypes.DOUBLE,
                     PersistToolsConstants.SqlTypes.FLOAT,
                     PersistToolsConstants.SqlTypes.FLOAT4,
-                    PersistToolsConstants.SqlTypes.FLOAT8-> PersistToolsConstants.BallerinaTypes.FLOAT;
+                    PersistToolsConstants.SqlTypes.FLOAT8 ->
+                PersistToolsConstants.BallerinaTypes.FLOAT;
             case PersistToolsConstants.SqlTypes.DATE -> PersistToolsConstants.BallerinaTypes.DATE;
             case PersistToolsConstants.SqlTypes.TIME,
-                    PersistToolsConstants.SqlTypes.TIMETZ -> PersistToolsConstants.BallerinaTypes.TIME_OF_DAY;
+                    PersistToolsConstants.SqlTypes.TIMETZ ->
+                PersistToolsConstants.BallerinaTypes.TIME_OF_DAY;
             case PersistToolsConstants.SqlTypes.TIME_STAMP,
-                    PersistToolsConstants.SqlTypes.TIME_STAMPTZ -> PersistToolsConstants.BallerinaTypes.UTC;
+                    PersistToolsConstants.SqlTypes.TIME_STAMPTZ ->
+                PersistToolsConstants.BallerinaTypes.UTC;
             case PersistToolsConstants.SqlTypes.DATE_TIME2,
                     PersistToolsConstants.SqlTypes.DATE_TIME ->
-                    PersistToolsConstants.BallerinaTypes.CIVIL;
+                PersistToolsConstants.BallerinaTypes.CIVIL;
             case PersistToolsConstants.SqlTypes.VARCHAR,
                     PersistToolsConstants.SqlTypes.CHAR,
                     PersistToolsConstants.SqlTypes.CHARACTER,
@@ -319,21 +504,20 @@ public abstract class Introspector {
                     PersistToolsConstants.SqlTypes.MEDIUMTEXT,
                     PersistToolsConstants.SqlTypes.LONGTEXT,
                     PersistToolsConstants.SqlTypes.TINYTEXT ->
-                    PersistToolsConstants.BallerinaTypes.STRING;
+                PersistToolsConstants.BallerinaTypes.STRING;
             case PersistToolsConstants.SqlTypes.LONG_BLOB,
                     PersistToolsConstants.SqlTypes.MEDIUM_BLOB,
                     PersistToolsConstants.SqlTypes.TINY_BLOB,
                     PersistToolsConstants.SqlTypes.BINARY,
                     PersistToolsConstants.SqlTypes.VARBINARY,
                     PersistToolsConstants.SqlTypes.BLOB,
-                    PersistToolsConstants.SqlTypes.BYTEA->
-                    PersistToolsConstants.BallerinaTypes.BYTE;
+                    PersistToolsConstants.SqlTypes.BYTEA ->
+                PersistToolsConstants.BallerinaTypes.BYTE;
             default -> {
                 errStream.println("WARNING Unsupported SQL type found: " + sqlType.getFullDataType());
                 yield PersistToolsConstants.UNSUPPORTED_TYPE;
             }
         };
     }
-
 
 }
