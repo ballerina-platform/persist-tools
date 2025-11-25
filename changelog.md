@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - [Add documentation for generated client](https://github.com/ballerina-platform/ballerina-library/issues/8467)
+- [Support eager loading for get all methods in generated client](https://github.com/ballerina-platform/ballerina-library/issues/8488)
 
 ### Changed
 - [Fix an SQL script generation order issue when there are multiple associations](https://github.com/ballerina-platform/ballerina-library/issues/7921)
