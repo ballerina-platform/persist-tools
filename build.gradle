@@ -169,6 +169,7 @@ task createProperties() {
 
 task build {
     dependsOn createProperties
+    dependsOn(":persist-core:build")
     dependsOn(":persist-cli:build")
     dependsOn(":persist-cli-tests:build")
     dependsOn(":persist-tool:build")

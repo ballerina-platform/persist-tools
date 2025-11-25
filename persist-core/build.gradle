@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2024, WSO2 LLC. (http://www.wso2.com) All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,12 @@
  */
 
 plugins {
-    id 'java'
+    id 'java-library'
     id 'checkstyle'
     id 'com.github.spotbugs'
 }
 
-description = 'Ballerina - Persist-CLI Java Native'
+description = 'Ballerina - Persist Core Java Library'
 
 repositories {
     mavenCentral()
@@ -36,13 +36,8 @@ dependencies {
     checkstyle project(':checkstyle')
     checkstyle "com.puppycrawl.tools:checkstyle:${checkstylePluginVersion}"
 
-    implementation project(':persist-core')
     implementation group: 'org.ballerinalang', name: 'ballerina-lang', version: "${ballerinaLangVersion}"
-    implementation (group: 'org.ballerinalang', name: 'ballerina-cli', version: "${ballerinaLangVersion}") {
-        exclude group: 'org.ballerinalang', module: 'maven-resolver'
-    }
     implementation group: 'org.ballerinalang', name: 'ballerina-runtime', version: "${ballerinaLangVersion}"
-    implementation group: 'info.picocli', name: 'picocli', version: "${picocliVersion}"
     implementation group: 'org.ballerinalang', name: 'ballerina-tools-api', version: "${ballerinaLangVersion}"
     implementation group: 'org.ballerinalang', name: 'ballerina-parser', version: "${ballerinaLangVersion}"
     implementation group: 'org.ballerinalang', name: 'toml-parser', version: "${ballerinaLangVersion}"
@@ -69,7 +64,6 @@ test {
     finalizedBy jacocoTestReport
 }
 
-
 spotbugsMain {
     enabled = true
     ignoreFailures = true
@@ -80,7 +74,6 @@ spotbugsMain {
     reportLevel = SpotBugsConfidence.LOW
     reportsDir = layout.buildDirectory.dir("reports/spotbugs")
     reports {
-        //html.enabled true
         text.required = true
     }
     def excludeFile = file("${rootDir}/spotbugs-exclude.xml")
@@ -147,14 +140,6 @@ jar {
     }
 }
 
-task createArtifactZip(type: Zip) {
-    dependsOn build
-    from 'build/libs/'
-    into 'libs'
-    archiveFileName = "persist-cli-${project.version}.zip"
-    destinationDirectory = file("${projectDir}/build/zip")
-}
-
 clean {
     delete layout.buildDirectory
 }
@@ -163,8 +148,8 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             groupId "io.ballerina"
-            artifactId "persist-tools"
-            artifact source: createArtifactZip, extension: 'zip'
+            artifactId "persist-core"
+            from components.java
         }
     }
 

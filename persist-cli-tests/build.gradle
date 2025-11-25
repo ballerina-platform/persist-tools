@@ -66,6 +66,7 @@ dependencies {
         transitive = false
     }
 
+    testImplementation project(":persist-core")
     testImplementation project(":persist-cli")
     testImplementation group: 'org.testng', name: 'testng', version: "${testngVersion}"
     testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
@@ -302,8 +303,9 @@ jacoco {
 
 jacocoTestReport {
     dependsOn test
-    def classFiles = new File("${rootDir}/persist-cli/build/classes/java/main/io/ballerina/persist")
-    additionalClassDirs(classFiles)
+    def coreClassFiles = new File("${rootDir}/persist-core/build/classes/java/main/io/ballerina/persist")
+    def cliClassFiles = new File("${rootDir}/persist-cli/build/classes/java/main/io/ballerina/persist")
+    additionalClassDirs(coreClassFiles, cliClassFiles)
     reports {
         xml.required = true
     }
