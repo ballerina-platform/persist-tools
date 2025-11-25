@@ -170,14 +170,16 @@ public class BalProjectUtils {
 
     public static Project buildDriverFile(Path driverPath) throws BalException {
         BuildOptions.BuildOptionsBuilder buildOptionsBuilder = BuildOptions.builder();
-        buildOptionsBuilder.setOffline(true);
+        // Setting offline to `false` to allow fetching dependencies for the driver file.
+        buildOptionsBuilder.setOffline(false);
         SingleFileProject buildProject =  SingleFileProject.load(driverPath.toAbsolutePath(),
                 buildOptionsBuilder.build());
         Package currentPackage = buildProject.currentPackage();
         PackageCompilation compilation = currentPackage.getCompilation();
         DiagnosticResult diagnosticResult = compilation.diagnosticResult();
         if (diagnosticResult.hasErrors()) {
-            throw new BalException("failed to build the driver file.");
+            throw new BalException("failed to build the driver file. Try pulling the associated driver " +
+                    "package manually using 'bal pull' command.");
         }
         return buildProject;
     }
