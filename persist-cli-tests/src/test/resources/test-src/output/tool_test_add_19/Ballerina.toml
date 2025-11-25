@@ -1,0 +1,17 @@
+[package]
+org = "foo"
+name = "persist_add_19"
+version = "0.1.0"
+distribution = "2201.3.0"
+
+[build-options]
+observabilityIncluded = false
+
+[[tool.persist]]
+id = "generate-db-client"
+targetModule = "persist_add_19.entities"
+options.datastore = "postgresql"
+options.eagerLoading = true
+filePath = "persist/model.bal"
+
+

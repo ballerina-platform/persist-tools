@@ -1,0 +1,8 @@
+[persist_generate_116.entities]
+host = "localhost"
+port = 5432
+user = "postgres"
+password = ""
+database = ""
+
+

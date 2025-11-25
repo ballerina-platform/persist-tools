@@ -207,6 +207,58 @@ public class ToolingAddTest {
         assertGeneratedSources("tool_test_add_17");
     }
 
+    @Test
+    @Description("Test add command with eager-loading flag for MySQL datastore")
+    public void testAddWithEagerLoadingMySQL() throws ClassNotFoundException, NoSuchMethodException,
+            InvocationTargetException, InstantiationException, IllegalAccessException {
+        Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Add");
+        Add persistCmd = (Add) persistClass.getDeclaredConstructor(String.class).
+                newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, "tool_test_add_18").toAbsolutePath().
+                        toString());
+        new CommandLine(persistCmd).parseArgs("--datastore", "mysql", "--module", "entities", "--eager-loading");
+        persistCmd.execute();
+        assertGeneratedSources("tool_test_add_18");
+    }
+
+    @Test
+    @Description("Test add command with eager-loading flag for PostgreSQL datastore")
+    public void testAddWithEagerLoadingPostgreSQL() throws ClassNotFoundException, NoSuchMethodException,
+            InvocationTargetException, InstantiationException, IllegalAccessException {
+        Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Add");
+        Add persistCmd = (Add) persistClass.getDeclaredConstructor(String.class).
+                newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, "tool_test_add_19").toAbsolutePath().
+                        toString());
+        new CommandLine(persistCmd).parseArgs("--datastore", "postgresql", "--module", "entities", "--eager-loading");
+        persistCmd.execute();
+        assertGeneratedSources("tool_test_add_19");
+    }
+
+    @Test
+    @Description("Test add command with eager-loading flag for MSSQL datastore")
+    public void testAddWithEagerLoadingMSSQL() throws ClassNotFoundException, NoSuchMethodException,
+            InvocationTargetException, InstantiationException, IllegalAccessException {
+        Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Add");
+        Add persistCmd = (Add) persistClass.getDeclaredConstructor(String.class).
+                newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, "tool_test_add_20").toAbsolutePath().
+                        toString());
+        new CommandLine(persistCmd).parseArgs("--datastore", "mssql", "--module", "entities", "--eager-loading");
+        persistCmd.execute();
+        assertGeneratedSources("tool_test_add_20");
+    }
+
+    @Test
+    @Description("Test add command with eager-loading flag for unsupported datastore (inmemory) - should show warning")
+    public void testAddWithEagerLoadingUnsupportedDatastore() throws ClassNotFoundException, NoSuchMethodException,
+            InvocationTargetException, InstantiationException, IllegalAccessException {
+        Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Add");
+        Add persistCmd = (Add) persistClass.getDeclaredConstructor(String.class).
+                newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, "tool_test_add_21").toAbsolutePath().
+                        toString());
+        new CommandLine(persistCmd).parseArgs("--datastore", "inmemory", "--module", "entities", "--eager-loading");
+        persistCmd.execute();
+        assertGeneratedSources("tool_test_add_21");
+    }
+
     private void executeCommand(String subDir) {
         Class<?> persistClass;
         Path sourcePath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);
