@@ -28,6 +28,7 @@ import io.ballerina.compiler.syntax.tree.NodeParser;
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.compiler.syntax.tree.Token;
 import io.ballerina.persist.BalException;
+import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
 import io.ballerina.tools.text.TextDocument;
 import io.ballerina.tools.text.TextDocuments;
@@ -36,6 +37,7 @@ import org.ballerinalang.formatter.core.FormatterException;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -47,6 +49,31 @@ import static io.ballerina.persist.PersistToolsConstants.SCHEMA_FILE_NAME;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.BAL_EXTENSION;
 
 public class Utils {
+
+    /**
+     * Validates that eager loading is only used with SQL datastores.
+     * If eager loading is requested for an unsupported datastore, a warning is printed and false is returned.
+     *
+     * @param datastore    the datastore type
+     * @param eagerLoading the current eager loading flag value
+     * @param errStream    the stream to print warnings to
+     * @return true if eager loading should be enabled, false otherwise
+     */
+    public static boolean validateEagerLoading(String datastore, boolean eagerLoading, PrintStream errStream) {
+        if (eagerLoading) {
+            if (!datastore.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB) &&
+                !datastore.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB) &&
+                !datastore.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB) &&
+                !datastore.equals(PersistToolsConstants.SupportedDataSources.H2_DB)) {
+                errStream.printf("WARNING: The --eager-loading flag is only supported for SQL datastores " +
+                        "(mysql, mssql, postgresql, h2). This flag will be ignored for the '%s' datastore.%n",
+                        datastore);
+                return false;
+            }
+        }
+        return eagerLoading;
+    }
+
     public static void generateSchemaBalFile(Path persistPath) throws BalException {
         try {
             String configTree = generateSchemaSyntaxTree();

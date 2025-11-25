@@ -90,7 +90,7 @@ public class Generate implements BLauncherCmd {
             "generated Ballerina client")
     private String testDatastore;
 
-    @CommandLine.Option(names = {"--eager-loading"}, description = "Enable eager loading to return arrays " +
+    @CommandLine.Option(names = {"--eager-loading"}, hidden = true, description = "Enable eager loading to return arrays " +
             "instead of streams for get-all methods")
     private boolean eagerLoading;
 
@@ -126,16 +126,7 @@ public class Generate implements BLauncherCmd {
         }
 
         // Validate eager loading is only used with SQL datastores
-        if (eagerLoading) {
-            if (!datastore.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB) &&
-                !datastore.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB) &&
-                !datastore.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB) &&
-                !datastore.equals(PersistToolsConstants.SupportedDataSources.H2_DB)) {
-                errStream.printf("WARNING: The --eager-loading flag is only supported for SQL datastores " +
-                        "(mysql, mssql, postgresql, h2). This flag will be ignored for the '%s' datastore.%n",
-                        datastore);
-            }
-        }
+        eagerLoading = Utils.validateEagerLoading(datastore, eagerLoading, errStream);
 
         Path projectPath = Paths.get(sourcePath);
         try {
