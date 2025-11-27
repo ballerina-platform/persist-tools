@@ -10,7 +10,7 @@ distribution-version = "2201.13.0"
 [[package]]
 org = "ballerina"
 name = "tool.persist"
-version = "1.7.1"
+version = "1.8.0"
 modules = [
 	{org = "ballerina", packageName = "tool.persist", moduleName = "tool.persist"}
 ]
