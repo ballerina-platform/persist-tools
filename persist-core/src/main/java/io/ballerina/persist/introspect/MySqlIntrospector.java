@@ -18,6 +18,7 @@
 package io.ballerina.persist.introspect;
 
 import io.ballerina.persist.PersistToolsConstants;
+import io.ballerina.persist.configuration.PersistConfiguration;
 import io.ballerina.persist.introspectiondto.SqlColumn;
 import io.ballerina.persist.models.SqlType;
 import io.ballerina.persist.utils.DatabaseConnector;
@@ -41,7 +42,8 @@ import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConst
  */
 public class MySqlIntrospector extends Introspector {
 
-    public MySqlIntrospector() {
+    public MySqlIntrospector(PersistConfiguration persistConfiguration) {
+        super(persistConfiguration);
         databaseConnector = new DatabaseConnector(JDBC_URL_WITH_DATABASE_MYSQL, MYSQL_DRIVER_CLASS);
     }
 
@@ -64,8 +66,8 @@ public class MySqlIntrospector extends Introspector {
                 table_info.table_name;
             """;
         formatQuery = formatQuery.replace("\r\n", "%n");
-        return String.format(formatQuery, this.persistConfigurations.getDbConfig().getDatabase(),
-                this.persistConfigurations.getDbConfig().getDatabase());
+        return String.format(formatQuery, this.persistConfiguration.getDbConfig().getDatabase(),
+                this.persistConfiguration.getDbConfig().getDatabase());
     }
 
     @Override
@@ -96,7 +98,7 @@ public class MySqlIntrospector extends Introspector {
                 ordinal_position ASC;
             """;
         formatQuery = formatQuery.replace("\r\n", "%n");
-        return String.format(formatQuery, this.persistConfigurations.getDbConfig().getDatabase(), tableName);
+        return String.format(formatQuery, this.persistConfiguration.getDbConfig().getDatabase(), tableName);
     }
 
     @Override
@@ -120,7 +122,7 @@ public class MySqlIntrospector extends Introspector {
                 seq_in_index;
             """;
         formatQuery = formatQuery.replace("\r\n", "%n");
-        return String.format(formatQuery, this.persistConfigurations.getDbConfig().getDatabase(), tableName);
+        return String.format(formatQuery, this.persistConfiguration.getDbConfig().getDatabase(), tableName);
     }
 
     @Override
@@ -151,8 +153,8 @@ public class MySqlIntrospector extends Introspector {
                     kcu.ordinal_position;
                 """;
         formatQuery = formatQuery.replace("\r\n", "%n");
-        return String.format(formatQuery, this.persistConfigurations.getDbConfig().getDatabase(),
-                this.persistConfigurations.getDbConfig().getDatabase(), tableName);
+        return String.format(formatQuery, this.persistConfiguration.getDbConfig().getDatabase(),
+                this.persistConfiguration.getDbConfig().getDatabase(), tableName);
     }
 
     @Override
@@ -171,7 +173,7 @@ public class MySqlIntrospector extends Introspector {
                 ordinal_position ASC;
             """;
         formatQuery = formatQuery.replace("\r\n", "%n");
-        return String.format(formatQuery, this.persistConfigurations.getDbConfig().getDatabase());
+        return String.format(formatQuery, this.persistConfiguration.getDbConfig().getDatabase());
     }
 
     @Override

@@ -68,4 +68,7 @@
         <Class name="io.ballerina.persist.utils.JdbcDriverLoader"/>
         <Bug pattern="CT_CONSTRUCTOR_THROW"/>
     </Match>
+    <Match>
+        <Class name="io.ballerina.persist.introspect.IntrospectorBuilder" />\
+    </Match>
 </FindBugsFilter>

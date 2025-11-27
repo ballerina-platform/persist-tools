@@ -20,12 +20,9 @@ package io.ballerina.persist.cmd;
 import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
-import io.ballerina.persist.configuration.DatabaseConfiguration;
 import io.ballerina.persist.configuration.PersistConfiguration;
 import io.ballerina.persist.introspect.Introspector;
-import io.ballerina.persist.introspect.MsSqlInstrospector;
-import io.ballerina.persist.introspect.MySqlIntrospector;
-import io.ballerina.persist.introspect.PostgreSqlIntrospector;
+import io.ballerina.persist.introspect.IntrospectorBuilder;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.SourceGenerator;
 import picocli.CommandLine;
@@ -107,34 +104,6 @@ public class Pull implements BLauncherCmd {
             return;
         }
 
-        Introspector introspector;
-        switch (this.datastore) {
-            case PersistToolsConstants.SupportedDataSources.MYSQL_DB:
-                introspector = new MySqlIntrospector();
-                if (Objects.isNull(port)) {
-                    port = "3306";
-                    errStream.println("MySQL database introspection operates on the default port 3306");
-                }
-                break;
-            case PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB:
-                introspector = new PostgreSqlIntrospector();
-                if (Objects.isNull(port)) {
-                    port = "5432";
-                    errStream.println("PostgreSQL database introspection operates on the default port 5432");
-                }
-                break;
-            case PersistToolsConstants.SupportedDataSources.MSSQL_DB:
-                introspector = new MsSqlInstrospector();
-                if (Objects.isNull(port)) {
-                    port = "1433";
-                    errStream.println("MSSQL database introspection operates on the default port 1433");
-                }
-                break;
-            default:
-                errStream.printf("ERROR: unsupported data store: '%s'%n", datastore);
-                return;
-        }
-
         try {
             validatePullCommandOptions(datastore, host, port, user, database);
         } catch (BalException e) {
@@ -173,17 +142,48 @@ public class Pull implements BLauncherCmd {
             errStream.println("Continuing...");
         }
 
-        PersistConfiguration persistConfigurations = new PersistConfiguration();
-        persistConfigurations.setProvider(datastore);
-        persistConfigurations.setSourcePath(this.sourcePath);
-
+        // Build introspector and configuration using the builder pattern
+        Introspector introspector;
         try {
-            persistConfigurations.setDbConfig(new DatabaseConfiguration(this.host, this.user, password, this.port,
-                    this.database));
+            IntrospectorBuilder builder = IntrospectorBuilder.newBuilder()
+                    .withDatastore(datastore)
+                    .withHost(host)
+                    .withPort(port)
+                    .withUser(user)
+                    .withPassword(password)
+                    .withDatabase(database)
+                    .withSourcePath(sourcePath);
+
+            // Add tables if specified
+            if (this.tables != null && !this.tables.trim().isEmpty()) {
+                builder.withTables(this.tables);
+            }
+
+            introspector = builder.build();
+
+            // Log default port usage if applicable
+            if (Objects.isNull(port)) {
+                switch (datastore) {
+                    case PersistToolsConstants.SupportedDataSources.MYSQL_DB:
+                        errStream.println("MySQL database introspection operates on the default port 3306");
+                        break;
+                    case PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB:
+                        errStream.println("PostgreSQL database introspection operates on the default port 5432");
+                        break;
+                    case PersistToolsConstants.SupportedDataSources.MSSQL_DB:
+                        errStream.println("MSSQL database introspection operates on the default port 1433");
+                        break;
+                    default:
+                        // No default port message for unsupported datastores
+                        break;
+                }
+            }
         } catch (BalException e) {
-            errStream.println(e.getMessage());
+            errStream.println("ERROR: " + e.getMessage());
             return;
         }
+
+        PersistConfiguration persistConfigurations = introspector.getPersistConfiguration();
 
         // Handle table selection: --tables flag controls the behavior
         if (this.tables != null && this.tables.trim().isEmpty()) {
@@ -191,14 +191,11 @@ public class Pull implements BLauncherCmd {
             if (!handleInteractiveTableSelection(scanner, introspector, persistConfigurations)) {
                 return;
             }
-        } else if (this.tables != null) {
-            // Tables specified via --tables=table1,table2
-            persistConfigurations.setSelectedTables(this.tables);
         }
 
         Module entityModule = null;
         try {
-            entityModule = introspector.introspectDatabase(persistConfigurations);
+            entityModule = introspector.introspectDatabase();
         } catch (BalException e) {
             errStream.printf("ERROR: failed to introspect database: %s%n", e.getMessage());
             return;
@@ -229,7 +226,7 @@ public class Pull implements BLauncherCmd {
     private boolean handleInteractiveTableSelection(Scanner scanner, Introspector introspector,
                                                      PersistConfiguration persistConfigurations) {
         try {
-            String[] availableTables = introspector.getAvailableTables(persistConfigurations);
+            String[] availableTables = introspector.getAvailableTables();
             if (availableTables.length == 0) {
                 errStream.println("ERROR: No tables found in the database.");
                 return false;
