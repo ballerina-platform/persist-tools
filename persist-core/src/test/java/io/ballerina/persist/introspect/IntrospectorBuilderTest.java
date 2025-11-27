@@ -240,7 +240,7 @@ public class IntrospectorBuilderTest {
     }
 
     @Test
-    public void testBuilderMethodChaining() throws BalException {
+    public void testBuilderMethodChaining() {
         // Verify that builder methods return the same instance for chaining
         IntrospectorBuilder builder = IntrospectorBuilder.newBuilder();
         Assert.assertSame(builder.withDatastore("mysql"), builder);
@@ -254,7 +254,7 @@ public class IntrospectorBuilderTest {
     }
 
     @Test
-    public void testBuildWithEmptyStringValues() throws BalException {
+    public void testBuildWithEmptyStringValues() {
         // Empty strings should be treated as missing values
         try {
             IntrospectorBuilder.newBuilder()
