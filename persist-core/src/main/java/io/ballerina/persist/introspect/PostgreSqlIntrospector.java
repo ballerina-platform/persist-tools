@@ -17,6 +17,7 @@
  */
 package io.ballerina.persist.introspect;
 
+import io.ballerina.persist.configuration.PersistConfiguration;
 import io.ballerina.persist.introspectiondto.SqlColumn;
 import io.ballerina.persist.models.SqlType;
 import io.ballerina.persist.utils.DatabaseConnector;
@@ -40,7 +41,8 @@ import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConst
  */
 public class PostgreSqlIntrospector extends Introspector {
 
-    public PostgreSqlIntrospector() {
+    public PostgreSqlIntrospector(PersistConfiguration persistConfiguration) {
+        super(persistConfiguration);
         databaseConnector = new DatabaseConnector(JDBC_URL_WITH_DATABASE_POSTGRESQL, POSTGRESQL_DRIVER_CLASS);
     }
 

@@ -62,7 +62,7 @@ import static java.lang.Integer.parseUnsignedInt;
 public abstract class Introspector {
 
     protected DatabaseConnector databaseConnector;
-    protected PersistConfiguration persistConfigurations;
+    public final PersistConfiguration persistConfiguration;
 
     protected abstract String getTablesQuery();
 
@@ -87,12 +87,22 @@ public abstract class Introspector {
     private final List<SqlForeignKey> sqlForeignKeys;
     protected PrintStream errStream = System.err;
 
-    protected Introspector() {
+    protected Introspector(PersistConfiguration persistConfiguration) {
+        this.persistConfiguration = persistConfiguration;
         this.tables = new ArrayList<>();
         this.entityMap = new HashMap<>();
         this.sqlForeignKeys = new ArrayList<>();
         this.sqlEnums = new ArrayList<>();
         this.moduleBuilder = Module.newBuilder("db");
+    }
+
+    /**
+     * Returns the current persist configuration.
+     *
+     * @return the PersistConfiguration object
+     */
+    public PersistConfiguration getPersistConfiguration() {
+        return persistConfiguration;
     }
 
     /**
@@ -102,20 +112,15 @@ public abstract class Introspector {
      * indexes, foreign keys, and enums, then maps them to Ballerina entities and
      * types.
      *
-     * @param persistConfiguration the configuration containing database connection
-     *                             details,
-     *                             source path, provider type, and optional table
-     *                             filtering
      * @return a Module object containing all entities, enums, and relationships
      *         mapped from the database schema
      * @throws BalException if there is an error connecting to the database, reading
      *                      the schema,
      *                      or mapping database structures to Ballerina types
      */
-    public Module introspectDatabase(PersistConfiguration persistConfiguration) throws BalException {
-        this.persistConfigurations = persistConfiguration;
-        DriverResolver driverResolver = new DriverResolver(this.persistConfigurations.getSourcePath(),
-                this.persistConfigurations.getProvider());
+    public Module introspectDatabase() throws BalException {
+        DriverResolver driverResolver = new DriverResolver(this.persistConfiguration.getSourcePath(),
+                this.persistConfiguration.getProvider());
         try {
             Project driverProject = driverResolver.resolveDriverDependencies();
             try (Connection connection = prepareDatabaseConnection(driverProject)) {
@@ -136,16 +141,13 @@ public abstract class Introspector {
      * database
      * without performing a full introspection and model generation.
      *
-     * @param persistConfiguration the persist configuration containing database
-     *                             connection details
      * @return an array of table names found in the database
      * @throws BalException if there is an error connecting to the database or
      *                      reading table information
      */
-    public String[] getAvailableTables(PersistConfiguration persistConfiguration) throws BalException {
-        this.persistConfigurations = persistConfiguration;
-        DriverResolver driverResolver = new DriverResolver(this.persistConfigurations.getSourcePath(),
-                this.persistConfigurations.getProvider());
+    public String[] getAvailableTables() throws BalException {
+        DriverResolver driverResolver = new DriverResolver(this.persistConfiguration.getSourcePath(),
+                this.persistConfiguration.getProvider());
         try {
             Project driverProject = driverResolver.resolveDriverDependencies();
             try (Connection connection = prepareDatabaseConnection(driverProject)) {
@@ -167,7 +169,7 @@ public abstract class Introspector {
         driverLoader = databaseConnector.getJdbcDriverLoader(driverProject);
         Driver driver = databaseConnector.getJdbcDriver(driverLoader);
         try {
-            return databaseConnector.getConnection(driver, persistConfigurations, true);
+            return databaseConnector.getConnection(driver, persistConfiguration, true);
         } catch (SQLException e) {
             throw new BalException("failed to connect to the database: " + e.getMessage());
         }
@@ -193,9 +195,9 @@ public abstract class Introspector {
         this.tables = sr.getSQLTables(this.getTablesQuery());
 
         // Filter tables if specific tables are selected
-        if (persistConfigurations.getSelectedTables() != null &&
-                !persistConfigurations.getSelectedTables().isEmpty()) {
-            List<String> selectedTableNames = new ArrayList<>(persistConfigurations.getSelectedTables());
+        if (persistConfiguration.getSelectedTables() != null &&
+                !persistConfiguration.getSelectedTables().isEmpty()) {
+            List<String> selectedTableNames = new ArrayList<>(persistConfiguration.getSelectedTables());
 
             // Resolve foreign key dependencies - automatically include referenced tables
             List<String> resolvedTableNames = resolveForeignKeyDependencies(sr, selectedTableNames);
@@ -339,7 +341,7 @@ public abstract class Introspector {
                             column.getNumericPrecision() != null ? parseInt(column.getNumericPrecision()) : 0,
                             column.getNumericScale() != null ? parseInt(column.getNumericScale()) : 0,
                             (maxLen != null) ? parseUnsignedInt(maxLen) : 0,
-                            persistConfigurations.getProvider());
+                            persistConfiguration.getProvider());
                     String balType = this.getBalType(sqlType);
                     fieldBuilder.setType(balType);
                     fieldBuilder.setSqlType(sqlType);

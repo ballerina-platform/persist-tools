@@ -32,6 +32,7 @@ module io.ballerina.persist.core {
     exports io.ballerina.persist.nodegenerator.syntax.clients;
     exports io.ballerina.persist.nodegenerator.syntax.constants;
     exports io.ballerina.persist.nodegenerator.syntax.utils;
+    exports io.ballerina.persist.nodegenerator.syntax.sources;
     exports io.ballerina.persist.inflector;
     exports io.ballerina.persist.utils;
     exports io.ballerina.persist.models;

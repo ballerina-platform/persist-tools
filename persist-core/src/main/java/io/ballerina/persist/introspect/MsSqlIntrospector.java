@@ -18,6 +18,7 @@
 package io.ballerina.persist.introspect;
 
 import io.ballerina.persist.PersistToolsConstants;
+import io.ballerina.persist.configuration.PersistConfiguration;
 import io.ballerina.persist.introspectiondto.SqlColumn;
 import io.ballerina.persist.models.SqlType;
 import io.ballerina.persist.utils.DatabaseConnector;
@@ -39,9 +40,10 @@ import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConst
  *
  * @since 0.1.0
  */
-public class MsSqlInstrospector extends Introspector {
+public class MsSqlIntrospector extends Introspector {
 
-    public MsSqlInstrospector() {
+    public MsSqlIntrospector(PersistConfiguration persistConfiguration) {
+        super(persistConfiguration);
         databaseConnector = new DatabaseConnector(JDBC_URL_WITH_DATABASE_MSSQL, MSSQL_DRIVER_CLASS);
     }
 
