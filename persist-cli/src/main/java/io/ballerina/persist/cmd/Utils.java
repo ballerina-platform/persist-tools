@@ -28,6 +28,7 @@ import io.ballerina.compiler.syntax.tree.NodeParser;
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.compiler.syntax.tree.Token;
 import io.ballerina.persist.BalException;
+import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
 import io.ballerina.persist.utils.FileUtils;
 import io.ballerina.tools.text.TextDocument;
@@ -36,6 +37,7 @@ import org.ballerinalang.formatter.core.Formatter;
 import org.ballerinalang.formatter.core.FormatterException;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Path;
 
 import static io.ballerina.persist.PersistToolsConstants.SCHEMA_FILE_NAME;
@@ -70,5 +72,18 @@ public class Utils {
         TextDocument textDocument = TextDocuments.from(BalSyntaxConstants.EMPTY_STRING);
         SyntaxTree balTree = SyntaxTree.from(textDocument);
         return Formatter.format(balTree.modifyWith(modulePartNode).toSourceCode());
+    }
+
+    public static boolean validateEagerLoading(String datastore, boolean eagerLoading, PrintStream errStream) {
+        if (eagerLoading && !datastore.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB) &&
+                    !datastore.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB) &&
+                    !datastore.equals(PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB) &&
+                    !datastore.equals(PersistToolsConstants.SupportedDataSources.H2_DB)) {
+            errStream.printf("WARNING: The --eager-loading flag is only supported for SQL datastores " +
+                            "(mysql, mssql, postgresql, h2). This flag will be ignored for the '%s' datastore.%n",
+                    datastore);
+            return false;
+        }
+        return eagerLoading;
     }
 }

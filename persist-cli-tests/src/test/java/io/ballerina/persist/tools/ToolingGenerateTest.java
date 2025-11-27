@@ -1106,6 +1106,33 @@ public class ToolingGenerateTest {
         assertGeneratedSources(subDir);
     }
 
+    @Test(enabled = true)
+    @Description("Test generate command with eager-loading flag enabled for MySQL datastore")
+    public void testGenerateWithEagerLoadingMySQL() {
+        updateOutputBallerinaToml("tool_test_generate_115");
+        executeGenerateCommand("tool_test_generate_115",
+                "--datastore", "mysql", "--module", "entities", "--eager-loading");
+        assertGeneratedSources("tool_test_generate_115");
+    }
+
+    @Test(enabled = true)
+    @Description("Test generate command with eager-loading flag enabled for PostgreSQL datastore")
+    public void testGenerateWithEagerLoadingPostgreSQL() {
+        updateOutputBallerinaToml("tool_test_generate_116");
+        executeGenerateCommand("tool_test_generate_116",
+                "--datastore", "postgresql", "--module", "entities", "--eager-loading");
+        assertGeneratedSources("tool_test_generate_116");
+    }
+
+    @Test(enabled = true)
+    @Description("Test generate command with eager-loading flag enabled for MSSQL datastore")
+    public void testGenerateWithEagerLoadingMSSQL() {
+        updateOutputBallerinaToml("tool_test_generate_117");
+        executeGenerateCommand("tool_test_generate_117",
+                "--datastore", "mssql", "--module", "entities", "--eager-loading");
+        assertGeneratedSources("tool_test_generate_117");
+    }
+
     private void updateOutputBallerinaToml(String fileName) {
         String tomlFileName = "Ballerina.toml";
         Path filePath = Paths.get("src", "test", "resources", "test-src", "output", fileName, tomlFileName);

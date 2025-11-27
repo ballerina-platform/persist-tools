@@ -65,8 +65,13 @@ public class DbClientSyntax implements ClientSyntax {
     private final String nativeClass;
     private final String initDbClientMethodTemplate;
     private final String dataSource;
+    private final boolean eagerLoading;
 
     public DbClientSyntax(Module entityModule, String datasource) throws BalException {
+        this(entityModule, datasource, false);
+    }
+
+    public DbClientSyntax(Module entityModule, String datasource, boolean eagerLoading) throws BalException {
         this.entityModule = entityModule;
         this.dataSource = datasource;
         this.dbNamePrefix = SUPPORTED_VIA_JDBC_CONNECTOR.contains(datasource) ?
@@ -101,7 +106,7 @@ public class DbClientSyntax implements ClientSyntax {
             }
             default -> throw new BalException("Unsupported datasource: " + datasource);
         }
-
+        this.eagerLoading = eagerLoading;
     }
 
     public NodeList<ImportDeclarationNode> getImports() throws BalException {
@@ -208,8 +213,11 @@ public class DbClientSyntax implements ClientSyntax {
 
     @Override
     public FunctionDefinitionNode getGetFunction(Entity entity) {
+        String template = this.eagerLoading ?
+                BalSyntaxConstants.EXTERNAL_SQL_GET_METHOD_LIST_TEMPLATE :
+                BalSyntaxConstants.EXTERNAL_SQL_GET_METHOD_TEMPLATE;
         FunctionDefinitionNode functionNode = (FunctionDefinitionNode) NodeParser.parseObjectMember(
-                String.format(BalSyntaxConstants.EXTERNAL_SQL_GET_METHOD_TEMPLATE,
+                String.format(template,
                         entity.getClientResourceName(),
                         entity.getEntityName(), BalSyntaxConstants.SQL, this.nativeClass));
 
