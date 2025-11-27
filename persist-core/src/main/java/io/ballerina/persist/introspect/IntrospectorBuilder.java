@@ -175,21 +175,27 @@ public class IntrospectorBuilder {
         // Validate required parameters
         validateRequiredParameters();
 
-        // Build PersistConfiguration
-        PersistConfiguration persistConfiguration = buildPersistConfiguration();
-
         // Apply default ports if not specified
         applyDefaultPort();
 
-        // Create the appropriate introspector based on datastore type
-        Introspector introspector = createIntrospector(persistConfiguration);
+        // Build PersistConfiguration
+        PersistConfiguration persistConfiguration = buildPersistConfiguration();
 
-        return introspector;
+        // Create the appropriate introspector based on datastore type
+        return createIntrospector(persistConfiguration);
     }
 
     private void validateRequiredParameters() throws BalException {
         if (Objects.isNull(datastore) || datastore.trim().isEmpty()) {
             throw new BalException("datastore is required");
+        }
+        switch (this.datastore) {
+            case PersistToolsConstants.SupportedDataSources.MYSQL_DB:
+            case PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB:
+            case PersistToolsConstants.SupportedDataSources.MSSQL_DB:
+                break;
+            default:
+                throw new BalException("unsupported data store: '" + datastore + "'");
         }
         if (Objects.isNull(host) || host.trim().isEmpty()) {
             throw new BalException("host is required");

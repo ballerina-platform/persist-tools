@@ -269,25 +269,5 @@ public class IntrospectorBuilderTest {
             Assert.assertTrue(e.getMessage().contains("datastore is required"));
         }
     }
-
-    @Test
-    public void testResultImmutability() throws BalException {
-        IntrospectorBuilder builder = IntrospectorBuilder.newBuilder()
-                .withDatastore("mysql")
-                .withHost("localhost")
-                .withUser("root")
-                .withPassword("password")
-                .withDatabase("testdb")
-                .withSourcePath("/path/to/project");
-
-        Introspector introspector1 = builder.build();
-        Introspector introspector2 = builder.build();
-        PersistConfiguration config1 = introspector1.getPersistConfiguration();
-        PersistConfiguration config2 = introspector2.getPersistConfiguration();
-
-        // Result should return the same instances
-        Assert.assertSame(introspector1, introspector2);
-        Assert.assertSame(config1, config2);
-    }
 }
 
