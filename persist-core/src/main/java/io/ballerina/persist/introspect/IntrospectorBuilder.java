@@ -57,7 +57,6 @@ public class IntrospectorBuilder {
     private String database;
     private String sourcePath;
     private String tables;
-    private PersistConfiguration persistConfiguration;
 
     private IntrospectorBuilder() {
         // Private constructor to enforce builder pattern
