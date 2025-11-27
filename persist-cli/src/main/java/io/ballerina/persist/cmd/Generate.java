@@ -25,6 +25,7 @@ import io.ballerina.persist.nodegenerator.SourceGenerator;
 import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
 import io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils;
 import io.ballerina.persist.utils.BalProjectUtils;
+import io.ballerina.persist.utils.FileUtils;
 import io.ballerina.projects.util.ProjectUtils;
 import io.ballerina.toml.syntax.tree.DocumentMemberDeclarationNode;
 import io.ballerina.toml.syntax.tree.DocumentNode;
@@ -225,7 +226,7 @@ public class Generate implements BLauncherCmd {
             BalProjectUtils.updateToml(sourcePath, datastore, moduleNameWithPackage);
             String syntaxTree = updateBallerinaToml(Paths.get(this.sourcePath, BALLERINA_TOML),
                     datastore, testDatastore);
-            Utils.writeOutputString(syntaxTree,
+            FileUtils.writeToTargetFile(syntaxTree,
                     Paths.get(this.sourcePath, BALLERINA_TOML).toAbsolutePath().toString());
             BalProjectUtils.validateSchemaFile(schemaFilePath);
             Module module = BalProjectUtils.getEntities(schemaFilePath);

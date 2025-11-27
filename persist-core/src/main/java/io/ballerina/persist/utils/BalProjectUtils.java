@@ -39,7 +39,6 @@ import io.ballerina.compiler.syntax.tree.TypeDefinitionNode;
 import io.ballerina.compiler.syntax.tree.TypeDescriptorNode;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
-import io.ballerina.persist.cmd.Utils;
 import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.Enum;
@@ -108,7 +107,9 @@ import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
  */
 public class BalProjectUtils {
 
-    private BalProjectUtils() {}
+    private BalProjectUtils() {
+    }
+
     private static final PrintStream errStream = System.err;
 
     public static Module getEntities(Path schemaFile) throws BalException {
@@ -142,7 +143,7 @@ public class BalProjectUtils {
                 "options.datastore = \"" + datastore + "\"" + System.lineSeparator() +
                 "module = \"" + module + "\"";
         Path generatedCmdOutPath = Paths.get(sourcePath, TARGET_DIRECTORY, GENERATE_CMD_FILE);
-        Utils.writeToTargetFile(sourceContent, generatedCmdOutPath.toAbsolutePath().toString());
+        FileUtils.writeToTargetFile(sourceContent, generatedCmdOutPath.toAbsolutePath().toString());
     }
 
     public static void validateSchemaFile(Path schemaPath) throws BalException {
@@ -215,15 +216,15 @@ public class BalProjectUtils {
         ModulePartNode rootNote = balSyntaxTree.rootNode();
         io.ballerina.compiler.syntax.tree.NodeList<ModuleMemberDeclarationNode> nodeList = rootNote.members();
         rootNote.imports().stream().filter(importNode -> importNode.orgName().isPresent() && importNode.orgName().get()
-                        .orgName().text().equals(BalSyntaxConstants.KEYWORD_BALLERINA) &&
-                        importNode.moduleName().stream().anyMatch(node -> node.text().equals(
-                                BalSyntaxConstants.KEYWORD_PERSIST)))
+                .orgName().text().equals(BalSyntaxConstants.KEYWORD_BALLERINA) &&
+                importNode.moduleName().stream().anyMatch(node -> node.text().equals(
+                        BalSyntaxConstants.KEYWORD_PERSIST)))
                 .findFirst().orElseThrow(() -> new BalException(
                         "no `import ballerina/persist as _;` statement found.."));
-        for (ImportDeclarationNode importDeclarationNode: rootNote.imports()) {
+        for (ImportDeclarationNode importDeclarationNode : rootNote.imports()) {
             if (importDeclarationNode.moduleName().get(0).text().equals(BalSyntaxConstants.CONSTRAINT) &&
                     importDeclarationNode.orgName().isPresent() && importDeclarationNode.orgName().get()
-                    .orgName().text().equals(BalSyntaxConstants.KEYWORD_BALLERINA)) {
+                            .orgName().text().equals(BalSyntaxConstants.KEYWORD_BALLERINA)) {
                 moduleBuilder.addImportModulePrefix(BalSyntaxConstants.CONSTRAINT);
             }
         }
@@ -241,14 +242,16 @@ public class BalProjectUtils {
             String annotatedTableName = entityMetadataNode.map(metaData -> readStringValueFromAnnotation(
                     new BalSyntaxUtils.AnnotationUtilRecord(metaData.annotations().stream().toList(),
                             BalSyntaxConstants.SQL_DB_NAME_ANNOTATION_NAME,
-                            BalSyntaxConstants.ANNOTATION_VALUE_FIELD))).orElse("");
+                            BalSyntaxConstants.ANNOTATION_VALUE_FIELD)))
+                    .orElse("");
             if (!annotatedTableName.isEmpty()) {
                 entityBuilder.setTableName(annotatedTableName);
             }
             entityMetadataNode.map(metaData -> readStringValueFromAnnotation(
                     new BalSyntaxUtils.AnnotationUtilRecord(metaData.annotations().stream().toList(),
                             BalSyntaxConstants.SQL_SCHEMA_NAME_ANNOTATION_NAME,
-                            BalSyntaxConstants.ANNOTATION_VALUE_FIELD))).ifPresent(entityBuilder::setSchemaName);
+                            BalSyntaxConstants.ANNOTATION_VALUE_FIELD)))
+                    .ifPresent(entityBuilder::setSchemaName);
             if (recordDesc.toSourceCode().contains(UNSUPPORTED_TYPE_COMMENT_START)) {
                 errStream.println("WARNING the entity '" + entityBuilder.getEntityName() + "' contains " +
                         "unsupported data types. client api for this entity will not be generated.");
@@ -278,38 +281,35 @@ public class BalProjectUtils {
                 fieldBuilder.setOptionalField(fieldNode.questionMarkToken().isPresent());
                 Optional<MetadataNode> metadataNode = fieldNode.metadata();
                 metadataNode.ifPresent(value -> {
-                    //read the db generated annotation
+                    // read the db generated annotation
                     List<AnnotationNode> annotations = value.annotations().stream().toList();
                     boolean dbGenerated = isAnnotationPresent(
                             annotations,
-                            BalSyntaxConstants.SQL_GENERATED_ANNOTATION_NAME
-                    );
+                            BalSyntaxConstants.SQL_GENERATED_ANNOTATION_NAME);
                     fieldBuilder.setIsDbGenerated(dbGenerated);
 
-                    //read the db mapping annotation
+                    // read the db mapping annotation
                     String fieldColumnName = readStringValueFromAnnotation(
                             new BalSyntaxUtils.AnnotationUtilRecord(annotations,
-                            BalSyntaxConstants.SQL_DB_NAME_ANNOTATION_NAME,
-                            BalSyntaxConstants.ANNOTATION_VALUE_FIELD)
-                    );
+                                    BalSyntaxConstants.SQL_DB_NAME_ANNOTATION_NAME,
+                                    BalSyntaxConstants.ANNOTATION_VALUE_FIELD));
                     if (!fieldColumnName.isEmpty()) {
                         fieldBuilder.setFieldColumnName(fieldColumnName);
                     }
-                    //read the unique index annotation
+                    // read the unique index annotation
                     boolean isUniqueIndexPresent = isAnnotationPresent(
                             annotations,
-                            BalSyntaxConstants.SQL_UNIQUE_INDEX_MAPPING_ANNOTATION_NAME
-                    );
+                            BalSyntaxConstants.SQL_UNIQUE_INDEX_MAPPING_ANNOTATION_NAME);
 
                     if (isUniqueIndexPresent) {
-                        BalSyntaxUtils.AnnotationUtilRecord uniqueIndexAnnot =
-                                new BalSyntaxUtils.AnnotationUtilRecord(annotations,
-                                        BalSyntaxConstants.SQL_UNIQUE_INDEX_MAPPING_ANNOTATION_NAME,
-                                        BalSyntaxConstants.ANNOTATION_NAME_FIELD);
+                        BalSyntaxUtils.AnnotationUtilRecord uniqueIndexAnnot = new BalSyntaxUtils.AnnotationUtilRecord(
+                                annotations,
+                                BalSyntaxConstants.SQL_UNIQUE_INDEX_MAPPING_ANNOTATION_NAME,
+                                BalSyntaxConstants.ANNOTATION_NAME_FIELD);
                         if (isAnnotationFieldArrayType(uniqueIndexAnnot)) {
                             List<String> uniqueIndexNames = readStringArrayValueFromAnnotation(uniqueIndexAnnot);
-                            uniqueIndexNames.forEach(uniqueIndexName ->
-                                    entityBuilder.upsertUniqueIndex(uniqueIndexName, fieldBuilder.build()));
+                            uniqueIndexNames.forEach(uniqueIndexName -> entityBuilder.upsertUniqueIndex(uniqueIndexName,
+                                    fieldBuilder.build()));
                         } else if (isAnnotationFieldStringType(uniqueIndexAnnot)) {
                             entityBuilder.upsertUniqueIndex(readStringValueFromAnnotation(uniqueIndexAnnot),
                                     fieldBuilder.build());
@@ -318,21 +318,19 @@ public class BalProjectUtils {
                                     fieldBuilder.getFieldName().toLowerCase(Locale.ENGLISH), fieldBuilder.build());
                         }
                     }
-                    //read the index annotation
+                    // read the index annotation
                     boolean isIndexPresent = isAnnotationPresent(
                             annotations,
-                            BalSyntaxConstants.SQL_INDEX_MAPPING_ANNOTATION_NAME
-                    );
+                            BalSyntaxConstants.SQL_INDEX_MAPPING_ANNOTATION_NAME);
 
                     if (isIndexPresent) {
-                        BalSyntaxUtils.AnnotationUtilRecord indexAnnot =
-                                new BalSyntaxUtils.AnnotationUtilRecord(annotations,
-                                        BalSyntaxConstants.SQL_INDEX_MAPPING_ANNOTATION_NAME,
-                                        BalSyntaxConstants.ANNOTATION_NAME_FIELD);
+                        BalSyntaxUtils.AnnotationUtilRecord indexAnnot = new BalSyntaxUtils.AnnotationUtilRecord(
+                                annotations,
+                                BalSyntaxConstants.SQL_INDEX_MAPPING_ANNOTATION_NAME,
+                                BalSyntaxConstants.ANNOTATION_NAME_FIELD);
                         if (isAnnotationFieldArrayType(indexAnnot)) {
                             List<String> indexNames = readStringArrayValueFromAnnotation(indexAnnot);
-                            indexNames.forEach(indexName ->
-                                    entityBuilder.upsertIndex(indexName, fieldBuilder.build()));
+                            indexNames.forEach(indexName -> entityBuilder.upsertIndex(indexName, fieldBuilder.build()));
                         } else if (isAnnotationFieldStringType(indexAnnot)) {
                             entityBuilder.upsertIndex(readStringValueFromAnnotation(indexAnnot),
                                     fieldBuilder.build());
@@ -341,21 +339,19 @@ public class BalProjectUtils {
                                     fieldBuilder.getFieldName().toLowerCase(Locale.ENGLISH), fieldBuilder.build());
                         }
                     }
-                    //read the relation annotation
+                    // read the relation annotation
                     List<String> relationRefs = readStringArrayValueFromAnnotation(
                             new BalSyntaxUtils.AnnotationUtilRecord(annotations,
-                            BalSyntaxConstants.SQL_RELATION_MAPPING_ANNOTATION_NAME,
-                            BalSyntaxConstants.ANNOTATION_KEYS_FIELD)
-                    );
+                                    BalSyntaxConstants.SQL_RELATION_MAPPING_ANNOTATION_NAME,
+                                    BalSyntaxConstants.ANNOTATION_KEYS_FIELD));
                     if (relationRefs != null) {
                         fieldBuilder.setRelationRefs(relationRefs);
                     }
                     // read the varchar annotation
                     String varcharLength = readStringValueFromAnnotation(
                             new BalSyntaxUtils.AnnotationUtilRecord(annotations,
-                            BalSyntaxConstants.SQL_VARCHAR_MAPPING_ANNOTATION_NAME,
-                            BalSyntaxConstants.ANNOTATION_LENGTH_FIELD)
-                    );
+                                    BalSyntaxConstants.SQL_VARCHAR_MAPPING_ANNOTATION_NAME,
+                                    BalSyntaxConstants.ANNOTATION_LENGTH_FIELD));
                     if (!varcharLength.isEmpty()) {
                         fieldBuilder.setSqlType(
                                 new SqlType(
@@ -366,12 +362,11 @@ public class BalProjectUtils {
                                         0,
                                         Integer.parseInt(varcharLength)));
                     }
-                    //read the char annotation
+                    // read the char annotation
                     String charLength = readStringValueFromAnnotation(
                             new BalSyntaxUtils.AnnotationUtilRecord(annotations,
-                            BalSyntaxConstants.SQL_CHAR_MAPPING_ANNOTATION_NAME,
-                            BalSyntaxConstants.ANNOTATION_LENGTH_FIELD)
-                    );
+                                    BalSyntaxConstants.SQL_CHAR_MAPPING_ANNOTATION_NAME,
+                                    BalSyntaxConstants.ANNOTATION_LENGTH_FIELD));
                     if (!charLength.isEmpty()) {
                         fieldBuilder.setSqlType(
                                 new SqlType(
@@ -382,12 +377,11 @@ public class BalProjectUtils {
                                         0,
                                         Integer.parseInt(charLength)));
                     }
-                    //read the decimal annotation
+                    // read the decimal annotation
                     List<String> decimal = readStringArrayValueFromAnnotation(
                             new BalSyntaxUtils.AnnotationUtilRecord(annotations,
-                            BalSyntaxConstants.SQL_DECIMAL_MAPPING_ANNOTATION_NAME,
-                            BalSyntaxConstants.ANNOTATION_PRECISION_FIELD)
-                    );
+                                    BalSyntaxConstants.SQL_DECIMAL_MAPPING_ANNOTATION_NAME,
+                                    BalSyntaxConstants.ANNOTATION_PRECISION_FIELD));
                     if (decimal != null && decimal.size() == 2) {
                         fieldBuilder.setSqlType(
                                 new SqlType(
@@ -396,8 +390,7 @@ public class BalProjectUtils {
                                         null,
                                         Integer.parseInt(decimal.get(0).trim()),
                                         Integer.parseInt(decimal.get(1).trim()),
-                                        0)
-                        );
+                                        0));
                     }
                     fieldBuilder.setAnnotations(annotations);
                 });
@@ -422,9 +415,9 @@ public class BalProjectUtils {
         ModulePartNode rootNote = balSyntaxTree.rootNode();
         io.ballerina.compiler.syntax.tree.NodeList<ModuleMemberDeclarationNode> nodeList = rootNote.members();
         rootNote.imports().stream().filter(importNode -> importNode.orgName().isPresent() && importNode.orgName().get()
-                        .orgName().text().equals(BalSyntaxConstants.KEYWORD_BALLERINA) &&
-                        importNode.moduleName().stream().anyMatch(node -> node.text().equals(
-                                BalSyntaxConstants.KEYWORD_PERSIST)))
+                .orgName().text().equals(BalSyntaxConstants.KEYWORD_BALLERINA) &&
+                importNode.moduleName().stream().anyMatch(node -> node.text().equals(
+                        BalSyntaxConstants.KEYWORD_PERSIST)))
                 .findFirst().orElseThrow(() -> new BalException(
                         "no `import ballerina/persist as _;` statement found."));
 
@@ -435,7 +428,7 @@ public class BalProjectUtils {
             EnumDeclarationNode enumDeclarationNode = (EnumDeclarationNode) moduleNode;
             Enum.Builder enumBuilder = Enum.newBuilder(enumDeclarationNode.identifier().text().trim());
 
-            for (Node node: enumDeclarationNode.enumMemberList()) {
+            for (Node node : enumDeclarationNode.enumMemberList()) {
                 if (!(node instanceof EnumMemberNode)) {
                     continue;
                 }
@@ -509,12 +502,13 @@ public class BalProjectUtils {
                 Entity assocEntity = entityMap.get(fieldList.get(0).getFieldType());
                 List<EntityField> assocFields = assocEntity.getFields().stream()
                         .filter(assocField -> assocField.getFieldType()
-                                .equals(entity.getEntityName()) && assocField.getRelation() == null).toList();
+                                .equals(entity.getEntityName()) && assocField.getRelation() == null)
+                        .toList();
                 for (int i = 0; i < fieldList.size(); i++) {
                     EntityField field = fieldList.get(i);
                     EntityField assocField = assocFields.get(i);
                     if (field.isArrayType() && assocField.isArrayType()) {
-                        //both are array types. many-to-many is not supported
+                        // both are array types. many-to-many is not supported
                         throw new RuntimeException("unsupported many to many relation between " +
                                 entity.getEntityName() + " and " + assocEntity.getEntityName());
                     }
@@ -564,8 +558,8 @@ public class BalProjectUtils {
     public static void inferEnumDetails(Module entityModule) {
         Map<String, Enum> enumMap = entityModule.getEnumMap();
 
-        for (Entity entity: entityModule.getEntityMap().values()) {
-            for (EntityField field: entity.getFields()) {
+        for (Entity entity : entityModule.getEntityMap().values()) {
+            for (EntityField field : entity.getFields()) {
                 if (enumMap.containsKey(field.getFieldType())) {
                     field.setEnum(enumMap.get(field.getFieldType()));
                 }
@@ -573,9 +567,8 @@ public class BalProjectUtils {
         }
     }
 
-
     private static Relation computeRelation(String fieldName, Entity entity, Entity assocEntity, boolean isOwner,
-                                            Relation.RelationType relationType, List<String> relationRefs) {
+            Relation.RelationType relationType, List<String> relationRefs) {
         Relation.Builder relBuilder = new Relation.Builder();
         relBuilder.setAssocEntity(assocEntity);
         if (isOwner) {
@@ -663,7 +656,7 @@ public class BalProjectUtils {
     }
 
     public static void validatePullCommandOptions(String datastore, String host, String port, String user,
-                                                  String database) throws BalException {
+            String database) throws BalException {
         String nameRegex = "[A-Za-z]\\w*";
         List<String> errors = new ArrayList<>();
         if (datastore == null) {
@@ -671,8 +664,9 @@ public class BalProjectUtils {
         } else if (datastore.isEmpty()) {
             errors.add("The datastore type cannot be empty.");
         } else if (!(datastore.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB) || datastore.equals(
-                PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB) || datastore.equals(
-                PersistToolsConstants.SupportedDataSources.MSSQL_DB))) {
+                PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB)
+                || datastore.equals(
+                        PersistToolsConstants.SupportedDataSources.MSSQL_DB))) {
             errors.add("Unsupported data store: '" + datastore + "'");
         }
         if (host == null) {

@@ -35,12 +35,14 @@ plugins {
 rootProject.name = 'persist-tools'
 
 include ':checkstyle'
+include ':persist-core'
 include ':persist-cli'
 include ':persist-cli-tests'
 include ':examples'
 include ':persist-tool'
 
 project(':checkstyle').projectDir = file("build-config${File.separator}checkstyle")
+project(':persist-core').projectDir = file('persist-core')
 project(':persist-cli').projectDir = file('persist-cli')
 project(':persist-cli-tests').projectDir = file('persist-cli-tests')
 project(':examples').projectDir = file('examples')

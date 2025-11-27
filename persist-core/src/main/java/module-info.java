@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2022 WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2025 WSO2 LLC. (http://www.wso2.com).
  *
- * WSO2 Inc. licenses this file to you under the Apache License,
+ * WSO2 LLC. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,15 +16,25 @@
  * under the License.
  */
 
-module io.ballerina.persist {
-    requires io.ballerina.persist.core;
+module io.ballerina.persist.core {
     requires io.ballerina.runtime;
     requires io.ballerina.lang;
-    requires io.ballerina.cli;
-    requires info.picocli;
     requires io.ballerina.toml;
     requires io.ballerina.tools.api;
     requires io.ballerina.parser;
     requires io.ballerina.formatter.core;
     requires java.sql;
+
+    exports io.ballerina.persist;
+    exports io.ballerina.persist.configuration;
+    exports io.ballerina.persist.introspect;
+    exports io.ballerina.persist.nodegenerator;
+    exports io.ballerina.persist.nodegenerator.syntax.clients;
+    exports io.ballerina.persist.nodegenerator.syntax.constants;
+    exports io.ballerina.persist.nodegenerator.syntax.utils;
+    exports io.ballerina.persist.inflector;
+    exports io.ballerina.persist.utils;
+    exports io.ballerina.persist.models;
+    exports io.ballerina.persist.components;
+    exports io.ballerina.persist.introspectiondto;
 }
