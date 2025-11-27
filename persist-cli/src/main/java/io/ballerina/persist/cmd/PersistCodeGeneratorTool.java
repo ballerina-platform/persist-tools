@@ -25,6 +25,7 @@ import io.ballerina.persist.nodegenerator.SourceGenerator;
 import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
 import io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils;
 import io.ballerina.persist.utils.BalProjectUtils;
+import io.ballerina.persist.utils.FileUtils;
 import io.ballerina.projects.buildtools.CodeGeneratorTool;
 import io.ballerina.projects.buildtools.ToolConfig;
 import io.ballerina.projects.buildtools.ToolContext;
@@ -78,8 +79,9 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
             BalProjectUtils.validateBallerinaProject(projectPath);
             packageName = TomlSyntaxUtils.readPackageName(projectPath.toString());
             schemaFilePath = BalProjectUtils.getSchemaFilePath(projectPath.toString());
+            Path path = Paths.get(projectPath.toString(), BALLERINA_TOML);
             HashMap<String, String> ballerinaTomlConfig = TomlSyntaxUtils.readBallerinaTomlConfig(
-                    Paths.get(projectPath.toString(), BALLERINA_TOML));
+                    path);
             targetModule = ballerinaTomlConfig.get(TARGET_MODULE).trim();
             datastore = ballerinaTomlConfig.get(OPTION_DATASTORE).trim();
             testDatastore = ballerinaTomlConfig.get(OPTION_TEST_DATASTORE) == null ? null :
@@ -111,10 +113,8 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
             BalProjectUtils.validateSchemaFile(schemaFilePath);
             entityModule = BalProjectUtils.getEntities(schemaFilePath);
             validateEntityModule(entityModule, schemaFilePath);
-            String syntaxTree = updateBallerinaToml(
-                    Paths.get(projectPath.toString(), BALLERINA_TOML), datastore, testDatastore);
-            Utils.writeOutputString(syntaxTree,
-                    Paths.get(projectPath.toString(), BALLERINA_TOML).toAbsolutePath().toString());
+            String syntaxTree = updateBallerinaToml(path, datastore, testDatastore);
+            FileUtils.writeToTargetFile(syntaxTree, path.toAbsolutePath().toString());
             createGeneratedSourceDirIfNotExists(generatedSourceDirPath);
             generateSources(datastore, entityModule, targetModule, projectPath, generatedSourceDirPath,
                     eagerLoading);

@@ -18,7 +18,21 @@
 
 package io.ballerina.persist.utils;
 
+import io.ballerina.compiler.syntax.tree.AbstractNodeFactory;
+import io.ballerina.compiler.syntax.tree.ImportDeclarationNode;
+import io.ballerina.compiler.syntax.tree.ModuleMemberDeclarationNode;
+import io.ballerina.compiler.syntax.tree.ModulePartNode;
+import io.ballerina.compiler.syntax.tree.NodeFactory;
+import io.ballerina.compiler.syntax.tree.NodeList;
+import io.ballerina.compiler.syntax.tree.NodeParser;
+import io.ballerina.compiler.syntax.tree.SyntaxTree;
+import io.ballerina.compiler.syntax.tree.Token;
 import io.ballerina.persist.BalException;
+import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
+import io.ballerina.tools.text.TextDocument;
+import io.ballerina.tools.text.TextDocuments;
+import org.ballerinalang.formatter.core.Formatter;
+import org.ballerinalang.formatter.core.FormatterException;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,6 +42,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
+
+import static io.ballerina.persist.PersistToolsConstants.SCHEMA_FILE_NAME;
+import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.BAL_EXTENSION;
 
 /**
  * File utilities for persist core.
@@ -61,5 +78,27 @@ public class FileUtils {
                 writer.println(content);
             }
         }
+    }
+
+    public static void generateSchemaBalFile(Path persistPath) throws BalException {
+        try {
+            String configTree = generateSchemaSyntaxTree();
+            FileUtils.writeToTargetFile(configTree, persistPath.resolve(SCHEMA_FILE_NAME + BAL_EXTENSION)
+                    .toAbsolutePath().toString());
+        } catch (Exception e) {
+            throw new BalException(e.getMessage());
+        }
+    }
+
+    public static String generateSchemaSyntaxTree() throws FormatterException {
+        NodeList<ImportDeclarationNode> imports = AbstractNodeFactory.createEmptyNodeList();
+        NodeList<ModuleMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
+
+        imports = imports.add(NodeParser.parseImportDeclaration("import ballerina/persist as _;"));
+        Token eofToken = AbstractNodeFactory.createIdentifierToken(BalSyntaxConstants.EMPTY_STRING);
+        ModulePartNode modulePartNode = NodeFactory.createModulePartNode(imports, moduleMembers, eofToken);
+        TextDocument textDocument = TextDocuments.from(BalSyntaxConstants.EMPTY_STRING);
+        SyntaxTree balTree = SyntaxTree.from(textDocument);
+        return Formatter.format(balTree.modifyWith(modulePartNode).toSourceCode());
     }
 }

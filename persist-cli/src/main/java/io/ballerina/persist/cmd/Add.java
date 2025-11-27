@@ -23,6 +23,7 @@ import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils;
 import io.ballerina.persist.utils.BalProjectUtils;
+import io.ballerina.persist.utils.FileUtils;
 import io.ballerina.projects.util.ProjectUtils;
 import io.ballerina.toml.syntax.tree.AbstractNodeFactory;
 import io.ballerina.toml.syntax.tree.DocumentMemberDeclarationNode;
@@ -125,7 +126,7 @@ public class Add implements BLauncherCmd {
             createDefaultClientId();
             String syntaxTree = updateBallerinaToml(Paths.get(this.sourcePath, BALLERINA_TOML),
                     moduleNameWithPackage, datastore, testDatastore, eagerLoading, id);
-            Utils.writeOutputString(syntaxTree,
+            FileUtils.writeToTargetFile(syntaxTree,
                     Paths.get(sourcePath, BALLERINA_TOML).toAbsolutePath().toString());
             createPersistDirectoryIfNotExists();
             createDefaultSchemaBalFile();
@@ -232,7 +233,8 @@ public class Add implements BLauncherCmd {
 
     private void createDefaultSchemaBalFile() throws IOException, BalException {
         List<String> schemaFiles;
-        try (Stream<Path> stream = Files.list(Paths.get(sourcePath, PERSIST_DIRECTORY))) {
+        Path persistPath = Paths.get(sourcePath, PERSIST_DIRECTORY);
+        try (Stream<Path> stream = Files.list(persistPath)) {
             schemaFiles = stream.filter(file -> !Files.isDirectory(file))
                     .map(Path::getFileName)
                     .filter(Objects::nonNull)
@@ -245,7 +247,7 @@ public class Add implements BLauncherCmd {
                     "but contains many files.");
         }
         if (schemaFiles.isEmpty()) {
-            Utils.generateSchemaBalFile(Paths.get(sourcePath, PERSIST_DIRECTORY));
+            FileUtils.generateSchemaBalFile(persistPath);
         }
     }
 

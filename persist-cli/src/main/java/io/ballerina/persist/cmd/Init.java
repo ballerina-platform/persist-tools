@@ -19,6 +19,7 @@ package io.ballerina.persist.cmd;
 
 import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.BalException;
+import io.ballerina.persist.utils.FileUtils;
 import picocli.CommandLine;
 
 import java.io.IOException;
@@ -113,9 +114,9 @@ public class Init implements BLauncherCmd {
                     "but contains many files.");
             return;
         }
-        if (schemaFiles.size() == 0) {
+        if (schemaFiles.isEmpty()) {
             try {
-                Utils.generateSchemaBalFile(persistDirPath);
+                FileUtils.generateSchemaBalFile(persistDirPath);
             } catch (BalException e) {
                 errStream.println("ERROR: failed to create the model definition file in persist directory. "
                         + e.getMessage());
