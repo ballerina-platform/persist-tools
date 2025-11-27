@@ -77,7 +77,13 @@ public class DbSyntaxTree implements RDBMSSyntaxTree {
     @Override
     public io.ballerina.compiler.syntax.tree.SyntaxTree getClientSyntax(Module entityModule, String datasource)
             throws BalException {
-        DbClientSyntax dbClientSyntax = new DbClientSyntax(entityModule, datasource);
+        return getClientSyntax(entityModule, datasource, false);
+    }
+
+    public io.ballerina.compiler.syntax.tree.SyntaxTree getClientSyntax(Module entityModule, String datasource,
+                                                                         boolean eagerLoading)
+            throws BalException {
+        DbClientSyntax dbClientSyntax = new DbClientSyntax(entityModule, datasource, eagerLoading);
         NodeList<ImportDeclarationNode> imports = dbClientSyntax.getImports();
         NodeList<ModuleMemberDeclarationNode> moduleMembers = dbClientSyntax.getConstantVariables();
 
@@ -86,7 +92,8 @@ public class DbSyntaxTree implements RDBMSSyntaxTree {
         return BalSyntaxUtils.generateSyntaxTree(imports, moduleMembers);
     }
 
-    public SyntaxTree getTestClientSyntax(Module entityModule) throws BalException {
+    @Override
+    public io.ballerina.compiler.syntax.tree.SyntaxTree getTestClientSyntax(Module entityModule) throws BalException {
         DbMockClientSyntax dbClientSyntax = new DbMockClientSyntax(entityModule);
         NodeList<ImportDeclarationNode> imports = dbClientSyntax.getImports();
         NodeList<ModuleMemberDeclarationNode> moduleMembers = dbClientSyntax.getConstantVariables();

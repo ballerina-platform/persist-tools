@@ -83,6 +83,10 @@ public class Add implements BLauncherCmd {
             "generated Ballerina client")
     private String testDatastore;
 
+    @CommandLine.Option(names = {"--eager-loading"}, hidden = true, description = "Enable eager loading to return " +
+            "arrays instead of streams for get-all methods")
+    private boolean eagerLoading;
+
     public Add() {
         this("");
     }
@@ -108,6 +112,9 @@ public class Add implements BLauncherCmd {
             }
             validateTestDatastore(datastore, testDatastore);
 
+            // Validate eager loading is only used with SQL datastores
+            eagerLoading = Utils.validateEagerLoading(datastore, eagerLoading, errStream);
+
             try {
                 packageName = TomlSyntaxUtils.readPackageName(this.sourcePath);
             } catch (BalException e) {
@@ -117,7 +124,7 @@ public class Add implements BLauncherCmd {
             String moduleNameWithPackage = validateAndProcessModule(packageName, module);
             createDefaultClientId();
             String syntaxTree = updateBallerinaToml(Paths.get(this.sourcePath, BALLERINA_TOML),
-                    moduleNameWithPackage, datastore, testDatastore, id);
+                    moduleNameWithPackage, datastore, testDatastore, eagerLoading, id);
             Utils.writeOutputString(syntaxTree,
                     Paths.get(sourcePath, BALLERINA_TOML).toAbsolutePath().toString());
             createPersistDirectoryIfNotExists();
@@ -142,7 +149,8 @@ public class Add implements BLauncherCmd {
     /**
      * Method to update the Ballerina.toml with persist tool configurations.
      */
-    private String updateBallerinaToml(Path tomlPath, String module, String datastore, String testDatastore, String id)
+    private String updateBallerinaToml(Path tomlPath, String module, String datastore, String testDatastore,
+                                        boolean eagerLoading, String id)
             throws BalException, IOException {
         TomlSyntaxUtils.NativeDependency dependency = getDependencyConfig(datastore, testDatastore);
         TomlSyntaxUtils.ConfigDeclaration declaration = getConfigDeclaration(tomlPath, dependency);
@@ -155,7 +163,8 @@ public class Add implements BLauncherCmd {
             moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
             moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray(
                     PersistToolsConstants.PERSIST_TOOL_CONFIG, null));
-            moduleMembers = populateBallerinaNodeList(moduleMembers, module, datastore, testDatastore, id);
+            moduleMembers = populateBallerinaNodeList(moduleMembers, module, datastore, testDatastore,
+                    eagerLoading, id);
             moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
         }
         Token eofToken = AbstractNodeFactory.createIdentifierToken("");
@@ -166,13 +175,17 @@ public class Add implements BLauncherCmd {
 
     private static NodeList<DocumentMemberDeclarationNode> populateBallerinaNodeList(
             NodeList<DocumentMemberDeclarationNode> moduleMembers, String module, String dataStore,
-            String testDatastore, String id) {
+            String testDatastore, boolean eagerLoading, String id) {
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("id", id, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("targetModule", module, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("options.datastore", dataStore, null));
         if (testDatastore != null) {
             moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("options.testDatastore",
                     testDatastore, null));
+        }
+        if (eagerLoading) {
+            moduleMembers = moduleMembers.add(SampleNodeGenerator.createBooleanKV("options.eagerLoading",
+                    true, null));
         }
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("filePath", "persist/model.bal", null));
         return moduleMembers;

@@ -73,6 +73,7 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
         TomlNodeLocation location = toolContext.currentPackage().ballerinaToml().get().tomlAstNode().location();
         Path projectPath = toolContext.currentPackage().project().sourceRoot();
         Path generatedSourceDirPath = Paths.get(projectPath.toString(), BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);
+        boolean eagerLoading = false;
         try {
             BalProjectUtils.validateBallerinaProject(projectPath);
             packageName = TomlSyntaxUtils.readPackageName(projectPath.toString());
@@ -83,6 +84,8 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
             datastore = ballerinaTomlConfig.get(OPTION_DATASTORE).trim();
             testDatastore = ballerinaTomlConfig.get(OPTION_TEST_DATASTORE) == null ? null :
                     ballerinaTomlConfig.get(OPTION_TEST_DATASTORE).trim();
+            eagerLoading = ballerinaTomlConfig.get(PersistToolsConstants.OPTION_EAGER_LOADING) != null &&
+                    Boolean.parseBoolean(ballerinaTomlConfig.get(PersistToolsConstants.OPTION_EAGER_LOADING).trim());
 
             validateDatastore(datastore);
             validateTestDatastore(datastore, testDatastore);
@@ -113,7 +116,8 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
             Utils.writeOutputString(syntaxTree,
                     Paths.get(projectPath.toString(), BALLERINA_TOML).toAbsolutePath().toString());
             createGeneratedSourceDirIfNotExists(generatedSourceDirPath);
-            generateSources(datastore, entityModule, targetModule, projectPath, generatedSourceDirPath);
+            generateSources(datastore, entityModule, targetModule, projectPath, generatedSourceDirPath,
+                    eagerLoading);
             generateTestSources(testDatastore, entityModule, targetModule, projectPath, generatedSourceDirPath);
             String modelHashVal = getHashValue(schemaFilePath);
             Path cachePath = toolContext.cachePath();
@@ -220,9 +224,9 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
     }
 
     private void generateSources(String datastore, Module entityModule, String targetModule, Path projectPath,
-                                 Path generatedSourceDirPath) throws BalException {
+                                 Path generatedSourceDirPath, boolean eagerLoading) throws BalException {
         SourceGenerator sourceCreator = new SourceGenerator(projectPath.toString(), generatedSourceDirPath,
-                targetModule, entityModule);
+                targetModule, entityModule, eagerLoading);
         switch (datastore) {
             case PersistToolsConstants.SupportedDataSources.MYSQL_DB:
             case PersistToolsConstants.SupportedDataSources.MSSQL_DB:

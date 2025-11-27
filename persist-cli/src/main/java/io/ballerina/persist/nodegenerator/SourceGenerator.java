@@ -66,13 +66,20 @@ public class SourceGenerator {
     private final String moduleNameWithPackageName;
     private final Path generatedSourceDirPath;
     private final Module entityModule;
+    private final boolean eagerLoading;
 
     public SourceGenerator(String sourcePath, Path generatedSourceDirPath, String moduleNameWithPackageName,
                            Module entityModule) {
+        this(sourcePath, generatedSourceDirPath, moduleNameWithPackageName, entityModule, false);
+    }
+
+    public SourceGenerator(String sourcePath, Path generatedSourceDirPath, String moduleNameWithPackageName,
+                           Module entityModule, boolean eagerLoading) {
         this.sourcePath = sourcePath;
         this.moduleNameWithPackageName = moduleNameWithPackageName;
         this.entityModule = entityModule;
         this.generatedSourceDirPath = generatedSourceDirPath;
+        this.eagerLoading = eagerLoading;
     }
 
     public void createDbModel() throws BalException {
@@ -101,7 +108,7 @@ public class SourceGenerator {
             addDataTypesBalFile(dbSyntaxTree.getDataTypesSyntax(entityModule),
                     this.generatedSourceDirPath.resolve(persistTypesBal).toAbsolutePath(),
                     this.moduleNameWithPackageName);
-            addClientFile(dbSyntaxTree.getClientSyntax(entityModule, datasource),
+            addClientFile(dbSyntaxTree.getClientSyntax(entityModule, datasource, this.eagerLoading),
                     this.generatedSourceDirPath.resolve(persistClientBal).toAbsolutePath(),
                     this.moduleNameWithPackageName);
             addSqlScriptFile(this.entityModule.getModuleName(),

@@ -426,6 +426,18 @@ public class BalSyntaxConstants {
             + System.lineSeparator()
             + "'class: \"io.ballerina.stdlib.persist.%s.datastore.%s\"," + System.lineSeparator() +
             " name: \"query\"} external;";
+    public static final String EXTERNAL_SQL_GET_METHOD_LIST_TEMPLATE = "isolated resource function get %s(" +
+            "%sTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, " +
+            "sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, " +
+            "sql:ParameterizedQuery groupByClause = ``) returns targetType[]|persist:Error = @java:Method {"
+            + System.lineSeparator()
+            + "'class: \"io.ballerina.stdlib.persist.%s.datastore.%s\"," + System.lineSeparator() +
+            " name: \"queryAsList\"} external;";
+    public static final String EXTERNAL_GET_METHOD_LIST_TEMPLATE = "isolated resource function get %s(" +
+            "%sTargetType targetType = <>) returns targetType[]|persist:Error = @java:Method {"
+            + System.lineSeparator()
+            + "'class: \"io.ballerina.stdlib.persist.%s.datastore.%s\"," + System.lineSeparator() +
+            " name: \"queryAsList\"} external;";
     public static final String EXTERNAL_QUERY_STREAM_METHOD_TEMPLATE =
             "private isolated function query%sStream(%sTargetType targetType = <>) returns " +
                     "stream<targetType, persist:Error?> = @java:Method {" + System.lineSeparator() +

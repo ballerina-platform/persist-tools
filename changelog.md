@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - [Add documentation for generated client](https://github.com/ballerina-platform/ballerina-library/issues/8467)
+- [Support eager loading for get all methods in generated client](https://github.com/ballerina-platform/ballerina-library/issues/8488)
 - [Add support for selecting tables in ballerina persist pull command](https://github.com/ballerina-platform/ballerina-library/issues/8468)
 
 ### Changed

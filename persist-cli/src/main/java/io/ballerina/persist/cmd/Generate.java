@@ -90,6 +90,10 @@ public class Generate implements BLauncherCmd {
             "generated Ballerina client")
     private String testDatastore;
 
+    @CommandLine.Option(names = {"--eager-loading"}, hidden = true, description = "Enable eager loading to return " +
+            "arrays instead of streams for get-all methods")
+    private boolean eagerLoading;
+
     @Override
     public void execute() {
         Path generatedSourceDirPath;
@@ -120,6 +124,9 @@ public class Generate implements BLauncherCmd {
             errStream.printf("ERROR: %s%n", e.getMessage());
             return;
         }
+
+        // Validate eager loading is only used with SQL datastores
+        eagerLoading = Utils.validateEagerLoading(datastore, eagerLoading, errStream);
 
         Path projectPath = Paths.get(sourcePath);
         try {
@@ -243,7 +250,7 @@ public class Generate implements BLauncherCmd {
             }
         }
         SourceGenerator sourceCreator = new SourceGenerator(sourcePath, generatedSourceDirPath,
-                moduleNameWithPackage, entityModule);
+                moduleNameWithPackage, entityModule, eagerLoading);
         try {
             switch (datastore) {
                 case PersistToolsConstants.SupportedDataSources.MYSQL_DB:
