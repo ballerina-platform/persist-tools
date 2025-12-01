@@ -373,7 +373,16 @@ public abstract class Introspector {
                 }
             });
             entityBuilder.setKeys(keys);
-            entityBuilderMap.put(entityBuilder.getEntityName(), entityBuilder);
+
+            // Mark entities without primary keys as containing unsupported types
+            // This prevents IndexOutOfBoundsException during code generation
+            if (keys.isEmpty()) {
+                entityBuilder.setContainsUnsupportedTypes(true);
+                errStream.println("WARNING: Table '" + table.getTableName() +
+                        "' does not have a primary key and will be excluded from entity generation.");
+            } else {
+                entityBuilderMap.put(entityBuilder.getEntityName(), entityBuilder);
+            }
         });
         HashMap<String, Integer> ownerFieldNames = new HashMap<>();
         HashMap<String, Integer> assocFieldNames = new HashMap<>();
