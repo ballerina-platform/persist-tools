@@ -3,3 +3,6 @@ id = "persist"
 
 [[dependency]]
 path = "../persist-cli/build/libs/persist-cli-@project.version@.jar"
+
+[[dependency]]
+path = "../persist-core/build/libs/persist-core-@project.version@.jar"
