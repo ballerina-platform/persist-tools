@@ -28,16 +28,23 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class DriverResolver {
 
     private final Path driverImportFile;
     private final String datastore;
+    private final Path tempDirectory;
 
-    public DriverResolver(String sourcePath, String datastore) {
-        driverImportFile = Paths.get(sourcePath, "persist/driver.bal");
-        this.datastore = datastore;
+    public DriverResolver(String datastore) throws BalException {
+        try {
+            // Create a temporary directory along with some prefix
+            this.tempDirectory = Files.createTempDirectory("persist-driver-test-");
+            // Set the driver file path in the temp directory
+            this.driverImportFile = this.tempDirectory.resolve("driver.bal");
+            this.datastore = datastore;
+        } catch (IOException e) {
+            throw new BalException("failed to create temporary directory: " + e.getMessage());
+        }
     }
 
     public Project resolveDriverDependencies() throws BalException {
@@ -48,16 +55,15 @@ public class DriverResolver {
     private void createDriverImportFile() throws BalException {
         DbModelGenSyntaxTree dbModelGenSyntaxTree = new DbModelGenSyntaxTree();
         try {
-            writeOutputFile
-                    (Formatter.format(dbModelGenSyntaxTree.createInitialDriverImportFile(datastore).toSourceCode()),
-                            driverImportFile);
+            writeOutputFile(Formatter.format(
+                    dbModelGenSyntaxTree.createInitialDriverImportFile(datastore).toSourceCode()));
         } catch (Exception e) {
             throw new BalException("failed to create driver import file: " + e.getMessage());
         }
     }
 
-    private void writeOutputFile(String syntaxTree, Path outPath) throws IOException {
-        try (PrintWriter writer = new PrintWriter(outPath.toString(), StandardCharsets.UTF_8)) {
+    private void writeOutputFile(String syntaxTree) throws IOException {
+        try (PrintWriter writer = new PrintWriter(this.driverImportFile.toString(), StandardCharsets.UTF_8)) {
             writer.println(syntaxTree);
         }
     }
@@ -65,8 +71,11 @@ public class DriverResolver {
     public void deleteDriverFile() throws BalException {
         try {
             Files.deleteIfExists(driverImportFile);
+            if (Files.exists(tempDirectory)) {
+                Files.delete(tempDirectory);
+            }
         } catch (IOException e) {
-            throw new BalException("failed to delete driver import file: " + e.getMessage());
+            throw new BalException("failed to delete driver import file and temp directory: " + e.getMessage());
         }
     }
 

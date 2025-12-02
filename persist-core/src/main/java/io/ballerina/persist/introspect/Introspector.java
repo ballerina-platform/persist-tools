@@ -119,8 +119,7 @@ public abstract class Introspector {
      *                      or mapping database structures to Ballerina types
      */
     public Module introspectDatabase() throws BalException {
-        DriverResolver driverResolver = new DriverResolver(this.persistConfiguration.getSourcePath(),
-                this.persistConfiguration.getProvider());
+        DriverResolver driverResolver = new DriverResolver(this.persistConfiguration.getProvider());
         try {
             Project driverProject = driverResolver.resolveDriverDependencies();
             try (Connection connection = prepareDatabaseConnection(driverProject)) {
@@ -146,8 +145,7 @@ public abstract class Introspector {
      *                      reading table information
      */
     public String[] getAvailableTables() throws BalException {
-        DriverResolver driverResolver = new DriverResolver(this.persistConfiguration.getSourcePath(),
-                this.persistConfiguration.getProvider());
+        DriverResolver driverResolver = new DriverResolver(this.persistConfiguration.getProvider());
         try {
             Project driverProject = driverResolver.resolveDriverDependencies();
             try (Connection connection = prepareDatabaseConnection(driverProject)) {
