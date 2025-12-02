@@ -20,6 +20,7 @@ package io.ballerina.persist.nodegenerator.syntax.sources;
 
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.persist.BalException;
+import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils;
 
@@ -27,10 +28,20 @@ public class DbModelGenSyntaxTree implements IntrospectSyntaxTree {
 
     @Override
     public SyntaxTree getDataModels(Module entityModule) throws BalException {
-        if (!entityModule.getEntityMap().values().isEmpty()) {
+        if (!entityModule.getEntityMap().isEmpty()) {
+            // Check if all entities have unsupported types
+            boolean allUnsupported = entityModule.getEntityMap().values().stream()
+                    .allMatch(Entity::containsUnsupportedTypes);
+
+            if (allUnsupported) {
+                throw new BalException("No valid entities found in the database. " +
+                        "All tables either lack primary keys or contain unsupported types.");
+            }
+
             return BalSyntaxUtils.generateModelSyntaxTree(entityModule);
         }
-        throw new BalException("No entities found in the database");
+        throw new BalException("No entities found in the database. " +
+                "The database may be empty or contain no accessible tables.");
     }
 
     @Override

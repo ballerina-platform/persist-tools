@@ -147,9 +147,8 @@ public class ScriptRunner {
                 while (results.next()) {
                     tables.add(SqlTable.newBuilder(results.getString("table_name")).build());
                 }
-                if (tables.isEmpty()) {
-                    throw new SQLException("No tables found in the database.");
-                }
+                // Return empty list instead of throwing exception for empty databases
+                // The error is handled in the calling function
                 return tables;
             }
         } catch (SQLException e) {

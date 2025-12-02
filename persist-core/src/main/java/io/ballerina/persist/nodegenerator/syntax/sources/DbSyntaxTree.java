@@ -124,6 +124,13 @@ public class DbSyntaxTree implements RDBMSSyntaxTree {
             resource.addFunction(dbClientSyntax.getDeleteFunction(entity), true);
             resourceList.add(resource);
         }
+
+        // Check if all entities were filtered out
+        if (resourceList.isEmpty()) {
+            throw new BalException("No valid entities found for client generation. " +
+                    "All entities contain unsupported types or are missing primary keys.");
+        }
+
         resourceList.forEach(resource -> {
             resource.getFunctions().forEach(function -> {
                 clientObject.addMember(function, false);
