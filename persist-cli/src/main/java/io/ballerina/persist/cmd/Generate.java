@@ -53,14 +53,12 @@ import static io.ballerina.persist.utils.BalProjectUtils.validateTestDatastore;
 import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 
 /**
- * This Class implements the `persist generate` command in Ballerina persist-tool.
+ * This Class implements the `persist generate` command in Ballerina
+ * persist-tool.
  *
  * @since 0.1.0
  */
-@CommandLine.Command(
-        name = "generate",
-        description = "Generate Ballerina client object for the entity."
-)
+@CommandLine.Command(name = "generate", description = "Generate Ballerina client object for the entity.")
 
 public class Generate implements BLauncherCmd {
 
@@ -78,22 +76,26 @@ public class Generate implements BLauncherCmd {
         this.sourcePath = sourcePath;
     }
 
-    @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
+    @CommandLine.Option(names = { "-h", "--help" }, hidden = true)
     private boolean helpFlag;
 
-    @CommandLine.Option(names = {"--module"})
+    @CommandLine.Option(names = { "--module" })
     private String module;
 
-    @CommandLine.Option(names = {"--datastore"})
+    @CommandLine.Option(names = { "--datastore" })
     private String datastore;
 
-    @CommandLine.Option(names = {"--test-datastore"}, description = "Test data store for the " +
+    @CommandLine.Option(names = { "--test-datastore" }, description = "Test data store for the " +
             "generated Ballerina client")
     private String testDatastore;
 
-    @CommandLine.Option(names = {"--eager-loading"}, hidden = true, description = "Enable eager loading to return " +
+    @CommandLine.Option(names = { "--eager-loading" }, hidden = true, description = "Enable eager loading to return " +
             "arrays instead of streams for get-all methods")
     private boolean eagerLoading;
+
+    @CommandLine.Option(names = { "--init-params" }, hidden = true, description = "Use init parameters instead of " +
+            "configurables")
+    private boolean initParams;
 
     @Override
     public void execute() {
@@ -216,7 +218,7 @@ public class Generate implements BLauncherCmd {
         }
 
         try {
-            schemaFilePath =  BalProjectUtils.getSchemaFilePath(this.sourcePath);
+            schemaFilePath = BalProjectUtils.getSchemaFilePath(this.sourcePath);
         } catch (BalException e) {
             errStream.println(e.getMessage());
             return;
@@ -251,7 +253,7 @@ public class Generate implements BLauncherCmd {
             }
         }
         SourceGenerator sourceCreator = new SourceGenerator(sourcePath, generatedSourceDirPath,
-                moduleNameWithPackage, entityModule, eagerLoading);
+                moduleNameWithPackage, entityModule, eagerLoading, initParams);
         try {
             switch (datastore) {
                 case PersistToolsConstants.SupportedDataSources.MYSQL_DB:
@@ -275,7 +277,7 @@ public class Generate implements BLauncherCmd {
                     datastore, e.getMessage()));
             return;
         }
-        errStream.println("Persist client and entity types generated successfully in the " + module +  " directory.");
+        errStream.println("Persist client and entity types generated successfully in the " + module + " directory.");
 
         if (testDatastore != null) {
             try {
@@ -323,8 +325,8 @@ public class Generate implements BLauncherCmd {
 
     @Override
     public void printUsage(StringBuilder stringBuilder) {
-        stringBuilder.append("  ballerina " + PersistToolsConstants.COMPONENT_IDENTIFIER + " generate").
-                append(System.lineSeparator());
+        stringBuilder.append("  ballerina " + PersistToolsConstants.COMPONENT_IDENTIFIER + " generate")
+                .append(System.lineSeparator());
     }
 
     public static boolean hasPersistConfig(Path configPath) throws BalException {

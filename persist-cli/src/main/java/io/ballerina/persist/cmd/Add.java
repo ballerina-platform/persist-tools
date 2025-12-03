@@ -58,9 +58,7 @@ import static io.ballerina.persist.utils.BalProjectUtils.validateDatastore;
 import static io.ballerina.persist.utils.BalProjectUtils.validateTestDatastore;
 import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 
-@CommandLine.Command(
-        name = "add",
-        description = "Initialize the persistence layer in the Ballerina project.")
+@CommandLine.Command(name = "add", description = "Initialize the persistence layer in the Ballerina project.")
 public class Add implements BLauncherCmd {
 
     private static final PrintStream errStream = System.err;
@@ -68,25 +66,29 @@ public class Add implements BLauncherCmd {
 
     private final String sourcePath;
 
-    @CommandLine.Option(names = {"-h", "--help"}, hidden = true)
+    @CommandLine.Option(names = { "-h", "--help" }, hidden = true)
     private boolean helpFlag;
 
-    @CommandLine.Option(names = {"--datastore"})
+    @CommandLine.Option(names = { "--datastore" })
     private String datastore;
 
-    @CommandLine.Option(names = {"--module"})
+    @CommandLine.Option(names = { "--module" })
     private String module;
 
-    @CommandLine.Option(names = {"--id"}, description = "ID for the generated Ballerina client")
+    @CommandLine.Option(names = { "--id" }, description = "ID for the generated Ballerina client")
     private String id;
 
-    @CommandLine.Option(names = {"--test-datastore"}, description = "Test data store for the " +
+    @CommandLine.Option(names = { "--test-datastore" }, description = "Test data store for the " +
             "generated Ballerina client")
     private String testDatastore;
 
-    @CommandLine.Option(names = {"--eager-loading"}, hidden = true, description = "Enable eager loading to return " +
+    @CommandLine.Option(names = { "--eager-loading" }, hidden = true, description = "Enable eager loading to return " +
             "arrays instead of streams for get-all methods")
     private boolean eagerLoading;
+
+    @CommandLine.Option(names = { "--init-params" }, hidden = true, description = "Use init parameters instead of " +
+            "configurables")
+    private boolean initParams;
 
     public Add() {
         this("");
@@ -125,7 +127,7 @@ public class Add implements BLauncherCmd {
             String moduleNameWithPackage = validateAndProcessModule(packageName, module);
             createDefaultClientId();
             String syntaxTree = updateBallerinaToml(Paths.get(this.sourcePath, BALLERINA_TOML),
-                    moduleNameWithPackage, datastore, testDatastore, eagerLoading, id);
+                    moduleNameWithPackage, datastore, testDatastore, eagerLoading, initParams, id);
             FileUtils.writeToTargetFile(syntaxTree,
                     Paths.get(sourcePath, BALLERINA_TOML).toAbsolutePath().toString());
             createPersistDirectoryIfNotExists();
@@ -151,7 +153,7 @@ public class Add implements BLauncherCmd {
      * Method to update the Ballerina.toml with persist tool configurations.
      */
     private String updateBallerinaToml(Path tomlPath, String module, String datastore, String testDatastore,
-                                        boolean eagerLoading, String id)
+            boolean eagerLoading, boolean initParams, String id)
             throws BalException, IOException {
         TomlSyntaxUtils.NativeDependency dependency = getDependencyConfig(datastore, testDatastore);
         TomlSyntaxUtils.ConfigDeclaration declaration = getConfigDeclaration(tomlPath, dependency);
@@ -165,7 +167,7 @@ public class Add implements BLauncherCmd {
             moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray(
                     PersistToolsConstants.PERSIST_TOOL_CONFIG, null));
             moduleMembers = populateBallerinaNodeList(moduleMembers, module, datastore, testDatastore,
-                    eagerLoading, id);
+                    eagerLoading, initParams, id);
             moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
         }
         Token eofToken = AbstractNodeFactory.createIdentifierToken("");
@@ -176,7 +178,7 @@ public class Add implements BLauncherCmd {
 
     private static NodeList<DocumentMemberDeclarationNode> populateBallerinaNodeList(
             NodeList<DocumentMemberDeclarationNode> moduleMembers, String module, String dataStore,
-            String testDatastore, boolean eagerLoading, String id) {
+            String testDatastore, boolean eagerLoading, boolean initParams, String id) {
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("id", id, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("targetModule", module, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("options.datastore", dataStore, null));
@@ -186,6 +188,10 @@ public class Add implements BLauncherCmd {
         }
         if (eagerLoading) {
             moduleMembers = moduleMembers.add(SampleNodeGenerator.createBooleanKV("options.eagerLoading",
+                    true, null));
+        }
+        if (initParams) {
+            moduleMembers = moduleMembers.add(SampleNodeGenerator.createBooleanKV("options.initParams",
                     true, null));
         }
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("filePath", "persist/model.bal", null));
@@ -219,8 +225,8 @@ public class Add implements BLauncherCmd {
                         "maximum length of module name is 256 characters", module));
             }
         }
-        return Objects.isNull(module) ? packageName :
-                String.format("%s.%s", packageName.replaceAll("\"", ""),
+        return Objects.isNull(module) ? packageName
+                : String.format("%s.%s", packageName.replaceAll("\"", ""),
                         module.replaceAll("\"", ""));
     }
 
