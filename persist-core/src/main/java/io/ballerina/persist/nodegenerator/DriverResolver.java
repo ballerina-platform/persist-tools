@@ -57,6 +57,11 @@ public class DriverResolver {
     }
 
     private void writeOutputFile(String syntaxTree, Path outPath) throws IOException {
+        // If the outPath parent directories do not exist, create them
+        Path parentDir = outPath.getParent();
+        if (parentDir != null && !Files.exists(parentDir)) {
+            Files.createDirectories(parentDir);
+        }
         try (PrintWriter writer = new PrintWriter(outPath.toString(), StandardCharsets.UTF_8)) {
             writer.println(syntaxTree);
         }
