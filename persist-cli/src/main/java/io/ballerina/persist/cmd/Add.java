@@ -86,8 +86,8 @@ public class Add implements BLauncherCmd {
             "arrays instead of streams for get-all methods")
     private boolean eagerLoading;
 
-    @CommandLine.Option(names = { "--init-params" }, hidden = true, description = "Use init parameters instead of " +
-            "configurables")
+    @CommandLine.Option(names = { "--with-init-params" }, hidden = true, description = "Use init parameters instead" +
+            " of configurables")
     private boolean initParams;
 
     public Add() {
