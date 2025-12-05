@@ -1,0 +1,5 @@
+[package]
+org = "test"
+name = "persist_add_init_params_mysql"
+version = "0.1.0"
+distribution = "2201.13.0"
