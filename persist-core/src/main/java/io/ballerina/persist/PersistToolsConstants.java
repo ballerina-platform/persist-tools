@@ -73,6 +73,8 @@ public class PersistToolsConstants {
     public static final String CACHE_FILE = "persist-cache.txt";
     public static final String UNSUPPORTED_TYPE = "Unsupported";
     public static final String UNSUPPORTED_TYPE_COMMENT_START = "//" + UNSUPPORTED_TYPE + "[";
+    public static final String OPTIONS = "Options";
+    public static final String CONNECTION_OPTIONS = "connectionOptions";
 
     public static final Set<String> SUPPORTED_DB_PROVIDERS =
            Set.of(SupportedDataSources.MYSQL_DB, SupportedDataSources.MSSQL_DB, SupportedDataSources.IN_MEMORY_TABLE,

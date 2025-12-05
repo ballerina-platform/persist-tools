@@ -45,8 +45,20 @@ import io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils;
 import java.util.List;
 import java.util.Objects;
 
+import static io.ballerina.persist.PersistToolsConstants.BallerinaTypes.INT;
+import static io.ballerina.persist.PersistToolsConstants.BallerinaTypes.STRING;
+import static io.ballerina.persist.PersistToolsConstants.CONNECTION_OPTIONS;
 import static io.ballerina.persist.PersistToolsConstants.CUSTOM_SCHEMA_SUPPORTED_DB_PROVIDERS;
+import static io.ballerina.persist.PersistToolsConstants.DBConfigs.KEY_DATABASE;
+import static io.ballerina.persist.PersistToolsConstants.DBConfigs.KEY_DEFAULT_SCHEMA;
+import static io.ballerina.persist.PersistToolsConstants.DBConfigs.KEY_HOST;
+import static io.ballerina.persist.PersistToolsConstants.DBConfigs.KEY_PASSWORD;
+import static io.ballerina.persist.PersistToolsConstants.DBConfigs.KEY_PORT;
+import static io.ballerina.persist.PersistToolsConstants.DBConfigs.KEY_URL;
+import static io.ballerina.persist.PersistToolsConstants.DBConfigs.KEY_USER;
+import static io.ballerina.persist.PersistToolsConstants.EMPTY_VALUE;
 import static io.ballerina.persist.PersistToolsConstants.JDBC_CONNECTOR_MODULE_NAME;
+import static io.ballerina.persist.PersistToolsConstants.OPTIONS;
 import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_VIA_JDBC_CONNECTOR;
 import static io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils.EntityType.TABLE;
 
@@ -160,49 +172,49 @@ public class DbClientSyntax implements ClientSyntax {
             // Add individual parameters based on datasource type
             switch (dataSource) {
                 case PersistToolsConstants.SupportedDataSources.MYSQL_DB -> {
-                    init.addRequiredParameter(TypeDescriptor.getBuiltinSimpleNameReferenceNode("string"), "host");
-                    init.addRequiredParameter(TypeDescriptor.getBuiltinSimpleNameReferenceNode("int"), "port");
-                    init.addRequiredParameter(TypeDescriptor.getBuiltinSimpleNameReferenceNode("string"), "user");
+                    init.addRequiredParameter(TypeDescriptor.getBuiltinSimpleNameReferenceNode(STRING), KEY_HOST);
+                    init.addRequiredParameter(TypeDescriptor.getBuiltinSimpleNameReferenceNode(INT), KEY_PORT);
+                    init.addRequiredParameter(TypeDescriptor.getBuiltinSimpleNameReferenceNode(STRING), KEY_USER);
                     init.addRequiredParameter(
-                        TypeDescriptor.getBuiltinSimpleNameReferenceNode("string"), "password");
+                        TypeDescriptor.getBuiltinSimpleNameReferenceNode(STRING), KEY_PASSWORD);
                     init.addRequiredParameter(
-                        TypeDescriptor.getBuiltinSimpleNameReferenceNode("string"), "database");
+                        TypeDescriptor.getBuiltinSimpleNameReferenceNode(STRING), KEY_DATABASE);
                     init.addDefaultableParameter(
-                        TypeDescriptor.getQualifiedNameReferenceNode(this.dbNamePrefix, "Options"),
-                        "connectionOptions",
+                        TypeDescriptor.getQualifiedNameReferenceNode(this.dbNamePrefix, OPTIONS),
+                        CONNECTION_OPTIONS,
                         NodeParser.parseExpression("{}"));
                 }
                 case PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB,
                      PersistToolsConstants.SupportedDataSources.MSSQL_DB -> {
-                    init.addRequiredParameter(TypeDescriptor.getBuiltinSimpleNameReferenceNode("string"), "host");
-                    init.addRequiredParameter(TypeDescriptor.getBuiltinSimpleNameReferenceNode("int"), "port");
-                    init.addRequiredParameter(TypeDescriptor.getBuiltinSimpleNameReferenceNode("string"), "user");
+                    init.addRequiredParameter(TypeDescriptor.getBuiltinSimpleNameReferenceNode(STRING), KEY_HOST);
+                    init.addRequiredParameter(TypeDescriptor.getBuiltinSimpleNameReferenceNode(INT), KEY_PORT);
+                    init.addRequiredParameter(TypeDescriptor.getBuiltinSimpleNameReferenceNode(STRING), KEY_USER);
                     init.addRequiredParameter(
-                        TypeDescriptor.getBuiltinSimpleNameReferenceNode("string"), "password");
+                        TypeDescriptor.getBuiltinSimpleNameReferenceNode(STRING), KEY_PASSWORD);
                     init.addRequiredParameter(
-                        TypeDescriptor.getBuiltinSimpleNameReferenceNode("string"), "database");
+                        TypeDescriptor.getBuiltinSimpleNameReferenceNode(STRING), KEY_DATABASE);
                     init.addDefaultableParameter(
-                        TypeDescriptor.getQualifiedNameReferenceNode(this.dbNamePrefix, "Options"),
-                        "connectionOptions",
+                        TypeDescriptor.getQualifiedNameReferenceNode(this.dbNamePrefix, OPTIONS),
+                        CONNECTION_OPTIONS,
                         NodeParser.parseExpression("{}"));
                     init.addDefaultableParameter(
-                        TypeDescriptor.getOptionalTypeDescriptorNode("", "string"),
-                        "defaultSchema",
+                        TypeDescriptor.getOptionalTypeDescriptorNode(EMPTY_VALUE, STRING),
+                        KEY_DEFAULT_SCHEMA,
                         NodeParser.parseExpression("()"));
                 }
                 case PersistToolsConstants.SupportedDataSources.H2_DB -> {
-                    init.addRequiredParameter(TypeDescriptor.getBuiltinSimpleNameReferenceNode("string"), "url");
+                    init.addRequiredParameter(TypeDescriptor.getBuiltinSimpleNameReferenceNode(STRING), KEY_URL);
                     init.addDefaultableParameter(
-                        TypeDescriptor.getOptionalTypeDescriptorNode("", "string"),
-                        "user",
+                        TypeDescriptor.getOptionalTypeDescriptorNode(EMPTY_VALUE, STRING),
+                        KEY_USER,
                         NodeParser.parseExpression("()"));
                     init.addDefaultableParameter(
-                        TypeDescriptor.getOptionalTypeDescriptorNode("", "string"),
-                        "password",
+                        TypeDescriptor.getOptionalTypeDescriptorNode(EMPTY_VALUE, STRING),
+                        KEY_PASSWORD,
                         NodeParser.parseExpression("()"));
                     init.addDefaultableParameter(
-                        TypeDescriptor.getQualifiedNameReferenceNode(this.dbNamePrefix, "Options"),
-                        "connectionOptions",
+                        TypeDescriptor.getQualifiedNameReferenceNode(this.dbNamePrefix, OPTIONS),
+                        CONNECTION_OPTIONS,
                         NodeParser.parseExpression("{}"));
                 }
                 default -> throw new IllegalStateException("Unsupported datasource: " + dataSource);
