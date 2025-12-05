@@ -33,6 +33,15 @@ public isolated client class Client {
         }
     };
 
+    # Initialize the persist client with MySQL database connection parameters.
+    #
+    # + host - Database server host
+    # + port - Database server port
+    # + user - Database username
+    # + password - Database password
+    # + database - Database name
+    # + connectionOptions - Additional MySQL connection options
+    # + return - An error if initialization fails
     public isolated function init(string host, int port, string user, string password, string database, mysql:Options connectionOptions = {}) returns persist:Error? {
         mysql:Client|error dbClient = new (host = host, user = user, password = password, database = database, port = port, options = connectionOptions);
         if dbClient is error {

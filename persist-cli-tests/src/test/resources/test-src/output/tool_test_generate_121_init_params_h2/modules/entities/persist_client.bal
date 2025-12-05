@@ -33,6 +33,13 @@ public isolated client class Client {
         }
     };
 
+    # Initialize the persist client with H2 database connection parameters.
+    #
+    # + url - JDBC URL for the H2 database
+    # + user - Database username (optional)
+    # + password - Database password (optional)
+    # + connectionOptions - Additional H2 connection options
+    # + return - An error if initialization fails
     public isolated function init(string url, string? user = (), string? password = (), jdbc:Options connectionOptions = {}) returns persist:Error? {
         jdbc:Client|error dbClient = new (url = url, user = user, password = password, options = connectionOptions);
         if dbClient is error {

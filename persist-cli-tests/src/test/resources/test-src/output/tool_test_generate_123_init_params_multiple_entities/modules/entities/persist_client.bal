@@ -111,6 +111,16 @@ public isolated client class Client {
         }
     };
 
+    # Initialize the persist client with PostgreSQL database connection parameters.
+    #
+    # + host - Database server host
+    # + port - Database server port
+    # + user - Database username
+    # + password - Database password
+    # + database - Database name
+    # + connectionOptions - Additional PostgreSQL connection options
+    # + defaultSchema - Default schema name for the database
+    # + return - An error if initialization fails
     public isolated function init(string host, int port, string user, string password, string database, postgresql:Options connectionOptions = {}, string? defaultSchema = ()) returns persist:Error? {
         postgresql:Client|error dbClient = new (host = host, username = user, password = password, database = database, port = port, options = connectionOptions);
         if dbClient is error {
