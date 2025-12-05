@@ -274,6 +274,13 @@ public class DbClientSyntax implements ClientSyntax {
         }
         init.addStatement(NodeParser.parseStatement(String.format(
                 BalSyntaxConstants.PERSIST_CLIENT_TEMPLATE, persistClientMap)));
+
+        // Add documentation if init parameters are used
+        if (initParams) {
+            String doc = createInitMethodDocumentation(dataSource);
+            init.addDocumentation(BalSyntaxUtils.createMarkdownDocumentationNode(doc));
+        }
+
         return init.getFunctionDefinitionNode();
     }
 
@@ -639,5 +646,47 @@ public class DbClientSyntax implements ClientSyntax {
                     filterKeys + BalSyntaxConstants.CLOSE_BRACKET + BalSyntaxConstants.SEMICOLON);
         }
         create.addStatement(NodeParser.parseStatement(filterKeys.toString()));
+    }
+
+    private String createInitMethodDocumentation(String dataSource) {
+        return switch (dataSource) {
+            case PersistToolsConstants.SupportedDataSources.MYSQL_DB ->
+                String.format("Initialize the persist client with MySQL database connection parameters.%n%n" +
+                        "+ host - Database server host%n" +
+                        "+ port - Database server port%n" +
+                        "+ user - Database username%n" +
+                        "+ password - Database password%n" +
+                        "+ database - Database name%n" +
+                        "+ connectionOptions - Additional MySQL connection options%n" +
+                        "+ return - An error if initialization fails");
+            case PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB ->
+                String.format("Initialize the persist client with PostgreSQL database connection parameters.%n%n" +
+                        "+ host - Database server host%n" +
+                        "+ port - Database server port%n" +
+                        "+ user - Database username%n" +
+                        "+ password - Database password%n" +
+                        "+ database - Database name%n" +
+                        "+ connectionOptions - Additional PostgreSQL connection options%n" +
+                        "+ defaultSchema - Default schema name for the database%n" +
+                        "+ return - An error if initialization fails");
+            case PersistToolsConstants.SupportedDataSources.MSSQL_DB ->
+                String.format("Initialize the persist client with MSSQL database connection parameters.%n%n" +
+                        "+ host - Database server host%n" +
+                        "+ port - Database server port%n" +
+                        "+ user - Database username%n" +
+                        "+ password - Database password%n" +
+                        "+ database - Database name%n" +
+                        "+ connectionOptions - Additional MSSQL connection options%n" +
+                        "+ defaultSchema - Default schema name for the database%n" +
+                        "+ return - An error if initialization fails");
+            case PersistToolsConstants.SupportedDataSources.H2_DB ->
+                String.format("Initialize the persist client with H2 database connection parameters.%n%n" +
+                        "+ url - JDBC URL for the H2 database%n" +
+                        "+ user - Database username (optional)%n" +
+                        "+ password - Database password (optional)%n" +
+                        "+ connectionOptions - Additional H2 connection options%n" +
+                        "+ return - An error if initialization fails");
+            default -> throw new IllegalStateException("Unsupported datasource: " + dataSource);
+        };
     }
 }
