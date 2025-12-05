@@ -136,6 +136,21 @@ public class Function {
         );
     }
 
+    public void addIncludedParameter(Node typeName, String name) {
+        if (parameters.size() > 0) {
+            parameters.add(SyntaxTokenConstants.SYNTAX_TREE_COMMA);
+        }
+        NodeList<AnnotationNode> annotations = NodeFactory.createEmptyNodeList();
+        parameters.add(
+                NodeFactory.createIncludedRecordParameterNode(
+                        annotations,
+                        SyntaxTokenConstants.SYNTAX_TREE_ASTERISK,
+                        typeName,
+                        AbstractNodeFactory.createIdentifierToken(name)
+                )
+        );
+    }
+
     public void addReturns(TypeDescriptorNode node) {
         returnTypeDescriptorNode = getReturnTypeDescriptorNode(node);
     }

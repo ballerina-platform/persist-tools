@@ -1,0 +1,11 @@
+[package]
+org = "test"
+name = "persist_init_params_with_config"
+version = "0.1.0"
+distribution = "2201.13.0"
+
+[[platform.java21.dependency]]
+groupId = "io.ballerina.stdlib"
+artifactId = "persist.sql-native"
+version = "1.6.0"
+

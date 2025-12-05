@@ -75,6 +75,7 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
         Path projectPath = toolContext.currentPackage().project().sourceRoot();
         Path generatedSourceDirPath = Paths.get(projectPath.toString(), BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);
         boolean eagerLoading = false;
+        boolean initParams = false;
         try {
             BalProjectUtils.validateBallerinaProject(projectPath);
             packageName = TomlSyntaxUtils.readPackageName(projectPath.toString());
@@ -84,10 +85,12 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
                     path);
             targetModule = ballerinaTomlConfig.get(TARGET_MODULE).trim();
             datastore = ballerinaTomlConfig.get(OPTION_DATASTORE).trim();
-            testDatastore = ballerinaTomlConfig.get(OPTION_TEST_DATASTORE) == null ? null :
-                    ballerinaTomlConfig.get(OPTION_TEST_DATASTORE).trim();
+            testDatastore = ballerinaTomlConfig.get(OPTION_TEST_DATASTORE) == null ? null
+                    : ballerinaTomlConfig.get(OPTION_TEST_DATASTORE).trim();
             eagerLoading = ballerinaTomlConfig.get(PersistToolsConstants.OPTION_EAGER_LOADING) != null &&
                     Boolean.parseBoolean(ballerinaTomlConfig.get(PersistToolsConstants.OPTION_EAGER_LOADING).trim());
+            initParams = ballerinaTomlConfig.get(PersistToolsConstants.OPTION_INIT_PARAMS) != null &&
+                    Boolean.parseBoolean(ballerinaTomlConfig.get(PersistToolsConstants.OPTION_INIT_PARAMS).trim());
 
             validateDatastore(datastore);
             validateTestDatastore(datastore, testDatastore);
@@ -117,7 +120,7 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
             FileUtils.writeToTargetFile(syntaxTree, path.toAbsolutePath().toString());
             createGeneratedSourceDirIfNotExists(generatedSourceDirPath);
             generateSources(datastore, entityModule, targetModule, projectPath, generatedSourceDirPath,
-                    eagerLoading);
+                    eagerLoading, initParams);
             generateTestSources(testDatastore, entityModule, targetModule, projectPath, generatedSourceDirPath);
             String modelHashVal = getHashValue(schemaFilePath);
             Path cachePath = toolContext.cachePath();
@@ -213,20 +216,21 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
     private void validateEntityModule(Module entityModule, Path schemaFilePath) throws BalException {
         if (entityModule.getEntityMap().isEmpty()) {
             throw new BalException(String.format("the model definition file(%s) does not contain any " +
-                            "entity definition.", schemaFilePath.getFileName()));
+                    "entity definition.", schemaFilePath.getFileName()));
         }
     }
 
     private void createGeneratedSourceDirIfNotExists(Path generatedSourceDirPath) throws IOException {
         if (!Files.exists(generatedSourceDirPath)) {
-                Files.createDirectories(generatedSourceDirPath.toAbsolutePath());
+            Files.createDirectories(generatedSourceDirPath.toAbsolutePath());
         }
     }
 
     private void generateSources(String datastore, Module entityModule, String targetModule, Path projectPath,
-                                 Path generatedSourceDirPath, boolean eagerLoading) throws BalException {
+            Path generatedSourceDirPath, boolean eagerLoading, boolean initParams)
+            throws BalException {
         SourceGenerator sourceCreator = new SourceGenerator(projectPath.toString(), generatedSourceDirPath,
-                targetModule, entityModule, eagerLoading);
+                targetModule, entityModule, eagerLoading, initParams);
         switch (datastore) {
             case PersistToolsConstants.SupportedDataSources.MYSQL_DB:
             case PersistToolsConstants.SupportedDataSources.MSSQL_DB:
@@ -247,7 +251,7 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
     }
 
     private void generateTestSources(String testDatastore, Module entityModule, String targetModule,
-                                     Path projectPath, Path generatedSourceDirPath) {
+            Path projectPath, Path generatedSourceDirPath) {
         if (testDatastore != null) {
             try {
                 SourceGenerator sourceCreator = new SourceGenerator(projectPath.toString(), generatedSourceDirPath,
@@ -260,7 +264,7 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
     }
 
     private static void createDiagnostics(ToolContext toolContext, PersistToolsConstants.DiagnosticMessages error,
-                                          Location location, String... args) {
+            Location location, String... args) {
         String message = String.format(error.getDescription(), (Object[]) args);
         DiagnosticInfo diagnosticInfo = new DiagnosticInfo(error.getCode(), message,
                 error.getSeverity());

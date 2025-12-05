@@ -1,0 +1,3 @@
+[[tool.persist]]
+options.datastore = "postgresql"
+module = "persist_multiple_entities.entities"

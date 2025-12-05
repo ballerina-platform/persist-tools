@@ -259,6 +259,56 @@ public class ToolingAddTest {
         assertGeneratedSources("tool_test_add_21");
     }
 
+    @Test
+    @Description("Test add command with --with-init-params flag for MySQL datastore")
+    public void testAddWithInitParamsMySQL() throws ClassNotFoundException, NoSuchMethodException,
+            InvocationTargetException, InstantiationException, IllegalAccessException {
+        Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Add");
+        Add persistCmd = (Add) persistClass.getDeclaredConstructor(String.class).newInstance(Paths
+                .get(GENERATED_SOURCES_DIRECTORY, "tool_test_add_22_init_params_mysql").toAbsolutePath().toString());
+        new CommandLine(persistCmd).parseArgs("--datastore", "mysql", "--module", "entities", "--with-init-params");
+        persistCmd.execute();
+        assertGeneratedSources("tool_test_add_22_init_params_mysql");
+    }
+
+    @Test
+    @Description("Test add command with --with-init-params flag for PostgreSQL datastore")
+    public void testAddWithInitParamsPostgreSQL() throws ClassNotFoundException, NoSuchMethodException,
+            InvocationTargetException, InstantiationException, IllegalAccessException {
+        Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Add");
+        Add persistCmd = (Add) persistClass.getDeclaredConstructor(String.class)
+                .newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, "tool_test_add_23_init_params_postgresql")
+                        .toAbsolutePath().toString());
+        new CommandLine(persistCmd).parseArgs("--datastore", "postgresql", "--module", "entities",
+                "--with-init-params");
+        persistCmd.execute();
+        assertGeneratedSources("tool_test_add_23_init_params_postgresql");
+    }
+
+    @Test
+    @Description("Test add command with --with-init-params flag for MSSQL datastore")
+    public void testAddWithInitParamsMSSQL() throws ClassNotFoundException, NoSuchMethodException,
+            InvocationTargetException, InstantiationException, IllegalAccessException {
+        Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Add");
+        Add persistCmd = (Add) persistClass.getDeclaredConstructor(String.class).newInstance(Paths
+                .get(GENERATED_SOURCES_DIRECTORY, "tool_test_add_24_init_params_mssql").toAbsolutePath().toString());
+        new CommandLine(persistCmd).parseArgs("--datastore", "mssql", "--module", "entities", "--with-init-params");
+        persistCmd.execute();
+        assertGeneratedSources("tool_test_add_24_init_params_mssql");
+    }
+
+    @Test
+    @Description("Test add command with --with-init-params flag for H2 datastore")
+    public void testAddWithInitParamsH2() throws ClassNotFoundException, NoSuchMethodException,
+            InvocationTargetException, InstantiationException, IllegalAccessException {
+        Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Add");
+        Add persistCmd = (Add) persistClass.getDeclaredConstructor(String.class).newInstance(
+                Paths.get(GENERATED_SOURCES_DIRECTORY, "tool_test_add_25_init_params_h2").toAbsolutePath().toString());
+        new CommandLine(persistCmd).parseArgs("--datastore", "h2", "--module", "entities", "--with-init-params");
+        persistCmd.execute();
+        assertGeneratedSources("tool_test_add_25_init_params_h2");
+    }
+
     private void executeCommand(String subDir) {
         Class<?> persistClass;
         Path sourcePath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);

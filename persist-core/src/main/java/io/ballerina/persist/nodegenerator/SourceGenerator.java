@@ -67,19 +67,21 @@ public class SourceGenerator {
     private final Path generatedSourceDirPath;
     private final Module entityModule;
     private final boolean eagerLoading;
+    private final boolean initParams;
 
     public SourceGenerator(String sourcePath, Path generatedSourceDirPath, String moduleNameWithPackageName,
-                           Module entityModule) {
-        this(sourcePath, generatedSourceDirPath, moduleNameWithPackageName, entityModule, false);
+            Module entityModule) {
+        this(sourcePath, generatedSourceDirPath, moduleNameWithPackageName, entityModule, false, false);
     }
 
     public SourceGenerator(String sourcePath, Path generatedSourceDirPath, String moduleNameWithPackageName,
-                           Module entityModule, boolean eagerLoading) {
+            Module entityModule, boolean eagerLoading, boolean initParams) {
         this.sourcePath = sourcePath;
         this.moduleNameWithPackageName = moduleNameWithPackageName;
         this.entityModule = entityModule;
         this.generatedSourceDirPath = generatedSourceDirPath;
         this.eagerLoading = eagerLoading;
+        this.initParams = initParams;
     }
 
     public void createDbModel() throws BalException {
@@ -101,14 +103,17 @@ public class SourceGenerator {
     public void createDbSources(String datasource) throws BalException {
         DbSyntaxTree dbSyntaxTree = new DbSyntaxTree();
         try {
-            addDataSourceConfigBalFile(this.generatedSourceDirPath, BalSyntaxConstants.PATH_DB_CONFIGURATION_BAL_FILE,
-                    dbSyntaxTree.getDataStoreConfigSyntax(datasource));
-            addConfigTomlFile(this.sourcePath, dbSyntaxTree.getConfigTomlSyntax(
+            if (!this.initParams) {
+                addDataSourceConfigBalFile(this.generatedSourceDirPath,
+                        BalSyntaxConstants.PATH_DB_CONFIGURATION_BAL_FILE,
+                        dbSyntaxTree.getDataStoreConfigSyntax(datasource));
+                addConfigTomlFile(this.sourcePath, dbSyntaxTree.getConfigTomlSyntax(
                     this.moduleNameWithPackageName, datasource), this.moduleNameWithPackageName);
+            }
             addDataTypesBalFile(dbSyntaxTree.getDataTypesSyntax(entityModule),
                     this.generatedSourceDirPath.resolve(persistTypesBal).toAbsolutePath(),
                     this.moduleNameWithPackageName);
-            addClientFile(dbSyntaxTree.getClientSyntax(entityModule, datasource, this.eagerLoading),
+            addClientFile(dbSyntaxTree.getClientSyntax(entityModule, datasource, this.eagerLoading, this.initParams),
                     this.generatedSourceDirPath.resolve(persistClientBal).toAbsolutePath(),
                     this.moduleNameWithPackageName);
             addSqlScriptFile(this.entityModule.getModuleName(),
@@ -125,14 +130,15 @@ public class SourceGenerator {
             addClientFile(dbSyntaxTree.getTestClientSyntax(entityModule),
                     this.generatedSourceDirPath.resolve("persist_test_client.bal").toAbsolutePath(),
                     this.moduleNameWithPackageName);
-            addTestInitFile(dbSyntaxTree.getTestInitSyntax(SqlScriptUtils.
-                            generateSqlScript(this.entityModule.getEntityMap().values(), testDatastore)),
+            addTestInitFile(
+                    dbSyntaxTree.getTestInitSyntax(
+                            SqlScriptUtils.generateSqlScript(this.entityModule.getEntityMap().values(), testDatastore)),
                     this.generatedSourceDirPath.resolve("persist_test_init.bal").toAbsolutePath());
         } else {
             InMemorySyntaxTree inMemorySyntaxTree = new InMemorySyntaxTree();
             addClientFile(inMemorySyntaxTree.getTestClientSyntax(entityModule),
-            this.generatedSourceDirPath.resolve("persist_test_client.bal").toAbsolutePath(),
-            this.moduleNameWithPackageName);
+                    this.generatedSourceDirPath.resolve("persist_test_client.bal").toAbsolutePath(),
+                    this.moduleNameWithPackageName);
         }
 
     }
@@ -140,8 +146,11 @@ public class SourceGenerator {
     public void createRedisSources() throws BalException {
         RedisSyntaxTree redisSyntaxTree = new RedisSyntaxTree();
         try {
-            addDataSourceConfigBalFile(this.generatedSourceDirPath, BalSyntaxConstants.PATH_DB_CONFIGURATION_BAL_FILE,
-            redisSyntaxTree.getDataStoreConfigSyntax());
+            if (!this.initParams) {
+                addDataSourceConfigBalFile(this.generatedSourceDirPath,
+                        BalSyntaxConstants.PATH_DB_CONFIGURATION_BAL_FILE,
+                        redisSyntaxTree.getDataStoreConfigSyntax());
+            }
             addConfigTomlFile(this.sourcePath, redisSyntaxTree.getConfigTomlSyntax(
                     this.moduleNameWithPackageName), this.moduleNameWithPackageName);
             addDataTypesBalFile(redisSyntaxTree.getDataTypesSyntax(this.entityModule),
@@ -173,8 +182,11 @@ public class SourceGenerator {
     public void createGSheetSources() throws BalException {
         GSheetSyntaxTree gSheetSyntaxTree = new GSheetSyntaxTree();
         try {
-            addDataSourceConfigBalFile(this.generatedSourceDirPath,
-                    BalSyntaxConstants.PATH_SHEET_CONFIGURATION_BAL_FILE, gSheetSyntaxTree.getDataStoreConfigSyntax());
+            if (!this.initParams) {
+                addDataSourceConfigBalFile(this.generatedSourceDirPath,
+                        BalSyntaxConstants.PATH_SHEET_CONFIGURATION_BAL_FILE,
+                        gSheetSyntaxTree.getDataStoreConfigSyntax());
+            }
             addConfigTomlFile(this.sourcePath, gSheetSyntaxTree.getConfigTomlSyntax(this.moduleNameWithPackageName),
                     this.moduleNameWithPackageName);
             addDataTypesBalFile(gSheetSyntaxTree.getDataTypesSyntax(entityModule),

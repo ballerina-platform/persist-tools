@@ -36,6 +36,13 @@ import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
 import io.ballerina.persist.nodegenerator.syntax.constants.SyntaxTokenConstants;
 import io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils;
 
+import static io.ballerina.persist.PersistToolsConstants.BallerinaTypes.STRING;
+import static io.ballerina.persist.PersistToolsConstants.CONNECTION_OPTIONS;
+import static io.ballerina.persist.PersistToolsConstants.DBConfigs.KEY_PASSWORD;
+import static io.ballerina.persist.PersistToolsConstants.DBConfigs.KEY_URL;
+import static io.ballerina.persist.PersistToolsConstants.DBConfigs.KEY_USER;
+import static io.ballerina.persist.PersistToolsConstants.OPTIONS;
+
 public class DbMockClientSyntax implements ClientSyntax {
     private final String dbNamePrefix;
     private final String dbSpecifics;
@@ -71,16 +78,16 @@ public class DbMockClientSyntax implements ClientSyntax {
         init.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PUBLIC, BalSyntaxConstants.KEYWORD_ISOLATED });
         init.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode(BalSyntaxConstants.EMPTY_STRING,
                 BalSyntaxConstants.PERSIST_ERROR));
-        init.addRequiredParameter(TypeDescriptor.getBuiltinSimpleNameReferenceNode("string"),
-                "url");
+        init.addRequiredParameter(TypeDescriptor.getBuiltinSimpleNameReferenceNode(STRING),
+                KEY_URL);
         init.addDefaultableParameter(TypeDescriptor.getOptionalTypeDescriptorNode(BalSyntaxConstants.EMPTY_STRING,
-                "string"), "user", NodeFactory.createNilLiteralNode(
+                STRING), KEY_USER, NodeFactory.createNilLiteralNode(
                         SyntaxTokenConstants.SYNTAX_TREE_OPEN_PAREN, SyntaxTokenConstants.SYNTAX_TREE_CLOSE_PAREN));
         init.addDefaultableParameter(TypeDescriptor.getOptionalTypeDescriptorNode(BalSyntaxConstants.EMPTY_STRING,
-                "string"), "password", NodeFactory.createNilLiteralNode(
+                STRING), KEY_PASSWORD, NodeFactory.createNilLiteralNode(
                 SyntaxTokenConstants.SYNTAX_TREE_OPEN_PAREN, SyntaxTokenConstants.SYNTAX_TREE_CLOSE_PAREN));
         init.addDefaultableParameter(TypeDescriptor.getOptionalTypeDescriptorNode("jdbc",
-                "Options"), "connectionOptions", NodeFactory.createNilLiteralNode(
+                OPTIONS), CONNECTION_OPTIONS, NodeFactory.createNilLiteralNode(
                 SyntaxTokenConstants.SYNTAX_TREE_OPEN_PAREN, SyntaxTokenConstants.SYNTAX_TREE_CLOSE_PAREN));
         init.addStatement(NodeParser.parseStatement(String.format(this.initDbClientMethodTemplate, this.dbNamePrefix)));
         IfElse errorCheck = new IfElse(NodeParser.parseExpression(String.format(

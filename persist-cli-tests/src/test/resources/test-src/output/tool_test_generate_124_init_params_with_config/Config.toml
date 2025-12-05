@@ -1,0 +1,7 @@
+# This Config.toml should be ignored when --with-init-params is used
+[test.persist_init_params_with_config]
+host = "localhost"
+port = 3306
+user = "root"
+password = "root"
+database = "testdb"

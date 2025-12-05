@@ -10,6 +10,9 @@
     },
     "eagerLoading": {
       "type": "boolean"
+    },
+    "initParams": {
+      "type": "boolean"
     }
   },
   "additionalProperties": false

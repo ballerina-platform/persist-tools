@@ -45,8 +45,20 @@ import io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils;
 import java.util.List;
 import java.util.Objects;
 
+import static io.ballerina.persist.PersistToolsConstants.BallerinaTypes.INT;
+import static io.ballerina.persist.PersistToolsConstants.BallerinaTypes.STRING;
+import static io.ballerina.persist.PersistToolsConstants.CONNECTION_OPTIONS;
 import static io.ballerina.persist.PersistToolsConstants.CUSTOM_SCHEMA_SUPPORTED_DB_PROVIDERS;
+import static io.ballerina.persist.PersistToolsConstants.DBConfigs.KEY_DATABASE;
+import static io.ballerina.persist.PersistToolsConstants.DBConfigs.KEY_DEFAULT_SCHEMA;
+import static io.ballerina.persist.PersistToolsConstants.DBConfigs.KEY_HOST;
+import static io.ballerina.persist.PersistToolsConstants.DBConfigs.KEY_PASSWORD;
+import static io.ballerina.persist.PersistToolsConstants.DBConfigs.KEY_PORT;
+import static io.ballerina.persist.PersistToolsConstants.DBConfigs.KEY_URL;
+import static io.ballerina.persist.PersistToolsConstants.DBConfigs.KEY_USER;
+import static io.ballerina.persist.PersistToolsConstants.EMPTY_VALUE;
 import static io.ballerina.persist.PersistToolsConstants.JDBC_CONNECTOR_MODULE_NAME;
+import static io.ballerina.persist.PersistToolsConstants.OPTIONS;
 import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_VIA_JDBC_CONNECTOR;
 import static io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils.EntityType.TABLE;
 
@@ -66,18 +78,26 @@ public class DbClientSyntax implements ClientSyntax {
     private final String initDbClientMethodTemplate;
     private final String dataSource;
     private final boolean eagerLoading;
+    private final boolean initParams;
 
     public DbClientSyntax(Module entityModule, String datasource) throws BalException {
-        this(entityModule, datasource, false);
+        this(entityModule, datasource, false, false);
     }
 
     public DbClientSyntax(Module entityModule, String datasource, boolean eagerLoading) throws BalException {
+        this(entityModule, datasource, eagerLoading, false);
+    }
+
+    public DbClientSyntax(Module entityModule, String datasource, boolean eagerLoading, boolean initParams)
+            throws BalException {
         this.entityModule = entityModule;
         this.dataSource = datasource;
-        this.dbNamePrefix = SUPPORTED_VIA_JDBC_CONNECTOR.contains(datasource) ?
-                PersistToolsConstants.SupportedDataSources.JDBC : datasource;
-        this.importPackage = SUPPORTED_VIA_JDBC_CONNECTOR.contains(datasource) ?
-                JDBC_CONNECTOR_MODULE_NAME : datasource;
+        this.initParams = initParams;
+        this.dbNamePrefix = SUPPORTED_VIA_JDBC_CONNECTOR.contains(datasource)
+                ? PersistToolsConstants.SupportedDataSources.JDBC
+                : datasource;
+        this.importPackage = SUPPORTED_VIA_JDBC_CONNECTOR.contains(datasource) ? JDBC_CONNECTOR_MODULE_NAME
+                : datasource;
 
         switch (datasource) {
             case PersistToolsConstants.SupportedDataSources.MYSQL_DB -> {
@@ -147,7 +167,65 @@ public class DbClientSyntax implements ClientSyntax {
         init.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PUBLIC, BalSyntaxConstants.KEYWORD_ISOLATED });
         init.addReturns(TypeDescriptor.getOptionalTypeDescriptorNode(BalSyntaxConstants.EMPTY_STRING,
                 BalSyntaxConstants.PERSIST_ERROR));
-        init.addStatement(NodeParser.parseStatement(String.format(this.initDbClientMethodTemplate, this.dbNamePrefix)));
+
+        if (initParams) {
+            // Add individual parameters based on datasource type
+            switch (dataSource) {
+                case PersistToolsConstants.SupportedDataSources.MYSQL_DB -> {
+                    init.addRequiredParameter(TypeDescriptor.getBuiltinSimpleNameReferenceNode(STRING), KEY_HOST);
+                    init.addRequiredParameter(TypeDescriptor.getBuiltinSimpleNameReferenceNode(INT), KEY_PORT);
+                    init.addRequiredParameter(TypeDescriptor.getBuiltinSimpleNameReferenceNode(STRING), KEY_USER);
+                    init.addRequiredParameter(
+                        TypeDescriptor.getBuiltinSimpleNameReferenceNode(STRING), KEY_PASSWORD);
+                    init.addRequiredParameter(
+                        TypeDescriptor.getBuiltinSimpleNameReferenceNode(STRING), KEY_DATABASE);
+                    init.addDefaultableParameter(
+                        TypeDescriptor.getQualifiedNameReferenceNode(this.dbNamePrefix, OPTIONS),
+                        CONNECTION_OPTIONS,
+                        NodeParser.parseExpression("{}"));
+                }
+                case PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB,
+                     PersistToolsConstants.SupportedDataSources.MSSQL_DB -> {
+                    init.addRequiredParameter(TypeDescriptor.getBuiltinSimpleNameReferenceNode(STRING), KEY_HOST);
+                    init.addRequiredParameter(TypeDescriptor.getBuiltinSimpleNameReferenceNode(INT), KEY_PORT);
+                    init.addRequiredParameter(TypeDescriptor.getBuiltinSimpleNameReferenceNode(STRING), KEY_USER);
+                    init.addRequiredParameter(
+                        TypeDescriptor.getBuiltinSimpleNameReferenceNode(STRING), KEY_PASSWORD);
+                    init.addRequiredParameter(
+                        TypeDescriptor.getBuiltinSimpleNameReferenceNode(STRING), KEY_DATABASE);
+                    init.addDefaultableParameter(
+                        TypeDescriptor.getQualifiedNameReferenceNode(this.dbNamePrefix, OPTIONS),
+                        CONNECTION_OPTIONS,
+                        NodeParser.parseExpression("{}"));
+                    init.addDefaultableParameter(
+                        TypeDescriptor.getOptionalTypeDescriptorNode(EMPTY_VALUE, STRING),
+                        KEY_DEFAULT_SCHEMA,
+                        NodeParser.parseExpression("()"));
+                }
+                case PersistToolsConstants.SupportedDataSources.H2_DB -> {
+                    init.addRequiredParameter(TypeDescriptor.getBuiltinSimpleNameReferenceNode(STRING), KEY_URL);
+                    init.addDefaultableParameter(
+                        TypeDescriptor.getOptionalTypeDescriptorNode(EMPTY_VALUE, STRING),
+                        KEY_USER,
+                        NodeParser.parseExpression("()"));
+                    init.addDefaultableParameter(
+                        TypeDescriptor.getOptionalTypeDescriptorNode(EMPTY_VALUE, STRING),
+                        KEY_PASSWORD,
+                        NodeParser.parseExpression("()"));
+                    init.addDefaultableParameter(
+                        TypeDescriptor.getQualifiedNameReferenceNode(this.dbNamePrefix, OPTIONS),
+                        CONNECTION_OPTIONS,
+                        NodeParser.parseExpression("{}"));
+                }
+                default -> throw new IllegalStateException("Unsupported datasource: " + dataSource);
+            }
+            init.addStatement(NodeParser.parseStatement(String.format(this.initDbClientMethodTemplate,
+                    this.dbNamePrefix)));
+        } else {
+            // Original behavior with configurables
+            init.addStatement(NodeParser.parseStatement(String.format(this.initDbClientMethodTemplate,
+                    this.dbNamePrefix)));
+        }
         IfElse errorCheck = new IfElse(NodeParser.parseExpression(String.format(
                 BalSyntaxConstants.RESULT_IS_BALLERINA_ERROR, BalSyntaxConstants.DB_CLIENT)));
         errorCheck.addIfStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.RETURN_ERROR,
@@ -196,8 +274,8 @@ public class DbClientSyntax implements ClientSyntax {
             if (persistClientMap.length() != 0) {
                 persistClientMap.append(BalSyntaxConstants.COMMA_WITH_NEWLINE);
             }
-            String constantName = BalSyntaxUtils.stripEscapeCharacter(BalSyntaxUtils.
-                    getStringWithUnderScore(entity.getEntityName()));
+            String constantName = BalSyntaxUtils
+                    .stripEscapeCharacter(BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()));
             if (CUSTOM_SCHEMA_SUPPORTED_DB_PROVIDERS.contains(dataSource)) {
                 persistClientMap.append(String.format(BalSyntaxConstants.PERSIST_CLIENT_MAP_ELEMENT_WITH_SCHEMA,
                         constantName, constantName, this.dbSpecifics));
@@ -208,14 +286,20 @@ public class DbClientSyntax implements ClientSyntax {
         }
         init.addStatement(NodeParser.parseStatement(String.format(
                 BalSyntaxConstants.PERSIST_CLIENT_TEMPLATE, persistClientMap)));
+
+        // Add documentation if init parameters are used
+        if (initParams) {
+            String doc = createInitMethodDocumentation(dataSource);
+            init.addDocumentation(BalSyntaxUtils.createMarkdownDocumentationNode(doc));
+        }
+
         return init.getFunctionDefinitionNode();
     }
 
     @Override
     public FunctionDefinitionNode getGetFunction(Entity entity) {
-        String template = this.eagerLoading ?
-                BalSyntaxConstants.EXTERNAL_SQL_GET_METHOD_LIST_TEMPLATE :
-                BalSyntaxConstants.EXTERNAL_SQL_GET_METHOD_TEMPLATE;
+        String template = this.eagerLoading ? BalSyntaxConstants.EXTERNAL_SQL_GET_METHOD_LIST_TEMPLATE
+                : BalSyntaxConstants.EXTERNAL_SQL_GET_METHOD_TEMPLATE;
         FunctionDefinitionNode functionNode = (FunctionDefinitionNode) NodeParser.parseObjectMember(
                 String.format(template,
                         entity.getClientResourceName(),
@@ -389,44 +473,44 @@ public class DbClientSyntax implements ClientSyntax {
                             if (Objects.equals(associatedEntityField.getFieldName(),
                                     associatedEntityField.getFieldColumnName())) {
                                 associateFieldMetaData.append(String.format((field.isArrayType() ? "\"%s[]" : "\"%s") +
-                                                BalSyntaxConstants.ASSOCIATED_FIELD_TEMPLATE,
+                                        BalSyntaxConstants.ASSOCIATED_FIELD_TEMPLATE,
                                         BalSyntaxUtils.stripEscapeCharacter(field.getFieldName()),
                                         BalSyntaxUtils.stripEscapeCharacter(associatedEntityField.getFieldName()),
                                         BalSyntaxUtils.stripEscapeCharacter(field.getFieldName()),
                                         BalSyntaxUtils.stripEscapeCharacter(associatedEntityField.getFieldName())));
                             } else {
                                 associateFieldMetaData.append(String.format((field.isArrayType() ? "\"%s[]" : "\"%s") +
-                                                BalSyntaxConstants.ASSOCIATED_FIELD_TEMPLATE_MAPPED,
+                                        BalSyntaxConstants.ASSOCIATED_FIELD_TEMPLATE_MAPPED,
                                         BalSyntaxUtils.stripEscapeCharacter(field.getFieldName()),
                                         BalSyntaxUtils.stripEscapeCharacter(associatedEntityField.getFieldName()),
                                         BalSyntaxUtils.stripEscapeCharacter(field.getFieldName()),
                                         BalSyntaxUtils.stripEscapeCharacter(associatedEntityField.getFieldName()),
-                                        BalSyntaxUtils.stripEscapeCharacter(associatedEntityField.getFieldColumnName())
-                                ));
+                                        BalSyntaxUtils
+                                                .stripEscapeCharacter(associatedEntityField.getFieldColumnName())));
                             }
                         } else {
                             if (associatedEntityField.getRelation().isOwner()) {
-                                    for (Relation.Key key : associatedEntityField.getRelation().getKeyColumns()) {
-                                        if (associateFieldMetaData.length() != 0) {
-                                            associateFieldMetaData.append(BalSyntaxConstants.COMMA_WITH_NEWLINE);
-                                        }
-                                        if (Objects.equals(key.getField(), key.getColumnName())) {
-                                            associateFieldMetaData.append(String.format((field.isArrayType() ?
-                                                            "\"%s[]" : "\"%s") +
-                                                            BalSyntaxConstants.ASSOCIATED_FIELD_TEMPLATE,
-                                                    field.getFieldName(), key.getField(),
-                                                    BalSyntaxUtils.stripEscapeCharacter(field.getFieldName()),
-                                                    BalSyntaxUtils.stripEscapeCharacter(key.getField())));
-                                        } else {
-                                            associateFieldMetaData.append(String.format((field.isArrayType() ?
-                                                            "\"%s[]" : "\"%s") +
-                                                            BalSyntaxConstants.ASSOCIATED_FIELD_TEMPLATE_MAPPED,
-                                                    field.getFieldName(), key.getField(),
-                                                    BalSyntaxUtils.stripEscapeCharacter(field.getFieldName()),
-                                                    BalSyntaxUtils.stripEscapeCharacter(key.getField()),
-                                                    BalSyntaxUtils.stripEscapeCharacter(key.getColumnName())));
-                                        }
+                                for (Relation.Key key : associatedEntityField.getRelation().getKeyColumns()) {
+                                    if (associateFieldMetaData.length() != 0) {
+                                        associateFieldMetaData.append(BalSyntaxConstants.COMMA_WITH_NEWLINE);
                                     }
+                                    if (Objects.equals(key.getField(), key.getColumnName())) {
+                                        associateFieldMetaData.append(String.format(
+                                                (field.isArrayType() ? "\"%s[]" : "\"%s") +
+                                                        BalSyntaxConstants.ASSOCIATED_FIELD_TEMPLATE,
+                                                field.getFieldName(), key.getField(),
+                                                BalSyntaxUtils.stripEscapeCharacter(field.getFieldName()),
+                                                BalSyntaxUtils.stripEscapeCharacter(key.getField())));
+                                    } else {
+                                        associateFieldMetaData.append(String.format(
+                                                (field.isArrayType() ? "\"%s[]" : "\"%s") +
+                                                        BalSyntaxConstants.ASSOCIATED_FIELD_TEMPLATE_MAPPED,
+                                                field.getFieldName(), key.getField(),
+                                                BalSyntaxUtils.stripEscapeCharacter(field.getFieldName()),
+                                                BalSyntaxUtils.stripEscapeCharacter(key.getField()),
+                                                BalSyntaxUtils.stripEscapeCharacter(key.getColumnName())));
+                                    }
+                                }
                             }
                         }
                     }
@@ -467,8 +551,9 @@ public class DbClientSyntax implements ClientSyntax {
             }
 
             mapBuilder.append(String.format(BalSyntaxConstants.METADATA_RECORD_ELEMENT_TEMPLATE,
-                    BalSyntaxUtils.stripEscapeCharacter((BalSyntaxUtils.
-                            getStringWithUnderScore(entity.getEntityName()))), entityMetaData));
+                    BalSyntaxUtils.stripEscapeCharacter(
+                            (BalSyntaxUtils.getStringWithUnderScore(entity.getEntityName()))),
+                    entityMetaData));
         }
 
         Node node;
@@ -535,7 +620,7 @@ public class DbClientSyntax implements ClientSyntax {
     }
 
     private static void addFunctionBodyToPostResource(Function create, List<EntityField> primaryKeys,
-                                                      String tableName, String parameterType) {
+            String tableName, String parameterType) {
         create.addStatement(NodeParser.parseStatement(BalSyntaxConstants.SQL_CLIENT_DECLARATION));
 
         String getPersistClientStatement = String.format(BalSyntaxConstants.GET_PERSIST_CLIENT,
@@ -545,8 +630,7 @@ public class DbClientSyntax implements ClientSyntax {
 
         // there can only be one auto_incremented key and it cannot be a partial key
         if (primaryKeys.get(0).isDbGenerated()) {
-            create.addStatement(NodeParser.parseStatement
-                    (BalSyntaxConstants.CREATE_SQL_RESULTS_AUTO_INCREMENT));
+            create.addStatement(NodeParser.parseStatement(BalSyntaxConstants.CREATE_SQL_RESULTS_AUTO_INCREMENT));
             create.addStatement(NodeParser.parseStatement(
                     String.format(BalSyntaxConstants.RETURN_CREATED_KEY_AUTO_INCREMENT, "sql:ExecutionResult")));
             create.addStatement(NodeParser.parseStatement(String.format(
@@ -574,5 +658,47 @@ public class DbClientSyntax implements ClientSyntax {
                     filterKeys + BalSyntaxConstants.CLOSE_BRACKET + BalSyntaxConstants.SEMICOLON);
         }
         create.addStatement(NodeParser.parseStatement(filterKeys.toString()));
+    }
+
+    private String createInitMethodDocumentation(String dataSource) {
+        return switch (dataSource) {
+            case PersistToolsConstants.SupportedDataSources.MYSQL_DB ->
+                String.format("Initialize the persist client with MySQL database connection parameters.%n%n" +
+                        "+ host - Database server host%n" +
+                        "+ port - Database server port%n" +
+                        "+ user - Database username%n" +
+                        "+ password - Database password%n" +
+                        "+ database - Database name%n" +
+                        "+ connectionOptions - Additional MySQL connection options%n" +
+                        "+ return - An error if initialization fails");
+            case PersistToolsConstants.SupportedDataSources.POSTGRESQL_DB ->
+                String.format("Initialize the persist client with PostgreSQL database connection parameters.%n%n" +
+                        "+ host - Database server host%n" +
+                        "+ port - Database server port%n" +
+                        "+ user - Database username%n" +
+                        "+ password - Database password%n" +
+                        "+ database - Database name%n" +
+                        "+ connectionOptions - Additional PostgreSQL connection options%n" +
+                        "+ defaultSchema - Default schema name for the database%n" +
+                        "+ return - An error if initialization fails");
+            case PersistToolsConstants.SupportedDataSources.MSSQL_DB ->
+                String.format("Initialize the persist client with MSSQL database connection parameters.%n%n" +
+                        "+ host - Database server host%n" +
+                        "+ port - Database server port%n" +
+                        "+ user - Database username%n" +
+                        "+ password - Database password%n" +
+                        "+ database - Database name%n" +
+                        "+ connectionOptions - Additional MSSQL connection options%n" +
+                        "+ defaultSchema - Default schema name for the database%n" +
+                        "+ return - An error if initialization fails");
+            case PersistToolsConstants.SupportedDataSources.H2_DB ->
+                String.format("Initialize the persist client with H2 database connection parameters.%n%n" +
+                        "+ url - JDBC URL for the H2 database%n" +
+                        "+ user - Database username (optional)%n" +
+                        "+ password - Database password (optional)%n" +
+                        "+ connectionOptions - Additional H2 connection options%n" +
+                        "+ return - An error if initialization fails");
+            default -> throw new IllegalStateException("Unsupported datasource: " + dataSource);
+        };
     }
 }

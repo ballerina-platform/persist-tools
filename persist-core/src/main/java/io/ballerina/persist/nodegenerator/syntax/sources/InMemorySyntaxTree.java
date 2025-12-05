@@ -43,6 +43,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 
+import static io.ballerina.persist.PersistToolsConstants.BallerinaTypes.STRING;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.CLIENT_NAME;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.IN_MEMORY_CLIENT_NAME;
 
@@ -117,7 +118,7 @@ public class InMemorySyntaxTree implements SyntaxTree {
             query.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_ISOLATED });
             query.addReturns(TypeDescriptor.getSimpleNameReferenceNode("record{}[]"));
             query.addRequiredParameter(TypeDescriptor.getSimpleNameReferenceNode("record{}"), "value");
-            query.addRequiredParameter(TypeDescriptor.getArrayTypeDescriptorNode("string"),
+            query.addRequiredParameter(TypeDescriptor.getArrayTypeDescriptorNode(STRING),
                     BalSyntaxConstants.KEYWORD_FIELDS);
             query.addStatement(NodeParser.parseStatement(queryMethod.getMethodBody()));
             functionsList.add(query.getFunctionDefinitionNode());
@@ -157,7 +158,7 @@ public class InMemorySyntaxTree implements SyntaxTree {
                 SyntaxKind.OBJECT_METHOD_DEFINITION);
         query.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_ISOLATED });
         query.addReturns(TypeDescriptor.getSimpleNameReferenceNode(BalSyntaxConstants.QUERY_RETURN));
-        query.addRequiredParameter(TypeDescriptor.getArrayTypeDescriptorNode("string"),
+        query.addRequiredParameter(TypeDescriptor.getArrayTypeDescriptorNode(STRING),
                 BalSyntaxConstants.KEYWORD_FIELDS);
         query.addStatement(NodeParser.parseStatement(clonedTables));
 
