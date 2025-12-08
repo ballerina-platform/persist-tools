@@ -60,7 +60,7 @@ public class PersistToolsConstants {
     public static final String OPTION_DATASTORE = "options.datastore";
     public static final String OPTION_TEST_DATASTORE = "options.testDatastore";
     public static final String OPTION_EAGER_LOADING = "options.eagerLoading";
-    public static final String OPTION_INIT_PARAMS = "options.initParams";
+    public static final String OPTION_INIT_PARAMS = "options.withInitParams";
     public static final String MIGRATIONS = "migrations";
     public static final String BALLERINA_MYSQL_DRIVER_NAME = "ballerinax/mysql.driver";
     public static final String BALLERINA_MSSQL_DRIVER_NAME = "ballerinax/mssql.driver";

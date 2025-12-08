@@ -191,7 +191,7 @@ public class Add implements BLauncherCmd {
                     true, null));
         }
         if (initParams) {
-            moduleMembers = moduleMembers.add(SampleNodeGenerator.createBooleanKV("options.initParams",
+            moduleMembers = moduleMembers.add(SampleNodeGenerator.createBooleanKV("options.withInitParams",
                     true, null));
         }
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("filePath", "persist/model.bal", null));

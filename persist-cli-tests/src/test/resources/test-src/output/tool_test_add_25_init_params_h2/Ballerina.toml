@@ -8,7 +8,7 @@ distribution = "2201.13.0"
 id = "generate-db-client"
 targetModule = "persist_add_init_params_h2.entities"
 options.datastore = "h2"
-options.initParams = true
+options.withInitParams = true
 filePath = "persist/model.bal"
 
 
