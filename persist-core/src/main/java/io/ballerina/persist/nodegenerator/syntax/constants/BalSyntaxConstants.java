@@ -36,6 +36,7 @@ public class BalSyntaxConstants {
         public static final String PERSIST_MODULE_NAME = "persist";
         public static final String ABSTRACT_PERSIST_CLIENT = "AbstractPersistClient";
     }
+
     public static final String DOUBLE_QUOTE = "\"";
     public static final String BACK_SLASH = "/";
     public static final String EMPTY_STRING = "";
@@ -115,7 +116,6 @@ public class BalSyntaxConstants {
 
     // jdbc(h2) connector use url instead of host, port, database
     public static final String CONFIGURABLE_JDBC_URL = "configurable string url = ?;";
-
 
     public static final String CLIENT_NAME = "Client";
     public static final String H2_CLIENT_NAME = "H2Client";

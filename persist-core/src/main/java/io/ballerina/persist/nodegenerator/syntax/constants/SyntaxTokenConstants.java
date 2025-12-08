@@ -43,6 +43,7 @@ public class SyntaxTokenConstants {
     public static final Token SYNTAX_TREE_PIPE = AbstractNodeFactory.createToken(SyntaxKind.PIPE_TOKEN);
     public static final Token SYNTAX_TREE_SLASH = AbstractNodeFactory.createToken(SyntaxKind.SLASH_TOKEN);
     public static final Token SYNTAX_TREE_COMMA = AbstractNodeFactory.createToken(SyntaxKind.COMMA_TOKEN);
+    public static final Token SYNTAX_TREE_ASTERISK = AbstractNodeFactory.createToken(SyntaxKind.ASTERISK_TOKEN);
 
     public static final Token SYNTAX_TREE_BLANK_LINE = AbstractNodeFactory.createIdentifierToken(
             System.lineSeparator() +  System.lineSeparator());

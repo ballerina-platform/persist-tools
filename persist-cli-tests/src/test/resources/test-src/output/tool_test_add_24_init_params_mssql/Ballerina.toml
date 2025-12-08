@@ -1,0 +1,14 @@
+[package]
+org = "test"
+name = "persist_add_init_params_mssql"
+version = "0.1.0"
+distribution = "2201.13.0"
+
+[[tool.persist]]
+id = "generate-db-client"
+targetModule = "persist_add_init_params_mssql.entities"
+options.datastore = "mssql"
+options.withInitParams = true
+filePath = "persist/model.bal"
+
+

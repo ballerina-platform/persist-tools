@@ -1133,6 +1133,80 @@ public class ToolingGenerateTest {
         assertGeneratedSources("tool_test_generate_117");
     }
 
+    @Test(enabled = true)
+    @Description("Test generate command with --with-init-params flag for MySQL datastore")
+    public void testGenerateWithInitParamsMySQL() {
+        updateOutputBallerinaToml("tool_test_generate_118_init_params_mysql");
+        executeGenerateCommand("tool_test_generate_118_init_params_mysql",
+                "--datastore", "mysql", "--module", "entities", "--with-init-params");
+        assertGeneratedSources("tool_test_generate_118_init_params_mysql");
+    }
+
+    @Test(enabled = true)
+    @Description("Test generate command with --with-init-params flag for PostgreSQL datastore")
+    public void testGenerateWithInitParamsPostgreSQL() {
+        updateOutputBallerinaToml("tool_test_generate_119_init_params_postgresql");
+        executeGenerateCommand("tool_test_generate_119_init_params_postgresql",
+                "--datastore", "postgresql", "--module", "entities", "--with-init-params");
+        assertGeneratedSources("tool_test_generate_119_init_params_postgresql");
+    }
+
+    @Test(enabled = true)
+    @Description("Test generate command with --with-init-params flag for MSSQL datastore")
+    public void testGenerateWithInitParamsMSSQL() {
+        updateOutputBallerinaToml("tool_test_generate_120_init_params_mssql");
+        executeGenerateCommand("tool_test_generate_120_init_params_mssql",
+                "--datastore", "mssql", "--module", "entities", "--with-init-params");
+        assertGeneratedSources("tool_test_generate_120_init_params_mssql");
+    }
+
+    @Test(enabled = true)
+    @Description("Test generate command with --with-init-params flag for H2 datastore")
+    public void testGenerateWithInitParamsH2() {
+        updateOutputBallerinaToml("tool_test_generate_121_init_params_h2");
+        executeGenerateCommand("tool_test_generate_121_init_params_h2",
+                "--datastore", "h2", "--module", "entities", "--with-init-params");
+        assertGeneratedSources("tool_test_generate_121_init_params_h2");
+    }
+
+    @Test(enabled = true)
+    @Description("Test generate command with --with-init-params flag for MySQL with relationships")
+    public void testGenerateWithInitParamsRelationships() {
+        updateOutputBallerinaToml("tool_test_generate_122_init_params_relationships");
+        executeGenerateCommand("tool_test_generate_122_init_params_relationships",
+                "--datastore", "mysql", "--module", "entities", "--with-init-params");
+        assertGeneratedSources("tool_test_generate_122_init_params_relationships");
+    }
+
+    @Test(enabled = true)
+    @Description("Test generate command with --with-init-params flag for PostgreSQL with multiple entities")
+    public void testGenerateWithInitParamsMultipleEntities() {
+        updateOutputBallerinaToml("tool_test_generate_123_init_params_multiple_entities");
+        executeGenerateCommand("tool_test_generate_123_init_params_multiple_entities",
+                "--datastore", "postgresql", "--module", "entities", "--with-init-params");
+        assertGeneratedSources("tool_test_generate_123_init_params_multiple_entities");
+    }
+
+    @Test(enabled = true)
+    @Description("Test generate command with --with-init-params flag when Config.toml exists " +
+            "(should ignore Config.toml)")
+    public void testGenerateWithInitParamsWithConfig() {
+        updateOutputBallerinaToml("tool_test_generate_124_init_params_with_config");
+        executeGenerateCommand("tool_test_generate_124_init_params_with_config",
+                "--datastore", "mysql", "--module", "entities", "--with-init-params");
+        assertGeneratedSources("tool_test_generate_124_init_params_with_config");
+    }
+
+    @Test(enabled = true)
+    @Description("Test generate command with --with-init-params flag with invalid model (missing readonly on key)")
+    public void testGenerateWithInitParamsInvalidModel() {
+        updateOutputBallerinaToml("tool_test_generate_125_init_params_negative_invalid_model");
+        assertGeneratedSourcesNegative("tool_test_generate_125_init_params_negative_invalid_model", GENERATE,
+                new String[]{"modules/entities/persist_client.bal", "modules/entities/persist_types.bal", 
+                            "modules/entities/script.sql"},
+                "--datastore", "mysql", "--module", "entities", "--with-init-params");
+    }
+
     private void updateOutputBallerinaToml(String fileName) {
         String tomlFileName = "Ballerina.toml";
         Path filePath = Paths.get("src", "test", "resources", "test-src", "output", fileName, tomlFileName);

@@ -60,6 +60,7 @@ public class PersistToolsConstants {
     public static final String OPTION_DATASTORE = "options.datastore";
     public static final String OPTION_TEST_DATASTORE = "options.testDatastore";
     public static final String OPTION_EAGER_LOADING = "options.eagerLoading";
+    public static final String OPTION_INIT_PARAMS = "options.withInitParams";
     public static final String MIGRATIONS = "migrations";
     public static final String BALLERINA_MYSQL_DRIVER_NAME = "ballerinax/mysql.driver";
     public static final String BALLERINA_MSSQL_DRIVER_NAME = "ballerinax/mssql.driver";
@@ -72,6 +73,8 @@ public class PersistToolsConstants {
     public static final String CACHE_FILE = "persist-cache.txt";
     public static final String UNSUPPORTED_TYPE = "Unsupported";
     public static final String UNSUPPORTED_TYPE_COMMENT_START = "//" + UNSUPPORTED_TYPE + "[";
+    public static final String OPTIONS = "Options";
+    public static final String CONNECTION_OPTIONS = "connectionOptions";
 
     public static final Set<String> SUPPORTED_DB_PROVIDERS =
            Set.of(SupportedDataSources.MYSQL_DB, SupportedDataSources.MSSQL_DB, SupportedDataSources.IN_MEMORY_TABLE,

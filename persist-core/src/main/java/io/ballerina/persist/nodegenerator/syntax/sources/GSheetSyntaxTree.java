@@ -49,6 +49,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import static io.ballerina.persist.PersistToolsConstants.BallerinaTypes.STRING;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.CLIENT_NAME;
 
 /**
@@ -99,7 +100,7 @@ public class GSheetSyntaxTree implements SyntaxTree {
                     BalSyntaxConstants.KEYWORD_ISOLATED });
             query.addReturns(TypeDescriptor.getSimpleNameReferenceNode("record{}[]|persist:Error"));
             query.addRequiredParameter(TypeDescriptor.getSimpleNameReferenceNode("record{}"), "value");
-            query.addRequiredParameter(TypeDescriptor.getArrayTypeDescriptorNode("string"),
+            query.addRequiredParameter(TypeDescriptor.getArrayTypeDescriptorNode(STRING),
                     BalSyntaxConstants.KEYWORD_FIELDS);
             query.addStatement(NodeParser.parseStatement(entry.getValue()));
             clientObject.addMember(query.getFunctionDefinitionNode(), true);
@@ -182,7 +183,7 @@ public class GSheetSyntaxTree implements SyntaxTree {
         query.addQualifiers(new String[] { BalSyntaxConstants.KEYWORD_PRIVATE, BalSyntaxConstants.KEYWORD_ISOLATED });
         query.addReturns(TypeDescriptor.getSimpleNameReferenceNode(BalSyntaxConstants.QUERY_RETURN + "|" +
                 BalSyntaxConstants.PERSIST_ERROR));
-        query.addRequiredParameter(TypeDescriptor.getArrayTypeDescriptorNode("string"),
+        query.addRequiredParameter(TypeDescriptor.getArrayTypeDescriptorNode(STRING),
                 BalSyntaxConstants.KEYWORD_FIELDS);
 
         Function queryOne = new Function(String.format(BalSyntaxConstants.QUERY_ONE, nameInCamelCase),
