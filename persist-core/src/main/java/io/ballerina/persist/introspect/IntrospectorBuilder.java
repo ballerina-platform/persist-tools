@@ -205,9 +205,6 @@ public class IntrospectorBuilder {
         if (Objects.isNull(database) || database.trim().isEmpty()) {
             throw new BalException("database is required");
         }
-        if (Objects.isNull(sourcePath) || sourcePath.trim().isEmpty()) {
-            throw new BalException("sourcePath is required");
-        }
         // Password can be empty/null for some databases, so we don't validate it
     }
 
