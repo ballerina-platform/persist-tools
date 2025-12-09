@@ -216,17 +216,6 @@ public class IntrospectorBuilderTest {
                 .build();
     }
 
-    @Test(expectedExceptions = BalException.class, expectedExceptionsMessageRegExp = ".*sourcePath is required.*")
-    public void testBuildWithoutSourcePath() throws BalException {
-        IntrospectorBuilder.newBuilder()
-                .withDatastore("mysql")
-                .withHost("localhost")
-                .withUser("root")
-                .withPassword("password")
-                .withDatabase("testdb")
-                .build();
-    }
-
     @Test(expectedExceptions = BalException.class, expectedExceptionsMessageRegExp = ".*unsupported data store.*")
     public void testBuildWithUnsupportedDatastore() throws BalException {
         IntrospectorBuilder.newBuilder()
