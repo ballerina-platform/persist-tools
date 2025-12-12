@@ -11,7 +11,7 @@
     "eagerLoading": {
       "type": "boolean"
     },
-    "initParams": {
+    "withInitParams": {
       "type": "boolean"
     }
   },
