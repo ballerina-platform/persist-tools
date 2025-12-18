@@ -68,9 +68,8 @@ public isolated client class Client {
     # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
     # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
     # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
-    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
     # + return - A collection of matching records or an error
-    isolated resource function get companies(CompanyTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns targetType[]|persist:Error = @java:Method {
+    isolated resource function get companies(CompanyTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``) returns targetType[]|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "queryAsList"
     } external;
@@ -133,9 +132,8 @@ public isolated client class Client {
     # + whereClause - SQL WHERE clause to filter the results (e.g., `column_name = value`)
     # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
     # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
-    # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
     # + return - A collection of matching records or an error
-    isolated resource function get employees(EmployeeTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns targetType[]|persist:Error = @java:Method {
+    isolated resource function get employees(EmployeeTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``) returns targetType[]|persist:Error = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
         name: "queryAsList"
     } external;

@@ -305,7 +305,7 @@ public class DbClientSyntax implements ClientSyntax {
                         entity.getClientResourceName(),
                         entity.getEntityName(), BalSyntaxConstants.SQL, this.nativeClass));
 
-        String doc = BalSyntaxUtils.createGetResourceDocumentation(entity, TABLE, true);
+        String doc = BalSyntaxUtils.createGetResourceDocumentation(entity, TABLE, true, this.eagerLoading);
         return BalSyntaxUtils.addDocumentationToFunction(functionNode, doc);
     }
 
