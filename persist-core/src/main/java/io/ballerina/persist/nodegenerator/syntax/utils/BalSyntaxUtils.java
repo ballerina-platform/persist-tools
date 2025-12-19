@@ -1140,6 +1140,20 @@ public class BalSyntaxUtils {
      * @return Documentation string
      */
     public static String createGetResourceDocumentation(Entity entity, EntityType entityType, boolean isSQLDataStore) {
+        return createGetResourceDocumentation(entity, entityType, isSQLDataStore, false);
+    }
+
+    /**
+     * Create documentation for GET resource method.
+     *
+     * @param entity The entity
+     * @param entityType The type of entity (table, sheet, key space)
+     * @param isSQLDataStore Whether the data store is SQL-based
+     * @param eagerLoading Whether eager loading is enabled
+     * @return Documentation string
+     */
+    public static String createGetResourceDocumentation(Entity entity, EntityType entityType, boolean isSQLDataStore,
+                                                        boolean eagerLoading) {
         StringBuilder sb = new StringBuilder();
         sb.append(String.format("Get rows from %s %s.%n%n+ targetType - Defines which fields to retrieve from " +
                         "the results%n", entity.getTableName(), entityType.getName()));
@@ -1149,9 +1163,11 @@ public class BalSyntaxUtils {
                     .append("+ orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)")
                     .append(System.lineSeparator())
                     .append("+ limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)")
-                    .append(System.lineSeparator())
-                    .append("+ groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)")
                     .append(System.lineSeparator());
+            if (!eagerLoading) {
+                sb.append("+ groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)")
+                        .append(System.lineSeparator());
+            }
         }
         sb.append("+ return - A collection of matching records or an error");
         return sb.toString();

@@ -120,10 +120,17 @@ public class BalProjectUtils {
         } else {
             throw new BalException("the model definition file name is invalid.");
         }
-        Module.Builder moduleBuilder = Module.newBuilder(moduleName);
-
         try {
             SyntaxTree balSyntaxTree = SyntaxTree.from(TextDocuments.from(Files.readString(schemaFile)));
+            return getEntities(moduleName, balSyntaxTree);
+        } catch (IOException | BalException | RuntimeException e) {
+            throw new BalException(e.getMessage());
+        }
+    }
+
+    public static Module getEntities(String module, SyntaxTree balSyntaxTree) throws BalException {
+        Module.Builder moduleBuilder = Module.newBuilder(module);
+        try {
             populateEnums(moduleBuilder, balSyntaxTree);
             populateEntities(moduleBuilder, balSyntaxTree);
             Module entityModule = moduleBuilder.build();

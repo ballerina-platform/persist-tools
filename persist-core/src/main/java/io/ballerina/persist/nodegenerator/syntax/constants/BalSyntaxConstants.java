@@ -428,8 +428,8 @@ public class BalSyntaxConstants {
             " name: \"query\"} external;";
     public static final String EXTERNAL_SQL_GET_METHOD_LIST_TEMPLATE = "isolated resource function get %s(" +
             "%sTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, " +
-            "sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, " +
-            "sql:ParameterizedQuery groupByClause = ``) returns targetType[]|persist:Error = @java:Method {"
+            "sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``) " +
+            "returns targetType[]|persist:Error = @java:Method {"
             + System.lineSeparator()
             + "'class: \"io.ballerina.stdlib.persist.%s.datastore.%s\"," + System.lineSeparator() +
             " name: \"queryAsList\"} external;";
