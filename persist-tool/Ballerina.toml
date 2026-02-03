@@ -1,7 +1,7 @@
 [package]
 org = "ballerina"
 name = "tool.persist"
-version = "1.8.0"
+version = "1.9.0"
 authors = ["Ballerina"]
 keywords = ["persist", "persist tool", "ORM"]
 license = ["Apache-2.0"]
