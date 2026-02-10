@@ -8,6 +8,7 @@ SYNOPSIS
                         [--user <database user]
                         [--database <database name>]
                         [--tables[=<table1,table2,...>]]
+                        [--model <model-name>]
                         [<-h> | <--help>]
 
 DESCRIPTION
@@ -15,6 +16,9 @@ DESCRIPTION
        file in the `persist` directory. If the file already exists, it will prompt the user to confirm overwriting the
        file. The database configurations must be passed in as command line arguments. The user must enter the
        database password when prompted.
+       
+       By default, creates/overwrites the root-level model at persist/model.bal. Use the --model option to 
+       create/overwrite a subdirectory model at persist/<model-name>/model.bal for multi-model projects.
 
        Table Selection:
        • By default (without --tables), all tables in the database are introspected
@@ -28,6 +32,25 @@ DESCRIPTION
        • When specific tables are selected, any tables referenced by foreign keys are automatically included
          to ensure valid model generation. INFO messages will be logged for auto-included tables.
 
+OPTIONS
+       --datastore <store type>
+              The type of the datastore to introspect. Currently supports 'mysql', 'mssql', and 'postgresql'.
+       --host <host address>
+              The host address of the database server.
+       --port <port number>
+              The port number of the database server.
+       --user <database user>
+              The username for database authentication.
+       --database <database name>
+              The name of the database to introspect.
+       --tables[=<table1,table2,...>]
+              Specify which tables to introspect. Use without value for interactive selection.
+       --model <model-name>
+              Specify the model name to create a subdirectory model. If not specified, creates a root-level model.
+              The model will be saved at persist/<model-name>/model.bal.
+       -h, --help
+           Print the usage details of all commands.
+
 EXAMPLES
        Print the usage details of the `bal persist pull` command.
           $ bal persist pull --help
@@ -40,3 +63,6 @@ EXAMPLES
 
        Use interactive mode to select tables.
           $ bal persist pull --datastore mysql --host localhost --port 3306 --user root --database db --tables
+
+       Generate a model in a subdirectory.
+          $ bal persist pull --model inventory --datastore mysql --host localhost --port 3306 --user root --database db

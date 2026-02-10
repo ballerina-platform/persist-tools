@@ -2,15 +2,22 @@ NAME
        bal persist init - Initialize the Ballerina package for persistence.
 
 SYNOPSIS
-       bal persist init [<-h> | <--help>]
+       bal persist init [<-h> | <--help>] [--model <model-name>]
 
 DESCRIPTION
          This command will create a new directory named 'persist' in the project directory. The 'persist' directory will
          contain empty model definition file which can be used to define the data model of the Ballerina project.
+         
+         By default, creates a root-level model at persist/model.bal. Use the --model option to create a subdirectory 
+         model at persist/<model-name>/model.bal for multi-model projects.
 
 OPTIONS
        -h, --help
            Print the usage details of all commands.
+
+       --model <model-name>
+           Specify the model name to create a subdirectory model. If not specified, creates a root-level model.
+           Model names must be valid identifiers and cannot be reserved words like 'migrations'.
 
 EXAMPLES
        Print the usage details of the `bal persist init` command.
@@ -18,3 +25,6 @@ EXAMPLES
 
        Initialize the Ballerina package for persistence with the default module.
           $ bal persist init
+
+       Initialize a specific model in a subdirectory.
+          $ bal persist init --model users

@@ -42,14 +42,10 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static io.ballerina.persist.PersistToolsConstants.BAL_PERSIST_ADD_CMD;
-import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.BAL_EXTENSION;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.getConfigDeclaration;
 import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.getDependencyConfig;
@@ -90,6 +86,9 @@ public class Add implements BLauncherCmd {
             " of configurables")
     private boolean initParams;
 
+    @CommandLine.Option(names = { "--model" })
+    private String model;
+
     public Add() {
         this("");
     }
@@ -126,8 +125,11 @@ public class Add implements BLauncherCmd {
             }
             String moduleNameWithPackage = validateAndProcessModule(packageName, module);
             createDefaultClientId();
+            String modelPath = (model != null && !model.trim().isEmpty())
+                    ? "persist/" + model + "/model.bal"
+                    : "persist/model.bal";
             String syntaxTree = updateBallerinaToml(Paths.get(this.sourcePath, BALLERINA_TOML),
-                    moduleNameWithPackage, datastore, testDatastore, eagerLoading, initParams, id);
+                    moduleNameWithPackage, datastore, testDatastore, eagerLoading, initParams, id, modelPath);
             FileUtils.writeToTargetFile(syntaxTree,
                     Paths.get(sourcePath, BALLERINA_TOML).toAbsolutePath().toString());
             createPersistDirectoryIfNotExists();
@@ -135,7 +137,7 @@ public class Add implements BLauncherCmd {
             errStream.printf("Integrated the generation of persist client and entity types into the package " +
                     "build process." + System.lineSeparator());
             errStream.println(System.lineSeparator() + "Next steps:");
-            errStream.println("1. Define your data model in \"persist/model.bal\".");
+            errStream.println("1. Define your data model in \"" + modelPath + "\".");
             errStream.println("2. Execute `bal build` to generate the persist client during package build.");
 
             if (Objects.nonNull(testDatastore)) {
@@ -152,22 +154,24 @@ public class Add implements BLauncherCmd {
     /**
      * Method to update the Ballerina.toml with persist tool configurations.
      */
-    private String updateBallerinaToml(Path tomlPath, String module, String datastore, String testDatastore,
-            boolean eagerLoading, boolean initParams, String id)
+    String updateBallerinaToml(Path tomlPath, String module, String datastore, String testDatastore,
+            boolean eagerLoading, boolean initParams, String id, String modelPath)
             throws BalException, IOException {
         TomlSyntaxUtils.NativeDependency dependency = getDependencyConfig(datastore, testDatastore);
         TomlSyntaxUtils.ConfigDeclaration declaration = getConfigDeclaration(tomlPath, dependency);
-        if (declaration.persistConfigExists()) {
-            throw new BalException("persist configuration already exists in the Ballerina.toml. " +
-                    "remove the existing configuration and try again.");
+
+        if (declaration.persistClientIds().contains(id)) {
+            throw new BalException(String.format("a build option with the provided ID '%s' already exists in " +
+                    "the Ballerina.toml. Please provide a unique ID using the --id option.", id));
         }
+
         NodeList<DocumentMemberDeclarationNode> moduleMembers = declaration.moduleMembers();
         if (!moduleMembers.isEmpty()) {
             moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
             moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray(
                     PersistToolsConstants.PERSIST_TOOL_CONFIG, null));
             moduleMembers = populateBallerinaNodeList(moduleMembers, module, datastore, testDatastore,
-                    eagerLoading, initParams, id);
+                    eagerLoading, initParams, id, modelPath);
             moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
         }
         Token eofToken = AbstractNodeFactory.createIdentifierToken("");
@@ -178,7 +182,7 @@ public class Add implements BLauncherCmd {
 
     private static NodeList<DocumentMemberDeclarationNode> populateBallerinaNodeList(
             NodeList<DocumentMemberDeclarationNode> moduleMembers, String module, String dataStore,
-            String testDatastore, boolean eagerLoading, boolean initParams, String id) {
+            String testDatastore, boolean eagerLoading, boolean initParams, String id, String modelPath) {
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("id", id, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("targetModule", module, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("options.datastore", dataStore, null));
@@ -194,7 +198,7 @@ public class Add implements BLauncherCmd {
             moduleMembers = moduleMembers.add(SampleNodeGenerator.createBooleanKV("options.withInitParams",
                     true, null));
         }
-        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("filePath", "persist/model.bal", null));
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("filePath", modelPath, null));
         return moduleMembers;
     }
 
@@ -238,28 +242,44 @@ public class Add implements BLauncherCmd {
     }
 
     private void createDefaultSchemaBalFile() throws IOException, BalException {
-        List<String> schemaFiles;
         Path persistPath = Paths.get(sourcePath, PERSIST_DIRECTORY);
-        try (Stream<Path> stream = Files.list(persistPath)) {
-            schemaFiles = stream.filter(file -> !Files.isDirectory(file))
-                    .map(Path::getFileName)
-                    .filter(Objects::nonNull)
-                    .filter(file -> file.toString().toLowerCase(Locale.ENGLISH).endsWith(BAL_EXTENSION))
-                    .map(file -> file.toString().replace(BAL_EXTENSION, ""))
-                    .collect(Collectors.toList());
-        }
-        if (schemaFiles.size() > 1) {
-            throw new BalException("the persist directory allows only one model definition file, " +
-                    "but contains many files.");
-        }
-        if (schemaFiles.isEmpty()) {
-            FileUtils.generateSchemaBalFile(persistPath);
+
+        if (model != null && !model.isBlank()) {
+            // Create subdirectory model
+            try {
+                BalProjectUtils.validateModelName(model);
+                Path modelDir = persistPath.resolve(model);
+
+                if (Files.exists(modelDir)) {
+                    // Directory exists, check if model.bal exists
+                    Path modelFile = modelDir.resolve("model.bal");
+                    if (!Files.exists(modelFile)) {
+                        FileUtils.generateSchemaBalFile(modelDir);
+                    }
+                } else {
+                    // Create directory and model file
+                    Files.createDirectory(modelDir);
+                    FileUtils.generateSchemaBalFile(modelDir);
+                }
+            } catch (BalException e) {
+                throw new BalException("invalid model name '" + model + "'. " + e.getMessage());
+            }
+        } else {
+            // Create root model (backward compatible)
+            Path modelFile = persistPath.resolve("model.bal");
+            if (!Files.exists(modelFile)) {
+                FileUtils.generateSchemaBalFile(persistPath);
+            }
         }
     }
 
     private void createDefaultClientId() {
         if (id == null || id.isBlank()) {
-            id = "generate-db-client";
+            if (model == null || model.isBlank()) {
+                id = "generate-db-client";
+            } else {
+                id = "generate-" + model.toLowerCase(Locale.ENGLISH).trim() + "-client";
+            }
         }
     }
 }

@@ -4,12 +4,16 @@ NAME
 SYNOPSIS
        bal persist generate [--module <module name>]
                             [--datastore <store type>]
+                            [--model <model-name>]
                             [<-h> | <--help>]
 
 DESCRIPTION
        Generate the client API and SQL script based on the data model defined in the `persist` directory.
        The generated API can be used to query and manipulate the persistent data in the application.
        The generated SQL script can be used to create the database tables.
+       
+       By default, uses the root-level model at persist/model.bal. Use the --model option to specify 
+       a subdirectory model at persist/<model-name>/model.bal for multi-model projects.
 
 OPTIONS
        --module <module name>
@@ -20,6 +24,9 @@ OPTIONS
        --test-datastore <store type>
               The type of the datastore to be used for testing.
               It can be either 'inmemory' for non-SQL or 'h2' for SQL, as these are the supported datastores.
+       --model <model-name>
+              Specify the model name to use a subdirectory model. If not specified, uses the root-level model.
+              The model must be defined at persist/<model-name>/model.bal.
        -h, --help
            Print the usage details of all commands.
 
@@ -31,4 +38,7 @@ EXAMPLES
           $ bal persist generate --module db --datastore mysql
 
        Generate client objects for the model definition file with the 'db' module, 'mysql' datastore, and 'h2' test datastore.
-          $ bal persist add --module db --datastore mysql --test-datastore h2
+          $ bal persist generate --module db --datastore mysql --test-datastore h2
+
+       Generate client objects for a specific model in a subdirectory.
+          $ bal persist generate --model users --datastore mysql

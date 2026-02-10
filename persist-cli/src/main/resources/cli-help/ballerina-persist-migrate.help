@@ -3,6 +3,7 @@ NAME
 
 SYNOPSIS
        bal persist migrate [<migration label>]
+                           [--model <model-name>]
                            [<-h> | <--help>]
 
 DESCRIPTION
@@ -10,10 +11,17 @@ DESCRIPTION
        The generated SQL script updates the database to the state of the current schema file. If there is no 
        previous migration, the current schema file is considered as the first migration and initializes the 
        migrations folder.
+       
+       By default, works with the root-level model at persist/model.bal and stores migrations in persist/migrations/.
+       Use the --model option to work with a subdirectory model at persist/<model-name>/model.bal and store 
+       migrations in persist/<model-name>/migrations/.
 
 OPTIONS
        <migration label>
             The label for the current migration.
+       --model <model-name>
+            Specify the model name to work with a subdirectory model. If not specified, uses the root-level model.
+            Migrations will be stored in persist/<model-name>/migrations/ for subdirectory models.
        -h, --help
            Print the usage details of all commands.
 
@@ -23,3 +31,6 @@ EXAMPLES
 
        Generate migration script based on the Ballerina schema changes. The generated script updates the database to the state of the current schema.
           $ bal persist migrate <migration label>
+
+       Generate migration script for a specific model.
+          $ bal persist migrate --model users add_user_preferences

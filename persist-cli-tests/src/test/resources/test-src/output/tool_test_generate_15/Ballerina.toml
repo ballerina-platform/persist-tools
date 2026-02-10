@@ -8,9 +8,16 @@ distribution = "2201.3.0"
 observabilityIncluded = false
 
 [[tool.persist]]
+id = "persist_generate_15_1"
 options.datastore = "mysql"
 targetModule = "persist_generate_15.entities1"
 
 [[tool.persist]]
+id = "persist_generate_15_2"
 options.datastore = "mysql"
 targetModule = "persist_generate_15.entities"
+
+[[platform.java21.dependency]]
+groupId = "io.ballerina.stdlib"
+artifactId = "persist.sql-native"
+version = "1.7.0"

@@ -41,10 +41,13 @@ import io.ballerina.tools.text.TextDocuments;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -56,6 +59,7 @@ import java.util.Properties;
 public class TomlSyntaxUtils {
 
     public static final String REGEX_TOML_TABLE_NAME_SPLITTER = "\\.";
+    private static final PrintStream errStream = System.err;
 
     private TomlSyntaxUtils() {
     }
@@ -170,16 +174,24 @@ public class TomlSyntaxUtils {
         NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
         TableArrayNode dependencyNode = null;
         TableArrayNode testDependencyNode = null;
-        boolean persistConfigExists = false;
+        List<String> persistClientIds = new ArrayList<>();
         if (Objects.nonNull(fileNamePath)) {
             SyntaxTree syntaxTree = SyntaxTree.from(configDocument, fileNamePath.toString());
             DocumentNode rootNote = syntaxTree.rootNode();
             NodeList<DocumentMemberDeclarationNode> nodeList = rootNote.members();
             for (DocumentMemberDeclarationNode member : nodeList) {
                 if (member instanceof TableArrayNode node) {
-                    if (node.identifier().toSourceCode().trim().equals(PersistToolsConstants.PERSIST_TOOL_CONFIG)) {
-                        persistConfigExists = true;
-                    } else if (node.identifier().toSourceCode().trim().equals("platform.java21.dependency")) {
+                    if (node.identifier().toSourceCode().trim().matches("tool\\..*")) {
+                        NodeList<KeyValueNode> fields = ((TableArrayNode) member).fields();
+                        for (KeyValueNode field : fields) {
+                            String value = field.value().toSourceCode().trim();
+                            if (field.identifier().toSourceCode().trim().equals(
+                                    PersistToolsConstants.TomlFileConstants.ID)) {
+                                persistClientIds.add(value.substring(1, value.length() - 1));
+                            }
+                        }
+                    }
+                    if (node.identifier().toSourceCode().trim().equals("platform.java21.dependency")) {
                         NodeList<KeyValueNode> fields = ((TableArrayNode) member).fields();
                         for (KeyValueNode field : fields) {
                             String value = field.value().toSourceCode().trim();
@@ -209,14 +221,14 @@ public class TomlSyntaxUtils {
                 }
             }
         }
-        return new ConfigDeclaration(moduleMembers, dependencyNode, testDependencyNode, persistConfigExists);
+        return new ConfigDeclaration(moduleMembers, dependencyNode, testDependencyNode, persistClientIds);
     }
 
     public record ConfigDeclaration(
             NodeList<DocumentMemberDeclarationNode> moduleMembers,
             TableArrayNode dependencyNode,
             TableArrayNode testDependencyNode,
-            boolean persistConfigExists) {
+            List<String> persistClientIds) {
     }
 
     public static NativeDependency getDependencyConfig(String datasource, String testDatasource) {
@@ -245,12 +257,45 @@ public class TomlSyntaxUtils {
         for (KeyValueNode field : fields) {
             String value = field.value().toSourceCode().trim().replaceAll("\"", "");
             if (field.identifier().toSourceCode().trim().equals(
-                    PersistToolsConstants.TomlFileConstants.KEYWORD_VERSION) &&
-                    !(value.equals(getPersistVersion(datasource)))) {
-                throw new BalException("the 'Ballerina.toml' file is already updated with the Persist client native " +
-                        "dependency but the version is different from the current version. Please remove the " +
-                        "existing dependency and try again.");
+                    PersistToolsConstants.TomlFileConstants.KEYWORD_VERSION)) {
+                String packedVersion = getPersistVersion(datasource);
+                if (!isCompatibleVersion(value, packedVersion)) {
+                    throw new BalException("the 'Ballerina.toml' file is already updated with the Persist client" +
+                            " native dependency but the version is not compatible with the version packed with the" +
+                            " tool(existing version: " + value + ", packed version: " + packedVersion +
+                            "). " + "please remove the existing dependency and try again.");
+                }
             }
+        }
+    }
+
+    public static boolean isCompatibleVersion(String existingVersion, String packedVersion) {
+        // The existing version should be the same major and minor version as the packed version
+        // If the existing version's patch version is less than the packed version's patch version,
+        // print a warning but allow it to be compatible since it can be an older patch version of the same release.
+        String[] existingVersionParts = existingVersion.split("\\.");
+        String[] packedVersionParts = packedVersion.split("\\.");
+        if (existingVersionParts.length != 3 || packedVersionParts.length != 3) {
+            return false;
+        }
+        if (!existingVersionParts[0].equals(packedVersionParts[0]) ||
+                !existingVersionParts[1].equals(packedVersionParts[1])) {
+            return false;
+        }
+        try {
+            // Extract numeric patch version, ignoring qualifiers like -SNAPSHOT, -alpha
+            int existingPatchVersion = Integer.parseInt(existingVersionParts[2].split("-")[0]);
+            int packedPatchVersion = Integer.parseInt(packedVersionParts[2].split("-")[0]);
+            if (existingPatchVersion < packedPatchVersion) {
+                errStream.println("WARNING: the existing version of the Persist client native dependency is older " +
+                        "than the version packed with the tool. consider updating the version to avoid potential " +
+                        "compatibility issues (existing version: " + existingVersion + ", packed version: " +
+                        packedVersion + ").");
+            }
+            return true;
+        } catch (NumberFormatException e) {
+            // Invalid version format, treat as incompatible
+            return false;
         }
     }
 

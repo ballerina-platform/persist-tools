@@ -97,6 +97,9 @@ public class Generate implements BLauncherCmd {
             " of configurables")
     private boolean initParams;
 
+    @CommandLine.Option(names = { "--model" })
+    private String model;
+
     @Override
     public void execute() {
         Path generatedSourceDirPath;
@@ -218,14 +221,14 @@ public class Generate implements BLauncherCmd {
         }
 
         try {
-            schemaFilePath = BalProjectUtils.getSchemaFilePath(this.sourcePath);
+            schemaFilePath = BalProjectUtils.getSchemaFilePath(this.sourcePath, model);
         } catch (BalException e) {
             errStream.println(e.getMessage());
             return;
         }
 
         try {
-            BalProjectUtils.updateToml(sourcePath, datastore, moduleNameWithPackage);
+            BalProjectUtils.updateToml(sourcePath, datastore, moduleNameWithPackage, model);
             String syntaxTree = updateBallerinaToml(Paths.get(this.sourcePath, BALLERINA_TOML),
                     datastore, testDatastore);
             FileUtils.writeToTargetFile(syntaxTree,
@@ -304,11 +307,6 @@ public class Generate implements BLauncherCmd {
             throws BalException, IOException {
         TomlSyntaxUtils.NativeDependency dependency = getDependencyConfig(datastore, testDatastore);
         TomlSyntaxUtils.ConfigDeclaration declaration = getConfigDeclaration(tomlPath, dependency);
-        if (declaration.persistConfigExists()) {
-            throw new BalException("persist configuration already exists in the Ballerina.toml. " +
-                    "remove the existing configuration and try again.");
-        }
-
         return populateNativeDependencyConfig(datastore, testDatastore, declaration, dependency);
     }
 

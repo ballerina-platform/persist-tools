@@ -95,6 +95,9 @@ public class Pull implements BLauncherCmd {
     @CommandLine.Option(names = { "-h", "--help" }, hidden = true)
     private boolean helpFlag;
 
+    @CommandLine.Option(names = { "--model" })
+    private String model;
+
     @Override
     public void execute() {
         Scanner scanner = new Scanner(System.in, StandardCharsets.UTF_8);
@@ -121,6 +124,10 @@ public class Pull implements BLauncherCmd {
         }
 
         Path persistDir = Paths.get(this.sourcePath, PERSIST_DIRECTORY);
+        Path targetModelDir = persistDir;
+        String modelFileName = "model.bal";
+        String modelDisplayPath = "persist/model.bal";
+
         if (!Files.exists(persistDir)) {
             try {
                 Files.createDirectory(persistDir.toAbsolutePath());
@@ -130,9 +137,28 @@ public class Pull implements BLauncherCmd {
             }
         }
 
-        boolean modelFile = Files.exists(Path.of(String.valueOf(persistDir), "model.bal"));
+        // Handle model-specific directory structure
+        if (model != null && !model.isBlank()) {
+            try {
+                io.ballerina.persist.utils.BalProjectUtils.validateModelName(model);
+                targetModelDir = persistDir.resolve(model);
+                modelDisplayPath = "persist/" + model + "/model.bal";
+
+                if (!Files.exists(targetModelDir)) {
+                    Files.createDirectory(targetModelDir.toAbsolutePath());
+                }
+            } catch (BalException e) {
+                errStream.println("ERROR: " + e.getMessage());
+                return;
+            } catch (IOException e) {
+                errStream.println("ERROR: failed to create the model directory '" + model + "'. " + e.getMessage());
+                return;
+            }
+        }
+
+        boolean modelFile = Files.exists(targetModelDir.resolve(modelFileName));
         if (modelFile) {
-            errStream.print(YELLOW_COLOR + "WARNING A model.bal file already exists. " +
+            errStream.print(YELLOW_COLOR + "WARNING A " + modelDisplayPath + " file already exists. " +
                     "Continuing would overwrite it. Do you wish to continue? (y/n) " + RESET_COLOR);
             String input = scanner.nextLine();
             if (!(input.toLowerCase(Locale.ENGLISH).equals("y") || input.toLowerCase(Locale.ENGLISH).equals("yes"))) {
@@ -201,7 +227,7 @@ public class Pull implements BLauncherCmd {
             return;
         }
 
-        SourceGenerator sourceGenerator = new SourceGenerator(sourcePath, Paths.get(sourcePath, PERSIST_DIRECTORY),
+        SourceGenerator sourceGenerator = new SourceGenerator(sourcePath, targetModelDir,
                 "Introspect.db", entityModule);
 
         try {
@@ -211,7 +237,7 @@ public class Pull implements BLauncherCmd {
                     e.getMessage()));
             return;
         }
-        errStream.println("Introspection complete! The model.bal file created successfully.");
+        errStream.println("Introspection complete! The " + modelDisplayPath + " file created successfully.");
     }
 
     /**

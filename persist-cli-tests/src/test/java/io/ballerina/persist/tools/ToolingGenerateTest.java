@@ -171,8 +171,8 @@ public class ToolingGenerateTest {
     @Description("There are three entities in two schema files")
     public void testGenerateThreeEntitiesWith1To1AssociationsWithChildEntityInSubModule() {
         updateOutputBallerinaToml("tool_test_generate_15");
-        assertGeneratedSourcesNegative("tool_test_generate_15", GENERATE, new String[]{},
-                "--datastore", "mysql", "--module", "entities");
+        executeGenerateCommand("tool_test_generate_15", "--datastore", "mysql", "--module", "entities");
+        assertGeneratedSources("tool_test_generate_15");
     }
 
     @Test(enabled = true)

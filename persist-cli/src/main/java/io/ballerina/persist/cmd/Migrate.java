@@ -77,7 +77,7 @@ public class Migrate implements BLauncherCmd {
 
     @CommandLine.Parameters
     public List<String> argList;
-    @CommandLine.Option(names = {"--datastore"})
+    @CommandLine.Option(names = { "--datastore" })
     private String datastore = "mysql";
 
     public Migrate() {
@@ -90,6 +90,9 @@ public class Migrate implements BLauncherCmd {
 
     @CommandLine.Option(names = { "-h", "--help" }, hidden = true)
     private boolean helpFlag;
+
+    @CommandLine.Option(names = { "--model" })
+    private String model;
 
     @Override
     public void execute() {
@@ -129,43 +132,52 @@ public class Migrate implements BLauncherCmd {
             return;
         }
 
-        String migrationName = argList.get(0);
+        String migrationName = argList.getFirst();
 
         // Returns the path of the bal file in the persist directory
         Path schemaFilePath;
         try {
-            schemaFilePath = BalProjectUtils.getSchemaFilePath(this.sourcePath);
+            schemaFilePath = BalProjectUtils.getSchemaFilePath(this.sourcePath, model);
         } catch (BalException e) {
-            errStream.println(e.getMessage());
+            errStream.println("Error: " + e.getMessage());
             return;
         }
 
-        migrate(migrationName, projectPath, this.sourcePath, schemaFilePath);
+        migrate(migrationName, projectPath, this.sourcePath, schemaFilePath, model);
 
     }
 
-    private static void migrate(String migrationName, Path projectDirPath, String sourcePath, Path schemaFilePath) {
+    private static void migrate(String migrationName, Path projectDirPath, String sourcePath, Path schemaFilePath,
+            String model) {
         if (schemaFilePath != null) {
             Path persistDirPath = Paths.get(projectDirPath.toString(), "persist");
 
             // Create a File object for the persist directory
             File persistDir = new File(persistDirPath.toString());
 
-            // Create a File object for the migrations directory
-            File migrationsDir = new File(persistDir, "migrations");
+            // Determine migrations directory based on model
+            File migrationsDir;
+            if (model != null && !model.trim().isEmpty()) {
+                // Model-specific migrations: persist/{model}/migrations/
+                File modelDir = new File(persistDir, model);
+                migrationsDir = new File(modelDir, "migrations");
+            } else {
+                // Root model migrations: persist/migrations/
+                migrationsDir = new File(persistDir, "migrations");
+            }
 
             // Check if the migrations directory exists
             if (!migrationsDir.exists()) {
-                // Create the migrations directory
-                boolean created = migrationsDir.mkdir();
+                // Create the migrations directory (and parent directories if needed)
+                boolean created = migrationsDir.mkdirs();
                 if (!created) {
                     errStream.println("Error: failed to create migrations directory inside the persist directory");
                     return;
                 }
 
-                Module model;
+                Module entityModule;
                 try {
-                    model = BalProjectUtils.getEntities(schemaFilePath);
+                    entityModule = BalProjectUtils.getEntities(schemaFilePath);
                 } catch (BalException e) {
                     errStream.println("Error getting entities: " + e.getMessage());
                     return;
@@ -177,20 +189,21 @@ public class Migrate implements BLauncherCmd {
 
                 Path newMigrationPath = Paths.get(newMigration);
 
-                if (!model.getEntityMap().isEmpty()) {
+                if (!entityModule.getEntityMap().isEmpty()) {
                     try {
                         // Generate the SQL script
                         SourceGenerator.addSqlScriptFile("the migrate command",
-                                SqlScriptUtils.generateSqlScript(model.getEntityMap().values(),
-                                        PersistToolsConstants.SupportedDataSources.MYSQL_DB), newMigrationPath);
+                                SqlScriptUtils.generateSqlScript(entityModule.getEntityMap().values(),
+                                        PersistToolsConstants.SupportedDataSources.MYSQL_DB),
+                                newMigrationPath);
                     } catch (BalException e) {
                         errStream.println("ERROR: failed to generate SQL script " + e.getMessage());
                         return;
                     }
 
                     try {
-                        // Copy the source file to the destination folder
-                        Files.copy(schemaFilePath, newMigrationPath.resolve(schemaFilePath.getFileName()));
+                        // Copy the source file to the destination folder with standard name
+                        Files.copy(schemaFilePath, newMigrationPath.resolve("model.bal"));
                     } catch (IOException e) {
                         errStream.println("Error: Copying file failed: " + e.getMessage());
                         return;
@@ -200,7 +213,7 @@ public class Migrate implements BLauncherCmd {
                     Path relativePath = Paths.get("").toAbsolutePath().relativize(newMigrationPath);
 
                     List<String> differences = new ArrayList<>();
-                    differences.add("Table " + String.join(", ", model.getEntityMap().keySet())
+                    differences.add("Table " + String.join(", ", entityModule.getEntityMap().keySet())
                             + " has been added");
                     printDetailedListOfDifferences(differences);
                     errStream.println(
@@ -217,7 +230,7 @@ public class Migrate implements BLauncherCmd {
             } else {
                 // Migrate with the latest bal file in the migrations directory
                 migrateWithTimestamp(migrationsDir, migrationName, schemaFilePath,
-                        findLatestBalFile(getDirectoryPaths(migrationsDir.toString()), sourcePath));
+                        findLatestBalFile(getDirectoryPaths(migrationsDir.toString()), sourcePath, model));
             }
         }
     }
@@ -251,9 +264,9 @@ public class Migrate implements BLauncherCmd {
     }
 
     // Get the path of the latest .bal file in the migrations directory
-    private static Path findLatestBalFile(List<String> folderNames, String sourcePath) {
+    private static Path findLatestBalFile(List<String> folderNames, String sourcePath, String model) {
         if (folderNames.size() == 1) {
-            return findBalFileInFolder(folderNames.get(0), sourcePath);
+            return findBalFileInFolder(folderNames.getFirst(), sourcePath, model);
         }
 
         String latestTimestamp = "";
@@ -271,13 +284,22 @@ public class Migrate implements BLauncherCmd {
             }
         }
 
-        return findBalFileInFolder(latestTimestamp, sourcePath);
+        return findBalFileInFolder(latestTimestamp, sourcePath, model);
     }
 
     // Find the .bal file in the given folder
-    private static Path findBalFileInFolder(String folderName, String sourcePath) {
-        Path folderPath = Paths.get(sourcePath).resolve("persist")
-                .resolve("migrations").resolve(folderName).toAbsolutePath();
+    private static Path findBalFileInFolder(String folderName, String sourcePath, String model) {
+        Path folderPath;
+        if (model != null && !model.trim().isEmpty()) {
+            // Model-specific path: persist/{model}/migrations/{timestamp}/
+            folderPath = Paths.get(sourcePath).resolve("persist")
+                    .resolve(model).resolve("migrations").resolve(folderName).toAbsolutePath();
+        } else {
+            // Root model path: persist/migrations/{timestamp}/
+            folderPath = Paths.get(sourcePath).resolve("persist")
+                    .resolve("migrations").resolve(folderName).toAbsolutePath();
+        }
+
         File folder = folderPath.toFile();
         File[] files = folder.listFiles();
 
