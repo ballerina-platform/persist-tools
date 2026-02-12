@@ -309,14 +309,94 @@ public class ToolingAddTest {
         assertGeneratedSources("tool_test_add_25_init_params_h2");
     }
 
+    // Multi-model support tests
+
+    @Test
+    @Description("Test add command with --model option for subdirectory model")
+    public void testAddWithModelOption() throws ClassNotFoundException, NoSuchMethodException,
+            InvocationTargetException, InstantiationException, IllegalAccessException {
+        Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Add");
+        Add persistCmd = (Add) persistClass.getDeclaredConstructor(String.class).newInstance(
+                Paths.get(GENERATED_SOURCES_DIRECTORY, "tool_test_add_multimodel_1").toAbsolutePath().toString());
+        new CommandLine(persistCmd).parseArgs("--datastore", "mysql", "--model", "store", "--id", "store-client",
+                "--module", "store");
+        persistCmd.execute();
+        assertGeneratedSources("tool_test_add_multimodel_1");
+    }
+
+    @Test
+    @Description("Test add command with multiple models having different datastores")
+    public void testAddMultipleModels() throws ClassNotFoundException, NoSuchMethodException,
+            InvocationTargetException, InstantiationException, IllegalAccessException {
+        Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Add");
+        // Add first model with MySQL
+        Add persistCmd1 = (Add) persistClass.getDeclaredConstructor(String.class).newInstance(
+                Paths.get(GENERATED_SOURCES_DIRECTORY, "tool_test_add_multimodel_2").toAbsolutePath().toString());
+        new CommandLine(persistCmd1).parseArgs("--datastore", "mysql", "--model", "users", "--id", "users-client",
+                "--module", "users");
+        persistCmd1.execute();
+        
+        // Add second model with PostgreSQL
+        Add persistCmd2 = (Add) persistClass.getDeclaredConstructor(String.class).newInstance(
+                Paths.get(GENERATED_SOURCES_DIRECTORY, "tool_test_add_multimodel_2").toAbsolutePath().toString());
+        new CommandLine(persistCmd2).parseArgs("--datastore", "postgresql", "--model", "orders", "--id",
+                "orders-client", "--module", "orders");
+        persistCmd2.execute();
+        
+        assertGeneratedSources("tool_test_add_multimodel_2");
+    }
+
+    @Test
+    @Description("Test add command conflict detection - duplicate ID")
+    public void testAddDuplicateId() throws ClassNotFoundException, NoSuchMethodException,
+            InvocationTargetException, InstantiationException, IllegalAccessException {
+        Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Add");
+        Path sourcePath = Paths.get(GENERATED_SOURCES_DIRECTORY, "tool_test_add_multimodel_3");
+        
+        // Add first config
+        Add persistCmd1 = (Add) persistClass.getDeclaredConstructor(String.class)
+                .newInstance(sourcePath.toAbsolutePath().toString());
+        new CommandLine(persistCmd1).parseArgs("--datastore", "mysql", "--id", "test-client");
+        persistCmd1.execute();
+        
+        // Try to add second config with same ID - should fail
+        assertGeneratedSourcesNegative("tool_test_add_multimodel_3", ADD, 
+                new String[]{"persist/orders/model.bal"}, "--datastore", "postgresql", "--id", "test-client",
+                "--model", "orders", "--module", "orders");
+    }
+
+    @Test
+    @Description("Test add command backward compatibility - existing config preserved")
+    public void testAddBackwardCompatibility() {
+        // This test should demonstrate that existing single-model config is preserved
+        // when adding a new model
+        executeCommand("tool_test_add_backward_compat");
+        assertGeneratedSources("tool_test_add_backward_compat");
+    }
+
+    @Test
+    @Description("Test add command in a hybrid structure - existing root model preserved when adding " +
+            "subdirectory model")
+    public void testAddHybridStructure() {
+        // First add root model
+        executeCommand("tool_test_add_hybrid");
+        // Then add subdirectory model
+        executeCommand("tool_test_add_hybrid", "--datastore", "mysql", "--model", "users", "--module", "users");
+        assertGeneratedSources("tool_test_add_hybrid");
+    }
+
     private void executeCommand(String subDir) {
+        executeCommand(subDir, "--datastore", "mysql");
+    }
+
+    private void executeCommand(String subDir, String... args) {
         Class<?> persistClass;
         Path sourcePath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);
         try {
             persistClass = Class.forName("io.ballerina.persist.cmd.Add");
             Add persistCmd = (Add) persistClass.getDeclaredConstructor(String.class)
                     .newInstance(sourcePath.toAbsolutePath().toString());
-            new CommandLine(persistCmd).parseArgs("--datastore", "mysql");
+            new CommandLine(persistCmd).parseArgs(args);
             persistCmd.execute();
         } catch (ClassNotFoundException | IllegalAccessException | InstantiationException |
                  NoSuchMethodException | InvocationTargetException e) {

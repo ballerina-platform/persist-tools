@@ -1,0 +1,8 @@
+[package]
+distribution = "2201.13.0"
+name = "tool_test_pull_multimodel_subdirectory"
+org = "wso2"
+version = "0.1.0"
+
+[build-options]
+observabilityIncluded = true

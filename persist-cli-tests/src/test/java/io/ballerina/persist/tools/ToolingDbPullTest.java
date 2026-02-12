@@ -20,6 +20,7 @@ package io.ballerina.persist.tools;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.cmd.Pull;
 import io.ballerina.persist.configuration.DatabaseConfiguration;
+import io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils;
 import jdk.jfr.Description;
 import org.junit.jupiter.api.condition.OS;
 import org.testng.annotations.DataProvider;
@@ -37,6 +38,7 @@ import static io.ballerina.persist.tools.utils.DatabaseTestUtils.createFromDatab
 import static io.ballerina.persist.tools.utils.DatabaseTestUtils.resetMsSqlDatabase;
 import static io.ballerina.persist.tools.utils.DatabaseTestUtils.resetPostgreSqlDatabase;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertGeneratedSources;
+import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertGeneratedSourcesNegative;
 
 public class ToolingDbPullTest {
 
@@ -1102,6 +1104,118 @@ public class ToolingDbPullTest {
         } catch (Exception e) {
             throw new BalException("Error occurred while executing pull command in interactive mode: " +
                     e.getMessage());
+        }
+    }
+
+    // Multi-model support tests
+
+    @Test
+    @Description("Test pull command with --model option to create subdirectory model")
+    public void testPullWithModelOption() throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        resetPostgreSqlDatabase(postgresDbConfig, true);
+        createFromDatabaseScript("tool_test_pull_multimodel_1", "postgresql", postgresDbConfig);
+        executePullCommandWithModel("tool_test_pull_multimodel_1", "users", postgresDbConfig, "postgresql");
+        assertGeneratedSources("tool_test_pull_multimodel_1");
+    }
+
+    @Test
+    @Description("Test pull command with multiple models from different databases")
+    public void testPullMultipleModels() throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        resetPostgreSqlDatabase(postgresDbConfig, true);
+        createFromDatabaseScript("tool_test_pull_multimodel_2", "postgresql", postgresDbConfig);
+        
+        // Pull first model
+        executePullCommandWithModel("tool_test_pull_multimodel_2", "users", postgresDbConfig, "postgresql");
+        // Pull second model
+        executePullCommandWithModel("tool_test_pull_multimodel_2", "orders", postgresDbConfig, "postgresql");
+        
+        assertGeneratedSources("tool_test_pull_multimodel_2");
+    }
+
+    @Test
+    @Description("Test pull command backward compatibility - creates root model by default")
+    public void testPullDefaultModelPath() throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        resetPostgreSqlDatabase(postgresDbConfig, true);
+        createFromDatabaseScript("tool_test_pull_backward_compat", "postgresql", postgresDbConfig);
+        executePullCommandWithoutModel("tool_test_pull_backward_compat", postgresDbConfig, "postgresql");
+        assertGeneratedSources("tool_test_pull_backward_compat");
+    }
+
+    @Test
+    @Description("Test pull command with reserved model name should fail")
+    public void testPullReservedModelName() throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        resetPostgreSqlDatabase(postgresDbConfig, true);
+        createFromDatabaseScript("tool_test_pull_multimodel_3", "postgresql", postgresDbConfig);
+        assertGeneratedSourcesNegative("tool_test_pull_multimodel_3", GeneratedSourcesTestUtils.Command.PULL,
+                new String[]{"persist/migrations"}, "--model", "migrations", "--datastore", "postgresql",
+                "--host", postgresDbConfig.getHost(),
+                "--port", String.valueOf(postgresDbConfig.getPort()),
+                "--user", postgresDbConfig.getUsername(),
+                "--database", postgresDbConfig.getDatabase());
+    }
+
+    private static void executePullCommandWithModel(String subDir, String modelName, DatabaseConfiguration dbConfig,
+                                                    String datastore) throws BalException {
+        try {
+            Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Pull");
+            Pull persistCmd = (Pull) persistClass.getDeclaredConstructor(String.class)
+                    .newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir).toAbsolutePath().toString());
+            new CommandLine(persistCmd).parseArgs("--datastore", datastore,
+                    "--host", dbConfig.getHost(),
+                    "--port", String.valueOf(dbConfig.getPort()),
+                    "--user", dbConfig.getUsername(),
+                    "--database", dbConfig.getDatabase(),
+                    "--model", modelName);
+            String input = dbConfig.getPassword() + "\ny\n";
+            InputStream originalSystemIn = System.in;
+            try (InputStream inputStream = new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8))) {
+                System.setIn(inputStream);
+                persistCmd.execute();
+            } finally {
+                System.setIn(originalSystemIn);
+            }
+        } catch (RuntimeException e) {
+            throw new RuntimeException("Error occurred while executing pull command with model: " + e.getMessage());
+        } catch (Exception e) {
+            throw new BalException("Error occurred while executing pull command with model: " + e.getMessage());
+        }
+    }
+
+    private static void executePullCommandWithoutModel(String subDir, DatabaseConfiguration dbConfig, 
+            String datastore) throws BalException {
+        try {
+            Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Pull");
+            Pull persistCmd = (Pull) persistClass.getDeclaredConstructor(String.class)
+                    .newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir).toAbsolutePath().toString());
+            new CommandLine(persistCmd).parseArgs("--datastore", datastore,
+                    "--host", dbConfig.getHost(),
+                    "--port", String.valueOf(dbConfig.getPort()),
+                    "--user", dbConfig.getUsername(),
+                    "--database", dbConfig.getDatabase());
+            String input = dbConfig.getPassword() + "\ny\n";
+            InputStream originalSystemIn = System.in;
+            try (InputStream inputStream = new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8))) {
+                System.setIn(inputStream);
+                persistCmd.execute();
+            } finally {
+                System.setIn(originalSystemIn);
+            }
+        } catch (RuntimeException e) {
+            throw new RuntimeException("Error occurred while executing pull command: " + e.getMessage());
+        } catch (Exception e) {
+            throw new BalException("Error occurred while executing pull command: " + e.getMessage());
         }
     }
 }

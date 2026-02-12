@@ -1,0 +1,18 @@
+[package]
+org = "foo"
+name = "tool_test_generate_multimodel_specific"
+version = "0.1.0"
+distribution = "2201.13.0"
+
+[build-options]
+observabilityIncluded = true
+
+[[platform.java21.dependency]]
+groupId = "io.ballerina.stdlib"
+artifactId = "persist.sql-native"
+version = "1.7.0"
+
+[[platform.java21.dependency]]
+groupId = "io.ballerina.stdlib"
+artifactId = "persist.inmemory-native"
+version = "1.6.0"

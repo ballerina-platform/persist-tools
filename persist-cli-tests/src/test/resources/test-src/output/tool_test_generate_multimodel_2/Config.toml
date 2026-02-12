@@ -1,0 +1,15 @@
+[tool_test_generate_multimodel_multiple.users]
+host = "localhost"
+port = 3306
+user = "root"
+password = ""
+database = ""
+
+[tool_test_generate_multimodel_multiple]
+host = "localhost"
+port = 5432
+user = "postgres"
+password = ""
+database = ""
+
+

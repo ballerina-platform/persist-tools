@@ -1,0 +1,8 @@
+[[tool.persist]]
+options.datastore = "mysql"
+module = "tool_test_generate_multimodel_multiple.users"
+model = "users"
+[[tool.persist]]
+options.datastore = "postgresql"
+module = "tool_test_generate_multimodel_multiple"
+model = "orders"

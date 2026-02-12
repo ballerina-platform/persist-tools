@@ -1,0 +1,7 @@
+[[tool.persist]]
+options.datastore = "mysql"
+module = "tool_test_generate_hybrid"
+[[tool.persist]]
+options.datastore = "postgresql"
+module = "tool_test_generate_hybrid.analytics"
+model = "analytics"

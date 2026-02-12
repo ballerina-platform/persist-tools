@@ -1,3 +1,12 @@
 [[tool.persist]]
+options.datastore = "mysql"
+module = "tool_test_generate_82.entities"
+[[tool.persist]]
+options.datastore = "mssql"
+module = "tool_test_generate_82.mssql_entities"
+[[tool.persist]]
+options.datastore = "h2"
+module = "tool_test_generate_82.h2_entities"
+[[tool.persist]]
 options.datastore = "postgresql"
 module = "tool_test_generate_82.postgresql_entities"

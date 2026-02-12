@@ -1,0 +1,4 @@
+[[tool.persist]]
+options.datastore = "mysql"
+module = "tool_test_generate_multimodel_subdirectory"
+model = "users"

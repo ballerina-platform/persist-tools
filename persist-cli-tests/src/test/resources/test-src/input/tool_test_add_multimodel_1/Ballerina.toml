@@ -1,0 +1,8 @@
+[package]
+org = "foo"
+name = "persist_add_multimodel_subdirectory"
+version = "0.1.0"
+distribution = "2201.13.0"
+
+[build-options]
+observabilityIncluded = true

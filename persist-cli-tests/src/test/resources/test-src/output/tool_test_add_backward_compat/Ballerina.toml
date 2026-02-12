@@ -1,0 +1,14 @@
+[package]
+org = "foo"
+name = "persist_add_backward_compat"
+version = "0.1.0"
+distribution = "2201.13.0"
+
+[build-options]
+observabilityIncluded = true
+
+[[tool.persist]]
+id = "generate-db-client"
+targetModule = "persist_add_backward_compat"
+options.datastore = "mysql"
+filePath = "persist/model.bal"

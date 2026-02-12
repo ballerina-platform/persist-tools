@@ -1,0 +1,14 @@
+[package]
+org = "foo"
+name = "persist_add_multimodel_duplicate"
+version = "0.1.0"
+distribution = "2201.13.0"
+
+[build-options]
+observabilityIncluded = true
+
+[[tool.persist]]
+id = "generate-users-client"
+targetModule = "persist_add_multimodel_duplicate.users"
+options.datastore = "users"
+filePath = "persist/users/model.bal"

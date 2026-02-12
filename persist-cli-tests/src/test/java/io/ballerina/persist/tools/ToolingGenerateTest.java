@@ -1207,6 +1207,65 @@ public class ToolingGenerateTest {
                 "--datastore", "mysql", "--module", "entities", "--with-init-params");
     }
 
+    // Multi-model support tests
+
+    @Test
+    @Description("Test generate command with --model option for subdirectory model")
+    public void testGenerateWithModelOption() {
+        updateOutputBallerinaToml("tool_test_generate_multimodel_1");
+        executeGenerateCommand("tool_test_generate_multimodel_1", "--datastore", "mysql", "--model", "users");
+        assertGeneratedSources("tool_test_generate_multimodel_1");
+    }
+
+    @Test
+    @Description("Test generate command with multiple models having different datastores")
+    public void testGenerateMultipleModels() {
+        updateOutputBallerinaToml("tool_test_generate_multimodel_2");
+        executeGenerateCommand("tool_test_generate_multimodel_2", "--datastore", "mysql", "--model",
+                "users", "--module", "users");
+        executeGenerateCommand("tool_test_generate_multimodel_2", "--datastore", "postgresql", "--model", "orders");
+        assertGeneratedSources("tool_test_generate_multimodel_2");
+    }
+
+    @Test
+    @Description("Test generate command backward compatibility - uses root model by default")
+    public void testGenerateBackwardCompatibility() {
+        updateOutputBallerinaToml("tool_test_generate_backward_compat");
+        executeGenerateCommand("tool_test_generate_backward_compat", "--datastore", "mysql");
+        assertGeneratedSources("tool_test_generate_backward_compat");
+    }
+
+    @Test
+    @Description("Test generate command with hybrid structure - root and subdirectory models")
+    public void testGenerateHybridStructure() {
+        updateOutputBallerinaToml("tool_test_generate_hybrid");
+        // Generate root model
+        executeGenerateCommand("tool_test_generate_hybrid", "--datastore", "mysql");
+        // Generate subdirectory model
+        executeGenerateCommand("tool_test_generate_hybrid", "--datastore", "postgresql", "--model",
+                "analytics", "--module", "analytics");
+        assertGeneratedSources("tool_test_generate_hybrid");
+    }
+
+    @Test
+    @Description("Test generate command with  independent entities in different models")
+    public void testGenerateIndependentModels() {
+        updateOutputBallerinaToml("tool_test_generate_multimodel_3");
+        executeGenerateCommand("tool_test_generate_multimodel_3", "--datastore", "mysql", "--model",
+                "users", "--module", "users");
+        executeGenerateCommand("tool_test_generate_multimodel_3", "--datastore", "inmemory", "--model", "cache");
+        assertGeneratedSources("tool_test_generate_multimodel_3");
+    }
+
+    @Test
+    @Description("Test generate command with model-specific module")
+    public void testGenerateModelSpecificModule() {
+        updateOutputBallerinaToml("tool_test_generate_multimodel_4");
+        executeGenerateCommand("tool_test_generate_multimodel_4", "--datastore", "mysql", "--model", "users", 
+                "--module", "db.users");
+        assertGeneratedSources("tool_test_generate_multimodel_4");
+    }
+
     private void updateOutputBallerinaToml(String fileName) {
         String tomlFileName = "Ballerina.toml";
         Path filePath = Paths.get("src", "test", "resources", "test-src", "output", fileName, tomlFileName);
