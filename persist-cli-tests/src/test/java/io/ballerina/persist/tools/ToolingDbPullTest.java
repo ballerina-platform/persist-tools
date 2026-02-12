@@ -28,6 +28,7 @@ import org.testng.annotations.Test;
 import picocli.CommandLine;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
@@ -1152,18 +1153,25 @@ public class ToolingDbPullTest {
 
     @Test
     @Description("Test pull command with reserved model name should fail")
-    public void testPullReservedModelName() throws BalException {
+    public void testPullReservedModelName() throws BalException, IOException {
         if (OS.WINDOWS.isCurrentOs()) {
             return;
         }
         resetPostgreSqlDatabase(postgresDbConfig, true);
         createFromDatabaseScript("tool_test_pull_multimodel_3", "postgresql", postgresDbConfig);
-        assertGeneratedSourcesNegative("tool_test_pull_multimodel_3", GeneratedSourcesTestUtils.Command.PULL,
-                new String[]{"persist/migrations"}, "--model", "migrations", "--datastore", "postgresql",
-                "--host", postgresDbConfig.getHost(),
-                "--port", String.valueOf(postgresDbConfig.getPort()),
-                "--user", postgresDbConfig.getUsername(),
-                "--database", postgresDbConfig.getDatabase());
+        String input = postgresDbConfig.getPassword() + "\ny\n";
+        InputStream originalSystemIn = System.in;
+        try (InputStream inputStream = new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8))) {
+            System.setIn(inputStream);
+            assertGeneratedSourcesNegative("tool_test_pull_multimodel_3", GeneratedSourcesTestUtils.Command.PULL,
+                    new String[]{"persist/migrations"}, "--model", "migrations", "--datastore", "postgresql",
+                    "--host", postgresDbConfig.getHost(),
+                    "--port", String.valueOf(postgresDbConfig.getPort()),
+                    "--user", postgresDbConfig.getUsername(),
+                    "--database", postgresDbConfig.getDatabase());
+        } finally {
+            System.setIn(originalSystemIn);
+        }
     }
 
     private static void executePullCommandWithModel(String subDir, String modelName, DatabaseConfiguration dbConfig,
