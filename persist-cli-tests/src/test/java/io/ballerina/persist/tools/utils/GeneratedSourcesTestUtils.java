@@ -210,7 +210,8 @@ public class GeneratedSourcesTestUtils {
         try (Stream<Path> generatedFileList = Files.list(generatedMigrations)) {
             generatedFileList.forEach(generatedDirectory -> {
                 String generatedDirectoryNameWithoutTimeStamp = getDirectoryNameWithoutTimeStamp(generatedDirectory);
-                assert (generatedDirectoryNameWithoutTimeStamp != null);
+                Assert.assertNotNull(generatedDirectoryNameWithoutTimeStamp,
+                        "Generated directory name without timestamp should not be null");
                 try (Stream<Path> expectedFileList = Files.list(expectedMigrations)) {
                     for (Path expectedDirectory : expectedFileList.toList()) {
                         String expectedDirectoryNameWithoutTimeStamp = getDirectoryNameWithoutTimeStamp(

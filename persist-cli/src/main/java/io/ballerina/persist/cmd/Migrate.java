@@ -232,8 +232,13 @@ public class Migrate implements BLauncherCmd {
 
             } else {
                 // Migrate with the latest bal file in the migrations directory
-                migrateWithTimestamp(migrationsDir, migrationName, schemaFilePath,
-                        findLatestBalFile(getDirectoryPaths(migrationsDir.toString()), sourcePath, model));
+                Path latestBalFile = findLatestBalFile(getDirectoryPaths(migrationsDir.toString()), sourcePath, model);
+                if (latestBalFile == null) {
+                    errStream.println("Error: no previous model file found in migrations directory. " +
+                            "Please ensure migration subdirectories contain a valid .bal file.");
+                    return;
+                }
+                migrateWithTimestamp(migrationsDir, migrationName, schemaFilePath, latestBalFile);
             }
         }
     }
