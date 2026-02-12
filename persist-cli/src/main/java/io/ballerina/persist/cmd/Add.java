@@ -46,6 +46,7 @@ import java.util.Locale;
 import java.util.Objects;
 
 import static io.ballerina.persist.PersistToolsConstants.BAL_PERSIST_ADD_CMD;
+import static io.ballerina.persist.PersistToolsConstants.MODEL_FILE;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.getConfigDeclaration;
 import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.getDependencyConfig;
@@ -252,7 +253,7 @@ public class Add implements BLauncherCmd {
 
                 if (Files.exists(modelDir)) {
                     // Directory exists, check if model.bal exists
-                    Path modelFile = modelDir.resolve("model.bal");
+                    Path modelFile = modelDir.resolve(MODEL_FILE);
                     if (!Files.exists(modelFile)) {
                         FileUtils.generateSchemaBalFile(modelDir);
                     }
@@ -266,7 +267,7 @@ public class Add implements BLauncherCmd {
             }
         } else {
             // Create root model (backward compatible)
-            Path modelFile = persistPath.resolve("model.bal");
+            Path modelFile = persistPath.resolve(MODEL_FILE);
             if (!Files.exists(modelFile)) {
                 FileUtils.generateSchemaBalFile(persistPath);
             }

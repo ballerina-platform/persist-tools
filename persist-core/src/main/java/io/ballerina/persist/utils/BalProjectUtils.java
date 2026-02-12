@@ -82,6 +82,7 @@ import java.util.stream.IntStream;
 
 import static io.ballerina.compiler.syntax.tree.SyntaxKind.QUALIFIED_NAME_REFERENCE;
 import static io.ballerina.persist.PersistToolsConstants.GENERATE_CMD_FILE;
+import static io.ballerina.persist.PersistToolsConstants.MIGRATIONS;
 import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_DB_PROVIDERS;
 import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_NOSQL_DB_PROVIDERS;
 import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_SQL_DB_PROVIDERS;
@@ -145,7 +146,7 @@ public class BalProjectUtils {
     }
 
     public static void updateToml(String sourcePath, String datastore, String module, String model)
-            throws BalException, IOException {
+            throws BalException {
         String sourceContent = "[[tool.persist]]" + System.lineSeparator() +
                 "options.datastore = \"" + datastore + "\"" + System.lineSeparator() +
                 "module = \"" + module + "\"" + System.lineSeparator();
@@ -683,11 +684,11 @@ public class BalProjectUtils {
             throw new BalException("model name cannot contain spaces.");
         }
 
-        if (modelName.equals("migrations")) {
+        if (modelName.equals(MIGRATIONS)) {
             throw new BalException("model name 'migrations' is reserved and cannot be used.");
         }
 
-        if (!Pattern.matches("[A-Za-z][A-Za-z0-9_]*", modelName)) {
+        if (!Pattern.matches("[A-Za-z]\\w*", modelName)) {
             throw new BalException(
                     "model name '" + modelName + "' is invalid. Model name should start with a letter " +
                             "and contain only letters, numbers, and underscores.");

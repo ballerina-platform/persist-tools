@@ -100,7 +100,7 @@ public class ToolingInitTest {
     }
 
     @Test
-    public void testInitReservedModelName() throws ClassNotFoundException, NoSuchMethodException {
+    public void testInitReservedModelName() {
         // Attempt to create model with reserved name "migrations"
         assertGeneratedSourcesNegative("tool_test_init_multimodel_3", GeneratedSourcesTestUtils.Command.INIT,
                 new String[]{"persist/migrations"}, "--model", "migrations");

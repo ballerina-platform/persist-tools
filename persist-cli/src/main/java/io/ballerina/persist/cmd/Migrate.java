@@ -57,6 +57,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import static io.ballerina.persist.PersistToolsConstants.MIGRATIONS;
+import static io.ballerina.persist.PersistToolsConstants.MODEL_FILE;
+import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.nodegenerator.syntax.utils.SqlScriptUtils.getTableNameWithSchema;
 
 /**
@@ -150,7 +153,7 @@ public class Migrate implements BLauncherCmd {
     private static void migrate(String migrationName, Path projectDirPath, String sourcePath, Path schemaFilePath,
             String model) {
         if (schemaFilePath != null) {
-            Path persistDirPath = Paths.get(projectDirPath.toString(), "persist");
+            Path persistDirPath = Paths.get(projectDirPath.toString(), PERSIST_DIRECTORY);
 
             // Create a File object for the persist directory
             File persistDir = new File(persistDirPath.toString());
@@ -160,10 +163,10 @@ public class Migrate implements BLauncherCmd {
             if (model != null && !model.trim().isEmpty()) {
                 // Model-specific migrations: persist/{model}/migrations/
                 File modelDir = new File(persistDir, model);
-                migrationsDir = new File(modelDir, "migrations");
+                migrationsDir = new File(modelDir, MIGRATIONS);
             } else {
                 // Root model migrations: persist/migrations/
-                migrationsDir = new File(persistDir, "migrations");
+                migrationsDir = new File(persistDir, MIGRATIONS);
             }
 
             // Check if the migrations directory exists
@@ -203,7 +206,7 @@ public class Migrate implements BLauncherCmd {
 
                     try {
                         // Copy the source file to the destination folder with standard name
-                        Files.copy(schemaFilePath, newMigrationPath.resolve("model.bal"));
+                        Files.copy(schemaFilePath, newMigrationPath.resolve(MODEL_FILE));
                     } catch (IOException e) {
                         errStream.println("Error: Copying file failed: " + e.getMessage());
                         return;
@@ -292,12 +295,12 @@ public class Migrate implements BLauncherCmd {
         Path folderPath;
         if (model != null && !model.trim().isEmpty()) {
             // Model-specific path: persist/{model}/migrations/{timestamp}/
-            folderPath = Paths.get(sourcePath).resolve("persist")
-                    .resolve(model).resolve("migrations").resolve(folderName).toAbsolutePath();
+            folderPath = Paths.get(sourcePath).resolve(PERSIST_DIRECTORY)
+                    .resolve(model).resolve(MIGRATIONS).resolve(folderName).toAbsolutePath();
         } else {
             // Root model path: persist/migrations/{timestamp}/
-            folderPath = Paths.get(sourcePath).resolve("persist")
-                    .resolve("migrations").resolve(folderName).toAbsolutePath();
+            folderPath = Paths.get(sourcePath).resolve(PERSIST_DIRECTORY)
+                    .resolve(MIGRATIONS).resolve(folderName).toAbsolutePath();
         }
 
         File folder = folderPath.toFile();

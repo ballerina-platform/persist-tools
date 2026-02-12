@@ -1153,7 +1153,7 @@ public class ToolingDbPullTest {
 
     @Test
     @Description("Test pull command with reserved model name should fail")
-    public void testPullReservedModelName() throws BalException, IOException {
+    public void testPullReservedModelName() throws IOException {
         if (OS.WINDOWS.isCurrentOs()) {
             return;
         }

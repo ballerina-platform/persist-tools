@@ -46,10 +46,12 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import static io.ballerina.persist.PersistToolsConstants.CACHE_FILE;
+import static io.ballerina.persist.PersistToolsConstants.MODEL_FILE;
 import static io.ballerina.persist.PersistToolsConstants.OPTION_DATASTORE;
 import static io.ballerina.persist.PersistToolsConstants.OPTION_EAGER_LOADING;
 import static io.ballerina.persist.PersistToolsConstants.OPTION_INIT_PARAMS;
 import static io.ballerina.persist.PersistToolsConstants.OPTION_TEST_DATASTORE;
+import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.getConfigDeclaration;
 import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.getDependencyConfig;
 import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.populateNativeDependencyConfig;
@@ -163,13 +165,13 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
         // Extract model name from filePath
         // persist/model.bal -> null (default)
         // persist/users/model.bal -> users
-        if (filePath.endsWith("persist/model.bal")) {
+        if (filePath.endsWith(String.format("%s/%s", PERSIST_DIRECTORY, MODEL_FILE))) {
             return null; // Default model
         }
 
         String[] parts = filePath.split("/");
-        if (parts.length >= 3 && parts[parts.length - 1].equals("model.bal") &&
-                parts[parts.length - 3].equals("persist")) {
+        if (parts.length >= 3 && parts[parts.length - 1].equals(MODEL_FILE) &&
+                parts[parts.length - 3].equals(PERSIST_DIRECTORY)) {
             return parts[parts.length - 2]; // Subdirectory name as model name
         }
 
