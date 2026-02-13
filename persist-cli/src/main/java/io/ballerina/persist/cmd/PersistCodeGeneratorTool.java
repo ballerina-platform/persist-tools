@@ -126,7 +126,9 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
                 errStream.println("INFO: unable to validate the cache. Generating sources for the schema file.");
             }
 
-            BalProjectUtils.validateSchemaFile(schemaFilePath);
+            String modelFileName = modelName == null ? schemaFilePath.getFileName().toString() :
+                    String.format("%s/%s", modelName, schemaFilePath.getFileName());
+            BalProjectUtils.validateSchemaFile(schemaFilePath, modelFileName);
             Module entityModule = BalProjectUtils.getEntities(schemaFilePath);
             validateEntityModule(entityModule, schemaFilePath);
 

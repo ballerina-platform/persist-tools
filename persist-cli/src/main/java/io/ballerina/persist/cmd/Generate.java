@@ -227,23 +227,26 @@ public class Generate implements BLauncherCmd {
             return;
         }
 
+        String modelDefFileName = model == null ? schemaFilePath.getFileName().toString() : String.format("%s/%s",
+                model, schemaFilePath.getFileName());
+
         try {
             BalProjectUtils.updateToml(sourcePath, datastore, moduleNameWithPackage, model);
             String syntaxTree = updateBallerinaToml(Paths.get(this.sourcePath, BALLERINA_TOML),
                     datastore, testDatastore);
             FileUtils.writeToTargetFile(syntaxTree,
                     Paths.get(this.sourcePath, BALLERINA_TOML).toAbsolutePath().toString());
-            BalProjectUtils.validateSchemaFile(schemaFilePath);
+            BalProjectUtils.validateSchemaFile(schemaFilePath, modelDefFileName);
             Module module = BalProjectUtils.getEntities(schemaFilePath);
             if (module.getEntityMap().isEmpty()) {
                 errStream.printf("ERROR: the model definition file(%s) does not contain any entity definition.%n",
-                        schemaFilePath.getFileName());
+                        modelDefFileName);
                 return;
             }
             entityModule = module;
         } catch (BalException | IOException e) {
             errStream.printf("ERROR: Failed to generate types and client for the definition file(%s). %s%n",
-                    schemaFilePath.getFileName(), e.getMessage());
+                    modelDefFileName, e.getMessage());
             return;
         }
 

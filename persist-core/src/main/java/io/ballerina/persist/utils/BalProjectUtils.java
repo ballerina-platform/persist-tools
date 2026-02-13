@@ -158,6 +158,10 @@ public class BalProjectUtils {
     }
 
     public static void validateSchemaFile(Path schemaPath) throws BalException {
+        validateSchemaFile(schemaPath, schemaPath.getFileName().toString());
+    }
+
+    public static void validateSchemaFile(Path schemaPath, String modelFileName) throws BalException {
         BuildOptions.BuildOptionsBuilder buildOptionsBuilder = BuildOptions.builder();
         buildOptionsBuilder.setOffline(true);
         SingleFileProject buildProject = SingleFileProject.load(schemaPath.toAbsolutePath(),
@@ -167,7 +171,7 @@ public class BalProjectUtils {
         DiagnosticResult diagnosticResult = compilation.diagnosticResult();
         if (diagnosticResult.hasErrors()) {
             StringBuilder errorMessage = new StringBuilder();
-            errorMessage.append(String.format("the model definition file(%s) has errors.", schemaPath.getFileName()));
+            errorMessage.append(String.format("the model definition file(%s) has errors.", modelFileName));
             int validErrors = 0;
             for (Diagnostic diagnostic : diagnosticResult.errors()) {
                 errorMessage.append(System.lineSeparator());
