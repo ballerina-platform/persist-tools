@@ -127,8 +127,8 @@ public class Add implements BLauncherCmd {
             String moduleNameWithPackage = validateAndProcessModule(packageName, module);
             createDefaultClientId();
             String modelPath = (model != null && !model.trim().isEmpty())
-                    ? "persist/" + model + "/model.bal"
-                    : "persist/model.bal";
+                    ? String.format("%s/%s/%s", PERSIST_DIRECTORY, model, MODEL_FILE)
+                    : String.format("%s/%s", PERSIST_DIRECTORY, MODEL_FILE);
             String syntaxTree = updateBallerinaToml(Paths.get(this.sourcePath, BALLERINA_TOML),
                     moduleNameWithPackage, datastore, testDatastore, eagerLoading, initParams, id, modelPath);
             FileUtils.writeToTargetFile(syntaxTree,

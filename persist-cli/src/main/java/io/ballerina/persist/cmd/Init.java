@@ -112,7 +112,10 @@ public class Init implements BLauncherCmd {
             }
         } else {
             // Create root model (default behavior)
-            createRootModel(persistDirPath);
+            boolean modelCreated = createRootModel(persistDirPath);
+            if (!modelCreated) {
+                return;
+            }
         }
 
         if (datastore != null || module != null) {
@@ -148,7 +151,7 @@ public class Init implements BLauncherCmd {
         }
     }
 
-    private void createRootModel(Path persistDirPath) {
+    private boolean createRootModel(Path persistDirPath) {
         List<String> schemaFiles;
         try (Stream<Path> stream = Files.list(persistDirPath)) {
             schemaFiles = stream.filter(file -> !Files.isDirectory(file))
@@ -160,7 +163,7 @@ public class Init implements BLauncherCmd {
         } catch (IOException e) {
             errStream.println("failed to list model definition files in the persist directory. "
                     + e.getMessage());
-            return;
+            return false;
         }
 
         if (schemaFiles.isEmpty()) {
@@ -169,8 +172,10 @@ public class Init implements BLauncherCmd {
             } catch (BalException e) {
                 errStream.println("failed to create the model definition file in persist directory. "
                         + e.getMessage());
+                return false;
             }
         }
+        return true;
     }
 
     private void createSubdirectoryModel(Path persistDirPath, String modelName) throws BalException {

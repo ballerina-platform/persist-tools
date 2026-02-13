@@ -40,6 +40,7 @@ import java.util.Objects;
 import java.util.Scanner;
 
 import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
+import static io.ballerina.persist.PersistToolsConstants.MODEL_FILE;
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.utils.BalProjectUtils.validateBallerinaProject;
 import static io.ballerina.persist.utils.BalProjectUtils.validatePullCommandOptions;
@@ -125,8 +126,7 @@ public class Pull implements BLauncherCmd {
 
         Path persistDir = Paths.get(this.sourcePath, PERSIST_DIRECTORY);
         Path targetModelDir = persistDir;
-        String modelFileName = "model.bal";
-        String modelDisplayPath = "persist/model.bal";
+        String modelDisplayPath = String.format("%s/%s", PERSIST_DIRECTORY, MODEL_FILE);
 
         if (!Files.exists(persistDir)) {
             try {
@@ -142,7 +142,7 @@ public class Pull implements BLauncherCmd {
             try {
                 io.ballerina.persist.utils.BalProjectUtils.validateModelName(model);
                 targetModelDir = persistDir.resolve(model);
-                modelDisplayPath = "persist/" + model + "/model.bal";
+                modelDisplayPath = String.format("%s/%s/%s", PERSIST_DIRECTORY, model, MODEL_FILE);
 
                 if (!Files.exists(targetModelDir)) {
                     Files.createDirectory(targetModelDir.toAbsolutePath());
@@ -156,7 +156,7 @@ public class Pull implements BLauncherCmd {
             }
         }
 
-        boolean modelFile = Files.exists(targetModelDir.resolve(modelFileName));
+        boolean modelFile = Files.exists(targetModelDir.resolve(MODEL_FILE));
         if (modelFile) {
             errStream.print(YELLOW_COLOR + "WARNING A " + modelDisplayPath + " file already exists. " +
                     "Continuing would overwrite it. Do you wish to continue? (y/n) " + RESET_COLOR);

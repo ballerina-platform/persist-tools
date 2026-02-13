@@ -83,7 +83,7 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
             String testDatastore = getOptionValue(toolContext, OPTION_TEST_DATASTORE, null);
             String filePath = toolContext.filePath();
             if (filePath == null || filePath.isEmpty()) {
-                filePath = "persist/model.bal";
+                filePath = String.format("%s/%s", PERSIST_DIRECTORY, MODEL_FILE);
             }
 
             boolean eagerLoading = Boolean
