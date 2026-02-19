@@ -227,8 +227,9 @@ public class Generate implements BLauncherCmd {
             return;
         }
 
-        String modelDefFileName = model == null ? schemaFilePath.getFileName().toString() : String.format("%s/%s",
-                model, schemaFilePath.getFileName());
+        Path schemaFileNamePath = schemaFilePath.getFileName();
+        String schemaFileName = schemaFileNamePath != null ? schemaFileNamePath.toString() : schemaFilePath.toString();
+        String modelDefFileName = model == null ? schemaFileName : String.format("%s/%s", model, schemaFileName);
 
         try {
             BalProjectUtils.updateToml(sourcePath, datastore, moduleNameWithPackage, model);

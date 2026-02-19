@@ -158,7 +158,9 @@ public class BalProjectUtils {
     }
 
     public static void validateSchemaFile(Path schemaPath) throws BalException {
-        validateSchemaFile(schemaPath, schemaPath.getFileName().toString());
+        Path fileNamePath = schemaPath.getFileName();
+        String fileName = fileNamePath != null ? fileNamePath.toString() : schemaPath.toString();
+        validateSchemaFile(schemaPath, fileName);
     }
 
     public static void validateSchemaFile(Path schemaPath, String modelFileName) throws BalException {
