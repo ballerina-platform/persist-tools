@@ -1,0 +1,8 @@
+[package]
+org = "wso2"
+name = "tool_test_init_hybrid"
+version = "0.1.0"
+distribution = "2201.13.0"
+
+[build-options]
+observabilityIncluded = true

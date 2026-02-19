@@ -1,0 +1,20 @@
+[package]
+org = "foo"
+name = "persist_add_multimodel_multiple"
+version = "0.1.0"
+distribution = "2201.13.0"
+
+[build-options]
+observabilityIncluded = true
+
+[[tool.persist]]
+id = "users-client"
+targetModule = "persist_add_multimodel_multiple.users"
+options.datastore = "mysql"
+filePath = "persist/users/model.bal"
+
+[[tool.persist]]
+id = "orders-client"
+targetModule = "persist_add_multimodel_multiple.orders"
+options.datastore = "postgresql"
+filePath = "persist/orders/model.bal"

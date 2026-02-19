@@ -38,18 +38,27 @@ DESCRIPTION
 
        $ bal build
 
+       Multi-Model Support:
+       Ballerina persist supports both single and multi-model projects:
+       • Single model: persist/model.bal (default)
+       • Multi-model: persist/<model-name>/model.bal (use --model option)
+       
+       For multi-model projects, each model can have its own datastore configuration,
+       migrations, and generated client code.
+
        Apart from the above commands, the following commands are also available:
 
-       $ bal persist init
+       $ bal persist init [--model <model-name>]
 
        This command initializes the package for persistence.
        This command will create a new directory named 'persist' in the project directory. The 'persist' directory will
        contain empty model definition file which can be used to define the data model of the Ballerina project.
+       Use --model to create a subdirectory model.
 
-       $ bal persist generate --module persist --datastore mysql
+       $ bal persist generate --module persist --datastore mysql [--model <model-name>]
 
        This command generates the client API based on the data model defined in the "persist" directory. Usually used
-       for one time generation of the client.
+       for one time generation of the client. Use --model to specify a subdirectory model.
 
 OPTIONS
        -h, --help
@@ -59,10 +68,14 @@ BALLERINA COMMANDS
        The below is a list of available subcommands:
 
        add             Initialize the package for persistence and integrate the client generation to
-                       the `bal build` command.
+                       the `bal build` command. Supports --model option for multi-model projects.
        init            Initialize the package for persistence and create the "persist" directory and data model file.
-       generate        Generate the client API based on the data model defined in the "persist" directory
-       pull            Introspect the existing database schema and generate data model
-       migrate         Generate migration scripts to update the database based on the Ballerina schema changes
+                       Supports --model option for subdirectory models.
+       generate        Generate the client API based on the data model defined in the "persist" directory.
+                       Supports --model option for subdirectory models.
+       pull            Introspect the existing database schema and generate data model.
+                       Supports --model option for subdirectory models.
+       migrate         Generate migration scripts to update the database based on the Ballerina schema changes.
+                       Supports --model option for model-specific migrations.
 
 Use 'bal persist <command> --help' for more information on a specific command.

@@ -19,6 +19,7 @@
 package io.ballerina.persist.tools;
 
 import io.ballerina.persist.cmd.Init;
+import io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils;
 import io.ballerina.persist.utils.BalProjectUtils;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -30,6 +31,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertGeneratedSources;
+import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertGeneratedSourcesNegative;
 
 public class ToolingInitTest {
     public static final String GENERATED_SOURCES_DIRECTORY = Paths.get("build", "generated-sources")
@@ -77,6 +79,61 @@ public class ToolingInitTest {
             String exceptionMessage = e.getMessage();
             Assert.assertTrue(exceptionMessage.contains("ERROR: invalid Ballerina package directory:"));
             Assert.assertTrue(exceptionMessage.contains("the persist tool does not support Ballerina workspaces"));
+        }
+    }
+
+    // Multi-model support tests
+
+    @Test
+    public void testInitWithModelOption() {
+        executeInitCommandWithModel("tool_test_init_multimodel_1", "users");
+        assertGeneratedSources("tool_test_init_multimodel_1");
+    }
+
+    @Test
+    public void testInitMultipleModels() {
+        // Initialize first model
+        executeInitCommandWithModel("tool_test_init_multimodel_2", "users");
+        // Initialize second model
+        executeInitCommandWithModel("tool_test_init_multimodel_2", "orders");
+        assertGeneratedSources("tool_test_init_multimodel_2");
+    }
+
+    @Test
+    public void testInitReservedModelName() {
+        // Attempt to create model with reserved name "migrations"
+        assertGeneratedSourcesNegative("tool_test_init_multimodel_3", GeneratedSourcesTestUtils.Command.INIT,
+                new String[]{"persist/migrations"}, "--model", "migrations");
+    }
+
+    @Test
+    public void testInitBackwardCompatibility() {
+        // Test init without --model creates traditional structure
+        executeInitCommand("tool_test_init_backward_compat");
+        assertGeneratedSources("tool_test_init_backward_compat");
+    }
+
+    @Test
+    public void testInitHybridStructure() {
+        // Create root model first
+        executeInitCommand("tool_test_init_hybrid");
+        // Then add subdirectory model
+        executeInitCommandWithModel("tool_test_init_hybrid", "analytics");
+        assertGeneratedSources("tool_test_init_hybrid");
+    }
+
+    public static void executeInitCommandWithModel(String subDir, String modelName) {
+        Class<?> persistClass;
+        Path sourcePath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);
+        try {
+            persistClass = Class.forName("io.ballerina.persist.cmd.Init");
+            Init persistCmd = (Init) persistClass.getDeclaredConstructor(String.class)
+                    .newInstance(sourcePath.toAbsolutePath().toString());
+            new CommandLine(persistCmd).parseArgs("--model", modelName);
+            persistCmd.execute();
+        } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException | IllegalAccessException
+                | InvocationTargetException e) {
+            errStream.println(e.getMessage());
         }
     }
 

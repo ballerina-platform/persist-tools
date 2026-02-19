@@ -34,6 +34,7 @@ import io.ballerina.tools.text.TextDocuments;
 import org.ballerinalang.formatter.core.Formatter;
 import org.ballerinalang.formatter.core.FormatterException;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -41,6 +42,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Objects;
 
 import static io.ballerina.persist.PersistToolsConstants.SCHEMA_FILE_NAME;
@@ -51,6 +53,32 @@ import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConst
  */
 public class FileUtils {
     private FileUtils() {
+    }
+
+    public static void updateTargetFileContent(String content, String outPath) throws BalException {
+        Path pathToFile = Paths.get(outPath);
+        Path parentDirectory = pathToFile.getParent();
+
+        if (parentDirectory != null && !Files.exists(parentDirectory)) {
+            try {
+                Files.createDirectories(parentDirectory);
+            } catch (IOException e) {
+                throw new BalException(
+                        String.format("could not create the parent directories of output path %s. %s",
+                                parentDirectory, e.getMessage()));
+            }
+        }
+
+        try (BufferedWriter writer = Files.newBufferedWriter(
+                pathToFile,
+                StandardCharsets.UTF_8,
+                StandardOpenOption.CREATE,
+                StandardOpenOption.APPEND)) {
+            writer.write(content);
+        } catch (IOException e) {
+            throw new BalException(
+                    String.format("could not write to the file in the output path %s", outPath));
+        }
     }
 
     public static void writeToTargetFile(String content, String outPath) throws BalException, IOException {
@@ -75,7 +103,7 @@ public class FileUtils {
                 }
             }
             try (PrintWriter writer = new PrintWriter(outPath, StandardCharsets.UTF_8)) {
-                writer.println(content);
+                writer.append(content);
             }
         }
     }

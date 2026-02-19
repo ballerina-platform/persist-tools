@@ -5,12 +5,16 @@ SYNOPSIS
        bal persist add [--module <module name>]
                         [--datastore <store type>]
                         [--test-datastore <store type>]
+                        [--model <model-name>]
                         [<-h> | <--help>]
 
 DESCRIPTION
          This command will create a new directory named 'persist' in the project directory. The 'persist' directory will
          contain empty model definition file which can be used to define the data model of the Ballerina project.
          This will also add persist configuration to the Ballerina.toml file.
+         
+         By default, creates a root-level model at persist/model.bal. Use the --model option to create a subdirectory 
+         model at persist/<model-name>/model.bal for multi-model projects.
 
 OPTIONS
        --module <module name>
@@ -22,6 +26,9 @@ OPTIONS
        --test-datastore <store type>
               The type of the datastore to be used for testing.
               It can be either 'inmemory' for non-SQL or 'h2' for SQL, as these are the supported datastores.
+       --model <model-name>
+              Specify the model name to create a subdirectory model. If not specified, creates a root-level model.
+              Model names must be valid identifiers and cannot be reserved words like 'migrations'.
        -h, --help
            Print the usage details of all commands.
 
@@ -37,3 +44,6 @@ EXAMPLES
 
        Initialize the Ballerina package for persistence with the 'db' module, 'mysql' datastore, and 'h2' test datastore.
           $ bal persist add --module db --datastore mysql --test-datastore h2
+
+       Initialize a specific model in a subdirectory.
+          $ bal persist add --model users --datastore mysql

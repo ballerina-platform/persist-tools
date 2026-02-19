@@ -71,4 +71,8 @@
     <Match>
         <Class name="io.ballerina.persist.introspect.IntrospectorBuilder" />\
     </Match>
+    <Match>
+        <Class name="io.ballerina.persist.tools.ToolingInitTest"/>
+        <Bug pattern = "REC_CATCH_EXCEPTION"/>
+    </Match>
 </FindBugsFilter>

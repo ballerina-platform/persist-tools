@@ -19,6 +19,7 @@ package io.ballerina.persist.cmd;
 
 import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.BalException;
+import io.ballerina.persist.utils.BalProjectUtils;
 import io.ballerina.persist.utils.FileUtils;
 import picocli.CommandLine;
 
@@ -30,7 +31,6 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
@@ -62,6 +62,9 @@ public class Init implements BLauncherCmd {
 
     @CommandLine.Option(names = {"--module"})
     private String module;
+
+    @CommandLine.Option(names = { "--model" })
+    private String model;
 
     public Init() {
         this("");
@@ -96,33 +99,25 @@ public class Init implements BLauncherCmd {
                 return;
             }
         }
-        List<String> schemaFiles;
-        try (Stream<Path> stream = Files.list(persistDirPath)) {
-            schemaFiles = stream.filter(file -> !Files.isDirectory(file))
-                    .map(Path::getFileName)
-                    .filter(Objects::nonNull)
-                    .filter(file -> file.toString().toLowerCase(Locale.ENGLISH).endsWith(BAL_EXTENSION))
-                    .map(file -> file.toString().replace(BAL_EXTENSION, ""))
-                    .collect(Collectors.toList());
-        } catch (IOException e) {
-            errStream.println("ERROR: failed to list model definition files in the persist directory. "
-                    + e.getMessage());
-            return;
-        }
-        if (schemaFiles.size() > 1) {
-            errStream.println("ERROR: the persist directory allows only one model definition file, " +
-                    "but contains many files.");
-            return;
-        }
-        if (schemaFiles.isEmpty()) {
+
+        // Handle model creation based on --model option
+        if (model != null && !model.isBlank()) {
+            // Create subdirectory model
             try {
-                FileUtils.generateSchemaBalFile(persistDirPath);
+                BalProjectUtils.validateModelName(model);
+                createSubdirectoryModel(persistDirPath, model);
             } catch (BalException e) {
-                errStream.println("ERROR: failed to create the model definition file in persist directory. "
-                        + e.getMessage());
+                errStream.println("ERROR: " + e.getMessage());
+                return;
+            }
+        } else {
+            // Create root model (default behavior)
+            boolean modelCreated = createRootModel(persistDirPath);
+            if (!modelCreated) {
                 return;
             }
         }
+
         if (datastore != null || module != null) {
             errStream.println("The behavior of the `bal persist init` command has been updated starting " +
                     "from Ballerina update 09.");
@@ -132,15 +127,69 @@ public class Init implements BLauncherCmd {
             errStream.println("If you have any questions or need further assistance, refer to the updated " +
                     "documentation.");
         } else {
-            errStream.println("Initialized the package for persistence.");
-            errStream.println(System.lineSeparator() + "Next steps:");
+            if (model != null && !model.trim().isEmpty()) {
+                errStream.println("Initialized the model '" + model + "' for persistence.");
+                errStream.println(System.lineSeparator() + "Next steps:");
+                errStream.println("1. Define your data model in \"persist/" + model + "/model.bal\".");
+                errStream.println("2. Execute `bal persist add --datastore <datastore> --module <module> --model "
+                        + model + "` to add an entry to \"Ballerina.toml\" for integrating code generation with " +
+                        "the package build process.");
+                errStream.println("OR");
+                errStream.println(
+                        "Execute `bal persist generate --datastore <datastore> --module <module> --model " + model +
+                                "` for a one-time generation of the client.");
+            } else {
+                errStream.println("Initialized the package for persistence.");
+                errStream.println(System.lineSeparator() + "Next steps:");
+                errStream.println("1. Define your data model in \"persist/model.bal\".");
+                errStream.println("2. Execute `bal persist add --datastore <datastore> --module <module>` to add an" +
+                        " entry to \"Ballerina.toml\" for integrating code generation with the package build process.");
+                errStream.println("OR");
+                errStream.println("Execute `bal persist generate --datastore <datastore> --module <module>` for " +
+                        "a one-time generation of the client.");
+            }
+        }
+    }
 
-            errStream.println("1. Define your data model in \"persist/model.bal\".");
-            errStream.println("2. Execute `bal persist add --datastore <datastore> --module <module>` to add an" +
-                    " entry to \"Ballerina.toml\" for integrating code generation with the package build process.");
-            errStream.println("OR");
-            errStream.println("Execute `bal persist generate --datastore <datastore> --module <module>` for " +
-                    "a one-time generation of the client.");
+    private boolean createRootModel(Path persistDirPath) {
+        List<String> schemaFiles;
+        try (Stream<Path> stream = Files.list(persistDirPath)) {
+            schemaFiles = stream.filter(file -> !Files.isDirectory(file))
+                    .map(Path::getFileName)
+                    .filter(Objects::nonNull)
+                    .filter(file -> file.toString().toLowerCase(Locale.ENGLISH).endsWith(BAL_EXTENSION))
+                    .map(file -> file.toString().replace(BAL_EXTENSION, ""))
+                    .toList();
+        } catch (IOException e) {
+            errStream.println("failed to list model definition files in the persist directory. "
+                    + e.getMessage());
+            return false;
+        }
+
+        if (schemaFiles.isEmpty()) {
+            try {
+                FileUtils.generateSchemaBalFile(persistDirPath);
+            } catch (BalException e) {
+                errStream.println("failed to create the model definition file in persist directory. "
+                        + e.getMessage());
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void createSubdirectoryModel(Path persistDirPath, String modelName) throws BalException {
+        Path modelDir = persistDirPath.resolve(modelName);
+
+        if (Files.exists(modelDir)) {
+            throw new BalException("model '" + modelName + "' already exists in the persist directory.");
+        }
+
+        try {
+            Files.createDirectory(modelDir);
+            FileUtils.generateSchemaBalFile(modelDir);
+        } catch (IOException e) {
+            throw new BalException("failed to create the model directory '" + modelName + "'. " + e.getMessage());
         }
     }
 

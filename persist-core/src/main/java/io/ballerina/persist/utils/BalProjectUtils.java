@@ -79,10 +79,10 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 import static io.ballerina.compiler.syntax.tree.SyntaxKind.QUALIFIED_NAME_REFERENCE;
 import static io.ballerina.persist.PersistToolsConstants.GENERATE_CMD_FILE;
+import static io.ballerina.persist.PersistToolsConstants.MIGRATIONS;
 import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_DB_PROVIDERS;
 import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_NOSQL_DB_PROVIDERS;
 import static io.ballerina.persist.PersistToolsConstants.SUPPORTED_SQL_DB_PROVIDERS;
@@ -145,15 +145,25 @@ public class BalProjectUtils {
         }
     }
 
-    public static void updateToml(String sourcePath, String datastore, String module) throws BalException, IOException {
+    public static void updateToml(String sourcePath, String datastore, String module, String model)
+            throws BalException {
         String sourceContent = "[[tool.persist]]" + System.lineSeparator() +
                 "options.datastore = \"" + datastore + "\"" + System.lineSeparator() +
-                "module = \"" + module + "\"";
+                "module = \"" + module + "\"" + System.lineSeparator();
+        if (model != null && !model.isBlank()) {
+            sourceContent += "model = \"" + model + "\"" + System.lineSeparator();
+        }
         Path generatedCmdOutPath = Paths.get(sourcePath, TARGET_DIRECTORY, GENERATE_CMD_FILE);
-        FileUtils.writeToTargetFile(sourceContent, generatedCmdOutPath.toAbsolutePath().toString());
+        FileUtils.updateTargetFileContent(sourceContent, generatedCmdOutPath.toAbsolutePath().toString());
     }
 
     public static void validateSchemaFile(Path schemaPath) throws BalException {
+        Path fileNamePath = schemaPath.getFileName();
+        String fileName = fileNamePath != null ? fileNamePath.toString() : schemaPath.toString();
+        validateSchemaFile(schemaPath, fileName);
+    }
+
+    public static void validateSchemaFile(Path schemaPath, String modelFileName) throws BalException {
         BuildOptions.BuildOptionsBuilder buildOptionsBuilder = BuildOptions.builder();
         buildOptionsBuilder.setOffline(true);
         SingleFileProject buildProject = SingleFileProject.load(schemaPath.toAbsolutePath(),
@@ -163,7 +173,7 @@ public class BalProjectUtils {
         DiagnosticResult diagnosticResult = compilation.diagnosticResult();
         if (diagnosticResult.hasErrors()) {
             StringBuilder errorMessage = new StringBuilder();
-            errorMessage.append(String.format("the model definition file(%s) has errors.", schemaPath.getFileName()));
+            errorMessage.append(String.format("the model definition file(%s) has errors.", modelFileName));
             int validErrors = 0;
             for (Diagnostic diagnostic : diagnosticResult.errors()) {
                 errorMessage.append(System.lineSeparator());
@@ -178,9 +188,10 @@ public class BalProjectUtils {
 
     public static Project buildDriverFile(Path driverPath) throws BalException {
         BuildOptions.BuildOptionsBuilder buildOptionsBuilder = BuildOptions.builder();
-        // Setting offline to `false` to allow fetching dependencies for the driver file.
+        // Setting offline to `false` to allow fetching dependencies for the driver
+        // file.
         buildOptionsBuilder.setOffline(false);
-        SingleFileProject buildProject =  SingleFileProject.load(driverPath.toAbsolutePath(),
+        SingleFileProject buildProject = SingleFileProject.load(driverPath.toAbsolutePath(),
                 buildOptionsBuilder.build());
         Package currentPackage = buildProject.currentPackage();
         PackageCompilation compilation = currentPackage.getCompilation();
@@ -635,31 +646,59 @@ public class BalProjectUtils {
     }
 
     public static Path getSchemaFilePath(String sourcePath) throws BalException {
-        List<Path> schemaFilePaths;
+        return getSchemaFilePath(sourcePath, null);
+    }
 
+    public static Path getSchemaFilePath(String sourcePath, String modelName) throws BalException {
         Path persistDir = Paths.get(sourcePath, PersistToolsConstants.PERSIST_DIRECTORY);
         if (!Files.isDirectory(persistDir, LinkOption.NOFOLLOW_LINKS)) {
-            throw new BalException("ERROR: the persist directory inside the Ballerina project does not exist. " +
+            throw new BalException("the persist directory inside the Ballerina project does not exist. " +
                     "run `bal persist init` to initiate the project before generation");
         }
-        try (Stream<Path> stream = Files.list(persistDir)) {
-            schemaFilePaths = stream.filter(file -> !Files.isDirectory(file))
-                    .filter(file -> file.toString().toLowerCase(Locale.ENGLISH).endsWith(".bal"))
-                    .collect(Collectors.toList());
-        } catch (IOException e) {
-            throw new BalException("ERROR: failed to list the model definition files in the persist directory. "
-                    + e.getMessage());
+
+        if (modelName == null) {
+            // Default behavior: look for root-level model.bal
+            Path rootModel = persistDir.resolve(PersistToolsConstants.MODEL_FILE);
+            if (!Files.exists(rootModel)) {
+                throw new BalException("the persist directory does not contain the default model definition file ("
+                        + PersistToolsConstants.MODEL_FILE + "). run `bal persist init` to initiate the project" +
+                        " before generation.");
+            }
+            return rootModel;
         }
 
-        if (schemaFilePaths.isEmpty()) {
-            throw new BalException("ERROR: the persist directory does not contain any model definition file. " +
-                    "run `bal persist init` to initiate the project before generation.");
-        } else if (schemaFilePaths.size() > 1) {
-            throw new BalException("ERROR: the persist directory allows only one model definition file, " +
-                    "but contains many files.");
+        // Model-specific behavior: look for persist/{modelName}/model.bal
+        validateModelName(modelName);
+        Path modelDir = persistDir.resolve(modelName);
+        if (!Files.isDirectory(modelDir, LinkOption.NOFOLLOW_LINKS)) {
+            throw new BalException("the model directory 'persist/" + modelName + "' does not exist. " +
+                    "run `bal persist init --model " + modelName + "` to create the model.");
+        }
+        Path modelFile = modelDir.resolve(PersistToolsConstants.MODEL_FILE);
+        if (!Files.exists(modelFile)) {
+            throw new BalException("the model file 'persist/" + modelName + "/model.bal' does not exist.");
+        }
+        return modelFile;
+    }
+
+    public static void validateModelName(String modelName) throws BalException {
+        if (modelName == null || modelName.isBlank()) {
+            throw new BalException("model name cannot be empty.");
         }
 
-        return schemaFilePaths.get(0);
+        if (modelName.contains(" ")) {
+            throw new BalException("model name cannot contain spaces.");
+        }
+
+        if (modelName.equals(MIGRATIONS)) {
+            throw new BalException("model name 'migrations' is reserved and cannot be used.");
+        }
+
+        if (!Pattern.matches("[A-Za-z]\\w*", modelName)) {
+            throw new BalException(
+                    "model name '" + modelName + "' is invalid. Model name should start with a letter " +
+                            "and contain only letters, numbers, and underscores.");
+        }
     }
 
     public static void validatePullCommandOptions(String datastore, String host, String port, String user,

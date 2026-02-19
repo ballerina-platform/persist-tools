@@ -14,6 +14,7 @@ public type User record {|
     UserGender gender;
     string nic;
     decimal? salary;
+
 |};
 
 public type UserOptionalized record {|

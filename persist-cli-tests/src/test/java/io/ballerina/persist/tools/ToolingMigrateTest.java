@@ -355,6 +355,49 @@ public class ToolingMigrateTest {
         assertMigrateGeneratedSources("tool_test_migrate_45");
     }
 
+    // Multi-model support tests
+
+    @Test
+    @Description("Test migrate command with --model option for subdirectory model")
+    public void testMigrateWithModelOption() {
+        executeCommandWithModel("tool_test_migrate_multimodel_1", "users", "firstMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_multimodel_1");
+    }
+
+    @Test
+    @Description("Test migrate command with multiple models having independent migrations")
+    public void testMigrateMultipleModelsIndependent() {
+        // Migrate first model
+        executeCommandWithModel("tool_test_migrate_multimodel_2", "users", "usersMigration");
+        // Migrate second model
+        executeCommandWithModel("tool_test_migrate_multimodel_2", "orders", "ordersMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_multimodel_2");
+    }
+
+    @Test
+    @Description("Test migrate command backward compatibility - uses root migrations directory")
+    public void testMigrateBackwardCompatibility() {
+        executeCommand("tool_test_migrate_backward_compat", "legacyMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_backward_compat");
+    }
+
+    @Test(enabled = true)
+    @Description("Test migrate command with hybrid structure - both root and subdirectory migrations")
+    public void testMigrateHybridStructure() {
+        // Migrate root model
+        executeCommand("tool_test_migrate_hybrid", "rootMigration");
+        // Migrate subdirectory model
+        executeCommandWithModel("tool_test_migrate_hybrid", "analytics", "analyticsMigration");
+        assertMigrateGeneratedSources("tool_test_migrate_hybrid");
+    }
+
+    @Test
+    @Description("Test migrate command with model-specific schema changes")
+    public void testMigrateModelSpecificChanges() {
+        executeCommandWithModel("tool_test_migrate_multimodel_3", "users", "addUserField");
+        assertMigrateGeneratedSources("tool_test_migrate_multimodel_3");
+    }
+
     private void executeCommand(String subDir, String migrationLabel) {
         Class<?> persistClass;
         Path sourcePath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);
@@ -364,6 +407,21 @@ public class ToolingMigrateTest {
                         .newInstance(sourcePath.toAbsolutePath().toString());
                 new CommandLine(persistCmd).parseArgs(migrationLabel);
                 persistCmd.execute();
+        } catch (ClassNotFoundException | IllegalAccessException | InstantiationException |
+                 NoSuchMethodException | InvocationTargetException e) {
+            errStream.println(e.getMessage());
+        }
+    }
+
+    private void executeCommandWithModel(String subDir, String modelName, String migrationLabel) {
+        Class<?> persistClass;
+        Path sourcePath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);
+        try {
+            persistClass = Class.forName("io.ballerina.persist.cmd.Migrate");
+            Migrate persistCmd = (Migrate) persistClass.getDeclaredConstructor(String.class)
+                    .newInstance(sourcePath.toAbsolutePath().toString());
+            new CommandLine(persistCmd).parseArgs("--model", modelName, migrationLabel);
+            persistCmd.execute();
         } catch (ClassNotFoundException | IllegalAccessException | InstantiationException |
                  NoSuchMethodException | InvocationTargetException e) {
             errStream.println(e.getMessage());

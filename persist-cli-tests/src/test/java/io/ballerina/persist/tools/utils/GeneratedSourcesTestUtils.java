@@ -153,38 +153,86 @@ public class GeneratedSourcesTestUtils {
         // check if directory content equals except the migrations directory
         Assert.assertTrue(directoryContentEquals(expectedSources, generatedSources));
 
-        for (Path actualOutputFile: listFiles(generatedSources)) {
-            Path generatedMigrations = generatedSources.resolve(PERSIST_MIGRATIONS_DIR);
-            Path expectedMigrations = expectedSources.resolve(PERSIST_MIGRATIONS_DIR);
-            Assert.assertEquals(getNumOfSubDirectories(generatedMigrations),
-                    getNumOfSubDirectories(expectedMigrations));
-            try (Stream<Path> generatedFileList = Files.list(generatedMigrations)) {
-                generatedFileList.forEach(generatedDirectory -> {
-                    String generatedDirectoryNameWithoutTimeStamp =
-                            getDirectoryNameWithoutTimeStamp(generatedDirectory);
-                    assert(generatedDirectoryNameWithoutTimeStamp != null);
-                    try (Stream<Path> expectedFileList = Files.list(expectedMigrations)) {
-                        for (Path expectedDirectory : expectedFileList.toList()) {
-                            String expectedDirectoryNameWithoutTimeStamp =
-                                    getDirectoryNameWithoutTimeStamp(expectedDirectory);
-                            if (generatedDirectoryNameWithoutTimeStamp.equals(expectedDirectoryNameWithoutTimeStamp)) {
-                                Assert.assertTrue(directoryContentEquals(expectedDirectory, generatedDirectory));
-                                for (Path expectedFile : listFiles(expectedDirectory)) {
-                                    Path generatedFile = generatedDirectory.resolve(expectedFile.getFileName());
-                                    Assert.assertTrue(Files.exists(generatedFile));
-                                    Assert.assertEquals(readContent(generatedFile), readContent(expectedFile));
-                                }
-                                break;
+        // Find all migration directories in expected sources (supports both root and
+        // model-specific migrations)
+        List<Path> expectedMigrationDirs = findAllMigrationDirectories(expectedSources);
+        List<Path> generatedMigrationDirs = findAllMigrationDirectories(generatedSources);
+
+        Assert.assertEquals(generatedMigrationDirs.size(), expectedMigrationDirs.size(),
+                "Number of migration directories should match");
+
+        // Compare each migration directory by relative path
+        for (Path expectedMigrationDir : expectedMigrationDirs) {
+            Path relativePath = expectedSources.relativize(expectedMigrationDir);
+            Path generatedMigrationDir = generatedSources.resolve(relativePath);
+
+            Assert.assertTrue(Files.exists(generatedMigrationDir),
+                    "Expected migration directory does not exist in generated sources: " + relativePath);
+
+            assertMigrationDirectoryEquals(expectedMigrationDir, generatedMigrationDir);
+            errStream.println("Validated migration directory: " + relativePath);
+        }
+    }
+
+    private static List<Path> findAllMigrationDirectories(Path projectRoot) {
+        List<Path> migrationDirs = new ArrayList<>();
+        Path persistDir = projectRoot.resolve("persist");
+
+        if (!Files.exists(persistDir) || !Files.isDirectory(persistDir)) {
+            return migrationDirs;
+        }
+
+        try (Stream<Path> paths = Files.walk(persistDir)) {
+            migrationDirs = paths
+                    .filter(Files::isDirectory)
+                    .filter(p -> {
+                        Path fileName = p.getFileName();
+                        return fileName != null && fileName.toString().equals("migrations");
+                    })
+                    .collect(Collectors.toList());
+        } catch (IOException e) {
+            errStream.println("Error finding migration directories: " + e.getMessage());
+        }
+
+        return migrationDirs;
+    }
+
+    private static void assertMigrationDirectoryEquals(Path expectedMigrations, Path generatedMigrations) {
+        if (!Files.exists(expectedMigrations) || !Files.exists(generatedMigrations)) {
+            Assert.fail("Migration directory does not exist. Expected: " + expectedMigrations +
+                    ", Generated: " + generatedMigrations);
+        }
+
+        Assert.assertEquals(getNumOfSubDirectories(generatedMigrations),
+                getNumOfSubDirectories(expectedMigrations),
+                "Number of migration subdirectories should match for " + expectedMigrations);
+
+        try (Stream<Path> generatedFileList = Files.list(generatedMigrations)) {
+            generatedFileList.forEach(generatedDirectory -> {
+                String generatedDirectoryNameWithoutTimeStamp = getDirectoryNameWithoutTimeStamp(generatedDirectory);
+                Assert.assertNotNull(generatedDirectoryNameWithoutTimeStamp,
+                        "Generated directory name without timestamp should not be null");
+                try (Stream<Path> expectedFileList = Files.list(expectedMigrations)) {
+                    for (Path expectedDirectory : expectedFileList.toList()) {
+                        String expectedDirectoryNameWithoutTimeStamp = getDirectoryNameWithoutTimeStamp(
+                                expectedDirectory);
+                        if (generatedDirectoryNameWithoutTimeStamp.equals(expectedDirectoryNameWithoutTimeStamp)) {
+                            Assert.assertTrue(directoryContentEquals(expectedDirectory, generatedDirectory));
+                            for (Path expectedFile : listFiles(expectedDirectory)) {
+                                Path generatedFile = generatedDirectory.resolve(expectedFile.getFileName());
+                                Assert.assertTrue(Files.exists(generatedFile),
+                                        "Expected migration file does not exist: " + generatedFile);
+                                Assert.assertEquals(readContent(generatedFile), readContent(expectedFile));
                             }
+                            break;
                         }
-                    } catch (IOException e) {
-                        Assert.fail("IO Exception: " + e.getMessage());
                     }
-                });
-            } catch (IOException e) {
-                Assert.fail("IO Exception: " + e.getMessage());
-            }
-            errStream.println(actualOutputFile);
+                } catch (IOException e) {
+                    Assert.fail("IO Exception: " + e.getMessage());
+                }
+            });
+        } catch (IOException e) {
+            Assert.fail("IO Exception: " + e.getMessage());
         }
     }
 
@@ -215,7 +263,7 @@ public class GeneratedSourcesTestUtils {
         if (cmd == Command.GENERATE) {
             executeGenerateCommand(subDir, args);
         } else {
-            executeCommand(subDir, cmd);
+            executeCommand(subDir, cmd, args);
         }
         if (cmd == Command.DB_PUSH) {
             Assert.assertFalse(false);
@@ -262,7 +310,7 @@ public class GeneratedSourcesTestUtils {
         }
     }
 
-    public static HashMap executeCommand(String subDir, Command cmd) {
+    public static HashMap executeCommand(String subDir, Command cmd, String... args) {
         Class<?> persistClass;
         Path sourcePath = Paths.get(GENERATED_SOURCES_DIRECTORY, subDir);
         try {
@@ -270,31 +318,37 @@ public class GeneratedSourcesTestUtils {
                 persistClass = Class.forName("io.ballerina.persist.cmd.Add");
                 Add persistCmd = (Add) persistClass.getDeclaredConstructor(String.class)
                         .newInstance(sourcePath.toAbsolutePath().toString());
+                new CommandLine(persistCmd).parseArgs(args);
                 persistCmd.execute();
             } else if (cmd == Command.INIT) {
                 persistClass = Class.forName("io.ballerina.persist.cmd.Init");
                 Init persistCmd = (Init) persistClass.getDeclaredConstructor(String.class)
                         .newInstance(sourcePath.toAbsolutePath().toString());
+                new CommandLine(persistCmd).parseArgs(args);
                 persistCmd.execute();
             } else if (cmd == Command.GENERATE) {
                 persistClass = Class.forName("io.ballerina.persist.cmd.Generate");
                 Generate persistCmd = (Generate) persistClass.getDeclaredConstructor(String.class)
                         .newInstance(sourcePath.toAbsolutePath().toString());
+                new CommandLine(persistCmd).parseArgs(args);
                 persistCmd.execute();
             } else if (cmd == Command.DB_PUSH) {
                 persistClass = Class.forName("io.ballerina.persist.cmd.Push");
                 Push persistCmd = (Push) persistClass.getDeclaredConstructor(String.class)
                         .newInstance(sourcePath.toAbsolutePath().toString());
+                new CommandLine(persistCmd).parseArgs(args);
                 persistCmd.execute();
             } else if (cmd == Command.PULL) {
                 persistClass = Class.forName("io.ballerina.persist.cmd.Pull");
                 Pull persistCmd = (Pull) persistClass.getDeclaredConstructor(String.class)
                         .newInstance(sourcePath.toAbsolutePath().toString());
+                new CommandLine(persistCmd).parseArgs(args);
                 persistCmd.execute();
             } else {
                 persistClass = Class.forName("io.ballerina.persist.cmd.Migrate");
                 Migrate persistCmd = (Migrate) persistClass.getDeclaredConstructor(String.class)
                         .newInstance(sourcePath.toAbsolutePath().toString());
+                new CommandLine(persistCmd).parseArgs(args);
                 persistCmd.execute();
             }
 

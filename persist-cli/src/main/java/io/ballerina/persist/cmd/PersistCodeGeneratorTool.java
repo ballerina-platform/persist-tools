@@ -44,12 +44,14 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
 
 import static io.ballerina.persist.PersistToolsConstants.CACHE_FILE;
+import static io.ballerina.persist.PersistToolsConstants.MODEL_FILE;
 import static io.ballerina.persist.PersistToolsConstants.OPTION_DATASTORE;
+import static io.ballerina.persist.PersistToolsConstants.OPTION_EAGER_LOADING;
+import static io.ballerina.persist.PersistToolsConstants.OPTION_INIT_PARAMS;
 import static io.ballerina.persist.PersistToolsConstants.OPTION_TEST_DATASTORE;
-import static io.ballerina.persist.PersistToolsConstants.TARGET_MODULE;
+import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.getConfigDeclaration;
 import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.getDependencyConfig;
 import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.populateNativeDependencyConfig;
@@ -64,48 +66,58 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
 
     @Override
     public void execute(ToolContext toolContext) {
-        String datastore;
-        Module entityModule;
-        Path schemaFilePath;
-        String packageName;
-        String targetModule;
-        String testDatastore;
-
         TomlNodeLocation location = toolContext.currentPackage().ballerinaToml().get().tomlAstNode().location();
         Path projectPath = toolContext.currentPackage().project().sourceRoot();
         Path generatedSourceDirPath = Paths.get(projectPath.toString(), BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY);
-        boolean eagerLoading = false;
-        boolean initParams = false;
+
         try {
             BalProjectUtils.validateBallerinaProject(projectPath);
-            packageName = TomlSyntaxUtils.readPackageName(projectPath.toString());
-            schemaFilePath = BalProjectUtils.getSchemaFilePath(projectPath.toString());
-            Path path = Paths.get(projectPath.toString(), BALLERINA_TOML);
-            HashMap<String, String> ballerinaTomlConfig = TomlSyntaxUtils.readBallerinaTomlConfig(
-                    path);
-            targetModule = ballerinaTomlConfig.get(TARGET_MODULE).trim();
-            datastore = ballerinaTomlConfig.get(OPTION_DATASTORE).trim();
-            testDatastore = ballerinaTomlConfig.get(OPTION_TEST_DATASTORE) == null ? null
-                    : ballerinaTomlConfig.get(OPTION_TEST_DATASTORE).trim();
-            eagerLoading = ballerinaTomlConfig.get(PersistToolsConstants.OPTION_EAGER_LOADING) != null &&
-                    Boolean.parseBoolean(ballerinaTomlConfig.get(PersistToolsConstants.OPTION_EAGER_LOADING).trim());
-            initParams = ballerinaTomlConfig.get(PersistToolsConstants.OPTION_INIT_PARAMS) != null &&
-                    Boolean.parseBoolean(ballerinaTomlConfig.get(PersistToolsConstants.OPTION_INIT_PARAMS).trim());
+
+            // Get configuration from ToolContext (per tool entry)
+            String packageName = TomlSyntaxUtils.readPackageName(projectPath.toString());
+            String targetModule = toolContext.targetModule();
+            if (targetModule == null || targetModule.isEmpty()) {
+                targetModule = packageName;
+            }
+            String datastore = getOptionValue(toolContext, OPTION_DATASTORE, "");
+            String testDatastore = getOptionValue(toolContext, OPTION_TEST_DATASTORE, null);
+            String filePath = toolContext.filePath();
+            if (filePath == null || filePath.isEmpty()) {
+                filePath = String.format("%s/%s", PERSIST_DIRECTORY, MODEL_FILE);
+            }
+
+            boolean eagerLoading = Boolean
+                    .parseBoolean(getOptionValue(toolContext, OPTION_EAGER_LOADING, "false"));
+            boolean initParams = Boolean
+                    .parseBoolean(getOptionValue(toolContext, OPTION_INIT_PARAMS, "false"));
+
+            if (datastore.isEmpty()) {
+                createDiagnostics(toolContext, PersistToolsConstants.DiagnosticMessages.ERROR_WHILE_GENERATING_CLIENT,
+                        location, "Datastore is required");
+                return;
+            }
 
             validateDatastore(datastore);
             validateTestDatastore(datastore, testDatastore);
+
             if (!targetModule.equals(packageName)) {
                 if (!targetModule.startsWith(packageName + ".")) {
                     createDiagnostics(toolContext, PersistToolsConstants.DiagnosticMessages.INVALID_MODULE_NAME,
-                            location, ballerinaTomlConfig.get(TARGET_MODULE));
+                            location, targetModule);
                     return;
                 }
                 String moduleName = targetModule.replace(packageName + ".", "");
                 validateModuleName(moduleName);
                 generatedSourceDirPath = generatedSourceDirPath.resolve(moduleName);
             }
-            validatePersistDirectory(datastore, projectPath);
+
+            // Get model file path from configuration
+            Path schemaFilePath = projectPath.resolve(filePath);
+            String modelName = getModelNameFromFilePath(filePath);
+
+            validatePersistDirectory(datastore, projectPath, modelName);
             printExperimentalFeatureInfo(datastore);
+
             try {
                 if (validateCache(toolContext, schemaFilePath) && Files.exists(generatedSourceDirPath)) {
                     return;
@@ -113,24 +125,62 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
             } catch (NoSuchAlgorithmException e) {
                 errStream.println("INFO: unable to validate the cache. Generating sources for the schema file.");
             }
-            BalProjectUtils.validateSchemaFile(schemaFilePath);
-            entityModule = BalProjectUtils.getEntities(schemaFilePath);
+
+            Path schemaFileNamePath = schemaFilePath.getFileName();
+            String schemaFileName = schemaFileNamePath != null ? schemaFileNamePath.toString() :
+                    schemaFilePath.toString();
+            String modelFileName = modelName == null ? schemaFileName :
+                    String.format("%s/%s", modelName, schemaFileName);
+            BalProjectUtils.validateSchemaFile(schemaFilePath, modelFileName);
+            Module entityModule = BalProjectUtils.getEntities(schemaFilePath);
             validateEntityModule(entityModule, schemaFilePath);
-            String syntaxTree = updateBallerinaToml(path, datastore, testDatastore);
-            FileUtils.writeToTargetFile(syntaxTree, path.toAbsolutePath().toString());
+
+            Path ballerinaTomlPath = Paths.get(projectPath.toString(), BALLERINA_TOML);
+            String syntaxTree = updateBallerinaToml(ballerinaTomlPath, datastore, testDatastore);
+            FileUtils.writeToTargetFile(syntaxTree, ballerinaTomlPath.toAbsolutePath().toString());
+
             createGeneratedSourceDirIfNotExists(generatedSourceDirPath);
             generateSources(datastore, entityModule, targetModule, projectPath, generatedSourceDirPath,
                     eagerLoading, initParams);
             generateTestSources(testDatastore, entityModule, targetModule, projectPath, generatedSourceDirPath);
+
             String modelHashVal = getHashValue(schemaFilePath);
             Path cachePath = toolContext.cachePath();
             updateCacheFile(cachePath, modelHashVal);
+
             errStream.println("Persist client and entity types generated successfully in the " + targetModule +
                     " directory.");
         } catch (BalException | IOException | NoSuchAlgorithmException e) {
             createDiagnostics(toolContext, PersistToolsConstants.DiagnosticMessages.ERROR_WHILE_GENERATING_CLIENT,
                     location, e.getMessage());
         }
+    }
+
+    private String getOptionValue(ToolContext toolContext, String key, String defaultValue) {
+        if (toolContext.options().containsKey(key)) {
+            ToolContext.Option option = toolContext.options().get(key);
+            if (option != null && option.value() != null) {
+                return option.value().toString();
+            }
+        }
+        return defaultValue;
+    }
+
+    private String getModelNameFromFilePath(String filePath) {
+        // Extract model name from filePath
+        // persist/model.bal -> null (default)
+        // persist/users/model.bal -> users
+        if (filePath.endsWith(String.format("%s/%s", PERSIST_DIRECTORY, MODEL_FILE))) {
+            return null; // Default model
+        }
+
+        String[] parts = filePath.split("/");
+        if (parts.length >= 3 && parts[parts.length - 1].equals(MODEL_FILE) &&
+                parts[parts.length - 3].equals(PERSIST_DIRECTORY)) {
+            return parts[parts.length - 2]; // Subdirectory name as model name
+        }
+
+        return null;
     }
 
     /**
@@ -195,13 +245,24 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
         return new String(fileContent, StandardCharsets.UTF_8);
     }
 
-    private void validatePersistDirectory(String datastore, Path projectPath) throws BalException {
-        if (Files.isDirectory(Paths.get(projectPath.toString(), PersistToolsConstants.PERSIST_DIRECTORY,
-                PersistToolsConstants.MIGRATIONS)) &&
+    private void validatePersistDirectory(String datastore, Path projectPath, String modelName) throws BalException {
+        Path migrationsPath;
+        if (modelName == null) {
+            // Root model: persist/migrations
+            migrationsPath = Paths.get(projectPath.toString(), PersistToolsConstants.PERSIST_DIRECTORY,
+                    PersistToolsConstants.MIGRATIONS);
+        } else {
+            // Subdirectory model: persist/{modelName}/migrations
+            migrationsPath = Paths.get(projectPath.toString(), PersistToolsConstants.PERSIST_DIRECTORY,
+                    modelName, PersistToolsConstants.MIGRATIONS);
+        }
+
+        if (Files.isDirectory(migrationsPath) &&
                 !datastore.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB)) {
-            throw new BalException("regenerating the client with a different datastore after executing " +
-                    "the migrate command is not permitted. please remove the migrations directory within the " +
-                    "persist directory and try executing the command again.");
+            String modelInfo = modelName == null ? "" : " for model '" + modelName + "'";
+            throw new BalException("regenerating the client with a different datastore" + modelInfo +
+                    " after executing the migrate command is not permitted. please remove the migrations directory " +
+                    "within the persist directory and try executing the command again.");
         }
     }
 

@@ -1,9 +1,9 @@
 # Specification: Ballerina Persist Tools
 
-_Owners_: @daneshk @sahanHe  
+_Owners_: @daneshk @sahanHe @TharmiganK  
 _Reviewers_: @daneshk  
 _Created_: 2022/07/26   
-_Updated_: 2024/05/06  
+_Updated_: 2026/02/10  
 _Edition_: Swan Lake  
 
 ## Introduction
@@ -38,8 +38,9 @@ bal persist add --datastore mysql --module db --test-datastore h2
 |:-----------------:|:----------------------------------------------------------------------------------------------------------------------------:|:---------:|:------------------:|
 |    --datastore    | used to indicate the preferred database client. Currently, 'mysql', 'mssql', 'google sheets' and 'postgresql' are supported. |    No     |      inmemory      |
 |     --module      |                        used to indicate the persist enabled module in which the files are generated.                         |    No     |   <package_name>   |
-| --id  |                                                    Used as an identifier                                                     | No | generate-db-client |
-| --test-datastore |            used to indicate the preferred database client for testing. Currently, 'h2', 'inmemory' are supported.            | No |         No         |
+|       --id        |                                                    Used as an identifier                                                     |     No    | generate-db-client |
+| --test-datastore  |            used to indicate the preferred database client for testing. Currently, 'h2', 'inmemory' are supported.            |     No    |         No         |
+|      --model      |         used to indicate the name of the model. If not specified, the command applies to the default root model.             |     No    |         No         |
 
 
 The command initializes the bal project with the persistence layer. This command includes the following steps,
@@ -77,7 +78,7 @@ Behaviour of the `add` command,
 Apart from the `bal persist add` command, if you want to use the `bal persist generate` command you can initialize the project with the following `init` command,
 
 ```bash
-bal persist init
+bal persist init --model <model-name>
 ```
 
 This command includes the following steps,
@@ -85,7 +86,9 @@ This command includes the following steps,
 1. Create persist directory:
    Within this directory, a data model definition file should be created. This file will outline the necessary entities according to the [`persist` specification](https://github.com/ballerina-platform/module-ballerina-persist/blob/main/docs/spec/spec.md#2-data-model-definition)
 2. Generate a model definition file within the persist directory:
-   This action will create a file named model.bal with the requisite imports (import ballerina/persist as _;) if no files currently exist in the persist directory.
+   This action will create a file named `model.bal` with the requisite imports (`import ballerina/persist as _;`) if no files currently exist in the persist directory.
+   - If `--model <model-name>` is specified, it creates the directory structure `persist/<model-name>/` and generates `model.bal` inside it.
+   - If `--model` is not specified, it generates `persist/model.bal` (default behavior).
 
 ## 3. Generating Persistence Derived Types, Clients, and Database Schema
 
@@ -170,7 +173,8 @@ bal persist generate --datastore mysql --module db --test-datastore h2
 |:-----------------:|:----------------------------------------------------------------------------------------:|:---------:|:--------------:|
 |    --datastore    |  used to indicate the preferred database client. Currently, 'mysql', 'mssql', 'google sheets' and 'postgresql' are supported.   |    Yes     |        |
 |     --module      |      used to indicate the persist enabled module in which the files are generated.       |    No     | <package_name> |
-| --test-datastore |            used to indicate the preferred database client for testing. Currently, 'h2', 'inmemory' are supported.            | No |         No         | 
+| --test-datastore  |            used to indicate the preferred database client for testing. Currently, 'h2', 'inmemory' are supported.            |    No     |         No         |
+|      --model      |         used to indicate the name of the model. If not specified, the command applies to the default root model.             |    No     |         No         | 
 
 Behaviour of the `generate` command,
 - User should invoke the command within a Ballerina project
@@ -242,12 +246,13 @@ bal persist pull --datastore mysql --host localhost --port 3306 --user root --da
 |      --user       |                           used to indicate the database user                            |    Yes    |        None        |
 |    --database     |                           used to indicate the database name                            |    Yes    |        None        |
 |     --tables      | enable table selection. accepts table names or triggers interactive mode if no value    |    No     |    all tables      |
+|      --model      |         used to indicate the name of the model. If not specified, the command applies to the default root model.             |     No    |         No         |
 
 This command will introspect the schema of the database and create a `model.bal` file with the entities and relations based on the schema of the database. The database configuration should be provided as command-line arguments.
 
 This command should execute within a Ballerina project.  
 
-The `persist` directory is created if it is not already present. If a `model.bal` file is already present in the `persist` directory, it will prompt the user to confirm overwriting the existing `model.bal` file.
+The `persist` directory is created if it is not already present. If a `model.bal` file is already present in the `persist` directory (or specific model directory if `--model` is used), it will prompt the user to confirm overwriting the existing `model.bal` file.
 
 Running the `pull` command will,
 1. Create a `model.bal` file with the entities and relations based on the introspected schema of the database.
@@ -277,6 +282,7 @@ bal persist migrate --datastore mysql migrationLabel
 | Command Parameter |                                   Description                                    | Mandatory | Default Value |
 |:-----------------:|:--------------------------------------------------------------------------------:|:---------:|:-------------:|
 |    --datastore    | used to indicate the preferred data store. Currently, only 'mysql' is supported. |    No     |     mysql     |
+|      --model      |         used to indicate the name of the model. If not specified, the command applies to the default root model.             |    No     |         No         |
 
 This command will generate the required migration scripts based on the changes in the `model.bal` file.
 
@@ -299,7 +305,7 @@ rainier
 The `persist/migrations` directory is created if it is not already present. If the `persist/migrations` directory already contains any migrations, the tool will look at the last migration and generate the next migration script based on the last `model.bal` file that was migrated.
 
 Running the `migrate` command will,
-1. Generate a migration script based on the changes in the `model.bal` file. These can be found at `persist/migrations` directory, within another directory named in the format `[TIMESTAMP]_[migrationLabel]` where the `migrationLabel` is provided as a positional CLI argument. This directory will contain the latest `model.bal` file and the migration script.
+1. Generate a migration script based on the changes in the `model.bal` file. These can be found at `persist/migrations` directory (or `persist/<model-name>/migrations` if `--model` is used), within another directory named in the format `[TIMESTAMP]_[migrationLabel]` where the `migrationLabel` is provided as a positional CLI argument. This directory will contain the latest `model.bal` file and the migration script.
 2. Not run the migration script against the database. The user should run the migration script against the database manually after reviewing the script.
 
 Behaviour of the `migrate` command,

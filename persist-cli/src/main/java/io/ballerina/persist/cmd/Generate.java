@@ -97,6 +97,9 @@ public class Generate implements BLauncherCmd {
             " of configurables")
     private boolean initParams;
 
+    @CommandLine.Option(names = { "--model" })
+    private String model;
+
     @Override
     public void execute() {
         Path generatedSourceDirPath;
@@ -218,29 +221,33 @@ public class Generate implements BLauncherCmd {
         }
 
         try {
-            schemaFilePath = BalProjectUtils.getSchemaFilePath(this.sourcePath);
+            schemaFilePath = BalProjectUtils.getSchemaFilePath(this.sourcePath, model);
         } catch (BalException e) {
             errStream.println(e.getMessage());
             return;
         }
 
+        Path schemaFileNamePath = schemaFilePath.getFileName();
+        String schemaFileName = schemaFileNamePath != null ? schemaFileNamePath.toString() : schemaFilePath.toString();
+        String modelDefFileName = model == null ? schemaFileName : String.format("%s/%s", model, schemaFileName);
+
         try {
-            BalProjectUtils.updateToml(sourcePath, datastore, moduleNameWithPackage);
+            BalProjectUtils.updateToml(sourcePath, datastore, moduleNameWithPackage, model);
             String syntaxTree = updateBallerinaToml(Paths.get(this.sourcePath, BALLERINA_TOML),
                     datastore, testDatastore);
             FileUtils.writeToTargetFile(syntaxTree,
                     Paths.get(this.sourcePath, BALLERINA_TOML).toAbsolutePath().toString());
-            BalProjectUtils.validateSchemaFile(schemaFilePath);
+            BalProjectUtils.validateSchemaFile(schemaFilePath, modelDefFileName);
             Module module = BalProjectUtils.getEntities(schemaFilePath);
             if (module.getEntityMap().isEmpty()) {
                 errStream.printf("ERROR: the model definition file(%s) does not contain any entity definition.%n",
-                        schemaFilePath.getFileName());
+                        modelDefFileName);
                 return;
             }
             entityModule = module;
         } catch (BalException | IOException e) {
             errStream.printf("ERROR: Failed to generate types and client for the definition file(%s). %s%n",
-                    schemaFilePath.getFileName(), e.getMessage());
+                    modelDefFileName, e.getMessage());
             return;
         }
 
@@ -304,11 +311,6 @@ public class Generate implements BLauncherCmd {
             throws BalException, IOException {
         TomlSyntaxUtils.NativeDependency dependency = getDependencyConfig(datastore, testDatastore);
         TomlSyntaxUtils.ConfigDeclaration declaration = getConfigDeclaration(tomlPath, dependency);
-        if (declaration.persistConfigExists()) {
-            throw new BalException("persist configuration already exists in the Ballerina.toml. " +
-                    "remove the existing configuration and try again.");
-        }
-
         return populateNativeDependencyConfig(datastore, testDatastore, declaration, dependency);
     }
 
