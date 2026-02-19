@@ -7,5 +7,5 @@ distribution = "2201.13.0"
 [[platform.java21.dependency]]
 groupId = "io.ballerina.stdlib"
 artifactId = "persist.sql-native"
-version = "1.7.0"
+version = "1.7.1"
 
