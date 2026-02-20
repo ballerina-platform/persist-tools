@@ -17,26 +17,27 @@ The Ballerina project should be initialized with `bal persist` before generating
 $ bal persist add --datastore mysql --module store --test-datastore h2
 ```
 
-|  Command option  |                                                                         Description                                                                          | Mandatory  |  Default value  |
-|:----------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------:|:----------:|:---------------:|
-|   --datastore    |   Used to indicate the preferred database client. Currently, `inmemory`, `mysql`, `mssql`, `postgresql`, `h2`, `googlesheets`, and  `redis` are supported.   |     No     |   `inmemory`    |
-|     --module     |                                        Used to indicate the persist-enabled module in which the files are generated.                                         |     No     | `<root_module>` |
-| --test-datastore | Used to indicate the preferred data store for the test cases. It can be either `inmemory` for non-SQL or `h2` for SQL, as these are the supported datastore.  |     No     |       No        |
+|  Command option  |                                                                                          Description                                                                                           | Mandatory  |  Default value  |
+|:----------------:|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:----------:|:---------------:|
+|   --datastore    |              Used to indicate the preferred database client. Currently, `inmemory`, `mysql`, `mssql`, `postgresql`, `h2`, `googlesheets`, and  `redis` are supported.                          |     No     |   `inmemory`    |
+|     --module     |                                               Used to indicate the persist-enabled module in which the files are generated.                                                                    |     No     | `<root_module>` |
+| --test-datastore |              Used to indicate the preferred data store for the test cases. It can be either `inmemory` for non-SQL or `h2` for SQL, as these are the supported datastore.                      |     No     |       No        |
+|     --model      | Used to indicate the name of the model. If specified, creates a subdirectory model at `persist/<model-name>/model.bal`. If not specified, creates a root-level model at `persist/model.bal`.   |     No     |       No        |
 
 The command initializes the `bal persist` feature in the project. This command will do the following,
 
 1. Create the `persist` directory in the project root directory.
-   This directory contains the data model definition file (`model.bal`) of the project.
+   By default, the `persist` directory contains a root-level model definition file (`model.bal`). If the `--model` option is specified, it creates a subdirectory `persist/<model-name>/` with a `model.bal` file inside.
 
 2. Create a model definition file in the `persist` directory.
-   This file is used to model the data, which need to be persisted in the project. You can have only one data model definition file in the project and the file name can be anything with the `.bal` extension. The default file name is `model.bal`. Entities defined in this file should be based on the [`persist model` specification](/learn/persist-model).
+   This file is used to model the data, which need to be persisted in the project. Entities defined in this file should be based on the [`persist model` specification](/learn/persist-model).
 
 3. Update the `Ballerina.toml` file with the `persist` module configurations.
    It will update the `Ballerina.toml` file with `persist` configurations as follows.
     ```ballerina
    [[tool.persist]]
    id = "generate-db-client"
-   targetModule = "store"
+   targetModule = "<package_name>.store"
    options.datastore = "mysql"
    options.testDatastore = "h2"
    filePath = "persist/model.bal"
@@ -51,9 +52,20 @@ rainier
    └── main.bal
 ```
 
+For a multi-model project using `--model users`, the directory structure will be,
+```
+rainier
+   ├── persist
+            └── users
+                     └── model.bal
+   ├── Ballerina.toml
+   └── main.bal
+```
+
 Behaviour of the `add` command,
 - You should invoke the command from within a Ballerina project.
 - You can use the optional arguments to indicate the preferred module name and data store. Otherwise, the default values will be used.
+- You can use `--model` to create a subdirectory model at `persist/<model-name>/model.bal`. Model names must be valid identifiers and cannot be reserved words like `migrations`.
 - You can use test-datastore to indicate the preferred database client for testing. It can be either `inmemory` for non-SQL or `h2` for SQL, as these are the supported datastore. If specified it will update the Ballerina.toml file with the testDatastore option to generate the test client along with the main client at the build time.
 - You cannot execute the command multiple times within the same project. You need to remove the `Ballerina.toml` configurations if the user wants to reinitialize the project.
 
@@ -64,15 +76,21 @@ Behaviour of the `add` command,
 you can initialize the project with the following `init` command,
 
 ```
-bal persist init
+bal persist init [--model <model-name>]
 ```
+
+| Command option |                                                                                            Description                                                                                            | Mandatory | Default value |
+|:--------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:---------:|:-------------:|
+|    --model     | Used to indicate the name of the model. If specified, creates a subdirectory model at `persist/<model-name>/model.bal`. If not specified, creates a root-level model at `persist/model.bal`.      |     No    |      No       |
 
 This command includes the following steps,
 
 1. Create persist directory:
    Within this directory, a data model definition file should be created. This file will outline the necessary entities according to the [`persist` specification](https://github.com/ballerina-platform/module-ballerina-persist/blob/main/docs/spec/spec.md#2-data-model-definition)
 2. Generate a model definition file within the persist directory:
-   This action will create a file named model.bal with the requisite imports (import ballerina/persist as _;) if no files currently exist in the persist directory.
+   This action will create a file named `model.bal` with the requisite imports (`import ballerina/persist as _;`) if no files currently exist in the persist directory.
+   - If `--model <model-name>` is specified, it creates the directory `persist/<model-name>/` and generates `model.bal` inside it.
+   - If `--model` is not specified, it generates `persist/model.bal` (default behavior).
 
 ### Generate the derived types, client, and script files
 
@@ -82,11 +100,12 @@ You can use the `bal persist generate` command to generate the derived types, cl
 bal persist generate --datastore mysql --module store --test-datastore h2
 ```
 
-|  Command option  |                                                                         Description                                                                         | Mandatory | Default Value  |
-|:----------------:|:-----------------------------------------------------------------------------------------------------------------------------------------------------------:|:---------:|:--------------:|
-|   --datastore    |  Used to indicate the preferred database client. Currently, `inmemory`, `mysql`, `mssql`, `postgresql`, `h2`, `googlesheets`, and  `redis` are supported.   |    Yes     |                |
-|     --module     |                                        Used to indicate the persist enabled module in which the files are generated.                                        |    No     | <package_name> |
-| --test-datastore | Used to indicate the preferred data store for the test cases. It can be either `inmemory` for non-SQL or `h2` for SQL, as these are the supported datastore. |     No     |       No        |
+|  Command option  |                                                                                          Description                                                                                           | Mandatory | Default Value  |
+|:----------------:|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:---------:|:--------------:|
+|   --datastore    |              Used to indicate the preferred database client. Currently, `inmemory`, `mysql`, `mssql`, `postgresql`, `h2`, `googlesheets`, and  `redis` are supported.                          |    Yes    |                |
+|     --module     |                                               Used to indicate the persist enabled module in which the files are generated.                                                                    |    No     | `<package_name>` |
+| --test-datastore |              Used to indicate the preferred data store for the test cases. It can be either `inmemory` for non-SQL or `h2` for SQL, as these are the supported datastore.                      |    No     |       No       |
+|     --model      | Used to indicate the name of the model. If specified, uses the subdirectory model at `persist/<model-name>/model.bal`. If not specified, uses the root-level model at `persist/model.bal`.     |    No     |       No       |
 
 If the module name is provided, it will generate the files under a new subdirectory with the module name like below. Otherwise, it will generate the files under the `root` directory.
 
@@ -127,14 +146,15 @@ $ bal persist pull --datastore mysql --host localhost --port 3306 --user root --
 $ bal persist pull --datastore mysql --host localhost --port 3306 --user root --database db --tables
 ```
 
-| Command option |                                               Description                                               | Mandatory | Default Value |
-|:--------------:|:-------------------------------------------------------------------------------------------------------:|:---------:|:-------------:|
-|  --datastore   | Used to indicate the preferred data store. Currently, `mysql`, `mssql`, and `postgresql` are supported. |    No     |     mysql     |
-|     --host     |                                   Used to indicate the database host                                    |    Yes    |     None      |
-|     --port     |                                   Used to indicate the database port                                    |    No     |     3306      |
-|     --user     |                                   Used to indicate the database user                                    |    Yes    |     None      |
-|   --database   |                                   Used to indicate the database name                                    |    Yes    |     None      |
-|    --tables    |  Enables table selection. Accepts comma-separated table names. If no value is provided, triggers interactive mode. Tables referenced by foreign keys are auto-included.  |    No     |  All tables   |
+| Command option |                                                                                          Description                                                                                           | Mandatory | Default Value |
+|:--------------:|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:---------:|:-------------:|
+|  --datastore   |                              Used to indicate the preferred data store. Currently, `mysql`, `mssql`, and `postgresql` are supported.                                                           |    No     |     mysql     |
+|     --host     |                                                             Used to indicate the database host                                                                                                 |    Yes    |     None      |
+|     --port     |                                                             Used to indicate the database port                                                                                                 |    No     |     3306      |
+|     --user     |                                                             Used to indicate the database user                                                                                                 |    Yes    |     None      |
+|   --database   |                                                             Used to indicate the database name                                                                                                 |    Yes    |     None      |
+|    --tables    |        Enables table selection. Accepts comma-separated table names. If no value is provided, triggers interactive mode. Tables referenced by foreign keys are auto-included.                  |    No     |  All tables   |
+|    --model     | Used to indicate the name of the model. If specified, writes to `persist/<model-name>/model.bal`. If not specified, writes to the root-level model at `persist/model.bal`.                    |    No     |      No       |
 
 The file structure of the project after executing the command will be as follows.
 
@@ -159,7 +179,9 @@ The behaviour of the `pull` command is as follows
 - User should invoke the command within a Ballerina project.
 - User should provide the relevant database configuration as command-line arguments.
 - The database password is not provided as a command-line argument. The user will be prompted to enter the password.
-- If the user invokes the command while a `model.bal` file exists in the `persist` directory, it will prompt the user to confirm overwriting the existing `model.bal` file.
+- By default (without `--tables`), all tables in the database will be introspected. Use `--tables=table1,table2` to introspect specific tables, or `--tables` without a value to trigger interactive selection mode. Tables referenced by foreign keys are automatically included.
+- You can use `--model` to write the generated model to a subdirectory at `persist/<model-name>/model.bal`.
+- If the user invokes the command while a `model.bal` file exists in the `persist` directory (or specific model directory if `--model` is used), it will prompt the user to confirm overwriting the existing `model.bal` file.
 - If the user introspects a database with unsupported data types, it will inform the user by giving a warning and will comment out the relevant field with the tag `[Unsupported[DATA_TYPE]]`.
 - The user must execute the `generate` command to generate the derived types and client API after running the `pull` command in order to use the client API in the project.
 
@@ -167,28 +189,42 @@ The behaviour of the `pull` command is as follows
 
 >**Info:** The support for migrations is currently an experimental feature, and its behavior may be subject to change in future releases. Also, the support for migrations is currently limited to the MySQL data store.
 
-The command below generates the migration scripts for the model definition changes. This command is executed in the project root directory. This command will generate the migration scripts based on the changes in the model definition file. The generated migration scripts will be added to the `migrations` directory inside the `persist` directory.
+The command below generates the migration scripts for the model definition changes. This command is executed in the project root directory. This command will generate the migration scripts based on the changes in the model definition file. The generated migration scripts will be added to the `migrations` directory inside the `persist` directory (or `persist/<model-name>/migrations/` for subdirectory models).
 
 ```
 $ bal persist migrate add_employee
 ```
 
+| Command option |                                                                                            Description                                                                                           | Mandatory | Default Value |
+|:--------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:---------:|:-------------:|
+|    --model     | Used to indicate the name of the model. If specified, works with `persist/<model-name>/model.bal` and stores migrations in `persist/<model-name>/migrations/`. If not specified, uses the root-level model. |    No     |      No       |
+
 The file structure of the project after executing the command will be as follows.
 
 ```
 rainier
-   ├── generated
-         └── store
-               ├── persist_client.bal
-               ├── persist_db_config.bal
-               ├── persist_types.bal
-               └── script.sql
    ├── persist
          └── model.bal
          └── migrations
                └── 20200820120000_add_employee
                   ├── model.bal
-                  └── script.sql     
+                  └── script.sql
+   ├── Ballerina.toml
+   ├── Config.toml
+   └── main.bal
+```
+
+For a multi-model project using `--model users`, the migrations are stored under `persist/users/migrations/`:
+
+```
+rainier
+   ├── persist
+         └── users
+               └── model.bal
+               └── migrations
+                     └── 20200820120000_add_employee
+                        ├── model.bal
+                        └── script.sql
    ├── Ballerina.toml
    ├── Config.toml
    └── main.bal
@@ -200,5 +236,6 @@ The behaviour of the `migrate` command will be as follows.
 - You should invoke the command within a Ballerina project.
 - You should provide a valid label for the migration.
 - You should have `bal persist` initiated in the project and the model definition file updated.
+- You can use `--model` to work with a subdirectory model. Migrations will be stored in `persist/<model-name>/migrations/` for subdirectory models.
 - You can execute the command multiple times. It will generate the migration scripts based on the changes in the model definition file.
 - Once the migration is generated, you cannot change the data store type in the `Ballerina.toml` file. If you want to change the data store type, you need to remove the migration directory and reinitialize the project.
