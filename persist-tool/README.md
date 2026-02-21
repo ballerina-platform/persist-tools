@@ -53,7 +53,7 @@ rainier
 ```
 
 For a multi-model project using `--model users`, the directory structure will be,
-```
+```text
 rainier
    ├── persist
             └── users
@@ -103,7 +103,7 @@ bal persist generate --datastore mysql --module store --test-datastore h2
 |  Command option  |                                                                                          Description                                                                                           | Mandatory | Default Value  |
 |:----------------:|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:---------:|:--------------:|
 |   --datastore    |              Used to indicate the preferred database client. Currently, `inmemory`, `mysql`, `mssql`, `postgresql`, `h2`, `googlesheets`, and  `redis` are supported.                          |    Yes    |                |
-|     --module     |                                               Used to indicate the persist enabled module in which the files are generated.                                                                    |    No     | `<package_name>` |
+|     --module     |                                               Used to indicate the persist-enabled module in which the files are generated.                                                                    |    No     | `<package_name>` |
 | --test-datastore |              Used to indicate the preferred data store for the test cases. It can be either `inmemory` for non-SQL or `h2` for SQL, as these are the supported datastore.                      |    No     |       No       |
 |     --model      | Used to indicate the name of the model. If specified, uses the subdirectory model at `persist/<model-name>/model.bal`. If not specified, uses the root-level model at `persist/model.bal`.     |    No     |       No       |
 
@@ -191,8 +191,8 @@ The behaviour of the `pull` command is as follows
 
 The command below generates the migration scripts for the model definition changes. This command is executed in the project root directory. This command will generate the migration scripts based on the changes in the model definition file. The generated migration scripts will be added to the `migrations` directory inside the `persist` directory (or `persist/<model-name>/migrations/` for subdirectory models).
 
-```
-$ bal persist migrate add_employee
+```bash
+bal persist migrate add_employee
 ```
 
 | Command option |                                                                                            Description                                                                                           | Mandatory | Default Value |
@@ -201,7 +201,7 @@ $ bal persist migrate add_employee
 
 The file structure of the project after executing the command will be as follows.
 
-```
+```text
 rainier
    ├── persist
          └── model.bal
@@ -216,7 +216,7 @@ rainier
 
 For a multi-model project using `--model users`, the migrations are stored under `persist/users/migrations/`:
 
-```
+```text
 rainier
    ├── persist
          └── users
