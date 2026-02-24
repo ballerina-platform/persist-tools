@@ -165,7 +165,9 @@ public class BalProjectUtils {
 
     public static void validateSchemaFile(Path schemaPath, String modelFileName) throws BalException {
         BuildOptions.BuildOptionsBuilder buildOptionsBuilder = BuildOptions.builder();
-        buildOptionsBuilder.setOffline(true);
+        // Setting offline to `false` to allow fetching dependencies for the model
+        // file.
+        buildOptionsBuilder.setOffline(false);
         SingleFileProject buildProject = SingleFileProject.load(schemaPath.toAbsolutePath(),
                 buildOptionsBuilder.build());
         Package currentPackage = buildProject.currentPackage();
