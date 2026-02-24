@@ -10,6 +10,6 @@ observabilityIncluded = true
 [[platform.java21.dependency]]
 groupId = "io.ballerina.stdlib"
 artifactId = "persist.sql-native"
-version = "1.7.1"
+version = "1.7.2-20260223-082800-6b94b8c"
 
 
