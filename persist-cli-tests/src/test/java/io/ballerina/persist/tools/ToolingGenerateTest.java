@@ -1202,9 +1202,18 @@ public class ToolingGenerateTest {
     public void testGenerateWithInitParamsInvalidModel() {
         updateOutputBallerinaToml("tool_test_generate_125_init_params_negative_invalid_model");
         assertGeneratedSourcesNegative("tool_test_generate_125_init_params_negative_invalid_model", GENERATE,
-                new String[]{"modules/entities/persist_client.bal", "modules/entities/persist_types.bal", 
+                new String[]{"modules/entities/persist_client.bal", "modules/entities/persist_types.bal",
                             "modules/entities/script.sql"},
                 "--datastore", "mysql", "--module", "entities", "--with-init-params");
+    }
+
+    @Test(enabled = true)
+    @Description("Test generate command with reserved word 'class' used as entity name (should escape as 'class)")
+    public void testGenerateWithReservedWordClass() {
+        updateOutputBallerinaToml("tool_test_generate_126_reserved_words");
+        executeGenerateCommand("tool_test_generate_126_reserved_words",
+                "--datastore", "mysql", "--module", "entities", "--with-init-params");
+        assertGeneratedSources("tool_test_generate_126_reserved_words");
     }
 
     // Multi-model support tests

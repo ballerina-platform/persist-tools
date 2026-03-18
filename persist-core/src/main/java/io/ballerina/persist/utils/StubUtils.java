@@ -18,6 +18,13 @@
 
 package io.ballerina.persist.utils;
 
+import io.ballerina.compiler.syntax.tree.AbstractNodeFactory;
+import io.ballerina.compiler.syntax.tree.SyntaxKind;
+
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 /**
  * Utilities related to Stub files.
  *
@@ -26,25 +33,16 @@ public class StubUtils {
 
     private StubUtils() {}
 
-    private static final String[] RESERVED_LITERAL_NAMES = {
-            "import", "as", "public", "private", "external", "final", "service", "resource", "function", "object",
-            "record", "annotation", "parameter", "transformer", "worker", "listener", "remote", "xmlns", "returns",
-            "version", "channel", "abstract", "client", "const", "typeof", "source", "from", "on", "group", "by",
-            "having", "order", "where", "followed", "for", "window", "every", "within", "snapshot", "inner", "outer",
-            "right", "left", "full", "unidirectional", "forever", "limit", "ascending", "descending", "int", "byte",
-            "float", "decimal", "boolean", "string", "error", "map", "json", "xml", "table", "stream", "any",
-            "typedesc", "type", "future", "anydata", "handle", "var", "new", "init", "if", "match", "else",
-            "foreach", "while", "continue", "break", "fork", "join", "some", "all", "try", "catch", "finally", "throw",
-            "panic", "trap", "return", "transaction", "abort", "retry", "onretry", "retries", "committed", "aborted",
-            "with", "in", "lock", "untaint", "start", "but", "check", "checkpanic", "primarykey", "is", "flush",
-            "wait", "default", "enum", "error"};
+    /**
+     * Set of Ballerina reserved keywords derived directly from the compiler's SyntaxKind enum.
+     * This stays in sync with the Ballerina parser version used by the project.
+     */
+    private static final Set<String> BALLERINA_KEYWORDS = Arrays.stream(SyntaxKind.values())
+            .filter(kind -> kind.name().endsWith("_KEYWORD"))
+            .map(kind -> AbstractNodeFactory.createToken(kind).text())
+            .collect(Collectors.toSet());
 
     public static boolean isLiteralName(String name) {
-        for (String reservedLiteralName : RESERVED_LITERAL_NAMES) {
-            if (reservedLiteralName.equals(name)) {
-                return true;
-            }
-        }
-        return false;
+        return BALLERINA_KEYWORDS.contains(name);
     }
 }
