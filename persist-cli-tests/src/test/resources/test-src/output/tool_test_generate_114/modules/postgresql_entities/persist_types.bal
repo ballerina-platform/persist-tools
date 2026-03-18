@@ -7,7 +7,7 @@ public type CodeSystem record {|
     readonly int codeSystemId;
     string id;
     string url;
-    string 'version;
+    string version;
     string name;
     string title;
     string status;
@@ -21,7 +21,7 @@ public type CodeSystemOptionalized record {|
     int codeSystemId?;
     string id?;
     string url?;
-    string 'version?;
+    string version?;
     string name?;
     string title?;
     string status?;
@@ -40,7 +40,7 @@ public type CodeSystemTargetType typedesc<CodeSystemWithRelations>;
 public type CodeSystemInsert record {|
     string id;
     string url;
-    string 'version;
+    string version;
     string name;
     string title;
     string status;
@@ -52,7 +52,7 @@ public type CodeSystemInsert record {|
 public type CodeSystemUpdate record {|
     string id?;
     string url?;
-    string 'version?;
+    string version?;
     string name?;
     string title?;
     string status?;
@@ -104,7 +104,7 @@ public type ValueSet record {|
     readonly int valueSetId;
     string id;
     string url;
-    string 'version;
+    string version;
     string name;
     string title;
     string status;
@@ -118,7 +118,7 @@ public type ValueSetOptionalized record {|
     int valueSetId?;
     string id?;
     string url?;
-    string 'version?;
+    string version?;
     string name?;
     string title?;
     string status?;
@@ -138,7 +138,7 @@ public type ValueSetTargetType typedesc<ValueSetWithRelations>;
 public type ValueSetInsert record {|
     string id;
     string url;
-    string 'version;
+    string version;
     string name;
     string title;
     string status;
@@ -150,7 +150,7 @@ public type ValueSetInsert record {|
 public type ValueSetUpdate record {|
     string id?;
     string url?;
-    string 'version?;
+    string version?;
     string name?;
     string title?;
     string status?;

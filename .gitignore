@@ -26,7 +26,7 @@ build
 .gradle/
 
 target/
-!persist-cli-tests/src/resources/test-src/**/target/
+!persist-cli-tests/src/test/resources/test-src/**/target/
 
 # IDEA Files
 .idea/
