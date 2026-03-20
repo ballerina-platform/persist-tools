@@ -19,6 +19,7 @@
 package io.ballerina.persist.models;
 
 import io.ballerina.compiler.syntax.tree.AnnotationNode;
+import io.ballerina.compiler.syntax.tree.SyntaxInfo;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -27,7 +28,6 @@ import java.util.List;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.COLON;
 import static io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants.SINGLE_QUOTE;
 import static io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils.stripEscapeCharacter;
-import static io.ballerina.persist.utils.StubUtils.isLiteralName;
 
 /**
  * Client Entity fieldMetaData class.
@@ -151,7 +151,7 @@ public class EntityField {
         private boolean isDbGenerated = false;
 
         Builder(String fieldName) {
-            if (isLiteralName(fieldName)) {
+            if (SyntaxInfo.isKeyword(fieldName)) {
                 this.fieldName = SINGLE_QUOTE + fieldName;
                 return;
             }
