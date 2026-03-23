@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.2] - 2026-03-20
+
 ### Fixed
 
 - [Fix invalid model generation when entity or field names match Ballerina reserved keywords (e.g. `class`)](https://github.com/ballerina-platform/ballerina-library/issues/8531)
