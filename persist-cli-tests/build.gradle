@@ -17,6 +17,12 @@
  */
 
 import org.apache.tools.ant.taskdefs.condition.Os
+import org.gradle.process.ExecOperations
+import javax.inject.Inject
+
+abstract class PersistCliTestsExecHelper {
+    @Inject abstract ExecOperations getExecOperations()
+}
 
 plugins {
     id 'java'
@@ -120,15 +126,16 @@ task unpackStdLibs() {
 }
 
 task pullGSheetsDependency() {
+    def execHelper = project.objects.newInstance(PersistCliTestsExecHelper)
     doLast {
         if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-            return exec {
+            return execHelper.execOperations.exec {
                 ignoreExitValue true
                 String distributionBinPath = "${project.rootDir}/target/ballerina-distribution/bin"
                 commandLine 'sh', '-c', "$distributionBinPath/bal pull ballerinax/googleapis.sheets"
             }.exitValue
         } else {
-            return exec {
+            return execHelper.execOperations.exec {
                 ignoreExitValue true
                 String distributionBinPath = "${project.rootDir}/target/ballerina-distribution/bin"
                 commandLine 'cmd', '/c', "$distributionBinPath/bal.bat pull ballerinax/googleapis.sheets"

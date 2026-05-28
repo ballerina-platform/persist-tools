@@ -17,6 +17,7 @@ pluginManagement {
     }
 
     repositories {
+        mavenLocal()
         gradlePluginPortal()
         maven {
             url = 'https://maven.pkg.github.com/ballerina-platform/*'
@@ -29,7 +30,7 @@ pluginManagement {
 }
 
 plugins {
-    id "com.gradle.enterprise" version "3.13.2"
+    id "com.gradle.develocity" version "3.19.2"
 }
 
 rootProject.name = 'persist-tools'
@@ -47,9 +48,9 @@ project(':persist-cli').projectDir = file('persist-cli')
 project(':persist-cli-tests').projectDir = file('persist-cli-tests')
 project(':examples').projectDir = file('examples')
 
-gradleEnterprise {
+develocity {
     buildScan {
-        termsOfServiceUrl = 'https://gradle.com/terms-of-service'
-        termsOfServiceAgree = 'yes'
+        termsOfUseUrl = 'https://gradle.com/terms-of-service'
+        termsOfUseAgree = 'yes'
     }
 }

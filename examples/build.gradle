@@ -17,6 +17,12 @@
  */
 
 import org.apache.tools.ant.taskdefs.condition.Os
+import org.gradle.process.ExecOperations
+import javax.inject.Inject
+
+abstract class ExamplesExecHelper {
+    @Inject abstract ExecOperations getExecOperations()
+}
 
 apply plugin: 'java'
 
@@ -151,7 +157,7 @@ task copyTestResources() {
     doLast() {
         copy {
             examples.each { example ->
-                into buildDir
+                into layout.buildDirectory.get().asFile
                 into("generated-examples/${example}/") {
                     from "${example}"
                 }
@@ -159,7 +165,7 @@ task copyTestResources() {
         }
         copy {
             introspectionExamples.each { example ->
-                into buildDir
+                into layout.buildDirectory.get().asFile
                 into("generated-examples/${example}/") {
                     from "${example}"
                 }
@@ -167,7 +173,7 @@ task copyTestResources() {
         }
         copy {
             redisDBExamples.each { example ->
-                into buildDir
+                into layout.buildDirectory.get().asFile
                 into("generated-examples/${example}/") {
                     from "${example}"
                 }
@@ -175,7 +181,7 @@ task copyTestResources() {
         }
         copy {
             mockExamples.each { example ->
-                into buildDir
+                into layout.buildDirectory.get().asFile
                 into("generated-examples/${example}/") {
                     from "${example}"
                 }
@@ -186,17 +192,18 @@ task copyTestResources() {
 }
 
 task initDbExamples {
+    def execHelper = project.objects.newInstance(ExamplesExecHelper)
     doLast {
         examples.each { example ->
             if (example != "gsheet_automation") {
                 try {
-                    exec {
-                        copy {
-                            from(file("${project.projectDir}/build/generated-examples/${example}/resources/mysql"))
-                            into("${project.projectDir}/build/generated-examples/${example}")
-                        }
-                        delete "${project.projectDir}/build/generated-examples/${example}/generated"
-                        delete "${project.projectDir}/build/generated-examples/${example}/modules"
+                    copy {
+                        from(file("${project.projectDir}/build/generated-examples/${example}/resources/mysql"))
+                        into("${project.projectDir}/build/generated-examples/${example}")
+                    }
+                    delete "${project.projectDir}/build/generated-examples/${example}/generated"
+                    delete "${project.projectDir}/build/generated-examples/${example}/modules"
+                    execHelper.execOperations.exec {
                         workingDir "${project.projectDir}/build/generated-examples/${example}"
                         if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
                             commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist add --module=entities --datastore=mysql"
@@ -215,10 +222,11 @@ task initDbExamples {
 }
 
 task generateDbExamples {
+    def execHelper = project.objects.newInstance(ExamplesExecHelper)
     doLast {
         examples.each { example ->
             try {
-                exec {
+                execHelper.execOperations.exec {
                     workingDir "${project.projectDir}/build/generated-examples/${example}"
                     if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
                         commandLine 'sh', '-c', "${ballerinaDist}/bin/bal build"
@@ -236,10 +244,11 @@ task generateDbExamples {
 }
 
 task generateInMemoryExamples {
+    def execHelper = project.objects.newInstance(ExamplesExecHelper)
     doLast {
         examples.each { example ->
             try {
-                exec {
+                execHelper.execOperations.exec {
                     workingDir "${project.projectDir}/build/generated-examples/${example}"
                     if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
                         commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate --datastore=inmemory --module=entities"
@@ -256,10 +265,11 @@ task generateInMemoryExamples {
 }
 
 task generateIntrospectionExamples {
+    def execHelper = project.objects.newInstance(ExamplesExecHelper)
     doLast {
         introspectionExamples.each { example ->
             try {
-                exec {
+                execHelper.execOperations.exec {
                     workingDir "${project.projectDir}/build/generated-examples/${example}"
                     if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
                         commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate --datastore=mysql --module=entities"
@@ -276,10 +286,11 @@ task generateIntrospectionExamples {
 }
 
 task generateRedisDBExamples {
+    def execHelper = project.objects.newInstance(ExamplesExecHelper)
     doLast {
         redisDBExamples.each { example ->
             try {
-                exec {
+                execHelper.execOperations.exec {
                     workingDir "${project.projectDir}/build/generated-examples/${example}"
                     if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
                         commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate --datastore=redis --module=entities"
@@ -296,15 +307,16 @@ task generateRedisDBExamples {
 }
 
 task generateDBMockExamples {
+    def execHelper = project.objects.newInstance(ExamplesExecHelper)
     doLast {
         mockExamples.each { example ->
             try {
-                exec {
-                    copy {
-                        from(file("${project.projectDir}/build/generated-examples/${example}/resources/mysql"))
-                        into("${project.projectDir}/build/generated-examples/${example}/tests")
-                    }
-                    delete "${project.projectDir}/build/generated-examples/${example}/modules"
+                copy {
+                    from(file("${project.projectDir}/build/generated-examples/${example}/resources/mysql"))
+                    into("${project.projectDir}/build/generated-examples/${example}/tests")
+                }
+                delete "${project.projectDir}/build/generated-examples/${example}/modules"
+                execHelper.execOperations.exec {
                     workingDir "${project.projectDir}/build/generated-examples/${example}"
                     if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
                         commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate --datastore=mysql --module=entities --test-datastore=h2"
@@ -321,15 +333,16 @@ task generateDBMockExamples {
 }
 
 task generateRedisMockExamples {
+    def execHelper = project.objects.newInstance(ExamplesExecHelper)
     doLast {
         mockExamples.each { example ->
             try {
-                exec {
-                    copy {
-                        from(file("${project.projectDir}/build/generated-examples/${example}/resources/redis"))
-                        into("${project.projectDir}/build/generated-examples/${example}/tests")
-                    }
-                    delete "${project.projectDir}/build/generated-examples/${example}/modules"
+                copy {
+                    from(file("${project.projectDir}/build/generated-examples/${example}/resources/redis"))
+                    into("${project.projectDir}/build/generated-examples/${example}/tests")
+                }
+                delete "${project.projectDir}/build/generated-examples/${example}/modules"
+                execHelper.execOperations.exec {
                     workingDir "${project.projectDir}/build/generated-examples/${example}"
                     if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
                         commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate --datastore=redis --module=entities --test-datastore=inmemory"
