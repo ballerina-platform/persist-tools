@@ -33,6 +33,9 @@ allprojects {
     version = project.version
 
     apply plugin: 'jacoco'
+jacoco {
+    toolVersion = jacocoVersion
+}
     apply plugin: 'maven-publish'
 
     repositories {
@@ -70,6 +73,14 @@ allprojects {
 }
 
 subprojects {
+    plugins.withId('java') {
+        java {
+            toolchain {
+                languageVersion = JavaLanguageVersion.of(25)
+            }
+        }
+    }
+
     configurations {
         externalJars
         ballerinaStdLibs
@@ -144,9 +155,9 @@ task codeCoverageReport(type: JacocoReport) {
         xml.required = true
         html.required = true
         csv.required = true
-        xml.outputLocation = file("${buildDir}/reports/jacoco/report.xml")
-        html.outputLocation = file("${buildDir}/reports/jacoco/report.html")
-        csv.outputLocation = file("${buildDir}/reports/jacoco/report.csv")
+        xml.outputLocation = layout.buildDirectory.file("reports/jacoco/report.xml")
+        html.outputLocation = layout.buildDirectory.dir("reports/jacoco/report.html")
+        csv.outputLocation = layout.buildDirectory.file("reports/jacoco/report.csv")
     }
 
     onlyIf = {
@@ -167,7 +178,7 @@ task createProperties() {
     }
 }
 
-task build {
+tasks.named('build') {
     dependsOn createProperties
     dependsOn(":persist-core:build")
     dependsOn(":persist-cli:build")

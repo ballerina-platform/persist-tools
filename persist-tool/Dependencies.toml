@@ -5,12 +5,12 @@
 
 [ballerina]
 dependencies-toml-version = "2"
-distribution-version = "2201.13.0"
+distribution-version = "2201.14.0-20260527-050400-74f7e6bf"
 
 [[package]]
 org = "ballerina"
 name = "tool.persist"
-version = "1.9.2"
+version = "1.9.3"
 modules = [
 	{org = "ballerina", packageName = "tool.persist", moduleName = "tool.persist"}
 ]
