@@ -265,7 +265,6 @@ spotbugsTest {
     reports {
         html.required = true
         text.required = true
-        html.enabled true
     }
     def excludeFile = file("${rootDir}/spotbugs-exclude.xml")
     if(excludeFile.exists()) {
