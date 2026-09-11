@@ -17,6 +17,13 @@
  */
 
 import org.apache.tools.ant.taskdefs.condition.Os
+import org.gradle.process.ExecOperations
+
+import javax.inject.Inject
+
+abstract class BallerinaExecHelper {
+    @Inject abstract ExecOperations getExecOperations()
+}
 
 apply plugin: 'java'
 
@@ -186,11 +193,12 @@ task copyTestResources() {
 }
 
 task initDbExamples {
+    def execHelper = project.objects.newInstance(BallerinaExecHelper)
     doLast {
         examples.each { example ->
             if (example != "gsheet_automation") {
                 try {
-                    exec {
+                    execHelper.execOperations.exec {
                         copy {
                             from(file("${project.projectDir}/build/generated-examples/${example}/resources/mysql"))
                             into("${project.projectDir}/build/generated-examples/${example}")
@@ -215,10 +223,11 @@ task initDbExamples {
 }
 
 task generateDbExamples {
+    def execHelper = project.objects.newInstance(BallerinaExecHelper)
     doLast {
         examples.each { example ->
             try {
-                exec {
+                execHelper.execOperations.exec {
                     workingDir "${project.projectDir}/build/generated-examples/${example}"
                     if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
                         commandLine 'sh', '-c', "${ballerinaDist}/bin/bal build"
@@ -236,10 +245,11 @@ task generateDbExamples {
 }
 
 task generateInMemoryExamples {
+    def execHelper = project.objects.newInstance(BallerinaExecHelper)
     doLast {
         examples.each { example ->
             try {
-                exec {
+                execHelper.execOperations.exec {
                     workingDir "${project.projectDir}/build/generated-examples/${example}"
                     if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
                         commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate --datastore=inmemory --module=entities"
@@ -256,10 +266,11 @@ task generateInMemoryExamples {
 }
 
 task generateIntrospectionExamples {
+    def execHelper = project.objects.newInstance(BallerinaExecHelper)
     doLast {
         introspectionExamples.each { example ->
             try {
-                exec {
+                execHelper.execOperations.exec {
                     workingDir "${project.projectDir}/build/generated-examples/${example}"
                     if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
                         commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate --datastore=mysql --module=entities"
@@ -276,10 +287,11 @@ task generateIntrospectionExamples {
 }
 
 task generateRedisDBExamples {
+    def execHelper = project.objects.newInstance(BallerinaExecHelper)
     doLast {
         redisDBExamples.each { example ->
             try {
-                exec {
+                execHelper.execOperations.exec {
                     workingDir "${project.projectDir}/build/generated-examples/${example}"
                     if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
                         commandLine 'sh', '-c', "${ballerinaDist}/bin/bal persist generate --datastore=redis --module=entities"
@@ -296,10 +308,11 @@ task generateRedisDBExamples {
 }
 
 task generateDBMockExamples {
+    def execHelper = project.objects.newInstance(BallerinaExecHelper)
     doLast {
         mockExamples.each { example ->
             try {
-                exec {
+                execHelper.execOperations.exec {
                     copy {
                         from(file("${project.projectDir}/build/generated-examples/${example}/resources/mysql"))
                         into("${project.projectDir}/build/generated-examples/${example}/tests")
@@ -321,10 +334,11 @@ task generateDBMockExamples {
 }
 
 task generateRedisMockExamples {
+    def execHelper = project.objects.newInstance(BallerinaExecHelper)
     doLast {
         mockExamples.each { example ->
             try {
-                exec {
+                execHelper.execOperations.exec {
                     copy {
                         from(file("${project.projectDir}/build/generated-examples/${example}/resources/redis"))
                         into("${project.projectDir}/build/generated-examples/${example}/tests")
