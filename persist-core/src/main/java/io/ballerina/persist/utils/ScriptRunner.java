@@ -26,6 +26,7 @@ import io.ballerina.persist.introspectiondto.SqlIndex;
 import io.ballerina.persist.introspectiondto.SqlTable;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.Reader;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -50,7 +51,7 @@ public class ScriptRunner {
         this.connection = connection;
     }
 
-    public void runScript(Reader reader) throws Exception {
+    public void runScript(Reader reader) throws SQLException, IOException {
         try {
             executeLineByLine(reader);
         } finally {
@@ -69,7 +70,7 @@ public class ScriptRunner {
 
 
 
-    private void executeLineByLine(Reader reader) throws Exception {
+    private void executeLineByLine(Reader reader) throws SQLException, IOException {
         StringBuilder command = new StringBuilder();
         BufferedReader lineReader = new BufferedReader(reader);
         String line;
@@ -80,13 +81,13 @@ public class ScriptRunner {
         checkForMissingLineTerminator(command);
     }
 
-    private void commitConnection() throws Exception {
+    private void commitConnection() throws SQLException {
         try {
             if (!connection.getAutoCommit()) {
                 connection.commit();
             }
-        } catch (Throwable t) {
-            throw new Exception("could not commit transaction. Message: " + t.getMessage(), t);
+        } catch (SQLException e) {
+            throw new SQLException("could not commit transaction. Message: " + e.getMessage(), e);
         }
     }
 
@@ -100,9 +101,9 @@ public class ScriptRunner {
         }
     }
 
-    private void checkForMissingLineTerminator(StringBuilder command) throws Exception {
+    private void checkForMissingLineTerminator(StringBuilder command) throws SQLException {
         if (command != null && command.toString().trim().length() > 0) {
-            throw new Exception("line missing end-of-line terminator (" + DEFAULT_DELIMITER + ") => " + command);
+            throw new SQLException("line missing end-of-line terminator (" + DEFAULT_DELIMITER + ") => " + command);
         }
     }
 
