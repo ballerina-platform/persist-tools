@@ -529,7 +529,7 @@ public class BalProjectUtils {
                     EntityField assocField = assocFields.get(i);
                     if (field.isArrayType() && assocField.isArrayType()) {
                         // both are array types. many-to-many is not supported
-                        throw new RuntimeException("unsupported many to many relation between " +
+                        throw new UnsupportedOperationException("unsupported many to many relation between " +
                                 entity.getEntityName() + " and " + assocEntity.getEntityName());
                     }
                     if (field.isArrayType() || assocField.isArrayType()) {

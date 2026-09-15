@@ -17,6 +17,13 @@
  */
 
 import org.apache.tools.ant.taskdefs.condition.Os
+import org.gradle.process.ExecOperations
+
+import javax.inject.Inject
+
+abstract class BallerinaExecHelper {
+    @Inject abstract ExecOperations getExecOperations()
+}
 
 plugins {
     id 'java'
@@ -120,18 +127,20 @@ task unpackStdLibs() {
 }
 
 task pullGSheetsDependency() {
+    def execHelper = project.objects.newInstance(BallerinaExecHelper)
+    def gSheetsPackage = "ballerinax/googleapis.sheets:${project.googleApisSheetsVersion}"
     doLast {
         if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-            return exec {
+            return execHelper.execOperations.exec {
                 ignoreExitValue true
                 String distributionBinPath = "${project.rootDir}/target/ballerina-distribution/bin"
-                commandLine 'sh', '-c', "$distributionBinPath/bal pull ballerinax/googleapis.sheets"
+                commandLine 'sh', '-c', "$distributionBinPath/bal pull $gSheetsPackage"
             }.exitValue
         } else {
-            return exec {
+            return execHelper.execOperations.exec {
                 ignoreExitValue true
                 String distributionBinPath = "${project.rootDir}/target/ballerina-distribution/bin"
-                commandLine 'cmd', '/c', "$distributionBinPath/bal.bat pull ballerinax/googleapis.sheets"
+                commandLine 'cmd', '/c', "$distributionBinPath/bal.bat pull $gSheetsPackage"
             }.exitValue
         }
     }
@@ -277,7 +286,7 @@ test {
     dependsOn(copyTestResources)
     systemProperty "ballerina.offline.flag", "true"
     doFirst {
-        systemProperty "ballerina.home", file("${buildDir}/ballerina-distribution").absolutePath
+        systemProperty "ballerina.home", layout.buildDirectory.dir("ballerina-distribution").get().asFile.absolutePath
     }
     useTestNG() {
         suites 'src/test/resources/testng.xml'
