@@ -128,18 +128,19 @@ task unpackStdLibs() {
 
 task pullGSheetsDependency() {
     def execHelper = project.objects.newInstance(BallerinaExecHelper)
+    def gSheetsPackage = "ballerinax/googleapis.sheets:${project.googleApisSheetsVersion}"
     doLast {
         if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
             return execHelper.execOperations.exec {
                 ignoreExitValue true
                 String distributionBinPath = "${project.rootDir}/target/ballerina-distribution/bin"
-                commandLine 'sh', '-c', "$distributionBinPath/bal pull ballerinax/googleapis.sheets"
+                commandLine 'sh', '-c', "$distributionBinPath/bal pull $gSheetsPackage"
             }.exitValue
         } else {
             return execHelper.execOperations.exec {
                 ignoreExitValue true
                 String distributionBinPath = "${project.rootDir}/target/ballerina-distribution/bin"
-                commandLine 'cmd', '/c', "$distributionBinPath/bal.bat pull ballerinax/googleapis.sheets"
+                commandLine 'cmd', '/c', "$distributionBinPath/bal.bat pull $gSheetsPackage"
             }.exitValue
         }
     }
