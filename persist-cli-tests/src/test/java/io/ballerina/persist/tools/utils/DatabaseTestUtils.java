@@ -27,6 +27,7 @@ import org.testng.Assert;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -267,7 +268,7 @@ public class DatabaseTestUtils {
         } catch (SQLException e) {
             errStream.println("Failed to create database connection: " + e.getMessage());
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new UncheckedIOException(e);
         }
 
     }

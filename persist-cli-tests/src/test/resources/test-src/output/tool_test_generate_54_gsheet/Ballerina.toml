@@ -16,3 +16,8 @@ version = "1.6.0"
 groupId = "io.ballerina.stdlib"
 artifactId = "persist.inmemory-native"
 version = "1.6.0"
+
+[[dependency]]
+org = "ballerinax"
+name = "googleapis.sheets"
+version = "3.0.0"

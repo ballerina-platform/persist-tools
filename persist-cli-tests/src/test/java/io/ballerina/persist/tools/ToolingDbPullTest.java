@@ -54,7 +54,7 @@ public class ToolingDbPullTest {
             postgresDbConfig = new DatabaseConfiguration("localhost", "postgres", "postgres", "5432", "persist");
             mssqlDbConfig = new DatabaseConfiguration("localhost", "sa", "Test123#", "1434", "persist");
         } catch (BalException e) {
-            throw new RuntimeException(e);
+            throw new ExceptionInInitializerError(e);
         }
     }
 
@@ -1014,7 +1014,7 @@ public class ToolingDbPullTest {
             }
             System.setIn(originalSystemIn);
         } catch (RuntimeException e) {
-            throw new RuntimeException("Error occurred while executing pull command: " + e.getMessage());
+            throw new IllegalStateException("Error occurred while executing pull command: " + e.getMessage(), e);
         } catch (Exception e) {
             throw new BalException("Error occurred while executing pull command: " + e.getMessage());
         }
@@ -1042,7 +1042,7 @@ public class ToolingDbPullTest {
                 System.setIn(originalSystemIn);
             }
         } catch (RuntimeException e) {
-            throw new RuntimeException("Error occurred while executing pull command: " + e.getMessage());
+            throw new IllegalStateException("Error occurred while executing pull command: " + e.getMessage(), e);
         } catch (Exception e) {
             throw new BalException("Error occurred while executing pull command: " + e.getMessage());
         }
@@ -1071,7 +1071,8 @@ public class ToolingDbPullTest {
                 System.setIn(originalSystemIn);
             }
         } catch (RuntimeException e) {
-            throw new RuntimeException("Error occurred while executing pull command with tables: " + e.getMessage());
+            throw new IllegalStateException("Error occurred while executing pull command with tables: "
+                    + e.getMessage(), e);
         } catch (Exception e) {
             throw new BalException("Error occurred while executing pull command with tables: " + e.getMessage());
         }
@@ -1100,8 +1101,8 @@ public class ToolingDbPullTest {
                 System.setIn(originalSystemIn);
             }
         } catch (RuntimeException e) {
-            throw new RuntimeException("Error occurred while executing pull command in interactive mode: " +
-                    e.getMessage());
+            throw new IllegalStateException("Error occurred while executing pull command in interactive mode: " +
+                    e.getMessage(), e);
         } catch (Exception e) {
             throw new BalException("Error occurred while executing pull command in interactive mode: " +
                     e.getMessage());
@@ -1195,7 +1196,8 @@ public class ToolingDbPullTest {
                 System.setIn(originalSystemIn);
             }
         } catch (RuntimeException e) {
-            throw new RuntimeException("Error occurred while executing pull command with model: " + e.getMessage());
+            throw new IllegalStateException("Error occurred while executing pull command with model: "
+                    + e.getMessage(), e);
         } catch (Exception e) {
             throw new BalException("Error occurred while executing pull command with model: " + e.getMessage());
         }
@@ -1221,7 +1223,7 @@ public class ToolingDbPullTest {
                 System.setIn(originalSystemIn);
             }
         } catch (RuntimeException e) {
-            throw new RuntimeException("Error occurred while executing pull command: " + e.getMessage());
+            throw new IllegalStateException("Error occurred while executing pull command: " + e.getMessage(), e);
         } catch (Exception e) {
             throw new BalException("Error occurred while executing pull command: " + e.getMessage());
         }
