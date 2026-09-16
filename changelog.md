@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- [Fix compilation errors in generated Google Sheets clients caused by resolving an incompatible `ballerinax/googleapis.sheets` version](https://github.com/ballerina-platform/ballerina-library/issues/9167)
+
 ## [1.9.2] - 2026-03-20
 
 ### Fixed
