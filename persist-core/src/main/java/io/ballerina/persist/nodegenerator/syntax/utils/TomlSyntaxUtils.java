@@ -174,6 +174,7 @@ public class TomlSyntaxUtils {
         NodeList<DocumentMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
         TableArrayNode dependencyNode = null;
         TableArrayNode testDependencyNode = null;
+        boolean gSheetsDependencyExists = false;
         List<String> persistClientIds = new ArrayList<>();
         if (Objects.nonNull(fileNamePath)) {
             SyntaxTree syntaxTree = SyntaxTree.from(configDocument, fileNamePath.toString());
@@ -190,6 +191,10 @@ public class TomlSyntaxUtils {
                                 persistClientIds.add(value.substring(1, value.length() - 1));
                             }
                         }
+                    }
+                    if (node.identifier().toSourceCode().trim().equals(
+                            PersistToolsConstants.TomlFileConstants.DEPENDENCY)) {
+                        gSheetsDependencyExists = gSheetsDependencyExists || isGSheetsConnectorDependency(node);
                     }
                     if (node.identifier().toSourceCode().trim().equals("platform.java21.dependency")) {
                         NodeList<KeyValueNode> fields = ((TableArrayNode) member).fields();
@@ -221,13 +226,30 @@ public class TomlSyntaxUtils {
                 }
             }
         }
-        return new ConfigDeclaration(moduleMembers, dependencyNode, testDependencyNode, persistClientIds);
+        return new ConfigDeclaration(moduleMembers, dependencyNode, testDependencyNode, gSheetsDependencyExists,
+                persistClientIds);
+    }
+
+    private static boolean isGSheetsConnectorDependency(TableArrayNode node) {
+        boolean orgMatches = false;
+        boolean nameMatches = false;
+        for (KeyValueNode field : node.fields()) {
+            String key = field.identifier().toSourceCode().trim();
+            String value = field.value().toSourceCode().trim().replaceAll("\"", "");
+            if (key.equals(PersistToolsConstants.TomlFileConstants.KEYWORD_ORG)) {
+                orgMatches = value.equals(PersistToolsConstants.TomlFileConstants.GOOGLE_SHEETS_CONNECTOR_ORG);
+            } else if (key.equals(PersistToolsConstants.TomlFileConstants.KEYWORD_NAME)) {
+                nameMatches = value.equals(PersistToolsConstants.TomlFileConstants.GOOGLE_SHEETS_CONNECTOR_NAME);
+            }
+        }
+        return orgMatches && nameMatches;
     }
 
     public record ConfigDeclaration(
             NodeList<DocumentMemberDeclarationNode> moduleMembers,
             TableArrayNode dependencyNode,
             TableArrayNode testDependencyNode,
+            boolean gSheetsDependencyExists,
             List<String> persistClientIds) {
     }
 
@@ -341,11 +363,40 @@ public class TomlSyntaxUtils {
                     validateDependency(declaration.testDependencyNode(), testDatastore);
                 }
             }
+            if (isGoogleSheetsDatastore(datastore, testDatastore) && !declaration.gSheetsDependencyExists()) {
+                moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
+                moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray(
+                        PersistToolsConstants.TomlFileConstants.DEPENDENCY, null));
+                moduleMembers = populateGSheetsConnectorDependency(moduleMembers);
+            }
         }
         Token eofToken = AbstractNodeFactory.createIdentifierToken("");
         DocumentNode documentNode = NodeFactory.createDocumentNode(moduleMembers, eofToken);
         TextDocument textDocument = TextDocuments.from(documentNode.toSourceCode());
         return SyntaxTree.from(textDocument).toSourceCode();
+    }
+
+    private static boolean isGoogleSheetsDatastore(String datastore, String testDatastore) {
+        return PersistToolsConstants.SupportedDataSources.GOOGLE_SHEETS.equals(datastore) ||
+                PersistToolsConstants.SupportedDataSources.GOOGLE_SHEETS.equals(testDatastore);
+    }
+
+    /**
+     * Pins the minimum compatible version of the Google Sheets connector, so that the generated client is not
+     * resolved against an incompatible major version of it from Ballerina Central.
+     */
+    private static NodeList<DocumentMemberDeclarationNode> populateGSheetsConnectorDependency(
+            NodeList<DocumentMemberDeclarationNode> moduleMembers) {
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
+                PersistToolsConstants.TomlFileConstants.KEYWORD_ORG,
+                PersistToolsConstants.TomlFileConstants.GOOGLE_SHEETS_CONNECTOR_ORG, null));
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
+                PersistToolsConstants.TomlFileConstants.KEYWORD_NAME,
+                PersistToolsConstants.TomlFileConstants.GOOGLE_SHEETS_CONNECTOR_NAME, null));
+        moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV(
+                PersistToolsConstants.TomlFileConstants.KEYWORD_VERSION,
+                PersistToolsConstants.TomlFileConstants.GOOGLE_SHEETS_CONNECTOR_VERSION, null));
+        return moduleMembers;
     }
 
     private static String getPersistVersion(String datasource) throws BalException {

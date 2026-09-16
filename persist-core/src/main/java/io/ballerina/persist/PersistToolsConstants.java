@@ -231,6 +231,13 @@ public class PersistToolsConstants {
         public static final String PERSIST_REDIS_VERSION = "persistRedisVersion";
         public static final String KEYWORD_VERSION = "version";
         public static final String ID = "id";
+        public static final String DEPENDENCY = "dependency";
+        public static final String KEYWORD_ORG = "org";
+        public static final String KEYWORD_NAME = "name";
+        public static final String GOOGLE_SHEETS_CONNECTOR_ORG = "ballerinax";
+        public static final String GOOGLE_SHEETS_CONNECTOR_NAME = "googleapis.sheets";
+        // Minimum connector version the generated Google Sheets client is compatible with
+        public static final String GOOGLE_SHEETS_CONNECTOR_VERSION = "3.0.0";
     }
 
     /**
