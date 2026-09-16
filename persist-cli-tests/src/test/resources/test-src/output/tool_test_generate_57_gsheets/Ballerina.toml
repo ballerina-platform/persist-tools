@@ -12,3 +12,8 @@ groupId = "io.ballerina.stdlib"
 artifactId = "persist.googlesheets-native"
 version = "1.6.0"
 
+
+[[dependency]]
+org = "ballerinax"
+name = "googleapis.sheets"
+version = "3.0.0"
