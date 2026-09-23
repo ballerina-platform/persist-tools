@@ -2,7 +2,7 @@
 id = "persist"
 
 [[dependency]]
-path = "../persist-cli/build/libs/persist-cli-1.9.2.jar"
+path = "../persist-cli/build/libs/persist-cli-1.9.3-SNAPSHOT.jar"
 
 [[dependency]]
-path = "../persist-core/build/libs/persist-core-1.9.2.jar"
+path = "../persist-core/build/libs/persist-core-1.9.3-SNAPSHOT.jar"
