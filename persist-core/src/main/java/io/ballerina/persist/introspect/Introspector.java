@@ -317,6 +317,7 @@ public abstract class Introspector {
 
     private void mapEntities() throws BalException {
         Map<String, Entity.Builder> entityBuilderMap = new HashMap<>();
+        Map<String, Entity.Builder> tableEntityBuilderMap = new HashMap<>();
         tables.forEach(table -> {
             String entityName = CaseConverter.toSingularPascalCase(table.getTableName());
 
@@ -382,15 +383,23 @@ public abstract class Introspector {
                         "' does not have a primary key and will be excluded from entity generation.");
             } else {
                 entityBuilderMap.put(entityBuilder.getEntityName(), entityBuilder);
+                tableEntityBuilderMap.put(table.getTableName(), entityBuilder);
             }
         });
         HashMap<String, Integer> ownerFieldNames = new HashMap<>();
         HashMap<String, Integer> assocFieldNames = new HashMap<>();
         for (SqlForeignKey sqlForeignKey : this.sqlForeignKeys) {
-            Entity.Builder ownerEntityBuilder = entityBuilderMap
-                    .get(CaseConverter.toSingularPascalCase(sqlForeignKey.getTableName()));
-            Entity.Builder assocEntityBuilder = entityBuilderMap
-                    .get(CaseConverter.toSingularPascalCase(sqlForeignKey.getReferencedTableName()));
+            Entity.Builder ownerEntityBuilder = tableEntityBuilderMap.get(sqlForeignKey.getTableName());
+            Entity.Builder assocEntityBuilder = tableEntityBuilderMap.get(sqlForeignKey.getReferencedTableName());
+            if (ownerEntityBuilder == null || assocEntityBuilder == null) {
+                String skippedTable = ownerEntityBuilder == null ? sqlForeignKey.getTableName()
+                        : sqlForeignKey.getReferencedTableName();
+                errStream.println("WARNING: Foreign key '" + sqlForeignKey.getConstraintName() + "' from table '" +
+                        sqlForeignKey.getTableName() + "' to table '" + sqlForeignKey.getReferencedTableName() +
+                        "' will not be mapped to a relation because table '" + skippedTable +
+                        "' is not included in entity generation. The foreign key columns are kept as plain fields.");
+                continue;
+            }
             if (!new HashSet<>(sqlForeignKey.getReferencedColumnNames()).containsAll(assocEntityBuilder.getKeys()
                     .stream().map(EntityField::getFieldColumnName).toList())) {
                 throw new BalException("bal persist does not support foreign key references to unique " +

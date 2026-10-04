@@ -180,7 +180,9 @@ public class PostgreSqlIntrospector extends Introspector {
                 SELECT
                     table_name,
                     att2.attname    AS column_name,
-                    cl.relname      AS referenced_table_name,
+                    CASE WHEN ref_ns.nspname = 'public' THEN cl.relname
+                         ELSE ref_ns.nspname || '.' || cl.relname
+                    END             AS referenced_table_name,
                     att.attname     AS referenced_column_name,
                     conname         AS constraint_name,
                     NULL            AS update_rule,
@@ -204,6 +206,7 @@ public class PostgreSqlIntrospector extends Introspector {
                     ) con
                         JOIN pg_attribute att on att.attrelid = con.confrelid and att.attnum = con.child
                         JOIN pg_class cl on cl.oid = con.confrelid
+                        JOIN pg_namespace ref_ns on ref_ns.oid = cl.relnamespace
                         JOIN pg_attribute att2 on att2.attrelid = con.conrelid and att2.attnum = con.parent
                 WHERE table_name = '%s';
                 """;

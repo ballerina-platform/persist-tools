@@ -4,6 +4,12 @@ This file contains all the notable changes done to the Ballerina Persist Tools t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- [Fix database introspection failure when a foreign key references a table outside the introspected schema](https://github.com/ballerina-platform/ballerina-library/issues/9255)
+
 ## [1.9.3] - 2026-09-23
 
 ### Fixed
