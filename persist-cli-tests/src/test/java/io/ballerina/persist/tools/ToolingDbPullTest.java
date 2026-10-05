@@ -758,6 +758,26 @@ public class ToolingDbPullTest {
     }
 
     @Test(enabled = true)
+    @Description("[PosgreSql] Create a model.bal file skipping a foreign key that references a table in another " +
+            "schema.")
+    public void pullTestPostgreSqlWithForeignKeyToOtherSchema() throws BalException {
+        runIntrospectionTestPostgreSql("tool_test_pull_52_postgresql");
+    }
+
+    @Test(enabled = true)
+    @Description("[PosgreSql] Create a model.bal file without relating a foreign key that references a table in " +
+            "another schema to a same-named table in the public schema.")
+    public void pullTestPostgreSqlWithForeignKeyToSameNamedTableInOtherSchema() throws BalException {
+        runIntrospectionTestPostgreSql("tool_test_pull_54_postgresql");
+    }
+
+    @Test(enabled = true)
+    @Description("[PosgreSql] Create a model.bal file skipping a foreign key owned by a table without a primary key.")
+    public void pullTestPostgreSqlWithForeignKeyFromTableWithoutPrimaryKey() throws BalException {
+        runIntrospectionTestPostgreSql("tool_test_pull_53_postgresql");
+    }
+
+    @Test(enabled = true)
     @Description("[PostgreSQL] Test the --tables option to introspect only selected tables.")
     public void pullTestPostgreSqlWithTablesOption() throws BalException {
         if (OS.WINDOWS.isCurrentOs()) {
