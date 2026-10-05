@@ -391,13 +391,16 @@ public abstract class Introspector {
         for (SqlForeignKey sqlForeignKey : this.sqlForeignKeys) {
             Entity.Builder ownerEntityBuilder = tableEntityBuilderMap.get(sqlForeignKey.getTableName());
             Entity.Builder assocEntityBuilder = tableEntityBuilderMap.get(sqlForeignKey.getReferencedTableName());
-            if (ownerEntityBuilder == null || assocEntityBuilder == null) {
-                String skippedTable = ownerEntityBuilder == null ? sqlForeignKey.getTableName()
-                        : sqlForeignKey.getReferencedTableName();
-                errStream.println("WARNING: Foreign key '" + sqlForeignKey.getConstraintName() + "' from table '" +
-                        sqlForeignKey.getTableName() + "' to table '" + sqlForeignKey.getReferencedTableName() +
-                        "' will not be mapped to a relation because table '" + skippedTable +
-                        "' is not included in entity generation. The foreign key columns are kept as plain fields.");
+            if (ownerEntityBuilder == null) {
+                // The owning table is already excluded from entity generation with its own warning.
+                continue;
+            }
+            if (assocEntityBuilder == null) {
+                errStream.println("WARNING: Foreign key '" + sqlForeignKey.getConstraintName() + "' in table '" +
+                        sqlForeignKey.getTableName() + "' references table '" +
+                        sqlForeignKey.getReferencedTableName() + "', which is outside the introspected tables. " +
+                        "Column(s) " + String.join(", ", sqlForeignKey.getColumnNames()) +
+                        " are considered normal columns and the reference is not mapped.");
                 continue;
             }
             if (!new HashSet<>(sqlForeignKey.getReferencedColumnNames()).containsAll(assocEntityBuilder.getKeys()
