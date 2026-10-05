@@ -396,9 +396,14 @@ public abstract class Introspector {
                 continue;
             }
             if (assocEntityBuilder == null) {
+                boolean referencedTableRead = tables.stream()
+                        .anyMatch(table -> table.getTableName().equals(sqlForeignKey.getReferencedTableName()));
+                String reason = referencedTableRead
+                        ? "which is excluded from entity generation because it has no primary key. "
+                        : "which is outside the introspected tables. ";
                 errStream.println("WARNING: Foreign key '" + sqlForeignKey.getConstraintName() + "' in table '" +
                         sqlForeignKey.getTableName() + "' references table '" +
-                        sqlForeignKey.getReferencedTableName() + "', which is outside the introspected tables. " +
+                        sqlForeignKey.getReferencedTableName() + "', " + reason +
                         "Column(s) " + String.join(", ", sqlForeignKey.getColumnNames()) +
                         " are considered normal columns and the reference is not mapped.");
                 continue;
