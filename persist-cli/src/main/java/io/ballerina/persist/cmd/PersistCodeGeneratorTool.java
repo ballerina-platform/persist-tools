@@ -20,6 +20,9 @@ package io.ballerina.persist.cmd;
 
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
+import io.ballerina.persist.dataservice.DataServiceModel;
+import io.ballerina.persist.dataservice.DataServiceOptions;
+import io.ballerina.persist.dataservice.HttpDataServiceGenerator;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.SourceGenerator;
 import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
@@ -44,6 +47,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.stream.Collectors;
 
 import static io.ballerina.persist.PersistToolsConstants.CACHE_FILE;
 import static io.ballerina.persist.PersistToolsConstants.MODEL_FILE;
@@ -91,6 +95,11 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
             boolean initParams = Boolean
                     .parseBoolean(getOptionValue(toolContext, OPTION_INIT_PARAMS, "false"));
 
+            Object dataServiceOption = getRawOption(toolContext, DataServiceOptions.OPTION_DATASERVICE);
+            DataServiceOptions dataServiceOptions = dataServiceOption == null ? null :
+                    DataServiceOptions.from(dataServiceOption);
+            String generationInput = dataServiceOption == null ? "" : dataServiceOption.toString();
+
             if (datastore.isEmpty()) {
                 createDiagnostics(toolContext, PersistToolsConstants.DiagnosticMessages.ERROR_WHILE_GENERATING_CLIENT,
                         location, "Datastore is required");
@@ -114,12 +123,16 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
             // Get model file path from configuration
             Path schemaFilePath = projectPath.resolve(filePath);
             String modelName = getModelNameFromFilePath(filePath);
+            if (dataServiceOptions != null) {
+                validateDataServiceEntry(targetModule, packageName, modelName, initParams);
+            }
 
             validatePersistDirectory(datastore, projectPath, modelName);
             printExperimentalFeatureInfo(datastore);
 
             try {
-                if (validateCache(toolContext, schemaFilePath) && Files.exists(generatedSourceDirPath)) {
+                if (validateCache(toolContext, schemaFilePath, generationInput) &&
+                        Files.exists(generatedSourceDirPath)) {
                     return;
                 }
             } catch (NoSuchAlgorithmException e) {
@@ -143,8 +156,13 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
             generateSources(datastore, entityModule, targetModule, projectPath, generatedSourceDirPath,
                     eagerLoading, initParams);
             generateTestSources(testDatastore, entityModule, targetModule, projectPath, generatedSourceDirPath);
+            if (dataServiceOptions == null) {
+                deleteDataServiceSources(generatedSourceDirPath);
+            } else {
+                generateDataServiceSources(dataServiceOptions, entityModule, schemaFilePath, generatedSourceDirPath);
+            }
 
-            String modelHashVal = getHashValue(schemaFilePath);
+            String modelHashVal = getHashValue(schemaFilePath, generationInput);
             Path cachePath = toolContext.cachePath();
             updateCacheFile(cachePath, modelHashVal);
 
@@ -164,6 +182,50 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
             }
         }
         return defaultValue;
+    }
+
+    private Object getRawOption(ToolContext toolContext, String key) {
+        ToolContext.Option option = toolContext.options().get(key);
+        return option == null ? null : option.value();
+    }
+
+    private void validateDataServiceEntry(String targetModule, String packageName, String modelName,
+                                          boolean initParams) throws BalException {
+        if (!targetModule.equals(packageName)) {
+            throw new BalException(String.format("a data service can only be generated into the default module. " +
+                    "set 'targetModule' to '%s' or remove 'options.dataservice'.", packageName));
+        }
+        if (modelName != null) {
+            throw new BalException("a data service is not supported for a named persist model. use " +
+                    "'persist/model.bal' or remove 'options.dataservice'.");
+        }
+        if (initParams) {
+            throw new BalException("a data service cannot be generated together with " +
+                    "'options.withInitParams', because the service creates the client without arguments.");
+        }
+    }
+
+    private void generateDataServiceSources(DataServiceOptions options, Module entityModule, Path schemaFilePath,
+                                            Path generatedSourceDirPath) throws BalException, IOException {
+        DataServiceModel model = DataServiceModel.resolve(options, entityModule, schemaFilePath);
+        for (String warning : model.warnings()) {
+            errStream.println("WARNING: " + warning);
+        }
+        if (options.entities().isEmpty()) {
+            errStream.println("INFO: the data service exposes every entity in the model: " +
+                    model.entities().stream().map(exposed -> exposed.entity().getEntityName())
+                            .collect(Collectors.joining(", ")) + ".");
+        }
+        HttpDataServiceGenerator generator = new HttpDataServiceGenerator(model);
+        Files.writeString(generatedSourceDirPath.resolve(HttpDataServiceGenerator.SERVICE_FILE),
+                generator.generateService(), StandardCharsets.UTF_8);
+        Files.writeString(generatedSourceDirPath.resolve(HttpDataServiceGenerator.CONFIG_FILE),
+                generator.generateConfig(), StandardCharsets.UTF_8);
+    }
+
+    private void deleteDataServiceSources(Path generatedSourceDirPath) throws IOException {
+        Files.deleteIfExists(generatedSourceDirPath.resolve(HttpDataServiceGenerator.SERVICE_FILE));
+        Files.deleteIfExists(generatedSourceDirPath.resolve(HttpDataServiceGenerator.CONFIG_FILE));
     }
 
     private String getModelNameFromFilePath(String filePath) {
@@ -207,10 +269,10 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
     /**
      * This method is used to validate the cache.
      */
-    private static boolean validateCache(ToolContext toolContext, Path schemaFilePath)
+    private static boolean validateCache(ToolContext toolContext, Path schemaFilePath, String generationInput)
             throws IOException, NoSuchAlgorithmException {
         Path cachePath = toolContext.cachePath();
-        String modelHashVal = getHashValue(schemaFilePath);
+        String modelHashVal = getHashValue(schemaFilePath, generationInput);
         if (!Files.isDirectory(cachePath)) {
             return false;
         }
@@ -233,8 +295,10 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
         }
     }
 
-    private static String getHashValue(Path schemaFilePath) throws IOException, NoSuchAlgorithmException {
-        String schema = readFileToString(schemaFilePath);
+    // The options that shape the generated sources are hashed with the model, so changing them regenerates.
+    private static String getHashValue(Path schemaFilePath, String generationInput)
+            throws IOException, NoSuchAlgorithmException {
+        String schema = readFileToString(schemaFilePath) + generationInput;
         MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
         byte[] hashBytes = messageDigest.digest(schema.getBytes(StandardCharsets.UTF_8));
         return new String(hashBytes, StandardCharsets.UTF_8);

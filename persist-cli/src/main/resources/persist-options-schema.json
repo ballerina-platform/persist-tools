@@ -13,6 +13,31 @@
     },
     "withInitParams": {
       "type": "boolean"
+    },
+    "dataservice": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "type": "string"
+        },
+        "basePath": {
+          "type": "string"
+        },
+        "entities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["read", "create", "update", "delete"]
+          }
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false
