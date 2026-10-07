@@ -9,6 +9,7 @@ SYNOPSIS
                         [--database <database name>]
                         [--tables[=<table1,table2,...>]]
                         [--model <model-name>]
+                        [--dataservice <protocol> [--entities <Entity,...>]]
                         [<-h> | <--help>]
 
 DESCRIPTION
@@ -48,6 +49,13 @@ OPTIONS
        --model <model-name>
               Specify the model name to create a subdirectory model. If not specified, creates a root-level model.
               The model will be saved at persist/<model-name>/model.bal.
+       --dataservice <protocol>
+              Record a data service over the pulled model in the [[tool.persist]] entry of Ballerina.toml, creating the
+              entry if none exists. The data service is generated during package build. The supported protocol is
+              'http'. Cannot be used with --model.
+       --entities <Entity,...>
+              The entities the data service exposes, as a comma-separated list of model entity names. If not
+              specified, every pulled entity is exposed. Requires --dataservice.
        -h, --help
            Print the usage details of all commands.
 
@@ -66,3 +74,6 @@ EXAMPLES
 
        Generate a model in a subdirectory.
           $ bal persist pull --model inventory --datastore mysql --host localhost --port 3306 --user root --database db
+
+       Generate a data model and an HTTP data service over two of its entities.
+          $ bal persist pull --datastore mysql --host localhost --port 3306 --user root --database db --dataservice http --entities Employee,Department

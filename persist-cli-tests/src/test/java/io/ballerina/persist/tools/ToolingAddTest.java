@@ -132,6 +132,42 @@ public class ToolingAddTest {
     }
 
     @Test
+    public void testAddWithDataService() throws ClassNotFoundException, NoSuchMethodException,
+            InvocationTargetException, InstantiationException, IllegalAccessException {
+        Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Add");
+        Add persistCmd = (Add) persistClass.getDeclaredConstructor(String.class).
+                newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, "tool_test_add_22").toAbsolutePath().
+                        toString());
+        new CommandLine(persistCmd).parseArgs("--datastore", "h2", "--dataservice", "http", "--entities",
+                "Employee, Department");
+        persistCmd.execute();
+        assertGeneratedSources("tool_test_add_22");
+    }
+
+    @Test
+    public void testAddWithInvalidDataServiceArgs() throws ClassNotFoundException, NoSuchMethodException,
+            InvocationTargetException, InstantiationException, IllegalAccessException {
+        String[][] invalidArgs = {
+                {"--entities", "Employee"},
+                {"--dataservice", "graphql"},
+                {"--dataservice", "odata"},
+                {"--dataservice", "http", "--entities", "Employee,,Department"},
+                {"--dataservice", "http", "--module", "db"},
+                {"--dataservice", "http", "--model", "users"},
+                {"--dataservice", "http", "--with-init-params"}
+        };
+        Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Add");
+        for (String[] args : invalidArgs) {
+            Add persistCmd = (Add) persistClass.getDeclaredConstructor(String.class).
+                    newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, "tool_test_add_23").toAbsolutePath().
+                            toString());
+            new CommandLine(persistCmd).parseArgs(args);
+            persistCmd.execute();
+            assertGeneratedSources("tool_test_add_23");
+        }
+    }
+
+    @Test
     public void testInitWithModuleArg() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
             InstantiationException, IllegalAccessException {
         Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Add");

@@ -21,10 +21,15 @@ import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.configuration.PersistConfiguration;
+import io.ballerina.persist.dataservice.DataServiceToml;
 import io.ballerina.persist.introspect.Introspector;
 import io.ballerina.persist.introspect.IntrospectorBuilder;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.SourceGenerator;
+import io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils;
+import io.ballerina.persist.utils.FileUtils;
+import io.ballerina.toml.syntax.tree.KeyValueNode;
+import io.ballerina.toml.validator.SampleNodeGenerator;
 import picocli.CommandLine;
 
 import java.io.IOException;
@@ -45,6 +50,7 @@ import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.utils.BalProjectUtils.validateBallerinaProject;
 import static io.ballerina.persist.utils.BalProjectUtils.validatePullCommandOptions;
 import static io.ballerina.persist.utils.DatabaseConnector.readDatabasePassword;
+import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 
 @CommandLine.Command(name = "pull", description = "Create model.bal file according to given database schema")
 public class Pull implements BLauncherCmd {
@@ -99,6 +105,12 @@ public class Pull implements BLauncherCmd {
     @CommandLine.Option(names = { "--model" })
     private String model;
 
+    @CommandLine.Option(names = { "--dataservice" })
+    private String dataservice;
+
+    @CommandLine.Option(names = { "--entities" })
+    private String entities;
+
     @Override
     public void execute() {
         Scanner scanner = new Scanner(System.in, StandardCharsets.UTF_8);
@@ -108,8 +120,10 @@ public class Pull implements BLauncherCmd {
             return;
         }
 
+        List<String> exposedEntities;
         try {
             validatePullCommandOptions(datastore, host, port, user, database);
+            exposedEntities = validateDataServiceFlags();
         } catch (BalException e) {
             errStream.println("ERROR: invalid option(s): " + System.lineSeparator() + e.getMessage());
             return;
@@ -227,6 +241,14 @@ public class Pull implements BLauncherCmd {
             return;
         }
 
+        for (String entity : exposedEntities) {
+            if (!entityModule.getEntityMap().containsKey(entity)) {
+                errStream.printf("ERROR: the entity '%s' in the '--entities' option is not in the introspected " +
+                        "model. Available entities: %s.%n", entity, String.join(", ",
+                        entityModule.getEntityMap().keySet()));
+                return;
+            }
+        }
         SourceGenerator sourceGenerator = new SourceGenerator(sourcePath, targetModelDir,
                 "Introspect.db", entityModule);
 
@@ -238,6 +260,38 @@ public class Pull implements BLauncherCmd {
             return;
         }
         errStream.println("Introspection complete! The " + modelDisplayPath + " file created successfully.");
+        if (dataservice != null) {
+            recordDataService(exposedEntities);
+        }
+    }
+
+    private List<String> validateDataServiceFlags() throws BalException {
+        List<String> exposedEntities = DataServiceToml.validateFlags(dataservice, entities);
+        if (dataservice != null && model != null) {
+            throw new BalException("the '--dataservice' option cannot be used with the '--model' option.");
+        }
+        return exposedEntities;
+    }
+
+    // Without --entities, every pulled entity is exposed; --tables already selects what is pulled.
+    private void recordDataService(List<String> exposedEntities) {
+        Path tomlPath = Paths.get(this.sourcePath, BALLERINA_TOML);
+        try {
+            String packageName = TomlSyntaxUtils.readPackageName(this.sourcePath);
+            List<KeyValueNode> newEntry = List.of(
+                    SampleNodeGenerator.createStringKV("id", "generate-db-client", null),
+                    SampleNodeGenerator.createStringKV("targetModule", packageName, null),
+                    SampleNodeGenerator.createStringKV("options.datastore", datastore, null),
+                    SampleNodeGenerator.createStringKV("filePath",
+                            String.format("%s/%s", PERSIST_DIRECTORY, MODEL_FILE), null));
+            String content = DataServiceToml.recordInEntry(tomlPath, newEntry,
+                    String.format("%s/%s", PERSIST_DIRECTORY, MODEL_FILE), dataservice, exposedEntities);
+            FileUtils.writeToTargetFile(content, tomlPath.toAbsolutePath().toString());
+            errStream.println("The data service is configured in Ballerina.toml. Execute `bal build` to generate " +
+                    "the persist client and the data service.");
+        } catch (BalException | IOException e) {
+            errStream.println("ERROR: failed to record the data service in Ballerina.toml. " + e.getMessage());
+        }
     }
 
     /**
