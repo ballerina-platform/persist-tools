@@ -1,0 +1,16 @@
+[package]
+org = "foo"
+name = "persist_add_22"
+version = "0.1.0"
+distribution = "2201.3.0"
+
+[build-options]
+observabilityIncluded = true
+
+[[tool.persist]]
+id = "generate-db-client"
+targetModule = "persist_add_22"
+options.datastore = "h2"
+filePath = "persist/model.bal"
+options.dataservice.protocol = "http"
+options.dataservice.entities = ["Employee", "Department"]

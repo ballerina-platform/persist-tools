@@ -21,6 +21,7 @@ package io.ballerina.persist.cmd;
 import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
+import io.ballerina.persist.dataservice.DataServiceToml;
 import io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils;
 import io.ballerina.persist.utils.BalProjectUtils;
 import io.ballerina.persist.utils.FileUtils;
@@ -28,6 +29,7 @@ import io.ballerina.projects.util.ProjectUtils;
 import io.ballerina.toml.syntax.tree.AbstractNodeFactory;
 import io.ballerina.toml.syntax.tree.DocumentMemberDeclarationNode;
 import io.ballerina.toml.syntax.tree.DocumentNode;
+import io.ballerina.toml.syntax.tree.KeyValueNode;
 import io.ballerina.toml.syntax.tree.NodeFactory;
 import io.ballerina.toml.syntax.tree.NodeList;
 import io.ballerina.toml.syntax.tree.SyntaxTree;
@@ -42,6 +44,7 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -90,6 +93,12 @@ public class Add implements BLauncherCmd {
     @CommandLine.Option(names = { "--model" })
     private String model;
 
+    @CommandLine.Option(names = { "--dataservice" }, description = "Protocol of the data service to generate")
+    private String dataservice;
+
+    @CommandLine.Option(names = { "--entities" }, description = "Comma-separated entities the data service exposes")
+    private String entities;
+
     public Add() {
         this("");
     }
@@ -114,6 +123,7 @@ public class Add implements BLauncherCmd {
                 validateDatastore(datastore);
             }
             validateTestDatastore(datastore, testDatastore);
+            List<String> exposedEntities = validateDataServiceFlags();
 
             // Validate eager loading is only used with SQL datastores
             eagerLoading = Utils.validateEagerLoading(datastore, eagerLoading, errStream);
@@ -130,7 +140,8 @@ public class Add implements BLauncherCmd {
                     ? String.format("%s/%s/%s", PERSIST_DIRECTORY, model, MODEL_FILE)
                     : String.format("%s/%s", PERSIST_DIRECTORY, MODEL_FILE);
             String syntaxTree = updateBallerinaToml(Paths.get(this.sourcePath, BALLERINA_TOML),
-                    moduleNameWithPackage, datastore, testDatastore, eagerLoading, initParams, id, modelPath);
+                    moduleNameWithPackage, datastore, testDatastore, eagerLoading, initParams, id, modelPath,
+                    exposedEntities);
             FileUtils.writeToTargetFile(syntaxTree,
                     Paths.get(sourcePath, BALLERINA_TOML).toAbsolutePath().toString());
             createPersistDirectoryIfNotExists();
@@ -139,7 +150,12 @@ public class Add implements BLauncherCmd {
                     "build process." + System.lineSeparator());
             errStream.println(System.lineSeparator() + "Next steps:");
             errStream.println("1. Define your data model in \"" + modelPath + "\".");
-            errStream.println("2. Execute `bal build` to generate the persist client during package build.");
+            if (dataservice == null) {
+                errStream.println("2. Execute `bal build` to generate the persist client during package build.");
+            } else {
+                errStream.println("2. Execute `bal build` to generate the persist client and the data service " +
+                        "during package build.");
+            }
 
             if (Objects.nonNull(testDatastore)) {
                 errStream.printf(System.lineSeparator() +
@@ -156,7 +172,7 @@ public class Add implements BLauncherCmd {
      * Method to update the Ballerina.toml with persist tool configurations.
      */
     String updateBallerinaToml(Path tomlPath, String module, String datastore, String testDatastore,
-            boolean eagerLoading, boolean initParams, String id, String modelPath)
+            boolean eagerLoading, boolean initParams, String id, String modelPath, List<String> exposedEntities)
             throws BalException, IOException {
         TomlSyntaxUtils.NativeDependency dependency = getDependencyConfig(datastore, testDatastore);
         TomlSyntaxUtils.ConfigDeclaration declaration = getConfigDeclaration(tomlPath, dependency);
@@ -173,6 +189,11 @@ public class Add implements BLauncherCmd {
                     PersistToolsConstants.PERSIST_TOOL_CONFIG, null));
             moduleMembers = populateBallerinaNodeList(moduleMembers, module, datastore, testDatastore,
                     eagerLoading, initParams, id, modelPath);
+            if (dataservice != null) {
+                for (KeyValueNode field : DataServiceToml.keyValues(dataservice, exposedEntities)) {
+                    moduleMembers = moduleMembers.add(field);
+                }
+            }
             moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
         }
         Token eofToken = AbstractNodeFactory.createIdentifierToken("");
@@ -201,6 +222,25 @@ public class Add implements BLauncherCmd {
         }
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("filePath", modelPath, null));
         return moduleMembers;
+    }
+
+    // The entities are not checked against the model here, because `add` writes an empty model.
+    private List<String> validateDataServiceFlags() throws BalException {
+        List<String> exposedEntities = DataServiceToml.validateFlags(dataservice, entities);
+        if (dataservice != null) {
+            if (module != null) {
+                throw new BalException("the '--dataservice' option cannot be used with the '--module' option. " +
+                        "a data service is generated only into the default module.");
+            }
+            if (model != null) {
+                throw new BalException("the '--dataservice' option cannot be used with the '--model' option.");
+            }
+            if (initParams) {
+                throw new BalException("the '--dataservice' option cannot be used with the '--with-init-params' " +
+                        "option.");
+            }
+        }
+        return exposedEntities;
     }
 
     @Override
