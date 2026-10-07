@@ -27,6 +27,7 @@ module io.ballerina.persist.core {
 
     exports io.ballerina.persist;
     exports io.ballerina.persist.configuration;
+    exports io.ballerina.persist.dataservice;
     exports io.ballerina.persist.introspect;
     exports io.ballerina.persist.nodegenerator;
     exports io.ballerina.persist.nodegenerator.syntax.clients;

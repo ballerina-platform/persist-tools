@@ -26,6 +26,14 @@
         <Bug pattern="EI_EXPOSE_REP2" />
     </Match>
     <Match>
+        <Package name="io.ballerina.persist.dataservice.*" />
+        <Bug pattern="EI_EXPOSE_REP" />
+    </Match>
+    <Match>
+        <Package name="io.ballerina.persist.dataservice.*" />
+        <Bug pattern="EI_EXPOSE_REP2" />
+    </Match>
+    <Match>
         <Package name="io.ballerina.persist.components.*" />
         <Bug pattern="EI_EXPOSE_REP" />
     </Match>
