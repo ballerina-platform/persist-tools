@@ -22,6 +22,12 @@
         },
         "basePath": {
           "type": "string"
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "additionalProperties": false

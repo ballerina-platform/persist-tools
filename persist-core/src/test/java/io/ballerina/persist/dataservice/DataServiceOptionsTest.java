@@ -19,9 +19,12 @@
 package io.ballerina.persist.dataservice;
 
 import io.ballerina.persist.BalException;
+import io.ballerina.persist.dataservice.DataServiceOptions.Operation;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -34,6 +37,33 @@ public class DataServiceOptionsTest {
         DataServiceOptions options = DataServiceOptions.from(Map.of("protocol", "http"));
         Assert.assertEquals(options.protocol(), DataServiceOptions.Protocol.HTTP);
         Assert.assertEquals(options.basePath(), "/api");
+        Assert.assertEquals(options.operations(), EnumSet.allOf(Operation.class));
+    }
+
+    @Test
+    public void testOperations() throws BalException {
+        DataServiceOptions options = DataServiceOptions.from(Map.of("protocol", "http",
+                "operations", List.of("read", "update")));
+        Assert.assertEquals(options.operations(), EnumSet.of(Operation.READ, Operation.UPDATE));
+    }
+
+    @Test
+    public void testEmptyOperations() {
+        assertError(Map.of("protocol", "http", "operations", List.of()),
+                "'options.dataservice.operations' cannot be empty.");
+    }
+
+    @Test
+    public void testInvalidOperation() {
+        assertError(Map.of("protocol", "http", "operations", List.of("read", "patch")),
+                "invalid operation 'patch' in 'options.dataservice.operations'. Supported values: read, create, " +
+                        "update, delete.");
+    }
+
+    @Test
+    public void testDuplicateOperation() {
+        assertError(Map.of("protocol", "http", "operations", List.of("read", "read")),
+                "the operation 'read' is listed more than once in 'options.dataservice.operations'.");
     }
 
     @Test

@@ -20,12 +20,14 @@ package io.ballerina.persist.dataservice;
 
 import io.ballerina.compiler.syntax.tree.AnnotationNode;
 import io.ballerina.compiler.syntax.tree.BasicLiteralNode;
+import io.ballerina.compiler.syntax.tree.ConstantDeclarationNode;
 import io.ballerina.compiler.syntax.tree.ListConstructorExpressionNode;
 import io.ballerina.compiler.syntax.tree.MappingFieldNode;
 import io.ballerina.compiler.syntax.tree.ModuleMemberDeclarationNode;
 import io.ballerina.compiler.syntax.tree.ModulePartNode;
 import io.ballerina.compiler.syntax.tree.Node;
 import io.ballerina.compiler.syntax.tree.QualifiedNameReferenceNode;
+import io.ballerina.compiler.syntax.tree.SimpleNameReferenceNode;
 import io.ballerina.compiler.syntax.tree.SpecificFieldNode;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
@@ -47,6 +49,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -62,7 +65,8 @@ public record DataServiceModel(DataServiceOptions options, List<ExposedEntity> e
     private static final String OPERATIONS_FIELD = "operations";
 
     /**
-     * Resolves the exposed entities and their actions. An entity is exposed only when it has the annotation.
+     * Resolves the exposed entities and their actions. An entity is exposed only when it has the annotation, and
+     * allows the operations of its annotation, or else the operations of the options.
      *
      * @param options   the data service options
      * @param module    the entities of the persist model
@@ -72,7 +76,7 @@ public record DataServiceModel(DataServiceOptions options, List<ExposedEntity> e
      */
     public static DataServiceModel resolve(DataServiceOptions options, Module module, Path modelPath)
             throws BalException {
-        Map<String, Set<Operation>> annotated = readExposeAnnotations(modelPath);
+        Map<String, Optional<Set<Operation>>> annotated = readExposeAnnotations(modelPath);
         List<ExposedEntity> exposed = new ArrayList<>();
         for (Entity entity : module.getEntityMap().values()) {
             String name = entity.getEntityName();
@@ -83,7 +87,8 @@ public record DataServiceModel(DataServiceOptions options, List<ExposedEntity> e
                 throw new BalException(String.format("the entity '%s' contains unsupported data types and " +
                         "cannot be exposed. remove its @dataservice:Expose annotation.", name));
             }
-            exposed.add(new ExposedEntity(entity, Collections.unmodifiableSet(annotated.get(name))));
+            Set<Operation> operations = annotated.get(name).orElse(options.operations());
+            exposed.add(new ExposedEntity(entity, Collections.unmodifiableSet(operations)));
         }
         if (exposed.isEmpty()) {
             throw new BalException(String.format("the data service does not expose any entity. add the " +
@@ -111,7 +116,8 @@ public record DataServiceModel(DataServiceOptions options, List<ExposedEntity> e
                 .map(Entity::getEntityName).collect(Collectors.joining(", "));
     }
 
-    private static Map<String, Set<Operation>> readExposeAnnotations(Path modelPath) throws BalException {
+    private static Map<String, Optional<Set<Operation>>> readExposeAnnotations(Path modelPath)
+            throws BalException {
         String source;
         try {
             source = Files.readString(modelPath, StandardCharsets.UTF_8);
@@ -119,7 +125,13 @@ public record DataServiceModel(DataServiceOptions options, List<ExposedEntity> e
             throw new BalException("failed to read the model file: " + e.getMessage());
         }
         ModulePartNode root = SyntaxTree.from(TextDocuments.from(source)).rootNode();
-        Map<String, Set<Operation>> annotated = new HashMap<>();
+        Map<String, Node> constants = new HashMap<>();
+        for (ModuleMemberDeclarationNode member : root.members()) {
+            if (member instanceof ConstantDeclarationNode constant) {
+                constants.put(constant.variableName().text().trim(), constant.initializer());
+            }
+        }
+        Map<String, Optional<Set<Operation>>> annotated = new HashMap<>();
         for (ModuleMemberDeclarationNode member : root.members()) {
             if (!(member instanceof TypeDefinitionNode typeDefinition) || typeDefinition.metadata().isEmpty()) {
                 continue;
@@ -127,28 +139,34 @@ public record DataServiceModel(DataServiceOptions options, List<ExposedEntity> e
             String entityName = typeDefinition.typeName().text().trim();
             for (AnnotationNode annotation : typeDefinition.metadata().get().annotations()) {
                 if (EXPOSE_ANNOTATION.equals(annotation.annotReference().toSourceCode().trim())) {
-                    annotated.put(entityName, readOperations(entityName, annotation));
+                    annotated.put(entityName, readOperations(entityName, annotation, constants));
                 }
             }
         }
         return annotated;
     }
 
-    // Without an `operations` field, the annotation allows every action.
-    private static Set<Operation> readOperations(String entityName, AnnotationNode annotation)
+    // Empty when the annotation does not set `operations`. A constant can only come from the model itself, because
+    // the modules a model may import declare no lists of operations.
+    private static Optional<Set<Operation>> readOperations(String entityName, AnnotationNode annotation,
+                                                           Map<String, Node> constants)
             throws BalException {
         if (annotation.annotValue().isEmpty()) {
-            return EnumSet.allOf(Operation.class);
+            return Optional.empty();
         }
         for (MappingFieldNode field : annotation.annotValue().get().fields()) {
             if (!(field instanceof SpecificFieldNode specificField)
                     || !OPERATIONS_FIELD.equals(specificField.fieldName().toSourceCode().trim())) {
                 continue;
             }
-            if (specificField.valueExpr().isEmpty()
-                    || !(specificField.valueExpr().get() instanceof ListConstructorExpressionNode list)) {
+            Node value = specificField.valueExpr().orElse(null);
+            if (value instanceof SimpleNameReferenceNode reference) {
+                value = constants.get(reference.name().text().trim());
+            }
+            if (!(value instanceof ListConstructorExpressionNode list)) {
                 throw new BalException(String.format("the 'operations' of the @dataservice:Expose annotation of " +
-                        "the entity '%s' must be a list of operations.", entityName));
+                        "the entity '%s' must be a list of operations or a constant declared in the model.",
+                        entityName));
             }
             Set<Operation> operations = EnumSet.noneOf(Operation.class);
             for (Node item : list.expressions()) {
@@ -158,9 +176,9 @@ public record DataServiceModel(DataServiceOptions options, List<ExposedEntity> e
                 throw new BalException(String.format("the 'operations' of the @dataservice:Expose annotation of " +
                         "the entity '%s' cannot be empty.", entityName));
             }
-            return operations;
+            return Optional.of(operations);
         }
-        return EnumSet.allOf(Operation.class);
+        return Optional.empty();
     }
 
     // Enum member names are the upper-case form of their values, so `READ` and `"read"` are the same operation.

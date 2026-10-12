@@ -28,6 +28,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -60,6 +61,33 @@ public class DataServiceModelTest {
     }
 
     @Test
+    public void testOptionsOperationsAreTheFallback() throws BalException {
+        DataServiceModel model = resolve("optin", Map.of("protocol", "http", "operations", List.of("read", "create")));
+        Assert.assertEquals(operations(model), Map.of(
+                "Department", EnumSet.of(Operation.READ, Operation.CREATE),
+                "Employee", EnumSet.of(Operation.READ)));
+    }
+
+    @Test
+    public void testAnnotationOverridesOptionsOperations() throws BalException {
+        DataServiceModel model = resolve("annotated", Map.of("protocol", "http", "operations", List.of("read")));
+        Assert.assertEquals(operations(model).get("Employee"),
+                EnumSet.of(Operation.READ, Operation.UPDATE, Operation.DELETE));
+    }
+
+    @Test
+    public void testConstantOperations() throws BalException {
+        Assert.assertEquals(operations(resolve("constant_operations")), Map.of(
+                "Department", EnumSet.of(Operation.READ)));
+    }
+
+    @Test
+    public void testUnknownConstant() {
+        assertError("unknown_constant", "the 'operations' of the @dataservice:Expose annotation of the entity " +
+                "'Department' must be a list of operations or a constant declared in the model.");
+    }
+
+    @Test
     public void testNoExposedEntity() {
         assertError("not_exposed", "the data service does not expose any entity. add the @dataservice:Expose " +
                 "annotation to the entities to expose: Department, Employee.");
@@ -69,12 +97,6 @@ public class DataServiceModelTest {
     public void testEmptyOperations() {
         assertError("empty_operations", "the 'operations' of the @dataservice:Expose annotation of the entity " +
                 "'Department' cannot be empty.");
-    }
-
-    @Test
-    public void testOperationsNotAList() {
-        assertError("constant_operations", "the 'operations' of the @dataservice:Expose annotation of the entity " +
-                "'Department' must be a list of operations.");
     }
 
     @Test

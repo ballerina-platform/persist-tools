@@ -20,6 +20,9 @@ package io.ballerina.persist.dataservice;
 
 import io.ballerina.persist.BalException;
 
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -28,14 +31,16 @@ import java.util.regex.Pattern;
 /**
  * The validated `options.dataservice` group of a `[[tool.persist]]` entry.
  *
- * @param protocol the protocol the service is generated for
- * @param basePath the base path of the service, without a trailing slash; empty for the root path
+ * @param protocol   the protocol the service is generated for
+ * @param basePath   the base path of the service, without a trailing slash; empty for the root path
+ * @param operations the actions an exposed entity allows when its annotation does not set them
  */
-public record DataServiceOptions(Protocol protocol, String basePath) {
+public record DataServiceOptions(Protocol protocol, String basePath, Set<Operation> operations) {
 
     public static final String OPTION_DATASERVICE = "dataservice";
     public static final String PROTOCOL = "protocol";
     public static final String BASE_PATH = "basePath";
+    public static final String OPERATIONS = "operations";
 
     private static final String PREFIX = "options." + OPTION_DATASERVICE + ".";
     private static final Pattern PATH_SEGMENT = Pattern.compile("[A-Za-z0-9_.\\-]+");
@@ -96,7 +101,10 @@ public record DataServiceOptions(Protocol protocol, String basePath) {
             throw new BalException("'options." + OPTION_DATASERVICE + "' must be a table of data service options.");
         }
         Protocol protocol = readProtocol(group.get(PROTOCOL));
-        return new DataServiceOptions(protocol, readBasePath(group.get(BASE_PATH), protocol));
+        Set<Operation> operations = group.containsKey(OPERATIONS) ?
+                readOperations(group.get(OPERATIONS)) : EnumSet.allOf(Operation.class);
+        return new DataServiceOptions(protocol, readBasePath(group.get(BASE_PATH), protocol),
+                Collections.unmodifiableSet(operations));
     }
 
     private static Protocol readProtocol(Object value) throws BalException {
@@ -136,6 +144,28 @@ public record DataServiceOptions(Protocol protocol, String basePath) {
             }
         }
         return trimmed;
+    }
+
+    private static Set<Operation> readOperations(Object value) throws BalException {
+        if (!(value instanceof List<?> list)) {
+            throw new BalException(String.format("'%s%s' must be an array of operations.", PREFIX, OPERATIONS));
+        }
+        if (list.isEmpty()) {
+            throw new BalException(String.format("'%s%s' cannot be empty.", PREFIX, OPERATIONS));
+        }
+        Set<Operation> operations = EnumSet.noneOf(Operation.class);
+        for (Object item : list) {
+            Operation operation = Operation.fromValue(String.valueOf(item));
+            if (operation == null) {
+                throw new BalException(String.format("invalid operation '%s' in '%s%s'. Supported values: read, " +
+                        "create, update, delete.", item, PREFIX, OPERATIONS));
+            }
+            if (!operations.add(operation)) {
+                throw new BalException(String.format("the operation '%s' is listed more than once in '%s%s'.",
+                        item, PREFIX, OPERATIONS));
+            }
+        }
+        return operations;
     }
 
     private static String supportedProtocols() {
