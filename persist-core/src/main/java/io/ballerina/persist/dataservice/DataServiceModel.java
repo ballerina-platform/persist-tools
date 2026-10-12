@@ -92,6 +92,20 @@ public record DataServiceModel(DataServiceOptions options, List<ExposedEntity> e
         return new DataServiceModel(options, Collections.unmodifiableList(exposed));
     }
 
+    /**
+     * Checks whether any entity of a persist model has the {@code @dataservice:Expose} annotation.
+     *
+     * @param modelPath the path of the persist model file
+     * @return {@code true} if an entity is annotated, even when its annotation is invalid
+     */
+    public static boolean hasExposeAnnotations(Path modelPath) {
+        try {
+            return !readExposeAnnotations(modelPath).isEmpty();
+        } catch (BalException e) {
+            return true;
+        }
+    }
+
     private static String exposableEntities(Module module) {
         return module.getEntityMap().values().stream().filter(entity -> !entity.containsUnsupportedTypes())
                 .map(Entity::getEntityName).collect(Collectors.joining(", "));

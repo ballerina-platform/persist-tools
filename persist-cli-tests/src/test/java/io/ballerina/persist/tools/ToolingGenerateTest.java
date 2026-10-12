@@ -1275,6 +1275,21 @@ public class ToolingGenerateTest {
         assertGeneratedSources("tool_test_generate_multimodel_4");
     }
 
+    @Test(enabled = true)
+    @Description("Invalid --dataservice combinations generate nothing")
+    public void testGenerateWithInvalidDataServiceArgs() {
+        String[][] invalidArgs = {
+                {"--datastore", "h2", "--dataservice", "graphql"},
+                {"--datastore", "h2", "--dataservice", "http", "--module", "db"},
+                {"--datastore", "h2", "--dataservice", "http", "--model", "users"},
+                {"--datastore", "h2", "--dataservice", "http", "--with-init-params"}
+        };
+        for (String[] args : invalidArgs) {
+            executeGenerateCommand("tool_test_generate_dataservice_invalid", args);
+            assertGeneratedSources("tool_test_generate_dataservice_invalid");
+        }
+    }
+
     private void updateOutputBallerinaToml(String fileName) {
         String tomlFileName = "Ballerina.toml";
         Path filePath = Paths.get("src", "test", "resources", "test-src", "output", fileName, tomlFileName);

@@ -207,11 +207,7 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
     private void generateDataServiceSources(DataServiceOptions options, Module entityModule, Path schemaFilePath,
                                             Path generatedSourceDirPath) throws BalException, IOException {
         DataServiceModel model = DataServiceModel.resolve(options, entityModule, schemaFilePath);
-        HttpDataServiceGenerator generator = new HttpDataServiceGenerator(model);
-        Files.writeString(generatedSourceDirPath.resolve(HttpDataServiceGenerator.SERVICE_FILE),
-                generator.generateService(), StandardCharsets.UTF_8);
-        Files.writeString(generatedSourceDirPath.resolve(HttpDataServiceGenerator.CONFIG_FILE),
-                generator.generateConfig(), StandardCharsets.UTF_8);
+        new HttpDataServiceGenerator(model).writeTo(generatedSourceDirPath);
     }
 
     private void deleteDataServiceSources(Path generatedSourceDirPath) throws IOException {

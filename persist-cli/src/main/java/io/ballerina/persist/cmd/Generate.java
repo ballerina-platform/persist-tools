@@ -20,6 +20,10 @@ package io.ballerina.persist.cmd;
 import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
+import io.ballerina.persist.dataservice.DataServiceModel;
+import io.ballerina.persist.dataservice.DataServiceOptions;
+import io.ballerina.persist.dataservice.DataServiceToml;
+import io.ballerina.persist.dataservice.HttpDataServiceGenerator;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.SourceGenerator;
 import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
@@ -41,6 +45,7 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.Objects;
 
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
@@ -100,6 +105,9 @@ public class Generate implements BLauncherCmd {
     @CommandLine.Option(names = { "--model" })
     private String model;
 
+    @CommandLine.Option(names = { "--dataservice" }, description = "Protocol of the data service to generate")
+    private String dataservice;
+
     @Override
     public void execute() {
         Path generatedSourceDirPath;
@@ -126,6 +134,7 @@ public class Generate implements BLauncherCmd {
         }
         try {
             validateTestDatastore(datastore, testDatastore);
+            validateDataServiceFlags();
         } catch (BalException e) {
             errStream.printf("ERROR: %s%n", e.getMessage());
             return;
@@ -251,6 +260,17 @@ public class Generate implements BLauncherCmd {
             return;
         }
 
+        DataServiceModel dataServiceModel = null;
+        if (dataservice != null) {
+            try {
+                dataServiceModel = DataServiceModel.resolve(DataServiceOptions.from(
+                        Map.of(DataServiceOptions.PROTOCOL, dataservice)), entityModule, schemaFilePath);
+            } catch (BalException e) {
+                errStream.printf("ERROR: failed to generate the data service. %s%n", e.getMessage());
+                return;
+            }
+        }
+
         if (!Files.exists(generatedSourceDirPath)) {
             try {
                 Files.createDirectories(generatedSourceDirPath.toAbsolutePath());
@@ -286,6 +306,19 @@ public class Generate implements BLauncherCmd {
         }
         errStream.println("Persist client and entity types generated successfully in the " + module + " directory.");
 
+        if (dataServiceModel != null) {
+            try {
+                new HttpDataServiceGenerator(dataServiceModel).writeTo(generatedSourceDirPath);
+            } catch (BalException | IOException e) {
+                errStream.printf("ERROR: failed to generate the data service. %s%n", e.getMessage());
+                return;
+            }
+            errStream.println("The data service is generated successfully in the " + module + " directory.");
+        } else if (DataServiceModel.hasExposeAnnotations(schemaFilePath)) {
+            errStream.println("INFO: the model has @dataservice:Expose annotations. Use the '--dataservice' option " +
+                    "to generate a data service.");
+        }
+
         if (testDatastore != null) {
             try {
                 sourceCreator.createTestDataSources(testDatastore);
@@ -302,6 +335,24 @@ public class Generate implements BLauncherCmd {
     @Override
     public void setParentCmdParser(CommandLine parentCmdParser) {
 
+    }
+
+    private void validateDataServiceFlags() throws BalException {
+        if (dataservice == null) {
+            return;
+        }
+        DataServiceToml.validateProtocol(dataservice);
+        if (module != null) {
+            throw new BalException("the '--dataservice' option cannot be used with the '--module' option. " +
+                    "a data service is generated only into the default module.");
+        }
+        if (model != null) {
+            throw new BalException("the '--dataservice' option cannot be used with the '--model' option.");
+        }
+        if (initParams) {
+            throw new BalException("the '--dataservice' option cannot be used with the '--with-init-params' " +
+                    "option.");
+        }
     }
 
     /**

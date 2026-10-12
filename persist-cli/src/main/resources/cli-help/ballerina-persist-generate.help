@@ -5,6 +5,7 @@ SYNOPSIS
        bal persist generate [--module <module name>]
                             [--datastore <store type>]
                             [--model <model-name>]
+                            [--dataservice <protocol>]
                             [<-h> | <--help>]
 
 DESCRIPTION
@@ -27,6 +28,9 @@ OPTIONS
        --model <model-name>
               Specify the model name to use a subdirectory model. If not specified, uses the root-level model.
               The model must be defined at persist/<model-name>/model.bal.
+       --dataservice <protocol>
+              Also generate a data service over the entities that have the @dataservice:Expose annotation in the
+              model. The supported protocol is 'http'. Cannot be used with --module or --model.
        -h, --help
            Print the usage details of all commands.
 
@@ -42,3 +46,6 @@ EXAMPLES
 
        Generate client objects for a specific model in a subdirectory.
           $ bal persist generate --model users --datastore mysql
+
+       Generate client objects and an HTTP data service in the default module.
+          $ bal persist generate --datastore mysql --dataservice http

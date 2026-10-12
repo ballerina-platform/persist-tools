@@ -27,6 +27,10 @@ import io.ballerina.tools.text.TextDocuments;
 import org.ballerinalang.formatter.core.Formatter;
 import org.ballerinalang.formatter.core.FormatterException;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -50,6 +54,18 @@ public class HttpDataServiceGenerator {
 
     public HttpDataServiceGenerator(DataServiceModel model) {
         this.model = model;
+    }
+
+    /**
+     * Writes the service file and the configuration file into a module directory.
+     *
+     * @param moduleDirectory the directory of the module the service is generated into
+     * @throws BalException if a source cannot be formatted
+     * @throws IOException  if a file cannot be written
+     */
+    public void writeTo(Path moduleDirectory) throws BalException, IOException {
+        Files.writeString(moduleDirectory.resolve(SERVICE_FILE), generateService(), StandardCharsets.UTF_8);
+        Files.writeString(moduleDirectory.resolve(CONFIG_FILE), generateConfig(), StandardCharsets.UTF_8);
     }
 
     /**
