@@ -13,4 +13,3 @@ targetModule = "persist_add_22"
 options.datastore = "h2"
 filePath = "persist/model.bal"
 options.dataservice.protocol = "http"
-options.dataservice.entities = ["Employee", "Department"]

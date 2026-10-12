@@ -7,7 +7,6 @@ type Department record {|
     string name;
 |};
 
-@dataservice:Expose {operations: ["read", "update", "delete"]}
 type Employee record {|
     readonly int id;
     string name;

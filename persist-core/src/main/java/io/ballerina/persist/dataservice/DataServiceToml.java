@@ -34,10 +34,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Reads the data service command-line flags and writes them to a {@code [[tool.persist]]} entry.
@@ -53,48 +51,26 @@ public final class DataServiceToml {
     }
 
     /**
-     * Validates the {@code --dataservice} and {@code --entities} flags.
+     * Validates the value of the {@code --dataservice} flag.
      *
      * @param protocol the value of {@code --dataservice}, or {@code null}
-     * @param entities the value of {@code --entities}, or {@code null}
-     * @return the entity names, or an empty list when {@code --entities} is not given
-     * @throws BalException if the flags are invalid
+     * @throws BalException if the protocol is not supported
      */
-    public static List<String> validateFlags(String protocol, String entities) throws BalException {
-        if (protocol == null) {
-            if (entities != null) {
-                throw new BalException("the '--entities' option requires the '--dataservice' option.");
-            }
-            return List.of();
+    public static void validateProtocol(String protocol) throws BalException {
+        if (protocol != null) {
+            DataServiceOptions.from(Map.of(DataServiceOptions.PROTOCOL, protocol));
         }
-        DataServiceOptions.from(Map.of(DataServiceOptions.PROTOCOL, protocol));
-        if (entities == null) {
-            return List.of();
-        }
-        List<String> names = Arrays.stream(entities.split(",")).map(String::trim).toList();
-        if (names.stream().anyMatch(String::isEmpty)) {
-            throw new BalException("the '--entities' option must be a comma-separated list of entity names.");
-        }
-        return names;
     }
 
     /**
      * Creates the {@code options.dataservice} key-value pairs for a {@code [[tool.persist]]} entry.
      *
      * @param protocol the protocol of the data service
-     * @param entities the entities to expose, or an empty list to expose every entity
      * @return the key-value nodes
      */
-    public static List<KeyValueNode> keyValues(String protocol, List<String> entities) {
-        StringBuilder source = new StringBuilder()
-                .append(KEY_PREFIX).append(DataServiceOptions.PROTOCOL).append(" = \"").append(protocol)
-                .append('"').append(NEW_LINE);
-        if (!entities.isEmpty()) {
-            source.append(KEY_PREFIX).append(DataServiceOptions.ENTITIES).append(" = ")
-                    .append(entities.stream().map(name -> '"' + name + '"').collect(Collectors.joining(", ", "[", "]")))
-                    .append(NEW_LINE);
-        }
-        DocumentNode root = SyntaxTree.from(TextDocuments.from(source.toString())).rootNode();
+    public static List<KeyValueNode> keyValues(String protocol) {
+        String source = KEY_PREFIX + DataServiceOptions.PROTOCOL + " = \"" + protocol + '"' + NEW_LINE;
+        DocumentNode root = SyntaxTree.from(TextDocuments.from(source)).rootNode();
         List<KeyValueNode> nodes = new ArrayList<>();
         for (DocumentMemberDeclarationNode member : root.members()) {
             nodes.add((KeyValueNode) member);
@@ -110,12 +86,11 @@ public final class DataServiceToml {
      * @param newEntry     the keys of the entry to create when none exists for the model
      * @param modelPath    the {@code filePath} of the model, relative to the package
      * @param protocol     the protocol of the data service
-     * @param entities     the entities to expose, or an empty list to expose every entity
      * @return the updated content of {@code Ballerina.toml}
      * @throws IOException if {@code Ballerina.toml} cannot be read
      */
     public static String recordInEntry(Path tomlPath, List<KeyValueNode> newEntry, String modelPath,
-                                       String protocol, List<String> entities) throws IOException {
+                                       String protocol) throws IOException {
         DocumentNode root = SyntaxTree.from(TextDocuments.from(Files.readString(tomlPath, StandardCharsets.UTF_8)))
                 .rootNode();
         NodeList<DocumentMemberDeclarationNode> members = AbstractNodeFactory.createEmptyNodeList();
@@ -128,7 +103,7 @@ public final class DataServiceToml {
                         fields = fields.add(field);
                     }
                 }
-                for (KeyValueNode field : keyValues(protocol, entities)) {
+                for (KeyValueNode field : keyValues(protocol)) {
                     fields = fields.add(field);
                 }
                 member = entry.modify().withFields(fields).apply();
@@ -145,7 +120,7 @@ public final class DataServiceToml {
         for (KeyValueNode field : newEntry) {
             entry.append(field.toSourceCode().strip()).append(NEW_LINE);
         }
-        for (KeyValueNode field : keyValues(protocol, entities)) {
+        for (KeyValueNode field : keyValues(protocol)) {
             entry.append(field.toSourceCode().strip()).append(NEW_LINE);
         }
         return entry.toString();

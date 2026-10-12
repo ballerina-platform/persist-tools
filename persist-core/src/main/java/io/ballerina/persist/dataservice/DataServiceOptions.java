@@ -20,10 +20,6 @@ package io.ballerina.persist.dataservice;
 
 import io.ballerina.persist.BalException;
 
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -32,19 +28,14 @@ import java.util.regex.Pattern;
 /**
  * The validated `options.dataservice` group of a `[[tool.persist]]` entry.
  *
- * @param protocol   the protocol the service is generated for
- * @param basePath   the base path of the service, without a trailing slash; empty for the root path
- * @param entities   the entities to expose, or an empty set to expose every entity
- * @param operations the actions every exposed entity allows, unless its annotation narrows them
+ * @param protocol the protocol the service is generated for
+ * @param basePath the base path of the service, without a trailing slash; empty for the root path
  */
-public record DataServiceOptions(Protocol protocol, String basePath, Set<String> entities,
-                                 Set<Operation> operations) {
+public record DataServiceOptions(Protocol protocol, String basePath) {
 
     public static final String OPTION_DATASERVICE = "dataservice";
     public static final String PROTOCOL = "protocol";
     public static final String BASE_PATH = "basePath";
-    public static final String ENTITIES = "entities";
-    public static final String OPERATIONS = "operations";
 
     private static final String PREFIX = "options." + OPTION_DATASERVICE + ".";
     private static final Pattern PATH_SEGMENT = Pattern.compile("[A-Za-z0-9_.\\-]+");
@@ -105,13 +96,7 @@ public record DataServiceOptions(Protocol protocol, String basePath, Set<String>
             throw new BalException("'options." + OPTION_DATASERVICE + "' must be a table of data service options.");
         }
         Protocol protocol = readProtocol(group.get(PROTOCOL));
-        String basePath = readBasePath(group.get(BASE_PATH), protocol);
-        Set<String> entities = group.containsKey(ENTITIES) ?
-                readNonEmptyStrings(group.get(ENTITIES), ENTITIES) : Collections.emptySet();
-        Set<Operation> operations = group.containsKey(OPERATIONS) ?
-                readOperations(group.get(OPERATIONS)) : EnumSet.allOf(Operation.class);
-        return new DataServiceOptions(protocol, basePath, Collections.unmodifiableSet(entities),
-                Collections.unmodifiableSet(operations));
+        return new DataServiceOptions(protocol, readBasePath(group.get(BASE_PATH), protocol));
     }
 
     private static Protocol readProtocol(Object value) throws BalException {
@@ -151,36 +136,6 @@ public record DataServiceOptions(Protocol protocol, String basePath, Set<String>
             }
         }
         return trimmed;
-    }
-
-    private static Set<Operation> readOperations(Object value) throws BalException {
-        Set<Operation> operations = EnumSet.noneOf(Operation.class);
-        for (String name : readNonEmptyStrings(value, OPERATIONS)) {
-            Operation operation = Operation.fromValue(name);
-            if (operation == null) {
-                throw new BalException(String.format("invalid operation '%s' in '%s%s'. Supported values: " +
-                        "read, create, update, delete.", name, PREFIX, OPERATIONS));
-            }
-            operations.add(operation);
-        }
-        return operations;
-    }
-
-    private static Set<String> readNonEmptyStrings(Object value, String key) throws BalException {
-        if (!(value instanceof List<?> list)) {
-            throw new BalException(String.format("'%s%s' must be an array of strings.", PREFIX, key));
-        }
-        if (list.isEmpty()) {
-            throw new BalException(String.format("'%s%s' cannot be empty.", PREFIX, key));
-        }
-        Set<String> values = new LinkedHashSet<>();
-        for (Object item : list) {
-            if (!(item instanceof String text)) {
-                throw new BalException(String.format("'%s%s' must be an array of strings.", PREFIX, key));
-            }
-            values.add(text);
-        }
-        return values;
     }
 
     private static String supportedProtocols() {

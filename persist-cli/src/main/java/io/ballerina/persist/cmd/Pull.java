@@ -22,8 +22,10 @@ import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.configuration.PersistConfiguration;
 import io.ballerina.persist.dataservice.DataServiceToml;
+import io.ballerina.persist.dataservice.ExposeAnnotations;
 import io.ballerina.persist.introspect.Introspector;
 import io.ballerina.persist.introspect.IntrospectorBuilder;
+import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.SourceGenerator;
 import io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils;
@@ -108,8 +110,8 @@ public class Pull implements BLauncherCmd {
     @CommandLine.Option(names = { "--dataservice" })
     private String dataservice;
 
-    @CommandLine.Option(names = { "--entities" })
-    private String entities;
+    @CommandLine.Option(names = { "--expose-tables" })
+    private String exposeTables;
 
     @Override
     public void execute() {
@@ -120,10 +122,9 @@ public class Pull implements BLauncherCmd {
             return;
         }
 
-        List<String> exposedEntities;
         try {
             validatePullCommandOptions(datastore, host, port, user, database);
-            exposedEntities = validateDataServiceFlags();
+            validateDataServiceFlags();
         } catch (BalException e) {
             errStream.println("ERROR: invalid option(s): " + System.lineSeparator() + e.getMessage());
             return;
@@ -241,11 +242,12 @@ public class Pull implements BLauncherCmd {
             return;
         }
 
-        for (String entity : exposedEntities) {
-            if (!entityModule.getEntityMap().containsKey(entity)) {
-                errStream.printf("ERROR: the entity '%s' in the '--entities' option is not in the introspected " +
-                        "model. Available entities: %s.%n", entity, String.join(", ",
-                        entityModule.getEntityMap().keySet()));
+        List<Entity> exposedEntities = List.of();
+        if (dataservice != null) {
+            try {
+                exposedEntities = ExposeAnnotations.select(entityModule, exposeTables);
+            } catch (BalException e) {
+                errStream.println("ERROR: " + e.getMessage());
                 return;
             }
         }
@@ -259,22 +261,44 @@ public class Pull implements BLauncherCmd {
                     e.getMessage()));
             return;
         }
+        if (dataservice != null) {
+            try {
+                annotateModel(targetModelDir.resolve(MODEL_FILE), exposedEntities);
+            } catch (BalException | IOException e) {
+                errStream.println("ERROR: failed to add the @dataservice:Expose annotations to the model. " +
+                        e.getMessage());
+                return;
+            }
+        }
         errStream.println("Introspection complete! The " + modelDisplayPath + " file created successfully.");
         if (dataservice != null) {
-            recordDataService(exposedEntities);
+            recordDataService();
         }
     }
 
-    private List<String> validateDataServiceFlags() throws BalException {
-        List<String> exposedEntities = DataServiceToml.validateFlags(dataservice, entities);
+    private void validateDataServiceFlags() throws BalException {
+        DataServiceToml.validateProtocol(dataservice);
+        if (dataservice == null && exposeTables != null) {
+            throw new BalException("the '--expose-tables' option requires the '--dataservice' option.");
+        }
         if (dataservice != null && model != null) {
             throw new BalException("the '--dataservice' option cannot be used with the '--model' option.");
         }
-        return exposedEntities;
     }
 
-    // Without --entities, every pulled entity is exposed; --tables already selects what is pulled.
-    private void recordDataService(List<String> exposedEntities) {
+    private void annotateModel(Path modelPath, List<Entity> exposedEntities) throws BalException, IOException {
+        List<String> names = exposedEntities.stream().map(Entity::getEntityName).toList();
+        String source = Files.readString(modelPath, StandardCharsets.UTF_8);
+        FileUtils.writeToTargetFile(ExposeAnnotations.annotate(source, names), modelPath.toString());
+        errStream.println("The data service exposes the following tables:");
+        for (Entity entity : exposedEntities) {
+            String table = ExposeAnnotations.tableName(entity);
+            errStream.println(table.equals(entity.getEntityName()) ? "  " + table :
+                    "  " + table + " as " + entity.getEntityName());
+        }
+    }
+
+    private void recordDataService() {
         Path tomlPath = Paths.get(this.sourcePath, BALLERINA_TOML);
         try {
             String packageName = TomlSyntaxUtils.readPackageName(this.sourcePath);
@@ -285,7 +309,7 @@ public class Pull implements BLauncherCmd {
                     SampleNodeGenerator.createStringKV("filePath",
                             String.format("%s/%s", PERSIST_DIRECTORY, MODEL_FILE), null));
             String content = DataServiceToml.recordInEntry(tomlPath, newEntry,
-                    String.format("%s/%s", PERSIST_DIRECTORY, MODEL_FILE), dataservice, exposedEntities);
+                    String.format("%s/%s", PERSIST_DIRECTORY, MODEL_FILE), dataservice);
             FileUtils.writeToTargetFile(content, tomlPath.toAbsolutePath().toString());
             errStream.println("The data service is configured in Ballerina.toml. Execute `bal build` to generate " +
                     "the persist client and the data service.");

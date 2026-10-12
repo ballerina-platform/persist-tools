@@ -42,18 +42,11 @@ public class DataServiceTomlTest {
             """;
 
     @Test
-    public void testValidateFlags() throws BalException {
-        Assert.assertEquals(DataServiceToml.validateFlags(null, null), List.of());
-        Assert.assertEquals(DataServiceToml.validateFlags("http", null), List.of());
-        Assert.assertEquals(DataServiceToml.validateFlags("http", " Employee, Department "),
-                List.of("Employee", "Department"));
-    }
-
-    @Test
-    public void testEntitiesWithoutDataService() {
-        BalException error = Assert.expectThrows(BalException.class,
-                () -> DataServiceToml.validateFlags(null, "Employee"));
-        Assert.assertEquals(error.getMessage(), "the '--entities' option requires the '--dataservice' option.");
+    public void testValidateProtocol() throws BalException {
+        DataServiceToml.validateProtocol(null);
+        DataServiceToml.validateProtocol("http");
+        BalException error = Assert.expectThrows(BalException.class, () -> DataServiceToml.validateProtocol("rest"));
+        Assert.assertEquals(error.getMessage(), "unsupported data service protocol 'rest'. Supported values: http.");
     }
 
     @Test
@@ -65,8 +58,8 @@ public class DataServiceTomlTest {
                 targetModule = "hr"
                 options.datastore = "mysql"
                 filePath = "persist/model.bal"
-                options.dataservice.protocol = "http"
-                options.dataservice.entities = ["Old"]
+                options.dataservice.protocol = "graphql"
+                options.dataservice.basePath = "/old"
 
                 [[tool.persist]]
                 id = "generate-users-client"
@@ -74,7 +67,7 @@ public class DataServiceTomlTest {
                 options.datastore = "mysql"
                 filePath = "persist/users/model.bal"
                 """;
-        Assert.assertEquals(record(toml, List.of("Employee")), PACKAGE + """
+        Assert.assertEquals(record(toml), PACKAGE + """
 
                 [[tool.persist]]
                 id = "generate-db-client"
@@ -82,7 +75,6 @@ public class DataServiceTomlTest {
                 options.datastore = "mysql"
                 filePath = "persist/model.bal"
                 options.dataservice.protocol = "http"
-                options.dataservice.entities = ["Employee"]
 
                 [[tool.persist]]
                 id = "generate-users-client"
@@ -94,7 +86,7 @@ public class DataServiceTomlTest {
 
     @Test
     public void testRecordCreatesEntry() throws IOException {
-        Assert.assertEquals(record(PACKAGE, List.of()), PACKAGE + """
+        Assert.assertEquals(record(PACKAGE), PACKAGE + """
 
                 [[tool.persist]]
                 id = "generate-db-client"
@@ -105,7 +97,7 @@ public class DataServiceTomlTest {
                 """);
     }
 
-    private static String record(String toml, List<String> entities) throws IOException {
+    private static String record(String toml) throws IOException {
         Path tomlPath = Files.createTempFile("Ballerina", ".toml");
         try {
             Files.writeString(tomlPath, toml, StandardCharsets.UTF_8);
@@ -114,7 +106,7 @@ public class DataServiceTomlTest {
                     SampleNodeGenerator.createStringKV("targetModule", "hr", null),
                     SampleNodeGenerator.createStringKV("options.datastore", "mysql", null),
                     SampleNodeGenerator.createStringKV("filePath", "persist/model.bal", null)),
-                    "persist/model.bal", "http", entities);
+                    "persist/model.bal", "http");
         } finally {
             Files.deleteIfExists(tomlPath);
         }

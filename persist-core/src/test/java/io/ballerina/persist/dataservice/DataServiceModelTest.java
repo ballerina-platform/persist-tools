@@ -28,65 +28,63 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Tests how the exposed entities and their effective actions are resolved.
+ * Tests how the exposed entities and their actions are resolved from the model.
  */
 public class DataServiceModelTest {
 
     static final Path RESOURCES = Paths.get("src", "test", "resources", "dataservice").toAbsolutePath();
 
     @Test
-    public void testAnnotationsNarrowDefaults() throws BalException {
-        DataServiceModel model = resolve("annotated", Map.of("protocol", "http"));
-        Assert.assertEquals(operations(model), Map.of(
+    public void testOnlyAnnotatedEntitiesAreExposed() throws BalException {
+        Assert.assertEquals(operations(resolve("optin")), Map.of(
+                "Department", EnumSet.allOf(Operation.class),
+                "Employee", EnumSet.of(Operation.READ)));
+    }
+
+    @Test
+    public void testOperationValues() throws BalException {
+        Assert.assertEquals(operations(resolve("annotated")), Map.of(
                 "Department", EnumSet.of(Operation.READ),
                 "Employee", EnumSet.of(Operation.READ, Operation.UPDATE, Operation.DELETE),
-                "Project", EnumSet.allOf(Operation.class)));
-        Assert.assertTrue(model.warnings().isEmpty());
+                "Project", EnumSet.of(Operation.READ, Operation.UPDATE, Operation.DELETE)));
     }
 
     @Test
-    public void testAnnotationsNeverWiden() throws BalException {
-        DataServiceModel model = resolve("annotated",
-                Map.of("protocol", "http", "operations", List.of("read", "create")));
-        Assert.assertEquals(operations(model), Map.of(
-                "Department", EnumSet.of(Operation.READ),
-                "Employee", EnumSet.of(Operation.READ),
-                "Project", EnumSet.of(Operation.READ, Operation.CREATE)));
+    public void testEmptyAnnotationValue() throws BalException {
+        Assert.assertEquals(operations(resolve("hr")).get("Assignment"), EnumSet.allOf(Operation.class));
     }
 
     @Test
-    public void testEmptyEffectiveOperations() {
-        assertError("annotated", Map.of("protocol", "http", "operations", List.of("create")),
-                "the entity 'Department' allows no operations: 'options.dataservice.operations' is [create] and " +
-                        "its @dataservice:Expose annotation is [read].");
+    public void testNoExposedEntity() {
+        assertError("not_exposed", "the data service does not expose any entity. add the @dataservice:Expose " +
+                "annotation to the entities to expose: Department, Employee.");
     }
 
     @Test
-    public void testEntitiesIncludeList() throws BalException {
-        DataServiceModel model = resolve("annotated",
-                Map.of("protocol", "http", "entities", List.of("Project", "Employee")));
-        Assert.assertEquals(operations(model).keySet(), Set.of("Employee", "Project"));
-        Assert.assertEquals(model.warnings(), List.of("the entity 'Department' has a @dataservice:Expose " +
-                "annotation but is not in 'options.dataservice.entities', so it is not exposed."));
+    public void testEmptyOperations() {
+        assertError("empty_operations", "the 'operations' of the @dataservice:Expose annotation of the entity " +
+                "'Department' cannot be empty.");
     }
 
     @Test
-    public void testUnknownEntity() {
-        assertError("annotated", Map.of("protocol", "http", "entities", List.of("Employee", "Manager")),
-                "the entity 'Manager' in 'options.dataservice.entities' is not defined in the model.");
+    public void testOperationsNotAList() {
+        assertError("constant_operations", "the 'operations' of the @dataservice:Expose annotation of the entity " +
+                "'Department' must be a list of operations.");
     }
 
     @Test
     public void testInvalidAnnotationOperation() {
-        assertError("invalid_annotation", Map.of("protocol", "http"),
-                "invalid operation 'dataservice:EXECUTE' in the @dataservice:Expose annotation of the entity " +
-                        "'Department'.");
+        assertError("invalid_annotation", "invalid operation 'dataservice:EXECUTE' in the @dataservice:Expose " +
+                "annotation of the entity 'Department'.");
+    }
+
+    static DataServiceModel resolve(String model) throws BalException {
+        return resolve(model, Map.of("protocol", "http"));
     }
 
     static DataServiceModel resolve(String model, Map<String, Object> options) throws BalException {
@@ -100,8 +98,8 @@ public class DataServiceModelTest {
                 ExposedEntity::operations, (a, b) -> a, LinkedHashMap::new));
     }
 
-    private static void assertError(String model, Map<String, Object> options, String message) {
-        BalException error = Assert.expectThrows(BalException.class, () -> resolve(model, options));
+    private static void assertError(String model, String message) {
+        BalException error = Assert.expectThrows(BalException.class, () -> resolve(model));
         Assert.assertEquals(error.getMessage(), message);
     }
 }

@@ -34,6 +34,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 import static io.ballerina.persist.tools.utils.DatabaseTestUtils.createFromDatabaseScript;
 import static io.ballerina.persist.tools.utils.DatabaseTestUtils.resetMsSqlDatabase;
@@ -200,6 +202,34 @@ public class ToolingDbPullTest {
         String subDir = "tool_test_pull_tables_mysql";
         createFromDatabaseScript(subDir, "mysql", mysqlDbConfig);
         executePullCommandWithTables(subDir, "User,Department", mysqlDbConfig, "mysql");
+        assertGeneratedSources(subDir);
+    }
+
+    @Test(enabled = true)
+    @Description("Test that --dataservice annotates the entities of the tables in --expose-tables.")
+    public void pullTestMysqlWithDataService() throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        String subDir = "tool_test_pull_dataservice_mysql";
+        createFromDatabaseScript(subDir, "mysql", mysqlDbConfig);
+        executePullCommandWithTables(subDir, "User,Department", mysqlDbConfig, "mysql",
+                "--dataservice", "http", "--expose-tables", "Department");
+        assertGeneratedSources(subDir);
+    }
+
+    @Test(enabled = true)
+    @Description("Test that invalid data service options leave the package unchanged.")
+    public void pullTestMysqlWithInvalidDataService() throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        String subDir = "tool_test_pull_dataservice_invalid_mysql";
+        createFromDatabaseScript(subDir, "mysql", mysqlDbConfig);
+        executePullCommandWithTables(subDir, "User,Department", mysqlDbConfig, "mysql",
+                "--expose-tables", "Department");
+        executePullCommandWithTables(subDir, "User,Department", mysqlDbConfig, "mysql",
+                "--dataservice", "http", "--expose-tables", "Product");
         assertGeneratedSources(subDir);
     }
 
@@ -1049,18 +1079,20 @@ public class ToolingDbPullTest {
     }
 
     private static void executePullCommandWithTables(String subDir, String tables, DatabaseConfiguration dbConfig,
-            String datastore)
+            String datastore, String... options)
             throws BalException {
         try {
             Class<?> persistClass = Class.forName("io.ballerina.persist.cmd.Pull");
             Pull persistCmd = (Pull) persistClass.getDeclaredConstructor(String.class)
                     .newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, subDir).toAbsolutePath().toString());
-            new CommandLine(persistCmd).parseArgs("--datastore", datastore,
+            List<String> args = new ArrayList<>(List.of("--datastore", datastore,
                     "--host", dbConfig.getHost(),
                     "--port", String.valueOf(dbConfig.getPort()),
                     "--user", dbConfig.getUsername(),
                     "--database", dbConfig.getDatabase(),
-                    "--tables", tables);
+                    "--tables", tables));
+            args.addAll(List.of(options));
+            new CommandLine(persistCmd).parseArgs(args.toArray(String[]::new));
             // Include "y\n" for potential model.bal overwrite confirmation
             String input = dbConfig.getPassword() + "\ny\n";
             InputStream originalSystemIn = System.in;

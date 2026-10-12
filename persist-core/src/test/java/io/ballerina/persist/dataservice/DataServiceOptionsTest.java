@@ -19,14 +19,10 @@
 package io.ballerina.persist.dataservice;
 
 import io.ballerina.persist.BalException;
-import io.ballerina.persist.dataservice.DataServiceOptions.Operation;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import java.util.EnumSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Tests the validation of the {@code options.dataservice} group.
@@ -38,17 +34,12 @@ public class DataServiceOptionsTest {
         DataServiceOptions options = DataServiceOptions.from(Map.of("protocol", "http"));
         Assert.assertEquals(options.protocol(), DataServiceOptions.Protocol.HTTP);
         Assert.assertEquals(options.basePath(), "/api");
-        Assert.assertTrue(options.entities().isEmpty());
-        Assert.assertEquals(options.operations(), EnumSet.allOf(Operation.class));
     }
 
     @Test
-    public void testAllValues() throws BalException {
-        DataServiceOptions options = DataServiceOptions.from(Map.of("protocol", "http", "basePath", "/hr-api/v1/",
-                "entities", List.of("Employee", "Department"), "operations", List.of("read", "update")));
+    public void testBasePath() throws BalException {
+        DataServiceOptions options = DataServiceOptions.from(Map.of("protocol", "http", "basePath", "/hr-api/v1/"));
         Assert.assertEquals(options.basePath(), "/hr-api/v1");
-        Assert.assertEquals(options.entities(), Set.of("Employee", "Department"));
-        Assert.assertEquals(options.operations(), EnumSet.of(Operation.READ, Operation.UPDATE));
     }
 
     @Test
@@ -85,25 +76,6 @@ public class DataServiceOptionsTest {
         assertError(Map.of("protocol", "http", "basePath", "/api//v1"),
                 "invalid 'options.dataservice.basePath' '/api//v1': each path segment must be non-empty and " +
                         "contain only letters, digits, '_', '-' and '.'.");
-    }
-
-    @Test
-    public void testEmptyEntities() {
-        assertError(Map.of("protocol", "http", "entities", List.of()),
-                "'options.dataservice.entities' cannot be empty.");
-    }
-
-    @Test
-    public void testEmptyOperations() {
-        assertError(Map.of("protocol", "http", "operations", List.of()),
-                "'options.dataservice.operations' cannot be empty.");
-    }
-
-    @Test
-    public void testInvalidOperation() {
-        assertError(Map.of("protocol", "http", "operations", List.of("read", "upsert")),
-                "invalid operation 'upsert' in 'options.dataservice.operations'. Supported values: read, create, " +
-                        "update, delete.");
     }
 
     @Test

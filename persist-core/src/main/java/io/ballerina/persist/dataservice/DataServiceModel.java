@@ -51,74 +51,50 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * The entities a data service exposes, resolved from the options and the persist model.
+ * The entities a data service exposes, resolved from the `@dataservice:Expose` annotations of the persist model.
  *
  * @param options  the data service options
  * @param entities the exposed entities, in model order
- * @param warnings the warnings raised while resolving the entities
  */
-public record DataServiceModel(DataServiceOptions options, List<ExposedEntity> entities, List<String> warnings) {
+public record DataServiceModel(DataServiceOptions options, List<ExposedEntity> entities) {
 
     private static final String EXPOSE_ANNOTATION = "dataservice:Expose";
+    private static final String OPERATIONS_FIELD = "operations";
 
     /**
-     * Resolves the exposed entities and their effective actions.
+     * Resolves the exposed entities and their actions. An entity is exposed only when it has the annotation.
      *
      * @param options   the data service options
      * @param module    the entities of the persist model
      * @param modelPath the path of the persist model file
      * @return the resolved data service model
-     * @throws BalException if the options and the model do not agree
+     * @throws BalException if an annotation is invalid or no entity is exposed
      */
     public static DataServiceModel resolve(DataServiceOptions options, Module module, Path modelPath)
             throws BalException {
         Map<String, Set<Operation>> annotated = readExposeAnnotations(modelPath);
-        Map<String, Entity> entityMap = module.getEntityMap();
-        List<String> warnings = new ArrayList<>();
-
-        for (String name : options.entities()) {
-            if (!entityMap.containsKey(name)) {
-                throw new BalException(String.format("the entity '%s' in 'options.dataservice.entities' is not " +
-                        "defined in the model.", name));
-            }
-            if (entityMap.get(name).containsUnsupportedTypes()) {
-                throw new BalException(String.format("the entity '%s' in 'options.dataservice.entities' " +
-                        "contains unsupported data types and cannot be exposed.", name));
-            }
-        }
-
         List<ExposedEntity> exposed = new ArrayList<>();
-        for (Entity entity : entityMap.values()) {
+        for (Entity entity : module.getEntityMap().values()) {
             String name = entity.getEntityName();
-            if (!options.entities().isEmpty() && !options.entities().contains(name)) {
-                if (annotated.containsKey(name)) {
-                    warnings.add(String.format("the entity '%s' has a @dataservice:Expose annotation but is not " +
-                            "in 'options.dataservice.entities', so it is not exposed.", name));
-                }
+            if (!annotated.containsKey(name)) {
                 continue;
             }
             if (entity.containsUnsupportedTypes()) {
-                warnings.add(String.format("the entity '%s' contains unsupported data types and is not exposed.",
-                        name));
-                continue;
+                throw new BalException(String.format("the entity '%s' contains unsupported data types and " +
+                        "cannot be exposed. remove its @dataservice:Expose annotation.", name));
             }
-            Set<Operation> operations = EnumSet.noneOf(Operation.class);
-            operations.addAll(options.operations());
-            if (annotated.containsKey(name)) {
-                operations.retainAll(annotated.get(name));
-            }
-            if (operations.isEmpty()) {
-                throw new BalException(String.format("the entity '%s' allows no operations: " +
-                        "'options.dataservice.operations' is %s and its @dataservice:Expose annotation is %s.",
-                        name, format(options.operations()), format(annotated.get(name))));
-            }
-            exposed.add(new ExposedEntity(entity, Collections.unmodifiableSet(operations)));
+            exposed.add(new ExposedEntity(entity, Collections.unmodifiableSet(annotated.get(name))));
         }
         if (exposed.isEmpty()) {
-            throw new BalException("the data service does not expose any entity.");
+            throw new BalException(String.format("the data service does not expose any entity. add the " +
+                    "@dataservice:Expose annotation to the entities to expose: %s.", exposableEntities(module)));
         }
-        return new DataServiceModel(options, Collections.unmodifiableList(exposed),
-                Collections.unmodifiableList(warnings));
+        return new DataServiceModel(options, Collections.unmodifiableList(exposed));
+    }
+
+    private static String exposableEntities(Module module) {
+        return module.getEntityMap().values().stream().filter(entity -> !entity.containsUnsupportedTypes())
+                .map(Entity::getEntityName).collect(Collectors.joining(", "));
     }
 
     private static Map<String, Set<Operation>> readExposeAnnotations(Path modelPath) throws BalException {
@@ -144,24 +120,33 @@ public record DataServiceModel(DataServiceOptions options, List<ExposedEntity> e
         return annotated;
     }
 
+    // Without an `operations` field, the annotation allows every action.
     private static Set<Operation> readOperations(String entityName, AnnotationNode annotation)
             throws BalException {
-        if (annotation.annotValue().isPresent()) {
-            for (MappingFieldNode field : annotation.annotValue().get().fields()) {
-                if (field instanceof SpecificFieldNode specificField
-                        && DataServiceOptions.OPERATIONS.equals(specificField.fieldName().toSourceCode().trim())
-                        && specificField.valueExpr().isPresent()
-                        && specificField.valueExpr().get() instanceof ListConstructorExpressionNode list) {
-                    Set<Operation> operations = EnumSet.noneOf(Operation.class);
-                    for (Node item : list.expressions()) {
-                        operations.add(readOperation(entityName, item));
-                    }
-                    return operations;
-                }
-            }
+        if (annotation.annotValue().isEmpty()) {
+            return EnumSet.allOf(Operation.class);
         }
-        throw new BalException(String.format("the @dataservice:Expose annotation of the entity '%s' must set " +
-                "'operations' to a list of operations.", entityName));
+        for (MappingFieldNode field : annotation.annotValue().get().fields()) {
+            if (!(field instanceof SpecificFieldNode specificField)
+                    || !OPERATIONS_FIELD.equals(specificField.fieldName().toSourceCode().trim())) {
+                continue;
+            }
+            if (specificField.valueExpr().isEmpty()
+                    || !(specificField.valueExpr().get() instanceof ListConstructorExpressionNode list)) {
+                throw new BalException(String.format("the 'operations' of the @dataservice:Expose annotation of " +
+                        "the entity '%s' must be a list of operations.", entityName));
+            }
+            Set<Operation> operations = EnumSet.noneOf(Operation.class);
+            for (Node item : list.expressions()) {
+                operations.add(readOperation(entityName, item));
+            }
+            if (operations.isEmpty()) {
+                throw new BalException(String.format("the 'operations' of the @dataservice:Expose annotation of " +
+                        "the entity '%s' cannot be empty.", entityName));
+            }
+            return operations;
+        }
+        return EnumSet.allOf(Operation.class);
     }
 
     // Enum member names are the upper-case form of their values, so `READ` and `"read"` are the same operation.
@@ -179,9 +164,5 @@ public record DataServiceModel(DataServiceOptions options, List<ExposedEntity> e
                     "the entity '%s'.", item.toSourceCode().trim(), entityName));
         }
         return operation;
-    }
-
-    private static String format(Set<Operation> operations) {
-        return operations.stream().map(Operation::value).collect(Collectors.joining(", ", "[", "]"));
     }
 }

@@ -1,0 +1,15 @@
+[package]
+org = "test_org"
+name = "test_module"
+version = "0.1.0"
+distribution = "2201.8.6"
+
+[build-options]
+observabilityIncluded = true
+
+[[tool.persist]]
+id = "generate-db-client"
+targetModule = "test_module"
+options.datastore = "mysql"
+filePath = "persist/model.bal"
+options.dataservice.protocol = "http"

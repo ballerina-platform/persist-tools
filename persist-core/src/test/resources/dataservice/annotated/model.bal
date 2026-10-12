@@ -13,6 +13,7 @@ type Employee record {|
     string name;
 |};
 
+@dataservice:Expose {operations: [dataservice:READ, dataservice:UPDATE, dataservice:DELETE]}
 type Project record {|
     readonly string code;
     string title;

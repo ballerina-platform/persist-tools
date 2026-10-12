@@ -47,7 +47,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.stream.Collectors;
 
 import static io.ballerina.persist.PersistToolsConstants.CACHE_FILE;
 import static io.ballerina.persist.PersistToolsConstants.MODEL_FILE;
@@ -208,14 +207,6 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
     private void generateDataServiceSources(DataServiceOptions options, Module entityModule, Path schemaFilePath,
                                             Path generatedSourceDirPath) throws BalException, IOException {
         DataServiceModel model = DataServiceModel.resolve(options, entityModule, schemaFilePath);
-        for (String warning : model.warnings()) {
-            errStream.println("WARNING: " + warning);
-        }
-        if (options.entities().isEmpty()) {
-            errStream.println("INFO: the data service exposes every entity in the model: " +
-                    model.entities().stream().map(exposed -> exposed.entity().getEntityName())
-                            .collect(Collectors.joining(", ")) + ".");
-        }
         HttpDataServiceGenerator generator = new HttpDataServiceGenerator(model);
         Files.writeString(generatedSourceDirPath.resolve(HttpDataServiceGenerator.SERVICE_FILE),
                 generator.generateService(), StandardCharsets.UTF_8);

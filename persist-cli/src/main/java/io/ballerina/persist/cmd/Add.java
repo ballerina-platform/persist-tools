@@ -44,7 +44,6 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -96,9 +95,6 @@ public class Add implements BLauncherCmd {
     @CommandLine.Option(names = { "--dataservice" }, description = "Protocol of the data service to generate")
     private String dataservice;
 
-    @CommandLine.Option(names = { "--entities" }, description = "Comma-separated entities the data service exposes")
-    private String entities;
-
     public Add() {
         this("");
     }
@@ -123,7 +119,7 @@ public class Add implements BLauncherCmd {
                 validateDatastore(datastore);
             }
             validateTestDatastore(datastore, testDatastore);
-            List<String> exposedEntities = validateDataServiceFlags();
+            validateDataServiceFlags();
 
             // Validate eager loading is only used with SQL datastores
             eagerLoading = Utils.validateEagerLoading(datastore, eagerLoading, errStream);
@@ -140,8 +136,7 @@ public class Add implements BLauncherCmd {
                     ? String.format("%s/%s/%s", PERSIST_DIRECTORY, model, MODEL_FILE)
                     : String.format("%s/%s", PERSIST_DIRECTORY, MODEL_FILE);
             String syntaxTree = updateBallerinaToml(Paths.get(this.sourcePath, BALLERINA_TOML),
-                    moduleNameWithPackage, datastore, testDatastore, eagerLoading, initParams, id, modelPath,
-                    exposedEntities);
+                    moduleNameWithPackage, datastore, testDatastore, eagerLoading, initParams, id, modelPath);
             FileUtils.writeToTargetFile(syntaxTree,
                     Paths.get(sourcePath, BALLERINA_TOML).toAbsolutePath().toString());
             createPersistDirectoryIfNotExists();
@@ -150,6 +145,10 @@ public class Add implements BLauncherCmd {
                     "build process." + System.lineSeparator());
             errStream.println(System.lineSeparator() + "Next steps:");
             errStream.println("1. Define your data model in \"" + modelPath + "\".");
+            if (dataservice != null) {
+                errStream.println("   Add the @dataservice:Expose annotation to each entity the data service " +
+                        "exposes.");
+            }
             if (dataservice == null) {
                 errStream.println("2. Execute `bal build` to generate the persist client during package build.");
             } else {
@@ -172,7 +171,7 @@ public class Add implements BLauncherCmd {
      * Method to update the Ballerina.toml with persist tool configurations.
      */
     String updateBallerinaToml(Path tomlPath, String module, String datastore, String testDatastore,
-            boolean eagerLoading, boolean initParams, String id, String modelPath, List<String> exposedEntities)
+            boolean eagerLoading, boolean initParams, String id, String modelPath)
             throws BalException, IOException {
         TomlSyntaxUtils.NativeDependency dependency = getDependencyConfig(datastore, testDatastore);
         TomlSyntaxUtils.ConfigDeclaration declaration = getConfigDeclaration(tomlPath, dependency);
@@ -190,7 +189,7 @@ public class Add implements BLauncherCmd {
             moduleMembers = populateBallerinaNodeList(moduleMembers, module, datastore, testDatastore,
                     eagerLoading, initParams, id, modelPath);
             if (dataservice != null) {
-                for (KeyValueNode field : DataServiceToml.keyValues(dataservice, exposedEntities)) {
+                for (KeyValueNode field : DataServiceToml.keyValues(dataservice)) {
                     moduleMembers = moduleMembers.add(field);
                 }
             }
@@ -224,9 +223,8 @@ public class Add implements BLauncherCmd {
         return moduleMembers;
     }
 
-    // The entities are not checked against the model here, because `add` writes an empty model.
-    private List<String> validateDataServiceFlags() throws BalException {
-        List<String> exposedEntities = DataServiceToml.validateFlags(dataservice, entities);
+    private void validateDataServiceFlags() throws BalException {
+        DataServiceToml.validateProtocol(dataservice);
         if (dataservice != null) {
             if (module != null) {
                 throw new BalException("the '--dataservice' option cannot be used with the '--module' option. " +
@@ -240,7 +238,6 @@ public class Add implements BLauncherCmd {
                         "option.");
             }
         }
-        return exposedEntities;
     }
 
     @Override

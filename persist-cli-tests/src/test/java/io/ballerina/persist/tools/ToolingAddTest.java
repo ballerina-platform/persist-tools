@@ -138,8 +138,7 @@ public class ToolingAddTest {
         Add persistCmd = (Add) persistClass.getDeclaredConstructor(String.class).
                 newInstance(Paths.get(GENERATED_SOURCES_DIRECTORY, "tool_test_add_22").toAbsolutePath().
                         toString());
-        new CommandLine(persistCmd).parseArgs("--datastore", "h2", "--dataservice", "http", "--entities",
-                "Employee, Department");
+        new CommandLine(persistCmd).parseArgs("--datastore", "h2", "--dataservice", "http");
         persistCmd.execute();
         assertGeneratedSources("tool_test_add_22");
     }
@@ -148,10 +147,8 @@ public class ToolingAddTest {
     public void testAddWithInvalidDataServiceArgs() throws ClassNotFoundException, NoSuchMethodException,
             InvocationTargetException, InstantiationException, IllegalAccessException {
         String[][] invalidArgs = {
-                {"--entities", "Employee"},
                 {"--dataservice", "graphql"},
                 {"--dataservice", "odata"},
-                {"--dataservice", "http", "--entities", "Employee,,Department"},
                 {"--dataservice", "http", "--module", "db"},
                 {"--dataservice", "http", "--model", "users"},
                 {"--dataservice", "http", "--with-init-params"}

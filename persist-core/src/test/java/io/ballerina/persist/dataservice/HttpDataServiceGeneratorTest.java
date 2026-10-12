@@ -27,7 +27,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -44,13 +43,12 @@ public class HttpDataServiceGeneratorTest {
 
     @Test
     public void testNarrowedActions() throws BalException, IOException {
-        assertGenerated("annotated", Map.of("protocol", "http", "operations", List.of("read", "update", "delete")));
+        assertGenerated("annotated", Map.of("protocol", "http"));
     }
 
     @Test
     public void testEscapedBasePath() throws BalException, IOException {
-        assertGenerated("basepath", Map.of("protocol", "http", "basePath", "/hr-api/v1.0",
-                "entities", List.of("Department")));
+        assertGenerated("basepath", Map.of("protocol", "http", "basePath", "/hr-api/v1.0"));
     }
 
     @Test
