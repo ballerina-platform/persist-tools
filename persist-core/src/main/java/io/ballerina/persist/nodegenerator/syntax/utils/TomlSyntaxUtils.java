@@ -400,7 +400,8 @@ public class TomlSyntaxUtils {
     }
 
     private static String getPersistVersion(String datasource) throws BalException {
-        ClassLoader classloader = Thread.currentThread().getContextClassLoader();
+        // The context class loader is not always the tool class loader by the time this runs.
+        ClassLoader classloader = TomlSyntaxUtils.class.getClassLoader();
         try (InputStream inputStream = classloader.getResourceAsStream(
                 PersistToolsConstants.TomlFileConstants.VERSION_PROPERTIES_FILE)) {
             Properties properties = new Properties();
