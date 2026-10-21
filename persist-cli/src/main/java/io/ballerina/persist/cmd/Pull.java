@@ -296,6 +296,8 @@ public class Pull implements BLauncherCmd {
             errStream.println(table.equals(entity.getEntityName()) ? "  " + table :
                     "  " + table + " as " + entity.getEntityName());
         }
+        errStream.println("The exposed entities allow every action. Set 'operations' in their @dataservice:Expose " +
+                "annotations to restrict them.");
     }
 
     private void recordDataService() {

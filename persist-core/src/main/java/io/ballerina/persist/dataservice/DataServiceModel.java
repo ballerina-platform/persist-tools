@@ -66,7 +66,7 @@ public record DataServiceModel(DataServiceOptions options, List<ExposedEntity> e
 
     /**
      * Resolves the exposed entities and their actions. An entity is exposed only when it has the annotation, and
-     * allows the operations of its annotation, or else the operations of the options.
+     * allows the operations of its annotation, which are every action by default.
      *
      * @param options   the data service options
      * @param module    the entities of the persist model
@@ -87,7 +87,7 @@ public record DataServiceModel(DataServiceOptions options, List<ExposedEntity> e
                 throw new BalException(String.format("the entity '%s' contains unsupported data types and " +
                         "cannot be exposed. remove its @dataservice:Expose annotation.", name));
             }
-            Set<Operation> operations = annotated.get(name).orElse(options.operations());
+            Set<Operation> operations = annotated.get(name).orElse(EnumSet.allOf(Operation.class));
             exposed.add(new ExposedEntity(entity, Collections.unmodifiableSet(operations)));
         }
         if (exposed.isEmpty()) {

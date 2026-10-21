@@ -28,7 +28,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -58,21 +57,6 @@ public class DataServiceModelTest {
     @Test
     public void testEmptyAnnotationValue() throws BalException {
         Assert.assertEquals(operations(resolve("hr")).get("Assignment"), EnumSet.allOf(Operation.class));
-    }
-
-    @Test
-    public void testOptionsOperationsAreTheFallback() throws BalException {
-        DataServiceModel model = resolve("optin", Map.of("protocol", "http", "operations", List.of("read", "create")));
-        Assert.assertEquals(operations(model), Map.of(
-                "Department", EnumSet.of(Operation.READ, Operation.CREATE),
-                "Employee", EnumSet.of(Operation.READ)));
-    }
-
-    @Test
-    public void testAnnotationOverridesOptionsOperations() throws BalException {
-        DataServiceModel model = resolve("annotated", Map.of("protocol", "http", "operations", List.of("read")));
-        Assert.assertEquals(operations(model).get("Employee"),
-                EnumSet.of(Operation.READ, Operation.UPDATE, Operation.DELETE));
     }
 
     @Test
