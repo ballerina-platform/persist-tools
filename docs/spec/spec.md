@@ -42,6 +42,7 @@ bal persist add --datastore mysql --module db --test-datastore h2
 |       --id        |                                                    Used as an identifier                                                     |     No    | generate-db-client |
 | --test-datastore  |            used to indicate the preferred database client for testing. Currently, 'h2', 'inmemory' are supported.            |     No    |         No         |
 |      --model      |         used to indicate the name of the model. If not specified, the command applies to the default root model.             |     No    |         No         |
+|   --dataservice   | used to enable a data service for the given protocol. Currently, 'http' is supported. See [Data service generation](#7-data-service-generation). |     No    |         No         |
 
 
 The command initializes the bal project with the persistence layer. This command includes the following steps,
@@ -176,6 +177,7 @@ bal persist generate --datastore mysql --module db --test-datastore h2
 |     --module      |      used to indicate the persist enabled module in which the files are generated.       |    No     | <package_name> |
 | --test-datastore  |            used to indicate the preferred database client for testing. Currently, 'h2', 'inmemory' are supported.            |    No     |         No         |
 |      --model      |         used to indicate the name of the model. If not specified, the command applies to the default root model.             |    No     |         No         | 
+|   --dataservice   | used to also generate a data service for the given protocol into the package root. See [Data service generation](#7-data-service-generation). |     No    |         No         |
 
 Behaviour of the `generate` command,
 - User should invoke the command within a Ballerina project
