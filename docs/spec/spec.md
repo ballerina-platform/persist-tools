@@ -251,7 +251,7 @@ bal persist pull --datastore mysql --host localhost --port 3306 --user root --da
 |     --tables      | enable table selection. accepts table names or triggers interactive mode if no value    |    No     |    all tables      |
 |      --model      |         used to indicate the name of the model. If not specified, the command applies to the default root model.             |     No    |         No         |
 |   --dataservice   | used to annotate the pulled entities and enable a data service for the given protocol. See [Data service generation](#7-data-service-generation). |     No    |         No         |
-|   --expose-tables   | used with `--dataservice` to annotate only the entities of the given tables. |     No    |         No         |
+|   --expose-tables   | used to annotate only the entities of the given tables. Requires `--dataservice`, unless the entry already enables a data service. |     No    |         No         |
 
 This command will introspect the schema of the database and create a `model.bal` file with the entities and relations based on the schema of the database. The database configuration should be provided as command-line arguments.
 
@@ -394,12 +394,12 @@ Warnings are printed with `WARNING:` and do not.
 | `pull` skips an entity | warning | `the table '<table>' has an unsupported data type, so its entity '<Entity>' is not exposed.` |
 | `pull` annotates entities | info | `The exposed entities allow every action. Set 'operations' in their @dataservice:Expose annotations to restrict them.` |
 | `generate` without `--dataservice` on an annotated model | info | `the model has @dataservice:Expose annotations. Use the '--dataservice' option to also generate a data service.` |
-| `--expose-tables` without `--dataservice` | error | `the '--expose-tables' option requires the '--dataservice' option.` |
+| `--expose-tables` without `--dataservice`, when the entry does not enable a data service | error | `the '--expose-tables' option requires the '--dataservice' option.` |
 | `--expose-tables` names a table that was not pulled | error | `the table '<table>' in '--expose-tables' is not a pulled table.` |
 | `--expose-tables` names a table with an unsupported data type | error | `the table '<table>' in '--expose-tables' has an unsupported data type, so its entity '<Entity>' cannot be exposed.` |
 | `pull` exposes an entity whose name differs from its table's | info | `The table '<table>' is exposed as the entity '<Entity>'.` |
 | `add --dataservice` succeeds | info | The next steps `2. Add the @dataservice:Expose annotation to each entity to expose.` and `3. Execute `bal build` to generate the persist client and the <PROTOCOL> data service during package build.` |
-| `pull --dataservice` succeeds | info | `Enabled the <PROTOCOL> data service in the [[tool.persist]] entry of persist/model.bal in Ballerina.toml.`, then the entity mappings and the actions message above, then `Execute `bal build` to generate the persist client and the <PROTOCOL> data service.` |
+| `pull` annotates entities, with `--dataservice` or from the entry | info | With `--dataservice` only, `Enabled the <PROTOCOL> data service in the [[tool.persist]] entry of persist/model.bal in Ballerina.toml.`, then the entity mappings and the actions message above, then `Execute `bal build` to generate the persist client and the <PROTOCOL> data service.` |
 
 `<value>` in an operation message is the operation as it is written, such as `dataservice:READ` or `"read"`. Every
 invalid annotation, and every invalid `--expose-tables` name, is reported, one line each.
@@ -417,6 +417,10 @@ invalid annotation, and every invalid `--expose-tables` name, is reported, one l
   which is named in a warning. With `--expose-tables <table,...>`, only the entities of the named tables are
   annotated. Names are separated by commas and matched exactly, as `--tables` matches them. Before introspecting,
   `pull` rejects an entry whose `targetModule` is not the package or that sets `withInitParams = true`.
+- **`pull` without `--dataservice`:** when the entry of `persist/model.bal` already has `options.dataservice`, `pull`
+  annotates the pulled entities in the same way, using the entry's protocol, accepts `--expose-tables`, and leaves the
+  entry unchanged, so a later `pull` keeps the service. The entry's `options.dataservice` is validated as `bal build`
+  validates it. When the entry has no `options.dataservice`, `pull` behaves as it does without data services.
 - A command that ends in an error leaves the model and `Ballerina.toml` unchanged.
 
 ### 7.4. Generated files

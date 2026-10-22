@@ -21,6 +21,7 @@ package io.ballerina.persist.dataservice;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -63,5 +64,13 @@ public class DataServiceTomlTest {
         Optional<DataServiceToml.Entry> entry = DataServiceToml.defaultModelEntry(toml);
         Assert.assertEquals(DataServiceToml.setProtocol(toml, entry.orElseThrow(), "http"),
                 toml.replace("\"graphql\"", "\"http\""));
+        Assert.assertEquals(entry.orElseThrow().dataService().orElseThrow(),
+                Map.of("protocol", "graphql", "basePath", "/v1"));
+    }
+
+    @Test
+    public void testEntryWithoutDataService() {
+        String toml = PACKAGE + "[[tool.persist]]\nfilePath = \"persist/model.bal\"\noptions.datastore = \"mysql\"\n";
+        Assert.assertTrue(DataServiceToml.defaultModelEntry(toml).orElseThrow().dataService().isEmpty());
     }
 }

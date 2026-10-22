@@ -41,6 +41,7 @@ public final class DataServiceToml {
     private static final String TARGET_MODULE = "targetModule";
     private static final String WITH_INIT_PARAMS = "options.withInitParams";
     private static final String PROTOCOL = "options.dataservice.protocol";
+    private static final String DATASERVICE_PREFIX = "options.dataservice.";
 
     private DataServiceToml() {
     }
@@ -71,6 +72,21 @@ public final class DataServiceToml {
          */
         public boolean withInitParams() {
             return "true".equals(values.get(WITH_INIT_PARAMS));
+        }
+
+        /**
+         * Returns the entry's `options.dataservice` group, if it has one.
+         *
+         * @return the group's keys, without the `options.dataservice.` prefix, and their values
+         */
+        public Optional<Map<String, String>> dataService() {
+            Map<String, String> group = new LinkedHashMap<>();
+            values.forEach((key, value) -> {
+                if (key.startsWith(DATASERVICE_PREFIX)) {
+                    group.put(key.substring(DATASERVICE_PREFIX.length()), value);
+                }
+            });
+            return group.isEmpty() ? Optional.empty() : Optional.of(group);
         }
     }
 

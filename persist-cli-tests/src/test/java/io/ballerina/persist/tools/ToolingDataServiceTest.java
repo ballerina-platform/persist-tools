@@ -448,6 +448,15 @@ public class ToolingDataServiceTest {
                         "a data service is generated only into the default module 'ds_pull_target_module'."},
                 {"init_params", "options.withInitParams = true", List.of("--dataservice", "http"),
                         "a data service cannot be generated with 'options.withInitParams'"},
+                {"expose_entry_without_dataservice", "", List.of("--expose-tables", "employees"),
+                        "the '--expose-tables' option requires the '--dataservice' option."},
+                {"entry_protocol", "options.dataservice.protocol = \"graphql\"", List.of(),
+                        "the protocol 'graphql' is not supported yet. Supported values: http."},
+                {"entry_base_path", "options.dataservice.protocol = \"http\"\noptions.dataservice.basePath = \"api\"",
+                        List.of(), "invalid 'options.dataservice.basePath' 'api': the base path must start with '/'."},
+                {"entry_expose_tables", "options.dataservice.protocol = \"http\"\n" +
+                        "targetModule = \"ds_pull_entry_expose_tables.db\"", List.of("--expose-tables", "employees"),
+                        "a data service is generated only into the default module 'ds_pull_entry_expose_tables'."},
         };
     }
 

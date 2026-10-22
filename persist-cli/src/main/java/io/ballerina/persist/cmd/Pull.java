@@ -115,6 +115,8 @@ public class Pull implements BLauncherCmd {
             "exposes")
     private String exposeTables;
 
+    private String protocol;
+
     @Override
     public void execute() {
         Scanner scanner = new Scanner(System.in, StandardCharsets.UTF_8);
@@ -248,7 +250,7 @@ public class Pull implements BLauncherCmd {
         }
 
         PullExposure exposure = new PullExposure(Set.of(), List.of(), List.of());
-        if (dataservice != null) {
+        if (protocol != null) {
             try {
                 exposure = PullExposure.select(entityModule, exposeTables);
             } catch (BalException e) {
@@ -269,46 +271,63 @@ public class Pull implements BLauncherCmd {
             return;
         }
         errStream.println("Introspection complete! The " + modelDisplayPath + " file created successfully.");
-        if (dataservice != null) {
-            try {
-                recordDataService();
-            } catch (BalException | IOException e) {
-                Utils.printErrors(errStream, e.getMessage());
-                return;
+        if (protocol != null) {
+            String protocolName = protocol.toUpperCase(Locale.ROOT);
+            // A protocol taken from the entry leaves the entry as it is.
+            if (dataservice != null) {
+                try {
+                    recordDataService();
+                } catch (BalException | IOException e) {
+                    Utils.printErrors(errStream, e.getMessage());
+                    return;
+                }
+                errStream.printf(DataServiceMessages.PULL_ENABLED + "%n", protocolName);
             }
-            String protocol = dataservice.toUpperCase(Locale.ROOT);
-            errStream.printf(DataServiceMessages.PULL_ENABLED + "%n", protocol);
             exposure.mappings().forEach(errStream::println);
             if (!exposure.exposed().isEmpty()) {
                 errStream.println(DataServiceMessages.PULL_ANNOTATES_ENTITIES);
             }
-            errStream.printf(DataServiceMessages.PULL_BUILD_STEP + "%n", protocol);
+            errStream.printf(DataServiceMessages.PULL_BUILD_STEP + "%n", protocolName);
         }
     }
 
     // Checks every data service error that does not need the database, before anything is asked or written.
+    // Without --dataservice, an entry of the default model that already enables a data service gives the protocol.
     private boolean validateDataServiceOptions() {
-        if (dataservice == null) {
-            if (exposeTables != null) {
-                Utils.printErrors(errStream, DataServiceMessages.EXPOSE_TABLES_WITHOUT_DATASERVICE);
-                return false;
+        Optional<DataServiceToml.Entry> entry = Optional.empty();
+        if (dataservice != null || model == null || model.isBlank()) {
+            try {
+                validateBallerinaProject(Paths.get(this.sourcePath));
+                entry = DataServiceToml.defaultModelEntry(Files.readString(Paths.get(this.sourcePath,
+                        BALLERINA_TOML)));
+            } catch (BalException e) {
+                if (dataservice != null) {
+                    errStream.println(e.getMessage().stripTrailing());
+                    return false;
+                }
+            } catch (IOException e) {
+                if (dataservice != null) {
+                    Utils.printErrors(errStream, e.getMessage());
+                    return false;
+                }
             }
-            return true;
         }
         try {
-            validateBallerinaProject(Paths.get(this.sourcePath));
-        } catch (BalException e) {
-            errStream.println(e.getMessage().stripTrailing());
-            return false;
-        }
-        try {
-            DataServiceOptions.validateProtocol(dataservice);
+            if (dataservice != null) {
+                protocol = DataServiceOptions.validateProtocol(dataservice);
+            } else if (entry.isPresent() && entry.get().dataService().isPresent()
+                    && (model == null || model.isBlank())) {
+                protocol = DataServiceOptions.from(entry.get().dataService().get()).protocol();
+            } else {
+                if (exposeTables != null) {
+                    throw new BalException(DataServiceMessages.EXPOSE_TABLES_WITHOUT_DATASERVICE);
+                }
+                return true;
+            }
             if (model != null && !model.isBlank()) {
                 throw new BalException(DataServiceMessages.NAMED_MODEL);
             }
             String packageName = TomlSyntaxUtils.readPackageName(this.sourcePath);
-            Optional<DataServiceToml.Entry> entry = DataServiceToml.defaultModelEntry(
-                    Files.readString(Paths.get(this.sourcePath, BALLERINA_TOML)));
             if (entry.isPresent() && !entry.get().targetModule(packageName).equals(packageName)) {
                 throw new BalException(String.format(DataServiceMessages.TARGET_MODULE, packageName, packageName));
             }
@@ -316,7 +335,7 @@ public class Pull implements BLauncherCmd {
                 throw new BalException(DataServiceMessages.WITH_INIT_PARAMS);
             }
             return true;
-        } catch (BalException | IOException e) {
+        } catch (BalException e) {
             Utils.printErrors(errStream, e.getMessage());
             return false;
         }
