@@ -3,7 +3,7 @@
 _Owners_: @daneshk @sahanHe @TharmiganK  
 _Reviewers_: @daneshk  
 _Created_: 2022/07/26   
-_Updated_: 2026/02/10  
+_Updated_: 2026/10/22  
 _Edition_: Swan Lake  
 
 ## Introduction
@@ -24,6 +24,7 @@ The conforming implementation of the specification is released and included in t
 4. [Push Persistence Schema to the Data Provider](#4-push-persistence-schema-to-the-data-provider)
 5. [Pull Persistence Schema from the Data Provider](#5-pull-persistence-schema-from-the-data-provider)
 6. [Migrate Persistence Schema changes to the Data Provider](#6-migrate-persistence-schema-to-the-data-provider)
+7. [Data Service Generation](#7-data-service-generation)
 
 ## 1. Overview
 This specification elaborates on the `Persist CLI Tool` commands.
@@ -311,3 +312,148 @@ Running the `migrate` command will,
 Behaviour of the `migrate` command,
 - User should invoke the command within a Ballerina project.
 - User should provide the migration label as a positional argument. The user also can provide the data store to the `--datastore` parameter to indicate the preferred data store. However, as only `mysql` is currently supported, it is optional and is set to `mysql` by default.
+
+## 7. Data Service Generation
+
+The persist tool can generate a data service over a persist model, as defined in the
+[data service proposal](https://github.com/ballerina-platform/ballerina-spec/issues/1503) and its
+[HTTP proposal](https://github.com/ballerina-platform/ballerina-spec/issues/1513). The model selects what is exposed
+with the `@dataservice:Expose` annotation of the
+[`ballerina/dataservice`](https://github.com/ballerina-platform/module-ballerina-dataservice/blob/main/docs/spec/spec.md)
+package, and `Ballerina.toml` says how the service is generated.
+
+```bash
+bal persist add --datastore postgresql --dataservice http
+# annotate the entities to expose in persist/model.bal
+bal build
+```
+
+### 7.1. Configuration
+
+```toml
+[[tool.persist]]
+id = "generate-db-client"
+targetModule = "hr"
+filePath = "persist/model.bal"
+options.datastore = "postgresql"
+options.dataservice.protocol = "http"
+options.dataservice.basePath = "/api"
+```
+
+| Key | Required | Default | Meaning |
+|---|---|---|---|
+| `options.dataservice.protocol` | yes | — | The protocol the service is generated for. Only `http` is supported |
+| `options.dataservice.basePath` | no | `/api` | The base path of the service |
+
+`basePath` must start with `/`. A trailing `/` is removed, and `/` alone serves the service at the root. Each segment
+must be non-empty and contain only letters, digits, `_`, `-` and `.`.
+
+| `options.dataservice` | `protocol` | Annotated entities | Result |
+|---|---|---|---|
+| absent | — | none | No service; persist behaves as it does without data services |
+| absent | — | some | No service, and a warning that `protocol` is not set |
+| present | absent | any | Error: `protocol` is required |
+| present | set | none | Error listing the entities that can be annotated |
+| present | set | some | The service is generated over the annotated entities |
+
+A data service is generated only into the package's default module, so `targetModule` must be the package name. It
+cannot be combined with `options.withInitParams = true`, because the service creates the client with `new ()`, or with a
+named model, because a package has at most one data service.
+
+### 7.2. Validation and messages
+
+The tool validates the annotations from the model's syntax tree each time it generates, after the model has compiled.
+The `ballerina/dataservice` compiler plugin reports the checks it shares with the tool, with the same text, when the
+model is compiled, so a model with such an error fails to compile before the tool's own check runs.
+
+Errors are printed with the `ERROR:` prefix, or as the build tool's diagnostic in `bal build`, and fail the command.
+Warnings are printed with `WARNING:` and do not.
+
+| Case | Severity | Message |
+|---|---|---|
+| `protocol` missing | error | `'options.dataservice.protocol' is required. Supported values: http.` |
+| `protocol` is `graphql`, `mcp`, `odata` or `soap` | error | `the protocol '<value>' is not supported yet. Supported values: http.` |
+| `protocol` is any other value | error | `invalid 'options.dataservice.protocol' '<value>'. Supported values: http.` |
+| `basePath` without a leading `/` | error | `invalid 'options.dataservice.basePath' '<value>': the base path must start with '/'.` |
+| `basePath` with an empty or invalid segment | error | `invalid 'options.dataservice.basePath' '<value>': each path segment must be non-empty and contain only letters, digits, '_', '-' and '.'.` |
+| `targetModule` is not the package | error | `a data service is generated only into the default module '<package>'. Remove 'targetModule' or set it to '<package>'.` |
+| `withInitParams = true` | error | `a data service cannot be generated with 'options.withInitParams', because the service creates the client without arguments.` |
+| A named model | error | `a data service is not supported for a named persist model. Use 'persist/model.bal' or remove 'options.dataservice'.` |
+| No annotated entity | error | `the data service exposes no entity. Add the @dataservice:Expose annotation to the entities to expose: <Entity>, <Entity>.` |
+| An annotated entity with an unsupported data type | error | `the entity '<Entity>' has an unsupported data type and cannot be exposed. Remove its @dataservice:Expose annotation.` |
+| `Expose` on something other than a record type | error | `the @dataservice:Expose annotation is allowed only on a record type in the persist model.` |
+| `operations` empty | error | `'operations' in the @dataservice:Expose annotation of the entity '<Entity>' cannot be empty.` |
+| `operations` not a list literal | error | `'operations' in the @dataservice:Expose annotation of the entity '<Entity>' must be a list of operations.` |
+| An unknown operation | error | `invalid operation '<value>' in the @dataservice:Expose annotation of the entity '<Entity>'. Supported values: dataservice:READ, dataservice:CREATE, dataservice:UPDATE, dataservice:DELETE.` |
+| A duplicate operation | error | `duplicate operation '<value>' in the @dataservice:Expose annotation of the entity '<Entity>'.` |
+| Annotations without `options.dataservice` | warning | `the model has @dataservice:Expose annotations, but no data service is generated. Set 'options.dataservice.protocol' in the [[tool.persist]] entry to generate one.` |
+| `pull` skips an entity | warning | `the table '<table>' has an unsupported data type, so its entity '<Entity>' is not exposed.` |
+| `pull` annotates entities | info | `The exposed entities allow every action. Set 'operations' in their @dataservice:Expose annotations to restrict them.` |
+| `generate` without `--dataservice` on an annotated model | info | `the model has @dataservice:Expose annotations. Use the '--dataservice' option to also generate a data service.` |
+| `--expose-tables` without `--dataservice` | error | `the '--expose-tables' option requires the '--dataservice' option.` |
+| `--expose-tables` names a table that was not pulled | error | `the table '<table>' in '--expose-tables' is not a pulled table.` |
+| `--expose-tables` names a table with an unsupported data type | error | `the table '<table>' in '--expose-tables' has an unsupported data type, so its entity '<Entity>' cannot be exposed.` |
+| `pull` exposes an entity whose name differs from its table's | info | `The table '<table>' is exposed as the entity '<Entity>'.` |
+
+`<value>` in an operation message is the operation as it is written, such as `dataservice:READ` or `"read"`. Every
+invalid annotation, and every invalid `--expose-tables` name, is reported, one line each.
+
+### 7.3. Commands
+
+| Command | Behaviour with `--dataservice <protocol>` |
+|---|---|
+| `bal persist add` | Writes the entry as without the option, and adds `options.dataservice.protocol`. It cannot be combined with `--module`, `--model` or `--with-init-params` |
+| `bal persist pull` | Writes the model with `@dataservice:Expose` on each entity to expose and the `ballerina/dataservice` import, then sets `options.dataservice.protocol` in the entry whose `filePath` is `persist/model.bal`, keeping its `basePath`, or creates that entry as `add` would. It cannot be combined with `--model` |
+| `bal persist generate` | Generates the client and the data service once, into the package root. It cannot be combined with `--module`, `--model` or `--with-init-params` |
+| `bal build` | Generates the client and, when `options.dataservice` is present, the data service |
+
+- **`pull`:** without `--expose-tables`, every pulled entity is annotated except one with an unsupported data type,
+  which is named in a warning. With `--expose-tables <table,...>`, only the entities of the named tables are
+  annotated. Names are separated by commas and matched exactly, as `--tables` matches them. Before introspecting,
+  `pull` rejects an entry whose `targetModule` is not the package or that sets `withInitParams = true`.
+- A command that ends in an error leaves the model and `Ballerina.toml` unchanged.
+
+### 7.4. Generated files
+
+| File | Contents |
+|---|---|
+| `persist_dataservice.bal` | The persist client the service uses, the listener, the service and the types it uses |
+| `persist_dataservice_config.bal` | `configurable int dataservicePort = 9090;` and `configurable http:ListenerConfiguration dataserviceListenerConfig = {};` |
+
+From `bal build`, the files are written into `generated/` with the header of persist's generated files and must not
+be edited. They are rewritten whenever the client is, and the check that skips generation for an unchanged model also
+covers `options.dataservice`. When `options.dataservice` is removed, both files are deleted from `generated/`.
+
+From `bal persist generate --dataservice`, the files are written into the package root with the same header without
+the instruction not to edit them. They are the user's code, are replaced if `generate` runs again, and are never
+deleted by the tool.
+
+### 7.5. The HTTP service
+
+For an entity `Employee` with the persist resource name `employees` and key `id`:
+
+| Action | Request | Success response |
+|---|---|---|
+| `read` | `GET <basePath>/employees` | `200`, `{"items": [Employee, ...]}` |
+| `read` | `GET <basePath>/employees/{id}` | `200`, `Employee` |
+| `create` | `POST <basePath>/employees` with an `EmployeeInsert` object | `201`, `Location`, the created `Employee` |
+| `create` | `POST <basePath>/employees` with an array of `EmployeeInsert` | `201`, `{"items": [Employee, ...]}` |
+| `update` | `PATCH <basePath>/employees/{id}` with an `EmployeeUpdate` object | `200`, the updated `Employee` |
+| `delete` | `DELETE <basePath>/employees/{id}` | `200`, the deleted `Employee` |
+
+- A composite key takes one path segment per key field, in declaration order.
+- `POST` with `[]` creates nothing. `PATCH` with `{}` returns the record without updating it.
+- An operation whose action is not allowed is not generated, so `ballerina/http` answers `405` for its method, and an
+  entity that is not exposed is `404`.
+- An entity with a `time:*` or `byte[]` field gets wire types, `<Entity>Record`, `<Entity>InsertRecord` and
+  `<Entity>UpdateRecord`, that hold those fields as ISO 8601 and base64 strings, generated only for the operations
+  that use them. Generated functions named `dataserviceTo<Entity>Record` and `dataserviceFrom<Wire type>` convert
+  between them with the `ballerina/dataservice` conversion functions.
+- Errors map to `404`, `409`, `400` and `500` with the `dataservice:DataserviceError` body, through the
+  [`ballerina/dataservice.http`](https://github.com/ballerina-platform/module-ballerina-dataservice.http/blob/main/docs/spec/spec.md)
+  functions.
+
+The source holds, in order: the client and the listener, then one service with the resources of each exposed entity
+in model order, as get many, get one, create, patch and delete, then per entity in model order the wire types, the
+`<Entity>List` envelope and the `<Entity>Created` and `<Entity>ListCreated` records, then the conversion functions.
+Every resource and generated type has a short doc comment.

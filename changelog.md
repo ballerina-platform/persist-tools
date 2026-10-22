@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- [Add HTTP data service generation from a persist model](https://github.com/ballerina-platform/ballerina-spec/issues/1503)
+
 ### Fixed
 
 - [Fix database introspection failure when a foreign key references a table outside the introspected schema](https://github.com/ballerina-platform/ballerina-library/issues/9255)
