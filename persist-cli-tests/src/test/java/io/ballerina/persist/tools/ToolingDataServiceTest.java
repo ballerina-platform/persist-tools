@@ -285,6 +285,16 @@ public class ToolingDataServiceTest {
         Assert.assertFalse(toml.contains("basePath"), toml);
     }
 
+    @Test(description = "An empty model is reported as a model without entities")
+    public void testEmptyModel() throws IOException, InterruptedException {
+        Path project = project("ds_empty_model", entry("h2", "options.dataservice.protocol = \"http\""),
+                "import ballerina/persist as _;\n");
+        Result result = build(project);
+        Assert.assertTrue(result.output().contains("the model definition file(model.bal) does not contain any " +
+                "entity definition."), result.output());
+        Assert.assertFalse(result.output().contains("unsupported data type"), result.output());
+    }
+
     @Test(dataProvider = "addErrors", description = "add rejects --dataservice with the options it cannot combine")
     public void testAddError(String name, List<String> args, String message)
             throws IOException, InterruptedException {
