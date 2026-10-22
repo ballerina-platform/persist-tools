@@ -149,7 +149,12 @@ public class Add implements BLauncherCmd {
                     "build process." + System.lineSeparator());
             errStream.println(System.lineSeparator() + "Next steps:");
             errStream.println("1. Define your data model in \"" + modelPath + "\".");
-            errStream.println("2. Execute `bal build` to generate the persist client during package build.");
+            if (dataservice != null) {
+                errStream.println(DataServiceMessages.ADD_ANNOTATE_STEP);
+                errStream.printf(DataServiceMessages.ADD_BUILD_STEP + "%n", dataservice.toUpperCase(Locale.ROOT));
+            } else {
+                errStream.println("2. Execute `bal build` to generate the persist client during package build.");
+            }
 
             if (Objects.nonNull(testDatastore)) {
                 errStream.printf(System.lineSeparator() +

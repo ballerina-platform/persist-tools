@@ -73,6 +73,15 @@ public final class DataServiceMessages {
             "data type, so its entity '%s' cannot be exposed.";
     public static final String PULL_ENTITY_NAME = "The table '%s' is exposed as the entity '%s'.";
 
+    public static final String ADD_ANNOTATE_STEP =
+            "2. Add the @dataservice:Expose annotation to each entity to expose.";
+    public static final String ADD_BUILD_STEP = "3. Execute `bal build` to generate the persist client and the %s " +
+            "data service during package build.";
+    public static final String PULL_ENABLED = "Enabled the %s data service in the [[tool.persist]] entry of " +
+            "persist/model.bal in Ballerina.toml.";
+    public static final String PULL_BUILD_STEP = "Execute `bal build` to generate the persist client and the %s " +
+            "data service.";
+
     private DataServiceMessages() {
     }
 }

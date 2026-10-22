@@ -283,6 +283,9 @@ public class ToolingDataServiceTest {
         Assert.assertTrue(toml.contains("options.datastore = \"h2\""), toml);
         Assert.assertTrue(toml.contains("options.dataservice.protocol = \"http\""), toml);
         Assert.assertFalse(toml.contains("basePath"), toml);
+        Assert.assertTrue(result.output().contains("2. Add the @dataservice:Expose annotation to each entity to " +
+                "expose.\n3. Execute `bal build` to generate the persist client and the HTTP data service during " +
+                "package build."), result.output());
     }
 
     @Test(description = "add outside a package names the missing Ballerina.toml once")
