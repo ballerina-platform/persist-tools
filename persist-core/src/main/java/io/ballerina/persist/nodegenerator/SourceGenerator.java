@@ -46,6 +46,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
+import java.util.Set;
 
 import static io.ballerina.persist.PersistToolsConstants.GOOGLE_SHEETS_SCHEMA_FILE;
 import static io.ballerina.persist.PersistToolsConstants.SQL_SCHEMA_FILE;
@@ -85,8 +86,12 @@ public class SourceGenerator {
     }
 
     public void createDbModel() throws BalException {
+        createDbModel(Set.of());
+    }
+
+    public void createDbModel(Set<String> exposedEntities) throws BalException {
         DbModelGenSyntaxTree dbModelGenSyntaxTree = new DbModelGenSyntaxTree();
-        addModelFile(dbModelGenSyntaxTree.getDataModels(entityModule),
+        addModelFile(dbModelGenSyntaxTree.getDataModels(entityModule, exposedEntities),
                 this.generatedSourceDirPath.resolve(persistModelBal).toAbsolutePath(),
                 this.moduleNameWithPackageName);
     }

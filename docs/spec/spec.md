@@ -250,6 +250,8 @@ bal persist pull --datastore mysql --host localhost --port 3306 --user root --da
 |    --database     |                           used to indicate the database name                            |    Yes    |        None        |
 |     --tables      | enable table selection. accepts table names or triggers interactive mode if no value    |    No     |    all tables      |
 |      --model      |         used to indicate the name of the model. If not specified, the command applies to the default root model.             |     No    |         No         |
+|   --dataservice   | used to annotate the pulled entities and enable a data service for the given protocol. See [Data service generation](#7-data-service-generation). |     No    |         No         |
+|   --expose-tables   | used with `--dataservice` to annotate only the entities of the given tables. |     No    |         No         |
 
 This command will introspect the schema of the database and create a `model.bal` file with the entities and relations based on the schema of the database. The database configuration should be provided as command-line arguments.
 

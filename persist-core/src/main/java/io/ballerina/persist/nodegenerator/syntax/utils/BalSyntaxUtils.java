@@ -66,6 +66,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 /**
@@ -336,8 +337,15 @@ public class BalSyntaxUtils {
     }
 
     public static SyntaxTree generateModelSyntaxTree(Module entityModule) {
+        return generateModelSyntaxTree(entityModule, Set.of());
+    }
+
+    public static SyntaxTree generateModelSyntaxTree(Module entityModule, Set<String> exposedEntities) {
         NodeList<ImportDeclarationNode> imports = AbstractNodeFactory.createEmptyNodeList();
         NodeList<ModuleMemberDeclarationNode> moduleMembers = AbstractNodeFactory.createEmptyNodeList();
+        if (!exposedEntities.isEmpty()) {
+            imports = imports.add(NodeParser.parseImportDeclaration("import ballerina/dataservice;"));
+        }
         imports = imports.add(NodeParser.parseImportDeclaration("import ballerina/persist as _;"));
         boolean areAnnotationsAdded = false;
         for (Entity entity : entityModule.getEntityMap().values()) {
@@ -369,8 +377,13 @@ public class BalSyntaxUtils {
                     entityModule.getModuleName()));
         }
         for (Entity entity : entityModule.getEntityMap().values()) {
-            moduleMembers = moduleMembers.add(createEntityRecord(entity, false,
-                    entityModule.getModuleName(), true));
+            ModuleMemberDeclarationNode entityRecord = createEntityRecord(entity, false,
+                    entityModule.getModuleName(), true);
+            if (exposedEntities.contains(entity.getEntityName())) {
+                entityRecord = NodeParser.parseModuleMemberDeclaration(
+                        "@dataservice:Expose" + System.lineSeparator() + entityRecord.toSourceCode());
+            }
+            moduleMembers = moduleMembers.add(entityRecord);
         }
         Token eofToken = AbstractNodeFactory.createIdentifierToken(BalSyntaxConstants.EMPTY_STRING);
         ModulePartNode modulePartNode = NodeFactory.createModulePartNode(imports, moduleMembers, eofToken);
