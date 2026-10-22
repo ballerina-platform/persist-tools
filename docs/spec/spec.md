@@ -398,6 +398,8 @@ Warnings are printed with `WARNING:` and do not.
 | `--expose-tables` names a table that was not pulled | error | `the table '<table>' in '--expose-tables' is not a pulled table.` |
 | `--expose-tables` names a table with an unsupported data type | error | `the table '<table>' in '--expose-tables' has an unsupported data type, so its entity '<Entity>' cannot be exposed.` |
 | `pull` exposes an entity whose name differs from its table's | info | `The table '<table>' is exposed as the entity '<Entity>'.` |
+| `add --dataservice` succeeds | info | The next steps `2. Add the @dataservice:Expose annotation to each entity to expose.` and `3. Execute `bal build` to generate the persist client and the <PROTOCOL> data service during package build.` |
+| `pull --dataservice` succeeds | info | `Enabled the <PROTOCOL> data service in the [[tool.persist]] entry of persist/model.bal in Ballerina.toml.`, then the entity mappings and the actions message above, then `Execute `bal build` to generate the persist client and the <PROTOCOL> data service.` |
 
 `<value>` in an operation message is the operation as it is written, such as `dataservice:READ` or `"read"`. Every
 invalid annotation, and every invalid `--expose-tables` name, is reported, one line each.

@@ -66,6 +66,10 @@ public class ToolingDataServicePullTest {
         Assert.assertTrue(output.contains("The table 'order_items' is exposed as the entity 'OrderItem'."), output);
         Assert.assertTrue(output.contains("The exposed entities allow every action. Set 'operations' in their " +
                 "@dataservice:Expose annotations to restrict them."), output);
+        Assert.assertTrue(output.contains("Enabled the HTTP data service in the [[tool.persist]] entry of " +
+                "persist/model.bal in Ballerina.toml."), output);
+        Assert.assertTrue(output.contains("Execute `bal build` to generate the persist client and the HTTP data " +
+                "service."), output);
         String toml = Files.readString(SOURCES.resolve(subDir).resolve("Ballerina.toml"));
         Assert.assertTrue(toml.contains("[[tool.persist]]"), toml);
         Assert.assertTrue(toml.contains("options.datastore = \"mysql\""), toml);

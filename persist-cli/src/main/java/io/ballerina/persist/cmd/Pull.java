@@ -276,10 +276,13 @@ public class Pull implements BLauncherCmd {
                 Utils.printErrors(errStream, e.getMessage());
                 return;
             }
+            String protocol = dataservice.toUpperCase(Locale.ROOT);
+            errStream.printf(DataServiceMessages.PULL_ENABLED + "%n", protocol);
             exposure.mappings().forEach(errStream::println);
             if (!exposure.exposed().isEmpty()) {
                 errStream.println(DataServiceMessages.PULL_ANNOTATES_ENTITIES);
             }
+            errStream.printf(DataServiceMessages.PULL_BUILD_STEP + "%n", protocol);
         }
     }
 
