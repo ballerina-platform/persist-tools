@@ -1,0 +1,17 @@
+[package]
+org = "dataservice_test"
+name = "dataservice_h2"
+version = "0.1.0"
+distribution = "2201.14.0"
+
+[[tool.persist]]
+id = "generate-db-client"
+targetModule = "dataservice_h2"
+options.datastore = "h2"
+filePath = "persist/model.bal"
+options.dataservice.protocol = "http"
+
+[[platform.java21.dependency]]
+groupId = "io.ballerina.stdlib"
+artifactId = "persist.sql-native"
+version = "1.7.2"
