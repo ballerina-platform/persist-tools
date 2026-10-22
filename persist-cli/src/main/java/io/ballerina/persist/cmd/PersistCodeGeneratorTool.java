@@ -326,7 +326,9 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
 
     private static void createDiagnostics(ToolContext toolContext, PersistToolsConstants.DiagnosticMessages error,
             Location location, String... args) {
-        String message = String.format(error.getDescription(), (Object[]) args);
+        // The diagnostic factory formats the message with MessageFormat, which would drop its single quotes.
+        String message = String.format(error.getDescription(), (Object[]) args).replace("'", "''")
+                .replace("{", "'{'");
         DiagnosticInfo diagnosticInfo = new DiagnosticInfo(error.getCode(), message,
                 error.getSeverity());
         toolContext.reportDiagnostic(DiagnosticFactory.createDiagnostic(diagnosticInfo, location));
