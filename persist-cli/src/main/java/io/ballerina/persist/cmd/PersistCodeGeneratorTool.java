@@ -157,6 +157,11 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
             generateTestSources(testDatastore, entityModule, targetModule, projectPath, generatedSourceDirPath);
             if (dataServiceOptions == null) {
                 deleteDataServiceSources(generatedSourceDirPath);
+                if (DataServiceModel.hasExposeAnnotations(schemaFilePath)) {
+                    errStream.println("WARNING: the model has @dataservice:Expose annotations, but no data service " +
+                            "is generated. Set 'options.dataservice.protocol' in the [[tool.persist]] entry to " +
+                            "generate one.");
+                }
             } else {
                 generateDataServiceSources(dataServiceOptions, entityModule, schemaFilePath, generatedSourceDirPath);
             }
