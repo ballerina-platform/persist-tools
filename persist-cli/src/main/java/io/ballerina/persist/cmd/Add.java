@@ -124,9 +124,10 @@ public class Add implements BLauncherCmd {
             eagerLoading = Utils.validateEagerLoading(datastore, eagerLoading, errStream);
 
             try {
+                BalProjectUtils.validateBallerinaProject(Paths.get(this.sourcePath));
                 packageName = TomlSyntaxUtils.readPackageName(this.sourcePath);
             } catch (BalException e) {
-                errStream.println(e.getMessage());
+                errStream.println(e.getMessage().stripTrailing());
                 return;
             }
             if (dataservice != null) {

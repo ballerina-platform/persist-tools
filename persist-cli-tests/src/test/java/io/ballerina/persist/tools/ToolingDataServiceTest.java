@@ -285,6 +285,27 @@ public class ToolingDataServiceTest {
         Assert.assertFalse(toml.contains("basePath"), toml);
     }
 
+    @Test(description = "add outside a package names the missing Ballerina.toml once")
+    public void testAddOutsidePackage() throws IOException, InterruptedException {
+        Path directory = SOURCES.resolve("ds_add_no_package");
+        deleteDirectory(directory);
+        Files.createDirectories(directory);
+        Result result = bal(directory, Map.of(), "persist", "add", "--dataservice", "http");
+        Assert.assertEquals(result.output().strip(), "ERROR: invalid Ballerina package directory: " + directory +
+                ", cannot find 'Ballerina.toml' file.", result.output());
+    }
+
+    @Test(description = "pull outside a package names the missing Ballerina.toml with one ERROR prefix")
+    public void testPullOutsidePackage() throws IOException, InterruptedException {
+        Path directory = SOURCES.resolve("ds_pull_no_package");
+        deleteDirectory(directory);
+        Files.createDirectories(directory);
+        Result result = bal(directory, Map.of(), "persist", "pull", "--dataservice", "http", "--host", "localhost",
+                "--port", "3307", "--user", "root", "--database", "persist");
+        Assert.assertTrue(result.output().startsWith("ERROR: invalid Ballerina package directory"), result.output());
+        Assert.assertFalse(result.output().contains("ERROR: ERROR:"), result.output());
+    }
+
     @Test(description = "An empty model is reported as a model without entities")
     public void testEmptyModel() throws IOException, InterruptedException {
         Path project = project("ds_empty_model", entry("h2", "options.dataservice.protocol = \"http\""),

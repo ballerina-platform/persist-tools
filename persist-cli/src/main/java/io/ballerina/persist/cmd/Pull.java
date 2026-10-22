@@ -293,11 +293,16 @@ public class Pull implements BLauncherCmd {
             return true;
         }
         try {
+            validateBallerinaProject(Paths.get(this.sourcePath));
+        } catch (BalException e) {
+            errStream.println(e.getMessage().stripTrailing());
+            return false;
+        }
+        try {
             DataServiceOptions.validateProtocol(dataservice);
             if (model != null && !model.isBlank()) {
                 throw new BalException(DataServiceMessages.NAMED_MODEL);
             }
-            validateBallerinaProject(Paths.get(this.sourcePath));
             String packageName = TomlSyntaxUtils.readPackageName(this.sourcePath);
             Optional<DataServiceToml.Entry> entry = DataServiceToml.defaultModelEntry(
                     Files.readString(Paths.get(this.sourcePath, BALLERINA_TOML)));
