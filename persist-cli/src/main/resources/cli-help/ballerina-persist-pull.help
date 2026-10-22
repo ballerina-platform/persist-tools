@@ -53,10 +53,13 @@ OPTIONS
        --dataservice <protocol>
               Annotate the pulled entities with @dataservice:Expose and set 'options.dataservice.protocol'
               in the [[tool.persist]] entry of persist/model.bal, creating the entry if there is none.
-              The supported protocol is 'http'. It cannot be combined with --model.
+              The supported protocol is 'http'. It cannot be combined with --model. Without it, an entry
+              that already has options.dataservice keeps its data service: the pulled entities are
+              annotated with the entry's protocol and the entry is left unchanged.
        --expose-tables <table1,table2,...>
               The tables whose entities are annotated. Without it, every pulled entity without an
-              unsupported data type is annotated. Requires --dataservice.
+              unsupported data type is annotated. Requires --dataservice, unless the entry of
+              persist/model.bal already enables a data service.
        -h, --help
            Print the usage details of all commands.
 

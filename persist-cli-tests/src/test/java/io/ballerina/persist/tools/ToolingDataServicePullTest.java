@@ -105,6 +105,33 @@ public class ToolingDataServicePullTest {
         Assert.assertEquals(Files.readString(SOURCES.resolve(subDir).resolve("Ballerina.toml")), toml);
     }
 
+    @Test(description = "pull without --dataservice into an entry that enables a data service annotates and " +
+            "leaves the entry unchanged")
+    public void testPullKeepsTheEntrysDataService() throws IOException {
+        String subDir = "tool_test_pull_dataservice_mysql_4";
+        createFromDatabaseScript(subDir, "mysql", MYSQL);
+        String toml = Files.readString(SOURCES.resolve(subDir).resolve("Ballerina.toml"));
+        String output = pull(subDir, "--expose-tables", "employees,order_items");
+        String model = Files.readString(SOURCES.resolve(subDir).resolve("persist").resolve("model.bal"));
+        Assert.assertEquals(model.split("@dataservice:Expose", -1).length - 1, 2, model);
+        Assert.assertEquals(Files.readString(SOURCES.resolve(subDir).resolve("Ballerina.toml")), toml);
+        Assert.assertFalse(output.contains("Enabled the"), output);
+        Assert.assertTrue(output.contains("Execute `bal build` to generate the persist client and the HTTP data " +
+                "service."), output);
+    }
+
+    @Test(description = "pull without --dataservice into an entry without a data service behaves as before")
+    public void testPullWithoutDataService() throws IOException {
+        String subDir = "tool_test_pull_dataservice_mysql_5";
+        createFromDatabaseScript(subDir, "mysql", MYSQL);
+        String toml = Files.readString(SOURCES.resolve(subDir).resolve("Ballerina.toml"));
+        String output = pull(subDir);
+        String model = Files.readString(SOURCES.resolve(subDir).resolve("persist").resolve("model.bal"));
+        Assert.assertFalse(model.contains("dataservice"), model);
+        Assert.assertEquals(Files.readString(SOURCES.resolve(subDir).resolve("Ballerina.toml")), toml);
+        Assert.assertFalse(output.contains("data service"), output);
+    }
+
     // Runs the installed command, as a user would, so that its output can be read.
     private static String pull(String subDir, String... options) throws IOException {
         List<String> command = new ArrayList<>(List.of(DISTRIBUTION.resolve("bin").resolve("bal").toString(),
