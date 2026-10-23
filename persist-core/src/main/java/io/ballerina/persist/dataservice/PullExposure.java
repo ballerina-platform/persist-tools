@@ -33,9 +33,8 @@ import java.util.Set;
  *
  * @param exposed  the names of the entities to annotate
  * @param warnings the warnings to print, for entities that are skipped
- * @param mappings the lines that name each exposed entity whose name differs from its table's
  */
-public record PullExposure(Set<String> exposed, List<String> warnings, List<String> mappings) {
+public record PullExposure(Set<String> exposed, List<String> warnings) {
 
     /**
      * Selects the entities to annotate.
@@ -48,17 +47,16 @@ public record PullExposure(Set<String> exposed, List<String> warnings, List<Stri
     public static PullExposure select(Module entityModule, String exposeTables) throws BalException {
         Set<String> exposed = new LinkedHashSet<>();
         List<String> warnings = new ArrayList<>();
-        List<String> mappings = new ArrayList<>();
         if (exposeTables == null) {
             for (Entity entity : entityModule.getEntityMap().values()) {
                 if (entity.containsUnsupportedTypes()) {
                     warnings.add(String.format(DataServiceMessages.PULL_SKIPS_ENTITY, entity.getTableName(),
                             entity.getEntityName()));
                 } else {
-                    expose(entity, exposed, mappings);
+                    exposed.add(entity.getEntityName());
                 }
             }
-            return new PullExposure(exposed, warnings, mappings);
+            return new PullExposure(exposed, warnings);
         }
         List<String> errors = new ArrayList<>();
         // Names are parsed and matched as `--tables` parses and matches them.
@@ -73,19 +71,12 @@ public record PullExposure(Set<String> exposed, List<String> warnings, List<Stri
                 errors.add(String.format(DataServiceMessages.EXPOSE_TABLE_UNSUPPORTED, table,
                         entity.getEntityName()));
             } else {
-                expose(entity, exposed, mappings);
+                exposed.add(entity.getEntityName());
             }
         }
         if (!errors.isEmpty()) {
             throw new BalException(String.join(System.lineSeparator(), errors));
         }
-        return new PullExposure(exposed, warnings, mappings);
-    }
-
-    private static void expose(Entity entity, Set<String> exposed, List<String> mappings) {
-        if (exposed.add(entity.getEntityName()) && !entity.getEntityName().equals(entity.getTableName())) {
-            mappings.add(String.format(DataServiceMessages.PULL_ENTITY_NAME, entity.getTableName(),
-                    entity.getEntityName()));
-        }
+        return new PullExposure(exposed, warnings);
     }
 }

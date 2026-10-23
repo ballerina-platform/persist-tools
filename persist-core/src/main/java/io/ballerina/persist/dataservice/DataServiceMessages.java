@@ -61,8 +61,6 @@ public final class DataServiceMessages {
             "generate one.";
     public static final String PULL_SKIPS_ENTITY =
             "the table '%s' has an unsupported data type, so its entity '%s' is not exposed.";
-    public static final String PULL_ANNOTATES_ENTITIES = "The exposed entities allow every action. Set " +
-            "'operations' in their @dataservice:Expose annotations to restrict them.";
     public static final String GENERATE_WITHOUT_OPTION = "the model has @dataservice:Expose annotations. Use the " +
             "'--dataservice' option to also generate a data service.";
 
@@ -71,7 +69,6 @@ public final class DataServiceMessages {
     public static final String EXPOSE_TABLE_NOT_PULLED = "the table '%s' in '--expose-tables' is not a pulled table.";
     public static final String EXPOSE_TABLE_UNSUPPORTED = "the table '%s' in '--expose-tables' has an unsupported " +
             "data type, so its entity '%s' cannot be exposed.";
-    public static final String PULL_ENTITY_NAME = "The table '%s' is exposed as the entity '%s'.";
 
     public static final String ADD_ANNOTATE_STEP =
             "2. Add the @dataservice:Expose annotation to each entity to expose.";
@@ -79,8 +76,6 @@ public final class DataServiceMessages {
             "data service during package build.";
     public static final String PULL_ENABLED = "Enabled the %s data service in the [[tool.persist]] entry of " +
             "persist/model.bal in Ballerina.toml.";
-    public static final String PULL_BUILD_STEP = "Execute `bal build` to generate the persist client and the %s " +
-            "data service.";
 
     private DataServiceMessages() {
     }
