@@ -425,8 +425,9 @@ invalid annotation, and every invalid `--expose-tables` name, is reported, one l
 
 | File | Contents |
 |---|---|
-| `persist_dataservice.bal` | The persist client the service uses, the listener, the service and the types it uses |
-| `persist_dataservice_config.bal` | `configurable int dataservicePort = 9090;` and `configurable http:ListenerConfiguration dataserviceListenerConfig = {};` |
+| `dataservice.bal` | The persist client the service uses, the listener, the service and the conversion functions |
+| `dataservice_types.bal` | The types the service uses: the wire types, the `<Entity>List` envelopes and the status code records. It is not written when no exposed entity needs a type |
+| `dataservice_config.bal` | `configurable int dataservicePort = 9090;` and `configurable http:ListenerConfiguration dataserviceListenerConfig = {};` |
 
 From `bal build`, the files are written into `generated/` with the header of persist's generated files and must not
 be edited. They are rewritten whenever the client is, and the check that skips generation for an unchanged model also
@@ -453,15 +454,16 @@ For an entity `Employee` with the persist resource name `employees` and key `id`
 - `POST` with `[]` creates nothing. `PATCH` with `{}` returns the record without updating it.
 - An operation whose action is not allowed is not generated, so `ballerina/http` answers `405` for its method, and an
   entity that is not exposed is `404`.
-- An entity with a `time:*` or `byte[]` field gets wire types, `<Entity>Record`, `<Entity>InsertRecord` and
-  `<Entity>UpdateRecord`, that hold those fields as ISO 8601 and base64 strings, generated only for the operations
-  that use them. Generated functions named `dataserviceTo<Entity>Record` and `dataserviceFrom<Wire type>` convert
+- An entity with a `time:*` or `byte[]` field gets wire types, `<Entity>Payload`, `<Entity>InsertPayload` and
+  `<Entity>UpdatePayload`, that hold those fields as ISO 8601 and base64 strings, generated only for the operations
+  that use them. Generated functions named `dataserviceTo<Entity>Payload` and `dataserviceFrom<Wire type>` convert
   between them with the `ballerina/dataservice` conversion functions.
 - Errors map to `404`, `409`, `400` and `500` with the `dataservice:DataserviceError` body, through the
   [`ballerina/dataservice.http`](https://github.com/ballerina-platform/module-ballerina-dataservice.http/blob/main/docs/spec/spec.md)
   functions.
 
-The source holds, in order: the client and the listener, then one service with the resources of each exposed entity
-in model order, as get many, get one, create, patch and delete, then per entity in model order the wire types, the
-`<Entity>List` envelope and the `<Entity>Created` and `<Entity>ListCreated` records, then the conversion functions.
+`dataservice.bal` holds, in order: the client and the listener, then one service with the resources of each exposed
+entity in model order, as get many, get one, create, patch and delete, then the conversion functions.
+`dataservice_types.bal` holds, per entity in model order, the wire types, the `<Entity>List` envelope and the
+`<Entity>Created` and `<Entity>ListCreated` records.
 Every resource and generated type has a short doc comment.

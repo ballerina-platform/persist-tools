@@ -28,6 +28,7 @@ import org.ballerinalang.formatter.core.FormatterException;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
@@ -43,8 +44,9 @@ import static io.ballerina.persist.dataservice.Operation.UPDATE;
  */
 public final class HttpDataServiceGenerator {
 
-    public static final String SERVICE_FILE = "persist_dataservice.bal";
-    public static final String CONFIG_FILE = "persist_dataservice_config.bal";
+    public static final String SERVICE_FILE = "dataservice.bal";
+    public static final String TYPES_FILE = "dataservice_types.bal";
+    public static final String CONFIG_FILE = "dataservice_config.bal";
 
     private static final String NEWLINE = System.lineSeparator();
     private static final Pattern IDENTIFIER = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*");
@@ -73,7 +75,7 @@ public final class HttpDataServiceGenerator {
     }
 
     /**
-     * Generates `persist_dataservice.bal`.
+     * Generates `dataservice.bal`: the client, the listener, the service and the conversion functions.
      *
      * @return the formatted source
      * @throws BalException if the source cannot be formatted
@@ -95,17 +97,37 @@ public final class HttpDataServiceGenerator {
         }
         body.append("}").append(NEWLINE);
         for (ExposedEntity entity : entities) {
-            appendTypes(body, entity);
-        }
-        for (ExposedEntity entity : entities) {
             appendConverters(body, entity);
         }
-        String header = header(String.format(BalSyntaxConstants.AUTO_GENERATED_COMMENT_WITH_REASON, modelName));
-        return format(header + String.join(NEWLINE, imports) + NEWLINE + NEWLINE + body);
+        return format(modelHeader() + String.join(NEWLINE, imports) + NEWLINE + NEWLINE + body);
     }
 
     /**
-     * Generates `persist_dataservice_config.bal`.
+     * Generates `dataservice_types.bal`: per entity in model order, the wire types, the list envelope and the
+     * status code records.
+     *
+     * @return the formatted source, or empty when no exposed entity needs a type
+     * @throws BalException if the source cannot be formatted
+     */
+    public Optional<String> generateTypes() throws BalException {
+        StringBuilder body = new StringBuilder();
+        for (ExposedEntity entity : entities) {
+            appendTypes(body, entity);
+        }
+        if (body.isEmpty()) {
+            return Optional.empty();
+        }
+        String imports = entities.stream().anyMatch(entity -> entity.allows(CREATE)) ?
+                "import ballerina/http;" + NEWLINE + NEWLINE : "";
+        return Optional.of(format(modelHeader() + imports + body.toString().stripLeading()));
+    }
+
+    private String modelHeader() {
+        return header(String.format(BalSyntaxConstants.AUTO_GENERATED_COMMENT_WITH_REASON, modelName));
+    }
+
+    /**
+     * Generates `dataservice_config.bal`.
      *
      * @return the formatted source
      * @throws BalException if the source cannot be formatted
@@ -603,9 +625,9 @@ public final class HttpDataServiceGenerator {
             this.displayName = unescape(entity.name());
             this.resource = entity.resourceName();
             this.hasWire = entity.hasWireTypes();
-            this.wire = hasWire ? this.entity + "Record" : this.entity;
-            this.insertWire = this.entity + (hasWire ? "InsertRecord" : "Insert");
-            this.updateWire = this.entity + (hasWire ? "UpdateRecord" : "Update");
+            this.wire = hasWire ? this.entity + "Payload" : this.entity;
+            this.insertWire = this.entity + (hasWire ? "InsertPayload" : "Insert");
+            this.updateWire = this.entity + (hasWire ? "UpdatePayload" : "Update");
             this.list = this.entity + "List";
             this.created = this.entity + "Created";
             this.listCreated = this.entity + "ListCreated";

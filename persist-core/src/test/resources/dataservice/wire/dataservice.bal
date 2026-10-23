@@ -21,8 +21,8 @@ service /api on dataserviceListener {
     #
     # + return - The documents, or an internal error
     resource function get documents() returns DocumentList|dsHttp:InternalError {
-        DocumentRecord[]|persist:Error items = from Document item in dataserviceClient->/documents(Document)
-            select dataserviceToDocumentRecord(item);
+        DocumentPayload[]|persist:Error items = from Document item in dataserviceClient->/documents(Document)
+            select dataserviceToDocumentPayload(item);
         if items is persist:Error {
             return dsHttp:internalError(items);
         }
@@ -32,29 +32,29 @@ service /api on dataserviceListener {
     # Gets a document by its key.
     #
     # + return - The document, or the error response
-    resource function get documents/[int id]() returns DocumentRecord|dsHttp:ErrorResponse {
+    resource function get documents/[int id]() returns DocumentPayload|dsHttp:ErrorResponse {
         Document|persist:Error item = dataserviceClient->/documents/[id];
         if item is persist:Error {
             return dsHttp:errorResponse(item, "Document", [id]);
         }
-        return dataserviceToDocumentRecord(item);
+        return dataserviceToDocumentPayload(item);
     }
 
     # Creates one document, or several from an array.
     #
     # + return - The created document or documents, or the error response
-    resource function post documents(DocumentInsertRecord|DocumentInsertRecord[] payload)
+    resource function post documents(DocumentInsertPayload|DocumentInsertPayload[] payload)
             returns DocumentCreated|DocumentListCreated|dsHttp:ErrorResponse {
-        DocumentInsertRecord[] entries = payload is DocumentInsertRecord[] ? payload : [payload];
+        DocumentInsertPayload[] entries = payload is DocumentInsertPayload[] ? payload : [payload];
         DocumentInsert[] values = [];
-        foreach DocumentInsertRecord entry in entries {
-            DocumentInsert|dsHttp:InvalidInput value = dataserviceFromDocumentInsertRecord(entry);
+        foreach DocumentInsertPayload entry in entries {
+            DocumentInsert|dsHttp:InvalidInput value = dataserviceFromDocumentInsertPayload(entry);
             if value is dsHttp:InvalidInput {
                 return value;
             }
             values.push(value);
         }
-        DocumentRecord[] items = [];
+        DocumentPayload[] items = [];
         if values.length() > 0 {
             int[]|persist:Error keys = dataserviceClient->/documents.post(values);
             if keys is persist:Error {
@@ -65,13 +65,13 @@ service /api on dataserviceListener {
                 if item is persist:Error {
                     return dsHttp:errorResponse(item, "Document", [id]);
                 }
-                items.push(dataserviceToDocumentRecord(item));
+                items.push(dataserviceToDocumentPayload(item));
             }
         }
-        if payload is DocumentInsertRecord[] {
+        if payload is DocumentInsertPayload[] {
             return <DocumentListCreated>{body: {items}};
         }
-        DocumentRecord created = items[0];
+        DocumentPayload created = items[0];
         return <DocumentCreated>{
             headers: {"Location": dsHttp:location("/api/documents", [created.id])},
             body: created
@@ -81,8 +81,8 @@ service /api on dataserviceListener {
     # Updates the given fields of a document.
     #
     # + return - The updated document, or the error response
-    resource function patch documents/[int id](DocumentUpdateRecord payload) returns DocumentRecord|dsHttp:ErrorResponse {
-        DocumentUpdate|dsHttp:InvalidInput value = dataserviceFromDocumentUpdateRecord(payload);
+    resource function patch documents/[int id](DocumentUpdatePayload payload) returns DocumentPayload|dsHttp:ErrorResponse {
+        DocumentUpdate|dsHttp:InvalidInput value = dataserviceFromDocumentUpdatePayload(payload);
         if value is dsHttp:InvalidInput {
             return value;
         }
@@ -95,26 +95,26 @@ service /api on dataserviceListener {
         if item is persist:Error {
             return dsHttp:errorResponse(item, "Document", [id]);
         }
-        return dataserviceToDocumentRecord(item);
+        return dataserviceToDocumentPayload(item);
     }
 
     # Deletes a document and returns it.
     #
     # + return - The deleted document, or the error response
-    resource function delete documents/[int id]() returns DocumentRecord|dsHttp:ErrorResponse {
+    resource function delete documents/[int id]() returns DocumentPayload|dsHttp:ErrorResponse {
         Document|persist:Error item = dataserviceClient->/documents/[id].delete();
         if item is persist:Error {
             return dsHttp:errorResponse(item, "Document", [id]);
         }
-        return dataserviceToDocumentRecord(item);
+        return dataserviceToDocumentPayload(item);
     }
 
     # Gets the holidays.
     #
     # + return - The holidays, or an internal error
     resource function get holidays() returns HolidayList|dsHttp:InternalError {
-        HolidayRecord[]|persist:Error items = from Holiday item in dataserviceClient->/holidays(Holiday)
-            select dataserviceToHolidayRecord(item);
+        HolidayPayload[]|persist:Error items = from Holiday item in dataserviceClient->/holidays(Holiday)
+            select dataserviceToHolidayPayload(item);
         if items is persist:Error {
             return dsHttp:internalError(items);
         }
@@ -124,110 +124,20 @@ service /api on dataserviceListener {
     # Gets a holiday by its key.
     #
     # + return - The holiday, or the error response
-    resource function get holidays/[int id]() returns HolidayRecord|dsHttp:ErrorResponse {
+    resource function get holidays/[int id]() returns HolidayPayload|dsHttp:ErrorResponse {
         Holiday|persist:Error item = dataserviceClient->/holidays/[id];
         if item is persist:Error {
             return dsHttp:errorResponse(item, "Holiday", [id]);
         }
-        return dataserviceToHolidayRecord(item);
+        return dataserviceToHolidayPayload(item);
     }
 }
-
-# The JSON form of `Document`.
-#
-# + id - The `id` field of `Document`
-# + title - The `title` field of `Document`
-# + issuedOn - The `issuedOn` field of `Document`, as an ISO 8601 date
-# + expiresOn - The `expiresOn` field of `Document`, as an ISO 8601 date
-# + opensAt - The `opensAt` field of `Document`, as an ISO 8601 time
-# + createdAt - The `createdAt` field of `Document`, as an ISO 8601 date-time without an offset
-# + signedAt - The `signedAt` field of `Document`, as an ISO 8601 date-time in UTC
-# + content - The `content` field of `Document`, as a base64 string
-# + thumbnail - The `thumbnail` field of `Document`, as a base64 string
-# + status - The `status` field of `Document`
-public type DocumentRecord record {|
-    readonly int id;
-    string title;
-    string issuedOn;
-    string? expiresOn;
-    string opensAt;
-    string createdAt;
-    string? signedAt;
-    string content;
-    string? thumbnail;
-    Status status;
-|};
-
-# The JSON form of `DocumentInsert`.
-public type DocumentInsertRecord DocumentRecord;
-
-# The JSON form of `DocumentUpdate`.
-#
-# + title - The `title` field of `DocumentUpdate`
-# + issuedOn - The `issuedOn` field of `DocumentUpdate`, as an ISO 8601 date
-# + expiresOn - The `expiresOn` field of `DocumentUpdate`, as an ISO 8601 date
-# + opensAt - The `opensAt` field of `DocumentUpdate`, as an ISO 8601 time
-# + createdAt - The `createdAt` field of `DocumentUpdate`, as an ISO 8601 date-time without an offset
-# + signedAt - The `signedAt` field of `DocumentUpdate`, as an ISO 8601 date-time in UTC
-# + content - The `content` field of `DocumentUpdate`, as a base64 string
-# + thumbnail - The `thumbnail` field of `DocumentUpdate`, as a base64 string
-# + status - The `status` field of `DocumentUpdate`
-public type DocumentUpdateRecord record {|
-    string title?;
-    string issuedOn?;
-    string? expiresOn?;
-    string opensAt?;
-    string createdAt?;
-    string? signedAt?;
-    string content?;
-    string? thumbnail?;
-    Status status?;
-|};
-
-# A list of documents.
-#
-# + items - The documents
-public type DocumentList record {|
-    DocumentRecord[] items;
-|};
-
-# The response to creating one document.
-#
-# + body - The created document
-public type DocumentCreated record {|
-    *http:Created;
-    DocumentRecord body;
-|};
-
-# The response to creating several documents.
-#
-# + body - The created documents
-public type DocumentListCreated record {|
-    *http:Created;
-    DocumentList body;
-|};
-
-# The JSON form of `Holiday`.
-#
-# + id - The `id` field of `Holiday`
-# + day - The `day` field of `Holiday`, as an ISO 8601 date
-public type HolidayRecord record {|
-    readonly int id;
-    string day;
-|};
-
-# A list of holidays.
-#
-# + items - The holidays
-public type HolidayList record {|
-    HolidayRecord[] items;
-|};
 
 # Converts a `Document` to its JSON form.
 #
 # + value - The `Document` record
 # + return - The JSON form
-isolated function dataserviceToDocumentRecord(Document value) returns DocumentRecord => {
+isolated function dataserviceToDocumentPayload(Document value) returns DocumentPayload => {
     id: value.id,
     title: value.title,
     issuedOn: dataservice:dateToString(value.issuedOn),
@@ -244,7 +154,7 @@ isolated function dataserviceToDocumentRecord(Document value) returns DocumentRe
 #
 # + wire - The JSON form
 # + return - The persist value, or the response for a value that is not in its format
-isolated function dataserviceFromDocumentInsertRecord(DocumentInsertRecord wire) returns DocumentInsert|dsHttp:InvalidInput {
+isolated function dataserviceFromDocumentInsertPayload(DocumentInsertPayload wire) returns DocumentInsert|dsHttp:InvalidInput {
     time:Date|dataservice:ConversionError issuedOn = dataservice:dateFromString(wire.issuedOn);
     if issuedOn is dataservice:ConversionError {
         return dsHttp:invalidInput(issuedOn, "Document", "issuedOn");
@@ -280,7 +190,7 @@ isolated function dataserviceFromDocumentInsertRecord(DocumentInsertRecord wire)
 #
 # + wire - The JSON form
 # + return - The persist value, or the response for a value that is not in its format
-isolated function dataserviceFromDocumentUpdateRecord(DocumentUpdateRecord wire) returns DocumentUpdate|dsHttp:InvalidInput {
+isolated function dataserviceFromDocumentUpdatePayload(DocumentUpdatePayload wire) returns DocumentUpdate|dsHttp:InvalidInput {
     DocumentUpdate value = {};
     string? title = wire?.title;
     if title !is () {
@@ -365,7 +275,7 @@ isolated function dataserviceFromDocumentUpdateRecord(DocumentUpdateRecord wire)
 #
 # + value - The `Holiday` record
 # + return - The JSON form
-isolated function dataserviceToHolidayRecord(Holiday value) returns HolidayRecord => {
+isolated function dataserviceToHolidayPayload(Holiday value) returns HolidayPayload => {
     id: value.id,
     day: dataservice:dateToString(value.day)
 };
