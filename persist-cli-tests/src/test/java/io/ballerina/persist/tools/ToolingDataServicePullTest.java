@@ -63,13 +63,11 @@ public class ToolingDataServicePullTest {
         Assert.assertFalse(model.matches("(?s).*@dataservice:Expose\\s+(@[^\\n]*\\s+)*public type Gadget.*"), model);
         Assert.assertTrue(output.contains("WARNING: the table 'gadgets' has an unsupported data type, so its " +
                 "entity 'Gadget' is not exposed."), output);
-        Assert.assertTrue(output.contains("The table 'order_items' is exposed as the entity 'OrderItem'."), output);
-        Assert.assertTrue(output.contains("The exposed entities allow every action. Set 'operations' in their " +
-                "@dataservice:Expose annotations to restrict them."), output);
+        Assert.assertFalse(output.contains("is exposed as the entity"), output);
+        Assert.assertFalse(output.contains("allow every action"), output);
         Assert.assertTrue(output.contains("Enabled the HTTP data service in the [[tool.persist]] entry of " +
                 "persist/model.bal in Ballerina.toml."), output);
-        Assert.assertTrue(output.contains("Execute `bal build` to generate the persist client and the HTTP data " +
-                "service."), output);
+        Assert.assertFalse(output.contains("Execute `bal build`"), output);
         String toml = Files.readString(SOURCES.resolve(subDir).resolve("Ballerina.toml"));
         Assert.assertTrue(toml.contains("[[tool.persist]]"), toml);
         Assert.assertTrue(toml.contains("options.datastore = \"mysql\""), toml);
@@ -116,8 +114,7 @@ public class ToolingDataServicePullTest {
         Assert.assertEquals(model.split("@dataservice:Expose", -1).length - 1, 2, model);
         Assert.assertEquals(Files.readString(SOURCES.resolve(subDir).resolve("Ballerina.toml")), toml);
         Assert.assertFalse(output.contains("Enabled the"), output);
-        Assert.assertTrue(output.contains("Execute `bal build` to generate the persist client and the HTTP data " +
-                "service."), output);
+        Assert.assertFalse(output.contains("Execute `bal build`"), output);
     }
 
     @Test(description = "pull without --dataservice into an entry without a data service behaves as before")

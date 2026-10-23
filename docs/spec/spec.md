@@ -392,14 +392,12 @@ Warnings are printed with `WARNING:` and do not.
 | A duplicate operation | error | `duplicate operation '<value>' in the @dataservice:Expose annotation of the entity '<Entity>'.` |
 | Annotations without `options.dataservice` | warning | `the model has @dataservice:Expose annotations, but no data service is generated. Set 'options.dataservice.protocol' in the [[tool.persist]] entry to generate one.` |
 | `pull` skips an entity | warning | `the table '<table>' has an unsupported data type, so its entity '<Entity>' is not exposed.` |
-| `pull` annotates entities | info | `The exposed entities allow every action. Set 'operations' in their @dataservice:Expose annotations to restrict them.` |
 | `generate` without `--dataservice` on an annotated model | info | `the model has @dataservice:Expose annotations. Use the '--dataservice' option to also generate a data service.` |
 | `--expose-tables` without `--dataservice`, when the entry does not enable a data service | error | `the '--expose-tables' option requires the '--dataservice' option.` |
 | `--expose-tables` names a table that was not pulled | error | `the table '<table>' in '--expose-tables' is not a pulled table.` |
 | `--expose-tables` names a table with an unsupported data type | error | `the table '<table>' in '--expose-tables' has an unsupported data type, so its entity '<Entity>' cannot be exposed.` |
-| `pull` exposes an entity whose name differs from its table's | info | `The table '<table>' is exposed as the entity '<Entity>'.` |
 | `add --dataservice` succeeds | info | The next steps `2. Add the @dataservice:Expose annotation to each entity to expose.` and `3. Execute `bal build` to generate the persist client and the <PROTOCOL> data service during package build.` |
-| `pull` annotates entities, with `--dataservice` or from the entry | info | With `--dataservice` only, `Enabled the <PROTOCOL> data service in the [[tool.persist]] entry of persist/model.bal in Ballerina.toml.`, then the entity mappings and the actions message above, then `Execute `bal build` to generate the persist client and the <PROTOCOL> data service.` |
+| `pull --dataservice` succeeds | info | `Enabled the <PROTOCOL> data service in the [[tool.persist]] entry of persist/model.bal in Ballerina.toml.` |
 
 `<value>` in an operation message is the operation as it is written, such as `dataservice:READ` or `"read"`. Every
 invalid annotation, and every invalid `--expose-tables` name, is reported, one line each.

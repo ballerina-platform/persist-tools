@@ -249,7 +249,7 @@ public class Pull implements BLauncherCmd {
             return;
         }
 
-        PullExposure exposure = new PullExposure(Set.of(), List.of(), List.of());
+        PullExposure exposure = new PullExposure(Set.of(), List.of());
         if (protocol != null) {
             try {
                 exposure = PullExposure.select(entityModule, exposeTables);
@@ -271,23 +271,15 @@ public class Pull implements BLauncherCmd {
             return;
         }
         errStream.println("Introspection complete! The " + modelDisplayPath + " file created successfully.");
-        if (protocol != null) {
-            String protocolName = protocol.toUpperCase(Locale.ROOT);
-            // A protocol taken from the entry leaves the entry as it is.
-            if (dataservice != null) {
-                try {
-                    recordDataService();
-                } catch (BalException | IOException e) {
-                    Utils.printErrors(errStream, e.getMessage());
-                    return;
-                }
-                errStream.printf(DataServiceMessages.PULL_ENABLED + "%n", protocolName);
+        // A protocol taken from the entry leaves the entry as it is.
+        if (dataservice != null) {
+            try {
+                recordDataService();
+            } catch (BalException | IOException e) {
+                Utils.printErrors(errStream, e.getMessage());
+                return;
             }
-            exposure.mappings().forEach(errStream::println);
-            if (!exposure.exposed().isEmpty()) {
-                errStream.println(DataServiceMessages.PULL_ANNOTATES_ENTITIES);
-            }
-            errStream.printf(DataServiceMessages.PULL_BUILD_STEP + "%n", protocolName);
+            errStream.printf(DataServiceMessages.PULL_ENABLED + "%n", dataservice.toUpperCase(Locale.ROOT));
         }
     }
 

@@ -48,8 +48,6 @@ public class PullExposureTest {
         Assert.assertEquals(exposure.exposed(), Set.of("OrderItem", "Customer"));
         Assert.assertEquals(exposure.warnings(), List.of("the table 'gadgets' has an unsupported data type, so " +
                 "its entity 'Gadget' is not exposed."));
-        Assert.assertEquals(exposure.mappings(), List.of("The table 'order_items' is exposed as the entity " +
-                "'OrderItem'."));
     }
 
     @Test
@@ -57,7 +55,6 @@ public class PullExposureTest {
         PullExposure exposure = PullExposure.select(pulled, " Customer , ");
         Assert.assertEquals(exposure.exposed(), Set.of("Customer"));
         Assert.assertEquals(exposure.warnings(), List.of());
-        Assert.assertEquals(exposure.mappings(), List.of());
     }
 
     @Test
