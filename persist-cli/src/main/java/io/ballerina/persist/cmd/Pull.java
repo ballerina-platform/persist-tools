@@ -21,10 +21,16 @@ import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.configuration.PersistConfiguration;
+import io.ballerina.persist.dataservice.DataServiceMessages;
+import io.ballerina.persist.dataservice.DataServiceOptions;
+import io.ballerina.persist.dataservice.DataServiceToml;
+import io.ballerina.persist.dataservice.PullExposure;
 import io.ballerina.persist.introspect.Introspector;
 import io.ballerina.persist.introspect.IntrospectorBuilder;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.SourceGenerator;
+import io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils;
+import io.ballerina.persist.utils.FileUtils;
 import picocli.CommandLine;
 
 import java.io.IOException;
@@ -37,7 +43,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Scanner;
+import java.util.Set;
 
 import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 import static io.ballerina.persist.PersistToolsConstants.MODEL_FILE;
@@ -45,6 +53,7 @@ import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.utils.BalProjectUtils.validateBallerinaProject;
 import static io.ballerina.persist.utils.BalProjectUtils.validatePullCommandOptions;
 import static io.ballerina.persist.utils.DatabaseConnector.readDatabasePassword;
+import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 
 @CommandLine.Command(name = "pull", description = "Create model.bal file according to given database schema")
 public class Pull implements BLauncherCmd {
@@ -99,6 +108,15 @@ public class Pull implements BLauncherCmd {
     @CommandLine.Option(names = { "--model" })
     private String model;
 
+    @CommandLine.Option(names = { "--dataservice" }, description = "Protocol of the generated data service")
+    private String dataservice;
+
+    @CommandLine.Option(names = { "--expose-tables" }, description = "Tables whose entities the data service " +
+            "exposes")
+    private String exposeTables;
+
+    private String protocol;
+
     @Override
     public void execute() {
         Scanner scanner = new Scanner(System.in, StandardCharsets.UTF_8);
@@ -112,6 +130,10 @@ public class Pull implements BLauncherCmd {
             validatePullCommandOptions(datastore, host, port, user, database);
         } catch (BalException e) {
             errStream.println("ERROR: invalid option(s): " + System.lineSeparator() + e.getMessage());
+            return;
+        }
+
+        if (!validateDataServiceOptions()) {
             return;
         }
 
@@ -227,17 +249,104 @@ public class Pull implements BLauncherCmd {
             return;
         }
 
+        PullExposure exposure = new PullExposure(Set.of(), List.of());
+        if (protocol != null) {
+            try {
+                exposure = PullExposure.select(entityModule, exposeTables);
+            } catch (BalException e) {
+                Utils.printErrors(errStream, e.getMessage());
+                return;
+            }
+            exposure.warnings().forEach(warning -> errStream.println("WARNING: " + warning));
+        }
+
         SourceGenerator sourceGenerator = new SourceGenerator(sourcePath, targetModelDir,
                 "Introspect.db", entityModule);
 
         try {
-            sourceGenerator.createDbModel();
+            sourceGenerator.createDbModel(exposure.exposed());
         } catch (BalException e) {
             errStream.printf(String.format("ERROR: failed to generate model for introspected database: %s%n",
                     e.getMessage()));
             return;
         }
         errStream.println("Introspection complete! The " + modelDisplayPath + " file created successfully.");
+        // A protocol taken from the entry leaves the entry as it is.
+        if (dataservice != null) {
+            try {
+                recordDataService();
+            } catch (BalException | IOException e) {
+                Utils.printErrors(errStream, e.getMessage());
+                return;
+            }
+            errStream.printf(DataServiceMessages.PULL_ENABLED + "%n", dataservice.toUpperCase(Locale.ROOT));
+        }
+    }
+
+    // Checks every data service error that does not need the database, before anything is asked or written.
+    // Without --dataservice, an entry of the default model that already enables a data service gives the protocol.
+    private boolean validateDataServiceOptions() {
+        Optional<DataServiceToml.Entry> entry = Optional.empty();
+        if (dataservice != null || model == null || model.isBlank()) {
+            try {
+                validateBallerinaProject(Paths.get(this.sourcePath));
+                entry = DataServiceToml.defaultModelEntry(Files.readString(Paths.get(this.sourcePath,
+                        BALLERINA_TOML)));
+            } catch (BalException e) {
+                if (dataservice != null) {
+                    errStream.println(e.getMessage().stripTrailing());
+                    return false;
+                }
+            } catch (IOException e) {
+                if (dataservice != null) {
+                    Utils.printErrors(errStream, e.getMessage());
+                    return false;
+                }
+            }
+        }
+        try {
+            if (dataservice != null) {
+                protocol = DataServiceOptions.validateProtocol(dataservice);
+            } else if (entry.isPresent() && entry.get().dataService().isPresent()
+                    && (model == null || model.isBlank())) {
+                protocol = DataServiceOptions.from(entry.get().dataService().get()).protocol();
+            } else {
+                if (exposeTables != null) {
+                    throw new BalException(DataServiceMessages.EXPOSE_TABLES_WITHOUT_DATASERVICE);
+                }
+                return true;
+            }
+            if (model != null && !model.isBlank()) {
+                throw new BalException(DataServiceMessages.NAMED_MODEL);
+            }
+            String packageName = TomlSyntaxUtils.readPackageName(this.sourcePath);
+            if (entry.isPresent() && !entry.get().targetModule(packageName).equals(packageName)) {
+                throw new BalException(String.format(DataServiceMessages.TARGET_MODULE, packageName, packageName));
+            }
+            if (entry.isPresent() && entry.get().withInitParams()) {
+                throw new BalException(DataServiceMessages.WITH_INIT_PARAMS);
+            }
+            return true;
+        } catch (BalException e) {
+            Utils.printErrors(errStream, e.getMessage());
+            return false;
+        }
+    }
+
+    // Sets the protocol in the default model's entry, creating the entry as `bal persist add` would.
+    private void recordDataService() throws BalException, IOException {
+        Path tomlPath = Paths.get(this.sourcePath, BALLERINA_TOML);
+        String toml = Files.readString(tomlPath);
+        Optional<DataServiceToml.Entry> entry = DataServiceToml.defaultModelEntry(toml);
+        String updated;
+        if (entry.isPresent()) {
+            updated = DataServiceToml.setProtocol(toml, entry.get(), dataservice);
+        } else {
+            String packageName = TomlSyntaxUtils.readPackageName(this.sourcePath);
+            updated = new Add(this.sourcePath).updateBallerinaToml(tomlPath, packageName, datastore, null,
+                    false, false, "generate-db-client", DataServiceToml.DEFAULT_MODEL_PATH, dataservice);
+        }
+        FileUtils.writeToTargetFile(updated, tomlPath.toAbsolutePath().toString());
     }
 
     /**

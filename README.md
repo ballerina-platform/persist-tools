@@ -9,6 +9,8 @@ The Ballerina `persist` Tool which supports several operations on the Ballerina 
 
 The `persist` commands will make it easy to enable Ballerina Persistence Layer in a bal project. With this support, users need not worry about the persistence layer in a project. Users can define an entity data model, validate the model and generate `persist` clients, which provide convenient APIs to store and query data in a data store.
 
+The tool can also generate an HTTP data service over the entities of a model that carry the `@dataservice:Expose` annotation. Enable it with `bal persist add --dataservice http`, or see [Data service generation](docs/spec/spec.md#7-data-service-generation).
+
 For more information, see [`persist` API Documentation](https://lib.ballerina.io/ballerina/persist/latest).
 
 ## Issues and projects

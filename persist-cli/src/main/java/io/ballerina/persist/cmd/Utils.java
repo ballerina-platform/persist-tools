@@ -24,6 +24,18 @@ import java.io.PrintStream;
 
 public class Utils {
 
+    /**
+     * Prints an error whose message may hold several lines, each with persist's `ERROR:` prefix.
+     *
+     * @param errStream the stream to print to
+     * @param message   the message
+     */
+    public static void printErrors(PrintStream errStream, String message) {
+        for (String line : message.split("\\R")) {
+            errStream.println("ERROR: " + line);
+        }
+    }
+
     public static boolean validateEagerLoading(String datastore, boolean eagerLoading, PrintStream errStream) {
         if (eagerLoading && !datastore.equals(PersistToolsConstants.SupportedDataSources.MYSQL_DB) &&
                     !datastore.equals(PersistToolsConstants.SupportedDataSources.MSSQL_DB) &&

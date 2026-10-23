@@ -13,6 +13,14 @@
     },
     "withInitParams": {
       "type": "boolean"
+    },
+    "dataservice": {
+      "type": "object",
+      "properties": {
+        "protocol": {"type": "string"},
+        "basePath": {"type": "string"}
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false

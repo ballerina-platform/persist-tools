@@ -20,6 +20,12 @@ package io.ballerina.persist.cmd;
 import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
+import io.ballerina.persist.dataservice.DataServiceMessages;
+import io.ballerina.persist.dataservice.DataServiceModel;
+import io.ballerina.persist.dataservice.DataServiceOptions;
+import io.ballerina.persist.dataservice.ExposeAnnotations;
+import io.ballerina.persist.dataservice.ExposedEntity;
+import io.ballerina.persist.dataservice.HttpDataServiceGenerator;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.SourceGenerator;
 import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
@@ -41,7 +47,9 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.getConfigDeclaration;
@@ -100,6 +108,9 @@ public class Generate implements BLauncherCmd {
     @CommandLine.Option(names = { "--model" })
     private String model;
 
+    @CommandLine.Option(names = { "--dataservice" }, description = "Protocol of the generated data service")
+    private String dataservice;
+
     @Override
     public void execute() {
         Path generatedSourceDirPath;
@@ -147,6 +158,14 @@ public class Generate implements BLauncherCmd {
         } catch (BalException e) {
             errStream.println(e.getMessage());
             return;
+        }
+        if (dataservice != null) {
+            try {
+                Add.validateDataServiceFlags(dataservice, packageName, module, model, initParams);
+            } catch (BalException e) {
+                errStream.printf("ERROR: %s%n", e.getMessage());
+                return;
+            }
         }
 
         if (module == null) {
@@ -231,13 +250,40 @@ public class Generate implements BLauncherCmd {
         String schemaFileName = schemaFileNamePath != null ? schemaFileNamePath.toString() : schemaFilePath.toString();
         String modelDefFileName = model == null ? schemaFileName : String.format("%s/%s", model, schemaFileName);
 
+        // With a data service, the model is validated before anything is written, so that an error writes nothing.
+        List<ExposedEntity> exposedEntities = null;
+        if (dataservice != null) {
+            Module module;
+            try {
+                BalProjectUtils.validateSchemaFile(schemaFilePath, modelDefFileName);
+                module = BalProjectUtils.getEntities(schemaFilePath);
+            } catch (BalException e) {
+                errStream.printf("ERROR: Failed to generate types and client for the definition file(%s). %s%n",
+                        modelDefFileName, e.getMessage());
+                return;
+            }
+            if (module.getEntityMap().isEmpty()) {
+                errStream.printf("ERROR: the model definition file(%s) does not contain any entity definition.%n",
+                        modelDefFileName);
+                return;
+            }
+            try {
+                exposedEntities = DataServiceModel.resolve(module, ExposeAnnotations.read(schemaFilePath),
+                        datastore);
+            } catch (BalException e) {
+                Utils.printErrors(errStream, e.getMessage());
+                return;
+            }
+        }
         try {
             BalProjectUtils.updateToml(sourcePath, datastore, moduleNameWithPackage, model);
             String syntaxTree = updateBallerinaToml(Paths.get(this.sourcePath, BALLERINA_TOML),
                     datastore, testDatastore);
             FileUtils.writeToTargetFile(syntaxTree,
                     Paths.get(this.sourcePath, BALLERINA_TOML).toAbsolutePath().toString());
-            BalProjectUtils.validateSchemaFile(schemaFilePath, modelDefFileName);
+            if (exposedEntities == null) {
+                BalProjectUtils.validateSchemaFile(schemaFilePath, modelDefFileName);
+            }
             Module module = BalProjectUtils.getEntities(schemaFilePath);
             if (module.getEntityMap().isEmpty()) {
                 errStream.printf("ERROR: the model definition file(%s) does not contain any entity definition.%n",
@@ -284,7 +330,34 @@ public class Generate implements BLauncherCmd {
                     datastore, e.getMessage()));
             return;
         }
+        if (exposedEntities != null) {
+            HttpDataServiceGenerator generator = new HttpDataServiceGenerator(exposedEntities,
+                    DataServiceOptions.defaults(dataservice), entityModule.getModuleName(), true);
+            try {
+                FileUtils.writeToTargetFile(generator.generateService(), generatedSourceDirPath
+                        .resolve(HttpDataServiceGenerator.SERVICE_FILE).toAbsolutePath().toString());
+                Optional<String> types = generator.generateTypes();
+                if (types.isPresent()) {
+                    FileUtils.writeToTargetFile(types.get(), generatedSourceDirPath
+                            .resolve(HttpDataServiceGenerator.TYPES_FILE).toAbsolutePath().toString());
+                }
+                FileUtils.writeToTargetFile(generator.generateConfig(), generatedSourceDirPath
+                        .resolve(HttpDataServiceGenerator.CONFIG_FILE).toAbsolutePath().toString());
+            } catch (BalException | IOException e) {
+                errStream.printf("ERROR: failed to generate the data service. %s%n", e.getMessage());
+                return;
+            }
+        }
         errStream.println("Persist client and entity types generated successfully in the " + module + " directory.");
+        if (exposedEntities == null) {
+            try {
+                if (ExposeAnnotations.isPresent(schemaFilePath)) {
+                    errStream.println(DataServiceMessages.GENERATE_WITHOUT_OPTION);
+                }
+            } catch (BalException e) {
+                errStream.printf("ERROR: %s%n", e.getMessage());
+            }
+        }
 
         if (testDatastore != null) {
             try {
