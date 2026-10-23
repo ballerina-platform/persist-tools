@@ -24,7 +24,7 @@ service /api on dataserviceListener {
         DocumentPayload[]|persist:Error items = from Document item in dataserviceClient->/documents(Document)
             select dataserviceToDocumentPayload(item);
         if items is persist:Error {
-            return dsHttp:internalError(items);
+            return dsHttp:toListError(items);
         }
         return {items};
     }
@@ -32,10 +32,10 @@ service /api on dataserviceListener {
     # Gets a document by its key.
     #
     # + return - The document, or the error response
-    resource function get documents/[int id]() returns DocumentPayload|dsHttp:ErrorResponse {
+    resource function get documents/[int id]() returns DocumentPayload|dsHttp:NotFound|dsHttp:InternalError {
         Document|persist:Error item = dataserviceClient->/documents/[id];
         if item is persist:Error {
-            return dsHttp:errorResponse(item, "Document", [id]);
+            return dsHttp:toGetError(item, "Document", [id]);
         }
         return dataserviceToDocumentPayload(item);
     }
@@ -44,7 +44,7 @@ service /api on dataserviceListener {
     #
     # + return - The created document or documents, or the error response
     resource function post documents(DocumentInsertPayload|DocumentInsertPayload[] payload)
-            returns DocumentCreated|DocumentListCreated|dsHttp:ErrorResponse {
+            returns DocumentCreated|DocumentListCreated|dsHttp:InvalidInput|dsHttp:NotFound|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         DocumentInsertPayload[] entries = payload is DocumentInsertPayload[] ? payload : [payload];
         DocumentInsert[] values = [];
         foreach DocumentInsertPayload entry in entries {
@@ -58,12 +58,12 @@ service /api on dataserviceListener {
         if values.length() > 0 {
             int[]|persist:Error keys = dataserviceClient->/documents.post(values);
             if keys is persist:Error {
-                return dsHttp:errorResponse(keys, "Document");
+                return dsHttp:toCreateError(keys, "Document");
             }
             foreach int id in keys {
                 Document|persist:Error item = dataserviceClient->/documents/[id];
                 if item is persist:Error {
-                    return dsHttp:errorResponse(item, "Document", [id]);
+                    return dsHttp:toCreateError(item, "Document", [id]);
                 }
                 items.push(dataserviceToDocumentPayload(item));
             }
@@ -73,7 +73,7 @@ service /api on dataserviceListener {
         }
         DocumentPayload created = items[0];
         return <DocumentCreated>{
-            headers: {"Location": dsHttp:location("/api/documents", [created.id])},
+            headers: {"Location": dsHttp:buildLocation("/api/documents", [created.id])},
             body: created
         };
     }
@@ -81,7 +81,8 @@ service /api on dataserviceListener {
     # Updates the given fields of a document.
     #
     # + return - The updated document, or the error response
-    resource function patch documents/[int id](DocumentUpdatePayload payload) returns DocumentPayload|dsHttp:ErrorResponse {
+    resource function patch documents/[int id](DocumentUpdatePayload payload)
+            returns DocumentPayload|dsHttp:InvalidInput|dsHttp:NotFound|dsHttp:ConstraintViolation|dsHttp:InternalError {
         DocumentUpdate|dsHttp:InvalidInput value = dataserviceFromDocumentUpdatePayload(payload);
         if value is dsHttp:InvalidInput {
             return value;
@@ -93,7 +94,7 @@ service /api on dataserviceListener {
             item = dataserviceClient->/documents/[id].put(value);
         }
         if item is persist:Error {
-            return dsHttp:errorResponse(item, "Document", [id]);
+            return dsHttp:toUpdateError(item, "Document", [id]);
         }
         return dataserviceToDocumentPayload(item);
     }
@@ -101,10 +102,10 @@ service /api on dataserviceListener {
     # Deletes a document and returns it.
     #
     # + return - The deleted document, or the error response
-    resource function delete documents/[int id]() returns DocumentPayload|dsHttp:ErrorResponse {
+    resource function delete documents/[int id]() returns DocumentPayload|dsHttp:NotFound|dsHttp:ConstraintViolation|dsHttp:InternalError {
         Document|persist:Error item = dataserviceClient->/documents/[id].delete();
         if item is persist:Error {
-            return dsHttp:errorResponse(item, "Document", [id]);
+            return dsHttp:toDeleteError(item, "Document", [id]);
         }
         return dataserviceToDocumentPayload(item);
     }
@@ -116,7 +117,7 @@ service /api on dataserviceListener {
         HolidayPayload[]|persist:Error items = from Holiday item in dataserviceClient->/holidays(Holiday)
             select dataserviceToHolidayPayload(item);
         if items is persist:Error {
-            return dsHttp:internalError(items);
+            return dsHttp:toListError(items);
         }
         return {items};
     }
@@ -124,10 +125,10 @@ service /api on dataserviceListener {
     # Gets a holiday by its key.
     #
     # + return - The holiday, or the error response
-    resource function get holidays/[int id]() returns HolidayPayload|dsHttp:ErrorResponse {
+    resource function get holidays/[int id]() returns HolidayPayload|dsHttp:NotFound|dsHttp:InternalError {
         Holiday|persist:Error item = dataserviceClient->/holidays/[id];
         if item is persist:Error {
-            return dsHttp:errorResponse(item, "Holiday", [id]);
+            return dsHttp:toGetError(item, "Holiday", [id]);
         }
         return dataserviceToHolidayPayload(item);
     }
@@ -157,31 +158,31 @@ isolated function dataserviceToDocumentPayload(Document value) returns DocumentP
 isolated function dataserviceFromDocumentInsertPayload(DocumentInsertPayload wire) returns DocumentInsert|dsHttp:InvalidInput {
     time:Date|dataservice:ConversionError issuedOn = dataservice:dateFromString(wire.issuedOn);
     if issuedOn is dataservice:ConversionError {
-        return dsHttp:invalidInput(issuedOn, "Document", "issuedOn");
+        return dsHttp:toInvalidInput(issuedOn, "Document", "issuedOn");
     }
     time:Date?|dataservice:ConversionError expiresOn = let string? expiresOnText = wire.expiresOn in expiresOnText is () ? () : dataservice:dateFromString(expiresOnText);
     if expiresOn is dataservice:ConversionError {
-        return dsHttp:invalidInput(expiresOn, "Document", "expiresOn");
+        return dsHttp:toInvalidInput(expiresOn, "Document", "expiresOn");
     }
     time:TimeOfDay|dataservice:ConversionError opensAt = dataservice:timeOfDayFromString(wire.opensAt);
     if opensAt is dataservice:ConversionError {
-        return dsHttp:invalidInput(opensAt, "Document", "opensAt");
+        return dsHttp:toInvalidInput(opensAt, "Document", "opensAt");
     }
     time:Civil|dataservice:ConversionError createdAt = dataservice:civilFromString(wire.createdAt);
     if createdAt is dataservice:ConversionError {
-        return dsHttp:invalidInput(createdAt, "Document", "createdAt");
+        return dsHttp:toInvalidInput(createdAt, "Document", "createdAt");
     }
     time:Utc?|dataservice:ConversionError signedAt = let string? signedAtText = wire.signedAt in signedAtText is () ? () : dataservice:utcFromString(signedAtText);
     if signedAt is dataservice:ConversionError {
-        return dsHttp:invalidInput(signedAt, "Document", "signedAt");
+        return dsHttp:toInvalidInput(signedAt, "Document", "signedAt");
     }
     byte[]|dataservice:ConversionError content = dataservice:bytesFromString(wire.content);
     if content is dataservice:ConversionError {
-        return dsHttp:invalidInput(content, "Document", "content");
+        return dsHttp:toInvalidInput(content, "Document", "content");
     }
     byte[]?|dataservice:ConversionError thumbnail = let string? thumbnailText = wire.thumbnail in thumbnailText is () ? () : dataservice:bytesFromString(thumbnailText);
     if thumbnail is dataservice:ConversionError {
-        return dsHttp:invalidInput(thumbnail, "Document", "thumbnail");
+        return dsHttp:toInvalidInput(thumbnail, "Document", "thumbnail");
     }
     return {id: wire.id, title: wire.title, issuedOn, expiresOn, opensAt, createdAt, signedAt, content, thumbnail, status: wire.status};
 }
@@ -200,7 +201,7 @@ isolated function dataserviceFromDocumentUpdatePayload(DocumentUpdatePayload wir
     if issuedOnText is string {
         time:Date|dataservice:ConversionError issuedOn = dataservice:dateFromString(issuedOnText);
         if issuedOn is dataservice:ConversionError {
-            return dsHttp:invalidInput(issuedOn, "Document", "issuedOn");
+            return dsHttp:toInvalidInput(issuedOn, "Document", "issuedOn");
         }
         value.issuedOn = issuedOn;
     }
@@ -211,7 +212,7 @@ isolated function dataserviceFromDocumentUpdatePayload(DocumentUpdatePayload wir
         } else {
             time:Date|dataservice:ConversionError expiresOn = dataservice:dateFromString(expiresOnText);
             if expiresOn is dataservice:ConversionError {
-                return dsHttp:invalidInput(expiresOn, "Document", "expiresOn");
+                return dsHttp:toInvalidInput(expiresOn, "Document", "expiresOn");
             }
             value.expiresOn = expiresOn;
         }
@@ -220,7 +221,7 @@ isolated function dataserviceFromDocumentUpdatePayload(DocumentUpdatePayload wir
     if opensAtText is string {
         time:TimeOfDay|dataservice:ConversionError opensAt = dataservice:timeOfDayFromString(opensAtText);
         if opensAt is dataservice:ConversionError {
-            return dsHttp:invalidInput(opensAt, "Document", "opensAt");
+            return dsHttp:toInvalidInput(opensAt, "Document", "opensAt");
         }
         value.opensAt = opensAt;
     }
@@ -228,7 +229,7 @@ isolated function dataserviceFromDocumentUpdatePayload(DocumentUpdatePayload wir
     if createdAtText is string {
         time:Civil|dataservice:ConversionError createdAt = dataservice:civilFromString(createdAtText);
         if createdAt is dataservice:ConversionError {
-            return dsHttp:invalidInput(createdAt, "Document", "createdAt");
+            return dsHttp:toInvalidInput(createdAt, "Document", "createdAt");
         }
         value.createdAt = createdAt;
     }
@@ -239,7 +240,7 @@ isolated function dataserviceFromDocumentUpdatePayload(DocumentUpdatePayload wir
         } else {
             time:Utc|dataservice:ConversionError signedAt = dataservice:utcFromString(signedAtText);
             if signedAt is dataservice:ConversionError {
-                return dsHttp:invalidInput(signedAt, "Document", "signedAt");
+                return dsHttp:toInvalidInput(signedAt, "Document", "signedAt");
             }
             value.signedAt = signedAt;
         }
@@ -248,7 +249,7 @@ isolated function dataserviceFromDocumentUpdatePayload(DocumentUpdatePayload wir
     if contentText is string {
         byte[]|dataservice:ConversionError content = dataservice:bytesFromString(contentText);
         if content is dataservice:ConversionError {
-            return dsHttp:invalidInput(content, "Document", "content");
+            return dsHttp:toInvalidInput(content, "Document", "content");
         }
         value.content = content;
     }
@@ -259,7 +260,7 @@ isolated function dataserviceFromDocumentUpdatePayload(DocumentUpdatePayload wir
         } else {
             byte[]|dataservice:ConversionError thumbnail = dataservice:bytesFromString(thumbnailText);
             if thumbnail is dataservice:ConversionError {
-                return dsHttp:invalidInput(thumbnail, "Document", "thumbnail");
+                return dsHttp:toInvalidInput(thumbnail, "Document", "thumbnail");
             }
             value.thumbnail = thumbnail;
         }

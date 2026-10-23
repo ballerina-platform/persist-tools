@@ -24,7 +24,7 @@ service /api on dataserviceListener {
         TicketPayload[]|persist:Error items = from Ticket item in dataserviceClient->/tickets(Ticket)
             select dataserviceToTicketPayload(item);
         if items is persist:Error {
-            return dsHttp:internalError(items);
+            return dsHttp:toListError(items);
         }
         return {items};
     }
@@ -32,10 +32,10 @@ service /api on dataserviceListener {
     # Gets a ticket by its key.
     #
     # + return - The ticket, or the error response
-    resource function get tickets/[int id]() returns TicketPayload|dsHttp:ErrorResponse {
+    resource function get tickets/[int id]() returns TicketPayload|dsHttp:NotFound|dsHttp:InternalError {
         Ticket|persist:Error item = dataserviceClient->/tickets/[id];
         if item is persist:Error {
-            return dsHttp:errorResponse(item, "Ticket", [id]);
+            return dsHttp:toGetError(item, "Ticket", [id]);
         }
         return dataserviceToTicketPayload(item);
     }
@@ -44,7 +44,7 @@ service /api on dataserviceListener {
     #
     # + return - The created ticket or tickets, or the error response
     resource function post tickets(TicketInsertPayload|TicketInsertPayload[] payload)
-            returns TicketCreated|TicketListCreated|dsHttp:ErrorResponse {
+            returns TicketCreated|TicketListCreated|dsHttp:InvalidInput|dsHttp:NotFound|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         TicketInsertPayload[] entries = payload is TicketInsertPayload[] ? payload : [payload];
         TicketInsert[] values = [];
         foreach TicketInsertPayload entry in entries {
@@ -58,12 +58,12 @@ service /api on dataserviceListener {
         if values.length() > 0 {
             int[]|persist:Error keys = dataserviceClient->/tickets.post(values);
             if keys is persist:Error {
-                return dsHttp:errorResponse(keys, "Ticket");
+                return dsHttp:toCreateError(keys, "Ticket");
             }
             foreach int id in keys {
                 Ticket|persist:Error item = dataserviceClient->/tickets/[id];
                 if item is persist:Error {
-                    return dsHttp:errorResponse(item, "Ticket", [id]);
+                    return dsHttp:toCreateError(item, "Ticket", [id]);
                 }
                 items.push(dataserviceToTicketPayload(item));
             }
@@ -73,7 +73,7 @@ service /api on dataserviceListener {
         }
         TicketPayload created = items[0];
         return <TicketCreated>{
-            headers: {"Location": dsHttp:location("/api/tickets", [created.id])},
+            headers: {"Location": dsHttp:buildLocation("/api/tickets", [created.id])},
             body: created
         };
     }
@@ -82,18 +82,18 @@ service /api on dataserviceListener {
     #
     # + return - The created order item or order items, or the error response
     resource function post orderitems(OrderItemInsert|OrderItemInsert[] payload)
-            returns OrderItemCreated|OrderItemListCreated|dsHttp:ErrorResponse {
+            returns OrderItemCreated|OrderItemListCreated|dsHttp:NotFound|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         OrderItemInsert[] values = payload is OrderItemInsert[] ? payload : [payload];
         OrderItem[] items = [];
         if values.length() > 0 {
             int[]|persist:Error keys = dataserviceClient->/orderitems.post(values);
             if keys is persist:Error {
-                return dsHttp:errorResponse(keys, "OrderItem");
+                return dsHttp:toCreateError(keys, "OrderItem");
             }
             foreach int id in keys {
                 OrderItem|persist:Error item = dataserviceClient->/orderitems/[id];
                 if item is persist:Error {
-                    return dsHttp:errorResponse(item, "OrderItem", [id]);
+                    return dsHttp:toCreateError(item, "OrderItem", [id]);
                 }
                 items.push(item);
             }
@@ -103,7 +103,7 @@ service /api on dataserviceListener {
         }
         OrderItem created = items[0];
         return <OrderItemCreated>{
-            headers: {"Location": dsHttp:location("/api/orderitems", [created.id])},
+            headers: {"Location": dsHttp:buildLocation("/api/orderitems", [created.id])},
             body: created
         };
     }
@@ -126,7 +126,7 @@ isolated function dataserviceToTicketPayload(Ticket value) returns TicketPayload
 isolated function dataserviceFromTicketInsertPayload(TicketInsertPayload wire) returns TicketInsert|dsHttp:InvalidInput {
     time:Date|dataservice:ConversionError openedOn = dataservice:dateFromString(wire.openedOn);
     if openedOn is dataservice:ConversionError {
-        return dsHttp:invalidInput(openedOn, "Ticket", "openedOn");
+        return dsHttp:toInvalidInput(openedOn, "Ticket", "openedOn");
     }
     return {subject: wire.subject, openedOn};
 }
