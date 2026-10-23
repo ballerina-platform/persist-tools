@@ -21,8 +21,8 @@ service /api on dataserviceListener {
     #
     # + return - The tickets, or an internal error
     resource function get tickets() returns TicketList|dsHttp:InternalError {
-        TicketRecord[]|persist:Error items = from Ticket item in dataserviceClient->/tickets(Ticket)
-            select dataserviceToTicketRecord(item);
+        TicketPayload[]|persist:Error items = from Ticket item in dataserviceClient->/tickets(Ticket)
+            select dataserviceToTicketPayload(item);
         if items is persist:Error {
             return dsHttp:internalError(items);
         }
@@ -32,29 +32,29 @@ service /api on dataserviceListener {
     # Gets a ticket by its key.
     #
     # + return - The ticket, or the error response
-    resource function get tickets/[int id]() returns TicketRecord|dsHttp:ErrorResponse {
+    resource function get tickets/[int id]() returns TicketPayload|dsHttp:ErrorResponse {
         Ticket|persist:Error item = dataserviceClient->/tickets/[id];
         if item is persist:Error {
             return dsHttp:errorResponse(item, "Ticket", [id]);
         }
-        return dataserviceToTicketRecord(item);
+        return dataserviceToTicketPayload(item);
     }
 
     # Creates one ticket, or several from an array.
     #
     # + return - The created ticket or tickets, or the error response
-    resource function post tickets(TicketInsertRecord|TicketInsertRecord[] payload)
+    resource function post tickets(TicketInsertPayload|TicketInsertPayload[] payload)
             returns TicketCreated|TicketListCreated|dsHttp:ErrorResponse {
-        TicketInsertRecord[] entries = payload is TicketInsertRecord[] ? payload : [payload];
+        TicketInsertPayload[] entries = payload is TicketInsertPayload[] ? payload : [payload];
         TicketInsert[] values = [];
-        foreach TicketInsertRecord entry in entries {
-            TicketInsert|dsHttp:InvalidInput value = dataserviceFromTicketInsertRecord(entry);
+        foreach TicketInsertPayload entry in entries {
+            TicketInsert|dsHttp:InvalidInput value = dataserviceFromTicketInsertPayload(entry);
             if value is dsHttp:InvalidInput {
                 return value;
             }
             values.push(value);
         }
-        TicketRecord[] items = [];
+        TicketPayload[] items = [];
         if values.length() > 0 {
             int[]|persist:Error keys = dataserviceClient->/tickets.post(values);
             if keys is persist:Error {
@@ -65,13 +65,13 @@ service /api on dataserviceListener {
                 if item is persist:Error {
                     return dsHttp:errorResponse(item, "Ticket", [id]);
                 }
-                items.push(dataserviceToTicketRecord(item));
+                items.push(dataserviceToTicketPayload(item));
             }
         }
-        if payload is TicketInsertRecord[] {
+        if payload is TicketInsertPayload[] {
             return <TicketListCreated>{body: {items}};
         }
-        TicketRecord created = items[0];
+        TicketPayload created = items[0];
         return <TicketCreated>{
             headers: {"Location": dsHttp:location("/api/tickets", [created.id])},
             body: created
@@ -109,77 +109,11 @@ service /api on dataserviceListener {
     }
 }
 
-# The JSON form of `Ticket`.
-#
-# + id - The `id` field of `Ticket`
-# + subject - The `subject` field of `Ticket`
-# + openedOn - The `openedOn` field of `Ticket`, as an ISO 8601 date
-public type TicketRecord record {|
-    readonly int id;
-    string subject;
-    string openedOn;
-|};
-
-# The JSON form of `TicketInsert`.
-#
-# + subject - The `subject` field of `TicketInsert`
-# + openedOn - The `openedOn` field of `TicketInsert`, as an ISO 8601 date
-public type TicketInsertRecord record {|
-    string subject;
-    string openedOn;
-|};
-
-# A list of tickets.
-#
-# + items - The tickets
-public type TicketList record {|
-    TicketRecord[] items;
-|};
-
-# The response to creating one ticket.
-#
-# + body - The created ticket
-public type TicketCreated record {|
-    *http:Created;
-    TicketRecord body;
-|};
-
-# The response to creating several tickets.
-#
-# + body - The created tickets
-public type TicketListCreated record {|
-    *http:Created;
-    TicketList body;
-|};
-
-# A list of order items.
-#
-# + items - The order items
-public type OrderItemList record {|
-    OrderItem[] items;
-|};
-
-# The response to creating one order item.
-#
-# + body - The created order item
-public type OrderItemCreated record {|
-    *http:Created;
-    OrderItem body;
-|};
-
-# The response to creating several order items.
-#
-# + body - The created order items
-public type OrderItemListCreated record {|
-    *http:Created;
-    OrderItemList body;
-|};
-
 # Converts a `Ticket` to its JSON form.
 #
 # + value - The `Ticket` record
 # + return - The JSON form
-isolated function dataserviceToTicketRecord(Ticket value) returns TicketRecord => {
+isolated function dataserviceToTicketPayload(Ticket value) returns TicketPayload => {
     id: value.id,
     subject: value.subject,
     openedOn: dataservice:dateToString(value.openedOn)
@@ -189,7 +123,7 @@ isolated function dataserviceToTicketRecord(Ticket value) returns TicketRecord =
 #
 # + wire - The JSON form
 # + return - The persist value, or the response for a value that is not in its format
-isolated function dataserviceFromTicketInsertRecord(TicketInsertRecord wire) returns TicketInsert|dsHttp:InvalidInput {
+isolated function dataserviceFromTicketInsertPayload(TicketInsertPayload wire) returns TicketInsert|dsHttp:InvalidInput {
     time:Date|dataservice:ConversionError openedOn = dataservice:dateFromString(wire.openedOn);
     if openedOn is dataservice:ConversionError {
         return dsHttp:invalidInput(openedOn, "Ticket", "openedOn");

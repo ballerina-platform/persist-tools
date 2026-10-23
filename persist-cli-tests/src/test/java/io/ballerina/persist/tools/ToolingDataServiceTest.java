@@ -42,8 +42,9 @@ public class ToolingDataServiceTest {
 
     private static final Path SOURCES = Paths.get("build", "generated-sources").toAbsolutePath();
     private static final Path DISTRIBUTION = Paths.get("build", "ballerina-distribution").toAbsolutePath();
-    private static final String SERVICE = "persist_dataservice.bal";
-    private static final String CONFIG = "persist_dataservice_config.bal";
+    private static final String SERVICE = "dataservice.bal";
+    private static final String TYPES = "dataservice_types.bal";
+    private static final String CONFIG = "dataservice_config.bal";
 
     private static final String MODEL = """
             import ballerina/dataservice;
@@ -130,6 +131,10 @@ public class ToolingDataServiceTest {
         Assert.assertTrue(service.contains("resource function get assignments/[string projectCode]/[int seq]()"));
         Assert.assertFalse(service.contains("auditlogs"), service);
         Assert.assertTrue(Files.exists(project.resolve("generated").resolve(CONFIG)));
+        String types = Files.readString(project.resolve("generated").resolve(TYPES));
+        Assert.assertTrue(types.contains("public type EmployeePayload record {|"), types);
+        Assert.assertTrue(types.contains("public type AssignmentList record {|"), types);
+        Assert.assertFalse(service.contains("public type "), service);
     }
 
     @Test(description = "Changing the base path regenerates the service, and removing the options deletes it")
@@ -150,6 +155,7 @@ public class ToolingDataServiceTest {
         Result result = build(project);
         Assert.assertFalse(Files.exists(service), result.output());
         Assert.assertFalse(Files.exists(project.resolve("generated").resolve(CONFIG)));
+        Assert.assertFalse(Files.exists(project.resolve("generated").resolve(TYPES)));
         Assert.assertTrue(Files.exists(project.resolve("generated").resolve("persist_client.bal")));
         Assert.assertTrue(result.output().contains("WARNING: the model has @dataservice:Expose annotations, but no " +
                 "data service is generated. Set 'options.dataservice.protocol' in the [[tool.persist]] entry to " +
@@ -363,6 +369,7 @@ public class ToolingDataServiceTest {
         Assert.assertTrue(generated.startsWith("// AUTO-GENERATED FILE.\n"), generated);
         Assert.assertFalse(generated.contains("DO NOT MODIFY") || generated.contains("should not be modified"));
         Assert.assertTrue(Files.readString(project.resolve(CONFIG)).startsWith("// AUTO-GENERATED FILE.\n"));
+        Assert.assertTrue(Files.readString(project.resolve(TYPES)).startsWith("// AUTO-GENERATED FILE.\n"));
         assertSucceeded(build(project));
 
         Files.writeString(service, generated + "\n// edited by the user\n");

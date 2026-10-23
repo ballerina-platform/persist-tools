@@ -52,6 +52,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static io.ballerina.persist.PersistToolsConstants.CACHE_FILE;
 import static io.ballerina.persist.PersistToolsConstants.MODEL_FILE;
@@ -166,6 +167,13 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
                         dataServiceOptions, entityModule.getModuleName(), false);
                 FileUtils.writeToTargetFile(generator.generateService(), generatedSourceDirPath
                         .resolve(HttpDataServiceGenerator.SERVICE_FILE).toAbsolutePath().toString());
+                Path typesFile = generatedSourceDirPath.resolve(HttpDataServiceGenerator.TYPES_FILE);
+                Optional<String> types = generator.generateTypes();
+                if (types.isPresent()) {
+                    FileUtils.writeToTargetFile(types.get(), typesFile.toAbsolutePath().toString());
+                } else {
+                    Files.deleteIfExists(typesFile);
+                }
                 FileUtils.writeToTargetFile(generator.generateConfig(), generatedSourceDirPath
                         .resolve(HttpDataServiceGenerator.CONFIG_FILE).toAbsolutePath().toString());
             }
@@ -218,6 +226,7 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
 
     private static void deleteDataServiceSources(Path generatedSourceDirPath) throws IOException {
         Files.deleteIfExists(generatedSourceDirPath.resolve(HttpDataServiceGenerator.SERVICE_FILE));
+        Files.deleteIfExists(generatedSourceDirPath.resolve(HttpDataServiceGenerator.TYPES_FILE));
         Files.deleteIfExists(generatedSourceDirPath.resolve(HttpDataServiceGenerator.CONFIG_FILE));
     }
 

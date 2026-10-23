@@ -49,6 +49,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils.getConfigDeclaration;
@@ -335,6 +336,11 @@ public class Generate implements BLauncherCmd {
             try {
                 FileUtils.writeToTargetFile(generator.generateService(), generatedSourceDirPath
                         .resolve(HttpDataServiceGenerator.SERVICE_FILE).toAbsolutePath().toString());
+                Optional<String> types = generator.generateTypes();
+                if (types.isPresent()) {
+                    FileUtils.writeToTargetFile(types.get(), generatedSourceDirPath
+                            .resolve(HttpDataServiceGenerator.TYPES_FILE).toAbsolutePath().toString());
+                }
                 FileUtils.writeToTargetFile(generator.generateConfig(), generatedSourceDirPath
                         .resolve(HttpDataServiceGenerator.CONFIG_FILE).toAbsolutePath().toString());
             } catch (BalException | IOException e) {

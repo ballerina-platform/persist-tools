@@ -42,7 +42,7 @@ public class HttpDataServiceGeneratorTest {
 
     @Test(dataProvider = "cases")
     public void testGeneratedService(String model, String datastore, String basePath, boolean userOwned,
-                                     String expected) throws BalException, IOException {
+                                     String expected, String expectedTypes) throws BalException, IOException {
         Path modelPath = RESOURCES.resolve(model).resolve("model.bal");
         Module module = BalProjectUtils.getEntities(modelPath);
         List<ExposedEntity> entities = DataServiceModel.resolve(module, ExposeAnnotations.read(modelPath),
@@ -51,31 +51,44 @@ public class HttpDataServiceGeneratorTest {
                 new DataServiceOptions("http", DataServiceOptions.validateBasePath(basePath)),
                 module.getModuleName(), userOwned);
         assertSource(generator.generateService(), RESOURCES.resolve(model).resolve(expected));
+        if (expectedTypes != null) {
+            assertSource(generator.generateTypes().orElseThrow(), RESOURCES.resolve(model).resolve(expectedTypes));
+        }
     }
 
     @DataProvider
     public Object[][] cases() {
         return new Object[][]{
-                {"employees", "inmemory", "/api", false, "persist_dataservice.bal"},
-                {"employees", "inmemory", "/", false, "root_base_path.bal"},
-                {"employees", "inmemory", "/hr/v1", false, "custom_base_path.bal"},
-                {"employees", "inmemory", "/hr-data/v1.0", false, "quoted_base_path.bal"},
-                {"employees", "inmemory", "/api", true, "user_owned.bal"},
-                {"composite", "inmemory", "/api", false, "persist_dataservice.bal"},
-                {"wire", "inmemory", "/api", false, "persist_dataservice.bal"},
-                {"combinations", "inmemory", "/api", false, "persist_dataservice.bal"},
-                {"generated_key", "h2", "/api", false, "persist_dataservice.bal"},
+                {"employees", "inmemory", "/api", false, "dataservice.bal", "dataservice_types.bal"},
+                {"employees", "inmemory", "/", false, "root_base_path.bal", null},
+                {"employees", "inmemory", "/hr/v1", false, "custom_base_path.bal", null},
+                {"employees", "inmemory", "/hr-data/v1.0", false, "quoted_base_path.bal", null},
+                {"employees", "inmemory", "/api", true, "user_owned.bal", "user_owned_types.bal"},
+                {"composite", "inmemory", "/api", false, "dataservice.bal", "dataservice_types.bal"},
+                {"wire", "inmemory", "/api", false, "dataservice.bal", "dataservice_types.bal"},
+                {"combinations", "inmemory", "/api", false, "dataservice.bal", "dataservice_types.bal"},
+                {"generated_key", "h2", "/api", false, "dataservice.bal", "dataservice_types.bal"},
         };
+    }
+
+    @Test
+    public void testNoTypesWithoutReadOrCreate() throws BalException {
+        Path modelPath = RESOURCES.resolve("combinations").resolve("model.bal");
+        Module module = BalProjectUtils.getEntities(modelPath);
+        List<ExposedEntity> updateOnly = DataServiceModel.resolve(module, ExposeAnnotations.read(modelPath),
+                "inmemory").stream().filter(entity -> entity.name().equals("UpdateDeleteItem")).toList();
+        Assert.assertTrue(new HttpDataServiceGenerator(updateOnly, DataServiceOptions.defaults("http"), "model",
+                false).generateTypes().isEmpty());
     }
 
     @Test
     public void testGeneratedConfig() throws BalException, IOException {
         HttpDataServiceGenerator generator = new HttpDataServiceGenerator(List.of(),
                 DataServiceOptions.defaults("http"), "model", false);
-        assertSource(generator.generateConfig(), RESOURCES.resolve("persist_dataservice_config.bal"));
+        assertSource(generator.generateConfig(), RESOURCES.resolve("dataservice_config.bal"));
         HttpDataServiceGenerator userOwned = new HttpDataServiceGenerator(List.of(),
                 DataServiceOptions.defaults("http"), "model", true);
-        assertSource(userOwned.generateConfig(), RESOURCES.resolve("persist_dataservice_config_user_owned.bal"));
+        assertSource(userOwned.generateConfig(), RESOURCES.resolve("dataservice_config_user_owned.bal"));
     }
 
     // The actual output is also written under build/ so that a changed expectation can be reviewed with a diff.
