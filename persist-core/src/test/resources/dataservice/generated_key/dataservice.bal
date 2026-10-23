@@ -20,7 +20,7 @@ service /api on dataserviceListener {
     # + return - The tickets, or an internal error
     resource function get tickets() returns TicketList|dsHttp:InternalError {
         TicketPayload[]|persist:Error items = from Ticket item in dataserviceClient->/tickets(Ticket)
-            select dataserviceToTicketPayload(item);
+            select transformTicketToPayload(item);
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
@@ -35,7 +35,7 @@ service /api on dataserviceListener {
         if item is persist:Error {
             return dsHttp:toGetError(item, "Ticket", [id]);
         }
-        return dataserviceToTicketPayload(item);
+        return transformTicketToPayload(item);
     }
 
     # Creates one ticket, or several from an array.
@@ -46,7 +46,7 @@ service /api on dataserviceListener {
         TicketInsertPayload[] entries = payload is TicketInsertPayload[] ? payload : [payload];
         TicketInsert[] values = [];
         foreach TicketInsertPayload entry in entries {
-            TicketInsert|dsHttp:InvalidInput value = dataserviceFromTicketInsertPayload(entry);
+            TicketInsert|dsHttp:InvalidInput value = transformPayloadToTicketInsert(entry);
             if value is dsHttp:InvalidInput {
                 return value;
             }
@@ -63,7 +63,7 @@ service /api on dataserviceListener {
                 if item is persist:Error {
                     return dsHttp:toCreateError(item, "Ticket", [id]);
                 }
-                items.push(dataserviceToTicketPayload(item));
+                items.push(transformTicketToPayload(item));
             }
         }
         if payload is TicketInsertPayload[] {

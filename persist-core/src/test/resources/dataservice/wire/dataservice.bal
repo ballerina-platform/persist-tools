@@ -20,7 +20,7 @@ service /api on dataserviceListener {
     # + return - The documents, or an internal error
     resource function get documents() returns DocumentList|dsHttp:InternalError {
         DocumentPayload[]|persist:Error items = from Document item in dataserviceClient->/documents(Document)
-            select dataserviceToDocumentPayload(item);
+            select transformDocumentToPayload(item);
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
@@ -35,7 +35,7 @@ service /api on dataserviceListener {
         if item is persist:Error {
             return dsHttp:toGetError(item, "Document", [id]);
         }
-        return dataserviceToDocumentPayload(item);
+        return transformDocumentToPayload(item);
     }
 
     # Creates one document, or several from an array.
@@ -46,7 +46,7 @@ service /api on dataserviceListener {
         DocumentInsertPayload[] entries = payload is DocumentInsertPayload[] ? payload : [payload];
         DocumentInsert[] values = [];
         foreach DocumentInsertPayload entry in entries {
-            DocumentInsert|dsHttp:InvalidInput value = dataserviceFromDocumentInsertPayload(entry);
+            DocumentInsert|dsHttp:InvalidInput value = transformPayloadToDocumentInsert(entry);
             if value is dsHttp:InvalidInput {
                 return value;
             }
@@ -63,7 +63,7 @@ service /api on dataserviceListener {
                 if item is persist:Error {
                     return dsHttp:toCreateError(item, "Document", [id]);
                 }
-                items.push(dataserviceToDocumentPayload(item));
+                items.push(transformDocumentToPayload(item));
             }
         }
         if payload is DocumentInsertPayload[] {
@@ -81,7 +81,7 @@ service /api on dataserviceListener {
     # + return - The updated document, or the error response
     resource function patch documents/[int id](DocumentUpdatePayload payload)
             returns DocumentPayload|dsHttp:InvalidInput|dsHttp:NotFound|dsHttp:ConstraintViolation|dsHttp:InternalError {
-        DocumentUpdate|dsHttp:InvalidInput value = dataserviceFromDocumentUpdatePayload(payload);
+        DocumentUpdate|dsHttp:InvalidInput value = transformPayloadToDocumentUpdate(payload);
         if value is dsHttp:InvalidInput {
             return value;
         }
@@ -94,7 +94,7 @@ service /api on dataserviceListener {
         if item is persist:Error {
             return dsHttp:toUpdateError(item, "Document", [id]);
         }
-        return dataserviceToDocumentPayload(item);
+        return transformDocumentToPayload(item);
     }
 
     # Deletes a document and returns it.
@@ -105,7 +105,7 @@ service /api on dataserviceListener {
         if item is persist:Error {
             return dsHttp:toDeleteError(item, "Document", [id]);
         }
-        return dataserviceToDocumentPayload(item);
+        return transformDocumentToPayload(item);
     }
 
     # Gets the holidays.
@@ -113,7 +113,7 @@ service /api on dataserviceListener {
     # + return - The holidays, or an internal error
     resource function get holidays() returns HolidayList|dsHttp:InternalError {
         HolidayPayload[]|persist:Error items = from Holiday item in dataserviceClient->/holidays(Holiday)
-            select dataserviceToHolidayPayload(item);
+            select transformHolidayToPayload(item);
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
@@ -128,6 +128,6 @@ service /api on dataserviceListener {
         if item is persist:Error {
             return dsHttp:toGetError(item, "Holiday", [id]);
         }
-        return dataserviceToHolidayPayload(item);
+        return transformHolidayToPayload(item);
     }
 }

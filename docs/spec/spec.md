@@ -456,7 +456,7 @@ For an entity `Employee` with the persist resource name `employees` and key `id`
   entity that is not exposed is `404`.
 - An entity with a `time:*` or `byte[]` field gets wire types, `<Entity>Payload`, `<Entity>InsertPayload` and
   `<Entity>UpdatePayload`, that hold those fields as ISO 8601 and base64 strings, generated only for the operations
-  that use them. Generated functions named `dataserviceTo<Entity>Payload` and `dataserviceFrom<Wire type>` convert
+  that use them. Generated functions named `transform<Entity>ToPayload`, `transformPayloadTo<Entity>Insert` and `transformPayloadTo<Entity>Update` convert
   between them with the `ballerina/dataservice` conversion functions.
 - Each resource declares only the error responses its operation can return: get many `InternalError`; get one
   `NotFound|InternalError`; create `NotFound|Conflict|ConstraintViolation|InternalError`; patch and delete

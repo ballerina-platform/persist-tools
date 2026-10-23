@@ -55,7 +55,7 @@ public type TicketListCreated record {|
 #
 # + value - The `Ticket` record
 # + return - The JSON form
-isolated function dataserviceToTicketPayload(Ticket value) returns TicketPayload => {
+isolated function transformTicketToPayload(Ticket value) returns TicketPayload => {
     id: value.id,
     subject: value.subject,
     openedOn: dataservice:dateToString(value.openedOn)
@@ -63,14 +63,14 @@ isolated function dataserviceToTicketPayload(Ticket value) returns TicketPayload
 
 # Converts the JSON form of a `TicketInsert` to the persist type.
 #
-# + wire - The JSON form
+# + payload - The JSON form
 # + return - The persist value, or the response for a value that is not in its format
-isolated function dataserviceFromTicketInsertPayload(TicketInsertPayload wire) returns TicketInsert|dsHttp:InvalidInput {
-    time:Date|dataservice:ConversionError openedOn = dataservice:dateFromString(wire.openedOn);
+isolated function transformPayloadToTicketInsert(TicketInsertPayload payload) returns TicketInsert|dsHttp:InvalidInput {
+    time:Date|dataservice:ConversionError openedOn = dataservice:dateFromString(payload.openedOn);
     if openedOn is dataservice:ConversionError {
         return dsHttp:toInvalidInput(openedOn, "Ticket", "openedOn");
     }
-    return {subject: wire.subject, openedOn};
+    return {subject: payload.subject, openedOn};
 }
 
 # A list of order items.
