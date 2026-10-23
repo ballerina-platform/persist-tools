@@ -3,7 +3,10 @@
 // This file is an auto-generated file by Ballerina persistence layer for model.
 // It should not be modified by hand.
 
+import ballerina/dataservice;
+import ballerina/dataservice.http as dsHttp;
 import ballerina/http;
+import ballerina/time;
 
 # The JSON form of `Document`.
 #
@@ -79,6 +82,144 @@ public type DocumentListCreated record {|
     DocumentList body;
 |};
 
+# Converts a `Document` to its JSON form.
+#
+# + value - The `Document` record
+# + return - The JSON form
+isolated function dataserviceToDocumentPayload(Document value) returns DocumentPayload => {
+    id: value.id,
+    title: value.title,
+    issuedOn: dataservice:dateToString(value.issuedOn),
+    expiresOn: let time:Date? expiresOn = value.expiresOn in expiresOn is () ? () : dataservice:dateToString(expiresOn),
+    opensAt: dataservice:timeOfDayToString(value.opensAt),
+    createdAt: dataservice:civilToString(value.createdAt),
+    signedAt: let time:Utc? signedAt = value.signedAt in signedAt is () ? () : dataservice:utcToString(signedAt),
+    content: dataservice:bytesToString(value.content),
+    thumbnail: let byte[]? thumbnail = value.thumbnail in thumbnail is () ? () : dataservice:bytesToString(thumbnail),
+    status: value.status
+};
+
+# Converts the JSON form of a `DocumentInsert` to the persist type.
+#
+# + wire - The JSON form
+# + return - The persist value, or the response for a value that is not in its format
+isolated function dataserviceFromDocumentInsertPayload(DocumentInsertPayload wire) returns DocumentInsert|dsHttp:InvalidInput {
+    time:Date|dataservice:ConversionError issuedOn = dataservice:dateFromString(wire.issuedOn);
+    if issuedOn is dataservice:ConversionError {
+        return dsHttp:toInvalidInput(issuedOn, "Document", "issuedOn");
+    }
+    time:Date?|dataservice:ConversionError expiresOn = let string? expiresOnText = wire.expiresOn in expiresOnText is () ? () : dataservice:dateFromString(expiresOnText);
+    if expiresOn is dataservice:ConversionError {
+        return dsHttp:toInvalidInput(expiresOn, "Document", "expiresOn");
+    }
+    time:TimeOfDay|dataservice:ConversionError opensAt = dataservice:timeOfDayFromString(wire.opensAt);
+    if opensAt is dataservice:ConversionError {
+        return dsHttp:toInvalidInput(opensAt, "Document", "opensAt");
+    }
+    time:Civil|dataservice:ConversionError createdAt = dataservice:civilFromString(wire.createdAt);
+    if createdAt is dataservice:ConversionError {
+        return dsHttp:toInvalidInput(createdAt, "Document", "createdAt");
+    }
+    time:Utc?|dataservice:ConversionError signedAt = let string? signedAtText = wire.signedAt in signedAtText is () ? () : dataservice:utcFromString(signedAtText);
+    if signedAt is dataservice:ConversionError {
+        return dsHttp:toInvalidInput(signedAt, "Document", "signedAt");
+    }
+    byte[]|dataservice:ConversionError content = dataservice:bytesFromString(wire.content);
+    if content is dataservice:ConversionError {
+        return dsHttp:toInvalidInput(content, "Document", "content");
+    }
+    byte[]?|dataservice:ConversionError thumbnail = let string? thumbnailText = wire.thumbnail in thumbnailText is () ? () : dataservice:bytesFromString(thumbnailText);
+    if thumbnail is dataservice:ConversionError {
+        return dsHttp:toInvalidInput(thumbnail, "Document", "thumbnail");
+    }
+    return {id: wire.id, title: wire.title, issuedOn, expiresOn, opensAt, createdAt, signedAt, content, thumbnail, status: wire.status};
+}
+
+# Converts the JSON form of a `DocumentUpdate` to the persist type.
+#
+# + wire - The JSON form
+# + return - The persist value, or the response for a value that is not in its format
+isolated function dataserviceFromDocumentUpdatePayload(DocumentUpdatePayload wire) returns DocumentUpdate|dsHttp:InvalidInput {
+    DocumentUpdate value = {};
+    string? title = wire?.title;
+    if title !is () {
+        value.title = title;
+    }
+    string? issuedOnText = wire?.issuedOn;
+    if issuedOnText is string {
+        time:Date|dataservice:ConversionError issuedOn = dataservice:dateFromString(issuedOnText);
+        if issuedOn is dataservice:ConversionError {
+            return dsHttp:toInvalidInput(issuedOn, "Document", "issuedOn");
+        }
+        value.issuedOn = issuedOn;
+    }
+    if wire.hasKey("expiresOn") {
+        string? expiresOnText = wire?.expiresOn;
+        if expiresOnText is () {
+            value.expiresOn = ();
+        } else {
+            time:Date|dataservice:ConversionError expiresOn = dataservice:dateFromString(expiresOnText);
+            if expiresOn is dataservice:ConversionError {
+                return dsHttp:toInvalidInput(expiresOn, "Document", "expiresOn");
+            }
+            value.expiresOn = expiresOn;
+        }
+    }
+    string? opensAtText = wire?.opensAt;
+    if opensAtText is string {
+        time:TimeOfDay|dataservice:ConversionError opensAt = dataservice:timeOfDayFromString(opensAtText);
+        if opensAt is dataservice:ConversionError {
+            return dsHttp:toInvalidInput(opensAt, "Document", "opensAt");
+        }
+        value.opensAt = opensAt;
+    }
+    string? createdAtText = wire?.createdAt;
+    if createdAtText is string {
+        time:Civil|dataservice:ConversionError createdAt = dataservice:civilFromString(createdAtText);
+        if createdAt is dataservice:ConversionError {
+            return dsHttp:toInvalidInput(createdAt, "Document", "createdAt");
+        }
+        value.createdAt = createdAt;
+    }
+    if wire.hasKey("signedAt") {
+        string? signedAtText = wire?.signedAt;
+        if signedAtText is () {
+            value.signedAt = ();
+        } else {
+            time:Utc|dataservice:ConversionError signedAt = dataservice:utcFromString(signedAtText);
+            if signedAt is dataservice:ConversionError {
+                return dsHttp:toInvalidInput(signedAt, "Document", "signedAt");
+            }
+            value.signedAt = signedAt;
+        }
+    }
+    string? contentText = wire?.content;
+    if contentText is string {
+        byte[]|dataservice:ConversionError content = dataservice:bytesFromString(contentText);
+        if content is dataservice:ConversionError {
+            return dsHttp:toInvalidInput(content, "Document", "content");
+        }
+        value.content = content;
+    }
+    if wire.hasKey("thumbnail") {
+        string? thumbnailText = wire?.thumbnail;
+        if thumbnailText is () {
+            value.thumbnail = ();
+        } else {
+            byte[]|dataservice:ConversionError thumbnail = dataservice:bytesFromString(thumbnailText);
+            if thumbnail is dataservice:ConversionError {
+                return dsHttp:toInvalidInput(thumbnail, "Document", "thumbnail");
+            }
+            value.thumbnail = thumbnail;
+        }
+    }
+    Status? status = wire?.status;
+    if status !is () {
+        value.status = status;
+    }
+    return value;
+}
+
 # The JSON form of `Holiday`.
 #
 # + id - The `id` field of `Holiday`
@@ -94,3 +235,12 @@ public type HolidayPayload record {|
 public type HolidayList record {|
     HolidayPayload[] items;
 |};
+
+# Converts a `Holiday` to its JSON form.
+#
+# + value - The `Holiday` record
+# + return - The JSON form
+isolated function dataserviceToHolidayPayload(Holiday value) returns HolidayPayload => {
+    id: value.id,
+    day: dataservice:dateToString(value.day)
+};
