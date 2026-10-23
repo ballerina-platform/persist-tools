@@ -215,8 +215,8 @@ public final class HttpDataServiceGenerator {
             String value = "payload";
             if (entity.hasWireTypes()) {
                 value = "value";
-                out.append("        ").append(n.entity).append("Update|dsHttp:InvalidInput value = dataserviceFrom")
-                        .append(n.updateWire).append("(payload);").append(NEWLINE);
+                out.append("        ").append(n.entity).append("Update|dsHttp:InvalidInput value = transformPayloadTo")
+                        .append(n.entity).append("Update(payload);").append(NEWLINE);
                 out.append("        if value is dsHttp:InvalidInput {").append(NEWLINE);
                 out.append("            return value;").append(NEWLINE);
                 out.append("        }").append(NEWLINE);
@@ -261,8 +261,8 @@ public final class HttpDataServiceGenerator {
                     .append("[] ? payload : [payload];").append(NEWLINE);
             out.append("        ").append(insert).append("[] values = [];").append(NEWLINE);
             out.append("        foreach ").append(n.insertWire).append(" entry in entries {").append(NEWLINE);
-            out.append("            ").append(insert).append("|dsHttp:InvalidInput value = dataserviceFrom")
-                    .append(n.insertWire).append("(entry);").append(NEWLINE);
+            out.append("            ").append(insert).append("|dsHttp:InvalidInput value = transformPayloadTo")
+                    .append(insert).append("(entry);").append(NEWLINE);
             out.append("            if value is dsHttp:InvalidInput {").append(NEWLINE);
             out.append("                return value;").append(NEWLINE);
             out.append("            }").append(NEWLINE);
@@ -421,7 +421,7 @@ public final class HttpDataServiceGenerator {
         out.append("#").append(NEWLINE);
         out.append("# + ").append(param).append(" - The `").append(n.entity).append("` record").append(NEWLINE);
         out.append("# + return - The JSON form").append(NEWLINE);
-        out.append("isolated function dataserviceTo").append(n.wire).append("(").append(n.entity).append(" ")
+        out.append("isolated function transform").append(n.entity).append("ToPayload(").append(n.entity).append(" ")
                 .append(param).append(") returns ").append(n.wire).append(" => {").append(NEWLINE);
         StringBuilder members = new StringBuilder();
         for (ServiceField field : entity.fields()) {
@@ -447,11 +447,11 @@ public final class HttpDataServiceGenerator {
 
     private void appendFromWire(StringBuilder out, Names n, String wireType, String persistType,
                                 List<ServiceField> fields) {
-        String param = parameterName("wire", fields);
+        String param = parameterName("payload", fields);
         out.append(NEWLINE).append("# Converts the JSON form of ").append(articleFor(persistType)).append(" `")
                 .append(persistType).append("` to the persist type.").append(NEWLINE);
         appendFromWireDoc(out, param);
-        out.append("isolated function dataserviceFrom").append(wireType).append("(").append(wireType).append(" ")
+        out.append("isolated function transformPayloadTo").append(persistType).append("(").append(wireType).append(" ")
                 .append(param).append(") returns ").append(persistType).append("|dsHttp:InvalidInput {")
                 .append(NEWLINE);
         StringBuilder members = new StringBuilder();
@@ -485,12 +485,12 @@ public final class HttpDataServiceGenerator {
 
     private void appendFromUpdateWire(StringBuilder out, Names n, List<ServiceField> fields) {
         String persistType = n.entity + "Update";
-        String param = parameterName("wire", fields);
+        String param = parameterName("payload", fields);
         String result = parameterName("value", fields);
         out.append(NEWLINE).append("# Converts the JSON form of ").append(articleFor(persistType)).append(" `")
                 .append(persistType).append("` to the persist type.").append(NEWLINE);
         appendFromWireDoc(out, param);
-        out.append("isolated function dataserviceFrom").append(n.updateWire).append("(").append(n.updateWire)
+        out.append("isolated function transformPayloadTo").append(persistType).append("(").append(n.updateWire)
                 .append(" ").append(param).append(") returns ").append(persistType).append("|dsHttp:InvalidInput {")
                 .append(NEWLINE);
         out.append("    ").append(persistType).append(" ").append(result).append(" = {};").append(NEWLINE);
@@ -647,7 +647,7 @@ public final class HttpDataServiceGenerator {
         }
 
         private String toWire(String expression) {
-            return hasWire ? "dataserviceTo" + wire + "(" + expression + ")" : expression;
+            return hasWire ? "transform" + entity + "ToPayload(" + expression + ")" : expression;
         }
     }
 }
