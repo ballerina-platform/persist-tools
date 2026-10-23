@@ -458,6 +458,9 @@ For an entity `Employee` with the persist resource name `employees` and key `id`
   `<Entity>UpdatePayload`, that hold those fields as ISO 8601 and base64 strings, generated only for the operations
   that use them. Generated functions named `dataserviceTo<Entity>Payload` and `dataserviceFrom<Wire type>` convert
   between them with the `ballerina/dataservice` conversion functions.
+- Each resource declares only the error responses its operation can return: get many `InternalError`; get one
+  `NotFound|InternalError`; create `NotFound|Conflict|ConstraintViolation|InternalError`; patch and delete
+  `NotFound|ConstraintViolation|InternalError`; create and patch also `InvalidInput` for an entity with wire types.
 - Errors map to `404`, `409`, `400` and `500` with the `dataservice:DataserviceError` body, through the
   [`ballerina/dataservice.http`](https://github.com/ballerina-platform/module-ballerina-dataservice.http/blob/main/docs/spec/spec.md)
   functions.

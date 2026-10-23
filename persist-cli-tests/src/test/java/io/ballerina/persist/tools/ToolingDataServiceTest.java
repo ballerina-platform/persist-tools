@@ -149,7 +149,7 @@ public class ToolingDataServiceTest {
                 "options.dataservice.basePath = \"/hr/v2/\""));
         assertSucceeded(build(project));
         Assert.assertTrue(Files.readString(service).contains("service /hr/v2 on"));
-        Assert.assertTrue(Files.readString(service).contains("dsHttp:location(\"/hr/v2/employees\""));
+        Assert.assertTrue(Files.readString(service).contains("dsHttp:buildLocation(\"/hr/v2/employees\""));
 
         writeToml(project, entry("inmemory", ""));
         Result result = build(project);

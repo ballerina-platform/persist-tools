@@ -49,6 +49,11 @@ public final class HttpDataServiceGenerator {
     public static final String CONFIG_FILE = "dataservice_config.bal";
 
     private static final String NEWLINE = System.lineSeparator();
+    private static final String GET_ERRORS = "|dsHttp:NotFound|dsHttp:InternalError";
+    private static final String CREATE_ERRORS =
+            "|dsHttp:NotFound|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError";
+    private static final String WRITE_ERRORS = "|dsHttp:NotFound|dsHttp:ConstraintViolation|dsHttp:InternalError";
+    private static final String INVALID_INPUT = "|dsHttp:InvalidInput";
     private static final Pattern IDENTIFIER = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*");
     private static final Pattern WORD_BOUNDARY = Pattern.compile("(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])");
 
@@ -179,7 +184,7 @@ public final class HttpDataServiceGenerator {
                     .append(")").append(NEWLINE);
             out.append("            select ").append(n.toWire("item")).append(";").append(NEWLINE);
             out.append("        if items is persist:Error {").append(NEWLINE);
-            out.append("            return dsHttp:internalError(items);").append(NEWLINE);
+            out.append("            return dsHttp:toListError(items);").append(NEWLINE);
             out.append("        }").append(NEWLINE);
             out.append("        return {items};").append(NEWLINE);
             out.append("    }").append(NEWLINE);
@@ -188,10 +193,10 @@ public final class HttpDataServiceGenerator {
                     .append(" by its key.").append(NEWLINE);
             appendReturnDoc(out, "The " + n.words);
             out.append("    resource function get ").append(n.resource).append("/").append(keyParams)
-                    .append("() returns ").append(n.wire).append("|dsHttp:ErrorResponse {").append(NEWLINE);
+                    .append("() returns ").append(n.wire).append(GET_ERRORS).append(" {").append(NEWLINE);
             out.append("        ").append(n.entity).append("|persist:Error item = dataserviceClient->/")
                     .append(n.resource).append(keyPath).append(";").append(NEWLINE);
-            appendErrorCheck(out, "item", n, keyList, "        ");
+            appendErrorCheck(out, "item", "toGetError", n, keyList, "        ");
             out.append("        return ").append(n.toWire("item")).append(";").append(NEWLINE);
             out.append("    }").append(NEWLINE);
         }
@@ -203,8 +208,9 @@ public final class HttpDataServiceGenerator {
                     .append(n.words).append(".").append(NEWLINE);
             appendReturnDoc(out, "The updated " + n.words);
             out.append("    resource function patch ").append(n.resource).append("/").append(keyParams).append("(")
-                    .append(n.updateWire).append(" payload) returns ").append(n.wire)
-                    .append("|dsHttp:ErrorResponse {").append(NEWLINE);
+                    .append(n.updateWire).append(" payload)").append(NEWLINE);
+            out.append("            returns ").append(n.wire).append(entity.hasWireTypes() ? INVALID_INPUT : "")
+                    .append(WRITE_ERRORS).append(" {").append(NEWLINE);
             String value = "payload";
             if (entity.hasWireTypes()) {
                 value = "value";
@@ -222,7 +228,7 @@ public final class HttpDataServiceGenerator {
             out.append("            item = dataserviceClient->/").append(n.resource).append(keyPath)
                     .append(".put(").append(value).append(");").append(NEWLINE);
             out.append("        }").append(NEWLINE);
-            appendErrorCheck(out, "item", n, keyList, "        ");
+            appendErrorCheck(out, "item", "toUpdateError", n, keyList, "        ");
             out.append("        return ").append(n.toWire("item")).append(";").append(NEWLINE);
             out.append("    }").append(NEWLINE);
         }
@@ -231,10 +237,10 @@ public final class HttpDataServiceGenerator {
                     .append(" and returns it.").append(NEWLINE);
             appendReturnDoc(out, "The deleted " + n.words);
             out.append("    resource function delete ").append(n.resource).append("/").append(keyParams)
-                    .append("() returns ").append(n.wire).append("|dsHttp:ErrorResponse {").append(NEWLINE);
+                    .append("() returns ").append(n.wire).append(WRITE_ERRORS).append(" {").append(NEWLINE);
             out.append("        ").append(n.entity).append("|persist:Error item = dataserviceClient->/")
                     .append(n.resource).append(keyPath).append(".delete();").append(NEWLINE);
-            appendErrorCheck(out, "item", n, keyList, "        ");
+            appendErrorCheck(out, "item", "toDeleteError", n, keyList, "        ");
             out.append("        return ").append(n.toWire("item")).append(";").append(NEWLINE);
             out.append("    }").append(NEWLINE);
         }
@@ -248,7 +254,7 @@ public final class HttpDataServiceGenerator {
         out.append("    resource function post ").append(n.resource).append("(").append(n.insertWire).append("|")
                 .append(n.insertWire).append("[] payload)").append(NEWLINE);
         out.append("            returns ").append(n.created).append("|").append(n.listCreated)
-                .append("|dsHttp:ErrorResponse {").append(NEWLINE);
+                .append(entity.hasWireTypes() ? INVALID_INPUT : "").append(CREATE_ERRORS).append(" {").append(NEWLINE);
         if (entity.hasWireTypes()) {
             out.append("        ").append(n.insertWire).append("[] entries = payload is ").append(n.insertWire)
                     .append("[] ? payload : [payload];").append(NEWLINE);
@@ -275,14 +281,14 @@ public final class HttpDataServiceGenerator {
         out.append("            ").append(keyType).append("[]|persist:Error keys = dataserviceClient->/")
                 .append(n.resource).append(".post(values);").append(NEWLINE);
         out.append("            if keys is persist:Error {").append(NEWLINE);
-        out.append("                return dsHttp:errorResponse(keys, \"").append(n.displayName).append("\");")
+        out.append("                return dsHttp:toCreateError(keys, \"").append(n.displayName).append("\");")
                 .append(NEWLINE);
         out.append("            }").append(NEWLINE);
         out.append("            foreach ").append(keyType).append(" ").append(keyBinding).append(" in keys {")
                 .append(NEWLINE);
         out.append("                ").append(n.entity).append("|persist:Error item = dataserviceClient->/")
                 .append(n.resource).append(keyPath).append(";").append(NEWLINE);
-        appendErrorCheck(out, "item", n, keyList, "                ");
+        appendErrorCheck(out, "item", "toCreateError", n, keyList, "                ");
         out.append("                items.push(").append(n.toWire("item")).append(");").append(NEWLINE);
         out.append("            }").append(NEWLINE);
         out.append("        }").append(NEWLINE);
@@ -291,7 +297,7 @@ public final class HttpDataServiceGenerator {
         out.append("        }").append(NEWLINE);
         out.append("        ").append(n.wire).append(" created = items[0];").append(NEWLINE);
         out.append("        return <").append(n.created).append(">{").append(NEWLINE);
-        out.append("            headers: {\"Location\": dsHttp:location(\"").append(collectionPath(n.resource))
+        out.append("            headers: {\"Location\": dsHttp:buildLocation(\"").append(collectionPath(n.resource))
                 .append("\", ").append(keyList(entity, "created.")).append(")},").append(NEWLINE);
         out.append("            body: created").append(NEWLINE);
         out.append("        };").append(NEWLINE);
@@ -303,10 +309,10 @@ public final class HttpDataServiceGenerator {
         out.append("    # + return - ").append(result).append(", or the error response").append(NEWLINE);
     }
 
-    private static void appendErrorCheck(StringBuilder out, String variable, Names n, String keyList,
-                                         String indent) {
+    private static void appendErrorCheck(StringBuilder out, String variable, String function, Names n,
+                                         String keyList, String indent) {
         out.append(indent).append("if ").append(variable).append(" is persist:Error {").append(NEWLINE);
-        out.append(indent).append("    return dsHttp:errorResponse(").append(variable).append(", \"")
+        out.append(indent).append("    return dsHttp:").append(function).append("(").append(variable).append(", \"")
                 .append(n.displayName).append("\", ").append(keyList).append(");").append(NEWLINE);
         out.append(indent).append("}").append(NEWLINE);
     }
@@ -546,7 +552,7 @@ public final class HttpDataServiceGenerator {
     private static void appendInvalidInputCheck(StringBuilder out, Names n, ServiceField field, String indent) {
         out.append(indent).append("if ").append(field.name()).append(" is dataservice:ConversionError {")
                 .append(NEWLINE);
-        out.append(indent).append("    return dsHttp:invalidInput(").append(field.name()).append(", \"")
+        out.append(indent).append("    return dsHttp:toInvalidInput(").append(field.name()).append(", \"")
                 .append(n.displayName).append("\", \"").append(unescape(field.name())).append("\");")
                 .append(NEWLINE);
         out.append(indent).append("}").append(NEWLINE);
