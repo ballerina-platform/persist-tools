@@ -425,8 +425,8 @@ invalid annotation, and every invalid `--expose-tables` name, is reported, one l
 
 | File | Contents |
 |---|---|
-| `dataservice.bal` | The persist client the service uses, the listener, the service and the conversion functions |
-| `dataservice_types.bal` | The types the service uses: the wire types, the `<Entity>List` envelopes and the status code records. It is not written when no exposed entity needs a type |
+| `dataservice.bal` | The persist client the service uses, the listener and the service |
+| `dataservice_types.bal` | The types the service uses: the wire types and their conversion functions, the `<Entity>List` envelopes and the status code records. It is not written when no exposed entity needs a type |
 | `dataservice_config.bal` | `configurable int dataservicePort = 9090;` and `configurable http:ListenerConfiguration dataserviceListenerConfig = {};` |
 
 From `bal build`, the files are written into `generated/` with the header of persist's generated files and must not
@@ -466,7 +466,7 @@ For an entity `Employee` with the persist resource name `employees` and key `id`
   functions.
 
 `dataservice.bal` holds, in order: the client and the listener, then one service with the resources of each exposed
-entity in model order, as get many, get one, create, patch and delete, then the conversion functions.
-`dataservice_types.bal` holds, per entity in model order, the wire types, the `<Entity>List` envelope and the
-`<Entity>Created` and `<Entity>ListCreated` records.
+entity in model order, as get many, get one, create, patch and delete. `dataservice_types.bal` holds, per entity in
+model order, the wire types, the `<Entity>List` envelope, the `<Entity>Created` and `<Entity>ListCreated` records,
+and the conversion functions.
 Every resource and generated type has a short doc comment.

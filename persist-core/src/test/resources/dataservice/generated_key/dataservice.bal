@@ -3,11 +3,9 @@
 // This file is an auto-generated file by Ballerina persistence layer for model.
 // It should not be modified by hand.
 
-import ballerina/dataservice;
 import ballerina/dataservice.http as dsHttp;
 import ballerina/http;
 import ballerina/persist;
-import ballerina/time;
 
 # The persist client that the data service uses.
 final Client dataserviceClient = check new ();
@@ -107,26 +105,4 @@ service /api on dataserviceListener {
             body: created
         };
     }
-}
-
-# Converts a `Ticket` to its JSON form.
-#
-# + value - The `Ticket` record
-# + return - The JSON form
-isolated function dataserviceToTicketPayload(Ticket value) returns TicketPayload => {
-    id: value.id,
-    subject: value.subject,
-    openedOn: dataservice:dateToString(value.openedOn)
-};
-
-# Converts the JSON form of a `TicketInsert` to the persist type.
-#
-# + wire - The JSON form
-# + return - The persist value, or the response for a value that is not in its format
-isolated function dataserviceFromTicketInsertPayload(TicketInsertPayload wire) returns TicketInsert|dsHttp:InvalidInput {
-    time:Date|dataservice:ConversionError openedOn = dataservice:dateFromString(wire.openedOn);
-    if openedOn is dataservice:ConversionError {
-        return dsHttp:toInvalidInput(openedOn, "Ticket", "openedOn");
-    }
-    return {subject: wire.subject, openedOn};
 }

@@ -80,7 +80,7 @@ public final class HttpDataServiceGenerator {
     }
 
     /**
-     * Generates `dataservice.bal`: the client, the listener, the service and the conversion functions.
+     * Generates `dataservice.bal`: the client, the listener and the service.
      *
      * @return the formatted source
      * @throws BalException if the source cannot be formatted
@@ -101,30 +101,31 @@ public final class HttpDataServiceGenerator {
             appendResources(body, entity);
         }
         body.append("}").append(NEWLINE);
-        for (ExposedEntity entity : entities) {
-            appendConverters(body, entity);
-        }
         return format(modelHeader() + String.join(NEWLINE, imports) + NEWLINE + NEWLINE + body);
     }
 
     /**
-     * Generates `dataservice_types.bal`: per entity in model order, the wire types, the list envelope and the
-     * status code records.
+     * Generates `dataservice_types.bal`: per entity in model order, the wire types, the list envelope, the status
+     * code records and the functions that convert between the wire types and the persist types.
      *
      * @return the formatted source, or empty when no exposed entity needs a type
      * @throws BalException if the source cannot be formatted
      */
     public Optional<String> generateTypes() throws BalException {
+        imports.clear();
         StringBuilder body = new StringBuilder();
         for (ExposedEntity entity : entities) {
             appendTypes(body, entity);
+            appendConverters(body, entity);
         }
         if (body.isEmpty()) {
             return Optional.empty();
         }
-        String imports = entities.stream().anyMatch(entity -> entity.allows(CREATE)) ?
-                "import ballerina/http;" + NEWLINE + NEWLINE : "";
-        return Optional.of(format(modelHeader() + imports + body.toString().stripLeading()));
+        if (entities.stream().anyMatch(entity -> entity.allows(CREATE))) {
+            imports.add("import ballerina/http;");
+        }
+        String importLines = imports.isEmpty() ? "" : String.join(NEWLINE, imports) + NEWLINE + NEWLINE;
+        return Optional.of(format(modelHeader() + importLines + body.toString().stripLeading()));
     }
 
     private String modelHeader() {
@@ -398,6 +399,9 @@ public final class HttpDataServiceGenerator {
             return;
         }
         imports.add("import ballerina/dataservice;");
+        if (entity.allows(CREATE) || entity.allows(UPDATE)) {
+            imports.add("import ballerina/dataservice.http as dsHttp;");
+        }
         Names n = new Names(entity);
         appendToWire(out, entity, n);
         if (entity.allows(CREATE) && entity.insertFields().isPresent()) {
