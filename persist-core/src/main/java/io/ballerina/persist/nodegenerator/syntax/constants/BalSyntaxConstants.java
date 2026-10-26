@@ -422,17 +422,18 @@ public class BalSyntaxConstants {
     public static final String EXTERNAL_SQL_GET_METHOD_TEMPLATE = "isolated resource function get %s(" +
             "%sTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, " +
             "sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, " +
-            "sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {"
+            "sql:ParameterizedQuery groupByClause = ``, sql:ParameterizedQuery offsetClause = ``) " +
+            "returns stream<targetType, persist:Error?> = @java:Method {"
             + System.lineSeparator()
             + "'class: \"io.ballerina.stdlib.persist.%s.datastore.%s\"," + System.lineSeparator() +
-            " name: \"query\"} external;";
+            " name: \"queryWithOffset\"} external;";
     public static final String EXTERNAL_SQL_GET_METHOD_LIST_TEMPLATE = "isolated resource function get %s(" +
             "%sTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, " +
-            "sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``) " +
-            "returns targetType[]|persist:Error = @java:Method {"
+            "sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, " +
+            "sql:ParameterizedQuery offsetClause = ``) returns targetType[]|persist:Error = @java:Method {"
             + System.lineSeparator()
             + "'class: \"io.ballerina.stdlib.persist.%s.datastore.%s\"," + System.lineSeparator() +
-            " name: \"queryAsList\"} external;";
+            " name: \"queryAsListWithOffset\"} external;";
     public static final String EXTERNAL_GET_METHOD_LIST_TEMPLATE = "isolated resource function get %s(" +
             "%sTargetType targetType = <>) returns targetType[]|persist:Error = @java:Method {"
             + System.lineSeparator()

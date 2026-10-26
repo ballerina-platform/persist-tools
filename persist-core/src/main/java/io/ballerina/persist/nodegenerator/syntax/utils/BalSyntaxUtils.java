@@ -1168,6 +1168,8 @@ public class BalSyntaxUtils {
                 sb.append("+ groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)")
                         .append(System.lineSeparator());
             }
+            sb.append("+ offsetClause - Number of rows to skip before returning results (e.g., `10`)")
+                    .append(System.lineSeparator());
         }
         sb.append("+ return - A collection of matching records or an error");
         return sb.toString();

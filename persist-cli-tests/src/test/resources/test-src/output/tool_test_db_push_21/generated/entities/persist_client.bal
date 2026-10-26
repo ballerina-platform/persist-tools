@@ -61,9 +61,9 @@ public isolated client class Client {
         };
     }
 
-    isolated resource function get profiles(ProfileTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get profiles(ProfileTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``, sql:ParameterizedQuery offsetClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
-        name: "query"
+        name: "queryWithOffset"
     } external;
 
     isolated resource function get profiles/[int id](ProfileTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
@@ -100,9 +100,9 @@ public isolated client class Client {
         return result;
     }
 
-    isolated resource function get users(UserTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get users(UserTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``, sql:ParameterizedQuery offsetClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
-        name: "query"
+        name: "queryWithOffset"
     } external;
 
     isolated resource function get users/[int id](UserTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
