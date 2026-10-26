@@ -50,9 +50,10 @@ public final class HttpDataServiceGenerator {
 
     private static final String NEWLINE = System.lineSeparator();
     private static final String GET_ERRORS = "|dsHttp:NotFound|dsHttp:InternalError";
-    private static final String CREATE_ERRORS =
+    private static final String CREATE_ERRORS = "|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError";
+    private static final String UPDATE_ERRORS =
             "|dsHttp:NotFound|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError";
-    private static final String WRITE_ERRORS = "|dsHttp:NotFound|dsHttp:ConstraintViolation|dsHttp:InternalError";
+    private static final String DELETE_ERRORS = "|dsHttp:NotFound|dsHttp:ConstraintViolation|dsHttp:InternalError";
     private static final String INVALID_INPUT = "|dsHttp:InvalidInput";
     private static final Pattern IDENTIFIER = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*");
     private static final Pattern WORD_BOUNDARY = Pattern.compile("(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])");
@@ -202,7 +203,7 @@ public final class HttpDataServiceGenerator {
             out.append("    }").append(NEWLINE);
         }
         if (entity.allows(CREATE)) {
-            appendCreate(out, entity, n, keyPath, keyList);
+            appendCreate(out, entity, n, keyPath);
         }
         if (entity.allows(UPDATE)) {
             out.append(NEWLINE).append("    # Updates the given fields of ").append(n.article).append(" ")
@@ -211,7 +212,7 @@ public final class HttpDataServiceGenerator {
             out.append("    resource function patch ").append(n.resource).append("/").append(keyParams).append("(")
                     .append(n.updateWire).append(" payload)").append(NEWLINE);
             out.append("            returns ").append(n.wire).append(entity.hasWireTypes() ? INVALID_INPUT : "")
-                    .append(WRITE_ERRORS).append(" {").append(NEWLINE);
+                    .append(UPDATE_ERRORS).append(" {").append(NEWLINE);
             String value = "payload";
             if (entity.hasWireTypes()) {
                 value = "value";
@@ -238,7 +239,7 @@ public final class HttpDataServiceGenerator {
                     .append(" and returns it.").append(NEWLINE);
             appendReturnDoc(out, "The deleted " + n.words);
             out.append("    resource function delete ").append(n.resource).append("/").append(keyParams)
-                    .append("() returns ").append(n.wire).append(WRITE_ERRORS).append(" {").append(NEWLINE);
+                    .append("() returns ").append(n.wire).append(DELETE_ERRORS).append(" {").append(NEWLINE);
             out.append("        ").append(n.entity).append("|persist:Error item = dataserviceClient->/")
                     .append(n.resource).append(keyPath).append(".delete();").append(NEWLINE);
             appendErrorCheck(out, "item", "toDeleteError", n, keyList, "        ");
@@ -247,7 +248,7 @@ public final class HttpDataServiceGenerator {
         }
     }
 
-    private void appendCreate(StringBuilder out, ExposedEntity entity, Names n, String keyPath, String keyList) {
+    private void appendCreate(StringBuilder out, ExposedEntity entity, Names n, String keyPath) {
         String insert = n.entity + "Insert";
         out.append(NEWLINE).append("    # Creates one ").append(n.words).append(", or several from an array.")
                 .append(NEWLINE);
@@ -289,7 +290,10 @@ public final class HttpDataServiceGenerator {
                 .append(NEWLINE);
         out.append("                ").append(n.entity).append("|persist:Error item = dataserviceClient->/")
                 .append(n.resource).append(keyPath).append(";").append(NEWLINE);
-        appendErrorCheck(out, "item", "toCreateError", n, keyList, "                ");
+        out.append("                if item is persist:Error {").append(NEWLINE);
+        out.append("                    return dsHttp:toCreateError(item, \"").append(n.displayName).append("\");")
+                .append(NEWLINE);
+        out.append("                }").append(NEWLINE);
         out.append("                items.push(").append(n.toWire("item")).append(");").append(NEWLINE);
         out.append("            }").append(NEWLINE);
         out.append("        }").append(NEWLINE);

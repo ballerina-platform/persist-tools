@@ -41,7 +41,7 @@ service /api on dataserviceListener {
     #
     # + return - The created employee or employees, or the error response
     resource function post employees(EmployeeInsert|EmployeeInsert[] payload)
-            returns EmployeeCreated|EmployeeListCreated|dsHttp:NotFound|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
+            returns EmployeeCreated|EmployeeListCreated|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         EmployeeInsert[] values = payload is EmployeeInsert[] ? payload : [payload];
         Employee[] items = [];
         if values.length() > 0 {
@@ -52,7 +52,7 @@ service /api on dataserviceListener {
             foreach int id in keys {
                 Employee|persist:Error item = dataserviceClient->/employees/[id];
                 if item is persist:Error {
-                    return dsHttp:toCreateError(item, "Employee", [id]);
+                    return dsHttp:toCreateError(item, "Employee");
                 }
                 items.push(item);
             }
@@ -71,7 +71,7 @@ service /api on dataserviceListener {
     #
     # + return - The updated employee, or the error response
     resource function patch employees/[int id](EmployeeUpdate payload)
-            returns Employee|dsHttp:NotFound|dsHttp:ConstraintViolation|dsHttp:InternalError {
+            returns Employee|dsHttp:NotFound|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         Employee|persist:Error item;
         if payload.length() == 0 {
             item = dataserviceClient->/employees/[id];

@@ -42,7 +42,7 @@ service /api on dataserviceListener {
     #
     # + return - The created document or documents, or the error response
     resource function post documents(DocumentInsertPayload|DocumentInsertPayload[] payload)
-            returns DocumentCreated|DocumentListCreated|dsHttp:InvalidInput|dsHttp:NotFound|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
+            returns DocumentCreated|DocumentListCreated|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         DocumentInsertPayload[] entries = payload is DocumentInsertPayload[] ? payload : [payload];
         DocumentInsert[] values = [];
         foreach DocumentInsertPayload entry in entries {
@@ -61,7 +61,7 @@ service /api on dataserviceListener {
             foreach int id in keys {
                 Document|persist:Error item = dataserviceClient->/documents/[id];
                 if item is persist:Error {
-                    return dsHttp:toCreateError(item, "Document", [id]);
+                    return dsHttp:toCreateError(item, "Document");
                 }
                 items.push(transformDocumentToPayload(item));
             }
@@ -80,7 +80,7 @@ service /api on dataserviceListener {
     #
     # + return - The updated document, or the error response
     resource function patch documents/[int id](DocumentUpdatePayload payload)
-            returns DocumentPayload|dsHttp:InvalidInput|dsHttp:NotFound|dsHttp:ConstraintViolation|dsHttp:InternalError {
+            returns DocumentPayload|dsHttp:InvalidInput|dsHttp:NotFound|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         DocumentUpdate|dsHttp:InvalidInput value = transformPayloadToDocumentUpdate(payload);
         if value is dsHttp:InvalidInput {
             return value;

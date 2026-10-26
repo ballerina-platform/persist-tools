@@ -42,7 +42,7 @@ service /api on dataserviceListener {
     #
     # + return - The created ticket or tickets, or the error response
     resource function post tickets(TicketInsertPayload|TicketInsertPayload[] payload)
-            returns TicketCreated|TicketListCreated|dsHttp:InvalidInput|dsHttp:NotFound|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
+            returns TicketCreated|TicketListCreated|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         TicketInsertPayload[] entries = payload is TicketInsertPayload[] ? payload : [payload];
         TicketInsert[] values = [];
         foreach TicketInsertPayload entry in entries {
@@ -61,7 +61,7 @@ service /api on dataserviceListener {
             foreach int id in keys {
                 Ticket|persist:Error item = dataserviceClient->/tickets/[id];
                 if item is persist:Error {
-                    return dsHttp:toCreateError(item, "Ticket", [id]);
+                    return dsHttp:toCreateError(item, "Ticket");
                 }
                 items.push(transformTicketToPayload(item));
             }
@@ -80,7 +80,7 @@ service /api on dataserviceListener {
     #
     # + return - The created order item or order items, or the error response
     resource function post orderitems(OrderItemInsert|OrderItemInsert[] payload)
-            returns OrderItemCreated|OrderItemListCreated|dsHttp:NotFound|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
+            returns OrderItemCreated|OrderItemListCreated|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         OrderItemInsert[] values = payload is OrderItemInsert[] ? payload : [payload];
         OrderItem[] items = [];
         if values.length() > 0 {
@@ -91,7 +91,7 @@ service /api on dataserviceListener {
             foreach int id in keys {
                 OrderItem|persist:Error item = dataserviceClient->/orderitems/[id];
                 if item is persist:Error {
-                    return dsHttp:toCreateError(item, "OrderItem", [id]);
+                    return dsHttp:toCreateError(item, "OrderItem");
                 }
                 items.push(item);
             }

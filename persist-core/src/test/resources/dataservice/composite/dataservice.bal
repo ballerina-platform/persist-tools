@@ -42,7 +42,7 @@ service /api on dataserviceListener {
     #
     # + return - The created assignment or assignments, or the error response
     resource function post assignments(AssignmentInsert|AssignmentInsert[] payload)
-            returns AssignmentCreated|AssignmentListCreated|dsHttp:NotFound|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
+            returns AssignmentCreated|AssignmentListCreated|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         AssignmentInsert[] values = payload is AssignmentInsert[] ? payload : [payload];
         Assignment[] items = [];
         if values.length() > 0 {
@@ -53,7 +53,7 @@ service /api on dataserviceListener {
             foreach [string, int] [projectCode, seq] in keys {
                 Assignment|persist:Error item = dataserviceClient->/assignments/[projectCode]/[seq];
                 if item is persist:Error {
-                    return dsHttp:toCreateError(item, "Assignment", [projectCode, seq]);
+                    return dsHttp:toCreateError(item, "Assignment");
                 }
                 items.push(item);
             }
@@ -72,7 +72,7 @@ service /api on dataserviceListener {
     #
     # + return - The updated assignment, or the error response
     resource function patch assignments/[string projectCode]/[int seq](AssignmentUpdate payload)
-            returns Assignment|dsHttp:NotFound|dsHttp:ConstraintViolation|dsHttp:InternalError {
+            returns Assignment|dsHttp:NotFound|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         Assignment|persist:Error item;
         if payload.length() == 0 {
             item = dataserviceClient->/assignments/[projectCode]/[seq];
