@@ -117,7 +117,8 @@ public class ToolingDataServiceTest {
 
     @Test(description = "The service is generated next to the client, with the default base path")
     public void testBuildGeneratesTheService() throws IOException, InterruptedException {
-        Path project = project("ds_build", entry("h2", "options.dataservice.protocol = \"http\""), MODEL);
+        Path project = project("ds_build", entry("h2", "\n[tool.persist.options.dataservice]\nprotocol = \"http\""),
+                MODEL);
         assertSucceeded(build(project));
         String service = Files.readString(project.resolve("generated").resolve(SERVICE));
         Assert.assertTrue(service.startsWith("// AUTO-GENERATED FILE. DO NOT MODIFY."), service);
@@ -131,7 +132,8 @@ public class ToolingDataServiceTest {
         Assert.assertFalse(service.contains("public type "), service);
     }
 
-    @Test(description = "Changing the base path regenerates the service, and removing the options deletes it")
+    @Test(description = "Changing the base path, dotted or in a table, regenerates the service, and removing the " +
+            "options deletes it")
     public void testRegenerationAndCleanup() throws IOException, InterruptedException {
         Path project = project("ds_regenerate", entry("h2", "options.dataservice.protocol = \"http\""),
                 MODEL);
@@ -139,8 +141,8 @@ public class ToolingDataServiceTest {
         Path service = project.resolve("generated").resolve(SERVICE);
         Assert.assertTrue(Files.readString(service).contains("service /api on"));
 
-        writeToml(project, entry("h2", "options.dataservice.protocol = \"http\"\n" +
-                "options.dataservice.basePath = \"/hr/v2/\""));
+        writeToml(project, entry("h2", "\n[tool.persist.options.dataservice]\nprotocol = \"http\"\n" +
+                "basePath = \"/hr/v2/\""));
         assertSucceeded(build(project));
         Assert.assertTrue(Files.readString(service).contains("service /hr/v2 on"));
         Assert.assertTrue(Files.readString(service).contains("dsHttp:buildLocation(\"/hr/v2/employees\""));
@@ -289,14 +291,16 @@ public class ToolingDataServiceTest {
 
     // bal persist add
 
-    @Test(description = "add --dataservice writes the protocol into the new entry")
+    @Test(description = "add --dataservice writes the protocol as a table after the new entry")
     public void testAdd() throws IOException, InterruptedException {
         Path project = emptyProject("ds_add");
         Result result = bal(project, Map.of(), "persist", "add", "--datastore", "h2", "--dataservice", "http");
         assertSucceeded(result);
         String toml = Files.readString(project.resolve("Ballerina.toml"));
         Assert.assertTrue(toml.contains("options.datastore = \"h2\""), toml);
-        Assert.assertTrue(toml.contains("options.dataservice.protocol = \"http\""), toml);
+        Assert.assertTrue(toml.contains("filePath = \"persist/model.bal\"\n\n[tool.persist.options.dataservice]\n" +
+                "protocol = \"http\"\n"), toml);
+        Assert.assertFalse(toml.contains("\noptions.dataservice"), toml);
         Assert.assertFalse(toml.contains("basePath"), toml);
         Assert.assertTrue(result.output().contains("2. Add the @dataservice:Expose annotation to each entity to " +
                 "expose.\n3. Execute `bal build` to generate the persist client and the HTTP data service during " +

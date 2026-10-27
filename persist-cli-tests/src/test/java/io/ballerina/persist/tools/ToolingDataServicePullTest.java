@@ -71,8 +71,8 @@ public class ToolingDataServicePullTest {
         String toml = Files.readString(SOURCES.resolve(subDir).resolve("Ballerina.toml"));
         Assert.assertTrue(toml.contains("[[tool.persist]]"), toml);
         Assert.assertTrue(toml.contains("options.datastore = \"mysql\""), toml);
-        Assert.assertTrue(toml.contains("filePath = \"persist/model.bal\""), toml);
-        Assert.assertTrue(toml.contains("options.dataservice.protocol = \"http\""), toml);
+        Assert.assertTrue(toml.contains("filePath = \"persist/model.bal\"\n\n[tool.persist.options.dataservice]\n" +
+                "protocol = \"http\"\n"), toml);
     }
 
     @Test(description = "pull --expose-tables annotates the named tables and keeps the entry's base path")

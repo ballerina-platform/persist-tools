@@ -217,8 +217,10 @@ public class Add implements BLauncherCmd {
         }
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("filePath", modelPath, null));
         if (dataservice != null) {
-            moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("options.dataservice.protocol",
-                    dataservice, null));
+            moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
+            moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(
+                    PersistToolsConstants.PERSIST_TOOL_CONFIG + ".options.dataservice", null));
+            moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("protocol", dataservice, null));
         }
         return moduleMembers;
     }

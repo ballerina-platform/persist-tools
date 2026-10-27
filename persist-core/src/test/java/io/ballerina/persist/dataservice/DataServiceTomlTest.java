@@ -45,8 +45,8 @@ public class DataServiceTomlTest {
         Assert.assertEquals(entry.values().get("id"), "generate-db-client");
         Assert.assertEquals(entry.targetModule("hr"), "hr");
         Assert.assertFalse(entry.withInitParams());
-        Assert.assertEquals(DataServiceToml.setProtocol(toml, entry, "http"),
-                toml.substring(0, toml.length() - 1) + "\noptions.dataservice.protocol = \"http\"\n");
+        Assert.assertEquals(DataServiceToml.setProtocol(toml, entry, "http"), toml.substring(0, toml.length() - 1) +
+                "\n\n[tool.persist.options.dataservice]\nprotocol = \"http\"\n");
     }
 
     @Test
@@ -72,5 +72,43 @@ public class DataServiceTomlTest {
     public void testEntryWithoutDataService() {
         String toml = PACKAGE + "[[tool.persist]]\nfilePath = \"persist/model.bal\"\noptions.datastore = \"mysql\"\n";
         Assert.assertTrue(DataServiceToml.defaultModelEntry(toml).orElseThrow().dataService().isEmpty());
+    }
+
+    @Test
+    public void testDataServiceTable() {
+        String toml = PACKAGE + "[[tool.persist]]\nfilePath = \"persist/model.bal\"\n\n" +
+                "[tool.persist.options.dataservice]\nprotocol = \"graphql\"\nbasePath = \"/v1\"\n";
+        DataServiceToml.Entry entry = DataServiceToml.defaultModelEntry(toml).orElseThrow();
+        Assert.assertEquals(entry.dataService().orElseThrow(), Map.of("protocol", "graphql", "basePath", "/v1"));
+        Assert.assertEquals(DataServiceToml.setProtocol(toml, entry, "http"), toml.replace("\"graphql\"", "\"http\""));
+    }
+
+    @Test
+    public void testProtocolIsAddedToTheTable() {
+        String toml = PACKAGE + "[[tool.persist]]\nfilePath = \"persist/model.bal\"\n\n" +
+                "[tool.persist.options.dataservice]\nbasePath = \"/v1\"\n\n[[platform.java21.dependency]]\n";
+        DataServiceToml.Entry entry = DataServiceToml.defaultModelEntry(toml).orElseThrow();
+        Assert.assertEquals(DataServiceToml.setProtocol(toml, entry, "http"),
+                toml.replace("basePath = \"/v1\"\n", "basePath = \"/v1\"\nprotocol = \"http\"\n"));
+    }
+
+    @Test
+    public void testProtocolIsAddedToADottedGroup() {
+        String toml = PACKAGE + "[[tool.persist]]\nfilePath = \"persist/model.bal\"\n" +
+                "options.dataservice.basePath = \"/v1\"\n";
+        DataServiceToml.Entry entry = DataServiceToml.defaultModelEntry(toml).orElseThrow();
+        Assert.assertEquals(DataServiceToml.setProtocol(toml, entry, "http"),
+                toml + "options.dataservice.protocol = \"http\"\n");
+    }
+
+    @Test
+    public void testTableBelongsToItsOwnEntry() {
+        String toml = PACKAGE + "[[tool.persist]]\nid = \"users\"\nfilePath = \"persist/users/model.bal\"\n\n" +
+                "[tool.persist.options.dataservice]\nprotocol = \"http\"\n\n" +
+                "[[tool.persist]]\nid = \"generate-db-client\"\nfilePath = \"persist/model.bal\"\n";
+        DataServiceToml.Entry entry = DataServiceToml.defaultModelEntry(toml).orElseThrow();
+        Assert.assertEquals(entry.values().get("id"), "generate-db-client");
+        Assert.assertTrue(entry.dataService().isEmpty());
+        Assert.assertTrue(entry.dataServiceTable().isEmpty());
     }
 }
