@@ -39,6 +39,8 @@ public final class DataServiceMessages {
             "Remove 'targetModule' or set it to '%s'.";
     public static final String WITH_INIT_PARAMS = "a data service cannot be generated with " +
             "'options.withInitParams', because the service creates the client without arguments.";
+    public static final String DATASTORE_NOT_SQL = "a data service is supported only for the SQL datastores " +
+            "mysql, mssql, postgresql and h2, found '%s'.";
     public static final String NAMED_MODEL = "a data service is not supported for a named persist model. " +
             "Use 'persist/model.bal' or remove 'options.dataservice'.";
     public static final String NO_EXPOSED_ENTITY = "the data service exposes no entity. Add the " +

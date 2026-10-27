@@ -65,6 +65,29 @@ public class DataServiceOptionsTest {
         return new Object[][]{{"rest"}, {"HTTP"}, {""}};
     }
 
+    @Test(dataProvider = "sqlDatastores")
+    public void testSqlDatastore(String datastore) throws BalException {
+        DataServiceOptions.validateDatastore(datastore);
+    }
+
+    @DataProvider
+    public Object[][] sqlDatastores() {
+        return new Object[][]{{"mysql"}, {"mssql"}, {"sqlserver"}, {"postgresql"}, {"h2"}};
+    }
+
+    @Test(dataProvider = "otherDatastores")
+    public void testOtherDatastore(String datastore) {
+        BalException error = Assert.expectThrows(BalException.class,
+                () -> DataServiceOptions.validateDatastore(datastore));
+        Assert.assertEquals(error.getMessage(), "a data service is supported only for the SQL datastores mysql, " +
+                "mssql, postgresql and h2, found '" + datastore + "'.");
+    }
+
+    @DataProvider
+    public Object[][] otherDatastores() {
+        return new Object[][]{{"inmemory"}, {"googlesheets"}, {"redis"}, {"jdbc"}};
+    }
+
     @Test(dataProvider = "validBasePaths")
     public void testValidBasePath(String basePath, String expected) throws BalException {
         Assert.assertEquals(DataServiceOptions.from(group(basePath)).basePath(), expected);

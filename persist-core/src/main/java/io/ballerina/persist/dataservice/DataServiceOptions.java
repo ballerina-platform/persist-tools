@@ -19,6 +19,7 @@
 package io.ballerina.persist.dataservice;
 
 import io.ballerina.persist.BalException;
+import io.ballerina.persist.PersistToolsConstants.SupportedDataSources;
 
 import java.util.Map;
 import java.util.Set;
@@ -39,6 +40,9 @@ public record DataServiceOptions(String protocol, String basePath) {
     public static final String DEFAULT_HTTP_BASE_PATH = "/api";
 
     private static final Set<String> RESERVED_PROTOCOLS = Set.of("graphql", "mcp", "odata", "soap");
+    private static final Set<String> SQL_DATASTORES = Set.of(SupportedDataSources.MYSQL_DB,
+            SupportedDataSources.MSSQL_DB, SupportedDataSources.MSSQL_DB_ALT, SupportedDataSources.POSTGRESQL_DB,
+            SupportedDataSources.H2_DB);
     private static final Pattern SEGMENT = Pattern.compile("[A-Za-z0-9_.\\-]+");
 
     /**
@@ -74,6 +78,18 @@ public record DataServiceOptions(String protocol, String basePath) {
             throw new BalException(String.format(DataServiceMessages.PROTOCOL_NOT_SUPPORTED_YET, protocol));
         }
         throw new BalException(String.format(DataServiceMessages.PROTOCOL_INVALID, protocol));
+    }
+
+    /**
+     * Validates that a datastore supports a data service.
+     *
+     * @param datastore the value of `options.datastore` or `--datastore`
+     * @throws BalException if the datastore is not a SQL datastore
+     */
+    public static void validateDatastore(String datastore) throws BalException {
+        if (!SQL_DATASTORES.contains(datastore)) {
+            throw new BalException(String.format(DataServiceMessages.DATASTORE_NOT_SQL, datastore));
+        }
     }
 
     /**

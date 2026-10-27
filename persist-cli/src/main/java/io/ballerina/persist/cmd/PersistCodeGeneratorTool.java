@@ -110,6 +110,9 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
 
             validateDatastore(datastore);
             validateTestDatastore(datastore, testDatastore);
+            if (dataServiceOptions != null) {
+                DataServiceOptions.validateDatastore(datastore);
+            }
 
             if (!targetModule.equals(packageName)) {
                 if (!targetModule.startsWith(packageName + ".")) {

@@ -131,7 +131,7 @@ public class Add implements BLauncherCmd {
                 return;
             }
             if (dataservice != null) {
-                validateDataServiceFlags(dataservice, packageName, module, model, initParams);
+                validateDataServiceFlags(dataservice, datastore, packageName, module, model, initParams);
             }
             String moduleNameWithPackage = validateAndProcessModule(packageName, module);
             createDefaultClientId();
@@ -244,15 +244,17 @@ public class Add implements BLauncherCmd {
      * Validates `--dataservice` and the options that cannot be combined with it, for `add` and `generate`.
      *
      * @param protocol    the value of `--dataservice`
+     * @param datastore   the value of `--datastore`
      * @param packageName the package name
      * @param module      the value of `--module`, or null
      * @param model       the value of `--model`, or null
      * @param initParams  whether `--with-init-params` is given
      * @throws BalException with the message of the matching `Ballerina.toml` case
      */
-    static void validateDataServiceFlags(String protocol, String packageName, String module, String model,
-                                         boolean initParams) throws BalException {
+    static void validateDataServiceFlags(String protocol, String datastore, String packageName, String module,
+                                         String model, boolean initParams) throws BalException {
         DataServiceOptions.validateProtocol(protocol);
+        DataServiceOptions.validateDatastore(datastore);
         if (module != null) {
             throw new BalException(String.format(DataServiceMessages.TARGET_MODULE, packageName, packageName));
         }

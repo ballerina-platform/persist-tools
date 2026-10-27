@@ -161,7 +161,7 @@ public class Generate implements BLauncherCmd {
         }
         if (dataservice != null) {
             try {
-                Add.validateDataServiceFlags(dataservice, packageName, module, model, initParams);
+                Add.validateDataServiceFlags(dataservice, datastore, packageName, module, model, initParams);
             } catch (BalException e) {
                 errStream.printf("ERROR: %s%n", e.getMessage());
                 return;

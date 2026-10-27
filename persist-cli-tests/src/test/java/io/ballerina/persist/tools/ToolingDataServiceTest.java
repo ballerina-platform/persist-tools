@@ -89,12 +89,6 @@ public class ToolingDataServiceTest {
 
     // Behaviour
 
-    @Test(description = "Every operation and error of the HTTP data service against the in-memory datastore")
-    public void testBehaviourInMemory() throws IOException, InterruptedException {
-        Result result = bal(SOURCES.resolve("tool_test_dataservice_inmemory"), Map.of(), "test", "--offline");
-        assertTestsPassed(result, 28);
-    }
-
     // H2 reads a time:Utc back from a TIMESTAMP column as local time, so the service runs in UTC.
     @Test(description = "Every operation and error of the HTTP data service against the H2 datastore")
     public void testBehaviourH2() throws IOException, InterruptedException {
@@ -123,7 +117,7 @@ public class ToolingDataServiceTest {
 
     @Test(description = "The service is generated next to the client, with the default base path")
     public void testBuildGeneratesTheService() throws IOException, InterruptedException {
-        Path project = project("ds_build", entry("inmemory", "options.dataservice.protocol = \"http\""), MODEL);
+        Path project = project("ds_build", entry("h2", "options.dataservice.protocol = \"http\""), MODEL);
         assertSucceeded(build(project));
         String service = Files.readString(project.resolve("generated").resolve(SERVICE));
         Assert.assertTrue(service.startsWith("// AUTO-GENERATED FILE. DO NOT MODIFY."), service);
@@ -139,19 +133,19 @@ public class ToolingDataServiceTest {
 
     @Test(description = "Changing the base path regenerates the service, and removing the options deletes it")
     public void testRegenerationAndCleanup() throws IOException, InterruptedException {
-        Path project = project("ds_regenerate", entry("inmemory", "options.dataservice.protocol = \"http\""),
+        Path project = project("ds_regenerate", entry("h2", "options.dataservice.protocol = \"http\""),
                 MODEL);
         assertSucceeded(build(project));
         Path service = project.resolve("generated").resolve(SERVICE);
         Assert.assertTrue(Files.readString(service).contains("service /api on"));
 
-        writeToml(project, entry("inmemory", "options.dataservice.protocol = \"http\"\n" +
+        writeToml(project, entry("h2", "options.dataservice.protocol = \"http\"\n" +
                 "options.dataservice.basePath = \"/hr/v2/\""));
         assertSucceeded(build(project));
         Assert.assertTrue(Files.readString(service).contains("service /hr/v2 on"));
         Assert.assertTrue(Files.readString(service).contains("dsHttp:buildLocation(\"/hr/v2/employees\""));
 
-        writeToml(project, entry("inmemory", ""));
+        writeToml(project, entry("h2", ""));
         Result result = build(project);
         Assert.assertFalse(Files.exists(service), result.output());
         Assert.assertFalse(Files.exists(project.resolve("generated").resolve(CONFIG)));
@@ -164,15 +158,15 @@ public class ToolingDataServiceTest {
 
     @Test(description = "Without options.dataservice and annotations, persist behaves as it does today")
     public void testNoDataService() throws IOException, InterruptedException {
-        Path project = project("ds_none", entry("inmemory", ""), PLAIN_MODEL);
+        Path project = project("ds_none", entry("h2", ""), PLAIN_MODEL);
         Result result = build(project);
         assertSucceeded(result);
         Assert.assertFalse(result.output().contains("@dataservice:Expose"), result.output());
         Assert.assertFalse(Files.exists(project.resolve("generated").resolve(SERVICE)));
     }
 
-    @Test(dataProvider = "datastores", description = "The generated package compiles on every persist datastore")
-    public void testCompilesOnEveryDatastore(String datastore) throws IOException, InterruptedException {
+    @Test(dataProvider = "sqlDatastores", description = "The generated package compiles on every SQL datastore")
+    public void testCompilesOnEverySqlDatastore(String datastore) throws IOException, InterruptedException {
         Path project = project("ds_datastore_" + datastore,
                 entry(datastore, "options.dataservice.protocol = \"http\""), MODEL);
         assertSucceeded(build(project));
@@ -180,9 +174,24 @@ public class ToolingDataServiceTest {
     }
 
     @DataProvider
-    public Object[][] datastores() {
-        return new Object[][]{{"inmemory"}, {"h2"}, {"mysql"}, {"mssql"}, {"postgresql"}, {"googlesheets"},
-                {"redis"}};
+    public Object[][] sqlDatastores() {
+        return new Object[][]{{"h2"}, {"mysql"}, {"mssql"}, {"postgresql"}};
+    }
+
+    @Test(dataProvider = "otherDatastores", description = "Every datastore other than a SQL datastore fails the build")
+    public void testBuildRejectsOtherDatastore(String datastore) throws IOException, InterruptedException {
+        Path project = project("ds_datastore_" + datastore,
+                entry(datastore, "options.dataservice.protocol = \"http\""), MODEL);
+        Result result = build(project);
+        Assert.assertNotEquals(result.exitCode(), 0, result.output());
+        Assert.assertTrue(result.output().contains(sqlOnly(datastore)), result.output());
+        Assert.assertFalse(Files.exists(project.resolve("generated").resolve(SERVICE)), result.output());
+        Assert.assertFalse(Files.exists(project.resolve("generated").resolve("persist_client.bal")), result.output());
+    }
+
+    @DataProvider
+    public Object[][] otherDatastores() {
+        return new Object[][]{{"inmemory"}, {"googlesheets"}, {"redis"}};
     }
 
     // Messages from bal build
@@ -190,7 +199,7 @@ public class ToolingDataServiceTest {
     @Test(dataProvider = "buildErrors", description = "Each Ballerina.toml and model error fails the build")
     public void testBuildError(String name, String options, String filePath, String model, String message)
             throws IOException, InterruptedException {
-        String toml = entry("inmemory", options);
+        String toml = entry("h2", options);
         if (filePath != null) {
             toml = toml.replace("filePath = \"persist/model.bal\"", "filePath = \"" + filePath + "\"");
         }
@@ -270,7 +279,7 @@ public class ToolingDataServiceTest {
     // Ballerina reports a schema error and skips the tool, but does not fail the build.
     @Test(description = "The options schema rejects a key that options.dataservice does not define")
     public void testUnknownOptionKey() throws IOException, InterruptedException {
-        Path project = project("ds_unknown_key", entry("inmemory", "options.dataservice.protocol = \"http\"\n" +
+        Path project = project("ds_unknown_key", entry("h2", "options.dataservice.protocol = \"http\"\n" +
                 "options.dataservice.port = 8080"), MODEL);
         Result result = build(project);
         Assert.assertTrue(result.output().contains("key 'port' not supported in schema 'dataservice'"),
@@ -341,17 +350,19 @@ public class ToolingDataServiceTest {
     @DataProvider
     public Object[][] addErrors() {
         return new Object[][]{
-                {"module", List.of("--dataservice", "http", "--module", "db"),
+                {"module", List.of("--datastore", "h2", "--dataservice", "http", "--module", "db"),
                         "a data service is generated only into the default module 'ds_add_module'. Remove " +
                                 "'targetModule' or set it to 'ds_add_module'."},
-                {"model", List.of("--dataservice", "http", "--model", "hr"),
+                {"model", List.of("--datastore", "h2", "--dataservice", "http", "--model", "hr"),
                         "a data service is not supported for a named persist model."},
-                {"init_params", List.of("--dataservice", "http", "--with-init-params"),
+                {"init_params", List.of("--datastore", "h2", "--dataservice", "http", "--with-init-params"),
                         "a data service cannot be generated with 'options.withInitParams'"},
                 {"graphql", List.of("--dataservice", "graphql"),
                         "the protocol 'graphql' is not supported yet. Supported values: http."},
                 {"rest", List.of("--dataservice", "rest"),
                         "invalid 'options.dataservice.protocol' 'rest'. Supported values: http."},
+                {"default_datastore", List.of("--dataservice", "http"), sqlOnly("inmemory")},
+                {"redis", List.of("--datastore", "redis", "--dataservice", "http"), sqlOnly("redis")},
         };
     }
 
@@ -361,7 +372,7 @@ public class ToolingDataServiceTest {
     public void testGenerate() throws IOException, InterruptedException {
         Path project = emptyProject("ds_generate");
         writeModel(project, MODEL);
-        Result result = bal(project, Map.of(), "persist", "generate", "--datastore", "inmemory", "--dataservice",
+        Result result = bal(project, Map.of(), "persist", "generate", "--datastore", "h2", "--dataservice",
                 "http");
         assertSucceeded(result);
         Path service = project.resolve(SERVICE);
@@ -373,7 +384,7 @@ public class ToolingDataServiceTest {
         assertSucceeded(build(project));
 
         Files.writeString(service, generated + "\n// edited by the user\n");
-        assertSucceeded(bal(project, Map.of(), "persist", "generate", "--datastore", "inmemory", "--dataservice",
+        assertSucceeded(bal(project, Map.of(), "persist", "generate", "--datastore", "h2", "--dataservice",
                 "http"));
         Assert.assertEquals(Files.readString(service), generated);
     }
@@ -382,7 +393,7 @@ public class ToolingDataServiceTest {
     public void testGenerateWithoutOption() throws IOException, InterruptedException {
         Path project = emptyProject("ds_generate_info");
         writeModel(project, MODEL);
-        Result result = bal(project, Map.of(), "persist", "generate", "--datastore", "inmemory");
+        Result result = bal(project, Map.of(), "persist", "generate", "--datastore", "h2");
         assertSucceeded(result);
         Assert.assertTrue(result.output().contains("the model has @dataservice:Expose annotations. Use the " +
                 "'--dataservice' option to also generate a data service."), result.output());
@@ -395,7 +406,10 @@ public class ToolingDataServiceTest {
         Path project = emptyProject("ds_generate_" + name);
         writeModel(project, model);
         String toml = Files.readString(project.resolve("Ballerina.toml"));
-        List<String> command = new ArrayList<>(List.of("persist", "generate", "--datastore", "inmemory"));
+        List<String> command = new ArrayList<>(List.of("persist", "generate"));
+        if (!args.contains("--datastore")) {
+            command.addAll(List.of("--datastore", "h2"));
+        }
         command.addAll(args);
         Result result = bal(project, Map.of(), command.toArray(String[]::new));
         Assert.assertTrue(result.output().contains("ERROR: " + message), result.output());
@@ -415,6 +429,8 @@ public class ToolingDataServiceTest {
                         "a data service cannot be generated with 'options.withInitParams'"},
                 {"mcp", MODEL, List.of("--dataservice", "mcp"),
                         "the protocol 'mcp' is not supported yet. Supported values: http."},
+                {"inmemory", MODEL, List.of("--dataservice", "http", "--datastore", "inmemory"),
+                        sqlOnly("inmemory")},
                 {"no_entity", PLAIN_MODEL.replace("import ballerina/persist as _;",
                         "import ballerina/dataservice as _;\nimport ballerina/persist as _;"),
                         List.of("--dataservice", "http"), "the data service exposes no entity. Add the " +
@@ -465,6 +481,11 @@ public class ToolingDataServiceTest {
                         "targetModule = \"ds_pull_entry_expose_tables.db\"", List.of("--expose-tables", "employees"),
                         "a data service is generated only into the default module 'ds_pull_entry_expose_tables'."},
         };
+    }
+
+    private static String sqlOnly(String datastore) {
+        return "a data service is supported only for the SQL datastores mysql, mssql, postgresql and h2, found '" +
+                datastore + "'.";
     }
 
     private static Result build(Path project) throws IOException, InterruptedException {
