@@ -386,6 +386,18 @@ public class ToolingDbPullTest {
     }
 
     @Test(enabled = true)
+    @Description("Test interactive mode aborting when the input ends before a table selection is given.")
+    public void pullTestMysqlInteractiveModeNoInput() throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        String subDir = "tool_test_pull_abort_mysql";
+        createFromDatabaseScript(subDir, "mysql", mysqlDbConfig);
+        executePullCommandInteractive(subDir, "", mysqlDbConfig, "mysql");
+        assertGeneratedSources(subDir);
+    }
+
+    @Test(enabled = true)
     @Description("Test foreign key dependency with multi-level chain (Address->City->Country).")
     public void pullTestMysqlForeignKeyChain() throws BalException {
         if (OS.WINDOWS.isCurrentOs()) {
@@ -478,6 +490,18 @@ public class ToolingDbPullTest {
         String subDir = "tool_test_pull_5_mysql";
         createFromDatabaseScript(subDir, "mysql", mysqlDbConfig);
         executeDefaultPullCommand(subDir, "n\n", mysqlDbConfig, "mysql");
+        assertGeneratedSources(subDir);
+    }
+
+    @Test(enabled = true)
+    @Description("Introspection when a model.bal file already exists and the input ends before an answer.")
+    public void pullTestMysqlModelFileExistsNoInput() throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        String subDir = "tool_test_pull_5_mysql";
+        createFromDatabaseScript(subDir, "mysql", mysqlDbConfig);
+        executeDefaultPullCommand(subDir, "", mysqlDbConfig, "mysql");
         assertGeneratedSources(subDir);
     }
 
