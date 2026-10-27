@@ -74,7 +74,7 @@ public final class DataServiceMessages {
             "2. Add the @dataservice:Expose annotation to each entity to expose.";
     public static final String ADD_BUILD_STEP = "3. Execute `bal build` to generate the persist client and the %s " +
             "data service during package build.";
-    public static final String PULL_ENABLED = "Enabled the %s data service in the [[tool.persist]] entry of " +
+    public static final String PULL_ENABLED = "enabled the %s data service in the [[tool.persist]] entry of " +
             "persist/model.bal in Ballerina.toml.";
 
     private DataServiceMessages() {

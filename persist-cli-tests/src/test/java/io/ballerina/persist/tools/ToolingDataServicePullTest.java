@@ -65,7 +65,7 @@ public class ToolingDataServicePullTest {
                 "entity 'Gadget' is not exposed."), output);
         Assert.assertFalse(output.contains("is exposed as the entity"), output);
         Assert.assertFalse(output.contains("allow every action"), output);
-        Assert.assertTrue(output.contains("Enabled the HTTP data service in the [[tool.persist]] entry of " +
+        Assert.assertTrue(output.contains("enabled the HTTP data service in the [[tool.persist]] entry of " +
                 "persist/model.bal in Ballerina.toml."), output);
         Assert.assertFalse(output.contains("Execute `bal build`"), output);
         String toml = Files.readString(SOURCES.resolve(subDir).resolve("Ballerina.toml"));
@@ -113,7 +113,7 @@ public class ToolingDataServicePullTest {
         String model = Files.readString(SOURCES.resolve(subDir).resolve("persist").resolve("model.bal"));
         Assert.assertEquals(model.split("@dataservice:Expose", -1).length - 1, 2, model);
         Assert.assertEquals(Files.readString(SOURCES.resolve(subDir).resolve("Ballerina.toml")), toml);
-        Assert.assertFalse(output.contains("Enabled the"), output);
+        Assert.assertFalse(output.contains("enabled the"), output);
         Assert.assertFalse(output.contains("Execute `bal build`"), output);
     }
 
