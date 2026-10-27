@@ -41,12 +41,11 @@ public class HttpDataServiceGeneratorTest {
     private static final Path ACTUAL = Paths.get("build", "dataservice-actual").toAbsolutePath();
 
     @Test(dataProvider = "cases")
-    public void testGeneratedService(String model, String datastore, String basePath, boolean userOwned,
-                                     String expected, String expectedTypes) throws BalException, IOException {
+    public void testGeneratedService(String model, String basePath, boolean userOwned, String expected,
+                                     String expectedTypes) throws BalException, IOException {
         Path modelPath = RESOURCES.resolve(model).resolve("model.bal");
         Module module = BalProjectUtils.getEntities(modelPath);
-        List<ExposedEntity> entities = DataServiceModel.resolve(module, ExposeAnnotations.read(modelPath),
-                datastore);
+        List<ExposedEntity> entities = DataServiceModel.resolve(module, ExposeAnnotations.read(modelPath));
         HttpDataServiceGenerator generator = new HttpDataServiceGenerator(entities,
                 new DataServiceOptions("http", DataServiceOptions.validateBasePath(basePath)),
                 module.getModuleName(), userOwned);
@@ -59,15 +58,15 @@ public class HttpDataServiceGeneratorTest {
     @DataProvider
     public Object[][] cases() {
         return new Object[][]{
-                {"employees", "inmemory", "/api", false, "dataservice.bal", "dataservice_types.bal"},
-                {"employees", "inmemory", "/", false, "root_base_path.bal", null},
-                {"employees", "inmemory", "/hr/v1", false, "custom_base_path.bal", null},
-                {"employees", "inmemory", "/hr-data/v1.0", false, "quoted_base_path.bal", null},
-                {"employees", "inmemory", "/api", true, "user_owned.bal", "user_owned_types.bal"},
-                {"composite", "inmemory", "/api", false, "dataservice.bal", "dataservice_types.bal"},
-                {"wire", "inmemory", "/api", false, "dataservice.bal", "dataservice_types.bal"},
-                {"combinations", "inmemory", "/api", false, "dataservice.bal", "dataservice_types.bal"},
-                {"generated_key", "h2", "/api", false, "dataservice.bal", "dataservice_types.bal"},
+                {"employees", "/api", false, "dataservice.bal", "dataservice_types.bal"},
+                {"employees", "/", false, "root_base_path.bal", null},
+                {"employees", "/hr/v1", false, "custom_base_path.bal", null},
+                {"employees", "/hr-data/v1.0", false, "quoted_base_path.bal", null},
+                {"employees", "/api", true, "user_owned.bal", "user_owned_types.bal"},
+                {"composite", "/api", false, "dataservice.bal", "dataservice_types.bal"},
+                {"wire", "/api", false, "dataservice.bal", "dataservice_types.bal"},
+                {"combinations", "/api", false, "dataservice.bal", "dataservice_types.bal"},
+                {"generated_key", "/api", false, "dataservice.bal", "dataservice_types.bal"},
         };
     }
 
@@ -75,8 +74,8 @@ public class HttpDataServiceGeneratorTest {
     public void testNoTypesWithoutReadOrCreate() throws BalException {
         Path modelPath = RESOURCES.resolve("combinations").resolve("model.bal");
         Module module = BalProjectUtils.getEntities(modelPath);
-        List<ExposedEntity> updateOnly = DataServiceModel.resolve(module, ExposeAnnotations.read(modelPath),
-                "inmemory").stream().filter(entity -> entity.name().equals("UpdateDeleteItem")).toList();
+        List<ExposedEntity> updateOnly = DataServiceModel.resolve(module, ExposeAnnotations.read(modelPath)).stream()
+                .filter(entity -> entity.name().equals("UpdateDeleteItem")).toList();
         Assert.assertTrue(new HttpDataServiceGenerator(updateOnly, DataServiceOptions.defaults("http"), "model",
                 false).generateTypes().isEmpty());
     }

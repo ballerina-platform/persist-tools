@@ -18,7 +18,6 @@
 
 package io.ballerina.persist.dataservice;
 
-import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.Relation;
@@ -56,10 +55,9 @@ public final class ExposedEntity {
      *
      * @param entity     the persist entity
      * @param operations the actions the entity allows
-     * @param datastore  the datastore, which decides whether `<Entity>Insert` holds the key
      * @return the exposed entity
      */
-    public static ExposedEntity of(Entity entity, EnumSet<Operation> operations, String datastore) {
+    public static ExposedEntity of(Entity entity, EnumSet<Operation> operations) {
         List<ServiceField> fields = new ArrayList<>();
         List<ServiceField> insertFields = new ArrayList<>();
         List<ServiceField> updateFields = new ArrayList<>();
@@ -85,9 +83,8 @@ public final class ExposedEntity {
             }
         }
         boolean generated = entity.getFields().stream().anyMatch(EntityField::isDbGenerated);
-        boolean aliasInsert = !generated || PersistToolsConstants.SUPPORTED_NOSQL_DB_PROVIDERS.contains(datastore);
         return new ExposedEntity(entity.getEntityName(), entity.getClientResourceName(), operations,
-                List.copyOf(fields), aliasInsert ? null : List.copyOf(insertFields), List.copyOf(updateFields));
+                List.copyOf(fields), generated ? List.copyOf(insertFields) : null, List.copyOf(updateFields));
     }
 
     /**

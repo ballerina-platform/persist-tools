@@ -268,8 +268,7 @@ public class Generate implements BLauncherCmd {
                 return;
             }
             try {
-                exposedEntities = DataServiceModel.resolve(module, ExposeAnnotations.read(schemaFilePath),
-                        datastore);
+                exposedEntities = DataServiceModel.resolve(module, ExposeAnnotations.read(schemaFilePath));
             } catch (BalException e) {
                 Utils.printErrors(errStream, e.getMessage());
                 return;
