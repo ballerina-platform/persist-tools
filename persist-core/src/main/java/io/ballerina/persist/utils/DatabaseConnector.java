@@ -192,16 +192,21 @@ public class DatabaseConnector {
         }
         return dependencies;
     }
+    /**
+     * Reads the database password from the console, or from standard input when no console is available.
+     *
+     * @param scanner   the scanner over standard input
+     * @param errStream the stream to print the prompt to
+     * @return the password, or {@code null} if the input ended before a password was given
+     */
     public static String readDatabasePassword(Scanner scanner, PrintStream errStream) {
-        String password;
         Console console = System.console();
         if (console == null) {
             errStream.println("WARNING console could not be detected. falling back to standard input.");
             errStream.print("Database Password: ");
-            password = scanner.nextLine();
-        } else {
-            password = new String(console.readPassword("Database Password: "));
+            return scanner.hasNextLine() ? scanner.nextLine() : null;
         }
-        return password;
+        char[] password = console.readPassword("Database Password: ");
+        return password == null ? null : new String(password);
     }
 }
