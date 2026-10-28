@@ -31,8 +31,10 @@ public type TicketInsertPayload record {|
 # A list of tickets.
 #
 # + items - The tickets
+# + hasMore - Whether records exist after this page
 public type TicketList record {|
     TicketPayload[] items;
+    boolean hasMore;
 |};
 
 # The response to creating one ticket.
@@ -76,8 +78,10 @@ isolated function transformPayloadToTicketInsert(TicketInsertPayload payload) re
 # A list of order items.
 #
 # + items - The order items
+# + hasMore - Whether records exist after this page
 public type OrderItemList record {|
     OrderItem[] items;
+    boolean hasMore;
 |};
 
 # The response to creating one order item.

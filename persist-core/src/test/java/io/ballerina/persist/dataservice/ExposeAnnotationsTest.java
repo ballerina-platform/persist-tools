@@ -150,4 +150,14 @@ public class ExposeAnnotationsTest {
         BalException error = Assert.expectThrows(BalException.class, () -> read(members));
         Assert.assertEquals(error.getMessage(), message);
     }
+
+    @Test
+    public void testDocs() {
+        SyntaxTree model = SyntaxTree.from(TextDocuments.from(IMPORTS +
+                "# An employee.\n#\n# Paid monthly.\n#\n# + id - The key\n@dataservice:Expose\n" +
+                "type Employee record {| readonly int id; |};\n" +
+                "type AuditLog record {| readonly int id; |};\n"));
+        Assert.assertEquals(ExposeAnnotations.docs(model),
+                Map.of("Employee", List.of("An employee.", "", "Paid monthly.")));
+    }
 }

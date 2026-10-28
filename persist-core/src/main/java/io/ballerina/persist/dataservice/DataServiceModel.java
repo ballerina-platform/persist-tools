@@ -40,11 +40,12 @@ public final class DataServiceModel {
      *
      * @param entityModule the persist model
      * @param annotations  the actions of each annotated entity, as `ExposeAnnotations` reads them
+     * @param docs         the doc comment lines of each entity, as `ExposeAnnotations.docs` reads them
      * @return the exposed entities, in model order
      * @throws BalException if an annotated entity cannot be exposed, or no entity is annotated
      */
-    public static List<ExposedEntity> resolve(Module entityModule, Map<String, EnumSet<Operation>> annotations)
-            throws BalException {
+    public static List<ExposedEntity> resolve(Module entityModule, Map<String, EnumSet<Operation>> annotations,
+                                              Map<String, List<String>> docs) throws BalException {
         List<ExposedEntity> exposed = new ArrayList<>();
         List<String> errors = new ArrayList<>();
         for (Entity entity : entityModule.getEntityMap().values()) {
@@ -55,7 +56,7 @@ public final class DataServiceModel {
             if (entity.containsUnsupportedTypes()) {
                 errors.add(String.format(DataServiceMessages.UNSUPPORTED_ENTITY, entity.getEntityName()));
             } else {
-                exposed.add(ExposedEntity.of(entity, operations));
+                exposed.add(ExposedEntity.of(entity, operations, docs.getOrDefault(entity.getEntityName(), List.of())));
             }
         }
         if (!errors.isEmpty()) {

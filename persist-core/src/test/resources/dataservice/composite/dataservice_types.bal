@@ -8,8 +8,10 @@ import ballerina/http;
 # A list of assignments.
 #
 # + items - The assignments
+# + hasMore - Whether records exist after this page
 public type AssignmentList record {|
     Assignment[] items;
+    boolean hasMore;
 |};
 
 # The response to creating one assignment.
@@ -31,6 +33,8 @@ public type AssignmentListCreated record {|
 # A list of rates.
 #
 # + items - The rates
+# + hasMore - Whether records exist after this page
 public type RateList record {|
     Rate[] items;
+    boolean hasMore;
 |};

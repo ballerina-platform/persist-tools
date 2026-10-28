@@ -3,6 +3,7 @@
 // This file is an auto-generated file by Ballerina persistence layer for model.
 // It should not be modified by hand.
 
+import ballerina/dataservice;
 import ballerina/dataservice.http as dsHttp;
 import ballerina/http;
 import ballerina/persist;
@@ -15,22 +16,23 @@ listener http:Listener dataserviceListener = new (dataservicePort, dataserviceLi
 
 service /api on dataserviceListener {
 
-    # Gets the documents.
+    # Gets a page of documents.
     #
-    # + return - The documents, or an internal error
-    resource function get documents() returns DocumentList|dsHttp:InternalError {
+    # + return - A page of documents, or the error response
+    resource function get documents() returns DocumentList|dsHttp:InvalidInput|dsHttp:InternalError {
         DocumentPayload[]|persist:Error items = from Document item in dataserviceClient->/documents(Document)
             select transformDocumentToPayload(item);
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        return {items};
+        return {items, hasMore: false};
     }
 
     # Gets a document by its key.
     #
+    # + id - The id of the document
     # + return - The document, or the error response
-    resource function get documents/[int id]() returns DocumentPayload|dsHttp:NotFound|dsHttp:InternalError {
+    resource function get documents/[int id]() returns DocumentPayload|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
         Document|persist:Error item = dataserviceClient->/documents/[id];
         if item is persist:Error {
             return dsHttp:toGetError(item, "Document", [id]);
@@ -38,12 +40,17 @@ service /api on dataserviceListener {
         return transformDocumentToPayload(item);
     }
 
-    # Creates one document, or several from an array.
+    # Creates one or more documents.
     #
+    # + payload - The document, or the documents, to create
     # + return - The created document or documents, or the error response
     resource function post documents(DocumentInsertPayload|DocumentInsertPayload[] payload)
             returns DocumentCreated|DocumentListCreated|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         DocumentInsertPayload[] entries = payload is DocumentInsertPayload[] ? payload : [payload];
+        dataservice:DataserviceError? tooMany = dataservice:checkCreateSize(entries.length(), dataservicePageConfig);
+        if tooMany is dataservice:DataserviceError {
+            return <dsHttp:InvalidInput>{body: tooMany};
+        }
         DocumentInsert[] values = [];
         foreach DocumentInsertPayload entry in entries {
             DocumentInsert|dsHttp:InvalidInput value = transformPayloadToDocumentInsert(entry);
@@ -54,20 +61,21 @@ service /api on dataserviceListener {
         }
         DocumentPayload[] items = [];
         if values.length() > 0 {
-            int[]|persist:Error keys = dataserviceClient->/documents.post(values);
-            if keys is persist:Error {
-                return dsHttp:toCreateError(keys, "Document");
-            }
-            foreach int id in keys {
-                Document|persist:Error item = dataserviceClient->/documents/[id];
-                if item is persist:Error {
-                    return dsHttp:toCreateError(item, "Document");
+            do {
+                transaction {
+                    int[] keys = check dataserviceClient->/documents.post(values);
+                    foreach int id in keys {
+                        Document item = check dataserviceClient->/documents/[id];
+                        items.push(transformDocumentToPayload(item));
+                    }
+                    check commit;
                 }
-                items.push(transformDocumentToPayload(item));
+            } on fail error err {
+                return dsHttp:toCreateError(err, "Document");
             }
         }
         if payload is DocumentInsertPayload[] {
-            return <DocumentListCreated>{body: {items}};
+            return <DocumentListCreated>{body: {items, hasMore: false}};
         }
         DocumentPayload created = items[0];
         return <DocumentCreated>{
@@ -76,11 +84,13 @@ service /api on dataserviceListener {
         };
     }
 
-    # Updates the given fields of a document.
+    # Updates a document by its key.
     #
+    # + id - The id of the document
+    # + payload - The fields of the document to update
     # + return - The updated document, or the error response
     resource function patch documents/[int id](DocumentUpdatePayload payload)
-            returns DocumentPayload|dsHttp:InvalidInput|dsHttp:NotFound|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
+            returns DocumentPayload|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         DocumentUpdate|dsHttp:InvalidInput value = transformPayloadToDocumentUpdate(payload);
         if value is dsHttp:InvalidInput {
             return value;
@@ -97,10 +107,11 @@ service /api on dataserviceListener {
         return transformDocumentToPayload(item);
     }
 
-    # Deletes a document and returns it.
+    # Deletes a document by its key.
     #
+    # + id - The id of the document
     # + return - The deleted document, or the error response
-    resource function delete documents/[int id]() returns DocumentPayload|dsHttp:NotFound|dsHttp:ConstraintViolation|dsHttp:InternalError {
+    resource function delete documents/[int id]() returns DocumentPayload|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:ConstraintViolation|dsHttp:InternalError {
         Document|persist:Error item = dataserviceClient->/documents/[id].delete();
         if item is persist:Error {
             return dsHttp:toDeleteError(item, "Document", [id]);
@@ -108,22 +119,23 @@ service /api on dataserviceListener {
         return transformDocumentToPayload(item);
     }
 
-    # Gets the holidays.
+    # Gets a page of holidays.
     #
-    # + return - The holidays, or an internal error
-    resource function get holidays() returns HolidayList|dsHttp:InternalError {
+    # + return - A page of holidays, or the error response
+    resource function get holidays() returns HolidayList|dsHttp:InvalidInput|dsHttp:InternalError {
         HolidayPayload[]|persist:Error items = from Holiday item in dataserviceClient->/holidays(Holiday)
             select transformHolidayToPayload(item);
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        return {items};
+        return {items, hasMore: false};
     }
 
     # Gets a holiday by its key.
     #
+    # + id - The id of the holiday
     # + return - The holiday, or the error response
-    resource function get holidays/[int id]() returns HolidayPayload|dsHttp:NotFound|dsHttp:InternalError {
+    resource function get holidays/[int id]() returns HolidayPayload|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
         Holiday|persist:Error item = dataserviceClient->/holidays/[id];
         if item is persist:Error {
             return dsHttp:toGetError(item, "Holiday", [id]);

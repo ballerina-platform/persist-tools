@@ -31,6 +31,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Expected-output tests of the generated HTTP data service.
@@ -45,7 +46,8 @@ public class HttpDataServiceGeneratorTest {
                                      String expectedTypes) throws BalException, IOException {
         Path modelPath = RESOURCES.resolve(model).resolve("model.bal");
         Module module = BalProjectUtils.getEntities(modelPath);
-        List<ExposedEntity> entities = DataServiceModel.resolve(module, ExposeAnnotations.read(modelPath));
+        List<ExposedEntity> entities = DataServiceModel.resolve(module, ExposeAnnotations.read(modelPath),
+                ExposeAnnotations.docs(modelPath));
         HttpDataServiceGenerator generator = new HttpDataServiceGenerator(entities,
                 new DataServiceOptions("http", DataServiceOptions.validateBasePath(basePath)),
                 module.getModuleName(), userOwned);
@@ -74,7 +76,8 @@ public class HttpDataServiceGeneratorTest {
     public void testNoTypesWithoutReadOrCreate() throws BalException {
         Path modelPath = RESOURCES.resolve("combinations").resolve("model.bal");
         Module module = BalProjectUtils.getEntities(modelPath);
-        List<ExposedEntity> updateOnly = DataServiceModel.resolve(module, ExposeAnnotations.read(modelPath)).stream()
+        List<ExposedEntity> updateOnly = DataServiceModel.resolve(module, ExposeAnnotations.read(modelPath), Map.of())
+                .stream()
                 .filter(entity -> entity.name().equals("UpdateDeleteItem")).toList();
         Assert.assertTrue(new HttpDataServiceGenerator(updateOnly, DataServiceOptions.defaults("http"), "model",
                 false).generateTypes().isEmpty());

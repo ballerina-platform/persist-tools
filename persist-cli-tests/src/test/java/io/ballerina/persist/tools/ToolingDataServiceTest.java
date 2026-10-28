@@ -104,13 +104,15 @@ public class ToolingDataServiceTest {
         Files.writeString(init, schema);
         Files.writeString(project.resolve("tests").resolve("Config.toml"), String.format("""
                 dataservicePort = 9591
+                dataservicePageSize = 5
+                dataserviceMaxPageSize = 5
 
                 [dataservice_test.dataservice_h2]
                 url = "jdbc:h2:mem:dstest;DB_CLOSE_DELAY=-1;INIT=RUNSCRIPT FROM '%s'"
                 user = "sa"
                 password = ""
                 """, init.toString().replace('\\', '/')));
-        assertTestsPassed(bal(project, Map.of("TZ", "UTC"), "test", "--offline"), 32);
+        assertTestsPassed(bal(project, Map.of("TZ", "UTC"), "test", "--offline"), 38);
     }
 
     // Generation from bal build

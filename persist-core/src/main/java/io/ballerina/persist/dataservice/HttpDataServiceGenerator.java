@@ -26,6 +26,7 @@ import io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils;
 import org.ballerinalang.formatter.core.Formatter;
 import org.ballerinalang.formatter.core.FormatterException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -49,12 +50,15 @@ public final class HttpDataServiceGenerator {
     public static final String CONFIG_FILE = "dataservice_config.bal";
 
     private static final String NEWLINE = System.lineSeparator();
-    private static final String GET_ERRORS = "|dsHttp:NotFound|dsHttp:InternalError";
-    private static final String CREATE_ERRORS = "|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError";
+    private static final String LIST_ERRORS = "|dsHttp:InvalidInput|dsHttp:InternalError";
+    private static final String GET_ERRORS = "|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError";
+    private static final String CREATE_ERRORS =
+            "|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError";
     private static final String UPDATE_ERRORS =
-            "|dsHttp:NotFound|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError";
-    private static final String DELETE_ERRORS = "|dsHttp:NotFound|dsHttp:ConstraintViolation|dsHttp:InternalError";
-    private static final String INVALID_INPUT = "|dsHttp:InvalidInput";
+            "|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError";
+    private static final String DELETE_ERRORS =
+            "|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:ConstraintViolation|dsHttp:InternalError";
+    private static final String NO_CONTENT = "http:NoContent";
     private static final Pattern IDENTIFIER = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*");
     private static final Pattern WORD_BOUNDARY = Pattern.compile("(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])");
 
@@ -102,6 +106,9 @@ public final class HttpDataServiceGenerator {
             appendResources(body, entity);
         }
         body.append("}").append(NEWLINE);
+        if (body.indexOf("dataservice:") >= 0) {
+            imports.add("import ballerina/dataservice;");
+        }
         return format(modelHeader() + String.join(NEWLINE, imports) + NEWLINE + NEWLINE + body);
     }
 
@@ -141,11 +148,19 @@ public final class HttpDataServiceGenerator {
      */
     public String generateConfig() throws BalException {
         return format(header(BalSyntaxConstants.AUTO_GENERATED_COMMENT) +
+                "import ballerina/dataservice;" + NEWLINE +
                 "import ballerina/http;" + NEWLINE + NEWLINE +
                 "# The port of the data service listener." + NEWLINE +
                 "configurable int dataservicePort = 9090;" + NEWLINE + NEWLINE +
                 "# The configuration of the data service listener." + NEWLINE +
-                "configurable http:ListenerConfiguration dataserviceListenerConfig = {};" + NEWLINE);
+                "configurable http:ListenerConfiguration dataserviceListenerConfig = {};" + NEWLINE + NEWLINE +
+                "# The number of records in a page when the caller gives no size." + NEWLINE +
+                "configurable int dataservicePageSize = 100;" + NEWLINE + NEWLINE +
+                "# The largest page, and the most records one create can hold." + NEWLINE +
+                "configurable int dataserviceMaxPageSize = 1000;" + NEWLINE + NEWLINE +
+                "# The page sizes, checked at startup." + NEWLINE +
+                "final dataservice:PageConfig dataservicePageConfig =" + NEWLINE +
+                "        check dataservice:pageConfig(dataservicePageSize, dataserviceMaxPageSize);" + NEWLINE);
     }
 
     private String header(String reason) {
@@ -175,12 +190,12 @@ public final class HttpDataServiceGenerator {
                 .collect(Collectors.joining("/"));
         String keyPath = keyPath(entity);
         String keyList = keyList(entity, "");
-        if (entity.allows(READ)) {
-            out.append(NEWLINE).append("    # Gets the ").append(n.plural).append(".").append(NEWLINE);
-            out.append("    #").append(NEWLINE);
-            out.append("    # + return - The ").append(n.plural).append(", or an internal error").append(NEWLINE);
+        boolean read = entity.allows(READ);
+        String changed = read ? n.wire : NO_CONTENT;
+        if (read) {
+            appendDoc(out, entity, "Gets a page of " + n.plural + ".", List.of(), "A page of " + n.plural);
             out.append("    resource function get ").append(n.resource).append("() returns ").append(n.list)
-                    .append("|dsHttp:InternalError {").append(NEWLINE);
+                    .append(LIST_ERRORS).append(" {").append(NEWLINE);
             out.append("        ").append(n.wire).append("[]|persist:Error items = from ").append(n.entity)
                     .append(" item in dataserviceClient->/").append(n.resource).append("(").append(n.entity)
                     .append(")").append(NEWLINE);
@@ -188,14 +203,14 @@ public final class HttpDataServiceGenerator {
             out.append("        if items is persist:Error {").append(NEWLINE);
             out.append("            return dsHttp:toListError(items);").append(NEWLINE);
             out.append("        }").append(NEWLINE);
-            out.append("        return {items};").append(NEWLINE);
+            out.append("        return {items, hasMore: false};").append(NEWLINE);
             out.append("    }").append(NEWLINE);
 
-            out.append(NEWLINE).append("    # Gets ").append(n.article).append(" ").append(n.words)
-                    .append(" by its key.").append(NEWLINE);
-            appendReturnDoc(out, "The " + n.words);
+            appendDoc(out, entity, "Gets " + n.article + " " + n.words + " by its key.", keyDocs(entity, n),
+                    "The " + n.words);
             out.append("    resource function get ").append(n.resource).append("/").append(keyParams)
                     .append("() returns ").append(n.wire).append(GET_ERRORS).append(" {").append(NEWLINE);
+            appendKeyCheck(out, entity, n, keyList);
             out.append("        ").append(n.entity).append("|persist:Error item = dataserviceClient->/")
                     .append(n.resource).append(keyPath).append(";").append(NEWLINE);
             appendErrorCheck(out, "item", "toGetError", n, keyList, "        ");
@@ -206,13 +221,14 @@ public final class HttpDataServiceGenerator {
             appendCreate(out, entity, n, keyPath);
         }
         if (entity.allows(UPDATE)) {
-            out.append(NEWLINE).append("    # Updates the given fields of ").append(n.article).append(" ")
-                    .append(n.words).append(".").append(NEWLINE);
-            appendReturnDoc(out, "The updated " + n.words);
+            List<String> params = new ArrayList<>(keyDocs(entity, n));
+            params.add("payload - The fields of the " + n.words + " to update");
+            appendDoc(out, entity, "Updates " + n.article + " " + n.words + " by its key.", params,
+                    read ? "The updated " + n.words : "No content");
             out.append("    resource function patch ").append(n.resource).append("/").append(keyParams).append("(")
                     .append(n.updateWire).append(" payload)").append(NEWLINE);
-            out.append("            returns ").append(n.wire).append(entity.hasWireTypes() ? INVALID_INPUT : "")
-                    .append(UPDATE_ERRORS).append(" {").append(NEWLINE);
+            out.append("            returns ").append(changed).append(UPDATE_ERRORS).append(" {").append(NEWLINE);
+            appendKeyCheck(out, entity, n, keyList);
             String value = "payload";
             if (entity.hasWireTypes()) {
                 value = "value";
@@ -222,44 +238,63 @@ public final class HttpDataServiceGenerator {
                 out.append("            return value;").append(NEWLINE);
                 out.append("        }").append(NEWLINE);
             }
-            out.append("        ").append(n.entity).append("|persist:Error item;").append(NEWLINE);
-            out.append("        if ").append(value).append(".length() == 0 {").append(NEWLINE);
-            out.append("            item = dataserviceClient->/").append(n.resource).append(keyPath).append(";")
-                    .append(NEWLINE);
-            out.append("        } else {").append(NEWLINE);
-            out.append("            item = dataserviceClient->/").append(n.resource).append(keyPath)
-                    .append(".put(").append(value).append(");").append(NEWLINE);
-            out.append("        }").append(NEWLINE);
-            appendErrorCheck(out, "item", "toUpdateError", n, keyList, "        ");
-            out.append("        return ").append(n.toWire("item")).append(";").append(NEWLINE);
+            if (read) {
+                out.append("        ").append(n.entity).append("|persist:Error item;").append(NEWLINE);
+                out.append("        if ").append(value).append(".length() == 0 {").append(NEWLINE);
+                out.append("            item = dataserviceClient->/").append(n.resource).append(keyPath).append(";")
+                        .append(NEWLINE);
+                out.append("        } else {").append(NEWLINE);
+                out.append("            item = dataserviceClient->/").append(n.resource).append(keyPath)
+                        .append(".put(").append(value).append(");").append(NEWLINE);
+                out.append("        }").append(NEWLINE);
+                appendErrorCheck(out, "item", "toUpdateError", n, keyList, "        ");
+                out.append("        return ").append(n.toWire("item")).append(";").append(NEWLINE);
+            } else {
+                out.append("        if ").append(value).append(".length() == 0 {").append(NEWLINE);
+                out.append("            return http:NO_CONTENT;").append(NEWLINE);
+                out.append("        }").append(NEWLINE);
+                out.append("        ").append(n.entity).append("|persist:Error item = dataserviceClient->/")
+                        .append(n.resource).append(keyPath).append(".put(").append(value).append(");")
+                        .append(NEWLINE);
+                appendErrorCheck(out, "item", "toUpdateError", n, keyList, "        ");
+                out.append("        return http:NO_CONTENT;").append(NEWLINE);
+            }
             out.append("    }").append(NEWLINE);
         }
         if (entity.allows(DELETE)) {
-            out.append(NEWLINE).append("    # Deletes ").append(n.article).append(" ").append(n.words)
-                    .append(" and returns it.").append(NEWLINE);
-            appendReturnDoc(out, "The deleted " + n.words);
+            appendDoc(out, entity, "Deletes " + n.article + " " + n.words + " by its key.", keyDocs(entity, n),
+                    read ? "The deleted " + n.words : "No content");
             out.append("    resource function delete ").append(n.resource).append("/").append(keyParams)
-                    .append("() returns ").append(n.wire).append(DELETE_ERRORS).append(" {").append(NEWLINE);
+                    .append("() returns ").append(changed).append(DELETE_ERRORS).append(" {").append(NEWLINE);
+            appendKeyCheck(out, entity, n, keyList);
             out.append("        ").append(n.entity).append("|persist:Error item = dataserviceClient->/")
                     .append(n.resource).append(keyPath).append(".delete();").append(NEWLINE);
             appendErrorCheck(out, "item", "toDeleteError", n, keyList, "        ");
-            out.append("        return ").append(n.toWire("item")).append(";").append(NEWLINE);
+            out.append("        return ").append(read ? n.toWire("item") : "http:NO_CONTENT").append(";")
+                    .append(NEWLINE);
             out.append("    }").append(NEWLINE);
         }
     }
 
     private void appendCreate(StringBuilder out, ExposedEntity entity, Names n, String keyPath) {
         String insert = n.entity + "Insert";
-        out.append(NEWLINE).append("    # Creates one ").append(n.words).append(", or several from an array.")
-                .append(NEWLINE);
-        appendReturnDoc(out, "The created " + n.words + " or " + n.plural);
+        appendDoc(out, entity, "Creates one or more " + n.plural + ".",
+                List.of("payload - The " + n.words + ", or the " + n.plural + ", to create"),
+                "The created " + n.words + " or " + n.plural);
         out.append("    resource function post ").append(n.resource).append("(").append(n.insertWire).append("|")
                 .append(n.insertWire).append("[] payload)").append(NEWLINE);
-        out.append("            returns ").append(n.created).append("|").append(n.listCreated)
-                .append(entity.hasWireTypes() ? INVALID_INPUT : "").append(CREATE_ERRORS).append(" {").append(NEWLINE);
+        out.append("            returns ").append(n.created).append("|").append(n.listCreated).append(CREATE_ERRORS)
+                .append(" {").append(NEWLINE);
+        String entries = entity.hasWireTypes() ? "entries" : "values";
+        String entriesType = entity.hasWireTypes() ? n.insertWire : insert;
+        out.append("        ").append(entriesType).append("[] ").append(entries).append(" = payload is ")
+                .append(entriesType).append("[] ? payload : [payload];").append(NEWLINE);
+        out.append("        dataservice:DataserviceError? tooMany = dataservice:checkCreateSize(").append(entries)
+                .append(".length(), dataservicePageConfig);").append(NEWLINE);
+        out.append("        if tooMany is dataservice:DataserviceError {").append(NEWLINE);
+        out.append("            return <dsHttp:InvalidInput>{body: tooMany};").append(NEWLINE);
+        out.append("        }").append(NEWLINE);
         if (entity.hasWireTypes()) {
-            out.append("        ").append(n.insertWire).append("[] entries = payload is ").append(n.insertWire)
-                    .append("[] ? payload : [payload];").append(NEWLINE);
             out.append("        ").append(insert).append("[] values = [];").append(NEWLINE);
             out.append("        foreach ").append(n.insertWire).append(" entry in entries {").append(NEWLINE);
             out.append("            ").append(insert).append("|dsHttp:InvalidInput value = transformPayloadTo")
@@ -269,9 +304,6 @@ public final class HttpDataServiceGenerator {
             out.append("            }").append(NEWLINE);
             out.append("            values.push(value);").append(NEWLINE);
             out.append("        }").append(NEWLINE);
-        } else {
-            out.append("        ").append(insert).append("[] values = payload is ").append(insert)
-                    .append("[] ? payload : [payload];").append(NEWLINE);
         }
         out.append("        ").append(n.wire).append("[] items = [];").append(NEWLINE);
         out.append("        if values.length() > 0 {").append(NEWLINE);
@@ -280,25 +312,28 @@ public final class HttpDataServiceGenerator {
                 "[" + keys.stream().map(ServiceField::type).collect(Collectors.joining(", ")) + "]";
         String keyBinding = keys.size() == 1 ? keys.get(0).name() :
                 "[" + keys.stream().map(ServiceField::name).collect(Collectors.joining(", ")) + "]";
-        out.append("            ").append(keyType).append("[]|persist:Error keys = dataserviceClient->/")
+        String entityName = "\"" + n.displayName + "\"";
+        // A failed check inside the transaction rolls it back, so a batch creates every record or none.
+        out.append("            do {").append(NEWLINE);
+        out.append("                transaction {").append(NEWLINE);
+        out.append("                    ").append(keyType).append("[] keys = check dataserviceClient->/")
                 .append(n.resource).append(".post(values);").append(NEWLINE);
-        out.append("            if keys is persist:Error {").append(NEWLINE);
-        out.append("                return dsHttp:toCreateError(keys, \"").append(n.displayName).append("\");")
+        out.append("                    foreach ").append(keyType).append(" ").append(keyBinding).append(" in keys {")
                 .append(NEWLINE);
-        out.append("            }").append(NEWLINE);
-        out.append("            foreach ").append(keyType).append(" ").append(keyBinding).append(" in keys {")
-                .append(NEWLINE);
-        out.append("                ").append(n.entity).append("|persist:Error item = dataserviceClient->/")
+        out.append("                        ").append(n.entity).append(" item = check dataserviceClient->/")
                 .append(n.resource).append(keyPath).append(";").append(NEWLINE);
-        out.append("                if item is persist:Error {").append(NEWLINE);
-        out.append("                    return dsHttp:toCreateError(item, \"").append(n.displayName).append("\");")
-                .append(NEWLINE);
+        out.append("                        items.push(").append(n.toWire("item")).append(");").append(NEWLINE);
+        out.append("                    }").append(NEWLINE);
+        out.append("                    check commit;").append(NEWLINE);
         out.append("                }").append(NEWLINE);
-        out.append("                items.push(").append(n.toWire("item")).append(");").append(NEWLINE);
+        out.append("            } on fail error err {").append(NEWLINE);
+        out.append("                return dsHttp:toCreateError(err, ").append(entityName).append(");")
+                .append(NEWLINE);
         out.append("            }").append(NEWLINE);
         out.append("        }").append(NEWLINE);
         out.append("        if payload is ").append(n.insertWire).append("[] {").append(NEWLINE);
-        out.append("            return <").append(n.listCreated).append(">{body: {items}};").append(NEWLINE);
+        out.append("            return <").append(n.listCreated).append(">{body: {items, hasMore: false}};")
+                .append(NEWLINE);
         out.append("        }").append(NEWLINE);
         out.append("        ").append(n.wire).append(" created = items[0];").append(NEWLINE);
         out.append("        return <").append(n.created).append(">{").append(NEWLINE);
@@ -309,9 +344,37 @@ public final class HttpDataServiceGenerator {
         out.append("    }").append(NEWLINE);
     }
 
-    private static void appendReturnDoc(StringBuilder out, String result) {
+    private static void appendDoc(StringBuilder out, ExposedEntity entity, String summary, List<String> params,
+                                  String result) {
+        out.append(NEWLINE).append("    # ").append(summary).append(NEWLINE);
+        if (!entity.doc().isEmpty()) {
+            out.append("    #").append(NEWLINE);
+            for (String line : entity.doc()) {
+                out.append("    #").append(line.isEmpty() ? "" : " " + line).append(NEWLINE);
+            }
+        }
         out.append("    #").append(NEWLINE);
+        for (String param : params) {
+            out.append("    # + ").append(param).append(NEWLINE);
+        }
         out.append("    # + return - ").append(result).append(", or the error response").append(NEWLINE);
+    }
+
+    private static List<String> keyDocs(ExposedEntity entity, Names n) {
+        return entity.keys().stream().map(key -> key.name() + " - The " + unescape(key.name()) + " of the " +
+                n.words).toList();
+    }
+
+    // A float key value can be NaN or infinite, which no record has.
+    private static void appendKeyCheck(StringBuilder out, ExposedEntity entity, Names n, String keyList) {
+        if (entity.keys().stream().noneMatch(key -> "float".equals(key.type()))) {
+            return;
+        }
+        out.append("        dataservice:DataserviceError? invalidKey = dataservice:checkFiniteKey(\"")
+                .append(n.displayName).append("\", ").append(keyList).append(");").append(NEWLINE);
+        out.append("        if invalidKey is dataservice:DataserviceError {").append(NEWLINE);
+        out.append("            return <dsHttp:InvalidInput>{body: invalidKey};").append(NEWLINE);
+        out.append("        }").append(NEWLINE);
     }
 
     private static void appendErrorCheck(StringBuilder out, String variable, String function, Names n,
@@ -345,8 +408,10 @@ public final class HttpDataServiceGenerator {
             out.append(NEWLINE).append("# A list of ").append(n.plural).append(".").append(NEWLINE);
             out.append("#").append(NEWLINE);
             out.append("# + items - The ").append(n.plural).append(NEWLINE);
+            out.append("# + hasMore - Whether records exist after this page").append(NEWLINE);
             out.append("public type ").append(n.list).append(" record {|").append(NEWLINE);
             out.append("    ").append(n.wire).append("[] items;").append(NEWLINE);
+            out.append("    boolean hasMore;").append(NEWLINE);
             out.append("|};").append(NEWLINE);
         }
         if (entity.allows(CREATE)) {

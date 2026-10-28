@@ -17,14 +17,17 @@ function testCreateMany() returns error? {
     http:Response response = check send("POST", "/api/employees", [employee(2, "Bob"), employee(3, "Cid")]);
     test:assertEquals(response.statusCode, 201);
     test:assertFalse(response.hasHeader("Location"));
-    test:assertEquals(check response.getJsonPayload(), {items: [employee(2, "Bob"), employee(3, "Cid")]});
+    test:assertEquals(check response.getJsonPayload(), {
+        items: [employee(2, "Bob"), employee(3, "Cid")],
+        hasMore: false
+    });
 }
 
 @test:Config
 function testCreateNone() returns error? {
     http:Response response = check send("POST", "/api/employees", []);
     test:assertEquals(response.statusCode, 201);
-    test:assertEquals(check response.getJsonPayload(), {items: []});
+    test:assertEquals(check response.getJsonPayload(), {items: [], hasMore: false});
 }
 
 @test:Config {dependsOn: [testCreateMany]}
@@ -34,7 +37,63 @@ function testGetMany() returns error? {
     json body = check response.getJsonPayload();
     json[] items = check (check body.items).ensureType();
     test:assertEquals(items.length(), 3);
+    test:assertEquals(check body.hasMore, false);
 }
+
+@test:Config {dependsOn: [testGetMany]}
+function testCreateIsAtomic() returns error? {
+    http:Response response = check send("POST", "/api/employees", [employee(50, "Eve"), employee(1, "Ann")]);
+    test:assertEquals(response.statusCode, 409);
+    http:Response created = check send("GET", "/api/employees/50");
+    test:assertEquals(created.statusCode, 404);
+}
+
+@test:Config
+function testCreateAboveTheLargestPage() returns error? {
+    json[] employees = from int id in 60 ..< 66 select employee(id, "Max");
+    http:Response response = check send("POST", "/api/employees", employees);
+    test:assertEquals(response.statusCode, 400);
+    test:assertEquals(check response.getJsonPayload(), {
+        code: "INVALID_INPUT",
+        message: "A create can hold at most 5 records."
+    });
+    http:Response created = check send("GET", "/api/employees/60");
+    test:assertEquals(created.statusCode, 404);
+}
+
+@test:Config
+function testWithoutReadPatchAndDeleteHaveNoContent() returns error? {
+    http:Response response = check send("POST", "/api/badges", {id: 1, label: "Gold"});
+    test:assertEquals(response.statusCode, 201);
+    http:Response patched = check send("PATCH", "/api/badges/1", {label: "Silver"});
+    test:assertEquals(patched.statusCode, 204);
+    http:Response empty = check send("PATCH", "/api/badges/99", {});
+    test:assertEquals(empty.statusCode, 204);
+    http:Response missing = check send("PATCH", "/api/badges/99", {label: "Bronze"});
+    test:assertEquals(missing.statusCode, 404);
+    http:Response deleted = check send("DELETE", "/api/badges/1");
+    test:assertEquals(deleted.statusCode, 204);
+    http:Response again = check send("DELETE", "/api/badges/1");
+    test:assertEquals(again.statusCode, 404);
+}
+
+@test:Config {
+    dataProvider: nonFiniteKeys
+}
+function testFloatKeyIsFinite(string method, string key) returns error? {
+    http:Response response = check send(method, "/api/rates/" + key);
+    test:assertEquals(response.statusCode, 400);
+    test:assertEquals(check response.getJsonPayload(), {
+        code: "INVALID_INPUT",
+        message: string `The key '${key}' of the entity 'Rate' is not a finite number.`
+    });
+}
+
+function nonFiniteKeys() returns [string, string][] => [
+    ["GET", "NaN"],
+    ["GET", "Infinity"],
+    ["DELETE", "-Infinity"]
+];
 
 @test:Config {dependsOn: [testCreateOne]}
 function testGetOne() returns error? {

@@ -62,8 +62,10 @@ public type DocumentUpdatePayload record {|
 # A list of documents.
 #
 # + items - The documents
+# + hasMore - Whether records exist after this page
 public type DocumentList record {|
     DocumentPayload[] items;
+    boolean hasMore;
 |};
 
 # The response to creating one document.
@@ -232,8 +234,10 @@ public type HolidayPayload record {|
 # A list of holidays.
 #
 # + items - The holidays
+# + hasMore - Whether records exist after this page
 public type HolidayList record {|
     HolidayPayload[] items;
+    boolean hasMore;
 |};
 
 # Converts a `Holiday` to its JSON form.

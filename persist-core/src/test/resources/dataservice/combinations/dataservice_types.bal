@@ -8,15 +8,19 @@ import ballerina/http;
 # A list of read items.
 #
 # + items - The read items
+# + hasMore - Whether records exist after this page
 public type ReadItemList record {|
     ReadItem[] items;
+    boolean hasMore;
 |};
 
 # A list of create items.
 #
 # + items - The create items
+# + hasMore - Whether records exist after this page
 public type CreateItemList record {|
     CreateItem[] items;
+    boolean hasMore;
 |};
 
 # The response to creating one create item.
@@ -38,8 +42,10 @@ public type CreateItemListCreated record {|
 # A list of read create items.
 #
 # + items - The read create items
+# + hasMore - Whether records exist after this page
 public type ReadCreateItemList record {|
     ReadCreateItem[] items;
+    boolean hasMore;
 |};
 
 # The response to creating one read create item.
@@ -61,22 +67,28 @@ public type ReadCreateItemListCreated record {|
 # A list of read update items.
 #
 # + items - The read update items
+# + hasMore - Whether records exist after this page
 public type ReadUpdateItemList record {|
     ReadUpdateItem[] items;
+    boolean hasMore;
 |};
 
 # A list of read delete items.
 #
 # + items - The read delete items
+# + hasMore - Whether records exist after this page
 public type ReadDeleteItemList record {|
     ReadDeleteItem[] items;
+    boolean hasMore;
 |};
 
 # A list of create update items.
 #
 # + items - The create update items
+# + hasMore - Whether records exist after this page
 public type CreateUpdateItemList record {|
     CreateUpdateItem[] items;
+    boolean hasMore;
 |};
 
 # The response to creating one create update item.
@@ -98,8 +110,10 @@ public type CreateUpdateItemListCreated record {|
 # A list of create delete items.
 #
 # + items - The create delete items
+# + hasMore - Whether records exist after this page
 public type CreateDeleteItemList record {|
     CreateDeleteItem[] items;
+    boolean hasMore;
 |};
 
 # The response to creating one create delete item.
@@ -121,8 +135,10 @@ public type CreateDeleteItemListCreated record {|
 # A list of read create update items.
 #
 # + items - The read create update items
+# + hasMore - Whether records exist after this page
 public type ReadCreateUpdateItemList record {|
     ReadCreateUpdateItem[] items;
+    boolean hasMore;
 |};
 
 # The response to creating one read create update item.
@@ -144,8 +160,10 @@ public type ReadCreateUpdateItemListCreated record {|
 # A list of read create delete items.
 #
 # + items - The read create delete items
+# + hasMore - Whether records exist after this page
 public type ReadCreateDeleteItemList record {|
     ReadCreateDeleteItem[] items;
+    boolean hasMore;
 |};
 
 # The response to creating one read create delete item.
@@ -167,15 +185,19 @@ public type ReadCreateDeleteItemListCreated record {|
 # A list of read update delete items.
 #
 # + items - The read update delete items
+# + hasMore - Whether records exist after this page
 public type ReadUpdateDeleteItemList record {|
     ReadUpdateDeleteItem[] items;
+    boolean hasMore;
 |};
 
 # A list of create update delete items.
 #
 # + items - The create update delete items
+# + hasMore - Whether records exist after this page
 public type CreateUpdateDeleteItemList record {|
     CreateUpdateDeleteItem[] items;
+    boolean hasMore;
 |};
 
 # The response to creating one create update delete item.
@@ -197,8 +219,10 @@ public type CreateUpdateDeleteItemListCreated record {|
 # A list of read create update delete items.
 #
 # + items - The read create update delete items
+# + hasMore - Whether records exist after this page
 public type ReadCreateUpdateDeleteItemList record {|
     ReadCreateUpdateDeleteItem[] items;
+    boolean hasMore;
 |};
 
 # The response to creating one read create update delete item.

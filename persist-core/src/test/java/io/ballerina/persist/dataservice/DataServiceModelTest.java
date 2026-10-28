@@ -41,7 +41,7 @@ public class DataServiceModelTest {
     public void testExposedEntitiesInModelOrder() throws BalException {
         Path model = RESOURCES.resolve("employees").resolve("model.bal");
         List<ExposedEntity> exposed = DataServiceModel.resolve(BalProjectUtils.getEntities(model),
-                ExposeAnnotations.read(model));
+                ExposeAnnotations.read(model), Map.of());
         Assert.assertEquals(exposed.stream().map(ExposedEntity::name).toList(), List.of("Employee", "Department"));
         Assert.assertEquals(exposed.get(1).operations(), EnumSet.of(Operation.READ));
         Assert.assertEquals(exposed.get(0).resourceName(), "employees");
@@ -51,7 +51,7 @@ public class DataServiceModelTest {
     public void testFieldsFollowThePersistTypes() throws BalException {
         Path model = RESOURCES.resolve("employees").resolve("model.bal");
         ExposedEntity employee = DataServiceModel.resolve(BalProjectUtils.getEntities(model),
-                ExposeAnnotations.read(model)).get(0);
+                ExposeAnnotations.read(model), Map.of()).get(0);
         Assert.assertEquals(employee.fields(), List.of(
                 new ServiceField("id", "int", false, false, true),
                 new ServiceField("name", "string", false, false, false),
@@ -68,7 +68,7 @@ public class DataServiceModelTest {
         Path model = RESOURCES.resolve("generated_key").resolve("model.bal");
         Module module = BalProjectUtils.getEntities(model);
         Map<String, EnumSet<Operation>> annotations = ExposeAnnotations.read(model);
-        ExposedEntity ticket = DataServiceModel.resolve(module, annotations).get(0);
+        ExposedEntity ticket = DataServiceModel.resolve(module, annotations, Map.of()).get(0);
         Assert.assertEquals(ticket.insertFields().orElseThrow().stream().map(ServiceField::name).toList(),
                 List.of("subject", "openedOn"));
     }
@@ -78,7 +78,7 @@ public class DataServiceModelTest {
         Path model = RESOURCES.resolve("unsupported").resolve("model.bal");
         Module module = BalProjectUtils.getEntities(model);
         BalException error = Assert.expectThrows(BalException.class,
-                () -> DataServiceModel.resolve(module, ExposeAnnotations.read(model)));
+                () -> DataServiceModel.resolve(module, ExposeAnnotations.read(model), Map.of()));
         Assert.assertEquals(error.getMessage(), "the entity 'Gadget' has an unsupported data type and cannot be " +
                 "exposed. Remove its @dataservice:Expose annotation.");
     }
@@ -88,7 +88,7 @@ public class DataServiceModelTest {
         Path model = RESOURCES.resolve("unsupported").resolve("model.bal");
         Module module = BalProjectUtils.getEntities(model);
         BalException error = Assert.expectThrows(BalException.class,
-                () -> DataServiceModel.resolve(module, Map.of()));
+                () -> DataServiceModel.resolve(module, Map.of(), Map.of()));
         Assert.assertEquals(error.getMessage(), "the data service exposes no entity. Add the @dataservice:Expose " +
                 "annotation to the entities to expose: Widget, Part.");
     }

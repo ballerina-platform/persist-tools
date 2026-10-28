@@ -3,6 +3,7 @@
 // This file is an auto-generated file by Ballerina persistence layer for model.
 // It should not be modified by hand.
 
+import ballerina/dataservice;
 import ballerina/dataservice.http as dsHttp;
 import ballerina/http;
 import ballerina/persist;
@@ -15,22 +16,24 @@ listener http:Listener dataserviceListener = new (dataservicePort, dataserviceLi
 
 service /api on dataserviceListener {
 
-    # Gets the assignments.
+    # Gets a page of assignments.
     #
-    # + return - The assignments, or an internal error
-    resource function get assignments() returns AssignmentList|dsHttp:InternalError {
+    # + return - A page of assignments, or the error response
+    resource function get assignments() returns AssignmentList|dsHttp:InvalidInput|dsHttp:InternalError {
         Assignment[]|persist:Error items = from Assignment item in dataserviceClient->/assignments(Assignment)
             select item;
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        return {items};
+        return {items, hasMore: false};
     }
 
     # Gets an assignment by its key.
     #
+    # + projectCode - The projectCode of the assignment
+    # + seq - The seq of the assignment
     # + return - The assignment, or the error response
-    resource function get assignments/[string projectCode]/[int seq]() returns Assignment|dsHttp:NotFound|dsHttp:InternalError {
+    resource function get assignments/[string projectCode]/[int seq]() returns Assignment|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
         Assignment|persist:Error item = dataserviceClient->/assignments/[projectCode]/[seq];
         if item is persist:Error {
             return dsHttp:toGetError(item, "Assignment", [projectCode, seq]);
@@ -38,28 +41,34 @@ service /api on dataserviceListener {
         return item;
     }
 
-    # Creates one assignment, or several from an array.
+    # Creates one or more assignments.
     #
+    # + payload - The assignment, or the assignments, to create
     # + return - The created assignment or assignments, or the error response
     resource function post assignments(AssignmentInsert|AssignmentInsert[] payload)
-            returns AssignmentCreated|AssignmentListCreated|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
+            returns AssignmentCreated|AssignmentListCreated|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         AssignmentInsert[] values = payload is AssignmentInsert[] ? payload : [payload];
+        dataservice:DataserviceError? tooMany = dataservice:checkCreateSize(values.length(), dataservicePageConfig);
+        if tooMany is dataservice:DataserviceError {
+            return <dsHttp:InvalidInput>{body: tooMany};
+        }
         Assignment[] items = [];
         if values.length() > 0 {
-            [string, int][]|persist:Error keys = dataserviceClient->/assignments.post(values);
-            if keys is persist:Error {
-                return dsHttp:toCreateError(keys, "Assignment");
-            }
-            foreach [string, int] [projectCode, seq] in keys {
-                Assignment|persist:Error item = dataserviceClient->/assignments/[projectCode]/[seq];
-                if item is persist:Error {
-                    return dsHttp:toCreateError(item, "Assignment");
+            do {
+                transaction {
+                    [string, int][] keys = check dataserviceClient->/assignments.post(values);
+                    foreach [string, int] [projectCode, seq] in keys {
+                        Assignment item = check dataserviceClient->/assignments/[projectCode]/[seq];
+                        items.push(item);
+                    }
+                    check commit;
                 }
-                items.push(item);
+            } on fail error err {
+                return dsHttp:toCreateError(err, "Assignment");
             }
         }
         if payload is AssignmentInsert[] {
-            return <AssignmentListCreated>{body: {items}};
+            return <AssignmentListCreated>{body: {items, hasMore: false}};
         }
         Assignment created = items[0];
         return <AssignmentCreated>{
@@ -68,11 +77,14 @@ service /api on dataserviceListener {
         };
     }
 
-    # Updates the given fields of an assignment.
+    # Updates an assignment by its key.
     #
+    # + projectCode - The projectCode of the assignment
+    # + seq - The seq of the assignment
+    # + payload - The fields of the assignment to update
     # + return - The updated assignment, or the error response
     resource function patch assignments/[string projectCode]/[int seq](AssignmentUpdate payload)
-            returns Assignment|dsHttp:NotFound|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
+            returns Assignment|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         Assignment|persist:Error item;
         if payload.length() == 0 {
             item = dataserviceClient->/assignments/[projectCode]/[seq];
@@ -85,10 +97,12 @@ service /api on dataserviceListener {
         return item;
     }
 
-    # Deletes an assignment and returns it.
+    # Deletes an assignment by its key.
     #
+    # + projectCode - The projectCode of the assignment
+    # + seq - The seq of the assignment
     # + return - The deleted assignment, or the error response
-    resource function delete assignments/[string projectCode]/[int seq]() returns Assignment|dsHttp:NotFound|dsHttp:ConstraintViolation|dsHttp:InternalError {
+    resource function delete assignments/[string projectCode]/[int seq]() returns Assignment|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:ConstraintViolation|dsHttp:InternalError {
         Assignment|persist:Error item = dataserviceClient->/assignments/[projectCode]/[seq].delete();
         if item is persist:Error {
             return dsHttp:toDeleteError(item, "Assignment", [projectCode, seq]);
@@ -96,22 +110,29 @@ service /api on dataserviceListener {
         return item;
     }
 
-    # Gets the rates.
+    # Gets a page of rates.
     #
-    # + return - The rates, or an internal error
-    resource function get rates() returns RateList|dsHttp:InternalError {
+    # + return - A page of rates, or the error response
+    resource function get rates() returns RateList|dsHttp:InvalidInput|dsHttp:InternalError {
         Rate[]|persist:Error items = from Rate item in dataserviceClient->/rates(Rate)
             select item;
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        return {items};
+        return {items, hasMore: false};
     }
 
     # Gets a rate by its key.
     #
+    # + amount - The amount of the rate
+    # + factor - The factor of the rate
+    # + active - The active of the rate
     # + return - The rate, or the error response
-    resource function get rates/[decimal amount]/[float factor]/[boolean active]() returns Rate|dsHttp:NotFound|dsHttp:InternalError {
+    resource function get rates/[decimal amount]/[float factor]/[boolean active]() returns Rate|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:DataserviceError? invalidKey = dataservice:checkFiniteKey("Rate", [amount, factor, active]);
+        if invalidKey is dataservice:DataserviceError {
+            return <dsHttp:InvalidInput>{body: invalidKey};
+        }
         Rate|persist:Error item = dataserviceClient->/rates/[amount]/[factor]/[active];
         if item is persist:Error {
             return dsHttp:toGetError(item, "Rate", [amount, factor, active]);
@@ -119,10 +140,17 @@ service /api on dataserviceListener {
         return item;
     }
 
-    # Deletes a rate and returns it.
+    # Deletes a rate by its key.
     #
+    # + amount - The amount of the rate
+    # + factor - The factor of the rate
+    # + active - The active of the rate
     # + return - The deleted rate, or the error response
-    resource function delete rates/[decimal amount]/[float factor]/[boolean active]() returns Rate|dsHttp:NotFound|dsHttp:ConstraintViolation|dsHttp:InternalError {
+    resource function delete rates/[decimal amount]/[float factor]/[boolean active]() returns Rate|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:ConstraintViolation|dsHttp:InternalError {
+        dataservice:DataserviceError? invalidKey = dataservice:checkFiniteKey("Rate", [amount, factor, active]);
+        if invalidKey is dataservice:DataserviceError {
+            return <dsHttp:InvalidInput>{body: invalidKey};
+        }
         Rate|persist:Error item = dataserviceClient->/rates/[amount]/[factor]/[active].delete();
         if item is persist:Error {
             return dsHttp:toDeleteError(item, "Rate", [amount, factor, active]);

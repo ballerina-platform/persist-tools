@@ -51,3 +51,15 @@ type Ticket record {|
     string subject;
     time:Date openedOn;
 |};
+
+@dataservice:Expose {operations: [dataservice:CREATE, dataservice:UPDATE, dataservice:DELETE]}
+type Badge record {|
+    readonly int id;
+    string label;
+|};
+
+@dataservice:Expose {operations: [dataservice:READ, dataservice:DELETE]}
+type Rate record {|
+    readonly float factor;
+    string label;
+|};

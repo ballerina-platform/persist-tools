@@ -25,6 +25,7 @@ import io.ballerina.compiler.syntax.tree.ExpressionNode;
 import io.ballerina.compiler.syntax.tree.ImportDeclarationNode;
 import io.ballerina.compiler.syntax.tree.ListConstructorExpressionNode;
 import io.ballerina.compiler.syntax.tree.MappingFieldNode;
+import io.ballerina.compiler.syntax.tree.MarkdownDocumentationNode;
 import io.ballerina.compiler.syntax.tree.MetadataNode;
 import io.ballerina.compiler.syntax.tree.ModuleMemberDeclarationNode;
 import io.ballerina.compiler.syntax.tree.ModulePartNode;
@@ -49,7 +50,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Reads the `@dataservice:Expose` annotations of a persist model from its syntax tree.
+ * Reads the `@dataservice:Expose` annotations and the doc comments of a persist model from its syntax tree.
  */
 public final class ExposeAnnotations {
 
@@ -102,6 +103,49 @@ public final class ExposeAnnotations {
             throw new BalException(String.join(System.lineSeparator(), errors));
         }
         return exposed;
+    }
+
+    /**
+     * Reads the doc comments of the record types in a model file.
+     *
+     * @param modelPath the model file
+     * @return the description lines of each documented record type, without its parameter lines
+     * @throws BalException if the file cannot be read
+     */
+    public static Map<String, List<String>> docs(Path modelPath) throws BalException {
+        return docs(parse(modelPath));
+    }
+
+    /**
+     * Reads the doc comments of the record types in a model.
+     *
+     * @param model the syntax tree of the model
+     * @return the description lines of each documented record type, without its parameter lines
+     */
+    public static Map<String, List<String>> docs(SyntaxTree model) {
+        Map<String, List<String>> docs = new LinkedHashMap<>();
+        ModulePartNode root = model.rootNode();
+        for (ModuleMemberDeclarationNode member : root.members()) {
+            if (!(member instanceof TypeDefinitionNode type) || type.metadata().isEmpty()
+                    || type.metadata().get().documentationString().isEmpty()
+                    || !(type.metadata().get().documentationString().get() instanceof MarkdownDocumentationNode doc)) {
+                continue;
+            }
+            List<String> lines = new ArrayList<>();
+            for (Node line : doc.documentationLines()) {
+                if (line.kind() != SyntaxKind.MARKDOWN_DOCUMENTATION_LINE) {
+                    break;
+                }
+                lines.add(line.toSourceCode().strip().replaceFirst("^#\\s?", ""));
+            }
+            while (!lines.isEmpty() && lines.get(lines.size() - 1).isBlank()) {
+                lines.remove(lines.size() - 1);
+            }
+            if (!lines.isEmpty()) {
+                docs.put(type.typeName().text().trim(), List.copyOf(lines));
+            }
+        }
+        return docs;
     }
 
     /**

@@ -1,6 +1,9 @@
 import ballerina/dataservice;
 import ballerina/persist as _;
 
+# An employee of the company.
+#
+# + name - The full name
 @dataservice:Expose
 type Employee record {|
     readonly int id;

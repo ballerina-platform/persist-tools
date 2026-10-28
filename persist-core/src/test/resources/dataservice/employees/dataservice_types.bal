@@ -8,8 +8,10 @@ import ballerina/http;
 # A list of employees.
 #
 # + items - The employees
+# + hasMore - Whether records exist after this page
 public type EmployeeList record {|
     Employee[] items;
+    boolean hasMore;
 |};
 
 # The response to creating one employee.
@@ -31,6 +33,8 @@ public type EmployeeListCreated record {|
 # A list of departments.
 #
 # + items - The departments
+# + hasMore - Whether records exist after this page
 public type DepartmentList record {|
     Department[] items;
+    boolean hasMore;
 |};

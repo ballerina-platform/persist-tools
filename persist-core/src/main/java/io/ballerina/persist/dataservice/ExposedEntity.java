@@ -38,16 +38,18 @@ public final class ExposedEntity {
     private final List<ServiceField> fields;
     private final List<ServiceField> insertFields;
     private final List<ServiceField> updateFields;
+    private final List<String> doc;
 
     private ExposedEntity(String name, String resourceName, EnumSet<Operation> operations,
                           List<ServiceField> fields, List<ServiceField> insertFields,
-                          List<ServiceField> updateFields) {
+                          List<ServiceField> updateFields, List<String> doc) {
         this.name = name;
         this.resourceName = resourceName;
         this.operations = EnumSet.copyOf(operations);
         this.fields = fields;
         this.insertFields = insertFields;
         this.updateFields = updateFields;
+        this.doc = doc;
     }
 
     /**
@@ -55,9 +57,10 @@ public final class ExposedEntity {
      *
      * @param entity     the persist entity
      * @param operations the actions the entity allows
+     * @param doc        the lines of the entity's doc comment in the model, without the parameter lines
      * @return the exposed entity
      */
-    public static ExposedEntity of(Entity entity, EnumSet<Operation> operations) {
+    public static ExposedEntity of(Entity entity, EnumSet<Operation> operations, List<String> doc) {
         List<ServiceField> fields = new ArrayList<>();
         List<ServiceField> insertFields = new ArrayList<>();
         List<ServiceField> updateFields = new ArrayList<>();
@@ -84,7 +87,8 @@ public final class ExposedEntity {
         }
         boolean generated = entity.getFields().stream().anyMatch(EntityField::isDbGenerated);
         return new ExposedEntity(entity.getEntityName(), entity.getClientResourceName(), operations,
-                List.copyOf(fields), generated ? List.copyOf(insertFields) : null, List.copyOf(updateFields));
+                List.copyOf(fields), generated ? List.copyOf(insertFields) : null, List.copyOf(updateFields),
+                List.copyOf(doc));
     }
 
     /**
@@ -139,6 +143,15 @@ public final class ExposedEntity {
      */
     public List<ServiceField> updateFields() {
         return updateFields;
+    }
+
+    /**
+     * Returns the entity's doc comment in the model.
+     *
+     * @return the lines of the description, without the parameter lines; empty when the entity has none
+     */
+    public List<String> doc() {
+        return doc;
     }
 
     /**

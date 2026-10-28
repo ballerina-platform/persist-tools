@@ -3,6 +3,7 @@
 // This file is an auto-generated file by Ballerina persistence layer for model.
 // It should not be modified by hand.
 
+import ballerina/dataservice;
 import ballerina/dataservice.http as dsHttp;
 import ballerina/http;
 import ballerina/persist;
@@ -15,22 +16,23 @@ listener http:Listener dataserviceListener = new (dataservicePort, dataserviceLi
 
 service /api on dataserviceListener {
 
-    # Gets the read items.
+    # Gets a page of read items.
     #
-    # + return - The read items, or an internal error
-    resource function get readitems() returns ReadItemList|dsHttp:InternalError {
+    # + return - A page of read items, or the error response
+    resource function get readitems() returns ReadItemList|dsHttp:InvalidInput|dsHttp:InternalError {
         ReadItem[]|persist:Error items = from ReadItem item in dataserviceClient->/readitems(ReadItem)
             select item;
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        return {items};
+        return {items, hasMore: false};
     }
 
     # Gets a read item by its key.
     #
+    # + id - The id of the read item
     # + return - The read item, or the error response
-    resource function get readitems/[int id]() returns ReadItem|dsHttp:NotFound|dsHttp:InternalError {
+    resource function get readitems/[int id]() returns ReadItem|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
         ReadItem|persist:Error item = dataserviceClient->/readitems/[id];
         if item is persist:Error {
             return dsHttp:toGetError(item, "ReadItem", [id]);
@@ -38,28 +40,34 @@ service /api on dataserviceListener {
         return item;
     }
 
-    # Creates one create item, or several from an array.
+    # Creates one or more create items.
     #
+    # + payload - The create item, or the create items, to create
     # + return - The created create item or create items, or the error response
     resource function post createitems(CreateItemInsert|CreateItemInsert[] payload)
-            returns CreateItemCreated|CreateItemListCreated|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
+            returns CreateItemCreated|CreateItemListCreated|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         CreateItemInsert[] values = payload is CreateItemInsert[] ? payload : [payload];
+        dataservice:DataserviceError? tooMany = dataservice:checkCreateSize(values.length(), dataservicePageConfig);
+        if tooMany is dataservice:DataserviceError {
+            return <dsHttp:InvalidInput>{body: tooMany};
+        }
         CreateItem[] items = [];
         if values.length() > 0 {
-            int[]|persist:Error keys = dataserviceClient->/createitems.post(values);
-            if keys is persist:Error {
-                return dsHttp:toCreateError(keys, "CreateItem");
-            }
-            foreach int id in keys {
-                CreateItem|persist:Error item = dataserviceClient->/createitems/[id];
-                if item is persist:Error {
-                    return dsHttp:toCreateError(item, "CreateItem");
+            do {
+                transaction {
+                    int[] keys = check dataserviceClient->/createitems.post(values);
+                    foreach int id in keys {
+                        CreateItem item = check dataserviceClient->/createitems/[id];
+                        items.push(item);
+                    }
+                    check commit;
                 }
-                items.push(item);
+            } on fail error err {
+                return dsHttp:toCreateError(err, "CreateItem");
             }
         }
         if payload is CreateItemInsert[] {
-            return <CreateItemListCreated>{body: {items}};
+            return <CreateItemListCreated>{body: {items, hasMore: false}};
         }
         CreateItem created = items[0];
         return <CreateItemCreated>{
@@ -68,50 +76,52 @@ service /api on dataserviceListener {
         };
     }
 
-    # Updates the given fields of an update item.
+    # Updates an update item by its key.
     #
-    # + return - The updated update item, or the error response
+    # + id - The id of the update item
+    # + payload - The fields of the update item to update
+    # + return - No content, or the error response
     resource function patch updateitems/[int id](UpdateItemUpdate payload)
-            returns UpdateItem|dsHttp:NotFound|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
-        UpdateItem|persist:Error item;
+            returns http:NoContent|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         if payload.length() == 0 {
-            item = dataserviceClient->/updateitems/[id];
-        } else {
-            item = dataserviceClient->/updateitems/[id].put(payload);
+            return http:NO_CONTENT;
         }
+        UpdateItem|persist:Error item = dataserviceClient->/updateitems/[id].put(payload);
         if item is persist:Error {
             return dsHttp:toUpdateError(item, "UpdateItem", [id]);
         }
-        return item;
+        return http:NO_CONTENT;
     }
 
-    # Deletes a delete item and returns it.
+    # Deletes a delete item by its key.
     #
-    # + return - The deleted delete item, or the error response
-    resource function delete deleteitems/[int id]() returns DeleteItem|dsHttp:NotFound|dsHttp:ConstraintViolation|dsHttp:InternalError {
+    # + id - The id of the delete item
+    # + return - No content, or the error response
+    resource function delete deleteitems/[int id]() returns http:NoContent|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:ConstraintViolation|dsHttp:InternalError {
         DeleteItem|persist:Error item = dataserviceClient->/deleteitems/[id].delete();
         if item is persist:Error {
             return dsHttp:toDeleteError(item, "DeleteItem", [id]);
         }
-        return item;
+        return http:NO_CONTENT;
     }
 
-    # Gets the read create items.
+    # Gets a page of read create items.
     #
-    # + return - The read create items, or an internal error
-    resource function get readcreateitems() returns ReadCreateItemList|dsHttp:InternalError {
+    # + return - A page of read create items, or the error response
+    resource function get readcreateitems() returns ReadCreateItemList|dsHttp:InvalidInput|dsHttp:InternalError {
         ReadCreateItem[]|persist:Error items = from ReadCreateItem item in dataserviceClient->/readcreateitems(ReadCreateItem)
             select item;
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        return {items};
+        return {items, hasMore: false};
     }
 
     # Gets a read create item by its key.
     #
+    # + id - The id of the read create item
     # + return - The read create item, or the error response
-    resource function get readcreateitems/[int id]() returns ReadCreateItem|dsHttp:NotFound|dsHttp:InternalError {
+    resource function get readcreateitems/[int id]() returns ReadCreateItem|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
         ReadCreateItem|persist:Error item = dataserviceClient->/readcreateitems/[id];
         if item is persist:Error {
             return dsHttp:toGetError(item, "ReadCreateItem", [id]);
@@ -119,28 +129,34 @@ service /api on dataserviceListener {
         return item;
     }
 
-    # Creates one read create item, or several from an array.
+    # Creates one or more read create items.
     #
+    # + payload - The read create item, or the read create items, to create
     # + return - The created read create item or read create items, or the error response
     resource function post readcreateitems(ReadCreateItemInsert|ReadCreateItemInsert[] payload)
-            returns ReadCreateItemCreated|ReadCreateItemListCreated|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
+            returns ReadCreateItemCreated|ReadCreateItemListCreated|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         ReadCreateItemInsert[] values = payload is ReadCreateItemInsert[] ? payload : [payload];
+        dataservice:DataserviceError? tooMany = dataservice:checkCreateSize(values.length(), dataservicePageConfig);
+        if tooMany is dataservice:DataserviceError {
+            return <dsHttp:InvalidInput>{body: tooMany};
+        }
         ReadCreateItem[] items = [];
         if values.length() > 0 {
-            int[]|persist:Error keys = dataserviceClient->/readcreateitems.post(values);
-            if keys is persist:Error {
-                return dsHttp:toCreateError(keys, "ReadCreateItem");
-            }
-            foreach int id in keys {
-                ReadCreateItem|persist:Error item = dataserviceClient->/readcreateitems/[id];
-                if item is persist:Error {
-                    return dsHttp:toCreateError(item, "ReadCreateItem");
+            do {
+                transaction {
+                    int[] keys = check dataserviceClient->/readcreateitems.post(values);
+                    foreach int id in keys {
+                        ReadCreateItem item = check dataserviceClient->/readcreateitems/[id];
+                        items.push(item);
+                    }
+                    check commit;
                 }
-                items.push(item);
+            } on fail error err {
+                return dsHttp:toCreateError(err, "ReadCreateItem");
             }
         }
         if payload is ReadCreateItemInsert[] {
-            return <ReadCreateItemListCreated>{body: {items}};
+            return <ReadCreateItemListCreated>{body: {items, hasMore: false}};
         }
         ReadCreateItem created = items[0];
         return <ReadCreateItemCreated>{
@@ -149,22 +165,23 @@ service /api on dataserviceListener {
         };
     }
 
-    # Gets the read update items.
+    # Gets a page of read update items.
     #
-    # + return - The read update items, or an internal error
-    resource function get readupdateitems() returns ReadUpdateItemList|dsHttp:InternalError {
+    # + return - A page of read update items, or the error response
+    resource function get readupdateitems() returns ReadUpdateItemList|dsHttp:InvalidInput|dsHttp:InternalError {
         ReadUpdateItem[]|persist:Error items = from ReadUpdateItem item in dataserviceClient->/readupdateitems(ReadUpdateItem)
             select item;
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        return {items};
+        return {items, hasMore: false};
     }
 
     # Gets a read update item by its key.
     #
+    # + id - The id of the read update item
     # + return - The read update item, or the error response
-    resource function get readupdateitems/[int id]() returns ReadUpdateItem|dsHttp:NotFound|dsHttp:InternalError {
+    resource function get readupdateitems/[int id]() returns ReadUpdateItem|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
         ReadUpdateItem|persist:Error item = dataserviceClient->/readupdateitems/[id];
         if item is persist:Error {
             return dsHttp:toGetError(item, "ReadUpdateItem", [id]);
@@ -172,11 +189,13 @@ service /api on dataserviceListener {
         return item;
     }
 
-    # Updates the given fields of a read update item.
+    # Updates a read update item by its key.
     #
+    # + id - The id of the read update item
+    # + payload - The fields of the read update item to update
     # + return - The updated read update item, or the error response
     resource function patch readupdateitems/[int id](ReadUpdateItemUpdate payload)
-            returns ReadUpdateItem|dsHttp:NotFound|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
+            returns ReadUpdateItem|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         ReadUpdateItem|persist:Error item;
         if payload.length() == 0 {
             item = dataserviceClient->/readupdateitems/[id];
@@ -189,22 +208,23 @@ service /api on dataserviceListener {
         return item;
     }
 
-    # Gets the read delete items.
+    # Gets a page of read delete items.
     #
-    # + return - The read delete items, or an internal error
-    resource function get readdeleteitems() returns ReadDeleteItemList|dsHttp:InternalError {
+    # + return - A page of read delete items, or the error response
+    resource function get readdeleteitems() returns ReadDeleteItemList|dsHttp:InvalidInput|dsHttp:InternalError {
         ReadDeleteItem[]|persist:Error items = from ReadDeleteItem item in dataserviceClient->/readdeleteitems(ReadDeleteItem)
             select item;
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        return {items};
+        return {items, hasMore: false};
     }
 
     # Gets a read delete item by its key.
     #
+    # + id - The id of the read delete item
     # + return - The read delete item, or the error response
-    resource function get readdeleteitems/[int id]() returns ReadDeleteItem|dsHttp:NotFound|dsHttp:InternalError {
+    resource function get readdeleteitems/[int id]() returns ReadDeleteItem|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
         ReadDeleteItem|persist:Error item = dataserviceClient->/readdeleteitems/[id];
         if item is persist:Error {
             return dsHttp:toGetError(item, "ReadDeleteItem", [id]);
@@ -212,10 +232,11 @@ service /api on dataserviceListener {
         return item;
     }
 
-    # Deletes a read delete item and returns it.
+    # Deletes a read delete item by its key.
     #
+    # + id - The id of the read delete item
     # + return - The deleted read delete item, or the error response
-    resource function delete readdeleteitems/[int id]() returns ReadDeleteItem|dsHttp:NotFound|dsHttp:ConstraintViolation|dsHttp:InternalError {
+    resource function delete readdeleteitems/[int id]() returns ReadDeleteItem|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:ConstraintViolation|dsHttp:InternalError {
         ReadDeleteItem|persist:Error item = dataserviceClient->/readdeleteitems/[id].delete();
         if item is persist:Error {
             return dsHttp:toDeleteError(item, "ReadDeleteItem", [id]);
@@ -223,28 +244,34 @@ service /api on dataserviceListener {
         return item;
     }
 
-    # Creates one create update item, or several from an array.
+    # Creates one or more create update items.
     #
+    # + payload - The create update item, or the create update items, to create
     # + return - The created create update item or create update items, or the error response
     resource function post createupdateitems(CreateUpdateItemInsert|CreateUpdateItemInsert[] payload)
-            returns CreateUpdateItemCreated|CreateUpdateItemListCreated|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
+            returns CreateUpdateItemCreated|CreateUpdateItemListCreated|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         CreateUpdateItemInsert[] values = payload is CreateUpdateItemInsert[] ? payload : [payload];
+        dataservice:DataserviceError? tooMany = dataservice:checkCreateSize(values.length(), dataservicePageConfig);
+        if tooMany is dataservice:DataserviceError {
+            return <dsHttp:InvalidInput>{body: tooMany};
+        }
         CreateUpdateItem[] items = [];
         if values.length() > 0 {
-            int[]|persist:Error keys = dataserviceClient->/createupdateitems.post(values);
-            if keys is persist:Error {
-                return dsHttp:toCreateError(keys, "CreateUpdateItem");
-            }
-            foreach int id in keys {
-                CreateUpdateItem|persist:Error item = dataserviceClient->/createupdateitems/[id];
-                if item is persist:Error {
-                    return dsHttp:toCreateError(item, "CreateUpdateItem");
+            do {
+                transaction {
+                    int[] keys = check dataserviceClient->/createupdateitems.post(values);
+                    foreach int id in keys {
+                        CreateUpdateItem item = check dataserviceClient->/createupdateitems/[id];
+                        items.push(item);
+                    }
+                    check commit;
                 }
-                items.push(item);
+            } on fail error err {
+                return dsHttp:toCreateError(err, "CreateUpdateItem");
             }
         }
         if payload is CreateUpdateItemInsert[] {
-            return <CreateUpdateItemListCreated>{body: {items}};
+            return <CreateUpdateItemListCreated>{body: {items, hasMore: false}};
         }
         CreateUpdateItem created = items[0];
         return <CreateUpdateItemCreated>{
@@ -253,45 +280,51 @@ service /api on dataserviceListener {
         };
     }
 
-    # Updates the given fields of a create update item.
+    # Updates a create update item by its key.
     #
-    # + return - The updated create update item, or the error response
+    # + id - The id of the create update item
+    # + payload - The fields of the create update item to update
+    # + return - No content, or the error response
     resource function patch createupdateitems/[int id](CreateUpdateItemUpdate payload)
-            returns CreateUpdateItem|dsHttp:NotFound|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
-        CreateUpdateItem|persist:Error item;
+            returns http:NoContent|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         if payload.length() == 0 {
-            item = dataserviceClient->/createupdateitems/[id];
-        } else {
-            item = dataserviceClient->/createupdateitems/[id].put(payload);
+            return http:NO_CONTENT;
         }
+        CreateUpdateItem|persist:Error item = dataserviceClient->/createupdateitems/[id].put(payload);
         if item is persist:Error {
             return dsHttp:toUpdateError(item, "CreateUpdateItem", [id]);
         }
-        return item;
+        return http:NO_CONTENT;
     }
 
-    # Creates one create delete item, or several from an array.
+    # Creates one or more create delete items.
     #
+    # + payload - The create delete item, or the create delete items, to create
     # + return - The created create delete item or create delete items, or the error response
     resource function post createdeleteitems(CreateDeleteItemInsert|CreateDeleteItemInsert[] payload)
-            returns CreateDeleteItemCreated|CreateDeleteItemListCreated|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
+            returns CreateDeleteItemCreated|CreateDeleteItemListCreated|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         CreateDeleteItemInsert[] values = payload is CreateDeleteItemInsert[] ? payload : [payload];
+        dataservice:DataserviceError? tooMany = dataservice:checkCreateSize(values.length(), dataservicePageConfig);
+        if tooMany is dataservice:DataserviceError {
+            return <dsHttp:InvalidInput>{body: tooMany};
+        }
         CreateDeleteItem[] items = [];
         if values.length() > 0 {
-            int[]|persist:Error keys = dataserviceClient->/createdeleteitems.post(values);
-            if keys is persist:Error {
-                return dsHttp:toCreateError(keys, "CreateDeleteItem");
-            }
-            foreach int id in keys {
-                CreateDeleteItem|persist:Error item = dataserviceClient->/createdeleteitems/[id];
-                if item is persist:Error {
-                    return dsHttp:toCreateError(item, "CreateDeleteItem");
+            do {
+                transaction {
+                    int[] keys = check dataserviceClient->/createdeleteitems.post(values);
+                    foreach int id in keys {
+                        CreateDeleteItem item = check dataserviceClient->/createdeleteitems/[id];
+                        items.push(item);
+                    }
+                    check commit;
                 }
-                items.push(item);
+            } on fail error err {
+                return dsHttp:toCreateError(err, "CreateDeleteItem");
             }
         }
         if payload is CreateDeleteItemInsert[] {
-            return <CreateDeleteItemListCreated>{body: {items}};
+            return <CreateDeleteItemListCreated>{body: {items, hasMore: false}};
         }
         CreateDeleteItem created = items[0];
         return <CreateDeleteItemCreated>{
@@ -300,61 +333,64 @@ service /api on dataserviceListener {
         };
     }
 
-    # Deletes a create delete item and returns it.
+    # Deletes a create delete item by its key.
     #
-    # + return - The deleted create delete item, or the error response
-    resource function delete createdeleteitems/[int id]() returns CreateDeleteItem|dsHttp:NotFound|dsHttp:ConstraintViolation|dsHttp:InternalError {
+    # + id - The id of the create delete item
+    # + return - No content, or the error response
+    resource function delete createdeleteitems/[int id]() returns http:NoContent|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:ConstraintViolation|dsHttp:InternalError {
         CreateDeleteItem|persist:Error item = dataserviceClient->/createdeleteitems/[id].delete();
         if item is persist:Error {
             return dsHttp:toDeleteError(item, "CreateDeleteItem", [id]);
         }
-        return item;
+        return http:NO_CONTENT;
     }
 
-    # Updates the given fields of an update delete item.
+    # Updates an update delete item by its key.
     #
-    # + return - The updated update delete item, or the error response
+    # + id - The id of the update delete item
+    # + payload - The fields of the update delete item to update
+    # + return - No content, or the error response
     resource function patch updatedeleteitems/[int id](UpdateDeleteItemUpdate payload)
-            returns UpdateDeleteItem|dsHttp:NotFound|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
-        UpdateDeleteItem|persist:Error item;
+            returns http:NoContent|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         if payload.length() == 0 {
-            item = dataserviceClient->/updatedeleteitems/[id];
-        } else {
-            item = dataserviceClient->/updatedeleteitems/[id].put(payload);
+            return http:NO_CONTENT;
         }
+        UpdateDeleteItem|persist:Error item = dataserviceClient->/updatedeleteitems/[id].put(payload);
         if item is persist:Error {
             return dsHttp:toUpdateError(item, "UpdateDeleteItem", [id]);
         }
-        return item;
+        return http:NO_CONTENT;
     }
 
-    # Deletes an update delete item and returns it.
+    # Deletes an update delete item by its key.
     #
-    # + return - The deleted update delete item, or the error response
-    resource function delete updatedeleteitems/[int id]() returns UpdateDeleteItem|dsHttp:NotFound|dsHttp:ConstraintViolation|dsHttp:InternalError {
+    # + id - The id of the update delete item
+    # + return - No content, or the error response
+    resource function delete updatedeleteitems/[int id]() returns http:NoContent|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:ConstraintViolation|dsHttp:InternalError {
         UpdateDeleteItem|persist:Error item = dataserviceClient->/updatedeleteitems/[id].delete();
         if item is persist:Error {
             return dsHttp:toDeleteError(item, "UpdateDeleteItem", [id]);
         }
-        return item;
+        return http:NO_CONTENT;
     }
 
-    # Gets the read create update items.
+    # Gets a page of read create update items.
     #
-    # + return - The read create update items, or an internal error
-    resource function get readcreateupdateitems() returns ReadCreateUpdateItemList|dsHttp:InternalError {
+    # + return - A page of read create update items, or the error response
+    resource function get readcreateupdateitems() returns ReadCreateUpdateItemList|dsHttp:InvalidInput|dsHttp:InternalError {
         ReadCreateUpdateItem[]|persist:Error items = from ReadCreateUpdateItem item in dataserviceClient->/readcreateupdateitems(ReadCreateUpdateItem)
             select item;
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        return {items};
+        return {items, hasMore: false};
     }
 
     # Gets a read create update item by its key.
     #
+    # + id - The id of the read create update item
     # + return - The read create update item, or the error response
-    resource function get readcreateupdateitems/[int id]() returns ReadCreateUpdateItem|dsHttp:NotFound|dsHttp:InternalError {
+    resource function get readcreateupdateitems/[int id]() returns ReadCreateUpdateItem|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
         ReadCreateUpdateItem|persist:Error item = dataserviceClient->/readcreateupdateitems/[id];
         if item is persist:Error {
             return dsHttp:toGetError(item, "ReadCreateUpdateItem", [id]);
@@ -362,28 +398,34 @@ service /api on dataserviceListener {
         return item;
     }
 
-    # Creates one read create update item, or several from an array.
+    # Creates one or more read create update items.
     #
+    # + payload - The read create update item, or the read create update items, to create
     # + return - The created read create update item or read create update items, or the error response
     resource function post readcreateupdateitems(ReadCreateUpdateItemInsert|ReadCreateUpdateItemInsert[] payload)
-            returns ReadCreateUpdateItemCreated|ReadCreateUpdateItemListCreated|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
+            returns ReadCreateUpdateItemCreated|ReadCreateUpdateItemListCreated|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         ReadCreateUpdateItemInsert[] values = payload is ReadCreateUpdateItemInsert[] ? payload : [payload];
+        dataservice:DataserviceError? tooMany = dataservice:checkCreateSize(values.length(), dataservicePageConfig);
+        if tooMany is dataservice:DataserviceError {
+            return <dsHttp:InvalidInput>{body: tooMany};
+        }
         ReadCreateUpdateItem[] items = [];
         if values.length() > 0 {
-            int[]|persist:Error keys = dataserviceClient->/readcreateupdateitems.post(values);
-            if keys is persist:Error {
-                return dsHttp:toCreateError(keys, "ReadCreateUpdateItem");
-            }
-            foreach int id in keys {
-                ReadCreateUpdateItem|persist:Error item = dataserviceClient->/readcreateupdateitems/[id];
-                if item is persist:Error {
-                    return dsHttp:toCreateError(item, "ReadCreateUpdateItem");
+            do {
+                transaction {
+                    int[] keys = check dataserviceClient->/readcreateupdateitems.post(values);
+                    foreach int id in keys {
+                        ReadCreateUpdateItem item = check dataserviceClient->/readcreateupdateitems/[id];
+                        items.push(item);
+                    }
+                    check commit;
                 }
-                items.push(item);
+            } on fail error err {
+                return dsHttp:toCreateError(err, "ReadCreateUpdateItem");
             }
         }
         if payload is ReadCreateUpdateItemInsert[] {
-            return <ReadCreateUpdateItemListCreated>{body: {items}};
+            return <ReadCreateUpdateItemListCreated>{body: {items, hasMore: false}};
         }
         ReadCreateUpdateItem created = items[0];
         return <ReadCreateUpdateItemCreated>{
@@ -392,11 +434,13 @@ service /api on dataserviceListener {
         };
     }
 
-    # Updates the given fields of a read create update item.
+    # Updates a read create update item by its key.
     #
+    # + id - The id of the read create update item
+    # + payload - The fields of the read create update item to update
     # + return - The updated read create update item, or the error response
     resource function patch readcreateupdateitems/[int id](ReadCreateUpdateItemUpdate payload)
-            returns ReadCreateUpdateItem|dsHttp:NotFound|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
+            returns ReadCreateUpdateItem|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         ReadCreateUpdateItem|persist:Error item;
         if payload.length() == 0 {
             item = dataserviceClient->/readcreateupdateitems/[id];
@@ -409,22 +453,23 @@ service /api on dataserviceListener {
         return item;
     }
 
-    # Gets the read create delete items.
+    # Gets a page of read create delete items.
     #
-    # + return - The read create delete items, or an internal error
-    resource function get readcreatedeleteitems() returns ReadCreateDeleteItemList|dsHttp:InternalError {
+    # + return - A page of read create delete items, or the error response
+    resource function get readcreatedeleteitems() returns ReadCreateDeleteItemList|dsHttp:InvalidInput|dsHttp:InternalError {
         ReadCreateDeleteItem[]|persist:Error items = from ReadCreateDeleteItem item in dataserviceClient->/readcreatedeleteitems(ReadCreateDeleteItem)
             select item;
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        return {items};
+        return {items, hasMore: false};
     }
 
     # Gets a read create delete item by its key.
     #
+    # + id - The id of the read create delete item
     # + return - The read create delete item, or the error response
-    resource function get readcreatedeleteitems/[int id]() returns ReadCreateDeleteItem|dsHttp:NotFound|dsHttp:InternalError {
+    resource function get readcreatedeleteitems/[int id]() returns ReadCreateDeleteItem|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
         ReadCreateDeleteItem|persist:Error item = dataserviceClient->/readcreatedeleteitems/[id];
         if item is persist:Error {
             return dsHttp:toGetError(item, "ReadCreateDeleteItem", [id]);
@@ -432,28 +477,34 @@ service /api on dataserviceListener {
         return item;
     }
 
-    # Creates one read create delete item, or several from an array.
+    # Creates one or more read create delete items.
     #
+    # + payload - The read create delete item, or the read create delete items, to create
     # + return - The created read create delete item or read create delete items, or the error response
     resource function post readcreatedeleteitems(ReadCreateDeleteItemInsert|ReadCreateDeleteItemInsert[] payload)
-            returns ReadCreateDeleteItemCreated|ReadCreateDeleteItemListCreated|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
+            returns ReadCreateDeleteItemCreated|ReadCreateDeleteItemListCreated|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         ReadCreateDeleteItemInsert[] values = payload is ReadCreateDeleteItemInsert[] ? payload : [payload];
+        dataservice:DataserviceError? tooMany = dataservice:checkCreateSize(values.length(), dataservicePageConfig);
+        if tooMany is dataservice:DataserviceError {
+            return <dsHttp:InvalidInput>{body: tooMany};
+        }
         ReadCreateDeleteItem[] items = [];
         if values.length() > 0 {
-            int[]|persist:Error keys = dataserviceClient->/readcreatedeleteitems.post(values);
-            if keys is persist:Error {
-                return dsHttp:toCreateError(keys, "ReadCreateDeleteItem");
-            }
-            foreach int id in keys {
-                ReadCreateDeleteItem|persist:Error item = dataserviceClient->/readcreatedeleteitems/[id];
-                if item is persist:Error {
-                    return dsHttp:toCreateError(item, "ReadCreateDeleteItem");
+            do {
+                transaction {
+                    int[] keys = check dataserviceClient->/readcreatedeleteitems.post(values);
+                    foreach int id in keys {
+                        ReadCreateDeleteItem item = check dataserviceClient->/readcreatedeleteitems/[id];
+                        items.push(item);
+                    }
+                    check commit;
                 }
-                items.push(item);
+            } on fail error err {
+                return dsHttp:toCreateError(err, "ReadCreateDeleteItem");
             }
         }
         if payload is ReadCreateDeleteItemInsert[] {
-            return <ReadCreateDeleteItemListCreated>{body: {items}};
+            return <ReadCreateDeleteItemListCreated>{body: {items, hasMore: false}};
         }
         ReadCreateDeleteItem created = items[0];
         return <ReadCreateDeleteItemCreated>{
@@ -462,10 +513,11 @@ service /api on dataserviceListener {
         };
     }
 
-    # Deletes a read create delete item and returns it.
+    # Deletes a read create delete item by its key.
     #
+    # + id - The id of the read create delete item
     # + return - The deleted read create delete item, or the error response
-    resource function delete readcreatedeleteitems/[int id]() returns ReadCreateDeleteItem|dsHttp:NotFound|dsHttp:ConstraintViolation|dsHttp:InternalError {
+    resource function delete readcreatedeleteitems/[int id]() returns ReadCreateDeleteItem|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:ConstraintViolation|dsHttp:InternalError {
         ReadCreateDeleteItem|persist:Error item = dataserviceClient->/readcreatedeleteitems/[id].delete();
         if item is persist:Error {
             return dsHttp:toDeleteError(item, "ReadCreateDeleteItem", [id]);
@@ -473,22 +525,23 @@ service /api on dataserviceListener {
         return item;
     }
 
-    # Gets the read update delete items.
+    # Gets a page of read update delete items.
     #
-    # + return - The read update delete items, or an internal error
-    resource function get readupdatedeleteitems() returns ReadUpdateDeleteItemList|dsHttp:InternalError {
+    # + return - A page of read update delete items, or the error response
+    resource function get readupdatedeleteitems() returns ReadUpdateDeleteItemList|dsHttp:InvalidInput|dsHttp:InternalError {
         ReadUpdateDeleteItem[]|persist:Error items = from ReadUpdateDeleteItem item in dataserviceClient->/readupdatedeleteitems(ReadUpdateDeleteItem)
             select item;
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        return {items};
+        return {items, hasMore: false};
     }
 
     # Gets a read update delete item by its key.
     #
+    # + id - The id of the read update delete item
     # + return - The read update delete item, or the error response
-    resource function get readupdatedeleteitems/[int id]() returns ReadUpdateDeleteItem|dsHttp:NotFound|dsHttp:InternalError {
+    resource function get readupdatedeleteitems/[int id]() returns ReadUpdateDeleteItem|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
         ReadUpdateDeleteItem|persist:Error item = dataserviceClient->/readupdatedeleteitems/[id];
         if item is persist:Error {
             return dsHttp:toGetError(item, "ReadUpdateDeleteItem", [id]);
@@ -496,11 +549,13 @@ service /api on dataserviceListener {
         return item;
     }
 
-    # Updates the given fields of a read update delete item.
+    # Updates a read update delete item by its key.
     #
+    # + id - The id of the read update delete item
+    # + payload - The fields of the read update delete item to update
     # + return - The updated read update delete item, or the error response
     resource function patch readupdatedeleteitems/[int id](ReadUpdateDeleteItemUpdate payload)
-            returns ReadUpdateDeleteItem|dsHttp:NotFound|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
+            returns ReadUpdateDeleteItem|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         ReadUpdateDeleteItem|persist:Error item;
         if payload.length() == 0 {
             item = dataserviceClient->/readupdatedeleteitems/[id];
@@ -513,10 +568,11 @@ service /api on dataserviceListener {
         return item;
     }
 
-    # Deletes a read update delete item and returns it.
+    # Deletes a read update delete item by its key.
     #
+    # + id - The id of the read update delete item
     # + return - The deleted read update delete item, or the error response
-    resource function delete readupdatedeleteitems/[int id]() returns ReadUpdateDeleteItem|dsHttp:NotFound|dsHttp:ConstraintViolation|dsHttp:InternalError {
+    resource function delete readupdatedeleteitems/[int id]() returns ReadUpdateDeleteItem|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:ConstraintViolation|dsHttp:InternalError {
         ReadUpdateDeleteItem|persist:Error item = dataserviceClient->/readupdatedeleteitems/[id].delete();
         if item is persist:Error {
             return dsHttp:toDeleteError(item, "ReadUpdateDeleteItem", [id]);
@@ -524,28 +580,34 @@ service /api on dataserviceListener {
         return item;
     }
 
-    # Creates one create update delete item, or several from an array.
+    # Creates one or more create update delete items.
     #
+    # + payload - The create update delete item, or the create update delete items, to create
     # + return - The created create update delete item or create update delete items, or the error response
     resource function post createupdatedeleteitems(CreateUpdateDeleteItemInsert|CreateUpdateDeleteItemInsert[] payload)
-            returns CreateUpdateDeleteItemCreated|CreateUpdateDeleteItemListCreated|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
+            returns CreateUpdateDeleteItemCreated|CreateUpdateDeleteItemListCreated|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         CreateUpdateDeleteItemInsert[] values = payload is CreateUpdateDeleteItemInsert[] ? payload : [payload];
+        dataservice:DataserviceError? tooMany = dataservice:checkCreateSize(values.length(), dataservicePageConfig);
+        if tooMany is dataservice:DataserviceError {
+            return <dsHttp:InvalidInput>{body: tooMany};
+        }
         CreateUpdateDeleteItem[] items = [];
         if values.length() > 0 {
-            int[]|persist:Error keys = dataserviceClient->/createupdatedeleteitems.post(values);
-            if keys is persist:Error {
-                return dsHttp:toCreateError(keys, "CreateUpdateDeleteItem");
-            }
-            foreach int id in keys {
-                CreateUpdateDeleteItem|persist:Error item = dataserviceClient->/createupdatedeleteitems/[id];
-                if item is persist:Error {
-                    return dsHttp:toCreateError(item, "CreateUpdateDeleteItem");
+            do {
+                transaction {
+                    int[] keys = check dataserviceClient->/createupdatedeleteitems.post(values);
+                    foreach int id in keys {
+                        CreateUpdateDeleteItem item = check dataserviceClient->/createupdatedeleteitems/[id];
+                        items.push(item);
+                    }
+                    check commit;
                 }
-                items.push(item);
+            } on fail error err {
+                return dsHttp:toCreateError(err, "CreateUpdateDeleteItem");
             }
         }
         if payload is CreateUpdateDeleteItemInsert[] {
-            return <CreateUpdateDeleteItemListCreated>{body: {items}};
+            return <CreateUpdateDeleteItemListCreated>{body: {items, hasMore: false}};
         }
         CreateUpdateDeleteItem created = items[0];
         return <CreateUpdateDeleteItemCreated>{
@@ -554,50 +616,52 @@ service /api on dataserviceListener {
         };
     }
 
-    # Updates the given fields of a create update delete item.
+    # Updates a create update delete item by its key.
     #
-    # + return - The updated create update delete item, or the error response
+    # + id - The id of the create update delete item
+    # + payload - The fields of the create update delete item to update
+    # + return - No content, or the error response
     resource function patch createupdatedeleteitems/[int id](CreateUpdateDeleteItemUpdate payload)
-            returns CreateUpdateDeleteItem|dsHttp:NotFound|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
-        CreateUpdateDeleteItem|persist:Error item;
+            returns http:NoContent|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         if payload.length() == 0 {
-            item = dataserviceClient->/createupdatedeleteitems/[id];
-        } else {
-            item = dataserviceClient->/createupdatedeleteitems/[id].put(payload);
+            return http:NO_CONTENT;
         }
+        CreateUpdateDeleteItem|persist:Error item = dataserviceClient->/createupdatedeleteitems/[id].put(payload);
         if item is persist:Error {
             return dsHttp:toUpdateError(item, "CreateUpdateDeleteItem", [id]);
         }
-        return item;
+        return http:NO_CONTENT;
     }
 
-    # Deletes a create update delete item and returns it.
+    # Deletes a create update delete item by its key.
     #
-    # + return - The deleted create update delete item, or the error response
-    resource function delete createupdatedeleteitems/[int id]() returns CreateUpdateDeleteItem|dsHttp:NotFound|dsHttp:ConstraintViolation|dsHttp:InternalError {
+    # + id - The id of the create update delete item
+    # + return - No content, or the error response
+    resource function delete createupdatedeleteitems/[int id]() returns http:NoContent|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:ConstraintViolation|dsHttp:InternalError {
         CreateUpdateDeleteItem|persist:Error item = dataserviceClient->/createupdatedeleteitems/[id].delete();
         if item is persist:Error {
             return dsHttp:toDeleteError(item, "CreateUpdateDeleteItem", [id]);
         }
-        return item;
+        return http:NO_CONTENT;
     }
 
-    # Gets the read create update delete items.
+    # Gets a page of read create update delete items.
     #
-    # + return - The read create update delete items, or an internal error
-    resource function get readcreateupdatedeleteitems() returns ReadCreateUpdateDeleteItemList|dsHttp:InternalError {
+    # + return - A page of read create update delete items, or the error response
+    resource function get readcreateupdatedeleteitems() returns ReadCreateUpdateDeleteItemList|dsHttp:InvalidInput|dsHttp:InternalError {
         ReadCreateUpdateDeleteItem[]|persist:Error items = from ReadCreateUpdateDeleteItem item in dataserviceClient->/readcreateupdatedeleteitems(ReadCreateUpdateDeleteItem)
             select item;
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        return {items};
+        return {items, hasMore: false};
     }
 
     # Gets a read create update delete item by its key.
     #
+    # + id - The id of the read create update delete item
     # + return - The read create update delete item, or the error response
-    resource function get readcreateupdatedeleteitems/[int id]() returns ReadCreateUpdateDeleteItem|dsHttp:NotFound|dsHttp:InternalError {
+    resource function get readcreateupdatedeleteitems/[int id]() returns ReadCreateUpdateDeleteItem|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
         ReadCreateUpdateDeleteItem|persist:Error item = dataserviceClient->/readcreateupdatedeleteitems/[id];
         if item is persist:Error {
             return dsHttp:toGetError(item, "ReadCreateUpdateDeleteItem", [id]);
@@ -605,28 +669,34 @@ service /api on dataserviceListener {
         return item;
     }
 
-    # Creates one read create update delete item, or several from an array.
+    # Creates one or more read create update delete items.
     #
+    # + payload - The read create update delete item, or the read create update delete items, to create
     # + return - The created read create update delete item or read create update delete items, or the error response
     resource function post readcreateupdatedeleteitems(ReadCreateUpdateDeleteItemInsert|ReadCreateUpdateDeleteItemInsert[] payload)
-            returns ReadCreateUpdateDeleteItemCreated|ReadCreateUpdateDeleteItemListCreated|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
+            returns ReadCreateUpdateDeleteItemCreated|ReadCreateUpdateDeleteItemListCreated|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         ReadCreateUpdateDeleteItemInsert[] values = payload is ReadCreateUpdateDeleteItemInsert[] ? payload : [payload];
+        dataservice:DataserviceError? tooMany = dataservice:checkCreateSize(values.length(), dataservicePageConfig);
+        if tooMany is dataservice:DataserviceError {
+            return <dsHttp:InvalidInput>{body: tooMany};
+        }
         ReadCreateUpdateDeleteItem[] items = [];
         if values.length() > 0 {
-            int[]|persist:Error keys = dataserviceClient->/readcreateupdatedeleteitems.post(values);
-            if keys is persist:Error {
-                return dsHttp:toCreateError(keys, "ReadCreateUpdateDeleteItem");
-            }
-            foreach int id in keys {
-                ReadCreateUpdateDeleteItem|persist:Error item = dataserviceClient->/readcreateupdatedeleteitems/[id];
-                if item is persist:Error {
-                    return dsHttp:toCreateError(item, "ReadCreateUpdateDeleteItem");
+            do {
+                transaction {
+                    int[] keys = check dataserviceClient->/readcreateupdatedeleteitems.post(values);
+                    foreach int id in keys {
+                        ReadCreateUpdateDeleteItem item = check dataserviceClient->/readcreateupdatedeleteitems/[id];
+                        items.push(item);
+                    }
+                    check commit;
                 }
-                items.push(item);
+            } on fail error err {
+                return dsHttp:toCreateError(err, "ReadCreateUpdateDeleteItem");
             }
         }
         if payload is ReadCreateUpdateDeleteItemInsert[] {
-            return <ReadCreateUpdateDeleteItemListCreated>{body: {items}};
+            return <ReadCreateUpdateDeleteItemListCreated>{body: {items, hasMore: false}};
         }
         ReadCreateUpdateDeleteItem created = items[0];
         return <ReadCreateUpdateDeleteItemCreated>{
@@ -635,11 +705,13 @@ service /api on dataserviceListener {
         };
     }
 
-    # Updates the given fields of a read create update delete item.
+    # Updates a read create update delete item by its key.
     #
+    # + id - The id of the read create update delete item
+    # + payload - The fields of the read create update delete item to update
     # + return - The updated read create update delete item, or the error response
     resource function patch readcreateupdatedeleteitems/[int id](ReadCreateUpdateDeleteItemUpdate payload)
-            returns ReadCreateUpdateDeleteItem|dsHttp:NotFound|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
+            returns ReadCreateUpdateDeleteItem|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         ReadCreateUpdateDeleteItem|persist:Error item;
         if payload.length() == 0 {
             item = dataserviceClient->/readcreateupdatedeleteitems/[id];
@@ -652,10 +724,11 @@ service /api on dataserviceListener {
         return item;
     }
 
-    # Deletes a read create update delete item and returns it.
+    # Deletes a read create update delete item by its key.
     #
+    # + id - The id of the read create update delete item
     # + return - The deleted read create update delete item, or the error response
-    resource function delete readcreateupdatedeleteitems/[int id]() returns ReadCreateUpdateDeleteItem|dsHttp:NotFound|dsHttp:ConstraintViolation|dsHttp:InternalError {
+    resource function delete readcreateupdatedeleteitems/[int id]() returns ReadCreateUpdateDeleteItem|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:ConstraintViolation|dsHttp:InternalError {
         ReadCreateUpdateDeleteItem|persist:Error item = dataserviceClient->/readcreateupdatedeleteitems/[id].delete();
         if item is persist:Error {
             return dsHttp:toDeleteError(item, "ReadCreateUpdateDeleteItem", [id]);
