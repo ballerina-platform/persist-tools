@@ -66,6 +66,7 @@ public final class HttpDataServiceGenerator {
     private final String basePath;
     private final boolean introspection;
     private final String modelName;
+    private final String datastore;
     private final boolean userOwned;
     private final Set<String> imports = new TreeSet<>();
 
@@ -75,14 +76,16 @@ public final class HttpDataServiceGenerator {
      * @param entities  the exposed entities, in model order
      * @param options   the data service options
      * @param modelName the name of the persist model, as persist writes it in its file headers
+     * @param datastore the datastore of the persist client, such as `mysql`
      * @param userOwned whether the files are written for the user to own, by `bal persist generate`
      */
     public HttpDataServiceGenerator(List<ExposedEntity> entities, DataServiceOptions options, String modelName,
-                                    boolean userOwned) {
+                                    String datastore, boolean userOwned) {
         this.entities = entities;
         this.basePath = options.basePath();
         this.introspection = options.introspection();
         this.modelName = modelName;
+        this.datastore = datastore;
         this.userOwned = userOwned;
     }
 
@@ -119,8 +122,9 @@ public final class HttpDataServiceGenerator {
     }
 
     /**
-     * Generates `dataservice_types.bal`: per entity in model order, the wire types, the list envelope, the status
-     * code records and the functions that convert between the wire types and the persist types.
+     * Generates `dataservice_types.bal`: per entity in model order, the wire types, the list envelope, the filter and
+     * partial types, the entity description, the status code records and the functions that convert between the
+     * wire types and the persist types.
      *
      * @return the formatted source, or empty when no exposed entity needs a type
      * @throws BalException if the source cannot be formatted
@@ -199,32 +203,34 @@ public final class HttpDataServiceGenerator {
         boolean read = entity.allows(READ);
         String changed = read ? n.wire : NO_CONTENT;
         if (read) {
-            appendDoc(out, entity, "Gets a page of " + n.plural + ".", List.of(), "A page of " + n.plural);
-            out.append("    resource function get ").append(n.resource).append("() returns ").append(n.list)
-                    .append(LIST_ERRORS).append(" {").append(NEWLINE);
-            out.append("        ").append(n.wire).append("[]|persist:Error items = from ").append(n.entity)
-                    .append(" item in dataserviceClient->/").append(n.resource).append("(").append(n.entity)
-                    .append(")").append(NEWLINE);
-            out.append("            select ").append(n.toWire("item")).append(";").append(NEWLINE);
-            out.append("        if items is persist:Error {").append(NEWLINE);
-            out.append("            return dsHttp:toListError(items);").append(NEWLINE);
-            out.append("        }").append(NEWLINE);
-            out.append("        return {items, hasMore: false};").append(NEWLINE);
-            out.append("    }").append(NEWLINE);
+            appendGetMany(out, entity, n);
 
-            appendDoc(out, entity, "Gets " + n.article + " " + n.words + " by its key.", keyDocs(entity, n),
-                    "The " + n.words);
+            List<String> params = new ArrayList<>(keyDocs(entity, n));
+            params.add("fields - The fields to return; the key fields are always returned");
+            appendDoc(out, entity, "Gets " + n.article + " " + n.words + " by its key.", params, "The " + n.words);
             out.append("    resource function get ").append(n.resource).append("/").append(keyParams)
-                    .append("() returns ").append(n.wire).append(GET_ERRORS).append(" {").append(NEWLINE);
+                    .append("(string[]? fields = ()) returns ").append(n.wire).append("|").append(n.partial)
+                    .append(GET_ERRORS).append(" {").append(NEWLINE);
             appendKeyCheck(out, entity, n, keyList);
+            appendFieldsCheck(out, n);
             out.append("        ").append(n.entity).append("|persist:Error item = dataserviceClient->/")
                     .append(n.resource).append(keyPath).append(";").append(NEWLINE);
             appendErrorCheck(out, "item", "toGetError", n, keyList, "        ");
+            out.append("        if fields is string[] {").append(NEWLINE);
+            out.append("            ").append(n.partial).append("|error partial = dataservice:narrow(")
+                    .append(n.toWire("item")).append(", ").append(n.description).append(", fields).cloneWithType(")
+                    .append(n.partial).append(");").append(NEWLINE);
+            out.append("            if partial is error {").append(NEWLINE);
+            out.append("                return dsHttp:toGetError(partial, \"").append(n.displayName).append("\", ")
+                    .append(keyList).append(");").append(NEWLINE);
+            out.append("            }").append(NEWLINE);
+            out.append("            return partial;").append(NEWLINE);
+            out.append("        }").append(NEWLINE);
             out.append("        return ").append(n.toWire("item")).append(";").append(NEWLINE);
             out.append("    }").append(NEWLINE);
         }
         if (entity.allows(CREATE)) {
-            appendCreate(out, entity, n, keyPath);
+            appendCreate(out, entity, n);
         }
         if (entity.allows(UPDATE)) {
             List<String> params = new ArrayList<>(keyDocs(entity, n));
@@ -282,7 +288,60 @@ public final class HttpDataServiceGenerator {
         }
     }
 
-    private void appendCreate(StringBuilder out, ExposedEntity entity, Names n, String keyPath) {
+    private void appendGetMany(StringBuilder out, ExposedEntity entity, Names n) {
+        String entityName = "\"" + n.displayName + "\"";
+        appendDoc(out, entity, "Gets a page of " + n.plural + ".", List.of(
+                "filter - The conditions that the " + n.plural + " match",
+                "sort - The fields to sort by, each descending when it starts with `-`",
+                "size - The number of " + n.plural + " in the page",
+                "offset - The number of " + n.plural + " to skip",
+                "fields - The fields to return; the key fields are always returned"), "A page of " + n.plural);
+        out.append("    resource function get ").append(n.resource).append("(").append(n.filter)
+                .append("? filter = (), string[]? sort = (), int? size = (), int? offset = (),").append(NEWLINE);
+        out.append("            string[]? fields = ()) returns ").append(n.list).append("|").append(n.partialList)
+                .append(LIST_ERRORS).append(" {").append(NEWLINE);
+        out.append("        dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =")
+                .append(NEWLINE);
+        out.append("            dataservice:query(").append(n.description)
+                .append(", dataservicePageConfig, filter, sort, size, offset);").append(NEWLINE);
+        out.append("        if query !is dataservice:Query {").append(NEWLINE);
+        out.append("            return dsHttp:toQueryError(query, ").append(entityName).append(");").append(NEWLINE);
+        out.append("        }").append(NEWLINE);
+        appendFieldsCheck(out, n);
+        out.append("        stream<").append(n.entity).append(", persist:Error?> rows = dataserviceClient->/")
+                .append(n.resource).append("(").append(n.entity).append(",").append(NEWLINE);
+        out.append("            whereClause = query.whereClause, orderByClause = query.orderByClause,").append(NEWLINE);
+        out.append("            limitClause = query.limitClause, offsetClause = query.offsetClause);").append(NEWLINE);
+        out.append("        ").append(n.wire).append("[]|persist:Error items = from ").append(n.entity)
+                .append(" item in rows select ").append(n.toWire("item")).append(";").append(NEWLINE);
+        out.append("        if items is persist:Error {").append(NEWLINE);
+        out.append("            return dsHttp:toListError(items);").append(NEWLINE);
+        out.append("        }").append(NEWLINE);
+        out.append("        boolean hasMore = dataservice:page(items, query);").append(NEWLINE);
+        out.append("        if fields is string[] {").append(NEWLINE);
+        out.append("            ").append(n.partial).append("[]|error partials = (from ").append(n.wire)
+                .append(" item in items").append(NEWLINE);
+        out.append("                select dataservice:narrow(item, ").append(n.description)
+                .append(", fields)).cloneWithType();").append(NEWLINE);
+        out.append("            if partials is error {").append(NEWLINE);
+        out.append("                return dsHttp:toListError(partials);").append(NEWLINE);
+        out.append("            }").append(NEWLINE);
+        out.append("            return <").append(n.partialList).append(">{items: partials, hasMore};").append(NEWLINE);
+        out.append("        }").append(NEWLINE);
+        out.append("        return <").append(n.list).append(">{items, hasMore};").append(NEWLINE);
+        out.append("    }").append(NEWLINE);
+    }
+
+    private static void appendFieldsCheck(StringBuilder out, Names n) {
+        out.append("        dataservice:DataserviceError? invalidFields = dataservice:checkFields(")
+                .append(n.description).append(", fields);").append(NEWLINE);
+        out.append("        if invalidFields is dataservice:DataserviceError {").append(NEWLINE);
+        out.append("            return dsHttp:toQueryError(invalidFields, \"").append(n.displayName).append("\");")
+                .append(NEWLINE);
+        out.append("        }").append(NEWLINE);
+    }
+
+    private void appendCreate(StringBuilder out, ExposedEntity entity, Names n) {
         String insert = n.entity + "Insert";
         appendDoc(out, entity, "Creates one or more " + n.plural + ".",
                 List.of("payload - The " + n.words + ", or the " + n.plural + ", to create"),
@@ -316,20 +375,32 @@ public final class HttpDataServiceGenerator {
         List<ServiceField> keys = entity.keys();
         String keyType = keys.size() == 1 ? keys.get(0).type() :
                 "[" + keys.stream().map(ServiceField::type).collect(Collectors.joining(", ")) + "]";
-        String keyBinding = keys.size() == 1 ? keys.get(0).name() :
-                "[" + keys.stream().map(ServiceField::name).collect(Collectors.joining(", ")) + "]";
         String entityName = "\"" + n.displayName + "\"";
         // A failed check inside the transaction rolls it back, so a batch creates every record or none.
         out.append("            do {").append(NEWLINE);
         out.append("                transaction {").append(NEWLINE);
         out.append("                    ").append(keyType).append("[] keys = check dataserviceClient->/")
                 .append(n.resource).append(".post(values);").append(NEWLINE);
-        out.append("                    foreach ").append(keyType).append(" ").append(keyBinding).append(" in keys {")
+        out.append("                    dataservice:KeyValue[][] keyValues = ")
+                .append(keys.size() == 1 ? "from " + keyType + " key in keys select [key]" : "keys").append(";")
                 .append(NEWLINE);
-        out.append("                        ").append(n.entity).append(" item = check dataserviceClient->/")
-                .append(n.resource).append(keyPath).append(";").append(NEWLINE);
-        out.append("                        items.push(").append(n.toWire("item")).append(");").append(NEWLINE);
-        out.append("                    }").append(NEWLINE);
+        out.append("                    dataservice:Query query = dataservice:keysQuery(").append(n.description)
+                .append(", keyValues);").append(NEWLINE);
+        out.append("                    stream<").append(n.entity)
+                .append(", persist:Error?> stored = dataserviceClient->/").append(n.resource).append("(")
+                .append(n.entity).append(",").append(NEWLINE);
+        out.append("                        whereClause = query.whereClause, orderByClause = query.orderByClause);")
+                .append(NEWLINE);
+        out.append("                    ").append(n.entity).append("[] rows = check from ").append(n.entity)
+                .append(" item in stored select item;").append(NEWLINE);
+        out.append("                    check dataservice:orderByKeys(rows, ").append(n.description)
+                .append(", keyValues);").append(NEWLINE);
+        if (entity.hasWireTypes()) {
+            out.append("                    items = from ").append(n.entity).append(" item in rows select ")
+                    .append(n.toWire("item")).append(";").append(NEWLINE);
+        } else {
+            out.append("                    items = rows;").append(NEWLINE);
+        }
         out.append("                    check commit;").append(NEWLINE);
         out.append("                }").append(NEWLINE);
         out.append("            } on fail error err {").append(NEWLINE);
@@ -421,12 +492,123 @@ public final class HttpDataServiceGenerator {
             out.append("    boolean hasMore;").append(NEWLINE);
             out.append("|};").append(NEWLINE);
         }
+        if (entity.allows(READ)) {
+            appendFilter(out, entity, n);
+            appendPartial(out, entity, n);
+        }
+        if (entity.allows(READ) || entity.allows(CREATE)) {
+            appendDescription(out, entity, n);
+        }
         if (entity.allows(CREATE)) {
             appendStatusRecord(out, "The response to creating one " + n.words + ".", n.created, n.wire,
                     "The created " + n.words);
             appendStatusRecord(out, "The response to creating several " + n.plural + ".", n.listCreated, n.list,
                     "The created " + n.plural);
         }
+    }
+
+    private static void appendFilter(StringBuilder out, ExposedEntity entity, Names n) {
+        List<ServiceField> fields = filterable(entity);
+        out.append(NEWLINE).append("# The conditions that ").append(n.plural)
+                .append(" match, as the `filter` query parameter holds them.").append(NEWLINE);
+        out.append("#").append(NEWLINE);
+        for (ServiceField field : fields) {
+            out.append("# + ").append(field.name()).append(" - The conditions on the `").append(unescape(field.name()))
+                    .append("` field").append(NEWLINE);
+        }
+        out.append("public type ").append(n.filter).append(" record {|").append(NEWLINE);
+        for (ServiceField field : fields) {
+            ExposedEntity.Column column = column(entity, field);
+            String type = field.conversion().isPresent() ? "string" : field.type();
+            List<String> operators = new ArrayList<>(List.of(type + " eq?;", type + " ne?;"));
+            if (!"BOOLEAN".equals(column.type()) && !"ENUM".equals(column.type())) {
+                for (String operator : List.of("lt", "lte", "gt", "gte")) {
+                    operators.add(type + " " + operator + "?;");
+                }
+            }
+            operators.add(type + "[] anyOf?;");
+            if ("STRING".equals(column.type())) {
+                operators.addAll(List.of("string contains?;", "string startsWith?;"));
+            }
+            if (column.nullable()) {
+                operators.add("boolean isNull?;");
+            }
+            out.append("    record {|").append(NEWLINE);
+            for (String operator : operators) {
+                out.append("        ").append(operator).append(NEWLINE);
+            }
+            out.append("    |} ").append(field.name()).append("?;").append(NEWLINE);
+        }
+        out.append("|};").append(NEWLINE);
+    }
+
+    private static void appendPartial(StringBuilder out, ExposedEntity entity, Names n) {
+        List<ServiceField> fields = returned(entity.fields());
+        out.append(NEWLINE).append("# ").append(capitalize(n.article)).append(" ").append(n.words)
+                .append(" with the fields named in the `fields` query parameter.").append(NEWLINE);
+        out.append("#").append(NEWLINE);
+        for (ServiceField field : fields) {
+            out.append("# + ").append(field.name()).append(" - ").append(fieldDoc(field, n.entity)).append(NEWLINE);
+        }
+        out.append("public type ").append(n.partial).append(" record {|").append(NEWLINE);
+        for (ServiceField field : fields) {
+            out.append("    ").append(field.wireType()).append(" ").append(field.name())
+                    .append(field.key() ? "" : "?").append(";").append(NEWLINE);
+        }
+        out.append("|};").append(NEWLINE);
+        out.append(NEWLINE).append("# A list of ").append(n.plural)
+                .append(" with the fields named in the `fields` query parameter.").append(NEWLINE);
+        out.append("#").append(NEWLINE);
+        out.append("# + items - The ").append(n.plural).append(NEWLINE);
+        out.append("# + hasMore - Whether records exist after this page").append(NEWLINE);
+        out.append("public type ").append(n.partialList).append(" record {|").append(NEWLINE);
+        out.append("    ").append(n.partial).append("[] items;").append(NEWLINE);
+        out.append("    boolean hasMore;").append(NEWLINE);
+        out.append("|};").append(NEWLINE);
+    }
+
+    private void appendDescription(StringBuilder out, ExposedEntity entity, Names n) {
+        imports.add("import ballerina/dataservice;");
+        out.append(NEWLINE).append("# The description of `").append(n.entity)
+                .append("` that `ballerina/dataservice` builds queries from.").append(NEWLINE);
+        out.append("final dataservice:Entity ").append(n.description).append(" = {").append(NEWLINE);
+        out.append("    name: \"").append(n.displayName).append("\",").append(NEWLINE);
+        out.append("    'resource: \"").append(n.resource).append("\",").append(NEWLINE);
+        out.append("    datastore: dataservice:").append(datastore.toUpperCase(Locale.ENGLISH)).append(",")
+                .append(NEWLINE);
+        out.append("    fields: [").append(NEWLINE);
+        List<String> members = new ArrayList<>();
+        for (ExposedEntity.Column column : entity.columns()) {
+            StringBuilder member = new StringBuilder("        {name: \"").append(column.name())
+                    .append("\", column: \"").append(column.column()).append("\", 'type: dataservice:")
+                    .append(column.type());
+            if (column.nullable()) {
+                member.append(", nullable: true");
+            }
+            if (column.key()) {
+                member.append(", key: true");
+            }
+            if (column.generated()) {
+                member.append(", generated: true");
+            }
+            members.add(member.append("}").toString());
+        }
+        out.append(String.join("," + NEWLINE, members)).append(NEWLINE);
+        out.append("    ]").append(NEWLINE);
+        out.append("};").append(NEWLINE);
+    }
+
+    private static List<ServiceField> filterable(ExposedEntity entity) {
+        return returned(entity.fields()).stream().filter(field -> column(entity, field).queryable()).toList();
+    }
+
+    private static ExposedEntity.Column column(ExposedEntity entity, ServiceField field) {
+        String name = unescape(field.name());
+        return entity.columns().stream().filter(column -> column.name().equals(name)).findFirst().orElseThrow();
+    }
+
+    private static String capitalize(String text) {
+        return text.substring(0, 1).toUpperCase(Locale.ENGLISH) + text.substring(1);
     }
 
     private static void appendRecord(StringBuilder out, String doc, String name, String persistType,
@@ -726,6 +908,10 @@ public final class HttpDataServiceGenerator {
         private final String insertWire;
         private final String updateWire;
         private final String list;
+        private final String filter;
+        private final String partial;
+        private final String partialList;
+        private final String description;
         private final String created;
         private final String listCreated;
         private final String words;
@@ -742,6 +928,10 @@ public final class HttpDataServiceGenerator {
             this.insertWire = this.entity + (hasWire ? "InsertPayload" : "Insert");
             this.updateWire = this.entity + (hasWire ? "UpdatePayload" : "Update");
             this.list = this.entity + "List";
+            this.filter = this.entity + "Filter";
+            this.partial = this.entity + "Partial";
+            this.partialList = this.entity + "PartialList";
+            this.description = "dataservice" + displayName + "Entity";
             this.created = this.entity + "Created";
             this.listCreated = this.entity + "ListCreated";
             this.words = String.join(" ", WORD_BOUNDARY.split(displayName)).toLowerCase(Locale.ENGLISH);

@@ -21,6 +21,7 @@ package io.ballerina.persist.dataservice;
 import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.Relation;
+import io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -40,10 +41,11 @@ public final class ExposedEntity {
     private final List<ServiceField> insertFields;
     private final List<ServiceField> updateFields;
     private final List<String> doc;
+    private final List<Column> columns;
 
     private ExposedEntity(String name, String resourceName, EnumSet<Operation> operations,
                           List<ServiceField> fields, List<ServiceField> insertFields,
-                          List<ServiceField> updateFields, List<String> doc) {
+                          List<ServiceField> updateFields, List<String> doc, List<Column> columns) {
         this.name = name;
         this.resourceName = resourceName;
         this.operations = EnumSet.copyOf(operations);
@@ -51,6 +53,7 @@ public final class ExposedEntity {
         this.insertFields = insertFields;
         this.updateFields = updateFields;
         this.doc = doc;
+        this.columns = columns;
     }
 
     /**
@@ -67,6 +70,7 @@ public final class ExposedEntity {
         List<ServiceField> fields = new ArrayList<>();
         List<ServiceField> insertFields = new ArrayList<>();
         List<ServiceField> updateFields = new ArrayList<>();
+        List<Column> columns = new ArrayList<>();
         for (EntityField field : entity.getFields()) {
             boolean isKey = entity.getKeys().stream().anyMatch(key -> key == field);
             if (field.getRelation() != null) {
@@ -79,6 +83,10 @@ public final class ExposedEntity {
                                 .withRule(rule));
                         updateFields.add(new ServiceField(key.getField(), key.getType(), false, true, false)
                                 .withRule(rule));
+                        if (!isInternal(rule)) {
+                            columns.add(new Column(unescape(key.getField()), unescape(key.getColumnName()),
+                                    Column.typeOf(key.getType(), false), false, false, false));
+                        }
                     }
                 }
                 continue;
@@ -87,6 +95,11 @@ public final class ExposedEntity {
             FieldRules.Applied rule = rules.get(field.getFieldName());
             fields.add(new ServiceField(field.getFieldName(), type, !isKey && field.isOptionalType(),
                     field.isOptionalField(), isKey).withRule(rule));
+            if (!isInternal(rule)) {
+                columns.add(new Column(unescape(field.getFieldName()), unescape(field.getFieldColumnName()),
+                        Column.typeOf(type, field.getEnum() != null), !isKey && field.isOptionalType(), isKey,
+                        field.isDbGenerated()));
+            }
             if (!isKey) {
                 insertFields.add(new ServiceField(field.getFieldName(), type, field.isOptionalType(),
                         field.isOptionalField(), false).withRule(rule));
@@ -97,7 +110,15 @@ public final class ExposedEntity {
         boolean generated = entity.getFields().stream().anyMatch(EntityField::isDbGenerated);
         return new ExposedEntity(entity.getEntityName(), entity.getClientResourceName(), operations,
                 List.copyOf(fields), generated ? List.copyOf(insertFields) : null, List.copyOf(updateFields),
-                List.copyOf(doc));
+                List.copyOf(doc), List.copyOf(columns));
+    }
+
+    private static boolean isInternal(FieldRules.Applied rule) {
+        return rule != null && rule.rule() == FieldRule.INTERNAL;
+    }
+
+    private static String unescape(String name) {
+        return BalSyntaxUtils.stripEscapeCharacter(name.startsWith("'") ? name.substring(1) : name);
     }
 
     /**
@@ -164,6 +185,15 @@ public final class ExposedEntity {
     }
 
     /**
+     * Returns the fields that callers can see, as the entity description of `ballerina/dataservice` holds them.
+     *
+     * @return the fields in model order, without the `Internal` ones
+     */
+    public List<Column> columns() {
+        return columns;
+    }
+
+    /**
      * Returns the key fields, in declaration order.
      *
      * @return the key fields
@@ -189,5 +219,45 @@ public final class ExposedEntity {
      */
     public boolean allows(Operation operation) {
         return operations.contains(operation);
+    }
+
+    /**
+     * A field of the entity description, with its unescaped name and its column name.
+     *
+     * @param name      the field name
+     * @param column    the column name
+     * @param type      the `dataservice:FieldType` member
+     * @param nullable  whether the field can be nil
+     * @param key       whether the field is a key field
+     * @param generated whether the database generates the value
+     */
+    public record Column(String name, String column, String type, boolean nullable, boolean key, boolean generated) {
+
+        static String typeOf(String type, boolean isEnum) {
+            if (isEnum) {
+                return "ENUM";
+            }
+            return switch (type) {
+                case "int" -> "INT";
+                case "float" -> "FLOAT";
+                case "decimal" -> "DECIMAL";
+                case "boolean" -> "BOOLEAN";
+                case "byte[]" -> "BYTES";
+                case "time:Date" -> "DATE";
+                case "time:TimeOfDay" -> "TIME_OF_DAY";
+                case "time:Civil" -> "CIVIL";
+                case "time:Utc" -> "UTC";
+                default -> "STRING";
+            };
+        }
+
+        /**
+         * Tells whether the field can be used in `filter` and `sort`.
+         *
+         * @return whether it can
+         */
+        public boolean queryable() {
+            return !"BYTES".equals(type);
+        }
     }
 }

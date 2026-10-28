@@ -37,6 +37,75 @@ public type TicketList record {|
     boolean hasMore;
 |};
 
+# The conditions that tickets match, as the `filter` query parameter holds them.
+#
+# + id - The conditions on the `id` field
+# + subject - The conditions on the `subject` field
+# + openedOn - The conditions on the `openedOn` field
+public type TicketFilter record {|
+    record {|
+        int eq?;
+        int ne?;
+        int lt?;
+        int lte?;
+        int gt?;
+        int gte?;
+        int[] anyOf?;
+    |} id?;
+    record {|
+        string eq?;
+        string ne?;
+        string lt?;
+        string lte?;
+        string gt?;
+        string gte?;
+        string[] anyOf?;
+        string contains?;
+        string startsWith?;
+    |} subject?;
+    record {|
+        string eq?;
+        string ne?;
+        string lt?;
+        string lte?;
+        string gt?;
+        string gte?;
+        string[] anyOf?;
+    |} openedOn?;
+|};
+
+# A ticket with the fields named in the `fields` query parameter.
+#
+# + id - The `id` field of `Ticket`
+# + subject - The `subject` field of `Ticket`
+# + openedOn - The `openedOn` field of `Ticket`, as an ISO 8601 date
+public type TicketPartial record {|
+    int id;
+    string subject?;
+    string openedOn?;
+|};
+
+# A list of tickets with the fields named in the `fields` query parameter.
+#
+# + items - The tickets
+# + hasMore - Whether records exist after this page
+public type TicketPartialList record {|
+    TicketPartial[] items;
+    boolean hasMore;
+|};
+
+# The description of `Ticket` that `ballerina/dataservice` builds queries from.
+final dataservice:Entity dataserviceTicketEntity = {
+    name: "Ticket",
+    'resource: "tickets",
+    datastore: dataservice:H2,
+    fields: [
+        {name: "id", column: "id", 'type: dataservice:INT, key: true, generated: true},
+        {name: "subject", column: "subject", 'type: dataservice:STRING},
+        {name: "openedOn", column: "openedOn", 'type: dataservice:DATE}
+    ]
+};
+
 # The response to creating one ticket.
 #
 # + body - The created ticket
@@ -83,6 +152,17 @@ public type OrderItemList record {|
     OrderItem[] items;
     boolean hasMore;
 |};
+
+# The description of `OrderItem` that `ballerina/dataservice` builds queries from.
+final dataservice:Entity dataserviceOrderItemEntity = {
+    name: "OrderItem",
+    'resource: "orderitems",
+    datastore: dataservice:H2,
+    fields: [
+        {name: "id", column: "id", 'type: dataservice:INT, key: true, generated: true},
+        {name: "sku", column: "sku", 'type: dataservice:STRING}
+    ]
+};
 
 # The response to creating one order item.
 #

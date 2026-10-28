@@ -20,25 +20,65 @@ service /api on dataserviceListener {
 
     # Gets a page of assignments.
     #
+    # + filter - The conditions that the assignments match
+    # + sort - The fields to sort by, each descending when it starts with `-`
+    # + size - The number of assignments in the page
+    # + offset - The number of assignments to skip
+    # + fields - The fields to return; the key fields are always returned
     # + return - A page of assignments, or the error response
-    resource function get assignments() returns AssignmentList|dsHttp:InvalidInput|dsHttp:InternalError {
-        Assignment[]|persist:Error items = from Assignment item in dataserviceClient->/assignments(Assignment)
+    resource function get assignments(AssignmentFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
+            string[]? fields = ()) returns AssignmentList|AssignmentPartialList|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
+            dataservice:query(dataserviceAssignmentEntity, dataservicePageConfig, filter, sort, size, offset);
+        if query !is dataservice:Query {
+            return dsHttp:toQueryError(query, "Assignment");
+        }
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceAssignmentEntity, fields);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "Assignment");
+        }
+        stream<Assignment, persist:Error?> rows = dataserviceClient->/assignments(Assignment,
+            whereClause = query.whereClause, orderByClause = query.orderByClause,
+            limitClause = query.limitClause, offsetClause = query.offsetClause
+        );
+        Assignment[]|persist:Error items = from Assignment item in rows
             select item;
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        return {items, hasMore: false};
+        boolean hasMore = dataservice:page(items, query);
+        if fields is string[] {
+            AssignmentPartial[]|error partials = (from Assignment item in items
+                select dataservice:narrow(item, dataserviceAssignmentEntity, fields)).cloneWithType();
+            if partials is error {
+                return dsHttp:toListError(partials);
+            }
+            return <AssignmentPartialList>{items: partials, hasMore};
+        }
+        return <AssignmentList>{items, hasMore};
     }
 
     # Gets an assignment by its key.
     #
     # + projectCode - The projectCode of the assignment
     # + seq - The seq of the assignment
+    # + fields - The fields to return; the key fields are always returned
     # + return - The assignment, or the error response
-    resource function get assignments/[string projectCode]/[int seq]() returns Assignment|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+    resource function get assignments/[string projectCode]/[int seq](string[]? fields = ()) returns Assignment|AssignmentPartial|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceAssignmentEntity, fields);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "Assignment");
+        }
         Assignment|persist:Error item = dataserviceClient->/assignments/[projectCode]/[seq];
         if item is persist:Error {
             return dsHttp:toGetError(item, "Assignment", [projectCode, seq]);
+        }
+        if fields is string[] {
+            AssignmentPartial|error partial = dataservice:narrow(item, dataserviceAssignmentEntity, fields).cloneWithType(AssignmentPartial);
+            if partial is error {
+                return dsHttp:toGetError(partial, "Assignment", [projectCode, seq]);
+            }
+            return partial;
         }
         return item;
     }
@@ -59,10 +99,15 @@ service /api on dataserviceListener {
             do {
                 transaction {
                     [string, int][] keys = check dataserviceClient->/assignments.post(values);
-                    foreach [string, int] [projectCode, seq] in keys {
-                        Assignment item = check dataserviceClient->/assignments/[projectCode]/[seq];
-                        items.push(item);
-                    }
+                    dataservice:KeyValue[][] keyValues = keys;
+                    dataservice:Query query = dataservice:keysQuery(dataserviceAssignmentEntity, keyValues);
+                    stream<Assignment, persist:Error?> stored = dataserviceClient->/assignments(Assignment,
+                        whereClause = query.whereClause, orderByClause = query.orderByClause
+                    );
+                    Assignment[] rows = check from Assignment item in stored
+                        select item;
+                    check dataservice:orderByKeys(rows, dataserviceAssignmentEntity, keyValues);
+                    items = rows;
                     check commit;
                 }
             } on fail error err {
@@ -114,14 +159,42 @@ service /api on dataserviceListener {
 
     # Gets a page of rates.
     #
+    # + filter - The conditions that the rates match
+    # + sort - The fields to sort by, each descending when it starts with `-`
+    # + size - The number of rates in the page
+    # + offset - The number of rates to skip
+    # + fields - The fields to return; the key fields are always returned
     # + return - A page of rates, or the error response
-    resource function get rates() returns RateList|dsHttp:InvalidInput|dsHttp:InternalError {
-        Rate[]|persist:Error items = from Rate item in dataserviceClient->/rates(Rate)
+    resource function get rates(RateFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
+            string[]? fields = ()) returns RateList|RatePartialList|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
+            dataservice:query(dataserviceRateEntity, dataservicePageConfig, filter, sort, size, offset);
+        if query !is dataservice:Query {
+            return dsHttp:toQueryError(query, "Rate");
+        }
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceRateEntity, fields);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "Rate");
+        }
+        stream<Rate, persist:Error?> rows = dataserviceClient->/rates(Rate,
+            whereClause = query.whereClause, orderByClause = query.orderByClause,
+            limitClause = query.limitClause, offsetClause = query.offsetClause
+        );
+        Rate[]|persist:Error items = from Rate item in rows
             select item;
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        return {items, hasMore: false};
+        boolean hasMore = dataservice:page(items, query);
+        if fields is string[] {
+            RatePartial[]|error partials = (from Rate item in items
+                select dataservice:narrow(item, dataserviceRateEntity, fields)).cloneWithType();
+            if partials is error {
+                return dsHttp:toListError(partials);
+            }
+            return <RatePartialList>{items: partials, hasMore};
+        }
+        return <RateList>{items, hasMore};
     }
 
     # Gets a rate by its key.
@@ -129,15 +202,27 @@ service /api on dataserviceListener {
     # + amount - The amount of the rate
     # + factor - The factor of the rate
     # + active - The active of the rate
+    # + fields - The fields to return; the key fields are always returned
     # + return - The rate, or the error response
-    resource function get rates/[decimal amount]/[float factor]/[boolean active]() returns Rate|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+    resource function get rates/[decimal amount]/[float factor]/[boolean active](string[]? fields = ()) returns Rate|RatePartial|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
         dataservice:DataserviceError? invalidKey = dataservice:checkFiniteKey("Rate", [amount, factor, active]);
         if invalidKey is dataservice:DataserviceError {
             return <dsHttp:InvalidInput>{body: invalidKey};
         }
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceRateEntity, fields);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "Rate");
+        }
         Rate|persist:Error item = dataserviceClient->/rates/[amount]/[factor]/[active];
         if item is persist:Error {
             return dsHttp:toGetError(item, "Rate", [amount, factor, active]);
+        }
+        if fields is string[] {
+            RatePartial|error partial = dataservice:narrow(item, dataserviceRateEntity, fields).cloneWithType(RatePartial);
+            if partial is error {
+                return dsHttp:toGetError(partial, "Rate", [amount, factor, active]);
+            }
+            return partial;
         }
         return item;
     }

@@ -48,7 +48,7 @@ public class HttpDataServiceGeneratorTest {
         List<ExposedEntity> entities = DataServiceModel.resolve(modelPath, module).entities();
         HttpDataServiceGenerator generator = new HttpDataServiceGenerator(entities,
                 new DataServiceOptions("http", DataServiceOptions.validateBasePath(basePath), false, introspection),
-                module.getModuleName(), userOwned);
+                module.getModuleName(), "h2", userOwned);
         assertSource(generator.generateService(), RESOURCES.resolve(model).resolve(expected));
         if (expectedTypes != null) {
             assertSource(generator.generateTypes().orElseThrow(), RESOURCES.resolve(model).resolve(expectedTypes));
@@ -79,16 +79,16 @@ public class HttpDataServiceGeneratorTest {
         List<ExposedEntity> updateOnly = DataServiceModel.resolve(modelPath, module).entities().stream()
                 .filter(entity -> entity.name().equals("UpdateDeleteItem")).toList();
         Assert.assertTrue(new HttpDataServiceGenerator(updateOnly, DataServiceOptions.defaults("http"), "model",
-                false).generateTypes().isEmpty());
+                "h2", false).generateTypes().isEmpty());
     }
 
     @Test
     public void testGeneratedConfig() throws BalException, IOException {
         HttpDataServiceGenerator generator = new HttpDataServiceGenerator(List.of(),
-                DataServiceOptions.defaults("http"), "model", false);
+                DataServiceOptions.defaults("http"), "model", "h2", false);
         assertSource(generator.generateConfig(), RESOURCES.resolve("dataservice_config.bal"));
         HttpDataServiceGenerator userOwned = new HttpDataServiceGenerator(List.of(),
-                DataServiceOptions.defaults("http"), "model", true);
+                DataServiceOptions.defaults("http"), "model", "h2", true);
         assertSource(userOwned.generateConfig(), RESOURCES.resolve("dataservice_config_user_owned.bal"));
     }
 

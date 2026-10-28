@@ -112,7 +112,7 @@ public class ToolingDataServiceTest {
                 user = "sa"
                 password = ""
                 """, init.toString().replace('\\', '/')));
-        assertTestsPassed(bal(project, Map.of("TZ", "UTC"), "test", "--offline"), 42);
+        assertTestsPassed(bal(project, Map.of("TZ", "UTC"), "test", "--offline"), 50);
     }
 
     // Generation from bal build
@@ -125,7 +125,8 @@ public class ToolingDataServiceTest {
         String service = Files.readString(project.resolve("generated").resolve(SERVICE));
         Assert.assertTrue(service.startsWith("// AUTO-GENERATED FILE. DO NOT MODIFY."), service);
         Assert.assertTrue(service.contains("service /api on dataserviceListener {"), service);
-        Assert.assertTrue(service.contains("resource function get assignments/[string projectCode]/[int seq]()"));
+        Assert.assertTrue(service.contains(
+                "resource function get assignments/[string projectCode]/[int seq](string[]? fields = ())"), service);
         Assert.assertFalse(service.contains("auditlogs"), service);
         Assert.assertTrue(service.contains("@openapi:ServiceInfo {embed: true}\nservice /api on"), service);
         Assert.assertTrue(Files.exists(project.resolve("generated").resolve(CONFIG)));

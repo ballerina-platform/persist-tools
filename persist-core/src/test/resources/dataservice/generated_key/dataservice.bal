@@ -20,24 +20,64 @@ service /api on dataserviceListener {
 
     # Gets a page of tickets.
     #
+    # + filter - The conditions that the tickets match
+    # + sort - The fields to sort by, each descending when it starts with `-`
+    # + size - The number of tickets in the page
+    # + offset - The number of tickets to skip
+    # + fields - The fields to return; the key fields are always returned
     # + return - A page of tickets, or the error response
-    resource function get tickets() returns TicketList|dsHttp:InvalidInput|dsHttp:InternalError {
-        TicketPayload[]|persist:Error items = from Ticket item in dataserviceClient->/tickets(Ticket)
+    resource function get tickets(TicketFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
+            string[]? fields = ()) returns TicketList|TicketPartialList|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
+            dataservice:query(dataserviceTicketEntity, dataservicePageConfig, filter, sort, size, offset);
+        if query !is dataservice:Query {
+            return dsHttp:toQueryError(query, "Ticket");
+        }
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceTicketEntity, fields);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "Ticket");
+        }
+        stream<Ticket, persist:Error?> rows = dataserviceClient->/tickets(Ticket,
+            whereClause = query.whereClause, orderByClause = query.orderByClause,
+            limitClause = query.limitClause, offsetClause = query.offsetClause
+        );
+        TicketPayload[]|persist:Error items = from Ticket item in rows
             select transformTicketToPayload(item);
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        return {items, hasMore: false};
+        boolean hasMore = dataservice:page(items, query);
+        if fields is string[] {
+            TicketPartial[]|error partials = (from TicketPayload item in items
+                select dataservice:narrow(item, dataserviceTicketEntity, fields)).cloneWithType();
+            if partials is error {
+                return dsHttp:toListError(partials);
+            }
+            return <TicketPartialList>{items: partials, hasMore};
+        }
+        return <TicketList>{items, hasMore};
     }
 
     # Gets a ticket by its key.
     #
     # + id - The id of the ticket
+    # + fields - The fields to return; the key fields are always returned
     # + return - The ticket, or the error response
-    resource function get tickets/[int id]() returns TicketPayload|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+    resource function get tickets/[int id](string[]? fields = ()) returns TicketPayload|TicketPartial|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceTicketEntity, fields);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "Ticket");
+        }
         Ticket|persist:Error item = dataserviceClient->/tickets/[id];
         if item is persist:Error {
             return dsHttp:toGetError(item, "Ticket", [id]);
+        }
+        if fields is string[] {
+            TicketPartial|error partial = dataservice:narrow(transformTicketToPayload(item), dataserviceTicketEntity, fields).cloneWithType(TicketPartial);
+            if partial is error {
+                return dsHttp:toGetError(partial, "Ticket", [id]);
+            }
+            return partial;
         }
         return transformTicketToPayload(item);
     }
@@ -66,10 +106,17 @@ service /api on dataserviceListener {
             do {
                 transaction {
                     int[] keys = check dataserviceClient->/tickets.post(values);
-                    foreach int id in keys {
-                        Ticket item = check dataserviceClient->/tickets/[id];
-                        items.push(transformTicketToPayload(item));
-                    }
+                    dataservice:KeyValue[][] keyValues = from int key in keys
+                        select [key];
+                    dataservice:Query query = dataservice:keysQuery(dataserviceTicketEntity, keyValues);
+                    stream<Ticket, persist:Error?> stored = dataserviceClient->/tickets(Ticket,
+                        whereClause = query.whereClause, orderByClause = query.orderByClause
+                    );
+                    Ticket[] rows = check from Ticket item in stored
+                        select item;
+                    check dataservice:orderByKeys(rows, dataserviceTicketEntity, keyValues);
+                    items = from Ticket item in rows
+                        select transformTicketToPayload(item);
                     check commit;
                 }
             } on fail error err {
@@ -102,10 +149,16 @@ service /api on dataserviceListener {
             do {
                 transaction {
                     int[] keys = check dataserviceClient->/orderitems.post(values);
-                    foreach int id in keys {
-                        OrderItem item = check dataserviceClient->/orderitems/[id];
-                        items.push(item);
-                    }
+                    dataservice:KeyValue[][] keyValues = from int key in keys
+                        select [key];
+                    dataservice:Query query = dataservice:keysQuery(dataserviceOrderItemEntity, keyValues);
+                    stream<OrderItem, persist:Error?> stored = dataserviceClient->/orderitems(OrderItem,
+                        whereClause = query.whereClause, orderByClause = query.orderByClause
+                    );
+                    OrderItem[] rows = check from OrderItem item in stored
+                        select item;
+                    check dataservice:orderByKeys(rows, dataserviceOrderItemEntity, keyValues);
+                    items = rows;
                     check commit;
                 }
             } on fail error err {

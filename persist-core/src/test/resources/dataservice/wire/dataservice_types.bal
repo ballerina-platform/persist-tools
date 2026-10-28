@@ -68,6 +68,144 @@ public type DocumentList record {|
     boolean hasMore;
 |};
 
+# The conditions that documents match, as the `filter` query parameter holds them.
+#
+# + id - The conditions on the `id` field
+# + title - The conditions on the `title` field
+# + issuedOn - The conditions on the `issuedOn` field
+# + expiresOn - The conditions on the `expiresOn` field
+# + opensAt - The conditions on the `opensAt` field
+# + createdAt - The conditions on the `createdAt` field
+# + signedAt - The conditions on the `signedAt` field
+# + status - The conditions on the `status` field
+public type DocumentFilter record {|
+    record {|
+        int eq?;
+        int ne?;
+        int lt?;
+        int lte?;
+        int gt?;
+        int gte?;
+        int[] anyOf?;
+    |} id?;
+    record {|
+        string eq?;
+        string ne?;
+        string lt?;
+        string lte?;
+        string gt?;
+        string gte?;
+        string[] anyOf?;
+        string contains?;
+        string startsWith?;
+    |} title?;
+    record {|
+        string eq?;
+        string ne?;
+        string lt?;
+        string lte?;
+        string gt?;
+        string gte?;
+        string[] anyOf?;
+    |} issuedOn?;
+    record {|
+        string eq?;
+        string ne?;
+        string lt?;
+        string lte?;
+        string gt?;
+        string gte?;
+        string[] anyOf?;
+        boolean isNull?;
+    |} expiresOn?;
+    record {|
+        string eq?;
+        string ne?;
+        string lt?;
+        string lte?;
+        string gt?;
+        string gte?;
+        string[] anyOf?;
+    |} opensAt?;
+    record {|
+        string eq?;
+        string ne?;
+        string lt?;
+        string lte?;
+        string gt?;
+        string gte?;
+        string[] anyOf?;
+    |} createdAt?;
+    record {|
+        string eq?;
+        string ne?;
+        string lt?;
+        string lte?;
+        string gt?;
+        string gte?;
+        string[] anyOf?;
+        boolean isNull?;
+    |} signedAt?;
+    record {|
+        Status eq?;
+        Status ne?;
+        Status[] anyOf?;
+    |} status?;
+|};
+
+# A document with the fields named in the `fields` query parameter.
+#
+# + id - The `id` field of `Document`
+# + title - The `title` field of `Document`
+# + issuedOn - The `issuedOn` field of `Document`, as an ISO 8601 date
+# + expiresOn - The `expiresOn` field of `Document`, as an ISO 8601 date
+# + opensAt - The `opensAt` field of `Document`, as an ISO 8601 time
+# + createdAt - The `createdAt` field of `Document`, as an ISO 8601 date-time without an offset
+# + signedAt - The `signedAt` field of `Document`, as an ISO 8601 date-time in UTC
+# + content - The `content` field of `Document`, as a base64 string
+# + thumbnail - The `thumbnail` field of `Document`, as a base64 string
+# + status - The `status` field of `Document`
+public type DocumentPartial record {|
+    int id;
+    string title?;
+    string issuedOn?;
+    string? expiresOn?;
+    string opensAt?;
+    string createdAt?;
+    string? signedAt?;
+    string content?;
+    string? thumbnail?;
+    Status status?;
+|};
+
+# A list of documents with the fields named in the `fields` query parameter.
+#
+# + items - The documents
+# + hasMore - Whether records exist after this page
+public type DocumentPartialList record {|
+    DocumentPartial[] items;
+    boolean hasMore;
+|};
+
+# The description of `Document` that `ballerina/dataservice` builds queries from.
+final dataservice:Entity dataserviceDocumentEntity = {
+    name: "Document",
+    'resource: "documents",
+    datastore: dataservice:H2,
+    fields: [
+        {name: "id", column: "id", 'type: dataservice:INT, key: true},
+        {name: "title", column: "title", 'type: dataservice:STRING},
+        {name: "issuedOn", column: "issuedOn", 'type: dataservice:DATE},
+        {name: "expiresOn", column: "expiresOn", 'type: dataservice:DATE, nullable: true},
+        {name: "opensAt", column: "opensAt", 'type: dataservice:TIME_OF_DAY},
+        {name: "createdAt", column: "createdAt", 'type: dataservice:CIVIL},
+        {name: "signedAt", column: "signedAt", 'type: dataservice:UTC, nullable: true},
+        {name: "content", column: "content", 'type: dataservice:BYTES},
+        {name: "thumbnail", column: "thumbnail", 'type: dataservice:BYTES, nullable: true},
+        {name: "status", column: "status", 'type: dataservice:ENUM}
+    ]
+};
+
 # The response to creating one document.
 #
 # + body - The created document
@@ -239,6 +377,60 @@ public type HolidayList record {|
     HolidayPayload[] items;
     boolean hasMore;
 |};
+
+# The conditions that holidays match, as the `filter` query parameter holds them.
+#
+# + id - The conditions on the `id` field
+# + day - The conditions on the `day` field
+public type HolidayFilter record {|
+    record {|
+        int eq?;
+        int ne?;
+        int lt?;
+        int lte?;
+        int gt?;
+        int gte?;
+        int[] anyOf?;
+    |} id?;
+    record {|
+        string eq?;
+        string ne?;
+        string lt?;
+        string lte?;
+        string gt?;
+        string gte?;
+        string[] anyOf?;
+    |} day?;
+|};
+
+# A holiday with the fields named in the `fields` query parameter.
+#
+# + id - The `id` field of `Holiday`
+# + day - The `day` field of `Holiday`, as an ISO 8601 date
+public type HolidayPartial record {|
+    int id;
+    string day?;
+|};
+
+# A list of holidays with the fields named in the `fields` query parameter.
+#
+# + items - The holidays
+# + hasMore - Whether records exist after this page
+public type HolidayPartialList record {|
+    HolidayPartial[] items;
+    boolean hasMore;
+|};
+
+# The description of `Holiday` that `ballerina/dataservice` builds queries from.
+final dataservice:Entity dataserviceHolidayEntity = {
+    name: "Holiday",
+    'resource: "holidays",
+    datastore: dataservice:H2,
+    fields: [
+        {name: "id", column: "id", 'type: dataservice:INT, key: true},
+        {name: "day", column: "day", 'type: dataservice:DATE}
+    ]
+};
 
 # Converts a `Holiday` to its JSON form.
 #

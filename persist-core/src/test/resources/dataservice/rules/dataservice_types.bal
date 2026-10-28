@@ -62,6 +62,116 @@ public type OrderList record {|
     boolean hasMore;
 |};
 
+# The conditions that orders match, as the `filter` query parameter holds them.
+#
+# + id - The conditions on the `id` field
+# + number - The conditions on the `number` field
+# + status - The conditions on the `status` field
+# + placedOn - The conditions on the `placedOn` field
+# + customerId - The conditions on the `customerId` field
+# + warehouseId - The conditions on the `warehouseId` field
+public type OrderFilter record {|
+    record {|
+        int eq?;
+        int ne?;
+        int lt?;
+        int lte?;
+        int gt?;
+        int gte?;
+        int[] anyOf?;
+    |} id?;
+    record {|
+        string eq?;
+        string ne?;
+        string lt?;
+        string lte?;
+        string gt?;
+        string gte?;
+        string[] anyOf?;
+        string contains?;
+        string startsWith?;
+    |} number?;
+    record {|
+        string eq?;
+        string ne?;
+        string lt?;
+        string lte?;
+        string gt?;
+        string gte?;
+        string[] anyOf?;
+        string contains?;
+        string startsWith?;
+    |} status?;
+    record {|
+        string eq?;
+        string ne?;
+        string lt?;
+        string lte?;
+        string gt?;
+        string gte?;
+        string[] anyOf?;
+    |} placedOn?;
+    record {|
+        int eq?;
+        int ne?;
+        int lt?;
+        int lte?;
+        int gt?;
+        int gte?;
+        int[] anyOf?;
+    |} customerId?;
+    record {|
+        int eq?;
+        int ne?;
+        int lt?;
+        int lte?;
+        int gt?;
+        int gte?;
+        int[] anyOf?;
+    |} warehouseId?;
+|};
+
+# An order with the fields named in the `fields` query parameter.
+#
+# + id - The `id` field of `Order`
+# + number - The `number` field of `Order`
+# + status - The `status` field of `Order`
+# + placedOn - The `placedOn` field of `Order`, as an ISO 8601 date
+# + customerId - The `customerId` field of `Order`
+# + warehouseId - The `warehouseId` field of `Order`
+public type OrderPartial record {|
+    int id;
+    string number?;
+    string status?;
+    string placedOn?;
+    int customerId?;
+    int warehouseId?;
+|};
+
+# A list of orders with the fields named in the `fields` query parameter.
+#
+# + items - The orders
+# + hasMore - Whether records exist after this page
+public type OrderPartialList record {|
+    OrderPartial[] items;
+    boolean hasMore;
+|};
+
+# The description of `Order` that `ballerina/dataservice` builds queries from.
+final dataservice:Entity dataserviceOrderEntity = {
+    name: "Order",
+    'resource: "orders",
+    datastore: dataservice:H2,
+    fields: [
+        {name: "id", column: "id", 'type: dataservice:INT, key: true},
+        {name: "number", column: "number", 'type: dataservice:STRING},
+        {name: "status", column: "status", 'type: dataservice:STRING},
+        {name: "placedOn", column: "placedOn", 'type: dataservice:DATE},
+        {name: "customerId", column: "customerId", 'type: dataservice:INT},
+        {name: "warehouseId", column: "warehouseId", 'type: dataservice:INT}
+    ]
+};
+
 # The response to creating one order.
 #
 # + body - The created order
@@ -129,6 +239,62 @@ public type CustomerList record {|
     boolean hasMore;
 |};
 
+# The conditions that customers match, as the `filter` query parameter holds them.
+#
+# + id - The conditions on the `id` field
+# + name - The conditions on the `name` field
+public type CustomerFilter record {|
+    record {|
+        int eq?;
+        int ne?;
+        int lt?;
+        int lte?;
+        int gt?;
+        int gte?;
+        int[] anyOf?;
+    |} id?;
+    record {|
+        string eq?;
+        string ne?;
+        string lt?;
+        string lte?;
+        string gt?;
+        string gte?;
+        string[] anyOf?;
+        string contains?;
+        string startsWith?;
+    |} name?;
+|};
+
+# A customer with the fields named in the `fields` query parameter.
+#
+# + id - The `id` field of `Customer`
+# + name - The `name` field of `Customer`
+public type CustomerPartial record {|
+    int id;
+    string name?;
+|};
+
+# A list of customers with the fields named in the `fields` query parameter.
+#
+# + items - The customers
+# + hasMore - Whether records exist after this page
+public type CustomerPartialList record {|
+    CustomerPartial[] items;
+    boolean hasMore;
+|};
+
+# The description of `Customer` that `ballerina/dataservice` builds queries from.
+final dataservice:Entity dataserviceCustomerEntity = {
+    name: "Customer",
+    'resource: "customers",
+    datastore: dataservice:H2,
+    fields: [
+        {name: "id", column: "id", 'type: dataservice:INT, key: true},
+        {name: "name", column: "name", 'type: dataservice:STRING}
+    ]
+};
+
 # A list of warehouses.
 #
 # + items - The warehouses
@@ -137,3 +303,59 @@ public type WarehouseList record {|
     Warehouse[] items;
     boolean hasMore;
 |};
+
+# The conditions that warehouses match, as the `filter` query parameter holds them.
+#
+# + id - The conditions on the `id` field
+# + city - The conditions on the `city` field
+public type WarehouseFilter record {|
+    record {|
+        int eq?;
+        int ne?;
+        int lt?;
+        int lte?;
+        int gt?;
+        int gte?;
+        int[] anyOf?;
+    |} id?;
+    record {|
+        string eq?;
+        string ne?;
+        string lt?;
+        string lte?;
+        string gt?;
+        string gte?;
+        string[] anyOf?;
+        string contains?;
+        string startsWith?;
+    |} city?;
+|};
+
+# A warehouse with the fields named in the `fields` query parameter.
+#
+# + id - The `id` field of `Warehouse`
+# + city - The `city` field of `Warehouse`
+public type WarehousePartial record {|
+    int id;
+    string city?;
+|};
+
+# A list of warehouses with the fields named in the `fields` query parameter.
+#
+# + items - The warehouses
+# + hasMore - Whether records exist after this page
+public type WarehousePartialList record {|
+    WarehousePartial[] items;
+    boolean hasMore;
+|};
+
+# The description of `Warehouse` that `ballerina/dataservice` builds queries from.
+final dataservice:Entity dataserviceWarehouseEntity = {
+    name: "Warehouse",
+    'resource: "warehouses",
+    datastore: dataservice:H2,
+    fields: [
+        {name: "id", column: "id", 'type: dataservice:INT, key: true},
+        {name: "city", column: "city", 'type: dataservice:STRING}
+    ]
+};

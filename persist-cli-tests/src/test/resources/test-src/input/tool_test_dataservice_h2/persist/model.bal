@@ -75,3 +75,21 @@ type Invoice record {|
     string? secret;
     int total;
 |};
+
+enum Category {
+    BOOK,
+    TOOL
+}
+
+@dataservice:Expose {operations: [dataservice:READ, dataservice:CREATE]}
+type Product record {|
+    readonly int id;
+    string name;
+    decimal price;
+    Category category;
+    time:Date launchedOn;
+    string? note;
+    boolean active;
+    @dataservice:Internal
+    string? supplier;
+|};

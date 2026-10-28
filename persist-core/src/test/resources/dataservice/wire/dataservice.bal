@@ -20,24 +20,64 @@ service /api on dataserviceListener {
 
     # Gets a page of documents.
     #
+    # + filter - The conditions that the documents match
+    # + sort - The fields to sort by, each descending when it starts with `-`
+    # + size - The number of documents in the page
+    # + offset - The number of documents to skip
+    # + fields - The fields to return; the key fields are always returned
     # + return - A page of documents, or the error response
-    resource function get documents() returns DocumentList|dsHttp:InvalidInput|dsHttp:InternalError {
-        DocumentPayload[]|persist:Error items = from Document item in dataserviceClient->/documents(Document)
+    resource function get documents(DocumentFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
+            string[]? fields = ()) returns DocumentList|DocumentPartialList|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
+            dataservice:query(dataserviceDocumentEntity, dataservicePageConfig, filter, sort, size, offset);
+        if query !is dataservice:Query {
+            return dsHttp:toQueryError(query, "Document");
+        }
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceDocumentEntity, fields);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "Document");
+        }
+        stream<Document, persist:Error?> rows = dataserviceClient->/documents(Document,
+            whereClause = query.whereClause, orderByClause = query.orderByClause,
+            limitClause = query.limitClause, offsetClause = query.offsetClause
+        );
+        DocumentPayload[]|persist:Error items = from Document item in rows
             select transformDocumentToPayload(item);
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        return {items, hasMore: false};
+        boolean hasMore = dataservice:page(items, query);
+        if fields is string[] {
+            DocumentPartial[]|error partials = (from DocumentPayload item in items
+                select dataservice:narrow(item, dataserviceDocumentEntity, fields)).cloneWithType();
+            if partials is error {
+                return dsHttp:toListError(partials);
+            }
+            return <DocumentPartialList>{items: partials, hasMore};
+        }
+        return <DocumentList>{items, hasMore};
     }
 
     # Gets a document by its key.
     #
     # + id - The id of the document
+    # + fields - The fields to return; the key fields are always returned
     # + return - The document, or the error response
-    resource function get documents/[int id]() returns DocumentPayload|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+    resource function get documents/[int id](string[]? fields = ()) returns DocumentPayload|DocumentPartial|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceDocumentEntity, fields);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "Document");
+        }
         Document|persist:Error item = dataserviceClient->/documents/[id];
         if item is persist:Error {
             return dsHttp:toGetError(item, "Document", [id]);
+        }
+        if fields is string[] {
+            DocumentPartial|error partial = dataservice:narrow(transformDocumentToPayload(item), dataserviceDocumentEntity, fields).cloneWithType(DocumentPartial);
+            if partial is error {
+                return dsHttp:toGetError(partial, "Document", [id]);
+            }
+            return partial;
         }
         return transformDocumentToPayload(item);
     }
@@ -66,10 +106,17 @@ service /api on dataserviceListener {
             do {
                 transaction {
                     int[] keys = check dataserviceClient->/documents.post(values);
-                    foreach int id in keys {
-                        Document item = check dataserviceClient->/documents/[id];
-                        items.push(transformDocumentToPayload(item));
-                    }
+                    dataservice:KeyValue[][] keyValues = from int key in keys
+                        select [key];
+                    dataservice:Query query = dataservice:keysQuery(dataserviceDocumentEntity, keyValues);
+                    stream<Document, persist:Error?> stored = dataserviceClient->/documents(Document,
+                        whereClause = query.whereClause, orderByClause = query.orderByClause
+                    );
+                    Document[] rows = check from Document item in stored
+                        select item;
+                    check dataservice:orderByKeys(rows, dataserviceDocumentEntity, keyValues);
+                    items = from Document item in rows
+                        select transformDocumentToPayload(item);
                     check commit;
                 }
             } on fail error err {
@@ -123,24 +170,64 @@ service /api on dataserviceListener {
 
     # Gets a page of holidays.
     #
+    # + filter - The conditions that the holidays match
+    # + sort - The fields to sort by, each descending when it starts with `-`
+    # + size - The number of holidays in the page
+    # + offset - The number of holidays to skip
+    # + fields - The fields to return; the key fields are always returned
     # + return - A page of holidays, or the error response
-    resource function get holidays() returns HolidayList|dsHttp:InvalidInput|dsHttp:InternalError {
-        HolidayPayload[]|persist:Error items = from Holiday item in dataserviceClient->/holidays(Holiday)
+    resource function get holidays(HolidayFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
+            string[]? fields = ()) returns HolidayList|HolidayPartialList|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
+            dataservice:query(dataserviceHolidayEntity, dataservicePageConfig, filter, sort, size, offset);
+        if query !is dataservice:Query {
+            return dsHttp:toQueryError(query, "Holiday");
+        }
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceHolidayEntity, fields);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "Holiday");
+        }
+        stream<Holiday, persist:Error?> rows = dataserviceClient->/holidays(Holiday,
+            whereClause = query.whereClause, orderByClause = query.orderByClause,
+            limitClause = query.limitClause, offsetClause = query.offsetClause
+        );
+        HolidayPayload[]|persist:Error items = from Holiday item in rows
             select transformHolidayToPayload(item);
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        return {items, hasMore: false};
+        boolean hasMore = dataservice:page(items, query);
+        if fields is string[] {
+            HolidayPartial[]|error partials = (from HolidayPayload item in items
+                select dataservice:narrow(item, dataserviceHolidayEntity, fields)).cloneWithType();
+            if partials is error {
+                return dsHttp:toListError(partials);
+            }
+            return <HolidayPartialList>{items: partials, hasMore};
+        }
+        return <HolidayList>{items, hasMore};
     }
 
     # Gets a holiday by its key.
     #
     # + id - The id of the holiday
+    # + fields - The fields to return; the key fields are always returned
     # + return - The holiday, or the error response
-    resource function get holidays/[int id]() returns HolidayPayload|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+    resource function get holidays/[int id](string[]? fields = ()) returns HolidayPayload|HolidayPartial|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceHolidayEntity, fields);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "Holiday");
+        }
         Holiday|persist:Error item = dataserviceClient->/holidays/[id];
         if item is persist:Error {
             return dsHttp:toGetError(item, "Holiday", [id]);
+        }
+        if fields is string[] {
+            HolidayPartial|error partial = dataservice:narrow(transformHolidayToPayload(item), dataserviceHolidayEntity, fields).cloneWithType(HolidayPartial);
+            if partial is error {
+                return dsHttp:toGetError(partial, "Holiday", [id]);
+            }
+            return partial;
         }
         return transformHolidayToPayload(item);
     }

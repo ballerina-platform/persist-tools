@@ -22,14 +22,42 @@ service "/hr-data/v1.0" on dataserviceListener {
     #
     # An employee of the company.
     #
+    # + filter - The conditions that the employees match
+    # + sort - The fields to sort by, each descending when it starts with `-`
+    # + size - The number of employees in the page
+    # + offset - The number of employees to skip
+    # + fields - The fields to return; the key fields are always returned
     # + return - A page of employees, or the error response
-    resource function get employees() returns EmployeeList|dsHttp:InvalidInput|dsHttp:InternalError {
-        Employee[]|persist:Error items = from Employee item in dataserviceClient->/employees(Employee)
+    resource function get employees(EmployeeFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
+            string[]? fields = ()) returns EmployeeList|EmployeePartialList|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
+            dataservice:query(dataserviceEmployeeEntity, dataservicePageConfig, filter, sort, size, offset);
+        if query !is dataservice:Query {
+            return dsHttp:toQueryError(query, "Employee");
+        }
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceEmployeeEntity, fields);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "Employee");
+        }
+        stream<Employee, persist:Error?> rows = dataserviceClient->/employees(Employee,
+            whereClause = query.whereClause, orderByClause = query.orderByClause,
+            limitClause = query.limitClause, offsetClause = query.offsetClause
+        );
+        Employee[]|persist:Error items = from Employee item in rows
             select item;
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        return {items, hasMore: false};
+        boolean hasMore = dataservice:page(items, query);
+        if fields is string[] {
+            EmployeePartial[]|error partials = (from Employee item in items
+                select dataservice:narrow(item, dataserviceEmployeeEntity, fields)).cloneWithType();
+            if partials is error {
+                return dsHttp:toListError(partials);
+            }
+            return <EmployeePartialList>{items: partials, hasMore};
+        }
+        return <EmployeeList>{items, hasMore};
     }
 
     # Gets an employee by its key.
@@ -37,11 +65,23 @@ service "/hr-data/v1.0" on dataserviceListener {
     # An employee of the company.
     #
     # + id - The id of the employee
+    # + fields - The fields to return; the key fields are always returned
     # + return - The employee, or the error response
-    resource function get employees/[int id]() returns Employee|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+    resource function get employees/[int id](string[]? fields = ()) returns Employee|EmployeePartial|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceEmployeeEntity, fields);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "Employee");
+        }
         Employee|persist:Error item = dataserviceClient->/employees/[id];
         if item is persist:Error {
             return dsHttp:toGetError(item, "Employee", [id]);
+        }
+        if fields is string[] {
+            EmployeePartial|error partial = dataservice:narrow(item, dataserviceEmployeeEntity, fields).cloneWithType(EmployeePartial);
+            if partial is error {
+                return dsHttp:toGetError(partial, "Employee", [id]);
+            }
+            return partial;
         }
         return item;
     }
@@ -64,10 +104,16 @@ service "/hr-data/v1.0" on dataserviceListener {
             do {
                 transaction {
                     int[] keys = check dataserviceClient->/employees.post(values);
-                    foreach int id in keys {
-                        Employee item = check dataserviceClient->/employees/[id];
-                        items.push(item);
-                    }
+                    dataservice:KeyValue[][] keyValues = from int key in keys
+                        select [key];
+                    dataservice:Query query = dataservice:keysQuery(dataserviceEmployeeEntity, keyValues);
+                    stream<Employee, persist:Error?> stored = dataserviceClient->/employees(Employee,
+                        whereClause = query.whereClause, orderByClause = query.orderByClause
+                    );
+                    Employee[] rows = check from Employee item in stored
+                        select item;
+                    check dataservice:orderByKeys(rows, dataserviceEmployeeEntity, keyValues);
+                    items = rows;
                     check commit;
                 }
             } on fail error err {
@@ -121,24 +167,64 @@ service "/hr-data/v1.0" on dataserviceListener {
 
     # Gets a page of departments.
     #
+    # + filter - The conditions that the departments match
+    # + sort - The fields to sort by, each descending when it starts with `-`
+    # + size - The number of departments in the page
+    # + offset - The number of departments to skip
+    # + fields - The fields to return; the key fields are always returned
     # + return - A page of departments, or the error response
-    resource function get departments() returns DepartmentList|dsHttp:InvalidInput|dsHttp:InternalError {
-        Department[]|persist:Error items = from Department item in dataserviceClient->/departments(Department)
+    resource function get departments(DepartmentFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
+            string[]? fields = ()) returns DepartmentList|DepartmentPartialList|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
+            dataservice:query(dataserviceDepartmentEntity, dataservicePageConfig, filter, sort, size, offset);
+        if query !is dataservice:Query {
+            return dsHttp:toQueryError(query, "Department");
+        }
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceDepartmentEntity, fields);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "Department");
+        }
+        stream<Department, persist:Error?> rows = dataserviceClient->/departments(Department,
+            whereClause = query.whereClause, orderByClause = query.orderByClause,
+            limitClause = query.limitClause, offsetClause = query.offsetClause
+        );
+        Department[]|persist:Error items = from Department item in rows
             select item;
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        return {items, hasMore: false};
+        boolean hasMore = dataservice:page(items, query);
+        if fields is string[] {
+            DepartmentPartial[]|error partials = (from Department item in items
+                select dataservice:narrow(item, dataserviceDepartmentEntity, fields)).cloneWithType();
+            if partials is error {
+                return dsHttp:toListError(partials);
+            }
+            return <DepartmentPartialList>{items: partials, hasMore};
+        }
+        return <DepartmentList>{items, hasMore};
     }
 
     # Gets a department by its key.
     #
     # + id - The id of the department
+    # + fields - The fields to return; the key fields are always returned
     # + return - The department, or the error response
-    resource function get departments/[int id]() returns Department|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+    resource function get departments/[int id](string[]? fields = ()) returns Department|DepartmentPartial|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceDepartmentEntity, fields);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "Department");
+        }
         Department|persist:Error item = dataserviceClient->/departments/[id];
         if item is persist:Error {
             return dsHttp:toGetError(item, "Department", [id]);
+        }
+        if fields is string[] {
+            DepartmentPartial|error partial = dataservice:narrow(item, dataserviceDepartmentEntity, fields).cloneWithType(DepartmentPartial);
+            if partial is error {
+                return dsHttp:toGetError(partial, "Department", [id]);
+            }
+            return partial;
         }
         return item;
     }

@@ -20,24 +20,64 @@ service /api on dataserviceListener {
 
     # Gets a page of orders.
     #
+    # + filter - The conditions that the orders match
+    # + sort - The fields to sort by, each descending when it starts with `-`
+    # + size - The number of orders in the page
+    # + offset - The number of orders to skip
+    # + fields - The fields to return; the key fields are always returned
     # + return - A page of orders, or the error response
-    resource function get orders() returns OrderList|dsHttp:InvalidInput|dsHttp:InternalError {
-        OrderPayload[]|persist:Error items = from Order item in dataserviceClient->/orders(Order)
+    resource function get orders(OrderFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
+            string[]? fields = ()) returns OrderList|OrderPartialList|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
+            dataservice:query(dataserviceOrderEntity, dataservicePageConfig, filter, sort, size, offset);
+        if query !is dataservice:Query {
+            return dsHttp:toQueryError(query, "Order");
+        }
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceOrderEntity, fields);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "Order");
+        }
+        stream<Order, persist:Error?> rows = dataserviceClient->/orders(Order,
+            whereClause = query.whereClause, orderByClause = query.orderByClause,
+            limitClause = query.limitClause, offsetClause = query.offsetClause
+        );
+        OrderPayload[]|persist:Error items = from Order item in rows
             select transformOrderToPayload(item);
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        return {items, hasMore: false};
+        boolean hasMore = dataservice:page(items, query);
+        if fields is string[] {
+            OrderPartial[]|error partials = (from OrderPayload item in items
+                select dataservice:narrow(item, dataserviceOrderEntity, fields)).cloneWithType();
+            if partials is error {
+                return dsHttp:toListError(partials);
+            }
+            return <OrderPartialList>{items: partials, hasMore};
+        }
+        return <OrderList>{items, hasMore};
     }
 
     # Gets an order by its key.
     #
     # + id - The id of the order
+    # + fields - The fields to return; the key fields are always returned
     # + return - The order, or the error response
-    resource function get orders/[int id]() returns OrderPayload|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+    resource function get orders/[int id](string[]? fields = ()) returns OrderPayload|OrderPartial|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceOrderEntity, fields);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "Order");
+        }
         Order|persist:Error item = dataserviceClient->/orders/[id];
         if item is persist:Error {
             return dsHttp:toGetError(item, "Order", [id]);
+        }
+        if fields is string[] {
+            OrderPartial|error partial = dataservice:narrow(transformOrderToPayload(item), dataserviceOrderEntity, fields).cloneWithType(OrderPartial);
+            if partial is error {
+                return dsHttp:toGetError(partial, "Order", [id]);
+            }
+            return partial;
         }
         return transformOrderToPayload(item);
     }
@@ -66,10 +106,17 @@ service /api on dataserviceListener {
             do {
                 transaction {
                     int[] keys = check dataserviceClient->/orders.post(values);
-                    foreach int id in keys {
-                        Order item = check dataserviceClient->/orders/[id];
-                        items.push(transformOrderToPayload(item));
-                    }
+                    dataservice:KeyValue[][] keyValues = from int key in keys
+                        select [key];
+                    dataservice:Query query = dataservice:keysQuery(dataserviceOrderEntity, keyValues);
+                    stream<Order, persist:Error?> stored = dataserviceClient->/orders(Order,
+                        whereClause = query.whereClause, orderByClause = query.orderByClause
+                    );
+                    Order[] rows = check from Order item in stored
+                        select item;
+                    check dataservice:orderByKeys(rows, dataserviceOrderEntity, keyValues);
+                    items = from Order item in rows
+                        select transformOrderToPayload(item);
                     check commit;
                 }
             } on fail error err {
@@ -123,48 +170,128 @@ service /api on dataserviceListener {
 
     # Gets a page of customers.
     #
+    # + filter - The conditions that the customers match
+    # + sort - The fields to sort by, each descending when it starts with `-`
+    # + size - The number of customers in the page
+    # + offset - The number of customers to skip
+    # + fields - The fields to return; the key fields are always returned
     # + return - A page of customers, or the error response
-    resource function get customers() returns CustomerList|dsHttp:InvalidInput|dsHttp:InternalError {
-        Customer[]|persist:Error items = from Customer item in dataserviceClient->/customers(Customer)
+    resource function get customers(CustomerFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
+            string[]? fields = ()) returns CustomerList|CustomerPartialList|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
+            dataservice:query(dataserviceCustomerEntity, dataservicePageConfig, filter, sort, size, offset);
+        if query !is dataservice:Query {
+            return dsHttp:toQueryError(query, "Customer");
+        }
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceCustomerEntity, fields);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "Customer");
+        }
+        stream<Customer, persist:Error?> rows = dataserviceClient->/customers(Customer,
+            whereClause = query.whereClause, orderByClause = query.orderByClause,
+            limitClause = query.limitClause, offsetClause = query.offsetClause
+        );
+        Customer[]|persist:Error items = from Customer item in rows
             select item;
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        return {items, hasMore: false};
+        boolean hasMore = dataservice:page(items, query);
+        if fields is string[] {
+            CustomerPartial[]|error partials = (from Customer item in items
+                select dataservice:narrow(item, dataserviceCustomerEntity, fields)).cloneWithType();
+            if partials is error {
+                return dsHttp:toListError(partials);
+            }
+            return <CustomerPartialList>{items: partials, hasMore};
+        }
+        return <CustomerList>{items, hasMore};
     }
 
     # Gets a customer by its key.
     #
     # + id - The id of the customer
+    # + fields - The fields to return; the key fields are always returned
     # + return - The customer, or the error response
-    resource function get customers/[int id]() returns Customer|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+    resource function get customers/[int id](string[]? fields = ()) returns Customer|CustomerPartial|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceCustomerEntity, fields);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "Customer");
+        }
         Customer|persist:Error item = dataserviceClient->/customers/[id];
         if item is persist:Error {
             return dsHttp:toGetError(item, "Customer", [id]);
+        }
+        if fields is string[] {
+            CustomerPartial|error partial = dataservice:narrow(item, dataserviceCustomerEntity, fields).cloneWithType(CustomerPartial);
+            if partial is error {
+                return dsHttp:toGetError(partial, "Customer", [id]);
+            }
+            return partial;
         }
         return item;
     }
 
     # Gets a page of warehouses.
     #
+    # + filter - The conditions that the warehouses match
+    # + sort - The fields to sort by, each descending when it starts with `-`
+    # + size - The number of warehouses in the page
+    # + offset - The number of warehouses to skip
+    # + fields - The fields to return; the key fields are always returned
     # + return - A page of warehouses, or the error response
-    resource function get warehouses() returns WarehouseList|dsHttp:InvalidInput|dsHttp:InternalError {
-        Warehouse[]|persist:Error items = from Warehouse item in dataserviceClient->/warehouses(Warehouse)
+    resource function get warehouses(WarehouseFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
+            string[]? fields = ()) returns WarehouseList|WarehousePartialList|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
+            dataservice:query(dataserviceWarehouseEntity, dataservicePageConfig, filter, sort, size, offset);
+        if query !is dataservice:Query {
+            return dsHttp:toQueryError(query, "Warehouse");
+        }
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceWarehouseEntity, fields);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "Warehouse");
+        }
+        stream<Warehouse, persist:Error?> rows = dataserviceClient->/warehouses(Warehouse,
+            whereClause = query.whereClause, orderByClause = query.orderByClause,
+            limitClause = query.limitClause, offsetClause = query.offsetClause
+        );
+        Warehouse[]|persist:Error items = from Warehouse item in rows
             select item;
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        return {items, hasMore: false};
+        boolean hasMore = dataservice:page(items, query);
+        if fields is string[] {
+            WarehousePartial[]|error partials = (from Warehouse item in items
+                select dataservice:narrow(item, dataserviceWarehouseEntity, fields)).cloneWithType();
+            if partials is error {
+                return dsHttp:toListError(partials);
+            }
+            return <WarehousePartialList>{items: partials, hasMore};
+        }
+        return <WarehouseList>{items, hasMore};
     }
 
     # Gets a warehouse by its key.
     #
     # + id - The id of the warehouse
+    # + fields - The fields to return; the key fields are always returned
     # + return - The warehouse, or the error response
-    resource function get warehouses/[int id]() returns Warehouse|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+    resource function get warehouses/[int id](string[]? fields = ()) returns Warehouse|WarehousePartial|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceWarehouseEntity, fields);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "Warehouse");
+        }
         Warehouse|persist:Error item = dataserviceClient->/warehouses/[id];
         if item is persist:Error {
             return dsHttp:toGetError(item, "Warehouse", [id]);
+        }
+        if fields is string[] {
+            WarehousePartial|error partial = dataservice:narrow(item, dataserviceWarehouseEntity, fields).cloneWithType(WarehousePartial);
+            if partial is error {
+                return dsHttp:toGetError(partial, "Warehouse", [id]);
+            }
+            return partial;
         }
         return item;
     }

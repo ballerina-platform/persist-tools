@@ -20,24 +20,64 @@ service /api on dataserviceListener {
 
     # Gets a page of read items.
     #
+    # + filter - The conditions that the read items match
+    # + sort - The fields to sort by, each descending when it starts with `-`
+    # + size - The number of read items in the page
+    # + offset - The number of read items to skip
+    # + fields - The fields to return; the key fields are always returned
     # + return - A page of read items, or the error response
-    resource function get readitems() returns ReadItemList|dsHttp:InvalidInput|dsHttp:InternalError {
-        ReadItem[]|persist:Error items = from ReadItem item in dataserviceClient->/readitems(ReadItem)
+    resource function get readitems(ReadItemFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
+            string[]? fields = ()) returns ReadItemList|ReadItemPartialList|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
+            dataservice:query(dataserviceReadItemEntity, dataservicePageConfig, filter, sort, size, offset);
+        if query !is dataservice:Query {
+            return dsHttp:toQueryError(query, "ReadItem");
+        }
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceReadItemEntity, fields);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "ReadItem");
+        }
+        stream<ReadItem, persist:Error?> rows = dataserviceClient->/readitems(ReadItem,
+            whereClause = query.whereClause, orderByClause = query.orderByClause,
+            limitClause = query.limitClause, offsetClause = query.offsetClause
+        );
+        ReadItem[]|persist:Error items = from ReadItem item in rows
             select item;
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        return {items, hasMore: false};
+        boolean hasMore = dataservice:page(items, query);
+        if fields is string[] {
+            ReadItemPartial[]|error partials = (from ReadItem item in items
+                select dataservice:narrow(item, dataserviceReadItemEntity, fields)).cloneWithType();
+            if partials is error {
+                return dsHttp:toListError(partials);
+            }
+            return <ReadItemPartialList>{items: partials, hasMore};
+        }
+        return <ReadItemList>{items, hasMore};
     }
 
     # Gets a read item by its key.
     #
     # + id - The id of the read item
+    # + fields - The fields to return; the key fields are always returned
     # + return - The read item, or the error response
-    resource function get readitems/[int id]() returns ReadItem|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+    resource function get readitems/[int id](string[]? fields = ()) returns ReadItem|ReadItemPartial|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceReadItemEntity, fields);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "ReadItem");
+        }
         ReadItem|persist:Error item = dataserviceClient->/readitems/[id];
         if item is persist:Error {
             return dsHttp:toGetError(item, "ReadItem", [id]);
+        }
+        if fields is string[] {
+            ReadItemPartial|error partial = dataservice:narrow(item, dataserviceReadItemEntity, fields).cloneWithType(ReadItemPartial);
+            if partial is error {
+                return dsHttp:toGetError(partial, "ReadItem", [id]);
+            }
+            return partial;
         }
         return item;
     }
@@ -58,10 +98,16 @@ service /api on dataserviceListener {
             do {
                 transaction {
                     int[] keys = check dataserviceClient->/createitems.post(values);
-                    foreach int id in keys {
-                        CreateItem item = check dataserviceClient->/createitems/[id];
-                        items.push(item);
-                    }
+                    dataservice:KeyValue[][] keyValues = from int key in keys
+                        select [key];
+                    dataservice:Query query = dataservice:keysQuery(dataserviceCreateItemEntity, keyValues);
+                    stream<CreateItem, persist:Error?> stored = dataserviceClient->/createitems(CreateItem,
+                        whereClause = query.whereClause, orderByClause = query.orderByClause
+                    );
+                    CreateItem[] rows = check from CreateItem item in stored
+                        select item;
+                    check dataservice:orderByKeys(rows, dataserviceCreateItemEntity, keyValues);
+                    items = rows;
                     check commit;
                 }
             } on fail error err {
@@ -109,24 +155,64 @@ service /api on dataserviceListener {
 
     # Gets a page of read create items.
     #
+    # + filter - The conditions that the read create items match
+    # + sort - The fields to sort by, each descending when it starts with `-`
+    # + size - The number of read create items in the page
+    # + offset - The number of read create items to skip
+    # + fields - The fields to return; the key fields are always returned
     # + return - A page of read create items, or the error response
-    resource function get readcreateitems() returns ReadCreateItemList|dsHttp:InvalidInput|dsHttp:InternalError {
-        ReadCreateItem[]|persist:Error items = from ReadCreateItem item in dataserviceClient->/readcreateitems(ReadCreateItem)
+    resource function get readcreateitems(ReadCreateItemFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
+            string[]? fields = ()) returns ReadCreateItemList|ReadCreateItemPartialList|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
+            dataservice:query(dataserviceReadCreateItemEntity, dataservicePageConfig, filter, sort, size, offset);
+        if query !is dataservice:Query {
+            return dsHttp:toQueryError(query, "ReadCreateItem");
+        }
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceReadCreateItemEntity, fields);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "ReadCreateItem");
+        }
+        stream<ReadCreateItem, persist:Error?> rows = dataserviceClient->/readcreateitems(ReadCreateItem,
+            whereClause = query.whereClause, orderByClause = query.orderByClause,
+            limitClause = query.limitClause, offsetClause = query.offsetClause
+        );
+        ReadCreateItem[]|persist:Error items = from ReadCreateItem item in rows
             select item;
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        return {items, hasMore: false};
+        boolean hasMore = dataservice:page(items, query);
+        if fields is string[] {
+            ReadCreateItemPartial[]|error partials = (from ReadCreateItem item in items
+                select dataservice:narrow(item, dataserviceReadCreateItemEntity, fields)).cloneWithType();
+            if partials is error {
+                return dsHttp:toListError(partials);
+            }
+            return <ReadCreateItemPartialList>{items: partials, hasMore};
+        }
+        return <ReadCreateItemList>{items, hasMore};
     }
 
     # Gets a read create item by its key.
     #
     # + id - The id of the read create item
+    # + fields - The fields to return; the key fields are always returned
     # + return - The read create item, or the error response
-    resource function get readcreateitems/[int id]() returns ReadCreateItem|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+    resource function get readcreateitems/[int id](string[]? fields = ()) returns ReadCreateItem|ReadCreateItemPartial|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceReadCreateItemEntity, fields);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "ReadCreateItem");
+        }
         ReadCreateItem|persist:Error item = dataserviceClient->/readcreateitems/[id];
         if item is persist:Error {
             return dsHttp:toGetError(item, "ReadCreateItem", [id]);
+        }
+        if fields is string[] {
+            ReadCreateItemPartial|error partial = dataservice:narrow(item, dataserviceReadCreateItemEntity, fields).cloneWithType(ReadCreateItemPartial);
+            if partial is error {
+                return dsHttp:toGetError(partial, "ReadCreateItem", [id]);
+            }
+            return partial;
         }
         return item;
     }
@@ -147,10 +233,16 @@ service /api on dataserviceListener {
             do {
                 transaction {
                     int[] keys = check dataserviceClient->/readcreateitems.post(values);
-                    foreach int id in keys {
-                        ReadCreateItem item = check dataserviceClient->/readcreateitems/[id];
-                        items.push(item);
-                    }
+                    dataservice:KeyValue[][] keyValues = from int key in keys
+                        select [key];
+                    dataservice:Query query = dataservice:keysQuery(dataserviceReadCreateItemEntity, keyValues);
+                    stream<ReadCreateItem, persist:Error?> stored = dataserviceClient->/readcreateitems(ReadCreateItem,
+                        whereClause = query.whereClause, orderByClause = query.orderByClause
+                    );
+                    ReadCreateItem[] rows = check from ReadCreateItem item in stored
+                        select item;
+                    check dataservice:orderByKeys(rows, dataserviceReadCreateItemEntity, keyValues);
+                    items = rows;
                     check commit;
                 }
             } on fail error err {
@@ -169,24 +261,64 @@ service /api on dataserviceListener {
 
     # Gets a page of read update items.
     #
+    # + filter - The conditions that the read update items match
+    # + sort - The fields to sort by, each descending when it starts with `-`
+    # + size - The number of read update items in the page
+    # + offset - The number of read update items to skip
+    # + fields - The fields to return; the key fields are always returned
     # + return - A page of read update items, or the error response
-    resource function get readupdateitems() returns ReadUpdateItemList|dsHttp:InvalidInput|dsHttp:InternalError {
-        ReadUpdateItem[]|persist:Error items = from ReadUpdateItem item in dataserviceClient->/readupdateitems(ReadUpdateItem)
+    resource function get readupdateitems(ReadUpdateItemFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
+            string[]? fields = ()) returns ReadUpdateItemList|ReadUpdateItemPartialList|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
+            dataservice:query(dataserviceReadUpdateItemEntity, dataservicePageConfig, filter, sort, size, offset);
+        if query !is dataservice:Query {
+            return dsHttp:toQueryError(query, "ReadUpdateItem");
+        }
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceReadUpdateItemEntity, fields);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "ReadUpdateItem");
+        }
+        stream<ReadUpdateItem, persist:Error?> rows = dataserviceClient->/readupdateitems(ReadUpdateItem,
+            whereClause = query.whereClause, orderByClause = query.orderByClause,
+            limitClause = query.limitClause, offsetClause = query.offsetClause
+        );
+        ReadUpdateItem[]|persist:Error items = from ReadUpdateItem item in rows
             select item;
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        return {items, hasMore: false};
+        boolean hasMore = dataservice:page(items, query);
+        if fields is string[] {
+            ReadUpdateItemPartial[]|error partials = (from ReadUpdateItem item in items
+                select dataservice:narrow(item, dataserviceReadUpdateItemEntity, fields)).cloneWithType();
+            if partials is error {
+                return dsHttp:toListError(partials);
+            }
+            return <ReadUpdateItemPartialList>{items: partials, hasMore};
+        }
+        return <ReadUpdateItemList>{items, hasMore};
     }
 
     # Gets a read update item by its key.
     #
     # + id - The id of the read update item
+    # + fields - The fields to return; the key fields are always returned
     # + return - The read update item, or the error response
-    resource function get readupdateitems/[int id]() returns ReadUpdateItem|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+    resource function get readupdateitems/[int id](string[]? fields = ()) returns ReadUpdateItem|ReadUpdateItemPartial|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceReadUpdateItemEntity, fields);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "ReadUpdateItem");
+        }
         ReadUpdateItem|persist:Error item = dataserviceClient->/readupdateitems/[id];
         if item is persist:Error {
             return dsHttp:toGetError(item, "ReadUpdateItem", [id]);
+        }
+        if fields is string[] {
+            ReadUpdateItemPartial|error partial = dataservice:narrow(item, dataserviceReadUpdateItemEntity, fields).cloneWithType(ReadUpdateItemPartial);
+            if partial is error {
+                return dsHttp:toGetError(partial, "ReadUpdateItem", [id]);
+            }
+            return partial;
         }
         return item;
     }
@@ -212,24 +344,64 @@ service /api on dataserviceListener {
 
     # Gets a page of read delete items.
     #
+    # + filter - The conditions that the read delete items match
+    # + sort - The fields to sort by, each descending when it starts with `-`
+    # + size - The number of read delete items in the page
+    # + offset - The number of read delete items to skip
+    # + fields - The fields to return; the key fields are always returned
     # + return - A page of read delete items, or the error response
-    resource function get readdeleteitems() returns ReadDeleteItemList|dsHttp:InvalidInput|dsHttp:InternalError {
-        ReadDeleteItem[]|persist:Error items = from ReadDeleteItem item in dataserviceClient->/readdeleteitems(ReadDeleteItem)
+    resource function get readdeleteitems(ReadDeleteItemFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
+            string[]? fields = ()) returns ReadDeleteItemList|ReadDeleteItemPartialList|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
+            dataservice:query(dataserviceReadDeleteItemEntity, dataservicePageConfig, filter, sort, size, offset);
+        if query !is dataservice:Query {
+            return dsHttp:toQueryError(query, "ReadDeleteItem");
+        }
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceReadDeleteItemEntity, fields);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "ReadDeleteItem");
+        }
+        stream<ReadDeleteItem, persist:Error?> rows = dataserviceClient->/readdeleteitems(ReadDeleteItem,
+            whereClause = query.whereClause, orderByClause = query.orderByClause,
+            limitClause = query.limitClause, offsetClause = query.offsetClause
+        );
+        ReadDeleteItem[]|persist:Error items = from ReadDeleteItem item in rows
             select item;
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        return {items, hasMore: false};
+        boolean hasMore = dataservice:page(items, query);
+        if fields is string[] {
+            ReadDeleteItemPartial[]|error partials = (from ReadDeleteItem item in items
+                select dataservice:narrow(item, dataserviceReadDeleteItemEntity, fields)).cloneWithType();
+            if partials is error {
+                return dsHttp:toListError(partials);
+            }
+            return <ReadDeleteItemPartialList>{items: partials, hasMore};
+        }
+        return <ReadDeleteItemList>{items, hasMore};
     }
 
     # Gets a read delete item by its key.
     #
     # + id - The id of the read delete item
+    # + fields - The fields to return; the key fields are always returned
     # + return - The read delete item, or the error response
-    resource function get readdeleteitems/[int id]() returns ReadDeleteItem|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+    resource function get readdeleteitems/[int id](string[]? fields = ()) returns ReadDeleteItem|ReadDeleteItemPartial|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceReadDeleteItemEntity, fields);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "ReadDeleteItem");
+        }
         ReadDeleteItem|persist:Error item = dataserviceClient->/readdeleteitems/[id];
         if item is persist:Error {
             return dsHttp:toGetError(item, "ReadDeleteItem", [id]);
+        }
+        if fields is string[] {
+            ReadDeleteItemPartial|error partial = dataservice:narrow(item, dataserviceReadDeleteItemEntity, fields).cloneWithType(ReadDeleteItemPartial);
+            if partial is error {
+                return dsHttp:toGetError(partial, "ReadDeleteItem", [id]);
+            }
+            return partial;
         }
         return item;
     }
@@ -262,10 +434,16 @@ service /api on dataserviceListener {
             do {
                 transaction {
                     int[] keys = check dataserviceClient->/createupdateitems.post(values);
-                    foreach int id in keys {
-                        CreateUpdateItem item = check dataserviceClient->/createupdateitems/[id];
-                        items.push(item);
-                    }
+                    dataservice:KeyValue[][] keyValues = from int key in keys
+                        select [key];
+                    dataservice:Query query = dataservice:keysQuery(dataserviceCreateUpdateItemEntity, keyValues);
+                    stream<CreateUpdateItem, persist:Error?> stored = dataserviceClient->/createupdateitems(CreateUpdateItem,
+                        whereClause = query.whereClause, orderByClause = query.orderByClause
+                    );
+                    CreateUpdateItem[] rows = check from CreateUpdateItem item in stored
+                        select item;
+                    check dataservice:orderByKeys(rows, dataserviceCreateUpdateItemEntity, keyValues);
+                    items = rows;
                     check commit;
                 }
             } on fail error err {
@@ -315,10 +493,16 @@ service /api on dataserviceListener {
             do {
                 transaction {
                     int[] keys = check dataserviceClient->/createdeleteitems.post(values);
-                    foreach int id in keys {
-                        CreateDeleteItem item = check dataserviceClient->/createdeleteitems/[id];
-                        items.push(item);
-                    }
+                    dataservice:KeyValue[][] keyValues = from int key in keys
+                        select [key];
+                    dataservice:Query query = dataservice:keysQuery(dataserviceCreateDeleteItemEntity, keyValues);
+                    stream<CreateDeleteItem, persist:Error?> stored = dataserviceClient->/createdeleteitems(CreateDeleteItem,
+                        whereClause = query.whereClause, orderByClause = query.orderByClause
+                    );
+                    CreateDeleteItem[] rows = check from CreateDeleteItem item in stored
+                        select item;
+                    check dataservice:orderByKeys(rows, dataserviceCreateDeleteItemEntity, keyValues);
+                    items = rows;
                     check commit;
                 }
             } on fail error err {
@@ -378,24 +562,64 @@ service /api on dataserviceListener {
 
     # Gets a page of read create update items.
     #
+    # + filter - The conditions that the read create update items match
+    # + sort - The fields to sort by, each descending when it starts with `-`
+    # + size - The number of read create update items in the page
+    # + offset - The number of read create update items to skip
+    # + fields - The fields to return; the key fields are always returned
     # + return - A page of read create update items, or the error response
-    resource function get readcreateupdateitems() returns ReadCreateUpdateItemList|dsHttp:InvalidInput|dsHttp:InternalError {
-        ReadCreateUpdateItem[]|persist:Error items = from ReadCreateUpdateItem item in dataserviceClient->/readcreateupdateitems(ReadCreateUpdateItem)
+    resource function get readcreateupdateitems(ReadCreateUpdateItemFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
+            string[]? fields = ()) returns ReadCreateUpdateItemList|ReadCreateUpdateItemPartialList|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
+            dataservice:query(dataserviceReadCreateUpdateItemEntity, dataservicePageConfig, filter, sort, size, offset);
+        if query !is dataservice:Query {
+            return dsHttp:toQueryError(query, "ReadCreateUpdateItem");
+        }
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceReadCreateUpdateItemEntity, fields);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "ReadCreateUpdateItem");
+        }
+        stream<ReadCreateUpdateItem, persist:Error?> rows = dataserviceClient->/readcreateupdateitems(ReadCreateUpdateItem,
+            whereClause = query.whereClause, orderByClause = query.orderByClause,
+            limitClause = query.limitClause, offsetClause = query.offsetClause
+        );
+        ReadCreateUpdateItem[]|persist:Error items = from ReadCreateUpdateItem item in rows
             select item;
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        return {items, hasMore: false};
+        boolean hasMore = dataservice:page(items, query);
+        if fields is string[] {
+            ReadCreateUpdateItemPartial[]|error partials = (from ReadCreateUpdateItem item in items
+                select dataservice:narrow(item, dataserviceReadCreateUpdateItemEntity, fields)).cloneWithType();
+            if partials is error {
+                return dsHttp:toListError(partials);
+            }
+            return <ReadCreateUpdateItemPartialList>{items: partials, hasMore};
+        }
+        return <ReadCreateUpdateItemList>{items, hasMore};
     }
 
     # Gets a read create update item by its key.
     #
     # + id - The id of the read create update item
+    # + fields - The fields to return; the key fields are always returned
     # + return - The read create update item, or the error response
-    resource function get readcreateupdateitems/[int id]() returns ReadCreateUpdateItem|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+    resource function get readcreateupdateitems/[int id](string[]? fields = ()) returns ReadCreateUpdateItem|ReadCreateUpdateItemPartial|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceReadCreateUpdateItemEntity, fields);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "ReadCreateUpdateItem");
+        }
         ReadCreateUpdateItem|persist:Error item = dataserviceClient->/readcreateupdateitems/[id];
         if item is persist:Error {
             return dsHttp:toGetError(item, "ReadCreateUpdateItem", [id]);
+        }
+        if fields is string[] {
+            ReadCreateUpdateItemPartial|error partial = dataservice:narrow(item, dataserviceReadCreateUpdateItemEntity, fields).cloneWithType(ReadCreateUpdateItemPartial);
+            if partial is error {
+                return dsHttp:toGetError(partial, "ReadCreateUpdateItem", [id]);
+            }
+            return partial;
         }
         return item;
     }
@@ -416,10 +640,16 @@ service /api on dataserviceListener {
             do {
                 transaction {
                     int[] keys = check dataserviceClient->/readcreateupdateitems.post(values);
-                    foreach int id in keys {
-                        ReadCreateUpdateItem item = check dataserviceClient->/readcreateupdateitems/[id];
-                        items.push(item);
-                    }
+                    dataservice:KeyValue[][] keyValues = from int key in keys
+                        select [key];
+                    dataservice:Query query = dataservice:keysQuery(dataserviceReadCreateUpdateItemEntity, keyValues);
+                    stream<ReadCreateUpdateItem, persist:Error?> stored = dataserviceClient->/readcreateupdateitems(ReadCreateUpdateItem,
+                        whereClause = query.whereClause, orderByClause = query.orderByClause
+                    );
+                    ReadCreateUpdateItem[] rows = check from ReadCreateUpdateItem item in stored
+                        select item;
+                    check dataservice:orderByKeys(rows, dataserviceReadCreateUpdateItemEntity, keyValues);
+                    items = rows;
                     check commit;
                 }
             } on fail error err {
@@ -457,24 +687,64 @@ service /api on dataserviceListener {
 
     # Gets a page of read create delete items.
     #
+    # + filter - The conditions that the read create delete items match
+    # + sort - The fields to sort by, each descending when it starts with `-`
+    # + size - The number of read create delete items in the page
+    # + offset - The number of read create delete items to skip
+    # + fields - The fields to return; the key fields are always returned
     # + return - A page of read create delete items, or the error response
-    resource function get readcreatedeleteitems() returns ReadCreateDeleteItemList|dsHttp:InvalidInput|dsHttp:InternalError {
-        ReadCreateDeleteItem[]|persist:Error items = from ReadCreateDeleteItem item in dataserviceClient->/readcreatedeleteitems(ReadCreateDeleteItem)
+    resource function get readcreatedeleteitems(ReadCreateDeleteItemFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
+            string[]? fields = ()) returns ReadCreateDeleteItemList|ReadCreateDeleteItemPartialList|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
+            dataservice:query(dataserviceReadCreateDeleteItemEntity, dataservicePageConfig, filter, sort, size, offset);
+        if query !is dataservice:Query {
+            return dsHttp:toQueryError(query, "ReadCreateDeleteItem");
+        }
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceReadCreateDeleteItemEntity, fields);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "ReadCreateDeleteItem");
+        }
+        stream<ReadCreateDeleteItem, persist:Error?> rows = dataserviceClient->/readcreatedeleteitems(ReadCreateDeleteItem,
+            whereClause = query.whereClause, orderByClause = query.orderByClause,
+            limitClause = query.limitClause, offsetClause = query.offsetClause
+        );
+        ReadCreateDeleteItem[]|persist:Error items = from ReadCreateDeleteItem item in rows
             select item;
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        return {items, hasMore: false};
+        boolean hasMore = dataservice:page(items, query);
+        if fields is string[] {
+            ReadCreateDeleteItemPartial[]|error partials = (from ReadCreateDeleteItem item in items
+                select dataservice:narrow(item, dataserviceReadCreateDeleteItemEntity, fields)).cloneWithType();
+            if partials is error {
+                return dsHttp:toListError(partials);
+            }
+            return <ReadCreateDeleteItemPartialList>{items: partials, hasMore};
+        }
+        return <ReadCreateDeleteItemList>{items, hasMore};
     }
 
     # Gets a read create delete item by its key.
     #
     # + id - The id of the read create delete item
+    # + fields - The fields to return; the key fields are always returned
     # + return - The read create delete item, or the error response
-    resource function get readcreatedeleteitems/[int id]() returns ReadCreateDeleteItem|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+    resource function get readcreatedeleteitems/[int id](string[]? fields = ()) returns ReadCreateDeleteItem|ReadCreateDeleteItemPartial|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceReadCreateDeleteItemEntity, fields);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "ReadCreateDeleteItem");
+        }
         ReadCreateDeleteItem|persist:Error item = dataserviceClient->/readcreatedeleteitems/[id];
         if item is persist:Error {
             return dsHttp:toGetError(item, "ReadCreateDeleteItem", [id]);
+        }
+        if fields is string[] {
+            ReadCreateDeleteItemPartial|error partial = dataservice:narrow(item, dataserviceReadCreateDeleteItemEntity, fields).cloneWithType(ReadCreateDeleteItemPartial);
+            if partial is error {
+                return dsHttp:toGetError(partial, "ReadCreateDeleteItem", [id]);
+            }
+            return partial;
         }
         return item;
     }
@@ -495,10 +765,16 @@ service /api on dataserviceListener {
             do {
                 transaction {
                     int[] keys = check dataserviceClient->/readcreatedeleteitems.post(values);
-                    foreach int id in keys {
-                        ReadCreateDeleteItem item = check dataserviceClient->/readcreatedeleteitems/[id];
-                        items.push(item);
-                    }
+                    dataservice:KeyValue[][] keyValues = from int key in keys
+                        select [key];
+                    dataservice:Query query = dataservice:keysQuery(dataserviceReadCreateDeleteItemEntity, keyValues);
+                    stream<ReadCreateDeleteItem, persist:Error?> stored = dataserviceClient->/readcreatedeleteitems(ReadCreateDeleteItem,
+                        whereClause = query.whereClause, orderByClause = query.orderByClause
+                    );
+                    ReadCreateDeleteItem[] rows = check from ReadCreateDeleteItem item in stored
+                        select item;
+                    check dataservice:orderByKeys(rows, dataserviceReadCreateDeleteItemEntity, keyValues);
+                    items = rows;
                     check commit;
                 }
             } on fail error err {
@@ -529,24 +805,64 @@ service /api on dataserviceListener {
 
     # Gets a page of read update delete items.
     #
+    # + filter - The conditions that the read update delete items match
+    # + sort - The fields to sort by, each descending when it starts with `-`
+    # + size - The number of read update delete items in the page
+    # + offset - The number of read update delete items to skip
+    # + fields - The fields to return; the key fields are always returned
     # + return - A page of read update delete items, or the error response
-    resource function get readupdatedeleteitems() returns ReadUpdateDeleteItemList|dsHttp:InvalidInput|dsHttp:InternalError {
-        ReadUpdateDeleteItem[]|persist:Error items = from ReadUpdateDeleteItem item in dataserviceClient->/readupdatedeleteitems(ReadUpdateDeleteItem)
+    resource function get readupdatedeleteitems(ReadUpdateDeleteItemFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
+            string[]? fields = ()) returns ReadUpdateDeleteItemList|ReadUpdateDeleteItemPartialList|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
+            dataservice:query(dataserviceReadUpdateDeleteItemEntity, dataservicePageConfig, filter, sort, size, offset);
+        if query !is dataservice:Query {
+            return dsHttp:toQueryError(query, "ReadUpdateDeleteItem");
+        }
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceReadUpdateDeleteItemEntity, fields);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "ReadUpdateDeleteItem");
+        }
+        stream<ReadUpdateDeleteItem, persist:Error?> rows = dataserviceClient->/readupdatedeleteitems(ReadUpdateDeleteItem,
+            whereClause = query.whereClause, orderByClause = query.orderByClause,
+            limitClause = query.limitClause, offsetClause = query.offsetClause
+        );
+        ReadUpdateDeleteItem[]|persist:Error items = from ReadUpdateDeleteItem item in rows
             select item;
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        return {items, hasMore: false};
+        boolean hasMore = dataservice:page(items, query);
+        if fields is string[] {
+            ReadUpdateDeleteItemPartial[]|error partials = (from ReadUpdateDeleteItem item in items
+                select dataservice:narrow(item, dataserviceReadUpdateDeleteItemEntity, fields)).cloneWithType();
+            if partials is error {
+                return dsHttp:toListError(partials);
+            }
+            return <ReadUpdateDeleteItemPartialList>{items: partials, hasMore};
+        }
+        return <ReadUpdateDeleteItemList>{items, hasMore};
     }
 
     # Gets a read update delete item by its key.
     #
     # + id - The id of the read update delete item
+    # + fields - The fields to return; the key fields are always returned
     # + return - The read update delete item, or the error response
-    resource function get readupdatedeleteitems/[int id]() returns ReadUpdateDeleteItem|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+    resource function get readupdatedeleteitems/[int id](string[]? fields = ()) returns ReadUpdateDeleteItem|ReadUpdateDeleteItemPartial|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceReadUpdateDeleteItemEntity, fields);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "ReadUpdateDeleteItem");
+        }
         ReadUpdateDeleteItem|persist:Error item = dataserviceClient->/readupdatedeleteitems/[id];
         if item is persist:Error {
             return dsHttp:toGetError(item, "ReadUpdateDeleteItem", [id]);
+        }
+        if fields is string[] {
+            ReadUpdateDeleteItemPartial|error partial = dataservice:narrow(item, dataserviceReadUpdateDeleteItemEntity, fields).cloneWithType(ReadUpdateDeleteItemPartial);
+            if partial is error {
+                return dsHttp:toGetError(partial, "ReadUpdateDeleteItem", [id]);
+            }
+            return partial;
         }
         return item;
     }
@@ -598,10 +914,16 @@ service /api on dataserviceListener {
             do {
                 transaction {
                     int[] keys = check dataserviceClient->/createupdatedeleteitems.post(values);
-                    foreach int id in keys {
-                        CreateUpdateDeleteItem item = check dataserviceClient->/createupdatedeleteitems/[id];
-                        items.push(item);
-                    }
+                    dataservice:KeyValue[][] keyValues = from int key in keys
+                        select [key];
+                    dataservice:Query query = dataservice:keysQuery(dataserviceCreateUpdateDeleteItemEntity, keyValues);
+                    stream<CreateUpdateDeleteItem, persist:Error?> stored = dataserviceClient->/createupdatedeleteitems(CreateUpdateDeleteItem,
+                        whereClause = query.whereClause, orderByClause = query.orderByClause
+                    );
+                    CreateUpdateDeleteItem[] rows = check from CreateUpdateDeleteItem item in stored
+                        select item;
+                    check dataservice:orderByKeys(rows, dataserviceCreateUpdateDeleteItemEntity, keyValues);
+                    items = rows;
                     check commit;
                 }
             } on fail error err {
@@ -649,24 +971,64 @@ service /api on dataserviceListener {
 
     # Gets a page of read create update delete items.
     #
+    # + filter - The conditions that the read create update delete items match
+    # + sort - The fields to sort by, each descending when it starts with `-`
+    # + size - The number of read create update delete items in the page
+    # + offset - The number of read create update delete items to skip
+    # + fields - The fields to return; the key fields are always returned
     # + return - A page of read create update delete items, or the error response
-    resource function get readcreateupdatedeleteitems() returns ReadCreateUpdateDeleteItemList|dsHttp:InvalidInput|dsHttp:InternalError {
-        ReadCreateUpdateDeleteItem[]|persist:Error items = from ReadCreateUpdateDeleteItem item in dataserviceClient->/readcreateupdatedeleteitems(ReadCreateUpdateDeleteItem)
+    resource function get readcreateupdatedeleteitems(ReadCreateUpdateDeleteItemFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
+            string[]? fields = ()) returns ReadCreateUpdateDeleteItemList|ReadCreateUpdateDeleteItemPartialList|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
+            dataservice:query(dataserviceReadCreateUpdateDeleteItemEntity, dataservicePageConfig, filter, sort, size, offset);
+        if query !is dataservice:Query {
+            return dsHttp:toQueryError(query, "ReadCreateUpdateDeleteItem");
+        }
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceReadCreateUpdateDeleteItemEntity, fields);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "ReadCreateUpdateDeleteItem");
+        }
+        stream<ReadCreateUpdateDeleteItem, persist:Error?> rows = dataserviceClient->/readcreateupdatedeleteitems(ReadCreateUpdateDeleteItem,
+            whereClause = query.whereClause, orderByClause = query.orderByClause,
+            limitClause = query.limitClause, offsetClause = query.offsetClause
+        );
+        ReadCreateUpdateDeleteItem[]|persist:Error items = from ReadCreateUpdateDeleteItem item in rows
             select item;
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        return {items, hasMore: false};
+        boolean hasMore = dataservice:page(items, query);
+        if fields is string[] {
+            ReadCreateUpdateDeleteItemPartial[]|error partials = (from ReadCreateUpdateDeleteItem item in items
+                select dataservice:narrow(item, dataserviceReadCreateUpdateDeleteItemEntity, fields)).cloneWithType();
+            if partials is error {
+                return dsHttp:toListError(partials);
+            }
+            return <ReadCreateUpdateDeleteItemPartialList>{items: partials, hasMore};
+        }
+        return <ReadCreateUpdateDeleteItemList>{items, hasMore};
     }
 
     # Gets a read create update delete item by its key.
     #
     # + id - The id of the read create update delete item
+    # + fields - The fields to return; the key fields are always returned
     # + return - The read create update delete item, or the error response
-    resource function get readcreateupdatedeleteitems/[int id]() returns ReadCreateUpdateDeleteItem|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+    resource function get readcreateupdatedeleteitems/[int id](string[]? fields = ()) returns ReadCreateUpdateDeleteItem|ReadCreateUpdateDeleteItemPartial|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceReadCreateUpdateDeleteItemEntity, fields);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "ReadCreateUpdateDeleteItem");
+        }
         ReadCreateUpdateDeleteItem|persist:Error item = dataserviceClient->/readcreateupdatedeleteitems/[id];
         if item is persist:Error {
             return dsHttp:toGetError(item, "ReadCreateUpdateDeleteItem", [id]);
+        }
+        if fields is string[] {
+            ReadCreateUpdateDeleteItemPartial|error partial = dataservice:narrow(item, dataserviceReadCreateUpdateDeleteItemEntity, fields).cloneWithType(ReadCreateUpdateDeleteItemPartial);
+            if partial is error {
+                return dsHttp:toGetError(partial, "ReadCreateUpdateDeleteItem", [id]);
+            }
+            return partial;
         }
         return item;
     }
@@ -687,10 +1049,16 @@ service /api on dataserviceListener {
             do {
                 transaction {
                     int[] keys = check dataserviceClient->/readcreateupdatedeleteitems.post(values);
-                    foreach int id in keys {
-                        ReadCreateUpdateDeleteItem item = check dataserviceClient->/readcreateupdatedeleteitems/[id];
-                        items.push(item);
-                    }
+                    dataservice:KeyValue[][] keyValues = from int key in keys
+                        select [key];
+                    dataservice:Query query = dataservice:keysQuery(dataserviceReadCreateUpdateDeleteItemEntity, keyValues);
+                    stream<ReadCreateUpdateDeleteItem, persist:Error?> stored = dataserviceClient->/readcreateupdatedeleteitems(ReadCreateUpdateDeleteItem,
+                        whereClause = query.whereClause, orderByClause = query.orderByClause
+                    );
+                    ReadCreateUpdateDeleteItem[] rows = check from ReadCreateUpdateDeleteItem item in stored
+                        select item;
+                    check dataservice:orderByKeys(rows, dataserviceReadCreateUpdateDeleteItemEntity, keyValues);
+                    items = rows;
                     check commit;
                 }
             } on fail error err {
