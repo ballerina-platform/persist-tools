@@ -48,12 +48,14 @@ service /api on dataserviceListener {
         }
         boolean hasMore = dataservice:page(items, query);
         if fields is string[] {
-            AssignmentPartial[]|error partials = (from Assignment item in items
-                select dataservice:narrow(item, dataserviceAssignmentEntity, fields)).cloneWithType();
-            if partials is error {
-                return dsHttp:toListError(partials);
+            Assignment[] sources = items;
+            map<anydata>[] partials = from Assignment item in sources
+                select dataservice:narrow(item, dataserviceAssignmentEntity, fields);
+            AssignmentPartial[]|error converted = partials.cloneWithType();
+            if converted is error {
+                return dsHttp:toListError(converted);
             }
-            return <AssignmentPartialList>{items: partials, hasMore};
+            return <AssignmentPartialList>{items: converted, hasMore};
         }
         return <AssignmentList>{items, hasMore};
     }
@@ -74,7 +76,9 @@ service /api on dataserviceListener {
             return dsHttp:toGetError(item, "Assignment", [projectCode, seq]);
         }
         if fields is string[] {
-            AssignmentPartial|error partial = dataservice:narrow(item, dataserviceAssignmentEntity, fields).cloneWithType(AssignmentPartial);
+            Assignment[] sources = [item];
+            map<anydata>[] partials = [dataservice:narrow(sources[0], dataserviceAssignmentEntity, fields)];
+            AssignmentPartial|error partial = partials[0].cloneWithType();
             if partial is error {
                 return dsHttp:toGetError(partial, "Assignment", [projectCode, seq]);
             }
@@ -187,12 +191,14 @@ service /api on dataserviceListener {
         }
         boolean hasMore = dataservice:page(items, query);
         if fields is string[] {
-            RatePartial[]|error partials = (from Rate item in items
-                select dataservice:narrow(item, dataserviceRateEntity, fields)).cloneWithType();
-            if partials is error {
-                return dsHttp:toListError(partials);
+            Rate[] sources = items;
+            map<anydata>[] partials = from Rate item in sources
+                select dataservice:narrow(item, dataserviceRateEntity, fields);
+            RatePartial[]|error converted = partials.cloneWithType();
+            if converted is error {
+                return dsHttp:toListError(converted);
             }
-            return <RatePartialList>{items: partials, hasMore};
+            return <RatePartialList>{items: converted, hasMore};
         }
         return <RateList>{items, hasMore};
     }
@@ -218,7 +224,9 @@ service /api on dataserviceListener {
             return dsHttp:toGetError(item, "Rate", [amount, factor, active]);
         }
         if fields is string[] {
-            RatePartial|error partial = dataservice:narrow(item, dataserviceRateEntity, fields).cloneWithType(RatePartial);
+            Rate[] sources = [item];
+            map<anydata>[] partials = [dataservice:narrow(sources[0], dataserviceRateEntity, fields)];
+            RatePartial|error partial = partials[0].cloneWithType();
             if partial is error {
                 return dsHttp:toGetError(partial, "Rate", [amount, factor, active]);
             }

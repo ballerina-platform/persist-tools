@@ -48,12 +48,14 @@ service /api on dataserviceListener {
         }
         boolean hasMore = dataservice:page(items, query);
         if fields is string[] {
-            DocumentPartial[]|error partials = (from DocumentPayload item in items
-                select dataservice:narrow(item, dataserviceDocumentEntity, fields)).cloneWithType();
-            if partials is error {
-                return dsHttp:toListError(partials);
+            DocumentPayload[] sources = items;
+            map<anydata>[] partials = from DocumentPayload item in sources
+                select dataservice:narrow(item, dataserviceDocumentEntity, fields);
+            DocumentPartial[]|error converted = partials.cloneWithType();
+            if converted is error {
+                return dsHttp:toListError(converted);
             }
-            return <DocumentPartialList>{items: partials, hasMore};
+            return <DocumentPartialList>{items: converted, hasMore};
         }
         return <DocumentList>{items, hasMore};
     }
@@ -73,7 +75,9 @@ service /api on dataserviceListener {
             return dsHttp:toGetError(item, "Document", [id]);
         }
         if fields is string[] {
-            DocumentPartial|error partial = dataservice:narrow(transformDocumentToPayload(item), dataserviceDocumentEntity, fields).cloneWithType(DocumentPartial);
+            DocumentPayload[] sources = [transformDocumentToPayload(item)];
+            map<anydata>[] partials = [dataservice:narrow(sources[0], dataserviceDocumentEntity, fields)];
+            DocumentPartial|error partial = partials[0].cloneWithType();
             if partial is error {
                 return dsHttp:toGetError(partial, "Document", [id]);
             }
@@ -198,12 +202,14 @@ service /api on dataserviceListener {
         }
         boolean hasMore = dataservice:page(items, query);
         if fields is string[] {
-            HolidayPartial[]|error partials = (from HolidayPayload item in items
-                select dataservice:narrow(item, dataserviceHolidayEntity, fields)).cloneWithType();
-            if partials is error {
-                return dsHttp:toListError(partials);
+            HolidayPayload[] sources = items;
+            map<anydata>[] partials = from HolidayPayload item in sources
+                select dataservice:narrow(item, dataserviceHolidayEntity, fields);
+            HolidayPartial[]|error converted = partials.cloneWithType();
+            if converted is error {
+                return dsHttp:toListError(converted);
             }
-            return <HolidayPartialList>{items: partials, hasMore};
+            return <HolidayPartialList>{items: converted, hasMore};
         }
         return <HolidayList>{items, hasMore};
     }
@@ -223,7 +229,9 @@ service /api on dataserviceListener {
             return dsHttp:toGetError(item, "Holiday", [id]);
         }
         if fields is string[] {
-            HolidayPartial|error partial = dataservice:narrow(transformHolidayToPayload(item), dataserviceHolidayEntity, fields).cloneWithType(HolidayPartial);
+            HolidayPayload[] sources = [transformHolidayToPayload(item)];
+            map<anydata>[] partials = [dataservice:narrow(sources[0], dataserviceHolidayEntity, fields)];
+            HolidayPartial|error partial = partials[0].cloneWithType();
             if partial is error {
                 return dsHttp:toGetError(partial, "Holiday", [id]);
             }

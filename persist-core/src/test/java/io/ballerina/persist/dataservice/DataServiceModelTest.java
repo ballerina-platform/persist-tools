@@ -29,6 +29,7 @@ import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Tests resolving the entities a data service exposes.
@@ -63,6 +64,47 @@ public class DataServiceModelTest {
         Assert.assertEquals(employee.updateFields().stream().map(ServiceField::name).toList(),
                 List.of("name", "email", "departmentId"));
         Assert.assertFalse(employee.hasWireTypes());
+    }
+
+    @Test
+    public void testRelationsReadableFromBothSides() throws BalException {
+        List<ExposedEntity> exposed = employees(NO_RULES);
+        Assert.assertEquals(exposed.get(0).relations(), List.of(new ExposedRelation("department", "Department",
+                false, true, List.of("departmentId"), List.of("id"))));
+        Assert.assertEquals(exposed.get(1).relations(), List.of(new ExposedRelation("employees", "Employee",
+                true, false, List.of("id"), List.of("departmentId"))));
+    }
+
+    @Test
+    public void testInternalOnTheOwningSideHidesBothSides() throws BalException {
+        List<ExposedEntity> exposed = employees(new FieldRules.Result(Map.of("Employee", Map.of("department",
+                new FieldRules.Applied(FieldRule.INTERNAL, Optional.of("1")))), List.of()));
+        Assert.assertTrue(exposed.get(0).relations().isEmpty());
+        Assert.assertTrue(exposed.get(1).relations().isEmpty());
+    }
+
+    @Test
+    public void testInternalOnTheOtherSideHidesOnlyThatSide() throws BalException {
+        List<ExposedEntity> exposed = employees(new FieldRules.Result(Map.of("Department", Map.of("employees",
+                new FieldRules.Applied(FieldRule.INTERNAL, Optional.empty()))), List.of()));
+        Assert.assertEquals(exposed.get(0).relations().size(), 1);
+        Assert.assertTrue(exposed.get(1).relations().isEmpty());
+    }
+
+    @Test
+    public void testRelationNeedsReadOnBothEntities() throws BalException {
+        Path model = RESOURCES.resolve("employees").resolve("model.bal");
+        Map<String, EnumSet<Operation>> annotations = Map.of("Employee", EnumSet.of(Operation.READ),
+                "Department", EnumSet.of(Operation.CREATE));
+        List<ExposedEntity> exposed = DataServiceModel.resolve(BalProjectUtils.getEntities(model), annotations,
+                Map.of(), NO_RULES);
+        Assert.assertTrue(exposed.stream().allMatch(entity -> entity.relations().isEmpty()));
+    }
+
+    private static List<ExposedEntity> employees(FieldRules.Result rules) throws BalException {
+        Path model = RESOURCES.resolve("employees").resolve("model.bal");
+        return DataServiceModel.resolve(BalProjectUtils.getEntities(model), ExposeAnnotations.read(model), Map.of(),
+                rules);
     }
 
     @Test

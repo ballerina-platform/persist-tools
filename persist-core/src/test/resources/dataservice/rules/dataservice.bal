@@ -48,12 +48,36 @@ service /api on dataserviceListener {
         }
         boolean hasMore = dataservice:page(items, query);
         if fields is string[] {
-            OrderPartial[]|error partials = (from OrderPayload item in items
-                select dataservice:narrow(item, dataserviceOrderEntity, fields)).cloneWithType();
-            if partials is error {
-                return dsHttp:toListError(partials);
+            OrderPayload[] sources = items;
+            map<anydata>[] partials = from OrderPayload item in sources
+                select dataservice:narrow(item, dataserviceOrderEntity, fields);
+            do {
+                if dataservice:includes(fields, "customer") {
+                    dataservice:Query include = dataservice:includeQuery(dataserviceOrderEntity, "customer", sources, dataservicePageConfig);
+                    stream<Customer, persist:Error?> includedRows = dataserviceClient->/customers(Customer,
+                        whereClause = include.whereClause, orderByClause = include.orderByClause
+                    );
+                    Customer[] included = check from Customer row in includedRows
+                        select row;
+                    dataservice:attachOne(partials, sources, dataserviceOrderEntity, "customer", included, fields);
+                }
+                if dataservice:includes(fields, "warehouse") {
+                    dataservice:Query include = dataservice:includeQuery(dataserviceOrderEntity, "warehouse", sources, dataservicePageConfig);
+                    stream<Warehouse, persist:Error?> includedRows = dataserviceClient->/warehouses(Warehouse,
+                        whereClause = include.whereClause, orderByClause = include.orderByClause
+                    );
+                    Warehouse[] included = check from Warehouse row in includedRows
+                        select row;
+                    dataservice:attachOne(partials, sources, dataserviceOrderEntity, "warehouse", included, fields);
+                }
+            } on fail error err {
+                return dsHttp:toListError(err);
             }
-            return <OrderPartialList>{items: partials, hasMore};
+            OrderPartial[]|error converted = partials.cloneWithType();
+            if converted is error {
+                return dsHttp:toListError(converted);
+            }
+            return <OrderPartialList>{items: converted, hasMore};
         }
         return <OrderList>{items, hasMore};
     }
@@ -73,13 +97,119 @@ service /api on dataserviceListener {
             return dsHttp:toGetError(item, "Order", [id]);
         }
         if fields is string[] {
-            OrderPartial|error partial = dataservice:narrow(transformOrderToPayload(item), dataserviceOrderEntity, fields).cloneWithType(OrderPartial);
+            OrderPayload[] sources = [transformOrderToPayload(item)];
+            map<anydata>[] partials = [dataservice:narrow(sources[0], dataserviceOrderEntity, fields)];
+            do {
+                if dataservice:includes(fields, "customer") {
+                    dataservice:Query include = dataservice:includeQuery(dataserviceOrderEntity, "customer", sources, dataservicePageConfig);
+                    stream<Customer, persist:Error?> includedRows = dataserviceClient->/customers(Customer,
+                        whereClause = include.whereClause, orderByClause = include.orderByClause
+                    );
+                    Customer[] included = check from Customer row in includedRows
+                        select row;
+                    dataservice:attachOne(partials, sources, dataserviceOrderEntity, "customer", included, fields);
+                }
+                if dataservice:includes(fields, "warehouse") {
+                    dataservice:Query include = dataservice:includeQuery(dataserviceOrderEntity, "warehouse", sources, dataservicePageConfig);
+                    stream<Warehouse, persist:Error?> includedRows = dataserviceClient->/warehouses(Warehouse,
+                        whereClause = include.whereClause, orderByClause = include.orderByClause
+                    );
+                    Warehouse[] included = check from Warehouse row in includedRows
+                        select row;
+                    dataservice:attachOne(partials, sources, dataserviceOrderEntity, "warehouse", included, fields);
+                }
+            } on fail error err {
+                return dsHttp:toGetError(err, "Order", [id]);
+            }
+            OrderPartial|error partial = partials[0].cloneWithType();
             if partial is error {
                 return dsHttp:toGetError(partial, "Order", [id]);
             }
             return partial;
         }
         return transformOrderToPayload(item);
+    }
+
+    # Gets the customer of an order.
+    #
+    # + id - The id of the order
+    # + fields - The fields of the customer to return; the key fields are always returned
+    # + return - The customer, or the error response
+    resource function get orders/[int id]/customer(string[]? fields = ()) returns Customer|CustomerPartial|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceCustomerEntity, fields, false);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "Customer");
+        }
+        Order|persist:Error item = dataserviceClient->/orders/[id];
+        if item is persist:Error {
+            return dsHttp:toGetError(item, "Order", [id]);
+        }
+        dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
+            dataservice:relatedQuery(dataserviceOrderEntity, "customer", item, dataservicePageConfig);
+        if query !is dataservice:Query {
+            return dsHttp:toQueryError(query, "Customer");
+        }
+        stream<Customer, persist:Error?> rows = dataserviceClient->/customers(Customer,
+            whereClause = query.whereClause, orderByClause = query.orderByClause,
+            limitClause = query.limitClause, offsetClause = query.offsetClause
+        );
+        Customer[]|persist:Error items = from Customer related in rows
+            select related;
+        if items is persist:Error {
+            return dsHttp:toListError(items);
+        }
+        if items.length() == 0 {
+            return <dsHttp:NotFound>{body: dataservice:noRelated(dataserviceOrderEntity, "customer", [id])};
+        }
+        if fields is string[] {
+            CustomerPartial|error partial = dataservice:narrow(items[0], dataserviceCustomerEntity, fields).cloneWithType();
+            if partial is error {
+                return dsHttp:toListError(partial);
+            }
+            return partial;
+        }
+        return items[0];
+    }
+
+    # Gets the warehouse of an order.
+    #
+    # + id - The id of the order
+    # + fields - The fields of the warehouse to return; the key fields are always returned
+    # + return - The warehouse, or the error response
+    resource function get orders/[int id]/warehouse(string[]? fields = ()) returns Warehouse|WarehousePartial|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceWarehouseEntity, fields, false);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "Warehouse");
+        }
+        Order|persist:Error item = dataserviceClient->/orders/[id];
+        if item is persist:Error {
+            return dsHttp:toGetError(item, "Order", [id]);
+        }
+        dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
+            dataservice:relatedQuery(dataserviceOrderEntity, "warehouse", item, dataservicePageConfig);
+        if query !is dataservice:Query {
+            return dsHttp:toQueryError(query, "Warehouse");
+        }
+        stream<Warehouse, persist:Error?> rows = dataserviceClient->/warehouses(Warehouse,
+            whereClause = query.whereClause, orderByClause = query.orderByClause,
+            limitClause = query.limitClause, offsetClause = query.offsetClause
+        );
+        Warehouse[]|persist:Error items = from Warehouse related in rows
+            select related;
+        if items is persist:Error {
+            return dsHttp:toListError(items);
+        }
+        if items.length() == 0 {
+            return <dsHttp:NotFound>{body: dataservice:noRelated(dataserviceOrderEntity, "warehouse", [id])};
+        }
+        if fields is string[] {
+            WarehousePartial|error partial = dataservice:narrow(items[0], dataserviceWarehouseEntity, fields).cloneWithType();
+            if partial is error {
+                return dsHttp:toListError(partial);
+            }
+            return partial;
+        }
+        return items[0];
     }
 
     # Creates one or more orders.
@@ -198,12 +328,14 @@ service /api on dataserviceListener {
         }
         boolean hasMore = dataservice:page(items, query);
         if fields is string[] {
-            CustomerPartial[]|error partials = (from Customer item in items
-                select dataservice:narrow(item, dataserviceCustomerEntity, fields)).cloneWithType();
-            if partials is error {
-                return dsHttp:toListError(partials);
+            Customer[] sources = items;
+            map<anydata>[] partials = from Customer item in sources
+                select dataservice:narrow(item, dataserviceCustomerEntity, fields);
+            CustomerPartial[]|error converted = partials.cloneWithType();
+            if converted is error {
+                return dsHttp:toListError(converted);
             }
-            return <CustomerPartialList>{items: partials, hasMore};
+            return <CustomerPartialList>{items: converted, hasMore};
         }
         return <CustomerList>{items, hasMore};
     }
@@ -223,7 +355,9 @@ service /api on dataserviceListener {
             return dsHttp:toGetError(item, "Customer", [id]);
         }
         if fields is string[] {
-            CustomerPartial|error partial = dataservice:narrow(item, dataserviceCustomerEntity, fields).cloneWithType(CustomerPartial);
+            Customer[] sources = [item];
+            map<anydata>[] partials = [dataservice:narrow(sources[0], dataserviceCustomerEntity, fields)];
+            CustomerPartial|error partial = partials[0].cloneWithType();
             if partial is error {
                 return dsHttp:toGetError(partial, "Customer", [id]);
             }
@@ -262,12 +396,30 @@ service /api on dataserviceListener {
         }
         boolean hasMore = dataservice:page(items, query);
         if fields is string[] {
-            WarehousePartial[]|error partials = (from Warehouse item in items
-                select dataservice:narrow(item, dataserviceWarehouseEntity, fields)).cloneWithType();
-            if partials is error {
-                return dsHttp:toListError(partials);
+            Warehouse[] sources = items;
+            map<anydata>[] partials = from Warehouse item in sources
+                select dataservice:narrow(item, dataserviceWarehouseEntity, fields);
+            do {
+                if dataservice:includes(fields, "orders") {
+                    foreach int i in 0 ..< sources.length() {
+                        dataservice:Query include = dataservice:includeQuery(dataserviceWarehouseEntity, "orders", [sources[i]], dataservicePageConfig);
+                        stream<Order, persist:Error?> includedRows = dataserviceClient->/orders(Order,
+                            whereClause = include.whereClause, orderByClause = include.orderByClause, limitClause = include.limitClause
+                        );
+                        OrderPayload[] included = check from Order row in includedRows
+                            select transformOrderToPayload(row);
+                        boolean includedMore = dataservice:page(included, include);
+                        dataservice:attachMany(partials[i], dataserviceWarehouseEntity, "orders", included, includedMore, fields);
+                    }
+                }
+            } on fail error err {
+                return dsHttp:toListError(err);
             }
-            return <WarehousePartialList>{items: partials, hasMore};
+            WarehousePartial[]|error converted = partials.cloneWithType();
+            if converted is error {
+                return dsHttp:toListError(converted);
+            }
+            return <WarehousePartialList>{items: converted, hasMore};
         }
         return <WarehouseList>{items, hasMore};
     }
@@ -287,12 +439,78 @@ service /api on dataserviceListener {
             return dsHttp:toGetError(item, "Warehouse", [id]);
         }
         if fields is string[] {
-            WarehousePartial|error partial = dataservice:narrow(item, dataserviceWarehouseEntity, fields).cloneWithType(WarehousePartial);
+            Warehouse[] sources = [item];
+            map<anydata>[] partials = [dataservice:narrow(sources[0], dataserviceWarehouseEntity, fields)];
+            do {
+                if dataservice:includes(fields, "orders") {
+                    foreach int i in 0 ..< sources.length() {
+                        dataservice:Query include = dataservice:includeQuery(dataserviceWarehouseEntity, "orders", [sources[i]], dataservicePageConfig);
+                        stream<Order, persist:Error?> includedRows = dataserviceClient->/orders(Order,
+                            whereClause = include.whereClause, orderByClause = include.orderByClause, limitClause = include.limitClause
+                        );
+                        OrderPayload[] included = check from Order row in includedRows
+                            select transformOrderToPayload(row);
+                        boolean includedMore = dataservice:page(included, include);
+                        dataservice:attachMany(partials[i], dataserviceWarehouseEntity, "orders", included, includedMore, fields);
+                    }
+                }
+            } on fail error err {
+                return dsHttp:toGetError(err, "Warehouse", [id]);
+            }
+            WarehousePartial|error partial = partials[0].cloneWithType();
             if partial is error {
                 return dsHttp:toGetError(partial, "Warehouse", [id]);
             }
             return partial;
         }
         return item;
+    }
+
+    # Gets the orders of a warehouse.
+    #
+    # + id - The id of the warehouse
+    # + filter - The conditions that the orders match
+    # + sort - The fields to sort by, each descending when it starts with `-`
+    # + size - The number of orders in the page
+    # + offset - The number of orders to skip
+    # + fields - The fields of the orders to return; the key fields are always returned
+    # + return - A page of the orders, or the error response
+    resource function get warehouses/[int id]/orders(OrderFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
+            string[]? fields = ()) returns OrderList|OrderPartialList|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceOrderEntity, fields, false);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "Order");
+        }
+        dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
+            dataservice:relatedQuery(dataserviceWarehouseEntity, "orders", {"id": id}, dataservicePageConfig, filter, sort, size, offset);
+        if query !is dataservice:Query {
+            return dsHttp:toQueryError(query, "Order");
+        }
+        stream<Order, persist:Error?> rows = dataserviceClient->/orders(Order,
+            whereClause = query.whereClause, orderByClause = query.orderByClause,
+            limitClause = query.limitClause, offsetClause = query.offsetClause
+        );
+        OrderPayload[]|persist:Error items = from Order related in rows
+            select transformOrderToPayload(related);
+        if items is persist:Error {
+            return dsHttp:toListError(items);
+        }
+        boolean hasMore = dataservice:page(items, query);
+        if items.length() == 0 {
+            Warehouse|persist:Error item = dataserviceClient->/warehouses/[id];
+            if item is persist:Error {
+                return dsHttp:toGetError(item, "Warehouse", [id]);
+            }
+            return <OrderList>{items, hasMore};
+        }
+        if fields is string[] {
+            OrderPartial[]|error partials = (from OrderPayload related in items
+                select dataservice:narrow(related, dataserviceOrderEntity, fields)).cloneWithType();
+            if partials is error {
+                return dsHttp:toListError(partials);
+            }
+            return <OrderPartialList>{items: partials, hasMore};
+        }
+        return <OrderList>{items, hasMore};
     }
 }

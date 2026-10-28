@@ -48,12 +48,14 @@ service /api on dataserviceListener {
         }
         boolean hasMore = dataservice:page(items, query);
         if fields is string[] {
-            ReadItemPartial[]|error partials = (from ReadItem item in items
-                select dataservice:narrow(item, dataserviceReadItemEntity, fields)).cloneWithType();
-            if partials is error {
-                return dsHttp:toListError(partials);
+            ReadItem[] sources = items;
+            map<anydata>[] partials = from ReadItem item in sources
+                select dataservice:narrow(item, dataserviceReadItemEntity, fields);
+            ReadItemPartial[]|error converted = partials.cloneWithType();
+            if converted is error {
+                return dsHttp:toListError(converted);
             }
-            return <ReadItemPartialList>{items: partials, hasMore};
+            return <ReadItemPartialList>{items: converted, hasMore};
         }
         return <ReadItemList>{items, hasMore};
     }
@@ -73,7 +75,9 @@ service /api on dataserviceListener {
             return dsHttp:toGetError(item, "ReadItem", [id]);
         }
         if fields is string[] {
-            ReadItemPartial|error partial = dataservice:narrow(item, dataserviceReadItemEntity, fields).cloneWithType(ReadItemPartial);
+            ReadItem[] sources = [item];
+            map<anydata>[] partials = [dataservice:narrow(sources[0], dataserviceReadItemEntity, fields)];
+            ReadItemPartial|error partial = partials[0].cloneWithType();
             if partial is error {
                 return dsHttp:toGetError(partial, "ReadItem", [id]);
             }
@@ -183,12 +187,14 @@ service /api on dataserviceListener {
         }
         boolean hasMore = dataservice:page(items, query);
         if fields is string[] {
-            ReadCreateItemPartial[]|error partials = (from ReadCreateItem item in items
-                select dataservice:narrow(item, dataserviceReadCreateItemEntity, fields)).cloneWithType();
-            if partials is error {
-                return dsHttp:toListError(partials);
+            ReadCreateItem[] sources = items;
+            map<anydata>[] partials = from ReadCreateItem item in sources
+                select dataservice:narrow(item, dataserviceReadCreateItemEntity, fields);
+            ReadCreateItemPartial[]|error converted = partials.cloneWithType();
+            if converted is error {
+                return dsHttp:toListError(converted);
             }
-            return <ReadCreateItemPartialList>{items: partials, hasMore};
+            return <ReadCreateItemPartialList>{items: converted, hasMore};
         }
         return <ReadCreateItemList>{items, hasMore};
     }
@@ -208,7 +214,9 @@ service /api on dataserviceListener {
             return dsHttp:toGetError(item, "ReadCreateItem", [id]);
         }
         if fields is string[] {
-            ReadCreateItemPartial|error partial = dataservice:narrow(item, dataserviceReadCreateItemEntity, fields).cloneWithType(ReadCreateItemPartial);
+            ReadCreateItem[] sources = [item];
+            map<anydata>[] partials = [dataservice:narrow(sources[0], dataserviceReadCreateItemEntity, fields)];
+            ReadCreateItemPartial|error partial = partials[0].cloneWithType();
             if partial is error {
                 return dsHttp:toGetError(partial, "ReadCreateItem", [id]);
             }
@@ -289,12 +297,14 @@ service /api on dataserviceListener {
         }
         boolean hasMore = dataservice:page(items, query);
         if fields is string[] {
-            ReadUpdateItemPartial[]|error partials = (from ReadUpdateItem item in items
-                select dataservice:narrow(item, dataserviceReadUpdateItemEntity, fields)).cloneWithType();
-            if partials is error {
-                return dsHttp:toListError(partials);
+            ReadUpdateItem[] sources = items;
+            map<anydata>[] partials = from ReadUpdateItem item in sources
+                select dataservice:narrow(item, dataserviceReadUpdateItemEntity, fields);
+            ReadUpdateItemPartial[]|error converted = partials.cloneWithType();
+            if converted is error {
+                return dsHttp:toListError(converted);
             }
-            return <ReadUpdateItemPartialList>{items: partials, hasMore};
+            return <ReadUpdateItemPartialList>{items: converted, hasMore};
         }
         return <ReadUpdateItemList>{items, hasMore};
     }
@@ -314,7 +324,9 @@ service /api on dataserviceListener {
             return dsHttp:toGetError(item, "ReadUpdateItem", [id]);
         }
         if fields is string[] {
-            ReadUpdateItemPartial|error partial = dataservice:narrow(item, dataserviceReadUpdateItemEntity, fields).cloneWithType(ReadUpdateItemPartial);
+            ReadUpdateItem[] sources = [item];
+            map<anydata>[] partials = [dataservice:narrow(sources[0], dataserviceReadUpdateItemEntity, fields)];
+            ReadUpdateItemPartial|error partial = partials[0].cloneWithType();
             if partial is error {
                 return dsHttp:toGetError(partial, "ReadUpdateItem", [id]);
             }
@@ -372,12 +384,14 @@ service /api on dataserviceListener {
         }
         boolean hasMore = dataservice:page(items, query);
         if fields is string[] {
-            ReadDeleteItemPartial[]|error partials = (from ReadDeleteItem item in items
-                select dataservice:narrow(item, dataserviceReadDeleteItemEntity, fields)).cloneWithType();
-            if partials is error {
-                return dsHttp:toListError(partials);
+            ReadDeleteItem[] sources = items;
+            map<anydata>[] partials = from ReadDeleteItem item in sources
+                select dataservice:narrow(item, dataserviceReadDeleteItemEntity, fields);
+            ReadDeleteItemPartial[]|error converted = partials.cloneWithType();
+            if converted is error {
+                return dsHttp:toListError(converted);
             }
-            return <ReadDeleteItemPartialList>{items: partials, hasMore};
+            return <ReadDeleteItemPartialList>{items: converted, hasMore};
         }
         return <ReadDeleteItemList>{items, hasMore};
     }
@@ -397,7 +411,9 @@ service /api on dataserviceListener {
             return dsHttp:toGetError(item, "ReadDeleteItem", [id]);
         }
         if fields is string[] {
-            ReadDeleteItemPartial|error partial = dataservice:narrow(item, dataserviceReadDeleteItemEntity, fields).cloneWithType(ReadDeleteItemPartial);
+            ReadDeleteItem[] sources = [item];
+            map<anydata>[] partials = [dataservice:narrow(sources[0], dataserviceReadDeleteItemEntity, fields)];
+            ReadDeleteItemPartial|error partial = partials[0].cloneWithType();
             if partial is error {
                 return dsHttp:toGetError(partial, "ReadDeleteItem", [id]);
             }
@@ -590,12 +606,14 @@ service /api on dataserviceListener {
         }
         boolean hasMore = dataservice:page(items, query);
         if fields is string[] {
-            ReadCreateUpdateItemPartial[]|error partials = (from ReadCreateUpdateItem item in items
-                select dataservice:narrow(item, dataserviceReadCreateUpdateItemEntity, fields)).cloneWithType();
-            if partials is error {
-                return dsHttp:toListError(partials);
+            ReadCreateUpdateItem[] sources = items;
+            map<anydata>[] partials = from ReadCreateUpdateItem item in sources
+                select dataservice:narrow(item, dataserviceReadCreateUpdateItemEntity, fields);
+            ReadCreateUpdateItemPartial[]|error converted = partials.cloneWithType();
+            if converted is error {
+                return dsHttp:toListError(converted);
             }
-            return <ReadCreateUpdateItemPartialList>{items: partials, hasMore};
+            return <ReadCreateUpdateItemPartialList>{items: converted, hasMore};
         }
         return <ReadCreateUpdateItemList>{items, hasMore};
     }
@@ -615,7 +633,9 @@ service /api on dataserviceListener {
             return dsHttp:toGetError(item, "ReadCreateUpdateItem", [id]);
         }
         if fields is string[] {
-            ReadCreateUpdateItemPartial|error partial = dataservice:narrow(item, dataserviceReadCreateUpdateItemEntity, fields).cloneWithType(ReadCreateUpdateItemPartial);
+            ReadCreateUpdateItem[] sources = [item];
+            map<anydata>[] partials = [dataservice:narrow(sources[0], dataserviceReadCreateUpdateItemEntity, fields)];
+            ReadCreateUpdateItemPartial|error partial = partials[0].cloneWithType();
             if partial is error {
                 return dsHttp:toGetError(partial, "ReadCreateUpdateItem", [id]);
             }
@@ -715,12 +735,14 @@ service /api on dataserviceListener {
         }
         boolean hasMore = dataservice:page(items, query);
         if fields is string[] {
-            ReadCreateDeleteItemPartial[]|error partials = (from ReadCreateDeleteItem item in items
-                select dataservice:narrow(item, dataserviceReadCreateDeleteItemEntity, fields)).cloneWithType();
-            if partials is error {
-                return dsHttp:toListError(partials);
+            ReadCreateDeleteItem[] sources = items;
+            map<anydata>[] partials = from ReadCreateDeleteItem item in sources
+                select dataservice:narrow(item, dataserviceReadCreateDeleteItemEntity, fields);
+            ReadCreateDeleteItemPartial[]|error converted = partials.cloneWithType();
+            if converted is error {
+                return dsHttp:toListError(converted);
             }
-            return <ReadCreateDeleteItemPartialList>{items: partials, hasMore};
+            return <ReadCreateDeleteItemPartialList>{items: converted, hasMore};
         }
         return <ReadCreateDeleteItemList>{items, hasMore};
     }
@@ -740,7 +762,9 @@ service /api on dataserviceListener {
             return dsHttp:toGetError(item, "ReadCreateDeleteItem", [id]);
         }
         if fields is string[] {
-            ReadCreateDeleteItemPartial|error partial = dataservice:narrow(item, dataserviceReadCreateDeleteItemEntity, fields).cloneWithType(ReadCreateDeleteItemPartial);
+            ReadCreateDeleteItem[] sources = [item];
+            map<anydata>[] partials = [dataservice:narrow(sources[0], dataserviceReadCreateDeleteItemEntity, fields)];
+            ReadCreateDeleteItemPartial|error partial = partials[0].cloneWithType();
             if partial is error {
                 return dsHttp:toGetError(partial, "ReadCreateDeleteItem", [id]);
             }
@@ -833,12 +857,14 @@ service /api on dataserviceListener {
         }
         boolean hasMore = dataservice:page(items, query);
         if fields is string[] {
-            ReadUpdateDeleteItemPartial[]|error partials = (from ReadUpdateDeleteItem item in items
-                select dataservice:narrow(item, dataserviceReadUpdateDeleteItemEntity, fields)).cloneWithType();
-            if partials is error {
-                return dsHttp:toListError(partials);
+            ReadUpdateDeleteItem[] sources = items;
+            map<anydata>[] partials = from ReadUpdateDeleteItem item in sources
+                select dataservice:narrow(item, dataserviceReadUpdateDeleteItemEntity, fields);
+            ReadUpdateDeleteItemPartial[]|error converted = partials.cloneWithType();
+            if converted is error {
+                return dsHttp:toListError(converted);
             }
-            return <ReadUpdateDeleteItemPartialList>{items: partials, hasMore};
+            return <ReadUpdateDeleteItemPartialList>{items: converted, hasMore};
         }
         return <ReadUpdateDeleteItemList>{items, hasMore};
     }
@@ -858,7 +884,9 @@ service /api on dataserviceListener {
             return dsHttp:toGetError(item, "ReadUpdateDeleteItem", [id]);
         }
         if fields is string[] {
-            ReadUpdateDeleteItemPartial|error partial = dataservice:narrow(item, dataserviceReadUpdateDeleteItemEntity, fields).cloneWithType(ReadUpdateDeleteItemPartial);
+            ReadUpdateDeleteItem[] sources = [item];
+            map<anydata>[] partials = [dataservice:narrow(sources[0], dataserviceReadUpdateDeleteItemEntity, fields)];
+            ReadUpdateDeleteItemPartial|error partial = partials[0].cloneWithType();
             if partial is error {
                 return dsHttp:toGetError(partial, "ReadUpdateDeleteItem", [id]);
             }
@@ -999,12 +1027,14 @@ service /api on dataserviceListener {
         }
         boolean hasMore = dataservice:page(items, query);
         if fields is string[] {
-            ReadCreateUpdateDeleteItemPartial[]|error partials = (from ReadCreateUpdateDeleteItem item in items
-                select dataservice:narrow(item, dataserviceReadCreateUpdateDeleteItemEntity, fields)).cloneWithType();
-            if partials is error {
-                return dsHttp:toListError(partials);
+            ReadCreateUpdateDeleteItem[] sources = items;
+            map<anydata>[] partials = from ReadCreateUpdateDeleteItem item in sources
+                select dataservice:narrow(item, dataserviceReadCreateUpdateDeleteItemEntity, fields);
+            ReadCreateUpdateDeleteItemPartial[]|error converted = partials.cloneWithType();
+            if converted is error {
+                return dsHttp:toListError(converted);
             }
-            return <ReadCreateUpdateDeleteItemPartialList>{items: partials, hasMore};
+            return <ReadCreateUpdateDeleteItemPartialList>{items: converted, hasMore};
         }
         return <ReadCreateUpdateDeleteItemList>{items, hasMore};
     }
@@ -1024,7 +1054,9 @@ service /api on dataserviceListener {
             return dsHttp:toGetError(item, "ReadCreateUpdateDeleteItem", [id]);
         }
         if fields is string[] {
-            ReadCreateUpdateDeleteItemPartial|error partial = dataservice:narrow(item, dataserviceReadCreateUpdateDeleteItemEntity, fields).cloneWithType(ReadCreateUpdateDeleteItemPartial);
+            ReadCreateUpdateDeleteItem[] sources = [item];
+            map<anydata>[] partials = [dataservice:narrow(sources[0], dataserviceReadCreateUpdateDeleteItemEntity, fields)];
+            ReadCreateUpdateDeleteItemPartial|error partial = partials[0].cloneWithType();
             if partial is error {
                 return dsHttp:toGetError(partial, "ReadCreateUpdateDeleteItem", [id]);
             }

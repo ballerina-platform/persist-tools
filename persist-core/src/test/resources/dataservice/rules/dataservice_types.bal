@@ -139,6 +139,8 @@ public type OrderFilter record {|
 # + placedOn - The `placedOn` field of `Order`, as an ISO 8601 date
 # + customerId - The `customerId` field of `Order`
 # + warehouseId - The `warehouseId` field of `Order`
+# + customer - The related customer, when `fields` names it
+# + warehouse - The related warehouse, when `fields` names it
 public type OrderPartial record {|
     int id;
     string number?;
@@ -146,6 +148,8 @@ public type OrderPartial record {|
     string placedOn?;
     int customerId?;
     int warehouseId?;
+    CustomerRelatedPartial? customer?;
+    WarehouseRelatedPartial? warehouse?;
 |};
 
 # A list of orders with the fields named in the `fields` query parameter.
@@ -154,6 +158,32 @@ public type OrderPartial record {|
 # + hasMore - Whether records exist after this page
 public type OrderPartialList record {|
     OrderPartial[] items;
+    boolean hasMore;
+|};
+
+# An order included in a related record by the `fields` query parameter.
+#
+# + id - The `id` field of `Order`
+# + number - The `number` field of `Order`
+# + status - The `status` field of `Order`
+# + placedOn - The `placedOn` field of `Order`, as an ISO 8601 date
+# + customerId - The `customerId` field of `Order`
+# + warehouseId - The `warehouseId` field of `Order`
+public type OrderRelatedPartial record {|
+    int id;
+    string number?;
+    string status?;
+    string placedOn?;
+    int customerId?;
+    int warehouseId?;
+|};
+
+# The orders included in a related record by the `fields` query parameter.
+#
+# + items - The orders, at most `dataservicePageSize`
+# + hasMore - Whether more orders exist
+public type OrderRelatedPartialList record {|
+    OrderRelatedPartial[] items;
     boolean hasMore;
 |};
 
@@ -169,6 +199,38 @@ final dataservice:Entity dataserviceOrderEntity = {
         {name: "placedOn", column: "placedOn", 'type: dataservice:DATE},
         {name: "customerId", column: "customerId", 'type: dataservice:INT},
         {name: "warehouseId", column: "warehouseId", 'type: dataservice:INT}
+    ],
+    relations: [
+        {
+            'field: "customer",
+            many: false,
+            fields: ["customerId"],
+            targetFields: ["id"],
+            target: {
+                name: "Customer",
+                'resource: "customers",
+                datastore: dataservice:H2,
+                fields: [
+                    {name: "id", column: "id", 'type: dataservice:INT, key: true},
+                    {name: "name", column: "name", 'type: dataservice:STRING}
+                ]
+            }
+        },
+        {
+            'field: "warehouse",
+            many: false,
+            fields: ["warehouseId"],
+            targetFields: ["id"],
+            target: {
+                name: "Warehouse",
+                'resource: "warehouses",
+                datastore: dataservice:H2,
+                fields: [
+                    {name: "id", column: "id", 'type: dataservice:INT, key: true},
+                    {name: "city", column: "city", 'type: dataservice:STRING}
+                ]
+            }
+        }
     ]
 };
 
@@ -284,6 +346,15 @@ public type CustomerPartialList record {|
     boolean hasMore;
 |};
 
+# A customer included in a related record by the `fields` query parameter.
+#
+# + id - The `id` field of `Customer`
+# + name - The `name` field of `Customer`
+public type CustomerRelatedPartial record {|
+    int id;
+    string name?;
+|};
+
 # The description of `Customer` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceCustomerEntity = {
     name: "Customer",
@@ -335,9 +406,11 @@ public type WarehouseFilter record {|
 #
 # + id - The `id` field of `Warehouse`
 # + city - The `city` field of `Warehouse`
+# + orders - The related orders, when `fields` names them
 public type WarehousePartial record {|
     int id;
     string city?;
+    OrderRelatedPartialList orders?;
 |};
 
 # A list of warehouses with the fields named in the `fields` query parameter.
@@ -349,6 +422,15 @@ public type WarehousePartialList record {|
     boolean hasMore;
 |};
 
+# A warehouse included in a related record by the `fields` query parameter.
+#
+# + id - The `id` field of `Warehouse`
+# + city - The `city` field of `Warehouse`
+public type WarehouseRelatedPartial record {|
+    int id;
+    string city?;
+|};
+
 # The description of `Warehouse` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceWarehouseEntity = {
     name: "Warehouse",
@@ -357,5 +439,26 @@ final dataservice:Entity dataserviceWarehouseEntity = {
     fields: [
         {name: "id", column: "id", 'type: dataservice:INT, key: true},
         {name: "city", column: "city", 'type: dataservice:STRING}
+    ],
+    relations: [
+        {
+            'field: "orders",
+            many: true,
+            fields: ["id"],
+            targetFields: ["warehouseId"],
+            target: {
+                name: "Order",
+                'resource: "orders",
+                datastore: dataservice:H2,
+                fields: [
+                    {name: "id", column: "id", 'type: dataservice:INT, key: true},
+                    {name: "number", column: "number", 'type: dataservice:STRING},
+                    {name: "status", column: "status", 'type: dataservice:STRING},
+                    {name: "placedOn", column: "placedOn", 'type: dataservice:DATE},
+                    {name: "customerId", column: "customerId", 'type: dataservice:INT},
+                    {name: "warehouseId", column: "warehouseId", 'type: dataservice:INT}
+                ]
+            }
+        }
     ]
 };

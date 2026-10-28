@@ -93,3 +93,35 @@ type Product record {|
     @dataservice:Internal
     string? supplier;
 |};
+
+@dataservice:Expose {operations: [dataservice:READ, dataservice:CREATE]}
+type Team record {|
+    readonly int id;
+    string name;
+    Member[] members;
+    Charter? charter;
+|};
+
+@dataservice:Expose {operations: [dataservice:READ, dataservice:CREATE]}
+type Member record {|
+    readonly string code;
+    readonly int seq;
+    string name;
+    Team team;
+    Task[] tasks;
+|};
+
+@dataservice:Expose {operations: [dataservice:READ, dataservice:CREATE]}
+type Task record {|
+    readonly int id;
+    string title;
+    time:Date due;
+    Member member;
+|};
+
+@dataservice:Expose {operations: [dataservice:READ, dataservice:CREATE]}
+type Charter record {|
+    readonly int id;
+    string text;
+    Team team;
+|};

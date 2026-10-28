@@ -48,12 +48,14 @@ service /api on dataserviceListener {
         }
         boolean hasMore = dataservice:page(items, query);
         if fields is string[] {
-            TicketPartial[]|error partials = (from TicketPayload item in items
-                select dataservice:narrow(item, dataserviceTicketEntity, fields)).cloneWithType();
-            if partials is error {
-                return dsHttp:toListError(partials);
+            TicketPayload[] sources = items;
+            map<anydata>[] partials = from TicketPayload item in sources
+                select dataservice:narrow(item, dataserviceTicketEntity, fields);
+            TicketPartial[]|error converted = partials.cloneWithType();
+            if converted is error {
+                return dsHttp:toListError(converted);
             }
-            return <TicketPartialList>{items: partials, hasMore};
+            return <TicketPartialList>{items: converted, hasMore};
         }
         return <TicketList>{items, hasMore};
     }
@@ -73,7 +75,9 @@ service /api on dataserviceListener {
             return dsHttp:toGetError(item, "Ticket", [id]);
         }
         if fields is string[] {
-            TicketPartial|error partial = dataservice:narrow(transformTicketToPayload(item), dataserviceTicketEntity, fields).cloneWithType(TicketPartial);
+            TicketPayload[] sources = [transformTicketToPayload(item)];
+            map<anydata>[] partials = [dataservice:narrow(sources[0], dataserviceTicketEntity, fields)];
+            TicketPartial|error partial = partials[0].cloneWithType();
             if partial is error {
                 return dsHttp:toGetError(partial, "Ticket", [id]);
             }

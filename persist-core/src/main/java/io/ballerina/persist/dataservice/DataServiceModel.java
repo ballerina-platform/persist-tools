@@ -21,11 +21,14 @@ package io.ballerina.persist.dataservice;
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.models.Entity;
+import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.Module;
+import io.ballerina.persist.models.Relation;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -98,6 +101,49 @@ public final class DataServiceModel {
             throw new BalException(String.format(DataServiceMessages.NO_EXPOSED_ENTITY,
                     String.join(", ", candidates)));
         }
-        return exposed;
+        Map<String, ExposedEntity> byName = new LinkedHashMap<>();
+        exposed.forEach(entity -> byName.put(entity.name(), entity));
+        return exposed.stream().map(entity -> entity.withRelations(
+                readableRelations(entityModule.getEntityMap().get(entity.name()), byName, rules))).toList();
+    }
+
+    // A relation is readable when both entities allow read and no Internal rule hides it. Internal on the owning
+    // side hides both sides, because the other side filters on the hidden foreign key.
+    private static List<ExposedRelation> readableRelations(Entity entity, Map<String, ExposedEntity> exposed,
+                                                           FieldRules.Result rules) {
+        List<ExposedRelation> relations = new ArrayList<>();
+        if (!exposed.get(entity.getEntityName()).allows(Operation.READ)) {
+            return relations;
+        }
+        for (EntityField field : entity.getFields()) {
+            Relation relation = field.getRelation();
+            if (relation == null) {
+                continue;
+            }
+            Entity target = relation.getAssocEntity();
+            ExposedEntity exposedTarget = exposed.get(target.getEntityName());
+            if (exposedTarget == null || !exposedTarget.allows(Operation.READ)
+                    || isInternal(rules.of(entity.getEntityName()).get(field.getFieldName()))) {
+                continue;
+            }
+            List<Relation.Key> keys = relation.getKeyColumns();
+            List<String> fields = keys.stream().map(Relation.Key::getField).toList();
+            List<String> targetFields = keys.stream().map(Relation.Key::getReference).toList();
+            if (!relation.isOwner() && target.getFields().stream().anyMatch(owning -> owning.getRelation() != null
+                    && owning.getRelation().isOwner()
+                    && owning.getRelation().getAssocEntity().getEntityName().equals(entity.getEntityName())
+                    && owning.getRelation().getKeyColumns().stream().map(Relation.Key::getField).toList()
+                            .equals(targetFields)
+                    && isInternal(rules.of(target.getEntityName()).get(owning.getFieldName())))) {
+                continue;
+            }
+            relations.add(new ExposedRelation(field.getFieldName(), target.getEntityName(), field.isArrayType(),
+                    relation.isOwner(), fields, targetFields));
+        }
+        return relations;
+    }
+
+    private static boolean isInternal(FieldRules.Applied rule) {
+        return rule != null && rule.rule() == FieldRule.INTERNAL;
     }
 }

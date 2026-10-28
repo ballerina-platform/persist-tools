@@ -42,10 +42,12 @@ public final class ExposedEntity {
     private final List<ServiceField> updateFields;
     private final List<String> doc;
     private final List<Column> columns;
+    private final List<ExposedRelation> relations;
 
     private ExposedEntity(String name, String resourceName, EnumSet<Operation> operations,
                           List<ServiceField> fields, List<ServiceField> insertFields,
-                          List<ServiceField> updateFields, List<String> doc, List<Column> columns) {
+                          List<ServiceField> updateFields, List<String> doc, List<Column> columns,
+                          List<ExposedRelation> relations) {
         this.name = name;
         this.resourceName = resourceName;
         this.operations = EnumSet.copyOf(operations);
@@ -54,6 +56,7 @@ public final class ExposedEntity {
         this.updateFields = updateFields;
         this.doc = doc;
         this.columns = columns;
+        this.relations = relations;
     }
 
     /**
@@ -110,7 +113,18 @@ public final class ExposedEntity {
         boolean generated = entity.getFields().stream().anyMatch(EntityField::isDbGenerated);
         return new ExposedEntity(entity.getEntityName(), entity.getClientResourceName(), operations,
                 List.copyOf(fields), generated ? List.copyOf(insertFields) : null, List.copyOf(updateFields),
-                List.copyOf(doc), List.copyOf(columns));
+                List.copyOf(doc), List.copyOf(columns), List.of());
+    }
+
+    /**
+     * Returns the entity with the relations that callers can read.
+     *
+     * @param readable the relations, in model order
+     * @return the entity with them
+     */
+    public ExposedEntity withRelations(List<ExposedRelation> readable) {
+        return new ExposedEntity(name, resourceName, operations, fields, insertFields, updateFields, doc, columns,
+                List.copyOf(readable));
     }
 
     private static boolean isInternal(FieldRules.Applied rule) {
@@ -191,6 +205,15 @@ public final class ExposedEntity {
      */
     public List<Column> columns() {
         return columns;
+    }
+
+    /**
+     * Returns the relations that callers can read, by get related and in `fields`.
+     *
+     * @return the relations in model order
+     */
+    public List<ExposedRelation> relations() {
+        return relations;
     }
 
     /**

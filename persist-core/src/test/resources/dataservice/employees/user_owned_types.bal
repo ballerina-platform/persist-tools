@@ -70,11 +70,13 @@ public type EmployeeFilter record {|
 # + name - The `name` field of `Employee`
 # + email - The `email` field of `Employee`
 # + departmentId - The `departmentId` field of `Employee`
+# + department - The related department, when `fields` names it
 public type EmployeePartial record {|
     int id;
     string name?;
     string? email?;
     int departmentId?;
+    DepartmentRelatedPartial? department?;
 |};
 
 # A list of employees with the fields named in the `fields` query parameter.
@@ -83,6 +85,28 @@ public type EmployeePartial record {|
 # + hasMore - Whether records exist after this page
 public type EmployeePartialList record {|
     EmployeePartial[] items;
+    boolean hasMore;
+|};
+
+# An employee included in a related record by the `fields` query parameter.
+#
+# + id - The `id` field of `Employee`
+# + name - The `name` field of `Employee`
+# + email - The `email` field of `Employee`
+# + departmentId - The `departmentId` field of `Employee`
+public type EmployeeRelatedPartial record {|
+    int id;
+    string name?;
+    string? email?;
+    int departmentId?;
+|};
+
+# The employees included in a related record by the `fields` query parameter.
+#
+# + items - The employees, at most `dataservicePageSize`
+# + hasMore - Whether more employees exist
+public type EmployeeRelatedPartialList record {|
+    EmployeeRelatedPartial[] items;
     boolean hasMore;
 |};
 
@@ -96,6 +120,23 @@ final dataservice:Entity dataserviceEmployeeEntity = {
         {name: "name", column: "name", 'type: dataservice:STRING},
         {name: "email", column: "email", 'type: dataservice:STRING, nullable: true},
         {name: "departmentId", column: "departmentId", 'type: dataservice:INT}
+    ],
+    relations: [
+        {
+            'field: "department",
+            many: false,
+            fields: ["departmentId"],
+            targetFields: ["id"],
+            target: {
+                name: "Department",
+                'resource: "departments",
+                datastore: dataservice:H2,
+                fields: [
+                    {name: "id", column: "id", 'type: dataservice:INT, key: true},
+                    {name: "name", column: "name", 'type: dataservice:STRING}
+                ]
+            }
+        }
     ]
 };
 
@@ -155,9 +196,11 @@ public type DepartmentFilter record {|
 #
 # + id - The `id` field of `Department`
 # + name - The `name` field of `Department`
+# + employees - The related employees, when `fields` names them
 public type DepartmentPartial record {|
     int id;
     string name?;
+    EmployeeRelatedPartialList employees?;
 |};
 
 # A list of departments with the fields named in the `fields` query parameter.
@@ -169,6 +212,15 @@ public type DepartmentPartialList record {|
     boolean hasMore;
 |};
 
+# A department included in a related record by the `fields` query parameter.
+#
+# + id - The `id` field of `Department`
+# + name - The `name` field of `Department`
+public type DepartmentRelatedPartial record {|
+    int id;
+    string name?;
+|};
+
 # The description of `Department` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceDepartmentEntity = {
     name: "Department",
@@ -177,5 +229,24 @@ final dataservice:Entity dataserviceDepartmentEntity = {
     fields: [
         {name: "id", column: "id", 'type: dataservice:INT, key: true},
         {name: "name", column: "name", 'type: dataservice:STRING}
+    ],
+    relations: [
+        {
+            'field: "employees",
+            many: true,
+            fields: ["id"],
+            targetFields: ["departmentId"],
+            target: {
+                name: "Employee",
+                'resource: "employees",
+                datastore: dataservice:H2,
+                fields: [
+                    {name: "id", column: "id", 'type: dataservice:INT, key: true},
+                    {name: "name", column: "name", 'type: dataservice:STRING},
+                    {name: "email", column: "email", 'type: dataservice:STRING, nullable: true},
+                    {name: "departmentId", column: "departmentId", 'type: dataservice:INT}
+                ]
+            }
+        }
     ]
 };
