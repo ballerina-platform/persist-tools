@@ -18,10 +18,12 @@
 
 package io.ballerina.persist.dataservice;
 
+import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.Module;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -36,16 +38,43 @@ public final class DataServiceModel {
     }
 
     /**
+     * The exposed entities of a model, and the warnings found while resolving them.
+     *
+     * @param entities the exposed entities, in model order
+     * @param warnings the warnings to print
+     */
+    public record Resolution(List<ExposedEntity> entities, List<String> warnings) {
+    }
+
+    /**
+     * Resolves the exposed entities of a model file, with their annotations, doc comments and field rules.
+     *
+     * @param modelPath    the model file
+     * @param entityModule the persist model read from it
+     * @return the exposed entities and the warnings
+     * @throws BalException if an annotation or a field rule is invalid, or no entity is annotated
+     */
+    public static Resolution resolve(Path modelPath, Module entityModule) throws BalException {
+        SyntaxTree model = ExposeAnnotations.parse(modelPath);
+        Map<String, EnumSet<Operation>> annotations = ExposeAnnotations.read(model);
+        FieldRules.Result rules = FieldRules.resolve(model, entityModule, annotations);
+        return new Resolution(resolve(entityModule, annotations, ExposeAnnotations.docs(model), rules),
+                rules.warnings());
+    }
+
+    /**
      * Resolves the exposed entities.
      *
      * @param entityModule the persist model
      * @param annotations  the actions of each annotated entity, as `ExposeAnnotations` reads them
      * @param docs         the doc comment lines of each entity, as `ExposeAnnotations.docs` reads them
+     * @param rules        the field rules, as `FieldRules` resolves them
      * @return the exposed entities, in model order
      * @throws BalException if an annotated entity cannot be exposed, or no entity is annotated
      */
     public static List<ExposedEntity> resolve(Module entityModule, Map<String, EnumSet<Operation>> annotations,
-                                              Map<String, List<String>> docs) throws BalException {
+                                              Map<String, List<String>> docs, FieldRules.Result rules)
+            throws BalException {
         List<ExposedEntity> exposed = new ArrayList<>();
         List<String> errors = new ArrayList<>();
         for (Entity entity : entityModule.getEntityMap().values()) {
@@ -56,7 +85,8 @@ public final class DataServiceModel {
             if (entity.containsUnsupportedTypes()) {
                 errors.add(String.format(DataServiceMessages.UNSUPPORTED_ENTITY, entity.getEntityName()));
             } else {
-                exposed.add(ExposedEntity.of(entity, operations, docs.getOrDefault(entity.getEntityName(), List.of())));
+                exposed.add(ExposedEntity.of(entity, operations, docs.getOrDefault(entity.getEntityName(), List.of()),
+                        rules.of(entity.getEntityName())));
             }
         }
         if (!errors.isEmpty()) {

@@ -149,9 +149,12 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
             BalProjectUtils.validateSchemaFile(schemaFilePath, modelFileName);
             Module entityModule = BalProjectUtils.getEntities(schemaFilePath);
             validateEntityModule(entityModule, schemaFilePath);
-            List<ExposedEntity> exposedEntities = dataServiceOptions == null ? List.of() :
-                    DataServiceModel.resolve(entityModule, ExposeAnnotations.read(schemaFilePath),
-                            ExposeAnnotations.docs(schemaFilePath));
+            List<ExposedEntity> exposedEntities = List.of();
+            if (dataServiceOptions != null) {
+                DataServiceModel.Resolution resolution = DataServiceModel.resolve(schemaFilePath, entityModule);
+                resolution.warnings().forEach(warning -> errStream.println("WARNING: " + warning));
+                exposedEntities = resolution.entities();
+            }
 
             Path ballerinaTomlPath = Paths.get(projectPath.toString(), BALLERINA_TOML);
             String syntaxTree = updateBallerinaToml(ballerinaTomlPath, datastore, testDatastore);

@@ -31,7 +31,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Expected-output tests of the generated HTTP data service.
@@ -46,8 +45,7 @@ public class HttpDataServiceGeneratorTest {
                                      String expected, String expectedTypes) throws BalException, IOException {
         Path modelPath = RESOURCES.resolve(model).resolve("model.bal");
         Module module = BalProjectUtils.getEntities(modelPath);
-        List<ExposedEntity> entities = DataServiceModel.resolve(module, ExposeAnnotations.read(modelPath),
-                ExposeAnnotations.docs(modelPath));
+        List<ExposedEntity> entities = DataServiceModel.resolve(modelPath, module).entities();
         HttpDataServiceGenerator generator = new HttpDataServiceGenerator(entities,
                 new DataServiceOptions("http", DataServiceOptions.validateBasePath(basePath), false, introspection),
                 module.getModuleName(), userOwned);
@@ -70,6 +68,7 @@ public class HttpDataServiceGeneratorTest {
                 {"wire", "/api", true, false, "dataservice.bal", "dataservice_types.bal"},
                 {"combinations", "/api", true, false, "dataservice.bal", "dataservice_types.bal"},
                 {"generated_key", "/api", true, false, "dataservice.bal", "dataservice_types.bal"},
+                {"rules", "/api", true, false, "dataservice.bal", "dataservice_types.bal"},
         };
     }
 
@@ -77,8 +76,7 @@ public class HttpDataServiceGeneratorTest {
     public void testNoTypesWithoutReadOrCreate() throws BalException {
         Path modelPath = RESOURCES.resolve("combinations").resolve("model.bal");
         Module module = BalProjectUtils.getEntities(modelPath);
-        List<ExposedEntity> updateOnly = DataServiceModel.resolve(module, ExposeAnnotations.read(modelPath), Map.of())
-                .stream()
+        List<ExposedEntity> updateOnly = DataServiceModel.resolve(modelPath, module).entities().stream()
                 .filter(entity -> entity.name().equals("UpdateDeleteItem")).toList();
         Assert.assertTrue(new HttpDataServiceGenerator(updateOnly, DataServiceOptions.defaults("http"), "model",
                 false).generateTypes().isEmpty());

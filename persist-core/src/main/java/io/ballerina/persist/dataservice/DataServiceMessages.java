@@ -59,6 +59,19 @@ public final class DataServiceMessages {
             "dataservice:DELETE.";
     public static final String OPERATION_DUPLICATE =
             "duplicate operation '%s' in the @dataservice:Expose annotation of the entity '%s'.";
+    public static final String RULE_MORE_THAN_ONE = "the field '%s' of the entity '%s' has more than one of " +
+            "@dataservice:ReadOnly, @dataservice:Immutable and @dataservice:Internal.";
+    public static final String RULE_ON_KEY = "the key field '%s' of the entity '%s' cannot have @dataservice:%s.";
+    public static final String RULE_NEEDS_VALUE = "the field '%s' of the entity '%s' needs a 'value' in " +
+            "@dataservice:%s, because it is neither nullable nor generated.";
+    public static final String RULE_VALUE_TYPE =
+            "the 'value' in @dataservice:%s of the field '%s' of the entity '%s' is not a '%s'.";
+    public static final String RULE_ON_RELATION_WITHOUT_FK = "@dataservice:%s cannot be used on the relation field " +
+            "'%s' of the entity '%s', which has no foreign key.";
+    public static final String RULE_ON_DECLARED_FK = "@dataservice:%s cannot be used on the foreign key field '%s' " +
+            "of the entity '%s'. Use it on the relation field '%s'.";
+    public static final String RULE_NO_EFFECT = "@dataservice:%s on the field '%s' of the entity '%s' has no " +
+            "effect, because the entity does not allow '%s'.";
     public static final String ANNOTATIONS_WITHOUT_OPTIONS = "the model has @dataservice:Expose annotations, but no " +
             "data service is generated. Set 'options.dataservice.protocol' in the [[tool.persist]] entry to " +
             "generate one.";

@@ -318,3 +318,25 @@ function testBindingErrorNamesEveryField() returns error? {
         test:assertTrue(message.includes("'" + 'field + "'"), message);
     }
 }
+
+@test:Config
+function testFieldRulesOnCreate() returns error? {
+    http:Response response = check send("POST", "/api/invoices",
+            {id: 1, number: "I-1", state: "paid", total: 10});
+    test:assertEquals(response.statusCode, 201);
+    test:assertEquals(check response.getJsonPayload(), {id: 1, number: "I-1", state: "draft", total: 10});
+    http:Response internal = check send("POST", "/api/invoices",
+            {id: 2, number: "I-2", secret: "s", total: 10});
+    test:assertEquals(internal.statusCode, 400);
+}
+
+@test:Config {dependsOn: [testFieldRulesOnCreate]}
+function testFieldRulesOnPatch() returns error? {
+    http:Response immutable = check send("PATCH", "/api/invoices/1", {number: "I-9"});
+    test:assertEquals(immutable.statusCode, 400);
+    http:Response response = check send("PATCH", "/api/invoices/1", {state: "paid", total: 20});
+    test:assertEquals(response.statusCode, 200);
+    test:assertEquals(check response.getJsonPayload(), {id: 1, number: "I-1", state: "draft", total: 20});
+    http:Response read = check send("GET", "/api/invoices/1");
+    test:assertEquals(check read.getJsonPayload(), {id: 1, number: "I-1", state: "draft", total: 20});
+}

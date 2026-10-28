@@ -394,11 +394,12 @@ public final class HttpDataServiceGenerator {
     private void appendTypes(StringBuilder out, ExposedEntity entity) {
         Names n = new Names(entity);
         if (entity.hasWireTypes()) {
-            appendRecord(out, "The JSON form of `" + n.entity + "`.", n.wire, n.entity, entity.fields());
+            appendRecord(out, "The JSON form of `" + n.entity + "`.", n.wire, n.entity, returned(entity.fields()));
             if (entity.allows(CREATE)) {
                 String doc = "The JSON form of `" + n.entity + "Insert`.";
-                if (entity.insertFields().isPresent()) {
-                    appendRecord(out, doc, n.insertWire, n.entity + "Insert", entity.insertFields().get());
+                List<ServiceField> insertFields = insertSource(entity);
+                if (entity.insertFields().isPresent() || insertFields.stream().anyMatch(f -> f.rule().isPresent())) {
+                    appendRecord(out, doc, n.insertWire, n.entity + "Insert", insertWire(insertFields));
                 } else {
                     out.append(NEWLINE).append("# ").append(doc).append(NEWLINE);
                     out.append("public type ").append(n.insertWire).append(" ").append(n.wire).append(";")
@@ -407,7 +408,7 @@ public final class HttpDataServiceGenerator {
             }
             if (entity.allows(UPDATE)) {
                 appendRecord(out, "The JSON form of `" + n.entity + "Update`.", n.updateWire,
-                        n.entity + "Update", entity.updateFields());
+                        n.entity + "Update", updateWire(entity.updateFields()));
             }
         }
         if (entity.allows(READ) || entity.allows(CREATE)) {
@@ -473,16 +474,16 @@ public final class HttpDataServiceGenerator {
         if (!entity.hasWireTypes()) {
             return;
         }
-        imports.add("import ballerina/dataservice;");
+        if (entity.fields().stream().anyMatch(field -> field.conversion().isPresent())) {
+            imports.add("import ballerina/dataservice;");
+        }
         if (entity.allows(CREATE) || entity.allows(UPDATE)) {
             imports.add("import ballerina/dataservice.http as dsHttp;");
         }
         Names n = new Names(entity);
         appendToWire(out, entity, n);
-        if (entity.allows(CREATE) && entity.insertFields().isPresent()) {
-            appendFromWire(out, n, n.insertWire, n.entity + "Insert", entity.insertFields().get());
-        } else if (entity.allows(CREATE)) {
-            appendFromWire(out, n, n.insertWire, n.entity + "Insert", entity.fields());
+        if (entity.allows(CREATE)) {
+            appendFromWire(out, n, n.insertWire, n.entity + "Insert", insertSource(entity));
         }
         if (entity.allows(UPDATE)) {
             appendFromUpdateWire(out, n, entity.updateFields());
@@ -499,7 +500,7 @@ public final class HttpDataServiceGenerator {
         out.append("isolated function transform").append(n.entity).append("ToPayload(").append(n.entity).append(" ")
                 .append(param).append(") returns ").append(n.wire).append(" => {").append(NEWLINE);
         StringBuilder members = new StringBuilder();
-        for (ServiceField field : entity.fields()) {
+        for (ServiceField field : returned(entity.fields())) {
             if (!members.isEmpty()) {
                 members.append(",").append(NEWLINE);
             }
@@ -535,6 +536,10 @@ public final class HttpDataServiceGenerator {
                 members.append(", ");
             }
             String access = param + "." + field.name();
+            if (field.has(FieldRule.READ_ONLY) || field.has(FieldRule.INTERNAL)) {
+                members.append(field.name()).append(": ").append(field.value().orElse("()"));
+                continue;
+            }
             if (field.conversion().isEmpty()) {
                 members.append(field.name()).append(": ").append(access);
                 continue;
@@ -570,6 +575,9 @@ public final class HttpDataServiceGenerator {
                 .append(NEWLINE);
         out.append("    ").append(persistType).append(" ").append(result).append(" = {};").append(NEWLINE);
         for (ServiceField field : fields) {
+            if (field.rule().isPresent()) {
+                continue;
+            }
             String name = field.name();
             String access = param + "?." + name;
             String text = unescape(name) + "Text";
@@ -635,6 +643,26 @@ public final class HttpDataServiceGenerator {
                 .append(n.displayName).append("\", \"").append(unescape(field.name())).append("\");")
                 .append(NEWLINE);
         out.append(indent).append("}").append(NEWLINE);
+    }
+
+    private static List<ServiceField> insertSource(ExposedEntity entity) {
+        return entity.insertFields().orElse(entity.fields());
+    }
+
+    private static List<ServiceField> returned(List<ServiceField> fields) {
+        return fields.stream().filter(field -> !field.has(FieldRule.INTERNAL)).toList();
+    }
+
+    // A read-only field may be sent back, as read, and is ignored.
+    private static List<ServiceField> insertWire(List<ServiceField> fields) {
+        return returned(fields).stream().map(field -> field.has(FieldRule.READ_ONLY) ?
+                new ServiceField(field.name(), field.type(), field.nilable(), true, field.key(), field.rule(),
+                        field.value()) : field).toList();
+    }
+
+    private static List<ServiceField> updateWire(List<ServiceField> fields) {
+        return fields.stream().filter(field -> !field.has(FieldRule.IMMUTABLE) && !field.has(FieldRule.INTERNAL))
+                .toList();
     }
 
     private void useTypeImport(ServiceField field) {

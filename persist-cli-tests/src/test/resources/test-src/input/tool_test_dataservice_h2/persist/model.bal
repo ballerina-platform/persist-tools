@@ -63,3 +63,15 @@ type Rate record {|
     readonly float factor;
     string label;
 |};
+
+@dataservice:Expose
+type Invoice record {|
+    readonly int id;
+    @dataservice:Immutable
+    string number;
+    @dataservice:ReadOnly {value: "draft"}
+    string state;
+    @dataservice:Internal
+    string? secret;
+    int total;
+|};

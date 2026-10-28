@@ -162,7 +162,7 @@ public final class ExposeAnnotations {
                 .anyMatch(member -> !exposeAnnotations(member, prefix.get()).isEmpty());
     }
 
-    private static SyntaxTree parse(Path modelPath) throws BalException {
+    static SyntaxTree parse(Path modelPath) throws BalException {
         try {
             return SyntaxTree.from(TextDocuments.from(Files.readString(modelPath)));
         } catch (IOException e) {
@@ -171,11 +171,23 @@ public final class ExposeAnnotations {
     }
 
     private static Optional<String> prefix(ModulePartNode root) {
+        return importPrefix(root, ORG, MODULE);
+    }
+
+    // The prefix of an import, which defaults to the last part of the module name.
+    static Optional<String> importPrefix(ModulePartNode root, String org, String... module) {
         for (ImportDeclarationNode importNode : root.imports()) {
-            if (importNode.orgName().isPresent() && ORG.equals(importNode.orgName().get().orgName().text())
-                    && importNode.moduleName().size() == 1
-                    && MODULE.equals(importNode.moduleName().get(0).text())) {
-                return Optional.of(importNode.prefix().map(prefix -> prefix.prefix().text()).orElse(MODULE));
+            if (importNode.orgName().isEmpty() || !org.equals(importNode.orgName().get().orgName().text())
+                    || importNode.moduleName().size() != module.length) {
+                continue;
+            }
+            boolean matches = true;
+            for (int i = 0; i < module.length; i++) {
+                matches = matches && module[i].equals(importNode.moduleName().get(i).text());
+            }
+            if (matches) {
+                return Optional.of(importNode.prefix().map(prefix -> prefix.prefix().text())
+                        .orElse(module[module.length - 1]));
             }
         }
         return Optional.empty();

@@ -268,8 +268,9 @@ public class Generate implements BLauncherCmd {
                 return;
             }
             try {
-                exposedEntities = DataServiceModel.resolve(module, ExposeAnnotations.read(schemaFilePath),
-                        ExposeAnnotations.docs(schemaFilePath));
+                DataServiceModel.Resolution resolution = DataServiceModel.resolve(schemaFilePath, module);
+                resolution.warnings().forEach(warning -> errStream.println("WARNING: " + warning));
+                exposedEntities = resolution.entities();
             } catch (BalException e) {
                 Utils.printErrors(errStream, e.getMessage());
                 return;

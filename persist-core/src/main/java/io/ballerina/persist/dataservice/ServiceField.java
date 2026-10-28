@@ -28,8 +28,45 @@ import java.util.Optional;
  * @param nilable    whether the type is nilable, `T?`
  * @param optional   whether the field is optional, `T name?`
  * @param key        whether the field is a key field, which is `readonly`
+ * @param rule       the field rule, if the field has one
+ * @param value      the Ballerina source of the value the service sets on create, if the rule gives one
  */
-public record ServiceField(String name, String type, boolean nilable, boolean optional, boolean key) {
+public record ServiceField(String name, String type, boolean nilable, boolean optional, boolean key,
+                           Optional<FieldRule> rule, Optional<String> value) {
+
+    /**
+     * Creates a field without a field rule.
+     *
+     * @param name     the field name, as written in the model
+     * @param type     the field's Ballerina type without `?`
+     * @param nilable  whether the type is nilable
+     * @param optional whether the field is optional
+     * @param key      whether the field is a key field
+     */
+    public ServiceField(String name, String type, boolean nilable, boolean optional, boolean key) {
+        this(name, type, nilable, optional, key, Optional.empty(), Optional.empty());
+    }
+
+    /**
+     * Returns the field with a rule.
+     *
+     * @param applied the rule, or `null` for none
+     * @return the field with the rule and its value
+     */
+    public ServiceField withRule(FieldRules.Applied applied) {
+        return applied == null ? this :
+                new ServiceField(name, type, nilable, optional, key, Optional.of(applied.rule()), applied.value());
+    }
+
+    /**
+     * Tells whether the field has a rule.
+     *
+     * @param fieldRule the rule
+     * @return whether the field has it
+     */
+    public boolean has(FieldRule fieldRule) {
+        return rule.isPresent() && rule.get() == fieldRule;
+    }
 
     /**
      * A type whose JSON form is a string, converted by `ballerina/dataservice`. Each holds its Ballerina type and the

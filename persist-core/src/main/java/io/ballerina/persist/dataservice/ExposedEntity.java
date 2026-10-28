@@ -25,6 +25,7 @@ import io.ballerina.persist.models.Relation;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -58,9 +59,11 @@ public final class ExposedEntity {
      * @param entity     the persist entity
      * @param operations the actions the entity allows
      * @param doc        the lines of the entity's doc comment in the model, without the parameter lines
+     * @param rules      the rule of each field that has one, as `FieldRules` resolves them
      * @return the exposed entity
      */
-    public static ExposedEntity of(Entity entity, EnumSet<Operation> operations, List<String> doc) {
+    public static ExposedEntity of(Entity entity, EnumSet<Operation> operations, List<String> doc,
+                                   Map<String, FieldRules.Applied> rules) {
         List<ServiceField> fields = new ArrayList<>();
         List<ServiceField> insertFields = new ArrayList<>();
         List<ServiceField> updateFields = new ArrayList<>();
@@ -69,20 +72,26 @@ public final class ExposedEntity {
             if (field.getRelation() != null) {
                 if (field.getRelation().isOwner()) {
                     for (Relation.Key key : field.getRelation().getKeyColumns()) {
-                        fields.add(new ServiceField(key.getField(), key.getType(), false, false, false));
-                        insertFields.add(new ServiceField(key.getField(), key.getType(), false, false, false));
-                        updateFields.add(new ServiceField(key.getField(), key.getType(), false, true, false));
+                        FieldRules.Applied rule = rules.get(key.getField());
+                        fields.add(new ServiceField(key.getField(), key.getType(), false, false, false)
+                                .withRule(rule));
+                        insertFields.add(new ServiceField(key.getField(), key.getType(), false, false, false)
+                                .withRule(rule));
+                        updateFields.add(new ServiceField(key.getField(), key.getType(), false, true, false)
+                                .withRule(rule));
                     }
                 }
                 continue;
             }
             String type = field.getFieldType() + (field.isArrayType() ? "[]" : "");
+            FieldRules.Applied rule = rules.get(field.getFieldName());
             fields.add(new ServiceField(field.getFieldName(), type, !isKey && field.isOptionalType(),
-                    field.isOptionalField(), isKey));
+                    field.isOptionalField(), isKey).withRule(rule));
             if (!isKey) {
                 insertFields.add(new ServiceField(field.getFieldName(), type, field.isOptionalType(),
-                        field.isOptionalField(), false));
-                updateFields.add(new ServiceField(field.getFieldName(), type, field.isOptionalType(), true, false));
+                        field.isOptionalField(), false).withRule(rule));
+                updateFields.add(new ServiceField(field.getFieldName(), type, field.isOptionalType(), true, false)
+                        .withRule(rule));
             }
         }
         boolean generated = entity.getFields().stream().anyMatch(EntityField::isDbGenerated);
@@ -164,12 +173,12 @@ public final class ExposedEntity {
     }
 
     /**
-     * Tells whether the entity needs wire types, because a field has a date, time or `byte[]` type.
+     * Tells whether the entity needs wire types, because a field has a date, time or `byte[]` type or a field rule.
      *
      * @return whether the entity has wire types
      */
     public boolean hasWireTypes() {
-        return fields.stream().anyMatch(field -> field.conversion().isPresent());
+        return fields.stream().anyMatch(field -> field.conversion().isPresent() || field.rule().isPresent());
     }
 
     /**

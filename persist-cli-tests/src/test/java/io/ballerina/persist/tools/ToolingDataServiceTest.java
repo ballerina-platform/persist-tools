@@ -112,7 +112,7 @@ public class ToolingDataServiceTest {
                 user = "sa"
                 password = ""
                 """, init.toString().replace('\\', '/')));
-        assertTestsPassed(bal(project, Map.of("TZ", "UTC"), "test", "--offline"), 40);
+        assertTestsPassed(bal(project, Map.of("TZ", "UTC"), "test", "--offline"), 42);
     }
 
     // Generation from bal build
@@ -133,6 +133,23 @@ public class ToolingDataServiceTest {
         Assert.assertTrue(types.contains("public type EmployeePayload record {|"), types);
         Assert.assertTrue(types.contains("public type AssignmentList record {|"), types);
         Assert.assertFalse(service.contains("public type "), service);
+    }
+
+    @Test(description = "An invalid field rule fails the build, and a rule without effect is a warning")
+    public void testFieldRuleChecks() throws IOException, InterruptedException {
+        String http = "options.dataservice.protocol = \"http\"";
+        Path invalid = project("ds_rule_error", entry("h2", http), MODEL.replace("    string name;",
+                "    @dataservice:Internal\n    string name;"));
+        Result failed = build(invalid);
+        Assert.assertNotEquals(failed.exitCode(), 0, failed.output());
+        Assert.assertTrue(failed.output().contains("the field 'name' of the entity 'Employee' needs a 'value' in " +
+                "@dataservice:Internal, because it is neither nullable nor generated."), failed.output());
+        Path noEffect = project("ds_rule_warning", entry("h2", http), MODEL.replace("    decimal hours;",
+                "    @dataservice:Immutable\n    decimal hours;"));
+        Result built = build(noEffect);
+        Assert.assertEquals(built.exitCode(), 0, built.output());
+        Assert.assertTrue(built.output().contains("WARNING: @dataservice:Immutable on the field 'hours' of the " +
+                "entity 'Assignment' has no effect, because the entity does not allow 'update'."), built.output());
     }
 
     @Test(description = "With introspection = false, the service does not publish its OpenAPI definition")
