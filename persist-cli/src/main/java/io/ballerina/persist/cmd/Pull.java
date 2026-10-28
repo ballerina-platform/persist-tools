@@ -116,6 +116,10 @@ public class Pull implements BLauncherCmd {
         }
 
         String password = readDatabasePassword(scanner, errStream);
+        if (password == null) {
+            errStream.println(System.lineSeparator() + "ERROR: no database password was given.");
+            return;
+        }
 
         try {
             validateBallerinaProject(Paths.get(this.sourcePath));
@@ -160,7 +164,12 @@ public class Pull implements BLauncherCmd {
         if (modelFile) {
             errStream.print(YELLOW_COLOR + "WARNING A " + modelDisplayPath + " file already exists. " +
                     "Continuing would overwrite it. Do you wish to continue? (y/n) " + RESET_COLOR);
-            String input = scanner.nextLine();
+            String input = readAnswer(scanner);
+            if (input == null) {
+                errStream.println(System.lineSeparator() + "ERROR: no answer was given to overwrite the " +
+                        modelDisplayPath + " file. Introspection aborted.");
+                return;
+            }
             if (!(input.toLowerCase(Locale.ENGLISH).equals("y") || input.toLowerCase(Locale.ENGLISH).equals("yes"))) {
                 errStream.println("Introspection aborted.");
                 return;
@@ -311,7 +320,12 @@ public class Pull implements BLauncherCmd {
 
         errStream.print(TABLE_SELECTION_PROMPT);
 
-        String input = scanner.nextLine().trim();
+        String input = readAnswer(scanner);
+        if (input == null) {
+            errStream.println(System.lineSeparator() + "ERROR: no answer was given to the table selection.");
+            return null;
+        }
+        input = input.trim();
 
         // Handle abort
         if (input.equalsIgnoreCase("q") || input.equalsIgnoreCase("quit")) {
@@ -330,6 +344,10 @@ public class Pull implements BLauncherCmd {
 
         // Otherwise, treat as table names
         return input;
+    }
+
+    private static String readAnswer(Scanner scanner) {
+        return scanner.hasNextLine() ? scanner.nextLine() : null;
     }
 
     /**
