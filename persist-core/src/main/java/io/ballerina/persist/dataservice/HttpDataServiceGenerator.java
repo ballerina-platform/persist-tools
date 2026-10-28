@@ -64,6 +64,7 @@ public final class HttpDataServiceGenerator {
 
     private final List<ExposedEntity> entities;
     private final String basePath;
+    private final boolean introspection;
     private final String modelName;
     private final boolean userOwned;
     private final Set<String> imports = new TreeSet<>();
@@ -80,6 +81,7 @@ public final class HttpDataServiceGenerator {
                                     boolean userOwned) {
         this.entities = entities;
         this.basePath = options.basePath();
+        this.introspection = options.introspection();
         this.modelName = modelName;
         this.userOwned = userOwned;
     }
@@ -101,6 +103,10 @@ public final class HttpDataServiceGenerator {
         body.append("# The listener of the data service.").append(NEWLINE);
         body.append("listener http:Listener dataserviceListener = new (dataservicePort, dataserviceListenerConfig);")
                 .append(NEWLINE).append(NEWLINE);
+        if (introspection) {
+            imports.add("import ballerina/openapi;");
+            body.append("@openapi:ServiceInfo {embed: true}").append(NEWLINE);
+        }
         body.append("service ").append(servicePath()).append(" on dataserviceListener {").append(NEWLINE);
         for (ExposedEntity entity : entities) {
             appendResources(body, entity);

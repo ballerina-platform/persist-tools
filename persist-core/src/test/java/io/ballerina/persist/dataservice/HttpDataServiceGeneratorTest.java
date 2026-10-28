@@ -42,14 +42,14 @@ public class HttpDataServiceGeneratorTest {
     private static final Path ACTUAL = Paths.get("build", "dataservice-actual").toAbsolutePath();
 
     @Test(dataProvider = "cases")
-    public void testGeneratedService(String model, String basePath, boolean userOwned, String expected,
-                                     String expectedTypes) throws BalException, IOException {
+    public void testGeneratedService(String model, String basePath, boolean introspection, boolean userOwned,
+                                     String expected, String expectedTypes) throws BalException, IOException {
         Path modelPath = RESOURCES.resolve(model).resolve("model.bal");
         Module module = BalProjectUtils.getEntities(modelPath);
         List<ExposedEntity> entities = DataServiceModel.resolve(module, ExposeAnnotations.read(modelPath),
                 ExposeAnnotations.docs(modelPath));
         HttpDataServiceGenerator generator = new HttpDataServiceGenerator(entities,
-                new DataServiceOptions("http", DataServiceOptions.validateBasePath(basePath)),
+                new DataServiceOptions("http", DataServiceOptions.validateBasePath(basePath), false, introspection),
                 module.getModuleName(), userOwned);
         assertSource(generator.generateService(), RESOURCES.resolve(model).resolve(expected));
         if (expectedTypes != null) {
@@ -60,15 +60,16 @@ public class HttpDataServiceGeneratorTest {
     @DataProvider
     public Object[][] cases() {
         return new Object[][]{
-                {"employees", "/api", false, "dataservice.bal", "dataservice_types.bal"},
-                {"employees", "/", false, "root_base_path.bal", null},
-                {"employees", "/hr/v1", false, "custom_base_path.bal", null},
-                {"employees", "/hr-data/v1.0", false, "quoted_base_path.bal", null},
-                {"employees", "/api", true, "user_owned.bal", "user_owned_types.bal"},
-                {"composite", "/api", false, "dataservice.bal", "dataservice_types.bal"},
-                {"wire", "/api", false, "dataservice.bal", "dataservice_types.bal"},
-                {"combinations", "/api", false, "dataservice.bal", "dataservice_types.bal"},
-                {"generated_key", "/api", false, "dataservice.bal", "dataservice_types.bal"},
+                {"employees", "/api", true, false, "dataservice.bal", "dataservice_types.bal"},
+                {"employees", "/api", false, false, "no_introspection.bal", null},
+                {"employees", "/", true, false, "root_base_path.bal", null},
+                {"employees", "/hr/v1", true, false, "custom_base_path.bal", null},
+                {"employees", "/hr-data/v1.0", true, false, "quoted_base_path.bal", null},
+                {"employees", "/api", true, true, "user_owned.bal", "user_owned_types.bal"},
+                {"composite", "/api", true, false, "dataservice.bal", "dataservice_types.bal"},
+                {"wire", "/api", true, false, "dataservice.bal", "dataservice_types.bal"},
+                {"combinations", "/api", true, false, "dataservice.bal", "dataservice_types.bal"},
+                {"generated_key", "/api", true, false, "dataservice.bal", "dataservice_types.bal"},
         };
     }
 

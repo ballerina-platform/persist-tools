@@ -49,6 +49,22 @@ function testCreateIsAtomic() returns error? {
 }
 
 @test:Config
+function testOptionsLinksTheOpenApiDefinition() returns error? {
+    http:Response response = check api->options("/api");
+    test:assertEquals(check response.getHeader("Link"),
+            "</api/openapi-doc-dygixywsw>;rel=\"service-desc\", </api/swagger-ui-dygixywsw>;rel=\"swagger-ui\"");
+}
+
+@test:Config
+function testOpenApiDefinitionHasTheSummaries() returns error? {
+    http:Response response = check send("GET", "/api/openapi-doc-dygixywsw");
+    test:assertEquals(response.statusCode, 200);
+    string definition = check response.getTextPayload();
+    test:assertTrue(definition.includes("Gets a page of employees."), definition);
+    test:assertTrue(definition.includes("Creates one or more employees."), definition);
+}
+
+@test:Config
 function testCreateAboveTheLargestPage() returns error? {
     json[] employees = from int id in 60 ..< 66 select employee(id, "Max");
     http:Response response = check send("POST", "/api/employees", employees);

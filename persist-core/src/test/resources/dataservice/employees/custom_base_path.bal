@@ -6,6 +6,7 @@
 import ballerina/dataservice;
 import ballerina/dataservice.http as dsHttp;
 import ballerina/http;
+import ballerina/openapi;
 import ballerina/persist;
 
 # The persist client that the data service uses.
@@ -14,6 +15,7 @@ final Client dataserviceClient = check new ();
 # The listener of the data service.
 listener http:Listener dataserviceListener = new (dataservicePort, dataserviceListenerConfig);
 
+@openapi:ServiceInfo {embed: true}
 service /hr/v1 on dataserviceListener {
 
     # Gets a page of employees.

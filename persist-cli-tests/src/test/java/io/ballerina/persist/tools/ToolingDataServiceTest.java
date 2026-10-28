@@ -112,7 +112,7 @@ public class ToolingDataServiceTest {
                 user = "sa"
                 password = ""
                 """, init.toString().replace('\\', '/')));
-        assertTestsPassed(bal(project, Map.of("TZ", "UTC"), "test", "--offline"), 38);
+        assertTestsPassed(bal(project, Map.of("TZ", "UTC"), "test", "--offline"), 40);
     }
 
     // Generation from bal build
@@ -127,11 +127,22 @@ public class ToolingDataServiceTest {
         Assert.assertTrue(service.contains("service /api on dataserviceListener {"), service);
         Assert.assertTrue(service.contains("resource function get assignments/[string projectCode]/[int seq]()"));
         Assert.assertFalse(service.contains("auditlogs"), service);
+        Assert.assertTrue(service.contains("@openapi:ServiceInfo {embed: true}\nservice /api on"), service);
         Assert.assertTrue(Files.exists(project.resolve("generated").resolve(CONFIG)));
         String types = Files.readString(project.resolve("generated").resolve(TYPES));
         Assert.assertTrue(types.contains("public type EmployeePayload record {|"), types);
         Assert.assertTrue(types.contains("public type AssignmentList record {|"), types);
         Assert.assertFalse(service.contains("public type "), service);
+    }
+
+    @Test(description = "With introspection = false, the service does not publish its OpenAPI definition")
+    public void testIntrospectionOff() throws IOException, InterruptedException {
+        Path project = project("ds_introspection", entry("h2",
+                "\n[tool.persist.options.dataservice]\nprotocol = \"http\"\nintrospection = false"), MODEL);
+        assertSucceeded(build(project));
+        String service = Files.readString(project.resolve("generated").resolve(SERVICE));
+        Assert.assertFalse(service.contains("openapi"), service);
+        Assert.assertTrue(service.contains("\nservice /api on dataserviceListener {"), service);
     }
 
     @Test(description = "Changing the base path, dotted or in a table, regenerates the service, and removing the " +
@@ -234,6 +245,8 @@ public class ToolingDataServiceTest {
                         "the protocol 'soap' is not supported yet. Supported values: http."},
                 {"rest", "options.dataservice.protocol = \"rest\"", null, MODEL,
                         "invalid 'options.dataservice.protocol' 'rest'. Supported values: http."},
+                {"auth", http + "\noptions.dataservice.auth = true", null, MODEL,
+                        "'options.dataservice.auth' is not supported yet."},
                 {"base_path_slash", http + "\noptions.dataservice.basePath = \"api\"", null, MODEL,
                         "invalid 'options.dataservice.basePath' 'api': the base path must start with '/'."},
                 {"base_path_segment", http + "\noptions.dataservice.basePath = \"/api//v1\"", null, MODEL,

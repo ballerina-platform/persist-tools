@@ -31,6 +31,7 @@ public final class DataServiceMessages {
             "the protocol '%s' is not supported yet. Supported values: " + SUPPORTED_PROTOCOLS + ".";
     public static final String PROTOCOL_INVALID =
             "invalid 'options.dataservice.protocol' '%s'. Supported values: " + SUPPORTED_PROTOCOLS + ".";
+    public static final String AUTH_NOT_SUPPORTED_YET = "'options.dataservice.auth' is not supported yet.";
     public static final String BASE_PATH_NO_LEADING_SLASH =
             "invalid 'options.dataservice.basePath' '%s': the base path must start with '/'.";
     public static final String BASE_PATH_INVALID_SEGMENT = "invalid 'options.dataservice.basePath' '%s': each path " +

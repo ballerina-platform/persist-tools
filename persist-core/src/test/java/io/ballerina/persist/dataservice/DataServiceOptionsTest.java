@@ -34,7 +34,18 @@ public class DataServiceOptionsTest {
     @Test
     public void testDefaults() throws BalException {
         Assert.assertEquals(DataServiceOptions.from(Map.of("protocol", "http")),
-                new DataServiceOptions("http", "/api"));
+                new DataServiceOptions("http", "/api", false, true));
+    }
+
+    @Test
+    public void testIntrospectionOff() throws BalException {
+        Assert.assertEquals(DataServiceOptions.from(Map.of("protocol", "http", "auth", false, "introspection", false)),
+                new DataServiceOptions("http", "/api", false, false));
+    }
+
+    @Test
+    public void testAuthIsNotSupportedYet() {
+        assertError(Map.of("protocol", "http", "auth", true), "'options.dataservice.auth' is not supported yet.");
     }
 
     @Test

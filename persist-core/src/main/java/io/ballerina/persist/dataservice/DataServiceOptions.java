@@ -28,14 +28,18 @@ import java.util.regex.Pattern;
 /**
  * The validated `options.dataservice` group of a `[[tool.persist]]` entry.
  *
- * @param protocol the protocol the service is generated for
- * @param basePath the base path of the service, without a trailing `/`; `/` for the root
+ * @param protocol      the protocol the service is generated for
+ * @param basePath      the base path of the service, without a trailing `/`; `/` for the root
+ * @param auth          whether the service is generated with authentication and scopes
+ * @param introspection whether the service publishes its own description
  */
-public record DataServiceOptions(String protocol, String basePath) {
+public record DataServiceOptions(String protocol, String basePath, boolean auth, boolean introspection) {
 
     public static final String OPTION_DATASERVICE = "dataservice";
     public static final String PROTOCOL = "protocol";
     public static final String BASE_PATH = "basePath";
+    public static final String AUTH = "auth";
+    public static final String INTROSPECTION = "introspection";
     public static final String HTTP = "http";
     public static final String DEFAULT_HTTP_BASE_PATH = "/api";
 
@@ -59,8 +63,14 @@ public record DataServiceOptions(String protocol, String basePath) {
         }
         String validProtocol = validateProtocol(protocol.toString());
         Object basePath = group.get(BASE_PATH);
+        boolean auth = Boolean.parseBoolean(String.valueOf(group.get(AUTH)));
+        if (auth) {
+            throw new BalException(DataServiceMessages.AUTH_NOT_SUPPORTED_YET);
+        }
+        Object introspection = group.get(INTROSPECTION);
         return new DataServiceOptions(validProtocol,
-                validateBasePath(basePath == null ? DEFAULT_HTTP_BASE_PATH : basePath.toString()));
+                validateBasePath(basePath == null ? DEFAULT_HTTP_BASE_PATH : basePath.toString()), auth,
+                introspection == null ? !auth : Boolean.parseBoolean(introspection.toString()));
     }
 
     /**
@@ -119,9 +129,9 @@ public record DataServiceOptions(String protocol, String basePath) {
      * Returns the default options for a protocol, as `bal persist generate --dataservice` uses them.
      *
      * @param protocol a supported protocol
-     * @return the options with the protocol's default base path
+     * @return the options with the protocol's default base path, without auth and with introspection
      */
     public static DataServiceOptions defaults(String protocol) {
-        return new DataServiceOptions(protocol, DEFAULT_HTTP_BASE_PATH);
+        return new DataServiceOptions(protocol, DEFAULT_HTTP_BASE_PATH, false, true);
     }
 }
