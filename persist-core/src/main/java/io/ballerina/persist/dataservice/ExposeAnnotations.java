@@ -24,6 +24,7 @@ import io.ballerina.compiler.syntax.tree.EnumDeclarationNode;
 import io.ballerina.compiler.syntax.tree.ExpressionNode;
 import io.ballerina.compiler.syntax.tree.ImportDeclarationNode;
 import io.ballerina.compiler.syntax.tree.ListConstructorExpressionNode;
+import io.ballerina.compiler.syntax.tree.MappingConstructorExpressionNode;
 import io.ballerina.compiler.syntax.tree.MappingFieldNode;
 import io.ballerina.compiler.syntax.tree.MarkdownDocumentationNode;
 import io.ballerina.compiler.syntax.tree.MetadataNode;
@@ -58,6 +59,7 @@ public final class ExposeAnnotations {
     private static final String MODULE = "dataservice";
     private static final String EXPOSE = "Expose";
     private static final String OPERATIONS = "operations";
+    private static final String SCOPES = "scopes";
 
     private ExposeAnnotations() {
     }
@@ -93,7 +95,11 @@ public final class ExposeAnnotations {
                 if (member instanceof TypeDefinitionNode type
                         && type.typeDescriptor().kind() == SyntaxKind.RECORD_TYPE_DESC) {
                     String entity = type.typeName().text().trim();
-                    operations(annotation, entity, prefix.get(), errors).ifPresent(ops -> exposed.put(entity, ops));
+                    Optional<EnumSet<Operation>> operations = operations(annotation, entity, prefix.get(), errors);
+                    operations.ifPresent(ops -> {
+                        exposed.put(entity, ops);
+                        checkScopes(annotation, entity, ops, errors);
+                    });
                 } else {
                     errors.add(DataServiceMessages.EXPOSE_PLACEMENT);
                 }
@@ -103,6 +109,46 @@ public final class ExposeAnnotations {
             throw new BalException(String.join(System.lineSeparator(), errors));
         }
         return exposed;
+    }
+
+    /**
+     * Reads the scopes that the annotations of a model file give. The annotations are checked by `read`.
+     *
+     * @param modelPath the model file
+     * @return per annotated entity, the scopes of each action its annotation lists
+     * @throws BalException if the file cannot be read
+     */
+    public static Map<String, Map<Operation, List<String>>> scopes(Path modelPath) throws BalException {
+        return scopes(parse(modelPath));
+    }
+
+    /**
+     * Reads the scopes that the annotations of a model give. The annotations are checked by `read`.
+     *
+     * @param model the syntax tree of the model
+     * @return per annotated entity, the scopes of each action its annotation lists
+     */
+    public static Map<String, Map<Operation, List<String>>> scopes(SyntaxTree model) {
+        Map<String, Map<Operation, List<String>>> scopes = new LinkedHashMap<>();
+        ModulePartNode root = model.rootNode();
+        Optional<String> prefix = prefix(root);
+        if (prefix.isEmpty()) {
+            return scopes;
+        }
+        for (ModuleMemberDeclarationNode member : root.members()) {
+            if (!(member instanceof TypeDefinitionNode type)) {
+                continue;
+            }
+            for (AnnotationNode annotation : exposeAnnotations(member, prefix.get())) {
+                Map<Operation, List<String>> entityScopes = new LinkedHashMap<>();
+                for (SpecificFieldNode action : scopeActions(annotation)) {
+                    actionOf(action).ifPresent(operation -> entityScopes.put(operation,
+                            scopeValues(action).stream().map(ExposeAnnotations::scopeText).toList()));
+                }
+                scopes.put(type.typeName().text().trim(), entityScopes);
+            }
+        }
+        return scopes;
     }
 
     /**
@@ -244,6 +290,70 @@ public final class ExposeAnnotations {
             }
         }
         return errors.size() == errorCount ? Optional.of(operations) : Optional.empty();
+    }
+
+    private static void checkScopes(AnnotationNode annotation, String entity, EnumSet<Operation> operations,
+                                    List<String> errors) {
+        for (SpecificFieldNode action : scopeActions(annotation)) {
+            Optional<Operation> operation = actionOf(action);
+            if (operation.isEmpty() || !operations.contains(operation.get())) {
+                errors.add(String.format(DataServiceMessages.SCOPES_NOT_ENABLED, entity,
+                        action.fieldName().toSourceCode().trim()));
+            }
+            for (Node value : scopeValues(action)) {
+                String scope = scopeText(value);
+                if (!(value instanceof BasicLiteralNode literal && literal.kind() == SyntaxKind.STRING_LITERAL)
+                        || scope.isEmpty() || scope.chars().anyMatch(Character::isWhitespace)) {
+                    errors.add(String.format(DataServiceMessages.SCOPE_INVALID, scope, entity));
+                }
+            }
+        }
+    }
+
+    private static List<SpecificFieldNode> scopeActions(AnnotationNode annotation) {
+        List<SpecificFieldNode> actions = new ArrayList<>();
+        if (annotation.annotValue().isEmpty()) {
+            return actions;
+        }
+        for (MappingFieldNode field : annotation.annotValue().get().fields()) {
+            if (field instanceof SpecificFieldNode specific
+                    && SCOPES.equals(specific.fieldName().toSourceCode().trim())
+                    && specific.valueExpr().isPresent()
+                    && specific.valueExpr().get() instanceof MappingConstructorExpressionNode mapping) {
+                for (MappingFieldNode actionField : mapping.fields()) {
+                    if (actionField instanceof SpecificFieldNode action) {
+                        actions.add(action);
+                    }
+                }
+            }
+        }
+        return actions;
+    }
+
+    private static Optional<Operation> actionOf(SpecificFieldNode action) {
+        String name = action.fieldName().toSourceCode().trim();
+        for (Operation operation : Operation.values()) {
+            if (operation.value().equals(name)) {
+                return Optional.of(operation);
+            }
+        }
+        return Optional.empty();
+    }
+
+    private static List<Node> scopeValues(SpecificFieldNode action) {
+        if (action.valueExpr().isPresent() && action.valueExpr().get() instanceof ListConstructorExpressionNode list) {
+            return new ArrayList<>(list.expressions().stream().toList());
+        }
+        return List.of();
+    }
+
+    // A string literal is read as its value; any other expression is kept as written, and is invalid.
+    private static String scopeText(Node value) {
+        if (value instanceof BasicLiteralNode literal && literal.kind() == SyntaxKind.STRING_LITERAL) {
+            String text = literal.literalToken().text();
+            return text.substring(1, text.length() - 1);
+        }
+        return value.toSourceCode().trim();
     }
 
     private static Optional<Operation> operation(Node member, String prefix) {

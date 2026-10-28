@@ -31,7 +31,6 @@ public final class DataServiceMessages {
             "the protocol '%s' is not supported yet. Supported values: " + SUPPORTED_PROTOCOLS + ".";
     public static final String PROTOCOL_INVALID =
             "invalid 'options.dataservice.protocol' '%s'. Supported values: " + SUPPORTED_PROTOCOLS + ".";
-    public static final String AUTH_NOT_SUPPORTED_YET = "'options.dataservice.auth' is not supported yet.";
     public static final String BASE_PATH_NO_LEADING_SLASH =
             "invalid 'options.dataservice.basePath' '%s': the base path must start with '/'.";
     public static final String BASE_PATH_INVALID_SEGMENT = "invalid 'options.dataservice.basePath' '%s': each path " +
@@ -59,6 +58,15 @@ public final class DataServiceMessages {
             "dataservice:DELETE.";
     public static final String OPERATION_DUPLICATE =
             "duplicate operation '%s' in the @dataservice:Expose annotation of the entity '%s'.";
+    public static final String SCOPE_INVALID =
+            "invalid scope '%s' in the @dataservice:Expose annotation of the entity '%s'.";
+    public static final String SCOPES_NOT_ENABLED = "the @dataservice:Expose annotation of the entity '%s' sets " +
+            "scopes for '%s', which is not in 'operations'.";
+    public static final String SCOPES_WITHOUT_AUTH = "the @dataservice:Expose annotation of the entity '%s' sets " +
+            "scopes, but 'options.dataservice.auth' is not true, so no scope is checked.";
+    public static final String RELATION_REFUSED = "the relation '%s' of the entity '%s' is always refused in " +
+            "'fields' and get related, because the 'read' scopes of '%s' do not cover those of '%s'. Give both " +
+            "entities a shared 'read' scope.";
     public static final String RULE_MORE_THAN_ONE = "the field '%s' of the entity '%s' has more than one of " +
             "@dataservice:ReadOnly, @dataservice:Immutable and @dataservice:Internal.";
     public static final String RULE_ON_KEY = "the key field '%s' of the entity '%s' cannot have @dataservice:%s.";

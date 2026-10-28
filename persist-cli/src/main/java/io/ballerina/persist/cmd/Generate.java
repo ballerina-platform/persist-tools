@@ -271,6 +271,8 @@ public class Generate implements BLauncherCmd {
                 DataServiceModel.Resolution resolution = DataServiceModel.resolve(schemaFilePath, module);
                 resolution.warnings().forEach(warning -> errStream.println("WARNING: " + warning));
                 exposedEntities = resolution.entities();
+                DataServiceModel.scopeWarnings(exposedEntities, false)
+                        .forEach(warning -> errStream.println("WARNING: " + warning));
             } catch (BalException e) {
                 Utils.printErrors(errStream, e.getMessage());
                 return;

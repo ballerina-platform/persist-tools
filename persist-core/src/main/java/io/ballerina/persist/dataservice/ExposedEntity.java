@@ -43,11 +43,12 @@ public final class ExposedEntity {
     private final List<String> doc;
     private final List<Column> columns;
     private final List<ExposedRelation> relations;
+    private final Map<Operation, List<String>> scopes;
 
     private ExposedEntity(String name, String resourceName, EnumSet<Operation> operations,
                           List<ServiceField> fields, List<ServiceField> insertFields,
                           List<ServiceField> updateFields, List<String> doc, List<Column> columns,
-                          List<ExposedRelation> relations) {
+                          List<ExposedRelation> relations, Map<Operation, List<String>> scopes) {
         this.name = name;
         this.resourceName = resourceName;
         this.operations = EnumSet.copyOf(operations);
@@ -57,6 +58,7 @@ public final class ExposedEntity {
         this.doc = doc;
         this.columns = columns;
         this.relations = relations;
+        this.scopes = scopes;
     }
 
     /**
@@ -113,7 +115,7 @@ public final class ExposedEntity {
         boolean generated = entity.getFields().stream().anyMatch(EntityField::isDbGenerated);
         return new ExposedEntity(entity.getEntityName(), entity.getClientResourceName(), operations,
                 List.copyOf(fields), generated ? List.copyOf(insertFields) : null, List.copyOf(updateFields),
-                List.copyOf(doc), List.copyOf(columns), List.of());
+                List.copyOf(doc), List.copyOf(columns), List.of(), Map.of());
     }
 
     /**
@@ -124,7 +126,37 @@ public final class ExposedEntity {
      */
     public ExposedEntity withRelations(List<ExposedRelation> readable) {
         return new ExposedEntity(name, resourceName, operations, fields, insertFields, updateFields, doc, columns,
-                List.copyOf(readable));
+                List.copyOf(readable), scopes);
+    }
+
+    /**
+     * Returns the entity with the scopes its annotation lists.
+     *
+     * @param listed the scopes of each listed action
+     * @return the entity with them
+     */
+    public ExposedEntity withScopes(Map<Operation, List<String>> listed) {
+        return new ExposedEntity(name, resourceName, operations, fields, insertFields, updateFields, doc, columns,
+                relations, Map.copyOf(listed));
+    }
+
+    /**
+     * Returns the scopes an action requires when the service has auth.
+     *
+     * @param operation the action
+     * @return the listed scopes, or `<resource>:<action>` when the annotation does not list the action
+     */
+    public List<String> scopes(Operation operation) {
+        return scopes.getOrDefault(operation, List.of(resourceName + ":" + operation.value()));
+    }
+
+    /**
+     * Tells whether the annotation lists scopes.
+     *
+     * @return whether it does
+     */
+    public boolean hasScopes() {
+        return !scopes.isEmpty();
     }
 
     private static boolean isInternal(FieldRules.Applied rule) {

@@ -27,6 +27,7 @@ import org.testng.annotations.Test;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static io.ballerina.persist.dataservice.Operation.CREATE;
 import static io.ballerina.persist.dataservice.Operation.DELETE;
@@ -136,6 +137,29 @@ public class ExposeAnnotationsTest {
                 "'operations' in the @dataservice:Expose annotation of the entity 'Employee' cannot be empty." +
                         System.lineSeparator() + "duplicate operation '\"read\"' in the @dataservice:Expose " +
                         "annotation of the entity 'Department'.");
+    }
+
+    @Test
+    public void testScopes() throws BalException {
+        String model = IMPORTS + "@dataservice:Expose {operations: [dataservice:READ, dataservice:DELETE], " +
+                "scopes: {read: [], delete: [\"hr:admin\", \"hr:owner\"]}}\n" +
+                "type Employee record {| readonly int id; |};\n" +
+                "@dataservice:Expose\ntype Department record {| readonly int id; |};";
+        Assert.assertEquals(read(model.substring(IMPORTS.length())).keySet(), Set.of("Employee", "Department"));
+        Assert.assertEquals(ExposeAnnotations.scopes(tree(model)), Map.of(
+                "Employee", Map.of(READ, List.of(), DELETE, List.of("hr:admin", "hr:owner")),
+                "Department", Map.of()));
+    }
+
+    @Test
+    public void testInvalidScopes() {
+        assertError("@dataservice:Expose {operations: [dataservice:READ], scopes: {read: [\"\", \"hr read\"], " +
+                        "delete: [\"hr:admin\"]}}\ntype Employee record {| readonly int id; |};",
+                String.join(System.lineSeparator(),
+                        "invalid scope '' in the @dataservice:Expose annotation of the entity 'Employee'.",
+                        "invalid scope 'hr read' in the @dataservice:Expose annotation of the entity 'Employee'.",
+                        "the @dataservice:Expose annotation of the entity 'Employee' sets scopes for 'delete', which " +
+                                "is not in 'operations'."));
     }
 
     private static SyntaxTree tree(String source) {

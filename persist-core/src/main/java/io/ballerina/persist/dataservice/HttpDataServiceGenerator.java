@@ -52,6 +52,7 @@ public final class HttpDataServiceGenerator {
     private static final String NEWLINE = System.lineSeparator();
     private static final String LIST_ERRORS = "|dsHttp:InvalidInput|dsHttp:InternalError";
     private static final String GET_ERRORS = "|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError";
+    private static final String FORBIDDEN = "|dsHttp:Forbidden";
     private static final String CREATE_ERRORS =
             "|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError";
     private static final String UPDATE_ERRORS =
@@ -65,6 +66,7 @@ public final class HttpDataServiceGenerator {
     private final List<ExposedEntity> entities;
     private final String basePath;
     private final boolean introspection;
+    private final boolean auth;
     private final String modelName;
     private final String datastore;
     private final boolean userOwned;
@@ -84,6 +86,7 @@ public final class HttpDataServiceGenerator {
         this.entities = entities;
         this.basePath = options.basePath();
         this.introspection = options.introspection();
+        this.auth = options.auth();
         this.modelName = modelName;
         this.datastore = datastore;
         this.userOwned = userOwned;
@@ -109,6 +112,9 @@ public final class HttpDataServiceGenerator {
         if (introspection) {
             imports.add("import ballerina/openapi;");
             body.append("@openapi:ServiceInfo {embed: true}").append(NEWLINE);
+        }
+        if (auth) {
+            body.append("@http:ServiceConfig {auth: dataserviceAuthConfig}").append(NEWLINE);
         }
         body.append("service ").append(servicePath()).append(" on dataserviceListener {").append(NEWLINE);
         for (ExposedEntity entity : entities) {
@@ -157,8 +163,15 @@ public final class HttpDataServiceGenerator {
      * @throws BalException if the source cannot be formatted
      */
     public String generateConfig() throws BalException {
+        String authValues = !auth ? "" : NEWLINE +
+                "# The authentication providers of the data service, such as a JWT validator." + NEWLINE +
+                "configurable http:ListenerAuthConfig[] dataserviceAuth = ?;" + NEWLINE + NEWLINE +
+                "# The authentication providers, checked at startup." + NEWLINE +
+                "final http:ListenerAuthConfig[] dataserviceAuthConfig = check dsHttp:authConfig(dataserviceAuth);" +
+                NEWLINE;
         return format(header(BalSyntaxConstants.AUTO_GENERATED_COMMENT) +
                 "import ballerina/dataservice;" + NEWLINE +
+                (auth ? "import ballerina/dataservice.http as dsHttp;" + NEWLINE : "") +
                 "import ballerina/http;" + NEWLINE + NEWLINE +
                 "# The port of the data service listener." + NEWLINE +
                 "configurable int dataservicePort = 9090;" + NEWLINE + NEWLINE +
@@ -170,7 +183,8 @@ public final class HttpDataServiceGenerator {
                 "configurable int dataserviceMaxPageSize = 1000;" + NEWLINE + NEWLINE +
                 "# The page sizes, checked at startup." + NEWLINE +
                 "final dataservice:PageConfig dataservicePageConfig =" + NEWLINE +
-                "        check dataservice:pageConfig(dataservicePageSize, dataserviceMaxPageSize);" + NEWLINE);
+                "        check dataservice:pageConfig(dataservicePageSize, dataserviceMaxPageSize);" + NEWLINE +
+                authValues);
     }
 
     private String header(String reason) {
@@ -207,11 +221,13 @@ public final class HttpDataServiceGenerator {
 
             List<String> params = new ArrayList<>(keyDocs(entity, n));
             params.add("fields - The fields to return; the key fields are always returned");
-            appendDoc(out, entity, "Gets " + n.article + " " + n.words + " by its key.", params, "The " + n.words);
+            appendDoc(out, entity, READ, "Gets " + n.article + " " + n.words + " by its key.", params,
+                    "The " + n.words);
             out.append("    resource function get ").append(n.resource).append("/").append(keyParams)
                     .append("(string[]? fields = ()) returns ").append(n.wire).append("|").append(n.partial)
-                    .append(GET_ERRORS).append(" {").append(NEWLINE);
+                    .append(errors(GET_ERRORS, !refused(entity).isEmpty())).append(" {").append(NEWLINE);
             appendKeyCheck(out, entity, n, keyList);
+            appendForbiddenCheck(out, entity, n);
             appendFieldsCheck(out, n);
             out.append("        ").append(n.entity).append("|persist:Error item = dataserviceClient->/")
                     .append(n.resource).append(keyPath).append(";").append(NEWLINE);
@@ -243,7 +259,7 @@ public final class HttpDataServiceGenerator {
         if (entity.allows(UPDATE)) {
             List<String> params = new ArrayList<>(keyDocs(entity, n));
             params.add("payload - The fields of the " + n.words + " to update");
-            appendDoc(out, entity, "Updates " + n.article + " " + n.words + " by its key.", params,
+            appendDoc(out, entity, UPDATE, "Updates " + n.article + " " + n.words + " by its key.", params,
                     read ? "The updated " + n.words : "No content");
             out.append("    resource function patch ").append(n.resource).append("/").append(keyParams).append("(")
                     .append(n.updateWire).append(" payload)").append(NEWLINE);
@@ -282,7 +298,7 @@ public final class HttpDataServiceGenerator {
             out.append("    }").append(NEWLINE);
         }
         if (entity.allows(DELETE)) {
-            appendDoc(out, entity, "Deletes " + n.article + " " + n.words + " by its key.", keyDocs(entity, n),
+            appendDoc(out, entity, DELETE, "Deletes " + n.article + " " + n.words + " by its key.", keyDocs(entity, n),
                     read ? "The deleted " + n.words : "No content");
             out.append("    resource function delete ").append(n.resource).append("/").append(keyParams)
                     .append("() returns ").append(changed).append(DELETE_ERRORS).append(" {").append(NEWLINE);
@@ -298,7 +314,7 @@ public final class HttpDataServiceGenerator {
 
     private void appendGetMany(StringBuilder out, ExposedEntity entity, Names n) {
         String entityName = "\"" + n.displayName + "\"";
-        appendDoc(out, entity, "Gets a page of " + n.plural + ".", List.of(
+        appendDoc(out, entity, READ, "Gets a page of " + n.plural + ".", List.of(
                 "filter - The conditions that the " + n.plural + " match",
                 "sort - The fields to sort by, each descending when it starts with `-`",
                 "size - The number of " + n.plural + " in the page",
@@ -307,7 +323,7 @@ public final class HttpDataServiceGenerator {
         out.append("    resource function get ").append(n.resource).append("(").append(n.filter)
                 .append("? filter = (), string[]? sort = (), int? size = (), int? offset = (),").append(NEWLINE);
         out.append("            string[]? fields = ()) returns ").append(n.list).append("|").append(n.partialList)
-                .append(LIST_ERRORS).append(" {").append(NEWLINE);
+                .append(errors(LIST_ERRORS, !refused(entity).isEmpty())).append(" {").append(NEWLINE);
         out.append("        dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =")
                 .append(NEWLINE);
         out.append("            dataservice:query(").append(n.description)
@@ -315,6 +331,7 @@ public final class HttpDataServiceGenerator {
         out.append("        if query !is dataservice:Query {").append(NEWLINE);
         out.append("            return dsHttp:toQueryError(query, ").append(entityName).append(");").append(NEWLINE);
         out.append("        }").append(NEWLINE);
+        appendForbiddenCheck(out, entity, n);
         appendFieldsCheck(out, n);
         out.append("        stream<").append(n.entity).append(", persist:Error?> rows = dataserviceClient->/")
                 .append(n.resource).append("(").append(n.entity).append(",").append(NEWLINE);
@@ -345,11 +362,11 @@ public final class HttpDataServiceGenerator {
 
     // Adds the relations named in `fields` to `partials`, read from the records in `sources`.
     private void appendIncludes(StringBuilder out, ExposedEntity entity, Names n, String failure) {
-        if (entity.relations().isEmpty()) {
+        if (allowed(entity).isEmpty()) {
             return;
         }
         out.append("            do {").append(NEWLINE);
-        for (ExposedRelation relation : entity.relations()) {
+        for (ExposedRelation relation : allowed(entity)) {
             Names t = new Names(target(relation));
             String name = "\"" + unescape(relation.field()) + "\"";
             String indent = relation.many() ? "                        " : "                    ";
@@ -390,6 +407,7 @@ public final class HttpDataServiceGenerator {
         ExposedEntity targetEntity = target(relation);
         Names t = new Names(targetEntity);
         String name = unescape(relation.field());
+        boolean refused = refused(entity).contains(relation);
         String words = String.join(" ", WORD_BOUNDARY.split(name)).toLowerCase(Locale.ENGLISH);
         String targetName = "\"" + t.displayName + "\"";
         List<String> params = new ArrayList<>(keyDocs(entity, n));
@@ -400,7 +418,7 @@ public final class HttpDataServiceGenerator {
                     "offset - The number of " + words + " to skip"));
         }
         params.add("fields - The fields of the " + words + " to return; the key fields are always returned");
-        appendDoc(out, entity, "Gets the " + words + " of " + n.article + " " + n.words + ".", params,
+        appendDoc(out, entity, READ, "Gets the " + words + " of " + n.article + " " + n.words + ".", params,
                 relation.many() ? "A page of the " + words : "The " + words);
         out.append("    resource function get ").append(n.resource).append("/").append(keyParams).append("/")
                 .append(relation.field()).append("(");
@@ -410,7 +428,14 @@ public final class HttpDataServiceGenerator {
         }
         out.append("string[]? fields = ()) returns ")
                 .append(relation.many() ? t.list + "|" + t.partialList : t.wire + "|" + t.partial)
-                .append(GET_ERRORS).append(" {").append(NEWLINE);
+                .append(errors(GET_ERRORS, refused)).append(" {").append(NEWLINE);
+        if (refused) {
+            // Always refused; the resource is still generated so that the API keeps its shape.
+            out.append("        return <dsHttp:Forbidden>{body: dataservice:forbidden(\"").append(n.displayName)
+                    .append("\", \"").append(name).append("\")};").append(NEWLINE);
+            out.append("    }").append(NEWLINE);
+            return;
+        }
         appendKeyCheck(out, entity, n, keyList);
         out.append("        dataservice:DataserviceError? invalidFields = dataservice:checkFields(")
                 .append(t.description).append(", fields, false);").append(NEWLINE);
@@ -490,6 +515,34 @@ public final class HttpDataServiceGenerator {
         out.append("    }").append(NEWLINE);
     }
 
+    private void appendForbiddenCheck(StringBuilder out, ExposedEntity entity, Names n) {
+        for (ExposedRelation relation : refused(entity)) {
+            String name = "\"" + unescape(relation.field()) + "\"";
+            out.append("        if dataservice:includes(fields, ").append(name).append(") {").append(NEWLINE);
+            out.append("            return <dsHttp:Forbidden>{body: dataservice:forbidden(\"").append(n.displayName)
+                    .append("\", ").append(name).append(")};").append(NEWLINE);
+            out.append("        }").append(NEWLINE);
+        }
+    }
+
+    // A relation the entity's read scopes do not cover is refused with auth, so it is never read; its types stay.
+    private List<ExposedRelation> refused(ExposedEntity entity) {
+        return auth ? entity.relations().stream()
+                .filter(relation -> DataServiceModel.refused(entity, relation, entities)).toList() : List.of();
+    }
+
+    private List<ExposedRelation> allowed(ExposedEntity entity) {
+        List<ExposedRelation> refused = refused(entity);
+        return entity.relations().stream().filter(relation -> !refused.contains(relation)).toList();
+    }
+
+    private static String errors(String errors, boolean forbidden) {
+        if (!forbidden) {
+            return errors;
+        }
+        return errors.replace("|dsHttp:InternalError", FORBIDDEN + "|dsHttp:InternalError");
+    }
+
     private ExposedEntity target(ExposedRelation relation) {
         return entities.stream().filter(entity -> entity.name().equals(relation.target())).findFirst()
                 .orElseThrow();
@@ -506,7 +559,7 @@ public final class HttpDataServiceGenerator {
 
     private void appendCreate(StringBuilder out, ExposedEntity entity, Names n) {
         String insert = n.entity + "Insert";
-        appendDoc(out, entity, "Creates one or more " + n.plural + ".",
+        appendDoc(out, entity, CREATE, "Creates one or more " + n.plural + ".",
                 List.of("payload - The " + n.words + ", or the " + n.plural + ", to create"),
                 "The created " + n.words + " or " + n.plural);
         out.append("    resource function post ").append(n.resource).append("(").append(n.insertWire).append("|")
@@ -584,8 +637,8 @@ public final class HttpDataServiceGenerator {
         out.append("    }").append(NEWLINE);
     }
 
-    private static void appendDoc(StringBuilder out, ExposedEntity entity, String summary, List<String> params,
-                                  String result) {
+    private void appendDoc(StringBuilder out, ExposedEntity entity, Operation action, String summary,
+                           List<String> params, String result) {
         out.append(NEWLINE).append("    # ").append(summary).append(NEWLINE);
         if (!entity.doc().isEmpty()) {
             out.append("    #").append(NEWLINE);
@@ -598,6 +651,12 @@ public final class HttpDataServiceGenerator {
             out.append("    # + ").append(param).append(NEWLINE);
         }
         out.append("    # + return - ").append(result).append(", or the error response").append(NEWLINE);
+        // An empty list requires only an authenticated caller, which the service's providers check.
+        List<String> scopes = entity.scopes(action);
+        if (auth && !scopes.isEmpty()) {
+            out.append("    @http:ResourceConfig {auth: {scopes: ").append(stringList(scopes)).append("}}")
+                    .append(NEWLINE);
+        }
     }
 
     private static List<String> keyDocs(ExposedEntity entity, Names n) {
@@ -809,10 +868,10 @@ public final class HttpDataServiceGenerator {
         }
         out.append(String.join("," + NEWLINE, members)).append(NEWLINE);
         out.append(indent).append("    ]");
-        if (withRelations && !entity.relations().isEmpty()) {
+        if (withRelations && !allowed(entity).isEmpty()) {
             out.append(",").append(NEWLINE).append(indent).append("    relations: [").append(NEWLINE);
             List<String> relations = new ArrayList<>();
-            for (ExposedRelation relation : entity.relations()) {
+            for (ExposedRelation relation : allowed(entity)) {
                 relations.add(indent + "        {" + NEWLINE
                         + indent + "            'field: \"" + unescape(relation.field()) + "\"," + NEWLINE
                         + indent + "            many: " + relation.many() + "," + NEWLINE

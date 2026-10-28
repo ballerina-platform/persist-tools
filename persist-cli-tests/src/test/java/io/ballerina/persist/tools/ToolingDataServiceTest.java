@@ -115,6 +115,50 @@ public class ToolingDataServiceTest {
         assertTestsPassed(bal(project, Map.of("TZ", "UTC"), "test", "--offline"), 56);
     }
 
+    @Test(description = "Authentication, scopes and refused relations of a service with auth, against H2")
+    public void testAuthBehaviourH2() throws IOException, InterruptedException {
+        Path project = SOURCES.resolve("tool_test_dataservice_auth");
+        Result build = bal(project, Map.of(), "build", "--offline");
+        assertSucceeded(build);
+        Assert.assertTrue(build.output().contains("WARNING: the relation 'employees' of the entity 'Department' is " +
+                "always refused in 'fields' and get related, because the 'read' scopes of 'Department' do not cover " +
+                "those of 'Employee'. Give both entities a shared 'read' scope."), build.output());
+        Path init = project.resolve("db").resolve("init.sql");
+        Files.createDirectories(init.getParent());
+        String schema = Files.readAllLines(project.resolve("generated").resolve("script.sql")).stream()
+                .filter(line -> !line.startsWith("DROP"))
+                .map(line -> line.replace("CREATE TABLE ", "CREATE TABLE IF NOT EXISTS "))
+                .collect(Collectors.joining(System.lineSeparator()));
+        Files.writeString(init, schema);
+        Files.writeString(project.resolve("tests").resolve("Config.toml"), String.format("""
+                dataservicePort = 9592
+
+                [[dataserviceAuth]]
+                [dataserviceAuth.fileUserStoreConfig]
+
+                [dataservice_test.dataservice_auth]
+                url = "jdbc:h2:mem:dsauth;DB_CLOSE_DELAY=-1;INIT=RUNSCRIPT FROM '%s'"
+                user = "sa"
+                password = ""
+
+                [[ballerina.auth.users]]
+                username = "reader"
+                password = "reader"
+                scopes = ["hr:read"]
+
+                [[ballerina.auth.users]]
+                username = "org"
+                password = "org"
+                scopes = ["org:read"]
+
+                [[ballerina.auth.users]]
+                username = "writer"
+                password = "writer"
+                scopes = ["employees:create"]
+                """, init.toString().replace('\\', '/')));
+        assertTestsPassed(bal(project, Map.of(), "test", "--offline"), 7);
+    }
+
     // Generation from bal build
 
     @Test(description = "The service is generated next to the client, with the default base path")
@@ -263,8 +307,6 @@ public class ToolingDataServiceTest {
                         "the protocol 'soap' is not supported yet. Supported values: http."},
                 {"rest", "options.dataservice.protocol = \"rest\"", null, MODEL,
                         "invalid 'options.dataservice.protocol' 'rest'. Supported values: http."},
-                {"auth", http + "\noptions.dataservice.auth = true", null, MODEL,
-                        "'options.dataservice.auth' is not supported yet."},
                 {"base_path_slash", http + "\noptions.dataservice.basePath = \"api\"", null, MODEL,
                         "invalid 'options.dataservice.basePath' 'api': the base path must start with '/'."},
                 {"base_path_segment", http + "\noptions.dataservice.basePath = \"/api//v1\"", null, MODEL,

@@ -154,6 +154,8 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
                 DataServiceModel.Resolution resolution = DataServiceModel.resolve(schemaFilePath, entityModule);
                 resolution.warnings().forEach(warning -> errStream.println("WARNING: " + warning));
                 exposedEntities = resolution.entities();
+                DataServiceModel.scopeWarnings(exposedEntities, dataServiceOptions.auth())
+                        .forEach(warning -> errStream.println("WARNING: " + warning));
             }
 
             Path ballerinaTomlPath = Paths.get(projectPath.toString(), BALLERINA_TOML);

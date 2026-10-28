@@ -101,6 +101,29 @@ public class DataServiceModelTest {
         Assert.assertTrue(exposed.stream().allMatch(entity -> entity.relations().isEmpty()));
     }
 
+    @Test
+    public void testScopeWarnings() throws BalException {
+        Path model = RESOURCES.resolve("auth").resolve("model.bal");
+        List<ExposedEntity> exposed = DataServiceModel.resolve(model, BalProjectUtils.getEntities(model)).entities();
+        Assert.assertEquals(exposed.get(0).scopes(Operation.READ), List.of("hr:read"));
+        Assert.assertEquals(exposed.get(0).scopes(Operation.CREATE), List.of("employees:create"));
+        Assert.assertEquals(exposed.get(1).scopes(Operation.CREATE), List.of());
+        Assert.assertEquals(DataServiceModel.scopeWarnings(exposed, true), List.of("the relation 'employees' of the " +
+                "entity 'Department' is always refused in 'fields' and get related, because the 'read' scopes of " +
+                "'Department' do not cover those of 'Employee'. Give both entities a shared 'read' scope."));
+        Assert.assertEquals(DataServiceModel.scopeWarnings(exposed, false), List.of(
+                "the @dataservice:Expose annotation of the entity 'Employee' sets scopes, but " +
+                        "'options.dataservice.auth' is not true, so no scope is checked.",
+                "the @dataservice:Expose annotation of the entity 'Department' sets scopes, but " +
+                        "'options.dataservice.auth' is not true, so no scope is checked."));
+    }
+
+    @Test
+    public void testDefaultScopesNeverCoverAnotherEntity() throws BalException {
+        List<ExposedEntity> exposed = employees(NO_RULES);
+        Assert.assertEquals(DataServiceModel.scopeWarnings(exposed, true).size(), 2);
+    }
+
     private static List<ExposedEntity> employees(FieldRules.Result rules) throws BalException {
         Path model = RESOURCES.resolve("employees").resolve("model.bal");
         return DataServiceModel.resolve(BalProjectUtils.getEntities(model), ExposeAnnotations.read(model), Map.of(),

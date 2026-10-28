@@ -41,13 +41,14 @@ public class HttpDataServiceGeneratorTest {
     private static final Path ACTUAL = Paths.get("build", "dataservice-actual").toAbsolutePath();
 
     @Test(dataProvider = "cases")
-    public void testGeneratedService(String model, String basePath, boolean introspection, boolean userOwned,
-                                     String expected, String expectedTypes) throws BalException, IOException {
+    public void testGeneratedService(String model, String basePath, boolean auth, boolean introspection,
+                                     boolean userOwned, String expected, String expectedTypes)
+            throws BalException, IOException {
         Path modelPath = RESOURCES.resolve(model).resolve("model.bal");
         Module module = BalProjectUtils.getEntities(modelPath);
         List<ExposedEntity> entities = DataServiceModel.resolve(modelPath, module).entities();
         HttpDataServiceGenerator generator = new HttpDataServiceGenerator(entities,
-                new DataServiceOptions("http", DataServiceOptions.validateBasePath(basePath), false, introspection),
+                new DataServiceOptions("http", DataServiceOptions.validateBasePath(basePath), auth, introspection),
                 module.getModuleName(), "h2", userOwned);
         assertSource(generator.generateService(), RESOURCES.resolve(model).resolve(expected));
         if (expectedTypes != null) {
@@ -58,17 +59,18 @@ public class HttpDataServiceGeneratorTest {
     @DataProvider
     public Object[][] cases() {
         return new Object[][]{
-                {"employees", "/api", true, false, "dataservice.bal", "dataservice_types.bal"},
-                {"employees", "/api", false, false, "no_introspection.bal", null},
-                {"employees", "/", true, false, "root_base_path.bal", null},
-                {"employees", "/hr/v1", true, false, "custom_base_path.bal", null},
-                {"employees", "/hr-data/v1.0", true, false, "quoted_base_path.bal", null},
-                {"employees", "/api", true, true, "user_owned.bal", "user_owned_types.bal"},
-                {"composite", "/api", true, false, "dataservice.bal", "dataservice_types.bal"},
-                {"wire", "/api", true, false, "dataservice.bal", "dataservice_types.bal"},
-                {"combinations", "/api", true, false, "dataservice.bal", "dataservice_types.bal"},
-                {"generated_key", "/api", true, false, "dataservice.bal", "dataservice_types.bal"},
-                {"rules", "/api", true, false, "dataservice.bal", "dataservice_types.bal"},
+                {"employees", "/api", false, true, false, "dataservice.bal", "dataservice_types.bal"},
+                {"employees", "/api", false, false, false, "no_introspection.bal", null},
+                {"employees", "/", false, true, false, "root_base_path.bal", null},
+                {"employees", "/hr/v1", false, true, false, "custom_base_path.bal", null},
+                {"employees", "/hr-data/v1.0", false, true, false, "quoted_base_path.bal", null},
+                {"employees", "/api", false, true, true, "user_owned.bal", "user_owned_types.bal"},
+                {"composite", "/api", false, true, false, "dataservice.bal", "dataservice_types.bal"},
+                {"wire", "/api", false, true, false, "dataservice.bal", "dataservice_types.bal"},
+                {"combinations", "/api", false, true, false, "dataservice.bal", "dataservice_types.bal"},
+                {"generated_key", "/api", false, true, false, "dataservice.bal", "dataservice_types.bal"},
+                {"rules", "/api", false, true, false, "dataservice.bal", "dataservice_types.bal"},
+                {"auth", "/api", true, false, false, "dataservice.bal", "dataservice_types.bal"},
         };
     }
 
@@ -90,6 +92,9 @@ public class HttpDataServiceGeneratorTest {
         HttpDataServiceGenerator userOwned = new HttpDataServiceGenerator(List.of(),
                 DataServiceOptions.defaults("http"), "model", "h2", true);
         assertSource(userOwned.generateConfig(), RESOURCES.resolve("dataservice_config_user_owned.bal"));
+        HttpDataServiceGenerator withAuth = new HttpDataServiceGenerator(List.of(),
+                new DataServiceOptions("http", "/api", true, false), "model", "h2", false);
+        assertSource(withAuth.generateConfig(), RESOURCES.resolve("dataservice_config_auth.bal"));
     }
 
     // The actual output is also written under build/ so that a changed expectation can be reviewed with a diff.

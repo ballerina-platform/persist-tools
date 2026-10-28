@@ -64,9 +64,6 @@ public record DataServiceOptions(String protocol, String basePath, boolean auth,
         String validProtocol = validateProtocol(protocol.toString());
         Object basePath = group.get(BASE_PATH);
         boolean auth = Boolean.parseBoolean(String.valueOf(group.get(AUTH)));
-        if (auth) {
-            throw new BalException(DataServiceMessages.AUTH_NOT_SUPPORTED_YET);
-        }
         Object introspection = group.get(INTROSPECTION);
         return new DataServiceOptions(validProtocol,
                 validateBasePath(basePath == null ? DEFAULT_HTTP_BASE_PATH : basePath.toString()), auth,
