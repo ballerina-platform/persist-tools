@@ -273,6 +273,18 @@ public class ToolingDbPullTest {
     }
 
     @Test(enabled = true)
+    @Description("Test --tables option generates only the enums used by the selected tables.")
+    public void pullTestMysqlTablesExcludesUnselectedEnums() throws BalException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
+        String subDir = "tool_test_pull_tables_enum_mysql";
+        createFromDatabaseScript(subDir, "mysql", mysqlDbConfig);
+        executePullCommandWithTables(subDir, "currency", mysqlDbConfig, "mysql");
+        assertGeneratedSources(subDir);
+    }
+
+    @Test(enabled = true)
     @Description("Test --tables option with partial invalid table names (should continue with valid ones).")
     public void pullTestMysqlPartialInvalidTables() throws BalException {
         if (OS.WINDOWS.isCurrentOs()) {

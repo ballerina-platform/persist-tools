@@ -50,6 +50,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static java.lang.Integer.parseInt;
 import static java.lang.Integer.parseUnsignedInt;
@@ -219,7 +221,10 @@ public abstract class Introspector {
             }
         }
 
-        this.sqlEnums = sr.getSQLEnums(this.getEnumsQuery());
+        Set<String> tableNames = this.tables.stream().map(SqlTable::getTableName).collect(Collectors.toSet());
+        this.sqlEnums = sr.getSQLEnums(this.getEnumsQuery()).stream()
+                .filter(sqlEnum -> tableNames.contains(sqlEnum.getEnumTableName()))
+                .collect(Collectors.toList());
         for (SqlTable table : tables) {
             sr.readColumnsOfSQLTable(table, this.getColumnsQuery(table.getTableName()));
             this.sqlForeignKeys
