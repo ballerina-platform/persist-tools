@@ -11,14 +11,16 @@ function testForeignKeyViolationOnUpdate() returns error? {
     });
 }
 
-// The persist SQL client raises a plain persist:Error for a foreign key violation on create.
 @test:Config {dependsOn: [testCreateOne]}
 function testForeignKeyViolationOnCreate() returns error? {
     map<json> dan = employee(40, "Dan");
     dan["departmentId"] = 99;
     http:Response response = check send("POST", "/api/employees", dan);
-    test:assertEquals(response.statusCode, 500);
-    test:assertEquals(check response.getJsonPayload(), {code: "INTERNAL", message: "An internal error occurred."});
+    test:assertEquals(response.statusCode, 409);
+    test:assertEquals(check response.getJsonPayload(), {
+        code: "CONSTRAINT_VIOLATION",
+        message: "The operation violates a constraint of the entity 'Employee'."
+    });
 }
 
 @test:Config
