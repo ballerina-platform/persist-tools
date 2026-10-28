@@ -113,10 +113,11 @@ public isolated client class Client {
     # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
     # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
     # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + offsetClause - Number of rows to skip before returning results (e.g., `10`)
     # + return - A collection of matching records or an error
-    isolated resource function get users(UserTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get users(UserTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``, sql:ParameterizedQuery offsetClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
-        name: "query"
+        name: "queryWithOffset"
     } external;
 
     # Get row from User table.
@@ -178,10 +179,11 @@ public isolated client class Client {
     # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
     # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
     # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + offsetClause - Number of rows to skip before returning results (e.g., `10`)
     # + return - A collection of matching records or an error
-    isolated resource function get cars(CarTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get cars(CarTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``, sql:ParameterizedQuery offsetClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
-        name: "query"
+        name: "queryWithOffset"
     } external;
 
     # Get row from Car table.
@@ -243,10 +245,11 @@ public isolated client class Client {
     # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
     # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
     # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + offsetClause - Number of rows to skip before returning results (e.g., `10`)
     # + return - A collection of matching records or an error
-    isolated resource function get user2s(User2TargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get user2s(User2TargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``, sql:ParameterizedQuery offsetClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
-        name: "query"
+        name: "queryWithOffset"
     } external;
 
     # Get row from User2 table.
@@ -311,10 +314,11 @@ public isolated client class Client {
     # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
     # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
     # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + offsetClause - Number of rows to skip before returning results (e.g., `10`)
     # + return - A collection of matching records or an error
-    isolated resource function get car2s(Car2TargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get car2s(Car2TargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``, sql:ParameterizedQuery offsetClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.MySQLProcessor",
-        name: "query"
+        name: "queryWithOffset"
     } external;
 
     # Get row from Car2 table.

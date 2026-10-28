@@ -40,9 +40,9 @@ public isolated client class Client {
         self.persistClients = {[MEDICAL_ITEM] : check new (dbClient, self.metadata.get(MEDICAL_ITEM), psql:POSTGRESQL_SPECIFICS)};
     }
 
-    isolated resource function get medicalitems(MedicalItemTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get medicalitems(MedicalItemTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``, sql:ParameterizedQuery offsetClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.PostgreSQLProcessor",
-        name: "query"
+        name: "queryWithOffset"
     } external;
 
     isolated resource function get medicalitems/[int itemId](MedicalItemTargetType targetType = <>) returns targetType|persist:Error = @java:Method {
