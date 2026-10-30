@@ -178,7 +178,7 @@ public type OrderRelatedPartial record {|
 
 # The orders included in a related record by the `fields` query parameter.
 #
-# + items - The orders, at most `dataservicePageSize`
+# + items - The orders, at most `dataserviceConfig.pageSize`
 # + hasMore - Whether more orders exist
 public type OrderRelatedPartialList record {|
     OrderRelatedPartial[] items;

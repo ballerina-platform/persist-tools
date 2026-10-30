@@ -13,7 +13,8 @@ import ballerina/persist;
 final Client dataserviceClient = check new ();
 
 # The listener of the data service.
-listener http:Listener dataserviceListener = new (dataservicePort, dataserviceListenerConfig);
+listener http:Listener dataserviceListener =
+        new (dataserviceConfig.port, dataserviceConfig.listenerConfig);
 
 @openapi:ServiceInfo {embed: true}
 service "/hr-data/v1.0" on dataserviceListener {

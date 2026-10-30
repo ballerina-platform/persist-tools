@@ -107,8 +107,9 @@ public final class HttpDataServiceGenerator {
         body.append("# The persist client that the data service uses.").append(NEWLINE);
         body.append("final Client dataserviceClient = check new ();").append(NEWLINE).append(NEWLINE);
         body.append("# The listener of the data service.").append(NEWLINE);
-        body.append("listener http:Listener dataserviceListener = new (dataservicePort, dataserviceListenerConfig);")
-                .append(NEWLINE).append(NEWLINE);
+        body.append("listener http:Listener dataserviceListener =").append(NEWLINE)
+                .append("        new (dataserviceConfig.port, dataserviceConfig.listenerConfig);").append(NEWLINE)
+                .append(NEWLINE);
         if (introspection) {
             imports.add("import ballerina/openapi;");
             body.append("@openapi:ServiceInfo {embed: true}").append(NEWLINE);
@@ -163,28 +164,35 @@ public final class HttpDataServiceGenerator {
      * @throws BalException if the source cannot be formatted
      */
     public String generateConfig() throws BalException {
-        String authValues = !auth ? "" : NEWLINE +
-                "# The authentication providers of the data service, such as a JWT validator." + NEWLINE +
-                "configurable http:ListenerAuthConfig[] dataserviceAuth = ?;" + NEWLINE + NEWLINE +
-                "# The authentication providers, checked at startup." + NEWLINE +
-                "final http:ListenerAuthConfig[] dataserviceAuthConfig = check dsHttp:authConfig(dataserviceAuth);" +
-                NEWLINE;
         return format(header(BalSyntaxConstants.AUTO_GENERATED_COMMENT) +
                 "import ballerina/dataservice;" + NEWLINE +
                 (auth ? "import ballerina/dataservice.http as dsHttp;" + NEWLINE : "") +
                 "import ballerina/http;" + NEWLINE + NEWLINE +
-                "# The port of the data service listener." + NEWLINE +
-                "configurable int dataservicePort = 9090;" + NEWLINE + NEWLINE +
-                "# The configuration of the data service listener." + NEWLINE +
-                "configurable http:ListenerConfiguration dataserviceListenerConfig = {};" + NEWLINE + NEWLINE +
-                "# The number of records in a page when the caller gives no size." + NEWLINE +
-                "configurable int dataservicePageSize = 100;" + NEWLINE + NEWLINE +
-                "# The largest page, and the most records one create can hold." + NEWLINE +
-                "configurable int dataserviceMaxPageSize = 1000;" + NEWLINE + NEWLINE +
+                "# The runtime settings of the data service, set in the `[dataserviceConfig]` table of Config.toml." +
+                NEWLINE +
+                "#" + NEWLINE +
+                "# + port - The port of the listener" + NEWLINE +
+                "# + listenerConfig - The other settings of the listener, such as TLS" + NEWLINE +
+                "# + pageSize - The number of records in a page when the caller gives no size" + NEWLINE +
+                "# + maxPageSize - The largest page, and the most records one create can hold" + NEWLINE +
+                (auth ? "# + auth - The authentication providers, such as a JWT validator" + NEWLINE : "") +
+                "type DataserviceConfig record {|" + NEWLINE +
+                "    int port = 9090;" + NEWLINE +
+                "    http:ListenerConfiguration listenerConfig = {};" + NEWLINE +
+                "    int pageSize = 100;" + NEWLINE +
+                "    int maxPageSize = 1000;" + NEWLINE +
+                (auth ? "    http:ListenerAuthConfig[] auth;" + NEWLINE : "") +
+                "|};" + NEWLINE + NEWLINE +
+                "# The runtime settings of the data service." + NEWLINE +
+                "configurable DataserviceConfig dataserviceConfig = " + (auth ? "?" : "{}") + ";" + NEWLINE + NEWLINE +
                 "# The page sizes, checked at startup." + NEWLINE +
                 "final dataservice:PageConfig dataservicePageConfig =" + NEWLINE +
-                "        check dataservice:pageConfig(dataservicePageSize, dataserviceMaxPageSize);" + NEWLINE +
-                authValues);
+                "        check dataservice:pageConfig(dataserviceConfig.pageSize, dataserviceConfig.maxPageSize);" +
+                NEWLINE +
+                (!auth ? "" : NEWLINE +
+                        "# The authentication providers, checked at startup." + NEWLINE +
+                        "final http:ListenerAuthConfig[] dataserviceAuthConfig =" + NEWLINE +
+                        "        check dsHttp:authConfig(dataserviceConfig.auth);" + NEWLINE));
     }
 
     private String header(String reason) {
@@ -224,7 +232,8 @@ public final class HttpDataServiceGenerator {
             appendDoc(out, entity, READ, "Gets " + n.article + " " + n.words + " by its key.", params,
                     "The " + n.words);
             out.append("    resource function get ").append(n.collection).append("/").append(keyParams)
-                    .append("(").append(requestParam(entity)).append("string[]? fields = ()) returns ").append(n.wire).append("|").append(n.partial)
+                    .append("(").append(requestParam(entity)).append("string[]? fields = ()) returns ").append(n.wire)
+                    .append("|").append(n.partial)
                     .append(errors(GET_ERRORS, !checked(entity).isEmpty())).append(" {").append(NEWLINE);
             appendKeyCheck(out, entity, n, keyList);
             appendForbiddenCheck(out, entity, n);
@@ -850,7 +859,8 @@ public final class HttpDataServiceGenerator {
             out.append(NEWLINE).append("# The ").append(n.plural)
                     .append(" included in a related record by the `fields` query parameter.").append(NEWLINE);
             out.append("#").append(NEWLINE);
-            out.append("# + items - The ").append(n.plural).append(", at most `dataservicePageSize`").append(NEWLINE);
+            out.append("# + items - The ").append(n.plural).append(", at most `dataserviceConfig.pageSize`")
+                    .append(NEWLINE);
             out.append("# + hasMore - Whether more ").append(n.plural).append(" exist").append(NEWLINE);
             out.append("public type ").append(n.relatedPartialList).append(" record {|").append(NEWLINE);
             out.append("    ").append(n.relatedPartial).append("[] items;").append(NEWLINE);

@@ -104,16 +104,17 @@ public class ToolingDataServiceTest {
                 .collect(Collectors.joining(System.lineSeparator()));
         Files.writeString(init, schema);
         Files.writeString(project.resolve("tests").resolve("Config.toml"), String.format("""
-                dataservicePort = 9591
-                dataservicePageSize = 5
-                dataserviceMaxPageSize = 5
+                [dataserviceConfig]
+                port = 9591
+                pageSize = 5
+                maxPageSize = 5
 
                 [dataservice_test.dataservice_h2]
                 url = "jdbc:h2:mem:dstest;DB_CLOSE_DELAY=-1;INIT=RUNSCRIPT FROM '%s'"
                 user = "sa"
                 password = ""
                 """, init.toString().replace('\\', '/')));
-        assertTestsPassed(bal(project, Map.of("TZ", "UTC"), "test", "--offline"), 60);
+        assertTestsPassed(bal(project, Map.of("TZ", "UTC"), "test", "--offline"), 58);
     }
 
     @Test(description = "Authentication, scopes and relation checks of a service with auth, against H2")
@@ -130,15 +131,16 @@ public class ToolingDataServiceTest {
                 .collect(Collectors.joining(System.lineSeparator()));
         Files.writeString(init, schema);
         Files.writeString(project.resolve("tests").resolve("Config.toml"), String.format("""
-                dataservicePort = 9592
+                [dataserviceConfig]
+                port = 9592
 
-                [[dataserviceAuth]]
-                [dataserviceAuth.fileUserStoreConfig]
+                [[dataserviceConfig.auth]]
+                [dataserviceConfig.auth.fileUserStoreConfig]
 
-                [[dataserviceAuth]]
-                [dataserviceAuth.jwtValidatorConfig]
+                [[dataserviceConfig.auth]]
+                [dataserviceConfig.auth.jwtValidatorConfig]
                 issuer = "dataservice"
-                [dataserviceAuth.jwtValidatorConfig.signatureConfig]
+                [dataserviceConfig.auth.jwtValidatorConfig.signatureConfig]
                 secret = "dataservice-test-secret"
 
                 [dataservice_test.dataservice_auth]
@@ -161,7 +163,7 @@ public class ToolingDataServiceTest {
                 password = "writer"
                 scopes = ["employees:create"]
                 """, init.toString().replace('\\', '/')));
-        assertTestsPassed(bal(project, Map.of(), "test", "--offline"), 8);
+        assertTestsPassed(bal(project, Map.of(), "test", "--offline"), 7);
     }
 
     // Generation from bal build

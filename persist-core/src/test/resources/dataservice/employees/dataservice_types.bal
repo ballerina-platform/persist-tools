@@ -104,7 +104,7 @@ public type EmployeeRelatedPartial record {|
 
 # The employees included in a related record by the `fields` query parameter.
 #
-# + items - The employees, at most `dataservicePageSize`
+# + items - The employees, at most `dataserviceConfig.pageSize`
 # + hasMore - Whether more employees exist
 public type EmployeeRelatedPartialList record {|
     EmployeeRelatedPartial[] items;

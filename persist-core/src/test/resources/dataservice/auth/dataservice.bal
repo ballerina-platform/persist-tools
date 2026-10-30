@@ -12,7 +12,8 @@ import ballerina/persist;
 final Client dataserviceClient = check new ();
 
 # The listener of the data service.
-listener http:Listener dataserviceListener = new (dataservicePort, dataserviceListenerConfig);
+listener http:Listener dataserviceListener =
+        new (dataserviceConfig.port, dataserviceConfig.listenerConfig);
 
 @http:ServiceConfig {auth: dataserviceAuthConfig}
 service /api on dataserviceListener {

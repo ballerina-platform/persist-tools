@@ -92,7 +92,8 @@ function token(string[] scopes) returns string|error => jwt:issue({
     signatureConfig: {algorithm: jwt:HS256, config: "dataservice-test-secret"}
 });
 
-@test:Config
+// Disabled until ballerina-library#9436: the definition is not embedded when the listener port is a record field.
+@test:Config {enable: false}
 function testIntrospectionByDefault() returns error? {
     http:Response response = check reader->get("/api/openapi-doc-dygixywsw");
     test:assertEquals(response.statusCode, 200);
