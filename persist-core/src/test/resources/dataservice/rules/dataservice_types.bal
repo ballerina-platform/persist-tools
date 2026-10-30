@@ -14,8 +14,8 @@ import ballerina/time;
 # + number - The `number` field of `Order`
 # + status - The `status` field of `Order`
 # + placedOn - The `placedOn` field of `Order`, as an ISO 8601 date
-# + customerId - The `customerId` field of `Order`
-# + warehouseId - The `warehouseId` field of `Order`
+# + customerId - The key of the related 'Customer'.
+# + warehouseId - The key of the related 'Warehouse'.
 public type OrderPayload record {|
     readonly int id;
     string number;
@@ -31,8 +31,8 @@ public type OrderPayload record {|
 # + number - The `number` field of `OrderInsert`
 # + status - The `status` field of `OrderInsert`
 # + placedOn - The `placedOn` field of `OrderInsert`, as an ISO 8601 date
-# + customerId - The `customerId` field of `OrderInsert`
-# + warehouseId - The `warehouseId` field of `OrderInsert`
+# + customerId - The key of the related 'Customer'.
+# + warehouseId - The key of the related 'Warehouse'.
 public type OrderInsertPayload record {|
     readonly int id;
     string number;
@@ -46,7 +46,7 @@ public type OrderInsertPayload record {|
 #
 # + status - The `status` field of `OrderUpdate`
 # + placedOn - The `placedOn` field of `OrderUpdate`, as an ISO 8601 date
-# + warehouseId - The `warehouseId` field of `OrderUpdate`
+# + warehouseId - The key of the related 'Warehouse'.
 public type OrderUpdatePayload record {|
     string status?;
     string placedOn?;
@@ -137,10 +137,9 @@ public type OrderFilter record {|
 # + number - The `number` field of `Order`
 # + status - The `status` field of `Order`
 # + placedOn - The `placedOn` field of `Order`, as an ISO 8601 date
-# + customerId - The `customerId` field of `Order`
-# + warehouseId - The `warehouseId` field of `Order`
+# + customerId - The key of the related 'Customer'.
+# + warehouseId - The key of the related 'Warehouse'.
 # + customer - The related customer, when `fields` names it
-# + warehouse - The related warehouse, when `fields` names it
 public type OrderPartial record {|
     int id;
     string number?;
@@ -149,7 +148,6 @@ public type OrderPartial record {|
     int customerId?;
     int warehouseId?;
     CustomerRelatedPartial? customer?;
-    WarehouseRelatedPartial? warehouse?;
 |};
 
 # A list of orders with the fields named in the `fields` query parameter.
@@ -167,8 +165,8 @@ public type OrderPartialList record {|
 # + number - The `number` field of `Order`
 # + status - The `status` field of `Order`
 # + placedOn - The `placedOn` field of `Order`, as an ISO 8601 date
-# + customerId - The `customerId` field of `Order`
-# + warehouseId - The `warehouseId` field of `Order`
+# + customerId - The key of the related 'Customer'.
+# + warehouseId - The key of the related 'Warehouse'.
 public type OrderRelatedPartial record {|
     int id;
     string number?;
@@ -213,21 +211,6 @@ final dataservice:Entity dataserviceOrderEntity = {
                 fields: [
                     {name: "id", column: "id", 'type: dataservice:INT, key: true},
                     {name: "name", column: "name", 'type: dataservice:STRING}
-                ]
-            }
-        },
-        {
-            'field: "warehouse",
-            many: false,
-            fields: ["warehouseId"],
-            targetFields: ["id"],
-            target: {
-                name: "Warehouse",
-                'resource: "warehouses",
-                datastore: dataservice:H2,
-                fields: [
-                    {name: "id", column: "id", 'type: dataservice:INT, key: true},
-                    {name: "city", column: "city", 'type: dataservice:STRING}
                 ]
             }
         }
@@ -420,15 +403,6 @@ public type WarehousePartial record {|
 public type WarehousePartialList record {|
     WarehousePartial[] items;
     boolean hasMore;
-|};
-
-# A warehouse included in a related record by the `fields` query parameter.
-#
-# + id - The `id` field of `Warehouse`
-# + city - The `city` field of `Warehouse`
-public type WarehouseRelatedPartial record {|
-    int id;
-    string city?;
 |};
 
 # The description of `Warehouse` that `ballerina/dataservice` builds queries from.

@@ -26,6 +26,7 @@ import io.ballerina.compiler.syntax.tree.MetadataNode;
 import io.ballerina.compiler.syntax.tree.ModuleMemberDeclarationNode;
 import io.ballerina.compiler.syntax.tree.ModulePartNode;
 import io.ballerina.compiler.syntax.tree.Node;
+import io.ballerina.compiler.syntax.tree.OptionalTypeDescriptorNode;
 import io.ballerina.compiler.syntax.tree.QualifiedNameReferenceNode;
 import io.ballerina.compiler.syntax.tree.RecordFieldNode;
 import io.ballerina.compiler.syntax.tree.RecordFieldWithDefaultValueNode;
@@ -78,8 +79,7 @@ public final class FieldRules {
     /**
      * The rules of a model.
      *
-     * @param rules    per entity, the rule of each field that has one. The owning side of a relation also has an
-     *                 entry per foreign key field, with that field's part of the value
+     * @param rules    per entity, the rule of each field that has one, foreign key fields included
      * @param warnings the warnings to print
      */
     public record Result(Map<String, Map<String, Applied>> rules, List<String> warnings) {
@@ -129,66 +129,67 @@ public final class FieldRules {
             }
             Map<String, String> declaredKeys = declaredForeignKeys(record, sqlPrefix);
             Map<String, Applied> entityRules = new LinkedHashMap<>();
+            Map<String, Optional<FieldRule>> keyRules = new LinkedHashMap<>();
+            String entityName = entity.getEntityName();
+            EnumSet<Operation> operations = exposed.get(entityName);
             for (Node node : record.fields()) {
                 Optional<RuleField> field = RuleField.of(node);
                 if (field.isEmpty()) {
                     continue;
                 }
                 List<AnnotationNode> annotations = ruleAnnotations(field.get().metadata(), prefix.get());
+                String name = field.get().name();
+                if (declaredKeys.containsKey(name)) {
+                    keyRules.put(name, annotations.size() == 1 ? Optional.of(ruleOf(annotations.get(0)))
+                            : Optional.empty());
+                }
                 if (annotations.isEmpty()) {
                     continue;
                 }
-                String name = field.get().name();
-                String entityName = entity.getEntityName();
                 if (annotations.size() > 1) {
                     errors.add(String.format(DataServiceMessages.RULE_MORE_THAN_ONE, name, entityName));
                     continue;
                 }
                 FieldRule rule = ruleOf(annotations.get(0));
                 Optional<ExpressionNode> value = value(annotations.get(0));
-                if (declaredKeys.containsKey(name)) {
-                    errors.add(String.format(DataServiceMessages.RULE_ON_DECLARED_FK, rule.annotation(), name,
-                            entityName, declaredKeys.get(name)));
-                    continue;
-                }
+                Optional<Relation.Key> foreignKey = declaredKeys.containsKey(name) ?
+                        foreignKey(entity, declaredKeys.get(name), name) : Optional.empty();
                 EntityField entityField = entity.getFieldByName(name);
-                if (entityField == null) {
+                if (entityField == null && foreignKey.isEmpty()) {
                     continue;
                 }
-                if (field.get().key() && !(rule == FieldRule.READ_ONLY && entityField.isDbGenerated())) {
+                boolean generated = entityField != null && entityField.isDbGenerated();
+                if (field.get().key() && !(rule == FieldRule.READ_ONLY && generated)) {
                     errors.add(String.format(DataServiceMessages.RULE_ON_KEY, name, entityName, rule.annotation()));
                     continue;
                 }
-                Relation relation = entityField.getRelation();
-                if (relation != null && !relation.isOwner()) {
+                EnumSet<Operation> affected = rule.affected();
+                if (entityField != null && entityField.getRelation() != null) {
                     if (rule != FieldRule.INTERNAL) {
-                        errors.add(String.format(DataServiceMessages.RULE_ON_RELATION_WITHOUT_FK, rule.annotation(),
+                        errors.add(String.format(DataServiceMessages.RULE_ON_RELATION_FIELD, rule.annotation(),
                                 name, entityName));
                         continue;
                     }
-                } else if (!checkValue(rule, value, entityField, module, entityName, errors)) {
-                    continue;
-                }
-                Applied applied = new Applied(rule, value.map(expression -> expression.toSourceCode().trim()));
-                entityRules.put(name, applied);
-                if (relation != null && relation.isOwner()) {
-                    List<Relation.Key> keys = relation.getKeyColumns();
-                    for (int i = 0; i < keys.size(); i++) {
-                        Optional<String> part = value.isEmpty() ? Optional.empty() : Optional.of(
-                                (keys.size() > 1 && value.get() instanceof ListConstructorExpressionNode list ?
-                                        list.expressions().get(i) : value.get()).toSourceCode().trim());
-                        entityRules.put(keys.get(i).getField(), new Applied(rule, part));
+                    affected = EnumSet.of(Operation.READ);
+                } else {
+                    String fieldType = foreignKey.map(Relation.Key::getType)
+                            .orElseGet(() -> entityField.getFieldType());
+                    boolean array = entityField != null && entityField.isArrayType();
+                    if (!checkValue(rule, value, name, fieldType, array, field.get().nullable(), generated, module,
+                            entityName, errors)) {
+                        continue;
                     }
                 }
-                EnumSet<Operation> operations = exposed.get(entityName);
-                if (operations != null && rule.affected().stream().noneMatch(operations::contains)) {
+                entityRules.put(name, new Applied(rule, value.map(expression -> expression.toSourceCode().trim())));
+                if (operations != null && affected.stream().noneMatch(operations::contains)) {
                     warnings.add(String.format(DataServiceMessages.RULE_NO_EFFECT, rule.annotation(), name,
-                            entityName, rule.affected().stream().map(Operation::value)
+                            entityName, affected.stream().map(Operation::value)
                                     .collect(Collectors.joining("' or '"))));
                 }
             }
+            checkForeignKeys(entity, declaredKeys, keyRules, operations, errors);
             if (!entityRules.isEmpty()) {
-                rules.put(entity.getEntityName(), entityRules);
+                rules.put(entityName, entityRules);
             }
         }
         if (!errors.isEmpty()) {
@@ -197,42 +198,68 @@ public final class FieldRules {
         return new Result(rules, warnings);
     }
 
+    // The foreign key fields of a relation share one rule, and a one-to-one foreign key cannot be set by the service.
+    private static void checkForeignKeys(Entity entity, Map<String, String> declaredKeys,
+                                         Map<String, Optional<FieldRule>> keyRules, EnumSet<Operation> operations,
+                                         List<String> errors) {
+        Map<String, List<String>> byRelation = new LinkedHashMap<>();
+        keyRules.keySet().forEach(key -> byRelation.computeIfAbsent(declaredKeys.get(key), name -> new ArrayList<>())
+                .add(key));
+        byRelation.forEach((relation, keys) -> {
+            if (keys.stream().map(keyRules::get).distinct().count() > 1) {
+                errors.add(String.format(DataServiceMessages.RULE_FOREIGN_KEYS_DIFFER, relation,
+                        entity.getEntityName()));
+                return;
+            }
+            EntityField relationField = entity.getFieldByName(relation);
+            if (operations == null || !operations.contains(Operation.CREATE) || relationField == null
+                    || !isOneToOne(entity, relationField)) {
+                return;
+            }
+            for (String key : keys) {
+                keyRules.get(key).filter(rule -> rule == FieldRule.READ_ONLY || rule == FieldRule.INTERNAL)
+                        .ifPresent(rule -> errors.add(String.format(DataServiceMessages.RULE_ON_ONE_TO_ONE_FK,
+                                rule.annotation(), key, entity.getEntityName())));
+            }
+        });
+    }
+
+    private static boolean isOneToOne(Entity entity, EntityField field) {
+        Relation relation = field.getRelation();
+        if (relation == null || !relation.isOwner() || field.isArrayType()) {
+            return false;
+        }
+        return relation.getAssocEntity().getFields().stream().anyMatch(other -> other.getRelation() != null
+                && !other.getRelation().isOwner() && !other.isArrayType()
+                && other.getRelation().getAssocEntity().getEntityName().equals(entity.getEntityName())
+                && other.getRelation().getKeyColumns().stream().map(Relation.Key::getReference).toList()
+                        .equals(relation.getKeyColumns().stream().map(Relation.Key::getField).toList()));
+    }
+
+    private static Optional<Relation.Key> foreignKey(Entity entity, String relation, String field) {
+        EntityField relationField = entity.getFieldByName(relation);
+        if (relationField == null || relationField.getRelation() == null) {
+            return Optional.empty();
+        }
+        return relationField.getRelation().getKeyColumns().stream().filter(key -> key.getField().equals(field))
+                .findFirst();
+    }
+
     // Checks that a rule that sets the field on create has a value it can set, of the field's type.
-    private static boolean checkValue(FieldRule rule, Optional<ExpressionNode> value, EntityField field,
-                                      Module module, String entity, List<String> errors) {
-        boolean nullable = field.isOptionalType();
+    private static boolean checkValue(FieldRule rule, Optional<ExpressionNode> value, String name, String type,
+                                      boolean array, boolean nullable, boolean generated, Module module,
+                                      String entity, List<String> errors) {
         if (value.isEmpty()) {
-            if (rule != FieldRule.IMMUTABLE && !nullable && !field.isDbGenerated()) {
-                errors.add(String.format(DataServiceMessages.RULE_NEEDS_VALUE, field.getFieldName(), entity,
-                        rule.annotation()));
+            if (rule != FieldRule.IMMUTABLE && !nullable && !generated) {
+                errors.add(String.format(DataServiceMessages.RULE_NEEDS_VALUE, name, entity, rule.annotation()));
                 return false;
             }
             return true;
         }
-        boolean matches;
-        String typeName;
-        Relation relation = field.getRelation();
-        if (relation != null) {
-            List<String> keyTypes = relation.getKeyColumns().stream().map(Relation.Key::getType).toList();
-            typeName = (keyTypes.size() == 1 ? keyTypes.get(0) : "[" + String.join(", ", keyTypes) + "]") +
-                    (nullable ? "?" : "");
-            if (keyTypes.size() == 1 || isNil(value.get())) {
-                matches = matches(value.get(), keyTypes.get(0), nullable, module);
-            } else {
-                matches = value.get() instanceof ListConstructorExpressionNode list
-                        && list.expressions().size() == keyTypes.size();
-                for (int i = 0; matches && i < keyTypes.size(); i++) {
-                    matches = matches((ExpressionNode) ((ListConstructorExpressionNode) value.get()).expressions()
-                            .get(i), keyTypes.get(i), false, module);
-                }
-            }
-        } else {
-            typeName = field.getFieldType() + (field.isArrayType() ? "[]" : "") + (nullable ? "?" : "");
-            matches = !field.isArrayType() && matches(value.get(), field.getFieldType(), nullable, module);
-        }
+        boolean matches = !array && matches(value.get(), type, nullable, module);
         if (!matches) {
-            errors.add(String.format(DataServiceMessages.RULE_VALUE_TYPE, rule.annotation(), field.getFieldName(),
-                    entity, typeName));
+            errors.add(String.format(DataServiceMessages.RULE_VALUE_TYPE, rule.annotation(), name, entity,
+                    type + (array ? "[]" : "") + (nullable ? "?" : "")));
         }
         return matches;
     }
@@ -363,16 +390,16 @@ public final class FieldRules {
                 && prefix.equals(reference.modulePrefix().text()) && name.equals(reference.identifier().text().trim());
     }
 
-    private record RuleField(String name, boolean key, Optional<MetadataNode> metadata) {
+    private record RuleField(String name, boolean key, boolean nullable, Optional<MetadataNode> metadata) {
 
         private static Optional<RuleField> of(Node node) {
             if (node instanceof RecordFieldNode field) {
                 return Optional.of(new RuleField(field.fieldName().text().trim(), field.readonlyKeyword().isPresent(),
-                        field.metadata()));
+                        field.typeName() instanceof OptionalTypeDescriptorNode, field.metadata()));
             }
             if (node instanceof RecordFieldWithDefaultValueNode field) {
                 return Optional.of(new RuleField(field.fieldName().text().trim(), field.readonlyKeyword().isPresent(),
-                        field.metadata()));
+                        field.typeName() instanceof OptionalTypeDescriptorNode, field.metadata()));
             }
             return Optional.empty();
         }

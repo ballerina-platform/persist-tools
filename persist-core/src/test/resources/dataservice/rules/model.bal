@@ -1,6 +1,7 @@
 import ballerina/dataservice;
 import ballerina/persist as _;
 import ballerina/time;
+import ballerinax/persist.sql;
 
 @dataservice:Expose
 type Order record {|
@@ -15,8 +16,13 @@ type Order record {|
     int tenantId;
     time:Date placedOn;
     @dataservice:Immutable
+    int customerId;
+    @sql:Relation {keys: ["customerId"]}
     Customer customer;
     @dataservice:ReadOnly {value: 7}
+    int warehouseId;
+    @sql:Relation {keys: ["warehouseId"]}
+    @dataservice:Internal
     Warehouse warehouse;
 |};
 

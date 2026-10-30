@@ -788,7 +788,8 @@ public final class HttpDataServiceGenerator {
                 .append(" with the fields named in the `fields` query parameter.").append(NEWLINE);
         out.append("#").append(NEWLINE);
         for (ServiceField field : fields) {
-            out.append("# + ").append(field.name()).append(" - ").append(fieldDoc(field, n.entity)).append(NEWLINE);
+            out.append("# + ").append(field.name()).append(" - ").append(fieldDoc(field, n.entity, entity))
+                    .append(NEWLINE);
         }
         for (ExposedRelation relation : entity.relations()) {
             out.append("# + ").append(relation.field()).append(" - The related ")
@@ -830,7 +831,8 @@ public final class HttpDataServiceGenerator {
         out.append("#").append(NEWLINE);
         List<ServiceField> fields = returned(entity.fields());
         for (ServiceField field : fields) {
-            out.append("# + ").append(field.name()).append(" - ").append(fieldDoc(field, n.entity)).append(NEWLINE);
+            out.append("# + ").append(field.name()).append(" - ").append(fieldDoc(field, n.entity, entity))
+                    .append(NEWLINE);
         }
         out.append("public type ").append(n.relatedPartial).append(" record {|").append(NEWLINE);
         for (ServiceField field : fields) {
@@ -925,7 +927,7 @@ public final class HttpDataServiceGenerator {
         out.append(NEWLINE).append("# ").append(doc).append(NEWLINE);
         out.append("#").append(NEWLINE);
         for (ServiceField field : fields) {
-            out.append("# + ").append(field.name()).append(" - ").append(fieldDoc(field, persistType))
+            out.append("# + ").append(field.name()).append(" - ").append(fieldDoc(field, persistType, entity))
                     .append(NEWLINE);
         }
         out.append("public type ").append(name).append(" record {|").append(NEWLINE);
@@ -954,7 +956,11 @@ public final class HttpDataServiceGenerator {
         out.append("|};").append(NEWLINE);
     }
 
-    private static String fieldDoc(ServiceField field, String persistType) {
+    private static String fieldDoc(ServiceField field, String persistType, ExposedEntity entity) {
+        Optional<String> target = entity.foreignKeyTarget(field.name());
+        if (target.isPresent()) {
+            return "The key of the related '" + target.get() + "'.";
+        }
         String doc = "The `" + unescape(field.name()) + "` field of `" + persistType + "`";
         if (field.conversion().isEmpty()) {
             return doc;

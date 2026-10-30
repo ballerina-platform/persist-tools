@@ -130,3 +130,38 @@ type Charter record {|
     string text;
     Team team;
 |};
+
+@dataservice:Expose
+type Deck record {|
+    readonly int id;
+    string label;
+    Card[] cards;
+|};
+
+@dataservice:Expose
+type Card record {|
+    readonly int id;
+    string title;
+    @dataservice:Immutable
+    int deckId;
+    @sql:Relation {keys: ["deckId"]}
+    @dataservice:Internal
+    Deck deck;
+|};
+
+@dataservice:Expose
+type Bin record {|
+    readonly int id;
+    string label;
+    Item[] items;
+|};
+
+@dataservice:Expose
+type Item record {|
+    readonly int id;
+    string name;
+    @dataservice:Internal {value: 1}
+    int binId;
+    @sql:Relation {keys: ["binId"]}
+    Bin bin;
+|};

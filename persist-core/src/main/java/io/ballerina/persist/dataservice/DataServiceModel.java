@@ -109,8 +109,8 @@ public final class DataServiceModel {
                 readableRelations(entityModule.getEntityMap().get(entity.name()), byName, rules))).toList();
     }
 
-    // A relation is readable when both entities allow read and no Internal rule hides it. Internal on the owning
-    // side hides both sides, because the other side filters on the hidden foreign key.
+    // A relation is readable when both entities allow read and neither its relation field nor its foreign key is
+    // Internal. An Internal foreign key hides both sides, because reading either side filters on it.
     private static List<ExposedRelation> readableRelations(Entity entity, Map<String, ExposedEntity> exposed,
                                                            FieldRules.Result rules) {
         List<ExposedRelation> relations = new ArrayList<>();
@@ -131,12 +131,10 @@ public final class DataServiceModel {
             List<Relation.Key> keys = relation.getKeyColumns();
             List<String> fields = keys.stream().map(Relation.Key::getField).toList();
             List<String> targetFields = keys.stream().map(Relation.Key::getReference).toList();
-            if (!relation.isOwner() && target.getFields().stream().anyMatch(owning -> owning.getRelation() != null
-                    && owning.getRelation().isOwner()
-                    && owning.getRelation().getAssocEntity().getEntityName().equals(entity.getEntityName())
-                    && owning.getRelation().getKeyColumns().stream().map(Relation.Key::getField).toList()
-                            .equals(targetFields)
-                    && isInternal(rules.of(target.getEntityName()).get(owning.getFieldName())))) {
+            Map<String, FieldRules.Applied> ownerRules = rules.of(relation.isOwner() ? entity.getEntityName() :
+                    target.getEntityName());
+            List<String> foreignKey = relation.isOwner() ? fields : targetFields;
+            if (foreignKey.stream().anyMatch(key -> isInternal(ownerRules.get(key)))) {
                 continue;
             }
             relations.add(new ExposedRelation(field.getFieldName(), target.getEntityName(), field.isArrayType(),

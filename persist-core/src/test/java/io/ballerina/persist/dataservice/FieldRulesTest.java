@@ -43,30 +43,73 @@ public class FieldRulesTest {
             "import ballerinax/persist.sql;\n\n";
     private static final String DEPARTMENT = "\n@dataservice:Expose\ntype Department record {|\n" +
             "    readonly int id;\n    string name;\n    Employee[] employees;\n|};\n";
+    private static final String ONE_TO_ONE = "@dataservice:Expose\ntype Profile record {|\n    readonly int id;\n" +
+            "    @dataservice:ReadOnly {value: 1}\n    int employeeId;\n" +
+            "    @sql:Relation {keys: [\"employeeId\"]}\n    Employee employee;\n|};\n\n" +
+            "@dataservice:Expose\ntype Employee record {|\n    readonly int id;\n    Profile? profile;\n|};\n";
 
     @Test
     public void testRulesAndForeignKeyValues() throws BalException, IOException {
         FieldRules.Result result = resolve(IMPORTS + "@dataservice:Expose\ntype Employee record {|\n" +
                 "    readonly int id;\n    @dataservice:ReadOnly {value: \"new\"}\n    string state;\n" +
-                "    @dataservice:Internal\n    string? notes;\n    @dataservice:Immutable\n" +
-                "    Department department;\n|};\n" + DEPARTMENT);
+                "    @dataservice:Internal\n    string? notes;\n    @dataservice:Immutable\n    int deptId;\n" +
+                "    @sql:Relation {keys: [\"deptId\"]}\n    @dataservice:Internal\n    Department department;\n|};\n" +
+                DEPARTMENT);
         Assert.assertEquals(result.of("Employee"), Map.of(
                 "state", new FieldRules.Applied(FieldRule.READ_ONLY, Optional.of("\"new\"")),
                 "notes", new FieldRules.Applied(FieldRule.INTERNAL, Optional.empty()),
-                "department", new FieldRules.Applied(FieldRule.IMMUTABLE, Optional.empty()),
-                "departmentId", new FieldRules.Applied(FieldRule.IMMUTABLE, Optional.empty())));
+                "deptId", new FieldRules.Applied(FieldRule.IMMUTABLE, Optional.empty()),
+                "department", new FieldRules.Applied(FieldRule.INTERNAL, Optional.empty())));
         Assert.assertTrue(result.warnings().isEmpty());
     }
 
     @Test
     public void testCompositeForeignKeyValue() throws BalException, IOException {
         FieldRules.Result result = resolve(IMPORTS + "@dataservice:Expose\ntype Line record {|\n" +
-                "    readonly int id;\n    @dataservice:ReadOnly {value: [\"P1\", 2]}\n    Slot slot;\n|};\n\n" +
+                "    readonly int id;\n    @dataservice:ReadOnly {value: \"P1\"}\n    string slotCode;\n" +
+                "    @dataservice:ReadOnly {value: 2}\n    int slotSeq;\n" +
+                "    @sql:Relation {keys: [\"slotCode\", \"slotSeq\"]}\n    Slot slot;\n|};\n\n" +
                 "type Slot record {|\n    readonly string code;\n    readonly int seq;\n    Line[] lines;\n|};\n");
         Assert.assertEquals(result.of("Line").get("slotCode"),
                 new FieldRules.Applied(FieldRule.READ_ONLY, Optional.of("\"P1\"")));
         Assert.assertEquals(result.of("Line").get("slotSeq"),
                 new FieldRules.Applied(FieldRule.READ_ONLY, Optional.of("2")));
+    }
+
+    @Test
+    public void testForeignKeyRulesDiffer() throws IOException {
+        BalException error = Assert.expectThrows(BalException.class, () -> resolve(IMPORTS +
+                "@dataservice:Expose\ntype Line record {|\n    readonly int id;\n    @dataservice:Immutable\n" +
+                "    string slotCode;\n    int slotSeq;\n    @sql:Relation {keys: [\"slotCode\", \"slotSeq\"]}\n" +
+                "    Slot slot;\n|};\n\ntype Slot record {|\n    readonly string code;\n    readonly int seq;\n" +
+                "    Line[] lines;\n|};\n"));
+        Assert.assertEquals(error.getMessage(), "the foreign key fields of the relation 'slot' of the entity " +
+                "'Line' must have the same field rule.");
+    }
+
+    @Test
+    public void testOneToOneForeignKeyWithoutCreate() throws BalException, IOException {
+        FieldRules.Result result = resolve(IMPORTS + ONE_TO_ONE.replace("@dataservice:Expose\ntype Profile",
+                "@dataservice:Expose {operations: [dataservice:READ, dataservice:UPDATE]}\ntype Profile"));
+        Assert.assertEquals(result.of("Profile").get("employeeId"),
+                new FieldRules.Applied(FieldRule.READ_ONLY, Optional.of("1")));
+    }
+
+    @Test
+    public void testOneToOneForeignKey() throws IOException {
+        BalException error = Assert.expectThrows(BalException.class, () -> resolve(IMPORTS + ONE_TO_ONE));
+        Assert.assertEquals(error.getMessage(), "@dataservice:ReadOnly cannot be used on the foreign key field " +
+                "'employeeId' of the entity 'Profile', because its relation is one to one and every create would " +
+                "set the same value.");
+    }
+
+    @Test
+    public void testRelationNoEffectWarning() throws BalException, IOException {
+        FieldRules.Result result = resolve(IMPORTS + "@dataservice:Expose {operations: [dataservice:CREATE]}\n" +
+                "type Employee record {|\n    readonly int id;\n    @dataservice:Internal\n" +
+                "    Department department;\n|};\n" + DEPARTMENT);
+        Assert.assertEquals(result.warnings(), List.of("@dataservice:Internal on the field 'department' of the " +
+                "entity 'Employee' has no effect, because the entity does not allow 'read'."));
     }
 
     @Test
@@ -89,7 +132,8 @@ public class FieldRulesTest {
                 "@dataservice:Expose\ntype Employee record {|\n    readonly int id;\n    Department department;\n" +
                 "|};\n" + department));
         Assert.assertEquals(error.getMessage(), "@dataservice:ReadOnly cannot be used on the relation field " +
-                "'employees' of the entity 'Department', which has no foreign key.");
+                "'employees' of the entity 'Department'. Use it on the foreign key field, declared with " +
+                "@sql:Relation.");
     }
 
     @Test(dataProvider = "errors")
@@ -117,16 +161,16 @@ public class FieldRulesTest {
                 {"    readonly int id;\n    @dataservice:ReadOnly {value: 1}\n    string name;\n" + relation,
                         "the 'value' in @dataservice:ReadOnly of the field 'name' of the entity 'Employee' is " +
                                 "not a 'string'."},
-                {"    readonly int id;\n    @dataservice:ReadOnly {value: \"x\"}\n" + relation,
-                        "the 'value' in @dataservice:ReadOnly of the field 'department' of the entity " +
+                {"    readonly int id;\n    @dataservice:ReadOnly {value: \"x\"}\n    int deptId;\n" +
+                        "    @sql:Relation {keys: [\"deptId\"]}\n" + relation,
+                        "the 'value' in @dataservice:ReadOnly of the field 'deptId' of the entity " +
                                 "'Employee' is not a 'int'."},
+                {"    readonly int id;\n    @dataservice:Immutable\n" + relation,
+                        "@dataservice:Immutable cannot be used on the relation field 'department' of the entity " +
+                                "'Employee'. Use it on the foreign key field, declared with @sql:Relation."},
                 {"    readonly int id;\n    @dataservice:ReadOnly {value: LIMIT}\n    int quota;\n" + relation,
                         "the 'value' in @dataservice:ReadOnly of the field 'quota' of the entity 'Employee' is " +
                                 "not a 'int'."},
-                {"    readonly int id;\n    @dataservice:Immutable\n    int deptId;\n" +
-                        "    @sql:Relation {keys: [\"deptId\"]}\n" + relation,
-                        "@dataservice:Immutable cannot be used on the foreign key field 'deptId' of the entity " +
-                                "'Employee'. Use it on the relation field 'department'."},
         };
     }
 

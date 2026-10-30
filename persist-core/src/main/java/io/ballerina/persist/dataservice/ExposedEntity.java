@@ -47,12 +47,13 @@ public final class ExposedEntity {
     private final List<ExposedRelation> relations;
     private final Map<Operation, List<String>> scopes;
     private final Map<String, List<String>> constraints;
+    private final Map<String, String> foreignKeys;
 
     private ExposedEntity(String name, String resourceName, EnumSet<Operation> operations,
                           List<ServiceField> fields, List<ServiceField> insertFields,
                           List<ServiceField> updateFields, List<String> doc, List<Column> columns,
                           List<ExposedRelation> relations, Map<Operation, List<String>> scopes,
-                          Map<String, List<String>> constraints) {
+                          Map<String, List<String>> constraints, Map<String, String> foreignKeys) {
         this.name = name;
         this.resourceName = resourceName;
         this.operations = EnumSet.copyOf(operations);
@@ -64,6 +65,7 @@ public final class ExposedEntity {
         this.relations = relations;
         this.scopes = scopes;
         this.constraints = constraints;
+        this.foreignKeys = foreignKeys;
     }
 
     /**
@@ -82,12 +84,14 @@ public final class ExposedEntity {
         List<ServiceField> updateFields = new ArrayList<>();
         List<Column> columns = new ArrayList<>();
         Map<String, List<String>> constraints = new LinkedHashMap<>();
+        Map<String, String> foreignKeys = new LinkedHashMap<>();
         for (EntityField field : entity.getFields()) {
             boolean isKey = entity.getKeys().stream().anyMatch(key -> key == field);
             if (field.getRelation() != null) {
                 if (field.getRelation().isOwner()) {
                     for (Relation.Key key : field.getRelation().getKeyColumns()) {
                         FieldRules.Applied rule = rules.get(key.getField());
+                        foreignKeys.put(key.getField(), field.getRelation().getAssocEntity().getEntityName());
                         field.getRelation().getAssocEntity().getFields().stream()
                                 .filter(target -> target.getFieldName().equals(key.getReference())).findFirst()
                                 .ifPresent(target -> constraints.put(key.getField(), constraintsOf(target)));
@@ -125,7 +129,8 @@ public final class ExposedEntity {
         boolean generated = entity.getFields().stream().anyMatch(EntityField::isDbGenerated);
         return new ExposedEntity(entity.getEntityName(), entity.getClientResourceName(), operations,
                 List.copyOf(fields), generated ? List.copyOf(insertFields) : null, List.copyOf(updateFields),
-                List.copyOf(doc), List.copyOf(columns), List.of(), Map.of(), Map.copyOf(constraints));
+                List.copyOf(doc), List.copyOf(columns), List.of(), Map.of(), Map.copyOf(constraints),
+                Map.copyOf(foreignKeys));
     }
 
     private static List<String> constraintsOf(EntityField field) {
@@ -142,7 +147,7 @@ public final class ExposedEntity {
      */
     public ExposedEntity withRelations(List<ExposedRelation> readable) {
         return new ExposedEntity(name, resourceName, operations, fields, insertFields, updateFields, doc, columns,
-                List.copyOf(readable), scopes, constraints);
+                List.copyOf(readable), scopes, constraints, foreignKeys);
     }
 
     /**
@@ -153,7 +158,7 @@ public final class ExposedEntity {
      */
     public ExposedEntity withScopes(Map<Operation, List<String>> listed) {
         return new ExposedEntity(name, resourceName, operations, fields, insertFields, updateFields, doc, columns,
-                relations, Map.copyOf(listed), constraints);
+                relations, Map.copyOf(listed), constraints, foreignKeys);
     }
 
     /**
@@ -165,6 +170,16 @@ public final class ExposedEntity {
      */
     public List<String> constraints(String field) {
         return constraints.getOrDefault(field, List.of());
+    }
+
+    /**
+     * Returns the entity a foreign key field references.
+     *
+     * @param field the field name, as written in the model
+     * @return the related entity's name, or empty when the field is not a foreign key
+     */
+    public Optional<String> foreignKeyTarget(String field) {
+        return Optional.ofNullable(foreignKeys.get(field));
     }
 
     /**

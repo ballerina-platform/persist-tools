@@ -76,11 +76,20 @@ public class DataServiceModelTest {
     }
 
     @Test
-    public void testInternalOnTheOwningSideHidesBothSides() throws BalException {
-        List<ExposedEntity> exposed = employees(new FieldRules.Result(Map.of("Employee", Map.of("department",
+    public void testInternalForeignKeyHidesBothSides() throws BalException {
+        List<ExposedEntity> exposed = employees(new FieldRules.Result(Map.of("Employee", Map.of("departmentId",
                 new FieldRules.Applied(FieldRule.INTERNAL, Optional.of("1")))), List.of()));
         Assert.assertTrue(exposed.get(0).relations().isEmpty());
         Assert.assertTrue(exposed.get(1).relations().isEmpty());
+    }
+
+    @Test
+    public void testInternalOnTheOwningSideHidesOnlyThatSide() throws BalException {
+        List<ExposedEntity> exposed = employees(new FieldRules.Result(Map.of("Employee", Map.of("department",
+                new FieldRules.Applied(FieldRule.INTERNAL, Optional.empty()))), List.of()));
+        Assert.assertTrue(exposed.get(0).relations().isEmpty());
+        Assert.assertEquals(exposed.get(1).relations().size(), 1);
+        Assert.assertTrue(exposed.get(0).columns().stream().anyMatch(column -> column.name().equals("departmentId")));
     }
 
     @Test

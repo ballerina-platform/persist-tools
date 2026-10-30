@@ -74,10 +74,12 @@ public final class DataServiceMessages {
             "@dataservice:%s, because it is neither nullable nor generated.";
     public static final String RULE_VALUE_TYPE =
             "the 'value' in @dataservice:%s of the field '%s' of the entity '%s' is not a '%s'.";
-    public static final String RULE_ON_RELATION_WITHOUT_FK = "@dataservice:%s cannot be used on the relation field " +
-            "'%s' of the entity '%s', which has no foreign key.";
-    public static final String RULE_ON_DECLARED_FK = "@dataservice:%s cannot be used on the foreign key field '%s' " +
-            "of the entity '%s'. Use it on the relation field '%s'.";
+    public static final String RULE_ON_RELATION_FIELD = "@dataservice:%s cannot be used on the relation field " +
+            "'%s' of the entity '%s'. Use it on the foreign key field, declared with @sql:Relation.";
+    public static final String RULE_FOREIGN_KEYS_DIFFER = "the foreign key fields of the relation '%s' of the " +
+            "entity '%s' must have the same field rule.";
+    public static final String RULE_ON_ONE_TO_ONE_FK = "@dataservice:%s cannot be used on the foreign key field " +
+            "'%s' of the entity '%s', because its relation is one to one and every create would set the same value.";
     public static final String RULE_NO_EFFECT = "@dataservice:%s on the field '%s' of the entity '%s' has no " +
             "effect, because the entity does not allow '%s'.";
     public static final String ANNOTATIONS_WITHOUT_OPTIONS = "the model has @dataservice:Expose annotations, but no " +

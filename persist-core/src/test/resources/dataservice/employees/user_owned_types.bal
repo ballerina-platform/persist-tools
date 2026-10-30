@@ -69,7 +69,7 @@ public type EmployeeFilter record {|
 # + id - The `id` field of `Employee`
 # + name - The `name` field of `Employee`
 # + email - The `email` field of `Employee`
-# + departmentId - The `departmentId` field of `Employee`
+# + departmentId - The key of the related 'Department'.
 # + department - The related department, when `fields` names it
 public type EmployeePartial record {|
     int id;
@@ -93,7 +93,7 @@ public type EmployeePartialList record {|
 # + id - The `id` field of `Employee`
 # + name - The `name` field of `Employee`
 # + email - The `email` field of `Employee`
-# + departmentId - The `departmentId` field of `Employee`
+# + departmentId - The key of the related 'Department'.
 public type EmployeeRelatedPartial record {|
     int id;
     string name?;
