@@ -233,21 +233,18 @@ public final class ExposedEntity {
     }
 
     /**
-     * Returns the collection name of the entity in the service: the entity name with its first letter in lowercase
-     * and its last word pluralized as persist pluralizes resource names.
+     * Returns the collection name of the entity in the service: the entity name with its first word in lowercase and
+     * its last word pluralized as persist pluralizes resource names.
      *
-     * @return the collection name, such as `projectAssignments` for `ProjectAssignment`
+     * @return the collection name, such as `projectAssignments` for `ProjectAssignment` or `httpLogs` for `HTTPLog`
      */
     public String collection() {
-        String plain = unescape(name);
-        String[] words = WORD_BOUNDARY.split(plain);
-        String last = words[words.length - 1];
-        String plural = Pluralizer.pluralize(last.toLowerCase(Locale.ENGLISH));
-        if (Character.isUpperCase(last.charAt(0))) {
-            plural = Character.toUpperCase(plural.charAt(0)) + plural.substring(1);
-        }
-        String collection = plain.substring(0, plain.length() - last.length()) + plural;
-        return Character.toLowerCase(collection.charAt(0)) + collection.substring(1);
+        String[] words = WORD_BOUNDARY.split(unescape(name));
+        int last = words.length - 1;
+        String plural = Pluralizer.pluralize(words[last].toLowerCase(Locale.ENGLISH));
+        words[last] = last == 0 ? plural : Character.toUpperCase(plural.charAt(0)) + plural.substring(1);
+        words[0] = words[0].toLowerCase(Locale.ENGLISH);
+        return String.join("", words);
     }
 
     /**

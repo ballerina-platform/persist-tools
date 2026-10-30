@@ -73,13 +73,16 @@ public class DataServiceModelTest {
         String source = "import ballerina/dataservice;\nimport ballerina/persist as _;\n\n" +
                 "@dataservice:Expose\ntype ProjectAssignment record {|\n    readonly int id;\n|};\n\n" +
                 "@dataservice:Expose\ntype Person record {|\n    readonly int id;\n|};\n\n" +
-                "@dataservice:Expose\ntype SalesPerson record {|\n    readonly int id;\n|};\n";
+                "@dataservice:Expose\ntype SalesPerson record {|\n    readonly int id;\n|};\n\n" +
+                "@dataservice:Expose\ntype HTTPLog record {|\n    readonly int id;\n|};\n\n" +
+                "@dataservice:Expose\ntype CustomerHTTPLog record {|\n    readonly int id;\n|};\n\n" +
+                "@dataservice:Expose\ntype URL record {|\n    readonly int id;\n|};\n";
         Path model = Files.createTempDirectory("collections").resolve("model.bal");
         Files.writeString(model, source);
         List<ExposedEntity> exposed = DataServiceModel.resolve(BalProjectUtils.getEntities(model),
                 ExposeAnnotations.read(model), Map.of(), NO_RULES);
         Assert.assertEquals(exposed.stream().map(ExposedEntity::collection).toList(),
-                List.of("projectAssignments", "people", "salesPeople"));
+                List.of("projectAssignments", "people", "salesPeople", "httpLogs", "customerHTTPLogs", "urls"));
         Assert.assertEquals(exposed.get(0).resourceName(), "projectassignments");
         Assert.assertEquals(exposed.get(0).scopes(Operation.READ), List.of("projectAssignments:read"));
     }
