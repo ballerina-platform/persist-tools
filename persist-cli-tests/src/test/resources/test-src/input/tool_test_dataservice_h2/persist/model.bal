@@ -1,3 +1,4 @@
+import ballerina/constraint;
 import ballerina/dataservice;
 import ballerina/persist as _;
 import ballerina/time;
@@ -55,6 +56,7 @@ type Ticket record {|
 @dataservice:Expose {operations: [dataservice:CREATE, dataservice:UPDATE, dataservice:DELETE]}
 type Badge record {|
     readonly int id;
+    @constraint:String {minLength: 2}
     string label;
 |};
 
@@ -84,9 +86,12 @@ enum Category {
 @dataservice:Expose {operations: [dataservice:READ, dataservice:CREATE]}
 type Product record {|
     readonly int id;
+    @constraint:String {maxLength: 20}
     string name;
+    @constraint:Number {minValue: 0}
     decimal price;
     Category category;
+    @constraint:Date {option: constraint:PAST}
     time:Date launchedOn;
     string? note;
     boolean active;

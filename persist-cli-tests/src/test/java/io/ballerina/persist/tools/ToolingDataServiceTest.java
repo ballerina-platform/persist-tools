@@ -112,7 +112,7 @@ public class ToolingDataServiceTest {
                 user = "sa"
                 password = ""
                 """, init.toString().replace('\\', '/')));
-        assertTestsPassed(bal(project, Map.of("TZ", "UTC"), "test", "--offline"), 56);
+        assertTestsPassed(bal(project, Map.of("TZ", "UTC"), "test", "--offline"), 58);
     }
 
     @Test(description = "Authentication, scopes and refused relations of a service with auth, against H2")

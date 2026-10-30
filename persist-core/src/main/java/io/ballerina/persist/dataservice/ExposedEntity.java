@@ -18,6 +18,7 @@
 
 package io.ballerina.persist.dataservice;
 
+import io.ballerina.compiler.syntax.tree.AnnotationNode;
 import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.Relation;
@@ -25,6 +26,7 @@ import io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -44,11 +46,13 @@ public final class ExposedEntity {
     private final List<Column> columns;
     private final List<ExposedRelation> relations;
     private final Map<Operation, List<String>> scopes;
+    private final Map<String, List<String>> constraints;
 
     private ExposedEntity(String name, String resourceName, EnumSet<Operation> operations,
                           List<ServiceField> fields, List<ServiceField> insertFields,
                           List<ServiceField> updateFields, List<String> doc, List<Column> columns,
-                          List<ExposedRelation> relations, Map<Operation, List<String>> scopes) {
+                          List<ExposedRelation> relations, Map<Operation, List<String>> scopes,
+                          Map<String, List<String>> constraints) {
         this.name = name;
         this.resourceName = resourceName;
         this.operations = EnumSet.copyOf(operations);
@@ -59,6 +63,7 @@ public final class ExposedEntity {
         this.columns = columns;
         this.relations = relations;
         this.scopes = scopes;
+        this.constraints = constraints;
     }
 
     /**
@@ -76,12 +81,16 @@ public final class ExposedEntity {
         List<ServiceField> insertFields = new ArrayList<>();
         List<ServiceField> updateFields = new ArrayList<>();
         List<Column> columns = new ArrayList<>();
+        Map<String, List<String>> constraints = new LinkedHashMap<>();
         for (EntityField field : entity.getFields()) {
             boolean isKey = entity.getKeys().stream().anyMatch(key -> key == field);
             if (field.getRelation() != null) {
                 if (field.getRelation().isOwner()) {
                     for (Relation.Key key : field.getRelation().getKeyColumns()) {
                         FieldRules.Applied rule = rules.get(key.getField());
+                        field.getRelation().getAssocEntity().getFields().stream()
+                                .filter(target -> target.getFieldName().equals(key.getReference())).findFirst()
+                                .ifPresent(target -> constraints.put(key.getField(), constraintsOf(target)));
                         fields.add(new ServiceField(key.getField(), key.getType(), false, false, false)
                                 .withRule(rule));
                         insertFields.add(new ServiceField(key.getField(), key.getType(), false, false, false)
@@ -98,6 +107,7 @@ public final class ExposedEntity {
             }
             String type = field.getFieldType() + (field.isArrayType() ? "[]" : "");
             FieldRules.Applied rule = rules.get(field.getFieldName());
+            constraints.put(field.getFieldName(), constraintsOf(field));
             fields.add(new ServiceField(field.getFieldName(), type, !isKey && field.isOptionalType(),
                     field.isOptionalField(), isKey).withRule(rule));
             if (!isInternal(rule)) {
@@ -115,7 +125,13 @@ public final class ExposedEntity {
         boolean generated = entity.getFields().stream().anyMatch(EntityField::isDbGenerated);
         return new ExposedEntity(entity.getEntityName(), entity.getClientResourceName(), operations,
                 List.copyOf(fields), generated ? List.copyOf(insertFields) : null, List.copyOf(updateFields),
-                List.copyOf(doc), List.copyOf(columns), List.of(), Map.of());
+                List.copyOf(doc), List.copyOf(columns), List.of(), Map.of(), Map.copyOf(constraints));
+    }
+
+    private static List<String> constraintsOf(EntityField field) {
+        return field.getAnnotation().stream()
+                .filter(annotation -> annotation.annotReference().toSourceCode().trim().startsWith("constraint:"))
+                .map(AnnotationNode::toSourceCode).map(String::trim).toList();
     }
 
     /**
@@ -126,7 +142,7 @@ public final class ExposedEntity {
      */
     public ExposedEntity withRelations(List<ExposedRelation> readable) {
         return new ExposedEntity(name, resourceName, operations, fields, insertFields, updateFields, doc, columns,
-                List.copyOf(readable), scopes);
+                List.copyOf(readable), scopes, constraints);
     }
 
     /**
@@ -137,7 +153,18 @@ public final class ExposedEntity {
      */
     public ExposedEntity withScopes(Map<Operation, List<String>> listed) {
         return new ExposedEntity(name, resourceName, operations, fields, insertFields, updateFields, doc, columns,
-                relations, Map.copyOf(listed));
+                relations, Map.copyOf(listed), constraints);
+    }
+
+    /**
+     * Returns the `ballerina/constraint` annotations of a field, as written in the model. A foreign key field has
+     * those of the key field it references.
+     *
+     * @param field the field name, as written in the model
+     * @return the annotations, empty when the field has none
+     */
+    public List<String> constraints(String field) {
+        return constraints.getOrDefault(field, List.of());
     }
 
     /**

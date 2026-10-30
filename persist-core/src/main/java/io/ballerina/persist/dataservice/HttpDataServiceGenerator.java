@@ -273,6 +273,7 @@ public final class HttpDataServiceGenerator {
                 out.append("        if value is dsHttp:InvalidInput {").append(NEWLINE);
                 out.append("            return value;").append(NEWLINE);
                 out.append("        }").append(NEWLINE);
+                appendConstraintCheck(out, entity, n, entity.updateFields(), "        ");
             }
             if (read) {
                 out.append("        ").append(n.entity).append("|persist:Error item;").append(NEWLINE);
@@ -583,6 +584,7 @@ public final class HttpDataServiceGenerator {
             out.append("            if value is dsHttp:InvalidInput {").append(NEWLINE);
             out.append("                return value;").append(NEWLINE);
             out.append("            }").append(NEWLINE);
+            appendConstraintCheck(out, entity, n, insertSource(entity), "            ");
             out.append("            values.push(value);").append(NEWLINE);
             out.append("        }").append(NEWLINE);
         }
@@ -665,6 +667,20 @@ public final class HttpDataServiceGenerator {
     }
 
     // A float key value can be NaN or infinite, which no record has.
+    // The wire type cannot carry the constraints of a converted field, so the converted record is checked.
+    private static void appendConstraintCheck(StringBuilder out, ExposedEntity entity, Names n,
+                                              List<ServiceField> fields, String indent) {
+        if (fields.stream().noneMatch(field -> field.conversion().isPresent()
+                && !entity.constraints(field.name()).isEmpty())) {
+            return;
+        }
+        out.append(indent).append("dataservice:DataserviceError? broken = dataservice:checkConstraints(value, \"")
+                .append(n.displayName).append("\");").append(NEWLINE);
+        out.append(indent).append("if broken is dataservice:DataserviceError {").append(NEWLINE);
+        out.append(indent).append("    return <dsHttp:InvalidInput>{body: broken};").append(NEWLINE);
+        out.append(indent).append("}").append(NEWLINE);
+    }
+
     private static void appendKeyCheck(StringBuilder out, ExposedEntity entity, Names n, String keyList) {
         if (entity.keys().stream().noneMatch(key -> "float".equals(key.type()))) {
             return;
@@ -687,12 +703,13 @@ public final class HttpDataServiceGenerator {
     private void appendTypes(StringBuilder out, ExposedEntity entity) {
         Names n = new Names(entity);
         if (entity.hasWireTypes()) {
-            appendRecord(out, "The JSON form of `" + n.entity + "`.", n.wire, n.entity, returned(entity.fields()));
+            appendRecord(out, entity, "The JSON form of `" + n.entity + "`.", n.wire, n.entity,
+                    returned(entity.fields()));
             if (entity.allows(CREATE)) {
                 String doc = "The JSON form of `" + n.entity + "Insert`.";
                 List<ServiceField> insertFields = insertSource(entity);
                 if (entity.insertFields().isPresent() || insertFields.stream().anyMatch(f -> f.rule().isPresent())) {
-                    appendRecord(out, doc, n.insertWire, n.entity + "Insert", insertWire(insertFields));
+                    appendRecord(out, entity, doc, n.insertWire, n.entity + "Insert", insertWire(insertFields));
                 } else {
                     out.append(NEWLINE).append("# ").append(doc).append(NEWLINE);
                     out.append("public type ").append(n.insertWire).append(" ").append(n.wire).append(";")
@@ -700,7 +717,7 @@ public final class HttpDataServiceGenerator {
                 }
             }
             if (entity.allows(UPDATE)) {
-                appendRecord(out, "The JSON form of `" + n.entity + "Update`.", n.updateWire,
+                appendRecord(out, entity, "The JSON form of `" + n.entity + "Update`.", n.updateWire,
                         n.entity + "Update", updateWire(entity.updateFields()));
             }
         }
@@ -903,8 +920,8 @@ public final class HttpDataServiceGenerator {
         return text.substring(0, 1).toUpperCase(Locale.ENGLISH) + text.substring(1);
     }
 
-    private static void appendRecord(StringBuilder out, String doc, String name, String persistType,
-                                     List<ServiceField> fields) {
+    private void appendRecord(StringBuilder out, ExposedEntity entity, String doc, String name,
+                              String persistType, List<ServiceField> fields) {
         out.append(NEWLINE).append("# ").append(doc).append(NEWLINE);
         out.append("#").append(NEWLINE);
         for (ServiceField field : fields) {
@@ -913,6 +930,13 @@ public final class HttpDataServiceGenerator {
         }
         out.append("public type ").append(name).append(" record {|").append(NEWLINE);
         for (ServiceField field : fields) {
+            // A date, time or byte[] field is a string here, so its constraints are checked after conversion.
+            if (field.conversion().isEmpty()) {
+                for (String annotation : entity.constraints(field.name())) {
+                    imports.add("import ballerina/constraint;");
+                    out.append("    ").append(annotation).append(NEWLINE);
+                }
+            }
             out.append("    ").append(field.key() ? "readonly " : "").append(field.wireType()).append(" ")
                     .append(field.name()).append(field.optional() ? "?" : "").append(";").append(NEWLINE);
         }

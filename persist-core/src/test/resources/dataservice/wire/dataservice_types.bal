@@ -3,6 +3,7 @@
 // This file is an auto-generated file by Ballerina persistence layer for model.
 // It should not be modified by hand.
 
+import ballerina/constraint;
 import ballerina/dataservice;
 import ballerina/dataservice.http as dsHttp;
 import ballerina/http;
@@ -22,6 +23,7 @@ import ballerina/time;
 # + status - The `status` field of `Document`
 public type DocumentPayload record {|
     readonly int id;
+    @constraint:String {maxLength: 40, pattern: re `[A-Z].*`}
     string title;
     string issuedOn;
     string? expiresOn;
@@ -48,6 +50,7 @@ public type DocumentInsertPayload DocumentPayload;
 # + thumbnail - The `thumbnail` field of `DocumentUpdate`, as a base64 string
 # + status - The `status` field of `DocumentUpdate`
 public type DocumentUpdatePayload record {|
+    @constraint:String {maxLength: 40, pattern: re `[A-Z].*`}
     string title?;
     string issuedOn?;
     string? expiresOn?;

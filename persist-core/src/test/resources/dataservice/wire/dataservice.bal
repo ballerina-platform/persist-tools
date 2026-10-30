@@ -103,6 +103,10 @@ service /api on dataserviceListener {
             if value is dsHttp:InvalidInput {
                 return value;
             }
+            dataservice:DataserviceError? broken = dataservice:checkConstraints(value, "Document");
+            if broken is dataservice:DataserviceError {
+                return <dsHttp:InvalidInput>{body: broken};
+            }
             values.push(value);
         }
         DocumentPayload[] items = [];
@@ -147,6 +151,10 @@ service /api on dataserviceListener {
         DocumentUpdate|dsHttp:InvalidInput value = transformPayloadToDocumentUpdate(payload);
         if value is dsHttp:InvalidInput {
             return value;
+        }
+        dataservice:DataserviceError? broken = dataservice:checkConstraints(value, "Document");
+        if broken is dataservice:DataserviceError {
+            return <dsHttp:InvalidInput>{body: broken};
         }
         Document|persist:Error item;
         if value.length() == 0 {

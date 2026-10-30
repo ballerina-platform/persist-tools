@@ -1,3 +1,4 @@
+import ballerina/constraint;
 import ballerina/dataservice;
 import ballerina/persist as _;
 import ballerina/time;
@@ -5,7 +6,9 @@ import ballerina/time;
 @dataservice:Expose
 type Document record {|
     readonly int id;
+    @constraint:String {maxLength: 40, pattern: re `[A-Z].*`}
     string title;
+    @constraint:Date {option: constraint:PAST}
     time:Date issuedOn;
     time:Date? expiresOn;
     time:TimeOfDay opensAt;
