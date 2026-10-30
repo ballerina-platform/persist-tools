@@ -516,7 +516,7 @@ public class BalSyntaxUtils {
             } else if (field.getRelation() != null) {
                 if (field.getRelation().isOwner()) {
                     for (Relation.Key key : field.getRelation().getKeyColumns()) {
-                        addConstraintsAnnotationForForeignKey(field, recordFields);
+                        addConstraintsAnnotationForForeignKey(field, key, recordFields);
                         recordFields.append(key.getType());
                         recordFields.append(BalSyntaxConstants.SPACE);
                         recordFields.append(key.getField());
@@ -732,9 +732,9 @@ public class BalSyntaxUtils {
         StringBuilder recordFields = new StringBuilder();
         for (EntityField field : entity.getFields()) {
             if (field.getRelation() != null) {
-                addConstraintsAnnotationForForeignKey(field, recordFields);
                 if (field.getRelation().isOwner()) {
                         for (Relation.Key key : field.getRelation().getKeyColumns()) {
+                            addConstraintsAnnotationForForeignKey(field, key, recordFields);
                             recordFields.append(key.getType());
                             recordFields.append(BalSyntaxConstants.SPACE);
                             recordFields.append(key.getField());
@@ -765,27 +765,25 @@ public class BalSyntaxUtils {
                 documentation, entityName, recordFields));
     }
 
-    private static void addConstraintsAnnotationForForeignKey(EntityField field, StringBuilder recordFields) {
-        Relation relation = field.getRelation();
-        List<String> references = relation.getReferences();
-        for (EntityField assocField : relation.getAssocEntity().getFields()) {
-            for (String reference : references) {
-                if (assocField.getFieldName().equals(reference)) {
-                    String params = getConstraintField(assocField);
-                    if (params != null) {
-                        recordFields.append(String.format(BalSyntaxConstants.CONSTRAINT_ANNOTATION,
-                                    params));
-                    }
-                    break;
-                }
+    // A foreign key field takes the constraints of the key field of the related entity that it references.
+    private static void addConstraintsAnnotationForForeignKey(EntityField field, Relation.Key key,
+                                                              StringBuilder recordFields) {
+        for (EntityField assocField : field.getRelation().getAssocEntity().getFields()) {
+            if (assocField.getFieldName().equals(key.getReference())) {
+                addConstrainAnnotationToField(assocField, recordFields);
+                return;
             }
         }
     }
 
+    // Every ballerina/constraint annotation of the model field is kept, as written, so that the generated types
+    // check the same constraints as the model.
     private static void addConstrainAnnotationToField(EntityField field, StringBuilder recordFields) {
-        String params = getConstraintField(field);
-        if (params != null) {
-            recordFields.append(String.format(BalSyntaxConstants.CONSTRAINT_ANNOTATION, params));
+        for (AnnotationNode annotationNode : field.getAnnotation()) {
+            if (annotationNode.annotReference().toSourceCode().trim()
+                    .startsWith(BalSyntaxConstants.CONSTRAINT + ":")) {
+                recordFields.append(annotationNode.toSourceCode().trim()).append(BalSyntaxConstants.SPACE);
+            }
         }
     }
 
@@ -900,35 +898,6 @@ public class BalSyntaxUtils {
         return Collections.emptyList();
     }
 
-    private static String getConstraintField(EntityField field) {
-        for (AnnotationNode annotationNode : field.getAnnotation()) {
-            String annotationName = annotationNode.annotReference().toSourceCode().trim();
-            if (annotationName.equals(BalSyntaxConstants.CONSTRAINT_STRING)) {
-                Optional<MappingConstructorExpressionNode> annotationFieldNode = annotationNode.annotValue();
-                if (annotationFieldNode.isPresent()) {
-                    for (MappingFieldNode mappingFieldNode : annotationFieldNode.get().fields()) {
-                        SpecificFieldNode specificFieldNode = (SpecificFieldNode) mappingFieldNode;
-                        String fieldName = specificFieldNode.fieldName().toSourceCode().trim();
-                        if (fieldName.equals(BalSyntaxConstants.MAX_LENGTH)) {
-                            Optional<ExpressionNode> valueExpr = specificFieldNode.valueExpr();
-                            if (valueExpr.isPresent()) {
-                                return BalSyntaxConstants.MAX_LENGTH + ":" +
-                                        valueExpr.get().toSourceCode().trim();
-                            }
-                        } else if (fieldName.equals(BalSyntaxConstants.LENGTH)) {
-                            Optional<ExpressionNode> valueExpr = specificFieldNode.valueExpr();
-                            if (valueExpr.isPresent()) {
-                                return BalSyntaxConstants.LENGTH + ":" +
-                                        valueExpr.get().toSourceCode().trim();
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return null;
-    }
-
     private static ModuleMemberDeclarationNode createEntityRecordWithRelation(Entity entity) {
         StringBuilder recordFields = new StringBuilder();
         recordFields.append(String.format("*%sOptionalized;", entity.getEntityName()));
@@ -968,7 +937,7 @@ public class BalSyntaxUtils {
                 if (field.getRelation() != null) {
                     if (field.getRelation().isOwner()) {
                             for (Relation.Key key : field.getRelation().getKeyColumns()) {
-                                addConstraintsAnnotationForForeignKey(field, recordFields);
+                                addConstraintsAnnotationForForeignKey(field, key, recordFields);
                                 recordFields.append(key.getType());
                                 recordFields.append(" ");
                                 recordFields.append(key.getField());
