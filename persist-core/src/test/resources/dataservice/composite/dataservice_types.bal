@@ -83,6 +83,7 @@ public type AssignmentPartialList record {|
 # The description of `Assignment` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceAssignmentEntity = {
     name: "Assignment",
+    collection: "assignments",
     'resource: "assignments",
     datastore: dataservice:H2,
     fields: [
@@ -186,6 +187,7 @@ public type RatePartialList record {|
 # The description of `Rate` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceRateEntity = {
     name: "Rate",
+    collection: "rates",
     'resource: "rates",
     datastore: dataservice:H2,
     fields: [

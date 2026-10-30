@@ -188,6 +188,7 @@ public type OrderRelatedPartialList record {|
 # The description of `Order` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceOrderEntity = {
     name: "Order",
+    collection: "orders",
     'resource: "orders",
     datastore: dataservice:H2,
     fields: [
@@ -206,6 +207,7 @@ final dataservice:Entity dataserviceOrderEntity = {
             targetFields: ["id"],
             target: {
                 name: "Customer",
+                collection: "customers",
                 'resource: "customers",
                 datastore: dataservice:H2,
                 fields: [
@@ -341,6 +343,7 @@ public type CustomerRelatedPartial record {|
 # The description of `Customer` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceCustomerEntity = {
     name: "Customer",
+    collection: "customers",
     'resource: "customers",
     datastore: dataservice:H2,
     fields: [
@@ -408,6 +411,7 @@ public type WarehousePartialList record {|
 # The description of `Warehouse` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceWarehouseEntity = {
     name: "Warehouse",
+    collection: "warehouses",
     'resource: "warehouses",
     datastore: dataservice:H2,
     fields: [
@@ -422,6 +426,7 @@ final dataservice:Entity dataserviceWarehouseEntity = {
             targetFields: ["warehouseId"],
             target: {
                 name: "Order",
+                collection: "orders",
                 'resource: "orders",
                 datastore: dataservice:H2,
                 fields: [

@@ -24,6 +24,8 @@ import io.ballerina.persist.utils.BalProjectUtils;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
@@ -64,6 +66,22 @@ public class DataServiceModelTest {
         Assert.assertEquals(employee.updateFields().stream().map(ServiceField::name).toList(),
                 List.of("name", "email", "departmentId"));
         Assert.assertFalse(employee.hasWireTypes());
+    }
+
+    @Test
+    public void testCollectionNames() throws BalException, IOException {
+        String source = "import ballerina/dataservice;\nimport ballerina/persist as _;\n\n" +
+                "@dataservice:Expose\ntype ProjectAssignment record {|\n    readonly int id;\n|};\n\n" +
+                "@dataservice:Expose\ntype Person record {|\n    readonly int id;\n|};\n\n" +
+                "@dataservice:Expose\ntype SalesPerson record {|\n    readonly int id;\n|};\n";
+        Path model = Files.createTempDirectory("collections").resolve("model.bal");
+        Files.writeString(model, source);
+        List<ExposedEntity> exposed = DataServiceModel.resolve(BalProjectUtils.getEntities(model),
+                ExposeAnnotations.read(model), Map.of(), NO_RULES);
+        Assert.assertEquals(exposed.stream().map(ExposedEntity::collection).toList(),
+                List.of("projectAssignments", "people", "salesPeople"));
+        Assert.assertEquals(exposed.get(0).resourceName(), "projectassignments");
+        Assert.assertEquals(exposed.get(0).scopes(Operation.READ), List.of("projectAssignments:read"));
     }
 
     @Test

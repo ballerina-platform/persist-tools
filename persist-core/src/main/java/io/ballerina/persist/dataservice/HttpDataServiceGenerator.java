@@ -223,7 +223,7 @@ public final class HttpDataServiceGenerator {
             params.add("fields - The fields to return; the key fields are always returned");
             appendDoc(out, entity, READ, "Gets " + n.article + " " + n.words + " by its key.", params,
                     "The " + n.words);
-            out.append("    resource function get ").append(n.resource).append("/").append(keyParams)
+            out.append("    resource function get ").append(n.collection).append("/").append(keyParams)
                     .append("(").append(requestParam(entity)).append("string[]? fields = ()) returns ").append(n.wire).append("|").append(n.partial)
                     .append(errors(GET_ERRORS, !checked(entity).isEmpty())).append(" {").append(NEWLINE);
             appendKeyCheck(out, entity, n, keyList);
@@ -261,7 +261,7 @@ public final class HttpDataServiceGenerator {
             params.add("payload - The fields of the " + n.words + " to update");
             appendDoc(out, entity, UPDATE, "Updates " + n.article + " " + n.words + " by its key.", params,
                     read ? "The updated " + n.words : "No content");
-            out.append("    resource function patch ").append(n.resource).append("/").append(keyParams).append("(")
+            out.append("    resource function patch ").append(n.collection).append("/").append(keyParams).append("(")
                     .append(n.updateWire).append(" payload)").append(NEWLINE);
             out.append("            returns ").append(changed).append(UPDATE_ERRORS).append(" {").append(NEWLINE);
             appendKeyCheck(out, entity, n, keyList);
@@ -301,7 +301,7 @@ public final class HttpDataServiceGenerator {
         if (entity.allows(DELETE)) {
             appendDoc(out, entity, DELETE, "Deletes " + n.article + " " + n.words + " by its key.", keyDocs(entity, n),
                     read ? "The deleted " + n.words : "No content");
-            out.append("    resource function delete ").append(n.resource).append("/").append(keyParams)
+            out.append("    resource function delete ").append(n.collection).append("/").append(keyParams)
                     .append("() returns ").append(changed).append(DELETE_ERRORS).append(" {").append(NEWLINE);
             appendKeyCheck(out, entity, n, keyList);
             out.append("        ").append(n.entity).append("|persist:Error item = dataserviceClient->/")
@@ -321,7 +321,7 @@ public final class HttpDataServiceGenerator {
                 "size - The number of " + n.plural + " in the page",
                 "offset - The number of " + n.plural + " to skip",
                 "fields - The fields to return; the key fields are always returned"), "A page of " + n.plural);
-        out.append("    resource function get ").append(n.resource).append("(").append(requestParam(entity))
+        out.append("    resource function get ").append(n.collection).append("(").append(requestParam(entity))
                 .append(n.filter).append("? filter = (), string[]? sort = (), int? size = (), int? offset = (),")
                 .append(NEWLINE);
         out.append("            string[]? fields = ()) returns ").append(n.list).append("|").append(n.partialList)
@@ -422,7 +422,7 @@ public final class HttpDataServiceGenerator {
         params.add("fields - The fields of the " + words + " to return; the key fields are always returned");
         appendDoc(out, entity, READ, "Gets the " + words + " of " + n.article + " " + n.words + ".", params,
                 relation.many() ? "A page of the " + words : "The " + words);
-        out.append("    resource function get ").append(n.resource).append("/").append(keyParams).append("/")
+        out.append("    resource function get ").append(n.collection).append("/").append(keyParams).append("/")
                 .append(relation.field()).append("(").append(checked ? "http:Request request, " : "");
         if (relation.many()) {
             out.append(t.filter).append("? filter = (), string[]? sort = (), int? size = (), int? offset = (),")
@@ -569,7 +569,7 @@ public final class HttpDataServiceGenerator {
         appendDoc(out, entity, CREATE, "Creates one or more " + n.plural + ".",
                 List.of("payload - The " + n.words + ", or the " + n.plural + ", to create"),
                 "The created " + n.words + " or " + n.plural);
-        out.append("    resource function post ").append(n.resource).append("(").append(n.insertWire).append("|")
+        out.append("    resource function post ").append(n.collection).append("(").append(n.insertWire).append("|")
                 .append(n.insertWire).append("[] payload)").append(NEWLINE);
         out.append("            returns ").append(n.created).append("|").append(n.listCreated).append(CREATE_ERRORS)
                 .append(" {").append(NEWLINE);
@@ -638,7 +638,7 @@ public final class HttpDataServiceGenerator {
         out.append("        }").append(NEWLINE);
         out.append("        ").append(n.wire).append(" created = items[0];").append(NEWLINE);
         out.append("        return <").append(n.created).append(">{").append(NEWLINE);
-        out.append("            headers: {\"Location\": dsHttp:buildLocation(\"").append(collectionPath(n.resource))
+        out.append("            headers: {\"Location\": dsHttp:buildLocation(\"").append(collectionPath(n.collection))
                 .append("\", ").append(keyList(entity, "created.")).append(")},").append(NEWLINE);
         out.append("            body: created").append(NEWLINE);
         out.append("        };").append(NEWLINE);
@@ -871,6 +871,7 @@ public final class HttpDataServiceGenerator {
         Names n = new Names(entity);
         StringBuilder out = new StringBuilder("{").append(NEWLINE);
         out.append(indent).append("    name: \"").append(n.displayName).append("\",").append(NEWLINE);
+        out.append(indent).append("    collection: \"").append(n.collection).append("\",").append(NEWLINE);
         out.append(indent).append("    'resource: \"").append(n.resource).append("\",").append(NEWLINE);
         out.append(indent).append("    datastore: dataservice:").append(datastore.toUpperCase(Locale.ENGLISH))
                 .append(",").append(NEWLINE);
@@ -915,8 +916,10 @@ public final class HttpDataServiceGenerator {
                 + "]";
     }
 
+    // Filter keys starting with `$` are reserved for joining conditions.
     private static List<ServiceField> filterable(ExposedEntity entity) {
-        return returned(entity.fields()).stream().filter(field -> column(entity, field).queryable()).toList();
+        return returned(entity.fields()).stream().filter(field -> column(entity, field).queryable()
+                && !unescape(field.name()).startsWith("$")).toList();
     }
 
     private static ExposedEntity.Column column(ExposedEntity entity, ServiceField field) {
@@ -1232,6 +1235,7 @@ public final class HttpDataServiceGenerator {
         private final String entity;
         private final String displayName;
         private final String resource;
+        private final String collection;
         private final String wire;
         private final String insertWire;
         private final String updateWire;
@@ -1253,6 +1257,7 @@ public final class HttpDataServiceGenerator {
             this.entity = entity.name();
             this.displayName = unescape(entity.name());
             this.resource = entity.resourceName();
+            this.collection = entity.collection();
             this.hasWire = entity.hasWireTypes();
             this.wire = hasWire ? this.entity + "Payload" : this.entity;
             this.insertWire = this.entity + (hasWire ? "InsertPayload" : "Insert");

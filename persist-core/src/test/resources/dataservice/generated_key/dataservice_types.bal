@@ -97,6 +97,7 @@ public type TicketPartialList record {|
 # The description of `Ticket` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceTicketEntity = {
     name: "Ticket",
+    collection: "tickets",
     'resource: "tickets",
     datastore: dataservice:H2,
     fields: [
@@ -156,6 +157,7 @@ public type OrderItemList record {|
 # The description of `OrderItem` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceOrderItemEntity = {
     name: "OrderItem",
+    collection: "orderItems",
     'resource: "orderitems",
     datastore: dataservice:H2,
     fields: [

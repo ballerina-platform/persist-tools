@@ -114,6 +114,7 @@ public type EmployeeRelatedPartialList record {|
 # The description of `Employee` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceEmployeeEntity = {
     name: "Employee",
+    collection: "employees",
     'resource: "employees",
     datastore: dataservice:H2,
     fields: [
@@ -130,6 +131,7 @@ final dataservice:Entity dataserviceEmployeeEntity = {
             targetFields: ["id"],
             target: {
                 name: "Department",
+                collection: "departments",
                 'resource: "departments",
                 datastore: dataservice:H2,
                 fields: [
@@ -225,6 +227,7 @@ public type DepartmentRelatedPartial record {|
 # The description of `Department` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceDepartmentEntity = {
     name: "Department",
+    collection: "departments",
     'resource: "departments",
     datastore: dataservice:H2,
     fields: [
@@ -239,6 +242,7 @@ final dataservice:Entity dataserviceDepartmentEntity = {
             targetFields: ["departmentId"],
             target: {
                 name: "Employee",
+                collection: "employees",
                 'resource: "employees",
                 datastore: dataservice:H2,
                 fields: [

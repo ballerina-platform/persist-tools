@@ -193,6 +193,7 @@ public type DocumentPartialList record {|
 # The description of `Document` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceDocumentEntity = {
     name: "Document",
+    collection: "documents",
     'resource: "documents",
     datastore: dataservice:H2,
     fields: [
@@ -427,6 +428,7 @@ public type HolidayPartialList record {|
 # The description of `Holiday` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceHolidayEntity = {
     name: "Holiday",
+    collection: "holidays",
     'resource: "holidays",
     datastore: dataservice:H2,
     fields: [

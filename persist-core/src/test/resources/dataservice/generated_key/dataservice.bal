@@ -141,7 +141,7 @@ service /api on dataserviceListener {
     #
     # + payload - The order item, or the order items, to create
     # + return - The created order item or order items, or the error response
-    resource function post orderitems(OrderItemInsert|OrderItemInsert[] payload)
+    resource function post orderItems(OrderItemInsert|OrderItemInsert[] payload)
             returns OrderItemCreated|OrderItemListCreated|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         OrderItemInsert[] values = payload is OrderItemInsert[] ? payload : [payload];
         dataservice:DataserviceError? tooMany = dataservice:checkCreateSize(values.length(), dataservicePageConfig);
@@ -174,7 +174,7 @@ service /api on dataserviceListener {
         }
         OrderItem created = items[0];
         return <OrderItemCreated>{
-            headers: {"Location": dsHttp:buildLocation("/api/orderitems", [created.id])},
+            headers: {"Location": dsHttp:buildLocation("/api/orderItems", [created.id])},
             body: created
         };
     }

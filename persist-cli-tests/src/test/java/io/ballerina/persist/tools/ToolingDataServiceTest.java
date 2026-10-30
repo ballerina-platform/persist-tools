@@ -31,6 +31,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -175,7 +176,7 @@ public class ToolingDataServiceTest {
         Assert.assertTrue(service.contains("service /api on dataserviceListener {"), service);
         Assert.assertTrue(service.contains(
                 "resource function get assignments/[string projectCode]/[int seq](string[]? fields = ())"), service);
-        Assert.assertFalse(service.contains("auditlogs"), service);
+        Assert.assertFalse(service.toLowerCase(Locale.ROOT).contains("auditlogs"), service);
         Assert.assertTrue(service.contains("@openapi:ServiceInfo {embed: true}\nservice /api on"), service);
         Assert.assertTrue(Files.exists(project.resolve("generated").resolve(CONFIG)));
         String types = Files.readString(project.resolve("generated").resolve(TYPES));

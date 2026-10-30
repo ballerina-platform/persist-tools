@@ -19,6 +19,7 @@
 package io.ballerina.persist.dataservice;
 
 import io.ballerina.compiler.syntax.tree.AnnotationNode;
+import io.ballerina.persist.inflector.Pluralizer;
 import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.Relation;
@@ -28,13 +29,17 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 /**
  * An entity that the data service exposes, with the fields of its persist-generated types.
  */
 public final class ExposedEntity {
+
+    private static final Pattern WORD_BOUNDARY = Pattern.compile("(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])");
 
     private final String name;
     private final String resourceName;
@@ -186,10 +191,10 @@ public final class ExposedEntity {
      * Returns the scopes an action requires when the service has auth.
      *
      * @param operation the action
-     * @return the listed scopes, or `<resource>:<action>` when the annotation does not list the action
+     * @return the listed scopes, or `<collection>:<action>` when the annotation does not list the action
      */
     public List<String> scopes(Operation operation) {
-        return scopes.getOrDefault(operation, List.of(resourceName + ":" + operation.value()));
+        return scopes.getOrDefault(operation, List.of(collection() + ":" + operation.value()));
     }
 
     /**
@@ -225,6 +230,24 @@ public final class ExposedEntity {
      */
     public String resourceName() {
         return resourceName;
+    }
+
+    /**
+     * Returns the collection name of the entity in the service: the entity name with its first letter in lowercase
+     * and its last word pluralized as persist pluralizes resource names.
+     *
+     * @return the collection name, such as `projectAssignments` for `ProjectAssignment`
+     */
+    public String collection() {
+        String plain = unescape(name);
+        String[] words = WORD_BOUNDARY.split(plain);
+        String last = words[words.length - 1];
+        String plural = Pluralizer.pluralize(last.toLowerCase(Locale.ENGLISH));
+        if (Character.isUpperCase(last.charAt(0))) {
+            plural = Character.toUpperCase(plural.charAt(0)) + plural.substring(1);
+        }
+        String collection = plain.substring(0, plain.length() - last.length()) + plural;
+        return Character.toLowerCase(collection.charAt(0)) + collection.substring(1);
     }
 
     /**

@@ -63,6 +63,7 @@ public type ReadItemPartialList record {|
 # The description of `ReadItem` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceReadItemEntity = {
     name: "ReadItem",
+    collection: "readItems",
     'resource: "readitems",
     datastore: dataservice:H2,
     fields: [
@@ -83,6 +84,7 @@ public type CreateItemList record {|
 # The description of `CreateItem` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceCreateItemEntity = {
     name: "CreateItem",
+    collection: "createItems",
     'resource: "createitems",
     datastore: dataservice:H2,
     fields: [
@@ -164,6 +166,7 @@ public type ReadCreateItemPartialList record {|
 # The description of `ReadCreateItem` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceReadCreateItemEntity = {
     name: "ReadCreateItem",
+    collection: "readCreateItems",
     'resource: "readcreateitems",
     datastore: dataservice:H2,
     fields: [
@@ -245,6 +248,7 @@ public type ReadUpdateItemPartialList record {|
 # The description of `ReadUpdateItem` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceReadUpdateItemEntity = {
     name: "ReadUpdateItem",
+    collection: "readUpdateItems",
     'resource: "readupdateitems",
     datastore: dataservice:H2,
     fields: [
@@ -310,6 +314,7 @@ public type ReadDeleteItemPartialList record {|
 # The description of `ReadDeleteItem` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceReadDeleteItemEntity = {
     name: "ReadDeleteItem",
+    collection: "readDeleteItems",
     'resource: "readdeleteitems",
     datastore: dataservice:H2,
     fields: [
@@ -330,6 +335,7 @@ public type CreateUpdateItemList record {|
 # The description of `CreateUpdateItem` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceCreateUpdateItemEntity = {
     name: "CreateUpdateItem",
+    collection: "createUpdateItems",
     'resource: "createupdateitems",
     datastore: dataservice:H2,
     fields: [
@@ -366,6 +372,7 @@ public type CreateDeleteItemList record {|
 # The description of `CreateDeleteItem` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceCreateDeleteItemEntity = {
     name: "CreateDeleteItem",
+    collection: "createDeleteItems",
     'resource: "createdeleteitems",
     datastore: dataservice:H2,
     fields: [
@@ -447,6 +454,7 @@ public type ReadCreateUpdateItemPartialList record {|
 # The description of `ReadCreateUpdateItem` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceReadCreateUpdateItemEntity = {
     name: "ReadCreateUpdateItem",
+    collection: "readCreateUpdateItems",
     'resource: "readcreateupdateitems",
     datastore: dataservice:H2,
     fields: [
@@ -528,6 +536,7 @@ public type ReadCreateDeleteItemPartialList record {|
 # The description of `ReadCreateDeleteItem` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceReadCreateDeleteItemEntity = {
     name: "ReadCreateDeleteItem",
+    collection: "readCreateDeleteItems",
     'resource: "readcreatedeleteitems",
     datastore: dataservice:H2,
     fields: [
@@ -609,6 +618,7 @@ public type ReadUpdateDeleteItemPartialList record {|
 # The description of `ReadUpdateDeleteItem` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceReadUpdateDeleteItemEntity = {
     name: "ReadUpdateDeleteItem",
+    collection: "readUpdateDeleteItems",
     'resource: "readupdatedeleteitems",
     datastore: dataservice:H2,
     fields: [
@@ -629,6 +639,7 @@ public type CreateUpdateDeleteItemList record {|
 # The description of `CreateUpdateDeleteItem` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceCreateUpdateDeleteItemEntity = {
     name: "CreateUpdateDeleteItem",
+    collection: "createUpdateDeleteItems",
     'resource: "createupdatedeleteitems",
     datastore: dataservice:H2,
     fields: [
@@ -710,6 +721,7 @@ public type ReadCreateUpdateDeleteItemPartialList record {|
 # The description of `ReadCreateUpdateDeleteItem` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceReadCreateUpdateDeleteItemEntity = {
     name: "ReadCreateUpdateDeleteItem",
+    collection: "readCreateUpdateDeleteItems",
     'resource: "readcreateupdatedeleteitems",
     datastore: dataservice:H2,
     fields: [
