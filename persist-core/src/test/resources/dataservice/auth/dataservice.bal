@@ -240,7 +240,7 @@ service /api on dataserviceListener {
     # + fields - The fields to return; the key fields are always returned
     # + return - A page of departments, or the error response
     @http:ResourceConfig {auth: {scopes: ["hr:read", "org:read"]}}
-    resource function get departments(DepartmentFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
+    resource function get departments(http:Request request, DepartmentFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
             string[]? fields = ()) returns DepartmentList|DepartmentPartialList|dsHttp:InvalidInput|dsHttp:Forbidden|dsHttp:InternalError {
         dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
             dataservice:query(dataserviceDepartmentEntity, dataservicePageConfig, filter, sort, size, offset);
@@ -248,7 +248,10 @@ service /api on dataserviceListener {
             return dsHttp:toQueryError(query, "Department");
         }
         if dataservice:includes(fields, "employees") {
-            return <dsHttp:Forbidden>{body: dataservice:forbidden("Department", "employees")};
+            dsHttp:Forbidden? forbidden = dsHttp:authorizeRelation(request, "Department", "employees", "Employee", ["hr:read"]);
+            if forbidden is dsHttp:Forbidden {
+                return forbidden;
+            }
         }
         dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceDepartmentEntity, fields);
         if invalidFields is dataservice:DataserviceError {
@@ -268,6 +271,22 @@ service /api on dataserviceListener {
             Department[] sources = items;
             map<anydata>[] partials = from Department item in sources
                 select dataservice:narrow(item, dataserviceDepartmentEntity, fields);
+            do {
+                if dataservice:includes(fields, "employees") {
+                    foreach int i in 0 ..< sources.length() {
+                        dataservice:Query include = dataservice:includeQuery(dataserviceDepartmentEntity, "employees", [sources[i]], dataservicePageConfig);
+                        stream<Employee, persist:Error?> includedRows = dataserviceClient->/employees(Employee,
+                            whereClause = include.whereClause, orderByClause = include.orderByClause, limitClause = include.limitClause
+                        );
+                        Employee[] included = check from Employee row in includedRows
+                            select row;
+                        boolean includedMore = dataservice:page(included, include);
+                        dataservice:attachMany(partials[i], dataserviceDepartmentEntity, "employees", included, includedMore, fields);
+                    }
+                }
+            } on fail error err {
+                return dsHttp:toListError(err);
+            }
             DepartmentPartial[]|error converted = partials.cloneWithType();
             if converted is error {
                 return dsHttp:toListError(converted);
@@ -283,9 +302,12 @@ service /api on dataserviceListener {
     # + fields - The fields to return; the key fields are always returned
     # + return - The department, or the error response
     @http:ResourceConfig {auth: {scopes: ["hr:read", "org:read"]}}
-    resource function get departments/[int id](string[]? fields = ()) returns Department|DepartmentPartial|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Forbidden|dsHttp:InternalError {
+    resource function get departments/[int id](http:Request request, string[]? fields = ()) returns Department|DepartmentPartial|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Forbidden|dsHttp:InternalError {
         if dataservice:includes(fields, "employees") {
-            return <dsHttp:Forbidden>{body: dataservice:forbidden("Department", "employees")};
+            dsHttp:Forbidden? forbidden = dsHttp:authorizeRelation(request, "Department", "employees", "Employee", ["hr:read"]);
+            if forbidden is dsHttp:Forbidden {
+                return forbidden;
+            }
         }
         dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceDepartmentEntity, fields);
         if invalidFields is dataservice:DataserviceError {
@@ -298,6 +320,22 @@ service /api on dataserviceListener {
         if fields is string[] {
             Department[] sources = [item];
             map<anydata>[] partials = [dataservice:narrow(sources[0], dataserviceDepartmentEntity, fields)];
+            do {
+                if dataservice:includes(fields, "employees") {
+                    foreach int i in 0 ..< sources.length() {
+                        dataservice:Query include = dataservice:includeQuery(dataserviceDepartmentEntity, "employees", [sources[i]], dataservicePageConfig);
+                        stream<Employee, persist:Error?> includedRows = dataserviceClient->/employees(Employee,
+                            whereClause = include.whereClause, orderByClause = include.orderByClause, limitClause = include.limitClause
+                        );
+                        Employee[] included = check from Employee row in includedRows
+                            select row;
+                        boolean includedMore = dataservice:page(included, include);
+                        dataservice:attachMany(partials[i], dataserviceDepartmentEntity, "employees", included, includedMore, fields);
+                    }
+                }
+            } on fail error err {
+                return dsHttp:toGetError(err, "Department", [id]);
+            }
             DepartmentPartial|error partial = partials[0].cloneWithType();
             if partial is error {
                 return dsHttp:toGetError(partial, "Department", [id]);
@@ -317,9 +355,47 @@ service /api on dataserviceListener {
     # + fields - The fields of the employees to return; the key fields are always returned
     # + return - A page of the employees, or the error response
     @http:ResourceConfig {auth: {scopes: ["hr:read", "org:read"]}}
-    resource function get departments/[int id]/employees(EmployeeFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
+    resource function get departments/[int id]/employees(http:Request request, EmployeeFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
             string[]? fields = ()) returns EmployeeList|EmployeePartialList|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Forbidden|dsHttp:InternalError {
-        return <dsHttp:Forbidden>{body: dataservice:forbidden("Department", "employees")};
+        dsHttp:Forbidden? forbidden = dsHttp:authorizeRelation(request, "Department", "employees", "Employee", ["hr:read"]);
+        if forbidden is dsHttp:Forbidden {
+            return forbidden;
+        }
+        dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceEmployeeEntity, fields, false);
+        if invalidFields is dataservice:DataserviceError {
+            return dsHttp:toQueryError(invalidFields, "Employee");
+        }
+        dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
+            dataservice:relatedQuery(dataserviceDepartmentEntity, "employees", {"id": id}, dataservicePageConfig, filter, sort, size, offset);
+        if query !is dataservice:Query {
+            return dsHttp:toQueryError(query, "Employee");
+        }
+        stream<Employee, persist:Error?> rows = dataserviceClient->/employees(Employee,
+            whereClause = query.whereClause, orderByClause = query.orderByClause,
+            limitClause = query.limitClause, offsetClause = query.offsetClause
+        );
+        Employee[]|persist:Error items = from Employee related in rows
+            select related;
+        if items is persist:Error {
+            return dsHttp:toListError(items);
+        }
+        boolean hasMore = dataservice:page(items, query);
+        if items.length() == 0 {
+            Department|persist:Error item = dataserviceClient->/departments/[id];
+            if item is persist:Error {
+                return dsHttp:toGetError(item, "Department", [id]);
+            }
+            return <EmployeeList>{items, hasMore};
+        }
+        if fields is string[] {
+            EmployeePartial[]|error partials = (from Employee related in items
+                select dataservice:narrow(related, dataserviceEmployeeEntity, fields)).cloneWithType();
+            if partials is error {
+                return dsHttp:toListError(partials);
+            }
+            return <EmployeePartialList>{items: partials, hasMore};
+        }
+        return <EmployeeList>{items, hasMore};
     }
 
     # Creates one or more departments.

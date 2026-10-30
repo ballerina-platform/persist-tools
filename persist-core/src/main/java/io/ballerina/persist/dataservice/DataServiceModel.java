@@ -144,46 +144,34 @@ public final class DataServiceModel {
     }
 
     /**
-     * Returns the warnings about scopes: scopes set without auth, or, with auth, each relation whose `read` scopes
-     * the entity's do not cover.
+     * Returns the warnings about scopes set while the service has no auth.
      *
      * @param entities the exposed entities
      * @param auth     whether the service has auth
      * @return the warnings, in model order
      */
     public static List<String> scopeWarnings(List<ExposedEntity> entities, boolean auth) {
-        List<String> warnings = new ArrayList<>();
-        for (ExposedEntity entity : entities) {
-            if (!auth) {
-                if (entity.hasScopes()) {
-                    warnings.add(String.format(DataServiceMessages.SCOPES_WITHOUT_AUTH, entity.name()));
-                }
-                continue;
-            }
-            for (ExposedRelation relation : entity.relations()) {
-                if (refused(entity, relation, entities)) {
-                    warnings.add(String.format(DataServiceMessages.RELATION_REFUSED, relation.field(),
-                            entity.name(), entity.name(), relation.target()));
-                }
-            }
+        if (auth) {
+            return List.of();
         }
-        return warnings;
+        return entities.stream().filter(ExposedEntity::hasScopes)
+                .map(entity -> String.format(DataServiceMessages.SCOPES_WITHOUT_AUTH, entity.name())).toList();
     }
 
     /**
-     * Tells whether a relation is always refused with auth: when the entity's `read` scopes do not cover those of
-     * the related entity, which needs every caller allowed to read the entity to be allowed to read it.
+     * Tells whether the entity's `read` scopes cover those of a related entity, so that every caller allowed to read
+     * the entity is allowed to read the related entity, and reading the relation needs no check of its own.
      *
      * @param entity   the entity
      * @param relation one of its readable relations
      * @param entities the exposed entities
-     * @return whether the relation is refused
+     * @return whether the relation is covered
      */
-    public static boolean refused(ExposedEntity entity, ExposedRelation relation, List<ExposedEntity> entities) {
+    public static boolean covered(ExposedEntity entity, ExposedRelation relation, List<ExposedEntity> entities) {
         List<String> own = entity.scopes(Operation.READ);
         List<String> related = entities.stream().filter(target -> target.name().equals(relation.target()))
                 .findFirst().orElseThrow().scopes(Operation.READ);
-        return !(related.isEmpty() || (!own.isEmpty() && related.containsAll(own)));
+        return related.isEmpty() || (!own.isEmpty() && related.containsAll(own));
     }
 
     private static boolean isInternal(FieldRules.Applied rule) {

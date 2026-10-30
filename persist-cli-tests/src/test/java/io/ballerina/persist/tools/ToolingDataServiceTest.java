@@ -115,14 +115,12 @@ public class ToolingDataServiceTest {
         assertTestsPassed(bal(project, Map.of("TZ", "UTC"), "test", "--offline"), 60);
     }
 
-    @Test(description = "Authentication, scopes and refused relations of a service with auth, against H2")
+    @Test(description = "Authentication, scopes and relation checks of a service with auth, against H2")
     public void testAuthBehaviourH2() throws IOException, InterruptedException {
         Path project = SOURCES.resolve("tool_test_dataservice_auth");
         Result build = bal(project, Map.of(), "build", "--offline");
         assertSucceeded(build);
-        Assert.assertTrue(build.output().contains("WARNING: the relation 'employees' of the entity 'Department' is " +
-                "always refused in 'fields' and get related, because the 'read' scopes of 'Department' do not cover " +
-                "those of 'Employee'. Give both entities a shared 'read' scope."), build.output());
+        Assert.assertFalse(build.output().contains("WARNING: the relation"), build.output());
         Path init = project.resolve("db").resolve("init.sql");
         Files.createDirectories(init.getParent());
         String schema = Files.readAllLines(project.resolve("generated").resolve("script.sql")).stream()
@@ -135,6 +133,12 @@ public class ToolingDataServiceTest {
 
                 [[dataserviceAuth]]
                 [dataserviceAuth.fileUserStoreConfig]
+
+                [[dataserviceAuth]]
+                [dataserviceAuth.jwtValidatorConfig]
+                issuer = "dataservice"
+                [dataserviceAuth.jwtValidatorConfig.signatureConfig]
+                secret = "dataservice-test-secret"
 
                 [dataservice_test.dataservice_auth]
                 url = "jdbc:h2:mem:dsauth;DB_CLOSE_DELAY=-1;INIT=RUNSCRIPT FROM '%s'"
@@ -156,7 +160,7 @@ public class ToolingDataServiceTest {
                 password = "writer"
                 scopes = ["employees:create"]
                 """, init.toString().replace('\\', '/')));
-        assertTestsPassed(bal(project, Map.of(), "test", "--offline"), 7);
+        assertTestsPassed(bal(project, Map.of(), "test", "--offline"), 8);
     }
 
     // Generation from bal build

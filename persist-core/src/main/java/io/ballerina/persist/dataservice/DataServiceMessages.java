@@ -64,9 +64,6 @@ public final class DataServiceMessages {
             "scopes for '%s', which is not in 'operations'.";
     public static final String SCOPES_WITHOUT_AUTH = "the @dataservice:Expose annotation of the entity '%s' sets " +
             "scopes, but 'options.dataservice.auth' is not true, so no scope is checked.";
-    public static final String RELATION_REFUSED = "the relation '%s' of the entity '%s' is always refused in " +
-            "'fields' and get related, because the 'read' scopes of '%s' do not cover those of '%s'. Give both " +
-            "entities a shared 'read' scope.";
     public static final String RULE_MORE_THAN_ONE = "the field '%s' of the entity '%s' has more than one of " +
             "@dataservice:ReadOnly, @dataservice:Immutable and @dataservice:Internal.";
     public static final String RULE_ON_KEY = "the key field '%s' of the entity '%s' cannot have @dataservice:%s.";

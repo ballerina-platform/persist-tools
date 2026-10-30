@@ -224,8 +224,8 @@ public final class HttpDataServiceGenerator {
             appendDoc(out, entity, READ, "Gets " + n.article + " " + n.words + " by its key.", params,
                     "The " + n.words);
             out.append("    resource function get ").append(n.resource).append("/").append(keyParams)
-                    .append("(string[]? fields = ()) returns ").append(n.wire).append("|").append(n.partial)
-                    .append(errors(GET_ERRORS, !refused(entity).isEmpty())).append(" {").append(NEWLINE);
+                    .append("(").append(requestParam(entity)).append("string[]? fields = ()) returns ").append(n.wire).append("|").append(n.partial)
+                    .append(errors(GET_ERRORS, !checked(entity).isEmpty())).append(" {").append(NEWLINE);
             appendKeyCheck(out, entity, n, keyList);
             appendForbiddenCheck(out, entity, n);
             appendFieldsCheck(out, n);
@@ -321,10 +321,11 @@ public final class HttpDataServiceGenerator {
                 "size - The number of " + n.plural + " in the page",
                 "offset - The number of " + n.plural + " to skip",
                 "fields - The fields to return; the key fields are always returned"), "A page of " + n.plural);
-        out.append("    resource function get ").append(n.resource).append("(").append(n.filter)
-                .append("? filter = (), string[]? sort = (), int? size = (), int? offset = (),").append(NEWLINE);
+        out.append("    resource function get ").append(n.resource).append("(").append(requestParam(entity))
+                .append(n.filter).append("? filter = (), string[]? sort = (), int? size = (), int? offset = (),")
+                .append(NEWLINE);
         out.append("            string[]? fields = ()) returns ").append(n.list).append("|").append(n.partialList)
-                .append(errors(LIST_ERRORS, !refused(entity).isEmpty())).append(" {").append(NEWLINE);
+                .append(errors(LIST_ERRORS, !checked(entity).isEmpty())).append(" {").append(NEWLINE);
         out.append("        dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =")
                 .append(NEWLINE);
         out.append("            dataservice:query(").append(n.description)
@@ -363,11 +364,11 @@ public final class HttpDataServiceGenerator {
 
     // Adds the relations named in `fields` to `partials`, read from the records in `sources`.
     private void appendIncludes(StringBuilder out, ExposedEntity entity, Names n, String failure) {
-        if (allowed(entity).isEmpty()) {
+        if (entity.relations().isEmpty()) {
             return;
         }
         out.append("            do {").append(NEWLINE);
-        for (ExposedRelation relation : allowed(entity)) {
+        for (ExposedRelation relation : entity.relations()) {
             Names t = new Names(target(relation));
             String name = "\"" + unescape(relation.field()) + "\"";
             String indent = relation.many() ? "                        " : "                    ";
@@ -408,7 +409,7 @@ public final class HttpDataServiceGenerator {
         ExposedEntity targetEntity = target(relation);
         Names t = new Names(targetEntity);
         String name = unescape(relation.field());
-        boolean refused = refused(entity).contains(relation);
+        boolean checked = checked(entity).contains(relation);
         String words = String.join(" ", WORD_BOUNDARY.split(name)).toLowerCase(Locale.ENGLISH);
         String targetName = "\"" + t.displayName + "\"";
         List<String> params = new ArrayList<>(keyDocs(entity, n));
@@ -422,20 +423,16 @@ public final class HttpDataServiceGenerator {
         appendDoc(out, entity, READ, "Gets the " + words + " of " + n.article + " " + n.words + ".", params,
                 relation.many() ? "A page of the " + words : "The " + words);
         out.append("    resource function get ").append(n.resource).append("/").append(keyParams).append("/")
-                .append(relation.field()).append("(");
+                .append(relation.field()).append("(").append(checked ? "http:Request request, " : "");
         if (relation.many()) {
             out.append(t.filter).append("? filter = (), string[]? sort = (), int? size = (), int? offset = (),")
                     .append(NEWLINE).append("            ");
         }
         out.append("string[]? fields = ()) returns ")
                 .append(relation.many() ? t.list + "|" + t.partialList : t.wire + "|" + t.partial)
-                .append(errors(GET_ERRORS, refused)).append(" {").append(NEWLINE);
-        if (refused) {
-            // Always refused; the resource is still generated so that the API keeps its shape.
-            out.append("        return <dsHttp:Forbidden>{body: dataservice:forbidden(\"").append(n.displayName)
-                    .append("\", \"").append(name).append("\")};").append(NEWLINE);
-            out.append("    }").append(NEWLINE);
-            return;
+                .append(errors(GET_ERRORS, checked)).append(" {").append(NEWLINE);
+        if (checked) {
+            appendAuthorize(out, n, relation, "        ");
         }
         appendKeyCheck(out, entity, n, keyList);
         out.append("        dataservice:DataserviceError? invalidFields = dataservice:checkFields(")
@@ -517,24 +514,33 @@ public final class HttpDataServiceGenerator {
     }
 
     private void appendForbiddenCheck(StringBuilder out, ExposedEntity entity, Names n) {
-        for (ExposedRelation relation : refused(entity)) {
+        for (ExposedRelation relation : checked(entity)) {
             String name = "\"" + unescape(relation.field()) + "\"";
             out.append("        if dataservice:includes(fields, ").append(name).append(") {").append(NEWLINE);
-            out.append("            return <dsHttp:Forbidden>{body: dataservice:forbidden(\"").append(n.displayName)
-                    .append("\", ").append(name).append(")};").append(NEWLINE);
+            appendAuthorize(out, n, relation, "            ");
             out.append("        }").append(NEWLINE);
         }
     }
 
-    // A relation the entity's read scopes do not cover is refused with auth, so it is never read; its types stay.
-    private List<ExposedRelation> refused(ExposedEntity entity) {
-        return auth ? entity.relations().stream()
-                .filter(relation -> DataServiceModel.refused(entity, relation, entities)).toList() : List.of();
+    private void appendAuthorize(StringBuilder out, Names n, ExposedRelation relation, String indent) {
+        ExposedEntity target = target(relation);
+        out.append(indent).append("dsHttp:Forbidden? forbidden = dsHttp:authorizeRelation(request, \"")
+                .append(n.displayName).append("\", \"").append(unescape(relation.field())).append("\", \"")
+                .append(new Names(target).displayName).append("\", ").append(stringList(target.scopes(READ)))
+                .append(");").append(NEWLINE);
+        out.append(indent).append("if forbidden is dsHttp:Forbidden {").append(NEWLINE);
+        out.append(indent).append("    return forbidden;").append(NEWLINE);
+        out.append(indent).append("}").append(NEWLINE);
     }
 
-    private List<ExposedRelation> allowed(ExposedEntity entity) {
-        List<ExposedRelation> refused = refused(entity);
-        return entity.relations().stream().filter(relation -> !refused.contains(relation)).toList();
+    // With auth, a relation the entity's read scopes do not cover checks the caller's scopes before it is read.
+    private List<ExposedRelation> checked(ExposedEntity entity) {
+        return auth ? entity.relations().stream()
+                .filter(relation -> !DataServiceModel.covered(entity, relation, entities)).toList() : List.of();
+    }
+
+    private String requestParam(ExposedEntity entity) {
+        return checked(entity).isEmpty() ? "" : "http:Request request, ";
     }
 
     private static String errors(String errors, boolean forbidden) {
@@ -887,10 +893,10 @@ public final class HttpDataServiceGenerator {
         }
         out.append(String.join("," + NEWLINE, members)).append(NEWLINE);
         out.append(indent).append("    ]");
-        if (withRelations && !allowed(entity).isEmpty()) {
+        if (withRelations && !entity.relations().isEmpty()) {
             out.append(",").append(NEWLINE).append(indent).append("    relations: [").append(NEWLINE);
             List<String> relations = new ArrayList<>();
-            for (ExposedRelation relation : allowed(entity)) {
+            for (ExposedRelation relation : entity.relations()) {
                 relations.add(indent + "        {" + NEWLINE
                         + indent + "            'field: \"" + unescape(relation.field()) + "\"," + NEWLINE
                         + indent + "            many: " + relation.many() + "," + NEWLINE

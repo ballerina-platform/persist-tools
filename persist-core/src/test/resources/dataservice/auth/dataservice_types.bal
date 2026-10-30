@@ -212,6 +212,24 @@ final dataservice:Entity dataserviceDepartmentEntity = {
     fields: [
         {name: "id", column: "id", 'type: dataservice:INT, key: true},
         {name: "name", column: "name", 'type: dataservice:STRING}
+    ],
+    relations: [
+        {
+            'field: "employees",
+            many: true,
+            fields: ["id"],
+            targetFields: ["departmentId"],
+            target: {
+                name: "Employee",
+                'resource: "employees",
+                datastore: dataservice:H2,
+                fields: [
+                    {name: "id", column: "id", 'type: dataservice:INT, key: true},
+                    {name: "name", column: "name", 'type: dataservice:STRING},
+                    {name: "departmentId", column: "departmentId", 'type: dataservice:INT}
+                ]
+            }
+        }
     ]
 };
 

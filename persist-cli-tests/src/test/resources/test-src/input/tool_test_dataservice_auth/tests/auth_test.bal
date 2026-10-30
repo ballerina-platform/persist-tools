@@ -1,4 +1,5 @@
 import ballerina/http;
+import ballerina/jwt;
 import ballerina/test;
 
 const BASE = "http://localhost:9592";
@@ -7,6 +8,8 @@ final http:Client anonymous = check new (BASE);
 final http:Client reader = check new (BASE, auth = {username: "reader", password: "reader"});
 final http:Client orgReader = check new (BASE, auth = {username: "org", password: "org"});
 final http:Client writer = check new (BASE, auth = {username: "writer", password: "writer"});
+final http:Client hrBearer = check new (BASE, auth = {token: check token(["hr:read"])});
+final http:Client orgBearer = check new (BASE, auth = {token: check token(["org:read"])});
 
 @test:Config
 function testNoCredentials() returns error? {
@@ -51,21 +54,43 @@ function testCoveredRelation() returns error? {
 }
 
 @test:Config {dependsOn: [testDefaultScope]}
-function testRefusedRelation() returns error? {
+function testCheckedRelation() returns error? {
+    check assertCheckedRelation(reader, orgReader);
+}
+
+@test:Config {dependsOn: [testDefaultScope]}
+function testCheckedRelationWithJwt() returns error? {
+    check assertCheckedRelation(hrBearer, orgBearer);
+}
+
+// `allowed` holds a `read` scope of both entities, and `refused` only one of `Department`.
+function assertCheckedRelation(http:Client allowed, http:Client refused) returns error? {
     json forbidden = {
         code: "FORBIDDEN",
-        message: "The relation 'employees' of the entity 'Department' needs 'read' scopes that the entity's " +
-            "'read' scopes do not cover."
+        message: "The relation 'employees' of the entity 'Department' needs a 'read' scope of the entity 'Employee'."
     };
+    http:Response response = check allowed->get("/api/departments/1/employees");
+    test:assertEquals(check response.getJsonPayload(), {items: [{id: 1, name: "Ann", departmentId: 1}],
+        hasMore: false});
+    response = check allowed->get("/api/departments/1?fields=employees.name");
+    test:assertEquals(check response.getJsonPayload(), {id: 1, employees: {items: [{id: 1, name: "Ann"}],
+        hasMore: false}});
     foreach string path in ["/api/departments/1/employees", "/api/departments?fields=employees.name",
             "/api/departments/1?fields=employees"] {
-        http:Response response = check orgReader->get(path);
+        response = check refused->get(path);
         test:assertEquals(response.statusCode, 403, path);
         test:assertEquals(check response.getJsonPayload(), forbidden, path);
     }
-    http:Response response = check orgReader->get("/api/departments/1?fields=name");
+    response = check refused->get("/api/departments/1?fields=name");
     test:assertEquals(check response.getJsonPayload(), {id: 1, name: "Research"});
 }
+
+function token(string[] scopes) returns string|error => jwt:issue({
+    issuer: "dataservice",
+    username: "caller",
+    customClaims: {scope: string:'join(" ", ...scopes)},
+    signatureConfig: {algorithm: jwt:HS256, config: "dataservice-test-secret"}
+});
 
 @test:Config
 function testNoIntrospectionByDefault() returns error? {
