@@ -93,7 +93,7 @@ function token(string[] scopes) returns string|error => jwt:issue({
 });
 
 @test:Config
-function testNoIntrospectionByDefault() returns error? {
+function testIntrospectionByDefault() returns error? {
     http:Response response = check reader->get("/api/openapi-doc-dygixywsw");
-    test:assertNotEquals(response.statusCode, 200);
+    test:assertEquals(response.statusCode, 200);
 }

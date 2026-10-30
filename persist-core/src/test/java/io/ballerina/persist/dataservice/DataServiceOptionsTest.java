@@ -44,11 +44,11 @@ public class DataServiceOptionsTest {
     }
 
     @Test
-    public void testAuthTurnsIntrospectionOff() throws BalException {
+    public void testIntrospectionDefaultsToTrueWithAuth() throws BalException {
         Assert.assertEquals(DataServiceOptions.from(Map.of("protocol", "http", "auth", true)),
-                new DataServiceOptions("http", "/api", true, false));
-        Assert.assertEquals(DataServiceOptions.from(Map.of("protocol", "http", "auth", true, "introspection", true)),
                 new DataServiceOptions("http", "/api", true, true));
+        Assert.assertEquals(DataServiceOptions.from(Map.of("protocol", "http", "auth", true, "introspection", false)),
+                new DataServiceOptions("http", "/api", true, false));
     }
 
     @Test

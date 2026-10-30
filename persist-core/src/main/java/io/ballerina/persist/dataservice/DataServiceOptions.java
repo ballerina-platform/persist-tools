@@ -67,7 +67,7 @@ public record DataServiceOptions(String protocol, String basePath, boolean auth,
         Object introspection = group.get(INTROSPECTION);
         return new DataServiceOptions(validProtocol,
                 validateBasePath(basePath == null ? DEFAULT_HTTP_BASE_PATH : basePath.toString()), auth,
-                introspection == null ? !auth : Boolean.parseBoolean(introspection.toString()));
+                introspection == null || Boolean.parseBoolean(introspection.toString()));
     }
 
     /**
