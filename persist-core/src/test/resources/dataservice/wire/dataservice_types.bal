@@ -66,10 +66,10 @@ public type DocumentUpdatePayload record {|
 #
 # + items - The documents
 # + hasMore - Whether records exist after this page
-public type DocumentList record {|
+public type DocumentList record {
     DocumentPayload[] items;
     boolean hasMore;
-|};
+};
 
 # The conditions that documents match, as the `filter` query parameter holds them.
 #
@@ -185,10 +185,10 @@ public type DocumentPartial record {|
 #
 # + items - The documents
 # + hasMore - Whether records exist after this page
-public type DocumentPartialList record {|
+public type DocumentPartialList record {
     DocumentPartial[] items;
     boolean hasMore;
-|};
+};
 
 # The description of `Document` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceDocumentEntity = {
@@ -377,10 +377,10 @@ public type HolidayPayload record {|
 #
 # + items - The holidays
 # + hasMore - Whether records exist after this page
-public type HolidayList record {|
+public type HolidayList record {
     HolidayPayload[] items;
     boolean hasMore;
-|};
+};
 
 # The conditions that holidays match, as the `filter` query parameter holds them.
 #
@@ -420,10 +420,10 @@ public type HolidayPartial record {|
 #
 # + items - The holidays
 # + hasMore - Whether records exist after this page
-public type HolidayPartialList record {|
+public type HolidayPartialList record {
     HolidayPartial[] items;
     boolean hasMore;
-|};
+};
 
 # The description of `Holiday` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceHolidayEntity = {

@@ -9,10 +9,10 @@ import ballerina/http;
 #
 # + items - The employees
 # + hasMore - Whether records exist after this page
-public type EmployeeList record {|
+public type EmployeeList record {
     Employee[] items;
     boolean hasMore;
-|};
+};
 
 # The conditions that employees match, as the `filter` query parameter holds them.
 #
@@ -83,10 +83,10 @@ public type EmployeePartial record {|
 #
 # + items - The employees
 # + hasMore - Whether records exist after this page
-public type EmployeePartialList record {|
+public type EmployeePartialList record {
     EmployeePartial[] items;
     boolean hasMore;
-|};
+};
 
 # An employee read through a relation, with the fields named in the `fields` query parameter.
 #
@@ -105,10 +105,10 @@ public type EmployeeRelatedPartial record {|
 #
 # + items - The employees, at most `dataserviceConfig.pageSize`
 # + hasMore - Whether more employees exist
-public type EmployeeRelatedPartialList record {|
+public type EmployeeRelatedPartialList record {
     EmployeeRelatedPartial[] items;
     boolean hasMore;
-|};
+};
 
 # The description of `Employee` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceEmployeeEntity = {
@@ -162,10 +162,10 @@ public type EmployeeListCreated record {|
 #
 # + items - The departments
 # + hasMore - Whether records exist after this page
-public type DepartmentList record {|
+public type DepartmentList record {
     Department[] items;
     boolean hasMore;
-|};
+};
 
 # The conditions that departments match, as the `filter` query parameter holds them.
 #
@@ -209,10 +209,10 @@ public type DepartmentPartial record {|
 #
 # + items - The departments
 # + hasMore - Whether records exist after this page
-public type DepartmentPartialList record {|
+public type DepartmentPartialList record {
     DepartmentPartial[] items;
     boolean hasMore;
-|};
+};
 
 # A department read through a relation, with the fields named in the `fields` query parameter.
 #

@@ -773,10 +773,10 @@ public final class HttpDataServiceGenerator {
             out.append("#").append(NEWLINE);
             out.append("# + items - The ").append(n.plural).append(NEWLINE);
             out.append("# + hasMore - Whether records exist after this page").append(NEWLINE);
-            out.append("public type ").append(n.list).append(" record {|").append(NEWLINE);
+            out.append("public type ").append(n.list).append(" record {").append(NEWLINE);
             out.append("    ").append(n.wire).append("[] items;").append(NEWLINE);
             out.append("    boolean hasMore;").append(NEWLINE);
-            out.append("|};").append(NEWLINE);
+            out.append("};").append(NEWLINE);
         }
         if (entity.allows(READ)) {
             appendFilter(out, entity, n);
@@ -859,10 +859,10 @@ public final class HttpDataServiceGenerator {
         out.append("#").append(NEWLINE);
         out.append("# + items - The ").append(n.plural).append(NEWLINE);
         out.append("# + hasMore - Whether records exist after this page").append(NEWLINE);
-        out.append("public type ").append(n.partialList).append(" record {|").append(NEWLINE);
+        out.append("public type ").append(n.partialList).append(" record {").append(NEWLINE);
         out.append("    ").append(n.partial).append("[] items;").append(NEWLINE);
         out.append("    boolean hasMore;").append(NEWLINE);
-        out.append("|};").append(NEWLINE);
+        out.append("};").append(NEWLINE);
     }
 
     // A related entity that callers can read is described in each relation that reaches it as well, with its own
@@ -896,10 +896,10 @@ public final class HttpDataServiceGenerator {
             out.append("# + items - The ").append(n.plural).append(", at most `dataserviceConfig.pageSize`")
                     .append(NEWLINE);
             out.append("# + hasMore - Whether more ").append(n.plural).append(" exist").append(NEWLINE);
-            out.append("public type ").append(n.relatedPartialList).append(" record {|").append(NEWLINE);
+            out.append("public type ").append(n.relatedPartialList).append(" record {").append(NEWLINE);
             out.append("    ").append(n.relatedPartial).append("[] items;").append(NEWLINE);
             out.append("    boolean hasMore;").append(NEWLINE);
-            out.append("|};").append(NEWLINE);
+            out.append("};").append(NEWLINE);
         }
     }
 

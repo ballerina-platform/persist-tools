@@ -193,7 +193,7 @@ public class ToolingDataServiceTest {
         Assert.assertTrue(Files.exists(project.resolve("generated").resolve(CONFIG)));
         String types = Files.readString(project.resolve("generated").resolve(TYPES));
         Assert.assertTrue(types.contains("public type EmployeePayload record {|"), types);
-        Assert.assertTrue(types.contains("public type AssignmentList record {|"), types);
+        Assert.assertTrue(types.contains("public type AssignmentList record {\n"), types);
         Assert.assertFalse(service.contains("public type "), service);
     }
 

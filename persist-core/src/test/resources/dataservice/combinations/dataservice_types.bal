@@ -10,10 +10,10 @@ import ballerina/http;
 #
 # + items - The read items
 # + hasMore - Whether records exist after this page
-public type ReadItemList record {|
+public type ReadItemList record {
     ReadItem[] items;
     boolean hasMore;
-|};
+};
 
 # The conditions that read items match, as the `filter` query parameter holds them.
 #
@@ -55,10 +55,10 @@ public type ReadItemPartial record {|
 #
 # + items - The read items
 # + hasMore - Whether records exist after this page
-public type ReadItemPartialList record {|
+public type ReadItemPartialList record {
     ReadItemPartial[] items;
     boolean hasMore;
-|};
+};
 
 # The description of `ReadItem` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceReadItemEntity = {
@@ -76,10 +76,10 @@ final dataservice:Entity dataserviceReadItemEntity = {
 #
 # + items - The create items
 # + hasMore - Whether records exist after this page
-public type CreateItemList record {|
+public type CreateItemList record {
     CreateItem[] items;
     boolean hasMore;
-|};
+};
 
 # The description of `CreateItem` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceCreateItemEntity = {
@@ -113,10 +113,10 @@ public type CreateItemListCreated record {|
 #
 # + items - The read create items
 # + hasMore - Whether records exist after this page
-public type ReadCreateItemList record {|
+public type ReadCreateItemList record {
     ReadCreateItem[] items;
     boolean hasMore;
-|};
+};
 
 # The conditions that read create items match, as the `filter` query parameter holds them.
 #
@@ -158,10 +158,10 @@ public type ReadCreateItemPartial record {|
 #
 # + items - The read create items
 # + hasMore - Whether records exist after this page
-public type ReadCreateItemPartialList record {|
+public type ReadCreateItemPartialList record {
     ReadCreateItemPartial[] items;
     boolean hasMore;
-|};
+};
 
 # The description of `ReadCreateItem` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceReadCreateItemEntity = {
@@ -195,10 +195,10 @@ public type ReadCreateItemListCreated record {|
 #
 # + items - The read update items
 # + hasMore - Whether records exist after this page
-public type ReadUpdateItemList record {|
+public type ReadUpdateItemList record {
     ReadUpdateItem[] items;
     boolean hasMore;
-|};
+};
 
 # The conditions that read update items match, as the `filter` query parameter holds them.
 #
@@ -240,10 +240,10 @@ public type ReadUpdateItemPartial record {|
 #
 # + items - The read update items
 # + hasMore - Whether records exist after this page
-public type ReadUpdateItemPartialList record {|
+public type ReadUpdateItemPartialList record {
     ReadUpdateItemPartial[] items;
     boolean hasMore;
-|};
+};
 
 # The description of `ReadUpdateItem` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceReadUpdateItemEntity = {
@@ -261,10 +261,10 @@ final dataservice:Entity dataserviceReadUpdateItemEntity = {
 #
 # + items - The read delete items
 # + hasMore - Whether records exist after this page
-public type ReadDeleteItemList record {|
+public type ReadDeleteItemList record {
     ReadDeleteItem[] items;
     boolean hasMore;
-|};
+};
 
 # The conditions that read delete items match, as the `filter` query parameter holds them.
 #
@@ -306,10 +306,10 @@ public type ReadDeleteItemPartial record {|
 #
 # + items - The read delete items
 # + hasMore - Whether records exist after this page
-public type ReadDeleteItemPartialList record {|
+public type ReadDeleteItemPartialList record {
     ReadDeleteItemPartial[] items;
     boolean hasMore;
-|};
+};
 
 # The description of `ReadDeleteItem` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceReadDeleteItemEntity = {
@@ -327,10 +327,10 @@ final dataservice:Entity dataserviceReadDeleteItemEntity = {
 #
 # + items - The create update items
 # + hasMore - Whether records exist after this page
-public type CreateUpdateItemList record {|
+public type CreateUpdateItemList record {
     CreateUpdateItem[] items;
     boolean hasMore;
-|};
+};
 
 # The description of `CreateUpdateItem` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceCreateUpdateItemEntity = {
@@ -364,10 +364,10 @@ public type CreateUpdateItemListCreated record {|
 #
 # + items - The create delete items
 # + hasMore - Whether records exist after this page
-public type CreateDeleteItemList record {|
+public type CreateDeleteItemList record {
     CreateDeleteItem[] items;
     boolean hasMore;
-|};
+};
 
 # The description of `CreateDeleteItem` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceCreateDeleteItemEntity = {
@@ -401,10 +401,10 @@ public type CreateDeleteItemListCreated record {|
 #
 # + items - The read create update items
 # + hasMore - Whether records exist after this page
-public type ReadCreateUpdateItemList record {|
+public type ReadCreateUpdateItemList record {
     ReadCreateUpdateItem[] items;
     boolean hasMore;
-|};
+};
 
 # The conditions that read create update items match, as the `filter` query parameter holds them.
 #
@@ -446,10 +446,10 @@ public type ReadCreateUpdateItemPartial record {|
 #
 # + items - The read create update items
 # + hasMore - Whether records exist after this page
-public type ReadCreateUpdateItemPartialList record {|
+public type ReadCreateUpdateItemPartialList record {
     ReadCreateUpdateItemPartial[] items;
     boolean hasMore;
-|};
+};
 
 # The description of `ReadCreateUpdateItem` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceReadCreateUpdateItemEntity = {
@@ -483,10 +483,10 @@ public type ReadCreateUpdateItemListCreated record {|
 #
 # + items - The read create delete items
 # + hasMore - Whether records exist after this page
-public type ReadCreateDeleteItemList record {|
+public type ReadCreateDeleteItemList record {
     ReadCreateDeleteItem[] items;
     boolean hasMore;
-|};
+};
 
 # The conditions that read create delete items match, as the `filter` query parameter holds them.
 #
@@ -528,10 +528,10 @@ public type ReadCreateDeleteItemPartial record {|
 #
 # + items - The read create delete items
 # + hasMore - Whether records exist after this page
-public type ReadCreateDeleteItemPartialList record {|
+public type ReadCreateDeleteItemPartialList record {
     ReadCreateDeleteItemPartial[] items;
     boolean hasMore;
-|};
+};
 
 # The description of `ReadCreateDeleteItem` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceReadCreateDeleteItemEntity = {
@@ -565,10 +565,10 @@ public type ReadCreateDeleteItemListCreated record {|
 #
 # + items - The read update delete items
 # + hasMore - Whether records exist after this page
-public type ReadUpdateDeleteItemList record {|
+public type ReadUpdateDeleteItemList record {
     ReadUpdateDeleteItem[] items;
     boolean hasMore;
-|};
+};
 
 # The conditions that read update delete items match, as the `filter` query parameter holds them.
 #
@@ -610,10 +610,10 @@ public type ReadUpdateDeleteItemPartial record {|
 #
 # + items - The read update delete items
 # + hasMore - Whether records exist after this page
-public type ReadUpdateDeleteItemPartialList record {|
+public type ReadUpdateDeleteItemPartialList record {
     ReadUpdateDeleteItemPartial[] items;
     boolean hasMore;
-|};
+};
 
 # The description of `ReadUpdateDeleteItem` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceReadUpdateDeleteItemEntity = {
@@ -631,10 +631,10 @@ final dataservice:Entity dataserviceReadUpdateDeleteItemEntity = {
 #
 # + items - The create update delete items
 # + hasMore - Whether records exist after this page
-public type CreateUpdateDeleteItemList record {|
+public type CreateUpdateDeleteItemList record {
     CreateUpdateDeleteItem[] items;
     boolean hasMore;
-|};
+};
 
 # The description of `CreateUpdateDeleteItem` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceCreateUpdateDeleteItemEntity = {
@@ -668,10 +668,10 @@ public type CreateUpdateDeleteItemListCreated record {|
 #
 # + items - The read create update delete items
 # + hasMore - Whether records exist after this page
-public type ReadCreateUpdateDeleteItemList record {|
+public type ReadCreateUpdateDeleteItemList record {
     ReadCreateUpdateDeleteItem[] items;
     boolean hasMore;
-|};
+};
 
 # The conditions that read create update delete items match, as the `filter` query parameter holds them.
 #
@@ -713,10 +713,10 @@ public type ReadCreateUpdateDeleteItemPartial record {|
 #
 # + items - The read create update delete items
 # + hasMore - Whether records exist after this page
-public type ReadCreateUpdateDeleteItemPartialList record {|
+public type ReadCreateUpdateDeleteItemPartialList record {
     ReadCreateUpdateDeleteItemPartial[] items;
     boolean hasMore;
-|};
+};
 
 # The description of `ReadCreateUpdateDeleteItem` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceReadCreateUpdateDeleteItemEntity = {

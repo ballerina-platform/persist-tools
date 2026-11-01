@@ -10,10 +10,10 @@ import ballerina/http;
 #
 # + items - The assignments
 # + hasMore - Whether records exist after this page
-public type AssignmentList record {|
+public type AssignmentList record {
     Assignment[] items;
     boolean hasMore;
-|};
+};
 
 # The conditions that assignments match, as the `filter` query parameter holds them.
 #
@@ -75,10 +75,10 @@ public type AssignmentPartial record {|
 #
 # + items - The assignments
 # + hasMore - Whether records exist after this page
-public type AssignmentPartialList record {|
+public type AssignmentPartialList record {
     AssignmentPartial[] items;
     boolean hasMore;
-|};
+};
 
 # The description of `Assignment` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceAssignmentEntity = {
@@ -114,10 +114,10 @@ public type AssignmentListCreated record {|
 #
 # + items - The rates
 # + hasMore - Whether records exist after this page
-public type RateList record {|
+public type RateList record {
     Rate[] items;
     boolean hasMore;
-|};
+};
 
 # The conditions that rates match, as the `filter` query parameter holds them.
 #
@@ -179,10 +179,10 @@ public type RatePartial record {|
 #
 # + items - The rates
 # + hasMore - Whether records exist after this page
-public type RatePartialList record {|
+public type RatePartialList record {
     RatePartial[] items;
     boolean hasMore;
-|};
+};
 
 # The description of `Rate` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceRateEntity = {

@@ -32,10 +32,10 @@ public type TicketInsertPayload record {|
 #
 # + items - The tickets
 # + hasMore - Whether records exist after this page
-public type TicketList record {|
+public type TicketList record {
     TicketPayload[] items;
     boolean hasMore;
-|};
+};
 
 # The conditions that tickets match, as the `filter` query parameter holds them.
 #
@@ -89,10 +89,10 @@ public type TicketPartial record {|
 #
 # + items - The tickets
 # + hasMore - Whether records exist after this page
-public type TicketPartialList record {|
+public type TicketPartialList record {
     TicketPartial[] items;
     boolean hasMore;
-|};
+};
 
 # The description of `Ticket` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceTicketEntity = {
@@ -149,10 +149,10 @@ isolated function transformPayloadToTicketInsert(TicketInsertPayload payload) re
 #
 # + items - The order items
 # + hasMore - Whether records exist after this page
-public type OrderItemList record {|
+public type OrderItemList record {
     OrderItem[] items;
     boolean hasMore;
-|};
+};
 
 # The description of `OrderItem` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceOrderItemEntity = {

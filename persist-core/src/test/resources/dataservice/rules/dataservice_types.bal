@@ -57,10 +57,10 @@ public type OrderUpdatePayload record {|
 #
 # + items - The orders
 # + hasMore - Whether records exist after this page
-public type OrderList record {|
+public type OrderList record {
     OrderPayload[] items;
     boolean hasMore;
-|};
+};
 
 # The conditions that orders match, as the `filter` query parameter holds them.
 #
@@ -154,10 +154,10 @@ public type OrderPartial record {|
 #
 # + items - The orders
 # + hasMore - Whether records exist after this page
-public type OrderPartialList record {|
+public type OrderPartialList record {
     OrderPartial[] items;
     boolean hasMore;
-|};
+};
 
 # An order read through a relation, with the fields named in the `fields` query parameter.
 #
@@ -180,10 +180,10 @@ public type OrderRelatedPartial record {|
 #
 # + items - The orders, at most `dataserviceConfig.pageSize`
 # + hasMore - Whether more orders exist
-public type OrderRelatedPartialList record {|
+public type OrderRelatedPartialList record {
     OrderRelatedPartial[] items;
     boolean hasMore;
-|};
+};
 
 # The description of `Order` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceOrderEntity = {
@@ -281,10 +281,10 @@ isolated function transformPayloadToOrderUpdate(OrderUpdatePayload payload) retu
 #
 # + items - The customers
 # + hasMore - Whether records exist after this page
-public type CustomerList record {|
+public type CustomerList record {
     Customer[] items;
     boolean hasMore;
-|};
+};
 
 # The conditions that customers match, as the `filter` query parameter holds them.
 #
@@ -326,10 +326,10 @@ public type CustomerPartial record {|
 #
 # + items - The customers
 # + hasMore - Whether records exist after this page
-public type CustomerPartialList record {|
+public type CustomerPartialList record {
     CustomerPartial[] items;
     boolean hasMore;
-|};
+};
 
 # A customer read through a relation, with the fields named in the `fields` query parameter.
 #
@@ -356,10 +356,10 @@ final dataservice:Entity dataserviceCustomerEntity = {
 #
 # + items - The warehouses
 # + hasMore - Whether records exist after this page
-public type WarehouseList record {|
+public type WarehouseList record {
     Warehouse[] items;
     boolean hasMore;
-|};
+};
 
 # The conditions that warehouses match, as the `filter` query parameter holds them.
 #
@@ -403,10 +403,10 @@ public type WarehousePartial record {|
 #
 # + items - The warehouses
 # + hasMore - Whether records exist after this page
-public type WarehousePartialList record {|
+public type WarehousePartialList record {
     WarehousePartial[] items;
     boolean hasMore;
-|};
+};
 
 # The description of `Warehouse` that `ballerina/dataservice` builds queries from.
 final dataservice:Entity dataserviceWarehouseEntity = {
