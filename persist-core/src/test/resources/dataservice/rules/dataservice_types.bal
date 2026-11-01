@@ -159,7 +159,7 @@ public type OrderPartialList record {|
     boolean hasMore;
 |};
 
-# An order included in a related record by the `fields` query parameter.
+# An order read through a relation, with the fields named in the `fields` query parameter.
 #
 # + id - The `id` field of `Order`
 # + number - The `number` field of `Order`
@@ -176,7 +176,7 @@ public type OrderRelatedPartial record {|
     int warehouseId?;
 |};
 
-# The orders included in a related record by the `fields` query parameter.
+# The orders read through a relation, with the fields named in the `fields` query parameter.
 #
 # + items - The orders, at most `dataserviceConfig.pageSize`
 # + hasMore - Whether more orders exist
@@ -331,7 +331,7 @@ public type CustomerPartialList record {|
     boolean hasMore;
 |};
 
-# A customer included in a related record by the `fields` query parameter.
+# A customer read through a relation, with the fields named in the `fields` query parameter.
 #
 # + id - The `id` field of `Customer`
 # + name - The `name` field of `Customer`

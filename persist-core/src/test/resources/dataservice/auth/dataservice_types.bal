@@ -74,7 +74,7 @@ public type EmployeePartialList record {|
     boolean hasMore;
 |};
 
-# An employee included in a related record by the `fields` query parameter.
+# An employee read through a relation, with the fields named in the `fields` query parameter.
 #
 # + id - The `id` field of `Employee`
 # + name - The `name` field of `Employee`
@@ -85,7 +85,7 @@ public type EmployeeRelatedPartial record {|
     int departmentId?;
 |};
 
-# The employees included in a related record by the `fields` query parameter.
+# The employees read through a relation, with the fields named in the `fields` query parameter.
 #
 # + items - The employees, at most `dataserviceConfig.pageSize`
 # + hasMore - Whether more employees exist
@@ -197,7 +197,7 @@ public type DepartmentPartialList record {|
     boolean hasMore;
 |};
 
-# A department included in a related record by the `fields` query parameter.
+# A department read through a relation, with the fields named in the `fields` query parameter.
 #
 # + id - The `id` field of `Department`
 # + name - The `name` field of `Department`

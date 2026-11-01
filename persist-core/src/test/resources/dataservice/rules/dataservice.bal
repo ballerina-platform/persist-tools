@@ -118,7 +118,7 @@ service /api on dataserviceListener {
     # + id - The id of the order
     # + fields - The fields of the customer to return; the key fields are always returned
     # + return - The customer, or the error response
-    resource function get orders/[int id]/customer(string[]? fields = ()) returns Customer|CustomerPartial|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+    resource function get orders/[int id]/customer(string[]? fields = ()) returns Customer|CustomerRelatedPartial|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
         dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceCustomerEntity, fields, false);
         if invalidFields is dataservice:DataserviceError {
             return dsHttp:toQueryError(invalidFields, "Customer");
@@ -145,7 +145,7 @@ service /api on dataserviceListener {
             return <dsHttp:NotFound>{body: dataservice:noRelated(dataserviceOrderEntity, "customer", [id])};
         }
         if fields is string[] {
-            CustomerPartial|error partial = dataservice:narrow(items[0], dataserviceCustomerEntity, fields).cloneWithType();
+            CustomerRelatedPartial|error partial = dataservice:narrow(items[0], dataserviceCustomerEntity, fields).cloneWithType();
             if partial is error {
                 return dsHttp:toListError(partial);
             }
@@ -418,7 +418,7 @@ service /api on dataserviceListener {
     # + fields - The fields of the orders to return; the key fields are always returned
     # + return - A page of the orders, or the error response
     resource function get warehouses/[int id]/orders(OrderFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
-            string[]? fields = ()) returns OrderList|OrderPartialList|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+            string[]? fields = ()) returns OrderList|OrderRelatedPartialList|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
         dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceOrderEntity, fields, false);
         if invalidFields is dataservice:DataserviceError {
             return dsHttp:toQueryError(invalidFields, "Order");
@@ -446,12 +446,12 @@ service /api on dataserviceListener {
             return <OrderList>{items, hasMore};
         }
         if fields is string[] {
-            OrderPartial[]|error partials = (from OrderPayload related in items
+            OrderRelatedPartial[]|error partials = (from OrderPayload related in items
                 select dataservice:narrow(related, dataserviceOrderEntity, fields)).cloneWithType();
             if partials is error {
                 return dsHttp:toListError(partials);
             }
-            return <OrderPartialList>{items: partials, hasMore};
+            return <OrderRelatedPartialList>{items: partials, hasMore};
         }
         return <OrderList>{items, hasMore};
     }

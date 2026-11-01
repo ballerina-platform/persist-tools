@@ -438,7 +438,7 @@ public final class HttpDataServiceGenerator {
                     .append(NEWLINE).append("            ");
         }
         out.append("string[]? fields = ()) returns ")
-                .append(relation.many() ? t.list + "|" + t.partialList : t.wire + "|" + t.partial)
+                .append(relation.many() ? t.list + "|" + t.relatedPartialList : t.wire + "|" + t.relatedPartial)
                 .append(errors(GET_ERRORS, checked)).append(" {").append(NEWLINE);
         if (checked) {
             appendAuthorize(out, n, relation, "        ");
@@ -499,17 +499,17 @@ public final class HttpDataServiceGenerator {
         out.append("        }").append(NEWLINE);
         out.append("        if fields is string[] {").append(NEWLINE);
         if (relation.many()) {
-            out.append("            ").append(t.partial).append("[]|error partials = (from ").append(t.wire)
+            out.append("            ").append(t.relatedPartial).append("[]|error partials = (from ").append(t.wire)
                     .append(" related in items").append(NEWLINE);
             out.append("                select dataservice:narrow(related, ").append(t.description)
                     .append(", fields)).cloneWithType();").append(NEWLINE);
             out.append("            if partials is error {").append(NEWLINE);
             out.append("                return dsHttp:toListError(partials);").append(NEWLINE);
             out.append("            }").append(NEWLINE);
-            out.append("            return <").append(t.partialList).append(">{items: partials, hasMore};")
+            out.append("            return <").append(t.relatedPartialList).append(">{items: partials, hasMore};")
                     .append(NEWLINE);
         } else {
-            out.append("            ").append(t.partial).append("|error partial = dataservice:narrow(items[0], ")
+            out.append("            ").append(t.relatedPartial).append("|error partial = dataservice:narrow(items[0], ")
                     .append(t.description).append(", fields).cloneWithType();").append(NEWLINE);
             out.append("            if partial is error {").append(NEWLINE);
             out.append("                return dsHttp:toListError(partial);").append(NEWLINE);
@@ -842,7 +842,8 @@ public final class HttpDataServiceGenerator {
             return;
         }
         out.append(NEWLINE).append("# ").append(capitalize(n.article)).append(" ").append(n.words)
-                .append(" included in a related record by the `fields` query parameter.").append(NEWLINE);
+                .append(" read through a relation, with the fields named in the `fields` query parameter.")
+                .append(NEWLINE);
         out.append("#").append(NEWLINE);
         List<ServiceField> fields = returned(entity.fields());
         for (ServiceField field : fields) {
@@ -857,7 +858,8 @@ public final class HttpDataServiceGenerator {
         out.append("|};").append(NEWLINE);
         if (reaching.stream().anyMatch(ExposedRelation::many)) {
             out.append(NEWLINE).append("# The ").append(n.plural)
-                    .append(" included in a related record by the `fields` query parameter.").append(NEWLINE);
+                    .append(" read through a relation, with the fields named in the `fields` query parameter.")
+                    .append(NEWLINE);
             out.append("#").append(NEWLINE);
             out.append("# + items - The ").append(n.plural).append(", at most `dataserviceConfig.pageSize`")
                     .append(NEWLINE);
