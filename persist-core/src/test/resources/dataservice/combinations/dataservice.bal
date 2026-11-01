@@ -17,7 +17,12 @@ listener http:Listener dataserviceListener =
         new (dataserviceConfig.port, dataserviceConfig.listenerConfig);
 
 @openapi:ServiceInfo {embed: true}
-service /api on dataserviceListener {
+service http:InterceptableService /api on dataserviceListener {
+
+    # Answers the errors that `ballerina/http` raises with the `DataserviceError` body.
+    #
+    # + return - The error interceptor
+    public function createInterceptors() returns dsHttp:ErrorInterceptor => new;
 
     # Gets a page of read items.
     #

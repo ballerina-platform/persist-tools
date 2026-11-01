@@ -342,3 +342,23 @@ function testFieldRulesOnPatch() returns error? {
     http:Response read = check send("GET", "/api/invoices/1");
     test:assertEquals(check read.getJsonPayload(), {id: 1, number: "I-1", state: "draft", total: 20});
 }
+
+@test:Config
+function testErrorsRaisedByHttpUseTheErrorBody() returns error? {
+    map<[string, string, json, int, string]> cases = {
+        "path": ["GET", "/api/employees/abc", (), 400, "INVALID_INPUT"],
+        "payload": ["POST", "/api/employees", {id: 50}, 400, "INVALID_INPUT"],
+        "query": ["GET", "/api/employees?size=x", (), 400, "INVALID_INPUT"],
+        "path with no resource": ["GET", "/api/auditlogs", (), 404, "NOT_FOUND"],
+        "method with no resource": ["PUT", "/api/employees/1", {}, 405, "INVALID_INPUT"]
+    };
+    foreach [string, [string, string, json, int, string]] [name, [method, path, body, status, code]]
+            in cases.entries() {
+        http:Response response = check send(method, path, body);
+        test:assertEquals(response.statusCode, status, name);
+        json payload = check response.getJsonPayload();
+        test:assertEquals(check payload.code, code, name);
+        test:assertTrue((check payload.message) is string, name);
+        test:assertEquals((<map<json>>payload).keys().length(), 2, name);
+    }
+}

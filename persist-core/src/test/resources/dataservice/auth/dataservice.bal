@@ -16,7 +16,12 @@ listener http:Listener dataserviceListener =
         new (dataserviceConfig.port, dataserviceConfig.listenerConfig);
 
 @http:ServiceConfig {auth: dataserviceAuthConfig}
-service /api on dataserviceListener {
+service http:InterceptableService /api on dataserviceListener {
+
+    # Answers the errors that `ballerina/http` raises with the `DataserviceError` body.
+    #
+    # + return - The error interceptor
+    public function createInterceptors() returns dsHttp:ErrorInterceptor => new;
 
     # Gets a page of employees.
     #
@@ -28,7 +33,7 @@ service /api on dataserviceListener {
     # + return - A page of employees, or the error response
     @http:ResourceConfig {auth: {scopes: ["hr:read"]}}
     resource function get employees(EmployeeFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
-            string[]? fields = ()) returns EmployeeList|EmployeePartialList|dsHttp:InvalidInput|dsHttp:InternalError {
+            string[]? fields = ()) returns EmployeeList|EmployeePartialList|dsHttp:InvalidInput|dsHttp:Unauthorized|dsHttp:Forbidden|dsHttp:InternalError {
         dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
             dataservice:query(dataserviceEmployeeEntity, dataservicePageConfig, filter, sort, size, offset);
         if query !is dataservice:Query {
@@ -80,7 +85,7 @@ service /api on dataserviceListener {
     # + fields - The fields to return; the key fields are always returned
     # + return - The employee, or the error response
     @http:ResourceConfig {auth: {scopes: ["hr:read"]}}
-    resource function get employees/[int id](string[]? fields = ()) returns Employee|EmployeePartial|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+    resource function get employees/[int id](string[]? fields = ()) returns Employee|EmployeePartial|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Unauthorized|dsHttp:Forbidden|dsHttp:InternalError {
         dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceEmployeeEntity, fields);
         if invalidFields is dataservice:DataserviceError {
             return dsHttp:toQueryError(invalidFields, "Employee");
@@ -120,7 +125,7 @@ service /api on dataserviceListener {
     # + fields - The fields of the department to return; the key fields are always returned
     # + return - The department, or the error response
     @http:ResourceConfig {auth: {scopes: ["hr:read"]}}
-    resource function get employees/[int id]/department(string[]? fields = ()) returns Department|DepartmentRelatedPartial|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError {
+    resource function get employees/[int id]/department(string[]? fields = ()) returns Department|DepartmentRelatedPartial|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Unauthorized|dsHttp:Forbidden|dsHttp:InternalError {
         dataservice:DataserviceError? invalidFields = dataservice:checkFields(dataserviceDepartmentEntity, fields, false);
         if invalidFields is dataservice:DataserviceError {
             return dsHttp:toQueryError(invalidFields, "Department");
@@ -162,7 +167,7 @@ service /api on dataserviceListener {
     # + return - The created employee or employees, or the error response
     @http:ResourceConfig {auth: {scopes: ["employees:create"]}}
     resource function post employees(EmployeeInsert|EmployeeInsert[] payload)
-            returns EmployeeCreated|EmployeeListCreated|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
+            returns EmployeeCreated|EmployeeListCreated|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:Unauthorized|dsHttp:Forbidden|dsHttp:InternalError {
         EmployeeInsert[] values = payload is EmployeeInsert[] ? payload : [payload];
         dataservice:DataserviceError? tooMany = dataservice:checkCreateSize(values.length(), dataservicePageConfig);
         if tooMany is dataservice:DataserviceError {
@@ -206,7 +211,7 @@ service /api on dataserviceListener {
     # + return - The updated employee, or no content when the caller may not read it, or the error response
     @http:ResourceConfig {auth: {scopes: ["employees:update"]}}
     resource function patch employees/[int id](http:Request request, EmployeeUpdate payload)
-            returns Employee|http:NoContent|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
+            returns Employee|http:NoContent|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:Unauthorized|dsHttp:Forbidden|dsHttp:InternalError {
         boolean readable = dsHttp:holdsScope(request, ["hr:read"]);
         Employee|persist:Error item;
         if payload.length() == 0 {
@@ -228,7 +233,7 @@ service /api on dataserviceListener {
     # + id - The id of the employee
     # + return - The deleted employee, or no content when the caller may not read it, or the error response
     @http:ResourceConfig {auth: {scopes: ["hr:admin"]}}
-    resource function delete employees/[int id](http:Request request) returns Employee|http:NoContent|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:ConstraintViolation|dsHttp:InternalError {
+    resource function delete employees/[int id](http:Request request) returns Employee|http:NoContent|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:ConstraintViolation|dsHttp:Unauthorized|dsHttp:Forbidden|dsHttp:InternalError {
         boolean readable = dsHttp:holdsScope(request, ["hr:read"]);
         Employee|persist:Error item = dataserviceClient->/employees/[id].delete();
         if item is persist:Error {
@@ -247,7 +252,7 @@ service /api on dataserviceListener {
     # + return - A page of departments, or the error response
     @http:ResourceConfig {auth: {scopes: ["hr:read", "org:read"]}}
     resource function get departments(http:Request request, DepartmentFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
-            string[]? fields = ()) returns DepartmentList|DepartmentPartialList|dsHttp:InvalidInput|dsHttp:Forbidden|dsHttp:InternalError {
+            string[]? fields = ()) returns DepartmentList|DepartmentPartialList|dsHttp:InvalidInput|dsHttp:Unauthorized|dsHttp:Forbidden|dsHttp:InternalError {
         dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
             dataservice:query(dataserviceDepartmentEntity, dataservicePageConfig, filter, sort, size, offset);
         if query !is dataservice:Query {
@@ -308,7 +313,7 @@ service /api on dataserviceListener {
     # + fields - The fields to return; the key fields are always returned
     # + return - The department, or the error response
     @http:ResourceConfig {auth: {scopes: ["hr:read", "org:read"]}}
-    resource function get departments/[int id](http:Request request, string[]? fields = ()) returns Department|DepartmentPartial|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Forbidden|dsHttp:InternalError {
+    resource function get departments/[int id](http:Request request, string[]? fields = ()) returns Department|DepartmentPartial|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Unauthorized|dsHttp:Forbidden|dsHttp:InternalError {
         if dataservice:includes(fields, "employees") {
             dsHttp:Forbidden? forbidden = dsHttp:authorizeRelation(request, "Department", "employees", "Employee", ["hr:read"]);
             if forbidden is dsHttp:Forbidden {
@@ -362,7 +367,7 @@ service /api on dataserviceListener {
     # + return - A page of the employees, or the error response
     @http:ResourceConfig {auth: {scopes: ["hr:read", "org:read"]}}
     resource function get departments/[int id]/employees(http:Request request, EmployeeFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
-            string[]? fields = ()) returns EmployeeList|EmployeeRelatedPartialList|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Forbidden|dsHttp:InternalError {
+            string[]? fields = ()) returns EmployeeList|EmployeeRelatedPartialList|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Unauthorized|dsHttp:Forbidden|dsHttp:InternalError {
         dsHttp:Forbidden? forbidden = dsHttp:authorizeRelation(request, "Department", "employees", "Employee", ["hr:read"]);
         if forbidden is dsHttp:Forbidden {
             return forbidden;
@@ -409,7 +414,7 @@ service /api on dataserviceListener {
     # + payload - The department, or the departments, to create
     # + return - The created department or departments, or the error response
     resource function post departments(DepartmentInsert|DepartmentInsert[] payload)
-            returns DepartmentCreated|DepartmentListCreated|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
+            returns DepartmentCreated|DepartmentListCreated|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:Unauthorized|dsHttp:InternalError {
         DepartmentInsert[] values = payload is DepartmentInsert[] ? payload : [payload];
         dataservice:DataserviceError? tooMany = dataservice:checkCreateSize(values.length(), dataservicePageConfig);
         if tooMany is dataservice:DataserviceError {

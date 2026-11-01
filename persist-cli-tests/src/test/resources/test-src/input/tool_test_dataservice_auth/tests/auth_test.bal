@@ -17,6 +17,10 @@ final http:Client orgBearer = check new (BASE, auth = {token: check token(["org:
 function testNoCredentials() returns error? {
     http:Response response = check anonymous->get("/api/employees");
     test:assertEquals(response.statusCode, 401);
+    test:assertEquals(check response.getJsonPayload(), {
+        code: "UNAUTHENTICATED",
+        message: "The request needs a valid credential."
+    });
 }
 
 @test:Config
@@ -38,6 +42,10 @@ function testDefaultScope() returns error? {
 function testListedScope() returns error? {
     http:Response response = check writer->get("/api/employees");
     test:assertEquals(response.statusCode, 403);
+    test:assertEquals(check response.getJsonPayload(), {
+        code: "FORBIDDEN",
+        message: "The caller holds no scope that the operation needs."
+    });
     response = check reader->get("/api/employees");
     test:assertEquals(response.statusCode, 200);
     response = check reader->delete("/api/employees/1");

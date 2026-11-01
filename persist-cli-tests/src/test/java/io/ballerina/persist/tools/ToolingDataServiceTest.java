@@ -114,7 +114,7 @@ public class ToolingDataServiceTest {
                 user = "sa"
                 password = ""
                 """, init.toString().replace('\\', '/')));
-        assertTestsPassed(bal(project, Map.of("TZ", "UTC"), "test", "--offline"), 58);
+        assertTestsPassed(bal(project, Map.of("TZ", "UTC"), "test", "--offline"), 59);
     }
 
     @Test(description = "Authentication, scopes and relation checks of a service with auth, against H2")
@@ -185,11 +185,13 @@ public class ToolingDataServiceTest {
         assertSucceeded(build(project));
         String service = Files.readString(project.resolve("generated").resolve(SERVICE));
         Assert.assertTrue(service.startsWith("// AUTO-GENERATED FILE. DO NOT MODIFY."), service);
-        Assert.assertTrue(service.contains("service /api on dataserviceListener {"), service);
+        Assert.assertTrue(service.contains("service http:InterceptableService /api on dataserviceListener {"),
+                service);
         Assert.assertTrue(service.contains(
                 "resource function get assignments/[string projectCode]/[int seq](string[]? fields = ())"), service);
         Assert.assertFalse(service.toLowerCase(Locale.ROOT).contains("auditlogs"), service);
-        Assert.assertTrue(service.contains("@openapi:ServiceInfo {embed: true}\nservice /api on"), service);
+        Assert.assertTrue(service.contains(
+                "@openapi:ServiceInfo {embed: true}\nservice http:InterceptableService /api on"), service);
         Assert.assertTrue(Files.exists(project.resolve("generated").resolve(CONFIG)));
         String types = Files.readString(project.resolve("generated").resolve(TYPES));
         Assert.assertTrue(types.contains("public type EmployeePayload record {|"), types);
@@ -221,7 +223,8 @@ public class ToolingDataServiceTest {
         assertSucceeded(build(project));
         String service = Files.readString(project.resolve("generated").resolve(SERVICE));
         Assert.assertFalse(service.contains("openapi"), service);
-        Assert.assertTrue(service.contains("\nservice /api on dataserviceListener {"), service);
+        Assert.assertTrue(service.contains("\nservice http:InterceptableService /api on dataserviceListener {"),
+                service);
     }
 
     @Test(description = "Changing the base path, dotted or in a table, regenerates the service, and removing the " +
@@ -231,12 +234,12 @@ public class ToolingDataServiceTest {
                 MODEL);
         assertSucceeded(build(project));
         Path service = project.resolve("generated").resolve(SERVICE);
-        Assert.assertTrue(Files.readString(service).contains("service /api on"));
+        Assert.assertTrue(Files.readString(service).contains("service http:InterceptableService /api on"));
 
         writeToml(project, entry("h2", "\n[tool.persist.options.dataservice]\nprotocol = \"http\"\n" +
                 "basePath = \"/hr/v2/\""));
         assertSucceeded(build(project));
-        Assert.assertTrue(Files.readString(service).contains("service /hr/v2 on"));
+        Assert.assertTrue(Files.readString(service).contains("service http:InterceptableService /hr/v2 on"));
         Assert.assertTrue(Files.readString(service).contains("dsHttp:buildLocation(\"/hr/v2/employees\""));
 
         writeToml(project, entry("h2", ""));

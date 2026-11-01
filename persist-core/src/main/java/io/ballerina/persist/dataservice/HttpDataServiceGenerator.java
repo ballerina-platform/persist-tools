@@ -117,7 +117,14 @@ public final class HttpDataServiceGenerator {
         if (auth) {
             body.append("@http:ServiceConfig {auth: dataserviceAuthConfig}").append(NEWLINE);
         }
-        body.append("service ").append(servicePath()).append(" on dataserviceListener {").append(NEWLINE);
+        body.append("service http:InterceptableService ").append(servicePath()).append(" on dataserviceListener {")
+                .append(NEWLINE);
+        body.append(NEWLINE)
+                .append("    # Answers the errors that `ballerina/http` raises with the `DataserviceError` body.")
+                .append(NEWLINE);
+        body.append("    #").append(NEWLINE);
+        body.append("    # + return - The error interceptor").append(NEWLINE);
+        body.append("    public function createInterceptors() returns dsHttp:ErrorInterceptor => new;").append(NEWLINE);
         for (ExposedEntity entity : entities) {
             appendResources(body, entity);
         }
@@ -234,7 +241,7 @@ public final class HttpDataServiceGenerator {
             out.append("    resource function get ").append(n.collection).append("/").append(keyParams)
                     .append("(").append(requestParam(entity)).append("string[]? fields = ()) returns ").append(n.wire)
                     .append("|").append(n.partial)
-                    .append(errors(GET_ERRORS, !checked(entity).isEmpty())).append(" {").append(NEWLINE);
+                    .append(errors(GET_ERRORS, entity, READ, !checked(entity).isEmpty())).append(" {").append(NEWLINE);
             appendKeyCheck(out, entity, n, keyList);
             appendForbiddenCheck(out, entity, n);
             appendFieldsCheck(out, n);
@@ -276,7 +283,7 @@ public final class HttpDataServiceGenerator {
                     .append(checkRead ? "http:Request request, " : "").append(n.updateWire).append(" payload)")
                     .append(NEWLINE);
             out.append("            returns ").append(checkRead ? changed + "|http:NoContent" : changed)
-                    .append(UPDATE_ERRORS).append(" {").append(NEWLINE);
+                    .append(errors(UPDATE_ERRORS, entity, UPDATE, false)).append(" {").append(NEWLINE);
             appendKeyCheck(out, entity, n, keyList);
             String value = "payload";
             if (entity.hasWireTypes()) {
@@ -327,7 +334,8 @@ public final class HttpDataServiceGenerator {
                             "") : "No content");
             out.append("    resource function delete ").append(n.collection).append("/").append(keyParams)
                     .append("(").append(checkRead ? "http:Request request" : "").append(") returns ")
-                    .append(checkRead ? changed + "|http:NoContent" : changed).append(DELETE_ERRORS).append(" {")
+                    .append(checkRead ? changed + "|http:NoContent" : changed)
+                    .append(errors(DELETE_ERRORS, entity, DELETE, false)).append(" {")
                     .append(NEWLINE);
             appendKeyCheck(out, entity, n, keyList);
             if (checkRead) {
@@ -355,7 +363,7 @@ public final class HttpDataServiceGenerator {
                 .append(n.filter).append("? filter = (), string[]? sort = (), int? size = (), int? offset = (),")
                 .append(NEWLINE);
         out.append("            string[]? fields = ()) returns ").append(n.list).append("|").append(n.partialList)
-                .append(errors(LIST_ERRORS, !checked(entity).isEmpty())).append(" {").append(NEWLINE);
+                .append(errors(LIST_ERRORS, entity, READ, !checked(entity).isEmpty())).append(" {").append(NEWLINE);
         out.append("        dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =")
                 .append(NEWLINE);
         out.append("            dataservice:query(").append(n.description)
@@ -460,7 +468,7 @@ public final class HttpDataServiceGenerator {
         }
         out.append("string[]? fields = ()) returns ")
                 .append(relation.many() ? t.list + "|" + t.relatedPartialList : t.wire + "|" + t.relatedPartial)
-                .append(errors(GET_ERRORS, checked)).append(" {").append(NEWLINE);
+                .append(errors(GET_ERRORS, entity, READ, checked)).append(" {").append(NEWLINE);
         if (checked) {
             appendAuthorize(out, n, relation, "        ");
         }
@@ -584,11 +592,15 @@ public final class HttpDataServiceGenerator {
         return checked(entity).isEmpty() ? "" : "http:Request request, ";
     }
 
-    private static String errors(String errors, boolean forbidden) {
-        if (!forbidden) {
+    // With auth, a resource also declares the 401 and 403 that ErrorInterceptor answers, so that the OpenAPI
+    // definition lists them; 403 needs a scope of the action, or a relation check.
+    private String errors(String errors, ExposedEntity entity, Operation action, boolean checksRelation) {
+        if (!auth) {
             return errors;
         }
-        return errors.replace("|dsHttp:InternalError", FORBIDDEN + "|dsHttp:InternalError");
+        boolean forbidden = checksRelation || !entity.scopes(action).isEmpty();
+        return errors.replace("|dsHttp:InternalError",
+                "|dsHttp:Unauthorized" + (forbidden ? FORBIDDEN : "") + "|dsHttp:InternalError");
     }
 
     private ExposedEntity target(ExposedRelation relation) {
@@ -612,7 +624,8 @@ public final class HttpDataServiceGenerator {
                 "The created " + n.words + " or " + n.plural);
         out.append("    resource function post ").append(n.collection).append("(").append(n.insertWire).append("|")
                 .append(n.insertWire).append("[] payload)").append(NEWLINE);
-        out.append("            returns ").append(n.created).append("|").append(n.listCreated).append(CREATE_ERRORS)
+        out.append("            returns ").append(n.created).append("|").append(n.listCreated)
+                .append(errors(CREATE_ERRORS, entity, CREATE, false))
                 .append(" {").append(NEWLINE);
         String entries = entity.hasWireTypes() ? "entries" : "values";
         String entriesType = entity.hasWireTypes() ? n.insertWire : insert;
