@@ -129,3 +129,10 @@ function testDeleteResultNeedsRead() returns error? {
     response = check reader->get("/api/employees/2");
     test:assertEquals(response.statusCode, 404);
 }
+
+@test:Config
+function testNoCorsByDefault() returns error? {
+    http:Response response = check reader->get("/api/employees", {"Origin": "https://app.example.com"});
+    test:assertEquals(response.statusCode, 200);
+    test:assertFalse(response.hasHeader("Access-Control-Allow-Origin"));
+}

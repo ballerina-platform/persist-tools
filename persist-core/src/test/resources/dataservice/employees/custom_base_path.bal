@@ -17,6 +17,7 @@ listener http:Listener dataserviceListener =
         new (dataserviceConfig.port, dataserviceConfig.listenerConfig);
 
 @openapi:ServiceInfo {embed: true}
+@http:ServiceConfig {cors: dataserviceConfig.serviceConfig.cors}
 service http:InterceptableService /hr/v1 on dataserviceListener {
 
     # Answers the errors that `ballerina/http` raises with the `DataserviceError` body.

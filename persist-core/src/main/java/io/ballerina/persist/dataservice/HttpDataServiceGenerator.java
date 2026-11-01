@@ -114,9 +114,8 @@ public final class HttpDataServiceGenerator {
             imports.add("import ballerina/openapi;");
             body.append("@openapi:ServiceInfo {embed: true}").append(NEWLINE);
         }
-        if (auth) {
-            body.append("@http:ServiceConfig {auth: dataserviceAuthConfig}").append(NEWLINE);
-        }
+        body.append("@http:ServiceConfig {").append(auth ? "auth: dataserviceAuthConfig, " : "")
+                .append("cors: dataserviceConfig.serviceConfig.cors}").append(NEWLINE);
         body.append("service http:InterceptableService ").append(servicePath()).append(" on dataserviceListener {")
                 .append(NEWLINE);
         body.append(NEWLINE)
@@ -173,25 +172,12 @@ public final class HttpDataServiceGenerator {
     public String generateConfig() throws BalException {
         return format(header(BalSyntaxConstants.AUTO_GENERATED_COMMENT) +
                 "import ballerina/dataservice;" + NEWLINE +
-                (auth ? "import ballerina/dataservice.http as dsHttp;" + NEWLINE : "") +
-                "import ballerina/http;" + NEWLINE + NEWLINE +
+                "import ballerina/dataservice.http as dsHttp;" + NEWLINE +
+                (auth ? "import ballerina/http;" + NEWLINE : "") + NEWLINE +
                 "# The runtime settings of the data service, set in the `[dataserviceConfig]` table of Config.toml." +
                 NEWLINE +
-                "#" + NEWLINE +
-                "# + port - The port of the listener" + NEWLINE +
-                "# + listenerConfig - The other settings of the listener, such as TLS" + NEWLINE +
-                "# + pageSize - The number of records in a page when the caller gives no size" + NEWLINE +
-                "# + maxPageSize - The largest page, and the most records one create can hold" + NEWLINE +
-                (auth ? "# + auth - The authentication providers, such as a JWT validator" + NEWLINE : "") +
-                "type DataserviceConfig record {|" + NEWLINE +
-                "    int port = 9090;" + NEWLINE +
-                "    http:ListenerConfiguration listenerConfig = {};" + NEWLINE +
-                "    int pageSize = 100;" + NEWLINE +
-                "    int maxPageSize = 1000;" + NEWLINE +
-                (auth ? "    http:ListenerAuthConfig[] auth;" + NEWLINE : "") +
-                "|};" + NEWLINE + NEWLINE +
-                "# The runtime settings of the data service." + NEWLINE +
-                "configurable DataserviceConfig dataserviceConfig = " + (auth ? "?" : "{}") + ";" + NEWLINE + NEWLINE +
+                (auth ? "configurable dsHttp:AuthConfig dataserviceConfig = ?;" :
+                        "configurable dsHttp:Config dataserviceConfig = {};") + NEWLINE + NEWLINE +
                 "# The page sizes, checked at startup." + NEWLINE +
                 "final dataservice:PageConfig dataservicePageConfig =" + NEWLINE +
                 "        check dataservice:pageConfig(dataserviceConfig.pageSize, dataserviceConfig.maxPageSize);" +
@@ -199,7 +185,7 @@ public final class HttpDataServiceGenerator {
                 (!auth ? "" : NEWLINE +
                         "# The authentication providers, checked at startup." + NEWLINE +
                         "final http:ListenerAuthConfig[] dataserviceAuthConfig =" + NEWLINE +
-                        "        check dsHttp:authConfig(dataserviceConfig.auth);" + NEWLINE));
+                        "        check dsHttp:authProviders(dataserviceConfig.serviceConfig.auth);" + NEWLINE));
     }
 
     private String header(String reason) {

@@ -109,12 +109,16 @@ public class ToolingDataServiceTest {
                 pageSize = 5
                 maxPageSize = 5
 
+                [dataserviceConfig.serviceConfig.cors]
+                allowOrigins = ["https://app.example.com"]
+                allowMethods = ["GET", "POST", "PATCH", "DELETE"]
+
                 [dataservice_test.dataservice_h2]
                 url = "jdbc:h2:mem:dstest;DB_CLOSE_DELAY=-1;INIT=RUNSCRIPT FROM '%s'"
                 user = "sa"
                 password = ""
                 """, init.toString().replace('\\', '/')));
-        assertTestsPassed(bal(project, Map.of("TZ", "UTC"), "test", "--offline"), 59);
+        assertTestsPassed(bal(project, Map.of("TZ", "UTC"), "test", "--offline"), 60);
     }
 
     @Test(description = "Authentication, scopes and relation checks of a service with auth, against H2")
@@ -134,13 +138,13 @@ public class ToolingDataServiceTest {
                 [dataserviceConfig]
                 port = 9592
 
-                [[dataserviceConfig.auth]]
-                [dataserviceConfig.auth.fileUserStoreConfig]
+                [[dataserviceConfig.serviceConfig.auth]]
+                [dataserviceConfig.serviceConfig.auth.fileUserStoreConfig]
 
-                [[dataserviceConfig.auth]]
-                [dataserviceConfig.auth.jwtValidatorConfig]
+                [[dataserviceConfig.serviceConfig.auth]]
+                [dataserviceConfig.serviceConfig.auth.jwtValidatorConfig]
                 issuer = "dataservice"
-                [dataserviceConfig.auth.jwtValidatorConfig.signatureConfig]
+                [dataserviceConfig.serviceConfig.auth.jwtValidatorConfig.signatureConfig]
                 secret = "dataservice-test-secret"
 
                 [dataservice_test.dataservice_auth]
@@ -173,7 +177,7 @@ public class ToolingDataServiceTest {
                 password = "editor"
                 scopes = ["employees:update", "hr:read"]
                 """, init.toString().replace('\\', '/')));
-        assertTestsPassed(bal(project, Map.of(), "test", "--offline"), 9);
+        assertTestsPassed(bal(project, Map.of(), "test", "--offline"), 10);
     }
 
     // Generation from bal build
@@ -190,8 +194,9 @@ public class ToolingDataServiceTest {
         Assert.assertTrue(service.contains(
                 "resource function get assignments/[string projectCode]/[int seq](string[]? fields = ())"), service);
         Assert.assertFalse(service.toLowerCase(Locale.ROOT).contains("auditlogs"), service);
-        Assert.assertTrue(service.contains(
-                "@openapi:ServiceInfo {embed: true}\nservice http:InterceptableService /api on"), service);
+        Assert.assertTrue(service.contains("@openapi:ServiceInfo {embed: true}\n" +
+                "@http:ServiceConfig {cors: dataserviceConfig.serviceConfig.cors}\n" +
+                "service http:InterceptableService /api on"), service);
         Assert.assertTrue(Files.exists(project.resolve("generated").resolve(CONFIG)));
         String types = Files.readString(project.resolve("generated").resolve(TYPES));
         Assert.assertTrue(types.contains("public type EmployeePayload record {|"), types);

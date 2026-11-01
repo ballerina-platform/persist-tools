@@ -362,3 +362,13 @@ function testErrorsRaisedByHttpUseTheErrorBody() returns error? {
         test:assertEquals((<map<json>>payload).keys().length(), 2, name);
     }
 }
+
+@test:Config
+function testCors() returns error? {
+    http:Response response = check api->options("/api/employees/1",
+        {"Origin": "https://app.example.com", "Access-Control-Request-Method": "PATCH"});
+    test:assertEquals(check response.getHeader("Access-Control-Allow-Origin"), "https://app.example.com");
+    test:assertTrue((check response.getHeader("Access-Control-Allow-Methods")).includes("PATCH"));
+    response = check api->get("/api/employees", {"Origin": "https://other.example.com"});
+    test:assertFalse(response.hasHeader("Access-Control-Allow-Origin"));
+}

@@ -15,6 +15,7 @@ final Client dataserviceClient = check new ();
 listener http:Listener dataserviceListener =
         new (dataserviceConfig.port, dataserviceConfig.listenerConfig);
 
+@http:ServiceConfig {cors: dataserviceConfig.serviceConfig.cors}
 service http:InterceptableService /api on dataserviceListener {
 
     # Answers the errors that `ballerina/http` raises with the `DataserviceError` body.
