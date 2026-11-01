@@ -139,20 +139,24 @@ public isolated client class H2Client {
     #
     # + id - The value of the primary key field id
     # + value - The record containing updated field values
-    # + return - The updated record or an error
+    # + return - The updated record or an error. A `persist:ReadBackError` means the update is saved
     isolated resource function put profiles/[int id](ProfileUpdate value) returns Profile|persist:Error {
         psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(PROFILE);
         }
         _ = check sqlClient.runUpdateQuery(id, value);
-        return self->/profiles/[id].get();
+        Profile|persist:Error result = self->/profiles/[id].get();
+        if result is persist:Error && result !is persist:NotFoundError {
+            return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
+        }
+        return result;
     }
 
     # Delete row from Profile table.
     #
     # + id - The value of the primary key field id
-    # + return - The deleted record or an error
+    # + return - The deleted record as read before the deletion, or an error
     isolated resource function delete profiles/[int id]() returns Profile|persist:Error {
         Profile result = check self->/profiles/[id].get();
         psql:SQLClient sqlClient;
@@ -204,20 +208,24 @@ public isolated client class H2Client {
     #
     # + id - The value of the primary key field id
     # + value - The record containing updated field values
-    # + return - The updated record or an error
+    # + return - The updated record or an error. A `persist:ReadBackError` means the update is saved
     isolated resource function put users/[int id](UserUpdate value) returns User|persist:Error {
         psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(USER);
         }
         _ = check sqlClient.runUpdateQuery(id, value);
-        return self->/users/[id].get();
+        User|persist:Error result = self->/users/[id].get();
+        if result is persist:Error && result !is persist:NotFoundError {
+            return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
+        }
+        return result;
     }
 
     # Delete row from User table.
     #
     # + id - The value of the primary key field id
-    # + return - The deleted record or an error
+    # + return - The deleted record as read before the deletion, or an error
     isolated resource function delete users/[int id]() returns User|persist:Error {
         User result = check self->/users/[id].get();
         psql:SQLClient sqlClient;
@@ -269,20 +277,24 @@ public isolated client class H2Client {
     #
     # + id - The value of the primary key field id
     # + value - The record containing updated field values
-    # + return - The updated record or an error
+    # + return - The updated record or an error. A `persist:ReadBackError` means the update is saved
     isolated resource function put multipleassociations/[int id](MultipleAssociationsUpdate value) returns MultipleAssociations|persist:Error {
         psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(MULTIPLE_ASSOCIATIONS);
         }
         _ = check sqlClient.runUpdateQuery(id, value);
-        return self->/multipleassociations/[id].get();
+        MultipleAssociations|persist:Error result = self->/multipleassociations/[id].get();
+        if result is persist:Error && result !is persist:NotFoundError {
+            return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
+        }
+        return result;
     }
 
     # Delete row from MultipleAssociations table.
     #
     # + id - The value of the primary key field id
-    # + return - The deleted record or an error
+    # + return - The deleted record as read before the deletion, or an error
     isolated resource function delete multipleassociations/[int id]() returns MultipleAssociations|persist:Error {
         MultipleAssociations result = check self->/multipleassociations/[id].get();
         psql:SQLClient sqlClient;

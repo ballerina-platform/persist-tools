@@ -126,7 +126,7 @@ public isolated client class Client {
     #
     # + workspaceId - The value of the primary key field workspaceId
     # + workspaceType - The value of the primary key field workspaceType
-    # + return - The deleted record or an error
+    # + return - The deleted record as read before the deletion, or an error
     isolated resource function delete workspaces/[string workspaceId]/[string workspaceType]() returns Workspace|persist:Error {
         lock {
             if !workspacesTable.hasKey([workspaceId, workspaceType]) {
@@ -195,7 +195,7 @@ public isolated client class Client {
     # Delete row from Building table.
     #
     # + buildingCode - The value of the primary key field buildingCode
-    # + return - The deleted record or an error
+    # + return - The deleted record as read before the deletion, or an error
     isolated resource function delete buildings/[string buildingCode]() returns Building|persist:Error {
         lock {
             if !buildingsTable.hasKey(buildingCode) {
@@ -267,7 +267,7 @@ public isolated client class Client {
     #
     # + deptNo - The value of the primary key field deptNo
     # + deptName - The value of the primary key field deptName
-    # + return - The deleted record or an error
+    # + return - The deleted record as read before the deletion, or an error
     isolated resource function delete departments/[string deptNo]/[string deptName]() returns Department|persist:Error {
         lock {
             if !departmentsTable.hasKey([deptNo, deptName]) {
@@ -339,7 +339,7 @@ public isolated client class Client {
     #
     # + orderId - The value of the primary key field orderId
     # + itemId - The value of the primary key field itemId
-    # + return - The deleted record or an error
+    # + return - The deleted record as read before the deletion, or an error
     isolated resource function delete orderitems/[string orderId]/[string itemId]() returns OrderItem|persist:Error {
         lock {
             if !orderitemsTable.hasKey([orderId, itemId]) {
@@ -411,7 +411,7 @@ public isolated client class Client {
     #
     # + empNo - The value of the primary key field empNo
     # + firstName - The value of the primary key field firstName
-    # + return - The deleted record or an error
+    # + return - The deleted record as read before the deletion, or an error
     isolated resource function delete employees/[string empNo]/[string firstName]() returns Employee|persist:Error {
         lock {
             if !employeesTable.hasKey([empNo, firstName]) {

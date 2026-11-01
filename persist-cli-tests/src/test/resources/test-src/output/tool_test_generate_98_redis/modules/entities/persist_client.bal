@@ -160,20 +160,24 @@ public isolated client class Client {
     #
     # + empNo - The value of the primary key field empNo
     # + value - The record containing updated field values
-    # + return - The updated record or an error
+    # + return - The updated record or an error. A `persist:ReadBackError` means the update is saved
     isolated resource function put employees/[string empNo](EmployeeUpdate value) returns Employee|persist:Error {
         predis:RedisClient redisClient;
         lock {
             redisClient = self.persistClients.get(EMPLOYEE);
         }
         _ = check redisClient.runUpdateQuery(empNo, value);
-        return self->/employees/[empNo].get();
+        Employee|persist:Error result = self->/employees/[empNo].get();
+        if result is persist:Error && result !is persist:NotFoundError {
+            return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
+        }
+        return result;
     }
 
     # Delete row from Employee key space.
     #
     # + empNo - The value of the primary key field empNo
-    # + return - The deleted record or an error
+    # + return - The deleted record as read before the deletion, or an error
     isolated resource function delete employees/[string empNo]() returns Employee|persist:Error {
         Employee result = check self->/employees/[empNo].get();
         predis:RedisClient redisClient;
@@ -221,20 +225,24 @@ public isolated client class Client {
     #
     # + workspaceId - The value of the primary key field workspaceId
     # + value - The record containing updated field values
-    # + return - The updated record or an error
+    # + return - The updated record or an error. A `persist:ReadBackError` means the update is saved
     isolated resource function put workspaces/[string workspaceId](WorkspaceUpdate value) returns Workspace|persist:Error {
         predis:RedisClient redisClient;
         lock {
             redisClient = self.persistClients.get(WORKSPACE);
         }
         _ = check redisClient.runUpdateQuery(workspaceId, value);
-        return self->/workspaces/[workspaceId].get();
+        Workspace|persist:Error result = self->/workspaces/[workspaceId].get();
+        if result is persist:Error && result !is persist:NotFoundError {
+            return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
+        }
+        return result;
     }
 
     # Delete row from Workspace key space.
     #
     # + workspaceId - The value of the primary key field workspaceId
-    # + return - The deleted record or an error
+    # + return - The deleted record as read before the deletion, or an error
     isolated resource function delete workspaces/[string workspaceId]() returns Workspace|persist:Error {
         Workspace result = check self->/workspaces/[workspaceId].get();
         predis:RedisClient redisClient;
@@ -282,20 +290,24 @@ public isolated client class Client {
     #
     # + buildingCode - The value of the primary key field buildingCode
     # + value - The record containing updated field values
-    # + return - The updated record or an error
+    # + return - The updated record or an error. A `persist:ReadBackError` means the update is saved
     isolated resource function put buildings/[string buildingCode](BuildingUpdate value) returns Building|persist:Error {
         predis:RedisClient redisClient;
         lock {
             redisClient = self.persistClients.get(BUILDING);
         }
         _ = check redisClient.runUpdateQuery(buildingCode, value);
-        return self->/buildings/[buildingCode].get();
+        Building|persist:Error result = self->/buildings/[buildingCode].get();
+        if result is persist:Error && result !is persist:NotFoundError {
+            return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
+        }
+        return result;
     }
 
     # Delete row from Building key space.
     #
     # + buildingCode - The value of the primary key field buildingCode
-    # + return - The deleted record or an error
+    # + return - The deleted record as read before the deletion, or an error
     isolated resource function delete buildings/[string buildingCode]() returns Building|persist:Error {
         Building result = check self->/buildings/[buildingCode].get();
         predis:RedisClient redisClient;
@@ -343,20 +355,24 @@ public isolated client class Client {
     #
     # + deptNo - The value of the primary key field deptNo
     # + value - The record containing updated field values
-    # + return - The updated record or an error
+    # + return - The updated record or an error. A `persist:ReadBackError` means the update is saved
     isolated resource function put departments/[string deptNo](DepartmentUpdate value) returns Department|persist:Error {
         predis:RedisClient redisClient;
         lock {
             redisClient = self.persistClients.get(DEPARTMENT);
         }
         _ = check redisClient.runUpdateQuery(deptNo, value);
-        return self->/departments/[deptNo].get();
+        Department|persist:Error result = self->/departments/[deptNo].get();
+        if result is persist:Error && result !is persist:NotFoundError {
+            return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
+        }
+        return result;
     }
 
     # Delete row from Department key space.
     #
     # + deptNo - The value of the primary key field deptNo
-    # + return - The deleted record or an error
+    # + return - The deleted record as read before the deletion, or an error
     isolated resource function delete departments/[string deptNo]() returns Department|persist:Error {
         Department result = check self->/departments/[deptNo].get();
         predis:RedisClient redisClient;

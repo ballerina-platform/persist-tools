@@ -90,7 +90,12 @@ public class BalSyntaxConstants {
     public static final String UPDATE_RUN_UPDATE_QUERY = "_ = check sqlClient.runUpdateQuery(%s, value);";
     public static final String G_SHEET_UPDATE_RUN_UPDATE_QUERY = "_ = check googleSheetsClient." +
             "runUpdateQuery(%s, value);";
-    public static final String UPDATE_RETURN_UPDATE_QUERY = "return self->%s.get();";
+    public static final String UPDATE_READ_BACK_QUERY = "%s|persist:Error result = self->%s.get();";
+    public static final String UPDATE_READ_BACK_ERROR = "if result is persist:Error && " +
+            "result !is persist:NotFoundError {" + System.lineSeparator() +
+            "return error persist:ReadBackError(" +
+            "string `The record was updated but could not be read back: ${result.message()}`, result);" +
+            System.lineSeparator() + "}";
     public static final String G_SHEET_DELETE_RUN_DELETE_QUERY = "_ = check googleSheetsClient." +
             "runDeleteQuery(%s);";
     public static final String DELETE_RUN_DELETE_QUERY = "_ = check sqlClient.runDeleteQuery(%s);";

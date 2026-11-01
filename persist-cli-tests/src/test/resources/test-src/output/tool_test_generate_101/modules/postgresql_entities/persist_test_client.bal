@@ -89,20 +89,24 @@ public isolated client class H2Client {
     #
     # + id - The value of the primary key field id
     # + value - The record containing updated field values
-    # + return - The updated record or an error
+    # + return - The updated record or an error. A `persist:ReadBackError` means the update is saved
     isolated resource function put cars/[int id](CarUpdate value) returns Car|persist:Error {
         psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(CAR);
         }
         _ = check sqlClient.runUpdateQuery(id, value);
-        return self->/cars/[id].get();
+        Car|persist:Error result = self->/cars/[id].get();
+        if result is persist:Error && result !is persist:NotFoundError {
+            return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
+        }
+        return result;
     }
 
     # Delete row from Car table.
     #
     # + id - The value of the primary key field id
-    # + return - The deleted record or an error
+    # + return - The deleted record as read before the deletion, or an error
     isolated resource function delete cars/[int id]() returns Car|persist:Error {
         Car result = check self->/cars/[id].get();
         psql:SQLClient sqlClient;

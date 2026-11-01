@@ -101,20 +101,24 @@ public isolated client class Client {
     #
     # + id - The value of the primary key field id
     # + value - The record containing updated field values
-    # + return - The updated record or an error
+    # + return - The updated record or an error. A `persist:ReadBackError` means the update is saved
     isolated resource function put products/[int id](ProductUpdate value) returns Product|persist:Error {
         psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(PRODUCT);
         }
         _ = check sqlClient.runUpdateQuery(id, value);
-        return self->/products/[id].get();
+        Product|persist:Error result = self->/products/[id].get();
+        if result is persist:Error && result !is persist:NotFoundError {
+            return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
+        }
+        return result;
     }
 
     # Delete row from Product table.
     #
     # + id - The value of the primary key field id
-    # + return - The deleted record or an error
+    # + return - The deleted record as read before the deletion, or an error
     isolated resource function delete products/[int id]() returns Product|persist:Error {
         Product result = check self->/products/[id].get();
         psql:SQLClient sqlClient;

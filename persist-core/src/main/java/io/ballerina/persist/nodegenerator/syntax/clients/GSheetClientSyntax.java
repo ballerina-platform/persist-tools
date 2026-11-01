@@ -164,7 +164,7 @@ public class GSheetClientSyntax implements ClientSyntax {
         StringBuilder filterKeys = new StringBuilder(BalSyntaxConstants.OPEN_BRACE);
         StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH + entity.getClientResourceName());
         Function update = BalSyntaxUtils.generatePutFunction(entity, filterKeys, path);
-        String doc = BalSyntaxUtils.createPutResourceDocumentation(entity, SHEET);
+        String doc = BalSyntaxUtils.createPutResourceDocumentation(entity, SHEET, true);
         update.addDocumentation(BalSyntaxUtils.createMarkdownDocumentationNode(doc));
         if (entity.getKeys().size() > 1) {
 
@@ -188,8 +188,7 @@ public class GSheetClientSyntax implements ClientSyntax {
                     BalSyntaxConstants.G_SHEET_UPDATE_RUN_UPDATE_QUERY, entity.getKeys().stream().
                             findFirst().get().getFieldName())));
         }
-        update.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.UPDATE_RETURN_UPDATE_QUERY,
-                path)));
+        BalSyntaxUtils.addUpdateReadBackStatements(update, entity, path);
         return update.getFunctionDefinitionNode();
     }
 

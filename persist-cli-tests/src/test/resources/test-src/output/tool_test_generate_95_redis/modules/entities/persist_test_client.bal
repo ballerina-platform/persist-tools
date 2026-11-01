@@ -144,7 +144,7 @@ public isolated client class InMemoryClient {
     # Delete row from AllTypes table.
     #
     # + id - The value of the primary key field id
-    # + return - The deleted record or an error
+    # + return - The deleted record as read before the deletion, or an error
     isolated resource function delete alltypes/[int id]() returns AllTypes|persist:Error {
         lock {
             if !alltypesTable.hasKey(id) {
@@ -213,7 +213,7 @@ public isolated client class InMemoryClient {
     # Delete row from StringIdRecord table.
     #
     # + id - The value of the primary key field id
-    # + return - The deleted record or an error
+    # + return - The deleted record as read before the deletion, or an error
     isolated resource function delete stringidrecords/[string id]() returns StringIdRecord|persist:Error {
         lock {
             if !stringidrecordsTable.hasKey(id) {
@@ -282,7 +282,7 @@ public isolated client class InMemoryClient {
     # Delete row from IntIdRecord table.
     #
     # + id - The value of the primary key field id
-    # + return - The deleted record or an error
+    # + return - The deleted record as read before the deletion, or an error
     isolated resource function delete intidrecords/[int id]() returns IntIdRecord|persist:Error {
         lock {
             if !intidrecordsTable.hasKey(id) {
@@ -351,7 +351,7 @@ public isolated client class InMemoryClient {
     # Delete row from FloatIdRecord table.
     #
     # + id - The value of the primary key field id
-    # + return - The deleted record or an error
+    # + return - The deleted record as read before the deletion, or an error
     isolated resource function delete floatidrecords/[float id]() returns FloatIdRecord|persist:Error {
         lock {
             if !floatidrecordsTable.hasKey(id) {
@@ -420,7 +420,7 @@ public isolated client class InMemoryClient {
     # Delete row from DecimalIdRecord table.
     #
     # + id - The value of the primary key field id
-    # + return - The deleted record or an error
+    # + return - The deleted record as read before the deletion, or an error
     isolated resource function delete decimalidrecords/[decimal id]() returns DecimalIdRecord|persist:Error {
         lock {
             if !decimalidrecordsTable.hasKey(id) {
@@ -489,7 +489,7 @@ public isolated client class InMemoryClient {
     # Delete row from BooleanIdRecord table.
     #
     # + id - The value of the primary key field id
-    # + return - The deleted record or an error
+    # + return - The deleted record as read before the deletion, or an error
     isolated resource function delete booleanidrecords/[boolean id]() returns BooleanIdRecord|persist:Error {
         lock {
             if !booleanidrecordsTable.hasKey(id) {
@@ -558,7 +558,7 @@ public isolated client class InMemoryClient {
     # Delete row from CompositeAssociationRecord table.
     #
     # + id - The value of the primary key field id
-    # + return - The deleted record or an error
+    # + return - The deleted record as read before the deletion, or an error
     isolated resource function delete compositeassociationrecords/[string id]() returns CompositeAssociationRecord|persist:Error {
         lock {
             if !compositeassociationrecordsTable.hasKey(id) {
@@ -639,7 +639,7 @@ public isolated client class InMemoryClient {
     # + floatType - The value of the primary key field floatType
     # + decimalType - The value of the primary key field decimalType
     # + stringType - The value of the primary key field stringType
-    # + return - The deleted record or an error
+    # + return - The deleted record as read before the deletion, or an error
     isolated resource function delete alltypesidrecords/[boolean booleanType]/[int intType]/[float floatType]/[decimal decimalType]/[string stringType]() returns AllTypesIdRecord|persist:Error {
         lock {
             if !alltypesidrecordsTable.hasKey([booleanType, intType, floatType, decimalType, stringType]) {

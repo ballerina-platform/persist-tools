@@ -170,20 +170,24 @@ public isolated client class Client {
     #
     # + id - The value of the primary key field id
     # + value - The record containing updated field values
-    # + return - The updated record or an error
+    # + return - The updated record or an error. A `persist:ReadBackError` means the update is saved
     isolated resource function put appointments/[int id](AppointmentUpdate value) returns Appointment|persist:Error {
         googlesheets:GoogleSheetsClient googleSheetsClient;
         lock {
             googleSheetsClient = self.persistClients.get(APPOINTMENT);
         }
         _ = check googleSheetsClient.runUpdateQuery(id, value);
-        return self->/appointments/[id].get();
+        Appointment|persist:Error result = self->/appointments/[id].get();
+        if result is persist:Error && result !is persist:NotFoundError {
+            return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
+        }
+        return result;
     }
 
     # Delete row from appointment sheet.
     #
     # + id - The value of the primary key field id
-    # + return - The deleted record or an error
+    # + return - The deleted record as read before the deletion, or an error
     isolated resource function delete appointments/[int id]() returns Appointment|persist:Error {
         Appointment result = check self->/appointments/[id].get();
         googlesheets:GoogleSheetsClient googleSheetsClient;
@@ -272,20 +276,24 @@ public isolated client class Client {
     #
     # + id - The value of the primary key field ID
     # + value - The record containing updated field values
-    # + return - The updated record or an error
+    # + return - The updated record or an error. A `persist:ReadBackError` means the update is saved
     isolated resource function put patients/[int id](PatientUpdate value) returns Patient|persist:Error {
         googlesheets:GoogleSheetsClient googleSheetsClient;
         lock {
             googleSheetsClient = self.persistClients.get(PATIENT);
         }
         _ = check googleSheetsClient.runUpdateQuery(id, value);
-        return self->/patients/[id].get();
+        Patient|persist:Error result = self->/patients/[id].get();
+        if result is persist:Error && result !is persist:NotFoundError {
+            return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
+        }
+        return result;
     }
 
     # Delete row from patients sheet.
     #
     # + id - The value of the primary key field ID
-    # + return - The deleted record or an error
+    # + return - The deleted record as read before the deletion, or an error
     isolated resource function delete patients/[int id]() returns Patient|persist:Error {
         Patient result = check self->/patients/[id].get();
         googlesheets:GoogleSheetsClient googleSheetsClient;
@@ -362,20 +370,24 @@ public isolated client class Client {
     #
     # + id - The value of the primary key field id
     # + value - The record containing updated field values
-    # + return - The updated record or an error
+    # + return - The updated record or an error. A `persist:ReadBackError` means the update is saved
     isolated resource function put doctors/[int id](DoctorUpdate value) returns Doctor|persist:Error {
         googlesheets:GoogleSheetsClient googleSheetsClient;
         lock {
             googleSheetsClient = self.persistClients.get(DOCTOR);
         }
         _ = check googleSheetsClient.runUpdateQuery(id, value);
-        return self->/doctors/[id].get();
+        Doctor|persist:Error result = self->/doctors/[id].get();
+        if result is persist:Error && result !is persist:NotFoundError {
+            return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
+        }
+        return result;
     }
 
     # Delete row from Doctor sheet.
     #
     # + id - The value of the primary key field id
-    # + return - The deleted record or an error
+    # + return - The deleted record as read before the deletion, or an error
     isolated resource function delete doctors/[int id]() returns Doctor|persist:Error {
         Doctor result = check self->/doctors/[id].get();
         googlesheets:GoogleSheetsClient googleSheetsClient;

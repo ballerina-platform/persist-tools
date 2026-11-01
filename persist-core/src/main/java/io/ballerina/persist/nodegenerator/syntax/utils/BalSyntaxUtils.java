@@ -1211,13 +1211,28 @@ public class BalSyntaxUtils {
     }
 
     /**
+     * Add the statements that read the updated record back and return it.
+     *
+     * @param update The put function
+     * @param entity The entity
+     * @param path The resource path of the entity record
+     */
+    public static void addUpdateReadBackStatements(Function update, Entity entity, StringBuilder path) {
+        update.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.UPDATE_READ_BACK_QUERY,
+                entity.getEntityName(), path)));
+        update.addStatement(NodeParser.parseStatement(BalSyntaxConstants.UPDATE_READ_BACK_ERROR));
+        update.addStatement(NodeParser.parseStatement(BalSyntaxConstants.RETURN_RESULT));
+    }
+
+    /**
      * Create documentation for PUT resource method.
      *
      * @param entity The entity
      * @param entityType The type of entity (table, sheet, key space)
+     * @param readBack Whether the update reads the record back with a separate query
      * @return Documentation string
      */
-    public static String createPutResourceDocumentation(Entity entity, EntityType entityType) {
+    public static String createPutResourceDocumentation(Entity entity, EntityType entityType, boolean readBack) {
         StringBuilder doc = new StringBuilder();
         doc.append(String.format("Update row in %s %s.%n", entity.getTableName(), entityType.getName()));
 
@@ -1228,7 +1243,12 @@ public class BalSyntaxUtils {
         }
 
         doc.append(String.format("%n+ value - The record containing updated field values"));
-        doc.append(String.format("%n+ return - The updated record or an error"));
+        if (readBack) {
+            doc.append(String.format("%n+ return - The updated record or an error. " +
+                    "A `persist:ReadBackError` means the update is saved"));
+        } else {
+            doc.append(String.format("%n+ return - The updated record or an error"));
+        }
 
         return doc.toString();
     }
@@ -1250,7 +1270,7 @@ public class BalSyntaxUtils {
                     key.getFieldName(), key.getFieldColumnName()));
         }
 
-        doc.append(String.format("%n+ return - The deleted record or an error"));
+        doc.append(String.format("%n+ return - The deleted record as read before the deletion, or an error"));
 
         return doc.toString();
     }

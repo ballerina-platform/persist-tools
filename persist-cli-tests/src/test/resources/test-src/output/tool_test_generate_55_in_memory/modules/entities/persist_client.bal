@@ -119,7 +119,7 @@ public isolated client class Client {
     # Delete row from User table.
     #
     # + id - The value of the primary key field id
-    # + return - The deleted record or an error
+    # + return - The deleted record as read before the deletion, or an error
     isolated resource function delete users/[int id]() returns User|persist:Error {
         lock {
             if !usersTable.hasKey(id) {
@@ -188,7 +188,7 @@ public isolated client class Client {
     # Delete row from Post table.
     #
     # + id - The value of the primary key field id
-    # + return - The deleted record or an error
+    # + return - The deleted record as read before the deletion, or an error
     isolated resource function delete posts/[int id]() returns Post|persist:Error {
         lock {
             if !postsTable.hasKey(id) {
@@ -257,7 +257,7 @@ public isolated client class Client {
     # Delete row from Follow table.
     #
     # + id - The value of the primary key field id
-    # + return - The deleted record or an error
+    # + return - The deleted record as read before the deletion, or an error
     isolated resource function delete follows/[int id]() returns Follow|persist:Error {
         lock {
             if !followsTable.hasKey(id) {
@@ -326,7 +326,7 @@ public isolated client class Client {
     # Delete row from Comment table.
     #
     # + id - The value of the primary key field id
-    # + return - The deleted record or an error
+    # + return - The deleted record as read before the deletion, or an error
     isolated resource function delete comments/[int id]() returns Comment|persist:Error {
         lock {
             if !commentsTable.hasKey(id) {

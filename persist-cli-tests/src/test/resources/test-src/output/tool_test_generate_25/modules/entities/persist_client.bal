@@ -125,20 +125,24 @@ public isolated client class Client {
     #
     # + id - The value of the primary key field id
     # + value - The record containing updated field values
-    # + return - The updated record or an error
+    # + return - The updated record or an error. A `persist:ReadBackError` means the update is saved
     isolated resource function put companies/[int id](CompanyUpdate value) returns Company|persist:Error {
         psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(COMPANY);
         }
         _ = check sqlClient.runUpdateQuery(id, value);
-        return self->/companies/[id].get();
+        Company|persist:Error result = self->/companies/[id].get();
+        if result is persist:Error && result !is persist:NotFoundError {
+            return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
+        }
+        return result;
     }
 
     # Delete row from Company table.
     #
     # + id - The value of the primary key field id
-    # + return - The deleted record or an error
+    # + return - The deleted record as read before the deletion, or an error
     isolated resource function delete companies/[int id]() returns Company|persist:Error {
         Company result = check self->/companies/[id].get();
         psql:SQLClient sqlClient;
@@ -190,20 +194,24 @@ public isolated client class Client {
     #
     # + id - The value of the primary key field id
     # + value - The record containing updated field values
-    # + return - The updated record or an error
+    # + return - The updated record or an error. A `persist:ReadBackError` means the update is saved
     isolated resource function put employees/[int id](EmployeeUpdate value) returns Employee|persist:Error {
         psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(EMPLOYEE);
         }
         _ = check sqlClient.runUpdateQuery(id, value);
-        return self->/employees/[id].get();
+        Employee|persist:Error result = self->/employees/[id].get();
+        if result is persist:Error && result !is persist:NotFoundError {
+            return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
+        }
+        return result;
     }
 
     # Delete row from Employee table.
     #
     # + id - The value of the primary key field id
-    # + return - The deleted record or an error
+    # + return - The deleted record as read before the deletion, or an error
     isolated resource function delete employees/[int id]() returns Employee|persist:Error {
         Employee result = check self->/employees/[id].get();
         psql:SQLClient sqlClient;
@@ -255,20 +263,24 @@ public isolated client class Client {
     #
     # + model - The value of the primary key field model
     # + value - The record containing updated field values
-    # + return - The updated record or an error
+    # + return - The updated record or an error. A `persist:ReadBackError` means the update is saved
     isolated resource function put vehicles/[int model](VehicleUpdate value) returns Vehicle|persist:Error {
         psql:SQLClient sqlClient;
         lock {
             sqlClient = self.persistClients.get(VEHICLE);
         }
         _ = check sqlClient.runUpdateQuery(model, value);
-        return self->/vehicles/[model].get();
+        Vehicle|persist:Error result = self->/vehicles/[model].get();
+        if result is persist:Error && result !is persist:NotFoundError {
+            return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
+        }
+        return result;
     }
 
     # Delete row from Vehicle table.
     #
     # + model - The value of the primary key field model
-    # + return - The deleted record or an error
+    # + return - The deleted record as read before the deletion, or an error
     isolated resource function delete vehicles/[int model]() returns Vehicle|persist:Error {
         Vehicle result = check self->/vehicles/[model].get();
         psql:SQLClient sqlClient;

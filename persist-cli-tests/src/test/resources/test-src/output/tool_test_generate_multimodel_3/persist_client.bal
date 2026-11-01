@@ -86,7 +86,7 @@ public isolated client class Client {
     # Delete row from Product table.
     #
     # + id - The value of the primary key field id
-    # + return - The deleted record or an error
+    # + return - The deleted record as read before the deletion, or an error
     isolated resource function delete products/[int id]() returns Product|persist:Error {
         lock {
             if !productsTable.hasKey(id) {

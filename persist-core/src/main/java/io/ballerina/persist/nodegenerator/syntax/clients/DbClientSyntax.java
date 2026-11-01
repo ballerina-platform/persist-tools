@@ -351,7 +351,7 @@ public class DbClientSyntax implements ClientSyntax {
         StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH +
                 entity.getClientResourceName());
         Function update = BalSyntaxUtils.generatePutFunction(entity, filterKeys, path);
-        String doc = BalSyntaxUtils.createPutResourceDocumentation(entity, TABLE);
+        String doc = BalSyntaxUtils.createPutResourceDocumentation(entity, TABLE, true);
         update.addDocumentation(BalSyntaxUtils.createMarkdownDocumentationNode(doc));
 
         update.addStatement(NodeParser.parseStatement(BalSyntaxConstants.SQL_CLIENT_DECLARATION));
@@ -371,8 +371,7 @@ public class DbClientSyntax implements ClientSyntax {
         }
         update.addStatement(NodeParser.parseStatement(updateStatement));
 
-        update.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.UPDATE_RETURN_UPDATE_QUERY,
-                path)));
+        BalSyntaxUtils.addUpdateReadBackStatements(update, entity, path);
         return update.getFunctionDefinitionNode();
     }
 

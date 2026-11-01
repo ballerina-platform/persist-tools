@@ -114,7 +114,7 @@ public isolated client class Client {
     # Delete row from Employee table.
     #
     # + empNo - The value of the primary key field empNo
-    # + return - The deleted record or an error
+    # + return - The deleted record as read before the deletion, or an error
     isolated resource function delete employees/[string empNo]() returns Employee|persist:Error {
         lock {
             if !employeesTable.hasKey(empNo) {
@@ -183,7 +183,7 @@ public isolated client class Client {
     # Delete row from Workspace table.
     #
     # + workspaceId - The value of the primary key field workspaceId
-    # + return - The deleted record or an error
+    # + return - The deleted record as read before the deletion, or an error
     isolated resource function delete workspaces/[string workspaceId]() returns Workspace|persist:Error {
         lock {
             if !workspacesTable.hasKey(workspaceId) {
@@ -252,7 +252,7 @@ public isolated client class Client {
     # Delete row from Building table.
     #
     # + buildingCode - The value of the primary key field buildingCode
-    # + return - The deleted record or an error
+    # + return - The deleted record as read before the deletion, or an error
     isolated resource function delete buildings/[string buildingCode]() returns Building|persist:Error {
         lock {
             if !buildingsTable.hasKey(buildingCode) {
@@ -321,7 +321,7 @@ public isolated client class Client {
     # Delete row from Department table.
     #
     # + deptNo - The value of the primary key field deptNo
-    # + return - The deleted record or an error
+    # + return - The deleted record as read before the deletion, or an error
     isolated resource function delete departments/[string deptNo]() returns Department|persist:Error {
         lock {
             if !departmentsTable.hasKey(deptNo) {
