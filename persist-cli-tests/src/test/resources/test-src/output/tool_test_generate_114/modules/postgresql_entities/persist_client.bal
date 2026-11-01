@@ -276,7 +276,7 @@ public isolated client class Client {
     #
     # + codeSystemId - The value of the primary key field codeSystemId
     # + value - The record containing updated field values
-    # + return - The updated record or an error. A `persist:ReadBackError` means the update is saved
+    # + return - The updated record or an error
     isolated resource function put codesystems/[int codeSystemId](CodeSystemUpdate value) returns CodeSystem|persist:Error {
         psql:SQLClient sqlClient;
         lock {
@@ -284,16 +284,16 @@ public isolated client class Client {
         }
         _ = check sqlClient.runUpdateQuery(codeSystemId, value);
         CodeSystem|persist:Error result = self->/codesystems/[codeSystemId].get();
-        if result is persist:Error && result !is persist:NotFoundError {
-            return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
+        if result is CodeSystem || result is persist:NotFoundError {
+            return result;
         }
-        return result;
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from codesystems table.
     #
     # + codeSystemId - The value of the primary key field codeSystemId
-    # + return - The deleted record as read before the deletion, or an error
+    # + return - The deleted record or an error
     isolated resource function delete codesystems/[int codeSystemId]() returns CodeSystem|persist:Error {
         CodeSystem result = check self->/codesystems/[codeSystemId].get();
         psql:SQLClient sqlClient;
@@ -346,7 +346,7 @@ public isolated client class Client {
     #
     # + conceptId - The value of the primary key field conceptId
     # + value - The record containing updated field values
-    # + return - The updated record or an error. A `persist:ReadBackError` means the update is saved
+    # + return - The updated record or an error
     isolated resource function put concepts/[int conceptId](ConceptUpdate value) returns Concept|persist:Error {
         psql:SQLClient sqlClient;
         lock {
@@ -354,16 +354,16 @@ public isolated client class Client {
         }
         _ = check sqlClient.runUpdateQuery(conceptId, value);
         Concept|persist:Error result = self->/concepts/[conceptId].get();
-        if result is persist:Error && result !is persist:NotFoundError {
-            return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
+        if result is Concept || result is persist:NotFoundError {
+            return result;
         }
-        return result;
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from concepts table.
     #
     # + conceptId - The value of the primary key field conceptId
-    # + return - The deleted record as read before the deletion, or an error
+    # + return - The deleted record or an error
     isolated resource function delete concepts/[int conceptId]() returns Concept|persist:Error {
         Concept result = check self->/concepts/[conceptId].get();
         psql:SQLClient sqlClient;
@@ -416,7 +416,7 @@ public isolated client class Client {
     #
     # + valueSetId - The value of the primary key field valueSetId
     # + value - The record containing updated field values
-    # + return - The updated record or an error. A `persist:ReadBackError` means the update is saved
+    # + return - The updated record or an error
     isolated resource function put valuesets/[int valueSetId](ValueSetUpdate value) returns ValueSet|persist:Error {
         psql:SQLClient sqlClient;
         lock {
@@ -424,16 +424,16 @@ public isolated client class Client {
         }
         _ = check sqlClient.runUpdateQuery(valueSetId, value);
         ValueSet|persist:Error result = self->/valuesets/[valueSetId].get();
-        if result is persist:Error && result !is persist:NotFoundError {
-            return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
+        if result is ValueSet || result is persist:NotFoundError {
+            return result;
         }
-        return result;
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from valuesets table.
     #
     # + valueSetId - The value of the primary key field valueSetId
-    # + return - The deleted record as read before the deletion, or an error
+    # + return - The deleted record or an error
     isolated resource function delete valuesets/[int valueSetId]() returns ValueSet|persist:Error {
         ValueSet result = check self->/valuesets/[valueSetId].get();
         psql:SQLClient sqlClient;
@@ -486,7 +486,7 @@ public isolated client class Client {
     #
     # + valueSetComposeIncludeId - The value of the primary key field valueSetComposeIncludeId
     # + value - The record containing updated field values
-    # + return - The updated record or an error. A `persist:ReadBackError` means the update is saved
+    # + return - The updated record or an error
     isolated resource function put valuesetcomposeincludes/[int valueSetComposeIncludeId](ValueSetComposeIncludeUpdate value) returns ValueSetComposeInclude|persist:Error {
         psql:SQLClient sqlClient;
         lock {
@@ -494,16 +494,16 @@ public isolated client class Client {
         }
         _ = check sqlClient.runUpdateQuery(valueSetComposeIncludeId, value);
         ValueSetComposeInclude|persist:Error result = self->/valuesetcomposeincludes/[valueSetComposeIncludeId].get();
-        if result is persist:Error && result !is persist:NotFoundError {
-            return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
+        if result is ValueSetComposeInclude || result is persist:NotFoundError {
+            return result;
         }
-        return result;
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from valueset_compose_includes table.
     #
     # + valueSetComposeIncludeId - The value of the primary key field valueSetComposeIncludeId
-    # + return - The deleted record as read before the deletion, or an error
+    # + return - The deleted record or an error
     isolated resource function delete valuesetcomposeincludes/[int valueSetComposeIncludeId]() returns ValueSetComposeInclude|persist:Error {
         ValueSetComposeInclude result = check self->/valuesetcomposeincludes/[valueSetComposeIncludeId].get();
         psql:SQLClient sqlClient;
@@ -556,7 +556,7 @@ public isolated client class Client {
     #
     # + valueSetComposeIncludeValueSetId - The value of the primary key field valueSetComposeIncludeValueSetId
     # + value - The record containing updated field values
-    # + return - The updated record or an error. A `persist:ReadBackError` means the update is saved
+    # + return - The updated record or an error
     isolated resource function put valuesetcomposeincludevaluesets/[int valueSetComposeIncludeValueSetId](ValueSetComposeIncludeValueSetUpdate value) returns ValueSetComposeIncludeValueSet|persist:Error {
         psql:SQLClient sqlClient;
         lock {
@@ -564,16 +564,16 @@ public isolated client class Client {
         }
         _ = check sqlClient.runUpdateQuery(valueSetComposeIncludeValueSetId, value);
         ValueSetComposeIncludeValueSet|persist:Error result = self->/valuesetcomposeincludevaluesets/[valueSetComposeIncludeValueSetId].get();
-        if result is persist:Error && result !is persist:NotFoundError {
-            return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
+        if result is ValueSetComposeIncludeValueSet || result is persist:NotFoundError {
+            return result;
         }
-        return result;
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from valueset_compose_include_value_sets table.
     #
     # + valueSetComposeIncludeValueSetId - The value of the primary key field valueSetComposeIncludeValueSetId
-    # + return - The deleted record as read before the deletion, or an error
+    # + return - The deleted record or an error
     isolated resource function delete valuesetcomposeincludevaluesets/[int valueSetComposeIncludeValueSetId]() returns ValueSetComposeIncludeValueSet|persist:Error {
         ValueSetComposeIncludeValueSet result = check self->/valuesetcomposeincludevaluesets/[valueSetComposeIncludeValueSetId].get();
         psql:SQLClient sqlClient;
@@ -626,7 +626,7 @@ public isolated client class Client {
     #
     # + valueSetComposeIncludeConceptId - The value of the primary key field valueSetComposeIncludeConceptId
     # + value - The record containing updated field values
-    # + return - The updated record or an error. A `persist:ReadBackError` means the update is saved
+    # + return - The updated record or an error
     isolated resource function put valuesetcomposeincludeconcepts/[int valueSetComposeIncludeConceptId](ValueSetComposeIncludeConceptUpdate value) returns ValueSetComposeIncludeConcept|persist:Error {
         psql:SQLClient sqlClient;
         lock {
@@ -634,16 +634,16 @@ public isolated client class Client {
         }
         _ = check sqlClient.runUpdateQuery(valueSetComposeIncludeConceptId, value);
         ValueSetComposeIncludeConcept|persist:Error result = self->/valuesetcomposeincludeconcepts/[valueSetComposeIncludeConceptId].get();
-        if result is persist:Error && result !is persist:NotFoundError {
-            return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
+        if result is ValueSetComposeIncludeConcept || result is persist:NotFoundError {
+            return result;
         }
-        return result;
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from valueset_compose_include_concepts table.
     #
     # + valueSetComposeIncludeConceptId - The value of the primary key field valueSetComposeIncludeConceptId
-    # + return - The deleted record as read before the deletion, or an error
+    # + return - The deleted record or an error
     isolated resource function delete valuesetcomposeincludeconcepts/[int valueSetComposeIncludeConceptId]() returns ValueSetComposeIncludeConcept|persist:Error {
         ValueSetComposeIncludeConcept result = check self->/valuesetcomposeincludeconcepts/[valueSetComposeIncludeConceptId].get();
         psql:SQLClient sqlClient;

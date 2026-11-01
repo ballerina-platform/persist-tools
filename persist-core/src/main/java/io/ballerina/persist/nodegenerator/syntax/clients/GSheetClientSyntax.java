@@ -164,7 +164,7 @@ public class GSheetClientSyntax implements ClientSyntax {
         StringBuilder filterKeys = new StringBuilder(BalSyntaxConstants.OPEN_BRACE);
         StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH + entity.getClientResourceName());
         Function update = BalSyntaxUtils.generatePutFunction(entity, filterKeys, path);
-        String doc = BalSyntaxUtils.createPutResourceDocumentation(entity, SHEET, true);
+        String doc = BalSyntaxUtils.createPutResourceDocumentation(entity, SHEET);
         update.addDocumentation(BalSyntaxUtils.createMarkdownDocumentationNode(doc));
         if (entity.getKeys().size() > 1) {
 

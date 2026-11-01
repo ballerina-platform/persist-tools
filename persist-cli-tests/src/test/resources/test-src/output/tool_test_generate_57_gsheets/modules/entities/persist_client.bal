@@ -212,7 +212,7 @@ public isolated client class Client {
     #
     # + empNo - The value of the primary key field empNo
     # + value - The record containing updated field values
-    # + return - The updated record or an error. A `persist:ReadBackError` means the update is saved
+    # + return - The updated record or an error
     isolated resource function put employees/[string empNo](EmployeeUpdate value) returns Employee|persist:Error {
         googlesheets:GoogleSheetsClient googleSheetsClient;
         lock {
@@ -220,16 +220,16 @@ public isolated client class Client {
         }
         _ = check googleSheetsClient.runUpdateQuery(empNo, value);
         Employee|persist:Error result = self->/employees/[empNo].get();
-        if result is persist:Error && result !is persist:NotFoundError {
-            return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
+        if result is Employee || result is persist:NotFoundError {
+            return result;
         }
-        return result;
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from Employee sheet.
     #
     # + empNo - The value of the primary key field empNo
-    # + return - The deleted record as read before the deletion, or an error
+    # + return - The deleted record or an error
     isolated resource function delete employees/[string empNo]() returns Employee|persist:Error {
         Employee result = check self->/employees/[empNo].get();
         googlesheets:GoogleSheetsClient googleSheetsClient;
@@ -318,7 +318,7 @@ public isolated client class Client {
     #
     # + workspaceId - The value of the primary key field workspaceId
     # + value - The record containing updated field values
-    # + return - The updated record or an error. A `persist:ReadBackError` means the update is saved
+    # + return - The updated record or an error
     isolated resource function put workspaces/[string workspaceId](WorkspaceUpdate value) returns Workspace|persist:Error {
         googlesheets:GoogleSheetsClient googleSheetsClient;
         lock {
@@ -326,16 +326,16 @@ public isolated client class Client {
         }
         _ = check googleSheetsClient.runUpdateQuery(workspaceId, value);
         Workspace|persist:Error result = self->/workspaces/[workspaceId].get();
-        if result is persist:Error && result !is persist:NotFoundError {
-            return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
+        if result is Workspace || result is persist:NotFoundError {
+            return result;
         }
-        return result;
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from Workspace sheet.
     #
     # + workspaceId - The value of the primary key field workspaceId
-    # + return - The deleted record as read before the deletion, or an error
+    # + return - The deleted record or an error
     isolated resource function delete workspaces/[string workspaceId]() returns Workspace|persist:Error {
         Workspace result = check self->/workspaces/[workspaceId].get();
         googlesheets:GoogleSheetsClient googleSheetsClient;
@@ -418,7 +418,7 @@ public isolated client class Client {
     #
     # + buildingCode - The value of the primary key field buildingCode
     # + value - The record containing updated field values
-    # + return - The updated record or an error. A `persist:ReadBackError` means the update is saved
+    # + return - The updated record or an error
     isolated resource function put buildings/[string buildingCode](BuildingUpdate value) returns Building|persist:Error {
         googlesheets:GoogleSheetsClient googleSheetsClient;
         lock {
@@ -426,16 +426,16 @@ public isolated client class Client {
         }
         _ = check googleSheetsClient.runUpdateQuery(buildingCode, value);
         Building|persist:Error result = self->/buildings/[buildingCode].get();
-        if result is persist:Error && result !is persist:NotFoundError {
-            return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
+        if result is Building || result is persist:NotFoundError {
+            return result;
         }
-        return result;
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from Building sheet.
     #
     # + buildingCode - The value of the primary key field buildingCode
-    # + return - The deleted record as read before the deletion, or an error
+    # + return - The deleted record or an error
     isolated resource function delete buildings/[string buildingCode]() returns Building|persist:Error {
         Building result = check self->/buildings/[buildingCode].get();
         googlesheets:GoogleSheetsClient googleSheetsClient;
@@ -512,7 +512,7 @@ public isolated client class Client {
     #
     # + deptNo - The value of the primary key field deptNo
     # + value - The record containing updated field values
-    # + return - The updated record or an error. A `persist:ReadBackError` means the update is saved
+    # + return - The updated record or an error
     isolated resource function put departments/[string deptNo](DepartmentUpdate value) returns Department|persist:Error {
         googlesheets:GoogleSheetsClient googleSheetsClient;
         lock {
@@ -520,16 +520,16 @@ public isolated client class Client {
         }
         _ = check googleSheetsClient.runUpdateQuery(deptNo, value);
         Department|persist:Error result = self->/departments/[deptNo].get();
-        if result is persist:Error && result !is persist:NotFoundError {
-            return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
+        if result is Department || result is persist:NotFoundError {
+            return result;
         }
-        return result;
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from Department sheet.
     #
     # + deptNo - The value of the primary key field deptNo
-    # + return - The deleted record as read before the deletion, or an error
+    # + return - The deleted record or an error
     isolated resource function delete departments/[string deptNo]() returns Department|persist:Error {
         Department result = check self->/departments/[deptNo].get();
         googlesheets:GoogleSheetsClient googleSheetsClient;
@@ -608,7 +608,7 @@ public isolated client class Client {
     # + orderId - The value of the primary key field orderId
     # + itemId - The value of the primary key field itemId
     # + value - The record containing updated field values
-    # + return - The updated record or an error. A `persist:ReadBackError` means the update is saved
+    # + return - The updated record or an error
     isolated resource function put orderitems/[string orderId]/[string itemId](OrderItemUpdate value) returns OrderItem|persist:Error {
         googlesheets:GoogleSheetsClient googleSheetsClient;
         lock {
@@ -616,17 +616,17 @@ public isolated client class Client {
         }
         _ = check googleSheetsClient.runUpdateQuery({"orderId": orderId, "itemId": itemId}, value);
         OrderItem|persist:Error result = self->/orderitems/[orderId]/[itemId].get();
-        if result is persist:Error && result !is persist:NotFoundError {
-            return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
+        if result is OrderItem || result is persist:NotFoundError {
+            return result;
         }
-        return result;
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from OrderItem sheet.
     #
     # + orderId - The value of the primary key field orderId
     # + itemId - The value of the primary key field itemId
-    # + return - The deleted record as read before the deletion, or an error
+    # + return - The deleted record or an error
     isolated resource function delete orderitems/[string orderId]/[string itemId]() returns OrderItem|persist:Error {
         OrderItem result = check self->/orderitems/[orderId]/[itemId].get();
         googlesheets:GoogleSheetsClient googleSheetsClient;

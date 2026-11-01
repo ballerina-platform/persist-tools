@@ -175,7 +175,7 @@ public class InMemoryClientSyntax implements ClientSyntax {
             primaryKeysRecord.append(BalSyntaxConstants.CLOSE_BRACE);
         }
         Function update = BalSyntaxUtils.generatePutFunction(entity, path, filterKeys);
-        String doc = BalSyntaxUtils.createPutResourceDocumentation(entity, TABLE, false);
+        String doc = BalSyntaxUtils.createPutResourceDocumentation(entity, TABLE);
         update.addDocumentation(BalSyntaxUtils.createMarkdownDocumentationNode(doc));
         update.addStatement(NodeParser.parseStatement(BalSyntaxConstants.LOCK));
         update.addStatement(NodeParser.parseStatement(BalSyntaxConstants.OPEN_BRACE));

@@ -106,7 +106,7 @@ public isolated client class Client {
     # Delete row from appointment table.
     #
     # + id - The value of the primary key field id
-    # + return - The deleted record as read before the deletion, or an error
+    # + return - The deleted record or an error
     isolated resource function delete appointments/[int id]() returns Appointment|persist:Error {
         lock {
             if !appointmentsTable.hasKey(id) {
@@ -175,7 +175,7 @@ public isolated client class Client {
     # Delete row from patients table.
     #
     # + id - The value of the primary key field ID
-    # + return - The deleted record as read before the deletion, or an error
+    # + return - The deleted record or an error
     isolated resource function delete patients/[int id]() returns Patient|persist:Error {
         lock {
             if !patientsTable.hasKey(id) {
@@ -244,7 +244,7 @@ public isolated client class Client {
     # Delete row from Doctor table.
     #
     # + id - The value of the primary key field id
-    # + return - The deleted record as read before the deletion, or an error
+    # + return - The deleted record or an error
     isolated resource function delete doctors/[int id]() returns Doctor|persist:Error {
         lock {
             if !doctorsTable.hasKey(id) {

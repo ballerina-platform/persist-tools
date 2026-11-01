@@ -96,7 +96,7 @@ public isolated client class Client {
     # Delete row from MedicalNeed table.
     #
     # + needId - The value of the primary key field needId
-    # + return - The deleted record as read before the deletion, or an error
+    # + return - The deleted record or an error
     isolated resource function delete medicalneeds/[int needId]() returns MedicalNeed|persist:Error {
         lock {
             if !medicalneedsTable.hasKey(needId) {
@@ -165,7 +165,7 @@ public isolated client class Client {
     # Delete row from MedicalItem table.
     #
     # + itemId - The value of the primary key field itemId
-    # + return - The deleted record as read before the deletion, or an error
+    # + return - The deleted record or an error
     isolated resource function delete medicalitems/[int itemId]() returns MedicalItem|persist:Error {
         lock {
             if !medicalitemsTable.hasKey(itemId) {

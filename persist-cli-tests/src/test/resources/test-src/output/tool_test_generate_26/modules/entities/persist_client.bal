@@ -113,7 +113,7 @@ public isolated client class Client {
     #
     # + 'record - The value of the primary key field 'record
     # + value - The record containing updated field values
-    # + return - The updated record or an error. A `persist:ReadBackError` means the update is saved
+    # + return - The updated record or an error
     isolated resource function put medicalneeds/[int 'record](MedicalNeedUpdate value) returns MedicalNeed|persist:Error {
         psql:SQLClient sqlClient;
         lock {
@@ -121,16 +121,16 @@ public isolated client class Client {
         }
         _ = check sqlClient.runUpdateQuery('record, value);
         MedicalNeed|persist:Error result = self->/medicalneeds/['record].get();
-        if result is persist:Error && result !is persist:NotFoundError {
-            return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
+        if result is MedicalNeed || result is persist:NotFoundError {
+            return result;
         }
-        return result;
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from MedicalNeed table.
     #
     # + 'record - The value of the primary key field 'record
-    # + return - The deleted record as read before the deletion, or an error
+    # + return - The deleted record or an error
     isolated resource function delete medicalneeds/[int 'record]() returns MedicalNeed|persist:Error {
         MedicalNeed result = check self->/medicalneeds/['record].get();
         psql:SQLClient sqlClient;
@@ -182,7 +182,7 @@ public isolated client class Client {
     #
     # + itemId - The value of the primary key field itemId
     # + value - The record containing updated field values
-    # + return - The updated record or an error. A `persist:ReadBackError` means the update is saved
+    # + return - The updated record or an error
     isolated resource function put medicalitems/[int itemId](MedicalItemUpdate value) returns MedicalItem|persist:Error {
         psql:SQLClient sqlClient;
         lock {
@@ -190,16 +190,16 @@ public isolated client class Client {
         }
         _ = check sqlClient.runUpdateQuery(itemId, value);
         MedicalItem|persist:Error result = self->/medicalitems/[itemId].get();
-        if result is persist:Error && result !is persist:NotFoundError {
-            return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
+        if result is MedicalItem || result is persist:NotFoundError {
+            return result;
         }
-        return result;
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from MedicalItem table.
     #
     # + itemId - The value of the primary key field itemId
-    # + return - The deleted record as read before the deletion, or an error
+    # + return - The deleted record or an error
     isolated resource function delete medicalitems/[int itemId]() returns MedicalItem|persist:Error {
         MedicalItem result = check self->/medicalitems/[itemId].get();
         psql:SQLClient sqlClient;

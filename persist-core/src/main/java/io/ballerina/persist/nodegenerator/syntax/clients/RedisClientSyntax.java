@@ -168,7 +168,7 @@ public class RedisClientSyntax  implements ClientSyntax {
         StringBuilder filterKeys = new StringBuilder(BalSyntaxConstants.OPEN_BRACE);
         StringBuilder path = new StringBuilder(BalSyntaxConstants.BACK_SLASH + entity.getClientResourceName());
         Function update = BalSyntaxUtils.generatePutFunction(entity, filterKeys, path);
-        String doc = BalSyntaxUtils.createPutResourceDocumentation(entity, KEY_SPACE, true);
+        String doc = BalSyntaxUtils.createPutResourceDocumentation(entity, KEY_SPACE);
         update.addDocumentation(BalSyntaxUtils.createMarkdownDocumentationNode(doc));
 
         update.addStatement(NodeParser.parseStatement(BalSyntaxConstants.REDIS_CLIENT_DECLARATION));

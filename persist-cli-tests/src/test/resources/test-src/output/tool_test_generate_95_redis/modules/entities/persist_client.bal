@@ -198,7 +198,7 @@ public isolated client class Client {
     #
     # + id - The value of the primary key field id
     # + value - The record containing updated field values
-    # + return - The updated record or an error. A `persist:ReadBackError` means the update is saved
+    # + return - The updated record or an error
     isolated resource function put alltypes/[int id](AllTypesUpdate value) returns AllTypes|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -206,16 +206,16 @@ public isolated client class Client {
         }
         _ = check redisClient.runUpdateQuery(id, value);
         AllTypes|persist:Error result = self->/alltypes/[id].get();
-        if result is persist:Error && result !is persist:NotFoundError {
-            return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
+        if result is AllTypes || result is persist:NotFoundError {
+            return result;
         }
-        return result;
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from AllTypes key space.
     #
     # + id - The value of the primary key field id
-    # + return - The deleted record as read before the deletion, or an error
+    # + return - The deleted record or an error
     isolated resource function delete alltypes/[int id]() returns AllTypes|persist:Error {
         AllTypes result = check self->/alltypes/[id].get();
         predis:RedisClient redisClient;
@@ -263,7 +263,7 @@ public isolated client class Client {
     #
     # + id - The value of the primary key field id
     # + value - The record containing updated field values
-    # + return - The updated record or an error. A `persist:ReadBackError` means the update is saved
+    # + return - The updated record or an error
     isolated resource function put stringidrecords/[string id](StringIdRecordUpdate value) returns StringIdRecord|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -271,16 +271,16 @@ public isolated client class Client {
         }
         _ = check redisClient.runUpdateQuery(id, value);
         StringIdRecord|persist:Error result = self->/stringidrecords/[id].get();
-        if result is persist:Error && result !is persist:NotFoundError {
-            return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
+        if result is StringIdRecord || result is persist:NotFoundError {
+            return result;
         }
-        return result;
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from StringIdRecord key space.
     #
     # + id - The value of the primary key field id
-    # + return - The deleted record as read before the deletion, or an error
+    # + return - The deleted record or an error
     isolated resource function delete stringidrecords/[string id]() returns StringIdRecord|persist:Error {
         StringIdRecord result = check self->/stringidrecords/[id].get();
         predis:RedisClient redisClient;
@@ -328,7 +328,7 @@ public isolated client class Client {
     #
     # + id - The value of the primary key field id
     # + value - The record containing updated field values
-    # + return - The updated record or an error. A `persist:ReadBackError` means the update is saved
+    # + return - The updated record or an error
     isolated resource function put intidrecords/[int id](IntIdRecordUpdate value) returns IntIdRecord|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -336,16 +336,16 @@ public isolated client class Client {
         }
         _ = check redisClient.runUpdateQuery(id, value);
         IntIdRecord|persist:Error result = self->/intidrecords/[id].get();
-        if result is persist:Error && result !is persist:NotFoundError {
-            return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
+        if result is IntIdRecord || result is persist:NotFoundError {
+            return result;
         }
-        return result;
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from IntIdRecord key space.
     #
     # + id - The value of the primary key field id
-    # + return - The deleted record as read before the deletion, or an error
+    # + return - The deleted record or an error
     isolated resource function delete intidrecords/[int id]() returns IntIdRecord|persist:Error {
         IntIdRecord result = check self->/intidrecords/[id].get();
         predis:RedisClient redisClient;
@@ -393,7 +393,7 @@ public isolated client class Client {
     #
     # + id - The value of the primary key field id
     # + value - The record containing updated field values
-    # + return - The updated record or an error. A `persist:ReadBackError` means the update is saved
+    # + return - The updated record or an error
     isolated resource function put floatidrecords/[float id](FloatIdRecordUpdate value) returns FloatIdRecord|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -401,16 +401,16 @@ public isolated client class Client {
         }
         _ = check redisClient.runUpdateQuery(id, value);
         FloatIdRecord|persist:Error result = self->/floatidrecords/[id].get();
-        if result is persist:Error && result !is persist:NotFoundError {
-            return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
+        if result is FloatIdRecord || result is persist:NotFoundError {
+            return result;
         }
-        return result;
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from FloatIdRecord key space.
     #
     # + id - The value of the primary key field id
-    # + return - The deleted record as read before the deletion, or an error
+    # + return - The deleted record or an error
     isolated resource function delete floatidrecords/[float id]() returns FloatIdRecord|persist:Error {
         FloatIdRecord result = check self->/floatidrecords/[id].get();
         predis:RedisClient redisClient;
@@ -458,7 +458,7 @@ public isolated client class Client {
     #
     # + id - The value of the primary key field id
     # + value - The record containing updated field values
-    # + return - The updated record or an error. A `persist:ReadBackError` means the update is saved
+    # + return - The updated record or an error
     isolated resource function put decimalidrecords/[decimal id](DecimalIdRecordUpdate value) returns DecimalIdRecord|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -466,16 +466,16 @@ public isolated client class Client {
         }
         _ = check redisClient.runUpdateQuery(id, value);
         DecimalIdRecord|persist:Error result = self->/decimalidrecords/[id].get();
-        if result is persist:Error && result !is persist:NotFoundError {
-            return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
+        if result is DecimalIdRecord || result is persist:NotFoundError {
+            return result;
         }
-        return result;
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from DecimalIdRecord key space.
     #
     # + id - The value of the primary key field id
-    # + return - The deleted record as read before the deletion, or an error
+    # + return - The deleted record or an error
     isolated resource function delete decimalidrecords/[decimal id]() returns DecimalIdRecord|persist:Error {
         DecimalIdRecord result = check self->/decimalidrecords/[id].get();
         predis:RedisClient redisClient;
@@ -523,7 +523,7 @@ public isolated client class Client {
     #
     # + id - The value of the primary key field id
     # + value - The record containing updated field values
-    # + return - The updated record or an error. A `persist:ReadBackError` means the update is saved
+    # + return - The updated record or an error
     isolated resource function put booleanidrecords/[boolean id](BooleanIdRecordUpdate value) returns BooleanIdRecord|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -531,16 +531,16 @@ public isolated client class Client {
         }
         _ = check redisClient.runUpdateQuery(id, value);
         BooleanIdRecord|persist:Error result = self->/booleanidrecords/[id].get();
-        if result is persist:Error && result !is persist:NotFoundError {
-            return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
+        if result is BooleanIdRecord || result is persist:NotFoundError {
+            return result;
         }
-        return result;
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from BooleanIdRecord key space.
     #
     # + id - The value of the primary key field id
-    # + return - The deleted record as read before the deletion, or an error
+    # + return - The deleted record or an error
     isolated resource function delete booleanidrecords/[boolean id]() returns BooleanIdRecord|persist:Error {
         BooleanIdRecord result = check self->/booleanidrecords/[id].get();
         predis:RedisClient redisClient;
@@ -588,7 +588,7 @@ public isolated client class Client {
     #
     # + id - The value of the primary key field id
     # + value - The record containing updated field values
-    # + return - The updated record or an error. A `persist:ReadBackError` means the update is saved
+    # + return - The updated record or an error
     isolated resource function put compositeassociationrecords/[string id](CompositeAssociationRecordUpdate value) returns CompositeAssociationRecord|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -596,16 +596,16 @@ public isolated client class Client {
         }
         _ = check redisClient.runUpdateQuery(id, value);
         CompositeAssociationRecord|persist:Error result = self->/compositeassociationrecords/[id].get();
-        if result is persist:Error && result !is persist:NotFoundError {
-            return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
+        if result is CompositeAssociationRecord || result is persist:NotFoundError {
+            return result;
         }
-        return result;
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from CompositeAssociationRecord key space.
     #
     # + id - The value of the primary key field id
-    # + return - The deleted record as read before the deletion, or an error
+    # + return - The deleted record or an error
     isolated resource function delete compositeassociationrecords/[string id]() returns CompositeAssociationRecord|persist:Error {
         CompositeAssociationRecord result = check self->/compositeassociationrecords/[id].get();
         predis:RedisClient redisClient;
@@ -661,7 +661,7 @@ public isolated client class Client {
     # + decimalType - The value of the primary key field decimalType
     # + stringType - The value of the primary key field stringType
     # + value - The record containing updated field values
-    # + return - The updated record or an error. A `persist:ReadBackError` means the update is saved
+    # + return - The updated record or an error
     isolated resource function put alltypesidrecords/[boolean booleanType]/[int intType]/[float floatType]/[decimal decimalType]/[string stringType](AllTypesIdRecordUpdate value) returns AllTypesIdRecord|persist:Error {
         predis:RedisClient redisClient;
         lock {
@@ -669,10 +669,10 @@ public isolated client class Client {
         }
         _ = check redisClient.runUpdateQuery({"booleanType": booleanType, "intType": intType, "floatType": floatType, "decimalType": decimalType, "stringType": stringType}, value);
         AllTypesIdRecord|persist:Error result = self->/alltypesidrecords/[booleanType]/[intType]/[floatType]/[decimalType]/[stringType].get();
-        if result is persist:Error && result !is persist:NotFoundError {
-            return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
+        if result is AllTypesIdRecord || result is persist:NotFoundError {
+            return result;
         }
-        return result;
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from AllTypesIdRecord key space.
@@ -682,7 +682,7 @@ public isolated client class Client {
     # + floatType - The value of the primary key field floatType
     # + decimalType - The value of the primary key field decimalType
     # + stringType - The value of the primary key field stringType
-    # + return - The deleted record as read before the deletion, or an error
+    # + return - The deleted record or an error
     isolated resource function delete alltypesidrecords/[boolean booleanType]/[int intType]/[float floatType]/[decimal decimalType]/[string stringType]() returns AllTypesIdRecord|persist:Error {
         AllTypesIdRecord result = check self->/alltypesidrecords/[booleanType]/[intType]/[floatType]/[decimalType]/[stringType].get();
         predis:RedisClient redisClient;
