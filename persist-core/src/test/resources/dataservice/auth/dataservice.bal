@@ -203,12 +203,16 @@ service /api on dataserviceListener {
     #
     # + id - The id of the employee
     # + payload - The fields of the employee to update
-    # + return - The updated employee, or the error response
+    # + return - The updated employee, or no content when the caller may not read it, or the error response
     @http:ResourceConfig {auth: {scopes: ["employees:update"]}}
-    resource function patch employees/[int id](EmployeeUpdate payload)
-            returns Employee|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
+    resource function patch employees/[int id](http:Request request, EmployeeUpdate payload)
+            returns Employee|http:NoContent|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
+        boolean readable = dsHttp:holdsScope(request, ["hr:read"]);
         Employee|persist:Error item;
         if payload.length() == 0 {
+            if !readable {
+                return http:NO_CONTENT;
+            }
             item = dataserviceClient->/employees/[id];
         } else {
             item = dataserviceClient->/employees/[id].put(payload);
@@ -216,20 +220,21 @@ service /api on dataserviceListener {
         if item is persist:Error {
             return dsHttp:toUpdateError(item, "Employee", [id]);
         }
-        return item;
+        return readable ? item : http:NO_CONTENT;
     }
 
     # Deletes an employee by its key.
     #
     # + id - The id of the employee
-    # + return - The deleted employee, or the error response
+    # + return - The deleted employee, or no content when the caller may not read it, or the error response
     @http:ResourceConfig {auth: {scopes: ["hr:admin"]}}
-    resource function delete employees/[int id]() returns Employee|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:ConstraintViolation|dsHttp:InternalError {
+    resource function delete employees/[int id](http:Request request) returns Employee|http:NoContent|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:ConstraintViolation|dsHttp:InternalError {
+        boolean readable = dsHttp:holdsScope(request, ["hr:read"]);
         Employee|persist:Error item = dataserviceClient->/employees/[id].delete();
         if item is persist:Error {
             return dsHttp:toDeleteError(item, "Employee", [id]);
         }
-        return item;
+        return readable ? item : http:NO_CONTENT;
     }
 
     # Gets a page of departments.

@@ -266,13 +266,17 @@ public final class HttpDataServiceGenerator {
             appendCreate(out, entity, n);
         }
         if (entity.allows(UPDATE)) {
+            boolean checkRead = readChecked(entity, UPDATE);
             List<String> params = new ArrayList<>(keyDocs(entity, n));
             params.add("payload - The fields of the " + n.words + " to update");
             appendDoc(out, entity, UPDATE, "Updates " + n.article + " " + n.words + " by its key.", params,
-                    read ? "The updated " + n.words : "No content");
+                    read ? "The updated " + n.words + (checkRead ? ", or no content when the caller may not read it" :
+                            "") : "No content");
             out.append("    resource function patch ").append(n.collection).append("/").append(keyParams).append("(")
-                    .append(n.updateWire).append(" payload)").append(NEWLINE);
-            out.append("            returns ").append(changed).append(UPDATE_ERRORS).append(" {").append(NEWLINE);
+                    .append(checkRead ? "http:Request request, " : "").append(n.updateWire).append(" payload)")
+                    .append(NEWLINE);
+            out.append("            returns ").append(checkRead ? changed + "|http:NoContent" : changed)
+                    .append(UPDATE_ERRORS).append(" {").append(NEWLINE);
             appendKeyCheck(out, entity, n, keyList);
             String value = "payload";
             if (entity.hasWireTypes()) {
@@ -285,8 +289,16 @@ public final class HttpDataServiceGenerator {
                 appendConstraintCheck(out, entity, n, entity.updateFields(), "        ");
             }
             if (read) {
+                if (checkRead) {
+                    appendHoldsRead(out, entity);
+                }
                 out.append("        ").append(n.entity).append("|persist:Error item;").append(NEWLINE);
                 out.append("        if ").append(value).append(".length() == 0 {").append(NEWLINE);
+                if (checkRead) {
+                    out.append("            if !readable {").append(NEWLINE);
+                    out.append("                return http:NO_CONTENT;").append(NEWLINE);
+                    out.append("            }").append(NEWLINE);
+                }
                 out.append("            item = dataserviceClient->/").append(n.resource).append(keyPath).append(";")
                         .append(NEWLINE);
                 out.append("        } else {").append(NEWLINE);
@@ -294,7 +306,8 @@ public final class HttpDataServiceGenerator {
                         .append(".put(").append(value).append(");").append(NEWLINE);
                 out.append("        }").append(NEWLINE);
                 appendErrorCheck(out, "item", "toUpdateError", n, keyList, "        ");
-                out.append("        return ").append(n.toWire("item")).append(";").append(NEWLINE);
+                out.append("        return ").append(checkRead ? "readable ? " + n.toWire("item") + " : http:NO_CONTENT"
+                        : n.toWire("item")).append(";").append(NEWLINE);
             } else {
                 out.append("        if ").append(value).append(".length() == 0 {").append(NEWLINE);
                 out.append("            return http:NO_CONTENT;").append(NEWLINE);
@@ -308,16 +321,24 @@ public final class HttpDataServiceGenerator {
             out.append("    }").append(NEWLINE);
         }
         if (entity.allows(DELETE)) {
+            boolean checkRead = readChecked(entity, DELETE);
             appendDoc(out, entity, DELETE, "Deletes " + n.article + " " + n.words + " by its key.", keyDocs(entity, n),
-                    read ? "The deleted " + n.words : "No content");
+                    read ? "The deleted " + n.words + (checkRead ? ", or no content when the caller may not read it" :
+                            "") : "No content");
             out.append("    resource function delete ").append(n.collection).append("/").append(keyParams)
-                    .append("() returns ").append(changed).append(DELETE_ERRORS).append(" {").append(NEWLINE);
+                    .append("(").append(checkRead ? "http:Request request" : "").append(") returns ")
+                    .append(checkRead ? changed + "|http:NoContent" : changed).append(DELETE_ERRORS).append(" {")
+                    .append(NEWLINE);
             appendKeyCheck(out, entity, n, keyList);
+            if (checkRead) {
+                appendHoldsRead(out, entity);
+            }
             out.append("        ").append(n.entity).append("|persist:Error item = dataserviceClient->/")
                     .append(n.resource).append(keyPath).append(".delete();").append(NEWLINE);
             appendErrorCheck(out, "item", "toDeleteError", n, keyList, "        ");
-            out.append("        return ").append(read ? n.toWire("item") : "http:NO_CONTENT").append(";")
-                    .append(NEWLINE);
+            String result = !read ? "http:NO_CONTENT" :
+                    checkRead ? "readable ? " + n.toWire("item") + " : http:NO_CONTENT" : n.toWire("item");
+            out.append("        return ").append(result).append(";").append(NEWLINE);
             out.append("    }").append(NEWLINE);
         }
     }
@@ -546,6 +567,17 @@ public final class HttpDataServiceGenerator {
     private List<ExposedRelation> checked(ExposedEntity entity) {
         return auth ? entity.relations().stream()
                 .filter(relation -> !DataServiceModel.covered(entity, relation, entities)).toList() : List.of();
+    }
+
+    // With auth, patch and delete return the record only to a caller who may read it, which needs a check of its own
+    // when the entity's read scopes do not cover the action's.
+    private boolean readChecked(ExposedEntity entity, Operation action) {
+        return auth && entity.allows(READ) && !DataServiceModel.readCovers(entity, action);
+    }
+
+    private void appendHoldsRead(StringBuilder out, ExposedEntity entity) {
+        out.append("        boolean readable = dsHttp:holdsScope(request, ").append(stringList(entity.scopes(READ)))
+                .append(");").append(NEWLINE);
     }
 
     private String requestParam(ExposedEntity entity) {

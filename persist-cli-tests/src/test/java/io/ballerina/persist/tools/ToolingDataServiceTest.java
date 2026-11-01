@@ -162,8 +162,18 @@ public class ToolingDataServiceTest {
                 username = "writer"
                 password = "writer"
                 scopes = ["employees:create"]
+
+                [[ballerina.auth.users]]
+                username = "updater"
+                password = "updater"
+                scopes = ["employees:update", "hr:admin"]
+
+                [[ballerina.auth.users]]
+                username = "editor"
+                password = "editor"
+                scopes = ["employees:update", "hr:read"]
                 """, init.toString().replace('\\', '/')));
-        assertTestsPassed(bal(project, Map.of(), "test", "--offline"), 7);
+        assertTestsPassed(bal(project, Map.of(), "test", "--offline"), 9);
     }
 
     // Generation from bal build

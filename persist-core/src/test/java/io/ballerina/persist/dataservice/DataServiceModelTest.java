@@ -149,6 +149,22 @@ public class DataServiceModelTest {
     }
 
     @Test
+    public void testReadCoversAnAction() throws BalException, IOException {
+        String source = "import ballerina/dataservice;\nimport ballerina/persist as _;\n\n" +
+                "@dataservice:Expose {scopes: {read: [\"hr:read\", \"hr:admin\"], update: [\"hr:admin\"], " +
+                "delete: []}}\ntype Item record {|\n    readonly int id;\n|};\n\n" +
+                "@dataservice:Expose {scopes: {read: []}}\ntype Note record {|\n    readonly int id;\n|};\n\n" +
+                "@dataservice:Expose\ntype Tag record {|\n    readonly int id;\n|};\n";
+        Path model = Files.createTempDirectory("covers").resolve("model.bal");
+        Files.writeString(model, source);
+        List<ExposedEntity> exposed = DataServiceModel.resolve(model, BalProjectUtils.getEntities(model)).entities();
+        Assert.assertTrue(DataServiceModel.readCovers(exposed.get(0), Operation.UPDATE));
+        Assert.assertFalse(DataServiceModel.readCovers(exposed.get(0), Operation.DELETE));
+        Assert.assertTrue(DataServiceModel.readCovers(exposed.get(1), Operation.DELETE));
+        Assert.assertFalse(DataServiceModel.readCovers(exposed.get(2), Operation.UPDATE));
+    }
+
+    @Test
     public void testDefaultScopesNeverCoverAnotherEntity() throws BalException {
         List<ExposedEntity> exposed = employees(NO_RULES);
         Assert.assertTrue(exposed.stream().allMatch(entity -> entity.relations().stream()

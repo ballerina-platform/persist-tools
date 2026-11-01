@@ -174,6 +174,20 @@ public final class DataServiceModel {
         return related.isEmpty() || (!own.isEmpty() && related.containsAll(own));
     }
 
+    /**
+     * Tells whether the entity's `read` scopes cover an action's, so that every caller allowed the action is allowed
+     * to read the record it changed, and returning it needs no check of its own.
+     *
+     * @param entity the entity
+     * @param action the action, `update` or `delete`
+     * @return whether the action is covered
+     */
+    public static boolean readCovers(ExposedEntity entity, Operation action) {
+        List<String> read = entity.scopes(Operation.READ);
+        List<String> scopes = entity.scopes(action);
+        return read.isEmpty() || (!scopes.isEmpty() && read.containsAll(scopes));
+    }
+
     private static boolean isInternal(FieldRules.Applied rule) {
         return rule != null && rule.rule() == FieldRule.INTERNAL;
     }

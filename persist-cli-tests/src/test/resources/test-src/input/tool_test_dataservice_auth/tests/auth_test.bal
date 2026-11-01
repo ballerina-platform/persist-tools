@@ -8,6 +8,8 @@ final http:Client anonymous = check new (BASE);
 final http:Client reader = check new (BASE, auth = {username: "reader", password: "reader"});
 final http:Client orgReader = check new (BASE, auth = {username: "org", password: "org"});
 final http:Client writer = check new (BASE, auth = {username: "writer", password: "writer"});
+final http:Client updater = check new (BASE, auth = {username: "updater", password: "updater"});
+final http:Client editor = check new (BASE, auth = {username: "editor", password: "editor"});
 final http:Client hrBearer = check new (BASE, auth = {token: check token(["hr:read"])});
 final http:Client orgBearer = check new (BASE, auth = {token: check token(["org:read"])});
 
@@ -97,4 +99,25 @@ function token(string[] scopes) returns string|error => jwt:issue({
 function testIntrospectionByDefault() returns error? {
     http:Response response = check reader->get("/api/openapi-doc-dygixywsw");
     test:assertEquals(response.statusCode, 200);
+}
+
+@test:Config {dependsOn: [testListedScope, testCheckedRelation, testCheckedRelationWithJwt]}
+function testPatchResultNeedsRead() returns error? {
+    http:Response response = check writer->post("/api/employees", {id: 2, name: "Bo", departmentId: 1});
+    test:assertEquals(response.statusCode, 201);
+    response = check updater->patch("/api/employees/2", {name: "Bea"});
+    test:assertEquals(response.statusCode, 204);
+    response = check updater->patch("/api/employees/2", {});
+    test:assertEquals(response.statusCode, 204);
+    response = check editor->patch("/api/employees/2", {name: "Bee"});
+    test:assertEquals(response.statusCode, 200);
+    test:assertEquals(check response.getJsonPayload(), {id: 2, name: "Bee", departmentId: 1});
+}
+
+@test:Config {dependsOn: [testPatchResultNeedsRead]}
+function testDeleteResultNeedsRead() returns error? {
+    http:Response response = check updater->delete("/api/employees/2");
+    test:assertEquals(response.statusCode, 204);
+    response = check reader->get("/api/employees/2");
+    test:assertEquals(response.statusCode, 404);
 }
