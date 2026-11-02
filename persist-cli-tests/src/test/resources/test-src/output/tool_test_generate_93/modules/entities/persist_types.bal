@@ -8,6 +8,7 @@ public enum UserGender {
     FEMALE
 }
 
+# Represents the `User` entity.
 public type User record {|
     readonly int id;
     string name;
@@ -16,6 +17,7 @@ public type User record {|
     decimal? salary;
 |};
 
+# Represents `User` with every field optional, for projected reads.
 public type UserOptionalized record {|
     int id?;
     string name?;
@@ -24,16 +26,20 @@ public type UserOptionalized record {|
     decimal? salary?;
 |};
 
+# Represents `User` with its related entities, for projected reads.
 public type UserWithRelations record {|
     *UserOptionalized;
     CarOptionalized[] cars?;
     CarOptionalized drives?;
 |};
 
+# The `User` type or a projection of it, for reads.
 public type UserTargetType typedesc<UserWithRelations>;
 
+# The fields to insert a new `User`.
 public type UserInsert User;
 
+# The fields to update on an existing `User`.
 public type UserUpdate record {|
     string name?;
     UserGender gender?;
@@ -41,6 +47,7 @@ public type UserUpdate record {|
     decimal? salary?;
 |};
 
+# Represents the `Car` entity.
 public type Car record {|
     readonly int id;
     string name;
@@ -49,6 +56,7 @@ public type Car record {|
     int driverId;
 |};
 
+# Represents `Car` with every field optional, for projected reads.
 public type CarOptionalized record {|
     int id?;
     string name?;
@@ -57,16 +65,20 @@ public type CarOptionalized record {|
     int driverId?;
 |};
 
+# Represents `Car` with its related entities, for projected reads.
 public type CarWithRelations record {|
     *CarOptionalized;
     UserOptionalized owner?;
     UserOptionalized driver?;
 |};
 
+# The `Car` type or a projection of it, for reads.
 public type CarTargetType typedesc<CarWithRelations>;
 
+# The fields to insert a new `Car`.
 public type CarInsert Car;
 
+# The fields to update on an existing `Car`.
 public type CarUpdate record {|
     string name?;
     string model?;
