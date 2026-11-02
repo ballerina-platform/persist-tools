@@ -394,6 +394,12 @@ public class BalSyntaxConstants {
     public static final String LOCK_TEMPLATE = "lock {%s}";
     public static final String LOCK = "lock";
     public static final String NEWLINE = System.lineSeparator();
+    public static final String ENTITY_DOC = "Represents the `%s` entity.";
+    public static final String OPTIONALIZED_DOC = "Represents `%s` with every field optional, for projected reads.";
+    public static final String WITH_RELATIONS_DOC = "Represents `%s` with its related entities, for projected reads.";
+    public static final String TARGET_TYPE_DOC = "The `%s` type or a projection of it, for reads.";
+    public static final String INSERT_DOC = "The fields to insert a new `%s`.";
+    public static final String UPDATE_DOC = "The fields to update on an existing `%s`.";
     public static final String PERSIST_CLIENT_CLOSE_STATEMENT = "error? result = self.dbClient.close();";
     public static final String REGEX_FOR_SPLIT_BY_CAPITOL_LETTER = "(?=\\p{Upper})";
     public static final String OPEN_BRACE = "{";

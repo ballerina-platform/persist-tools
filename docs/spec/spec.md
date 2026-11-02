@@ -155,6 +155,32 @@ It will add generated files under the conventions,
  configurable string password = ?;
 ```
 `persist_types.bal` file will contain the derived entity types based on the entities defined in the model file.
+Each derived type has a one-line doc comment with a fixed summary based on the entity name. The entity type adds the first
+paragraph of the entity's doc comment in the model, if any. Each field, in every derived type that has it, takes the first
+paragraph of its doc comment in the model.
+
+| Derived type | Doc comment |
+|---|---|
+| `Employee` | Represents the `Employee` entity. *Model doc* |
+| `EmployeeOptionalized` | Represents `Employee` with every field optional, for projected reads. |
+| `EmployeeWithRelations` | Represents `Employee` with its related entities, for projected reads. |
+| `EmployeeTargetType` | The `Employee` type or a projection of it, for reads. |
+| `EmployeeInsert` | The fields to insert a new `Employee`. |
+| `EmployeeUpdate` | The fields to update on an existing `Employee`. |
+
+```ballerina
+# Represents the `Employee` entity. A person employed by the company.
+public type Employee record {|
+    # The employee's id
+    readonly int id;
+    string name;
+|};
+
+# The fields to update on an existing `Employee`.
+public type EmployeeUpdate record {|
+    string name?;
+|};
+```
 `persist_test_client.bal` file will contain the client API for the entities defined in the model file for the test-datastore.
 `persist_test_init.bal` file will contain the initialization of the test database schema based on the entities defined in the model file for the test-datastore.
 `script.sql` file will contain the SQL script to create the database schema based on the entities defined in the model file.
