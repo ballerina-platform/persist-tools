@@ -102,11 +102,24 @@ function token(string[] scopes) returns string|error => jwt:issue({
     signatureConfig: {algorithm: jwt:HS256, config: "dataservice-test-secret"}
 });
 
-// Disabled until ballerina-library#9436: the definition is not embedded when the listener port is a record field.
-@test:Config {enable: false}
+@test:Config
 function testIntrospectionByDefault() returns error? {
     http:Response response = check reader->get("/api/openapi-doc-dygixywsw");
     test:assertEquals(response.statusCode, 200);
+    response = check reader->get("/api/swagger-ui-dygixywsw");
+    test:assertEquals(response.statusCode, 200);
+}
+
+@test:Config
+function testIntrospectionNeedsCredentials() returns error? {
+    foreach string path in ["/api/openapi-doc-dygixywsw", "/api/swagger-ui-dygixywsw"] {
+        http:Response response = check anonymous->get(path);
+        test:assertEquals(response.statusCode, 401, path);
+        test:assertEquals(check response.getJsonPayload(), {
+            code: "UNAUTHENTICATED",
+            message: "The request needs a valid credential."
+        }, path);
+    }
 }
 
 @test:Config {dependsOn: [testListedScope, testCheckedRelation, testCheckedRelationWithJwt]}

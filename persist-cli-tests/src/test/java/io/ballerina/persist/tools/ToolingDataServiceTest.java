@@ -118,7 +118,7 @@ public class ToolingDataServiceTest {
                 user = "sa"
                 password = ""
                 """, init.toString().replace('\\', '/')));
-        assertTestsPassed(bal(project, Map.of("TZ", "UTC"), "test", "--offline"), 61);
+        assertTestsPassed(bal(project, Map.of("TZ", "UTC"), "test", "--offline"), 63);
     }
 
     @Test(description = "Authentication, scopes and relation checks of a service with auth, against H2")
@@ -177,7 +177,7 @@ public class ToolingDataServiceTest {
                 password = "editor"
                 scopes = ["employees:update", "hr:read"]
                 """, init.toString().replace('\\', '/')));
-        assertTestsPassed(bal(project, Map.of(), "test", "--offline"), 10);
+        assertTestsPassed(bal(project, Map.of(), "test", "--offline"), 12);
     }
 
     // Generation from bal build
