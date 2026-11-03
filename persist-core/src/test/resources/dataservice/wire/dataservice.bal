@@ -152,9 +152,9 @@ service http:InterceptableService /api on dataserviceListener {
     #
     # + id - The id of the document
     # + payload - The fields of the document to update
-    # + return - The updated document, or the error response
+    # + return - The updated document, or no content when it cannot be read back, or the error response
     resource function patch documents/[int id](DocumentUpdatePayload payload)
-            returns DocumentPayload|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
+            returns DocumentPayload|http:NoContent|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         DocumentUpdate|dsHttp:InvalidInput value = transformPayloadToDocumentUpdate(payload);
         if value is dsHttp:InvalidInput {
             return value;

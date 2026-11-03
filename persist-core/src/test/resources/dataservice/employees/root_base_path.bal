@@ -216,9 +216,9 @@ service http:InterceptableService / on dataserviceListener {
     #
     # + id - The id of the employee
     # + payload - The fields of the employee to update
-    # + return - The updated employee, or the error response
+    # + return - The updated employee, or no content when it cannot be read back, or the error response
     resource function patch employees/[int id](EmployeeUpdate payload)
-            returns Employee|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
+            returns Employee|http:NoContent|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         Employee|persist:Error item;
         if payload.length() == 0 {
             item = dataserviceClient->/employees/[id];

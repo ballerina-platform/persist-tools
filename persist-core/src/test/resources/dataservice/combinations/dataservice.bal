@@ -346,9 +346,9 @@ service http:InterceptableService /api on dataserviceListener {
     #
     # + id - The id of the read update item
     # + payload - The fields of the read update item to update
-    # + return - The updated read update item, or the error response
+    # + return - The updated read update item, or no content when it cannot be read back, or the error response
     resource function patch readUpdateItems/[int id](ReadUpdateItemUpdate payload)
-            returns ReadUpdateItem|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
+            returns ReadUpdateItem|http:NoContent|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         ReadUpdateItem|persist:Error item;
         if payload.length() == 0 {
             item = dataserviceClient->/readupdateitems/[id];
@@ -697,9 +697,9 @@ service http:InterceptableService /api on dataserviceListener {
     #
     # + id - The id of the read create update item
     # + payload - The fields of the read create update item to update
-    # + return - The updated read create update item, or the error response
+    # + return - The updated read create update item, or no content when it cannot be read back, or the error response
     resource function patch readCreateUpdateItems/[int id](ReadCreateUpdateItemUpdate payload)
-            returns ReadCreateUpdateItem|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
+            returns ReadCreateUpdateItem|http:NoContent|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         ReadCreateUpdateItem|persist:Error item;
         if payload.length() == 0 {
             item = dataserviceClient->/readcreateupdateitems/[id];
@@ -906,9 +906,9 @@ service http:InterceptableService /api on dataserviceListener {
     #
     # + id - The id of the read update delete item
     # + payload - The fields of the read update delete item to update
-    # + return - The updated read update delete item, or the error response
+    # + return - The updated read update delete item, or no content when it cannot be read back, or the error response
     resource function patch readUpdateDeleteItems/[int id](ReadUpdateDeleteItemUpdate payload)
-            returns ReadUpdateDeleteItem|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
+            returns ReadUpdateDeleteItem|http:NoContent|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         ReadUpdateDeleteItem|persist:Error item;
         if payload.length() == 0 {
             item = dataserviceClient->/readupdatedeleteitems/[id];
@@ -1118,9 +1118,9 @@ service http:InterceptableService /api on dataserviceListener {
     #
     # + id - The id of the read create update delete item
     # + payload - The fields of the read create update delete item to update
-    # + return - The updated read create update delete item, or the error response
+    # + return - The updated read create update delete item, or no content when it cannot be read back, or the error response
     resource function patch readCreateUpdateDeleteItems/[int id](ReadCreateUpdateDeleteItemUpdate payload)
-            returns ReadCreateUpdateDeleteItem|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
+            returns ReadCreateUpdateDeleteItem|http:NoContent|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         ReadCreateUpdateDeleteItem|persist:Error item;
         if payload.length() == 0 {
             item = dataserviceClient->/readcreateupdatedeleteitems/[id];

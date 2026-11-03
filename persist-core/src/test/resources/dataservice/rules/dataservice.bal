@@ -215,9 +215,9 @@ service http:InterceptableService /api on dataserviceListener {
     #
     # + id - The id of the order
     # + payload - The fields of the order to update
-    # + return - The updated order, or the error response
+    # + return - The updated order, or no content when it cannot be read back, or the error response
     resource function patch orders/[int id](OrderUpdatePayload payload)
-            returns OrderPayload|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
+            returns OrderPayload|http:NoContent|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         OrderUpdate|dsHttp:InvalidInput value = transformPayloadToOrderUpdate(payload);
         if value is dsHttp:InvalidInput {
             return value;

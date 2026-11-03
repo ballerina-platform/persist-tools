@@ -140,9 +140,9 @@ service http:InterceptableService /api on dataserviceListener {
     # + projectCode - The projectCode of the assignment
     # + seq - The seq of the assignment
     # + payload - The fields of the assignment to update
-    # + return - The updated assignment, or the error response
+    # + return - The updated assignment, or no content when it cannot be read back, or the error response
     resource function patch assignments/[string projectCode]/[int seq](AssignmentUpdate payload)
-            returns Assignment|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
+            returns Assignment|http:NoContent|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         Assignment|persist:Error item;
         if payload.length() == 0 {
             item = dataserviceClient->/assignments/[projectCode]/[seq];

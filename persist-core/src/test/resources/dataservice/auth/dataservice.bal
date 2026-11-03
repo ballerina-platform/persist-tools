@@ -208,7 +208,7 @@ service http:InterceptableService /api on dataserviceListener {
     #
     # + id - The id of the employee
     # + payload - The fields of the employee to update
-    # + return - The updated employee, or no content when the caller may not read it, or the error response
+    # + return - The updated employee, or no content when the caller may not read it or it cannot be read back, or the error response
     @http:ResourceConfig {auth: {scopes: ["employees:update"]}}
     resource function patch employees/[int id](http:Request request, EmployeeUpdate payload)
             returns Employee|http:NoContent|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:Unauthorized|dsHttp:Forbidden|dsHttp:InternalError {

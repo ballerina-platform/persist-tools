@@ -263,12 +263,13 @@ public final class HttpDataServiceGenerator {
             List<String> params = new ArrayList<>(keyDocs(entity, n));
             params.add("payload - The fields of the " + n.words + " to update");
             appendDoc(out, entity, UPDATE, "Updates " + n.article + " " + n.words + " by its key.", params,
-                    read ? "The updated " + n.words + (checkRead ? ", or no content when the caller may not read it" :
-                            "") : "No content");
+                    read ? "The updated " + n.words + (checkRead ? ", or no content when the caller may not read it or "
+                            + "it cannot be read back" : ", or no content when it cannot be read back") : "No content");
             out.append("    resource function patch ").append(n.collection).append("/").append(keyParams).append("(")
                     .append(checkRead ? "http:Request request, " : "").append(n.updateWire).append(" payload)")
                     .append(NEWLINE);
-            out.append("            returns ").append(checkRead ? changed + "|http:NoContent" : changed)
+            // An update that is saved but cannot be read back is answered with no content.
+            out.append("            returns ").append(read ? changed + "|http:NoContent" : changed)
                     .append(errors(UPDATE_ERRORS, entity, UPDATE, false)).append(" {").append(NEWLINE);
             appendKeyCheck(out, entity, n, keyList);
             String value = "payload";
