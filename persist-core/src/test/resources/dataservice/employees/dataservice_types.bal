@@ -68,8 +68,8 @@ public type EmployeeFilter record {|
 # An employee with the fields named in the `fields` query parameter.
 #
 # + id - The `id` field of `Employee`
-# + name - The `name` field of `Employee`
-# + email - The `email` field of `Employee`
+# + name - The full name
+# + email - The work email, if the employee has one
 # + departmentId - The key of the related 'Department'.
 # + department - The related department, when `fields` names it
 public type EmployeePartial record {|
@@ -92,8 +92,8 @@ public type EmployeePartialList record {
 # An employee read through a relation, with the fields named in the `fields` query parameter.
 #
 # + id - The `id` field of `Employee`
-# + name - The `name` field of `Employee`
-# + email - The `email` field of `Employee`
+# + name - The full name
+# + email - The work email, if the employee has one
 # + departmentId - The key of the related 'Department'.
 public type EmployeeRelatedPartial record {|
     int id;

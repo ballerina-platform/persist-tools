@@ -30,9 +30,10 @@ import java.util.Optional;
  * @param key        whether the field is a key field, which is `readonly`
  * @param rule       the field rule, if the field has one
  * @param value      the Ballerina source of the value the service sets on create, if the rule gives one
+ * @param doc        the field's doc comment in the model, if it has one
  */
 public record ServiceField(String name, String type, boolean nilable, boolean optional, boolean key,
-                           Optional<FieldRule> rule, Optional<String> value) {
+                           Optional<FieldRule> rule, Optional<String> value, Optional<String> doc) {
 
     /**
      * Creates a field without a field rule.
@@ -44,7 +45,7 @@ public record ServiceField(String name, String type, boolean nilable, boolean op
      * @param key      whether the field is a key field
      */
     public ServiceField(String name, String type, boolean nilable, boolean optional, boolean key) {
-        this(name, type, nilable, optional, key, Optional.empty(), Optional.empty());
+        this(name, type, nilable, optional, key, Optional.empty(), Optional.empty(), Optional.empty());
     }
 
     /**
@@ -55,7 +56,18 @@ public record ServiceField(String name, String type, boolean nilable, boolean op
      */
     public ServiceField withRule(FieldRules.Applied applied) {
         return applied == null ? this :
-                new ServiceField(name, type, nilable, optional, key, Optional.of(applied.rule()), applied.value());
+                new ServiceField(name, type, nilable, optional, key, Optional.of(applied.rule()), applied.value(), doc);
+    }
+
+    /**
+     * Returns the field with its doc comment in the model.
+     *
+     * @param documentation the doc comment, or `null` for none
+     * @return the field with the doc comment
+     */
+    public ServiceField withDoc(String documentation) {
+        return new ServiceField(name, type, nilable, optional, key, rule, value,
+                Optional.ofNullable(documentation).filter(text -> !text.isBlank()));
     }
 
     /**

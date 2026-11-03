@@ -8,6 +8,7 @@ import ballerina/persist as _;
 type Employee record {|
     readonly int id;
     string name;
+    # The work email, if the employee has one
     string? email;
     Department department;
 |};

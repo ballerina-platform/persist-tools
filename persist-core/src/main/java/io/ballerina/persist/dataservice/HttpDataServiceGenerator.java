@@ -1010,6 +1010,9 @@ public final class HttpDataServiceGenerator {
     }
 
     private static String fieldDoc(ServiceField field, String persistType, ExposedEntity entity) {
+        if (field.doc().isPresent()) {
+            return field.doc().get();
+        }
         Optional<String> target = entity.foreignKeyTarget(field.name());
         if (target.isPresent()) {
             return "The key of the related '" + target.get() + "'.";
@@ -1214,7 +1217,7 @@ public final class HttpDataServiceGenerator {
     private static List<ServiceField> insertWire(List<ServiceField> fields) {
         return returned(fields).stream().map(field -> field.has(FieldRule.READ_ONLY) ?
                 new ServiceField(field.name(), field.type(), field.nilable(), true, field.key(), field.rule(),
-                        field.value()) : field).toList();
+                        field.value(), field.doc()) : field).toList();
     }
 
     private static List<ServiceField> updateWire(List<ServiceField> fields) {

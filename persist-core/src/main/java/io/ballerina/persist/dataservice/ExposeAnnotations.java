@@ -27,6 +27,7 @@ import io.ballerina.compiler.syntax.tree.ListConstructorExpressionNode;
 import io.ballerina.compiler.syntax.tree.MappingConstructorExpressionNode;
 import io.ballerina.compiler.syntax.tree.MappingFieldNode;
 import io.ballerina.compiler.syntax.tree.MarkdownDocumentationNode;
+import io.ballerina.compiler.syntax.tree.MarkdownParameterDocumentationLineNode;
 import io.ballerina.compiler.syntax.tree.MetadataNode;
 import io.ballerina.compiler.syntax.tree.ModuleMemberDeclarationNode;
 import io.ballerina.compiler.syntax.tree.ModulePartNode;
@@ -189,6 +190,39 @@ public final class ExposeAnnotations {
             }
             if (!lines.isEmpty()) {
                 docs.put(type.typeName().text().trim(), List.copyOf(lines));
+            }
+        }
+        return docs;
+    }
+
+    /**
+     * Reads the `+ field` lines of the doc comments of the record types in a model.
+     *
+     * @param model the syntax tree of the model
+     * @return the first line of each documented field, by field name, of each record type
+     */
+    public static Map<String, Map<String, String>> fieldDocs(SyntaxTree model) {
+        Map<String, Map<String, String>> docs = new LinkedHashMap<>();
+        ModulePartNode root = model.rootNode();
+        for (ModuleMemberDeclarationNode member : root.members()) {
+            if (!(member instanceof TypeDefinitionNode type) || type.metadata().isEmpty()
+                    || type.metadata().get().documentationString().isEmpty()
+                    || !(type.metadata().get().documentationString().get() instanceof MarkdownDocumentationNode doc)) {
+                continue;
+            }
+            Map<String, String> fields = new LinkedHashMap<>();
+            for (Node line : doc.documentationLines()) {
+                if (line instanceof MarkdownParameterDocumentationLineNode parameter
+                        && line.kind() == SyntaxKind.MARKDOWN_PARAMETER_DOCUMENTATION_LINE) {
+                    StringBuilder text = new StringBuilder();
+                    parameter.documentElements().forEach(element -> text.append(element.toSourceCode()));
+                    if (!text.toString().isBlank()) {
+                        fields.put(parameter.parameterName().text().trim(), text.toString().strip());
+                    }
+                }
+            }
+            if (!fields.isEmpty()) {
+                docs.put(type.typeName().text().trim(), Map.copyOf(fields));
             }
         }
         return docs;

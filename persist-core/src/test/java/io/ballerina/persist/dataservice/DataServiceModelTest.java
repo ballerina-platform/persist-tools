@@ -60,12 +60,21 @@ public class DataServiceModelTest {
         Assert.assertEquals(employee.fields(), List.of(
                 new ServiceField("id", "int", false, false, true),
                 new ServiceField("name", "string", false, false, false),
-                new ServiceField("email", "string", true, false, false),
+                new ServiceField("email", "string", true, false, false)
+                        .withDoc("The work email, if the employee has one"),
                 new ServiceField("departmentId", "int", false, false, false)));
         Assert.assertTrue(employee.insertFields().isEmpty());
         Assert.assertEquals(employee.updateFields().stream().map(ServiceField::name).toList(),
                 List.of("name", "email", "departmentId"));
         Assert.assertFalse(employee.hasWireTypes());
+    }
+
+    @Test
+    public void testFieldDocsFromTheModel() throws BalException {
+        Path model = RESOURCES.resolve("employees").resolve("model.bal");
+        ExposedEntity employee = DataServiceModel.resolve(model, BalProjectUtils.getEntities(model)).entities().get(0);
+        Assert.assertEquals(employee.fields().stream().map(field -> field.doc().orElse("")).toList(),
+                List.of("", "The full name", "The work email, if the employee has one", ""));
     }
 
     @Test

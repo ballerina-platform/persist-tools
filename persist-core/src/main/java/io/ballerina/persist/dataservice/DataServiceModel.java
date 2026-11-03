@@ -62,8 +62,10 @@ public final class DataServiceModel {
         Map<String, EnumSet<Operation>> annotations = ExposeAnnotations.read(model);
         FieldRules.Result rules = FieldRules.resolve(model, entityModule, annotations);
         Map<String, Map<Operation, List<String>>> scopes = ExposeAnnotations.scopes(model);
+        Map<String, Map<String, String>> fieldDocs = ExposeAnnotations.fieldDocs(model);
         return new Resolution(resolve(entityModule, annotations, ExposeAnnotations.docs(model), rules).stream()
-                .map(entity -> entity.withScopes(scopes.getOrDefault(entity.name(), Map.of()))).toList(),
+                .map(entity -> entity.withScopes(scopes.getOrDefault(entity.name(), Map.of()))
+                        .withFieldDocs(fieldDocs.getOrDefault(entity.name(), Map.of()))).toList(),
                 rules.warnings());
     }
 

@@ -118,7 +118,7 @@ public final class ExposedEntity {
             FieldRules.Applied rule = rules.get(field.getFieldName());
             constraints.put(field.getFieldName(), constraintsOf(field));
             fields.add(new ServiceField(field.getFieldName(), type, !isKey && field.isOptionalType(),
-                    field.isOptionalField(), isKey).withRule(rule));
+                    field.isOptionalField(), isKey).withRule(rule).withDoc(field.getDocumentation()));
             if (!isInternal(rule)) {
                 columns.add(new Column(unescape(field.getFieldName()), unescape(field.getFieldColumnName()),
                         Column.typeOf(type, field.getEnum() != null), !isKey && field.isOptionalType(), isKey,
@@ -126,9 +126,9 @@ public final class ExposedEntity {
             }
             if (!isKey) {
                 insertFields.add(new ServiceField(field.getFieldName(), type, field.isOptionalType(),
-                        field.isOptionalField(), false).withRule(rule));
+                        field.isOptionalField(), false).withRule(rule).withDoc(field.getDocumentation()));
                 updateFields.add(new ServiceField(field.getFieldName(), type, field.isOptionalType(), true, false)
-                        .withRule(rule));
+                        .withRule(rule).withDoc(field.getDocumentation()));
             }
         }
         boolean generated = entity.getFields().stream().anyMatch(EntityField::isDbGenerated);
@@ -164,6 +164,23 @@ public final class ExposedEntity {
     public ExposedEntity withScopes(Map<Operation, List<String>> listed) {
         return new ExposedEntity(name, resourceName, operations, fields, insertFields, updateFields, doc, columns,
                 relations, Map.copyOf(listed), constraints, foreignKeys);
+    }
+
+    /**
+     * Returns the entity with the `+ field` lines of its doc comment, for the fields without their own doc comment.
+     *
+     * @param lines the line of each documented field, by field name
+     * @return the entity with them
+     */
+    public ExposedEntity withFieldDocs(Map<String, String> lines) {
+        return new ExposedEntity(name, resourceName, operations, withDocs(fields, lines),
+                insertFields == null ? null : withDocs(insertFields, lines), withDocs(updateFields, lines), doc,
+                columns, relations, scopes, constraints, foreignKeys);
+    }
+
+    private static List<ServiceField> withDocs(List<ServiceField> fields, Map<String, String> lines) {
+        return fields.stream().map(field -> field.doc().isPresent() || !lines.containsKey(field.name()) ? field :
+                field.withDoc(lines.get(field.name()))).toList();
     }
 
     /**
