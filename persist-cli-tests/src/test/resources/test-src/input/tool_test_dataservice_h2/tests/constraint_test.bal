@@ -1,8 +1,14 @@
 import ballerina/http;
 import ballerina/test;
 
-// ballerina/http does not check the payload of a create, a union of type references, until
-// ballerina-library#9433 is fixed, so a constraint on a field that is not converted is checked here on patch.
+@test:Config
+function testConstraintOnCreate() returns error? {
+    http:Response response = check send("POST", "/api/badges", {id: 98, label: "A"});
+    test:assertEquals(response.statusCode, 400);
+    json body = check response.getJsonPayload();
+    test:assertEquals(body.code, "INVALID_INPUT");
+}
+
 @test:Config
 function testConstraintOnPatch() returns error? {
     http:Response response = check send("PATCH", "/api/badges/99", {label: "A"});
