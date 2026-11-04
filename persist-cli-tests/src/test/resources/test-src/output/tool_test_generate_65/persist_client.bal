@@ -171,7 +171,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(BOOK);
         }
         _ = check sqlClient.runUpdateQuery(bookId, value);
-        return self->/books/[bookId].get();
+        Book|persist:Error result = self->/books/[bookId].get();
+        if result is Book || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from Book table.
@@ -236,7 +240,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(ORDER);
         }
         _ = check sqlClient.runUpdateQuery(orderId, value);
-        return self->/orders/[orderId].get();
+        Order|persist:Error result = self->/orders/[orderId].get();
+        if result is Order || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from Order table.
@@ -301,7 +309,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(ORDER_ITEM);
         }
         _ = check sqlClient.runUpdateQuery(orderItemId, value);
-        return self->/orderitems/[orderItemId].get();
+        OrderItem|persist:Error result = self->/orderitems/[orderItemId].get();
+        if result is OrderItem || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from OrderItem table.
@@ -366,7 +378,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(PAYMENT);
         }
         _ = check sqlClient.runUpdateQuery(paymentId, value);
-        return self->/payments/[paymentId].get();
+        Payment|persist:Error result = self->/payments/[paymentId].get();
+        if result is Payment || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from Payment table.

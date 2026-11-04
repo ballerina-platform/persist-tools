@@ -144,7 +144,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(USER);
         }
         _ = check sqlClient.runUpdateQuery(id, value);
-        return self->/users/[id].get();
+        User|persist:Error result = self->/users/[id].get();
+        if result is User || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from User table.
@@ -209,7 +213,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(CAR);
         }
         _ = check sqlClient.runUpdateQuery(id, value);
-        return self->/cars/[id].get();
+        Car|persist:Error result = self->/cars/[id].get();
+        if result is Car || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from cars table.
@@ -274,7 +282,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(PERSON);
         }
         _ = check sqlClient.runUpdateQuery(name, value);
-        return self->/people/[name].get();
+        Person|persist:Error result = self->/people/[name].get();
+        if result is Person || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from Person table.
@@ -339,7 +351,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(PERSON2);
         }
         _ = check sqlClient.runUpdateQuery(name, value);
-        return self->/person2s/[name].get();
+        Person2|persist:Error result = self->/person2s/[name].get();
+        if result is Person2 || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from people2 table.
