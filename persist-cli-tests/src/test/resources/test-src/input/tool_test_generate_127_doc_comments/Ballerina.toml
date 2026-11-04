@@ -1,0 +1,5 @@
+[package]
+org = "test"
+name = "persist_doc_comments"
+version = "0.1.0"
+distribution = "2201.13.0"

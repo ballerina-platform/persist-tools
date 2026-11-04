@@ -1216,6 +1216,15 @@ public class ToolingGenerateTest {
         assertGeneratedSources("tool_test_generate_126_reserved_words");
     }
 
+    @Test(enabled = true)
+    @Description("The model's doc comments are added to the fixed doc comments of the generated types")
+    public void testGenerateWithDocComments() {
+        updateOutputBallerinaToml("tool_test_generate_127_doc_comments");
+        executeGenerateCommand("tool_test_generate_127_doc_comments",
+                "--datastore", "mysql", "--module", "entities");
+        assertGeneratedSources("tool_test_generate_127_doc_comments");
+    }
+
     // Multi-model support tests
 
     @Test
