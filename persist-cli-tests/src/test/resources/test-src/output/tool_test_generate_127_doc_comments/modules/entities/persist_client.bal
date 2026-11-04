@@ -123,7 +123,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(DEPARTMENT);
         }
         _ = check sqlClient.runUpdateQuery(id, value);
-        return self->/departments/[id].get();
+        Department|persist:Error result = self->/departments/[id].get();
+        if result is Department || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from Department table.
@@ -189,7 +193,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(EMPLOYEE);
         }
         _ = check sqlClient.runUpdateQuery(id, value);
-        return self->/employees/[id].get();
+        Employee|persist:Error result = self->/employees/[id].get();
+        if result is Employee || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from Employee table.
@@ -254,7 +262,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(BUILDING);
         }
         _ = check sqlClient.runUpdateQuery(code, value);
-        return self->/buildings/[code].get();
+        Building|persist:Error result = self->/buildings/[code].get();
+        if result is Building || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from Building table.
