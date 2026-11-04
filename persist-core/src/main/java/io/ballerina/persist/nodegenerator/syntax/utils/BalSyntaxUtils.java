@@ -1256,6 +1256,21 @@ public class BalSyntaxUtils {
     }
 
     /**
+     * Add the statements that read the updated record back and return it.
+     *
+     * @param update The put function
+     * @param entity The entity
+     * @param path The resource path of the entity record
+     */
+    public static void addUpdateReadBackStatements(Function update, Entity entity, StringBuilder path) {
+        update.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.UPDATE_READ_BACK_QUERY,
+                entity.getEntityName(), path)));
+        update.addStatement(NodeParser.parseStatement(String.format(
+                BalSyntaxConstants.UPDATE_READ_BACK_PASS_THROUGH, entity.getEntityName())));
+        update.addStatement(NodeParser.parseStatement(BalSyntaxConstants.UPDATE_READ_BACK_ERROR));
+    }
+
+    /**
      * Create documentation for PUT resource method.
      *
      * @param entity The entity

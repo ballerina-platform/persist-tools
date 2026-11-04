@@ -93,7 +93,11 @@ public isolated client class H2Client {
             sqlClient = self.persistClients.get(MEDICAL_NEED);
         }
         _ = check sqlClient.runUpdateQuery(needId, value);
-        return self->/medicalneeds/[needId].get();
+        MedicalNeed|persist:Error result = self->/medicalneeds/[needId].get();
+        if result is MedicalNeed || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from MedicalNeed table.

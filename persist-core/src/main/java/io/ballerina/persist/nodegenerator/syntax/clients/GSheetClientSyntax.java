@@ -188,8 +188,7 @@ public class GSheetClientSyntax implements ClientSyntax {
                     BalSyntaxConstants.G_SHEET_UPDATE_RUN_UPDATE_QUERY, entity.getKeys().stream().
                             findFirst().get().getFieldName())));
         }
-        update.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.UPDATE_RETURN_UPDATE_QUERY,
-                path)));
+        BalSyntaxUtils.addUpdateReadBackStatements(update, entity, path);
         return update.getFunctionDefinitionNode();
     }
 

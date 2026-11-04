@@ -196,7 +196,11 @@ public isolated client class H2Client {
             sqlClient = self.persistClients.get(PROFILE);
         }
         _ = check sqlClient.runUpdateQuery(id, value);
-        return self->/profiles/[id].get();
+        Profile|persist:Error result = self->/profiles/[id].get();
+        if result is Profile || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from Profile table.
@@ -261,7 +265,11 @@ public isolated client class H2Client {
             sqlClient = self.persistClients.get(USER);
         }
         _ = check sqlClient.runUpdateQuery(id, value);
-        return self->/users/[id].get();
+        User|persist:Error result = self->/users/[id].get();
+        if result is User || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from User table.
@@ -326,7 +334,11 @@ public isolated client class H2Client {
             sqlClient = self.persistClients.get(DEPT);
         }
         _ = check sqlClient.runUpdateQuery(id, value);
-        return self->/depts/[id].get();
+        Dept|persist:Error result = self->/depts/[id].get();
+        if result is Dept || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from Dept table.
@@ -391,7 +403,11 @@ public isolated client class H2Client {
             sqlClient = self.persistClients.get(CUSTOMER);
         }
         _ = check sqlClient.runUpdateQuery(id, value);
-        return self->/customers/[id].get();
+        Customer|persist:Error result = self->/customers/[id].get();
+        if result is Customer || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from Customer table.
@@ -458,7 +474,11 @@ public isolated client class H2Client {
             sqlClient = self.persistClients.get(STUDENT);
         }
         _ = check sqlClient.runUpdateQuery({"id": id, "firstName": firstName}, value);
-        return self->/students/[id]/[firstName].get();
+        Student|persist:Error result = self->/students/[id]/[firstName].get();
+        if result is Student || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from Student table.
@@ -524,7 +544,11 @@ public isolated client class H2Client {
             sqlClient = self.persistClients.get(MULTIPLE_ASSOCIATIONS);
         }
         _ = check sqlClient.runUpdateQuery(id, value);
-        return self->/multipleassociations/[id].get();
+        MultipleAssociations|persist:Error result = self->/multipleassociations/[id].get();
+        if result is MultipleAssociations || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from MultipleAssociations table.

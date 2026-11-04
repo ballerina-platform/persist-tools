@@ -205,7 +205,11 @@ public isolated client class Client {
             redisClient = self.persistClients.get(ALL_TYPES);
         }
         _ = check redisClient.runUpdateQuery(id, value);
-        return self->/alltypes/[id].get();
+        AllTypes|persist:Error result = self->/alltypes/[id].get();
+        if result is AllTypes || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from AllTypes key space.
@@ -266,7 +270,11 @@ public isolated client class Client {
             redisClient = self.persistClients.get(STRING_ID_RECORD);
         }
         _ = check redisClient.runUpdateQuery(id, value);
-        return self->/stringidrecords/[id].get();
+        StringIdRecord|persist:Error result = self->/stringidrecords/[id].get();
+        if result is StringIdRecord || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from StringIdRecord key space.
@@ -327,7 +335,11 @@ public isolated client class Client {
             redisClient = self.persistClients.get(INT_ID_RECORD);
         }
         _ = check redisClient.runUpdateQuery(id, value);
-        return self->/intidrecords/[id].get();
+        IntIdRecord|persist:Error result = self->/intidrecords/[id].get();
+        if result is IntIdRecord || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from IntIdRecord key space.
@@ -388,7 +400,11 @@ public isolated client class Client {
             redisClient = self.persistClients.get(FLOAT_ID_RECORD);
         }
         _ = check redisClient.runUpdateQuery(id, value);
-        return self->/floatidrecords/[id].get();
+        FloatIdRecord|persist:Error result = self->/floatidrecords/[id].get();
+        if result is FloatIdRecord || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from FloatIdRecord key space.
@@ -449,7 +465,11 @@ public isolated client class Client {
             redisClient = self.persistClients.get(DECIMAL_ID_RECORD);
         }
         _ = check redisClient.runUpdateQuery(id, value);
-        return self->/decimalidrecords/[id].get();
+        DecimalIdRecord|persist:Error result = self->/decimalidrecords/[id].get();
+        if result is DecimalIdRecord || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from DecimalIdRecord key space.
@@ -510,7 +530,11 @@ public isolated client class Client {
             redisClient = self.persistClients.get(BOOLEAN_ID_RECORD);
         }
         _ = check redisClient.runUpdateQuery(id, value);
-        return self->/booleanidrecords/[id].get();
+        BooleanIdRecord|persist:Error result = self->/booleanidrecords/[id].get();
+        if result is BooleanIdRecord || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from BooleanIdRecord key space.
@@ -571,7 +595,11 @@ public isolated client class Client {
             redisClient = self.persistClients.get(COMPOSITE_ASSOCIATION_RECORD);
         }
         _ = check redisClient.runUpdateQuery(id, value);
-        return self->/compositeassociationrecords/[id].get();
+        CompositeAssociationRecord|persist:Error result = self->/compositeassociationrecords/[id].get();
+        if result is CompositeAssociationRecord || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from CompositeAssociationRecord key space.
@@ -640,7 +668,11 @@ public isolated client class Client {
             redisClient = self.persistClients.get(ALL_TYPES_ID_RECORD);
         }
         _ = check redisClient.runUpdateQuery({"booleanType": booleanType, "intType": intType, "floatType": floatType, "decimalType": decimalType, "stringType": stringType}, value);
-        return self->/alltypesidrecords/[booleanType]/[intType]/[floatType]/[decimalType]/[stringType].get();
+        AllTypesIdRecord|persist:Error result = self->/alltypesidrecords/[booleanType]/[intType]/[floatType]/[decimalType]/[stringType].get();
+        if result is AllTypesIdRecord || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from AllTypesIdRecord key space.

@@ -176,7 +176,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(USER);
         }
         _ = check sqlClient.runUpdateQuery(id, value);
-        return self->/users/[id].get();
+        User|persist:Error result = self->/users/[id].get();
+        if result is User || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from User table.
@@ -241,7 +245,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(POST);
         }
         _ = check sqlClient.runUpdateQuery(id, value);
-        return self->/posts/[id].get();
+        Post|persist:Error result = self->/posts/[id].get();
+        if result is Post || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from Post table.
@@ -306,7 +314,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(FOLLOW);
         }
         _ = check sqlClient.runUpdateQuery(id, value);
-        return self->/follows/[id].get();
+        Follow|persist:Error result = self->/follows/[id].get();
+        if result is Follow || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from Follow table.

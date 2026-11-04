@@ -440,7 +440,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(ALL_TYPES);
         }
         _ = check sqlClient.runUpdateQuery(id, value);
-        return self->/alltypes/[id].get();
+        AllTypes|persist:Error result = self->/alltypes/[id].get();
+        if result is AllTypes || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from AllTypes table.
@@ -505,7 +509,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(STRING_ID_RECORD);
         }
         _ = check sqlClient.runUpdateQuery(id, value);
-        return self->/stringidrecords/[id].get();
+        StringIdRecord|persist:Error result = self->/stringidrecords/[id].get();
+        if result is StringIdRecord || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from StringIdRecord table.
@@ -570,7 +578,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(INT_ID_RECORD);
         }
         _ = check sqlClient.runUpdateQuery(id, value);
-        return self->/intidrecords/[id].get();
+        IntIdRecord|persist:Error result = self->/intidrecords/[id].get();
+        if result is IntIdRecord || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from IntIdRecord table.
@@ -635,7 +647,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(FLOAT_ID_RECORD);
         }
         _ = check sqlClient.runUpdateQuery(id, value);
-        return self->/floatidrecords/[id].get();
+        FloatIdRecord|persist:Error result = self->/floatidrecords/[id].get();
+        if result is FloatIdRecord || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from FloatIdRecord table.
@@ -700,7 +716,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(DECIMAL_ID_RECORD);
         }
         _ = check sqlClient.runUpdateQuery(id, value);
-        return self->/decimalidrecords/[id].get();
+        DecimalIdRecord|persist:Error result = self->/decimalidrecords/[id].get();
+        if result is DecimalIdRecord || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from DecimalIdRecord table.
@@ -765,7 +785,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(BOOLEAN_ID_RECORD);
         }
         _ = check sqlClient.runUpdateQuery(id, value);
-        return self->/booleanidrecords/[id].get();
+        BooleanIdRecord|persist:Error result = self->/booleanidrecords/[id].get();
+        if result is BooleanIdRecord || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from BooleanIdRecord table.
@@ -830,7 +854,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(COMPOSITE_ASSOCIATION_RECORD);
         }
         _ = check sqlClient.runUpdateQuery(id, value);
-        return self->/compositeassociationrecords/[id].get();
+        CompositeAssociationRecord|persist:Error result = self->/compositeassociationrecords/[id].get();
+        if result is CompositeAssociationRecord || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from CompositeAssociationRecord table.
@@ -903,7 +931,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(ALL_TYPES_ID_RECORD);
         }
         _ = check sqlClient.runUpdateQuery({"booleanType": booleanType, "intType": intType, "floatType": floatType, "decimalType": decimalType, "stringType": stringType}, value);
-        return self->/alltypesidrecords/[booleanType]/[intType]/[floatType]/[decimalType]/[stringType].get();
+        AllTypesIdRecord|persist:Error result = self->/alltypesidrecords/[booleanType]/[intType]/[floatType]/[decimalType]/[stringType].get();
+        if result is AllTypesIdRecord || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from AllTypesIdRecord table.
@@ -972,7 +1004,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(USER);
         }
         _ = check sqlClient.runUpdateQuery(id, value);
-        return self->/users/[id].get();
+        User|persist:Error result = self->/users/[id].get();
+        if result is User || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from User table.
@@ -1037,7 +1073,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(POST);
         }
         _ = check sqlClient.runUpdateQuery(id, value);
-        return self->/posts/[id].get();
+        Post|persist:Error result = self->/posts/[id].get();
+        if result is Post || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from Post table.
@@ -1102,7 +1142,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(FOLLOW);
         }
         _ = check sqlClient.runUpdateQuery(id, value);
-        return self->/follows/[id].get();
+        Follow|persist:Error result = self->/follows/[id].get();
+        if result is Follow || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from Follow table.
@@ -1167,7 +1211,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(COMMENT);
         }
         _ = check sqlClient.runUpdateQuery(id, value);
-        return self->/comments/[id].get();
+        Comment|persist:Error result = self->/comments/[id].get();
+        if result is Comment || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from Comment table.
@@ -1232,7 +1280,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(EMPLOYEE);
         }
         _ = check sqlClient.runUpdateQuery(empNo, value);
-        return self->/employees/[empNo].get();
+        Employee|persist:Error result = self->/employees/[empNo].get();
+        if result is Employee || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from Employee table.
@@ -1297,7 +1349,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(WORKSPACE);
         }
         _ = check sqlClient.runUpdateQuery(workspaceId, value);
-        return self->/workspaces/[workspaceId].get();
+        Workspace|persist:Error result = self->/workspaces/[workspaceId].get();
+        if result is Workspace || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from Workspace table.
@@ -1362,7 +1418,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(BUILDING);
         }
         _ = check sqlClient.runUpdateQuery(buildingCode, value);
-        return self->/buildings/[buildingCode].get();
+        Building|persist:Error result = self->/buildings/[buildingCode].get();
+        if result is Building || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from Building table.
@@ -1427,7 +1487,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(DEPARTMENT);
         }
         _ = check sqlClient.runUpdateQuery(deptNo, value);
-        return self->/departments/[deptNo].get();
+        Department|persist:Error result = self->/departments/[deptNo].get();
+        if result is Department || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from Department table.
@@ -1494,7 +1558,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(ORDER_ITEM);
         }
         _ = check sqlClient.runUpdateQuery({"orderId": orderId, "itemId": itemId}, value);
-        return self->/orderitems/[orderId]/[itemId].get();
+        OrderItem|persist:Error result = self->/orderitems/[orderId]/[itemId].get();
+        if result is OrderItem || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from OrderItem table.

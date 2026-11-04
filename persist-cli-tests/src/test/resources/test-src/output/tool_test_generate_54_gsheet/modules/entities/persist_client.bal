@@ -219,7 +219,11 @@ public isolated client class Client {
             googleSheetsClient = self.persistClients.get(EMPLOYEE);
         }
         _ = check googleSheetsClient.runUpdateQuery(empNo, value);
-        return self->/employees/[empNo].get();
+        Employee|persist:Error result = self->/employees/[empNo].get();
+        if result is Employee || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from Employee sheet.
@@ -321,7 +325,11 @@ public isolated client class Client {
             googleSheetsClient = self.persistClients.get(WORKSPACE);
         }
         _ = check googleSheetsClient.runUpdateQuery(workspaceId, value);
-        return self->/workspaces/[workspaceId].get();
+        Workspace|persist:Error result = self->/workspaces/[workspaceId].get();
+        if result is Workspace || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from Workspace sheet.
@@ -417,7 +425,11 @@ public isolated client class Client {
             googleSheetsClient = self.persistClients.get(BUILDING);
         }
         _ = check googleSheetsClient.runUpdateQuery(buildingCode, value);
-        return self->/buildings/[buildingCode].get();
+        Building|persist:Error result = self->/buildings/[buildingCode].get();
+        if result is Building || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from Building sheet.
@@ -507,7 +519,11 @@ public isolated client class Client {
             googleSheetsClient = self.persistClients.get(DEPARTMENT);
         }
         _ = check googleSheetsClient.runUpdateQuery(deptNo, value);
-        return self->/departments/[deptNo].get();
+        Department|persist:Error result = self->/departments/[deptNo].get();
+        if result is Department || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from Department sheet.
@@ -599,7 +615,11 @@ public isolated client class Client {
             googleSheetsClient = self.persistClients.get(ORDER_ITEM);
         }
         _ = check googleSheetsClient.runUpdateQuery({"orderId": orderId, "itemId": itemId}, value);
-        return self->/orderitems/[orderId]/[itemId].get();
+        OrderItem|persist:Error result = self->/orderitems/[orderId]/[itemId].get();
+        if result is OrderItem || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from OrderItem sheet.

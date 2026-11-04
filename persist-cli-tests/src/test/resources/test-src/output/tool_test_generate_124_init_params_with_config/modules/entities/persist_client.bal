@@ -99,7 +99,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(PRODUCT);
         }
         _ = check sqlClient.runUpdateQuery(id, value);
-        return self->/products/[id].get();
+        Product|persist:Error result = self->/products/[id].get();
+        if result is Product || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from Product table.
