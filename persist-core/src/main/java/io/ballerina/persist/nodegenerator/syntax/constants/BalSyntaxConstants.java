@@ -90,7 +90,11 @@ public class BalSyntaxConstants {
     public static final String UPDATE_RUN_UPDATE_QUERY = "_ = check sqlClient.runUpdateQuery(%s, value);";
     public static final String G_SHEET_UPDATE_RUN_UPDATE_QUERY = "_ = check googleSheetsClient." +
             "runUpdateQuery(%s, value);";
-    public static final String UPDATE_RETURN_UPDATE_QUERY = "return self->%s.get();";
+    public static final String UPDATE_READ_BACK_QUERY = "%s|persist:Error result = self->%s.get();";
+    public static final String UPDATE_READ_BACK_PASS_THROUGH = "if result is %s || result is persist:NotFoundError {" +
+            System.lineSeparator() + "return result;" + System.lineSeparator() + "}";
+    public static final String UPDATE_READ_BACK_ERROR = "return error persist:ReadBackError(" +
+            "string `The record was updated but could not be read back: ${result.message()}`, result);";
     public static final String G_SHEET_DELETE_RUN_DELETE_QUERY = "_ = check googleSheetsClient." +
             "runDeleteQuery(%s);";
     public static final String DELETE_RUN_DELETE_QUERY = "_ = check sqlClient.runDeleteQuery(%s);";
@@ -394,6 +398,12 @@ public class BalSyntaxConstants {
     public static final String LOCK_TEMPLATE = "lock {%s}";
     public static final String LOCK = "lock";
     public static final String NEWLINE = System.lineSeparator();
+    public static final String ENTITY_DOC = "Represents the `%s` entity.";
+    public static final String OPTIONALIZED_DOC = "Represents `%s` with every field optional, for projected reads.";
+    public static final String WITH_RELATIONS_DOC = "Represents `%s` with its related entities, for projected reads.";
+    public static final String TARGET_TYPE_DOC = "The `%s` type or a projection of it, for reads.";
+    public static final String INSERT_DOC = "The fields to insert a new `%s`.";
+    public static final String UPDATE_DOC = "The fields to update on an existing `%s`.";
     public static final String PERSIST_CLIENT_CLOSE_STATEMENT = "error? result = self.dbClient.close();";
     public static final String REGEX_FOR_SPLIT_BY_CAPITOL_LETTER = "(?=\\p{Upper})";
     public static final String OPEN_BRACE = "{";

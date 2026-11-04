@@ -167,7 +167,11 @@ public isolated client class Client {
             redisClient = self.persistClients.get(EMPLOYEE);
         }
         _ = check redisClient.runUpdateQuery(empNo, value);
-        return self->/employees/[empNo].get();
+        Employee|persist:Error result = self->/employees/[empNo].get();
+        if result is Employee || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from Employee key space.
@@ -228,7 +232,11 @@ public isolated client class Client {
             redisClient = self.persistClients.get(WORKSPACE);
         }
         _ = check redisClient.runUpdateQuery(workspaceId, value);
-        return self->/workspaces/[workspaceId].get();
+        Workspace|persist:Error result = self->/workspaces/[workspaceId].get();
+        if result is Workspace || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from Workspace key space.
@@ -289,7 +297,11 @@ public isolated client class Client {
             redisClient = self.persistClients.get(BUILDING);
         }
         _ = check redisClient.runUpdateQuery(buildingCode, value);
-        return self->/buildings/[buildingCode].get();
+        Building|persist:Error result = self->/buildings/[buildingCode].get();
+        if result is Building || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from Building key space.
@@ -350,7 +362,11 @@ public isolated client class Client {
             redisClient = self.persistClients.get(DEPARTMENT);
         }
         _ = check redisClient.runUpdateQuery(deptNo, value);
-        return self->/departments/[deptNo].get();
+        Department|persist:Error result = self->/departments/[deptNo].get();
+        if result is Department || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from Department key space.

@@ -49,10 +49,11 @@ public class EntityField {
     private Enum enumValue;
     private final List<AnnotationNode> annotationNodes;
     private final List<String> relationRefs;
+    private final String documentation;
 
     EntityField(String fieldName, String fieldColumnName, String fieldType, boolean arrayType, boolean optionalType,
                 boolean optionalField, List<AnnotationNode> annotationNodes, SqlType sqlType, List<String> relationRefs,
-                boolean isDbGenerated) {
+                boolean isDbGenerated, String documentation) {
         this.fieldName = fieldName;
         this.fieldColumnName = fieldColumnName;
         this.fieldType = fieldType;
@@ -64,6 +65,7 @@ public class EntityField {
         this.sqlType = sqlType;
         this.relationRefs = Collections.unmodifiableList(relationRefs != null ? relationRefs : new ArrayList<>());
         this.isDbGenerated = isDbGenerated;
+        this.documentation = documentation;
     }
 
     public String getFieldName() {
@@ -92,6 +94,10 @@ public class EntityField {
 
     public boolean isDbGenerated() {
         return isDbGenerated;
+    }
+
+    public String getDocumentation() {
+        return documentation;
     }
 
     public boolean shouldColumnMappingGenerated() {
@@ -149,6 +155,7 @@ public class EntityField {
         private List<AnnotationNode> annotationNodes = null;
         private List<String> relationRefs;
         private boolean isDbGenerated = false;
+        private String documentation;
 
         Builder(String fieldName) {
             if (SyntaxInfo.isKeyword(fieldName)) {
@@ -198,9 +205,13 @@ public class EntityField {
             this.annotationNodes = annotationNodes;
         }
 
+        public void setDocumentation(String documentation) {
+            this.documentation = documentation;
+        }
+
         public EntityField build() {
             return new EntityField(fieldName, fieldColumnName, fieldType, arrayType, optionalType, optionalField, 
-            annotationNodes, sqlType, relationRefs, isDbGenerated);
+            annotationNodes, sqlType, relationRefs, isDbGenerated, documentation);
         }
 
         public String getFieldName() {

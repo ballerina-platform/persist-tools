@@ -193,7 +193,11 @@ public isolated client class Client {
             redisClient = self.persistClients.get(FOLLOW);
         }
         _ = check redisClient.runUpdateQuery(id, value);
-        return self->/follows/[id].get();
+        Follow|persist:Error result = self->/follows/[id].get();
+        if result is Follow || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from Follow key space.
@@ -254,7 +258,11 @@ public isolated client class Client {
             redisClient = self.persistClients.get(USER);
         }
         _ = check redisClient.runUpdateQuery(id, value);
-        return self->/users/[id].get();
+        User|persist:Error result = self->/users/[id].get();
+        if result is User || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from User key space.
@@ -315,7 +323,11 @@ public isolated client class Client {
             redisClient = self.persistClients.get(POST);
         }
         _ = check redisClient.runUpdateQuery(id, value);
-        return self->/posts/[id].get();
+        Post|persist:Error result = self->/posts/[id].get();
+        if result is Post || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from Post key space.
@@ -376,7 +388,11 @@ public isolated client class Client {
             redisClient = self.persistClients.get(COMMENT);
         }
         _ = check redisClient.runUpdateQuery(id, value);
-        return self->/comments/[id].get();
+        Comment|persist:Error result = self->/comments/[id].get();
+        if result is Comment || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from Comment key space.

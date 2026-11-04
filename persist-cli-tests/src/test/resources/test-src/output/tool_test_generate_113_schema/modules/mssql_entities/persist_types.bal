@@ -16,6 +16,7 @@ public enum PatientGender {
     FEMALE = "FEMALE"
 }
 
+# Represents the `Appointment` entity.
 public type Appointment record {|
     readonly int id;
     string reason;
@@ -25,6 +26,7 @@ public type Appointment record {|
     int doctorId;
 |};
 
+# Represents `Appointment` with every field optional, for projected reads.
 public type AppointmentOptionalized record {|
     int id?;
     string reason?;
@@ -34,16 +36,20 @@ public type AppointmentOptionalized record {|
     int doctorId?;
 |};
 
+# Represents `Appointment` with its related entities, for projected reads.
 public type AppointmentWithRelations record {|
     *AppointmentOptionalized;
     PatientOptionalized patient?;
     DoctorOptionalized doctor?;
 |};
 
+# The `Appointment` type or a projection of it, for reads.
 public type AppointmentTargetType typedesc<AppointmentWithRelations>;
 
+# The fields to insert a new `Appointment`.
 public type AppointmentInsert Appointment;
 
+# The fields to update on an existing `Appointment`.
 public type AppointmentUpdate record {|
     string reason?;
     time:Civil appointmentTime?;
@@ -52,6 +58,7 @@ public type AppointmentUpdate record {|
     int doctorId?;
 |};
 
+# Represents the `Patient` entity.
 public type Patient record {|
     readonly int idP;
     string name;
@@ -62,6 +69,7 @@ public type Patient record {|
 
 |};
 
+# Represents `Patient` with every field optional, for projected reads.
 public type PatientOptionalized record {|
     int idP?;
     string name?;
@@ -71,13 +79,16 @@ public type PatientOptionalized record {|
     PatientGender gender?;
 |};
 
+# Represents `Patient` with its related entities, for projected reads.
 public type PatientWithRelations record {|
     *PatientOptionalized;
     AppointmentOptionalized[] appointments?;
 |};
 
+# The `Patient` type or a projection of it, for reads.
 public type PatientTargetType typedesc<PatientWithRelations>;
 
+# The fields to insert a new `Patient`.
 public type PatientInsert record {|
     string name;
     int age;
@@ -86,6 +97,7 @@ public type PatientInsert record {|
     PatientGender gender;
 |};
 
+# The fields to update on an existing `Patient`.
 public type PatientUpdate record {|
     string name?;
     int age?;
@@ -94,6 +106,7 @@ public type PatientUpdate record {|
     PatientGender gender?;
 |};
 
+# Represents the `Doctor` entity.
 public type Doctor record {|
     readonly int id;
     string name;
@@ -103,6 +116,7 @@ public type Doctor record {|
 
 |};
 
+# Represents `Doctor` with every field optional, for projected reads.
 public type DoctorOptionalized record {|
     int id?;
     string name?;
@@ -111,15 +125,19 @@ public type DoctorOptionalized record {|
     decimal? salary?;
 |};
 
+# Represents `Doctor` with its related entities, for projected reads.
 public type DoctorWithRelations record {|
     *DoctorOptionalized;
     AppointmentOptionalized[] appointments?;
 |};
 
+# The `Doctor` type or a projection of it, for reads.
 public type DoctorTargetType typedesc<DoctorWithRelations>;
 
+# The fields to insert a new `Doctor`.
 public type DoctorInsert Doctor;
 
+# The fields to update on an existing `Doctor`.
 public type DoctorUpdate record {|
     string name?;
     string specialty?;

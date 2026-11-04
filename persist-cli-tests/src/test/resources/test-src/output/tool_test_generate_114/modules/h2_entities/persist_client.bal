@@ -265,7 +265,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(CODE_SYSTEM);
         }
         _ = check sqlClient.runUpdateQuery(codeSystemId, value);
-        return self->/codesystems/[codeSystemId].get();
+        CodeSystem|persist:Error result = self->/codesystems/[codeSystemId].get();
+        if result is CodeSystem || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from codesystems table.
@@ -332,7 +336,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(CONCEPT);
         }
         _ = check sqlClient.runUpdateQuery(conceptId, value);
-        return self->/concepts/[conceptId].get();
+        Concept|persist:Error result = self->/concepts/[conceptId].get();
+        if result is Concept || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from concepts table.
@@ -399,7 +407,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(VALUE_SET);
         }
         _ = check sqlClient.runUpdateQuery(valueSetId, value);
-        return self->/valuesets/[valueSetId].get();
+        ValueSet|persist:Error result = self->/valuesets/[valueSetId].get();
+        if result is ValueSet || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from valuesets table.
@@ -466,7 +478,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(VALUE_SET_COMPOSE_INCLUDE);
         }
         _ = check sqlClient.runUpdateQuery(valueSetComposeIncludeId, value);
-        return self->/valuesetcomposeincludes/[valueSetComposeIncludeId].get();
+        ValueSetComposeInclude|persist:Error result = self->/valuesetcomposeincludes/[valueSetComposeIncludeId].get();
+        if result is ValueSetComposeInclude || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from valueset_compose_includes table.
@@ -533,7 +549,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(VALUE_SET_COMPOSE_INCLUDE_VALUE_SET);
         }
         _ = check sqlClient.runUpdateQuery(valueSetComposeIncludeValueSetId, value);
-        return self->/valuesetcomposeincludevaluesets/[valueSetComposeIncludeValueSetId].get();
+        ValueSetComposeIncludeValueSet|persist:Error result = self->/valuesetcomposeincludevaluesets/[valueSetComposeIncludeValueSetId].get();
+        if result is ValueSetComposeIncludeValueSet || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from valueset_compose_include_value_sets table.
@@ -600,7 +620,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(VALUE_SET_COMPOSE_INCLUDE_CONCEPT);
         }
         _ = check sqlClient.runUpdateQuery(valueSetComposeIncludeConceptId, value);
-        return self->/valuesetcomposeincludeconcepts/[valueSetComposeIncludeConceptId].get();
+        ValueSetComposeIncludeConcept|persist:Error result = self->/valuesetcomposeincludeconcepts/[valueSetComposeIncludeConceptId].get();
+        if result is ValueSetComposeIncludeConcept || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from valueset_compose_include_concepts table.

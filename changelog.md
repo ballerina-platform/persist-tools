@@ -9,12 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - [Generate the `offsetClause` argument on the `get` resources of SQL clients](https://github.com/ballerina-platform/ballerina-library/issues/5846)
+- [Add doc comments to the generated types, carrying the model's doc comments](https://github.com/ballerina-platform/ballerina-library/issues/9390)
 
 ### Fixed
 
 - [Fix database introspection failure when a foreign key references a table outside the introspected schema](https://github.com/ballerina-platform/ballerina-library/issues/9255)
 - [Fix `bal persist pull --tables` generating enums of tables that were not selected](https://github.com/ballerina-platform/ballerina-library/issues/9393)
 - [Fix `bal persist pull` crashing when the input ends before a prompt is answered](https://github.com/ballerina-platform/ballerina-library/issues/9392)
+- [Return `persist:ReadBackError` from generated `put` when the update is saved but the record cannot be read back](https://github.com/ballerina-platform/ballerina-library/issues/9439)
 
 ## [1.9.3] - 2026-09-23
 

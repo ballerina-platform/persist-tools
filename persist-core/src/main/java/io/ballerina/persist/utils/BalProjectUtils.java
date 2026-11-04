@@ -24,6 +24,7 @@ import io.ballerina.compiler.syntax.tree.BuiltinSimpleNameReferenceNode;
 import io.ballerina.compiler.syntax.tree.EnumDeclarationNode;
 import io.ballerina.compiler.syntax.tree.EnumMemberNode;
 import io.ballerina.compiler.syntax.tree.ImportDeclarationNode;
+import io.ballerina.compiler.syntax.tree.MarkdownDocumentationNode;
 import io.ballerina.compiler.syntax.tree.MetadataNode;
 import io.ballerina.compiler.syntax.tree.ModuleMemberDeclarationNode;
 import io.ballerina.compiler.syntax.tree.ModulePartNode;
@@ -259,6 +260,7 @@ public class BalProjectUtils {
                     .typeDescriptor();
             Optional<MetadataNode> entityMetadataNode = typeDefinitionNode.metadata();
             entityBuilder.setTableName(typeDefinitionNode.typeName().text().trim());
+            entityBuilder.setDocumentation(readDocumentation(entityMetadataNode));
             String annotatedTableName = entityMetadataNode.map(metaData -> readStringValueFromAnnotation(
                     new BalSyntaxUtils.AnnotationUtilRecord(metaData.annotations().stream().toList(),
                             BalSyntaxConstants.SQL_DB_NAME_ANNOTATION_NAME,
@@ -281,6 +283,7 @@ public class BalProjectUtils {
                 EntityField.Builder fieldBuilder;
                 RecordFieldNode fieldNode = (RecordFieldNode) node;
                 fieldBuilder = EntityField.newBuilder(fieldNode.fieldName().text().trim());
+                fieldBuilder.setDocumentation(readDocumentation(fieldNode.metadata()));
                 TypeDescriptorNode type;
                 Node fieldType = fieldNode.typeName();
                 if (fieldType instanceof OptionalTypeDescriptorNode) {
@@ -468,6 +471,32 @@ public class BalProjectUtils {
             Enum enumValue = enumBuilder.build();
             moduleBuilder.addEnum(enumValue.getEnumName(), enumValue);
         }
+    }
+
+    private static String readDocumentation(Optional<MetadataNode> metadataNode) {
+        if (metadataNode.isEmpty() || metadataNode.get().documentationString().isEmpty()) {
+            return null;
+        }
+        // Only the first paragraph of the description is kept, as one line, so the generated docs stay a short
+        // summary. `+ field` and `+ return` lines are skipped, as they name members the generated types may not have.
+        MarkdownDocumentationNode docNode = (MarkdownDocumentationNode) metadataNode.get().documentationString().get();
+        List<String> summary = new ArrayList<>();
+        for (Node line : docNode.documentationLines()) {
+            if (line.kind() != SyntaxKind.MARKDOWN_DOCUMENTATION_LINE
+                    && line.kind() != SyntaxKind.MARKDOWN_REFERENCE_DOCUMENTATION_LINE) {
+                continue;
+            }
+            String text = line.toSourceCode().trim();
+            text = text.startsWith("#") ? text.substring(1).trim() : text;
+            if (text.isEmpty()) {
+                if (summary.isEmpty()) {
+                    continue;
+                }
+                break;
+            }
+            summary.add(text);
+        }
+        return summary.isEmpty() ? null : String.join(" ", summary);
     }
 
     private static String getType(TypeDescriptorNode typeDesc, String fieldName) throws BalException {

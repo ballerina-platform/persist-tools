@@ -91,7 +91,11 @@ public isolated client class Client {
             sqlClient = self.persistClients.get(BYTE_TEST);
         }
         _ = check sqlClient.runUpdateQuery(id, value);
-        return self->/bytetests/[id].get();
+        ByteTest|persist:Error result = self->/bytetests/[id].get();
+        if result is ByteTest || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from ByteTest table.

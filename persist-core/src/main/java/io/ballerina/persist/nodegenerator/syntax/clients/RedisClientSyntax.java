@@ -188,8 +188,7 @@ public class RedisClientSyntax  implements ClientSyntax {
         }
         update.addStatement(NodeParser.parseStatement(updateStatement));
 
-        update.addStatement(NodeParser.parseStatement(String.format(BalSyntaxConstants.UPDATE_RETURN_UPDATE_QUERY,
-                path)));
+        BalSyntaxUtils.addUpdateReadBackStatements(update, entity, path);
         return update.getFunctionDefinitionNode();
     }
 

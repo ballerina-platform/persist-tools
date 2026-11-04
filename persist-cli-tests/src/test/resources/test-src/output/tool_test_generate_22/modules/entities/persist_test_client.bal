@@ -121,7 +121,11 @@ public isolated client class H2Client {
             sqlClient = self.persistClients.get(MEDICAL_NEED);
         }
         _ = check sqlClient.runUpdateQuery('record, value);
-        return self->/medicalneeds/['record].get();
+        MedicalNeed|persist:Error result = self->/medicalneeds/['record].get();
+        if result is MedicalNeed || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from MedicalNeed table.
@@ -187,7 +191,11 @@ public isolated client class H2Client {
             sqlClient = self.persistClients.get(MEDICAL_ITEM);
         }
         _ = check sqlClient.runUpdateQuery(itemId, value);
-        return self->/medicalitems/[itemId].get();
+        MedicalItem|persist:Error result = self->/medicalitems/[itemId].get();
+        if result is MedicalItem || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from MedicalItem table.

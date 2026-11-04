@@ -97,7 +97,11 @@ public isolated client class H2Client {
             sqlClient = self.persistClients.get(CAR);
         }
         _ = check sqlClient.runUpdateQuery(id, value);
-        return self->/cars/[id].get();
+        Car|persist:Error result = self->/cars/[id].get();
+        if result is Car || result is persist:NotFoundError {
+            return result;
+        }
+        return error persist:ReadBackError(string `The record was updated but could not be read back: ${result.message()}`, result);
     }
 
     # Delete row from Car table.

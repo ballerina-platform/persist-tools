@@ -40,9 +40,10 @@ public class Entity {
     private final List<Index> indexes;
     private final List<Index> uniqueIndexes;
     private final boolean containsUnsupportedTypes;
+    private final String documentation;
     private Entity(String entityName, List<EntityField> keys, String resourceName, String schemaName,
                    List<EntityField> fields, List<Index> indexes, List<Index> uniqueIndexes,
-                   boolean containsUnsupportedTypes) {
+                   boolean containsUnsupportedTypes, String documentation) {
         this.entityName = entityName;
         this.keys = Collections.unmodifiableList(keys);
         this.tableName = resourceName;
@@ -51,6 +52,7 @@ public class Entity {
         this.indexes = Collections.unmodifiableList(indexes);
         this.uniqueIndexes = Collections.unmodifiableList(uniqueIndexes);
         this.containsUnsupportedTypes = containsUnsupportedTypes;
+        this.documentation = documentation;
     }
 
     public List<EntityField> getKeys() {
@@ -120,6 +122,10 @@ public class Entity {
         return new Entity.Builder(entityName);
     }
 
+    public String getDocumentation() {
+        return documentation;
+    }
+
     public String getSchemaName() {
         return this.schemaName;
     }
@@ -137,6 +143,7 @@ public class Entity {
         List<Index> indexes;
         List<Index> uniqueIndexes;
         boolean containsUnsupportedTypes = false;
+        String documentation;
 
         private Builder(String entityName) {
             this.entityName = entityName;
@@ -201,9 +208,13 @@ public class Entity {
             this.containsUnsupportedTypes = containsUnsupportedTypes;
         }
 
+        public void setDocumentation(String documentation) {
+            this.documentation = documentation;
+        }
+
         public Entity build() {
             return new Entity(entityName, keys, tableName, schemaName, fieldList, indexes, uniqueIndexes,
-                    containsUnsupportedTypes);
+                    containsUnsupportedTypes, documentation);
         }
 
         public String getEntityName() {
