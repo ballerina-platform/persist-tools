@@ -17,7 +17,7 @@ id = "persist_generate_15_2"
 options.datastore = "mysql"
 targetModule = "persist_generate_15.entities"
 
-[[platform.java21.dependency]]
+[[platform.java25.dependency]]
 groupId = "io.ballerina.stdlib"
 artifactId = "persist.sql-native"
 version = "1.8.0"
