@@ -11,4 +11,4 @@ configurable dsHttp:Config dataserviceConfig = {};
 
 # The page sizes, checked at startup.
 final dataservice:PageConfig dataservicePageConfig =
-        check dataservice:pageConfig(dataserviceConfig.pageSize, dataserviceConfig.maxPageSize);
+        check dataservice:toPageConfig(dataserviceConfig.pageSize, dataserviceConfig.maxPageSize);

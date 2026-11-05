@@ -38,7 +38,7 @@ service http:InterceptableService /hr/v1 on dataserviceListener {
     resource function get employees(EmployeeFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
             string[]? fields = ()) returns EmployeeList|EmployeePartialList|dsHttp:InvalidInput|dsHttp:InternalError {
         dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
-            dataservice:query(dataserviceEmployeeEntity, dataservicePageConfig, filter, sort, size, offset);
+            dataservice:toQuery(dataserviceEmployeeEntity, dataservicePageConfig, filter, sort, size, offset);
         if query !is dataservice:Query {
             return dsHttp:toQueryError(query, "Employee");
         }
@@ -55,14 +55,14 @@ service http:InterceptableService /hr/v1 on dataserviceListener {
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        boolean hasMore = dataservice:page(items, query);
+        boolean hasMore = dataservice:trimToPage(items, query);
         if fields is string[] {
             Employee[] sources = items;
             map<anydata>[] partials = from Employee item in sources
-                select dataservice:narrow(item, dataserviceEmployeeEntity, fields);
+                select dataservice:selectFields(item, dataserviceEmployeeEntity, fields);
             do {
-                if dataservice:includes(fields, "department") {
-                    dataservice:Query include = dataservice:includeQuery(dataserviceEmployeeEntity, "department", sources, dataservicePageConfig);
+                if dataservice:isIncluded(fields, "department") {
+                    dataservice:Query include = dataservice:toIncludeQuery(dataserviceEmployeeEntity, "department", sources, dataservicePageConfig);
                     stream<Department, persist:Error?> includedRows = dataserviceClient->/departments(Department,
                         whereClause = include.whereClause, orderByClause = include.orderByClause
                     );
@@ -100,10 +100,10 @@ service http:InterceptableService /hr/v1 on dataserviceListener {
         }
         if fields is string[] {
             Employee[] sources = [item];
-            map<anydata>[] partials = [dataservice:narrow(sources[0], dataserviceEmployeeEntity, fields)];
+            map<anydata>[] partials = [dataservice:selectFields(sources[0], dataserviceEmployeeEntity, fields)];
             do {
-                if dataservice:includes(fields, "department") {
-                    dataservice:Query include = dataservice:includeQuery(dataserviceEmployeeEntity, "department", sources, dataservicePageConfig);
+                if dataservice:isIncluded(fields, "department") {
+                    dataservice:Query include = dataservice:toIncludeQuery(dataserviceEmployeeEntity, "department", sources, dataservicePageConfig);
                     stream<Department, persist:Error?> includedRows = dataserviceClient->/departments(Department,
                         whereClause = include.whereClause, orderByClause = include.orderByClause
                     );
@@ -140,7 +140,7 @@ service http:InterceptableService /hr/v1 on dataserviceListener {
             return dsHttp:toGetError(item, "Employee", [id]);
         }
         dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
-            dataservice:relatedQuery(dataserviceEmployeeEntity, "department", item, dataservicePageConfig);
+            dataservice:toRelatedQuery(dataserviceEmployeeEntity, "department", item, dataservicePageConfig);
         if query !is dataservice:Query {
             return dsHttp:toQueryError(query, "Department");
         }
@@ -154,10 +154,10 @@ service http:InterceptableService /hr/v1 on dataserviceListener {
             return dsHttp:toListError(items);
         }
         if items.length() == 0 {
-            return <dsHttp:NotFound>{body: dataservice:noRelated(dataserviceEmployeeEntity, "department", [id])};
+            return <dsHttp:NotFound>{body: dataservice:relatedNotFound(dataserviceEmployeeEntity, "department", [id])};
         }
         if fields is string[] {
-            DepartmentRelatedPartial|error partial = dataservice:narrow(items[0], dataserviceDepartmentEntity, fields).cloneWithType();
+            DepartmentRelatedPartial|error partial = dataservice:selectFields(items[0], dataserviceDepartmentEntity, fields).cloneWithType();
             if partial is error {
                 return dsHttp:toListError(partial);
             }
@@ -186,7 +186,7 @@ service http:InterceptableService /hr/v1 on dataserviceListener {
                     int[] keys = check dataserviceClient->/employees.post(values);
                     dataservice:KeyValue[][] keyValues = from int key in keys
                         select [key];
-                    dataservice:Query query = dataservice:keysQuery(dataserviceEmployeeEntity, keyValues);
+                    dataservice:Query query = dataservice:toKeysQuery(dataserviceEmployeeEntity, keyValues);
                     stream<Employee, persist:Error?> stored = dataserviceClient->/employees(Employee,
                         whereClause = query.whereClause, orderByClause = query.orderByClause
                     );
@@ -205,7 +205,7 @@ service http:InterceptableService /hr/v1 on dataserviceListener {
         }
         Employee created = items[0];
         return <EmployeeCreated>{
-            headers: {"Location": dsHttp:buildLocation("/hr/v1/employees", [created.id])},
+            headers: {"Location": dsHttp:toLocation("/hr/v1/employees", [created.id])},
             body: created
         };
     }
@@ -256,7 +256,7 @@ service http:InterceptableService /hr/v1 on dataserviceListener {
     resource function get departments(DepartmentFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
             string[]? fields = ()) returns DepartmentList|DepartmentPartialList|dsHttp:InvalidInput|dsHttp:InternalError {
         dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
-            dataservice:query(dataserviceDepartmentEntity, dataservicePageConfig, filter, sort, size, offset);
+            dataservice:toQuery(dataserviceDepartmentEntity, dataservicePageConfig, filter, sort, size, offset);
         if query !is dataservice:Query {
             return dsHttp:toQueryError(query, "Department");
         }
@@ -273,21 +273,21 @@ service http:InterceptableService /hr/v1 on dataserviceListener {
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        boolean hasMore = dataservice:page(items, query);
+        boolean hasMore = dataservice:trimToPage(items, query);
         if fields is string[] {
             Department[] sources = items;
             map<anydata>[] partials = from Department item in sources
-                select dataservice:narrow(item, dataserviceDepartmentEntity, fields);
+                select dataservice:selectFields(item, dataserviceDepartmentEntity, fields);
             do {
-                if dataservice:includes(fields, "employees") {
+                if dataservice:isIncluded(fields, "employees") {
                     foreach int i in 0 ..< sources.length() {
-                        dataservice:Query include = dataservice:includeQuery(dataserviceDepartmentEntity, "employees", [sources[i]], dataservicePageConfig);
+                        dataservice:Query include = dataservice:toIncludeQuery(dataserviceDepartmentEntity, "employees", [sources[i]], dataservicePageConfig);
                         stream<Employee, persist:Error?> includedRows = dataserviceClient->/employees(Employee,
                             whereClause = include.whereClause, orderByClause = include.orderByClause, limitClause = include.limitClause
                         );
                         Employee[] included = check from Employee row in includedRows
                             select row;
-                        boolean includedMore = dataservice:page(included, include);
+                        boolean includedMore = dataservice:trimToPage(included, include);
                         dataservice:attachMany(partials[i], dataserviceDepartmentEntity, "employees", included, includedMore, fields);
                     }
                 }
@@ -319,17 +319,17 @@ service http:InterceptableService /hr/v1 on dataserviceListener {
         }
         if fields is string[] {
             Department[] sources = [item];
-            map<anydata>[] partials = [dataservice:narrow(sources[0], dataserviceDepartmentEntity, fields)];
+            map<anydata>[] partials = [dataservice:selectFields(sources[0], dataserviceDepartmentEntity, fields)];
             do {
-                if dataservice:includes(fields, "employees") {
+                if dataservice:isIncluded(fields, "employees") {
                     foreach int i in 0 ..< sources.length() {
-                        dataservice:Query include = dataservice:includeQuery(dataserviceDepartmentEntity, "employees", [sources[i]], dataservicePageConfig);
+                        dataservice:Query include = dataservice:toIncludeQuery(dataserviceDepartmentEntity, "employees", [sources[i]], dataservicePageConfig);
                         stream<Employee, persist:Error?> includedRows = dataserviceClient->/employees(Employee,
                             whereClause = include.whereClause, orderByClause = include.orderByClause, limitClause = include.limitClause
                         );
                         Employee[] included = check from Employee row in includedRows
                             select row;
-                        boolean includedMore = dataservice:page(included, include);
+                        boolean includedMore = dataservice:trimToPage(included, include);
                         dataservice:attachMany(partials[i], dataserviceDepartmentEntity, "employees", included, includedMore, fields);
                     }
                 }
@@ -361,7 +361,7 @@ service http:InterceptableService /hr/v1 on dataserviceListener {
             return dsHttp:toQueryError(invalidFields, "Employee");
         }
         dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
-            dataservice:relatedQuery(dataserviceDepartmentEntity, "employees", {"id": id}, dataservicePageConfig, filter, sort, size, offset);
+            dataservice:toRelatedQuery(dataserviceDepartmentEntity, "employees", {"id": id}, dataservicePageConfig, filter, sort, size, offset);
         if query !is dataservice:Query {
             return dsHttp:toQueryError(query, "Employee");
         }
@@ -374,7 +374,7 @@ service http:InterceptableService /hr/v1 on dataserviceListener {
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        boolean hasMore = dataservice:page(items, query);
+        boolean hasMore = dataservice:trimToPage(items, query);
         if items.length() == 0 {
             Department|persist:Error item = dataserviceClient->/departments/[id];
             if item is persist:Error {
@@ -384,7 +384,7 @@ service http:InterceptableService /hr/v1 on dataserviceListener {
         }
         if fields is string[] {
             EmployeeRelatedPartial[]|error partials = (from Employee related in items
-                select dataservice:narrow(related, dataserviceEmployeeEntity, fields)).cloneWithType();
+                select dataservice:selectFields(related, dataserviceEmployeeEntity, fields)).cloneWithType();
             if partials is error {
                 return dsHttp:toListError(partials);
             }

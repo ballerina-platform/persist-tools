@@ -36,7 +36,7 @@ service http:InterceptableService /api on dataserviceListener {
     resource function get documents(DocumentFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
             string[]? fields = ()) returns DocumentList|DocumentPartialList|dsHttp:InvalidInput|dsHttp:InternalError {
         dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
-            dataservice:query(dataserviceDocumentEntity, dataservicePageConfig, filter, sort, size, offset);
+            dataservice:toQuery(dataserviceDocumentEntity, dataservicePageConfig, filter, sort, size, offset);
         if query !is dataservice:Query {
             return dsHttp:toQueryError(query, "Document");
         }
@@ -53,11 +53,11 @@ service http:InterceptableService /api on dataserviceListener {
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        boolean hasMore = dataservice:page(items, query);
+        boolean hasMore = dataservice:trimToPage(items, query);
         if fields is string[] {
             DocumentPayload[] sources = items;
             map<anydata>[] partials = from DocumentPayload item in sources
-                select dataservice:narrow(item, dataserviceDocumentEntity, fields);
+                select dataservice:selectFields(item, dataserviceDocumentEntity, fields);
             DocumentPartial[]|error converted = partials.cloneWithType();
             if converted is error {
                 return dsHttp:toListError(converted);
@@ -83,7 +83,7 @@ service http:InterceptableService /api on dataserviceListener {
         }
         if fields is string[] {
             DocumentPayload[] sources = [transformDocumentToPayload(item)];
-            map<anydata>[] partials = [dataservice:narrow(sources[0], dataserviceDocumentEntity, fields)];
+            map<anydata>[] partials = [dataservice:selectFields(sources[0], dataserviceDocumentEntity, fields)];
             DocumentPartial|error partial = partials[0].cloneWithType();
             if partial is error {
                 return dsHttp:toGetError(partial, "Document", [id]);
@@ -123,7 +123,7 @@ service http:InterceptableService /api on dataserviceListener {
                     int[] keys = check dataserviceClient->/documents.post(values);
                     dataservice:KeyValue[][] keyValues = from int key in keys
                         select [key];
-                    dataservice:Query query = dataservice:keysQuery(dataserviceDocumentEntity, keyValues);
+                    dataservice:Query query = dataservice:toKeysQuery(dataserviceDocumentEntity, keyValues);
                     stream<Document, persist:Error?> stored = dataserviceClient->/documents(Document,
                         whereClause = query.whereClause, orderByClause = query.orderByClause
                     );
@@ -143,7 +143,7 @@ service http:InterceptableService /api on dataserviceListener {
         }
         DocumentPayload created = items[0];
         return <DocumentCreated>{
-            headers: {"Location": dsHttp:buildLocation("/api/documents", [created.id])},
+            headers: {"Location": dsHttp:toLocation("/api/documents", [created.id])},
             body: created
         };
     }
@@ -198,7 +198,7 @@ service http:InterceptableService /api on dataserviceListener {
     resource function get holidays(HolidayFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
             string[]? fields = ()) returns HolidayList|HolidayPartialList|dsHttp:InvalidInput|dsHttp:InternalError {
         dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
-            dataservice:query(dataserviceHolidayEntity, dataservicePageConfig, filter, sort, size, offset);
+            dataservice:toQuery(dataserviceHolidayEntity, dataservicePageConfig, filter, sort, size, offset);
         if query !is dataservice:Query {
             return dsHttp:toQueryError(query, "Holiday");
         }
@@ -215,11 +215,11 @@ service http:InterceptableService /api on dataserviceListener {
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        boolean hasMore = dataservice:page(items, query);
+        boolean hasMore = dataservice:trimToPage(items, query);
         if fields is string[] {
             HolidayPayload[] sources = items;
             map<anydata>[] partials = from HolidayPayload item in sources
-                select dataservice:narrow(item, dataserviceHolidayEntity, fields);
+                select dataservice:selectFields(item, dataserviceHolidayEntity, fields);
             HolidayPartial[]|error converted = partials.cloneWithType();
             if converted is error {
                 return dsHttp:toListError(converted);
@@ -245,7 +245,7 @@ service http:InterceptableService /api on dataserviceListener {
         }
         if fields is string[] {
             HolidayPayload[] sources = [transformHolidayToPayload(item)];
-            map<anydata>[] partials = [dataservice:narrow(sources[0], dataserviceHolidayEntity, fields)];
+            map<anydata>[] partials = [dataservice:selectFields(sources[0], dataserviceHolidayEntity, fields)];
             HolidayPartial|error partial = partials[0].cloneWithType();
             if partial is error {
                 return dsHttp:toGetError(partial, "Holiday", [id]);

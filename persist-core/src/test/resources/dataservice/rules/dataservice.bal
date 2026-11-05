@@ -36,7 +36,7 @@ service http:InterceptableService /api on dataserviceListener {
     resource function get orders(OrderFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
             string[]? fields = ()) returns OrderList|OrderPartialList|dsHttp:InvalidInput|dsHttp:InternalError {
         dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
-            dataservice:query(dataserviceOrderEntity, dataservicePageConfig, filter, sort, size, offset);
+            dataservice:toQuery(dataserviceOrderEntity, dataservicePageConfig, filter, sort, size, offset);
         if query !is dataservice:Query {
             return dsHttp:toQueryError(query, "Order");
         }
@@ -53,14 +53,14 @@ service http:InterceptableService /api on dataserviceListener {
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        boolean hasMore = dataservice:page(items, query);
+        boolean hasMore = dataservice:trimToPage(items, query);
         if fields is string[] {
             OrderPayload[] sources = items;
             map<anydata>[] partials = from OrderPayload item in sources
-                select dataservice:narrow(item, dataserviceOrderEntity, fields);
+                select dataservice:selectFields(item, dataserviceOrderEntity, fields);
             do {
-                if dataservice:includes(fields, "customer") {
-                    dataservice:Query include = dataservice:includeQuery(dataserviceOrderEntity, "customer", sources, dataservicePageConfig);
+                if dataservice:isIncluded(fields, "customer") {
+                    dataservice:Query include = dataservice:toIncludeQuery(dataserviceOrderEntity, "customer", sources, dataservicePageConfig);
                     stream<Customer, persist:Error?> includedRows = dataserviceClient->/customers(Customer,
                         whereClause = include.whereClause, orderByClause = include.orderByClause
                     );
@@ -96,10 +96,10 @@ service http:InterceptableService /api on dataserviceListener {
         }
         if fields is string[] {
             OrderPayload[] sources = [transformOrderToPayload(item)];
-            map<anydata>[] partials = [dataservice:narrow(sources[0], dataserviceOrderEntity, fields)];
+            map<anydata>[] partials = [dataservice:selectFields(sources[0], dataserviceOrderEntity, fields)];
             do {
-                if dataservice:includes(fields, "customer") {
-                    dataservice:Query include = dataservice:includeQuery(dataserviceOrderEntity, "customer", sources, dataservicePageConfig);
+                if dataservice:isIncluded(fields, "customer") {
+                    dataservice:Query include = dataservice:toIncludeQuery(dataserviceOrderEntity, "customer", sources, dataservicePageConfig);
                     stream<Customer, persist:Error?> includedRows = dataserviceClient->/customers(Customer,
                         whereClause = include.whereClause, orderByClause = include.orderByClause
                     );
@@ -134,7 +134,7 @@ service http:InterceptableService /api on dataserviceListener {
             return dsHttp:toGetError(item, "Order", [id]);
         }
         dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
-            dataservice:relatedQuery(dataserviceOrderEntity, "customer", item, dataservicePageConfig);
+            dataservice:toRelatedQuery(dataserviceOrderEntity, "customer", item, dataservicePageConfig);
         if query !is dataservice:Query {
             return dsHttp:toQueryError(query, "Customer");
         }
@@ -148,10 +148,10 @@ service http:InterceptableService /api on dataserviceListener {
             return dsHttp:toListError(items);
         }
         if items.length() == 0 {
-            return <dsHttp:NotFound>{body: dataservice:noRelated(dataserviceOrderEntity, "customer", [id])};
+            return <dsHttp:NotFound>{body: dataservice:relatedNotFound(dataserviceOrderEntity, "customer", [id])};
         }
         if fields is string[] {
-            CustomerRelatedPartial|error partial = dataservice:narrow(items[0], dataserviceCustomerEntity, fields).cloneWithType();
+            CustomerRelatedPartial|error partial = dataservice:selectFields(items[0], dataserviceCustomerEntity, fields).cloneWithType();
             if partial is error {
                 return dsHttp:toListError(partial);
             }
@@ -186,7 +186,7 @@ service http:InterceptableService /api on dataserviceListener {
                     int[] keys = check dataserviceClient->/orders.post(values);
                     dataservice:KeyValue[][] keyValues = from int key in keys
                         select [key];
-                    dataservice:Query query = dataservice:keysQuery(dataserviceOrderEntity, keyValues);
+                    dataservice:Query query = dataservice:toKeysQuery(dataserviceOrderEntity, keyValues);
                     stream<Order, persist:Error?> stored = dataserviceClient->/orders(Order,
                         whereClause = query.whereClause, orderByClause = query.orderByClause
                     );
@@ -206,7 +206,7 @@ service http:InterceptableService /api on dataserviceListener {
         }
         OrderPayload created = items[0];
         return <OrderCreated>{
-            headers: {"Location": dsHttp:buildLocation("/api/orders", [created.id])},
+            headers: {"Location": dsHttp:toLocation("/api/orders", [created.id])},
             body: created
         };
     }
@@ -257,7 +257,7 @@ service http:InterceptableService /api on dataserviceListener {
     resource function get customers(CustomerFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
             string[]? fields = ()) returns CustomerList|CustomerPartialList|dsHttp:InvalidInput|dsHttp:InternalError {
         dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
-            dataservice:query(dataserviceCustomerEntity, dataservicePageConfig, filter, sort, size, offset);
+            dataservice:toQuery(dataserviceCustomerEntity, dataservicePageConfig, filter, sort, size, offset);
         if query !is dataservice:Query {
             return dsHttp:toQueryError(query, "Customer");
         }
@@ -274,11 +274,11 @@ service http:InterceptableService /api on dataserviceListener {
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        boolean hasMore = dataservice:page(items, query);
+        boolean hasMore = dataservice:trimToPage(items, query);
         if fields is string[] {
             Customer[] sources = items;
             map<anydata>[] partials = from Customer item in sources
-                select dataservice:narrow(item, dataserviceCustomerEntity, fields);
+                select dataservice:selectFields(item, dataserviceCustomerEntity, fields);
             CustomerPartial[]|error converted = partials.cloneWithType();
             if converted is error {
                 return dsHttp:toListError(converted);
@@ -304,7 +304,7 @@ service http:InterceptableService /api on dataserviceListener {
         }
         if fields is string[] {
             Customer[] sources = [item];
-            map<anydata>[] partials = [dataservice:narrow(sources[0], dataserviceCustomerEntity, fields)];
+            map<anydata>[] partials = [dataservice:selectFields(sources[0], dataserviceCustomerEntity, fields)];
             CustomerPartial|error partial = partials[0].cloneWithType();
             if partial is error {
                 return dsHttp:toGetError(partial, "Customer", [id]);
@@ -325,7 +325,7 @@ service http:InterceptableService /api on dataserviceListener {
     resource function get warehouses(WarehouseFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
             string[]? fields = ()) returns WarehouseList|WarehousePartialList|dsHttp:InvalidInput|dsHttp:InternalError {
         dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
-            dataservice:query(dataserviceWarehouseEntity, dataservicePageConfig, filter, sort, size, offset);
+            dataservice:toQuery(dataserviceWarehouseEntity, dataservicePageConfig, filter, sort, size, offset);
         if query !is dataservice:Query {
             return dsHttp:toQueryError(query, "Warehouse");
         }
@@ -342,21 +342,21 @@ service http:InterceptableService /api on dataserviceListener {
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        boolean hasMore = dataservice:page(items, query);
+        boolean hasMore = dataservice:trimToPage(items, query);
         if fields is string[] {
             Warehouse[] sources = items;
             map<anydata>[] partials = from Warehouse item in sources
-                select dataservice:narrow(item, dataserviceWarehouseEntity, fields);
+                select dataservice:selectFields(item, dataserviceWarehouseEntity, fields);
             do {
-                if dataservice:includes(fields, "orders") {
+                if dataservice:isIncluded(fields, "orders") {
                     foreach int i in 0 ..< sources.length() {
-                        dataservice:Query include = dataservice:includeQuery(dataserviceWarehouseEntity, "orders", [sources[i]], dataservicePageConfig);
+                        dataservice:Query include = dataservice:toIncludeQuery(dataserviceWarehouseEntity, "orders", [sources[i]], dataservicePageConfig);
                         stream<Order, persist:Error?> includedRows = dataserviceClient->/orders(Order,
                             whereClause = include.whereClause, orderByClause = include.orderByClause, limitClause = include.limitClause
                         );
                         OrderPayload[] included = check from Order row in includedRows
                             select transformOrderToPayload(row);
-                        boolean includedMore = dataservice:page(included, include);
+                        boolean includedMore = dataservice:trimToPage(included, include);
                         dataservice:attachMany(partials[i], dataserviceWarehouseEntity, "orders", included, includedMore, fields);
                     }
                 }
@@ -388,17 +388,17 @@ service http:InterceptableService /api on dataserviceListener {
         }
         if fields is string[] {
             Warehouse[] sources = [item];
-            map<anydata>[] partials = [dataservice:narrow(sources[0], dataserviceWarehouseEntity, fields)];
+            map<anydata>[] partials = [dataservice:selectFields(sources[0], dataserviceWarehouseEntity, fields)];
             do {
-                if dataservice:includes(fields, "orders") {
+                if dataservice:isIncluded(fields, "orders") {
                     foreach int i in 0 ..< sources.length() {
-                        dataservice:Query include = dataservice:includeQuery(dataserviceWarehouseEntity, "orders", [sources[i]], dataservicePageConfig);
+                        dataservice:Query include = dataservice:toIncludeQuery(dataserviceWarehouseEntity, "orders", [sources[i]], dataservicePageConfig);
                         stream<Order, persist:Error?> includedRows = dataserviceClient->/orders(Order,
                             whereClause = include.whereClause, orderByClause = include.orderByClause, limitClause = include.limitClause
                         );
                         OrderPayload[] included = check from Order row in includedRows
                             select transformOrderToPayload(row);
-                        boolean includedMore = dataservice:page(included, include);
+                        boolean includedMore = dataservice:trimToPage(included, include);
                         dataservice:attachMany(partials[i], dataserviceWarehouseEntity, "orders", included, includedMore, fields);
                     }
                 }
@@ -430,7 +430,7 @@ service http:InterceptableService /api on dataserviceListener {
             return dsHttp:toQueryError(invalidFields, "Order");
         }
         dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
-            dataservice:relatedQuery(dataserviceWarehouseEntity, "orders", {"id": id}, dataservicePageConfig, filter, sort, size, offset);
+            dataservice:toRelatedQuery(dataserviceWarehouseEntity, "orders", {"id": id}, dataservicePageConfig, filter, sort, size, offset);
         if query !is dataservice:Query {
             return dsHttp:toQueryError(query, "Order");
         }
@@ -443,7 +443,7 @@ service http:InterceptableService /api on dataserviceListener {
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        boolean hasMore = dataservice:page(items, query);
+        boolean hasMore = dataservice:trimToPage(items, query);
         if items.length() == 0 {
             Warehouse|persist:Error item = dataserviceClient->/warehouses/[id];
             if item is persist:Error {
@@ -453,7 +453,7 @@ service http:InterceptableService /api on dataserviceListener {
         }
         if fields is string[] {
             OrderRelatedPartial[]|error partials = (from OrderPayload related in items
-                select dataservice:narrow(related, dataserviceOrderEntity, fields)).cloneWithType();
+                select dataservice:selectFields(related, dataserviceOrderEntity, fields)).cloneWithType();
             if partials is error {
                 return dsHttp:toListError(partials);
             }

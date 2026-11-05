@@ -36,7 +36,7 @@ service http:InterceptableService /api on dataserviceListener {
     resource function get tickets(TicketFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
             string[]? fields = ()) returns TicketList|TicketPartialList|dsHttp:InvalidInput|dsHttp:InternalError {
         dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
-            dataservice:query(dataserviceTicketEntity, dataservicePageConfig, filter, sort, size, offset);
+            dataservice:toQuery(dataserviceTicketEntity, dataservicePageConfig, filter, sort, size, offset);
         if query !is dataservice:Query {
             return dsHttp:toQueryError(query, "Ticket");
         }
@@ -53,11 +53,11 @@ service http:InterceptableService /api on dataserviceListener {
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        boolean hasMore = dataservice:page(items, query);
+        boolean hasMore = dataservice:trimToPage(items, query);
         if fields is string[] {
             TicketPayload[] sources = items;
             map<anydata>[] partials = from TicketPayload item in sources
-                select dataservice:narrow(item, dataserviceTicketEntity, fields);
+                select dataservice:selectFields(item, dataserviceTicketEntity, fields);
             TicketPartial[]|error converted = partials.cloneWithType();
             if converted is error {
                 return dsHttp:toListError(converted);
@@ -83,7 +83,7 @@ service http:InterceptableService /api on dataserviceListener {
         }
         if fields is string[] {
             TicketPayload[] sources = [transformTicketToPayload(item)];
-            map<anydata>[] partials = [dataservice:narrow(sources[0], dataserviceTicketEntity, fields)];
+            map<anydata>[] partials = [dataservice:selectFields(sources[0], dataserviceTicketEntity, fields)];
             TicketPartial|error partial = partials[0].cloneWithType();
             if partial is error {
                 return dsHttp:toGetError(partial, "Ticket", [id]);
@@ -119,7 +119,7 @@ service http:InterceptableService /api on dataserviceListener {
                     int[] keys = check dataserviceClient->/tickets.post(values);
                     dataservice:KeyValue[][] keyValues = from int key in keys
                         select [key];
-                    dataservice:Query query = dataservice:keysQuery(dataserviceTicketEntity, keyValues);
+                    dataservice:Query query = dataservice:toKeysQuery(dataserviceTicketEntity, keyValues);
                     stream<Ticket, persist:Error?> stored = dataserviceClient->/tickets(Ticket,
                         whereClause = query.whereClause, orderByClause = query.orderByClause
                     );
@@ -139,7 +139,7 @@ service http:InterceptableService /api on dataserviceListener {
         }
         TicketPayload created = items[0];
         return <TicketCreated>{
-            headers: {"Location": dsHttp:buildLocation("/api/tickets", [created.id])},
+            headers: {"Location": dsHttp:toLocation("/api/tickets", [created.id])},
             body: created
         };
     }
@@ -162,7 +162,7 @@ service http:InterceptableService /api on dataserviceListener {
                     int[] keys = check dataserviceClient->/orderitems.post(values);
                     dataservice:KeyValue[][] keyValues = from int key in keys
                         select [key];
-                    dataservice:Query query = dataservice:keysQuery(dataserviceOrderItemEntity, keyValues);
+                    dataservice:Query query = dataservice:toKeysQuery(dataserviceOrderItemEntity, keyValues);
                     stream<OrderItem, persist:Error?> stored = dataserviceClient->/orderitems(OrderItem,
                         whereClause = query.whereClause, orderByClause = query.orderByClause
                     );
@@ -181,7 +181,7 @@ service http:InterceptableService /api on dataserviceListener {
         }
         OrderItem created = items[0];
         return <OrderItemCreated>{
-            headers: {"Location": dsHttp:buildLocation("/api/orderItems", [created.id])},
+            headers: {"Location": dsHttp:toLocation("/api/orderItems", [created.id])},
             body: created
         };
     }

@@ -36,7 +36,7 @@ service http:InterceptableService /api on dataserviceListener {
     resource function get assignments(AssignmentFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
             string[]? fields = ()) returns AssignmentList|AssignmentPartialList|dsHttp:InvalidInput|dsHttp:InternalError {
         dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
-            dataservice:query(dataserviceAssignmentEntity, dataservicePageConfig, filter, sort, size, offset);
+            dataservice:toQuery(dataserviceAssignmentEntity, dataservicePageConfig, filter, sort, size, offset);
         if query !is dataservice:Query {
             return dsHttp:toQueryError(query, "Assignment");
         }
@@ -53,11 +53,11 @@ service http:InterceptableService /api on dataserviceListener {
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        boolean hasMore = dataservice:page(items, query);
+        boolean hasMore = dataservice:trimToPage(items, query);
         if fields is string[] {
             Assignment[] sources = items;
             map<anydata>[] partials = from Assignment item in sources
-                select dataservice:narrow(item, dataserviceAssignmentEntity, fields);
+                select dataservice:selectFields(item, dataserviceAssignmentEntity, fields);
             AssignmentPartial[]|error converted = partials.cloneWithType();
             if converted is error {
                 return dsHttp:toListError(converted);
@@ -84,7 +84,7 @@ service http:InterceptableService /api on dataserviceListener {
         }
         if fields is string[] {
             Assignment[] sources = [item];
-            map<anydata>[] partials = [dataservice:narrow(sources[0], dataserviceAssignmentEntity, fields)];
+            map<anydata>[] partials = [dataservice:selectFields(sources[0], dataserviceAssignmentEntity, fields)];
             AssignmentPartial|error partial = partials[0].cloneWithType();
             if partial is error {
                 return dsHttp:toGetError(partial, "Assignment", [projectCode, seq]);
@@ -111,7 +111,7 @@ service http:InterceptableService /api on dataserviceListener {
                 transaction {
                     [string, int][] keys = check dataserviceClient->/assignments.post(values);
                     dataservice:KeyValue[][] keyValues = keys;
-                    dataservice:Query query = dataservice:keysQuery(dataserviceAssignmentEntity, keyValues);
+                    dataservice:Query query = dataservice:toKeysQuery(dataserviceAssignmentEntity, keyValues);
                     stream<Assignment, persist:Error?> stored = dataserviceClient->/assignments(Assignment,
                         whereClause = query.whereClause, orderByClause = query.orderByClause
                     );
@@ -130,7 +130,7 @@ service http:InterceptableService /api on dataserviceListener {
         }
         Assignment created = items[0];
         return <AssignmentCreated>{
-            headers: {"Location": dsHttp:buildLocation("/api/assignments", [created.projectCode, created.seq])},
+            headers: {"Location": dsHttp:toLocation("/api/assignments", [created.projectCode, created.seq])},
             body: created
         };
     }
@@ -179,7 +179,7 @@ service http:InterceptableService /api on dataserviceListener {
     resource function get rates(RateFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
             string[]? fields = ()) returns RateList|RatePartialList|dsHttp:InvalidInput|dsHttp:InternalError {
         dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
-            dataservice:query(dataserviceRateEntity, dataservicePageConfig, filter, sort, size, offset);
+            dataservice:toQuery(dataserviceRateEntity, dataservicePageConfig, filter, sort, size, offset);
         if query !is dataservice:Query {
             return dsHttp:toQueryError(query, "Rate");
         }
@@ -196,11 +196,11 @@ service http:InterceptableService /api on dataserviceListener {
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        boolean hasMore = dataservice:page(items, query);
+        boolean hasMore = dataservice:trimToPage(items, query);
         if fields is string[] {
             Rate[] sources = items;
             map<anydata>[] partials = from Rate item in sources
-                select dataservice:narrow(item, dataserviceRateEntity, fields);
+                select dataservice:selectFields(item, dataserviceRateEntity, fields);
             RatePartial[]|error converted = partials.cloneWithType();
             if converted is error {
                 return dsHttp:toListError(converted);
@@ -232,7 +232,7 @@ service http:InterceptableService /api on dataserviceListener {
         }
         if fields is string[] {
             Rate[] sources = [item];
-            map<anydata>[] partials = [dataservice:narrow(sources[0], dataserviceRateEntity, fields)];
+            map<anydata>[] partials = [dataservice:selectFields(sources[0], dataserviceRateEntity, fields)];
             RatePartial|error partial = partials[0].cloneWithType();
             if partial is error {
                 return dsHttp:toGetError(partial, "Rate", [amount, factor, active]);

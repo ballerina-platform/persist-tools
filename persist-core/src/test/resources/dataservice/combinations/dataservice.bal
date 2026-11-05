@@ -36,7 +36,7 @@ service http:InterceptableService /api on dataserviceListener {
     resource function get readItems(ReadItemFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
             string[]? fields = ()) returns ReadItemList|ReadItemPartialList|dsHttp:InvalidInput|dsHttp:InternalError {
         dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
-            dataservice:query(dataserviceReadItemEntity, dataservicePageConfig, filter, sort, size, offset);
+            dataservice:toQuery(dataserviceReadItemEntity, dataservicePageConfig, filter, sort, size, offset);
         if query !is dataservice:Query {
             return dsHttp:toQueryError(query, "ReadItem");
         }
@@ -53,11 +53,11 @@ service http:InterceptableService /api on dataserviceListener {
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        boolean hasMore = dataservice:page(items, query);
+        boolean hasMore = dataservice:trimToPage(items, query);
         if fields is string[] {
             ReadItem[] sources = items;
             map<anydata>[] partials = from ReadItem item in sources
-                select dataservice:narrow(item, dataserviceReadItemEntity, fields);
+                select dataservice:selectFields(item, dataserviceReadItemEntity, fields);
             ReadItemPartial[]|error converted = partials.cloneWithType();
             if converted is error {
                 return dsHttp:toListError(converted);
@@ -83,7 +83,7 @@ service http:InterceptableService /api on dataserviceListener {
         }
         if fields is string[] {
             ReadItem[] sources = [item];
-            map<anydata>[] partials = [dataservice:narrow(sources[0], dataserviceReadItemEntity, fields)];
+            map<anydata>[] partials = [dataservice:selectFields(sources[0], dataserviceReadItemEntity, fields)];
             ReadItemPartial|error partial = partials[0].cloneWithType();
             if partial is error {
                 return dsHttp:toGetError(partial, "ReadItem", [id]);
@@ -111,7 +111,7 @@ service http:InterceptableService /api on dataserviceListener {
                     int[] keys = check dataserviceClient->/createitems.post(values);
                     dataservice:KeyValue[][] keyValues = from int key in keys
                         select [key];
-                    dataservice:Query query = dataservice:keysQuery(dataserviceCreateItemEntity, keyValues);
+                    dataservice:Query query = dataservice:toKeysQuery(dataserviceCreateItemEntity, keyValues);
                     stream<CreateItem, persist:Error?> stored = dataserviceClient->/createitems(CreateItem,
                         whereClause = query.whereClause, orderByClause = query.orderByClause
                     );
@@ -130,7 +130,7 @@ service http:InterceptableService /api on dataserviceListener {
         }
         CreateItem created = items[0];
         return <CreateItemCreated>{
-            headers: {"Location": dsHttp:buildLocation("/api/createItems", [created.id])},
+            headers: {"Location": dsHttp:toLocation("/api/createItems", [created.id])},
             body: created
         };
     }
@@ -175,7 +175,7 @@ service http:InterceptableService /api on dataserviceListener {
     resource function get readCreateItems(ReadCreateItemFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
             string[]? fields = ()) returns ReadCreateItemList|ReadCreateItemPartialList|dsHttp:InvalidInput|dsHttp:InternalError {
         dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
-            dataservice:query(dataserviceReadCreateItemEntity, dataservicePageConfig, filter, sort, size, offset);
+            dataservice:toQuery(dataserviceReadCreateItemEntity, dataservicePageConfig, filter, sort, size, offset);
         if query !is dataservice:Query {
             return dsHttp:toQueryError(query, "ReadCreateItem");
         }
@@ -192,11 +192,11 @@ service http:InterceptableService /api on dataserviceListener {
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        boolean hasMore = dataservice:page(items, query);
+        boolean hasMore = dataservice:trimToPage(items, query);
         if fields is string[] {
             ReadCreateItem[] sources = items;
             map<anydata>[] partials = from ReadCreateItem item in sources
-                select dataservice:narrow(item, dataserviceReadCreateItemEntity, fields);
+                select dataservice:selectFields(item, dataserviceReadCreateItemEntity, fields);
             ReadCreateItemPartial[]|error converted = partials.cloneWithType();
             if converted is error {
                 return dsHttp:toListError(converted);
@@ -222,7 +222,7 @@ service http:InterceptableService /api on dataserviceListener {
         }
         if fields is string[] {
             ReadCreateItem[] sources = [item];
-            map<anydata>[] partials = [dataservice:narrow(sources[0], dataserviceReadCreateItemEntity, fields)];
+            map<anydata>[] partials = [dataservice:selectFields(sources[0], dataserviceReadCreateItemEntity, fields)];
             ReadCreateItemPartial|error partial = partials[0].cloneWithType();
             if partial is error {
                 return dsHttp:toGetError(partial, "ReadCreateItem", [id]);
@@ -250,7 +250,7 @@ service http:InterceptableService /api on dataserviceListener {
                     int[] keys = check dataserviceClient->/readcreateitems.post(values);
                     dataservice:KeyValue[][] keyValues = from int key in keys
                         select [key];
-                    dataservice:Query query = dataservice:keysQuery(dataserviceReadCreateItemEntity, keyValues);
+                    dataservice:Query query = dataservice:toKeysQuery(dataserviceReadCreateItemEntity, keyValues);
                     stream<ReadCreateItem, persist:Error?> stored = dataserviceClient->/readcreateitems(ReadCreateItem,
                         whereClause = query.whereClause, orderByClause = query.orderByClause
                     );
@@ -269,7 +269,7 @@ service http:InterceptableService /api on dataserviceListener {
         }
         ReadCreateItem created = items[0];
         return <ReadCreateItemCreated>{
-            headers: {"Location": dsHttp:buildLocation("/api/readCreateItems", [created.id])},
+            headers: {"Location": dsHttp:toLocation("/api/readCreateItems", [created.id])},
             body: created
         };
     }
@@ -285,7 +285,7 @@ service http:InterceptableService /api on dataserviceListener {
     resource function get readUpdateItems(ReadUpdateItemFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
             string[]? fields = ()) returns ReadUpdateItemList|ReadUpdateItemPartialList|dsHttp:InvalidInput|dsHttp:InternalError {
         dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
-            dataservice:query(dataserviceReadUpdateItemEntity, dataservicePageConfig, filter, sort, size, offset);
+            dataservice:toQuery(dataserviceReadUpdateItemEntity, dataservicePageConfig, filter, sort, size, offset);
         if query !is dataservice:Query {
             return dsHttp:toQueryError(query, "ReadUpdateItem");
         }
@@ -302,11 +302,11 @@ service http:InterceptableService /api on dataserviceListener {
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        boolean hasMore = dataservice:page(items, query);
+        boolean hasMore = dataservice:trimToPage(items, query);
         if fields is string[] {
             ReadUpdateItem[] sources = items;
             map<anydata>[] partials = from ReadUpdateItem item in sources
-                select dataservice:narrow(item, dataserviceReadUpdateItemEntity, fields);
+                select dataservice:selectFields(item, dataserviceReadUpdateItemEntity, fields);
             ReadUpdateItemPartial[]|error converted = partials.cloneWithType();
             if converted is error {
                 return dsHttp:toListError(converted);
@@ -332,7 +332,7 @@ service http:InterceptableService /api on dataserviceListener {
         }
         if fields is string[] {
             ReadUpdateItem[] sources = [item];
-            map<anydata>[] partials = [dataservice:narrow(sources[0], dataserviceReadUpdateItemEntity, fields)];
+            map<anydata>[] partials = [dataservice:selectFields(sources[0], dataserviceReadUpdateItemEntity, fields)];
             ReadUpdateItemPartial|error partial = partials[0].cloneWithType();
             if partial is error {
                 return dsHttp:toGetError(partial, "ReadUpdateItem", [id]);
@@ -372,7 +372,7 @@ service http:InterceptableService /api on dataserviceListener {
     resource function get readDeleteItems(ReadDeleteItemFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
             string[]? fields = ()) returns ReadDeleteItemList|ReadDeleteItemPartialList|dsHttp:InvalidInput|dsHttp:InternalError {
         dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
-            dataservice:query(dataserviceReadDeleteItemEntity, dataservicePageConfig, filter, sort, size, offset);
+            dataservice:toQuery(dataserviceReadDeleteItemEntity, dataservicePageConfig, filter, sort, size, offset);
         if query !is dataservice:Query {
             return dsHttp:toQueryError(query, "ReadDeleteItem");
         }
@@ -389,11 +389,11 @@ service http:InterceptableService /api on dataserviceListener {
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        boolean hasMore = dataservice:page(items, query);
+        boolean hasMore = dataservice:trimToPage(items, query);
         if fields is string[] {
             ReadDeleteItem[] sources = items;
             map<anydata>[] partials = from ReadDeleteItem item in sources
-                select dataservice:narrow(item, dataserviceReadDeleteItemEntity, fields);
+                select dataservice:selectFields(item, dataserviceReadDeleteItemEntity, fields);
             ReadDeleteItemPartial[]|error converted = partials.cloneWithType();
             if converted is error {
                 return dsHttp:toListError(converted);
@@ -419,7 +419,7 @@ service http:InterceptableService /api on dataserviceListener {
         }
         if fields is string[] {
             ReadDeleteItem[] sources = [item];
-            map<anydata>[] partials = [dataservice:narrow(sources[0], dataserviceReadDeleteItemEntity, fields)];
+            map<anydata>[] partials = [dataservice:selectFields(sources[0], dataserviceReadDeleteItemEntity, fields)];
             ReadDeleteItemPartial|error partial = partials[0].cloneWithType();
             if partial is error {
                 return dsHttp:toGetError(partial, "ReadDeleteItem", [id]);
@@ -459,7 +459,7 @@ service http:InterceptableService /api on dataserviceListener {
                     int[] keys = check dataserviceClient->/createupdateitems.post(values);
                     dataservice:KeyValue[][] keyValues = from int key in keys
                         select [key];
-                    dataservice:Query query = dataservice:keysQuery(dataserviceCreateUpdateItemEntity, keyValues);
+                    dataservice:Query query = dataservice:toKeysQuery(dataserviceCreateUpdateItemEntity, keyValues);
                     stream<CreateUpdateItem, persist:Error?> stored = dataserviceClient->/createupdateitems(CreateUpdateItem,
                         whereClause = query.whereClause, orderByClause = query.orderByClause
                     );
@@ -478,7 +478,7 @@ service http:InterceptableService /api on dataserviceListener {
         }
         CreateUpdateItem created = items[0];
         return <CreateUpdateItemCreated>{
-            headers: {"Location": dsHttp:buildLocation("/api/createUpdateItems", [created.id])},
+            headers: {"Location": dsHttp:toLocation("/api/createUpdateItems", [created.id])},
             body: created
         };
     }
@@ -518,7 +518,7 @@ service http:InterceptableService /api on dataserviceListener {
                     int[] keys = check dataserviceClient->/createdeleteitems.post(values);
                     dataservice:KeyValue[][] keyValues = from int key in keys
                         select [key];
-                    dataservice:Query query = dataservice:keysQuery(dataserviceCreateDeleteItemEntity, keyValues);
+                    dataservice:Query query = dataservice:toKeysQuery(dataserviceCreateDeleteItemEntity, keyValues);
                     stream<CreateDeleteItem, persist:Error?> stored = dataserviceClient->/createdeleteitems(CreateDeleteItem,
                         whereClause = query.whereClause, orderByClause = query.orderByClause
                     );
@@ -537,7 +537,7 @@ service http:InterceptableService /api on dataserviceListener {
         }
         CreateDeleteItem created = items[0];
         return <CreateDeleteItemCreated>{
-            headers: {"Location": dsHttp:buildLocation("/api/createDeleteItems", [created.id])},
+            headers: {"Location": dsHttp:toLocation("/api/createDeleteItems", [created.id])},
             body: created
         };
     }
@@ -594,7 +594,7 @@ service http:InterceptableService /api on dataserviceListener {
     resource function get readCreateUpdateItems(ReadCreateUpdateItemFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
             string[]? fields = ()) returns ReadCreateUpdateItemList|ReadCreateUpdateItemPartialList|dsHttp:InvalidInput|dsHttp:InternalError {
         dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
-            dataservice:query(dataserviceReadCreateUpdateItemEntity, dataservicePageConfig, filter, sort, size, offset);
+            dataservice:toQuery(dataserviceReadCreateUpdateItemEntity, dataservicePageConfig, filter, sort, size, offset);
         if query !is dataservice:Query {
             return dsHttp:toQueryError(query, "ReadCreateUpdateItem");
         }
@@ -611,11 +611,11 @@ service http:InterceptableService /api on dataserviceListener {
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        boolean hasMore = dataservice:page(items, query);
+        boolean hasMore = dataservice:trimToPage(items, query);
         if fields is string[] {
             ReadCreateUpdateItem[] sources = items;
             map<anydata>[] partials = from ReadCreateUpdateItem item in sources
-                select dataservice:narrow(item, dataserviceReadCreateUpdateItemEntity, fields);
+                select dataservice:selectFields(item, dataserviceReadCreateUpdateItemEntity, fields);
             ReadCreateUpdateItemPartial[]|error converted = partials.cloneWithType();
             if converted is error {
                 return dsHttp:toListError(converted);
@@ -641,7 +641,7 @@ service http:InterceptableService /api on dataserviceListener {
         }
         if fields is string[] {
             ReadCreateUpdateItem[] sources = [item];
-            map<anydata>[] partials = [dataservice:narrow(sources[0], dataserviceReadCreateUpdateItemEntity, fields)];
+            map<anydata>[] partials = [dataservice:selectFields(sources[0], dataserviceReadCreateUpdateItemEntity, fields)];
             ReadCreateUpdateItemPartial|error partial = partials[0].cloneWithType();
             if partial is error {
                 return dsHttp:toGetError(partial, "ReadCreateUpdateItem", [id]);
@@ -669,7 +669,7 @@ service http:InterceptableService /api on dataserviceListener {
                     int[] keys = check dataserviceClient->/readcreateupdateitems.post(values);
                     dataservice:KeyValue[][] keyValues = from int key in keys
                         select [key];
-                    dataservice:Query query = dataservice:keysQuery(dataserviceReadCreateUpdateItemEntity, keyValues);
+                    dataservice:Query query = dataservice:toKeysQuery(dataserviceReadCreateUpdateItemEntity, keyValues);
                     stream<ReadCreateUpdateItem, persist:Error?> stored = dataserviceClient->/readcreateupdateitems(ReadCreateUpdateItem,
                         whereClause = query.whereClause, orderByClause = query.orderByClause
                     );
@@ -688,7 +688,7 @@ service http:InterceptableService /api on dataserviceListener {
         }
         ReadCreateUpdateItem created = items[0];
         return <ReadCreateUpdateItemCreated>{
-            headers: {"Location": dsHttp:buildLocation("/api/readCreateUpdateItems", [created.id])},
+            headers: {"Location": dsHttp:toLocation("/api/readCreateUpdateItems", [created.id])},
             body: created
         };
     }
@@ -723,7 +723,7 @@ service http:InterceptableService /api on dataserviceListener {
     resource function get readCreateDeleteItems(ReadCreateDeleteItemFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
             string[]? fields = ()) returns ReadCreateDeleteItemList|ReadCreateDeleteItemPartialList|dsHttp:InvalidInput|dsHttp:InternalError {
         dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
-            dataservice:query(dataserviceReadCreateDeleteItemEntity, dataservicePageConfig, filter, sort, size, offset);
+            dataservice:toQuery(dataserviceReadCreateDeleteItemEntity, dataservicePageConfig, filter, sort, size, offset);
         if query !is dataservice:Query {
             return dsHttp:toQueryError(query, "ReadCreateDeleteItem");
         }
@@ -740,11 +740,11 @@ service http:InterceptableService /api on dataserviceListener {
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        boolean hasMore = dataservice:page(items, query);
+        boolean hasMore = dataservice:trimToPage(items, query);
         if fields is string[] {
             ReadCreateDeleteItem[] sources = items;
             map<anydata>[] partials = from ReadCreateDeleteItem item in sources
-                select dataservice:narrow(item, dataserviceReadCreateDeleteItemEntity, fields);
+                select dataservice:selectFields(item, dataserviceReadCreateDeleteItemEntity, fields);
             ReadCreateDeleteItemPartial[]|error converted = partials.cloneWithType();
             if converted is error {
                 return dsHttp:toListError(converted);
@@ -770,7 +770,7 @@ service http:InterceptableService /api on dataserviceListener {
         }
         if fields is string[] {
             ReadCreateDeleteItem[] sources = [item];
-            map<anydata>[] partials = [dataservice:narrow(sources[0], dataserviceReadCreateDeleteItemEntity, fields)];
+            map<anydata>[] partials = [dataservice:selectFields(sources[0], dataserviceReadCreateDeleteItemEntity, fields)];
             ReadCreateDeleteItemPartial|error partial = partials[0].cloneWithType();
             if partial is error {
                 return dsHttp:toGetError(partial, "ReadCreateDeleteItem", [id]);
@@ -798,7 +798,7 @@ service http:InterceptableService /api on dataserviceListener {
                     int[] keys = check dataserviceClient->/readcreatedeleteitems.post(values);
                     dataservice:KeyValue[][] keyValues = from int key in keys
                         select [key];
-                    dataservice:Query query = dataservice:keysQuery(dataserviceReadCreateDeleteItemEntity, keyValues);
+                    dataservice:Query query = dataservice:toKeysQuery(dataserviceReadCreateDeleteItemEntity, keyValues);
                     stream<ReadCreateDeleteItem, persist:Error?> stored = dataserviceClient->/readcreatedeleteitems(ReadCreateDeleteItem,
                         whereClause = query.whereClause, orderByClause = query.orderByClause
                     );
@@ -817,7 +817,7 @@ service http:InterceptableService /api on dataserviceListener {
         }
         ReadCreateDeleteItem created = items[0];
         return <ReadCreateDeleteItemCreated>{
-            headers: {"Location": dsHttp:buildLocation("/api/readCreateDeleteItems", [created.id])},
+            headers: {"Location": dsHttp:toLocation("/api/readCreateDeleteItems", [created.id])},
             body: created
         };
     }
@@ -845,7 +845,7 @@ service http:InterceptableService /api on dataserviceListener {
     resource function get readUpdateDeleteItems(ReadUpdateDeleteItemFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
             string[]? fields = ()) returns ReadUpdateDeleteItemList|ReadUpdateDeleteItemPartialList|dsHttp:InvalidInput|dsHttp:InternalError {
         dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
-            dataservice:query(dataserviceReadUpdateDeleteItemEntity, dataservicePageConfig, filter, sort, size, offset);
+            dataservice:toQuery(dataserviceReadUpdateDeleteItemEntity, dataservicePageConfig, filter, sort, size, offset);
         if query !is dataservice:Query {
             return dsHttp:toQueryError(query, "ReadUpdateDeleteItem");
         }
@@ -862,11 +862,11 @@ service http:InterceptableService /api on dataserviceListener {
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        boolean hasMore = dataservice:page(items, query);
+        boolean hasMore = dataservice:trimToPage(items, query);
         if fields is string[] {
             ReadUpdateDeleteItem[] sources = items;
             map<anydata>[] partials = from ReadUpdateDeleteItem item in sources
-                select dataservice:narrow(item, dataserviceReadUpdateDeleteItemEntity, fields);
+                select dataservice:selectFields(item, dataserviceReadUpdateDeleteItemEntity, fields);
             ReadUpdateDeleteItemPartial[]|error converted = partials.cloneWithType();
             if converted is error {
                 return dsHttp:toListError(converted);
@@ -892,7 +892,7 @@ service http:InterceptableService /api on dataserviceListener {
         }
         if fields is string[] {
             ReadUpdateDeleteItem[] sources = [item];
-            map<anydata>[] partials = [dataservice:narrow(sources[0], dataserviceReadUpdateDeleteItemEntity, fields)];
+            map<anydata>[] partials = [dataservice:selectFields(sources[0], dataserviceReadUpdateDeleteItemEntity, fields)];
             ReadUpdateDeleteItemPartial|error partial = partials[0].cloneWithType();
             if partial is error {
                 return dsHttp:toGetError(partial, "ReadUpdateDeleteItem", [id]);
@@ -951,7 +951,7 @@ service http:InterceptableService /api on dataserviceListener {
                     int[] keys = check dataserviceClient->/createupdatedeleteitems.post(values);
                     dataservice:KeyValue[][] keyValues = from int key in keys
                         select [key];
-                    dataservice:Query query = dataservice:keysQuery(dataserviceCreateUpdateDeleteItemEntity, keyValues);
+                    dataservice:Query query = dataservice:toKeysQuery(dataserviceCreateUpdateDeleteItemEntity, keyValues);
                     stream<CreateUpdateDeleteItem, persist:Error?> stored = dataserviceClient->/createupdatedeleteitems(CreateUpdateDeleteItem,
                         whereClause = query.whereClause, orderByClause = query.orderByClause
                     );
@@ -970,7 +970,7 @@ service http:InterceptableService /api on dataserviceListener {
         }
         CreateUpdateDeleteItem created = items[0];
         return <CreateUpdateDeleteItemCreated>{
-            headers: {"Location": dsHttp:buildLocation("/api/createUpdateDeleteItems", [created.id])},
+            headers: {"Location": dsHttp:toLocation("/api/createUpdateDeleteItems", [created.id])},
             body: created
         };
     }
@@ -1015,7 +1015,7 @@ service http:InterceptableService /api on dataserviceListener {
     resource function get readCreateUpdateDeleteItems(ReadCreateUpdateDeleteItemFilter? filter = (), string[]? sort = (), int? size = (), int? offset = (),
             string[]? fields = ()) returns ReadCreateUpdateDeleteItemList|ReadCreateUpdateDeleteItemPartialList|dsHttp:InvalidInput|dsHttp:InternalError {
         dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
-            dataservice:query(dataserviceReadCreateUpdateDeleteItemEntity, dataservicePageConfig, filter, sort, size, offset);
+            dataservice:toQuery(dataserviceReadCreateUpdateDeleteItemEntity, dataservicePageConfig, filter, sort, size, offset);
         if query !is dataservice:Query {
             return dsHttp:toQueryError(query, "ReadCreateUpdateDeleteItem");
         }
@@ -1032,11 +1032,11 @@ service http:InterceptableService /api on dataserviceListener {
         if items is persist:Error {
             return dsHttp:toListError(items);
         }
-        boolean hasMore = dataservice:page(items, query);
+        boolean hasMore = dataservice:trimToPage(items, query);
         if fields is string[] {
             ReadCreateUpdateDeleteItem[] sources = items;
             map<anydata>[] partials = from ReadCreateUpdateDeleteItem item in sources
-                select dataservice:narrow(item, dataserviceReadCreateUpdateDeleteItemEntity, fields);
+                select dataservice:selectFields(item, dataserviceReadCreateUpdateDeleteItemEntity, fields);
             ReadCreateUpdateDeleteItemPartial[]|error converted = partials.cloneWithType();
             if converted is error {
                 return dsHttp:toListError(converted);
@@ -1062,7 +1062,7 @@ service http:InterceptableService /api on dataserviceListener {
         }
         if fields is string[] {
             ReadCreateUpdateDeleteItem[] sources = [item];
-            map<anydata>[] partials = [dataservice:narrow(sources[0], dataserviceReadCreateUpdateDeleteItemEntity, fields)];
+            map<anydata>[] partials = [dataservice:selectFields(sources[0], dataserviceReadCreateUpdateDeleteItemEntity, fields)];
             ReadCreateUpdateDeleteItemPartial|error partial = partials[0].cloneWithType();
             if partial is error {
                 return dsHttp:toGetError(partial, "ReadCreateUpdateDeleteItem", [id]);
@@ -1090,7 +1090,7 @@ service http:InterceptableService /api on dataserviceListener {
                     int[] keys = check dataserviceClient->/readcreateupdatedeleteitems.post(values);
                     dataservice:KeyValue[][] keyValues = from int key in keys
                         select [key];
-                    dataservice:Query query = dataservice:keysQuery(dataserviceReadCreateUpdateDeleteItemEntity, keyValues);
+                    dataservice:Query query = dataservice:toKeysQuery(dataserviceReadCreateUpdateDeleteItemEntity, keyValues);
                     stream<ReadCreateUpdateDeleteItem, persist:Error?> stored = dataserviceClient->/readcreateupdatedeleteitems(ReadCreateUpdateDeleteItem,
                         whereClause = query.whereClause, orderByClause = query.orderByClause
                     );
@@ -1109,7 +1109,7 @@ service http:InterceptableService /api on dataserviceListener {
         }
         ReadCreateUpdateDeleteItem created = items[0];
         return <ReadCreateUpdateDeleteItemCreated>{
-            headers: {"Location": dsHttp:buildLocation("/api/readCreateUpdateDeleteItems", [created.id])},
+            headers: {"Location": dsHttp:toLocation("/api/readCreateUpdateDeleteItems", [created.id])},
             body: created
         };
     }

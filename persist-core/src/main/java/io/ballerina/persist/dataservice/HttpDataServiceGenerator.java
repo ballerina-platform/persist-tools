@@ -180,12 +180,12 @@ public final class HttpDataServiceGenerator {
                         "configurable dsHttp:Config dataserviceConfig = {};") + NEWLINE + NEWLINE +
                 "# The page sizes, checked at startup." + NEWLINE +
                 "final dataservice:PageConfig dataservicePageConfig =" + NEWLINE +
-                "        check dataservice:pageConfig(dataserviceConfig.pageSize, dataserviceConfig.maxPageSize);" +
+                "        check dataservice:toPageConfig(dataserviceConfig.pageSize, dataserviceConfig.maxPageSize);" +
                 NEWLINE +
                 (!auth ? "" : NEWLINE +
                         "# The authentication providers, checked at startup." + NEWLINE +
                         "final http:ListenerAuthConfig[] dataserviceAuthConfig =" + NEWLINE +
-                        "        check dsHttp:authProviders(dataserviceConfig.serviceConfig.auth);" + NEWLINE));
+                        "        check dsHttp:initAuthProviders(dataserviceConfig.serviceConfig.auth);" + NEWLINE));
     }
 
     private String header(String reason) {
@@ -238,7 +238,8 @@ public final class HttpDataServiceGenerator {
             out.append("        if fields is string[] {").append(NEWLINE);
             out.append("            ").append(n.wire).append("[] sources = [").append(n.toWire("item")).append("];")
                     .append(NEWLINE);
-            out.append("            map<anydata>[] partials = [dataservice:narrow(sources[0], ").append(n.description)
+            out.append("            map<anydata>[] partials = [dataservice:selectFields(sources[0], ")
+                    .append(n.description)
                     .append(", fields)];").append(NEWLINE);
             appendIncludes(out, entity, n, getFailure);
             out.append("            ").append(n.partial).append("|error partial = partials[0].cloneWithType();")
@@ -353,7 +354,7 @@ public final class HttpDataServiceGenerator {
                 .append(errors(LIST_ERRORS, entity, READ, !checked(entity).isEmpty())).append(" {").append(NEWLINE);
         out.append("        dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =")
                 .append(NEWLINE);
-        out.append("            dataservice:query(").append(n.description)
+        out.append("            dataservice:toQuery(").append(n.description)
                 .append(", dataservicePageConfig, filter, sort, size, offset);").append(NEWLINE);
         out.append("        if query !is dataservice:Query {").append(NEWLINE);
         out.append("            return dsHttp:toQueryError(query, ").append(entityName).append(");").append(NEWLINE);
@@ -369,11 +370,11 @@ public final class HttpDataServiceGenerator {
         out.append("        if items is persist:Error {").append(NEWLINE);
         out.append("            return dsHttp:toListError(items);").append(NEWLINE);
         out.append("        }").append(NEWLINE);
-        out.append("        boolean hasMore = dataservice:page(items, query);").append(NEWLINE);
+        out.append("        boolean hasMore = dataservice:trimToPage(items, query);").append(NEWLINE);
         out.append("        if fields is string[] {").append(NEWLINE);
         out.append("            ").append(n.wire).append("[] sources = items;").append(NEWLINE);
         out.append("            map<anydata>[] partials = from ").append(n.wire).append(" item in sources select ")
-                .append("dataservice:narrow(item, ").append(n.description).append(", fields);").append(NEWLINE);
+                .append("dataservice:selectFields(item, ").append(n.description).append(", fields);").append(NEWLINE);
         appendIncludes(out, entity, n, "dsHttp:toListError(err)");
         out.append("            ").append(n.partial).append("[]|error converted = partials.cloneWithType();")
                 .append(NEWLINE);
@@ -397,11 +398,11 @@ public final class HttpDataServiceGenerator {
             Names t = new Names(target(relation));
             String name = "\"" + unescape(relation.field()) + "\"";
             String indent = relation.many() ? "                        " : "                    ";
-            out.append("                if dataservice:includes(fields, ").append(name).append(") {").append(NEWLINE);
+            out.append("                if dataservice:isIncluded(fields, ").append(name).append(") {").append(NEWLINE);
             if (relation.many()) {
                 out.append("                    foreach int i in 0 ..< sources.length() {").append(NEWLINE);
             }
-            out.append(indent).append("dataservice:Query include = dataservice:includeQuery(").append(n.description)
+            out.append(indent).append("dataservice:Query include = dataservice:toIncludeQuery(").append(n.description)
                     .append(", ").append(name).append(", ").append(relation.many() ? "[sources[i]]" : "sources")
                     .append(", dataservicePageConfig);").append(NEWLINE);
             out.append(indent).append("stream<").append(t.entity)
@@ -413,7 +414,7 @@ public final class HttpDataServiceGenerator {
             out.append(indent).append(t.wire).append("[] included = check from ").append(t.entity)
                     .append(" row in includedRows select ").append(t.toWire("row")).append(";").append(NEWLINE);
             if (relation.many()) {
-                out.append(indent).append("boolean includedMore = dataservice:page(included, include);")
+                out.append(indent).append("boolean includedMore = dataservice:trimToPage(included, include);")
                         .append(NEWLINE);
                 out.append(indent).append("dataservice:attachMany(partials[i], ").append(n.description).append(", ")
                         .append(name).append(", included, includedMore, fields);").append(NEWLINE);
@@ -478,7 +479,7 @@ public final class HttpDataServiceGenerator {
         }
         out.append("        dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =")
                 .append(NEWLINE);
-        out.append("            dataservice:relatedQuery(").append(n.description).append(", \"").append(name)
+        out.append("            dataservice:toRelatedQuery(").append(n.description).append(", \"").append(name)
                 .append("\", ").append(row).append(", dataservicePageConfig");
         if (relation.many()) {
             out.append(", filter, sort, size, offset");
@@ -497,7 +498,7 @@ public final class HttpDataServiceGenerator {
         out.append("            return dsHttp:toListError(items);").append(NEWLINE);
         out.append("        }").append(NEWLINE);
         if (relation.many()) {
-            out.append("        boolean hasMore = dataservice:page(items, query);").append(NEWLINE);
+            out.append("        boolean hasMore = dataservice:trimToPage(items, query);").append(NEWLINE);
         }
         out.append("        if items.length() == 0 {").append(NEWLINE);
         if (!relation.owner()) {
@@ -509,7 +510,7 @@ public final class HttpDataServiceGenerator {
         if (relation.many()) {
             out.append("            return <").append(t.list).append(">{items, hasMore};").append(NEWLINE);
         } else {
-            out.append("            return <dsHttp:NotFound>{body: dataservice:noRelated(").append(n.description)
+            out.append("            return <dsHttp:NotFound>{body: dataservice:relatedNotFound(").append(n.description)
                     .append(", \"").append(name).append("\", ").append(keyList).append(")};").append(NEWLINE);
         }
         out.append("        }").append(NEWLINE);
@@ -517,7 +518,7 @@ public final class HttpDataServiceGenerator {
         if (relation.many()) {
             out.append("            ").append(t.relatedPartial).append("[]|error partials = (from ").append(t.wire)
                     .append(" related in items").append(NEWLINE);
-            out.append("                select dataservice:narrow(related, ").append(t.description)
+            out.append("                select dataservice:selectFields(related, ").append(t.description)
                     .append(", fields)).cloneWithType();").append(NEWLINE);
             out.append("            if partials is error {").append(NEWLINE);
             out.append("                return dsHttp:toListError(partials);").append(NEWLINE);
@@ -525,7 +526,8 @@ public final class HttpDataServiceGenerator {
             out.append("            return <").append(t.relatedPartialList).append(">{items: partials, hasMore};")
                     .append(NEWLINE);
         } else {
-            out.append("            ").append(t.relatedPartial).append("|error partial = dataservice:narrow(items[0], ")
+            out.append("            ").append(t.relatedPartial)
+                    .append("|error partial = dataservice:selectFields(items[0], ")
                     .append(t.description).append(", fields).cloneWithType();").append(NEWLINE);
             out.append("            if partial is error {").append(NEWLINE);
             out.append("                return dsHttp:toListError(partial);").append(NEWLINE);
@@ -541,7 +543,7 @@ public final class HttpDataServiceGenerator {
     private void appendForbiddenCheck(StringBuilder out, ExposedEntity entity, Names n) {
         for (ExposedRelation relation : checked(entity)) {
             String name = "\"" + unescape(relation.field()) + "\"";
-            out.append("        if dataservice:includes(fields, ").append(name).append(") {").append(NEWLINE);
+            out.append("        if dataservice:isIncluded(fields, ").append(name).append(") {").append(NEWLINE);
             appendAuthorize(out, n, relation, "            ");
             out.append("        }").append(NEWLINE);
         }
@@ -549,7 +551,7 @@ public final class HttpDataServiceGenerator {
 
     private void appendAuthorize(StringBuilder out, Names n, ExposedRelation relation, String indent) {
         ExposedEntity target = target(relation);
-        out.append(indent).append("dsHttp:Forbidden? forbidden = dsHttp:authorizeRelation(request, \"")
+        out.append(indent).append("dsHttp:Forbidden? forbidden = dsHttp:checkRelationScopes(request, \"")
                 .append(n.displayName).append("\", \"").append(unescape(relation.field())).append("\", \"")
                 .append(new Names(target).displayName).append("\", ").append(stringList(target.scopes(READ)))
                 .append(");").append(NEWLINE);
@@ -571,7 +573,7 @@ public final class HttpDataServiceGenerator {
     }
 
     private void appendHoldsRead(StringBuilder out, ExposedEntity entity) {
-        out.append("        boolean readable = dsHttp:holdsScope(request, ").append(stringList(entity.scopes(READ)))
+        out.append("        boolean readable = dsHttp:hasScope(request, ").append(stringList(entity.scopes(READ)))
                 .append(");").append(NEWLINE);
     }
 
@@ -649,7 +651,7 @@ public final class HttpDataServiceGenerator {
         out.append("                    dataservice:KeyValue[][] keyValues = ")
                 .append(keys.size() == 1 ? "from " + keyType + " key in keys select [key]" : "keys").append(";")
                 .append(NEWLINE);
-        out.append("                    dataservice:Query query = dataservice:keysQuery(").append(n.description)
+        out.append("                    dataservice:Query query = dataservice:toKeysQuery(").append(n.description)
                 .append(", keyValues);").append(NEWLINE);
         out.append("                    stream<").append(n.entity)
                 .append(", persist:Error?> stored = dataserviceClient->/").append(n.resource).append("(")
@@ -679,7 +681,7 @@ public final class HttpDataServiceGenerator {
         out.append("        }").append(NEWLINE);
         out.append("        ").append(n.wire).append(" created = items[0];").append(NEWLINE);
         out.append("        return <").append(n.created).append(">{").append(NEWLINE);
-        out.append("            headers: {\"Location\": dsHttp:buildLocation(\"").append(collectionPath(n.collection))
+        out.append("            headers: {\"Location\": dsHttp:toLocation(\"").append(collectionPath(n.collection))
                 .append("\", ").append(keyList(entity, "created.")).append(")},").append(NEWLINE);
         out.append("            body: created").append(NEWLINE);
         out.append("        };").append(NEWLINE);

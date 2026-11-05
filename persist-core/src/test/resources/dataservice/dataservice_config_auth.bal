@@ -12,8 +12,8 @@ configurable dsHttp:AuthConfig dataserviceConfig = ?;
 
 # The page sizes, checked at startup.
 final dataservice:PageConfig dataservicePageConfig =
-        check dataservice:pageConfig(dataserviceConfig.pageSize, dataserviceConfig.maxPageSize);
+        check dataservice:toPageConfig(dataserviceConfig.pageSize, dataserviceConfig.maxPageSize);
 
 # The authentication providers, checked at startup.
 final http:ListenerAuthConfig[] dataserviceAuthConfig =
-        check dsHttp:authProviders(dataserviceConfig.serviceConfig.auth);
+        check dsHttp:initAuthProviders(dataserviceConfig.serviceConfig.auth);

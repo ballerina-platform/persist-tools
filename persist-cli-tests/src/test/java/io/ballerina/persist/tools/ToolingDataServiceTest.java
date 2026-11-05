@@ -245,7 +245,7 @@ public class ToolingDataServiceTest {
                 "basePath = \"/hr/v2/\""));
         assertSucceeded(build(project));
         Assert.assertTrue(Files.readString(service).contains("service http:InterceptableService /hr/v2 on"));
-        Assert.assertTrue(Files.readString(service).contains("dsHttp:buildLocation(\"/hr/v2/employees\""));
+        Assert.assertTrue(Files.readString(service).contains("dsHttp:toLocation(\"/hr/v2/employees\""));
 
         writeToml(project, entry("h2", ""));
         Result result = build(project);
