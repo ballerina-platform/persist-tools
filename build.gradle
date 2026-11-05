@@ -117,10 +117,12 @@ subprojects {
 }
 
 def moduleVersion = project.version.replace("-SNAPSHOT", "")
-def persistSqlNativeVersion = "${persistSqlNativeVersion}"
-def persistInMemoryNativeVersion = "${persistInMemoryNativeVersion}"
-def persistGoogleSheetsNativeVersion = "${persistGoogleSheetsNativeVersion}"
-def persistRedisNativeVersion = "${persistRedisNativeVersion}"
+// A persist package's native jar has the package's version. Taking it from the stdlib keys lets the release
+// workflow move it to the stable version along with them.
+def persistSqlNativeVersion = "${stdlibPersistSqlVersion}"
+def persistInMemoryNativeVersion = "${stdlibPersistInmemoryVersion}"
+def persistGoogleSheetsNativeVersion = "${stdlibPersistGoogleSheetVersion}"
+def persistRedisNativeVersion = "${stdlibPersistRedisVersion}"
 
 release {
     buildTasks = ['build']
