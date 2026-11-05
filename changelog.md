@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [1.10.0] - 2026-11-05
+
 ### Added
 
 - [Generate the `offsetClause` argument on the `get` resources of SQL clients](https://github.com/ballerina-platform/ballerina-library/issues/5846)
