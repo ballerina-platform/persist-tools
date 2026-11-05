@@ -4,7 +4,7 @@ name = "persist_init_params_h2"
 version = "0.1.0"
 distribution = "2201.14.0"
 
-[[platform.java21.dependency]]
+[[platform.java25.dependency]]
 groupId = "io.ballerina.stdlib"
 artifactId = "persist.sql-native"
 version = "1.8.0"

@@ -196,7 +196,10 @@ public class TomlSyntaxUtils {
                             PersistToolsConstants.TomlFileConstants.DEPENDENCY)) {
                         gSheetsDependencyExists = gSheetsDependencyExists || isGSheetsConnectorDependency(node);
                     }
-                    if (node.identifier().toSourceCode().trim().equals("platform.java21.dependency")) {
+                    // A project set up by an earlier tool version holds its native dependency under java21.
+                    String tableName = node.identifier().toSourceCode().trim();
+                    if (tableName.equals(BalSyntaxConstants.PERSIST_DEPENDENCY)
+                            || tableName.equals(BalSyntaxConstants.PERSIST_JAVA21_DEPENDENCY)) {
                         NodeList<KeyValueNode> fields = ((TableArrayNode) member).fields();
                         for (KeyValueNode field : fields) {
                             String value = field.value().toSourceCode().trim();
