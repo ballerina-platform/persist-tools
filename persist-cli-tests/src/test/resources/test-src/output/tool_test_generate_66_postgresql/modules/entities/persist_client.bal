@@ -418,10 +418,11 @@ public isolated client class Client {
     # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
     # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
     # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + offsetClause - Number of rows to skip before returning results (e.g., `10`)
     # + return - A collection of matching records or an error
-    isolated resource function get alltypes(AllTypesTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get alltypes(AllTypesTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``, sql:ParameterizedQuery offsetClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.PostgreSQLProcessor",
-        name: "query"
+        name: "queryWithOffset"
     } external;
 
     # Get row from AllTypes table.
@@ -487,10 +488,11 @@ public isolated client class Client {
     # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
     # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
     # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + offsetClause - Number of rows to skip before returning results (e.g., `10`)
     # + return - A collection of matching records or an error
-    isolated resource function get stringidrecords(StringIdRecordTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get stringidrecords(StringIdRecordTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``, sql:ParameterizedQuery offsetClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.PostgreSQLProcessor",
-        name: "query"
+        name: "queryWithOffset"
     } external;
 
     # Get row from StringIdRecord table.
@@ -556,10 +558,11 @@ public isolated client class Client {
     # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
     # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
     # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + offsetClause - Number of rows to skip before returning results (e.g., `10`)
     # + return - A collection of matching records or an error
-    isolated resource function get intidrecords(IntIdRecordTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get intidrecords(IntIdRecordTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``, sql:ParameterizedQuery offsetClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.PostgreSQLProcessor",
-        name: "query"
+        name: "queryWithOffset"
     } external;
 
     # Get row from IntIdRecord table.
@@ -625,10 +628,11 @@ public isolated client class Client {
     # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
     # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
     # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + offsetClause - Number of rows to skip before returning results (e.g., `10`)
     # + return - A collection of matching records or an error
-    isolated resource function get floatidrecords(FloatIdRecordTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get floatidrecords(FloatIdRecordTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``, sql:ParameterizedQuery offsetClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.PostgreSQLProcessor",
-        name: "query"
+        name: "queryWithOffset"
     } external;
 
     # Get row from FloatIdRecord table.
@@ -694,10 +698,11 @@ public isolated client class Client {
     # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
     # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
     # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + offsetClause - Number of rows to skip before returning results (e.g., `10`)
     # + return - A collection of matching records or an error
-    isolated resource function get decimalidrecords(DecimalIdRecordTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get decimalidrecords(DecimalIdRecordTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``, sql:ParameterizedQuery offsetClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.PostgreSQLProcessor",
-        name: "query"
+        name: "queryWithOffset"
     } external;
 
     # Get row from DecimalIdRecord table.
@@ -763,10 +768,11 @@ public isolated client class Client {
     # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
     # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
     # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + offsetClause - Number of rows to skip before returning results (e.g., `10`)
     # + return - A collection of matching records or an error
-    isolated resource function get booleanidrecords(BooleanIdRecordTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get booleanidrecords(BooleanIdRecordTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``, sql:ParameterizedQuery offsetClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.PostgreSQLProcessor",
-        name: "query"
+        name: "queryWithOffset"
     } external;
 
     # Get row from BooleanIdRecord table.
@@ -832,10 +838,11 @@ public isolated client class Client {
     # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
     # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
     # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + offsetClause - Number of rows to skip before returning results (e.g., `10`)
     # + return - A collection of matching records or an error
-    isolated resource function get compositeassociationrecords(CompositeAssociationRecordTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get compositeassociationrecords(CompositeAssociationRecordTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``, sql:ParameterizedQuery offsetClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.PostgreSQLProcessor",
-        name: "query"
+        name: "queryWithOffset"
     } external;
 
     # Get row from CompositeAssociationRecord table.
@@ -901,10 +908,11 @@ public isolated client class Client {
     # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
     # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
     # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + offsetClause - Number of rows to skip before returning results (e.g., `10`)
     # + return - A collection of matching records or an error
-    isolated resource function get alltypesidrecords(AllTypesIdRecordTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get alltypesidrecords(AllTypesIdRecordTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``, sql:ParameterizedQuery offsetClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.PostgreSQLProcessor",
-        name: "query"
+        name: "queryWithOffset"
     } external;
 
     # Get row from AllTypesIdRecord table.
@@ -982,10 +990,11 @@ public isolated client class Client {
     # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
     # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
     # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + offsetClause - Number of rows to skip before returning results (e.g., `10`)
     # + return - A collection of matching records or an error
-    isolated resource function get users(UserTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get users(UserTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``, sql:ParameterizedQuery offsetClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.PostgreSQLProcessor",
-        name: "query"
+        name: "queryWithOffset"
     } external;
 
     # Get row from User table.
@@ -1051,10 +1060,11 @@ public isolated client class Client {
     # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
     # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
     # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + offsetClause - Number of rows to skip before returning results (e.g., `10`)
     # + return - A collection of matching records or an error
-    isolated resource function get posts(PostTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get posts(PostTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``, sql:ParameterizedQuery offsetClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.PostgreSQLProcessor",
-        name: "query"
+        name: "queryWithOffset"
     } external;
 
     # Get row from Post table.
@@ -1120,10 +1130,11 @@ public isolated client class Client {
     # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
     # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
     # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + offsetClause - Number of rows to skip before returning results (e.g., `10`)
     # + return - A collection of matching records or an error
-    isolated resource function get follows(FollowTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get follows(FollowTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``, sql:ParameterizedQuery offsetClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.PostgreSQLProcessor",
-        name: "query"
+        name: "queryWithOffset"
     } external;
 
     # Get row from Follow table.
@@ -1189,10 +1200,11 @@ public isolated client class Client {
     # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
     # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
     # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + offsetClause - Number of rows to skip before returning results (e.g., `10`)
     # + return - A collection of matching records or an error
-    isolated resource function get comments(CommentTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get comments(CommentTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``, sql:ParameterizedQuery offsetClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.PostgreSQLProcessor",
-        name: "query"
+        name: "queryWithOffset"
     } external;
 
     # Get row from Comment table.
@@ -1258,10 +1270,11 @@ public isolated client class Client {
     # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
     # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
     # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + offsetClause - Number of rows to skip before returning results (e.g., `10`)
     # + return - A collection of matching records or an error
-    isolated resource function get employees(EmployeeTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get employees(EmployeeTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``, sql:ParameterizedQuery offsetClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.PostgreSQLProcessor",
-        name: "query"
+        name: "queryWithOffset"
     } external;
 
     # Get row from Employee table.
@@ -1327,10 +1340,11 @@ public isolated client class Client {
     # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
     # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
     # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + offsetClause - Number of rows to skip before returning results (e.g., `10`)
     # + return - A collection of matching records or an error
-    isolated resource function get workspaces(WorkspaceTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get workspaces(WorkspaceTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``, sql:ParameterizedQuery offsetClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.PostgreSQLProcessor",
-        name: "query"
+        name: "queryWithOffset"
     } external;
 
     # Get row from Workspace table.
@@ -1396,10 +1410,11 @@ public isolated client class Client {
     # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
     # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
     # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + offsetClause - Number of rows to skip before returning results (e.g., `10`)
     # + return - A collection of matching records or an error
-    isolated resource function get buildings(BuildingTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get buildings(BuildingTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``, sql:ParameterizedQuery offsetClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.PostgreSQLProcessor",
-        name: "query"
+        name: "queryWithOffset"
     } external;
 
     # Get row from Building table.
@@ -1465,10 +1480,11 @@ public isolated client class Client {
     # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
     # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
     # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + offsetClause - Number of rows to skip before returning results (e.g., `10`)
     # + return - A collection of matching records or an error
-    isolated resource function get departments(DepartmentTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get departments(DepartmentTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``, sql:ParameterizedQuery offsetClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.PostgreSQLProcessor",
-        name: "query"
+        name: "queryWithOffset"
     } external;
 
     # Get row from Department table.
@@ -1534,10 +1550,11 @@ public isolated client class Client {
     # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
     # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
     # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + offsetClause - Number of rows to skip before returning results (e.g., `10`)
     # + return - A collection of matching records or an error
-    isolated resource function get orderitems(OrderItemTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get orderitems(OrderItemTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``, sql:ParameterizedQuery offsetClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.PostgreSQLProcessor",
-        name: "query"
+        name: "queryWithOffset"
     } external;
 
     # Get row from OrderItem table.

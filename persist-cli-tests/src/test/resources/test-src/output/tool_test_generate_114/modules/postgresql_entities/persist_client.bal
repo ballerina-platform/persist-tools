@@ -241,10 +241,11 @@ public isolated client class Client {
     # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
     # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
     # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + offsetClause - Number of rows to skip before returning results (e.g., `10`)
     # + return - A collection of matching records or an error
-    isolated resource function get codesystems(CodeSystemTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get codesystems(CodeSystemTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``, sql:ParameterizedQuery offsetClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.PostgreSQLProcessor",
-        name: "query"
+        name: "queryWithOffset"
     } external;
 
     # Get row from codesystems table.
@@ -311,10 +312,11 @@ public isolated client class Client {
     # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
     # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
     # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + offsetClause - Number of rows to skip before returning results (e.g., `10`)
     # + return - A collection of matching records or an error
-    isolated resource function get concepts(ConceptTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get concepts(ConceptTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``, sql:ParameterizedQuery offsetClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.PostgreSQLProcessor",
-        name: "query"
+        name: "queryWithOffset"
     } external;
 
     # Get row from concepts table.
@@ -381,10 +383,11 @@ public isolated client class Client {
     # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
     # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
     # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + offsetClause - Number of rows to skip before returning results (e.g., `10`)
     # + return - A collection of matching records or an error
-    isolated resource function get valuesets(ValueSetTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get valuesets(ValueSetTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``, sql:ParameterizedQuery offsetClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.PostgreSQLProcessor",
-        name: "query"
+        name: "queryWithOffset"
     } external;
 
     # Get row from valuesets table.
@@ -451,10 +454,11 @@ public isolated client class Client {
     # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
     # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
     # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + offsetClause - Number of rows to skip before returning results (e.g., `10`)
     # + return - A collection of matching records or an error
-    isolated resource function get valuesetcomposeincludes(ValueSetComposeIncludeTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get valuesetcomposeincludes(ValueSetComposeIncludeTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``, sql:ParameterizedQuery offsetClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.PostgreSQLProcessor",
-        name: "query"
+        name: "queryWithOffset"
     } external;
 
     # Get row from valueset_compose_includes table.
@@ -521,10 +525,11 @@ public isolated client class Client {
     # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
     # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
     # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + offsetClause - Number of rows to skip before returning results (e.g., `10`)
     # + return - A collection of matching records or an error
-    isolated resource function get valuesetcomposeincludevaluesets(ValueSetComposeIncludeValueSetTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get valuesetcomposeincludevaluesets(ValueSetComposeIncludeValueSetTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``, sql:ParameterizedQuery offsetClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.PostgreSQLProcessor",
-        name: "query"
+        name: "queryWithOffset"
     } external;
 
     # Get row from valueset_compose_include_value_sets table.
@@ -591,10 +596,11 @@ public isolated client class Client {
     # + orderByClause - SQL ORDER BY clause to sort the results (e.g., `column_name ASC`)
     # + limitClause - SQL LIMIT clause to limit the number of results (e.g., `10`)
     # + groupByClause - SQL GROUP BY clause to group the results (e.g., `column_name`)
+    # + offsetClause - Number of rows to skip before returning results (e.g., `10`)
     # + return - A collection of matching records or an error
-    isolated resource function get valuesetcomposeincludeconcepts(ValueSetComposeIncludeConceptTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
+    isolated resource function get valuesetcomposeincludeconcepts(ValueSetComposeIncludeConceptTargetType targetType = <>, sql:ParameterizedQuery whereClause = ``, sql:ParameterizedQuery orderByClause = ``, sql:ParameterizedQuery limitClause = ``, sql:ParameterizedQuery groupByClause = ``, sql:ParameterizedQuery offsetClause = ``) returns stream<targetType, persist:Error?> = @java:Method {
         'class: "io.ballerina.stdlib.persist.sql.datastore.PostgreSQLProcessor",
-        name: "query"
+        name: "queryWithOffset"
     } external;
 
     # Get row from valueset_compose_include_concepts table.
