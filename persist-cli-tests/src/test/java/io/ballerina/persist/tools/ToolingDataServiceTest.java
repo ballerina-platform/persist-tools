@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 /**
@@ -219,6 +220,22 @@ public class ToolingDataServiceTest {
         Assert.assertEquals(built.exitCode(), 0, built.output());
         Assert.assertTrue(built.output().contains("WARNING: @dataservice:Immutable on the field 'hours' of the " +
                 "entity 'Assignment' has no effect, because the entity does not allow 'update'."), built.output());
+    }
+
+    @Test(description = "An invalid data service configuration stops the program at startup")
+    public void testStartupFailures() throws IOException, InterruptedException {
+        String database = "url = \"jdbc:h2:mem:dsstartup\"\nuser = \"sa\"\npassword = \"\"\n";
+        Path plain = project("ds_startup", entry("h2", "options.dataservice.protocol = \"http\""), MODEL);
+        assertSucceeded(build(plain));
+        assertStartupFails(plain, database + "[dataserviceConfig]\nfoo = 1\n",
+                "undefined field 'foo' provided for closed record");
+        Path auth = project("ds_startup_auth", entry("h2",
+                "options.dataservice.protocol = \"http\"\noptions.dataservice.auth = true"), MODEL);
+        assertSucceeded(build(auth));
+        assertStartupFails(auth, database, "value not provided for required configurable variable " +
+                "'dataserviceConfig'");
+        assertStartupFails(auth, database + "[dataserviceConfig.serviceConfig]\nauth = []\n",
+                "'dataserviceConfig.serviceConfig.auth' must hold at least one");
     }
 
     @Test(description = "With introspection = false, the service does not publish its OpenAPI definition")
@@ -612,6 +629,29 @@ public class ToolingDataServiceTest {
             output = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
         }
         return new Result(process.waitFor(), output);
+    }
+
+    // A configuration that does not fail would start the service, so the run is stopped after a timeout.
+    private static void assertStartupFails(Path project, String config, String message)
+            throws IOException, InterruptedException {
+        Path configFile = project.resolve("startup.toml");
+        Files.writeString(configFile, config);
+        Path log = project.resolve("startup.log");
+        String bal = DISTRIBUTION.resolve("bin").resolve(System.getProperty("os.name").startsWith("Windows") ?
+                "bal.bat" : "bal").toString();
+        String jar = project.resolve("target").resolve("bin").resolve(project.getFileName() + ".jar").toString();
+        ProcessBuilder builder = new ProcessBuilder(bal, "run", jar).directory(project.toFile())
+                .redirectErrorStream(true).redirectOutput(log.toFile());
+        builder.environment().put("BAL_CONFIG_FILES", configFile.toString());
+        Process process = builder.start();
+        boolean exited = process.waitFor(120, TimeUnit.SECONDS);
+        if (!exited) {
+            process.destroyForcibly().waitFor();
+        }
+        String output = Files.readString(log);
+        Assert.assertTrue(exited, "the program did not stop: " + output);
+        Assert.assertNotEquals(process.exitValue(), 0, output);
+        Assert.assertTrue(output.contains(message), output);
     }
 
     private static Path emptyProject(String name) throws IOException {
