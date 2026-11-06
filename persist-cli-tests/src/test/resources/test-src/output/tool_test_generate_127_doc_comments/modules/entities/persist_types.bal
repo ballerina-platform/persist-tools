@@ -46,9 +46,7 @@ public type Employee record {|
     # The employee's id
     readonly int id;
     # The employee's full name
-    @constraint:String {
-        maxLength: 50
-    }
+    @constraint:String {maxLength: 50}
     string name;
     int age;
     string departmentId;
@@ -59,9 +57,7 @@ public type EmployeeOptionalized record {|
     # The employee's id
     int id?;
     # The employee's full name
-    @constraint:String {
-        maxLength: 50
-    }
+    @constraint:String {maxLength: 50}
     string name?;
     int age?;
     string departmentId?;
@@ -88,9 +84,7 @@ public type EmployeeInsert record {|
 # The fields to update on an existing `Employee`.
 public type EmployeeUpdate record {|
     # The employee's full name
-    @constraint:String {
-        maxLength: 50
-    }
+    @constraint:String {maxLength: 50}
     string name?;
     int age?;
     string departmentId?;

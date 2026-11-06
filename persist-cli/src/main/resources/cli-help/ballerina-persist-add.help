@@ -6,6 +6,7 @@ SYNOPSIS
                         [--datastore <store type>]
                         [--test-datastore <store type>]
                         [--model <model-name>]
+                        [--dataservice <protocol>]
                         [<-h> | <--help>]
 
 DESCRIPTION
@@ -29,6 +30,10 @@ OPTIONS
        --model <model-name>
               Specify the model name to create a subdirectory model. If not specified, creates a root-level model.
               Model names must be valid identifiers and cannot be reserved words like 'migrations'.
+       --dataservice <protocol>
+              Add 'options.dataservice.protocol' to the entry, so that the build also generates a data
+              service over the entities that have the @dataservice:Expose annotation. The supported
+              protocol is 'http'. It cannot be combined with --module, --model or --with-init-params.
        -h, --help
            Print the usage details of all commands.
 
@@ -44,6 +49,9 @@ EXAMPLES
 
        Initialize the Ballerina package for persistence with the 'db' module, 'mysql' datastore, and 'h2' test datastore.
           $ bal persist add --module db --datastore mysql --test-datastore h2
+
+       Initialize the Ballerina package for persistence with an HTTP data service.
+          $ bal persist add --datastore mysql --dataservice http
 
        Initialize a specific model in a subdirectory.
           $ bal persist add --model users --datastore mysql

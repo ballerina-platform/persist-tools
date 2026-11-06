@@ -1,0 +1,146 @@
+/*
+ * Copyright (c) 2026, WSO2 LLC. (http://www.wso2.com).
+ *
+ * WSO2 LLC. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+package io.ballerina.persist.dataservice;
+
+import java.util.Optional;
+
+/**
+ * A field of a persist-generated type, as the data service sees it.
+ *
+ * @param name       the field name, as written in the model
+ * @param type       the field's Ballerina type without `?`, such as `time:Date` or `byte[]`
+ * @param nilable    whether the type is nilable, `T?`
+ * @param optional   whether the field is optional, `T name?`
+ * @param key        whether the field is a key field, which is `readonly`
+ * @param rule       the field rule, if the field has one
+ * @param value      the Ballerina source of the value the service sets on create, if the rule gives one
+ * @param doc        the field's doc comment in the model, if it has one
+ */
+public record ServiceField(String name, String type, boolean nilable, boolean optional, boolean key,
+                           Optional<FieldRule> rule, Optional<String> value, Optional<String> doc) {
+
+    /**
+     * Creates a field without a field rule.
+     *
+     * @param name     the field name, as written in the model
+     * @param type     the field's Ballerina type without `?`
+     * @param nilable  whether the type is nilable
+     * @param optional whether the field is optional
+     * @param key      whether the field is a key field
+     */
+    public ServiceField(String name, String type, boolean nilable, boolean optional, boolean key) {
+        this(name, type, nilable, optional, key, Optional.empty(), Optional.empty(), Optional.empty());
+    }
+
+    /**
+     * Returns the field with a rule.
+     *
+     * @param applied the rule, or `null` for none
+     * @return the field with the rule and its value
+     */
+    public ServiceField withRule(FieldRules.Applied applied) {
+        return applied == null ? this :
+                new ServiceField(name, type, nilable, optional, key, Optional.of(applied.rule()), applied.value(), doc);
+    }
+
+    /**
+     * Returns the field with its doc comment in the model.
+     *
+     * @param documentation the doc comment, or `null` for none
+     * @return the field with the doc comment
+     */
+    public ServiceField withDoc(String documentation) {
+        return new ServiceField(name, type, nilable, optional, key, rule, value,
+                Optional.ofNullable(documentation).filter(text -> !text.isBlank()));
+    }
+
+    /**
+     * Tells whether the field has a rule.
+     *
+     * @param fieldRule the rule
+     * @return whether the field has it
+     */
+    public boolean has(FieldRule fieldRule) {
+        return rule.isPresent() && rule.get() == fieldRule;
+    }
+
+    /**
+     * A type whose JSON form is a string, converted by `ballerina/dataservice`. Each holds its Ballerina type and the
+     * name of the type in the conversion functions, such as `date` in `dateToString`.
+     */
+    public enum Conversion {
+        BYTES("byte[]", "bytes"),
+        DATE("time:Date", "date"),
+        TIME_OF_DAY("time:TimeOfDay", "timeOfDay"),
+        CIVIL("time:Civil", "civil"),
+        UTC("time:Utc", "utc");
+
+        private final String balType;
+        private final String name;
+
+        Conversion(String balType, String name) {
+            this.balType = balType;
+            this.name = name;
+        }
+
+        public String balType() {
+            return balType;
+        }
+
+        public String toStringFunction() {
+            return "dataservice:" + name + "ToString";
+        }
+
+        public String fromStringFunction() {
+            return "dataservice:" + name + "FromString";
+        }
+    }
+
+    /**
+     * Returns the conversion of the field's type, if its JSON form is a string.
+     *
+     * @return the conversion, or empty when the persist type is used as it is
+     */
+    public Optional<Conversion> conversion() {
+        for (Conversion conversion : Conversion.values()) {
+            if (conversion.balType.equals(type)) {
+                return Optional.of(conversion);
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Returns the type of the field in the wire type.
+     *
+     * @return `string` for a converted type, the persist type otherwise, with `?` when nilable
+     */
+    public String wireType() {
+        return (conversion().isPresent() ? "string" : type) + (nilable ? "?" : "");
+    }
+
+    /**
+     * Returns the type of the field in the persist type.
+     *
+     * @return the type, with `?` when nilable
+     */
+    public String persistType() {
+        return type + (nilable ? "?" : "");
+    }
+}

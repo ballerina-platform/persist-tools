@@ -1,0 +1,167 @@
+import ballerina/constraint;
+import ballerina/dataservice;
+import ballerina/persist as _;
+import ballerina/time;
+import ballerinax/persist.sql;
+
+@dataservice:Expose
+type Employee record {|
+    readonly int id;
+    string name;
+    string? email;
+    time:Date hiredOn;
+    Department department;
+    Assignment[] assignments;
+|};
+
+@dataservice:Expose {operations: [dataservice:READ, dataservice:CREATE]}
+type Department record {|
+    readonly int id;
+    string name;
+    Employee[] employees;
+|};
+
+@dataservice:Expose
+type Assignment record {|
+    readonly string projectCode;
+    readonly int seq;
+    decimal hours;
+    Employee employee;
+|};
+
+@dataservice:Expose
+type Document record {|
+    readonly string code;
+    time:Date issuedOn;
+    time:Date? expiresOn;
+    time:TimeOfDay opensAt;
+    time:Civil createdAt;
+    time:Utc signedAt;
+    byte[] content;
+|};
+
+type AuditLog record {|
+    readonly int id;
+    string entry;
+|};
+
+@dataservice:Expose {operations: [dataservice:READ, dataservice:CREATE]}
+type Ticket record {|
+    @sql:Generated
+    readonly int id;
+    string subject;
+    time:Date openedOn;
+|};
+
+@dataservice:Expose {operations: [dataservice:CREATE, dataservice:UPDATE, dataservice:DELETE]}
+type Badge record {|
+    readonly int id;
+    @constraint:String {minLength: 2}
+    string label;
+|};
+
+@dataservice:Expose {operations: [dataservice:READ, dataservice:DELETE]}
+type Rate record {|
+    readonly float factor;
+    string label;
+|};
+
+@dataservice:Expose
+type Invoice record {|
+    readonly int id;
+    @dataservice:Immutable
+    string number;
+    @dataservice:ReadOnly {value: "draft"}
+    string state;
+    @dataservice:Internal
+    string? secret;
+    int total;
+|};
+
+enum Category {
+    BOOK,
+    TOOL
+}
+
+@dataservice:Expose {operations: [dataservice:READ, dataservice:CREATE]}
+type Product record {|
+    readonly int id;
+    @constraint:String {maxLength: 20}
+    string name;
+    @constraint:Number {minValue: 0}
+    decimal price;
+    Category category;
+    @constraint:Date {option: constraint:PAST}
+    time:Date launchedOn;
+    string? note;
+    boolean active;
+    @dataservice:Internal
+    string? supplier;
+|};
+
+@dataservice:Expose {operations: [dataservice:READ, dataservice:CREATE]}
+type Team record {|
+    readonly int id;
+    string name;
+    Member[] members;
+    Charter? charter;
+|};
+
+@dataservice:Expose {operations: [dataservice:READ, dataservice:CREATE]}
+type Member record {|
+    readonly string code;
+    readonly int seq;
+    string name;
+    Team team;
+    Task[] tasks;
+|};
+
+@dataservice:Expose {operations: [dataservice:READ, dataservice:CREATE]}
+type Task record {|
+    readonly int id;
+    string title;
+    time:Date due;
+    Member member;
+|};
+
+@dataservice:Expose {operations: [dataservice:READ, dataservice:CREATE]}
+type Charter record {|
+    readonly int id;
+    string text;
+    Team team;
+|};
+
+@dataservice:Expose
+type Deck record {|
+    readonly int id;
+    string label;
+    Card[] cards;
+|};
+
+@dataservice:Expose
+type Card record {|
+    readonly int id;
+    string title;
+    @dataservice:Immutable
+    int deckId;
+    @sql:Relation {keys: ["deckId"]}
+    @dataservice:Internal
+    Deck deck;
+|};
+
+@dataservice:Expose
+type Bin record {|
+    readonly int id;
+    string label;
+    Item[] items;
+|};
+
+@dataservice:Expose
+type Item record {|
+    readonly int id;
+    string name;
+    @dataservice:Internal {value: 1}
+    int binId;
+    @sql:Relation {keys: ["binId"]}
+    Bin bin;
+|};

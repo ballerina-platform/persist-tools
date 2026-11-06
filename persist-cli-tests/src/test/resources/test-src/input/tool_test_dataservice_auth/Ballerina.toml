@@ -1,0 +1,15 @@
+[package]
+org = "dataservice_test"
+name = "dataservice_auth"
+version = "0.1.0"
+distribution = "2201.14.0"
+
+[[tool.persist]]
+id = "generate-db-client"
+targetModule = "dataservice_auth"
+options.datastore = "h2"
+filePath = "persist/model.bal"
+
+[tool.persist.options.dataservice]
+protocol = "http"
+auth = true
