@@ -71,7 +71,7 @@ The tool offers these commands:
 
 ## 2. Terminology
 
-- **Model definition file:** the Ballerina file that defines the entities of a data model as per the [`persist` specification](https://github.com/ballerina-platform/module-ballerina-persist/blob/main/docs/spec/spec.md#2-data-model-definition), named `model.bal`.
+- **Model definition file:** the Ballerina file that defines the entities of a data model as per the [`persist` specification](https://github.com/ballerina-platform/module-ballerina-persist/blob/main/docs/spec/spec.md#3-data-model-definition), named `model.bal`.
 - **Root model:** the model whose definition file is `persist/model.bal`. A command applies to the root model when `--model` is not given.
 - **Named model:** a model whose definition file is `persist/<model-name>/model.bal`, selected with `--model <model-name>`.
 - **Datastore:** the data source that the generated client uses, such as `mysql`.
@@ -154,7 +154,7 @@ The `bal persist init` command creates the model definition file without adding 
 
 ### 5.1. Description
 
-The persist tool generates the [derived entity types and persist clients](https://github.com/ballerina-platform/module-ballerina-persist/blob/main/docs/spec/spec.md#3-derived-entity-types-and-persist-clients) of the `persist` specification, and the database schema associated with the model definition file. `bal build` generates them for each tool entry, and `bal persist generate` generates the same files once.
+The persist tool generates the [derived entity types and persist clients](https://github.com/ballerina-platform/module-ballerina-persist/blob/main/docs/spec/spec.md#4-derived-entity-types-and-persist-clients) of the `persist` specification, and the database schema associated with the model definition file. `bal build` generates them for each tool entry, and `bal persist generate` generates the same files once.
 
 ### 5.2. Configuration
 
