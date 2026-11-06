@@ -36,6 +36,7 @@ The key words MUST, MUST NOT, REQUIRED, SHALL, SHALL NOT, SHOULD, SHOULD NOT, RE
     - [5.5. Derived types](#55-derived-types)
     - [5.6. Database configuration](#56-database-configuration)
     - [5.7. Database schema](#57-database-schema)
+    - [5.8. Native dependencies](#58-native-dependencies)
 - [6. Pushing the schema](#6-pushing-the-schema)
     - [6.1. Description](#61-description)
     - [6.2. Configuration](#62-configuration)
@@ -64,7 +65,7 @@ The tool offers these commands:
 | `bal persist add` | Sets up a project so that `bal build` generates the client. |
 | `bal persist init` | Creates the model definition file, for use with `bal persist generate`. |
 | `bal persist generate` | Generates the client once, outside the build. |
-| `bal persist push` | Runs the generated schema against a database. Not supported yet. |
+| `bal persist push` | Creates the database and runs the generated schema against it. |
 | `bal persist pull` | Creates a model definition file from the schema of an existing database. |
 | `bal persist migrate` | Generates a migration script from the changes to the model. |
 
@@ -89,11 +90,13 @@ The `bal persist add` command initializes a Ballerina project with the persisten
 
 | Option | Description | Mandatory | Default |
 |---|---|---|---|
-| `--datastore` | The preferred database client. Currently, `mysql`, `mssql`, `google sheets` and `postgresql` are supported. | No | `inmemory` |
+| `--datastore` | The preferred database client. Currently, `mysql`, `mssql`, `postgresql`, `h2`, `inmemory`, `googlesheets` and `redis` are supported. | No | `inmemory` |
 | `--module` | The persist module in which the files are generated. | No | `<package_name>` |
-| `--id` | The identifier of the tool entry. | No | `generate-db-client` |
+| `--id` | The identifier of the tool entry. | No | `generate-db-client`, or `generate-<model-name>-client` when `--model` is given |
 | `--test-datastore` | The preferred database client for testing. Currently, `h2` and `inmemory` are supported. | No | None |
 | `--model` | The name of the model. | No | The root model |
+| `--eager-loading` | Makes the generated get-all methods return arrays instead of streams. Supported for `mysql`, `mssql`, `postgresql` and `h2`. For other datastores, the command gives a warning and ignores it. | No | Off |
+| `--with-init-params` | Makes the generated client take the database connection values as init parameters instead of configurable variables. | No | Off |
 
 ### 3.3. Behaviour
 
@@ -113,7 +116,9 @@ The `bal persist add` command initializes a Ballerina project with the persisten
 
 5. When an option is not given, its default value in [3.2](#32-configuration) is used.
 6. When `--test-datastore` is given, the tool entry has the `options.testDatastore` option, and `bal build` generates the test client along with the main client.
-7. The command cannot be executed more than once in the same project. To reinitialize the project, the user removes the persist configurations from `Ballerina.toml`.
+7. When `--eager-loading` or `--with-init-params` is given, the tool entry has the `options.eagerLoading = true` or `options.withInitParams = true` option.
+8. The `id` of each tool entry is unique. The command fails when `Ballerina.toml` already has a tool entry with the same `id`. To add the persistence layer for another model, the user runs the command again with a different `--model` or `--id`.
+9. The command adds the native dependencies described in [5.8](#58-native-dependencies) to `Ballerina.toml`.
 
 For example, `bal persist add --datastore mysql --module db --test-datastore h2` in the `medical-center` package creates this layout:
 
@@ -141,8 +146,9 @@ The `bal persist init` command creates the model definition file without adding 
 
 1. The command creates the `persist` directory, which holds the model definition file.
 2. If no files are present in the `persist` directory, the command creates `model.bal` with the required import, `import ballerina/persist as _;`.
-3. When `--model <model-name>` is given, the command creates the directory `persist/<model-name>/` and creates `model.bal` in it.
+3. When `--model <model-name>` is given, the command creates the directory `persist/<model-name>/` and creates `model.bal` in it. The command fails when that model already exists.
 4. When `--model` is not given, the command creates `persist/model.bal`.
+5. The command still accepts the `--datastore` and `--module` options of earlier versions. It ignores them and prints a message that the command no longer takes them.
 
 ## 5. Client generation
 
@@ -156,10 +162,12 @@ The persist tool generates the [derived entity types and persist clients](https:
 
 | Option | Description | Mandatory | Default |
 |---|---|---|---|
-| `--datastore` | The preferred database client. Currently, `mysql`, `mssql`, `google sheets` and `postgresql` are supported. | Yes | None |
+| `--datastore` | The preferred database client. Currently, `mysql`, `mssql`, `postgresql`, `h2`, `inmemory`, `googlesheets` and `redis` are supported. | Yes | None |
 | `--module` | The persist module in which the files are generated. | No | `<package_name>` |
 | `--test-datastore` | The preferred database client for testing. Currently, `h2` and `inmemory` are supported. | No | None |
 | `--model` | The name of the model. | No | The root model |
+| `--eager-loading` | As for `bal persist add`, in [3.2](#32-configuration). | No | Off |
+| `--with-init-params` | As for `bal persist add`, in [3.2](#32-configuration). | No | Off |
 
 For example, `bal persist generate --datastore mysql --module db --test-datastore h2` generates the files of a MySQL client and an H2 test client in the `db` module.
 
@@ -170,6 +178,8 @@ For example, `bal persist generate --datastore mysql --module db --test-datastor
 3. The model definition file MUST contain at least one entity.
 4. The tool generates the files in [5.4](#54-generated-files), and creates or updates `Config.toml` as described in [5.6](#56-database-configuration).
 5. Invoking `bal persist generate` again does not fail. It generates the files again.
+6. The tool adds the native dependencies described in [5.8](#58-native-dependencies) to `Ballerina.toml`.
+7. Support for the `googlesheets` and `redis` datastores is experimental. The tool prints a warning when it generates a `googlesheets` client, and `bal persist generate` also prints one for a `redis` client.
 
 ### 5.4. Generated files
 
@@ -258,9 +268,11 @@ public type EmployeeUpdate record {|
 
 ### 5.6. Database configuration
 
-`persist_db_config.bal` declares the configurable variables required for database access. The tool creates `Config.toml`, or updates it when it exists, with the values that initialize these variables, under a table named after the data model (the definition file name).
+`persist_db_config.bal` declares the configurable variables required for database access. The tool creates `Config.toml`, or updates it when it exists, with the values that initialize these variables, under a table named after the persist module: `<package_name>` for the default module, or `<package_name>.<module_name>` otherwise.
 
-For example, for MySQL, `persist_db_config.bal` holds:
+For the SQL datastores, when `--with-init-params` is given, the client takes the connection values as init parameters, and the tool generates neither `persist_db_config.bal` nor the `Config.toml` values.
+
+For example, for MySQL and the `db` module of the `medical_center` package, `persist_db_config.bal` holds:
 
 ```ballerina
 import ballerinax/mysql.driver as _;
@@ -275,7 +287,7 @@ configurable string password = ?;
 and `Config.toml` holds:
 
 ```toml
-[<data model name (definition filename)>]
+[medical_center.db]
 host = "localhost"
 port = 3306
 user = "root"
@@ -290,17 +302,34 @@ The database schema in `script.sql` creates:
 1. A table for each entity, with the defined primary keys.
 2. Foreign key associations between the tables, if the model defines associations between entities.
 
+Before it creates each table, the script drops the table if it exists.
+
+### 5.8. Native dependencies
+
+The generated client calls the native code of its datastore's persist package. The tool adds that native jar to `Ballerina.toml` as a `[[platform.java25.dependency]]` entry, with the group ID `io.ballerina.stdlib` (`io.ballerina.lib` for `redis`), the artifact ID `persist.<datastore>-native`, and the version of the persist package that the tool supports. All SQL datastores, including `h2`, use the `persist.sql-native` artifact. For example, for `mysql`:
+
+```toml
+[[platform.java25.dependency]]
+groupId = "io.ballerina.stdlib"
+artifactId = "persist.sql-native"
+version = "1.8.0"
+```
+
+1. When a test datastore is given and it uses a different artifact, the tool adds a second entry for it.
+2. When the datastore is `googlesheets`, the tool also adds a `[[dependency]]` entry for the Google Sheets connector.
+3. When `Ballerina.toml` already has the entry, under `platform.java25.dependency` or the `platform.java21.dependency` of earlier versions, the tool keeps it if its version is compatible with the supported version. Otherwise, the command fails and asks the user to remove the entry and run it again.
+
 ## 6. Pushing the schema
 
 ### 6.1. Description
 
-The `bal persist push` command runs the database schema against the database defined in `Ballerina.toml`.
-
-The `push` command is not supported yet. The SQL script generated by the `generate` command can be used to create the database schema.
+The `bal persist push` command creates the database, if it does not exist, and runs the generated `script.sql` against it, to create the tables of the model. It supports the `mysql`, `mssql` and `postgresql` datastores.
 
 ### 6.2. Configuration
 
-The database is configured in `Ballerina.toml` under the `[persist.model.storage.mysql]` table. For example:
+The command takes the datastore from `options.datastore`, and the persist module from `targetModule`, of the tool entry described in [3.3](#33-behaviour).
+
+The database is configured in `Ballerina.toml` under the `[persist.model.storage.<datastore>]` table, with the `host`, `port`, `user`, `password` and `database` keys. For example:
 
 ```toml
 [persist.model.storage.mysql]
@@ -314,10 +343,13 @@ database = "persist"
 ### 6.3. Behaviour
 
 1. The command requires a Ballerina project.
-2. The database configuration in [6.2](#62-configuration) MUST be in `Ballerina.toml`.
-3. The persistence layer MUST be initialized in the project, and the `generate` command MUST have been executed to generate the SQL script.
-4. Running the schema creates the tables and foreign key associations described in [5.7](#57-database-schema).
-5. Invoking the command again does not fail. It reruns the SQL script against the database.
+2. The command fails when the datastore is not `mysql`, `mssql` or `postgresql`.
+3. The database configuration in [6.2](#62-configuration) MUST be in `Ballerina.toml`.
+4. The `persist` directory MUST hold at least one model definition file. The command runs the schema of each model definition file directly in the `persist` directory.
+5. The SQL script MUST have been generated, as described in [5](#5-client-generation). The command reads it from `generated/script.sql`, or from `generated/<module_name>/script.sql` when the persist module is not the default module.
+6. The command loads the JDBC driver from the project's dependency on the datastore's driver package, `ballerinax/mysql.driver`, `ballerinax/mssql.driver` or `ballerinax/postgresql.driver`, which the generated `persist_db_config.bal` imports.
+7. The command creates the database if it does not exist, and then runs the script, which creates the tables and foreign key associations described in [5.7](#57-database-schema).
+8. Invoking the command again does not fail. It reruns the SQL script, which drops and recreates the tables, so the data in them is lost.
 
 For example, the `medical-center` package has this layout before the command runs:
 
@@ -411,10 +443,11 @@ The migration label is a REQUIRED positional argument.
 ### 8.3. Behaviour
 
 1. The command requires a Ballerina project.
-2. The command creates the `persist/migrations` directory, or `persist/<model-name>/migrations` when `--model` is given, if it is not present.
-3. The command generates a migration script based on the changes to the `model.bal` file, in a new directory of the migrations directory named `[TIMESTAMP]_[migrationLabel]`, where `migrationLabel` is the migration label. The new directory holds the latest `model.bal` file and the migration script, `script.sql`.
-4. If the migrations directory already contains migrations, the command takes the last migration, and generates the next migration script from the changes since the `model.bal` file of that migration.
-5. The command does not run the migration script against the database. The user runs the migration script against the database after reviewing it.
+2. Support for migrations is experimental. The command prints a warning that its behaviour may change in future releases.
+3. The command creates the `persist/migrations` directory, or `persist/<model-name>/migrations` when `--model` is given, if it is not present.
+4. The command generates a migration script based on the changes to the `model.bal` file, in a new directory of the migrations directory named `[TIMESTAMP]_[migrationLabel]`, where `migrationLabel` is the migration label. The new directory holds the latest `model.bal` file and the migration script, `script.sql`.
+5. If the migrations directory already contains migrations, the command takes the last migration, and generates the next migration script from the changes since the `model.bal` file of that migration.
+6. The command does not run the migration script against the database. The user runs the migration script against the database after reviewing it.
 
 For example, `bal persist migrate --datastore mysql migrationLabel` in the `rainier` package creates this layout:
 
@@ -434,6 +467,7 @@ rainier
 
 - `bal persist pull` does not accept the database password as a command-line argument. It prompts for it, as described in [7.3](#73-behaviour).
 - `bal persist push` reads the database credentials, including the password, from `Ballerina.toml`, as described in [6.2](#62-configuration).
+- `bal persist push` drops and recreates the tables of the model, so the data in them is lost, as described in [6.3](#63-behaviour).
 - The generated `Config.toml` holds the database connection values, including the password, as described in [5.6](#56-database-configuration).
 - `bal persist pull` does not change the database schema, and `bal persist migrate` does not run its scripts against the database.
 
