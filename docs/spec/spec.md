@@ -527,7 +527,7 @@ The `[tool.persist.options.dataservice]` table is a sub-table of the `[[tool.per
 | `options.dataservice.auth` | no | `false` | Whether the service is generated with authentication and scopes; see [Auth](#977-auth) |
 | `options.dataservice.introspection` | no | `true` | Whether the service publishes its OpenAPI definition |
 
-`basePath` must start with `/`. A trailing `/` is removed, and `/` alone serves the service at the root. Each segment must be non-empty and contain only letters, digits, `_`, `-` and `.`. `persist-options-schema.json` allows the `dataservice` group with the string keys `protocol` and `basePath`, and the tool checks their values.
+`basePath` must start with `/`. A trailing `/` is removed, and `/` alone serves the service at the root. Each segment must be non-empty and contain only letters, digits, `_`, `-` and `.`. `persist-options-schema.json` allows the `dataservice` group with the string keys `protocol` and `basePath` and the boolean keys `auth` and `introspection`, and the tool checks their values.
 
 `http` generates an `http:Service` on an `http:Listener`. `graphql`, `mcp`, `odata` and `soap` are reserved for later protocols and are reported as not supported yet.
 
@@ -619,7 +619,7 @@ Errors are printed with the `ERROR:` prefix, or as the build tool's diagnostic i
 |---|---|
 | `dataservice.bal` | The persist client the service uses, the listener and the service |
 | `dataservice_types.bal` | The types the service uses: the wire types and their conversion functions, the `<Entity>List` envelopes and the status code records. It is not written when no exposed entity needs a type |
-| `dataservice_config.bal` | The configurable values of the listener and the page sizes, and `dataservicePageConfig`; see [Configuration](#979-configuration) |
+| `dataservice_config.bal` | The configurable `dataserviceConfig` record, `dataservicePageConfig`, and with `auth = true` `dataserviceAuthConfig`; see [Configuration](#979-configuration) |
 
 From `bal build`, the files are written into `generated/` with the header of persist's generated files and must not be edited. They are rewritten whenever the client is, and the check that skips generation for an unchanged model also covers `options.dataservice`. When `options.dataservice` is removed, the three files are deleted from `generated/`.
 
@@ -632,6 +632,7 @@ Generated module-level names share the default module's namespace with the user'
 | `dataserviceClient`, `dataserviceListener` | The persist client and the listener |
 | `dataserviceConfig` | The runtime settings, a `dsHttp:Config` or `dsHttp:AuthConfig` |
 | `dataservicePageConfig` | The checked page sizes |
+| `dataserviceAuthConfig` | The checked authentication providers, with `auth = true` |
 | `<Entity>List`, `<Entity>Created`, `<Entity>ListCreated` | The envelope and the status code records |
 | `<Entity>Payload`, `<Entity>InsertPayload`, `<Entity>UpdatePayload` | The wire types |
 | `transform<Entity>ToPayload`, `transformPayloadTo<Entity>Insert`, `transformPayloadTo<Entity>Update` | The conversion functions |
@@ -659,7 +660,7 @@ Each exposed entity gets up to six operations, plus a get related per relation. 
 - **Update not read back:** when `put` returns `persist:ReadBackError`, the update is saved, so patch returns no record and the error is logged. `dsHttp:toUpdateError` answers it with `204`, so patch declares `http:NoContent` also when the entity allows `read`.
 - **Persist client:** get many passes `offsetClause`, so the service needs `ballerinax/persist.sql` 1.8.0 or later.
 - **Create size:** a create holds at most `dataserviceConfig.maxPageSize` records, checked with `dataservice:checkCreateSize`.
-- **Reserved:** the path segment after an entity's full key is not used, and path segments starting with `$`, such as `$count`, are reserved for later query and metadata operations.
+- **Reserved:** path segments starting with `$`, such as `$count`, are reserved for later query and metadata operations.
 - **Datastores:** the service is generated only for the SQL datastores, because its queries run in the database through the SQL client.
 
 ### 9.7. HTTP service
@@ -698,7 +699,7 @@ For an entity `Employee` with the collection name `employees` and key `id`:
 - **`Location`:** built with `dsHttp:toLocation`, as the collection path followed by the percent-encoded key values, such as `/api/employees/1`. With the base path `/`, it starts at the entity, as in `/employees/1`.
 - **Patch is partial.** A field left out of the body is not changed, and a nullable field set to `null` is set to `null`. `EmployeeUpdate` is a closed record without the key fields, so a body that sets a key field is answered with `400` by `ballerina/http`.
 - **Empty writes.** `POST` with `[]` is answered with `201` and `{"items": [], "hasMore": false}`, and `PATCH` with `{}` is answered as get one when the entity allows `read`, and with `204` without reading otherwise. Neither calls the persist client's write.
-- **Without `read`,** patch and delete return `http:NoContent`, so they answer `204` with no body.
+- **Without `read`,** patch and delete return `http:NoContent`, so they answer `204` with no body. With `auth = true`, they also answer `204` to a caller without a `read` scope; see [Auth](#977-auth).
 - **Disabled operations.** An operation whose action is not allowed is not generated, so `ballerina/http` answers `405` for its method, and an entity that is not exposed is `404`.
 
 #### 9.7.1. Keys
