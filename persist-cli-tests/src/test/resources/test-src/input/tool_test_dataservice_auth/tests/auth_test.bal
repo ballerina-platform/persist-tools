@@ -24,6 +24,36 @@ function testNoCredentials() returns error? {
 }
 
 @test:Config
+function testNoCredentialsBeforeDispatchAndBinding() returns error? {
+    [string, string, json][] requests = [
+        ["GET", "/api/employees?size=abc", ()],
+        ["POST", "/api/employees", {id: 1}],
+        ["PUT", "/api/employees", {}],
+        ["GET", "/api/nope", ()]
+    ];
+    foreach [string, string, json] [method, path, body] in requests {
+        http:Response response = check anonymous->execute(method, path, body);
+        test:assertEquals(response.statusCode, 401, path);
+        test:assertEquals(response.getContentType(), "application/json", path);
+        test:assertEquals((check response.getJsonPayload()).code, "UNAUTHENTICATED", path);
+    }
+}
+
+@test:Config
+function testOptionsNeedsNoCredentials() returns error? {
+    http:Response response = check anonymous->options("/api/employees");
+    test:assertEquals(response.statusCode, 204);
+}
+
+@test:Config
+function testOpenApiDefinitionListsTheAuthErrors() returns error? {
+    http:Response response = check reader->get("/api/openapi-doc-dygixywsw");
+    string definition = check response.getTextPayload();
+    test:assertTrue(definition.includes("\"401\"") && definition.includes("\"403\""), definition);
+    test:assertFalse(definition.includes("ErrorPayload"), definition);
+}
+
+@test:Config
 function testEmptyScopesNeedOnlyAuthentication() returns error? {
     http:Response response = check reader->post("/api/departments", {id: 1, name: "Research"});
     test:assertEquals(response.statusCode, 201);

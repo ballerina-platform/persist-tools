@@ -23,7 +23,7 @@ service http:InterceptableService /api on dataserviceListener {
     # Answers the errors that `ballerina/http` raises with the `DataserviceError` body.
     #
     # + return - The error interceptor
-    public function createInterceptors() returns dsHttp:ErrorInterceptor => new;
+    public function createInterceptors() returns DataserviceErrorInterceptor => new;
 
     # Gets a page of tickets.
     #
@@ -184,5 +184,18 @@ service http:InterceptableService /api on dataserviceListener {
             headers: {"Location": dsHttp:toLocation("/api/orderItems", [created.id])},
             body: created
         };
+    }
+}
+
+# Answers the errors that `ballerina/http` raises with the `DataserviceError` body.
+isolated service class DataserviceErrorInterceptor {
+    *http:ResponseErrorInterceptor;
+
+    isolated remote function interceptResponseError(error err, http:RequestContext ctx, http:Response response)
+            returns http:NextService? {
+        dsHttp:setErrorBody(response, err);
+        // The response is changed in place; an error return would add a 500 response to the OpenAPI definition.
+        http:NextService|error? next = ctx.next();
+        return next is http:NextService ? next : ();
     }
 }

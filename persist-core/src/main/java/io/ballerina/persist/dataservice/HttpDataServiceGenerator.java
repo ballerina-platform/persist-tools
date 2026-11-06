@@ -29,6 +29,7 @@ import org.ballerinalang.formatter.core.FormatterException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
@@ -51,6 +52,8 @@ public final class HttpDataServiceGenerator {
 
     private static final String NEWLINE = System.lineSeparator();
     private static final String RELATED_OPERATION = "get related";
+    private static final Map<Operation, String> HTTP_METHODS = Map.of(READ, "GET", CREATE, "POST", UPDATE, "PATCH",
+            DELETE, "DELETE");
     private static final String LIST_ERRORS = "|dsHttp:InvalidInput|dsHttp:InternalError";
     private static final String GET_ERRORS = "|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError";
     private static final String FORBIDDEN = "|dsHttp:Forbidden";
@@ -111,24 +114,37 @@ public final class HttpDataServiceGenerator {
         body.append("listener http:Listener dataserviceListener =").append(NEWLINE)
                 .append("        new (dataserviceConfig.port, dataserviceConfig.listenerConfig);").append(NEWLINE)
                 .append(NEWLINE);
+        if (auth) {
+            appendAuthenticator(body);
+        }
         if (introspection) {
             imports.add("import ballerina/openapi;");
             body.append("@openapi:ServiceInfo {embed: true}").append(NEWLINE);
         }
-        body.append("@http:ServiceConfig {").append(auth ? "auth: dataserviceAuthConfig, " : "")
-                .append("cors: dataserviceConfig.serviceConfig.cors}").append(NEWLINE);
+        body.append("@http:ServiceConfig {cors: dataserviceConfig.serviceConfig.cors}").append(NEWLINE);
         body.append("service http:InterceptableService ").append(servicePath()).append(" on dataserviceListener {")
                 .append(NEWLINE);
-        body.append(NEWLINE)
-                .append("    # Answers the errors that `ballerina/http` raises with the `DataserviceError` body.")
-                .append(NEWLINE);
-        body.append("    #").append(NEWLINE);
-        body.append("    # + return - The error interceptor").append(NEWLINE);
-        body.append("    public function createInterceptors() returns dsHttp:ErrorInterceptor => new;").append(NEWLINE);
+        body.append(NEWLINE);
+        if (auth) {
+            body.append("    # Checks auth before each request is dispatched, and answers the errors that `ballerina/http` ")
+                    .append("raises with the `DataserviceError` body.").append(NEWLINE);
+            body.append("    #").append(NEWLINE);
+            body.append("    # + return - The interceptors").append(NEWLINE);
+            body.append("    public function createInterceptors() returns [DataserviceAuthInterceptor, "
+                    + "DataserviceErrorInterceptor] => [new, new];").append(NEWLINE);
+        } else {
+            body.append("    # Answers the errors that `ballerina/http` raises with the `DataserviceError` body.")
+                    .append(NEWLINE);
+            body.append("    #").append(NEWLINE);
+            body.append("    # + return - The error interceptor").append(NEWLINE);
+            body.append("    public function createInterceptors() returns DataserviceErrorInterceptor => new;")
+                    .append(NEWLINE);
+        }
         for (ExposedEntity entity : entities) {
             appendResources(body, entity);
         }
         body.append("}").append(NEWLINE);
+        appendInterceptors(body);
         if (body.indexOf("dataservice:") >= 0) {
             imports.add("import ballerina/dataservice;");
         }
@@ -174,7 +190,7 @@ public final class HttpDataServiceGenerator {
         return format(header(BalSyntaxConstants.AUTO_GENERATED_COMMENT) +
                 "import ballerina/dataservice;" + NEWLINE +
                 "import ballerina/dataservice.http as dsHttp;" + NEWLINE +
-                (auth ? "import ballerina/http;" + NEWLINE : "") + NEWLINE +
+                NEWLINE +
                 "# The runtime settings of the data service, set in the `[dataserviceConfig]` table of Config.toml." +
                 NEWLINE +
                 (auth ? "configurable dsHttp:AuthConfig dataserviceConfig = ?;" :
@@ -182,11 +198,64 @@ public final class HttpDataServiceGenerator {
                 "# The page sizes, checked at startup." + NEWLINE +
                 "final dataservice:PageConfig dataservicePageConfig =" + NEWLINE +
                 "        check dataservice:toPageConfig(dataserviceConfig.pageSize, dataserviceConfig.maxPageSize);" +
-                NEWLINE +
-                (!auth ? "" : NEWLINE +
-                        "# The authentication providers, checked at startup." + NEWLINE +
-                        "final http:ListenerAuthConfig[] dataserviceAuthConfig =" + NEWLINE +
-                        "        check dsHttp:initAuthProviders(dataserviceConfig.serviceConfig.auth);" + NEWLINE));
+                NEWLINE);
+    }
+
+    // The interceptors are defined in the service's own package, because the OpenAPI definition leaves out an
+    // interceptor class from another package (ballerina-library#9633).
+    private void appendInterceptors(StringBuilder out) {
+        if (auth) {
+            out.append(NEWLINE).append("# Checks the credential and the scopes of each request before it is dispatched.")
+                    .append(NEWLINE);
+            out.append("isolated service class DataserviceAuthInterceptor {").append(NEWLINE);
+            out.append("    *http:RequestInterceptor;").append(NEWLINE).append(NEWLINE);
+            out.append("    isolated resource function 'default [string... path](http:RequestContext ctx, "
+                    + "http:Request request)").append(NEWLINE);
+            out.append("            returns http:NextService|dsHttp:Unauthorized|dsHttp:Forbidden|error? =>")
+                    .append(NEWLINE);
+            out.append("        dataserviceAuthenticator.authorize(ctx, request, path);").append(NEWLINE);
+            out.append("}").append(NEWLINE);
+        }
+        out.append(NEWLINE).append("# Answers the errors that `ballerina/http` raises with the `DataserviceError` body.")
+                .append(NEWLINE);
+        out.append("isolated service class DataserviceErrorInterceptor {").append(NEWLINE);
+        out.append("    *http:ResponseErrorInterceptor;").append(NEWLINE).append(NEWLINE);
+        out.append("    isolated remote function interceptResponseError(error err, http:RequestContext ctx, "
+                + "http:Response response)").append(NEWLINE);
+        out.append("            returns http:NextService? {").append(NEWLINE);
+        out.append("        dsHttp:setErrorBody(response, err);").append(NEWLINE);
+        out.append("        // The response is changed in place; an error return would add a 500 response to the "
+                + "OpenAPI definition.").append(NEWLINE);
+        out.append("        http:NextService|error? next = ctx.next();").append(NEWLINE);
+        out.append("        return next is http:NextService ? next : ();").append(NEWLINE);
+        out.append("    }").append(NEWLINE);
+        out.append("}").append(NEWLINE);
+    }
+
+    private void appendAuthenticator(StringBuilder out) {
+        out.append("# The scopes of each operation, by collection and then by HTTP method.").append(NEWLINE);
+        out.append("final readonly & map<map<string[]>> dataserviceScopes = {").append(NEWLINE);
+        List<String> collections = new ArrayList<>();
+        for (ExposedEntity entity : entities) {
+            List<String> methods = new ArrayList<>();
+            for (Operation action : List.of(READ, CREATE, UPDATE, DELETE)) {
+                List<String> scopes = entity.scopes(action);
+                if (entity.allows(action) && !scopes.isEmpty()) {
+                    methods.add("\"" + HTTP_METHODS.get(action) + "\": " + stringList(scopes));
+                }
+            }
+            if (!methods.isEmpty()) {
+                collections.add("    \"" + unescape(new Names(entity).collection) + "\": {" + String.join(", ", methods)
+                        + "}");
+            }
+        }
+        out.append(String.join("," + NEWLINE, collections)).append(NEWLINE).append("};").append(NEWLINE)
+                .append(NEWLINE);
+        out.append("# Checks the credential and the scopes of each request, with the configured providers.")
+                .append(NEWLINE);
+        out.append("final dsHttp:Authenticator dataserviceAuthenticator =").append(NEWLINE)
+                .append("        check new (dataserviceConfig.serviceConfig.auth, dataserviceScopes);").append(NEWLINE)
+                .append(NEWLINE);
     }
 
     private String header(String reason) {
@@ -223,7 +292,7 @@ public final class HttpDataServiceGenerator {
 
             List<String> params = new ArrayList<>(keyDocs(entity, n));
             params.add("fields - The fields to return; the key fields are always returned");
-            appendDoc(out, entity, READ, "Gets " + n.article + " " + n.words + " by its key.", params,
+            appendDoc(out, entity, "Gets " + n.article + " " + n.words + " by its key.", params,
                     "The " + n.words);
             out.append("    resource function get ").append(n.collection).append("/").append(keyParams)
                     .append("(").append(requestParam(entity)).append("string[]? fields = ()) returns ").append(n.wire)
@@ -264,11 +333,11 @@ public final class HttpDataServiceGenerator {
             boolean checkRead = readChecked(entity, UPDATE);
             List<String> params = new ArrayList<>(keyDocs(entity, n));
             params.add("payload - The fields of the " + n.words + " to update");
-            appendDoc(out, entity, UPDATE, "Updates " + n.article + " " + n.words + " by its key.", params,
+            appendDoc(out, entity, "Updates " + n.article + " " + n.words + " by its key.", params,
                     read ? "The updated " + n.words + (checkRead ? ", or no content when the caller may not read it or "
                             + "it cannot be read back" : ", or no content when it cannot be read back") : "No content");
             out.append("    resource function patch ").append(n.collection).append("/").append(keyParams).append("(")
-                    .append(checkRead ? "http:Request request, " : "").append(n.updateWire).append(" payload)")
+                    .append(checkRead ? "http:RequestContext ctx, " : "").append(n.updateWire).append(" payload)")
                     .append(NEWLINE);
             // An update that is saved but cannot be read back is answered with no content.
             out.append("            returns ").append(read ? changed + "|http:NoContent" : changed)
@@ -318,11 +387,11 @@ public final class HttpDataServiceGenerator {
         }
         if (entity.allows(DELETE)) {
             boolean checkRead = readChecked(entity, DELETE);
-            appendDoc(out, entity, DELETE, "Deletes " + n.article + " " + n.words + " by its key.", keyDocs(entity, n),
+            appendDoc(out, entity, "Deletes " + n.article + " " + n.words + " by its key.", keyDocs(entity, n),
                     read ? "The deleted " + n.words + (checkRead ? ", or no content when the caller may not read it" :
                             "") : "No content");
             out.append("    resource function delete ").append(n.collection).append("/").append(keyParams)
-                    .append("(").append(checkRead ? "http:Request request" : "").append(") returns ")
+                    .append("(").append(checkRead ? "http:RequestContext ctx" : "").append(") returns ")
                     .append(checkRead ? changed + "|http:NoContent" : changed)
                     .append(errors(DELETE_ERRORS, entity, DELETE, false)).append(" {")
                     .append(NEWLINE);
@@ -342,7 +411,7 @@ public final class HttpDataServiceGenerator {
 
     private void appendGetMany(StringBuilder out, ExposedEntity entity, Names n) {
         String entityName = "\"" + n.displayName + "\"";
-        appendDoc(out, entity, READ, "Gets a page of " + n.plural + ".", List.of(
+        appendDoc(out, entity, "Gets a page of " + n.plural + ".", List.of(
                 "filter - The conditions that the " + n.plural + " match",
                 "sort - The fields to sort by, each descending when it starts with `-`",
                 "size - The number of " + n.plural + " in the page",
@@ -449,10 +518,10 @@ public final class HttpDataServiceGenerator {
                     "offset - The number of " + words + " to skip"));
         }
         params.add("fields - The fields of the " + words + " to return; the key fields are always returned");
-        appendDoc(out, entity, READ, "Gets the " + words + " of " + n.article + " " + n.words + ".", params,
+        appendDoc(out, entity, "Gets the " + words + " of " + n.article + " " + n.words + ".", params,
                 relation.many() ? "A page of the " + words : "The " + words);
         out.append("    resource function get ").append(n.collection).append("/").append(keyParams).append("/")
-                .append(relation.field()).append("(").append(checked ? "http:Request request, " : "");
+                .append(relation.field()).append("(").append(checked ? "http:RequestContext ctx, " : "");
         if (relation.many()) {
             out.append(t.filter).append("? filter = (), string[]? sort = (), int? size = (), int? offset = (),")
                     .append(NEWLINE).append("            ");
@@ -557,7 +626,7 @@ public final class HttpDataServiceGenerator {
 
     private void appendAuthorize(StringBuilder out, Names n, ExposedRelation relation, String indent) {
         ExposedEntity target = target(relation);
-        out.append(indent).append("dsHttp:Forbidden? forbidden = dsHttp:checkRelationScopes(request, \"")
+        out.append(indent).append("dsHttp:Forbidden? forbidden = dsHttp:checkRelationScopes(ctx, \"")
                 .append(n.displayName).append("\", \"").append(unescape(relation.field())).append("\", \"")
                 .append(new Names(target).displayName).append("\", ").append(stringList(target.scopes(READ)))
                 .append(");").append(NEWLINE);
@@ -579,23 +648,18 @@ public final class HttpDataServiceGenerator {
     }
 
     private void appendHoldsRead(StringBuilder out, ExposedEntity entity) {
-        out.append("        boolean readable = dsHttp:hasScope(request, ").append(stringList(entity.scopes(READ)))
+        out.append("        boolean readable = dsHttp:hasScope(ctx, ").append(stringList(entity.scopes(READ)))
                 .append(");").append(NEWLINE);
     }
 
     private String requestParam(ExposedEntity entity) {
-        return checked(entity).isEmpty() ? "" : "http:Request request, ";
+        return checked(entity).isEmpty() ? "" : "http:RequestContext ctx, ";
     }
 
-    // With auth, a resource also declares the 401 and 403 that ErrorInterceptor answers, so that the OpenAPI
-    // definition lists them; 403 needs a scope of the action, or a relation check.
+    // The 401 and 403 of the operation's scopes come from DataserviceAuthInterceptor, whose return type the OpenAPI
+    // definition lists; a resource declares 403 only for a relation check of its own.
     private String errors(String errors, ExposedEntity entity, Operation action, boolean checksRelation) {
-        if (!auth) {
-            return errors;
-        }
-        boolean forbidden = checksRelation || !entity.scopes(action).isEmpty();
-        return errors.replace("|dsHttp:InternalError",
-                "|dsHttp:Unauthorized" + (forbidden ? FORBIDDEN : "") + "|dsHttp:InternalError");
+        return checksRelation ? errors.replace("|dsHttp:InternalError", FORBIDDEN + "|dsHttp:InternalError") : errors;
     }
 
     private ExposedEntity target(ExposedRelation relation) {
@@ -614,7 +678,7 @@ public final class HttpDataServiceGenerator {
 
     private void appendCreate(StringBuilder out, ExposedEntity entity, Names n) {
         String insert = n.entity + "Insert";
-        appendDoc(out, entity, CREATE, "Creates one or more " + n.plural + ".",
+        appendDoc(out, entity, "Creates one or more " + n.plural + ".",
                 List.of("payload - The " + n.words + ", or the " + n.plural + ", to create"),
                 "The created " + n.words + " or " + n.plural);
         out.append("    resource function post ").append(n.collection).append("(").append(n.insertWire).append("|")
@@ -694,7 +758,7 @@ public final class HttpDataServiceGenerator {
         out.append("    }").append(NEWLINE);
     }
 
-    private void appendDoc(StringBuilder out, ExposedEntity entity, Operation action, String summary,
+    private void appendDoc(StringBuilder out, ExposedEntity entity, String summary,
                            List<String> params, String result) {
         out.append(NEWLINE).append("    # ").append(summary).append(NEWLINE);
         if (!entity.doc().isEmpty()) {
@@ -708,12 +772,6 @@ public final class HttpDataServiceGenerator {
             out.append("    # + ").append(param).append(NEWLINE);
         }
         out.append("    # + return - ").append(result).append(", or the error response").append(NEWLINE);
-        // An empty list requires only an authenticated caller, which the service's providers check.
-        List<String> scopes = entity.scopes(action);
-        if (auth && !scopes.isEmpty()) {
-            out.append("    @http:ResourceConfig {auth: {scopes: ").append(stringList(scopes)).append("}}")
-                    .append(NEWLINE);
-        }
     }
 
     private static List<String> keyDocs(ExposedEntity entity, Names n) {

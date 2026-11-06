@@ -62,6 +62,7 @@ function testOpenApiDefinitionHasTheSummaries() returns error? {
     string definition = check response.getTextPayload();
     test:assertTrue(definition.includes("Gets a page of employees."), definition);
     test:assertTrue(definition.includes("Creates one or more employees."), definition);
+    test:assertFalse(definition.includes("ErrorPayload"), definition);
 }
 
 @test:Config

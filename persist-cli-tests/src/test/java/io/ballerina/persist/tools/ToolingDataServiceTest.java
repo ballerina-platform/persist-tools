@@ -178,7 +178,7 @@ public class ToolingDataServiceTest {
                 password = "editor"
                 scopes = ["employees:update", "hr:read"]
                 """, init.toString().replace('\\', '/')));
-        assertTestsPassed(bal(project, Map.of(), "test", "--offline"), 12);
+        assertTestsPassed(bal(project, Map.of(), "test", "--offline"), 15);
     }
 
     // Generation from bal build

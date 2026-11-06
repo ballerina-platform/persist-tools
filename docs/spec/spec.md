@@ -619,7 +619,7 @@ Errors are printed with the `ERROR:` prefix, or as the build tool's diagnostic i
 |---|---|
 | `dataservice.bal` | The persist client the service uses, the listener and the service |
 | `dataservice_types.bal` | The types the service uses: the wire types and their conversion functions, the `<Entity>List` envelopes and the status code records. It is not written when no exposed entity needs a type |
-| `dataservice_config.bal` | The configurable `dataserviceConfig` record, `dataservicePageConfig`, and with `auth = true` `dataserviceAuthConfig`; see [Configuration](#979-configuration) |
+| `dataservice_config.bal` | The configurable `dataserviceConfig` record and `dataservicePageConfig`; see [Configuration](#979-configuration) |
 
 From `bal build`, the files are written into `generated/` with the header of persist's generated files and must not be edited. They are rewritten whenever the client is, and the check that skips generation for an unchanged model also covers `options.dataservice`. When `options.dataservice` is removed, the three files are deleted from `generated/`.
 
@@ -632,7 +632,8 @@ Generated module-level names share the default module's namespace with the user'
 | `dataserviceClient`, `dataserviceListener` | The persist client and the listener |
 | `dataserviceConfig` | The runtime settings, a `dsHttp:Config` or `dsHttp:AuthConfig` |
 | `dataservicePageConfig` | The checked page sizes |
-| `dataserviceAuthConfig` | The checked authentication providers, with `auth = true` |
+| `dataserviceScopes`, `dataserviceAuthenticator` | The scopes of each operation and the authenticator, with `auth = true` |
+| `DataserviceAuthInterceptor`, `DataserviceErrorInterceptor` | The request interceptor that checks auth, with `auth = true`, and the response error interceptor |
 | `<Entity>List`, `<Entity>Created`, `<Entity>ListCreated` | The envelope and the status code records |
 | `<Entity>Payload`, `<Entity>InsertPayload`, `<Entity>UpdatePayload` | The wire types |
 | `transform<Entity>ToPayload`, `transformPayloadTo<Entity>Insert`, `transformPayloadTo<Entity>Update` | The conversion functions |
@@ -674,7 +675,7 @@ listener http:Listener dataserviceListener =
 
 service http:InterceptableService /api on dataserviceListener {
 
-    public function createInterceptors() returns dsHttp:ErrorInterceptor => new;
+    public function createInterceptors() returns DataserviceErrorInterceptor => new;
 
     // the resources of each exposed entity
 }
@@ -746,7 +747,7 @@ resource function get employees/[int id](string[]? fields = ())
 - **Query:** the resource passes the options and the entity description to `dataservice:toQuery`, which validates them and returns the clauses for the persist client. The page is read with one row more than `size`, and `dataservice:trimToPage` removes that row and gives `hasMore`.
 - **Fields:** with `fields`, a record is returned as `<Entity>Partial`, whose key fields are required and whose other fields are optional, and a page as `<Entity>PartialList`. Each record is read in full, converted to its wire type and narrowed with `dataservice:selectFields`. `dataservice:checkFields` validates the names first.
 - **Entity description:** `dataservice_types.bal` holds a `dataservice:Entity` per entity that allows `read` or `create`, named `dataservice<Entity>Entity`, with the datastore, and the name, column, type and flags of each field that callers can see.
-- **Errors:** an invalid option is answered with `400` and `INVALID_INPUT`, with the messages of `ballerina/dataservice`, through `dsHttp:toQueryError`. A filter that does not bind to `<Entity>Filter`, such as one with an unknown field or operator, is answered by `ballerina/http` with `400`, which `dsHttp:ErrorInterceptor` answers with `INVALID_INPUT`.
+- **Errors:** an invalid option is answered with `400` and `INVALID_INPUT`, with the messages of `ballerina/dataservice`, through `dsHttp:toQueryError`. A filter that does not bind to `<Entity>Filter`, such as one with an unknown field or operator, is answered by `ballerina/http` with `400`, which `DataserviceErrorInterceptor` answers with `INVALID_INPUT`.
 
 #### 9.7.4. Relations
 
@@ -789,23 +790,37 @@ The tool reads the model's syntax tree, so it checks a `value` that is a string,
 
 #### 9.7.7. Auth
 
-With `options.dataservice.auth = true`, the service passes `dataserviceAuthConfig` to `@http:ServiceConfig`, and each resource requires the scopes of its action through `@http:ResourceConfig`:
+With `options.dataservice.auth = true`, the service checks the credential and the scopes of each request in `DataserviceAuthInterceptor`, a request interceptor, before `ballerina/http` dispatches the request and binds its parameters. `ballerina/http` declarative auth is not used, because it runs inside the resource, after dispatching and binding (ballerina-library#9632):
 
 ```ballerina
-@http:ServiceConfig {auth: dataserviceAuthConfig, cors: dataserviceConfig.serviceConfig.cors}
+final readonly & map<map<string[]>> dataserviceScopes = {
+    "employees": {"GET": ["hr:read"], "POST": ["employees:create"], "PATCH": ["employees:update"], "DELETE": ["hr:admin"]}
+};
+
+final dsHttp:Authenticator dataserviceAuthenticator =
+        check new (dataserviceConfig.serviceConfig.auth, dataserviceScopes);
+
 service http:InterceptableService /api on dataserviceListener {
 
-    @http:ResourceConfig {auth: {scopes: ["hr:read"]}}
-    resource function get employees(...) returns ... { ... }
+    public function createInterceptors() returns [DataserviceAuthInterceptor, DataserviceErrorInterceptor] => [new, new];
+    // the resources of each exposed entity
+}
+
+isolated service class DataserviceAuthInterceptor {
+    *http:RequestInterceptor;
+
+    isolated resource function 'default [string... path](http:RequestContext ctx, http:Request request)
+            returns http:NextService|dsHttp:Unauthorized|dsHttp:Forbidden|error? =>
+        dataserviceAuthenticator.authorize(ctx, request, path);
 }
 ```
 
-- **Scopes:** `scopes` in `@dataservice:Expose` gives each action's scopes; an action not listed requires `<collection>:<action>`, such as `employees:create`. Get many, get one and get related use the `read` scopes. An empty list requires only an authenticated caller, so the resource gets no `@http:ResourceConfig`.
-- **Providers:** `dataserviceConfig` is a `dsHttp:AuthConfig`, whose `serviceConfig.auth`, an `http:ListenerAuthConfig[]`, has no default, so the program does not start without it. `dsHttp:initAuthProviders` checks it at startup and stops the program when the list is empty.
-- **Responses:** `ballerina/http` answers a missing or invalid credential with `401` and a missing scope with `403`, before the resource runs, and `dsHttp:ErrorInterceptor` gives them the codes `UNAUTHENTICATED` and `FORBIDDEN`. Every resource declares `dsHttp:Unauthorized`, and `dsHttp:Forbidden` when its action has scopes or it checks a relation, so the OpenAPI definition lists them.
-- **Patch and delete results:** with `read` allowed, patch and delete return the record only to a caller who may read it. When the entity's `read` scopes do not cover the action's (the `read` list is not empty, and the action's list is empty or holds a scope the `read` list does not), they take the `http:Request`, call `dsHttp:hasScope` with the `read` scopes, return `<Entity>|http:NoContent`, and answer `204` to a caller without one; an empty patch then reads nothing. With the default scopes every patch and delete is checked.
-- **Relations:** get related and a relation in `fields` require the entity's `read` scopes. When those do not cover the related entity's, because the related entity's list is not empty and the entity's list is empty or holds a scope the related entity's does not, get many, get one and get related take the `http:Request` and call `dsHttp:checkRelationScopes` before reading the relation. It answers `403` with `FORBIDDEN` when the caller's credential holds none of the related entity's `read` scopes. Default scopes differ per entity, so with them every relation is checked; a shared `read` scope avoids the check.
-- **Introspection** is on by default, as without auth. The definition and Swagger UI are served behind the service's auth, so a request without a valid credential is answered with `401` and `UNAUTHENTICATED`. The `OPTIONS` `Link` header stays public.
+- **Scopes:** `scopes` in `@dataservice:Expose` gives each action's scopes; an action not listed requires `<collection>:<action>`, such as `employees:create`. `dataserviceScopes` maps each collection to the scopes of each HTTP method: `GET` for get many, get one and get related, which use the `read` scopes, `POST` for create, `PATCH` for patch and `DELETE` for delete. An empty list requires only an authenticated caller, so it has no entry.
+- **Providers:** `dataserviceConfig` is a `dsHttp:AuthConfig`, whose `serviceConfig.auth`, an `http:ListenerAuthConfig[]`, has no default, so the program does not start without it. Creating `dataserviceAuthenticator` stops the program when the list is empty.
+- **Responses:** a request without a valid credential is answered with `401` and `UNAUTHENTICATED`, and a caller without a scope of the operation with `403` and `FORBIDDEN`, whatever the request's path, method or body. A path or method without scopes, such as the OpenAPI definition, needs only a credential. An `OPTIONS` request, such as a CORS preflight, needs none. The OpenAPI definition lists `401` and `403` on every operation, from the interceptor's return type.
+- **Patch and delete results:** with `read` allowed, patch and delete return the record only to a caller who may read it. When the entity's `read` scopes do not cover the action's (the `read` list is not empty, and the action's list is empty or holds a scope the `read` list does not), they take the `http:RequestContext`, call `dsHttp:hasScope` with the `read` scopes, return `<Entity>|http:NoContent`, and answer `204` to a caller without one; an empty patch then reads nothing. With the default scopes every patch and delete is checked.
+- **Relations:** get related and a relation in `fields` require the entity's `read` scopes. When those do not cover the related entity's, because the related entity's list is not empty and the entity's list is empty or holds a scope the related entity's does not, get many, get one and get related take the `http:RequestContext` and call `dsHttp:checkRelationScopes` before reading the relation. It answers `403` with `FORBIDDEN` when the caller holds none of the related entity's `read` scopes. The caller is the one `dataserviceAuthenticator` authenticated, so the credential is not checked again. Default scopes differ per entity, so with them every relation is checked; a shared `read` scope avoids the check.
+- **Introspection** is on by default, as without auth. The definition and Swagger UI are served behind the interceptor, so a request without a valid credential is answered with `401` and `UNAUTHENTICATED`, and any authenticated caller can read them. The `OPTIONS` `Link` header stays public.
 
 #### 9.7.8. Errors
 
@@ -826,7 +841,7 @@ service http:InterceptableService /api on dataserviceListener {
 | A method the path has no resource for, or another `4xx` of `ballerina/http` | `405` or that status | `INVALID_INPUT` |
 | Any other error | `500` | `INTERNAL` |
 
-Errors are answered with the `dataservice:DataserviceError` body, through the [`ballerina/dataservice.http`](https://github.com/ballerina-platform/module-ballerina-dataservice.http/blob/main/docs/spec/spec.md) functions, and the errors `ballerina/http` raises before a resource runs through `dsHttp:ErrorInterceptor`, which keeps their status. Because the service is an `http:InterceptableService`, the OpenAPI definition does not add `ballerina/http`'s default error body to a resource's `400`. Each resource declares the error responses its operation can return:
+Errors are answered with the `dataservice:DataserviceError` body, through the [`ballerina/dataservice.http`](https://github.com/ballerina-platform/module-ballerina-dataservice.http/blob/main/docs/spec/spec.md) functions, and the errors `ballerina/http` raises before a resource runs through `DataserviceErrorInterceptor`, which keeps their status. The interceptors are defined in the service's own package, because the OpenAPI definition leaves out an interceptor class from another package (ballerina-library#9633). Because the service is an `http:InterceptableService` with a response error interceptor, the OpenAPI definition does not add `ballerina/http`'s default error body to a resource's `400`. Each resource declares the error responses its operation can return:
 
 | Operation | Error responses |
 |---|---|
@@ -836,7 +851,7 @@ Errors are answered with the `dataservice:DataserviceError` body, through the [`
 | Patch | `NotFound`, `InvalidInput`, `Conflict`, `ConstraintViolation`, `InternalError` |
 | Delete | `NotFound`, `InvalidInput`, `ConstraintViolation`, `InternalError` |
 
-With `auth = true`, each also declares `Unauthorized`, and `Forbidden` when its action has scopes or it checks a relation. A path or method with no resource belongs to no resource, so the definition does not list it.
+With `auth = true`, a resource that checks a relation also declares `Forbidden`; the `401` and `403` of the operation's scopes come from `DataserviceAuthInterceptor`. A path or method with no resource belongs to no resource, so the definition does not list it.
 
 #### 9.7.9. Configuration
 
@@ -860,12 +875,9 @@ configurable dsHttp:Config dataserviceConfig = {};
 
 final dataservice:PageConfig dataservicePageConfig =
         check dataservice:toPageConfig(dataserviceConfig.pageSize, dataserviceConfig.maxPageSize);
-// Only with options.dataservice.auth = true
-final http:ListenerAuthConfig[] dataserviceAuthConfig =
-        check dsHttp:initAuthProviders(dataserviceConfig.serviceConfig.auth);
 ```
 
-The service carries `@http:ServiceConfig {cors: dataserviceConfig.serviceConfig.cors}`, with `auth: dataserviceAuthConfig` as well when `auth` is `true`.
+The service carries `@http:ServiceConfig {cors: dataserviceConfig.serviceConfig.cors}`.
 
 A field left out of `[dataserviceConfig]` keeps its default, and an unknown field stops the program at startup, because the record is closed. The program also stops, with the message `ballerina/dataservice` gives, when `maxPageSize` is below 1 or `pageSize` is not between 1 and `maxPageSize`. `-C` arguments and environment variables cannot set one field of the record; set the table in `Config.toml`, or in a file named by `BAL_CONFIG_FILES`.
 
@@ -916,7 +928,7 @@ A field's `+ field` line in the generated types is its doc comment in the model:
 - The generated `Config.toml` holds the database connection values, including the password, as described in [5.6](#56-database-configuration).
 - `bal persist pull` does not change the database schema, and `bal persist migrate` does not run its scripts against the database.
 - A data service is generated without authentication unless `options.dataservice.auth` is `true`, as described in [9.2](#92-configuration). Without it, every caller can use every enabled operation of each exposed entity.
-- With `auth = true`, each operation requires the scopes of its action, and patch, delete and relations check the `read` scopes, as described in [9.7.7](#977-auth). The OpenAPI definition and Swagger UI are served behind the service's auth, and only the `OPTIONS` `Link` header stays public.
+- With `auth = true`, each operation requires the scopes of its action, and patch, delete and relations check the `read` scopes, as described in [9.7.7](#977-auth). A request without a valid credential is answered with `401` before it is dispatched or bound, so binding errors do not reveal the request types to an unauthenticated caller. The OpenAPI definition and Swagger UI need a credential, and only `OPTIONS`, with its `Link` header, stays public.
 - A field annotated with `@dataservice:Internal` is never returned or accepted by the data service, as described in [9.7.6](#976-field-rules).
 - The data service allows no cross-origin request unless CORS is configured, as described in [9.7.9](#979-configuration). Swagger UI loads its scripts from `unpkg.com`, as described in [9.7.10](#9710-openapi-definition).
 
