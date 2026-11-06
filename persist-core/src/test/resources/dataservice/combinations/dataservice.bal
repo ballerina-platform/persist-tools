@@ -51,7 +51,7 @@ service http:InterceptableService /api on dataserviceListener {
         ReadItem[]|persist:Error items = from ReadItem item in rows
             select item;
         if items is persist:Error {
-            return dsHttp:toListError(items);
+            return dsHttp:toListError(items, "ReadItem");
         }
         boolean hasMore = dataservice:trimToPage(items, query);
         if fields is string[] {
@@ -60,7 +60,7 @@ service http:InterceptableService /api on dataserviceListener {
                 select dataservice:selectFields(item, dataserviceReadItemEntity, fields);
             ReadItemPartial[]|error converted = partials.cloneWithType();
             if converted is error {
-                return dsHttp:toListError(converted);
+                return dsHttp:toListError(converted, "ReadItem");
             }
             return <ReadItemPartialList>{items: converted, hasMore};
         }
@@ -190,7 +190,7 @@ service http:InterceptableService /api on dataserviceListener {
         ReadCreateItem[]|persist:Error items = from ReadCreateItem item in rows
             select item;
         if items is persist:Error {
-            return dsHttp:toListError(items);
+            return dsHttp:toListError(items, "ReadCreateItem");
         }
         boolean hasMore = dataservice:trimToPage(items, query);
         if fields is string[] {
@@ -199,7 +199,7 @@ service http:InterceptableService /api on dataserviceListener {
                 select dataservice:selectFields(item, dataserviceReadCreateItemEntity, fields);
             ReadCreateItemPartial[]|error converted = partials.cloneWithType();
             if converted is error {
-                return dsHttp:toListError(converted);
+                return dsHttp:toListError(converted, "ReadCreateItem");
             }
             return <ReadCreateItemPartialList>{items: converted, hasMore};
         }
@@ -300,7 +300,7 @@ service http:InterceptableService /api on dataserviceListener {
         ReadUpdateItem[]|persist:Error items = from ReadUpdateItem item in rows
             select item;
         if items is persist:Error {
-            return dsHttp:toListError(items);
+            return dsHttp:toListError(items, "ReadUpdateItem");
         }
         boolean hasMore = dataservice:trimToPage(items, query);
         if fields is string[] {
@@ -309,7 +309,7 @@ service http:InterceptableService /api on dataserviceListener {
                 select dataservice:selectFields(item, dataserviceReadUpdateItemEntity, fields);
             ReadUpdateItemPartial[]|error converted = partials.cloneWithType();
             if converted is error {
-                return dsHttp:toListError(converted);
+                return dsHttp:toListError(converted, "ReadUpdateItem");
             }
             return <ReadUpdateItemPartialList>{items: converted, hasMore};
         }
@@ -387,7 +387,7 @@ service http:InterceptableService /api on dataserviceListener {
         ReadDeleteItem[]|persist:Error items = from ReadDeleteItem item in rows
             select item;
         if items is persist:Error {
-            return dsHttp:toListError(items);
+            return dsHttp:toListError(items, "ReadDeleteItem");
         }
         boolean hasMore = dataservice:trimToPage(items, query);
         if fields is string[] {
@@ -396,7 +396,7 @@ service http:InterceptableService /api on dataserviceListener {
                 select dataservice:selectFields(item, dataserviceReadDeleteItemEntity, fields);
             ReadDeleteItemPartial[]|error converted = partials.cloneWithType();
             if converted is error {
-                return dsHttp:toListError(converted);
+                return dsHttp:toListError(converted, "ReadDeleteItem");
             }
             return <ReadDeleteItemPartialList>{items: converted, hasMore};
         }
@@ -609,7 +609,7 @@ service http:InterceptableService /api on dataserviceListener {
         ReadCreateUpdateItem[]|persist:Error items = from ReadCreateUpdateItem item in rows
             select item;
         if items is persist:Error {
-            return dsHttp:toListError(items);
+            return dsHttp:toListError(items, "ReadCreateUpdateItem");
         }
         boolean hasMore = dataservice:trimToPage(items, query);
         if fields is string[] {
@@ -618,7 +618,7 @@ service http:InterceptableService /api on dataserviceListener {
                 select dataservice:selectFields(item, dataserviceReadCreateUpdateItemEntity, fields);
             ReadCreateUpdateItemPartial[]|error converted = partials.cloneWithType();
             if converted is error {
-                return dsHttp:toListError(converted);
+                return dsHttp:toListError(converted, "ReadCreateUpdateItem");
             }
             return <ReadCreateUpdateItemPartialList>{items: converted, hasMore};
         }
@@ -738,7 +738,7 @@ service http:InterceptableService /api on dataserviceListener {
         ReadCreateDeleteItem[]|persist:Error items = from ReadCreateDeleteItem item in rows
             select item;
         if items is persist:Error {
-            return dsHttp:toListError(items);
+            return dsHttp:toListError(items, "ReadCreateDeleteItem");
         }
         boolean hasMore = dataservice:trimToPage(items, query);
         if fields is string[] {
@@ -747,7 +747,7 @@ service http:InterceptableService /api on dataserviceListener {
                 select dataservice:selectFields(item, dataserviceReadCreateDeleteItemEntity, fields);
             ReadCreateDeleteItemPartial[]|error converted = partials.cloneWithType();
             if converted is error {
-                return dsHttp:toListError(converted);
+                return dsHttp:toListError(converted, "ReadCreateDeleteItem");
             }
             return <ReadCreateDeleteItemPartialList>{items: converted, hasMore};
         }
@@ -860,7 +860,7 @@ service http:InterceptableService /api on dataserviceListener {
         ReadUpdateDeleteItem[]|persist:Error items = from ReadUpdateDeleteItem item in rows
             select item;
         if items is persist:Error {
-            return dsHttp:toListError(items);
+            return dsHttp:toListError(items, "ReadUpdateDeleteItem");
         }
         boolean hasMore = dataservice:trimToPage(items, query);
         if fields is string[] {
@@ -869,7 +869,7 @@ service http:InterceptableService /api on dataserviceListener {
                 select dataservice:selectFields(item, dataserviceReadUpdateDeleteItemEntity, fields);
             ReadUpdateDeleteItemPartial[]|error converted = partials.cloneWithType();
             if converted is error {
-                return dsHttp:toListError(converted);
+                return dsHttp:toListError(converted, "ReadUpdateDeleteItem");
             }
             return <ReadUpdateDeleteItemPartialList>{items: converted, hasMore};
         }
@@ -1030,7 +1030,7 @@ service http:InterceptableService /api on dataserviceListener {
         ReadCreateUpdateDeleteItem[]|persist:Error items = from ReadCreateUpdateDeleteItem item in rows
             select item;
         if items is persist:Error {
-            return dsHttp:toListError(items);
+            return dsHttp:toListError(items, "ReadCreateUpdateDeleteItem");
         }
         boolean hasMore = dataservice:trimToPage(items, query);
         if fields is string[] {
@@ -1039,7 +1039,7 @@ service http:InterceptableService /api on dataserviceListener {
                 select dataservice:selectFields(item, dataserviceReadCreateUpdateDeleteItemEntity, fields);
             ReadCreateUpdateDeleteItemPartial[]|error converted = partials.cloneWithType();
             if converted is error {
-                return dsHttp:toListError(converted);
+                return dsHttp:toListError(converted, "ReadCreateUpdateDeleteItem");
             }
             return <ReadCreateUpdateDeleteItemPartialList>{items: converted, hasMore};
         }

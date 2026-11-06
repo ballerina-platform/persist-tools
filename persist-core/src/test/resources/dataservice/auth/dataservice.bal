@@ -50,7 +50,7 @@ service http:InterceptableService /api on dataserviceListener {
         Employee[]|persist:Error items = from Employee item in rows
             select item;
         if items is persist:Error {
-            return dsHttp:toListError(items);
+            return dsHttp:toListError(items, "Employee");
         }
         boolean hasMore = dataservice:trimToPage(items, query);
         if fields is string[] {
@@ -68,11 +68,11 @@ service http:InterceptableService /api on dataserviceListener {
                     dataservice:attachOne(partials, sources, dataserviceEmployeeEntity, "department", included, fields);
                 }
             } on fail error err {
-                return dsHttp:toListError(err);
+                return dsHttp:toListError(err, "Employee");
             }
             EmployeePartial[]|error converted = partials.cloneWithType();
             if converted is error {
-                return dsHttp:toListError(converted);
+                return dsHttp:toListError(converted, "Employee");
             }
             return <EmployeePartialList>{items: converted, hasMore};
         }
@@ -132,7 +132,7 @@ service http:InterceptableService /api on dataserviceListener {
         }
         Employee|persist:Error item = dataserviceClient->/employees/[id];
         if item is persist:Error {
-            return dsHttp:toGetError(item, "Employee", [id]);
+            return dsHttp:toGetError(item, "Employee", [id], "get related");
         }
         dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
             dataservice:toRelatedQuery(dataserviceEmployeeEntity, "department", item, dataservicePageConfig);
@@ -146,7 +146,7 @@ service http:InterceptableService /api on dataserviceListener {
         Department[]|persist:Error items = from Department related in rows
             select related;
         if items is persist:Error {
-            return dsHttp:toListError(items);
+            return dsHttp:toListError(items, "Employee", "get related");
         }
         if items.length() == 0 {
             return <dsHttp:NotFound>{body: dataservice:relatedNotFound(dataserviceEmployeeEntity, "department", [id])};
@@ -154,7 +154,7 @@ service http:InterceptableService /api on dataserviceListener {
         if fields is string[] {
             DepartmentRelatedPartial|error partial = dataservice:selectFields(items[0], dataserviceDepartmentEntity, fields).cloneWithType();
             if partial is error {
-                return dsHttp:toListError(partial);
+                return dsHttp:toListError(partial, "Employee", "get related");
             }
             return partial;
         }
@@ -275,7 +275,7 @@ service http:InterceptableService /api on dataserviceListener {
         Department[]|persist:Error items = from Department item in rows
             select item;
         if items is persist:Error {
-            return dsHttp:toListError(items);
+            return dsHttp:toListError(items, "Department");
         }
         boolean hasMore = dataservice:trimToPage(items, query);
         if fields is string[] {
@@ -296,11 +296,11 @@ service http:InterceptableService /api on dataserviceListener {
                     }
                 }
             } on fail error err {
-                return dsHttp:toListError(err);
+                return dsHttp:toListError(err, "Department");
             }
             DepartmentPartial[]|error converted = partials.cloneWithType();
             if converted is error {
-                return dsHttp:toListError(converted);
+                return dsHttp:toListError(converted, "Department");
             }
             return <DepartmentPartialList>{items: converted, hasMore};
         }
@@ -388,13 +388,13 @@ service http:InterceptableService /api on dataserviceListener {
         Employee[]|persist:Error items = from Employee related in rows
             select related;
         if items is persist:Error {
-            return dsHttp:toListError(items);
+            return dsHttp:toListError(items, "Department", "get related");
         }
         boolean hasMore = dataservice:trimToPage(items, query);
         if items.length() == 0 {
             Department|persist:Error item = dataserviceClient->/departments/[id];
             if item is persist:Error {
-                return dsHttp:toGetError(item, "Department", [id]);
+                return dsHttp:toGetError(item, "Department", [id], "get related");
             }
             return <EmployeeList>{items, hasMore};
         }
@@ -402,7 +402,7 @@ service http:InterceptableService /api on dataserviceListener {
             EmployeeRelatedPartial[]|error partials = (from Employee related in items
                 select dataservice:selectFields(related, dataserviceEmployeeEntity, fields)).cloneWithType();
             if partials is error {
-                return dsHttp:toListError(partials);
+                return dsHttp:toListError(partials, "Department", "get related");
             }
             return <EmployeeRelatedPartialList>{items: partials, hasMore};
         }

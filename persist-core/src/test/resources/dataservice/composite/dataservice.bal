@@ -51,7 +51,7 @@ service http:InterceptableService /api on dataserviceListener {
         Assignment[]|persist:Error items = from Assignment item in rows
             select item;
         if items is persist:Error {
-            return dsHttp:toListError(items);
+            return dsHttp:toListError(items, "Assignment");
         }
         boolean hasMore = dataservice:trimToPage(items, query);
         if fields is string[] {
@@ -60,7 +60,7 @@ service http:InterceptableService /api on dataserviceListener {
                 select dataservice:selectFields(item, dataserviceAssignmentEntity, fields);
             AssignmentPartial[]|error converted = partials.cloneWithType();
             if converted is error {
-                return dsHttp:toListError(converted);
+                return dsHttp:toListError(converted, "Assignment");
             }
             return <AssignmentPartialList>{items: converted, hasMore};
         }
@@ -194,7 +194,7 @@ service http:InterceptableService /api on dataserviceListener {
         Rate[]|persist:Error items = from Rate item in rows
             select item;
         if items is persist:Error {
-            return dsHttp:toListError(items);
+            return dsHttp:toListError(items, "Rate");
         }
         boolean hasMore = dataservice:trimToPage(items, query);
         if fields is string[] {
@@ -203,7 +203,7 @@ service http:InterceptableService /api on dataserviceListener {
                 select dataservice:selectFields(item, dataserviceRateEntity, fields);
             RatePartial[]|error converted = partials.cloneWithType();
             if converted is error {
-                return dsHttp:toListError(converted);
+                return dsHttp:toListError(converted, "Rate");
             }
             return <RatePartialList>{items: converted, hasMore};
         }

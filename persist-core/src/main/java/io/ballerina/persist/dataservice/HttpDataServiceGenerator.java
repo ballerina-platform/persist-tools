@@ -50,6 +50,7 @@ public final class HttpDataServiceGenerator {
     public static final String CONFIG_FILE = "dataservice_config.bal";
 
     private static final String NEWLINE = System.lineSeparator();
+    private static final String RELATED_OPERATION = "get related";
     private static final String LIST_ERRORS = "|dsHttp:InvalidInput|dsHttp:InternalError";
     private static final String GET_ERRORS = "|dsHttp:NotFound|dsHttp:InvalidInput|dsHttp:InternalError";
     private static final String FORBIDDEN = "|dsHttp:Forbidden";
@@ -368,18 +369,20 @@ public final class HttpDataServiceGenerator {
         out.append("        ").append(n.wire).append("[]|persist:Error items = from ").append(n.entity)
                 .append(" item in rows select ").append(n.toWire("item")).append(";").append(NEWLINE);
         out.append("        if items is persist:Error {").append(NEWLINE);
-        out.append("            return dsHttp:toListError(items);").append(NEWLINE);
+        out.append("            return dsHttp:toListError(items, \"").append(n.displayName).append("\");")
+                .append(NEWLINE);
         out.append("        }").append(NEWLINE);
         out.append("        boolean hasMore = dataservice:trimToPage(items, query);").append(NEWLINE);
         out.append("        if fields is string[] {").append(NEWLINE);
         out.append("            ").append(n.wire).append("[] sources = items;").append(NEWLINE);
         out.append("            map<anydata>[] partials = from ").append(n.wire).append(" item in sources select ")
                 .append("dataservice:selectFields(item, ").append(n.description).append(", fields);").append(NEWLINE);
-        appendIncludes(out, entity, n, "dsHttp:toListError(err)");
+        appendIncludes(out, entity, n, "dsHttp:toListError(err, \"" + n.displayName + "\")");
         out.append("            ").append(n.partial).append("[]|error converted = partials.cloneWithType();")
                 .append(NEWLINE);
         out.append("            if converted is error {").append(NEWLINE);
-        out.append("                return dsHttp:toListError(converted);").append(NEWLINE);
+        out.append("                return dsHttp:toListError(converted, \"").append(n.displayName).append("\");")
+                .append(NEWLINE);
         out.append("            }").append(NEWLINE);
         out.append("            return <").append(n.partialList).append(">{items: converted, hasMore};")
                 .append(NEWLINE);
@@ -472,7 +475,7 @@ public final class HttpDataServiceGenerator {
             row = "item";
             out.append("        ").append(n.entity).append("|persist:Error item = dataserviceClient->/")
                     .append(n.resource).append(keyPath).append(";").append(NEWLINE);
-            appendErrorCheck(out, "item", "toGetError", n, keyList, "        ");
+            appendErrorCheck(out, "item", "toGetError", n, keyList, "        ", RELATED_OPERATION);
         } else {
             row = "{" + entity.keys().stream().map(key -> "\"" + unescape(key.name()) + "\": " + key.name())
                     .collect(Collectors.joining(", ")) + "}";
@@ -495,7 +498,8 @@ public final class HttpDataServiceGenerator {
         out.append("        ").append(t.wire).append("[]|persist:Error items = from ").append(t.entity)
                 .append(" related in rows select ").append(t.toWire("related")).append(";").append(NEWLINE);
         out.append("        if items is persist:Error {").append(NEWLINE);
-        out.append("            return dsHttp:toListError(items);").append(NEWLINE);
+        out.append("            return dsHttp:toListError(items, \"").append(n.displayName).append("\", \"")
+                .append(RELATED_OPERATION).append("\");").append(NEWLINE);
         out.append("        }").append(NEWLINE);
         if (relation.many()) {
             out.append("        boolean hasMore = dataservice:trimToPage(items, query);").append(NEWLINE);
@@ -505,7 +509,7 @@ public final class HttpDataServiceGenerator {
             // The record itself may not exist, which an empty result does not tell.
             out.append("            ").append(n.entity).append("|persist:Error item = dataserviceClient->/")
                     .append(n.resource).append(keyPath).append(";").append(NEWLINE);
-            appendErrorCheck(out, "item", "toGetError", n, keyList, "            ");
+            appendErrorCheck(out, "item", "toGetError", n, keyList, "            ", RELATED_OPERATION);
         }
         if (relation.many()) {
             out.append("            return <").append(t.list).append(">{items, hasMore};").append(NEWLINE);
@@ -521,7 +525,8 @@ public final class HttpDataServiceGenerator {
             out.append("                select dataservice:selectFields(related, ").append(t.description)
                     .append(", fields)).cloneWithType();").append(NEWLINE);
             out.append("            if partials is error {").append(NEWLINE);
-            out.append("                return dsHttp:toListError(partials);").append(NEWLINE);
+            out.append("                return dsHttp:toListError(partials, \"").append(n.displayName).append("\", \"")
+                    .append(RELATED_OPERATION).append("\");").append(NEWLINE);
             out.append("            }").append(NEWLINE);
             out.append("            return <").append(t.relatedPartialList).append(">{items: partials, hasMore};")
                     .append(NEWLINE);
@@ -530,7 +535,8 @@ public final class HttpDataServiceGenerator {
                     .append("|error partial = dataservice:selectFields(items[0], ")
                     .append(t.description).append(", fields).cloneWithType();").append(NEWLINE);
             out.append("            if partial is error {").append(NEWLINE);
-            out.append("                return dsHttp:toListError(partial);").append(NEWLINE);
+            out.append("                return dsHttp:toListError(partial, \"").append(n.displayName).append("\", \"")
+                    .append(RELATED_OPERATION).append("\");").append(NEWLINE);
             out.append("            }").append(NEWLINE);
             out.append("            return partial;").append(NEWLINE);
         }
@@ -743,9 +749,15 @@ public final class HttpDataServiceGenerator {
 
     private static void appendErrorCheck(StringBuilder out, String variable, String function, Names n,
                                          String keyList, String indent) {
+        appendErrorCheck(out, variable, function, n, keyList, indent, null);
+    }
+
+    private static void appendErrorCheck(StringBuilder out, String variable, String function, Names n,
+                                         String keyList, String indent, String operation) {
         out.append(indent).append("if ").append(variable).append(" is persist:Error {").append(NEWLINE);
         out.append(indent).append("    return dsHttp:").append(function).append("(").append(variable).append(", \"")
-                .append(n.displayName).append("\", ").append(keyList).append(");").append(NEWLINE);
+                .append(n.displayName).append("\", ").append(keyList)
+                .append(operation == null ? "" : ", \"" + operation + "\"").append(");").append(NEWLINE);
         out.append(indent).append("}").append(NEWLINE);
     }
 

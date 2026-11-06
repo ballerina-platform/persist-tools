@@ -51,7 +51,7 @@ service http:InterceptableService /api on dataserviceListener {
         DocumentPayload[]|persist:Error items = from Document item in rows
             select transformDocumentToPayload(item);
         if items is persist:Error {
-            return dsHttp:toListError(items);
+            return dsHttp:toListError(items, "Document");
         }
         boolean hasMore = dataservice:trimToPage(items, query);
         if fields is string[] {
@@ -60,7 +60,7 @@ service http:InterceptableService /api on dataserviceListener {
                 select dataservice:selectFields(item, dataserviceDocumentEntity, fields);
             DocumentPartial[]|error converted = partials.cloneWithType();
             if converted is error {
-                return dsHttp:toListError(converted);
+                return dsHttp:toListError(converted, "Document");
             }
             return <DocumentPartialList>{items: converted, hasMore};
         }
@@ -213,7 +213,7 @@ service http:InterceptableService /api on dataserviceListener {
         HolidayPayload[]|persist:Error items = from Holiday item in rows
             select transformHolidayToPayload(item);
         if items is persist:Error {
-            return dsHttp:toListError(items);
+            return dsHttp:toListError(items, "Holiday");
         }
         boolean hasMore = dataservice:trimToPage(items, query);
         if fields is string[] {
@@ -222,7 +222,7 @@ service http:InterceptableService /api on dataserviceListener {
                 select dataservice:selectFields(item, dataserviceHolidayEntity, fields);
             HolidayPartial[]|error converted = partials.cloneWithType();
             if converted is error {
-                return dsHttp:toListError(converted);
+                return dsHttp:toListError(converted, "Holiday");
             }
             return <HolidayPartialList>{items: converted, hasMore};
         }

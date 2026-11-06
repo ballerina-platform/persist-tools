@@ -51,7 +51,7 @@ service http:InterceptableService /api on dataserviceListener {
         TicketPayload[]|persist:Error items = from Ticket item in rows
             select transformTicketToPayload(item);
         if items is persist:Error {
-            return dsHttp:toListError(items);
+            return dsHttp:toListError(items, "Ticket");
         }
         boolean hasMore = dataservice:trimToPage(items, query);
         if fields is string[] {
@@ -60,7 +60,7 @@ service http:InterceptableService /api on dataserviceListener {
                 select dataservice:selectFields(item, dataserviceTicketEntity, fields);
             TicketPartial[]|error converted = partials.cloneWithType();
             if converted is error {
-                return dsHttp:toListError(converted);
+                return dsHttp:toListError(converted, "Ticket");
             }
             return <TicketPartialList>{items: converted, hasMore};
         }

@@ -51,7 +51,7 @@ service http:InterceptableService /api on dataserviceListener {
         OrderPayload[]|persist:Error items = from Order item in rows
             select transformOrderToPayload(item);
         if items is persist:Error {
-            return dsHttp:toListError(items);
+            return dsHttp:toListError(items, "Order");
         }
         boolean hasMore = dataservice:trimToPage(items, query);
         if fields is string[] {
@@ -69,11 +69,11 @@ service http:InterceptableService /api on dataserviceListener {
                     dataservice:attachOne(partials, sources, dataserviceOrderEntity, "customer", included, fields);
                 }
             } on fail error err {
-                return dsHttp:toListError(err);
+                return dsHttp:toListError(err, "Order");
             }
             OrderPartial[]|error converted = partials.cloneWithType();
             if converted is error {
-                return dsHttp:toListError(converted);
+                return dsHttp:toListError(converted, "Order");
             }
             return <OrderPartialList>{items: converted, hasMore};
         }
@@ -131,7 +131,7 @@ service http:InterceptableService /api on dataserviceListener {
         }
         Order|persist:Error item = dataserviceClient->/orders/[id];
         if item is persist:Error {
-            return dsHttp:toGetError(item, "Order", [id]);
+            return dsHttp:toGetError(item, "Order", [id], "get related");
         }
         dataservice:Query|dataservice:DataserviceError|dataservice:ConversionError query =
             dataservice:toRelatedQuery(dataserviceOrderEntity, "customer", item, dataservicePageConfig);
@@ -145,7 +145,7 @@ service http:InterceptableService /api on dataserviceListener {
         Customer[]|persist:Error items = from Customer related in rows
             select related;
         if items is persist:Error {
-            return dsHttp:toListError(items);
+            return dsHttp:toListError(items, "Order", "get related");
         }
         if items.length() == 0 {
             return <dsHttp:NotFound>{body: dataservice:relatedNotFound(dataserviceOrderEntity, "customer", [id])};
@@ -153,7 +153,7 @@ service http:InterceptableService /api on dataserviceListener {
         if fields is string[] {
             CustomerRelatedPartial|error partial = dataservice:selectFields(items[0], dataserviceCustomerEntity, fields).cloneWithType();
             if partial is error {
-                return dsHttp:toListError(partial);
+                return dsHttp:toListError(partial, "Order", "get related");
             }
             return partial;
         }
@@ -272,7 +272,7 @@ service http:InterceptableService /api on dataserviceListener {
         Customer[]|persist:Error items = from Customer item in rows
             select item;
         if items is persist:Error {
-            return dsHttp:toListError(items);
+            return dsHttp:toListError(items, "Customer");
         }
         boolean hasMore = dataservice:trimToPage(items, query);
         if fields is string[] {
@@ -281,7 +281,7 @@ service http:InterceptableService /api on dataserviceListener {
                 select dataservice:selectFields(item, dataserviceCustomerEntity, fields);
             CustomerPartial[]|error converted = partials.cloneWithType();
             if converted is error {
-                return dsHttp:toListError(converted);
+                return dsHttp:toListError(converted, "Customer");
             }
             return <CustomerPartialList>{items: converted, hasMore};
         }
@@ -340,7 +340,7 @@ service http:InterceptableService /api on dataserviceListener {
         Warehouse[]|persist:Error items = from Warehouse item in rows
             select item;
         if items is persist:Error {
-            return dsHttp:toListError(items);
+            return dsHttp:toListError(items, "Warehouse");
         }
         boolean hasMore = dataservice:trimToPage(items, query);
         if fields is string[] {
@@ -361,11 +361,11 @@ service http:InterceptableService /api on dataserviceListener {
                     }
                 }
             } on fail error err {
-                return dsHttp:toListError(err);
+                return dsHttp:toListError(err, "Warehouse");
             }
             WarehousePartial[]|error converted = partials.cloneWithType();
             if converted is error {
-                return dsHttp:toListError(converted);
+                return dsHttp:toListError(converted, "Warehouse");
             }
             return <WarehousePartialList>{items: converted, hasMore};
         }
@@ -441,13 +441,13 @@ service http:InterceptableService /api on dataserviceListener {
         OrderPayload[]|persist:Error items = from Order related in rows
             select transformOrderToPayload(related);
         if items is persist:Error {
-            return dsHttp:toListError(items);
+            return dsHttp:toListError(items, "Warehouse", "get related");
         }
         boolean hasMore = dataservice:trimToPage(items, query);
         if items.length() == 0 {
             Warehouse|persist:Error item = dataserviceClient->/warehouses/[id];
             if item is persist:Error {
-                return dsHttp:toGetError(item, "Warehouse", [id]);
+                return dsHttp:toGetError(item, "Warehouse", [id], "get related");
             }
             return <OrderList>{items, hasMore};
         }
@@ -455,7 +455,7 @@ service http:InterceptableService /api on dataserviceListener {
             OrderRelatedPartial[]|error partials = (from OrderPayload related in items
                 select dataservice:selectFields(related, dataserviceOrderEntity, fields)).cloneWithType();
             if partials is error {
-                return dsHttp:toListError(partials);
+                return dsHttp:toListError(partials, "Warehouse", "get related");
             }
             return <OrderRelatedPartialList>{items: partials, hasMore};
         }
