@@ -126,7 +126,7 @@ The `bal persist add` command initializes a Ballerina project with the persisten
 
 1. The command requires a Ballerina project.
 2. The command creates the `persist` directory, which holds the model definition file.
-3. If no files are present in the `persist` directory, the command creates `model.bal` in it with the required import, `import ballerina/persist as _;`.
+3. If `persist/model.bal` does not exist, the command creates it with the required import, `import ballerina/persist as _;`. When `--model <model-name>` is given, the command uses `persist/<model-name>/model.bal` instead, creating the directory if needed, and that path is the `filePath` of the tool entry. An existing model definition file is kept.
 4. The command adds a tool entry to `Ballerina.toml`:
 
     ```toml
@@ -141,7 +141,7 @@ The `bal persist add` command initializes a Ballerina project with the persisten
 5. When an option is not given, its default value in [3.2](#32-configuration) is used.
 6. When `--test-datastore` is given, the tool entry has the `options.testDatastore` option, and `bal build` generates the test client along with the main client.
 7. When `--eager-loading` or `--with-init-params` is given, the tool entry has the `options.eagerLoading = true` or `options.withInitParams = true` option.
-8. The `id` of each tool entry is unique. The command fails when `Ballerina.toml` already has a tool entry with the same `id`. To add the persistence layer for another model, the user runs the command again with a different `--model` or `--id`.
+8. The `id` of each tool entry is unique. The command fails when `Ballerina.toml` already has a tool entry with the same `id`. To add the persistence layer for another model, the user runs the command again with a different `--model`, which also gives the entry a different default `id`. Each tool entry needs its own target module, given with `--module`, because the generated files of two entries in the same module have the same names.
 9. The command adds the native dependencies described in [5.8](#58-native-dependencies) to `Ballerina.toml`.
 
 For example, `bal persist add --datastore mysql --module db --test-datastore h2` in the `medical-center` package creates this layout:
@@ -210,8 +210,8 @@ For example, `bal persist generate --datastore mysql --module db --test-datastor
 
 The tool places the generated files as follows:
 
-1. If the module name is the same as the package name, the tool generates the files in the `generated` directory, as part of the default module.
-2. If the module name is different from the package name, the tool generates the files under a new submodule with the same name as the file.
+1. `bal build` generates the files in the `generated` directory when the target module is the package's default module, and in `generated/<module>` otherwise.
+2. `bal persist generate` generates the files in the project root when the target module is the package's default module, and in `modules/<module>` otherwise.
 
 | File | Content |
 |---|---|
@@ -220,7 +220,7 @@ The tool places the generated files as follows:
 | `persist_types.bal` | The derived entity types of the entities defined in the model definition file. See [5.5](#55-derived-types). |
 | `persist_test_client.bal` | The client API for the entities defined in the model definition file, for the test datastore. Generated only when a test datastore is given. |
 | `persist_test_init.bal` | The initialization of the test database schema of the entities defined in the model definition file, for the test datastore. Generated only when `h2` is the test datastore. |
-| `script.sql` | The SQL script that creates the database schema of the entities defined in the model definition file. See [5.7](#57-database-schema). |
+| `script.sql` | The SQL script that creates the database schema of the entities defined in the model definition file. Generated only for the `mysql`, `mssql`, `postgresql` and `h2` datastores. See [5.7](#57-database-schema). |
 
 For example, the files of the `medical-center` package are laid out as follows when the module name is the package name:
 
@@ -388,7 +388,7 @@ medical-center
 │   ├── persist_types.bal
 │   └── script.sql
 ├── persist
-│   └── medical-center.bal
+│   └── model.bal
 ├── Ballerina.toml
 ├── Config.toml
 └── main.bal
@@ -910,7 +910,7 @@ A field's `+ field` line in the generated types is its doc comment in the model:
 ## 10. Security considerations
 
 - `bal persist pull` does not accept the database password as a command-line argument. It prompts for it, as described in [7.3](#73-behaviour).
-- `bal persist push` reads the database credentials, including the password, from `Ballerina.toml`, as described in [6.2](#62-configuration).
+- `bal persist push` reads the database credentials, including the password, from `Ballerina.toml`, as described in [6.2](#62-configuration). A user SHOULD NOT commit real credentials in `Ballerina.toml`.
 - `bal persist push` drops and recreates the tables of the model, so the data in them is lost, as described in [6.3](#63-behaviour).
 - The generated `Config.toml` holds the database connection values, including the password, as described in [5.6](#56-database-configuration).
 - `bal persist pull` does not change the database schema, and `bal persist migrate` does not run its scripts against the database.
