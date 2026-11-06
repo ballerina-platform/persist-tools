@@ -173,7 +173,7 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
                 }
             } else {
                 HttpDataServiceGenerator generator = new HttpDataServiceGenerator(exposedEntities,
-                        dataServiceOptions, entityModule.getModuleName(), datastore, false);
+                        dataServiceOptions, packageName, entityModule.getModuleName(), datastore, false);
                 FileUtils.writeToTargetFile(generator.generateService(), generatedSourceDirPath
                         .resolve(HttpDataServiceGenerator.SERVICE_FILE).toAbsolutePath().toString());
                 Path typesFile = generatedSourceDirPath.resolve(HttpDataServiceGenerator.TYPES_FILE);

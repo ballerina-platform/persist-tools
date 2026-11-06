@@ -195,7 +195,7 @@ public class ToolingDataServiceTest {
         Assert.assertTrue(service.contains(
                 "resource function get assignments/[string projectCode]/[int seq](string[]? fields = ())"), service);
         Assert.assertFalse(service.toLowerCase(Locale.ROOT).contains("auditlogs"), service);
-        Assert.assertTrue(service.contains("@openapi:ServiceInfo {embed: true}\n" +
+        Assert.assertTrue(service.contains("@openapi:ServiceInfo {embed: true, title: \"ds_build\"}\n" +
                 "@http:ServiceConfig {cors: dataserviceConfig.serviceConfig.cors}\n" +
                 "service http:InterceptableService /api on"), service);
         Assert.assertTrue(Files.exists(project.resolve("generated").resolve(CONFIG)));

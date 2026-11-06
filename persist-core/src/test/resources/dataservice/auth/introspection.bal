@@ -24,9 +24,9 @@ final readonly & map<map<string[]>> dataserviceScopes = {
 
 # Checks the credential and the scopes of each request, with the configured providers.
 final dsHttp:Authenticator dataserviceAuthenticator =
-        check new (dataserviceConfig.serviceConfig.auth, dataserviceScopes);
+        check new (dataserviceConfig.serviceConfig.auth, dataserviceScopes, dataserviceConfig.serviceConfig.cors);
 
-@openapi:ServiceInfo {embed: true}
+@openapi:ServiceInfo {embed: true, title: "hr"}
 @http:ServiceConfig {cors: dataserviceConfig.serviceConfig.cors}
 service http:InterceptableService /api on dataserviceListener {
 

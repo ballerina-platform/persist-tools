@@ -49,7 +49,7 @@ public class HttpDataServiceGeneratorTest {
         List<ExposedEntity> entities = DataServiceModel.resolve(modelPath, module).entities();
         HttpDataServiceGenerator generator = new HttpDataServiceGenerator(entities,
                 new DataServiceOptions("http", DataServiceOptions.validateBasePath(basePath), auth, introspection),
-                module.getModuleName(), "h2", userOwned);
+                "hr", module.getModuleName(), "h2", userOwned);
         assertSource(generator.generateService(), RESOURCES.resolve(model).resolve(expected));
         if (expectedTypes != null) {
             assertSource(generator.generateTypes().orElseThrow(), RESOURCES.resolve(model).resolve(expectedTypes));
@@ -81,20 +81,20 @@ public class HttpDataServiceGeneratorTest {
         Module module = BalProjectUtils.getEntities(modelPath);
         List<ExposedEntity> updateOnly = DataServiceModel.resolve(modelPath, module).entities().stream()
                 .filter(entity -> entity.name().equals("UpdateDeleteItem")).toList();
-        Assert.assertTrue(new HttpDataServiceGenerator(updateOnly, DataServiceOptions.defaults("http"), "model",
+        Assert.assertTrue(new HttpDataServiceGenerator(updateOnly, DataServiceOptions.defaults("http"), "hr", "model",
                 "h2", false).generateTypes().isEmpty());
     }
 
     @Test
     public void testGeneratedConfig() throws BalException, IOException {
         HttpDataServiceGenerator generator = new HttpDataServiceGenerator(List.of(),
-                DataServiceOptions.defaults("http"), "model", "h2", false);
+                DataServiceOptions.defaults("http"), "hr", "model", "h2", false);
         assertSource(generator.generateConfig(), RESOURCES.resolve("dataservice_config.bal"));
         HttpDataServiceGenerator userOwned = new HttpDataServiceGenerator(List.of(),
-                DataServiceOptions.defaults("http"), "model", "h2", true);
+                DataServiceOptions.defaults("http"), "hr", "model", "h2", true);
         assertSource(userOwned.generateConfig(), RESOURCES.resolve("dataservice_config_user_owned.bal"));
         HttpDataServiceGenerator withAuth = new HttpDataServiceGenerator(List.of(),
-                new DataServiceOptions("http", "/api", true, false), "model", "h2", false);
+                new DataServiceOptions("http", "/api", true, false), "hr", "model", "h2", false);
         assertSource(withAuth.generateConfig(), RESOURCES.resolve("dataservice_config_auth.bal"));
     }
 

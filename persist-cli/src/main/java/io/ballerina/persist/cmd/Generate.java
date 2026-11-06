@@ -335,7 +335,8 @@ public class Generate implements BLauncherCmd {
         }
         if (exposedEntities != null) {
             HttpDataServiceGenerator generator = new HttpDataServiceGenerator(exposedEntities,
-                    DataServiceOptions.defaults(dataservice), entityModule.getModuleName(), datastore, true);
+                    DataServiceOptions.defaults(dataservice), packageName, entityModule.getModuleName(), datastore,
+                    true);
             try {
                 FileUtils.writeToTargetFile(generator.generateService(), generatedSourceDirPath
                         .resolve(HttpDataServiceGenerator.SERVICE_FILE).toAbsolutePath().toString());

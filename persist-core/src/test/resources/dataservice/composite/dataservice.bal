@@ -16,7 +16,7 @@ final Client dataserviceClient = check new ();
 listener http:Listener dataserviceListener =
         new (dataserviceConfig.port, dataserviceConfig.listenerConfig);
 
-@openapi:ServiceInfo {embed: true}
+@openapi:ServiceInfo {embed: true, title: "hr"}
 @http:ServiceConfig {cors: dataserviceConfig.serviceConfig.cors}
 service http:InterceptableService /api on dataserviceListener {
 

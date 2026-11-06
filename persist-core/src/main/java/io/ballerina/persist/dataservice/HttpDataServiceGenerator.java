@@ -71,6 +71,7 @@ public final class HttpDataServiceGenerator {
     private final String basePath;
     private final boolean introspection;
     private final boolean auth;
+    private final String packageName;
     private final String modelName;
     private final String datastore;
     private final boolean userOwned;
@@ -79,15 +80,17 @@ public final class HttpDataServiceGenerator {
     /**
      * Creates a generator for a data service.
      *
-     * @param entities  the exposed entities, in model order
-     * @param options   the data service options
-     * @param modelName the name of the persist model, as persist writes it in its file headers
-     * @param datastore the datastore of the persist client, such as `mysql`
-     * @param userOwned whether the files are written for the user to own, by `bal persist generate`
+     * @param entities    the exposed entities, in model order
+     * @param options     the data service options
+     * @param packageName the name of the package, the title of the OpenAPI definition
+     * @param modelName   the name of the persist model, as persist writes it in its file headers
+     * @param datastore   the datastore of the persist client, such as `mysql`
+     * @param userOwned   whether the files are written for the user to own, by `bal persist generate`
      */
-    public HttpDataServiceGenerator(List<ExposedEntity> entities, DataServiceOptions options, String modelName,
-                                    String datastore, boolean userOwned) {
+    public HttpDataServiceGenerator(List<ExposedEntity> entities, DataServiceOptions options, String packageName,
+                                    String modelName, String datastore, boolean userOwned) {
         this.entities = entities;
+        this.packageName = packageName;
         this.basePath = options.basePath();
         this.introspection = options.introspection();
         this.auth = options.auth();
@@ -119,15 +122,16 @@ public final class HttpDataServiceGenerator {
         }
         if (introspection) {
             imports.add("import ballerina/openapi;");
-            body.append("@openapi:ServiceInfo {embed: true}").append(NEWLINE);
+            body.append("@openapi:ServiceInfo {embed: true, title: \"").append(packageName).append("\"}")
+                    .append(NEWLINE);
         }
         body.append("@http:ServiceConfig {cors: dataserviceConfig.serviceConfig.cors}").append(NEWLINE);
         body.append("service http:InterceptableService ").append(servicePath()).append(" on dataserviceListener {")
                 .append(NEWLINE);
         body.append(NEWLINE);
         if (auth) {
-            body.append("    # Checks auth before each request is dispatched, and answers the errors that `ballerina/http` ")
-                    .append("raises with the `DataserviceError` body.").append(NEWLINE);
+            body.append("    # Checks auth before each request is dispatched, and answers the errors that ")
+                    .append("`ballerina/http` raises with the `DataserviceError` body.").append(NEWLINE);
             body.append("    #").append(NEWLINE);
             body.append("    # + return - The interceptors").append(NEWLINE);
             body.append("    public function createInterceptors() returns [DataserviceAuthInterceptor, "
@@ -205,7 +209,8 @@ public final class HttpDataServiceGenerator {
     // interceptor class from another package (ballerina-library#9633).
     private void appendInterceptors(StringBuilder out) {
         if (auth) {
-            out.append(NEWLINE).append("# Checks the credential and the scopes of each request before it is dispatched.")
+            out.append(NEWLINE)
+                    .append("# Checks the credential and the scopes of each request before it is dispatched.")
                     .append(NEWLINE);
             out.append("isolated service class DataserviceAuthInterceptor {").append(NEWLINE);
             out.append("    *http:RequestInterceptor;").append(NEWLINE).append(NEWLINE);
@@ -216,7 +221,8 @@ public final class HttpDataServiceGenerator {
             out.append("        dataserviceAuthenticator.authorize(ctx, request, path);").append(NEWLINE);
             out.append("}").append(NEWLINE);
         }
-        out.append(NEWLINE).append("# Answers the errors that `ballerina/http` raises with the `DataserviceError` body.")
+        out.append(NEWLINE)
+                .append("# Answers the errors that `ballerina/http` raises with the `DataserviceError` body.")
                 .append(NEWLINE);
         out.append("isolated service class DataserviceErrorInterceptor {").append(NEWLINE);
         out.append("    *http:ResponseErrorInterceptor;").append(NEWLINE).append(NEWLINE);
@@ -254,7 +260,8 @@ public final class HttpDataServiceGenerator {
         out.append("# Checks the credential and the scopes of each request, with the configured providers.")
                 .append(NEWLINE);
         out.append("final dsHttp:Authenticator dataserviceAuthenticator =").append(NEWLINE)
-                .append("        check new (dataserviceConfig.serviceConfig.auth, dataserviceScopes);").append(NEWLINE)
+                .append("        check new (dataserviceConfig.serviceConfig.auth, dataserviceScopes, ")
+                .append("dataserviceConfig.serviceConfig.cors);").append(NEWLINE)
                 .append(NEWLINE);
     }
 
