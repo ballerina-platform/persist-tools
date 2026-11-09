@@ -97,6 +97,8 @@ subprojects {
         ballerinaStdLibs "io.ballerina.stdlib:persist.googlesheets-ballerina:${stdlibPersistGoogleSheetVersion}"
         ballerinaStdLibs "io.ballerina.lib:persist.redis-ballerina:${stdlibPersistRedisVersion}"
         ballerinaStdLibs "io.ballerina.lib:data.jsondata-ballerina:${stdlibDataJsonDataVersion}"
+        ballerinaStdLibs "io.ballerina.lib:dataservice-ballerina:${stdlibDataserviceVersion}"
+        ballerinaStdLibs "io.ballerina.lib:dataservice.http-ballerina:${stdlibDataserviceHttpVersion}"
         ballerinaStdLibs "io.ballerina:module-ballerina-openapi:${stdlibOpenapiVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:graphql-ballerina:${stdlibGraphqlVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:websocket-ballerina:${stdlibWebsocketVersion}"
@@ -120,6 +122,7 @@ subprojects {
         ballerinaStdLibs "io.ballerina.stdlib:uuid-ballerina:${stdlibUuidVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:observe-ballerina:${observeVersion}"
         ballerinaStdLibs "io.ballerina:observe-ballerina:${observeInternalVersion}"
+        ballerinaStdLibs "org.ballerinalang:transaction-ballerina:${stdlibTransactionVersion}"
     }
 }
 
