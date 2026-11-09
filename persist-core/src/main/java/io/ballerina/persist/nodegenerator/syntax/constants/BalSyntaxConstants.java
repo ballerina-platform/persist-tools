@@ -293,9 +293,6 @@ public class BalSyntaxConstants {
     public static final String ASSOCIATED_FIELD_TEMPLATE = ".%s\": {relation: {entityName: \"%s\", refField: \"%s\"}}";
     public static final String ASSOCIATED_FIELD_TEMPLATE_MAPPED =
             ".%s\": {relation: {entityName: \"%s\", refField: \"%s\", refColumn: \"%s\"}}";
-    public static final String CONSTRAINT_ANNOTATION = "@constraint:String {" + System.lineSeparator() +
-            "        %s" + System.lineSeparator() +
-            "    }";
 
     public static final String SQL_DB_NAME_ANNOTATION_NAME = "sql:Name";
     public static final String SQL_SCHEMA_NAME_ANNOTATION_NAME = "sql:Schema";
