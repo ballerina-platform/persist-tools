@@ -207,7 +207,7 @@ public class ToolingDataServiceTest {
                 user = "sa"
                 password = ""
                 """, init.toString().replace('\\', '/')));
-        assertTestsPassed(bal(project, Map.of(), "test", "--offline"), 38);
+        assertTestsPassed(bal(project, Map.of(), "test", "--offline"), 47);
     }
 
     // Generation from bal build
