@@ -45,9 +45,9 @@ public class GraphqlDataServiceGeneratorTest {
     private static final Path ACTUAL = Paths.get("build", "dataservice-actual", "graphql").toAbsolutePath();
 
     @Test(dataProvider = "cases")
-    public void testGeneratedService(String model, String basePath, boolean introspection, String expected,
-                                     String expectedTypes) throws BalException, IOException {
-        GraphqlDataServiceGenerator generator = generator(model, basePath, introspection, false);
+    public void testGeneratedService(String model, boolean auth, String expected, String expectedTypes)
+            throws BalException, IOException {
+        GraphqlDataServiceGenerator generator = generator(model, "/graphql", auth, true, false);
         // The types are generated first, so that a state left by one call would show in the next.
         String types = generator.generateTypes().orElseThrow();
         String service = generator.generateService();
@@ -61,10 +61,11 @@ public class GraphqlDataServiceGeneratorTest {
     @DataProvider
     public Object[][] cases() {
         return new Object[][]{
-                {"demo", "/graphql", true, "dataservice.bal", "dataservice_types.bal"},
-                {"relations", "/graphql", true, "dataservice.bal", "dataservice_types.bal"},
-                {"writes", "/graphql", true, "dataservice.bal", "dataservice_types.bal"},
-                {"types", "/graphql", true, "dataservice.bal", "dataservice_types.bal"},
+                {"demo", false, "dataservice.bal", "dataservice_types.bal"},
+                {"relations", false, "dataservice.bal", "dataservice_types.bal"},
+                {"writes", false, "dataservice.bal", "dataservice_types.bal"},
+                {"types", false, "dataservice.bal", "dataservice_types.bal"},
+                {"auth", true, "dataservice.bal", "dataservice_types.bal"},
         };
     }
 
@@ -72,7 +73,7 @@ public class GraphqlDataServiceGeneratorTest {
     @Test(dataProvider = "variants")
     public void testServiceVariant(String basePath, boolean introspection, boolean userOwned, List<String[]> service)
             throws BalException, IOException {
-        GraphqlDataServiceGenerator generator = generator("demo", basePath, introspection, userOwned);
+        GraphqlDataServiceGenerator generator = generator("demo", basePath, false, introspection, userOwned);
         Assert.assertEquals(generator.generateService(), edit("dataservice.bal", service));
     }
 
@@ -115,8 +116,10 @@ public class GraphqlDataServiceGeneratorTest {
 
     @Test
     public void testGeneratedConfig() throws BalException, IOException {
-        assertSource(generator("demo", "/graphql", true, false).generateConfig(),
+        assertSource(generator("demo", "/graphql", false, true, false).generateConfig(),
                 RESOURCES.resolve("dataservice_config.bal"));
+        assertSource(generator("demo", "/graphql", true, true, false).generateConfig(),
+                RESOURCES.resolve("dataservice_config_auth.bal"));
     }
 
     @Test
@@ -183,13 +186,14 @@ public class GraphqlDataServiceGeneratorTest {
                 module);
     }
 
-    private static GraphqlDataServiceGenerator generator(String model, String basePath, boolean introspection,
-                                                         boolean userOwned) throws BalException {
+    private static GraphqlDataServiceGenerator generator(String model, String basePath, boolean auth,
+                                                         boolean introspection, boolean userOwned)
+            throws BalException {
         Path modelPath = RESOURCES.resolve(model).resolve("model.bal");
         Module module = BalProjectUtils.getEntities(modelPath);
-        List<ExposedEntity> entities = DataServiceModel.resolve(modelPath, module, false).entities();
+        List<ExposedEntity> entities = DataServiceModel.resolve(modelPath, module, auth).entities();
         return new GraphqlDataServiceGenerator(entities, new DataServiceOptions("graphql",
-                DataServiceOptions.validateBasePath(basePath), false, introspection), module.getModuleName(), "h2",
+                DataServiceOptions.validateBasePath(basePath), auth, introspection), module.getModuleName(), "h2",
                 userOwned);
     }
 

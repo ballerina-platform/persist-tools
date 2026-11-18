@@ -59,7 +59,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
      */
     public static final Set<String> LIBRARY_TYPES = libraryTypes();
 
-    private static final Set<String> GRAPHQL_RESERVED_KEY_NAMES = Set.of("input");
+    private static final Set<String> GRAPHQL_RESERVED_KEY_NAMES = Set.of("input", "field");
     private static final Pattern ESCAPE = Pattern.compile("\\\\(.)");
     private static final Pattern GRAPHQL_NAME = Pattern.compile("[_A-Za-z][_0-9A-Za-z]*");
     private static final String DATASERVICE_GRAPHQL_IMPORT = "import ballerina/dataservice.graphql as dsGraphql;";
@@ -72,6 +72,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
     private final Map<String, ExposedEntity> entitiesByName = new LinkedHashMap<>();
     private final String basePath;
     private final boolean introspection;
+    private final boolean auth;
     private final String modelName;
     private final String datastore;
     private final boolean userOwned;
@@ -91,6 +92,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         entities.forEach(entity -> entitiesByName.put(entity.name(), entity));
         this.basePath = options.basePath();
         this.introspection = options.introspection();
+        this.auth = options.auth();
         this.modelName = modelName;
         this.datastore = datastore;
         this.userOwned = userOwned;
@@ -189,12 +191,16 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         body.append("listener graphql:Listener dataserviceListener =").append(NEWLINE)
                 .append("        new (dataserviceConfig.port, dataserviceConfig.listenerConfig);").append(NEWLINE)
                 .append(NEWLINE);
+        if (auth) {
+            imports.add(DATASERVICE_GRAPHQL_IMPORT);
+            appendRelationScopes(body);
+        }
         body.append("@graphql:ServiceConfig {").append(NEWLINE);
         List<String> config = new ArrayList<>();
         // GraphiQL loads the schema through introspection, so it is served exactly when introspection is on.
         config.add(introspection ? "graphiql: {enabled: true}" : "introspection: false");
         config.add("cors: dataserviceConfig.serviceConfig.cors");
-        if (!toOneRelations().isEmpty()) {
+        if (auth || !toOneRelations().isEmpty()) {
             config.add("contextInit: dataserviceInitContext");
         }
         body.append("    ").append(String.join("," + NEWLINE + "    ", config)).append(NEWLINE);
@@ -285,12 +291,16 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
                 NEWLINE +
                 "# The runtime settings of the data service, set in the `[dataserviceConfig]` table of Config.toml." +
                 NEWLINE +
-                "configurable dsGraphql:Config dataserviceConfig = {};" + NEWLINE +
+                (auth ? "configurable dsGraphql:AuthConfig dataserviceConfig = ?;" :
+                        "configurable dsGraphql:Config dataserviceConfig = {};") + NEWLINE +
                 NEWLINE +
                 "# The page sizes of the data service, checked at startup." + NEWLINE +
                 "final dataservice:PageConfig dataservicePageConfig =" + NEWLINE +
                 "        check dataservice:toPageConfig(dataserviceConfig.pageSize, dataserviceConfig.maxPageSize);" +
-                NEWLINE);
+                NEWLINE + (auth ? NEWLINE +
+                "# Authenticates each request with the configured providers; the program does not start without one." +
+                NEWLINE + "final dsGraphql:Authenticator dataserviceAuthenticator = check new (" +
+                "dataserviceConfig.serviceConfig.auth);" + NEWLINE : ""));
     }
 
     private String modelHeader() {
@@ -307,10 +317,12 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
                 "sort - The order of the " + n.plural + "; each entry names one field",
                 "size - The number of " + n.plural + " in the page",
                 "offset - The number of " + n.plural + " to skip"), "A page of " + n.plural + ", or the error");
-        out.append("    resource function get ").append(identifier(n.getMany)).append("(").append(n.filter)
+        out.append("    resource function get ").append(identifier(n.getMany)).append("(")
+                .append(authParams(entity, true)).append(n.filter)
                 .append("? filter = (), ").append(n.sort).append("[]? sort = (),").append(NEWLINE)
                 .append("            int? size = (), int? offset = ()) returns ").append(n.list).append("?|error {")
                 .append(NEWLINE);
+        appendAuthChecks(out, entity, READ, true);
         out.append("        dataservice:Query query = check dsGraphql:toQuery(").append(n.description)
                 .append(", dataservicePageConfig,").append(NEWLINE)
                 .append("                filter, sort, size, offset);").append(NEWLINE);
@@ -337,8 +349,10 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         Names n = new Names(entity);
         appendDoc(out, "    ", entity, "Gets " + n.article + " " + n.words + " by its key.", keyDocs(entity, n),
                 "The " + n.words + ", or the error");
-        out.append("    resource function get ").append(identifier(n.getOne)).append("(").append(keyParams(entity))
+        out.append("    resource function get ").append(identifier(n.getOne)).append("(")
+                .append(authParams(entity, true)).append(keyParams(entity))
                 .append(") returns ").append(n.object).append("?|error {").append(NEWLINE);
+        appendAuthChecks(out, entity, READ, true);
         appendKeyCheck(out, entity, n, imports);
         out.append("        ").append(n.entity).append("|persist:Error item = dataserviceClient->/").append(n.resource)
                 .append(keyPath(entity)).append(";").append(NEWLINE);
@@ -354,15 +368,34 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         Names n = new Names(entity);
         appendDoc(out, "    ", entity, "Creates " + n.article + " " + n.words + ".",
                 List.of("input - The " + n.words + " to create"), "The created " + n.words + ", or the error");
-        out.append("    remote function ").append(n.createOne).append("(").append(n.insertInput)
-                .append(" input) returns ").append(n.object).append("?|error =>").append(NEWLINE)
-                .append("        (check ").append(n.createFunction).append("([input]))[0];").append(NEWLINE);
+        if (auth) {
+            out.append("    remote function ").append(n.createOne).append("(").append(authParams(entity, true))
+                    .append(n.insertInput).append(" input)").append(NEWLINE).append("            returns ")
+                    .append(n.object).append("?|error {").append(NEWLINE);
+            appendAuthChecks(out, entity, CREATE, true);
+            out.append("        return (check ").append(n.createFunction).append("([input]))[0];").append(NEWLINE);
+            out.append("    }").append(NEWLINE);
+        } else {
+            out.append("    remote function ").append(n.createOne).append("(").append(n.insertInput)
+                    .append(" input) returns ").append(n.object).append("?|error =>").append(NEWLINE)
+                    .append("        (check ").append(n.createFunction).append("([input]))[0];").append(NEWLINE);
+        }
         appendDoc(out, "    ", entity, "Creates " + n.plural + ".", List.of("input - The " + n.plural + " to create"),
                 "The created " + n.plural + ", or the error");
-        out.append("    remote function ").append(n.createMany).append("(").append(n.insertInput)
-                .append("[] input) returns ").append(n.list).append("?|error =>").append(NEWLINE)
-                .append("        {items: check ").append(n.createFunction).append("(input), hasMore: false};")
-                .append(NEWLINE);
+        if (auth) {
+            out.append("    remote function ").append(n.createMany).append("(").append(authParams(entity, true))
+                    .append(n.insertInput).append("[] input)").append(NEWLINE).append("            returns ")
+                    .append(n.list).append("?|error {").append(NEWLINE);
+            appendAuthChecks(out, entity, CREATE, true);
+            out.append("        return {items: check ").append(n.createFunction).append("(input), hasMore: false};")
+                    .append(NEWLINE);
+            out.append("    }").append(NEWLINE);
+        } else {
+            out.append("    remote function ").append(n.createMany).append("(").append(n.insertInput)
+                    .append("[] input) returns ").append(n.list).append("?|error =>").append(NEWLINE)
+                    .append("        {items: check ").append(n.createFunction).append("(input), hasMore: false};")
+                    .append(NEWLINE);
+        }
     }
 
     // Create one and create many share this function: in one transaction it posts the records and reads them back
@@ -436,9 +469,16 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         appendDoc(out, "    ", entity, "Updates " + n.article + " " + n.words + " by its key.", params,
                 read ? "The updated " + n.words + ", `()` when it cannot be returned, or the error" :
                         "`true` when the " + n.words + " is updated, or the error");
-        out.append("    remote function ").append(n.update).append("(").append(keyParams(entity)).append(", ")
+        out.append("    remote function ").append(n.update).append("(").append(authParams(entity, read))
+                .append(keyParams(entity)).append(", ")
                 .append(n.updateInput).append(" input)").append(NEWLINE).append("            returns ")
                 .append(read ? n.object : "boolean").append("?|error {").append(NEWLINE);
+        appendAuthChecks(out, entity, UPDATE, read);
+        boolean readChecked = auth && read;
+        if (readChecked) {
+            out.append("        boolean readable = dsGraphql:hasScope(ctx, ").append(stringList(entity.scopes(READ)))
+                    .append(");").append(NEWLINE);
+        }
         appendKeyCheck(out, entity, n, imports);
         String update = n.entity + "Update";
         out.append("        ").append(update).append(" value = check transformInputTo").append(update)
@@ -446,6 +486,12 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         if (read) {
             out.append("        ").append(n.entity).append("|persist:Error item;").append(NEWLINE);
             out.append("        if value.length() == 0 {").append(NEWLINE);
+            if (readChecked) {
+                // An empty patch reads the record, which a caller who may not read it does not get.
+                out.append("            if !readable {").append(NEWLINE);
+                out.append("                return ();").append(NEWLINE);
+                out.append("            }").append(NEWLINE);
+            }
             out.append("            item = dataserviceClient->/").append(n.resource).append(keyPath(entity)).append(";")
                     .append(NEWLINE);
             out.append("        } else {").append(NEWLINE);
@@ -456,7 +502,8 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
             out.append("            return dsGraphql:toUpdateError(item, \"").append(n.displayName).append("\", ")
                     .append(keyList(entity)).append(");").append(NEWLINE);
             out.append("        }").append(NEWLINE);
-            out.append("        return new (item);").append(NEWLINE);
+            out.append("        return ").append(readChecked ? "readable ? new (item) : ()" : "new (item)").append(";")
+                    .append(NEWLINE);
         } else {
             out.append("        if value.length() == 0 {").append(NEWLINE);
             out.append("            return true;").append(NEWLINE);
@@ -479,8 +526,10 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         appendDoc(out, "    ", entity, "Deletes " + n.article + " " + n.words + " by its key.", keyDocs(entity, n),
                 read ? "The deleted " + n.words + ", or the error" :
                         "`true` when the " + n.words + " is deleted, or the error");
-        out.append("    remote function ").append(n.delete).append("(").append(keyParams(entity)).append(") returns ")
+        out.append("    remote function ").append(n.delete).append("(").append(authParams(entity, read))
+                .append(keyParams(entity)).append(") returns ")
                 .append(read ? n.object : "boolean").append("?|error {").append(NEWLINE);
+        appendAuthChecks(out, entity, DELETE, read);
         appendKeyCheck(out, entity, n, imports);
         out.append("        ").append(n.entity).append("|persist:Error item = dataserviceClient->/").append(n.resource)
                 .append(keyPath(entity)).append(".delete();").append(NEWLINE);
@@ -488,8 +537,64 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         out.append("            return dsGraphql:toDeleteError(item, \"").append(n.displayName).append("\", ")
                 .append(keyList(entity)).append(");").append(NEWLINE);
         out.append("        }").append(NEWLINE);
-        out.append("        return ").append(read ? "new (item)" : "true").append(";").append(NEWLINE);
+        out.append("        return ").append(!read ? "true" : auth ? "dsGraphql:hasScope(ctx, " +
+                stringList(entity.scopes(READ)) + ") ? new (item) : ()" : "new (item)").append(";").append(NEWLINE);
         out.append("    }").append(NEWLINE);
+    }
+
+    // With auth, a root field takes the request context, which holds the caller, and the field itself when its result
+    // has relation fields, whose selection the relation scopes are checked against.
+    private String authParams(ExposedEntity entity, boolean returnsRecords) {
+        if (!auth) {
+            return "";
+        }
+        return "graphql:Context ctx, " + (returnsRecords && !entity.relations().isEmpty() ? "graphql:Field 'field, " :
+                "");
+    }
+
+    // Each root field checks the scopes of its action first, and then that the caller may read every relation its
+    // selection reads; a mutation's result needs the entity's own `read` scopes for that too.
+    private void appendAuthChecks(StringBuilder out, ExposedEntity entity, Operation action, boolean returnsRecords) {
+        if (!auth) {
+            return;
+        }
+        out.append("        check dsGraphql:checkScopes(ctx, ").append(stringList(entity.scopes(action))).append(");")
+                .append(NEWLINE);
+        if (!returnsRecords || entity.relations().isEmpty()) {
+            return;
+        }
+        out.append("        check dsGraphql:checkRelationScopes(ctx, 'field, \"").append(unescape(entity.name()))
+                .append("\", ").append(relationsName(entity))
+                .append(action == READ ? "" : ", " + stringList(entity.scopes(READ))).append(");").append(NEWLINE);
+    }
+
+    private static String relationsName(ExposedEntity entity) {
+        return "dataservice" + unescape(entity.name()) + "Relations";
+    }
+
+    private static String stringList(List<String> names) {
+        return EntityDescription.stringList(names);
+    }
+
+    // The related entity and its `read` scopes, by relation field, which a caller needs to read each relation.
+    private void appendRelationScopes(StringBuilder out) {
+        for (ExposedEntity entity : entities) {
+            if (entity.relations().isEmpty()) {
+                continue;
+            }
+            out.append("# The `read` scopes that a caller needs to read each relation of `").append(entity.name())
+                    .append("`.").append(NEWLINE);
+            out.append("final readonly & map<dsGraphql:RelationScopes> ").append(relationsName(entity)).append(" = {")
+                    .append(NEWLINE);
+            List<String> members = new ArrayList<>();
+            for (ExposedRelation relation : entity.relations()) {
+                ExposedEntity target = target(relation);
+                members.add("    \"" + unescape(relation.field()) + "\": {target: \"" + unescape(target.name()) +
+                        "\", scopes: " + stringList(target.scopes(READ)) + "}");
+            }
+            out.append(String.join("," + NEWLINE, members)).append(NEWLINE).append("};").append(NEWLINE)
+                    .append(NEWLINE);
+        }
     }
 
     // The fields a create accepts: neither a `ReadOnly` field, which the database or the annotation's value sets, nor
@@ -943,14 +1048,17 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
     // collected link with one query.
     private void appendContext(StringBuilder out, Set<String> imports) {
         List<Map.Entry<ExposedEntity, ExposedRelation>> relations = toOneRelations();
-        if (relations.isEmpty()) {
+        if (relations.isEmpty() && !auth) {
             return;
         }
-        imports.add("import ballerina/graphql.dataloader;");
+        if (!relations.isEmpty()) {
+            imports.add("import ballerina/graphql.dataloader;");
+            imports.add(DATASERVICE_IMPORT);
+        }
         imports.add("import ballerina/http;");
-        imports.add(DATASERVICE_IMPORT);
-        out.append(NEWLINE).append("# Creates the context of a request, with a dataloader per to-one relation.")
-                .append(NEWLINE);
+        out.append(NEWLINE).append("# Creates the context of a request")
+                .append(auth ? ", after authenticating it" : "")
+                .append(relations.isEmpty() ? "." : ", with a dataloader per to-one relation.").append(NEWLINE);
         out.append("#").append(NEWLINE);
         out.append("# + requestContext - The HTTP request context").append(NEWLINE);
         out.append("# + request - The HTTP request").append(NEWLINE);
@@ -958,6 +1066,11 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         out.append("isolated function dataserviceInitContext(http:RequestContext requestContext, http:Request request)")
                 .append(NEWLINE).append("        returns graphql:Context|error {").append(NEWLINE);
         out.append("    graphql:Context ctx = new;").append(NEWLINE);
+        if (auth) {
+            // contextInit runs before ballerina/graphql parses the document, so every request is authenticated.
+            imports.add(DATASERVICE_GRAPHQL_IMPORT);
+            out.append("    check dataserviceAuthenticator.authenticate(ctx, request);").append(NEWLINE);
+        }
         for (Map.Entry<ExposedEntity, ExposedRelation> entry : relations) {
             out.append("    ctx.registerDataLoader(\"").append(loaderId(entry.getKey(), entry.getValue()))
                     .append("\",").append(NEWLINE).append("            new dataloader:DefaultDataLoader(")
