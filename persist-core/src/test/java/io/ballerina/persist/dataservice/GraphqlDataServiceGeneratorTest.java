@@ -62,6 +62,7 @@ public class GraphqlDataServiceGeneratorTest {
     public Object[][] cases() {
         return new Object[][]{
                 {"demo", "/graphql", true, "dataservice.bal", "dataservice_types.bal"},
+                {"relations", "/graphql", true, "dataservice.bal", "dataservice_types.bal"},
         };
     }
 

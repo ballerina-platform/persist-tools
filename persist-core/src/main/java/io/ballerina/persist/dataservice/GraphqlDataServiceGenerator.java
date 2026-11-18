@@ -64,6 +64,8 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
     private static final String DATASERVICE_GRAPHQL_IMPORT = "import ballerina/dataservice.graphql as dsGraphql;";
     private static final String GRAPHQL_IMPORT = "import ballerina/graphql;";
     private static final String DATASERVICE_IMPORT = "import ballerina/dataservice;";
+    private static final String PERSIST_IMPORT = "import ballerina/persist;";
+    private static final String RELATED_OPERATION = "get related";
 
     private final List<ExposedEntity> entities;
     private final Map<String, ExposedEntity> entitiesByName = new LinkedHashMap<>();
@@ -172,7 +174,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
      * @throws BalException if the source cannot be formatted
      */
     public String generateService() throws BalException {
-        Set<String> imports = new TreeSet<>(List.of(GRAPHQL_IMPORT, "import ballerina/persist;"));
+        Set<String> imports = new TreeSet<>(List.of(GRAPHQL_IMPORT, PERSIST_IMPORT));
         StringBuilder body = new StringBuilder();
         body.append("# The persist client of the data service.").append(NEWLINE);
         body.append("final Client dataserviceClient = check new ();").append(NEWLINE).append(NEWLINE);
@@ -185,6 +187,9 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         // GraphiQL loads the schema through introspection, so it is served exactly when introspection is on.
         config.add(introspection ? "graphiql: {enabled: true}" : "introspection: false");
         config.add("cors: dataserviceConfig.serviceConfig.cors");
+        if (!toOneRelations().isEmpty()) {
+            config.add("contextInit: dataserviceInitContext");
+        }
         body.append("    ").append(String.join("," + NEWLINE + "    ", config)).append(NEWLINE);
         body.append("}").append(NEWLINE);
         body.append("service graphql:Service ").append(DataServiceUtils.servicePath(basePath))
@@ -196,6 +201,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
             }
         }
         body.append("}").append(NEWLINE);
+        appendContext(body, imports);
         return DataServiceUtils.format(modelHeader() + String.join(NEWLINE, imports) + NEWLINE + NEWLINE + body);
     }
 
@@ -213,6 +219,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
             if (entity.allows(READ)) {
                 appendObject(body, entity, imports);
                 appendList(body, entity);
+                appendRelated(body, entity, imports);
                 appendFilter(body, entity);
                 appendSort(body, entity);
                 imports.add(DATASERVICE_IMPORT);
@@ -394,7 +401,206 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
                     .append(outputType(field)).append(" => ").append(toOutput(field, imports)).append(";")
                     .append(NEWLINE);
         }
+        for (ExposedRelation relation : entity.relations()) {
+            if (relation.many()) {
+                appendToMany(out, entity, relation, imports);
+            } else {
+                appendToOne(out, entity, relation, imports);
+            }
+        }
         out.append("}").append(NEWLINE);
+    }
+
+    private void appendToMany(StringBuilder out, ExposedEntity entity, ExposedRelation relation,
+                              Set<String> imports) {
+        imports.add(DATASERVICE_IMPORT);
+        imports.add(DATASERVICE_GRAPHQL_IMPORT);
+        imports.add(PERSIST_IMPORT);
+        Names n = new Names(entity);
+        Names t = new Names(target(relation));
+        String words = words(relation.field());
+        appendDoc(out, "    ", null, "Gets the " + words + " of " + n.article + " " + n.words + ".", List.of(
+                "filter - The conditions that the " + words + " match",
+                "sort - The order of the " + words + "; each entry names one field",
+                "size - The number of " + words + " in the page",
+                "offset - The number of " + words + " to skip"), "A page of the " + words + ", or the error");
+        out.append("    isolated resource function get ").append(relation.field()).append("(").append(t.filter)
+                .append("? filter = (), ").append(t.sort).append("[]? sort = (),").append(NEWLINE)
+                .append("            int? size = (), int? offset = ()) returns ").append(t.relatedList)
+                .append("?|error {").append(NEWLINE);
+        out.append("        dataservice:Query query = check dsGraphql:toRelatedQuery(").append(n.description)
+                .append(", \"").append(unescape(relation.field())).append("\", self.row,").append(NEWLINE)
+                .append("                dataservicePageConfig, filter, sort, size, offset);").append(NEWLINE);
+        out.append("        stream<").append(t.entity).append(", persist:Error?> rows = dataserviceClient->/")
+                .append(t.resource).append("(").append(t.entity).append(",").append(NEWLINE);
+        out.append("            whereClause = query.whereClause, orderByClause = query.orderByClause,").append(NEWLINE);
+        out.append("            limitClause = query.limitClause, offsetClause = query.offsetClause").append(NEWLINE);
+        out.append("        );").append(NEWLINE);
+        out.append("        ").append(t.entity).append("[]|persist:Error items = from ").append(t.entity)
+                .append(" item in rows").append(NEWLINE);
+        out.append("            select item;").append(NEWLINE);
+        out.append("        if items is persist:Error {").append(NEWLINE);
+        out.append("            return dsGraphql:toListError(items, \"").append(n.displayName).append("\", \"")
+                .append(RELATED_OPERATION).append("\");").append(NEWLINE);
+        out.append("        }").append(NEWLINE);
+        out.append("        boolean hasMore = dataservice:trimToPage(items, query);").append(NEWLINE);
+        out.append("        return {items: from ").append(t.entity).append(" item in items select new ")
+                .append(t.relatedObject).append("(item), hasMore};").append(NEWLINE);
+        out.append("    }").append(NEWLINE);
+    }
+
+    // A to-one relation is read through the request's dataloader of the relation, keyed by the record's link: the
+    // fields that link the relation, as a record.
+    private void appendToOne(StringBuilder out, ExposedEntity entity, ExposedRelation relation,
+                             Set<String> imports) {
+        imports.add(GRAPHQL_IMPORT);
+        Names n = new Names(entity);
+        Names t = new Names(target(relation));
+        String prefetch = "prefetch" + capitalize(unescape(relation.field()));
+        String link = link(relation);
+        out.append(NEWLINE).append("    isolated function ").append(prefetch).append("(graphql:Context ctx) {")
+                .append(NEWLINE);
+        out.append("        ctx.getDataLoader(\"").append(loaderId(entity, relation)).append("\").add(").append(link)
+                .append(");").append(NEWLINE);
+        out.append("    }").append(NEWLINE);
+        appendDoc(out, "    ", null, "Gets the " + words(relation.field()) + " of " + n.article + " " + n.words + ".",
+                List.of("ctx - The request context, which holds the dataloader of the relation"),
+                "The " + words(relation.field()) + ", `()` when there is none, or the error");
+        out.append("    @graphql:ResourceConfig {prefetchMethodName: \"").append(prefetch).append("\"}")
+                .append(NEWLINE);
+        out.append("    isolated resource function get ").append(relation.field())
+                .append("(graphql:Context ctx) returns ").append(t.relatedObject).append("?|error {").append(NEWLINE);
+        out.append("        ").append(t.entity).append("? row = check ctx.getDataLoader(\"")
+                .append(loaderId(entity, relation)).append("\").get(").append(link).append(");").append(NEWLINE);
+        out.append("        return row is ").append(t.entity).append(" ? new (row) : ();").append(NEWLINE);
+        out.append("    }").append(NEWLINE);
+    }
+
+    private static String link(ExposedRelation relation) {
+        return "{" + relation.fields().stream().map(field -> "\"" + unescape(field) + "\": self.row." + field)
+                .collect(Collectors.joining(", ")) + "}";
+    }
+
+    private static String loaderId(ExposedEntity entity, ExposedRelation relation) {
+        return unescape(entity.name()) + "." + unescape(relation.field());
+    }
+
+    private static String loaderFunction(ExposedEntity entity, ExposedRelation relation) {
+        return "dataserviceLoad" + unescape(entity.name()) + capitalize(unescape(relation.field()));
+    }
+
+    private List<Map.Entry<ExposedEntity, ExposedRelation>> toOneRelations() {
+        List<Map.Entry<ExposedEntity, ExposedRelation>> relations = new ArrayList<>();
+        for (ExposedEntity entity : entities) {
+            for (ExposedRelation relation : entity.relations()) {
+                if (!relation.many()) {
+                    relations.add(Map.entry(entity, relation));
+                }
+            }
+        }
+        return relations;
+    }
+
+    // Each request gets one dataloader per to-one relation, whose batch function reads the related records of every
+    // collected link with one query.
+    private void appendContext(StringBuilder out, Set<String> imports) {
+        List<Map.Entry<ExposedEntity, ExposedRelation>> relations = toOneRelations();
+        if (relations.isEmpty()) {
+            return;
+        }
+        imports.add("import ballerina/graphql.dataloader;");
+        imports.add("import ballerina/http;");
+        imports.add(DATASERVICE_IMPORT);
+        out.append(NEWLINE).append("# Creates the context of a request, with a dataloader per to-one relation.")
+                .append(NEWLINE);
+        out.append("#").append(NEWLINE);
+        out.append("# + requestContext - The HTTP request context").append(NEWLINE);
+        out.append("# + request - The HTTP request").append(NEWLINE);
+        out.append("# + return - The context, or the error").append(NEWLINE);
+        out.append("isolated function dataserviceInitContext(http:RequestContext requestContext, http:Request request)")
+                .append(NEWLINE).append("        returns graphql:Context|error {").append(NEWLINE);
+        out.append("    graphql:Context ctx = new;").append(NEWLINE);
+        for (Map.Entry<ExposedEntity, ExposedRelation> entry : relations) {
+            out.append("    ctx.registerDataLoader(\"").append(loaderId(entry.getKey(), entry.getValue()))
+                    .append("\",").append(NEWLINE).append("            new dataloader:DefaultDataLoader(")
+                    .append(loaderFunction(entry.getKey(), entry.getValue())).append("));").append(NEWLINE);
+        }
+        out.append("    return ctx;").append(NEWLINE);
+        out.append("}").append(NEWLINE);
+        for (Map.Entry<ExposedEntity, ExposedRelation> entry : relations) {
+            appendLoader(out, entry.getKey(), entry.getValue());
+        }
+    }
+
+    private void appendLoader(StringBuilder out, ExposedEntity entity, ExposedRelation relation) {
+        Names n = new Names(entity);
+        Names t = new Names(target(relation));
+        String name = "\"" + unescape(relation.field()) + "\"";
+        out.append(NEWLINE).append("isolated function ").append(loaderFunction(entity, relation))
+                .append("(readonly & anydata[] keys) returns anydata[]|error {").append(NEWLINE);
+        out.append("    map<anydata>[] links = from anydata key in keys").append(NEWLINE);
+        out.append("        select check key.ensureType();").append(NEWLINE);
+        out.append("    dataservice:Query query = dataservice:toIncludeQuery(").append(n.description).append(", ")
+                .append(name).append(", links,").append(NEWLINE).append("            dataservicePageConfig);")
+                .append(NEWLINE);
+        out.append("    stream<").append(t.entity).append(", persist:Error?> rows = dataserviceClient->/")
+                .append(t.resource).append("(").append(t.entity).append(",").append(NEWLINE);
+        out.append("        whereClause = query.whereClause, orderByClause = query.orderByClause").append(NEWLINE);
+        out.append("    );").append(NEWLINE);
+        out.append("    ").append(t.entity).append("[]|persist:Error found = from ").append(t.entity)
+                .append(" row in rows").append(NEWLINE);
+        out.append("        select row;").append(NEWLINE);
+        out.append("    if found is persist:Error {").append(NEWLINE);
+        out.append("        return dsGraphql:toListError(found, \"").append(n.displayName).append("\", \"")
+                .append(RELATED_OPERATION).append("\");").append(NEWLINE);
+        out.append("    }").append(NEWLINE);
+        out.append("    return dsGraphql:toKeyOrder(found, ").append(n.description).append(", ").append(name)
+                .append(", links);").append(NEWLINE);
+        out.append("}").append(NEWLINE);
+    }
+
+    // A related record has the entity's own fields and no relation fields, so a document reads relations one hop
+    // deep.
+    private void appendRelated(StringBuilder out, ExposedEntity entity, Set<String> imports) {
+        List<ExposedRelation> reaching = entities.stream().flatMap(other -> other.relations().stream())
+                .filter(relation -> relation.target().equals(entity.name())).toList();
+        if (reaching.isEmpty()) {
+            return;
+        }
+        Names n = new Names(entity);
+        out.append(NEWLINE).append("# ").append(capitalize(n.article)).append(" ").append(n.words)
+                .append(", as a related record: its own fields and no relation fields.").append(NEWLINE);
+        out.append("public isolated service class ").append(n.relatedObject).append(" {").append(NEWLINE);
+        out.append("    private final readonly & ").append(n.entity).append(" row;").append(NEWLINE).append(NEWLINE);
+        out.append("    isolated function init(").append(n.entity).append(" row) {").append(NEWLINE);
+        out.append("        self.row = row.cloneReadOnly();").append(NEWLINE);
+        out.append("    }").append(NEWLINE);
+        for (ServiceField field : returned(entity)) {
+            out.append(NEWLINE).append("    # ").append(fieldDoc(field, entity, n)).append(NEWLINE);
+            out.append("    # + return - The value").append(NEWLINE);
+            out.append("    isolated resource function get ").append(field.name()).append("() returns ")
+                    .append(outputType(field)).append(" => ").append(toOutput(field, imports)).append(";")
+                    .append(NEWLINE);
+        }
+        out.append("}").append(NEWLINE);
+        if (reaching.stream().anyMatch(ExposedRelation::many)) {
+            out.append(NEWLINE).append("# A page of related ").append(n.plural).append(".").append(NEWLINE);
+            out.append("#").append(NEWLINE);
+            out.append("# + items - The ").append(n.plural).append(NEWLINE);
+            out.append("# + hasMore - Whether records exist after this page; read them with `offset`").append(NEWLINE);
+            out.append("public type ").append(n.relatedList).append(" record {").append(NEWLINE);
+            out.append("    ").append(n.relatedObject).append("[] items;").append(NEWLINE);
+            out.append("    boolean hasMore;").append(NEWLINE);
+            out.append("};").append(NEWLINE);
+        }
+    }
+
+    private ExposedEntity target(ExposedRelation relation) {
+        return entitiesByName.get(relation.target());
+    }
+
+    private static String words(String name) {
+        return String.join(" ", WORD_BOUNDARY.split(unescape(name))).toLowerCase(Locale.ENGLISH);
     }
 
     private static void appendList(StringBuilder out, ExposedEntity entity) {
@@ -441,7 +647,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
     private static void appendDoc(StringBuilder out, String indent, ExposedEntity entity, String summary,
                                   List<String> params, String result) {
         out.append(NEWLINE).append(indent).append("# ").append(summary).append(NEWLINE);
-        if (!entity.doc().isEmpty()) {
+        if (entity != null && !entity.doc().isEmpty()) {
             out.append(indent).append("#").append(NEWLINE);
             for (String line : entity.doc()) {
                 out.append(indent).append("#").append(line.isEmpty() ? "" : " " + line).append(NEWLINE);

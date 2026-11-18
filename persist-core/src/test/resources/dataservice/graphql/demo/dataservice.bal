@@ -6,6 +6,8 @@
 import ballerina/dataservice;
 import ballerina/dataservice.graphql as dsGraphql;
 import ballerina/graphql;
+import ballerina/graphql.dataloader;
+import ballerina/http;
 import ballerina/persist;
 
 # The persist client of the data service.
@@ -17,7 +19,8 @@ listener graphql:Listener dataserviceListener =
 
 @graphql:ServiceConfig {
     graphiql: {enabled: true},
-    cors: dataserviceConfig.serviceConfig.cors
+    cors: dataserviceConfig.serviceConfig.cors,
+    contextInit: dataserviceInitContext
 }
 service graphql:Service /graphql on dataserviceListener {
 
@@ -132,4 +135,33 @@ service graphql:Service /graphql on dataserviceListener {
         }
         return new (item);
     }
+}
+
+# Creates the context of a request, with a dataloader per to-one relation.
+#
+# + requestContext - The HTTP request context
+# + request - The HTTP request
+# + return - The context, or the error
+isolated function dataserviceInitContext(http:RequestContext requestContext, http:Request request)
+        returns graphql:Context|error {
+    graphql:Context ctx = new;
+    ctx.registerDataLoader("Assignment.employee",
+            new dataloader:DefaultDataLoader(dataserviceLoadAssignmentEmployee));
+    return ctx;
+}
+
+isolated function dataserviceLoadAssignmentEmployee(readonly & anydata[] keys) returns anydata[]|error {
+    map<anydata>[] links = from anydata key in keys
+        select check key.ensureType();
+    dataservice:Query query = dataservice:toIncludeQuery(dataserviceAssignmentEntity, "employee", links,
+            dataservicePageConfig);
+    stream<Employee, persist:Error?> rows = dataserviceClient->/employees(Employee,
+        whereClause = query.whereClause, orderByClause = query.orderByClause
+    );
+    Employee[]|persist:Error found = from Employee row in rows
+        select row;
+    if found is persist:Error {
+        return dsGraphql:toListError(found, "Assignment", "get related");
+    }
+    return dsGraphql:toKeyOrder(found, dataserviceAssignmentEntity, "employee", links);
 }

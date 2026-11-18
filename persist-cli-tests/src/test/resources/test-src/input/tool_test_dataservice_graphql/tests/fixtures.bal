@@ -18,6 +18,11 @@ function seed() returns error? {
         {projectCode: "ATLAS", seq: 1, hours: 12.50, employeeId: 1},
         {projectCode: "ATLAS", seq: 2, hours: 4, employeeId: 3}
     ]);
+    _ = check dataserviceClient->/badges.post([{code: "B-1", employeeId: 1}]);
+    _ = check dataserviceClient->/timesheets.post([
+        {id: 1, hours: 3, assignmentProjectCode: "ATLAS", assignmentSeq: 2},
+        {id: 2, hours: 5, assignmentProjectCode: "ATLAS", assignmentSeq: 1}
+    ]);
 }
 
 // Posts a document and returns the response body, which a request error answers with 400.
