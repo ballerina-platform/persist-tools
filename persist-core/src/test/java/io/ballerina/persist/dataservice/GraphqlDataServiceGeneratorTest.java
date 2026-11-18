@@ -31,6 +31,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 /**
  * Expected-output tests of the generated GraphQL data service, and of its checks.
@@ -84,6 +87,27 @@ public class GraphqlDataServiceGeneratorTest {
                         new String[]{"// AUTO-GENERATED FILE. DO NOT MODIFY.\n", "// AUTO-GENERATED FILE.\n"},
                         new String[]{"// It should not be modified by hand.\n", ""})},
         };
+    }
+
+    // A key field becomes a parameter of the resolvers, so every name they declare must be reserved.
+    @Test
+    public void testResolverVariablesAreReserved() throws IOException {
+        List<Pattern> declarations = List.of(Pattern.compile("^ {8,}\\w[\\w:<>|\\[\\]?, &]* (\\w+) (?:=|;)"),
+                Pattern.compile("\\b(?:from|foreach) \\S+ (\\w+) in\\b"),
+                Pattern.compile("\\bon fail error (\\w+)"));
+        try (Stream<Path> files = Files.walk(RESOURCES)) {
+            for (Path file : files.filter(path -> path.getFileName().toString().equals("dataservice.bal")).toList()) {
+                for (String line : Files.readAllLines(file, StandardCharsets.UTF_8)) {
+                    for (Pattern declaration : declarations) {
+                        Matcher matcher = declaration.matcher(line);
+                        while (matcher.find()) {
+                            Assert.assertTrue(DataServiceModel.RESERVED_KEY_NAMES.contains(matcher.group(1)),
+                                    matcher.group(1) + " in " + file + ": " + line);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     @Test

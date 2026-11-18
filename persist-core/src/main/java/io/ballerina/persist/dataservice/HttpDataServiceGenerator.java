@@ -997,7 +997,7 @@ public final class HttpDataServiceGenerator implements DataServiceGenerator {
         }
         if (entity.allows(READ) || entity.allows(CREATE)) {
             imports.add(DATASERVICE_IMPORT);
-            appendDescription(out, entity, n);
+            EntityDescription.append(out, entity, entitiesByName, datastore);
         }
         if (entity.allows(CREATE)) {
             imports.add(HTTP_IMPORT);
@@ -1117,62 +1117,8 @@ public final class HttpDataServiceGenerator implements DataServiceGenerator {
         }
     }
 
-    private void appendDescription(StringBuilder out, ExposedEntity entity, Names n) {
-        out.append(NEWLINE).append("# The fields of `").append(n.entity).append("` that callers can see.")
-                .append(NEWLINE);
-        out.append("final readonly & dataservice:Field[] ").append(n.fields).append(" = [").append(NEWLINE);
-        List<String> members = new ArrayList<>();
-        for (ExposedEntity.Column column : entity.columns()) {
-            StringBuilder member = new StringBuilder("    {name: \"").append(column.name())
-                    .append("\", column: \"").append(column.column()).append("\", 'type: dataservice:")
-                    .append(column.type());
-            if (column.nullable()) {
-                member.append(", nullable: true");
-            }
-            if (column.key()) {
-                member.append(", key: true");
-            }
-            if (column.generated()) {
-                member.append(", generated: true");
-            }
-            members.add(member.append("}").toString());
-        }
-        out.append(String.join("," + NEWLINE, members)).append(NEWLINE).append("];").append(NEWLINE);
-        out.append(NEWLINE).append("# The description of `").append(n.entity)
-                .append("` that `ballerina/dataservice` builds queries from.").append(NEWLINE);
-        out.append("final dataservice:Entity ").append(n.description).append(" = ")
-                .append(entityLiteral(entity, "", true)).append(";").append(NEWLINE);
-    }
-
-    private String entityLiteral(ExposedEntity entity, String indent, boolean withRelations) {
-        Names n = new Names(entity);
-        StringBuilder out = new StringBuilder("{").append(NEWLINE);
-        out.append(indent).append("    name: \"").append(n.displayName).append("\",").append(NEWLINE);
-        out.append(indent).append("    collection: \"").append(n.collection).append("\",").append(NEWLINE);
-        out.append(indent).append("    'resource: \"").append(n.resource).append("\",").append(NEWLINE);
-        out.append(indent).append("    datastore: dataservice:").append(datastore.toUpperCase(Locale.ENGLISH))
-                .append(",").append(NEWLINE);
-        out.append(indent).append("    fields: ").append(n.fields);
-        if (withRelations && !entity.relations().isEmpty()) {
-            out.append(",").append(NEWLINE).append(indent).append("    relations: [").append(NEWLINE);
-            List<String> relations = new ArrayList<>();
-            for (ExposedRelation relation : entity.relations()) {
-                relations.add(indent + "        {" + NEWLINE
-                        + indent + "            'field: \"" + unescape(relation.field()) + "\"," + NEWLINE
-                        + indent + "            many: " + relation.many() + "," + NEWLINE
-                        + indent + "            fields: " + stringList(relation.fields()) + "," + NEWLINE
-                        + indent + "            targetFields: " + stringList(relation.targetFields()) + "," + NEWLINE
-                        + indent + "            target: " + entityLiteral(target(relation), indent + "            ",
-                        false) + NEWLINE + indent + "        }");
-            }
-            out.append(String.join("," + NEWLINE, relations)).append(NEWLINE).append(indent).append("    ]");
-        }
-        return out.append(NEWLINE).append(indent).append("}").toString();
-    }
-
     private static String stringList(List<String> names) {
-        return "[" + names.stream().map(name -> "\"" + unescape(name) + "\"").collect(Collectors.joining(", "))
-                + "]";
+        return EntityDescription.stringList(names);
     }
 
     // Filter keys starting with `$` are reserved for joining conditions.
@@ -1505,7 +1451,6 @@ public final class HttpDataServiceGenerator implements DataServiceGenerator {
         private final String partial;
         private final String partialList;
         private final String description;
-        private final String fields;
         private final String relatedPartial;
         private final String relatedPartialList;
         private final String created;
@@ -1528,8 +1473,7 @@ public final class HttpDataServiceGenerator implements DataServiceGenerator {
             this.filter = this.entity + "Filter";
             this.partial = this.entity + "Partial";
             this.partialList = this.entity + "PartialList";
-            this.description = "dataservice" + displayName + "Entity";
-            this.fields = "dataservice" + displayName + "Fields";
+            this.description = EntityDescription.descriptionName(entity);
             this.relatedPartial = this.entity + "RelatedPartial";
             this.relatedPartialList = this.entity + "RelatedPartialList";
             this.created = this.entity + "Created";

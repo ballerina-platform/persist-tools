@@ -39,6 +39,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static io.ballerina.persist.dataservice.DataServiceUtils.NEWLINE;
 import static io.ballerina.persist.dataservice.DataServiceUtils.WORD_BOUNDARY;
@@ -62,11 +63,14 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
     private static final Pattern GRAPHQL_NAME = Pattern.compile("[_A-Za-z][_0-9A-Za-z]*");
     private static final String DATASERVICE_GRAPHQL_IMPORT = "import ballerina/dataservice.graphql as dsGraphql;";
     private static final String GRAPHQL_IMPORT = "import ballerina/graphql;";
+    private static final String DATASERVICE_IMPORT = "import ballerina/dataservice;";
 
     private final List<ExposedEntity> entities;
+    private final Map<String, ExposedEntity> entitiesByName = new LinkedHashMap<>();
     private final String basePath;
     private final boolean introspection;
     private final String modelName;
+    private final String datastore;
     private final boolean userOwned;
 
     /**
@@ -81,9 +85,11 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
     public GraphqlDataServiceGenerator(List<ExposedEntity> entities, DataServiceOptions options, String modelName,
                                        String datastore, boolean userOwned) {
         this.entities = entities;
+        entities.forEach(entity -> entitiesByName.put(entity.name(), entity));
         this.basePath = options.basePath();
         this.introspection = options.introspection();
         this.modelName = modelName;
+        this.datastore = datastore;
         this.userOwned = userOwned;
     }
 
@@ -186,6 +192,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         for (ExposedEntity entity : entities) {
             if (entity.allows(READ)) {
                 appendGetMany(body, entity, imports);
+                appendGetOne(body, entity, imports);
             }
         }
         body.append("}").append(NEWLINE);
@@ -193,7 +200,8 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
     }
 
     /**
-     * Generates `dataservice_types.bal`: per entity in model order, the object type and the list envelope.
+     * Generates `dataservice_types.bal`: per entity in model order, the object type, the list envelope, the filter and
+     * sort inputs and the entity description.
      *
      * @return the formatted source, or empty when no exposed entity needs a type
      * @throws BalException if the source cannot be formatted
@@ -205,6 +213,11 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
             if (entity.allows(READ)) {
                 appendObject(body, entity, imports);
                 appendList(body, entity);
+                appendFilter(body, entity);
+                appendSort(body, entity);
+                imports.add(DATASERVICE_IMPORT);
+                imports.add(DATASERVICE_GRAPHQL_IMPORT);
+                EntityDescription.append(body, entity, entitiesByName, datastore);
             }
         }
         if (body.isEmpty()) {
@@ -222,11 +235,16 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
      */
     public String generateConfig() throws BalException {
         return DataServiceUtils.format(DataServiceUtils.header(BalSyntaxConstants.AUTO_GENERATED_COMMENT, userOwned) +
-                DATASERVICE_GRAPHQL_IMPORT + NEWLINE +
+                DATASERVICE_IMPORT + NEWLINE + DATASERVICE_GRAPHQL_IMPORT + NEWLINE +
                 NEWLINE +
                 "# The runtime settings of the data service, set in the `[dataserviceConfig]` table of Config.toml." +
                 NEWLINE +
-                "configurable dsGraphql:Config dataserviceConfig = {};" + NEWLINE);
+                "configurable dsGraphql:Config dataserviceConfig = {};" + NEWLINE +
+                NEWLINE +
+                "# The page sizes of the data service, checked at startup." + NEWLINE +
+                "final dataservice:PageConfig dataservicePageConfig =" + NEWLINE +
+                "        check dataservice:toPageConfig(dataserviceConfig.pageSize, dataserviceConfig.maxPageSize);" +
+                NEWLINE);
     }
 
     private String modelHeader() {
@@ -235,14 +253,26 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
     }
 
     private void appendGetMany(StringBuilder out, ExposedEntity entity, Set<String> imports) {
+        imports.add(DATASERVICE_IMPORT);
         imports.add(DATASERVICE_GRAPHQL_IMPORT);
         Names n = new Names(entity);
-        appendDoc(out, "    ", entity, "Gets a page of " + n.plural + ".", List.of(),
-                "A page of " + n.plural + ", or the error");
-        out.append("    resource function get ").append(identifier(n.getMany)).append("() returns ").append(n.list)
-                .append("?|error {").append(NEWLINE);
+        appendDoc(out, "    ", entity, "Gets a page of " + n.plural + ".", List.of(
+                "filter - The conditions that the " + n.plural + " match",
+                "sort - The order of the " + n.plural + "; each entry names one field",
+                "size - The number of " + n.plural + " in the page",
+                "offset - The number of " + n.plural + " to skip"), "A page of " + n.plural + ", or the error");
+        out.append("    resource function get ").append(identifier(n.getMany)).append("(").append(n.filter)
+                .append("? filter = (), ").append(n.sort).append("[]? sort = (),").append(NEWLINE)
+                .append("            int? size = (), int? offset = ()) returns ").append(n.list).append("?|error {")
+                .append(NEWLINE);
+        out.append("        dataservice:Query query = check dsGraphql:toQuery(").append(n.description)
+                .append(", dataservicePageConfig,").append(NEWLINE)
+                .append("                filter, sort, size, offset);").append(NEWLINE);
         out.append("        stream<").append(n.entity).append(", persist:Error?> rows = dataserviceClient->/")
-                .append(n.resource).append("(").append(n.entity).append(");").append(NEWLINE);
+                .append(n.resource).append("(").append(n.entity).append(",").append(NEWLINE);
+        out.append("            whereClause = query.whereClause, orderByClause = query.orderByClause,").append(NEWLINE);
+        out.append("            limitClause = query.limitClause, offsetClause = query.offsetClause").append(NEWLINE);
+        out.append("        );").append(NEWLINE);
         out.append("        ").append(n.entity).append("[]|persist:Error items = from ").append(n.entity)
                 .append(" item in rows").append(NEWLINE);
         out.append("            select item;").append(NEWLINE);
@@ -250,9 +280,102 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         out.append("            return dsGraphql:toListError(items, \"").append(n.displayName).append("\");")
                 .append(NEWLINE);
         out.append("        }").append(NEWLINE);
+        out.append("        boolean hasMore = dataservice:trimToPage(items, query);").append(NEWLINE);
         out.append("        return {items: from ").append(n.entity).append(" item in items select new ")
-                .append(n.object).append("(item), hasMore: false};").append(NEWLINE);
+                .append(n.object).append("(item), hasMore};").append(NEWLINE);
         out.append("    }").append(NEWLINE);
+    }
+
+    private void appendGetOne(StringBuilder out, ExposedEntity entity, Set<String> imports) {
+        imports.add(DATASERVICE_GRAPHQL_IMPORT);
+        Names n = new Names(entity);
+        appendDoc(out, "    ", entity, "Gets " + n.article + " " + n.words + " by its key.", keyDocs(entity, n),
+                "The " + n.words + ", or the error");
+        out.append("    resource function get ").append(identifier(n.getOne)).append("(").append(keyParams(entity))
+                .append(") returns ").append(n.object).append("?|error {").append(NEWLINE);
+        out.append("        ").append(n.entity).append("|persist:Error item = dataserviceClient->/").append(n.resource)
+                .append(keyPath(entity)).append(";").append(NEWLINE);
+        out.append("        if item is persist:Error {").append(NEWLINE);
+        out.append("            return dsGraphql:toGetError(item, \"").append(n.displayName).append("\", ")
+                .append(keyList(entity)).append(");").append(NEWLINE);
+        out.append("        }").append(NEWLINE);
+        out.append("        return new (item);").append(NEWLINE);
+        out.append("    }").append(NEWLINE);
+    }
+
+    private static List<String> keyDocs(ExposedEntity entity, Names n) {
+        return entity.keys().stream().map(key -> key.name() + " - The " + unescape(key.name()) + " of the " +
+                n.words).toList();
+    }
+
+    private static String keyParams(ExposedEntity entity) {
+        return entity.keys().stream().map(key -> key.type() + " " + key.name()).collect(Collectors.joining(", "));
+    }
+
+    private static String keyPath(ExposedEntity entity) {
+        return entity.keys().stream().map(key -> "/[" + key.name() + "]").collect(Collectors.joining());
+    }
+
+    private static String keyList(ExposedEntity entity) {
+        return "[" + entity.keys().stream().map(ServiceField::name).collect(Collectors.joining(", ")) + "]";
+    }
+
+    // Input fields are documented in place: ballerina/graphql reads an input field's description from its own doc
+    // comment, not from the record's `+ field` lines.
+    private static void appendFilter(StringBuilder out, ExposedEntity entity) {
+        Names n = new Names(entity);
+        out.append(NEWLINE).append("# The conditions that ").append(n.plural)
+                .append(" match; every condition set must hold.").append(NEWLINE);
+        out.append("public type ").append(n.filter).append(" record {|").append(NEWLINE);
+        for (ServiceField field : filterable(entity)) {
+            Optional<String> type = filterType(column(entity, field));
+            if (type.isEmpty()) {
+                continue;
+            }
+            out.append("    # The conditions on `").append(unescape(field.name())).append("`").append(NEWLINE);
+            out.append("    dsGraphql:").append(type.get()).append("? ").append(field.name()).append(";")
+                    .append(NEWLINE);
+        }
+        out.append("|};").append(NEWLINE);
+    }
+
+    private static void appendSort(StringBuilder out, ExposedEntity entity) {
+        Names n = new Names(entity);
+        out.append(NEWLINE).append("# One entry of the order of ").append(n.plural).append("; set exactly one field.")
+                .append(NEWLINE);
+        out.append("public type ").append(n.sort).append(" record {|").append(NEWLINE);
+        for (ServiceField field : filterable(entity)) {
+            out.append("    # Sorts by `").append(unescape(field.name())).append("`").append(NEWLINE);
+            out.append("    dsGraphql:SortDirection? ").append(field.name()).append(";").append(NEWLINE);
+        }
+        out.append("|};").append(NEWLINE);
+    }
+
+    // The filter of an enum field is generated per enum, with the enum types.
+    private static Optional<String> filterType(ExposedEntity.Column column) {
+        String scalar = switch (column.type()) {
+            case "INT" -> "Int";
+            case "FLOAT" -> "Float";
+            case "DECIMAL" -> "Decimal";
+            case "STRING" -> "String";
+            case "BOOLEAN" -> "Boolean";
+            case "DATE" -> "Date";
+            case "TIME_OF_DAY" -> "TimeOfDay";
+            case "CIVIL" -> "Civil";
+            case "UTC" -> "Utc";
+            default -> null;
+        };
+        return Optional.ofNullable(scalar).map(name -> name + (column.nullable() ? "Nullable" : "") + "Filter");
+    }
+
+    // A field that cannot be compared, such as a `byte[]` field, is neither filtered nor sorted.
+    private static List<ServiceField> filterable(ExposedEntity entity) {
+        return returned(entity).stream().filter(field -> column(entity, field).queryable()).toList();
+    }
+
+    private static ExposedEntity.Column column(ExposedEntity entity, ServiceField field) {
+        String name = unescape(field.name());
+        return entity.columns().stream().filter(column -> column.name().equals(name)).findFirst().orElseThrow();
     }
 
     private void appendObject(StringBuilder out, ExposedEntity entity, Set<String> imports) {
@@ -398,6 +521,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         private final String updateInput;
         private final String filter;
         private final String sort;
+        private final String description;
         private final String words;
         private final String plural;
         private final String article;
@@ -419,6 +543,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
             this.updateInput = displayName + "UpdateInput";
             this.filter = displayName + "Filter";
             this.sort = displayName + "Sort";
+            this.description = EntityDescription.descriptionName(entity);
             this.words = String.join(" ", WORD_BOUNDARY.split(displayName)).toLowerCase(Locale.ENGLISH);
             this.plural = Pluralizer.pluralize(words);
             this.article = articleFor(words);

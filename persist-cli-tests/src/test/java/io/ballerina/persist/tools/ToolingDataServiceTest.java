@@ -198,13 +198,15 @@ public class ToolingDataServiceTest {
         Files.writeString(project.resolve("tests").resolve("Config.toml"), String.format("""
                 [dataserviceConfig]
                 port = 9593
+                pageSize = 2
+                maxPageSize = 3
 
                 [dataservice_test.dataservice_graphql]
                 url = "jdbc:h2:mem:dsgraphql;DB_CLOSE_DELAY=-1;INIT=RUNSCRIPT FROM '%s'"
                 user = "sa"
                 password = ""
                 """, init.toString().replace('\\', '/')));
-        assertTestsPassed(bal(project, Map.of(), "test", "--offline"), 4);
+        assertTestsPassed(bal(project, Map.of(), "test", "--offline"), 12);
     }
 
     // Generation from bal build
@@ -241,8 +243,8 @@ public class ToolingDataServiceTest {
         Assert.assertTrue(service.contains("@graphql:ServiceConfig {\n    introspection: false,\n" +
                 "    cors: dataserviceConfig.serviceConfig.cors\n}\nservice graphql:Service /graphql on " +
                 "dataserviceListener {"), service);
-        Assert.assertTrue(service.contains("resource function get assignments() returns AssignmentList?|error {"),
-                service);
+        Assert.assertTrue(service.contains("resource function get assignment(string projectCode, int seq) " +
+                "returns AssignmentObject?|error {"), service);
         Assert.assertFalse(service.toLowerCase(Locale.ROOT).contains("auditlog"), service);
         Assert.assertTrue(Files.readString(project.resolve("generated").resolve(CONFIG))
                 .contains("configurable dsGraphql:Config dataserviceConfig = {};"));
