@@ -56,10 +56,12 @@ function testRootFieldsInModelOrder() returns error? {
                         {name: "badges"},
                         {name: "badge"},
                         {name: "timesheets"},
-                        {name: "timesheet"}
+                        {name: "timesheet"},
+                        {name: "tickets"},
+                        {name: "ticket"}
                     ]
                 },
-                mutationType: ()
+                mutationType: {name: "Mutation"}
             }
         }
     });

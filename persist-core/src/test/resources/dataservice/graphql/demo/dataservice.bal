@@ -61,6 +61,20 @@ service graphql:Service /graphql on dataserviceListener {
         return new (item);
     }
 
+    # Creates a department.
+    #
+    # + input - The department to create
+    # + return - The created department, or the error
+    remote function createDepartment(DepartmentInsertInput input) returns DepartmentObject?|error =>
+        (check dataserviceCreateDepartment([input]))[0];
+
+    # Creates departments.
+    #
+    # + input - The departments to create
+    # + return - The created departments, or the error
+    remote function createDepartments(DepartmentInsertInput[] input) returns DepartmentList?|error =>
+        {items: check dataserviceCreateDepartment(input), hasMore: false};
+
     # Gets a page of employees.
     #
     # + filter - The conditions that the employees match
@@ -94,6 +108,52 @@ service graphql:Service /graphql on dataserviceListener {
         Employee|persist:Error item = dataserviceClient->/employees/[id];
         if item is persist:Error {
             return dsGraphql:toGetError(item, "Employee", [id]);
+        }
+        return new (item);
+    }
+
+    # Creates an employee.
+    #
+    # + input - The employee to create
+    # + return - The created employee, or the error
+    remote function createEmployee(EmployeeInsertInput input) returns EmployeeObject?|error =>
+        (check dataserviceCreateEmployee([input]))[0];
+
+    # Creates employees.
+    #
+    # + input - The employees to create
+    # + return - The created employees, or the error
+    remote function createEmployees(EmployeeInsertInput[] input) returns EmployeeList?|error =>
+        {items: check dataserviceCreateEmployee(input), hasMore: false};
+
+    # Updates an employee by its key.
+    #
+    # + id - The id of the employee
+    # + input - The fields to change
+    # + return - The updated employee, `()` when it cannot be returned, or the error
+    remote function updateEmployee(int id, EmployeeUpdateInput input)
+            returns EmployeeObject?|error {
+        EmployeeUpdate value = check transformInputToEmployeeUpdate(input);
+        Employee|persist:Error item;
+        if value.length() == 0 {
+            item = dataserviceClient->/employees/[id];
+        } else {
+            item = dataserviceClient->/employees/[id].put(value);
+        }
+        if item is persist:Error {
+            return dsGraphql:toUpdateError(item, "Employee", [id]);
+        }
+        return new (item);
+    }
+
+    # Deletes an employee by its key.
+    #
+    # + id - The id of the employee
+    # + return - The deleted employee, or the error
+    remote function deleteEmployee(int id) returns EmployeeObject?|error {
+        Employee|persist:Error item = dataserviceClient->/employees/[id].delete();
+        if item is persist:Error {
+            return dsGraphql:toDeleteError(item, "Employee", [id]);
         }
         return new (item);
     }
@@ -134,6 +194,148 @@ service graphql:Service /graphql on dataserviceListener {
             return dsGraphql:toGetError(item, "Assignment", [projectCode, seq]);
         }
         return new (item);
+    }
+
+    # Creates an assignment.
+    #
+    # + input - The assignment to create
+    # + return - The created assignment, or the error
+    remote function createAssignment(AssignmentInsertInput input) returns AssignmentObject?|error =>
+        (check dataserviceCreateAssignment([input]))[0];
+
+    # Creates assignments.
+    #
+    # + input - The assignments to create
+    # + return - The created assignments, or the error
+    remote function createAssignments(AssignmentInsertInput[] input) returns AssignmentList?|error =>
+        {items: check dataserviceCreateAssignment(input), hasMore: false};
+
+    # Updates an assignment by its key.
+    #
+    # + projectCode - The projectCode of the assignment
+    # + seq - The seq of the assignment
+    # + input - The fields to change
+    # + return - The updated assignment, `()` when it cannot be returned, or the error
+    remote function updateAssignment(string projectCode, int seq, AssignmentUpdateInput input)
+            returns AssignmentObject?|error {
+        AssignmentUpdate value = check transformInputToAssignmentUpdate(input);
+        Assignment|persist:Error item;
+        if value.length() == 0 {
+            item = dataserviceClient->/assignments/[projectCode]/[seq];
+        } else {
+            item = dataserviceClient->/assignments/[projectCode]/[seq].put(value);
+        }
+        if item is persist:Error {
+            return dsGraphql:toUpdateError(item, "Assignment", [projectCode, seq]);
+        }
+        return new (item);
+    }
+
+    # Deletes an assignment by its key.
+    #
+    # + projectCode - The projectCode of the assignment
+    # + seq - The seq of the assignment
+    # + return - The deleted assignment, or the error
+    remote function deleteAssignment(string projectCode, int seq) returns AssignmentObject?|error {
+        Assignment|persist:Error item = dataserviceClient->/assignments/[projectCode]/[seq].delete();
+        if item is persist:Error {
+            return dsGraphql:toDeleteError(item, "Assignment", [projectCode, seq]);
+        }
+        return new (item);
+    }
+}
+
+isolated function dataserviceCreateDepartment(DepartmentInsertInput[] input) returns DepartmentObject[]|error {
+    dataservice:DataserviceError? tooMany = dataservice:checkCreateSize(input.length(), dataservicePageConfig);
+    if tooMany is dataservice:DataserviceError {
+        return dsGraphql:toError(tooMany);
+    }
+    if input.length() == 0 {
+        return [];
+    }
+    DepartmentInsert[] values = from DepartmentInsertInput entry in input
+        select transformInputToDepartmentInsert(entry);
+    do {
+        transaction {
+            int[] keys = check dataserviceClient->/departments.post(values);
+            dataservice:KeyValue[][] keyValues = from int key in keys
+                select [key];
+            dataservice:Query query = dataservice:toKeysQuery(dataserviceDepartmentEntity, keyValues);
+            stream<Department, persist:Error?> stored = dataserviceClient->/departments(Department,
+                whereClause = query.whereClause, orderByClause = query.orderByClause
+            );
+            Department[] rows = check from Department item in stored
+                select item;
+            check dataservice:orderByKeys(rows, dataserviceDepartmentEntity, keyValues);
+            check commit;
+            return from Department item in rows
+                select new DepartmentObject(item);
+        }
+    } on fail error err {
+        return err is dsGraphql:Error ? err : dsGraphql:toCreateError(err, "Department");
+    }
+}
+
+isolated function dataserviceCreateEmployee(EmployeeInsertInput[] input) returns EmployeeObject[]|error {
+    dataservice:DataserviceError? tooMany = dataservice:checkCreateSize(input.length(), dataservicePageConfig);
+    if tooMany is dataservice:DataserviceError {
+        return dsGraphql:toError(tooMany);
+    }
+    if input.length() == 0 {
+        return [];
+    }
+    EmployeeInsert[] values = [];
+    foreach EmployeeInsertInput entry in input {
+        values.push(check transformInputToEmployeeInsert(entry));
+    }
+    do {
+        transaction {
+            int[] keys = check dataserviceClient->/employees.post(values);
+            dataservice:KeyValue[][] keyValues = from int key in keys
+                select [key];
+            dataservice:Query query = dataservice:toKeysQuery(dataserviceEmployeeEntity, keyValues);
+            stream<Employee, persist:Error?> stored = dataserviceClient->/employees(Employee,
+                whereClause = query.whereClause, orderByClause = query.orderByClause
+            );
+            Employee[] rows = check from Employee item in stored
+                select item;
+            check dataservice:orderByKeys(rows, dataserviceEmployeeEntity, keyValues);
+            check commit;
+            return from Employee item in rows
+                select new EmployeeObject(item);
+        }
+    } on fail error err {
+        return err is dsGraphql:Error ? err : dsGraphql:toCreateError(err, "Employee");
+    }
+}
+
+isolated function dataserviceCreateAssignment(AssignmentInsertInput[] input) returns AssignmentObject[]|error {
+    dataservice:DataserviceError? tooMany = dataservice:checkCreateSize(input.length(), dataservicePageConfig);
+    if tooMany is dataservice:DataserviceError {
+        return dsGraphql:toError(tooMany);
+    }
+    if input.length() == 0 {
+        return [];
+    }
+    AssignmentInsert[] values = from AssignmentInsertInput entry in input
+        select transformInputToAssignmentInsert(entry);
+    do {
+        transaction {
+            [string, int][] keys = check dataserviceClient->/assignments.post(values);
+            dataservice:KeyValue[][] keyValues = keys;
+            dataservice:Query query = dataservice:toKeysQuery(dataserviceAssignmentEntity, keyValues);
+            stream<Assignment, persist:Error?> stored = dataserviceClient->/assignments(Assignment,
+                whereClause = query.whereClause, orderByClause = query.orderByClause
+            );
+            Assignment[] rows = check from Assignment item in stored
+                select item;
+            check dataservice:orderByKeys(rows, dataserviceAssignmentEntity, keyValues);
+            check commit;
+            return from Assignment item in rows
+                select new AssignmentObject(item);
+        }
+    } on fail error err {
+        return err is dsGraphql:Error ? err : dsGraphql:toCreateError(err, "Assignment");
     }
 }
 

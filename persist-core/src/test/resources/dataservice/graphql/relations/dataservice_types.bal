@@ -106,6 +106,20 @@ public type CustomerSort record {|
     dsGraphql:SortDirection? name;
 |};
 
+# The fields to create a customer with.
+public type CustomerInsertInput record {|
+    # The `id` field of `Customer`
+    int id;
+    # The `name` field of `Customer`
+    string name;
+|};
+
+# The fields to change in a customer; a field left out is not changed.
+public type CustomerUpdateInput record {|
+    # The `name` field of `Customer`
+    string? name?;
+|};
+
 # The fields of `Customer` that callers can see.
 final readonly & dataservice:Field[] dataserviceCustomerFields = [
     {name: "id", column: "id", 'type: dataservice:INT, key: true},
@@ -148,6 +162,22 @@ final dataservice:Entity dataserviceCustomerEntity = {
         }
     ]
 };
+
+isolated function transformInputToCustomerInsert(CustomerInsertInput value) returns CustomerInsert {
+    return {id: value.id, name: value.name};
+}
+
+isolated function transformInputToCustomerUpdate(CustomerUpdateInput value) returns CustomerUpdate|dsGraphql:Error {
+    CustomerUpdate update = {};
+    if value.hasKey("name") {
+        string? name = value?.name;
+        if name is () {
+            return dsGraphql:toNullError("Customer", "name");
+        }
+        update.name = name;
+    }
+    return update;
+}
 
 # A profile.
 public isolated service class ProfileObject {
@@ -234,6 +264,24 @@ public type ProfileSort record {|
     dsGraphql:SortDirection? customerId;
 |};
 
+# The fields to create a profile with.
+public type ProfileInsertInput record {|
+    # The `id` field of `Profile`
+    int id;
+    # The `bio` field of `Profile`
+    string bio;
+    # The key of the related 'Customer'.
+    int customerId;
+|};
+
+# The fields to change in a profile; a field left out is not changed.
+public type ProfileUpdateInput record {|
+    # The `bio` field of `Profile`
+    string? bio?;
+    # The key of the related 'Customer'.
+    int? customerId?;
+|};
+
 # The fields of `Profile` that callers can see.
 final readonly & dataservice:Field[] dataserviceProfileFields = [
     {name: "id", column: "id", 'type: dataservice:INT, key: true},
@@ -264,6 +312,29 @@ final dataservice:Entity dataserviceProfileEntity = {
         }
     ]
 };
+
+isolated function transformInputToProfileInsert(ProfileInsertInput value) returns ProfileInsert {
+    return {id: value.id, bio: value.bio, customerId: value.customerId};
+}
+
+isolated function transformInputToProfileUpdate(ProfileUpdateInput value) returns ProfileUpdate|dsGraphql:Error {
+    ProfileUpdate update = {};
+    if value.hasKey("bio") {
+        string? bio = value?.bio;
+        if bio is () {
+            return dsGraphql:toNullError("Profile", "bio");
+        }
+        update.bio = bio;
+    }
+    if value.hasKey("customerId") {
+        int? customerId = value?.customerId;
+        if customerId is () {
+            return dsGraphql:toNullError("Profile", "customerId");
+        }
+        update.customerId = customerId;
+    }
+    return update;
+}
 
 # A purchase.
 public isolated service class PurchaseObject {

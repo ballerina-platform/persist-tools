@@ -65,6 +65,60 @@ service graphql:Service /graphql on dataserviceListener {
         return new (item);
     }
 
+    # Creates a customer.
+    #
+    # A customer.
+    #
+    # + input - The customer to create
+    # + return - The created customer, or the error
+    remote function createCustomer(CustomerInsertInput input) returns CustomerObject?|error =>
+        (check dataserviceCreateCustomer([input]))[0];
+
+    # Creates customers.
+    #
+    # A customer.
+    #
+    # + input - The customers to create
+    # + return - The created customers, or the error
+    remote function createCustomers(CustomerInsertInput[] input) returns CustomerList?|error =>
+        {items: check dataserviceCreateCustomer(input), hasMore: false};
+
+    # Updates a customer by its key.
+    #
+    # A customer.
+    #
+    # + id - The id of the customer
+    # + input - The fields to change
+    # + return - The updated customer, `()` when it cannot be returned, or the error
+    remote function updateCustomer(int id, CustomerUpdateInput input)
+            returns CustomerObject?|error {
+        CustomerUpdate value = check transformInputToCustomerUpdate(input);
+        Customer|persist:Error item;
+        if value.length() == 0 {
+            item = dataserviceClient->/customers/[id];
+        } else {
+            item = dataserviceClient->/customers/[id].put(value);
+        }
+        if item is persist:Error {
+            return dsGraphql:toUpdateError(item, "Customer", [id]);
+        }
+        return new (item);
+    }
+
+    # Deletes a customer by its key.
+    #
+    # A customer.
+    #
+    # + id - The id of the customer
+    # + return - The deleted customer, or the error
+    remote function deleteCustomer(int id) returns CustomerObject?|error {
+        Customer|persist:Error item = dataserviceClient->/customers/[id].delete();
+        if item is persist:Error {
+            return dsGraphql:toDeleteError(item, "Customer", [id]);
+        }
+        return new (item);
+    }
+
     # Gets a page of profiles.
     #
     # + filter - The conditions that the profiles match
@@ -98,6 +152,52 @@ service graphql:Service /graphql on dataserviceListener {
         Profile|persist:Error item = dataserviceClient->/profiles/[id];
         if item is persist:Error {
             return dsGraphql:toGetError(item, "Profile", [id]);
+        }
+        return new (item);
+    }
+
+    # Creates a profile.
+    #
+    # + input - The profile to create
+    # + return - The created profile, or the error
+    remote function createProfile(ProfileInsertInput input) returns ProfileObject?|error =>
+        (check dataserviceCreateProfile([input]))[0];
+
+    # Creates profiles.
+    #
+    # + input - The profiles to create
+    # + return - The created profiles, or the error
+    remote function createProfiles(ProfileInsertInput[] input) returns ProfileList?|error =>
+        {items: check dataserviceCreateProfile(input), hasMore: false};
+
+    # Updates a profile by its key.
+    #
+    # + id - The id of the profile
+    # + input - The fields to change
+    # + return - The updated profile, `()` when it cannot be returned, or the error
+    remote function updateProfile(int id, ProfileUpdateInput input)
+            returns ProfileObject?|error {
+        ProfileUpdate value = check transformInputToProfileUpdate(input);
+        Profile|persist:Error item;
+        if value.length() == 0 {
+            item = dataserviceClient->/profiles/[id];
+        } else {
+            item = dataserviceClient->/profiles/[id].put(value);
+        }
+        if item is persist:Error {
+            return dsGraphql:toUpdateError(item, "Profile", [id]);
+        }
+        return new (item);
+    }
+
+    # Deletes a profile by its key.
+    #
+    # + id - The id of the profile
+    # + return - The deleted profile, or the error
+    remote function deleteProfile(int id) returns ProfileObject?|error {
+        Profile|persist:Error item = dataserviceClient->/profiles/[id].delete();
+        if item is persist:Error {
+            return dsGraphql:toDeleteError(item, "Profile", [id]);
         }
         return new (item);
     }
@@ -175,6 +275,68 @@ service graphql:Service /graphql on dataserviceListener {
             return dsGraphql:toGetError(item, "PurchaseLine", [id]);
         }
         return new (item);
+    }
+}
+
+isolated function dataserviceCreateCustomer(CustomerInsertInput[] input) returns CustomerObject[]|error {
+    dataservice:DataserviceError? tooMany = dataservice:checkCreateSize(input.length(), dataservicePageConfig);
+    if tooMany is dataservice:DataserviceError {
+        return dsGraphql:toError(tooMany);
+    }
+    if input.length() == 0 {
+        return [];
+    }
+    CustomerInsert[] values = from CustomerInsertInput entry in input
+        select transformInputToCustomerInsert(entry);
+    do {
+        transaction {
+            int[] keys = check dataserviceClient->/customers.post(values);
+            dataservice:KeyValue[][] keyValues = from int key in keys
+                select [key];
+            dataservice:Query query = dataservice:toKeysQuery(dataserviceCustomerEntity, keyValues);
+            stream<Customer, persist:Error?> stored = dataserviceClient->/customers(Customer,
+                whereClause = query.whereClause, orderByClause = query.orderByClause
+            );
+            Customer[] rows = check from Customer item in stored
+                select item;
+            check dataservice:orderByKeys(rows, dataserviceCustomerEntity, keyValues);
+            check commit;
+            return from Customer item in rows
+                select new CustomerObject(item);
+        }
+    } on fail error err {
+        return err is dsGraphql:Error ? err : dsGraphql:toCreateError(err, "Customer");
+    }
+}
+
+isolated function dataserviceCreateProfile(ProfileInsertInput[] input) returns ProfileObject[]|error {
+    dataservice:DataserviceError? tooMany = dataservice:checkCreateSize(input.length(), dataservicePageConfig);
+    if tooMany is dataservice:DataserviceError {
+        return dsGraphql:toError(tooMany);
+    }
+    if input.length() == 0 {
+        return [];
+    }
+    ProfileInsert[] values = from ProfileInsertInput entry in input
+        select transformInputToProfileInsert(entry);
+    do {
+        transaction {
+            int[] keys = check dataserviceClient->/profiles.post(values);
+            dataservice:KeyValue[][] keyValues = from int key in keys
+                select [key];
+            dataservice:Query query = dataservice:toKeysQuery(dataserviceProfileEntity, keyValues);
+            stream<Profile, persist:Error?> stored = dataserviceClient->/profiles(Profile,
+                whereClause = query.whereClause, orderByClause = query.orderByClause
+            );
+            Profile[] rows = check from Profile item in stored
+                select item;
+            check dataservice:orderByKeys(rows, dataserviceProfileEntity, keyValues);
+            check commit;
+            return from Profile item in rows
+                select new ProfileObject(item);
+        }
+    } on fail error err {
+        return err is dsGraphql:Error ? err : dsGraphql:toCreateError(err, "Profile");
     }
 }
 

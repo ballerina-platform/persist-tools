@@ -7,6 +7,7 @@ import ballerina/dataservice;
 import ballerina/dataservice.graphql as dsGraphql;
 import ballerina/graphql;
 import ballerina/persist;
+import ballerina/time;
 
 # A department.
 public isolated service class DepartmentObject {
@@ -75,6 +76,12 @@ public type DepartmentSort record {|
     dsGraphql:SortDirection? name;
 |};
 
+# The fields to create a department with.
+public type DepartmentInsertInput record {|
+    # The `name` field of `Department`
+    string name;
+|};
+
 # The fields of `Department` that callers can see.
 final readonly & dataservice:Field[] dataserviceDepartmentFields = [
     {name: "id", column: "id", 'type: dataservice:INT, key: true, generated: true},
@@ -104,6 +111,10 @@ final dataservice:Entity dataserviceDepartmentEntity = {
         }
     ]
 };
+
+isolated function transformInputToDepartmentInsert(DepartmentInsertInput value) returns DepartmentInsert {
+    return {name: value.name};
+}
 
 # An employee.
 public isolated service class EmployeeObject {
@@ -234,6 +245,32 @@ public type EmployeeSort record {|
     dsGraphql:SortDirection? departmentId;
 |};
 
+# The fields to create an employee with.
+public type EmployeeInsertInput record {|
+    # The `id` field of `Employee`
+    int id;
+    # The `name` field of `Employee`
+    string name;
+    # The `email` field of `Employee`
+    string? email;
+    # The `hiredOn` field of `Employee`, as an ISO 8601 date
+    string hiredOn;
+    # The key of the related 'Department'.
+    int departmentId;
+|};
+
+# The fields to change in an employee; a field left out is not changed.
+public type EmployeeUpdateInput record {|
+    # The `name` field of `Employee`
+    string? name?;
+    # The `email` field of `Employee`
+    string? email?;
+    # The `hiredOn` field of `Employee`, as an ISO 8601 date
+    string? hiredOn?;
+    # The key of the related 'Department'.
+    int? departmentId?;
+|};
+
 # The fields of `Employee` that callers can see.
 final readonly & dataservice:Field[] dataserviceEmployeeFields = [
     {name: "id", column: "id", 'type: dataservice:INT, key: true},
@@ -266,6 +303,47 @@ final dataservice:Entity dataserviceEmployeeEntity = {
         }
     ]
 };
+
+isolated function transformInputToEmployeeInsert(EmployeeInsertInput value) returns EmployeeInsert|dsGraphql:Error {
+    time:Date|dataservice:ConversionError hiredOn = dataservice:dateFromString(value.hiredOn);
+    if hiredOn is dataservice:ConversionError {
+        return dsGraphql:toInvalidInput(hiredOn, "Employee", "hiredOn");
+    }
+    return {id: value.id, name: value.name, email: value.email, hiredOn, departmentId: value.departmentId};
+}
+
+isolated function transformInputToEmployeeUpdate(EmployeeUpdateInput value) returns EmployeeUpdate|dsGraphql:Error {
+    EmployeeUpdate update = {};
+    if value.hasKey("name") {
+        string? name = value?.name;
+        if name is () {
+            return dsGraphql:toNullError("Employee", "name");
+        }
+        update.name = name;
+    }
+    if value.hasKey("email") {
+        update.email = value?.email;
+    }
+    if value.hasKey("hiredOn") {
+        string? hiredOnText = value?.hiredOn;
+        if hiredOnText is () {
+            return dsGraphql:toNullError("Employee", "hiredOn");
+        }
+        time:Date|dataservice:ConversionError hiredOn = dataservice:dateFromString(hiredOnText);
+        if hiredOn is dataservice:ConversionError {
+            return dsGraphql:toInvalidInput(hiredOn, "Employee", "hiredOn");
+        }
+        update.hiredOn = hiredOn;
+    }
+    if value.hasKey("departmentId") {
+        int? departmentId = value?.departmentId;
+        if departmentId is () {
+            return dsGraphql:toNullError("Employee", "departmentId");
+        }
+        update.departmentId = departmentId;
+    }
+    return update;
+}
 
 # An assignment.
 public isolated service class AssignmentObject {
@@ -373,6 +451,26 @@ public type AssignmentSort record {|
     dsGraphql:SortDirection? employeeId;
 |};
 
+# The fields to create an assignment with.
+public type AssignmentInsertInput record {|
+    # The `projectCode` field of `Assignment`
+    string projectCode;
+    # The `seq` field of `Assignment`
+    int seq;
+    # The `hours` field of `Assignment`
+    decimal hours;
+    # The key of the related 'Employee'.
+    int employeeId;
+|};
+
+# The fields to change in an assignment; a field left out is not changed.
+public type AssignmentUpdateInput record {|
+    # The `hours` field of `Assignment`
+    decimal? hours?;
+    # The key of the related 'Employee'.
+    int? employeeId?;
+|};
+
 # The fields of `Assignment` that callers can see.
 final readonly & dataservice:Field[] dataserviceAssignmentFields = [
     {name: "projectCode", column: "projectCode", 'type: dataservice:STRING, key: true},
@@ -404,3 +502,26 @@ final dataservice:Entity dataserviceAssignmentEntity = {
         }
     ]
 };
+
+isolated function transformInputToAssignmentInsert(AssignmentInsertInput value) returns AssignmentInsert {
+    return {projectCode: value.projectCode, seq: value.seq, hours: value.hours, employeeId: value.employeeId};
+}
+
+isolated function transformInputToAssignmentUpdate(AssignmentUpdateInput value) returns AssignmentUpdate|dsGraphql:Error {
+    AssignmentUpdate update = {};
+    if value.hasKey("hours") {
+        decimal? hours = value?.hours;
+        if hours is () {
+            return dsGraphql:toNullError("Assignment", "hours");
+        }
+        update.hours = hours;
+    }
+    if value.hasKey("employeeId") {
+        int? employeeId = value?.employeeId;
+        if employeeId is () {
+            return dsGraphql:toNullError("Assignment", "employeeId");
+        }
+        update.employeeId = employeeId;
+    }
+    return update;
+}

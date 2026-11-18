@@ -63,6 +63,7 @@ public class GraphqlDataServiceGeneratorTest {
         return new Object[][]{
                 {"demo", "/graphql", true, "dataservice.bal", "dataservice_types.bal"},
                 {"relations", "/graphql", true, "dataservice.bal", "dataservice_types.bal"},
+                {"writes", "/graphql", true, "dataservice.bal", "dataservice_types.bal"},
         };
     }
 
@@ -158,6 +159,9 @@ public class GraphqlDataServiceGeneratorTest {
                         "    string 'n\\-ame;\n|};\n",
                         "the name 'n-ame' of the entity 'Item' is not a valid GraphQL name. Rename it, or mark the " +
                                 "field @dataservice:Internal."},
+                {header + "@dataservice:Expose\ntype Item record {|\n    readonly int input;\n|};\n",
+                        "the key field 'input' of the entity 'Item' uses a name reserved by the data service. Rename " +
+                                "the field, or remove the entity's @dataservice:Expose annotation."},
                 {header + "@dataservice:Expose\ntype Item record {|\n    readonly int id;\n|};\n\n" +
                         "type IntFilter record {|\n    readonly int id;\n|};\n",
                         "the type 'IntFilter' clashes with a type of the GraphQL data service. Rename it."},

@@ -59,6 +59,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
      */
     public static final Set<String> LIBRARY_TYPES = libraryTypes();
 
+    private static final Set<String> GRAPHQL_RESERVED_KEY_NAMES = Set.of("input");
     private static final Pattern ESCAPE = Pattern.compile("\\\\(.)");
     private static final Pattern GRAPHQL_NAME = Pattern.compile("[_A-Za-z][_0-9A-Za-z]*");
     private static final String DATASERVICE_GRAPHQL_IMPORT = "import ballerina/dataservice.graphql as dsGraphql;";
@@ -115,6 +116,12 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
             String name = graphqlName(entity.name());
             if (!GRAPHQL_NAME.matcher(name).matches()) {
                 errors.add(String.format(DataServiceMessages.GRAPHQL_INVALID_NAME, name, name));
+            }
+            for (ServiceField key : entity.keys()) {
+                // Patch takes the key fields and `input`, which the core reserved names do not hold.
+                if (GRAPHQL_RESERVED_KEY_NAMES.contains(unescape(key.name()))) {
+                    errors.add(String.format(DataServiceMessages.KEY_NAME_RESERVED, unescape(key.name()), name));
+                }
             }
             for (ServiceField field : entity.fields()) {
                 if (field.has(FieldRule.INTERNAL)) {
@@ -199,8 +206,22 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
                 appendGetMany(body, entity, imports);
                 appendGetOne(body, entity, imports);
             }
+            if (entity.allows(CREATE)) {
+                appendCreate(body, entity, imports);
+            }
+            if (entity.allows(UPDATE)) {
+                appendUpdate(body, entity, imports);
+            }
+            if (entity.allows(DELETE)) {
+                appendDelete(body, entity, imports);
+            }
         }
         body.append("}").append(NEWLINE);
+        for (ExposedEntity entity : entities) {
+            if (entity.allows(CREATE)) {
+                appendCreateFunction(body, entity, imports);
+            }
+        }
         appendContext(body, imports);
         return DataServiceUtils.format(modelHeader() + String.join(NEWLINE, imports) + NEWLINE + NEWLINE + body);
     }
@@ -216,15 +237,32 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         Set<String> imports = new TreeSet<>();
         StringBuilder body = new StringBuilder();
         for (ExposedEntity entity : entities) {
-            if (entity.allows(READ)) {
+            boolean returned = entity.allows(READ) || entity.allows(CREATE);
+            if (returned) {
                 appendObject(body, entity, imports);
                 appendList(body, entity);
+            }
+            if (entity.allows(READ)) {
                 appendRelated(body, entity, imports);
                 appendFilter(body, entity);
                 appendSort(body, entity);
-                imports.add(DATASERVICE_IMPORT);
                 imports.add(DATASERVICE_GRAPHQL_IMPORT);
+            }
+            if (entity.allows(CREATE)) {
+                appendInsertInput(body, entity);
+            }
+            if (entity.allows(UPDATE)) {
+                appendUpdateInput(body, entity);
+            }
+            if (returned) {
+                imports.add(DATASERVICE_IMPORT);
                 EntityDescription.append(body, entity, entitiesByName, datastore);
+            }
+            if (entity.allows(CREATE)) {
+                appendInsertConverter(body, entity, imports);
+            }
+            if (entity.allows(UPDATE)) {
+                appendUpdateConverter(body, entity, imports);
             }
         }
         if (body.isEmpty()) {
@@ -308,6 +346,337 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         out.append("        }").append(NEWLINE);
         out.append("        return new (item);").append(NEWLINE);
         out.append("    }").append(NEWLINE);
+    }
+
+    private void appendCreate(StringBuilder out, ExposedEntity entity, Set<String> imports) {
+        Names n = new Names(entity);
+        appendDoc(out, "    ", entity, "Creates " + n.article + " " + n.words + ".",
+                List.of("input - The " + n.words + " to create"), "The created " + n.words + ", or the error");
+        out.append("    remote function ").append(n.createOne).append("(").append(n.insertInput)
+                .append(" input) returns ").append(n.object).append("?|error =>").append(NEWLINE)
+                .append("        (check ").append(n.createFunction).append("([input]))[0];").append(NEWLINE);
+        appendDoc(out, "    ", entity, "Creates " + n.plural + ".", List.of("input - The " + n.plural + " to create"),
+                "The created " + n.plural + ", or the error");
+        out.append("    remote function ").append(n.createMany).append("(").append(n.insertInput)
+                .append("[] input) returns ").append(n.list).append("?|error =>").append(NEWLINE)
+                .append("        {items: check ").append(n.createFunction).append("(input), hasMore: false};")
+                .append(NEWLINE);
+    }
+
+    // Create one and create many share this function: in one transaction it posts the records and reads them back
+    // with one query on their keys, in the order of the input, so a batch creates every record or none.
+    private void appendCreateFunction(StringBuilder out, ExposedEntity entity, Set<String> imports) {
+        imports.add(DATASERVICE_IMPORT);
+        imports.add(DATASERVICE_GRAPHQL_IMPORT);
+        Names n = new Names(entity);
+        String insert = n.entity + "Insert";
+        List<ServiceField> keys = entity.keys();
+        String keyType = keys.size() == 1 ? keys.get(0).type() :
+                "[" + keys.stream().map(ServiceField::type).collect(Collectors.joining(", ")) + "]";
+        out.append(NEWLINE).append("isolated function ").append(n.createFunction).append("(").append(n.insertInput)
+                .append("[] input) returns ").append(n.object).append("[]|error {").append(NEWLINE);
+        out.append("    dataservice:DataserviceError? tooMany = dataservice:checkCreateSize(input.length(), ")
+                .append("dataservicePageConfig);").append(NEWLINE);
+        out.append("    if tooMany is dataservice:DataserviceError {").append(NEWLINE);
+        out.append("        return dsGraphql:toError(tooMany);").append(NEWLINE);
+        out.append("    }").append(NEWLINE);
+        out.append("    if input.length() == 0 {").append(NEWLINE);
+        out.append("        return [];").append(NEWLINE);
+        out.append("    }").append(NEWLINE);
+        if (insertConverts(entity)) {
+            out.append("    ").append(insert).append("[] values = [];").append(NEWLINE);
+            out.append("    foreach ").append(n.insertInput).append(" entry in input {").append(NEWLINE);
+            out.append("        values.push(check transformInputTo").append(insert).append("(entry));").append(NEWLINE);
+            out.append("    }").append(NEWLINE);
+        } else {
+            out.append("    ").append(insert).append("[] values = from ").append(n.insertInput)
+                    .append(" entry in input").append(NEWLINE);
+            out.append("        select transformInputTo").append(insert).append("(entry);").append(NEWLINE);
+        }
+        out.append("    do {").append(NEWLINE);
+        out.append("        transaction {").append(NEWLINE);
+        out.append("            ").append(keyType).append("[] keys = check dataserviceClient->/").append(n.resource)
+                .append(".post(values);").append(NEWLINE);
+        out.append("            dataservice:KeyValue[][] keyValues = ")
+                .append(keys.size() == 1 ? "from " + keyType + " key in keys select [key]" : "keys").append(";")
+                .append(NEWLINE);
+        out.append("            dataservice:Query query = dataservice:toKeysQuery(").append(n.description)
+                .append(", keyValues);").append(NEWLINE);
+        out.append("            stream<").append(n.entity).append(", persist:Error?> stored = dataserviceClient->/")
+                .append(n.resource).append("(").append(n.entity).append(",").append(NEWLINE);
+        out.append("                whereClause = query.whereClause, orderByClause = query.orderByClause")
+                .append(NEWLINE);
+        out.append("            );").append(NEWLINE);
+        out.append("            ").append(n.entity).append("[] rows = check from ").append(n.entity)
+                .append(" item in stored").append(NEWLINE);
+        out.append("                select item;").append(NEWLINE);
+        out.append("            check dataservice:orderByKeys(rows, ").append(n.description).append(", keyValues);")
+                .append(NEWLINE);
+        out.append("            check commit;").append(NEWLINE);
+        out.append("            return from ").append(n.entity).append(" item in rows select new ").append(n.object)
+                .append("(item);").append(NEWLINE);
+        out.append("        }").append(NEWLINE);
+        out.append("    } on fail error err {").append(NEWLINE);
+        out.append("        return err is dsGraphql:Error ? err : dsGraphql:toCreateError(err, \"")
+                .append(n.displayName).append("\");").append(NEWLINE);
+        out.append("    }").append(NEWLINE);
+        out.append("}").append(NEWLINE);
+    }
+
+    // Without `read`, patch returns `true`, since GraphQL has no empty result; an empty patch then changes nothing and
+    // reads nothing.
+    private void appendUpdate(StringBuilder out, ExposedEntity entity, Set<String> imports) {
+        imports.add(DATASERVICE_GRAPHQL_IMPORT);
+        Names n = new Names(entity);
+        boolean read = entity.allows(READ);
+        List<String> params = new ArrayList<>(keyDocs(entity, n));
+        params.add("input - The fields to change");
+        appendDoc(out, "    ", entity, "Updates " + n.article + " " + n.words + " by its key.", params,
+                read ? "The updated " + n.words + ", `()` when it cannot be returned, or the error" :
+                        "`true` when the " + n.words + " is updated, or the error");
+        out.append("    remote function ").append(n.update).append("(").append(keyParams(entity)).append(", ")
+                .append(n.updateInput).append(" input)").append(NEWLINE).append("            returns ")
+                .append(read ? n.object : "boolean").append("?|error {").append(NEWLINE);
+        String update = n.entity + "Update";
+        out.append("        ").append(update).append(" value = check transformInputTo").append(update)
+                .append("(input);").append(NEWLINE);
+        if (read) {
+            out.append("        ").append(n.entity).append("|persist:Error item;").append(NEWLINE);
+            out.append("        if value.length() == 0 {").append(NEWLINE);
+            out.append("            item = dataserviceClient->/").append(n.resource).append(keyPath(entity)).append(";")
+                    .append(NEWLINE);
+            out.append("        } else {").append(NEWLINE);
+            out.append("            item = dataserviceClient->/").append(n.resource).append(keyPath(entity))
+                    .append(".put(value);").append(NEWLINE);
+            out.append("        }").append(NEWLINE);
+            out.append("        if item is persist:Error {").append(NEWLINE);
+            out.append("            return dsGraphql:toUpdateError(item, \"").append(n.displayName).append("\", ")
+                    .append(keyList(entity)).append(");").append(NEWLINE);
+            out.append("        }").append(NEWLINE);
+            out.append("        return new (item);").append(NEWLINE);
+        } else {
+            out.append("        if value.length() == 0 {").append(NEWLINE);
+            out.append("            return true;").append(NEWLINE);
+            out.append("        }").append(NEWLINE);
+            out.append("        ").append(n.entity).append("|persist:Error item = dataserviceClient->/")
+                    .append(n.resource).append(keyPath(entity)).append(".put(value);").append(NEWLINE);
+            out.append("        if item is persist:Error {").append(NEWLINE);
+            out.append("            check dsGraphql:toUpdateError(item, \"").append(n.displayName).append("\", ")
+                    .append(keyList(entity)).append(");").append(NEWLINE);
+            out.append("        }").append(NEWLINE);
+            out.append("        return true;").append(NEWLINE);
+        }
+        out.append("    }").append(NEWLINE);
+    }
+
+    private void appendDelete(StringBuilder out, ExposedEntity entity, Set<String> imports) {
+        imports.add(DATASERVICE_GRAPHQL_IMPORT);
+        Names n = new Names(entity);
+        boolean read = entity.allows(READ);
+        appendDoc(out, "    ", entity, "Deletes " + n.article + " " + n.words + " by its key.", keyDocs(entity, n),
+                read ? "The deleted " + n.words + ", or the error" :
+                        "`true` when the " + n.words + " is deleted, or the error");
+        out.append("    remote function ").append(n.delete).append("(").append(keyParams(entity)).append(") returns ")
+                .append(read ? n.object : "boolean").append("?|error {").append(NEWLINE);
+        out.append("        ").append(n.entity).append("|persist:Error item = dataserviceClient->/").append(n.resource)
+                .append(keyPath(entity)).append(".delete();").append(NEWLINE);
+        out.append("        if item is persist:Error {").append(NEWLINE);
+        out.append("            return dsGraphql:toDeleteError(item, \"").append(n.displayName).append("\", ")
+                .append(keyList(entity)).append(");").append(NEWLINE);
+        out.append("        }").append(NEWLINE);
+        out.append("        return ").append(read ? "new (item)" : "true").append(";").append(NEWLINE);
+        out.append("    }").append(NEWLINE);
+    }
+
+    // The fields a create accepts: neither a `ReadOnly` field, which the database or the annotation's value sets, nor
+    // an `Internal` one. A document that sets one is rejected by ballerina/graphql.
+    private static List<ServiceField> insertInputFields(ExposedEntity entity) {
+        return entity.insertFields().orElse(entity.fields()).stream()
+                .filter(field -> !field.has(FieldRule.READ_ONLY) && !field.has(FieldRule.INTERNAL)).toList();
+    }
+
+    // The fields a patch can change: no key, `ReadOnly`, `Immutable` or `Internal` field.
+    private static List<ServiceField> updateInputFields(ExposedEntity entity) {
+        return entity.updateFields().stream().filter(field -> field.rule().isEmpty()).toList();
+    }
+
+    private static boolean insertConverts(ExposedEntity entity) {
+        return insertInputFields(entity).stream().anyMatch(field -> field.conversion().isPresent());
+    }
+
+    // An input field that a client may leave out is nullable, since GraphQL lets a client send `null` for any field it
+    // may leave out; `T x?` cannot take that `null` (ballerina-library#9740).
+    private static void appendInsertInput(StringBuilder out, ExposedEntity entity) {
+        Names n = new Names(entity);
+        out.append(NEWLINE).append("# The fields to create ").append(n.article).append(" ").append(n.words)
+                .append(" with.").append(NEWLINE);
+        out.append("public type ").append(n.insertInput).append(" record {|").append(NEWLINE);
+        for (ServiceField field : insertInputFields(entity)) {
+            out.append("    # ").append(fieldDoc(field, entity, n)).append(NEWLINE);
+            String type = field.conversion().isPresent() ? "string" : field.type();
+            out.append("    ").append(type).append(field.nilable() || field.optional() ? "?" : "").append(" ")
+                    .append(field.name()).append(";").append(NEWLINE);
+        }
+        out.append("|};").append(NEWLINE);
+    }
+
+    private static void appendUpdateInput(StringBuilder out, ExposedEntity entity) {
+        Names n = new Names(entity);
+        out.append(NEWLINE).append("# The fields to change in ").append(n.article).append(" ").append(n.words)
+                .append("; a field left out is not changed.").append(NEWLINE);
+        out.append("public type ").append(n.updateInput).append(" record {|").append(NEWLINE);
+        for (ServiceField field : updateInputFields(entity)) {
+            out.append("    # ").append(fieldDoc(field, entity, n)).append(NEWLINE);
+            String type = field.conversion().isPresent() ? "string" : field.type();
+            out.append("    ").append(type).append("? ").append(field.name()).append("?;").append(NEWLINE);
+        }
+        out.append("|};").append(NEWLINE);
+    }
+
+    // A `ReadOnly` or `Internal` field takes the value of its annotation, or `()`, as in the HTTP service.
+    private void appendInsertConverter(StringBuilder out, ExposedEntity entity, Set<String> imports) {
+        Names n = new Names(entity);
+        String insert = n.entity + "Insert";
+        List<ServiceField> fields = entity.insertFields().orElse(entity.fields());
+        String param = parameterName("value", fields);
+        boolean converts = insertConverts(entity);
+        out.append(NEWLINE).append("isolated function transformInputTo").append(insert).append("(")
+                .append(n.insertInput).append(" ").append(param).append(") returns ").append(insert)
+                .append(converts ? "|dsGraphql:Error {" : " {").append(NEWLINE);
+        List<String> members = new ArrayList<>();
+        for (ServiceField field : fields) {
+            String access = param + "." + field.name();
+            if (field.has(FieldRule.READ_ONLY) || field.has(FieldRule.INTERNAL)) {
+                members.add(field.name() + ": " + field.value().orElse("()"));
+                continue;
+            }
+            if (field.conversion().isEmpty()) {
+                members.add(field.name() + ": " + access);
+                continue;
+            }
+            members.add(field.name());
+            appendFromString(out, n, field, access, "    ", imports);
+        }
+        out.append("    return {").append(String.join(", ", members)).append("};").append(NEWLINE);
+        out.append("}").append(NEWLINE);
+    }
+
+    // Declares `field` as the persist value of the string at `access`, returning the INVALID_INPUT error when it does
+    // not parse; a nil string stays nil.
+    private static void appendFromString(StringBuilder out, Names n, ServiceField field, String access, String indent,
+                                         Set<String> imports) {
+        imports.add(DATASERVICE_IMPORT);
+        imports.add(DATASERVICE_GRAPHQL_IMPORT);
+        if (field.type().startsWith("time:")) {
+            imports.add("import ballerina/time;");
+        }
+        ServiceField.Conversion conversion = field.conversion().orElseThrow();
+        out.append(indent).append(field.persistType()).append("|dataservice:ConversionError ").append(field.name())
+                .append(" = ");
+        if (field.nilable()) {
+            String text = unescape(field.name()) + "Text";
+            out.append("();").append(NEWLINE);
+            out.append(indent).append("string? ").append(text).append(" = ").append(access).append(";").append(NEWLINE);
+            out.append(indent).append("if ").append(text).append(" !is () {").append(NEWLINE);
+            out.append(indent).append("    ").append(field.name()).append(" = ").append(conversion.fromStringFunction())
+                    .append("(").append(text).append(");").append(NEWLINE);
+            out.append(indent).append("}").append(NEWLINE);
+        } else {
+            out.append(conversion.fromStringFunction()).append("(").append(access).append(");").append(NEWLINE);
+        }
+        out.append(indent).append("if ").append(field.name()).append(" is dataservice:ConversionError {")
+                .append(NEWLINE);
+        out.append(indent).append("    return dsGraphql:toInvalidInput(").append(field.name()).append(", \"")
+                .append(n.displayName).append("\", \"").append(unescape(field.name())).append("\");").append(NEWLINE);
+        out.append(indent).append("}").append(NEWLINE);
+    }
+
+    // A field left out is absent from the persist update, so it is not changed; `null` clears a nullable field and is
+    // rejected on one that cannot hold it.
+    private void appendUpdateConverter(StringBuilder out, ExposedEntity entity, Set<String> imports) {
+        imports.add(DATASERVICE_GRAPHQL_IMPORT);
+        Names n = new Names(entity);
+        String update = n.entity + "Update";
+        List<ServiceField> fields = updateInputFields(entity);
+        String param = parameterName("value", fields);
+        String result = parameterName("update", fields);
+        out.append(NEWLINE).append("isolated function transformInputTo").append(update).append("(")
+                .append(n.updateInput).append(" ").append(param).append(") returns ").append(update)
+                .append("|dsGraphql:Error {").append(NEWLINE);
+        out.append("    ").append(update).append(" ").append(result).append(" = {};").append(NEWLINE);
+        for (ServiceField field : fields) {
+            String name = field.name();
+            String key = "\"" + unescape(name) + "\"";
+            out.append("    if ").append(param).append(".hasKey(").append(key).append(") {").append(NEWLINE);
+            if (field.conversion().isEmpty() && field.nilable()) {
+                out.append("        ").append(result).append(".").append(name).append(" = ").append(param).append("?.")
+                        .append(name).append(";").append(NEWLINE);
+            } else if (field.conversion().isEmpty()) {
+                out.append("        ").append(field.type()).append("? ").append(name).append(" = ").append(param)
+                        .append("?.").append(name).append(";").append(NEWLINE);
+                appendNullCheck(out, n, field, name, "        ");
+                out.append("        ").append(result).append(".").append(name).append(" = ").append(name).append(";")
+                        .append(NEWLINE);
+            } else {
+                String text = unescape(name) + "Text";
+                out.append("        string? ").append(text).append(" = ").append(param).append("?.").append(name)
+                        .append(";").append(NEWLINE);
+                if (field.nilable()) {
+                    out.append("        if ").append(text).append(" is () {").append(NEWLINE);
+                    out.append("            ").append(result).append(".").append(name).append(" = ();").append(NEWLINE);
+                    out.append("        } else {").append(NEWLINE);
+                    appendParse(out, n, field, text, "            ", imports);
+                    out.append("            ").append(result).append(".").append(name).append(" = ").append(name)
+                            .append(";").append(NEWLINE);
+                    out.append("        }").append(NEWLINE);
+                } else {
+                    appendNullCheck(out, n, field, text, "        ");
+                    appendParse(out, n, field, text, "        ", imports);
+                    out.append("        ").append(result).append(".").append(name).append(" = ").append(name)
+                            .append(";").append(NEWLINE);
+                }
+            }
+            out.append("    }").append(NEWLINE);
+        }
+        out.append("    return ").append(result).append(";").append(NEWLINE);
+        out.append("}").append(NEWLINE);
+    }
+
+    private static void appendNullCheck(StringBuilder out, Names n, ServiceField field, String variable,
+                                        String indent) {
+        out.append(indent).append("if ").append(variable).append(" is () {").append(NEWLINE);
+        out.append(indent).append("    return dsGraphql:toNullError(\"").append(n.displayName).append("\", \"")
+                .append(unescape(field.name())).append("\");").append(NEWLINE);
+        out.append(indent).append("}").append(NEWLINE);
+    }
+
+    private static void appendParse(StringBuilder out, Names n, ServiceField field, String text, String indent,
+                                    Set<String> imports) {
+        imports.add(DATASERVICE_IMPORT);
+        if (field.type().startsWith("time:")) {
+            imports.add("import ballerina/time;");
+        }
+        out.append(indent).append(field.type()).append("|dataservice:ConversionError ").append(field.name())
+                .append(" = ").append(field.conversion().orElseThrow().fromStringFunction()).append("(").append(text)
+                .append(");").append(NEWLINE);
+        out.append(indent).append("if ").append(field.name()).append(" is dataservice:ConversionError {")
+                .append(NEWLINE);
+        out.append(indent).append("    return dsGraphql:toInvalidInput(").append(field.name()).append(", \"")
+                .append(n.displayName).append("\", \"").append(unescape(field.name())).append("\");").append(NEWLINE);
+        out.append(indent).append("}").append(NEWLINE);
+    }
+
+    // A field with the same name as the parameter would shadow it in the generated record constructor.
+    private static String parameterName(String preferred, List<ServiceField> fields) {
+        String name = preferred;
+        while (true) {
+            String candidate = name;
+            if (fields.stream().noneMatch(field -> unescape(field.name()).equals(candidate)
+                    || (unescape(field.name()) + "Text").equals(candidate))) {
+                return name;
+            }
+            name = "_" + name;
+        }
     }
 
     private static List<String> keyDocs(ExposedEntity entity, Names n) {
@@ -395,11 +764,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         out.append("        self.row = row.cloneReadOnly();").append(NEWLINE);
         out.append("    }").append(NEWLINE);
         for (ServiceField field : returned(entity)) {
-            out.append(NEWLINE).append("    # ").append(fieldDoc(field, entity, n)).append(NEWLINE);
-            out.append("    # + return - The value").append(NEWLINE);
-            out.append("    isolated resource function get ").append(field.name()).append("() returns ")
-                    .append(outputType(field)).append(" => ").append(toOutput(field, imports)).append(";")
-                    .append(NEWLINE);
+            appendFieldResolver(out, entity, n, field, imports);
         }
         for (ExposedRelation relation : entity.relations()) {
             if (relation.many()) {
@@ -576,11 +941,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         out.append("        self.row = row.cloneReadOnly();").append(NEWLINE);
         out.append("    }").append(NEWLINE);
         for (ServiceField field : returned(entity)) {
-            out.append(NEWLINE).append("    # ").append(fieldDoc(field, entity, n)).append(NEWLINE);
-            out.append("    # + return - The value").append(NEWLINE);
-            out.append("    isolated resource function get ").append(field.name()).append("() returns ")
-                    .append(outputType(field)).append(" => ").append(toOutput(field, imports)).append(";")
-                    .append(NEWLINE);
+            appendFieldResolver(out, entity, n, field, imports);
         }
         out.append("}").append(NEWLINE);
         if (reaching.stream().anyMatch(ExposedRelation::many)) {
@@ -621,17 +982,32 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         return field.wireType();
     }
 
-    private static String toOutput(ServiceField field, Set<String> imports) {
+    // A nullable date, time or byte[] field is read into a variable, since a field access cannot be narrowed.
+    private static void appendFieldResolver(StringBuilder out, ExposedEntity entity, Names n, ServiceField field,
+                                            Set<String> imports) {
+        out.append(NEWLINE).append("    # ").append(fieldDoc(field, entity, n)).append(NEWLINE);
+        out.append("    # + return - The value").append(NEWLINE);
+        out.append("    isolated resource function get ").append(field.name()).append("() returns ")
+                .append(outputType(field));
         String access = "self.row." + field.name();
         if (field.conversion().isEmpty()) {
-            return access;
+            out.append(" => ").append(access).append(";").append(NEWLINE);
+            return;
         }
-        imports.add("import ballerina/dataservice;");
+        imports.add(DATASERVICE_IMPORT);
         String convert = field.conversion().get().toStringFunction();
-        if (field.nilable()) {
-            return access + " is () ? () : " + convert + "(" + access + ")";
+        if (!field.nilable()) {
+            out.append(" => ").append(convert).append("(").append(access).append(");").append(NEWLINE);
+            return;
         }
-        return convert + "(" + access + ")";
+        if (field.type().startsWith("time:")) {
+            imports.add("import ballerina/time;");
+        }
+        out.append(" {").append(NEWLINE);
+        out.append("        ").append(field.persistType()).append(" value = ").append(access).append(";")
+                .append(NEWLINE);
+        out.append("        return value is () ? () : ").append(convert).append("(value);").append(NEWLINE);
+        out.append("    }").append(NEWLINE);
     }
 
     private static void appendEntityDoc(StringBuilder out, ExposedEntity entity, Names n) {
@@ -728,6 +1104,11 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         private final String filter;
         private final String sort;
         private final String description;
+        private final String createOne;
+        private final String createMany;
+        private final String createFunction;
+        private final String update;
+        private final String delete;
         private final String words;
         private final String plural;
         private final String article;
@@ -750,6 +1131,11 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
             this.filter = displayName + "Filter";
             this.sort = displayName + "Sort";
             this.description = EntityDescription.descriptionName(entity);
+            this.createOne = "create" + displayName;
+            this.createMany = "create" + capitalize(getMany);
+            this.createFunction = "dataserviceCreate" + displayName;
+            this.update = "update" + displayName;
+            this.delete = "delete" + displayName;
             this.words = String.join(" ", WORD_BOUNDARY.split(displayName)).toLowerCase(Locale.ENGLISH);
             this.plural = Pluralizer.pluralize(words);
             this.article = articleFor(words);
@@ -762,14 +1148,14 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
                 fields.add(getOne);
             }
             if (entity.allows(CREATE)) {
-                fields.add("create" + displayName);
-                fields.add("create" + capitalize(getMany));
+                fields.add(createOne);
+                fields.add(createMany);
             }
             if (entity.allows(UPDATE)) {
-                fields.add("update" + displayName);
+                fields.add(update);
             }
             if (entity.allows(DELETE)) {
-                fields.add("delete" + displayName);
+                fields.add(delete);
             }
             return fields;
         }
