@@ -265,6 +265,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
                 appendUpdateConverter(body, entity, imports);
             }
         }
+        appendEnumFilters(body);
         if (body.isEmpty()) {
             return Optional.empty();
         }
@@ -338,6 +339,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
                 "The " + n.words + ", or the error");
         out.append("    resource function get ").append(identifier(n.getOne)).append("(").append(keyParams(entity))
                 .append(") returns ").append(n.object).append("?|error {").append(NEWLINE);
+        appendKeyCheck(out, entity, n, imports);
         out.append("        ").append(n.entity).append("|persist:Error item = dataserviceClient->/").append(n.resource)
                 .append(keyPath(entity)).append(";").append(NEWLINE);
         out.append("        if item is persist:Error {").append(NEWLINE);
@@ -437,6 +439,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         out.append("    remote function ").append(n.update).append("(").append(keyParams(entity)).append(", ")
                 .append(n.updateInput).append(" input)").append(NEWLINE).append("            returns ")
                 .append(read ? n.object : "boolean").append("?|error {").append(NEWLINE);
+        appendKeyCheck(out, entity, n, imports);
         String update = n.entity + "Update";
         out.append("        ").append(update).append(" value = check transformInputTo").append(update)
                 .append("(input);").append(NEWLINE);
@@ -478,6 +481,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
                         "`true` when the " + n.words + " is deleted, or the error");
         out.append("    remote function ").append(n.delete).append("(").append(keyParams(entity)).append(") returns ")
                 .append(read ? n.object : "boolean").append("?|error {").append(NEWLINE);
+        appendKeyCheck(out, entity, n, imports);
         out.append("        ").append(n.entity).append("|persist:Error item = dataserviceClient->/").append(n.resource)
                 .append(keyPath(entity)).append(".delete();").append(NEWLINE);
         out.append("        if item is persist:Error {").append(NEWLINE);
@@ -500,8 +504,9 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         return entity.updateFields().stream().filter(field -> field.rule().isEmpty()).toList();
     }
 
+    // An insert input fails to convert when a value does not parse or a float is not finite.
     private static boolean insertConverts(ExposedEntity entity) {
-        return insertInputFields(entity).stream().anyMatch(field -> field.conversion().isPresent());
+        return insertInputFields(entity).stream().anyMatch(field -> field.conversion().isPresent() || isFloat(field));
     }
 
     // An input field that a client may leave out is nullable, since GraphQL lets a client send `null` for any field it
@@ -551,6 +556,9 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
                 continue;
             }
             if (field.conversion().isEmpty()) {
+                if (isFloat(field)) {
+                    appendFiniteCheck(out, n, field, field.nilable() ? access + " ?: 0.0" : access, "    ");
+                }
                 members.add(field.name() + ": " + access);
                 continue;
             }
@@ -608,13 +616,22 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
             String name = field.name();
             String key = "\"" + unescape(name) + "\"";
             out.append("    if ").append(param).append(".hasKey(").append(key).append(") {").append(NEWLINE);
-            if (field.conversion().isEmpty() && field.nilable()) {
+            if (field.conversion().isEmpty() && field.nilable() && !isFloat(field)) {
                 out.append("        ").append(result).append(".").append(name).append(" = ").append(param).append("?.")
                         .append(name).append(";").append(NEWLINE);
+            } else if (field.conversion().isEmpty() && field.nilable()) {
+                out.append("        float? ").append(name).append(" = ").append(param).append("?.").append(name)
+                        .append(";").append(NEWLINE);
+                appendFiniteCheck(out, n, field, name + " ?: 0.0", "        ");
+                out.append("        ").append(result).append(".").append(name).append(" = ").append(name).append(";")
+                        .append(NEWLINE);
             } else if (field.conversion().isEmpty()) {
                 out.append("        ").append(field.type()).append("? ").append(name).append(" = ").append(param)
                         .append("?.").append(name).append(";").append(NEWLINE);
                 appendNullCheck(out, n, field, name, "        ");
+                if (isFloat(field)) {
+                    appendFiniteCheck(out, n, field, name, "        ");
+                }
                 out.append("        ").append(result).append(".").append(name).append(" = ").append(name).append(";")
                         .append(NEWLINE);
             } else {
@@ -640,6 +657,26 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         }
         out.append("    return ").append(result).append(";").append(NEWLINE);
         out.append("}").append(NEWLINE);
+    }
+
+    private static void appendFiniteCheck(StringBuilder out, Names n, ServiceField field, String value,
+                                          String indent) {
+        out.append(indent).append("check dsGraphql:checkFinite(").append(value).append(", \"").append(n.displayName)
+                .append("\", \"").append(unescape(field.name())).append("\");").append(NEWLINE);
+    }
+
+    // ballerina/graphql takes a float literal beyond the largest float, such as `1e400`, as `Infinity`, which no
+    // record has as a key.
+    private static void appendKeyCheck(StringBuilder out, ExposedEntity entity, Names n, Set<String> imports) {
+        if (entity.keys().stream().noneMatch(GraphqlDataServiceGenerator::isFloat)) {
+            return;
+        }
+        imports.add(DATASERVICE_IMPORT);
+        out.append("        dataservice:DataserviceError? invalidKey = dataservice:checkFiniteKey(\"")
+                .append(n.displayName).append("\", ").append(keyList(entity)).append(");").append(NEWLINE);
+        out.append("        if invalidKey is dataservice:DataserviceError {").append(NEWLINE);
+        out.append("            return dsGraphql:toError(invalidKey);").append(NEWLINE);
+        out.append("        }").append(NEWLINE);
     }
 
     private static void appendNullCheck(StringBuilder out, Names n, ServiceField field, String variable,
@@ -704,13 +741,11 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
                 .append(" match; every condition set must hold.").append(NEWLINE);
         out.append("public type ").append(n.filter).append(" record {|").append(NEWLINE);
         for (ServiceField field : filterable(entity)) {
-            Optional<String> type = filterType(column(entity, field));
-            if (type.isEmpty()) {
-                continue;
-            }
+            ExposedEntity.Column column = column(entity, field);
+            String type = "ENUM".equals(column.type()) ? enumFilter(field.type(), column.nullable()) :
+                    "dsGraphql:" + filterType(column);
             out.append("    # The conditions on `").append(unescape(field.name())).append("`").append(NEWLINE);
-            out.append("    dsGraphql:").append(type.get()).append("? ").append(field.name()).append(";")
-                    .append(NEWLINE);
+            out.append("    ").append(type).append("? ").append(field.name()).append(";").append(NEWLINE);
         }
         out.append("|};").append(NEWLINE);
     }
@@ -727,8 +762,46 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         out.append("|};").append(NEWLINE);
     }
 
-    // The filter of an enum field is generated per enum, with the enum types.
-    private static Optional<String> filterType(ExposedEntity.Column column) {
+    private static String enumFilter(String enumType, boolean nullable) {
+        return unescape(enumType) + (nullable ? "Nullable" : "") + "Filter";
+    }
+
+    // The filter of an enum is generated in the service's module, once per enum and nullability a filter uses.
+    private void appendEnumFilters(StringBuilder out) {
+        Set<String> written = new LinkedHashSet<>();
+        for (ExposedEntity entity : entities) {
+            if (!entity.allows(READ)) {
+                continue;
+            }
+            for (ServiceField field : filterable(entity)) {
+                ExposedEntity.Column column = column(entity, field);
+                if (!"ENUM".equals(column.type()) || !written.add(enumFilter(field.type(), column.nullable()))) {
+                    continue;
+                }
+                String enumType = field.type();
+                out.append(NEWLINE).append("# The conditions on ").append(column.nullable() ? "a nullable `" : "a `")
+                        .append(unescape(enumType)).append("` field")
+                        .append(column.nullable() ? ". A null field matches only `isNull`." :
+                                "; every condition set must hold.").append(NEWLINE);
+                out.append("public type ").append(enumFilter(enumType, column.nullable())).append(" record {|")
+                        .append(NEWLINE);
+                out.append("    # Equal to the value").append(NEWLINE);
+                out.append("    ").append(enumType).append("? eq;").append(NEWLINE);
+                out.append("    # Not equal to the value")
+                        .append(column.nullable() ? "; a null field does not match" : "").append(NEWLINE);
+                out.append("    ").append(enumType).append("? ne;").append(NEWLINE);
+                out.append("    # Equal to any of the values").append(NEWLINE);
+                out.append("    ").append(enumType).append("[]? anyOf;").append(NEWLINE);
+                if (column.nullable()) {
+                    out.append("    # `true` for null, `false` for not null").append(NEWLINE);
+                    out.append("    boolean? isNull;").append(NEWLINE);
+                }
+                out.append("|};").append(NEWLINE);
+            }
+        }
+    }
+
+    private static String filterType(ExposedEntity.Column column) {
         String scalar = switch (column.type()) {
             case "INT" -> "Int";
             case "FLOAT" -> "Float";
@@ -739,9 +812,9 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
             case "TIME_OF_DAY" -> "TimeOfDay";
             case "CIVIL" -> "Civil";
             case "UTC" -> "Utc";
-            default -> null;
+            default -> throw new IllegalArgumentException("no filter for " + column.type());
         };
-        return Optional.ofNullable(scalar).map(name -> name + (column.nullable() ? "Nullable" : "") + "Filter");
+        return scalar + (column.nullable() ? "Nullable" : "") + "Filter";
     }
 
     // A field that cannot be compared, such as a `byte[]` field, is neither filtered nor sorted.
@@ -979,7 +1052,11 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
 
     // A date, time or byte[] field is a string in the schema, since ballerina/graphql has no scalar for it.
     private static String outputType(ServiceField field) {
-        return field.wireType();
+        return isFloat(field) ? field.wireType() + "|error" : field.wireType();
+    }
+
+    private static boolean isFloat(ServiceField field) {
+        return "float".equals(field.type());
     }
 
     // A nullable date, time or byte[] field is read into a variable, since a field access cannot be narrowed.
@@ -990,6 +1067,21 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         out.append("    isolated resource function get ").append(field.name()).append("() returns ")
                 .append(outputType(field));
         String access = "self.row." + field.name();
+        if (isFloat(field)) {
+            // JSON cannot hold a stored NaN or Infinity, which is answered as an error of the field.
+            String finite = "dsGraphql:toFinite(%s, \"" + n.displayName + "\", \"" + unescape(field.name()) + "\")";
+            imports.add(DATASERVICE_GRAPHQL_IMPORT);
+            if (!field.nilable()) {
+                out.append(" => ").append(String.format(finite, access)).append(";").append(NEWLINE);
+                return;
+            }
+            out.append(" {").append(NEWLINE);
+            out.append("        float? value = ").append(access).append(";").append(NEWLINE);
+            out.append("        return value is () ? () : check ").append(String.format(finite, "value")).append(";")
+                    .append(NEWLINE);
+            out.append("    }").append(NEWLINE);
+            return;
+        }
         if (field.conversion().isEmpty()) {
             out.append(" => ").append(access).append(";").append(NEWLINE);
             return;

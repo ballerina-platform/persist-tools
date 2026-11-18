@@ -64,6 +64,7 @@ public class GraphqlDataServiceGeneratorTest {
                 {"demo", "/graphql", true, "dataservice.bal", "dataservice_types.bal"},
                 {"relations", "/graphql", true, "dataservice.bal", "dataservice_types.bal"},
                 {"writes", "/graphql", true, "dataservice.bal", "dataservice_types.bal"},
+                {"types", "/graphql", true, "dataservice.bal", "dataservice_types.bal"},
         };
     }
 
