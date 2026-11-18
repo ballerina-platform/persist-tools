@@ -6,6 +6,7 @@ function testGetMany() returns error? {
     json response = check query("{ departments { items { id name } hasMore } " +
             "employees { items { id name email hiredOn departmentId } hasMore } " +
             "assignments { items { projectCode seq hours employeeId } hasMore } }");
+    // The page size is 2, and the records are in key order.
     test:assertEquals(response, {
         data: {
             departments: {items: [{id: 1, name: "Research"}, {id: 2, name: "Sales"}], hasMore: false},
@@ -14,9 +15,15 @@ function testGetMany() returns error? {
                     {id: 1, name: "Ann", email: "ann@example.com", hiredOn: "2021-03-15", departmentId: 1},
                     {id: 2, name: "Bob", email: (), hiredOn: "2022-07-01", departmentId: 2}
                 ],
-                hasMore: false
+                hasMore: true
             },
-            assignments: {items: [{projectCode: "ATLAS", seq: 1, hours: 12.50d, employeeId: 1}], hasMore: false}
+            assignments: {
+                items: [
+                    {projectCode: "ATLAS", seq: 1, hours: 12.50d, employeeId: 1},
+                    {projectCode: "ATLAS", seq: 2, hours: 4d, employeeId: 3}
+                ],
+                hasMore: false
+            }
         }
     });
 }
@@ -38,7 +45,16 @@ function testRootFieldsInModelOrder() returns error? {
     test:assertEquals(response, {
         data: {
             __schema: {
-                queryType: {fields: [{name: "departments"}, {name: "employees"}, {name: "assignments"}]},
+                queryType: {
+                    fields: [
+                        {name: "departments"},
+                        {name: "department"},
+                        {name: "employees"},
+                        {name: "employee"},
+                        {name: "assignments"},
+                        {name: "assignment"}
+                    ]
+                },
                 mutationType: ()
             }
         }

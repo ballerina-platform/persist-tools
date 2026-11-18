@@ -11,9 +11,13 @@ function seed() returns error? {
     time:Date hiredOn = {year: 2021, month: 3, day: 15};
     _ = check dataserviceClient->/employees.post([
         {id: 1, name: "Ann", email: "ann@example.com", hiredOn, departmentId: 1},
-        {id: 2, name: "Bob", email: (), hiredOn: {year: 2022, month: 7, day: 1}, departmentId: 2}
+        {id: 2, name: "Bob", email: (), hiredOn: {year: 2022, month: 7, day: 1}, departmentId: 2},
+        {id: 3, name: "Cid", email: "cid@example.com", hiredOn: {year: 2023, month: 1, day: 10}, departmentId: 1}
     ]);
-    _ = check dataserviceClient->/assignments.post([{projectCode: "ATLAS", seq: 1, hours: 12.50, employeeId: 1}]);
+    _ = check dataserviceClient->/assignments.post([
+        {projectCode: "ATLAS", seq: 1, hours: 12.50, employeeId: 1},
+        {projectCode: "ATLAS", seq: 2, hours: 4, employeeId: 3}
+    ]);
 }
 
 // Posts a document and returns the response body, which a request error answers with 400.
@@ -24,4 +28,16 @@ function query(string document, map<json>? variables = ()) returns json|error {
     }
     http:Response response = check api->post("/graphql", payload);
     return response.getJsonPayload();
+}
+
+// The `errors` entries of a response without their `locations`, which depend on the document's layout, ordered by
+// their path, since root fields resolve concurrently.
+function errorsOf(json response) returns json[]|error {
+    json[] errors = check (check response.errors).ensureType();
+    return from json entry in errors
+        let map<json> fields = check entry.ensureType()
+        order by (fields["path"] ?: "").toString()
+        select map from [string, json] [name, value] in fields.entries()
+            where name != "locations"
+            select [name, value];
 }
