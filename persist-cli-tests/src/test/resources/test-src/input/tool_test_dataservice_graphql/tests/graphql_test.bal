@@ -58,7 +58,11 @@ function testRootFieldsInModelOrder() returns error? {
                         {name: "timesheets"},
                         {name: "timesheet"},
                         {name: "tickets"},
-                        {name: "ticket"}
+                        {name: "ticket"},
+                        {name: "readings"},
+                        {name: "reading"},
+                        {name: "measures"},
+                        {name: "measure"}
                     ]
                 },
                 mutationType: {name: "Mutation"}

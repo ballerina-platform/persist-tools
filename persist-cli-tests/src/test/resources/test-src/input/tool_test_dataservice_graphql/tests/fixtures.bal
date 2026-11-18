@@ -7,6 +7,9 @@ final http:Client api = check new ("http://localhost:9593");
 // The records every test reads; each test that writes uses keys of its own.
 @test:BeforeSuite
 function seed() returns error? {
+    // persist's schema stores an int in a 32-bit INT column; the column is widened so that a 64-bit value reaches the
+    // service.
+    _ = check dataserviceClient->executeNativeSQL(`ALTER TABLE "Reading" ALTER COLUMN "count" BIGINT`);
     _ = check dataserviceClient->/departments.post([{name: "Research"}, {name: "Sales"}]);
     time:Date hiredOn = {year: 2021, month: 3, day: 15};
     _ = check dataserviceClient->/employees.post([
@@ -19,6 +22,7 @@ function seed() returns error? {
         {projectCode: "ATLAS", seq: 2, hours: 4, employeeId: 3}
     ]);
     _ = check dataserviceClient->/badges.post([{code: "B-1", employeeId: 1}]);
+    _ = check dataserviceClient->/measures.post([{weight: 1.5, label: "small"}, {weight: 2.5, label: "large"}]);
     _ = check dataserviceClient->/timesheets.post([
         {id: 1, hours: 3, assignmentProjectCode: "ATLAS", assignmentSeq: 2},
         {id: 2, hours: 5, assignmentProjectCode: "ATLAS", assignmentSeq: 1}

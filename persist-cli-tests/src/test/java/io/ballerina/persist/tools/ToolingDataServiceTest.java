@@ -207,7 +207,8 @@ public class ToolingDataServiceTest {
                 user = "sa"
                 password = ""
                 """, init.toString().replace('\\', '/')));
-        assertTestsPassed(bal(project, Map.of(), "test", "--offline"), 47);
+        // H2 reads a time:Utc back from a TIMESTAMP column as local time, so the service runs in UTC.
+        assertTestsPassed(bal(project, Map.of("TZ", "UTC"), "test", "--offline"), 58);
     }
 
     // Generation from bal build
@@ -388,7 +389,7 @@ public class ToolingDataServiceTest {
 
     @DataProvider
     public Object[][] graphqlGoldenModels() {
-        return new Object[][]{{"demo"}, {"relations"}, {"writes"}};
+        return new Object[][]{{"demo"}, {"relations"}, {"writes"}, {"types"}};
     }
 
     @Test(dataProvider = "otherDatastores", description = "Every datastore other than a SQL datastore fails the build")
