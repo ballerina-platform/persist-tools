@@ -208,7 +208,7 @@ public class ToolingDataServiceTest {
                 password = ""
                 """, init.toString().replace('\\', '/')));
         // H2 reads a time:Utc back from a TIMESTAMP column as local time, so the service runs in UTC.
-        assertTestsPassed(bal(project, Map.of("TZ", "UTC"), "test", "--offline"), 58);
+        assertTestsPassed(bal(project, Map.of("TZ", "UTC"), "test", "--offline"), 64);
     }
 
     @Test(description = "Authentication, scopes and relation checks of the GraphQL data service, against H2")
@@ -308,8 +308,10 @@ public class ToolingDataServiceTest {
         assertSucceeded(build(project));
         String service = Files.readString(project.resolve("generated").resolve(SERVICE));
         Assert.assertTrue(service.contains("@graphql:ServiceConfig {\n    introspection: false,\n" +
-                "    cors: dataserviceConfig.serviceConfig.cors\n}\nservice graphql:Service /graphql on " +
-                "dataserviceListener {"), service);
+                "    cors: dataserviceConfig.serviceConfig.cors,\n" +
+                "    maxQueryDepth: dataserviceConfig.serviceConfig.maxQueryDepth,\n" +
+                "    queryComplexityConfig: {maxComplexity: dataserviceConfig.serviceConfig.maxQueryComplexity},\n" +
+                "    validation: false\n}\nservice graphql:Service /graphql on dataserviceListener {"), service);
         Assert.assertTrue(service.contains("resource function get assignment(string projectCode, int seq) " +
                 "returns AssignmentObject?|error {"), service);
         Assert.assertFalse(service.toLowerCase(Locale.ROOT).contains("auditlog"), service);
@@ -365,8 +367,14 @@ public class ToolingDataServiceTest {
         assertStartupFails(auth, database + "[dataserviceConfig.serviceConfig]\nauth = []\n",
                 "'dataserviceConfig.serviceConfig.auth' must hold at least one");
         assertStartupFails(auth, database + "[dataserviceConfig]\npageSize = 0\n" +
-                "[[dataserviceConfig.serviceConfig.auth]]\n[dataserviceConfig.serviceConfig.auth.fileUserStoreConfig]\n",
+                "[[dataserviceConfig.serviceConfig.auth]]\n" +
+                "[dataserviceConfig.serviceConfig.auth.fileUserStoreConfig]\n",
                 "'dataserviceConfig.pageSize' must be between 1 and");
+        assertStartupFails(auth, database + "[dataserviceConfig.serviceConfig]\nmaxQueryComplexity = 0\n" +
+                "[[dataserviceConfig.serviceConfig.auth]]\n" +
+                "[dataserviceConfig.serviceConfig.auth.fileUserStoreConfig]\n",
+                "The configurable value 'dataserviceConfig.serviceConfig.maxQueryComplexity' must be at least 1, " +
+                        "found 0.");
     }
 
     @Test(description = "With introspection = false, the service does not publish its OpenAPI definition")
@@ -471,7 +479,7 @@ public class ToolingDataServiceTest {
     @DataProvider
     public Object[][] graphqlGoldenModels() {
         return new Object[][]{{"demo", false}, {"relations", false}, {"writes", false}, {"types", false},
-                {"auth", true}};
+                {"auth", true}, {"constraints", false}};
     }
 
     @Test(dataProvider = "otherDatastores", description = "Every datastore other than a SQL datastore fails the build")
@@ -576,7 +584,8 @@ public class ToolingDataServiceTest {
                 {"rest", "options.dataservice.protocol = \"rest\"", null, MODEL,
                         "invalid 'options.dataservice.protocol' 'rest'. Supported values: http, graphql."},
                 {"graphql_no_read", "options.dataservice.protocol = \"graphql\"", null,
-                        MODEL.replace("@dataservice:Expose\n", "@dataservice:Expose {operations: [dataservice:CREATE]}\n")
+                        MODEL.replace("@dataservice:Expose\n",
+                                        "@dataservice:Expose {operations: [dataservice:CREATE]}\n")
                                 .replace("[dataservice:READ]", "[dataservice:CREATE]"),
                         "a GraphQL data service needs at least one entity that allows 'read'."},
                 {"base_path_slash", http + "\noptions.dataservice.basePath = \"api\"", null, MODEL,

@@ -66,6 +66,7 @@ public class GraphqlDataServiceGeneratorTest {
                 {"writes", false, "dataservice.bal", "dataservice_types.bal"},
                 {"types", false, "dataservice.bal", "dataservice_types.bal"},
                 {"auth", true, "dataservice.bal", "dataservice_types.bal"},
+                {"constraints", false, "dataservice.bal", "dataservice_types.bal"},
         };
     }
 

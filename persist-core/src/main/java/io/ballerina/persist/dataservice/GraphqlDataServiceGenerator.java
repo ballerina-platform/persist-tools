@@ -67,6 +67,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
     private static final String DATASERVICE_IMPORT = "import ballerina/dataservice;";
     private static final String PERSIST_IMPORT = "import ballerina/persist;";
     private static final String RELATED_OPERATION = "get related";
+    private static final int TO_MANY_COMPLEXITY = 20;
 
     private final List<ExposedEntity> entities;
     private final Map<String, ExposedEntity> entitiesByName = new LinkedHashMap<>();
@@ -200,13 +201,25 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         // GraphiQL loads the schema through introspection, so it is served exactly when introspection is on.
         config.add(introspection ? "graphiql: {enabled: true}" : "introspection: false");
         config.add("cors: dataserviceConfig.serviceConfig.cors");
+        config.add("maxQueryDepth: dataserviceConfig.serviceConfig.maxQueryDepth");
+        config.add("queryComplexityConfig: {maxComplexity: dataserviceConfig.serviceConfig.maxQueryComplexity}");
         if (auth || !toOneRelations().isEmpty()) {
             config.add("contextInit: dataserviceInitContext");
         }
+        // The service checks the model's constraints itself, with #1503's message.
+        config.add("validation: false");
         body.append("    ").append(String.join("," + NEWLINE + "    ", config)).append(NEWLINE);
         body.append("}").append(NEWLINE);
         body.append("service graphql:Service ").append(DataServiceUtils.servicePath(basePath))
                 .append(" on dataserviceListener {").append(NEWLINE);
+        body.append(NEWLINE).append("    # Checks the query limits, so that a value out of range stops the program.")
+                .append(NEWLINE);
+        body.append("    #").append(NEWLINE);
+        body.append("    # + return - An error naming the limit that is out of range").append(NEWLINE);
+        body.append("    function init() returns error? {").append(NEWLINE);
+        body.append("        check dsGraphql:checkLimits(dataserviceConfig.serviceConfig);").append(NEWLINE);
+        body.append("    }").append(NEWLINE);
+        imports.add(DATASERVICE_GRAPHQL_IMPORT);
         for (ExposedEntity entity : entities) {
             if (entity.allows(READ)) {
                 appendGetMany(body, entity, imports);
@@ -418,7 +431,15 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         out.append("    if input.length() == 0 {").append(NEWLINE);
         out.append("        return [];").append(NEWLINE);
         out.append("    }").append(NEWLINE);
-        if (insertConverts(entity)) {
+        if (hasConstraints(entity)) {
+            out.append("    ").append(insert).append("[] values = [];").append(NEWLINE);
+            out.append("    foreach ").append(n.insertInput).append(" entry in input {").append(NEWLINE);
+            out.append("        ").append(insert).append(" value = ").append(insertConverts(entity) ? "check " : "")
+                    .append("transformInputTo").append(insert).append("(entry);").append(NEWLINE);
+            appendConstraintCheck(out, n, "        ");
+            out.append("        values.push(value);").append(NEWLINE);
+            out.append("    }").append(NEWLINE);
+        } else if (insertConverts(entity)) {
             out.append("    ").append(insert).append("[] values = [];").append(NEWLINE);
             out.append("    foreach ").append(n.insertInput).append(" entry in input {").append(NEWLINE);
             out.append("        values.push(check transformInputTo").append(insert).append("(entry));").append(NEWLINE);
@@ -483,6 +504,10 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         String update = n.entity + "Update";
         out.append("        ").append(update).append(" value = check transformInputTo").append(update)
                 .append("(input);").append(NEWLINE);
+        if (hasConstraints(entity)) {
+            imports.add(DATASERVICE_IMPORT);
+            appendConstraintCheck(out, n, "        ");
+        }
         if (read) {
             out.append("        ").append(n.entity).append("|persist:Error item;").append(NEWLINE);
             out.append("        if value.length() == 0 {").append(NEWLINE);
@@ -610,6 +635,20 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
     }
 
     // An insert input fails to convert when a value does not parse or a float is not finite.
+    // The input types carry no constraint annotations, since ballerina/graphql's validation is off, so the converted
+    // persist record is checked.
+    private static boolean hasConstraints(ExposedEntity entity) {
+        return entity.fields().stream().anyMatch(field -> !entity.constraints(field.name()).isEmpty());
+    }
+
+    private static void appendConstraintCheck(StringBuilder out, Names n, String indent) {
+        out.append(indent).append("dataservice:DataserviceError? broken = dataservice:checkConstraints(value, \"")
+                .append(n.displayName).append("\");").append(NEWLINE);
+        out.append(indent).append("if broken is dataservice:DataserviceError {").append(NEWLINE);
+        out.append(indent).append("    return dsGraphql:toError(broken);").append(NEWLINE);
+        out.append(indent).append("}").append(NEWLINE);
+    }
+
     private static boolean insertConverts(ExposedEntity entity) {
         return insertInputFields(entity).stream().anyMatch(field -> field.conversion().isPresent() || isFloat(field));
     }
@@ -967,6 +1006,8 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
                 "sort - The order of the " + words + "; each entry names one field",
                 "size - The number of " + words + " in the page",
                 "offset - The number of " + words + " to skip"), "A page of the " + words + ", or the error");
+        // A to-many relation runs one query per record, which its complexity accounts for.
+        out.append("    @graphql:ResourceConfig {complexity: ").append(TO_MANY_COMPLEXITY).append("}").append(NEWLINE);
         out.append("    isolated resource function get ").append(relation.field()).append("(").append(t.filter)
                 .append("? filter = (), ").append(t.sort).append("[]? sort = (),").append(NEWLINE)
                 .append("            int? size = (), int? offset = ()) returns ").append(t.relatedList)

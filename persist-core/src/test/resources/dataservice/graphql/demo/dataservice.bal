@@ -20,9 +20,19 @@ listener graphql:Listener dataserviceListener =
 @graphql:ServiceConfig {
     graphiql: {enabled: true},
     cors: dataserviceConfig.serviceConfig.cors,
-    contextInit: dataserviceInitContext
+    maxQueryDepth: dataserviceConfig.serviceConfig.maxQueryDepth,
+    queryComplexityConfig: {maxComplexity: dataserviceConfig.serviceConfig.maxQueryComplexity},
+    contextInit: dataserviceInitContext,
+    validation: false
 }
 service graphql:Service /graphql on dataserviceListener {
+
+    # Checks the query limits, so that a value out of range stops the program.
+    #
+    # + return - An error naming the limit that is out of range
+    function init() returns error? {
+        check dsGraphql:checkLimits(dataserviceConfig.serviceConfig);
+    }
 
     # Gets a page of departments.
     #

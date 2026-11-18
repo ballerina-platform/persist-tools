@@ -32,6 +32,7 @@ public isolated service class DepartmentObject {
     # + size - The number of employees in the page
     # + offset - The number of employees to skip
     # + return - A page of the employees, or the error
+    @graphql:ResourceConfig {complexity: 20}
     isolated resource function get employees(EmployeeFilter? filter = (), EmployeeSort[]? sort = (),
             int? size = (), int? offset = ()) returns EmployeeRelatedList?|error {
         dataservice:Query query = check dsGraphql:toRelatedQuery(dataserviceDepartmentEntity, "employees", self.row,
@@ -182,6 +183,7 @@ public isolated service class EmployeeObject {
     # + size - The number of assignments in the page
     # + offset - The number of assignments to skip
     # + return - A page of the assignments, or the error
+    @graphql:ResourceConfig {complexity: 20}
     isolated resource function get assignments(AssignmentFilter? filter = (), AssignmentSort[]? sort = (),
             int? size = (), int? offset = ()) returns AssignmentRelatedList?|error {
         dataservice:Query query = check dsGraphql:toRelatedQuery(dataserviceEmployeeEntity, "assignments", self.row,
