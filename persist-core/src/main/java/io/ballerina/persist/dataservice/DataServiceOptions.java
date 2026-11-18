@@ -41,9 +41,11 @@ public record DataServiceOptions(String protocol, String basePath, boolean auth,
     public static final String AUTH = "auth";
     public static final String INTROSPECTION = "introspection";
     public static final String HTTP = "http";
+    public static final String GRAPHQL = "graphql";
     public static final String DEFAULT_HTTP_BASE_PATH = "/api";
+    public static final String DEFAULT_GRAPHQL_BASE_PATH = "/graphql";
 
-    private static final Set<String> RESERVED_PROTOCOLS = Set.of("graphql", "mcp", "odata", "soap");
+    private static final Set<String> RESERVED_PROTOCOLS = Set.of("mcp", "odata", "soap");
     private static final Set<String> SQL_DATASTORES = Set.of(SupportedDataSources.MYSQL_DB,
             SupportedDataSources.MSSQL_DB, SupportedDataSources.MSSQL_DB_ALT, SupportedDataSources.POSTGRESQL_DB,
             SupportedDataSources.H2_DB);
@@ -66,7 +68,7 @@ public record DataServiceOptions(String protocol, String basePath, boolean auth,
         boolean auth = Boolean.parseBoolean(String.valueOf(group.get(AUTH)));
         Object introspection = group.get(INTROSPECTION);
         return new DataServiceOptions(validProtocol,
-                validateBasePath(basePath == null ? DEFAULT_HTTP_BASE_PATH : basePath.toString()), auth,
+                validateBasePath(basePath == null ? defaultBasePath(validProtocol) : basePath.toString()), auth,
                 introspection == null || Boolean.parseBoolean(introspection.toString()));
     }
 
@@ -93,7 +95,7 @@ public record DataServiceOptions(String protocol, String basePath, boolean auth,
     }
 
     private static String validateProtocol(String protocol, String invalidMessage) throws BalException {
-        if (HTTP.equals(protocol)) {
+        if (HTTP.equals(protocol) || GRAPHQL.equals(protocol)) {
             return protocol;
         }
         if (RESERVED_PROTOCOLS.contains(protocol)) {
@@ -144,6 +146,10 @@ public record DataServiceOptions(String protocol, String basePath, boolean auth,
      * @return the options with the protocol's default base path, without auth and with introspection
      */
     public static DataServiceOptions defaults(String protocol) {
-        return new DataServiceOptions(protocol, DEFAULT_HTTP_BASE_PATH, false, true);
+        return new DataServiceOptions(protocol, defaultBasePath(protocol), false, true);
+    }
+
+    private static String defaultBasePath(String protocol) {
+        return GRAPHQL.equals(protocol) ? DEFAULT_GRAPHQL_BASE_PATH : DEFAULT_HTTP_BASE_PATH;
     }
 }

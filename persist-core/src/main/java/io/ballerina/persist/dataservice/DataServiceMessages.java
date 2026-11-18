@@ -23,7 +23,7 @@ package io.ballerina.persist.dataservice;
  */
 public final class DataServiceMessages {
 
-    public static final String SUPPORTED_PROTOCOLS = "http";
+    public static final String SUPPORTED_PROTOCOLS = "http, graphql";
 
     public static final String PROTOCOL_REQUIRED =
             "'options.dataservice.protocol' is required. Supported values: " + SUPPORTED_PROTOCOLS + ".";
@@ -58,6 +58,16 @@ public final class DataServiceMessages {
             "exposed. Remove its @dataservice:Expose annotation.";
     public static final String SCOPES_WITHOUT_AUTH = "the @dataservice:Expose annotation of the entity '%s' sets " +
             "scopes, but 'options.dataservice.auth' is not true. Set it to true, or remove the scopes.";
+    public static final String GRAPHQL_NO_READ = "a GraphQL data service needs at least one entity that allows " +
+            "'read'. Add dataservice:READ to the 'operations' of an entity.";
+    public static final String GRAPHQL_FIELD_CLASH = "the entities '%s' and '%s' map to the same GraphQL field " +
+            "'%s'. Rename one of them, or remove its @dataservice:Expose annotation.";
+    public static final String GRAPHQL_RESERVED_FIELD = "the field '%s' of the entity '%s' starts with '_', which " +
+            "the GraphQL data service reserves. Rename the field, or mark it @dataservice:Internal.";
+    public static final String GRAPHQL_INVALID_NAME = "the name '%s' of the entity '%s' is not a valid GraphQL " +
+            "name. Rename it, or mark the field @dataservice:Internal.";
+    public static final String GRAPHQL_TYPE_CLASH = "the type '%s' clashes with a type of the GraphQL data " +
+            "service. Rename it.";
     public static final String ANNOTATIONS_WITHOUT_OPTIONS = "the model has @dataservice:Expose annotations, but no " +
             "data service is generated. Set 'options.dataservice.protocol' in the [[tool.persist]] entry to " +
             "generate one.";

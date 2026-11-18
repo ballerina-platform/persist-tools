@@ -38,6 +38,14 @@ public class DataServiceOptionsTest {
     }
 
     @Test
+    public void testGraphqlDefaults() throws BalException {
+        Assert.assertEquals(DataServiceOptions.from(Map.of("protocol", "graphql")),
+                new DataServiceOptions("graphql", "/graphql", false, true));
+        Assert.assertEquals(DataServiceOptions.defaults("graphql"),
+                new DataServiceOptions("graphql", "/graphql", false, true));
+    }
+
+    @Test
     public void testIntrospectionOff() throws BalException {
         Assert.assertEquals(DataServiceOptions.from(Map.of("protocol", "http", "auth", false, "introspection", false)),
                 new DataServiceOptions("http", "/api", false, false));
@@ -54,24 +62,24 @@ public class DataServiceOptionsTest {
     @Test
     public void testProtocolRequired() {
         assertError(Map.of("basePath", "/api"),
-                "'options.dataservice.protocol' is required. Supported values: http.");
+                "'options.dataservice.protocol' is required. Supported values: http, graphql.");
     }
 
     @Test(dataProvider = "reservedProtocols")
     public void testReservedProtocol(String protocol) {
         assertError(Map.of("protocol", protocol),
-                "the protocol '" + protocol + "' is not supported yet. Supported values: http.");
+                "the protocol '" + protocol + "' is not supported yet. Supported values: http, graphql.");
     }
 
     @DataProvider
     public Object[][] reservedProtocols() {
-        return new Object[][]{{"graphql"}, {"mcp"}, {"odata"}, {"soap"}};
+        return new Object[][]{{"mcp"}, {"odata"}, {"soap"}};
     }
 
     @Test(dataProvider = "invalidProtocols")
     public void testInvalidProtocol(String protocol) {
         assertError(Map.of("protocol", protocol),
-                "invalid 'options.dataservice.protocol' '" + protocol + "'. Supported values: http.");
+                "invalid 'options.dataservice.protocol' '" + protocol + "'. Supported values: http, graphql.");
     }
 
     @DataProvider

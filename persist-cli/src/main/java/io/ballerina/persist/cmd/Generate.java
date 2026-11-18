@@ -20,12 +20,12 @@ package io.ballerina.persist.cmd;
 import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
+import io.ballerina.persist.dataservice.DataServiceGenerator;
 import io.ballerina.persist.dataservice.DataServiceMessages;
 import io.ballerina.persist.dataservice.DataServiceModel;
 import io.ballerina.persist.dataservice.DataServiceOptions;
 import io.ballerina.persist.dataservice.ExposeAnnotations;
 import io.ballerina.persist.dataservice.ExposedEntity;
-import io.ballerina.persist.dataservice.HttpDataServiceGenerator;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.SourceGenerator;
 import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
@@ -272,6 +272,7 @@ public class Generate implements BLauncherCmd {
                 DataServiceModel.Resolution resolution = DataServiceModel.resolve(schemaFilePath, module, false);
                 resolution.warnings().forEach(warning -> errStream.println("WARNING: " + warning));
                 exposedEntities = resolution.entities();
+                DataServiceGenerator.validate(dataservice, exposedEntities, module);
             } catch (BalException e) {
                 Utils.printErrors(errStream, e.getMessage());
                 return;
@@ -333,7 +334,7 @@ public class Generate implements BLauncherCmd {
             return;
         }
         if (exposedEntities != null) {
-            HttpDataServiceGenerator generator = new HttpDataServiceGenerator(exposedEntities,
+            DataServiceGenerator generator = DataServiceGenerator.of(exposedEntities,
                     DataServiceOptions.defaults(dataservice), packageName, entityModule.getModuleName(), datastore,
                     true);
             try {

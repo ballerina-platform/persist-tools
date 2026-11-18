@@ -1,0 +1,19 @@
+[package]
+org = "dataservice_test"
+name = "dataservice_graphql"
+version = "0.1.0"
+distribution = "2201.14.0"
+
+[[tool.persist]]
+id = "generate-db-client"
+targetModule = "dataservice_graphql"
+options.datastore = "h2"
+filePath = "persist/model.bal"
+options.dataservice.protocol = "graphql"
+
+# ballerina/graphql 1.19.2 is not released yet: the test distribution holds a local build of
+# module-ballerina-graphql#2610 and #2611.
+[[dependency]]
+org = "ballerina"
+name = "graphql"
+version = "1.19.2"

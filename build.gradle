@@ -99,6 +99,10 @@ subprojects {
         ballerinaStdLibs "io.ballerina.lib:data.jsondata-ballerina:${stdlibDataJsonDataVersion}"
         ballerinaStdLibs "io.ballerina.lib:dataservice-ballerina:${stdlibDataserviceVersion}"
         ballerinaStdLibs "io.ballerina.lib:dataservice.http-ballerina:${stdlibDataserviceHttpVersion}"
+        ballerinaStdLibs "io.ballerina.lib:dataservice.graphql-ballerina:${stdlibDataserviceGraphqlVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:graphql-ballerina:${stdlibGraphqlVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:websocket-ballerina:${stdlibWebsocketVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:uuid-ballerina:${stdlibUuidVersion}"
 
         ballerinaStdLibs "io.ballerina.stdlib:mime-ballerina:${stdlibMimeVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:file-ballerina:${stdlibFileVersion}"

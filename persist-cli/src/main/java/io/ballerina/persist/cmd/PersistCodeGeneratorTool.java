@@ -20,12 +20,12 @@ package io.ballerina.persist.cmd;
 
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
+import io.ballerina.persist.dataservice.DataServiceGenerator;
 import io.ballerina.persist.dataservice.DataServiceMessages;
 import io.ballerina.persist.dataservice.DataServiceModel;
 import io.ballerina.persist.dataservice.DataServiceOptions;
 import io.ballerina.persist.dataservice.ExposeAnnotations;
 import io.ballerina.persist.dataservice.ExposedEntity;
-import io.ballerina.persist.dataservice.HttpDataServiceGenerator;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.SourceGenerator;
 import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
@@ -155,6 +155,7 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
                         dataServiceOptions.auth());
                 resolution.warnings().forEach(warning -> errStream.println("WARNING: " + warning));
                 exposedEntities = resolution.entities();
+                DataServiceGenerator.validate(dataServiceOptions.protocol(), exposedEntities, entityModule);
             }
 
             Path ballerinaTomlPath = Paths.get(projectPath.toString(), BALLERINA_TOML);
@@ -175,7 +176,7 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
                     errStream.println("WARNING: " + DataServiceMessages.ANNOTATIONS_WITHOUT_OPTIONS);
                 }
             } else {
-                new HttpDataServiceGenerator(exposedEntities, dataServiceOptions, packageName,
+                DataServiceGenerator.of(exposedEntities, dataServiceOptions, packageName,
                         entityModule.getModuleName(), datastore, false).write(generatedSourceDirPath);
             }
 
@@ -226,9 +227,9 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
     }
 
     private static void deleteDataServiceSources(Path generatedSourceDirPath) throws IOException {
-        Files.deleteIfExists(generatedSourceDirPath.resolve(HttpDataServiceGenerator.SERVICE_FILE));
-        Files.deleteIfExists(generatedSourceDirPath.resolve(HttpDataServiceGenerator.TYPES_FILE));
-        Files.deleteIfExists(generatedSourceDirPath.resolve(HttpDataServiceGenerator.CONFIG_FILE));
+        Files.deleteIfExists(generatedSourceDirPath.resolve(DataServiceGenerator.SERVICE_FILE));
+        Files.deleteIfExists(generatedSourceDirPath.resolve(DataServiceGenerator.TYPES_FILE));
+        Files.deleteIfExists(generatedSourceDirPath.resolve(DataServiceGenerator.CONFIG_FILE));
     }
 
     private String getModelNameFromFilePath(String filePath) {
