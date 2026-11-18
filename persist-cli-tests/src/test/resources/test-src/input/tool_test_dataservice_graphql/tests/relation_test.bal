@@ -44,7 +44,7 @@ function testToManyWithArguments() returns error? {
 @test:Config
 function testToManyWithAFilter() returns error? {
     json response = check query("query($hours: Decimal) { employees(size: 3) { items { id " +
-            "assignments(filter: {hours: {gt: $hours}}) { items { seq } hasMore } } } }", {hours: 4.5});
+            "assignments(filter: {hours: {gt: $hours}}) { items { seq } hasMore } } } }", {hours: 5});
     test:assertEquals(response, {
         data: {
             employees: {

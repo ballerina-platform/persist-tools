@@ -206,7 +206,7 @@ public class ToolingDataServiceTest {
                 user = "sa"
                 password = ""
                 """, init.toString().replace('\\', '/')));
-        assertTestsPassed(bal(project, Map.of(), "test", "--offline"), 20);
+        assertTestsPassed(bal(project, Map.of(), "test", "--offline"), 38);
     }
 
     // Generation from bal build
@@ -374,6 +374,20 @@ public class ToolingDataServiceTest {
     public Object[][] goldenModels() {
         return new Object[][]{{"auth", true}, {"combinations", false}, {"composite", false}, {"employees", false},
                 {"generated_key", false}, {"key_relations", false}, {"rules", false}, {"wire", false}};
+    }
+
+    @Test(dataProvider = "graphqlGoldenModels", description = "Each model of the GraphQL generator's expected " +
+            "outputs compiles")
+    public void testGraphqlGoldenModelCompiles(String model) throws IOException, InterruptedException {
+        Path project = project("ds_golden_graphql_" + model, entry("h2", "options.dataservice.protocol = \"graphql\""),
+                Files.readString(GOLDEN_MODELS.resolve("graphql").resolve(model).resolve("model.bal")));
+        assertSucceeded(build(project));
+        Assert.assertTrue(Files.exists(project.resolve("generated").resolve(SERVICE)));
+    }
+
+    @DataProvider
+    public Object[][] graphqlGoldenModels() {
+        return new Object[][]{{"demo"}, {"relations"}, {"writes"}};
     }
 
     @Test(dataProvider = "otherDatastores", description = "Every datastore other than a SQL datastore fails the build")

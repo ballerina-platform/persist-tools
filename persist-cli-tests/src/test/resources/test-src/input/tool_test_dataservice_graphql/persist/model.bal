@@ -9,6 +9,7 @@ type Department record {|
     readonly int id;
     string name;
     Employee[] employees;
+    Ticket[] tickets;
 |};
 
 @dataservice:Expose
@@ -45,4 +46,26 @@ type Timesheet record {|
     readonly int id;
     decimal hours;
     Assignment assignment;
+|};
+
+# A ticket, with a field of each rule.
+@dataservice:Expose
+type Ticket record {|
+    readonly int id;
+    @dataservice:Immutable
+    string title;
+    @dataservice:ReadOnly {value: "open"}
+    string status;
+    string? note;
+    time:Date openedOn;
+    time:Civil? dueAt;
+    Department department;
+|};
+
+# A note that callers may only write, with a composite key.
+@dataservice:Expose {operations: [dataservice:CREATE, dataservice:UPDATE, dataservice:DELETE]}
+type Note record {|
+    readonly string region;
+    readonly int seq;
+    string text;
 |};
