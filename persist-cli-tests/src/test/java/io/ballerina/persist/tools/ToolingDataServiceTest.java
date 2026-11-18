@@ -211,6 +211,71 @@ public class ToolingDataServiceTest {
         assertTestsPassed(bal(project, Map.of("TZ", "UTC"), "test", "--offline"), 58);
     }
 
+    @Test(description = "Authentication, scopes and relation checks of the GraphQL data service, against H2")
+    public void testGraphqlAuthBehaviourH2() throws IOException, InterruptedException {
+        Path project = SOURCES.resolve("tool_test_dataservice_graphql_auth");
+        assertSucceeded(bal(project, Map.of(), "build", "--offline"));
+        Path init = project.resolve("db").resolve("init.sql");
+        Files.createDirectories(init.getParent());
+        String schema = Files.readAllLines(project.resolve("generated").resolve("script.sql")).stream()
+                .filter(line -> !line.startsWith("DROP"))
+                .map(line -> line.replace("CREATE TABLE ", "CREATE TABLE IF NOT EXISTS "))
+                .collect(Collectors.joining(System.lineSeparator()));
+        Files.writeString(init, schema);
+        Files.writeString(project.resolve("tests").resolve("Config.toml"), String.format("""
+                [dataserviceConfig]
+                port = 9594
+
+                [dataserviceConfig.serviceConfig.cors]
+                allowOrigins = ["https://app.example.com"]
+
+                [[dataserviceConfig.serviceConfig.auth]]
+                [dataserviceConfig.serviceConfig.auth.fileUserStoreConfig]
+
+                [[dataserviceConfig.serviceConfig.auth]]
+                scopes = ["jwt:default"]
+                [dataserviceConfig.serviceConfig.auth.jwtValidatorConfig]
+                issuer = "dataservice"
+                [dataserviceConfig.serviceConfig.auth.jwtValidatorConfig.signatureConfig]
+                secret = "dataservice-test-secret"
+
+                [dataservice_test.dataservice_graphql_auth]
+                url = "jdbc:h2:mem:dsgraphqlauth;DB_CLOSE_DELAY=-1;INIT=RUNSCRIPT FROM '%s'"
+                user = "sa"
+                password = ""
+
+                [[ballerina.auth.users]]
+                username = "admin"
+                password = "admin"
+                scopes = ["hr:read", "hr:admin", "employees:create", "employees:update", "assignments:read"]
+
+                [[ballerina.auth.users]]
+                username = "reader"
+                password = "reader"
+                scopes = ["hr:read"]
+
+                [[ballerina.auth.users]]
+                username = "writer"
+                password = "writer"
+                scopes = ["employees:create", "employees:update"]
+
+                [[ballerina.auth.users]]
+                username = "remover"
+                password = "remover"
+                scopes = ["hr:admin"]
+
+                [[ballerina.auth.users]]
+                username = "logger"
+                password = "logger"
+                scopes = ["log:write"]
+
+                [[ballerina.auth.users]]
+                username = "guest"
+                password = "guest"
+                """, init.toString().replace('\\', '/')));
+        assertTestsPassed(bal(project, Map.of(), "test", "--offline"), 17);
+    }
+
     // Generation from bal build
 
     @Test(description = "The service is generated next to the client, with the default base path")
@@ -287,6 +352,21 @@ public class ToolingDataServiceTest {
                 "'dataserviceConfig'");
         assertStartupFails(auth, database + "[dataserviceConfig.serviceConfig]\nauth = []\n",
                 "'dataserviceConfig.serviceConfig.auth' must hold at least one");
+    }
+
+    @Test(description = "An invalid configuration stops the GraphQL data service at startup")
+    public void testGraphqlStartupFailures() throws IOException, InterruptedException {
+        String database = "url = \"jdbc:h2:mem:dsstartupgraphql\"\nuser = \"sa\"\npassword = \"\"\n";
+        Path auth = project("ds_startup_graphql_auth", entry("h2",
+                "options.dataservice.protocol = \"graphql\"\noptions.dataservice.auth = true"), MODEL);
+        assertSucceeded(build(auth));
+        assertStartupFails(auth, database, "value not provided for required configurable variable " +
+                "'dataserviceConfig'");
+        assertStartupFails(auth, database + "[dataserviceConfig.serviceConfig]\nauth = []\n",
+                "'dataserviceConfig.serviceConfig.auth' must hold at least one");
+        assertStartupFails(auth, database + "[dataserviceConfig]\npageSize = 0\n" +
+                "[[dataserviceConfig.serviceConfig.auth]]\n[dataserviceConfig.serviceConfig.auth.fileUserStoreConfig]\n",
+                "'dataserviceConfig.pageSize' must be between 1 and");
     }
 
     @Test(description = "With introspection = false, the service does not publish its OpenAPI definition")
@@ -380,8 +460,9 @@ public class ToolingDataServiceTest {
 
     @Test(dataProvider = "graphqlGoldenModels", description = "Each model of the GraphQL generator's expected " +
             "outputs compiles")
-    public void testGraphqlGoldenModelCompiles(String model) throws IOException, InterruptedException {
-        Path project = project("ds_golden_graphql_" + model, entry("h2", "options.dataservice.protocol = \"graphql\""),
+    public void testGraphqlGoldenModelCompiles(String model, boolean auth) throws IOException, InterruptedException {
+        Path project = project("ds_golden_graphql_" + model, entry("h2", "options.dataservice.protocol = \"graphql\"" +
+                (auth ? "\noptions.dataservice.auth = true" : "")),
                 Files.readString(GOLDEN_MODELS.resolve("graphql").resolve(model).resolve("model.bal")));
         assertSucceeded(build(project));
         Assert.assertTrue(Files.exists(project.resolve("generated").resolve(SERVICE)));
@@ -389,7 +470,8 @@ public class ToolingDataServiceTest {
 
     @DataProvider
     public Object[][] graphqlGoldenModels() {
-        return new Object[][]{{"demo"}, {"relations"}, {"writes"}, {"types"}};
+        return new Object[][]{{"demo", false}, {"relations", false}, {"writes", false}, {"types", false},
+                {"auth", true}};
     }
 
     @Test(dataProvider = "otherDatastores", description = "Every datastore other than a SQL datastore fails the build")
