@@ -1,3 +1,4 @@
+import ballerina/constraint;
 import ballerina/dataservice;
 import ballerina/persist as _;
 import ballerina/time;
@@ -53,6 +54,7 @@ type Timesheet record {|
 type Ticket record {|
     readonly int id;
     @dataservice:Immutable
+    @constraint:String {maxLength: 20}
     string title;
     @dataservice:ReadOnly {value: "open"}
     string status;
@@ -67,6 +69,7 @@ type Ticket record {|
 type Note record {|
     readonly string region;
     readonly int seq;
+    @constraint:String {maxLength: 10}
     string text;
 |};
 

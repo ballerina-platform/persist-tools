@@ -45,6 +45,7 @@ public isolated service class CustomerObject {
     # + size - The number of purchases in the page
     # + offset - The number of purchases to skip
     # + return - A page of the purchases, or the error
+    @graphql:ResourceConfig {complexity: 20}
     isolated resource function get purchases(PurchaseFilter? filter = (), PurchaseSort[]? sort = (),
             int? size = (), int? offset = ()) returns PurchaseRelatedList?|error {
         dataservice:Query query = check dsGraphql:toRelatedQuery(dataserviceCustomerEntity, "purchases", self.row,
@@ -377,6 +378,7 @@ public isolated service class PurchaseObject {
     # + size - The number of lines in the page
     # + offset - The number of lines to skip
     # + return - A page of the lines, or the error
+    @graphql:ResourceConfig {complexity: 20}
     isolated resource function get lines(PurchaseLineFilter? filter = (), PurchaseLineSort[]? sort = (),
             int? size = (), int? offset = ()) returns PurchaseLineRelatedList?|error {
         dataservice:Query query = check dsGraphql:toRelatedQuery(dataservicePurchaseEntity, "lines", self.row,
