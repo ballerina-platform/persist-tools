@@ -3,7 +3,7 @@
 _Owners_: @daneshk @sahanHe @TharmiganK  
 _Reviewers_: @daneshk  
 _Created_: 2022/07/26  
-_Updated_: 2026/11/06  
+_Updated_: 2026/11/18  
 _Edition_: Swan Lake
 
 ## Introduction
@@ -70,6 +70,19 @@ The key words MUST, MUST NOT, REQUIRED, SHALL, SHALL NOT, SHOULD, SHOULD NOT, RE
         - [9.7.9. Configuration](#979-configuration)
         - [9.7.10. OpenAPI definition](#9710-openapi-definition)
         - [9.7.11. Generated source](#9711-generated-source)
+    - [9.8. GraphQL service](#98-graphql-service)
+        - [9.8.1. Keys](#981-keys)
+        - [9.8.2. Types](#982-types)
+        - [9.8.3. Query arguments](#983-query-arguments)
+        - [9.8.4. Relations](#984-relations)
+        - [9.8.5. Constraints](#985-constraints)
+        - [9.8.6. Field rules](#986-field-rules)
+        - [9.8.7. Auth](#987-auth)
+        - [9.8.8. Errors](#988-errors)
+        - [9.8.9. Configuration](#989-configuration)
+        - [9.8.10. Introspection and GraphiQL](#9810-introspection-and-graphiql)
+        - [9.8.11. Limits](#9811-limits)
+        - [9.8.12. Generated source](#9812-generated-source)
 - [10. Security considerations](#10-security-considerations)
 - [References](#references)
 
@@ -522,14 +535,14 @@ The `[tool.persist.options.dataservice]` table is a sub-table of the `[[tool.per
 
 | Key | Required | Default | Meaning |
 |---|---|---|---|
-| `options.dataservice.protocol` | yes | — | The protocol the service is generated for. Only `http` is supported |
-| `options.dataservice.basePath` | no | `/api` | The base path of the service |
-| `options.dataservice.auth` | no | `false` | Whether the service is generated with authentication and scopes; see [Auth](#977-auth) |
-| `options.dataservice.introspection` | no | `true` | Whether the service publishes its OpenAPI definition |
+| `options.dataservice.protocol` | yes | — | The protocol the service is generated for: `http` or `graphql` |
+| `options.dataservice.basePath` | no | `/api` for `http`, `/graphql` for `graphql` | The base path of the service |
+| `options.dataservice.auth` | no | `false` | Whether the service is generated with authentication and scopes; see [HTTP auth](#977-auth) and [GraphQL auth](#987-auth) |
+| `options.dataservice.introspection` | no | `true` | Whether the service publishes its OpenAPI definition, for `http`, or its schema through introspection and GraphiQL, for `graphql` |
 
 `basePath` must start with `/`. A trailing `/` is removed, and `/` alone serves the service at the root. Each segment must be non-empty and contain only letters, digits, `_`, `-` and `.`. `persist-options-schema.json` allows the `dataservice` group with the string keys `protocol` and `basePath` and the boolean keys `auth` and `introspection`, and the tool checks their values.
 
-`http` generates an `http:Service` on an `http:Listener`. `graphql`, `mcp`, `odata` and `soap` are reserved for later protocols and are reported as not supported yet.
+`http` generates an `http:Service` on an `http:Listener`, as [HTTP service](#97-http-service) describes, and `graphql` a `graphql:Service` on a `graphql:Listener`, as [GraphQL service](#98-graphql-service) describes. `mcp`, `odata` and `soap` are reserved for later protocols and are reported as not supported yet.
 
 | `options.dataservice` | `protocol` | Annotated entities | Result |
 |---|---|---|---|
@@ -572,9 +585,9 @@ Errors are printed with the `ERROR:` prefix, or as the build tool's diagnostic i
 
 | Case | Severity | Message |
 |---|---|---|
-| `protocol` missing | error | `'options.dataservice.protocol' is required. Supported values: http.` |
-| `protocol` is `graphql`, `mcp`, `odata` or `soap` | error | `the protocol '<value>' is not supported yet. Supported values: http.` |
-| `protocol` is any other value | error | `invalid 'options.dataservice.protocol' '<value>'. Supported values: http.` |
+| `protocol` missing | error | `'options.dataservice.protocol' is required. Supported values: http, graphql.` |
+| `protocol` is `mcp`, `odata` or `soap` | error | `the protocol '<value>' is not supported yet. Supported values: http, graphql.` |
+| `protocol` is any other value | error | `invalid 'options.dataservice.protocol' '<value>'. Supported values: http, graphql.` |
 | `basePath` without a leading `/` | error | `invalid 'options.dataservice.basePath' '<value>': the base path must start with '/'.` |
 | `basePath` with an empty or invalid segment | error | `invalid 'options.dataservice.basePath' '<value>': each path segment must be non-empty and contain only letters, digits, '_', '-' and '.'.` |
 | `targetModule` is not the package | error | `a data service is generated only into the default module '<package>'. Remove 'targetModule' or set it to '<package>'.` |
@@ -586,6 +599,11 @@ Errors are printed with the `ERROR:` prefix, or as the build tool's diagnostic i
 | A key field named as a parameter or variable of the generated resources | error | `the key field '<field>' of the entity '<Entity>' uses a name reserved by the data service. Rename the field, or remove the entity's @dataservice:Expose annotation.` |
 | Two annotated entities with the same collection name | error | `the entities '<Entity>' and '<Entity>' map to the same collection '<collection>' in the data service. Rename one of them, or remove its @dataservice:Expose annotation.` |
 | An entity named as a type generated for an annotated entity, such as `OrderList` next to `Order` | error | `the entity '<Entity>' has the name of a type that the data service generates for the entity '<Entity>'. Rename one of them, or remove the @dataservice:Expose annotation of '<Entity>'.` |
+| `graphql`: no exposed entity allows `read` | error | `a GraphQL data service needs at least one entity that allows 'read'. Add dataservice:READ to the 'operations' of an entity.` |
+| `graphql`: two entities give the same root field, such as `Equipment` and `EquipmentList` | error | `the entities '<Entity>' and '<Entity>' map to the same GraphQL field '<field>'. Rename one of them, or remove its @dataservice:Expose annotation.` |
+| `graphql`: an exposed field whose name starts with `_` | error | `the field '<field>' of the entity '<Entity>' starts with '_', which the GraphQL data service reserves. Rename the field, or mark it @dataservice:Internal.` |
+| `graphql`: an exposed entity or field name that is not a GraphQL name | error | `the name '<name>' of the entity '<Entity>' is not a valid GraphQL name. Rename it, or mark the field @dataservice:Internal.` |
+| `graphql`: an entity or enum named as a generated or library type, such as `EmployeeObject` or `IntFilter` | error | `the type '<name>' clashes with a type of the GraphQL data service. Rename it.` |
 | `scopes` set while `auth` is not `true` | warning | `the @dataservice:Expose annotation of the entity '<Entity>' sets scopes, but 'options.dataservice.auth' is not true. Set it to true, or remove the scopes.` |
 | Annotations without `options.dataservice` | warning | `the model has @dataservice:Expose annotations, but no data service is generated. Set 'options.dataservice.protocol' in the [[tool.persist]] entry to generate one.` |
 | `pull` skips an entity with an unsupported data type | warning | `the table '<table>' has an unsupported data type, so its entity '<Entity>' is not exposed.` |
@@ -604,7 +622,7 @@ Errors are printed with the `ERROR:` prefix, or as the build tool's diagnostic i
 | `pull --dataservice` when the entry already has `options.dataservice` | error | `the [[tool.persist]] entry of persist/model.bal already has an 'options.dataservice' group. Remove it from Ballerina.toml and run the command again, or run 'bal persist pull' without '--dataservice'.` |
 | `pull --dataservice` succeeds | info | `enabled the <PROTOCOL> data service in the [[tool.persist]] entry of persist/model.bal in Ballerina.toml.` |
 
-A key field becomes a path parameter of the generated resources, so it cannot be named `broken`, `converted`, `created`, `ctx`, `entries`, `entry`, `err`, `fields`, `filter`, `forbidden`, `hasMore`, `i`, `include`, `included`, `includedMore`, `includedRows`, `invalidFields`, `invalidKey`, `item`, `itemKey`, `itemPayload`, `items`, `key`, `keyValues`, `keys`, `next`, `offset`, `partial`, `partials`, `payload`, `query`, `readable`, `related`, `row`, `rows`, `size`, `sort`, `sources`, `stored`, `tooMany`, `value` and `values`. Two entities have the same collection name when their names give the same name after the collection rule in [Service shape](#96-service-shape), such as `Person` and `People`, which both give `people`.
+A key field becomes a path parameter of the generated resources, so it cannot be named `broken`, `converted`, `created`, `ctx`, `entries`, `entry`, `err`, `fields`, `filter`, `forbidden`, `hasMore`, `i`, `include`, `included`, `includedMore`, `includedRows`, `invalidFields`, `invalidKey`, `item`, `itemKey`, `itemPayload`, `items`, `key`, `keyValues`, `keys`, `next`, `offset`, `partial`, `partials`, `payload`, `query`, `readable`, `related`, `row`, `rows`, `size`, `sort`, `sources`, `stored`, `tooMany`, `value` and `values`, and with `graphql` also `input` and `field`, the parameters of a GraphQL root field. Two entities have the same collection name when their names give the same name after the collection rule in [Service shape](#96-service-shape), such as `Person` and `People`, which both give `people`.
 
 Every invalid `--expose-tables` name is reported, one line each.
 
@@ -626,8 +644,8 @@ Every invalid `--expose-tables` name is reported, one line each.
 | File | Contents |
 |---|---|
 | `dataservice.bal` | The listener and the service, which holds the persist client |
-| `dataservice_types.bal` | The types the service uses: the wire types and their conversion functions, the `<Entity>List` envelopes and the status code records. It is not written when no exposed entity needs a type, and one left from an earlier run is deleted |
-| `dataservice_config.bal` | The configurable `dataserviceConfig` record; see [Configuration](#979-configuration) |
+| `dataservice_types.bal` | The types the service uses, as each protocol's section describes, such as the wire types and their conversion functions for `http`, or the object, input, filter and sort types for `graphql`. It is not written when no exposed entity needs a type, and one left from an earlier run is deleted |
+| `dataservice_config.bal` | The configurable `dataserviceConfig` record; see the [HTTP](#979-configuration) and [GraphQL](#989-configuration) configuration |
 
 From `bal build`, the files are written into `generated/` with the header of persist's generated files and must not be edited. They are rewritten whenever the client is, and the check that skips generation for an unchanged model also covers `options.dataservice`. When `options.dataservice` is removed, the three files are deleted from `generated/`.
 
@@ -645,6 +663,17 @@ Generated module-level names share the default module's namespace with the user'
 | `<Entity>Payload`, `<Entity>InsertPayload`, `<Entity>UpdatePayload` | The wire types |
 | `transform<Entity>ToPayload`, `transformPayloadTo<Entity>Insert`, `transformPayloadTo<Entity>Update` | The conversion functions |
 | `dataservice<Entity>Fields`, `dataservice<Entity>Entity` | The field list and the description of an entity |
+
+A GraphQL service has these names instead of the HTTP-only ones above:
+
+| Name | Kind |
+|---|---|
+| `dataserviceListener`, `dataserviceClient`, `dataserviceConfig`, `dataservicePageConfig` | The listener, the persist client, the runtime settings and the checked page sizes |
+| `dataserviceAuthenticator`, `dataservice<Entity>Relations` | The authenticator and the `read` scopes of each entity's relations, with `auth = true` |
+| `dataserviceInitContext`, `dataserviceLoad<Entity><Relation>`, `dataserviceCreate<Entity>` | The context function, the dataloader batch function of each to-one relation, and the create function of each entity |
+| `<Entity>Object`, `<Entity>RelatedObject`, `<Entity>List`, `<Entity>RelatedList` | The output types |
+| `<Entity>InsertInput`, `<Entity>UpdateInput`, `<Entity>Filter`, `<Entity>Sort`, `<Enum>Filter`, `<Enum>NullableFilter` | The input types |
+| `transformInputTo<Entity>Insert`, `transformInputTo<Entity>Update` | The conversion functions |
 
 ### 9.6. Service shape
 
@@ -939,6 +968,217 @@ Unless `options.dataservice.introspection` is `false`, the service carries `@ope
 
 A field's `+ field` line in the generated types is its doc comment in the model: the first paragraph of the field's own doc comment, or else the field's `+ field` line in the entity's doc comment. A field without either has a fixed line, such as ``The `name` field of `Employee` ``.
 
+### 9.8. GraphQL service
+
+`dataservice.bal` declares the persist client, the listener and one service. The service checks the query limits in its `init`, so a limit out of range stops it from starting:
+
+```ballerina
+final Client dataserviceClient = check new ();
+
+listener graphql:Listener dataserviceListener =
+        new (dataserviceConfig.port, dataserviceConfig.listenerConfig);
+
+@graphql:ServiceConfig {
+    graphiql: {enabled: true},
+    cors: dataserviceConfig.serviceConfig.cors,
+    maxQueryDepth: dataserviceConfig.serviceConfig.maxQueryDepth,
+    queryComplexityConfig: {maxComplexity: dataserviceConfig.serviceConfig.maxQueryComplexity},
+    contextInit: dataserviceInitContext,
+    validation: false
+}
+service graphql:Service /graphql on dataserviceListener {
+
+    function init() returns error? {
+        check dsGraphql:checkLimits(dataserviceConfig.serviceConfig);
+    }
+
+    // the root fields of each exposed entity
+}
+```
+
+The service's base path is `options.dataservice.basePath`. `contextInit` is set when the model offers a to-one relation or `auth` is `true`; see [Relations](#984-relations) and [Auth](#987-auth). A document is sent with `POST` and `Content-Type: application/json`, or, without auth, with `GET` and the `query`, `operationName` and `variables` query parameters, as `ballerina/graphql` accepts them. The service's functions come from [`ballerina/dataservice.graphql`](https://github.com/ballerina-platform/module-ballerina-dataservice.graphql/blob/main/docs/spec/spec.md), imported as `dsGraphql`.
+
+For an entity `Employee` with the collection name `employees` and key `id`:
+
+| Operation | Action | Root field | Result |
+|---|---|---|---|
+| Get many | `read` | `employees(filter: EmployeeFilter, sort: [EmployeeSort!], size: Int, offset: Int): EmployeeList` | One page of records |
+| Get one | `read` | `employee(id: Int!): EmployeeObject` | The record, or `null` and `NOT_FOUND` |
+| Get related | `read` | A field of the object type, such as `EmployeeObject.assignments`; see [Relations](#984-relations) | The related records |
+| Create one | `create` | `createEmployee(input: EmployeeInsertInput!): EmployeeObject` | The created record |
+| Create many | `create` | `createEmployees(input: [EmployeeInsertInput!]!): EmployeeList` | The created records, with `hasMore: false` |
+| Patch one | `update` | `updateEmployee(id: Int!, input: EmployeeUpdateInput!): EmployeeObject` | The updated record; `Boolean` without `read` |
+| Delete one | `delete` | `deleteEmployee(id: Int!): EmployeeObject` | The deleted record; `Boolean` without `read` |
+
+- **Names:** get many is the collection name, and get one the entity name with its first word in lowercase. An entity whose collection name is its singular name, such as `Equipment`, gets `List` on its list fields: `equipmentList` and `createEquipmentList`. Mutations are `create`, `update` or `delete` followed by the entity name, and create many `create` followed by the capitalized get many name. Root fields are in model order, and within an entity get many and get one, then create one, create many, update and delete.
+- **Nullable root fields:** every root field returns `T?|error`, so a root field that fails is `null` with an entry in `errors` and the other root fields keep their data.
+- **Disabled operations** are not generated, so `ballerina/graphql` answers a document that selects one with a request error. A schema without `create`, `update` or `delete` has no mutation type, and one without `read` cannot be generated; see [Compile-time validation](#93-compile-time-validation).
+- **Creates are atomic:** create one and create many call one generated function, `dataserviceCreate<Entity>`, which checks the count with `dataservice:checkCreateSize`, converts each input, and in one `transaction` posts the records and reads them back with `dataservice:toKeysQuery`, in the order of the input. An empty list returns `{items: [], hasMore: false}` without calling the persist client.
+- **Patch is partial:** a field left out of `input` is not changed, a nullable field set to `null` is set to `null`, and `null` on a field that cannot hold it is `INVALID_INPUT`. An empty patch, `input: {}`, reads the record as get one does, and returns `true` without reading when the entity does not allow `read`. A patch saved but not read back returns `null`, through `dsGraphql:toUpdateError`.
+- **Without `read`,** patch and delete return `Boolean`, `true` when the record was changed or deleted, since GraphQL has no empty result.
+- **Several mutations** in one document run in order, each in its own transaction, so one that fails does not undo the others.
+
+#### 9.8.1. Keys
+
+Get one, patch and delete take one non-null argument per key field, named as the field, in declaration order, such as `assignment(projectCode: String!, seq: Int!)`. A `float` key that is `NaN` or infinite, such as `1e400`, is `INVALID_INPUT`, checked with `dataservice:checkFiniteKey`.
+
+#### 9.8.2. Types
+
+`ballerina/graphql` names a schema type after its Ballerina type, so the generated types have names of their own:
+
+| Type | Kind | Holds |
+|---|---|---|
+| `<Entity>Object` | service class | The returned fields of `<Entity>`, a resolver each, and a field per offered relation |
+| `<Entity>RelatedObject` | service class | The returned fields, without relation fields, for an entity a relation reaches |
+| `<Entity>List`, `<Entity>RelatedList` | open record | A page, `items` and `hasMore` |
+| `<Entity>InsertInput` | closed record | The fields that create accepts |
+| `<Entity>UpdateInput` | closed record | The fields that patch accepts, all optional |
+| `<Entity>Filter`, `<Entity>Sort` | closed record | One field per filterable or sortable field |
+
+The object types are service classes, because `ballerina/graphql` compares records by structure, so an output record with the fields of an input record would be one type. Each holds the persist record, and each field's resolver returns it in its GraphQL form:
+
+| Ballerina type | GraphQL type | Form |
+|---|---|---|
+| `int`, `decimal`, `string`, `boolean` | `Int`, `Decimal`, `String`, `Boolean` | An `int` beyond 32 bits is returned as it is. A decimal literal in a document is read as a float, so a client sends a decimal as a variable to keep it |
+| `float` | `Float` | A stored `NaN` or `Infinity` is `INTERNAL` on its field, through `dsGraphql:toFinite`; an input that is not finite is `INVALID_INPUT`, through `dsGraphql:checkFinite` |
+| enum | the enum | The member name |
+| `byte[]`, `time:Date`, `time:TimeOfDay`, `time:Civil`, `time:Utc` | `String` | As in [JSON](#972-json), with the `ballerina/dataservice` conversion functions; a value that does not parse is `INVALID_INPUT` |
+| `T?` | the nullable type | The value or `null` |
+
+A field of type `T` is `T!` in the object and insert types and `T` in the update type. Filter and sort fields are `T? x;`, where `null` sets no condition, and update fields `T? x?;`, so a patch tells a field left out from one set to `null`. An optional non-nullable field, `T x?`, is never generated, because `ballerina/graphql` publishes it as nullable and cannot bind a `null` for it. A `decimal` is returned at its column's scale.
+
+#### 9.8.3. Query arguments
+
+Get many and a to-many relation field take `filter`, `sort`, `size` and `offset`, passed to `dsGraphql:toQuery` or `dsGraphql:toRelatedQuery` with the entity description:
+
+| Argument | Type | Example |
+|---|---|---|
+| `filter` | `<Entity>Filter` | `filter: {hiredOn: {gte: "2024-01-01"}, email: {isNull: false}}` |
+| `sort` | `[<Entity>Sort!]` | `sort: [{hiredOn: DESC}, {name: ASC}]` |
+| `size` | `Int` | The page size; `dataserviceConfig.pageSize` without it, and at most `dataserviceConfig.maxPageSize` |
+| `offset` | `Int` | The number of records to skip |
+
+- **Filter:** each field of `<Entity>Filter` is an input type of `dsGraphql`, such as `IntFilter` or `StringNullableFilter`, or `<Enum>Filter` and `<Enum>NullableFilter`, generated once per enum a filter uses. A `byte[]` field is neither filtered nor sorted, and an enum field is sorted. Several operators on one field all apply. Without `sort`, records are in key order.
+- **Sort:** each entry sets exactly one field, so the list carries the order; an entry with none or two is `INVALID_INPUT`.
+- **No `fields`:** the selection set names the fields to return. Each record is read in full.
+- **Errors:** an invalid option is a field error with `INVALID_INPUT` and the messages of `ballerina/dataservice`; an unknown field, operator or enum value is a request error of `ballerina/graphql`.
+
+#### 9.8.4. Relations
+
+Each relation the service offers, as [Relations](#974-relations) of the HTTP service defines them, is a field of `<Entity>Object` named as the relation field. A related record is a `<Target>RelatedObject`, so a document reads one hop, and selecting a relation of a related record is a request error.
+
+- **To-many:** the field takes the query arguments and returns `<Target>RelatedList`, read with one query per record, and has `@graphql:ResourceConfig {complexity: 20}`.
+- **To-one:** the field returns `<Target>RelatedObject`, or `null` when there is no related record. It is read through a dataloader that `dataserviceInitContext` registers per request, keyed by the record's link, a record of its linking fields such as `{"employeeId": 1}`. The batch function reads every related record of the request with `dataservice:toIncludeQuery` and orders them with `dsGraphql:toKeyOrder`. This serves both sides of a one-to-one relation and a composite foreign key.
+- **Errors:** an error while reading a relation makes only that field `null`.
+
+#### 9.8.5. Constraints
+
+`ballerina/graphql`'s constraint validation is off, `validation: false`, and the input types carry no constraint annotations. Create and patch check the converted persist record with `dataservice:checkConstraints` when the entity has constraints, and answer a value that breaks one with `INVALID_INPUT` and `The field '<field>' of the entity '<Entity>' breaks its '<constraint>' constraint.`
+
+#### 9.8.6. Field rules
+
+| Rule | Object types | `<Entity>InsertInput` | `<Entity>UpdateInput` | Filter and sort |
+|---|---|---|---|---|
+| `ReadOnly` | Holds the field | Does not hold the field | Does not hold the field | Hold the field |
+| `Immutable` | Holds the field | Holds the field | Does not hold the field | Hold the field |
+| `Internal` | Does not hold the field | Does not hold the field | Does not hold the field | Do not hold the field |
+
+A document that sets a field its input type does not hold is a request error of `ballerina/graphql`. Unlike the HTTP service, a `ReadOnly` field is rejected rather than ignored, because a GraphQL client cannot send back an object it has read. `transformInputTo<Entity>Insert` sets a `ReadOnly` or `Internal` field to the `value` of its annotation, or to `()`. A direction that is not offered has no field.
+
+#### 9.8.7. Auth
+
+With `options.dataservice.auth = true`, `dataserviceInitContext` authenticates each request with `dsGraphql:Authenticator` before `ballerina/graphql` parses the document, and each root field checks its scopes:
+
+```ballerina
+final readonly & map<dsGraphql:RelationScopes> dataserviceEmployeeRelations = {
+    "assignments": {target: "Assignment", scopes: ["assignments:read"]}
+};
+
+isolated function dataserviceInitContext(http:RequestContext requestContext, http:Request request)
+        returns graphql:Context|error {
+    graphql:Context ctx = new;
+    check dataserviceAuthenticator.authenticate(ctx, request);
+    // the dataloaders
+    return ctx;
+}
+
+service graphql:Service /graphql on dataserviceListener {
+
+    resource function get employees(graphql:Context ctx, graphql:Field 'field, EmployeeFilter? filter = (),
+            EmployeeSort[]? sort = (), int? size = (), int? offset = ()) returns EmployeeList?|error {
+        check dsGraphql:checkScopes(ctx, ["hr:read"]);
+        check dsGraphql:checkRelationScopes(ctx, 'field, "Employee", dataserviceEmployeeRelations);
+        // the read
+    }
+}
+```
+
+- **Scopes:** the scopes of each action are those of [HTTP auth](#977-auth). A root field takes the `graphql:Context`, and the `graphql:Field` when its result has relation fields, and calls `dsGraphql:checkScopes` with its action's scopes first; an empty list takes the deciding provider's `scopes`. A caller without one gets `FORBIDDEN` on that field.
+- **Relations:** a root field whose result has relation fields calls `dsGraphql:checkRelationScopes` with `dataservice<Entity>Relations`, the related entity and its `read` scopes per relation, so a selected relation the caller may not read is `FORBIDDEN` once, before the read. A mutation passes the entity's own `read` scopes too.
+- **Patch and delete results:** with `read` allowed, patch and delete return the record only when `dsGraphql:hasScope` holds for the `read` scopes, and `null` with no error otherwise; an empty patch by such a caller does not read.
+- **Before validation:** a request without a valid credential is answered with `400`, no `data` and `UNAUTHENTICATED`, whatever its document, including one that does not parse and an introspection query, and without a `WWW-Authenticate` header. A request that is not `POST` is refused.
+- **Providers:** `dataserviceConfig` is a `dsGraphql:AuthConfig`, whose `serviceConfig.auth` is required, and `dataserviceAuthenticator` is created at startup, so the program stops without a provider or with an empty list.
+- **Introspection** needs a credential and no scope. GraphiQL's page needs none; a user sets the credential in its Headers tab.
+
+#### 9.8.8. Errors
+
+Each error is a field error carrying `extensions.code`, through the `dsGraphql` functions, except a request error of `ballerina/graphql`, which has no `data` and no code:
+
+| Error | Where | `extensions.code` |
+|---|---|---|
+| `persist:NotFoundError` | Get one, patch, delete | `NOT_FOUND` |
+| `persist:AlreadyExistsError` | Create, patch | `CONFLICT` |
+| `persist:ConstraintViolationError` | Create, patch, delete | `CONSTRAINT_VIOLATION` |
+| A value that does not parse, `null` on a field that needs a value, a broken constraint, an invalid query option, a create above `maxPageSize`, a `float` that is not finite | The field whose argument holds it | `INVALID_INPUT` |
+| A document that `ballerina/graphql` rejects, or one beyond the limits | The response, with `400` and no `data` | none |
+| A missing or rejected credential, with `auth = true` | The response, with `400` and no `data` | `UNAUTHENTICATED` |
+| A caller without a scope of the action, or of a selected relation, with `auth = true` | The root field | `FORBIDDEN` |
+| Any other error, and a stored `float` that is not finite | The field | `INTERNAL` |
+
+The messages are those of `ballerina/dataservice`. A field error is answered with `200`.
+
+#### 9.8.9. Configuration
+
+| Setting | Where | Default |
+|---|---|---|
+| Base path | `options.dataservice.basePath` in `Ballerina.toml` | `/graphql` |
+| Introspection and GraphiQL | `options.dataservice.introspection` in `Ballerina.toml` | `true` |
+| Port, page sizes | `port`, `pageSize` and `maxPageSize` of `[dataserviceConfig]` in `Config.toml` | `9090`, `100`, `1000` |
+| Other listener settings | `listenerConfig` of `[dataserviceConfig]` | The `ballerina/graphql` defaults |
+| CORS | `cors` of `[dataserviceConfig.serviceConfig]` | No cross-origin request |
+| Query depth and complexity | `maxQueryDepth` and `maxQueryComplexity` of `[dataserviceConfig.serviceConfig]` | `15` and `100` |
+| Authentication providers | `auth` of `[dataserviceConfig.serviceConfig]` | None: required when `auth` is `true` |
+
+`dataservice_config.bal` declares `configurable dsGraphql:Config dataserviceConfig = {};`, or `configurable dsGraphql:AuthConfig dataserviceConfig = ?;` with auth, the checked `dataservicePageConfig`, and with auth `dataserviceAuthenticator`. The layout is that of the HTTP service, apart from the limits.
+
+#### 9.8.10. Introspection and GraphiQL
+
+Unless `options.dataservice.introspection` is `false`, the service publishes its schema through introspection and serves GraphiQL, `graphiql: {enabled: true}`, at `/graphiql`, which loads its scripts from `unpkg.com`. With `introspection = false`, the service carries `introspection: false`, `__schema` and `__type` are refused, and GraphiQL is not served. The schema's descriptions come from the generated doc comments.
+
+#### 9.8.11. Limits
+
+| Limit | Default | On a breach |
+|---|---|---|
+| Query depth | `15` | A request error, `Query "<name>" has depth of <n>, which exceeds max depth of <max>` |
+| Query complexity | `100`; a field counts `1`, and a to-many relation field `20` | A request error, `The operation <name> exceeds the maximum query complexity threshold. ...` |
+
+The schema nests data at most five fields deep; GraphiQL's introspection query has depth 13 and complexity 25, within the defaults. A limit below 1 stops the program, through `dsGraphql:checkLimits`.
+
+#### 9.8.12. Generated source
+
+`dataservice.bal` holds, in order: the client and the listener, with auth the relation scope maps, then the service with its `init` and the root fields of each exposed entity in model order, then the create functions, `dataserviceInitContext` and the dataloader batch functions. `dataservice_types.bal` holds, per entity in model order, `<Entity>Object`, `<Entity>List`, `<Entity>RelatedObject` and `<Entity>RelatedList`, `<Entity>Filter`, `<Entity>Sort`, `<Entity>InsertInput`, `<Entity>UpdateInput`, the entity description and the conversion functions, followed by the enum filters. Each root field and generated public type has a short doc comment, from which the schema's descriptions come:
+
+| Operation | Summary |
+|---|---|
+| Get many | `Gets a page of employees.` |
+| Get one | `Gets an employee by its key.` |
+| A to-one relation | `Gets the employee of an assignment.` |
+| A to-many relation | `Gets the assignments of an employee.` |
+| Create one, create many | `Creates an employee.`, `Creates employees.` |
+| Patch, delete | `Updates an employee by its key.`, `Deletes an employee by its key.` |
+
+The entity's doc comment from the model follows the summary. A field's description is its doc comment in the model, or else names the field and its format, such as ``The `hiredOn` field of `Employee`, as an ISO 8601 date``. Input fields are documented in place, because `ballerina/graphql` reads an input field's description from its own doc comment, and the fields of an output record from the record's `+ field` lines.
+
 ## 10. Security considerations
 
 - `bal persist pull` does not accept the database password as a command-line argument. It prompts for it, as described in [7.3](#73-behaviour).
@@ -949,12 +1189,15 @@ A field's `+ field` line in the generated types is its doc comment in the model:
 - A data service is generated without authentication unless `options.dataservice.auth` is `true`, as described in [9.2](#92-configuration). Without it, every caller can use every enabled operation of each exposed entity.
 - With `auth = true`, each operation requires the scopes of its action, and patch, delete and relations check the `read` scopes, as described in [9.7.7](#977-auth). A request without a valid credential is answered with `401` before it is dispatched or bound, so binding errors do not reveal the request types to an unauthenticated caller. The OpenAPI definition and Swagger UI need a credential, and only `OPTIONS`, with its `Link` header, stays public.
 - A field annotated with `@dataservice:Internal` is never returned or accepted by the data service, as described in [9.7.6](#976-field-rules).
-- The data service allows no cross-origin request unless CORS is configured, as described in [9.7.9](#979-configuration). Swagger UI loads its scripts from `unpkg.com`, as described in [9.7.10](#9710-openapi-definition).
+- The data service allows no cross-origin request unless CORS is configured, as described in [9.7.9](#979-configuration) and [9.8.9](#989-configuration). Swagger UI and GraphiQL load their scripts from `unpkg.com`, as described in [9.7.10](#9710-openapi-definition) and [9.8.10](#9810-introspection-and-graphiql).
+- A GraphQL data service with `auth = true` authenticates each request before its document is parsed, so neither introspection nor a validation error reveals the schema to an unauthenticated caller, and it accepts only `POST`, so a cross-site `GET` cannot run a mutation with a browser's saved credentials, as described in [9.8.7](#987-auth).
+- A GraphQL data service refuses a document beyond its depth and complexity limits, which bound the queries one document runs, as described in [9.8.11](#9811-limits).
 
 ## References
 
 - [Ballerina `persist` specification](https://github.com/ballerina-platform/module-ballerina-persist/blob/main/docs/spec/spec.md)
 - [Ballerina `dataservice` specification](https://github.com/ballerina-platform/module-ballerina-dataservice/blob/main/docs/spec/spec.md)
 - [Ballerina `dataservice.http` specification](https://github.com/ballerina-platform/module-ballerina-dataservice.http/blob/main/docs/spec/spec.md)
+- [Ballerina `dataservice.graphql` specification](https://github.com/ballerina-platform/module-ballerina-dataservice.graphql/blob/main/docs/spec/spec.md)
 - [RFC 2119: Key words for use in RFCs to Indicate Requirement Levels](https://www.rfc-editor.org/rfc/rfc2119)
 - [RFC 8174: Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words](https://www.rfc-editor.org/rfc/rfc8174)

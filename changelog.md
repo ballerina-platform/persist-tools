@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - [Add HTTP data service generation from a persist model](https://github.com/ballerina-platform/ballerina-spec/issues/1503)
+- [Add GraphQL data service generation from a persist model](https://github.com/ballerina-platform/ballerina-spec/issues/1520)
 
 ### Changed
 
