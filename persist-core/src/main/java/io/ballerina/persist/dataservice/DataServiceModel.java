@@ -32,6 +32,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 import static io.ballerina.persist.dataservice.DataServiceUtils.isInternal;
 
@@ -121,14 +122,6 @@ public final class DataServiceModel {
                         entity.collection()));
             }
         }
-        for (ExposedEntity entity : exposed) {
-            for (String typeName : generatedTypeNames(entity)) {
-                if (entityModule.getEntityMap().containsKey(typeName)) {
-                    errors.add(String.format(DataServiceMessages.TYPE_NAME_CLASH, typeName, entity.name(),
-                            entity.name()));
-                }
-            }
-        }
         if (!errors.isEmpty()) {
             throw new BalException(String.join(System.lineSeparator(), errors));
         }
@@ -186,14 +179,20 @@ public final class DataServiceModel {
                 .map(entity -> String.format(DataServiceMessages.SCOPES_WITHOUT_AUTH, entity.name())).toList();
     }
 
-    // The types that `HttpDataServiceGenerator` declares for an entity, next to the persist types of the model.
-    private static List<String> generatedTypeNames(ExposedEntity entity) {
-        List<String> suffixes = new ArrayList<>(List.of("List", "Filter", "Partial", "PartialList", "RelatedPartial",
-                "RelatedPartialList", "Created", "ListCreated"));
-        if (entity.hasWireTypes()) {
-            suffixes.addAll(List.of("Payload", "InsertPayload", "UpdatePayload"));
+    // A protocol's types share the module with the persist types of the model, so a model entity cannot have the name
+    // of a type generated for an exposed entity.
+    static List<String> typeNameClashes(List<ExposedEntity> exposed, Set<String> entityNames,
+                                        Function<ExposedEntity, List<String>> generatedTypes) {
+        List<String> errors = new ArrayList<>();
+        for (ExposedEntity entity : exposed) {
+            for (String typeName : generatedTypes.apply(entity)) {
+                if (entityNames.contains(typeName)) {
+                    errors.add(String.format(DataServiceMessages.TYPE_NAME_CLASH, typeName, entity.name(),
+                            entity.name()));
+                }
+            }
         }
-        return suffixes.stream().map(suffix -> entity.name() + suffix).toList();
+        return errors;
     }
 
     // The key fields whose names the generated resources use for their own parameters and variables.

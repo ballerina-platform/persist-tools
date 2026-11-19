@@ -23,6 +23,7 @@ import io.ballerina.persist.models.Module;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -54,7 +55,25 @@ public interface DataServiceGenerator {
     static void validate(String protocol, List<ExposedEntity> entities, Module entityModule) throws BalException {
         if (DataServiceOptions.GRAPHQL.equals(protocol)) {
             GraphqlDataServiceGenerator.validate(entities, entityModule);
+        } else {
+            HttpDataServiceGenerator.validate(entities, entityModule);
         }
+    }
+
+    /**
+     * Lists the key fields of an entity whose names the generated code of a protocol uses for its own parameters
+     * and variables.
+     *
+     * @param protocol the protocol
+     * @param entity   the entity
+     * @return the unescaped names of those key fields
+     */
+    static List<String> reservedKeys(String protocol, ExposedEntity entity) {
+        List<String> reserved = new ArrayList<>(DataServiceModel.reservedKeys(entity));
+        if (DataServiceOptions.GRAPHQL.equals(protocol)) {
+            reserved.addAll(GraphqlDataServiceGenerator.reservedKeys(entity));
+        }
+        return reserved;
     }
 
     /**

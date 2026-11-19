@@ -43,12 +43,14 @@ public record PullExposure(Set<String> exposed, List<String> warnings) {
      * Selects the entities to annotate.
      *
      * @param entityModule the introspected model
+     * @param protocol     the protocol of the data service, whose generated code reserves some key names
      * @param exposeTables the value of `--expose-tables`, or null to expose every supported entity
      * @return the selection
      * @throws BalException if `--expose-tables` names no table, or a table that cannot be exposed, with one line per
      *                      table
      */
-    public static PullExposure select(Module entityModule, String exposeTables) throws BalException {
+    public static PullExposure select(Module entityModule, String protocol, String exposeTables)
+            throws BalException {
         Set<String> exposed = new LinkedHashSet<>();
         List<String> warnings = new ArrayList<>();
         // The entity that has taken each collection, by collection.
@@ -62,7 +64,7 @@ public record PullExposure(Set<String> exposed, List<String> warnings) {
                 }
                 ExposedEntity candidate = ExposedEntity.of(entity, EnumSet.allOf(Operation.class), List.of(),
                         Map.of());
-                List<String> reserved = DataServiceModel.reservedKeys(candidate);
+                List<String> reserved = DataServiceGenerator.reservedKeys(protocol, candidate);
                 Entity other = collections.get(candidate.collection());
                 if (!reserved.isEmpty()) {
                     warnings.add(String.format(DataServiceMessages.PULL_SKIPS_RESERVED_KEY, reserved.get(0),
@@ -98,7 +100,7 @@ public record PullExposure(Set<String> exposed, List<String> warnings) {
                 continue;
             }
             ExposedEntity candidate = ExposedEntity.of(entity, EnumSet.allOf(Operation.class), List.of(), Map.of());
-            List<String> reserved = DataServiceModel.reservedKeys(candidate);
+            List<String> reserved = DataServiceGenerator.reservedKeys(protocol, candidate);
             Entity other = collections.get(candidate.collection());
             if (!reserved.isEmpty()) {
                 errors.add(String.format(DataServiceMessages.EXPOSE_TABLE_RESERVED_KEY, table, reserved.get(0),

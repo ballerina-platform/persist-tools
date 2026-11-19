@@ -94,23 +94,27 @@ service graphql:Service /graphql on dataserviceListener {
     # Creates a department.
     #
     # + input - The department to create
-    # + return - The created department, or the error
+    # + return - The created department, `()` when it cannot be returned, or the error
     remote function createDepartment(graphql:Context ctx, graphql:Field 'field, DepartmentInsertInput input)
             returns DepartmentObject?|error {
         check dsGraphql:checkScopes(ctx, []);
         check dsGraphql:checkRelationScopes(ctx, 'field, "Department", dataserviceDepartmentRelations, ["hr:read"]);
-        return (check dataserviceCreateDepartment([input]))[0];
+        boolean readable = dsGraphql:hasScope(ctx, ["hr:read"]);
+        DepartmentObject created = (check dataserviceCreateDepartment([input]))[0];
+        return readable ? created : ();
     }
 
     # Creates departments.
     #
     # + input - The departments to create
-    # + return - The created departments, or the error
+    # + return - The created departments, `()` when it cannot be returned, or the error
     remote function createDepartments(graphql:Context ctx, graphql:Field 'field, DepartmentInsertInput[] input)
             returns DepartmentList?|error {
         check dsGraphql:checkScopes(ctx, []);
         check dsGraphql:checkRelationScopes(ctx, 'field, "Department", dataserviceDepartmentRelations, ["hr:read"]);
-        return {items: check dataserviceCreateDepartment(input), hasMore: false};
+        boolean readable = dsGraphql:hasScope(ctx, ["hr:read"]);
+        DepartmentObject[] items = check dataserviceCreateDepartment(input);
+        return readable ? {items, hasMore: false} : ();
     }
 
     # Gets a page of employees.
@@ -157,23 +161,27 @@ service graphql:Service /graphql on dataserviceListener {
     # Creates an employee.
     #
     # + input - The employee to create
-    # + return - The created employee, or the error
+    # + return - The created employee, `()` when it cannot be returned, or the error
     remote function createEmployee(graphql:Context ctx, graphql:Field 'field, EmployeeInsertInput input)
             returns EmployeeObject?|error {
         check dsGraphql:checkScopes(ctx, ["employees:create"]);
         check dsGraphql:checkRelationScopes(ctx, 'field, "Employee", dataserviceEmployeeRelations, ["hr:read"]);
-        return (check dataserviceCreateEmployee([input]))[0];
+        boolean readable = dsGraphql:hasScope(ctx, ["hr:read"]);
+        EmployeeObject created = (check dataserviceCreateEmployee([input]))[0];
+        return readable ? created : ();
     }
 
     # Creates employees.
     #
     # + input - The employees to create
-    # + return - The created employees, or the error
+    # + return - The created employees, `()` when it cannot be returned, or the error
     remote function createEmployees(graphql:Context ctx, graphql:Field 'field, EmployeeInsertInput[] input)
             returns EmployeeList?|error {
         check dsGraphql:checkScopes(ctx, ["employees:create"]);
         check dsGraphql:checkRelationScopes(ctx, 'field, "Employee", dataserviceEmployeeRelations, ["hr:read"]);
-        return {items: check dataserviceCreateEmployee(input), hasMore: false};
+        boolean readable = dsGraphql:hasScope(ctx, ["hr:read"]);
+        EmployeeObject[] items = check dataserviceCreateEmployee(input);
+        return readable ? {items, hasMore: false} : ();
     }
 
     # Updates an employee by its key.
@@ -261,23 +269,27 @@ service graphql:Service /graphql on dataserviceListener {
     # Creates an assignment.
     #
     # + input - The assignment to create
-    # + return - The created assignment, or the error
+    # + return - The created assignment, `()` when it cannot be returned, or the error
     remote function createAssignment(graphql:Context ctx, graphql:Field 'field, AssignmentInsertInput input)
             returns AssignmentObject?|error {
         check dsGraphql:checkScopes(ctx, ["assignments:create"]);
         check dsGraphql:checkRelationScopes(ctx, 'field, "Assignment", dataserviceAssignmentRelations, ["assignments:read"]);
-        return (check dataserviceCreateAssignment([input]))[0];
+        boolean readable = dsGraphql:hasScope(ctx, ["assignments:read"]);
+        AssignmentObject created = (check dataserviceCreateAssignment([input]))[0];
+        return readable ? created : ();
     }
 
     # Creates assignments.
     #
     # + input - The assignments to create
-    # + return - The created assignments, or the error
+    # + return - The created assignments, `()` when it cannot be returned, or the error
     remote function createAssignments(graphql:Context ctx, graphql:Field 'field, AssignmentInsertInput[] input)
             returns AssignmentList?|error {
         check dsGraphql:checkScopes(ctx, ["assignments:create"]);
         check dsGraphql:checkRelationScopes(ctx, 'field, "Assignment", dataserviceAssignmentRelations, ["assignments:read"]);
-        return {items: check dataserviceCreateAssignment(input), hasMore: false};
+        boolean readable = dsGraphql:hasScope(ctx, ["assignments:read"]);
+        AssignmentObject[] items = check dataserviceCreateAssignment(input);
+        return readable ? {items, hasMore: false} : ();
     }
 
     # Updates an assignment by its key.

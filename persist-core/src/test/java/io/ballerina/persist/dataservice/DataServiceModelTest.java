@@ -22,6 +22,7 @@ import io.ballerina.persist.BalException;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.utils.BalProjectUtils;
 import org.testng.Assert;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
@@ -211,19 +212,53 @@ public class DataServiceModelTest {
                         "Rename one of them, or remove its @dataservice:Expose annotation."));
     }
 
-    @Test
-    public void testEntityNamedAsAGeneratedType() throws IOException {
-        // OrderList is not exposed, but its persist type shares the module with the generated OrderList.
+    @Test(dataProvider = "generatedTypeNames")
+    public void testEntityNamedAsAGeneratedType(String protocol, String typeName) throws IOException, BalException {
+        // The type is not exposed, but its persist type shares the module with the generated one.
+        Path model = generatedTypeModel(typeName);
+        Module entities = BalProjectUtils.getEntities(model);
+        List<ExposedEntity> exposed = DataServiceModel.resolve(entities, annotations(model), Map.of(), NO_RULES);
+        BalException error = Assert.expectThrows(BalException.class,
+                () -> DataServiceGenerator.validate(protocol, exposed, entities));
+        Assert.assertEquals(error.getMessage(), "the entity '" + typeName + "' has the name of a type that the " +
+                "data service generates for the entity 'Order'. Rename one of them, or remove the " +
+                "@dataservice:Expose annotation of 'Order'.");
+    }
+
+    @DataProvider
+    public Object[][] generatedTypeNames() {
+        return new Object[][]{
+                {DataServiceOptions.HTTP, "OrderList"},
+                {DataServiceOptions.HTTP, "OrderPartial"},
+                {DataServiceOptions.GRAPHQL, "OrderList"},
+                {DataServiceOptions.GRAPHQL, "OrderObject"},
+        };
+    }
+
+    @Test(dataProvider = "otherProtocolTypeNames")
+    public void testEntityNamedAsAnotherProtocolsType(String protocol, String typeName)
+            throws IOException, BalException {
+        Path model = generatedTypeModel(typeName);
+        Module entities = BalProjectUtils.getEntities(model);
+        DataServiceGenerator.validate(protocol, DataServiceModel.resolve(entities, annotations(model), Map.of(),
+                NO_RULES), entities);
+    }
+
+    @DataProvider
+    public Object[][] otherProtocolTypeNames() {
+        return new Object[][]{
+                {DataServiceOptions.HTTP, "OrderObject"},
+                {DataServiceOptions.GRAPHQL, "OrderPartial"},
+        };
+    }
+
+    private static Path generatedTypeModel(String typeName) throws IOException {
         String source = "import ballerina/dataservice;\nimport ballerina/persist as _;\n\n" +
                 "@dataservice:Expose\ntype Order record {|\n    readonly int id;\n|};\n\n" +
-                "type OrderList record {|\n    readonly int id;\n|};\n";
+                "type " + typeName + " record {|\n    readonly int id;\n|};\n";
         Path model = Files.createTempDirectory("types").resolve("model.bal");
         Files.writeString(model, source);
-        BalException error = Assert.expectThrows(BalException.class, () -> DataServiceModel.resolve(
-                BalProjectUtils.getEntities(model), annotations(model), Map.of(), NO_RULES));
-        Assert.assertEquals(error.getMessage(), "the entity 'OrderList' has the name of a type that the data " +
-                "service generates for the entity 'Order'. Rename one of them, or remove the @dataservice:Expose " +
-                "annotation of 'Order'.");
+        return model;
     }
 
     private static Map<String, EnumSet<Operation>> annotations(Path model) throws BalException {

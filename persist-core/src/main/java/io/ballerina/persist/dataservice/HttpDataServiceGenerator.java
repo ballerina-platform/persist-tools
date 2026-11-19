@@ -20,6 +20,7 @@ package io.ballerina.persist.dataservice;
 
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.inflector.Pluralizer;
+import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
 import io.ballerina.persist.utils.FileUtils;
 
@@ -74,6 +75,31 @@ public final class HttpDataServiceGenerator implements DataServiceGenerator {
     private final String modelName;
     private final String datastore;
     private final boolean userOwned;
+
+    /**
+     * Checks the exposed entities against the rules of the HTTP data service.
+     *
+     * @param entities     the exposed entities, in model order
+     * @param entityModule the persist model, whose entity names become Ballerina types
+     * @throws BalException with every problem found, one per line
+     */
+    public static void validate(List<ExposedEntity> entities, Module entityModule) throws BalException {
+        List<String> errors = DataServiceModel.typeNameClashes(entities, entityModule.getEntityMap().keySet(),
+                HttpDataServiceGenerator::generatedTypeNames);
+        if (!errors.isEmpty()) {
+            throw new BalException(String.join(NEWLINE, errors));
+        }
+    }
+
+    // The types this generator declares for an entity, next to the persist types of the model.
+    private static List<String> generatedTypeNames(ExposedEntity entity) {
+        List<String> suffixes = new ArrayList<>(List.of("List", "Filter", "Partial", "PartialList", "RelatedPartial",
+                "RelatedPartialList", "Created", "ListCreated"));
+        if (entity.hasWireTypes()) {
+            suffixes.addAll(List.of("Payload", "InsertPayload", "UpdatePayload"));
+        }
+        return suffixes.stream().map(suffix -> entity.name() + suffix).toList();
+    }
 
     /**
      * Creates a generator for a data service.
