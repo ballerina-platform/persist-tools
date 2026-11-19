@@ -131,7 +131,7 @@ public class Add implements BLauncherCmd {
                 return;
             }
             if (dataservice != null) {
-                validateDataServiceFlags(dataservice, datastore, packageName, module, model, initParams);
+                validateDataServiceFlags(dataservice, datastore, module, model, initParams);
             }
             String moduleNameWithPackage = validateAndProcessModule(packageName, module);
             createDefaultClientId();
@@ -245,27 +245,30 @@ public class Add implements BLauncherCmd {
     /**
      * Validates `--dataservice` and the options that cannot be combined with it, for `add` and `generate`.
      *
-     * @param protocol    the value of `--dataservice`
-     * @param datastore   the value of `--datastore`
-     * @param packageName the package name
-     * @param module      the value of `--module`, or null
-     * @param model       the value of `--model`, or null
-     * @param initParams  whether `--with-init-params` is given
-     * @throws BalException with the message of the matching `Ballerina.toml` case
+     * @param protocol   the value of `--dataservice`
+     * @param datastore  the value of `--datastore`
+     * @param module     the value of `--module`, or null
+     * @param model      the value of `--model`, or null
+     * @param initParams whether `--with-init-params` is given
+     * @throws BalException naming the option that cannot be used with `--dataservice`
      */
-    static void validateDataServiceFlags(String protocol, String datastore, String packageName, String module,
-                                         String model, boolean initParams) throws BalException {
-        DataServiceOptions.validateProtocol(protocol);
+    static void validateDataServiceFlags(String protocol, String datastore, String module, String model,
+                                         boolean initParams) throws BalException {
+        DataServiceOptions.validateProtocolFlag(protocol);
         DataServiceOptions.validateDatastore(datastore);
         if (module != null) {
-            throw new BalException(String.format(DataServiceMessages.TARGET_MODULE, packageName, packageName));
+            throw flagError("--module");
         }
         if (model != null && !model.isBlank()) {
-            throw new BalException(DataServiceMessages.NAMED_MODEL);
+            throw flagError("--model");
         }
         if (initParams) {
-            throw new BalException(DataServiceMessages.WITH_INIT_PARAMS);
+            throw flagError("--with-init-params");
         }
+    }
+
+    private static BalException flagError(String option) {
+        return new BalException(String.format(DataServiceMessages.FLAG_WITH_DATASERVICE, option, option));
     }
 
     private String validateAndProcessModule(String packageName, String module) throws BalException {

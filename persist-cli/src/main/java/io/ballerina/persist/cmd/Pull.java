@@ -318,7 +318,7 @@ public class Pull implements BLauncherCmd {
         }
         try {
             if (dataservice != null) {
-                protocol = DataServiceOptions.validateProtocol(dataservice);
+                protocol = DataServiceOptions.validateProtocolFlag(dataservice);
             } else if (entry.isPresent() && entry.get().dataService().isPresent()
                     && (model == null || model.isBlank())) {
                 protocol = DataServiceOptions.from(entry.get().dataService().get()).protocol();
@@ -329,7 +329,8 @@ public class Pull implements BLauncherCmd {
                 return true;
             }
             if (model != null && !model.isBlank()) {
-                throw new BalException(DataServiceMessages.NAMED_MODEL);
+                throw new BalException(String.format(DataServiceMessages.FLAG_WITH_DATASERVICE, "--model",
+                        "--model"));
             }
             // --dataservice only adds a group; it does not change one the user has written.
             if (dataservice != null && entry.isPresent() && entry.get().dataService().isPresent()) {

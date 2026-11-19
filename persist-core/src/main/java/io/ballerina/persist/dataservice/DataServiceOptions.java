@@ -71,20 +71,35 @@ public record DataServiceOptions(String protocol, String basePath, boolean auth,
     }
 
     /**
-     * Validates a protocol value, as given in `Ballerina.toml` or with `--dataservice`.
+     * Validates a protocol value, as given in `Ballerina.toml`.
      *
      * @param protocol the value
      * @return the value, if it is supported
      * @throws BalException if the protocol is reserved or unknown
      */
     public static String validateProtocol(String protocol) throws BalException {
+        return validateProtocol(protocol, DataServiceMessages.PROTOCOL_INVALID);
+    }
+
+    /**
+     * Validates the value of the `--dataservice` option.
+     *
+     * @param protocol the value
+     * @return the protocol
+     * @throws BalException if the protocol is not supported yet or is unknown
+     */
+    public static String validateProtocolFlag(String protocol) throws BalException {
+        return validateProtocol(protocol, DataServiceMessages.DATASERVICE_FLAG_INVALID);
+    }
+
+    private static String validateProtocol(String protocol, String invalidMessage) throws BalException {
         if (HTTP.equals(protocol)) {
             return protocol;
         }
         if (RESERVED_PROTOCOLS.contains(protocol)) {
             throw new BalException(String.format(DataServiceMessages.PROTOCOL_NOT_SUPPORTED_YET, protocol));
         }
-        throw new BalException(String.format(DataServiceMessages.PROTOCOL_INVALID, protocol));
+        throw new BalException(String.format(invalidMessage, protocol));
     }
 
     /**

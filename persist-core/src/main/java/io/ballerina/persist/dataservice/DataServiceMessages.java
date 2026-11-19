@@ -41,6 +41,9 @@ public final class DataServiceMessages {
             "Remove it or set it to false.";
     public static final String DATASTORE_NOT_SQL = "the datastore '%s' does not support a data service. Use " +
             "mysql, mssql, postgresql or h2.";
+    public static final String DATASERVICE_FLAG_INVALID =
+            "invalid '--dataservice' value '%s'. Supported values: " + SUPPORTED_PROTOCOLS + ".";
+    public static final String FLAG_WITH_DATASERVICE = "'%s' cannot be used with '--dataservice'. Remove '%s'.";
     public static final String NAMED_MODEL = "a data service is not supported for a named persist model. " +
             "Use 'persist/model.bal' or remove 'options.dataservice'.";
     public static final String NO_EXPOSED_ENTITY = "the data service exposes no entity. Add the " +
