@@ -313,7 +313,7 @@ public class ToolingDataServiceTest {
     @DataProvider
     public Object[][] goldenModels() {
         return new Object[][]{{"auth", true}, {"combinations", false}, {"composite", false}, {"employees", false},
-                {"generated_key", false}, {"rules", false}, {"wire", false}};
+                {"generated_key", false}, {"key_relations", false}, {"rules", false}, {"wire", false}};
     }
 
     @Test(dataProvider = "otherDatastores", description = "Every datastore other than a SQL datastore fails the build")
