@@ -65,6 +65,7 @@ public class Pull implements BLauncherCmd {
     private final String sourcePath;
 
     private static final String COMMAND_IDENTIFIER = "persist-pull";
+    private static final String OPTIONS_DATASTORE = "options.datastore";
 
     // Table selection prompt message
     private static final String TABLE_SELECTION_PROMPT =
@@ -116,6 +117,8 @@ public class Pull implements BLauncherCmd {
     private String exposeTables;
 
     private String protocol;
+
+    private String tomlUpdate;
 
     @Override
     public void execute() {
@@ -339,6 +342,13 @@ public class Pull implements BLauncherCmd {
             if (entry.isPresent() && entry.get().withInitParams()) {
                 throw new BalException(DataServiceMessages.WITH_INIT_PARAMS);
             }
+            String entryDatastore = entry.map(found -> found.values().get(OPTIONS_DATASTORE)).orElse(null);
+            if (entryDatastore != null) {
+                DataServiceOptions.validateDatastore(entryDatastore);
+            }
+            if (dataservice != null) {
+                tomlUpdate = withDataService(entry, packageName);
+            }
             return true;
         } catch (BalException e) {
             Utils.printErrors(errStream, e.getMessage());
@@ -347,19 +357,24 @@ public class Pull implements BLauncherCmd {
     }
 
     // Adds the data service group to the default model's entry, creating the entry as `bal persist add` would.
-    private void recordDataService() throws BalException, IOException {
+    // The update is built before the database is read, so that a failure writes nothing.
+    private String withDataService(Optional<DataServiceToml.Entry> entry, String packageName)
+            throws BalException {
         Path tomlPath = Paths.get(this.sourcePath, BALLERINA_TOML);
-        String toml = Files.readString(tomlPath);
-        Optional<DataServiceToml.Entry> entry = DataServiceToml.defaultModelEntry(toml);
-        String updated;
-        if (entry.isPresent()) {
-            updated = DataServiceToml.addDataService(toml, entry.get(), dataservice);
-        } else {
-            String packageName = TomlSyntaxUtils.readPackageName(this.sourcePath);
-            updated = new Add(this.sourcePath).updateBallerinaToml(tomlPath, packageName, datastore, null,
+        try {
+            if (entry.isPresent()) {
+                return DataServiceToml.addDataService(Files.readString(tomlPath), entry.get(), dataservice);
+            }
+            return new Add(this.sourcePath).updateBallerinaToml(tomlPath, packageName, datastore, null,
                     false, false, "generate-db-client", DataServiceToml.DEFAULT_MODEL_PATH, dataservice);
+        } catch (IOException e) {
+            throw new BalException(e.getMessage());
         }
-        FileUtils.writeToTargetFile(updated, tomlPath.toAbsolutePath().toString());
+    }
+
+    private void recordDataService() throws BalException, IOException {
+        FileUtils.writeToTargetFile(tomlUpdate,
+                Paths.get(this.sourcePath, BALLERINA_TOML).toAbsolutePath().toString());
     }
 
     /**

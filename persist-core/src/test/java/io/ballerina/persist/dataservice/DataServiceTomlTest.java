@@ -51,6 +51,14 @@ public class DataServiceTomlTest {
     }
 
     @Test
+    public void testRelativeFilePathIsTheDefaultModel() {
+        String toml = PACKAGE + "[[tool.persist]]\nid = \"generate-db-client\"\n" +
+                "filePath = \"./persist/model.bal\"\noptions.datastore = \"mysql\"\n";
+        Assert.assertEquals(DataServiceToml.defaultModelEntry(toml).orElseThrow().values().get("id"),
+                "generate-db-client");
+    }
+
+    @Test
     public void testEntryWithoutFilePathIsTheDefaultModel() {
         String toml = PACKAGE + "[[tool.persist]]\ntargetModule = \"hr.db\"\noptions.withInitParams = true\n";
         DataServiceToml.Entry entry = DataServiceToml.defaultModelEntry(toml).orElseThrow();

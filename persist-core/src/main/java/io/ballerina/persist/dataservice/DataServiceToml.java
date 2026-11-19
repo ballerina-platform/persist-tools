@@ -103,7 +103,8 @@ public final class DataServiceToml {
     }
 
     /**
-     * Finds the entry whose `filePath` is `persist/model.bal`, or that has no `filePath`.
+     * Finds the entry whose `filePath` ends with `persist/model.bal`, as the build tool reads it, or that has no
+     * `filePath`.
      *
      * @param toml the content of `Ballerina.toml`
      * @return the entry, if there is one
@@ -129,8 +130,8 @@ public final class DataServiceToml {
                 }
             }
         }
-        return entries.stream().filter(entry -> DEFAULT_MODEL_PATH.equals(
-                entry.values().getOrDefault(FILE_PATH, DEFAULT_MODEL_PATH))).findFirst();
+        return entries.stream().filter(entry -> entry.values().getOrDefault(FILE_PATH, DEFAULT_MODEL_PATH)
+                .endsWith(DEFAULT_MODEL_PATH)).findFirst();
     }
 
     /**

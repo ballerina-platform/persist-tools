@@ -583,9 +583,32 @@ public class ToolingDataServiceTest {
     @Test(dataProvider = "pullErrors", description = "pull rejects data service options before introspecting")
     public void testPullError(String name, String entryOptions, List<String> args, String message)
             throws IOException, InterruptedException {
+        assertPullFails(name, entryOptions == null ? null : entry("mysql", entryOptions), args, message);
+    }
+
+    @Test(dataProvider = "pullEntryErrors", description = "pull checks the entry of the default model, wherever its " +
+            "filePath points")
+    public void testPullEntryError(String name, String entry, String message)
+            throws IOException, InterruptedException {
+        assertPullFails(name, entry, List.of("--dataservice", "http"), message);
+    }
+
+    @DataProvider
+    public Object[][] pullEntryErrors() {
+        return new Object[][]{
+                {"inmemory", entry("inmemory", ""), sqlOnly("inmemory")},
+                {"relative_path", "[[tool.persist]]\nid = \"generate-db-client\"\n" +
+                        "filePath = \"./persist/model.bal\"\noptions.datastore = \"mysql\"\n" +
+                        "options.withInitParams = true\n",
+                        "'options.withInitParams' cannot be used with a data service."},
+        };
+    }
+
+    private static void assertPullFails(String name, String entry, List<String> args, String message)
+            throws IOException, InterruptedException {
         Path project = emptyProject("ds_pull_" + name);
-        if (entryOptions != null) {
-            writeToml(project, entry("mysql", entryOptions));
+        if (entry != null) {
+            writeToml(project, entry);
         }
         String toml = Files.readString(project.resolve("Ballerina.toml"));
         List<String> command = new ArrayList<>(List.of("persist", "pull", "--datastore", "mysql", "--host",
