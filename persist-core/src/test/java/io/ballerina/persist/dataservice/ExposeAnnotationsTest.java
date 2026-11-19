@@ -125,4 +125,14 @@ public class ExposeAnnotationsTest {
         Assert.assertEquals(ExposeAnnotations.docs(model),
                 Map.of("Employee", List.of("An employee.", "", "Paid monthly.")));
     }
+
+    @Test
+    public void testDocsWithInlineCode() {
+        SyntaxTree model = SyntaxTree.from(TextDocuments.from(IMPORTS +
+                "# An employee.\n# Stored in the `employees` table.\n# Paid monthly.\n# + id - The key\n" +
+                "@dataservice:Expose\ntype Employee record {| readonly int id; |};\n"));
+        Assert.assertEquals(ExposeAnnotations.docs(model), Map.of("Employee",
+                List.of("An employee.", "Stored in the `employees` table.", "Paid monthly.")));
+    }
+
 }
