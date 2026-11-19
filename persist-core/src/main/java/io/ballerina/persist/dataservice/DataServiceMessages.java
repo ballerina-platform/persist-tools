@@ -63,6 +63,17 @@ public final class DataServiceMessages {
     public static final String GENERATE_WITHOUT_OPTION = "the model has @dataservice:Expose annotations. Use the " +
             "'--dataservice' option to also generate a data service.";
 
+    public static final String PULL_SKIPS_RESERVED_KEY = "the key field '%s' of the table '%s' uses a name " +
+            "reserved by the data service, so its entity '%s' is not exposed.";
+    public static final String PULL_SKIPS_COLLECTION_CLASH = "the entity '%s' of the table '%s' maps to the " +
+            "collection '%s' of the entity '%s', so it is not exposed.";
+
+    public static final String EXPOSE_TABLES_EMPTY =
+            "'--expose-tables' names no table. Give the tables to expose, separated by commas.";
+    public static final String EXPOSE_TABLE_RESERVED_KEY = "the table '%s' in '--expose-tables' has the key " +
+            "field '%s', whose name the data service reserves, so its entity '%s' cannot be exposed.";
+    public static final String EXPOSE_TABLE_COLLECTION_CLASH = "the table '%s' in '--expose-tables' maps to the " +
+            "collection '%s' of the table '%s'. Expose only one of them.";
     public static final String EXPOSE_TABLES_WITHOUT_DATASERVICE =
             "the '--expose-tables' option requires the '--dataservice' option.";
     public static final String EXPOSE_TABLE_NOT_PULLED = "the table '%s' in '--expose-tables' is not a pulled table.";

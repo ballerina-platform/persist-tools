@@ -24,8 +24,11 @@ import io.ballerina.persist.models.Module;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -42,17 +45,34 @@ public record PullExposure(Set<String> exposed, List<String> warnings) {
      * @param entityModule the introspected model
      * @param exposeTables the value of `--expose-tables`, or null to expose every supported entity
      * @return the selection
-     * @throws BalException if `--expose-tables` names a table that cannot be exposed, with one line per table
+     * @throws BalException if `--expose-tables` names no table, or a table that cannot be exposed, with one line per
+     *                      table
      */
     public static PullExposure select(Module entityModule, String exposeTables) throws BalException {
         Set<String> exposed = new LinkedHashSet<>();
         List<String> warnings = new ArrayList<>();
+        // The entity that has taken each collection, by collection.
+        Map<String, Entity> collections = new LinkedHashMap<>();
         if (exposeTables == null) {
             for (Entity entity : entityModule.getEntityMap().values()) {
                 if (entity.containsUnsupportedTypes()) {
                     warnings.add(String.format(DataServiceMessages.PULL_SKIPS_ENTITY, entity.getTableName(),
                             entity.getEntityName()));
+                    continue;
+                }
+                ExposedEntity candidate = ExposedEntity.of(entity, EnumSet.allOf(Operation.class), List.of(),
+                        Map.of());
+                List<String> reserved = DataServiceModel.reservedKeys(candidate);
+                Entity other = collections.get(candidate.collection());
+                if (!reserved.isEmpty()) {
+                    warnings.add(String.format(DataServiceMessages.PULL_SKIPS_RESERVED_KEY, reserved.get(0),
+                            entity.getTableName(), entity.getEntityName()));
+                } else if (other != null) {
+                    warnings.add(String.format(DataServiceMessages.PULL_SKIPS_COLLECTION_CLASH,
+                            entity.getEntityName(), entity.getTableName(), candidate.collection(),
+                            other.getEntityName()));
                 } else {
+                    collections.put(candidate.collection(), entity);
                     exposed.add(entity.getEntityName());
                 }
             }
@@ -62,15 +82,32 @@ public record PullExposure(Set<String> exposed, List<String> warnings) {
         // Names are parsed and matched as `--tables` parses and matches them.
         List<String> tables = Arrays.stream(exposeTables.split(",")).map(String::trim)
                 .filter(table -> !table.isEmpty()).toList();
+        if (tables.isEmpty()) {
+            throw new BalException(DataServiceMessages.EXPOSE_TABLES_EMPTY);
+        }
         for (String table : tables) {
             Entity entity = entityModule.getEntityMap().values().stream()
                     .filter(candidate -> table.equals(candidate.getTableName())).findFirst().orElse(null);
             if (entity == null) {
                 errors.add(String.format(DataServiceMessages.EXPOSE_TABLE_NOT_PULLED, table));
-            } else if (entity.containsUnsupportedTypes()) {
+                continue;
+            }
+            if (entity.containsUnsupportedTypes()) {
                 errors.add(String.format(DataServiceMessages.EXPOSE_TABLE_UNSUPPORTED, table,
                         entity.getEntityName()));
+                continue;
+            }
+            ExposedEntity candidate = ExposedEntity.of(entity, EnumSet.allOf(Operation.class), List.of(), Map.of());
+            List<String> reserved = DataServiceModel.reservedKeys(candidate);
+            Entity other = collections.get(candidate.collection());
+            if (!reserved.isEmpty()) {
+                errors.add(String.format(DataServiceMessages.EXPOSE_TABLE_RESERVED_KEY, table, reserved.get(0),
+                        entity.getEntityName()));
+            } else if (other != null && other != entity) {
+                errors.add(String.format(DataServiceMessages.EXPOSE_TABLE_COLLECTION_CLASH, table,
+                        candidate.collection(), other.getTableName()));
             } else {
+                collections.put(candidate.collection(), entity);
                 exposed.add(entity.getEntityName());
             }
         }

@@ -23,6 +23,7 @@ import io.ballerina.persist.models.Module;
 import io.ballerina.persist.utils.BalProjectUtils;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.nio.file.Paths;
@@ -73,4 +74,41 @@ public class PullExposureTest {
         Assert.assertEquals(error.getMessage(), "the table 'gadgets' in '--expose-tables' has an unsupported " +
                 "data type, so its entity 'Gadget' cannot be exposed.");
     }
+
+    @Test
+    public void testEntitiesTheBuildRejectsAreSkipped() throws BalException {
+        PullExposure exposure = PullExposure.select(conflicts(), null);
+        Assert.assertEquals(exposure.exposed(), Set.of("Person"));
+        Assert.assertEquals(exposure.warnings(), List.of("the key field 'key' of the table 'settings' uses a name " +
+                "reserved by the data service, so its entity 'Setting' is not exposed.", "the entity 'People' of " +
+                "the table 'people' maps to the collection 'people' of the entity 'Person', so it is not exposed."));
+    }
+
+    @Test
+    public void testExposeTablesTheBuildRejects() {
+        BalException error = Assert.expectThrows(BalException.class,
+                () -> PullExposure.select(conflicts(), "settings,person,people"));
+        Assert.assertEquals(error.getMessage(), "the table 'settings' in '--expose-tables' has the key field " +
+                "'key', whose name the data service reserves, so its entity 'Setting' cannot be exposed." +
+                System.lineSeparator() + "the table 'people' in '--expose-tables' maps to the collection 'people' " +
+                "of the table 'person'. Expose only one of them.");
+    }
+
+    @Test(dataProvider = "noTables")
+    public void testExposeTablesWithoutTables(String value) {
+        BalException error = Assert.expectThrows(BalException.class, () -> PullExposure.select(pulled, value));
+        Assert.assertEquals(error.getMessage(),
+                "'--expose-tables' names no table. Give the tables to expose, separated by commas.");
+    }
+
+    @DataProvider
+    public Object[][] noTables() {
+        return new Object[][]{{""}, {","}, {" , "}};
+    }
+
+    private static Module conflicts() throws BalException {
+        return BalProjectUtils.getEntities(Paths.get("src", "test", "resources", "dataservice", "pulled_conflicts",
+                "model.bal").toAbsolutePath());
+    }
+
 }
