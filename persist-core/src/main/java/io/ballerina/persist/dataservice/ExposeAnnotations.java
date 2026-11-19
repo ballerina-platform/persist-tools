@@ -134,7 +134,9 @@ public final class ExposeAnnotations {
             }
             List<String> lines = new ArrayList<>();
             for (Node line : doc.documentationLines()) {
-                if (line.kind() != SyntaxKind.MARKDOWN_DOCUMENTATION_LINE) {
+                // A line with inline code is a reference documentation line.
+                if (line.kind() != SyntaxKind.MARKDOWN_DOCUMENTATION_LINE
+                        && line.kind() != SyntaxKind.MARKDOWN_REFERENCE_DOCUMENTATION_LINE) {
                     break;
                 }
                 lines.add(line.toSourceCode().strip().replaceFirst("^#\\s?", ""));
