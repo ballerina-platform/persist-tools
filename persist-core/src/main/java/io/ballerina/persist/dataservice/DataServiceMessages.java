@@ -49,6 +49,8 @@ public final class DataServiceMessages {
             "the data service. Rename the field, or remove the entity's @dataservice:Expose annotation.";
     public static final String COLLECTION_CLASH = "the entities '%s' and '%s' map to the same collection '%s' in " +
             "the data service. Rename one of them, or remove its @dataservice:Expose annotation.";
+    public static final String TYPE_NAME_CLASH = "the entity '%s' has the name of a type that the data service " +
+            "generates for the entity '%s'. Rename one of them, or remove the @dataservice:Expose annotation of '%s'.";
     public static final String UNSUPPORTED_ENTITY = "the entity '%s' has an unsupported data type and cannot be " +
             "exposed. Remove its @dataservice:Expose annotation.";
     public static final String SCOPES_WITHOUT_AUTH = "the @dataservice:Expose annotation of the entity '%s' sets " +
