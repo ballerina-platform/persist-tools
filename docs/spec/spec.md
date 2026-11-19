@@ -598,6 +598,8 @@ Errors are printed with the `ERROR:` prefix, or as the build tool's diagnostic i
 | `--expose-tables` names a table with a key field named as the generated code needs | error | `the table '<table>' in '--expose-tables' has the key field '<field>', whose name the data service reserves, so its entity '<Entity>' cannot be exposed.` |
 | `--expose-tables` names two tables with the same collection | error | `the table '<table>' in '--expose-tables' maps to the collection '<collection>' of the table '<table>'. Expose only one of them.` |
 | `--expose-tables` names no table, such as `--expose-tables ,` | error | `'--expose-tables' names no table. Give the tables to expose, separated by commas.` |
+| `--dataservice` with an unknown protocol, on `add`, `generate` or `pull` | error | `invalid '--dataservice' value '<value>'. Supported values: http.` |
+| `--dataservice` with `--module` or `--with-init-params` on `add` or `generate`, or with `--model` on `add`, `generate` or `pull` | error | `'<option>' cannot be used with '--dataservice'. Remove '<option>'.` |
 | `add --dataservice` succeeds | info | The next steps `2. Add the @dataservice:Expose annotation to each entity to expose.` and `3. Execute `bal build` to generate the persist client and the <PROTOCOL> data service during package build.` |
 | `pull --dataservice` when the entry already has `options.dataservice` | error | `the [[tool.persist]] entry of persist/model.bal already has an 'options.dataservice' group. Remove it from Ballerina.toml and run the command again, or run 'bal persist pull' without '--dataservice'.` |
 | `pull --dataservice` succeeds | info | `enabled the <PROTOCOL> data service in the [[tool.persist]] entry of persist/model.bal in Ballerina.toml.` |

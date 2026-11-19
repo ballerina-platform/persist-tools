@@ -506,16 +506,15 @@ public class ToolingDataServiceTest {
     public Object[][] addErrors() {
         return new Object[][]{
                 {"module", List.of("--datastore", "h2", "--dataservice", "http", "--module", "db"),
-                        "a data service is generated only into the default module 'ds_add_module'. Remove " +
-                                "'targetModule' or set it to 'ds_add_module'."},
+                        "'--module' cannot be used with '--dataservice'. Remove '--module'."},
                 {"model", List.of("--datastore", "h2", "--dataservice", "http", "--model", "hr"),
-                        "a data service is not supported for a named persist model."},
+                        "'--model' cannot be used with '--dataservice'. Remove '--model'."},
                 {"init_params", List.of("--datastore", "h2", "--dataservice", "http", "--with-init-params"),
-                        "'options.withInitParams' cannot be used with a data service."},
+                        "'--with-init-params' cannot be used with '--dataservice'. Remove '--with-init-params'."},
                 {"graphql", List.of("--dataservice", "graphql"),
                         "the protocol 'graphql' is not supported yet. Supported values: http."},
                 {"rest", List.of("--dataservice", "rest"),
-                        "invalid 'options.dataservice.protocol' 'rest'. Supported values: http."},
+                        "invalid '--dataservice' value 'rest'. Supported values: http."},
                 {"default_datastore", List.of("--dataservice", "http"), sqlOnly("inmemory")},
                 {"redis", List.of("--datastore", "redis", "--dataservice", "http"), sqlOnly("redis")},
         };
@@ -577,11 +576,11 @@ public class ToolingDataServiceTest {
     public Object[][] generateErrors() {
         return new Object[][]{
                 {"module", MODEL, List.of("--dataservice", "http", "--module", "db"),
-                        "a data service is generated only into the default module 'ds_generate_module'."},
+                        "'--module' cannot be used with '--dataservice'. Remove '--module'."},
                 {"model", MODEL, List.of("--dataservice", "http", "--model", "hr"),
-                        "a data service is not supported for a named persist model."},
+                        "'--model' cannot be used with '--dataservice'. Remove '--model'."},
                 {"init_params", MODEL, List.of("--dataservice", "http", "--with-init-params"),
-                        "'options.withInitParams' cannot be used with a data service."},
+                        "'--with-init-params' cannot be used with '--dataservice'. Remove '--with-init-params'."},
                 {"mcp", MODEL, List.of("--dataservice", "mcp"),
                         "the protocol 'mcp' is not supported yet. Supported values: http."},
                 {"inmemory", MODEL, List.of("--dataservice", "http", "--datastore", "inmemory"),
@@ -644,7 +643,7 @@ public class ToolingDataServiceTest {
                 {"soap", null, List.of("--dataservice", "soap"),
                         "the protocol 'soap' is not supported yet. Supported values: http."},
                 {"named_model", null, List.of("--dataservice", "http", "--model", "hr"),
-                        "a data service is not supported for a named persist model."},
+                        "'--model' cannot be used with '--dataservice'. Remove '--model'."},
                 {"target_module", "targetModule = \"ds_pull_target_module.db\"", List.of("--dataservice", "http"),
                         "a data service is generated only into the default module 'ds_pull_target_module'."},
                 {"init_params", "options.withInitParams = true", List.of("--dataservice", "http"),
