@@ -57,6 +57,7 @@ function testOpenApiDefinitionListsTheAuthErrors() returns error? {
 function testEmptyScopesNeedOnlyAuthentication() returns error? {
     http:Response response = check reader->post("/api/departments", {id: 1, name: "Research"});
     test:assertEquals(response.statusCode, 201);
+    test:assertEquals(check response.getJsonPayload(), {id: 1, name: "Research"});
 }
 
 @test:Config {dependsOn: [testEmptyScopesNeedOnlyAuthentication]}
@@ -64,8 +65,12 @@ function testDefaultScope() returns error? {
     json employee = {id: 1, name: "Ann", departmentId: 1};
     http:Response response = check reader->post("/api/employees", employee);
     test:assertEquals(response.statusCode, 403);
+    // The writer may create but not read employees, so the record is not returned.
     response = check writer->post("/api/employees", employee);
     test:assertEquals(response.statusCode, 201);
+    test:assertEquals(check response.getHeader("Location"), "/api/employees/1");
+    string|error body = response.getTextPayload();
+    test:assertTrue(body is error || body == "");
 }
 
 @test:Config {dependsOn: [testDefaultScope]}
