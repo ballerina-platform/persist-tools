@@ -108,12 +108,8 @@ public final class DataServiceModel {
             } else {
                 ExposedEntity exposedEntity = ExposedEntity.of(entity, operations,
                         docs.getOrDefault(entity.getEntityName(), List.of()), rules.of(entity.getEntityName()));
-                for (ServiceField key : exposedEntity.keys()) {
-                    if (RESERVED_KEY_NAMES.contains(DataServiceUtils.unescape(key.name()))) {
-                        errors.add(String.format(DataServiceMessages.KEY_NAME_RESERVED,
-                                DataServiceUtils.unescape(key.name()), entity.getEntityName()));
-                    }
-                }
+                reservedKeys(exposedEntity).forEach(key -> errors.add(String.format(
+                        DataServiceMessages.KEY_NAME_RESERVED, key, entity.getEntityName())));
                 exposed.add(exposedEntity);
             }
         }
@@ -198,6 +194,12 @@ public final class DataServiceModel {
             suffixes.addAll(List.of("Payload", "InsertPayload", "UpdatePayload"));
         }
         return suffixes.stream().map(suffix -> entity.name() + suffix).toList();
+    }
+
+    // The key fields whose names the generated resources use for their own parameters and variables.
+    static List<String> reservedKeys(ExposedEntity entity) {
+        return entity.keys().stream().map(key -> DataServiceUtils.unescape(key.name()))
+                .filter(RESERVED_KEY_NAMES::contains).toList();
     }
 
 }
