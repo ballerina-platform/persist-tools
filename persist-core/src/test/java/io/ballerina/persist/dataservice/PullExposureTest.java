@@ -49,7 +49,7 @@ public class PullExposureTest {
 
     @Test
     public void testEverySupportedEntityIsExposed() throws BalException {
-        PullExposure exposure = PullExposure.select(pulled, null);
+        PullExposure exposure = PullExposure.select(pulled, DataServiceOptions.HTTP, null);
         Assert.assertEquals(exposure.exposed(), Set.of("OrderItem", "Customer"));
         Assert.assertEquals(exposure.warnings(), List.of("the table 'gadgets' has an unsupported data type, so " +
                 "its entity 'Gadget' is not exposed."));
@@ -57,7 +57,7 @@ public class PullExposureTest {
 
     @Test
     public void testExposeTables() throws BalException {
-        PullExposure exposure = PullExposure.select(pulled, " Customer , ");
+        PullExposure exposure = PullExposure.select(pulled, DataServiceOptions.HTTP, " Customer , ");
         Assert.assertEquals(exposure.exposed(), Set.of("Customer"));
         Assert.assertEquals(exposure.warnings(), List.of());
     }
@@ -65,7 +65,7 @@ public class PullExposureTest {
     @Test
     public void testExposeTablesMatchesExactly() {
         BalException error = Assert.expectThrows(BalException.class,
-                () -> PullExposure.select(pulled, "ORDER_ITEMS,orders"));
+                () -> PullExposure.select(pulled, DataServiceOptions.HTTP, "ORDER_ITEMS,orders"));
         Assert.assertEquals(error.getMessage(),
                 "the table 'ORDER_ITEMS' in '--expose-tables' is not a pulled table." + System.lineSeparator() +
                 "the table 'orders' in '--expose-tables' is not a pulled table.");
@@ -74,7 +74,7 @@ public class PullExposureTest {
     @Test
     public void testExposeTablesWithUnsupportedType() {
         BalException error = Assert.expectThrows(BalException.class,
-                () -> PullExposure.select(pulled, "order_items,gadgets"));
+                () -> PullExposure.select(pulled, DataServiceOptions.HTTP, "order_items,gadgets"));
         Assert.assertEquals(error.getMessage(), "the table 'gadgets' in '--expose-tables' has an unsupported " +
                 "data type, so its entity 'Gadget' cannot be exposed.");
     }
@@ -83,14 +83,14 @@ public class PullExposureTest {
     public void testIntrospectedUnsupportedColumnIsNotExposed() {
         Module introspected = introspectedGadgets();
         BalException error = Assert.expectThrows(BalException.class,
-                () -> PullExposure.select(introspected, "gadgets"));
+                () -> PullExposure.select(introspected, DataServiceOptions.HTTP, "gadgets"));
         Assert.assertEquals(error.getMessage(), "the table 'gadgets' in '--expose-tables' has an unsupported " +
                 "data type, so its entity 'Gadget' cannot be exposed.");
     }
 
     @Test
     public void testIntrospectedUnsupportedColumnIsSkipped() throws BalException {
-        PullExposure exposure = PullExposure.select(introspectedGadgets(), null);
+        PullExposure exposure = PullExposure.select(introspectedGadgets(), DataServiceOptions.HTTP, null);
         Assert.assertEquals(exposure.exposed(), Set.of());
         Assert.assertEquals(exposure.warnings(), List.of("the table 'gadgets' has an unsupported data type, so " +
                 "its entity 'Gadget' is not exposed."));
@@ -98,17 +98,33 @@ public class PullExposureTest {
 
     @Test
     public void testEntitiesTheBuildRejectsAreSkipped() throws BalException {
-        PullExposure exposure = PullExposure.select(conflicts(), null);
-        Assert.assertEquals(exposure.exposed(), Set.of("Person"));
+        PullExposure exposure = PullExposure.select(conflicts(), DataServiceOptions.HTTP, null);
+        Assert.assertEquals(exposure.exposed(), Set.of("Person", "Input"));
         Assert.assertEquals(exposure.warnings(), List.of("the key field 'key' of the table 'settings' uses a name " +
                 "reserved by the data service, so its entity 'Setting' is not exposed.", "the entity 'People' of " +
                 "the table 'people' maps to the collection 'people' of the entity 'Person', so it is not exposed."));
     }
 
     @Test
+    public void testGraphqlKeyNamesAreSkipped() throws BalException {
+        PullExposure exposure = PullExposure.select(conflicts(), DataServiceOptions.GRAPHQL, null);
+        Assert.assertEquals(exposure.exposed(), Set.of("Person"));
+        Assert.assertEquals(exposure.warnings().get(2), "the key field 'input' of the table 'inputs' uses a name " +
+                "reserved by the data service, so its entity 'Input' is not exposed.");
+    }
+
+    @Test
+    public void testExposeTablesWithAGraphqlKeyName() {
+        BalException error = Assert.expectThrows(BalException.class,
+                () -> PullExposure.select(conflicts(), DataServiceOptions.GRAPHQL, "inputs"));
+        Assert.assertEquals(error.getMessage(), "the table 'inputs' in '--expose-tables' has the key field " +
+                "'input', whose name the data service reserves, so its entity 'Input' cannot be exposed.");
+    }
+
+    @Test
     public void testExposeTablesTheBuildRejects() {
         BalException error = Assert.expectThrows(BalException.class,
-                () -> PullExposure.select(conflicts(), "settings,person,people"));
+                () -> PullExposure.select(conflicts(), DataServiceOptions.HTTP, "settings,person,people"));
         Assert.assertEquals(error.getMessage(), "the table 'settings' in '--expose-tables' has the key field " +
                 "'key', whose name the data service reserves, so its entity 'Setting' cannot be exposed." +
                 System.lineSeparator() + "the table 'people' in '--expose-tables' maps to the collection 'people' " +
@@ -117,7 +133,8 @@ public class PullExposureTest {
 
     @Test(dataProvider = "noTables")
     public void testExposeTablesWithoutTables(String value) {
-        BalException error = Assert.expectThrows(BalException.class, () -> PullExposure.select(pulled, value));
+        BalException error = Assert.expectThrows(BalException.class,
+                () -> PullExposure.select(pulled, DataServiceOptions.HTTP, value));
         Assert.assertEquals(error.getMessage(),
                 "'--expose-tables' names no table. Give the tables to expose, separated by commas.");
     }
@@ -166,13 +183,13 @@ public class PullExposureTest {
             module.addEntity(entity[0], builder.build());
         }
         Module pulledTables = module.build();
-        PullExposure exposure = PullExposure.select(pulledTables, null);
+        PullExposure exposure = PullExposure.select(pulledTables, DataServiceOptions.HTTP, null);
         Assert.assertEquals(exposure.exposed(), Set.of("EmployeeList"));
         Assert.assertEquals(exposure.warnings(), List.of("the entity 'Employee' of the table 'employee' would " +
                 "generate the type 'EmployeeList', which is the entity of the table 'employee_list', so it is not " +
                 "exposed."));
         BalException error = Assert.expectThrows(BalException.class,
-                () -> PullExposure.select(pulledTables, "employee"));
+                () -> PullExposure.select(pulledTables, DataServiceOptions.HTTP, "employee"));
         Assert.assertEquals(error.getMessage(), "the table 'employee' in '--expose-tables' would generate the type " +
                 "'EmployeeList' for its entity 'Employee', which is the entity of the table 'employee_list'. Remove " +
                 "the table from '--expose-tables'.");
@@ -190,13 +207,13 @@ public class PullExposureTest {
             module.addEntity(entity[0], builder.build());
         }
         Module pulledTables = module.build();
-        PullExposure exposure = PullExposure.select(pulledTables, null);
+        PullExposure exposure = PullExposure.select(pulledTables, DataServiceOptions.HTTP, null);
         Assert.assertEquals(exposure.exposed(), Set.of("Order"));
         Assert.assertEquals(exposure.warnings(), List.of("the entity 'OrderRelated' of the table 'order_related' " +
                 "would generate the type 'OrderRelatedPartial', which the data service also generates for the entity " +
                 "'Order', so it is not exposed."));
         BalException error = Assert.expectThrows(BalException.class,
-                () -> PullExposure.select(pulledTables, "orders,order_related"));
+                () -> PullExposure.select(pulledTables, DataServiceOptions.HTTP, "orders,order_related"));
         Assert.assertEquals(error.getMessage(), "the table 'order_related' in '--expose-tables' would generate the " +
                 "type 'OrderRelatedPartial', which the data service also generates for the table 'orders'. Expose " +
                 "only one of them.");
@@ -205,8 +222,10 @@ public class PullExposureTest {
     @Test
     public void testIntrospectedRelationFields() throws BalException {
         Module introspected = introspectedModule();
-        Assert.assertEquals(PullExposure.select(introspected, null).exposed(), Set.of("Department", "Employee"));
-        Assert.assertEquals(PullExposure.select(introspected, "employees").exposed(), Set.of("Employee"));
+        Assert.assertEquals(PullExposure.select(introspected, DataServiceOptions.HTTP, null).exposed(),
+                Set.of("Department", "Employee"));
+        Assert.assertEquals(PullExposure.select(introspected, DataServiceOptions.HTTP, "employees").exposed(),
+                Set.of("Employee"));
     }
 
     // As the introspector builds them: a column has its column name, and a relation field has only its type and,

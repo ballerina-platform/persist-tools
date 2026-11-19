@@ -22,6 +22,7 @@ import io.ballerina.persist.BalException;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.utils.BalProjectUtils;
 import org.testng.Assert;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
@@ -211,62 +212,116 @@ public class DataServiceModelTest {
                         "Rename one of them, or remove its @dataservice:Expose annotation."));
     }
 
-    @Test
-    public void testEntityNamedAsAGeneratedType() throws IOException {
-        // OrderList is not exposed, but its persist type shares the module with the generated OrderList.
-        String source = "import ballerina/dataservice;\nimport ballerina/persist as _;\n\n" +
-                "@dataservice:Expose\ntype Order record {|\n    readonly int id;\n|};\n\n" +
-                "type OrderList record {|\n    readonly int id;\n|};\n";
-        Path model = Files.createTempDirectory("types").resolve("model.bal");
-        Files.writeString(model, source);
-        BalException error = Assert.expectThrows(BalException.class, () -> DataServiceModel.resolve(
-                BalProjectUtils.getEntities(model), annotations(model), Map.of(), NO_RULES));
-        Assert.assertEquals(error.getMessage(), "the entity 'OrderList' has the name of a type that the data " +
-                "service generates for the entity 'Order'. Rename one of them, or remove the @dataservice:Expose " +
-                "annotation of 'Order'.");
+    @Test(dataProvider = "generatedTypeNames")
+    public void testEntityNamedAsAGeneratedType(String protocol, String typeName) throws IOException, BalException {
+        // The type is not exposed, but its persist type shares the module with the generated one.
+        Path model = generatedTypeModel(typeName);
+        Module entities = BalProjectUtils.getEntities(model);
+        List<ExposedEntity> exposed = DataServiceModel.resolve(entities, annotations(model), Map.of(), NO_RULES);
+        BalException error = Assert.expectThrows(BalException.class,
+                () -> DataServiceGenerator.validate(protocol, exposed, entities));
+        Assert.assertEquals(error.getMessage(), "the entity '" + typeName + "' has the name of a type that the " +
+                "data service generates for the entity 'Order'. Rename one of them, or remove the " +
+                "@dataservice:Expose annotation of 'Order'.");
     }
 
-    @Test
-    public void testTwoEntitiesGenerateOneType() throws IOException {
-        // The relation target Order gives OrderRelatedPartial, and so does the partial of OrderRelated.
+    @DataProvider
+    public Object[][] generatedTypeNames() {
+        return new Object[][]{
+                {DataServiceOptions.HTTP, "OrderList"},
+                {DataServiceOptions.HTTP, "OrderPartial"},
+                {DataServiceOptions.GRAPHQL, "OrderList"},
+                {DataServiceOptions.GRAPHQL, "OrderObject"},
+        };
+    }
+
+    @Test(dataProvider = "otherProtocolTypeNames")
+    public void testEntityNamedAsAnotherProtocolsType(String protocol, String typeName)
+            throws IOException, BalException {
+        Path model = generatedTypeModel(typeName);
+        Module entities = BalProjectUtils.getEntities(model);
+        DataServiceGenerator.validate(protocol, DataServiceModel.resolve(entities, annotations(model), Map.of(),
+                NO_RULES), entities);
+    }
+
+    @DataProvider
+    public Object[][] otherProtocolTypeNames() {
+        return new Object[][]{
+                {DataServiceOptions.HTTP, "OrderObject"},
+                {DataServiceOptions.GRAPHQL, "OrderPartial"},
+        };
+    }
+
+    private static Path generatedTypeModel(String typeName) throws IOException {
+        String source = "import ballerina/dataservice;\nimport ballerina/persist as _;\n\n" +
+                "@dataservice:Expose\ntype Order record {|\n    readonly int id;\n|};\n\n" +
+                "type " + typeName + " record {|\n    readonly int id;\n|};\n";
+        Path model = Files.createTempDirectory("types").resolve("model.bal");
+        Files.writeString(model, source);
+        return model;
+    }
+
+    @Test(dataProvider = "sharedTypes")
+    public void testTwoEntitiesGenerateOneType(String protocol, String typeName) throws IOException, BalException {
+        // The relation target Order gives OrderRelated<suffix>, and so does OrderRelated's own type.
         String source = "import ballerina/dataservice;\nimport ballerina/persist as _;\n" +
                 "import ballerinax/persist.sql;\n\n" +
                 "@dataservice:Expose\ntype Order record {|\n    readonly int id;\n    OrderRelated[] notes;\n|};\n\n" +
                 "@dataservice:Expose\ntype OrderRelated record {|\n    readonly int id;\n    int orderId;\n" +
                 "    @sql:Relation {keys: [\"orderId\"]}\n    Order 'order;\n|};\n";
-        Path model = Files.createTempDirectory("generated").resolve("model.bal");
-        Files.writeString(model, source);
-        BalException error = Assert.expectThrows(BalException.class, () -> DataServiceModel.resolve(
-                BalProjectUtils.getEntities(model), annotations(model), Map.of(), NO_RULES));
-        Assert.assertEquals(error.getMessage(), "the data service generates the type 'OrderRelatedPartial' for " +
+        BalException error = Assert.expectThrows(BalException.class, () -> validate(protocol, source));
+        Assert.assertEquals(error.getMessage(), "the data service generates the type '" + typeName + "' for " +
                 "both the entity 'Order' and the entity 'OrderRelated'. Rename one of them, or remove its " +
                 "@dataservice:Expose annotation.");
     }
 
-    @Test
-    public void testEnumNamedAsAGeneratedType() throws IOException {
+    @DataProvider
+    public Object[][] sharedTypes() {
+        return new Object[][]{
+                {DataServiceOptions.HTTP, "OrderRelatedPartial"},
+                {DataServiceOptions.GRAPHQL, "OrderRelatedObject"},
+        };
+    }
+
+    @Test(dataProvider = "protocols")
+    public void testEnumNamedAsAGeneratedType(String protocol) throws IOException, BalException {
         String source = "import ballerina/dataservice;\nimport ballerina/persist as _;\n\n" +
                 "enum OrderFilter {\n    OPEN,\n    CLOSED\n}\n\n@dataservice:Expose\ntype Order record {|\n" +
                 "    readonly int id;\n    OrderFilter state;\n|};\n";
-        Path model = Files.createTempDirectory("enums").resolve("model.bal");
-        Files.writeString(model, source);
-        BalException error = Assert.expectThrows(BalException.class, () -> DataServiceModel.resolve(
-                BalProjectUtils.getEntities(model), annotations(model), Map.of(), NO_RULES));
+        BalException error = Assert.expectThrows(BalException.class, () -> validate(protocol, source));
         Assert.assertEquals(error.getMessage(), "the enum 'OrderFilter' has the name of a type that the data " +
                 "service generates for the entity 'Order'. Rename one of them, or remove the @dataservice:Expose " +
                 "annotation of 'Order'.");
     }
 
-    @Test
-    public void testOnlyEmittedTypesAreReserved() throws IOException, BalException {
-        // An Order that only allows create declares no filter, partial or list of partials.
-        String source = "import ballerina/dataservice;\nimport ballerina/persist as _;\n\n" +
-                "@dataservice:Expose {operations: [dataservice:CREATE]}\ntype Order record {|\n" +
-                "    readonly int id;\n|};\n\ntype OrderFilter record {|\n    readonly int id;\n|};\n";
-        Path model = Files.createTempDirectory("emitted").resolve("model.bal");
+    @DataProvider
+    public Object[][] protocols() {
+        return new Object[][]{{DataServiceOptions.HTTP}, {DataServiceOptions.GRAPHQL}};
+    }
+
+    @Test(dataProvider = "notEmitted")
+    public void testOnlyEmittedTypesAreReserved(String protocol, String operation, String typeName)
+            throws IOException, BalException {
+        // An Order that only allows create declares no HTTP filter, and one that only allows read no update input.
+        validate(protocol, "import ballerina/dataservice;\nimport ballerina/persist as _;\n\n" +
+                "@dataservice:Expose {operations: [dataservice:" + operation + "]}\ntype Order record {|\n" +
+                "    readonly int id;\n|};\n\ntype " + typeName + " record {|\n    readonly int id;\n|};\n");
+    }
+
+    @DataProvider
+    public Object[][] notEmitted() {
+        return new Object[][]{
+                {DataServiceOptions.HTTP, "CREATE", "OrderFilter"},
+                {DataServiceOptions.GRAPHQL, "READ", "OrderUpdateInput"},
+        };
+    }
+
+    private static void validate(String protocol, String source) throws IOException, BalException {
+        Path model = Files.createTempDirectory("types").resolve("model.bal");
         Files.writeString(model, source);
-        Assert.assertEquals(DataServiceModel.resolve(BalProjectUtils.getEntities(model), annotations(model),
-                Map.of(), NO_RULES).stream().map(ExposedEntity::name).toList(), List.of("Order"));
+        Module entities = BalProjectUtils.getEntities(model);
+        DataServiceGenerator.validate(protocol, DataServiceModel.resolve(entities, annotations(model), Map.of(),
+                NO_RULES), entities);
     }
 
     private static Map<String, EnumSet<Operation>> annotations(Path model) throws BalException {

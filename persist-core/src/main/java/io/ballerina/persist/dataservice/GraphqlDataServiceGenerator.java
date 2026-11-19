@@ -120,12 +120,8 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
             if (!GRAPHQL_NAME.matcher(name).matches()) {
                 errors.add(String.format(DataServiceMessages.GRAPHQL_INVALID_NAME, name, name));
             }
-            for (ServiceField key : entity.keys()) {
-                // Patch takes the key fields and `input`, which the core reserved names do not hold.
-                if (GRAPHQL_RESERVED_KEY_NAMES.contains(unescape(key.name()))) {
-                    errors.add(String.format(DataServiceMessages.KEY_NAME_RESERVED, unescape(key.name()), name));
-                }
-            }
+            reservedKeys(entity.keys().stream().map(ServiceField::name).toList()).forEach(key -> errors.add(
+                    String.format(DataServiceMessages.KEY_NAME_RESERVED, key, name)));
             for (ServiceField field : entity.fields()) {
                 if (field.has(FieldRule.INTERNAL)) {
                     continue;
@@ -144,8 +140,10 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
                     errors.add(String.format(DataServiceMessages.GRAPHQL_FIELD_CLASH, other, name, rootField));
                 }
             }
-            generatedTypes.addAll(n.types());
         }
+        errors.addAll(DataServiceModel.typeNameClashes(entities, entityModule,
+                entity -> generatedTypeNames(entity, entities)));
+        // The library's types and the enum filters are not declared for one entity, so a clash names the type alone.
         Set<String> modelTypes = new LinkedHashSet<>(entityModule.getEntityMap().keySet().stream()
                 .map(DataServiceUtils::unescape).toList());
         for (Enum enumType : entityModule.getEnumMap().values()) {
@@ -162,6 +160,44 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         if (!errors.isEmpty()) {
             throw new BalException(String.join(NEWLINE, errors));
         }
+    }
+
+    // Patch takes the key fields and `input`, and a root field with relations takes `field`, which the core reserved
+    // names do not hold.
+    static List<String> reservedKeys(List<String> keyNames) {
+        return keyNames.stream().map(DataServiceUtils::unescape).filter(GRAPHQL_RESERVED_KEY_NAMES::contains).toList();
+    }
+
+    // The types `generateTypes` declares for an entity, under the same conditions.
+    private static List<String> generatedTypeNames(ExposedEntity entity, List<ExposedEntity> exposed) {
+        Names n = new Names(entity);
+        List<String> types = new ArrayList<>();
+        if (entity.allows(READ) || entity.allows(CREATE)) {
+            types.addAll(List.of(n.object, n.list));
+        }
+        if (entity.allows(READ)) {
+            types.addAll(List.of(n.filter, n.sort));
+            List<ExposedRelation> reaching = exposed.stream().flatMap(other -> other.relations().stream())
+                    .filter(relation -> relation.target().equals(entity.name())).toList();
+            if (!reaching.isEmpty()) {
+                types.add(n.relatedObject);
+            }
+            if (reaching.stream().anyMatch(ExposedRelation::many)) {
+                types.add(n.relatedList);
+            }
+        }
+        if (entity.allows(CREATE)) {
+            types.add(n.insertInput);
+        }
+        if (entity.allows(UPDATE)) {
+            types.add(n.updateInput);
+        }
+        return types;
+    }
+
+    static List<String> pulledTypeNames(String entityName) {
+        return List.of("Object", "RelatedObject", "List", "RelatedList", "InsertInput", "UpdateInput", "Filter",
+                "Sort").stream().map(suffix -> entityName + suffix).toList();
     }
 
     @Override
@@ -377,16 +413,27 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         out.append("    }").append(NEWLINE);
     }
 
+    // With auth and `read`, create returns the records only to a caller who may read them; it still creates them.
     private void appendCreate(StringBuilder out, ExposedEntity entity, Set<String> imports) {
         Names n = new Names(entity);
+        boolean readChecked = auth && entity.allows(READ);
+        String hidden = readChecked ? ", `()` when it cannot be returned" : "";
         appendDoc(out, "    ", entity, "Creates " + n.article + " " + n.words + ".",
-                List.of("input - The " + n.words + " to create"), "The created " + n.words + ", or the error");
+                List.of("input - The " + n.words + " to create"), "The created " + n.words + hidden + ", or the error");
         if (auth) {
             out.append("    remote function ").append(n.createOne).append("(").append(authParams(entity, true))
                     .append(n.insertInput).append(" input)").append(NEWLINE).append("            returns ")
                     .append(n.object).append("?|error {").append(NEWLINE);
             appendAuthChecks(out, entity, CREATE, true);
-            out.append("        return (check ").append(n.createFunction).append("([input]))[0];").append(NEWLINE);
+            if (readChecked) {
+                appendReadable(out, entity);
+                out.append("        ").append(n.object).append(" created = (check ").append(n.createFunction)
+                        .append("([input]))[0];").append(NEWLINE);
+                out.append("        return readable ? created : ();").append(NEWLINE);
+            } else {
+                out.append("        return (check ").append(n.createFunction).append("([input]))[0];")
+                        .append(NEWLINE);
+            }
             out.append("    }").append(NEWLINE);
         } else {
             out.append("    remote function ").append(n.createOne).append("(").append(n.insertInput)
@@ -394,14 +441,21 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
                     .append("        (check ").append(n.createFunction).append("([input]))[0];").append(NEWLINE);
         }
         appendDoc(out, "    ", entity, "Creates " + n.plural + ".", List.of("input - The " + n.plural + " to create"),
-                "The created " + n.plural + ", or the error");
+                "The created " + n.plural + hidden + ", or the error");
         if (auth) {
             out.append("    remote function ").append(n.createMany).append("(").append(authParams(entity, true))
                     .append(n.insertInput).append("[] input)").append(NEWLINE).append("            returns ")
                     .append(n.list).append("?|error {").append(NEWLINE);
             appendAuthChecks(out, entity, CREATE, true);
-            out.append("        return {items: check ").append(n.createFunction).append("(input), hasMore: false};")
-                    .append(NEWLINE);
+            if (readChecked) {
+                appendReadable(out, entity);
+                out.append("        ").append(n.object).append("[] items = check ").append(n.createFunction)
+                        .append("(input);").append(NEWLINE);
+                out.append("        return readable ? {items, hasMore: false} : ();").append(NEWLINE);
+            } else {
+                out.append("        return {items: check ").append(n.createFunction)
+                        .append("(input), hasMore: false};").append(NEWLINE);
+            }
             out.append("    }").append(NEWLINE);
         } else {
             out.append("    remote function ").append(n.createMany).append("(").append(n.insertInput)
@@ -409,6 +463,11 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
                     .append("        {items: check ").append(n.createFunction).append("(input), hasMore: false};")
                     .append(NEWLINE);
         }
+    }
+
+    private static void appendReadable(StringBuilder out, ExposedEntity entity) {
+        out.append("        boolean readable = dsGraphql:hasScope(ctx, ").append(stringList(entity.scopes(READ)))
+                .append(");").append(NEWLINE);
     }
 
     // Create one and create many share this function: in one transaction it posts the records and reads them back
@@ -497,8 +556,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         appendAuthChecks(out, entity, UPDATE, read);
         boolean readChecked = auth && read;
         if (readChecked) {
-            out.append("        boolean readable = dsGraphql:hasScope(ctx, ").append(stringList(entity.scopes(READ)))
-                    .append(");").append(NEWLINE);
+            appendReadable(out, entity);
         }
         appendKeyCheck(out, entity, n, imports);
         String update = n.entity + "Update";
@@ -1404,10 +1462,6 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
                 fields.add(delete);
             }
             return fields;
-        }
-
-        private List<String> types() {
-            return List.of(object, relatedObject, list, relatedList, insertInput, updateInput, filter, sort);
         }
     }
 }

@@ -20,6 +20,7 @@ package io.ballerina.persist.dataservice;
 
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.inflector.Pluralizer;
+import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
 import io.ballerina.persist.utils.FileUtils;
 
@@ -75,6 +76,59 @@ public final class HttpDataServiceGenerator implements DataServiceGenerator {
     private final String datastore;
     private final boolean userOwned;
     private final boolean eagerLoading;
+
+    /**
+     * Checks the exposed entities against the rules of the HTTP data service.
+     *
+     * @param entities     the exposed entities, in model order
+     * @param entityModule the persist model, whose entity names become Ballerina types
+     * @throws BalException with every problem found, one per line
+     */
+    public static void validate(List<ExposedEntity> entities, Module entityModule) throws BalException {
+        List<String> errors = DataServiceModel.typeNameClashes(entities, entityModule,
+                entity -> generatedTypeNames(entity, entities));
+        if (!errors.isEmpty()) {
+            throw new BalException(String.join(NEWLINE, errors));
+        }
+    }
+
+    // The types this generator declares for an entity, under the same conditions.
+    private static List<String> generatedTypeNames(ExposedEntity entity, List<ExposedEntity> exposed) {
+        List<String> suffixes = new ArrayList<>();
+        if (entity.hasWireTypes()) {
+            suffixes.add("Payload");
+            if (entity.allows(CREATE)) {
+                suffixes.add("InsertPayload");
+            }
+            if (entity.allows(UPDATE)) {
+                suffixes.add("UpdatePayload");
+            }
+        }
+        if (entity.allows(READ) || entity.allows(CREATE)) {
+            suffixes.add("List");
+        }
+        if (entity.allows(READ)) {
+            suffixes.addAll(List.of("Filter", "Partial", "PartialList"));
+            List<ExposedRelation> reaching = exposed.stream().flatMap(other -> other.relations().stream())
+                    .filter(relation -> relation.target().equals(entity.name())).toList();
+            if (!reaching.isEmpty()) {
+                suffixes.add("RelatedPartial");
+            }
+            if (reaching.stream().anyMatch(ExposedRelation::many)) {
+                suffixes.add("RelatedPartialList");
+            }
+        }
+        if (entity.allows(CREATE)) {
+            suffixes.addAll(List.of("Created", "ListCreated"));
+        }
+        return suffixes.stream().map(suffix -> unescape(entity.name()) + suffix).toList();
+    }
+
+    static List<String> pulledTypeNames(String entityName) {
+        return List.of("List", "Filter", "Partial", "PartialList", "RelatedPartial", "RelatedPartialList",
+                "Created", "ListCreated", "Payload", "InsertPayload", "UpdatePayload").stream()
+                .map(suffix -> entityName + suffix).toList();
+    }
 
     /**
      * Creates a generator for a data service.

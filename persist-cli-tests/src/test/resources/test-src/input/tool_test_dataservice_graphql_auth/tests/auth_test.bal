@@ -55,12 +55,13 @@ function testJwtScopes() returns error? {
 }
 
 // Department create has an empty scope list, so it takes the provider's scopes: none for the user store, where a
-// credential is enough, and `jwt:default` for the JWT validator.
+// credential is enough, and `jwt:default` for the JWT validator. The guest may not read departments, so it gets null.
 @test:Config
 function testEmptyScopeListTakesTheProviderScopes() returns error? {
     json byUser = check query("mutation { createDepartment(input: {name: \"Ops\"}) { name } }", "guest");
-    test:assertEquals(byUser, {data: {createDepartment: {name: "Ops"}}});
-    json byToken = check bearer("mutation { createDepartment(input: {name: \"Legal\"}) { name } }", ["jwt:default"]);
+    test:assertEquals(byUser, {data: {createDepartment: ()}});
+    json byToken = check bearer("mutation { createDepartment(input: {name: \"Legal\"}) { name } }",
+            ["jwt:default", "hr:read"]);
     test:assertEquals(byToken, {data: {createDepartment: {name: "Legal"}}});
     json refused = check bearer("mutation { createDepartment(input: {name: \"No\"}) { name } }", ["hr:read"]);
     test:assertEquals(check errorsOf(refused), [forbidden("createDepartment")]);
@@ -94,7 +95,20 @@ function testRelationUnderAMutationNeedsTheEntityReadScope() returns error? {
     test:assertEquals(check errorsOf(response), [forbidden("createEmployee")]);
     json allowed = check query("mutation { createEmployee(input: {id: 11, name: \"Eve\", hiredOn: \"2024-01-01\", " +
             "departmentId: 1}) { id } }", "writer");
-    test:assertEquals(allowed, {data: {createEmployee: {id: 11}}});
+    test:assertEquals(allowed, {data: {createEmployee: ()}});
+}
+
+// A caller who may create but not read gets null, with no error, and the records are created.
+@test:Config
+function testCreateWithoutReadScope() returns error? {
+    json response = check query("mutation { createEmployees(input: [{id: 12, name: \"Fay\", hiredOn: \"2024-01-01\", " +
+            "departmentId: 1}]) { items { id } } }", "writer");
+    test:assertEquals(response, {data: {createEmployees: ()}});
+    json read = check query("{ employee(id: 12) { name } }", "reader");
+    test:assertEquals(read, {data: {employee: {name: "Fay"}}});
+    json withRead = check query("mutation { createEmployees(input: [{id: 13, name: \"Gus\", " +
+            "hiredOn: \"2024-01-01\", departmentId: 1}]) { items { id } } }", "admin");
+    test:assertEquals(withRead, {data: {createEmployees: {items: [{id: 13}]}}});
 }
 
 // A caller who may update but not read gets null, with no error, for the record.

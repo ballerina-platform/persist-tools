@@ -23,6 +23,7 @@ import io.ballerina.persist.models.Module;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -54,7 +55,36 @@ public interface DataServiceGenerator {
     static void validate(String protocol, List<ExposedEntity> entities, Module entityModule) throws BalException {
         if (DataServiceOptions.GRAPHQL.equals(protocol)) {
             GraphqlDataServiceGenerator.validate(entities, entityModule);
+        } else {
+            HttpDataServiceGenerator.validate(entities, entityModule);
         }
+    }
+
+    /**
+     * Lists the key fields whose names the generated code of a protocol uses for its own parameters and variables.
+     *
+     * @param protocol the protocol
+     * @param keyNames the names of an entity's key fields
+     * @return the unescaped names of those key fields
+     */
+    static List<String> reservedKeys(String protocol, List<String> keyNames) {
+        List<String> reserved = new ArrayList<>(DataServiceModel.reservedKeys(keyNames));
+        if (DataServiceOptions.GRAPHQL.equals(protocol)) {
+            reserved.addAll(GraphqlDataServiceGenerator.reservedKeys(keyNames));
+        }
+        return reserved;
+    }
+
+    /**
+     * Returns the types a protocol declares for an entity that every operation exposes, as `pull` exposes it.
+     *
+     * @param protocol   the protocol
+     * @param entityName the entity name
+     * @return the type names
+     */
+    static List<String> pulledTypeNames(String protocol, String entityName) {
+        return DataServiceOptions.GRAPHQL.equals(protocol) ? GraphqlDataServiceGenerator.pulledTypeNames(entityName) :
+                HttpDataServiceGenerator.pulledTypeNames(entityName);
     }
 
     /**

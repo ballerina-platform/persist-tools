@@ -44,12 +44,14 @@ public record PullExposure(Set<String> exposed, List<String> warnings) {
      * Selects the entities to annotate.
      *
      * @param entityModule the introspected model
+     * @param protocol     the protocol of the data service, whose generated code reserves key and type names
      * @param exposeTables the value of `--expose-tables`, or null to expose every supported entity
      * @return the selection
      * @throws BalException if `--expose-tables` names no table, or a table that cannot be exposed, with one line per
      *                      table
      */
-    public static PullExposure select(Module entityModule, String exposeTables) throws BalException {
+    public static PullExposure select(Module entityModule, String protocol, String exposeTables)
+            throws BalException {
         Set<String> exposed = new LinkedHashSet<>();
         List<String> warnings = new ArrayList<>();
         // The entity that has taken each collection, by collection.
@@ -64,17 +66,17 @@ public record PullExposure(Set<String> exposed, List<String> warnings) {
                     continue;
                 }
                 String collection = ExposedEntity.collectionOf(entity.getEntityName());
-                List<String> reserved = reservedKeys(entity);
+                List<String> reserved = reservedKeys(protocol, entity);
                 Entity other = collections.get(collection);
-                Entity named = namedByGeneratedType(entity, entityModule);
+                Entity named = namedByGeneratedType(protocol, entity, entityModule);
                 if (!reserved.isEmpty()) {
                     warnings.add(String.format(DataServiceMessages.PULL_SKIPS_RESERVED_KEY, reserved.get(0),
                             entity.getTableName(), entity.getEntityName()));
                 } else if (named != null) {
                     warnings.add(String.format(DataServiceMessages.PULL_SKIPS_TYPE_NAME, entity.getEntityName(),
                             entity.getTableName(), named.getEntityName(), named.getTableName()));
-                } else if (sharedType(entity, generated) != null) {
-                    String typeName = sharedType(entity, generated);
+                } else if (sharedType(protocol, entity, generated) != null) {
+                    String typeName = sharedType(protocol, entity, generated);
                     warnings.add(String.format(DataServiceMessages.PULL_SKIPS_GENERATED_TYPE, entity.getEntityName(),
                             entity.getTableName(), typeName, generated.get(typeName).getEntityName()));
                 } else if (other != null) {
@@ -83,7 +85,7 @@ public record PullExposure(Set<String> exposed, List<String> warnings) {
                             other.getEntityName()));
                 } else {
                     collections.put(collection, entity);
-                    select(entity, generated);
+                    select(protocol, entity, generated);
                     exposed.add(entity.getEntityName());
                 }
             }
@@ -109,17 +111,17 @@ public record PullExposure(Set<String> exposed, List<String> warnings) {
                 continue;
             }
             String collection = ExposedEntity.collectionOf(entity.getEntityName());
-            List<String> reserved = reservedKeys(entity);
+            List<String> reserved = reservedKeys(protocol, entity);
             Entity other = collections.get(collection);
-            Entity named = namedByGeneratedType(entity, entityModule);
+            Entity named = namedByGeneratedType(protocol, entity, entityModule);
             if (!reserved.isEmpty()) {
                 errors.add(String.format(DataServiceMessages.EXPOSE_TABLE_RESERVED_KEY, table, reserved.get(0),
                         entity.getEntityName()));
             } else if (named != null) {
                 errors.add(String.format(DataServiceMessages.EXPOSE_TABLE_TYPE_NAME, table, named.getEntityName(),
                         entity.getEntityName(), named.getTableName()));
-            } else if (sharedType(entity, generated) != null) {
-                String typeName = sharedType(entity, generated);
+            } else if (sharedType(protocol, entity, generated) != null) {
+                String typeName = sharedType(protocol, entity, generated);
                 errors.add(String.format(DataServiceMessages.EXPOSE_TABLE_GENERATED_TYPE, table, typeName,
                         generated.get(typeName).getTableName()));
             } else if (other != null && other != entity) {
@@ -127,7 +129,7 @@ public record PullExposure(Set<String> exposed, List<String> warnings) {
                         collection, other.getTableName()));
             } else {
                 collections.put(collection, entity);
-                select(entity, generated);
+                select(protocol, entity, generated);
                 exposed.add(entity.getEntityName());
             }
         }
@@ -145,13 +147,14 @@ public record PullExposure(Set<String> exposed, List<String> warnings) {
     }
 
     // The introspected model has not resolved its relations yet, so only the entity's own key fields are read.
-    private static List<String> reservedKeys(Entity entity) {
-        return DataServiceModel.reservedKeys(entity.getKeys().stream().map(EntityField::getFieldName).toList());
+    private static List<String> reservedKeys(String protocol, Entity entity) {
+        return DataServiceGenerator.reservedKeys(protocol,
+                entity.getKeys().stream().map(EntityField::getFieldName).toList());
     }
 
     // The pulled entity whose name the data service would declare as a type of this entity, if any.
-    private static Entity namedByGeneratedType(Entity entity, Module entityModule) {
-        for (String typeName : DataServiceModel.pulledTypeNames(entity.getEntityName())) {
+    private static Entity namedByGeneratedType(String protocol, Entity entity, Module entityModule) {
+        for (String typeName : DataServiceGenerator.pulledTypeNames(protocol, entity.getEntityName())) {
             Entity named = entityModule.getEntityMap().get(typeName);
             if (named != null) {
                 return named;
@@ -162,13 +165,14 @@ public record PullExposure(Set<String> exposed, List<String> warnings) {
 
     // A type that another selected entity also generates, if any. The relations are not resolved yet, so every type
     // an entity can generate is compared.
-    private static String sharedType(Entity entity, Map<String, Entity> generated) {
-        return DataServiceModel.pulledTypeNames(entity.getEntityName()).stream()
+    private static String sharedType(String protocol, Entity entity, Map<String, Entity> generated) {
+        return DataServiceGenerator.pulledTypeNames(protocol, entity.getEntityName()).stream()
                 .filter(typeName -> generated.containsKey(typeName) && generated.get(typeName) != entity)
                 .findFirst().orElse(null);
     }
 
-    private static void select(Entity entity, Map<String, Entity> generated) {
-        DataServiceModel.pulledTypeNames(entity.getEntityName()).forEach(typeName -> generated.put(typeName, entity));
+    private static void select(String protocol, Entity entity, Map<String, Entity> generated) {
+        DataServiceGenerator.pulledTypeNames(protocol, entity.getEntityName())
+                .forEach(typeName -> generated.put(typeName, entity));
     }
 }

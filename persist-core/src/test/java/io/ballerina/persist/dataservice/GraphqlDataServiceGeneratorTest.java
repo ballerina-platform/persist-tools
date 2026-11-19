@@ -140,8 +140,10 @@ public class GraphqlDataServiceGeneratorTest {
         BalException error = Assert.expectThrows(BalException.class,
                 () -> DataServiceGenerator.validate("graphql", entities, module));
         Assert.assertEquals(error.getMessage(), message);
-        // The HTTP service has none of these rules.
-        DataServiceGenerator.validate("http", entities, module);
+        // The HTTP service has none of these rules, but generates an `<Entity>List` type too.
+        if (!message.contains("EquipmentList")) {
+            DataServiceGenerator.validate("http", entities, module);
+        }
     }
 
     @DataProvider
@@ -155,8 +157,9 @@ public class GraphqlDataServiceGeneratorTest {
                         "@dataservice:Expose\ntype EquipmentList record {|\n    readonly int id;\n|};\n",
                         "the entities 'Equipment' and 'EquipmentList' map to the same GraphQL field " +
                                 "'equipmentList'. Rename one of them, or remove its @dataservice:Expose annotation." +
-                                System.lineSeparator() + "the type 'EquipmentList' clashes with a type of the " +
-                                "GraphQL data service. Rename it."},
+                                System.lineSeparator() + "the entity 'EquipmentList' has the name of a type that the " +
+                                "data service generates for the entity 'Equipment'. Rename one of them, or remove " +
+                                "the @dataservice:Expose annotation of 'Equipment'."},
                 {header + "@dataservice:Expose\ntype Item record {|\n    readonly int id;\n    string _note;\n|};\n",
                         "the field '_note' of the entity 'Item' starts with '_', which the GraphQL data service " +
                                 "reserves. Rename the field, or mark it @dataservice:Internal."},
@@ -172,7 +175,16 @@ public class GraphqlDataServiceGeneratorTest {
                         "the type 'IntFilter' clashes with a type of the GraphQL data service. Rename it."},
                 {header + "@dataservice:Expose\ntype Item record {|\n    readonly int id;\n|};\n\n" +
                         "type ItemObject record {|\n    readonly int id;\n|};\n",
-                        "the type 'ItemObject' clashes with a type of the GraphQL data service. Rename it."},
+                        "the entity 'ItemObject' has the name of a type that the data service generates for the " +
+                                "entity 'Item'. Rename one of them, or remove the @dataservice:Expose annotation of " +
+                                "'Item'."},
+                {header + "@dataservice:Expose\ntype Item record {|\n    readonly int id;\n|};\n\n" +
+                        "enum ItemSort {\n    A\n}\n",
+                        "the enum 'ItemSort' has the name of a type that the data service generates for the entity " +
+                                "'Item'. Rename one of them, or remove the @dataservice:Expose annotation of 'Item'."},
+                {header + "@dataservice:Expose\ntype Item record {|\n    readonly int id;\n    Status status;\n" +
+                        "|};\n\nenum Status {\n    A\n}\n\ntype StatusFilter record {|\n    readonly int id;\n|};\n",
+                        "the type 'StatusFilter' clashes with a type of the GraphQL data service. Rename it."},
         };
     }
 
