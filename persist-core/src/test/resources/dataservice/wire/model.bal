@@ -6,7 +6,8 @@ import ballerina/time;
 @dataservice:Expose
 type Document record {|
     readonly int id;
-    @constraint:String {maxLength: 40, pattern: re `[A-Z].*`}
+    // Shown on the certificate
+    @constraint:String {maxLength: 40, pattern: re `[A-Z].*`} // title case
     string title;
     @constraint:Date {option: constraint:PAST}
     time:Date issuedOn;

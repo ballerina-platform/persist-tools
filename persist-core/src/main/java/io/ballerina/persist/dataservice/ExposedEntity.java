@@ -18,11 +18,11 @@
 
 package io.ballerina.persist.dataservice;
 
-import io.ballerina.compiler.syntax.tree.AnnotationNode;
 import io.ballerina.persist.inflector.Pluralizer;
 import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.Relation;
+import io.ballerina.persist.nodegenerator.syntax.utils.BalSyntaxUtils;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -166,7 +166,7 @@ public final class ExposedEntity {
     private static List<String> constraintsOf(EntityField field) {
         return field.getAnnotation().stream()
                 .filter(annotation -> annotation.annotReference().toSourceCode().trim().startsWith("constraint:"))
-                .map(AnnotationNode::toSourceCode).map(String::trim).toList();
+                .map(BalSyntaxUtils::annotationText).toList();
     }
 
     /**

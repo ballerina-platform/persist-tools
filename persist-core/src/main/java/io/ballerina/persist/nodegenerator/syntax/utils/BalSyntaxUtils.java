@@ -782,9 +782,21 @@ public class BalSyntaxUtils {
         for (AnnotationNode annotationNode : field.getAnnotation()) {
             if (annotationNode.annotReference().toSourceCode().trim()
                     .startsWith(BalSyntaxConstants.CONSTRAINT + ":")) {
-                recordFields.append(annotationNode.toSourceCode().trim()).append(BalSyntaxConstants.SPACE);
+                recordFields.append(annotationText(annotationNode)).append(BalSyntaxConstants.SPACE);
             }
         }
+    }
+
+    /**
+     * Returns the source of an annotation without the comments and whitespace before and after it.
+     *
+     * @param annotation the annotation
+     * @return the source
+     */
+    public static String annotationText(AnnotationNode annotation) {
+        String source = annotation.toSourceCode();
+        return source.substring(annotation.leadingMinutiae().toString().length(),
+                source.length() - annotation.trailingMinutiae().toString().length());
     }
 
     public static String readStringValueFromAnnotation(AnnotationUtilRecord annotationMethodRecord) {
