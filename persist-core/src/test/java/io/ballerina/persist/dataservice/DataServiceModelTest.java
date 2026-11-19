@@ -211,6 +211,21 @@ public class DataServiceModelTest {
                         "Rename one of them, or remove its @dataservice:Expose annotation."));
     }
 
+    @Test
+    public void testEntityNamedAsAGeneratedType() throws IOException {
+        // OrderList is not exposed, but its persist type shares the module with the generated OrderList.
+        String source = "import ballerina/dataservice;\nimport ballerina/persist as _;\n\n" +
+                "@dataservice:Expose\ntype Order record {|\n    readonly int id;\n|};\n\n" +
+                "type OrderList record {|\n    readonly int id;\n|};\n";
+        Path model = Files.createTempDirectory("types").resolve("model.bal");
+        Files.writeString(model, source);
+        BalException error = Assert.expectThrows(BalException.class, () -> DataServiceModel.resolve(
+                BalProjectUtils.getEntities(model), annotations(model), Map.of(), NO_RULES));
+        Assert.assertEquals(error.getMessage(), "the entity 'OrderList' has the name of a type that the data " +
+                "service generates for the entity 'Order'. Rename one of them, or remove the @dataservice:Expose " +
+                "annotation of 'Order'.");
+    }
+
     private static Map<String, EnumSet<Operation>> annotations(Path model) throws BalException {
         return ExposeAnnotations.read(ExposeAnnotations.parse(model));
     }
