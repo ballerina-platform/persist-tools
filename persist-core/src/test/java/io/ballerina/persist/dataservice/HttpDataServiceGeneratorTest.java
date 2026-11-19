@@ -72,6 +72,7 @@ public class HttpDataServiceGeneratorTest {
                 {"combinations", "/api", false, true, false, "dataservice.bal", "dataservice_types.bal"},
                 {"generated_key", "/api", false, true, false, "dataservice.bal", "dataservice_types.bal"},
                 {"rules", "/api", false, true, false, "dataservice.bal", "dataservice_types.bal"},
+                {"key_relations", "/api", false, true, false, "dataservice.bal", "dataservice_types.bal"},
                 {"auth", "/api", true, false, false, "dataservice.bal", "dataservice_types.bal"},
                 {"auth", "/api", true, true, false, "introspection.bal", null},
         };

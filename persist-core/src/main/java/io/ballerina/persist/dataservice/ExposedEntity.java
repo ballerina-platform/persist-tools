@@ -25,6 +25,7 @@ import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.Relation;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -53,12 +54,14 @@ public final class ExposedEntity {
     private final Map<Operation, List<String>> scopes;
     private final Map<String, List<String>> constraints;
     private final Map<String, String> foreignKeys;
+    private final List<String> keyOrder;
 
     private ExposedEntity(String name, String resourceName, EnumSet<Operation> operations,
                           List<ServiceField> fields, List<ServiceField> insertFields,
                           List<ServiceField> updateFields, List<String> doc, List<Column> columns,
                           List<ExposedRelation> relations, Map<Operation, List<String>> scopes,
-                          Map<String, List<String>> constraints, Map<String, String> foreignKeys) {
+                          Map<String, List<String>> constraints, Map<String, String> foreignKeys,
+                          List<String> keyOrder) {
         this.name = name;
         this.resourceName = resourceName;
         this.operations = EnumSet.copyOf(operations);
@@ -71,6 +74,7 @@ public final class ExposedEntity {
         this.scopes = scopes;
         this.constraints = constraints;
         this.foreignKeys = foreignKeys;
+        this.keyOrder = keyOrder;
     }
 
     /**
@@ -100,15 +104,21 @@ public final class ExposedEntity {
                         field.getRelation().getAssocEntity().getFields().stream()
                                 .filter(target -> target.getFieldName().equals(key.getReference())).findFirst()
                                 .ifPresent(target -> constraints.put(key.getField(), constraintsOf(target)));
-                        fields.add(new ServiceField(key.getField(), key.getType(), false, false, false)
+                        // Persist drops a declared foreign key field from the entity's fields, but keeps it in
+                        // its keys when the field is also a key.
+                        boolean keyField = entity.getKeys().stream()
+                                .anyMatch(entityKey -> entityKey.getFieldName().equals(key.getField()));
+                        fields.add(new ServiceField(key.getField(), key.getType(), false, false, keyField)
                                 .withRule(rule));
-                        insertFields.add(new ServiceField(key.getField(), key.getType(), false, false, false)
-                                .withRule(rule));
-                        updateFields.add(new ServiceField(key.getField(), key.getType(), false, true, false)
-                                .withRule(rule));
+                        if (!keyField) {
+                            insertFields.add(new ServiceField(key.getField(), key.getType(), false, false, false)
+                                    .withRule(rule));
+                            updateFields.add(new ServiceField(key.getField(), key.getType(), false, true, false)
+                                    .withRule(rule));
+                        }
                         if (!isInternal(rule)) {
                             columns.add(new Column(unescape(key.getField()), unescape(key.getColumnName()),
-                                    Column.typeOf(key.getType(), false), false, false, false));
+                                    Column.typeOf(key.getType(), false), false, keyField, false));
                         }
                     }
                 }
@@ -131,11 +141,26 @@ public final class ExposedEntity {
                         .withRule(rule).withDoc(field.getDocumentation()));
             }
         }
+        List<String> keyOrder = entity.getKeys().stream().map(EntityField::getFieldName).toList();
         boolean generated = entity.getFields().stream().anyMatch(EntityField::isDbGenerated);
         return new ExposedEntity(entity.getEntityName(), entity.getClientResourceName(), operations,
                 List.copyOf(fields), generated ? List.copyOf(insertFields) : null, List.copyOf(updateFields),
-                List.copyOf(doc), List.copyOf(columns), List.of(), Map.of(), Map.copyOf(constraints),
-                Map.copyOf(foreignKeys));
+                List.copyOf(doc), inKeyOrder(columns, keyOrder), List.of(), Map.of(), Map.copyOf(constraints),
+                Map.copyOf(foreignKeys), keyOrder);
+    }
+
+    // `ballerina/dataservice` pairs key values with the key columns by position, so the key columns follow the
+    // order of the entity's keys, in the places the key columns take.
+    private static List<Column> inKeyOrder(List<Column> columns, List<String> keyOrder) {
+        List<Column> keys = columns.stream().filter(Column::key)
+                .sorted(Comparator.comparingInt(column -> keyOrder.stream().map(DataServiceUtils::unescape)
+                        .toList().indexOf(column.name()))).toList();
+        List<Column> ordered = new ArrayList<>();
+        int next = 0;
+        for (Column column : columns) {
+            ordered.add(column.key() ? keys.get(next++) : column);
+        }
+        return List.copyOf(ordered);
     }
 
     private static List<String> constraintsOf(EntityField field) {
@@ -152,7 +177,7 @@ public final class ExposedEntity {
      */
     public ExposedEntity withRelations(List<ExposedRelation> readable) {
         return new ExposedEntity(name, resourceName, operations, fields, insertFields, updateFields, doc, columns,
-                List.copyOf(readable), scopes, constraints, foreignKeys);
+                List.copyOf(readable), scopes, constraints, foreignKeys, keyOrder);
     }
 
     /**
@@ -163,7 +188,7 @@ public final class ExposedEntity {
      */
     public ExposedEntity withScopes(Map<Operation, List<String>> listed) {
         return new ExposedEntity(name, resourceName, operations, fields, insertFields, updateFields, doc, columns,
-                relations, Map.copyOf(listed), constraints, foreignKeys);
+                relations, Map.copyOf(listed), constraints, foreignKeys, keyOrder);
     }
 
     /**
@@ -175,7 +200,7 @@ public final class ExposedEntity {
     public ExposedEntity withFieldDocs(Map<String, String> lines) {
         return new ExposedEntity(name, resourceName, operations, withDocs(fields, lines),
                 insertFields == null ? null : withDocs(insertFields, lines), withDocs(updateFields, lines), doc,
-                columns, relations, scopes, constraints, foreignKeys);
+                columns, relations, scopes, constraints, foreignKeys, keyOrder);
     }
 
     private static List<ServiceField> withDocs(List<ServiceField> fields, Map<String, String> lines) {
@@ -320,12 +345,13 @@ public final class ExposedEntity {
     }
 
     /**
-     * Returns the key fields, in declaration order.
+     * Returns the key fields, in the order of the entity's keys.
      *
      * @return the key fields
      */
     public List<ServiceField> keys() {
-        return fields.stream().filter(ServiceField::key).toList();
+        return fields.stream().filter(ServiceField::key)
+                .sorted(Comparator.comparingInt(field -> keyOrder.indexOf(field.name()))).toList();
     }
 
     /**
