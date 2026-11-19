@@ -166,7 +166,11 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
                     eagerLoading, initParams);
             generateTestSources(testDatastore, entityModule, targetModule, projectPath, generatedSourceDirPath);
             if (dataServiceOptions == null) {
-                deleteDataServiceSources(generatedSourceDirPath);
+                // Only the default model has a data service, always in the root generated directory.
+                if (modelName == null) {
+                    deleteDataServiceSources(Paths.get(projectPath.toString(),
+                            BalSyntaxConstants.GENERATED_SOURCE_DIRECTORY));
+                }
                 if (ExposeAnnotations.isPresent(schemaFilePath)) {
                     errStream.println("WARNING: " + DataServiceMessages.ANNOTATIONS_WITHOUT_OPTIONS);
                 }
