@@ -279,6 +279,21 @@ public class ToolingDataServiceTest {
                 "generate one."), result.output());
     }
 
+    @Test(description = "Removing the options while moving the client to a submodule deletes the service")
+    public void testCleanupAfterTargetModuleChange() throws IOException, InterruptedException {
+        Path project = project("ds_cleanup_module", entry("h2", "options.dataservice.protocol = \"http\""),
+                MODEL);
+        assertSucceeded(build(project));
+        Path service = project.resolve("generated").resolve(SERVICE);
+        Assert.assertTrue(Files.exists(service));
+
+        writeToml(project, entry("h2", "targetModule = \"ds_cleanup_module.db\""));
+        Result result = build(project);
+        Assert.assertFalse(Files.exists(service), result.output());
+        Assert.assertFalse(Files.exists(project.resolve("generated").resolve(CONFIG)), result.output());
+        Assert.assertFalse(Files.exists(project.resolve("generated").resolve(TYPES)), result.output());
+    }
+
     @Test(description = "Without options.dataservice and annotations, persist behaves as it does today")
     public void testNoDataService() throws IOException, InterruptedException {
         Path project = project("ds_none", entry("h2", ""), PLAIN_MODEL);
