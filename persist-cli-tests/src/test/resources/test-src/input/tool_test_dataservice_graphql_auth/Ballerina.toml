@@ -12,9 +12,3 @@ filePath = "persist/model.bal"
 options.dataservice.protocol = "graphql"
 options.dataservice.auth = true
 
-# ballerina/graphql 1.19.2 is not released yet: the test distribution holds a local build of
-# module-ballerina-graphql#2610, #2611 and #2612.
-[[dependency]]
-org = "ballerina"
-name = "graphql"
-version = "1.19.2"
