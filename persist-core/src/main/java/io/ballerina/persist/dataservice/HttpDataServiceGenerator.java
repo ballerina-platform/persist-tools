@@ -821,13 +821,16 @@ public final class HttpDataServiceGenerator {
     private void appendCreate(StringBuilder out, ExposedEntity entity, Names n, Set<String> imports) {
         imports.add(DATASERVICE_IMPORT);
         String insert = n.entity + "Insert";
+        boolean checkRead = readChecked(entity);
         appendDoc(out, entity, "Creates one or more " + n.plural + ".",
                 List.of("payload - The " + n.words + ", or the " + n.plural + ", to create"),
-                "The created " + n.words + " or " + n.plural);
-        out.append("    resource function post ").append(n.collection).append("(").append(n.insertWire).append("|")
+                "The created " + n.words + " or " + n.plural + (checkRead ? ", without a body when the caller " +
+                        "may not read them" : ""));
+        out.append("    resource function post ").append(n.collection).append("(")
+                .append(checkRead ? "http:RequestContext ctx, " : "").append(n.insertWire).append("|")
                 .append(n.insertWire).append("[] payload)").append(NEWLINE);
         out.append("            returns ").append(n.created).append("|").append(n.listCreated)
-                .append(errors(CREATE_ERRORS, false))
+                .append(checkRead ? "|http:Created" : "").append(errors(CREATE_ERRORS, false))
                 .append(" {").append(NEWLINE);
         String entries = entity.hasWireTypes() ? "entries" : "values";
         String entriesType = entity.hasWireTypes() ? n.insertWire : insert;
@@ -888,11 +891,26 @@ public final class HttpDataServiceGenerator {
                 .append(NEWLINE);
         out.append("            }").append(NEWLINE);
         out.append("        }").append(NEWLINE);
+        if (checkRead) {
+            appendHoldsRead(out, entity);
+        }
         out.append("        if payload is ").append(n.insertWire).append("[] {").append(NEWLINE);
+        if (checkRead) {
+            out.append("            if !readable {").append(NEWLINE);
+            out.append("                return <http:Created>{};").append(NEWLINE);
+            out.append("            }").append(NEWLINE);
+        }
         out.append("            return <").append(n.listCreated).append(">{body: {items, hasMore: false}};")
                 .append(NEWLINE);
         out.append("        }").append(NEWLINE);
         out.append("        ").append(n.wire).append(" created = items[0];").append(NEWLINE);
+        if (checkRead) {
+            out.append("        if !readable {").append(NEWLINE);
+            out.append("            return <http:Created>{headers: {\"Location\": dsHttp:toLocation(\"")
+                    .append(collectionPath(n.collection)).append("\", ").append(keyList(entity, "created."))
+                    .append(")}};").append(NEWLINE);
+            out.append("        }").append(NEWLINE);
+        }
         out.append("        return <").append(n.created).append(">{").append(NEWLINE);
         out.append("            headers: {\"Location\": dsHttp:toLocation(\"").append(collectionPath(n.collection))
                 .append("\", ").append(keyList(entity, "created.")).append(")},").append(NEWLINE);

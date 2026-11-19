@@ -200,9 +200,9 @@ service http:InterceptableService /api on dataserviceListener {
     # Creates one or more employees.
     #
     # + payload - The employee, or the employees, to create
-    # + return - The created employee or employees, or the error response
-    resource function post employees(EmployeeInsert|EmployeeInsert[] payload)
-            returns EmployeeCreated|EmployeeListCreated|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
+    # + return - The created employee or employees, without a body when the caller may not read them, or the error response
+    resource function post employees(http:RequestContext ctx, EmployeeInsert|EmployeeInsert[] payload)
+            returns EmployeeCreated|EmployeeListCreated|http:Created|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         EmployeeInsert[] values = payload is EmployeeInsert[] ? payload : [payload];
         dataservice:DataserviceError? tooMany = dataservice:checkCreateSize(values.length(), self.pageConfig);
         if tooMany is dataservice:DataserviceError {
@@ -229,10 +229,17 @@ service http:InterceptableService /api on dataserviceListener {
                 return dsHttp:toCreateError(err, "Employee");
             }
         }
+        boolean readable = dsHttp:hasScope(ctx, ["hr:read"]);
         if payload is EmployeeInsert[] {
+            if !readable {
+                return <http:Created>{};
+            }
             return <EmployeeListCreated>{body: {items, hasMore: false}};
         }
         Employee created = items[0];
+        if !readable {
+            return <http:Created>{headers: {"Location": dsHttp:toLocation("/api/employees", [created.id])}};
+        }
         return <EmployeeCreated>{
             headers: {"Location": dsHttp:toLocation("/api/employees", [created.id])},
             body: created
@@ -457,9 +464,9 @@ service http:InterceptableService /api on dataserviceListener {
     # Creates one or more departments.
     #
     # + payload - The department, or the departments, to create
-    # + return - The created department or departments, or the error response
-    resource function post departments(DepartmentInsert|DepartmentInsert[] payload)
-            returns DepartmentCreated|DepartmentListCreated|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
+    # + return - The created department or departments, without a body when the caller may not read them, or the error response
+    resource function post departments(http:RequestContext ctx, DepartmentInsert|DepartmentInsert[] payload)
+            returns DepartmentCreated|DepartmentListCreated|http:Created|dsHttp:InvalidInput|dsHttp:Conflict|dsHttp:ConstraintViolation|dsHttp:InternalError {
         DepartmentInsert[] values = payload is DepartmentInsert[] ? payload : [payload];
         dataservice:DataserviceError? tooMany = dataservice:checkCreateSize(values.length(), self.pageConfig);
         if tooMany is dataservice:DataserviceError {
@@ -486,10 +493,17 @@ service http:InterceptableService /api on dataserviceListener {
                 return dsHttp:toCreateError(err, "Department");
             }
         }
+        boolean readable = dsHttp:hasScope(ctx, ["hr:read", "org:read"]);
         if payload is DepartmentInsert[] {
+            if !readable {
+                return <http:Created>{};
+            }
             return <DepartmentListCreated>{body: {items, hasMore: false}};
         }
         Department created = items[0];
+        if !readable {
+            return <http:Created>{headers: {"Location": dsHttp:toLocation("/api/departments", [created.id])}};
+        }
         return <DepartmentCreated>{
             headers: {"Location": dsHttp:toLocation("/api/departments", [created.id])},
             body: created
