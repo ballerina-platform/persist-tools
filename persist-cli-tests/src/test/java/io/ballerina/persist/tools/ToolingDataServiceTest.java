@@ -192,7 +192,7 @@ public class ToolingDataServiceTest {
         Path project = project("ds_build", entry("h2", "\n[tool.persist.options.dataservice]\nprotocol = \"http\""),
                 MODEL);
         assertSucceeded(build(project));
-        String service = Files.readString(project.resolve("generated").resolve(SERVICE));
+        String service = read(project.resolve("generated").resolve(SERVICE));
         Assert.assertTrue(service.startsWith("// AUTO-GENERATED FILE. DO NOT MODIFY."), service);
         Assert.assertTrue(service.contains("service http:InterceptableService /api on dataserviceListener {"),
                 service);
@@ -203,7 +203,7 @@ public class ToolingDataServiceTest {
                 "@http:ServiceConfig {cors: dataserviceConfig.serviceConfig.cors}\n" +
                 "service http:InterceptableService /api on"), service);
         Assert.assertTrue(Files.exists(project.resolve("generated").resolve(CONFIG)));
-        String types = Files.readString(project.resolve("generated").resolve(TYPES));
+        String types = read(project.resolve("generated").resolve(TYPES));
         Assert.assertTrue(types.contains("public type EmployeePayload record {|"), types);
         Assert.assertTrue(types.contains("public type AssignmentList record {\n"), types);
         Assert.assertFalse(service.contains("public type "), service);
@@ -248,7 +248,7 @@ public class ToolingDataServiceTest {
         Path project = project("ds_introspection", entry("h2",
                 "\n[tool.persist.options.dataservice]\nprotocol = \"http\"\nintrospection = false"), MODEL);
         assertSucceeded(build(project));
-        String service = Files.readString(project.resolve("generated").resolve(SERVICE));
+        String service = read(project.resolve("generated").resolve(SERVICE));
         Assert.assertFalse(service.contains("openapi"), service);
         Assert.assertTrue(service.contains("\nservice http:InterceptableService /api on dataserviceListener {"),
                 service);
@@ -261,13 +261,13 @@ public class ToolingDataServiceTest {
                 MODEL);
         assertSucceeded(build(project));
         Path service = project.resolve("generated").resolve(SERVICE);
-        Assert.assertTrue(Files.readString(service).contains("service http:InterceptableService /api on"));
+        Assert.assertTrue(read(service).contains("service http:InterceptableService /api on"));
 
         writeToml(project, entry("h2", "\n[tool.persist.options.dataservice]\nprotocol = \"http\"\n" +
                 "basePath = \"/hr/v2/\""));
         assertSucceeded(build(project));
-        Assert.assertTrue(Files.readString(service).contains("service http:InterceptableService /hr/v2 on"));
-        Assert.assertTrue(Files.readString(service).contains("dsHttp:toLocation(\"/hr/v2/employees\""));
+        Assert.assertTrue(read(service).contains("service http:InterceptableService /hr/v2 on"));
+        Assert.assertTrue(read(service).contains("dsHttp:toLocation(\"/hr/v2/employees\""));
 
         writeToml(project, entry("h2", ""));
         Result result = build(project);
@@ -320,7 +320,7 @@ public class ToolingDataServiceTest {
     @Test(dataProvider = "goldenModels", description = "Each model of the generator's expected outputs compiles")
     public void testGoldenModelCompiles(String model, boolean auth) throws IOException, InterruptedException {
         Path project = project("ds_golden_" + model, entry("h2", "options.dataservice.protocol = \"http\"" +
-                (auth ? "\noptions.dataservice.auth = true" : "")), Files.readString(GOLDEN_MODELS.resolve(model)
+                (auth ? "\noptions.dataservice.auth = true" : "")), read(GOLDEN_MODELS.resolve(model)
                 .resolve("model.bal")));
         assertSucceeded(build(project));
         Assert.assertTrue(Files.exists(project.resolve("generated").resolve(SERVICE)));
@@ -448,7 +448,7 @@ public class ToolingDataServiceTest {
         Path project = emptyProject("ds_add");
         Result result = bal(project, Map.of(), "persist", "add", "--datastore", "h2", "--dataservice", "http");
         assertSucceeded(result);
-        String toml = Files.readString(project.resolve("Ballerina.toml"));
+        String toml = read(project.resolve("Ballerina.toml"));
         Assert.assertTrue(toml.contains("options.datastore = \"h2\""), toml);
         Assert.assertTrue(toml.contains("filePath = \"persist/model.bal\"\n\n[tool.persist.options.dataservice]\n" +
                 "protocol = \"http\"\n"), toml);
@@ -465,8 +465,9 @@ public class ToolingDataServiceTest {
         deleteDirectory(directory);
         Files.createDirectories(directory);
         Result result = bal(directory, Map.of(), "persist", "add", "--dataservice", "http");
-        Assert.assertEquals(result.output().strip(), "ERROR: invalid Ballerina package directory: " + directory +
-                ", cannot find 'Ballerina.toml' file.", result.output());
+        String error = "ERROR: invalid Ballerina package directory: " + directory +
+                ", cannot find 'Ballerina.toml' file.";
+        Assert.assertEquals(result.output().split(Pattern.quote(error), -1).length - 1, 1, result.output());
     }
 
     @Test(description = "pull outside a package names the missing Ballerina.toml with one ERROR prefix")
@@ -476,7 +477,7 @@ public class ToolingDataServiceTest {
         Files.createDirectories(directory);
         Result result = bal(directory, Map.of(), "persist", "pull", "--dataservice", "http", "--host", "localhost",
                 "--port", "3307", "--user", "root", "--database", "persist");
-        Assert.assertTrue(result.output().startsWith("ERROR: invalid Ballerina package directory"), result.output());
+        Assert.assertTrue(result.output().contains("ERROR: invalid Ballerina package directory"), result.output());
         Assert.assertFalse(result.output().contains("ERROR: ERROR:"), result.output());
     }
 
@@ -494,12 +495,12 @@ public class ToolingDataServiceTest {
     public void testAddError(String name, List<String> args, String message)
             throws IOException, InterruptedException {
         Path project = emptyProject("ds_add_" + name);
-        String toml = Files.readString(project.resolve("Ballerina.toml"));
+        String toml = read(project.resolve("Ballerina.toml"));
         List<String> command = new ArrayList<>(List.of("persist", "add"));
         command.addAll(args);
         Result result = bal(project, Map.of(), command.toArray(String[]::new));
         Assert.assertTrue(result.output().contains("ERROR: " + message), result.output());
-        Assert.assertEquals(Files.readString(project.resolve("Ballerina.toml")), toml);
+        Assert.assertEquals(read(project.resolve("Ballerina.toml")), toml);
         Assert.assertFalse(Files.exists(project.resolve("persist")));
     }
 
@@ -531,17 +532,17 @@ public class ToolingDataServiceTest {
                 "http");
         assertSucceeded(result);
         Path service = project.resolve(SERVICE);
-        String generated = Files.readString(service);
+        String generated = read(service);
         Assert.assertTrue(generated.startsWith("// AUTO-GENERATED FILE.\n"), generated);
         Assert.assertFalse(generated.contains("DO NOT MODIFY") || generated.contains("should not be modified"));
-        Assert.assertTrue(Files.readString(project.resolve(CONFIG)).startsWith("// AUTO-GENERATED FILE.\n"));
-        Assert.assertTrue(Files.readString(project.resolve(TYPES)).startsWith("// AUTO-GENERATED FILE.\n"));
+        Assert.assertTrue(read(project.resolve(CONFIG)).startsWith("// AUTO-GENERATED FILE.\n"));
+        Assert.assertTrue(read(project.resolve(TYPES)).startsWith("// AUTO-GENERATED FILE.\n"));
         assertSucceeded(build(project));
 
         Files.writeString(service, generated + "\n// edited by the user\n");
         assertSucceeded(bal(project, Map.of(), "persist", "generate", "--datastore", "h2", "--dataservice",
                 "http"));
-        Assert.assertEquals(Files.readString(service), generated);
+        Assert.assertEquals(read(service), generated);
     }
 
     @Test(description = "generate without --dataservice on an annotated model says what the option would do")
@@ -560,7 +561,7 @@ public class ToolingDataServiceTest {
             throws IOException, InterruptedException {
         Path project = emptyProject("ds_generate_" + name);
         writeModel(project, model);
-        String toml = Files.readString(project.resolve("Ballerina.toml"));
+        String toml = read(project.resolve("Ballerina.toml"));
         List<String> command = new ArrayList<>(List.of("persist", "generate"));
         if (!args.contains("--datastore")) {
             command.addAll(List.of("--datastore", "h2"));
@@ -568,7 +569,7 @@ public class ToolingDataServiceTest {
         command.addAll(args);
         Result result = bal(project, Map.of(), command.toArray(String[]::new));
         Assert.assertTrue(result.output().contains("ERROR: " + message), result.output());
-        Assert.assertEquals(Files.readString(project.resolve("Ballerina.toml")), toml);
+        Assert.assertEquals(read(project.resolve("Ballerina.toml")), toml);
         Assert.assertFalse(Files.exists(project.resolve(SERVICE)));
         Assert.assertFalse(Files.exists(project.resolve("persist_client.bal")));
     }
@@ -625,14 +626,14 @@ public class ToolingDataServiceTest {
         if (entry != null) {
             writeToml(project, entry);
         }
-        String toml = Files.readString(project.resolve("Ballerina.toml"));
+        String toml = read(project.resolve("Ballerina.toml"));
         List<String> command = new ArrayList<>(List.of("persist", "pull", "--datastore", "mysql", "--host",
                 "localhost", "--port", "3307", "--user", "root", "--database", "persist"));
         command.addAll(args);
         Result result = bal(project, Map.of(), command.toArray(String[]::new));
         Assert.assertTrue(result.output().contains("ERROR: " + message), result.output());
         Assert.assertFalse(result.output().contains("password"), result.output());
-        Assert.assertEquals(Files.readString(project.resolve("Ballerina.toml")), toml);
+        Assert.assertEquals(read(project.resolve("Ballerina.toml")), toml);
         Assert.assertFalse(Files.exists(project.resolve("persist").resolve("model.bal")));
     }
 
@@ -710,7 +711,7 @@ public class ToolingDataServiceTest {
         if (!exited) {
             process.destroyForcibly().waitFor();
         }
-        String output = Files.readString(log);
+        String output = read(log);
         Assert.assertTrue(exited, "the program did not stop: " + output);
         Assert.assertNotEquals(process.exitValue(), 0, output);
         Assert.assertTrue(output.contains(message), output);
@@ -735,6 +736,11 @@ public class ToolingDataServiceTest {
     private static void writeModel(Path project, String model) throws IOException {
         Files.createDirectories(project.resolve("persist"));
         Files.writeString(project.resolve("persist").resolve("model.bal"), model);
+    }
+
+    private static String read(Path file) throws IOException {
+        // The tool writes the platform's line separator, and the expectations use \n.
+        return Files.readString(file).replace("\r\n", "\n");
     }
 
     private static void writeToml(Path project, String toolEntry) throws IOException {

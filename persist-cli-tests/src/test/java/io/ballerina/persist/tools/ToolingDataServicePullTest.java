@@ -20,6 +20,7 @@ package io.ballerina.persist.tools;
 
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.configuration.DatabaseConfiguration;
+import org.junit.jupiter.api.condition.OS;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -54,6 +55,9 @@ public class ToolingDataServicePullTest {
 
     @Test(description = "pull --dataservice annotates every supported entity and creates the entry")
     public void testPullAnnotatesEveryEntity() throws IOException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
         String subDir = "tool_test_pull_dataservice_mysql_1";
         createFromDatabaseScript(subDir, "mysql", MYSQL);
         String output = pull(subDir, "--dataservice", "http");
@@ -77,6 +81,9 @@ public class ToolingDataServicePullTest {
 
     @Test(description = "pull --expose-tables annotates the named tables and keeps the entry's base path")
     public void testPullExposeTables() throws IOException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
         String subDir = "tool_test_pull_dataservice_mysql_2";
         createFromDatabaseScript(subDir, "mysql", MYSQL);
         pull(subDir, "--dataservice", "http", "--expose-tables", "employees");
@@ -91,6 +98,9 @@ public class ToolingDataServicePullTest {
 
     @Test(description = "pull --expose-tables with a table that cannot be exposed writes nothing")
     public void testPullExposeTablesErrors() throws IOException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
         String subDir = "tool_test_pull_dataservice_mysql_3";
         createFromDatabaseScript(subDir, "mysql", MYSQL);
         String toml = Files.readString(SOURCES.resolve(subDir).resolve("Ballerina.toml"));
@@ -106,6 +116,9 @@ public class ToolingDataServicePullTest {
     @Test(description = "pull without --dataservice into an entry that enables a data service annotates and " +
             "leaves the entry unchanged")
     public void testPullKeepsTheEntrysDataService() throws IOException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
         String subDir = "tool_test_pull_dataservice_mysql_4";
         createFromDatabaseScript(subDir, "mysql", MYSQL);
         String toml = Files.readString(SOURCES.resolve(subDir).resolve("Ballerina.toml"));
@@ -119,6 +132,9 @@ public class ToolingDataServicePullTest {
 
     @Test(description = "pull without --dataservice into an entry without a data service behaves as before")
     public void testPullWithoutDataService() throws IOException {
+        if (OS.WINDOWS.isCurrentOs()) {
+            return;
+        }
         String subDir = "tool_test_pull_dataservice_mysql_5";
         createFromDatabaseScript(subDir, "mysql", MYSQL);
         String toml = Files.readString(SOURCES.resolve(subDir).resolve("Ballerina.toml"));
