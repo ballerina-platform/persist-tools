@@ -46,8 +46,10 @@ public class DataServiceTomlTest {
         Assert.assertEquals(entry.targetModule("hr"), "hr");
         Assert.assertFalse(entry.withInitParams());
         Assert.assertTrue(entry.dataService().isEmpty());
+        String separator = System.lineSeparator();
         Assert.assertEquals(DataServiceToml.addDataService(toml, entry, "http"), toml.substring(0,
-                toml.length() - 1) + "\n\n[tool.persist.options.dataservice]\nprotocol = \"http\"\n");
+                toml.length() - 1) + separator + separator + "[tool.persist.options.dataservice]" + separator +
+                "protocol = \"http\"\n");
     }
 
     @Test
@@ -116,8 +118,10 @@ public class DataServiceTomlTest {
         String toml = PACKAGE + "[[tool.persist]]\nfilePath = \"persist/model.bal\"\n\n" +
                 "[tool.persist.options]\ndatastore = \"h2\"\n\n[[platform.java21.dependency]]\n";
         DataServiceToml.Entry entry = DataServiceToml.defaultModelEntry(toml).orElseThrow();
+        String separator = System.lineSeparator();
         Assert.assertEquals(DataServiceToml.addDataService(toml, entry, "http"), toml.replace("datastore = \"h2\"\n",
-                "datastore = \"h2\"\n\n[tool.persist.options.dataservice]\nprotocol = \"http\"\n"));
+                "datastore = \"h2\"" + separator + separator + "[tool.persist.options.dataservice]" + separator +
+                "protocol = \"http\"\n"));
     }
 
     @Test
