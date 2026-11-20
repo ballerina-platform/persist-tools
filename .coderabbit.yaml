@@ -1,0 +1,7 @@
+# CodeRabbit config - https://docs.coderabbit.ai/getting-started/yaml-configuration
+inheritance: true
+
+reviews:
+  path_filters:
+    # Sample projects that the CLI tests run the tool on. The expected generated sources stay in the review.
+    - '!**/src/test/resources/test-src/input/**'
