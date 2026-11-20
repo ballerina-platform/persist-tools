@@ -88,8 +88,8 @@ public class HttpDataServiceGeneratorTest {
                 DataServiceModel.resolve(modelPath, module, false).entities(),
                 new DataServiceOptions("http", DataServiceOptions.validateBasePath(basePath), false, introspection),
                 "hr", module.getModuleName(), "h2", userOwned);
-        Assert.assertEquals(generator.generateService(), edit("dataservice.bal", service));
-        Assert.assertEquals(generator.generateTypes().orElseThrow(), edit("dataservice_types.bal", types));
+        Assert.assertEquals(lf(generator.generateService()), edit("dataservice.bal", service));
+        Assert.assertEquals(lf(generator.generateTypes().orElseThrow()), edit("dataservice_types.bal", types));
     }
 
     @DataProvider
@@ -112,8 +112,13 @@ public class HttpDataServiceGeneratorTest {
                 new String[]{"toLocation(\"/api/employees\"", "toLocation(\"" + locationPrefix + "/employees\""});
     }
 
+    private static String lf(String source) {
+        // The generator writes the platform's line separator, and Git may check the golden files out with CRLF.
+        return source.replace("\r\n", "\n");
+    }
+
     private static String edit(String golden, List<String[]> edits) throws IOException {
-        String expected = Files.readString(RESOURCES.resolve("employees").resolve(golden), StandardCharsets.UTF_8);
+        String expected = lf(Files.readString(RESOURCES.resolve("employees").resolve(golden), StandardCharsets.UTF_8));
         for (String[] edit : edits) {
             Assert.assertTrue(expected.contains(edit[0]), "missing '" + edit[0] + "' in " + golden);
             expected = expected.replace(edit[0], edit[1]);
