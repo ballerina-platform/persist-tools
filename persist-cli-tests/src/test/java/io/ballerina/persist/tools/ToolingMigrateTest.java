@@ -77,7 +77,7 @@ public class ToolingMigrateTest {
         executeCommand("tool_test_migrate_empty_model", "emptyModel");
         try (Stream<Path> migrations = Files.list(Paths.get(GENERATED_SOURCES_DIRECTORY,
                 "tool_test_migrate_empty_model", "persist", "migrations"))) {
-            Assert.assertEquals(migrations.map(path -> path.getFileName().toString()).toList(),
+            Assert.assertEquals(migrations.map(path -> String.valueOf(path.getFileName())).toList(),
                     List.of("20240329105157_firstMigration"));
         }
     }

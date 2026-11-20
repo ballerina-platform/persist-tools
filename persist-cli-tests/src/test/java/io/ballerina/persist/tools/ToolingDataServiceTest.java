@@ -33,6 +33,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -99,15 +100,15 @@ public class ToolingDataServiceTest {
     public void testBehaviourH2() throws IOException, InterruptedException {
         Path project = SOURCES.resolve("tool_test_dataservice_h2");
         assertSucceeded(bal(project, Map.of(), "build", "--offline"));
-        Path init = project.resolve("db").resolve("init.sql");
-        Files.createDirectories(init.getParent());
+        Path db = Files.createDirectories(project.resolve("db"));
+        Path init = db.resolve("init.sql");
         // H2 runs the INIT script on every new connection, so the schema must not drop tables.
         String schema = Files.readAllLines(project.resolve("generated").resolve("script.sql")).stream()
                 .filter(line -> !line.startsWith("DROP"))
                 .map(line -> line.replace("CREATE TABLE ", "CREATE TABLE IF NOT EXISTS "))
                 .collect(Collectors.joining(System.lineSeparator()));
         Files.writeString(init, schema);
-        Files.writeString(project.resolve("tests").resolve("Config.toml"), String.format("""
+        Files.writeString(project.resolve("tests").resolve("Config.toml"), """
                 [dataserviceConfig]
                 port = 9591
                 pageSize = 5
@@ -118,10 +119,10 @@ public class ToolingDataServiceTest {
                 allowMethods = ["GET", "POST", "PATCH", "DELETE"]
 
                 [dataservice_test.dataservice_h2]
-                url = "jdbc:h2:mem:dstest;DB_CLOSE_DELAY=-1;INIT=RUNSCRIPT FROM '%s'"
+                url = "jdbc:h2:mem:dstest;DB_CLOSE_DELAY=-1;INIT=RUNSCRIPT FROM '{init}'"
                 user = "sa"
                 password = ""
-                """, init.toString().replace('\\', '/')));
+                """.replace("{init}", init.toString().replace('\\', '/')));
         assertTestsPassed(bal(project, Map.of("TZ", "UTC"), "test", "--offline"), 64);
     }
 
@@ -131,14 +132,14 @@ public class ToolingDataServiceTest {
         Result build = bal(project, Map.of(), "build", "--offline");
         assertSucceeded(build);
         Assert.assertFalse(build.output().contains("WARNING: the relation"), build.output());
-        Path init = project.resolve("db").resolve("init.sql");
-        Files.createDirectories(init.getParent());
+        Path db = Files.createDirectories(project.resolve("db"));
+        Path init = db.resolve("init.sql");
         String schema = Files.readAllLines(project.resolve("generated").resolve("script.sql")).stream()
                 .filter(line -> !line.startsWith("DROP"))
                 .map(line -> line.replace("CREATE TABLE ", "CREATE TABLE IF NOT EXISTS "))
                 .collect(Collectors.joining(System.lineSeparator()));
         Files.writeString(init, schema);
-        Files.writeString(project.resolve("tests").resolve("Config.toml"), String.format("""
+        Files.writeString(project.resolve("tests").resolve("Config.toml"), """
                 [dataserviceConfig]
                 port = 9592
 
@@ -152,7 +153,7 @@ public class ToolingDataServiceTest {
                 secret = "dataservice-test-secret"
 
                 [dataservice_test.dataservice_auth]
-                url = "jdbc:h2:mem:dsauth;DB_CLOSE_DELAY=-1;INIT=RUNSCRIPT FROM '%s'"
+                url = "jdbc:h2:mem:dsauth;DB_CLOSE_DELAY=-1;INIT=RUNSCRIPT FROM '{init}'"
                 user = "sa"
                 password = ""
 
@@ -180,7 +181,7 @@ public class ToolingDataServiceTest {
                 username = "editor"
                 password = "editor"
                 scopes = ["employees:update", "hr:read"]
-                """, init.toString().replace('\\', '/')));
+                """.replace("{init}", init.toString().replace('\\', '/')));
         assertTestsPassed(bal(project, Map.of(), "test", "--offline"), 15);
     }
 
@@ -358,7 +359,7 @@ public class ToolingDataServiceTest {
         }
         Path project = project("ds_error_" + name, toml, model);
         if (filePath != null) {
-            Files.createDirectories(project.resolve(filePath).getParent());
+            Files.createDirectories(Objects.requireNonNull(project.resolve(filePath).getParent()));
             Files.move(project.resolve("persist").resolve("model.bal"), project.resolve(filePath));
         }
         Result result = build(project);
@@ -738,13 +739,14 @@ public class ToolingDataServiceTest {
 
     private static void writeToml(Path project, String toolEntry) throws IOException {
         Path name = project.getFileName();
-        Files.writeString(project.resolve("Ballerina.toml"), String.format("""
+        Files.writeString(project.resolve("Ballerina.toml"), """
                 [package]
                 org = "dataservice_test"
-                name = "%s"
+                name = "{name}"
                 version = "0.1.0"
                 distribution = "2201.14.0"
-                %s""", name, toolEntry.isEmpty() ? "" : System.lineSeparator() + toolEntry));
+                {tool}""".replace("{name}", String.valueOf(name))
+                .replace("{tool}", toolEntry.isEmpty() ? "" : System.lineSeparator() + toolEntry));
     }
 
     private static String entry(String datastore, String options) {
