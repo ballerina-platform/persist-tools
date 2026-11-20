@@ -19,6 +19,9 @@
 package io.ballerina.persist.dataservice;
 
 import io.ballerina.persist.BalException;
+import io.ballerina.persist.PersistToolsConstants;
+import io.ballerina.persist.models.Entity;
+import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.utils.BalProjectUtils;
 import org.testng.Assert;
@@ -76,6 +79,23 @@ public class PullExposureTest {
     }
 
     @Test
+    public void testIntrospectedUnsupportedColumnIsNotExposed() {
+        Module introspected = introspectedGadgets();
+        BalException error = Assert.expectThrows(BalException.class,
+                () -> PullExposure.select(introspected, "gadgets"));
+        Assert.assertEquals(error.getMessage(), "the table 'gadgets' in '--expose-tables' has an unsupported " +
+                "data type, so its entity 'Gadget' cannot be exposed.");
+    }
+
+    @Test
+    public void testIntrospectedUnsupportedColumnIsSkipped() throws BalException {
+        PullExposure exposure = PullExposure.select(introspectedGadgets(), null);
+        Assert.assertEquals(exposure.exposed(), Set.of());
+        Assert.assertEquals(exposure.warnings(), List.of("the table 'gadgets' has an unsupported data type, so " +
+                "its entity 'Gadget' is not exposed."));
+    }
+
+    @Test
     public void testEntitiesTheBuildRejectsAreSkipped() throws BalException {
         PullExposure exposure = PullExposure.select(conflicts(), null);
         Assert.assertEquals(exposure.exposed(), Set.of("Person"));
@@ -104,6 +124,27 @@ public class PullExposureTest {
     @DataProvider
     public Object[][] noTables() {
         return new Object[][]{{""}, {","}, {" , "}};
+    }
+
+    private static Module introspectedGadgets() {
+        // As introspection builds it: the unsupported column is a field typed `Unsupported`, and the entity is not
+        // flagged.
+        EntityField id = field("id", "int");
+        Entity.Builder gadget = Entity.newBuilder("Gadget");
+        gadget.setTableName("gadgets");
+        gadget.addField(id);
+        gadget.addField(field("location", PersistToolsConstants.UNSUPPORTED_TYPE));
+        gadget.setKeys(List.of(id));
+        Module.Builder module = Module.newBuilder("db");
+        module.addEntity("Gadget", gadget.build());
+        return module.build();
+    }
+
+    private static EntityField field(String name, String type) {
+        EntityField.Builder field = EntityField.newBuilder(name);
+        field.setType(type);
+        field.setFieldColumnName(name);
+        return field.build();
     }
 
     private static Module conflicts() throws BalException {

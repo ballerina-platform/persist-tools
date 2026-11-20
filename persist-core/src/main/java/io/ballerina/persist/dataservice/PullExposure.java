@@ -19,6 +19,7 @@
 package io.ballerina.persist.dataservice;
 
 import io.ballerina.persist.BalException;
+import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.Module;
 
@@ -55,7 +56,7 @@ public record PullExposure(Set<String> exposed, List<String> warnings) {
         Map<String, Entity> collections = new LinkedHashMap<>();
         if (exposeTables == null) {
             for (Entity entity : entityModule.getEntityMap().values()) {
-                if (entity.containsUnsupportedTypes()) {
+                if (hasUnsupportedTypes(entity)) {
                     warnings.add(String.format(DataServiceMessages.PULL_SKIPS_ENTITY, entity.getTableName(),
                             entity.getEntityName()));
                     continue;
@@ -92,7 +93,7 @@ public record PullExposure(Set<String> exposed, List<String> warnings) {
                 errors.add(String.format(DataServiceMessages.EXPOSE_TABLE_NOT_PULLED, table));
                 continue;
             }
-            if (entity.containsUnsupportedTypes()) {
+            if (hasUnsupportedTypes(entity)) {
                 errors.add(String.format(DataServiceMessages.EXPOSE_TABLE_UNSUPPORTED, table,
                         entity.getEntityName()));
                 continue;
@@ -115,5 +116,12 @@ public record PullExposure(Set<String> exposed, List<String> warnings) {
             throw new BalException(String.join(System.lineSeparator(), errors));
         }
         return new PullExposure(exposed, warnings);
+    }
+
+    private static boolean hasUnsupportedTypes(Entity entity) {
+        // Introspection flags only a table without a primary key; a column of an unsupported type is a field typed
+        // as `Unsupported`.
+        return entity.containsUnsupportedTypes() || entity.getFields().stream()
+                .anyMatch(field -> PersistToolsConstants.UNSUPPORTED_TYPE.equals(field.getFieldType()));
     }
 }
