@@ -75,4 +75,9 @@
         <Class name="io.ballerina.persist.tools.ToolingInitTest"/>
         <Bug pattern = "REC_CATCH_EXCEPTION"/>
     </Match>
+    <Match>
+        <!-- The data service model's records hold lists and maps that are built once and not changed. -->
+        <Package name="io.ballerina.persist.dataservice" />
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
+    </Match>
 </FindBugsFilter>

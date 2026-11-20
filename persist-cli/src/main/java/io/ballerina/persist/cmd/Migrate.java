@@ -341,6 +341,14 @@ public class Migrate implements BLauncherCmd {
         try {
             Module previousModel = BalProjectUtils.getEntities(previousModelPath);
             Module currentModel = BalProjectUtils.getEntities(currentModelPath);
+            if (currentModel.getEntityMap().isEmpty()) {
+                errStream.printf("ERROR: the model definition file(%s) does not contain any valid entity.%n",
+                        currentModelPath.getFileName());
+                if (newMigrateDirectory != null && !newMigrateDirectory.delete()) {
+                    errStream.println("Error: Failed to delete the new migration directory");
+                }
+                return;
+            }
 
             queries = findDifferences(previousModel, currentModel);
 

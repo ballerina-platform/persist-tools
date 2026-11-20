@@ -13,6 +13,16 @@
     },
     "withInitParams": {
       "type": "boolean"
+    },
+    "dataservice": {
+      "type": "object",
+      "properties": {
+        "protocol": {"type": "string"},
+        "basePath": {"type": "string"},
+        "auth": {"type": "boolean"},
+        "introspection": {"type": "boolean"}
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false

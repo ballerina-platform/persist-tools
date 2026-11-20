@@ -20,13 +20,18 @@ package io.ballerina.persist.tools;
 
 import io.ballerina.persist.cmd.Migrate;
 import jdk.jfr.Description;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 import picocli.CommandLine;
 
+import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
+import java.util.stream.Stream;
 
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.GENERATED_SOURCES_DIRECTORY;
 import static io.ballerina.persist.tools.utils.GeneratedSourcesTestUtils.assertMigrateGeneratedSources;
@@ -64,6 +69,17 @@ public class ToolingMigrateTest {
     public void testMigrateRemoveTable() {
         executeCommand("tool_test_migrate_4", "secondMigration");
         assertMigrateGeneratedSources("tool_test_migrate_4");
+    }
+
+    @Test
+    @Description("Migrating to an empty model writes no migration")
+    public void testMigrateEmptyModel() throws IOException {
+        executeCommand("tool_test_migrate_empty_model", "emptyModel");
+        try (Stream<Path> migrations = Files.list(Paths.get(GENERATED_SOURCES_DIRECTORY,
+                "tool_test_migrate_empty_model", "persist", "migrations"))) {
+            Assert.assertEquals(migrations.map(path -> String.valueOf(path.getFileName())).toList(),
+                    List.of("20240329105157_firstMigration"));
+        }
     }
 
     @Test(enabled = true)
