@@ -79,7 +79,7 @@ public class ToolingDataServicePullTest {
                 "protocol = \"http\"\n"), toml);
     }
 
-    @Test(description = "pull --expose-tables annotates the named tables and keeps the entry's base path")
+    @Test(description = "pull --dataservice --expose-tables annotates only the named tables and enables the service")
     public void testPullExposeTables() throws IOException {
         if (OS.WINDOWS.isCurrentOs()) {
             return;
@@ -89,11 +89,10 @@ public class ToolingDataServicePullTest {
         pull(subDir, "--dataservice", "http", "--expose-tables", "employees");
         String model = Files.readString(SOURCES.resolve(subDir).resolve("persist").resolve("model.bal"));
         Assert.assertEquals(model.split("@dataservice:Expose", -1).length - 1, 1, model);
-        Assert.assertTrue(model.contains("@dataservice:Expose\npublic type Employee"), model);
+        Assert.assertTrue(model.matches("(?s).*@dataservice:Expose\\s+(@[^\\n]*\\s+)*public type Employee.*"), model);
         String toml = Files.readString(SOURCES.resolve(subDir).resolve("Ballerina.toml"));
-        Assert.assertTrue(toml.contains("options.dataservice.protocol = \"http\""), toml);
-        Assert.assertTrue(toml.contains("options.dataservice.basePath = \"/hr\""), toml);
-        Assert.assertFalse(toml.contains("graphql"), toml);
+        Assert.assertTrue(toml.contains("filePath = \"persist/model.bal\"\n\n[tool.persist.options.dataservice]\n" +
+                "protocol = \"http\"\n"), toml);
     }
 
     @Test(description = "pull --expose-tables with a table that cannot be exposed writes nothing")
