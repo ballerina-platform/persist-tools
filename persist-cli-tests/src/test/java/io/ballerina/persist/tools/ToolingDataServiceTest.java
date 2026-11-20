@@ -689,7 +689,7 @@ public class ToolingDataServiceTest {
         process.getOutputStream().close();
         String output;
         try (InputStream stream = process.getInputStream()) {
-            output = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+            output = new String(stream.readAllBytes(), StandardCharsets.UTF_8).replace("\r\n", "\n");
         }
         return new Result(process.waitFor(), output);
     }
