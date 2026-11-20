@@ -37,5 +37,6 @@ module io.ballerina.persist.core {
     exports io.ballerina.persist.utils;
     exports io.ballerina.persist.models;
     exports io.ballerina.persist.components;
+    exports io.ballerina.persist.dataservice;
     exports io.ballerina.persist.introspectiondto;
 }

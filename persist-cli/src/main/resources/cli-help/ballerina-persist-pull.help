@@ -9,6 +9,8 @@ SYNOPSIS
                         [--database <database name>]
                         [--tables[=<table1,table2,...>]]
                         [--model <model-name>]
+                        [--dataservice <protocol>]
+                        [--expose-tables <table1,table2,...>]
                         [<-h> | <--help>]
 
 DESCRIPTION
@@ -48,6 +50,16 @@ OPTIONS
        --model <model-name>
               Specify the model name to create a subdirectory model. If not specified, creates a root-level model.
               The model will be saved at persist/<model-name>/model.bal.
+       --dataservice <protocol>
+              Annotate the pulled entities with @dataservice:Expose and set 'options.dataservice.protocol'
+              in the [[tool.persist]] entry of persist/model.bal, creating the entry if there is none.
+              The supported protocol is 'http'. It cannot be combined with --model. Without it, an entry
+              that already has options.dataservice keeps its data service: the pulled entities are
+              annotated with the entry's protocol and the entry is left unchanged.
+       --expose-tables <table1,table2,...>
+              The tables whose entities are annotated. Without it, every pulled entity without an
+              unsupported data type is annotated. Requires --dataservice, unless the entry of
+              persist/model.bal already enables a data service.
        -h, --help
            Print the usage details of all commands.
 
@@ -66,3 +78,6 @@ EXAMPLES
 
        Generate a model in a subdirectory.
           $ bal persist pull --model inventory --datastore mysql --host localhost --port 3306 --user root --database db
+
+       Generate a model whose orders and customers tables are exposed by an HTTP data service.
+          $ bal persist pull --datastore mysql --host localhost --port 3306 --user root --database db --dataservice http --expose-tables orders,customers

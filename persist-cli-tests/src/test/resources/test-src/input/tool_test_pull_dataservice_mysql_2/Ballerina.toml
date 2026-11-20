@@ -1,0 +1,13 @@
+[package]
+org = "test_org"
+name = "test_module"
+version = "0.1.0"
+distribution = "2201.14.0"
+
+[[tool.persist]]
+id = "generate-db-client"
+targetModule = "test_module"
+options.datastore = "mysql"
+filePath = "persist/model.bal"
+options.dataservice.protocol = "graphql"
+options.dataservice.basePath = "/hr"
