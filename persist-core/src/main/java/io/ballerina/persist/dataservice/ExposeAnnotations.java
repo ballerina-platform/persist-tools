@@ -285,10 +285,7 @@ public final class ExposeAnnotations {
     // A field name may be written as a string, such as `"read"`, or as a quoted identifier, such as `'read`.
     private static String fieldName(SpecificFieldNode field) {
         String name = field.fieldName().toSourceCode().trim();
-        if (name.length() >= 2 && name.startsWith("\"") && name.endsWith("\"")) {
-            return name.substring(1, name.length() - 1);
-        }
-        return name.startsWith("'") ? name.substring(1) : name;
+        return name.startsWith("\"") ? DataServiceUtils.stringValue(name) : DataServiceUtils.identifierName(name);
     }
 
     private static Optional<Operation> actionOf(SpecificFieldNode action) {
@@ -325,8 +322,7 @@ public final class ExposeAnnotations {
                 return Optional.empty();
             }
         } else if (member instanceof BasicLiteralNode literal && literal.kind() == SyntaxKind.STRING_LITERAL) {
-            String text = literal.literalToken().text();
-            value = text.substring(1, text.length() - 1);
+            value = DataServiceUtils.stringValue(literal.literalToken().text());
         }
         for (Operation operation : Operation.values()) {
             if (operation.value().equals(value)) {

@@ -107,6 +107,15 @@ public class ExposeAnnotationsTest {
                 "Employee", Map.of(READ, List.of("hr:read"), DELETE, List.of("hr:admin"))));
     }
 
+    @Test
+    public void testEscapedNames() {
+        String model = IMPORTS + "@dataservice:Expose {\"oper\\u{61}tions\": [\"\\u{72}ead\"], " +
+                "'scopes: {\"r\\u{65}ad\": [\"hr:read\"]}}\ntype Employee record {| readonly int id; |};";
+        Assert.assertEquals(read(model.substring(IMPORTS.length())), Map.of("Employee", EnumSet.of(READ)));
+        Assert.assertEquals(ExposeAnnotations.scopes(tree(model)), Map.of("Employee", Map.of(READ,
+                List.of("hr:read"))));
+    }
+
 
     private static SyntaxTree tree(String source) {
         return SyntaxTree.from(TextDocuments.from(source));

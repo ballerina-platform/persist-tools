@@ -37,6 +37,52 @@ final class DataServiceUtils {
         return BalSyntaxUtils.stripEscapeCharacter(name.startsWith("'") ? name.substring(1) : name);
     }
 
+    // The value of a string literal, with its escapes resolved as the compiler resolves them.
+    static String stringValue(String literal) {
+        String body = unquote(literal);
+        StringBuilder value = new StringBuilder();
+        for (int i = 0; i < body.length(); i++) {
+            char c = body.charAt(i);
+            if (c != '\\' || i + 1 >= body.length()) {
+                value.append(c);
+                continue;
+            }
+            char escaped = body.charAt(++i);
+            switch (escaped) {
+                case 't' -> value.append('\t');
+                case 'n' -> value.append('\n');
+                case 'r' -> value.append('\r');
+                case 'u' -> {
+                    int end = body.indexOf('}', i);
+                    if (end > i + 2 && body.charAt(i + 1) == '{') {
+                        value.appendCodePoint(Integer.parseInt(body.substring(i + 2, end), 16));
+                        i = end;
+                    } else {
+                        value.append(escaped);
+                    }
+                }
+                default -> value.append(escaped);
+            }
+        }
+        return value.toString();
+    }
+
+    // An identifier as the compiler names it: without the quote of a quoted identifier, and with escapes resolved.
+    static String identifierName(String text) {
+        if (!text.startsWith("'")) {
+            return text;
+        }
+        StringBuilder name = new StringBuilder();
+        for (int i = 1; i < text.length(); i++) {
+            char c = text.charAt(i);
+            if (c == '\\' && i + 1 < text.length()) {
+                c = text.charAt(++i);
+            }
+            name.append(c);
+        }
+        return name.toString();
+    }
+
     static String unquote(String text) {
         return text.length() >= 2 && text.startsWith("\"") && text.endsWith("\"") ?
                 text.substring(1, text.length() - 1) : text;
