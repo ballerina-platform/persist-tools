@@ -50,6 +50,7 @@ public type Post record {|
     string tags;
     string category;
     time:Date created_date;
+    # The key of the related 'User'.
     int userId;
 |};
 
@@ -60,6 +61,7 @@ public type PostOptionalized record {|
     string tags?;
     string category?;
     time:Date created_date?;
+    # The key of the related 'User'.
     int userId?;
 |};
 
@@ -81,13 +83,16 @@ public type PostUpdate record {|
     string tags?;
     string category?;
     time:Date created_date?;
+    # The key of the related 'User'.
     int userId?;
 |};
 
 # Represents the `Follow` entity.
 public type Follow record {|
     readonly int id;
+    # The key of the related 'User'.
     int leaderId;
+    # The key of the related 'User'.
     int followerId;
     time:Date created_date;
 |};
@@ -95,7 +100,9 @@ public type Follow record {|
 # Represents `Follow` with every field optional, for projected reads.
 public type FollowOptionalized record {|
     int id?;
+    # The key of the related 'User'.
     int leaderId?;
+    # The key of the related 'User'.
     int followerId?;
     time:Date created_date?;
 |};
@@ -115,7 +122,9 @@ public type FollowInsert Follow;
 
 # The fields to update on an existing `Follow`.
 public type FollowUpdate record {|
+    # The key of the related 'User'.
     int leaderId?;
+    # The key of the related 'User'.
     int followerId?;
     time:Date created_date?;
 |};

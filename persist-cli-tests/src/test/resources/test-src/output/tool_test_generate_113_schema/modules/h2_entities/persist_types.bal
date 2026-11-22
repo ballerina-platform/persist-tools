@@ -22,7 +22,9 @@ public type Appointment record {|
     string reason;
     time:Civil appointmentTime;
     AppointmentStatus status;
+    # The key of the related 'Patient'.
     int patientId;
+    # The key of the related 'Doctor'.
     int doctorId;
 |};
 
@@ -32,7 +34,9 @@ public type AppointmentOptionalized record {|
     string reason?;
     time:Civil appointmentTime?;
     AppointmentStatus status?;
+    # The key of the related 'Patient'.
     int patientId?;
+    # The key of the related 'Doctor'.
     int doctorId?;
 |};
 
@@ -54,7 +58,9 @@ public type AppointmentUpdate record {|
     string reason?;
     time:Civil appointmentTime?;
     AppointmentStatus status?;
+    # The key of the related 'Patient'.
     int patientId?;
+    # The key of the related 'Doctor'.
     int doctorId?;
 |};
 

@@ -57,6 +57,7 @@ public type Car record {|
     readonly int id;
     string name;
     string model;
+    # The key of the related 'User'.
     int ownerId;
 |};
 
@@ -65,6 +66,7 @@ public type CarOptionalized record {|
     int id?;
     string name?;
     string model?;
+    # The key of the related 'User'.
     int ownerId?;
 |};
 
@@ -84,6 +86,7 @@ public type CarInsert Car;
 public type CarUpdate record {|
     string name?;
     string model?;
+    # The key of the related 'User'.
     int ownerId?;
 |};
 

@@ -516,6 +516,7 @@ public class BalSyntaxUtils {
             } else if (field.getRelation() != null) {
                 if (field.getRelation().isOwner()) {
                     for (Relation.Key key : field.getRelation().getKeyColumns()) {
+                        appendDocumentation(recordFields, foreignKeyDocumentation(field, key));
                         addConstraintsAnnotationForForeignKey(field, key, recordFields);
                         recordFields.append(key.getType());
                         recordFields.append(BalSyntaxConstants.SPACE);
@@ -734,6 +735,7 @@ public class BalSyntaxUtils {
             if (field.getRelation() != null) {
                 if (field.getRelation().isOwner()) {
                         for (Relation.Key key : field.getRelation().getKeyColumns()) {
+                            appendDocumentation(recordFields, foreignKeyDocumentation(field, key));
                             addConstraintsAnnotationForForeignKey(field, key, recordFields);
                             recordFields.append(key.getType());
                             recordFields.append(BalSyntaxConstants.SPACE);
@@ -763,6 +765,16 @@ public class BalSyntaxUtils {
         String documentation = documentationString(String.format(BalSyntaxConstants.OPTIONALIZED_DOC, entityName));
         return NodeParser.parseModuleMemberDeclaration(String.format("%spublic type %sOptionalized record {| %s |};",
                 documentation, entityName, recordFields));
+    }
+
+    // A foreign key field that the model does not document is described by the entity it refers to.
+    private static String foreignKeyDocumentation(EntityField field, Relation.Key key) {
+        String documentation = key.getDocumentation();
+        if (documentation != null && !documentation.isBlank()) {
+            return documentation;
+        }
+        return String.format(BalSyntaxConstants.FOREIGN_KEY_DOC,
+                field.getRelation().getAssocEntity().getEntityName().trim());
     }
 
     // A foreign key field takes the constraints of the key field of the related entity that it references.
@@ -949,6 +961,7 @@ public class BalSyntaxUtils {
                 if (field.getRelation() != null) {
                     if (field.getRelation().isOwner()) {
                             for (Relation.Key key : field.getRelation().getKeyColumns()) {
+                                appendDocumentation(recordFields, foreignKeyDocumentation(field, key));
                                 addConstraintsAnnotationForForeignKey(field, key, recordFields);
                                 recordFields.append(key.getType());
                                 recordFields.append(" ");
@@ -998,6 +1011,7 @@ public class BalSyntaxUtils {
             if (field.getRelation() != null) {
                 if (field.getRelation().isOwner()) {
                         for (Relation.Key key : field.getRelation().getKeyColumns()) {
+                            appendDocumentation(recordFields, foreignKeyDocumentation(field, key));
                             addConstraintsAnnotationForForeignKey(field, key, recordFields);
                             recordFields.append(key.getType());
                             recordFields.append(BalSyntaxConstants.SPACE);

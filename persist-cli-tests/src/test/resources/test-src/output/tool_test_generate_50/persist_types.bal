@@ -26,6 +26,7 @@ public type Employee record {|
     string firstName;
     string lastName;
     Gender gender;
+    # The key of the related 'Department'.
     string departmentDeptNo;
 |};
 
@@ -35,6 +36,7 @@ public type EmployeeOptionalized record {|
     string firstName?;
     string lastName?;
     Gender gender?;
+    # The key of the related 'Department'.
     string departmentDeptNo?;
 |};
 
@@ -56,6 +58,7 @@ public type EmployeeUpdate record {|
     string firstName?;
     string lastName?;
     Gender gender?;
+    # The key of the related 'Department'.
     string departmentDeptNo?;
 |};
 
@@ -63,7 +66,9 @@ public type EmployeeUpdate record {|
 public type Workspace record {|
     readonly string workspaceId;
     WorkspaceType workspaceType;
+    # The key of the related 'Building'.
     string locationBuildingCode;
+    # The key of the related 'Employee'.
     string employeeEmpNo;
 |};
 
@@ -71,7 +76,9 @@ public type Workspace record {|
 public type WorkspaceOptionalized record {|
     string workspaceId?;
     WorkspaceType workspaceType?;
+    # The key of the related 'Building'.
     string locationBuildingCode?;
+    # The key of the related 'Employee'.
     string employeeEmpNo?;
 |};
 
@@ -91,7 +98,9 @@ public type WorkspaceInsert Workspace;
 # The fields to update on an existing `Workspace`.
 public type WorkspaceUpdate record {|
     WorkspaceType workspaceType?;
+    # The key of the related 'Building'.
     string locationBuildingCode?;
+    # The key of the related 'Employee'.
     string employeeEmpNo?;
 |};
 

@@ -41,6 +41,7 @@ public type Order record {|
     readonly int id;
     string orderNumber;
     decimal totalAmount;
+    # The key of the related 'Customer'.
     int customerId;
 
 |};
@@ -50,6 +51,7 @@ public type OrderOptionalized record {|
     int id?;
     string orderNumber?;
     decimal totalAmount?;
+    # The key of the related 'Customer'.
     int customerId?;
 |};
 
@@ -70,6 +72,7 @@ public type OrderInsert Order;
 public type OrderUpdate record {|
     string orderNumber?;
     decimal totalAmount?;
+    # The key of the related 'Customer'.
     int customerId?;
 |};
 
@@ -78,7 +81,9 @@ public type OrderItem record {|
     readonly int id;
     int quantity;
     decimal price;
+    # The key of the related 'Order'.
     int orderId;
+    # The key of the related 'Product'.
     int productId;
 |};
 
@@ -87,7 +92,9 @@ public type OrderItemOptionalized record {|
     int id?;
     int quantity?;
     decimal price?;
+    # The key of the related 'Order'.
     int orderId?;
+    # The key of the related 'Product'.
     int productId?;
 |};
 
@@ -108,7 +115,9 @@ public type OrderItemInsert OrderItem;
 public type OrderItemUpdate record {|
     int quantity?;
     decimal price?;
+    # The key of the related 'Order'.
     int orderId?;
+    # The key of the related 'Product'.
     int productId?;
 |};
 

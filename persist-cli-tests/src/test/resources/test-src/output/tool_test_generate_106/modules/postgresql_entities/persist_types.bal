@@ -44,6 +44,7 @@ public type Car record {|
     readonly int id;
     string name;
     string model;
+    # The key of the related 'User'.
     int driverId;
 |};
 
@@ -52,6 +53,7 @@ public type CarOptionalized record {|
     int id?;
     string name?;
     string model?;
+    # The key of the related 'User'.
     int driverId?;
 |};
 
@@ -71,6 +73,7 @@ public type CarInsert Car;
 public type CarUpdate record {|
     string name?;
     string model?;
+    # The key of the related 'User'.
     int driverId?;
 |};
 
@@ -114,7 +117,9 @@ public type Car2 record {|
     readonly int id;
     string name;
     string model;
+    # The key of the related 'User2'.
     int driverId;
+    # The key of the related 'User2'.
     string driverNic;
 |};
 
@@ -123,7 +128,9 @@ public type Car2Optionalized record {|
     int id?;
     string name?;
     string model?;
+    # The key of the related 'User2'.
     int driverId?;
+    # The key of the related 'User2'.
     string driverNic?;
 |};
 
@@ -143,7 +150,9 @@ public type Car2Insert Car2;
 public type Car2Update record {|
     string name?;
     string model?;
+    # The key of the related 'User2'.
     int driverId?;
+    # The key of the related 'User2'.
     string driverNic?;
 |};
 

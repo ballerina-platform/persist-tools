@@ -11,6 +11,7 @@ public type Profile record {|
     float salary;
     decimal age;
     byte[] isRegistered;
+    # The key of the related 'User'.
     int ownerId;
 |};
 
@@ -22,6 +23,7 @@ public type ProfileOptionalized record {|
     float salary?;
     decimal age?;
     byte[] isRegistered?;
+    # The key of the related 'User'.
     int ownerId?;
 |};
 
@@ -44,6 +46,7 @@ public type ProfileUpdate record {|
     float salary?;
     decimal age?;
     byte[] isRegistered?;
+    # The key of the related 'User'.
     int ownerId?;
 |};
 
@@ -51,6 +54,7 @@ public type ProfileUpdate record {|
 public type User record {|
     readonly int id;
     string name;
+    # The key of the related 'MultipleAssociations'.
     int multipleassociationsId;
 |};
 
@@ -58,6 +62,7 @@ public type User record {|
 public type UserOptionalized record {|
     int id?;
     string name?;
+    # The key of the related 'MultipleAssociations'.
     int multipleassociationsId?;
 |};
 
@@ -77,6 +82,7 @@ public type UserInsert User;
 # The fields to update on an existing `User`.
 public type UserUpdate record {|
     string name?;
+    # The key of the related 'MultipleAssociations'.
     int multipleassociationsId?;
 |};
 
@@ -84,6 +90,7 @@ public type UserUpdate record {|
 public type Dept record {|
     readonly int id;
     string name;
+    # The key of the related 'MultipleAssociations'.
     int multipleassociationsId;
 |};
 
@@ -91,6 +98,7 @@ public type Dept record {|
 public type DeptOptionalized record {|
     int id?;
     string name?;
+    # The key of the related 'MultipleAssociations'.
     int multipleassociationsId?;
 |};
 
@@ -109,6 +117,7 @@ public type DeptInsert Dept;
 # The fields to update on an existing `Dept`.
 public type DeptUpdate record {|
     string name?;
+    # The key of the related 'MultipleAssociations'.
     int multipleassociationsId?;
 |};
 
@@ -117,6 +126,7 @@ public type Customer record {|
     readonly int id;
     string name;
     int age;
+    # The key of the related 'MultipleAssociations'.
     int multipleassociationsId;
 |};
 
@@ -125,6 +135,7 @@ public type CustomerOptionalized record {|
     int id?;
     string name?;
     int age?;
+    # The key of the related 'MultipleAssociations'.
     int multipleassociationsId?;
 |};
 
@@ -144,6 +155,7 @@ public type CustomerInsert Customer;
 public type CustomerUpdate record {|
     string name?;
     int age?;
+    # The key of the related 'MultipleAssociations'.
     int multipleassociationsId?;
 |};
 

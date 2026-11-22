@@ -8,6 +8,7 @@ public type Profile record {|
     readonly int id;
     string name;
     string? gender;
+    # The key of the related 'User'.
     int ownerId;
 |};
 
@@ -16,6 +17,7 @@ public type ProfileOptionalized record {|
     int id?;
     string name?;
     string? gender?;
+    # The key of the related 'User'.
     int ownerId?;
 |};
 
@@ -35,6 +37,7 @@ public type ProfileInsert Profile;
 public type ProfileUpdate record {|
     string name?;
     string? gender?;
+    # The key of the related 'User'.
     int ownerId?;
 |};
 

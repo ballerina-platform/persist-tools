@@ -397,6 +397,7 @@ public class BalSyntaxConstants {
     public static final String LOCK = "lock";
     public static final String NEWLINE = System.lineSeparator();
     public static final String ENTITY_DOC = "Represents the `%s` entity.";
+    public static final String FOREIGN_KEY_DOC = "The key of the related '%s'.";
     public static final String OPTIONALIZED_DOC = "Represents `%s` with every field optional, for projected reads.";
     public static final String WITH_RELATIONS_DOC = "Represents `%s` with its related entities, for projected reads.";
     public static final String TARGET_TYPE_DOC = "The `%s` type or a projection of it, for reads.";

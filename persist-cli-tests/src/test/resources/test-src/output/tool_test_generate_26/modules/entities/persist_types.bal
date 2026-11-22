@@ -6,6 +6,7 @@ import ballerina/time;
 # Represents the `MedicalNeed` entity.
 public type MedicalNeed record {|
     readonly int 'record;
+    # The key of the related 'MedicalItem'.
     int itemItemId;
     int beneficiaryId;
     time:Civil 'time;
@@ -16,6 +17,7 @@ public type MedicalNeed record {|
 # Represents `MedicalNeed` with every field optional, for projected reads.
 public type MedicalNeedOptionalized record {|
     int 'record?;
+    # The key of the related 'MedicalItem'.
     int itemItemId?;
     int beneficiaryId?;
     time:Civil 'time?;
@@ -37,6 +39,7 @@ public type MedicalNeedInsert MedicalNeed;
 
 # The fields to update on an existing `MedicalNeed`.
 public type MedicalNeedUpdate record {|
+    # The key of the related 'MedicalItem'.
     int itemItemId?;
     int beneficiaryId?;
     time:Civil 'time?;

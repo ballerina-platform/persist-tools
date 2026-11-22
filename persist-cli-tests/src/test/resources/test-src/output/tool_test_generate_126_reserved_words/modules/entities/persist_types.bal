@@ -36,12 +36,14 @@ public type ClassUpdate record {|
 # Represents the `Enrollment` entity.
 public type Enrollment record {|
     readonly int id;
+    # The key of the related 'Class'.
     int classId;
 |};
 
 # Represents `Enrollment` with every field optional, for projected reads.
 public type EnrollmentOptionalized record {|
     int id?;
+    # The key of the related 'Class'.
     int classId?;
 |};
 
@@ -59,6 +61,7 @@ public type EnrollmentInsert Enrollment;
 
 # The fields to update on an existing `Enrollment`.
 public type EnrollmentUpdate record {|
+    # The key of the related 'Class'.
     int classId?;
 |};
 

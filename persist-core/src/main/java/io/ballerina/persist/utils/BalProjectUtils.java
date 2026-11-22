@@ -645,7 +645,7 @@ public class BalProjectUtils {
                             EntityField fkEntityField = entity.getFieldByName(fkField);
                             return new Relation.Key(fkField,
                                     fkEntityField.getFieldColumnName(), key.getFieldName(), key.getFieldColumnName(),
-                                    key.getFieldType());
+                                    key.getFieldType(), fkEntityField.getDocumentation());
                         }
                         String fkField = stripEscapeCharacter(fieldName.toLowerCase(Locale.ENGLISH))
                                 + stripEscapeCharacter(key.getFieldName()).substring(0, 1).toUpperCase(Locale.ENGLISH)

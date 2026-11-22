@@ -49,6 +49,7 @@ public type Employee record {|
     @constraint:String {maxLength: 50}
     string name;
     int age;
+    # The key of the related 'Department'.
     string departmentId;
 |};
 
@@ -60,6 +61,7 @@ public type EmployeeOptionalized record {|
     @constraint:String {maxLength: 50}
     string name?;
     int age?;
+    # The key of the related 'Department'.
     string departmentId?;
 |};
 
@@ -79,6 +81,7 @@ public type EmployeeInsert record {|
     @constraint:String {maxLength: 50}
     string name;
     int age;
+    # The key of the related 'Department'.
     string departmentId;
 |};
 
@@ -88,6 +91,7 @@ public type EmployeeUpdate record {|
     @constraint:String {maxLength: 50}
     string name?;
     int age?;
+    # The key of the related 'Department'.
     string departmentId?;
 |};
 
