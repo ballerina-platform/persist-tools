@@ -199,7 +199,8 @@ public class BalProjectUtils {
             }
         }
         return diagnosticResult.warnings().stream()
-                .filter(warning -> warning.diagnosticInfo().code().startsWith(DATASERVICE_DIAGNOSTIC_PREFIX))
+                .filter(warning -> warning.diagnosticInfo().code() != null
+                        && warning.diagnosticInfo().code().startsWith(DATASERVICE_DIAGNOSTIC_PREFIX))
                 .map(Diagnostic::toString).toList();
     }
 
