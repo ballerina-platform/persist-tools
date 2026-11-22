@@ -121,10 +121,24 @@ public final class DataServiceModel {
                         entity.collection()));
             }
         }
-        // The entity that each generated type is declared for, by type name.
+        if (!errors.isEmpty()) {
+            throw new BalException(String.join(System.lineSeparator(), errors));
+        }
+        if (exposed.isEmpty()) {
+            List<String> candidates = entityModule.getEntityMap().values().stream()
+                    .filter(entity -> !entity.containsUnsupportedTypes()).map(Entity::getEntityName).toList();
+            throw new BalException(String.format(DataServiceMessages.NO_EXPOSED_ENTITY,
+                    String.join(", ", candidates)));
+        }
+        Map<String, ExposedEntity> byName = new LinkedHashMap<>();
+        exposed.forEach(entity -> byName.put(entity.name(), entity));
+        List<ExposedEntity> resolved = exposed.stream().map(entity -> entity.withRelations(
+                readableRelations(entityModule.getEntityMap().get(entity.name()), byName, rules))).toList();
+        // The entity that each generated type is declared for, by type name. The generated types depend on the
+        // relations, so they are checked once the relations are resolved.
         Map<String, String> generated = new LinkedHashMap<>();
-        for (ExposedEntity entity : exposed) {
-            for (String typeName : generatedTypeNames(entity, exposed)) {
+        for (ExposedEntity entity : resolved) {
+            for (String typeName : generatedTypeNames(entity, resolved)) {
                 String owner = generated.putIfAbsent(typeName, entity.name());
                 if (entityModule.getEntityMap().containsKey(typeName)) {
                     errors.add(String.format(DataServiceMessages.TYPE_NAME_CLASH, typeName, entity.name(),
@@ -138,16 +152,7 @@ public final class DataServiceModel {
         if (!errors.isEmpty()) {
             throw new BalException(String.join(System.lineSeparator(), errors));
         }
-        if (exposed.isEmpty()) {
-            List<String> candidates = entityModule.getEntityMap().values().stream()
-                    .filter(entity -> !entity.containsUnsupportedTypes()).map(Entity::getEntityName).toList();
-            throw new BalException(String.format(DataServiceMessages.NO_EXPOSED_ENTITY,
-                    String.join(", ", candidates)));
-        }
-        Map<String, ExposedEntity> byName = new LinkedHashMap<>();
-        exposed.forEach(entity -> byName.put(entity.name(), entity));
-        return exposed.stream().map(entity -> entity.withRelations(
-                readableRelations(entityModule.getEntityMap().get(entity.name()), byName, rules))).toList();
+        return resolved;
     }
 
     // A relation is readable when both entities allow read and neither its relation field nor its foreign key is
