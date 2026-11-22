@@ -103,13 +103,22 @@ public final class DataServiceToml {
     }
 
     /**
-     * Finds the entry whose `filePath` ends with `persist/model.bal`, as the build tool reads it, or that has no
-     * `filePath`.
+     * Finds the first `[[tool.persist]]` entry of the default model, `persist/model.bal`.
      *
-     * @param toml the content of `Ballerina.toml`
+     * @param toml the text of `Ballerina.toml`
      * @return the entry, if there is one
      */
     public static Optional<Entry> defaultModelEntry(String toml) {
+        return defaultModelEntries(toml).stream().findFirst();
+    }
+
+    /**
+     * Finds every `[[tool.persist]]` entry of the default model, `persist/model.bal`.
+     *
+     * @param toml the text of `Ballerina.toml`
+     * @return the entries, in file order
+     */
+    public static List<Entry> defaultModelEntries(String toml) {
         DocumentNode document = SyntaxTree.from(TextDocuments.from(toml)).rootNode();
         List<Entry> entries = new ArrayList<>();
         for (DocumentMemberDeclarationNode member : document.members()) {
@@ -131,7 +140,7 @@ public final class DataServiceToml {
             }
         }
         return entries.stream().filter(entry -> entry.values().getOrDefault(FILE_PATH, DEFAULT_MODEL_PATH)
-                .endsWith(DEFAULT_MODEL_PATH)).findFirst();
+                .endsWith(DEFAULT_MODEL_PATH)).toList();
     }
 
     /**

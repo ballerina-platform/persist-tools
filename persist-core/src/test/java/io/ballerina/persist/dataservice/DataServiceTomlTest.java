@@ -21,6 +21,7 @@ package io.ballerina.persist.dataservice;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -50,6 +51,18 @@ public class DataServiceTomlTest {
         Assert.assertEquals(DataServiceToml.addDataService(toml, entry, "http"), toml.substring(0,
                 toml.length() - 1) + separator + separator + "[tool.persist.options.dataservice]" + separator +
                 "protocol = \"http\"\n");
+    }
+
+    @Test
+    public void testEveryEntryOfTheDefaultModel() {
+        String toml = PACKAGE + "[[tool.persist]]\nid = \"api\"\nfilePath = \"persist/model.bal\"\n\n" +
+                "[tool.persist.options.dataservice]\nprotocol = \"http\"\n\n[[tool.persist]]\nid = \"users\"\n" +
+                "filePath = \"persist/users/model.bal\"\n\n[[tool.persist]]\nid = \"batch\"\n" +
+                "filePath = \"./persist/model.bal\"\ntargetModule = \"hr.db\"\n";
+        List<DataServiceToml.Entry> entries = DataServiceToml.defaultModelEntries(toml);
+        Assert.assertEquals(entries.stream().map(entry -> entry.values().get("id")).toList(), List.of("api", "batch"));
+        Assert.assertTrue(entries.get(0).dataService().isPresent());
+        Assert.assertTrue(entries.get(1).dataService().isEmpty());
     }
 
     @Test

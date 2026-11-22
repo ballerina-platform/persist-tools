@@ -368,6 +368,38 @@ public class ToolingDataServiceTest {
         Assert.assertFalse(Files.exists(project.resolve("generated").resolve(SERVICE)), result.output());
     }
 
+    @Test(description = "A data service needs the only entry of the default model")
+    public void testSharedModelEntries() throws IOException, InterruptedException {
+        String batch = "\n[[tool.persist]]\nid = \"batch\"\nfilePath = \"persist/model.bal\"\n" +
+                "targetModule = \"ds_shared_entries.db\"\noptions.datastore = \"h2\"\n";
+        Path project = project("ds_shared_entries", entry("h2", "options.dataservice.protocol = \"http\"") + batch,
+                MODEL);
+        Result result = build(project);
+        Assert.assertNotEquals(result.exitCode(), 0, result.output());
+        Assert.assertTrue(result.output().contains("the persist model persist/model.bal has more than one " +
+                "[[tool.persist]] entry, and a data service needs one."), result.output());
+        Assert.assertFalse(Files.exists(project.resolve("generated").resolve(SERVICE)), result.output());
+    }
+
+    @Test(description = "add does not add a second entry of the default model when a data service is involved")
+    public void testAddSecondEntry() throws IOException, InterruptedException {
+        String message = "ERROR: a data service needs the only [[tool.persist]] entry of persist/model.bal, and " +
+                "Ballerina.toml already has one. Change that entry instead of adding another.";
+        Path plain = project("ds_add_second_plain", entry("h2", ""), MODEL);
+        String plainToml = read(plain.resolve("Ballerina.toml"));
+        Result withService = bal(plain, Map.of(), "persist", "add", "--datastore", "h2", "--dataservice", "http",
+                "--id", "api");
+        Assert.assertTrue(withService.output().contains(message), withService.output());
+        Assert.assertEquals(read(plain.resolve("Ballerina.toml")), plainToml);
+        Path service = project("ds_add_second_service", entry("h2", "options.dataservice.protocol = \"http\""),
+                MODEL);
+        String serviceToml = read(service.resolve("Ballerina.toml"));
+        Result withoutService = bal(service, Map.of(), "persist", "add", "--datastore", "h2", "--module", "db",
+                "--id", "batch");
+        Assert.assertTrue(withoutService.output().contains(message), withoutService.output());
+        Assert.assertEquals(read(service.resolve("Ballerina.toml")), serviceToml);
+    }
+
     @DataProvider
     public Object[][] buildErrors() {
         String http = "options.dataservice.protocol = \"http\"";

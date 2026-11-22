@@ -23,6 +23,7 @@ import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.dataservice.DataServiceMessages;
 import io.ballerina.persist.dataservice.DataServiceModel;
 import io.ballerina.persist.dataservice.DataServiceOptions;
+import io.ballerina.persist.dataservice.DataServiceToml;
 import io.ballerina.persist.dataservice.ExposeAnnotations;
 import io.ballerina.persist.dataservice.ExposedEntity;
 import io.ballerina.persist.dataservice.HttpDataServiceGenerator;
@@ -127,6 +128,11 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
             // Get model file path from configuration
             Path schemaFilePath = projectPath.resolve(filePath);
             String modelName = getModelNameFromFilePath(filePath);
+            if (modelName == null && hasSharedDataServiceModel(projectPath)) {
+                createDiagnostics(toolContext, PersistToolsConstants.DiagnosticMessages.ERROR_WHILE_GENERATING_CLIENT,
+                        location, DataServiceMessages.MODEL_ENTRIES_WITH_DATASERVICE);
+                return;
+            }
 
             validatePersistDirectory(datastore, projectPath, modelName);
             printExperimentalFeatureInfo(datastore);
@@ -223,6 +229,14 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
             throw new BalException(DataServiceMessages.NAMED_MODEL);
         }
         return options;
+    }
+
+    // An entry that does not enable a data service deletes the default model's service, so the default model can have
+    // only one entry when any entry enables a data service.
+    private static boolean hasSharedDataServiceModel(Path projectPath) throws IOException {
+        List<DataServiceToml.Entry> entries = DataServiceToml.defaultModelEntries(
+                Files.readString(projectPath.resolve(BALLERINA_TOML)));
+        return entries.size() > 1 && entries.stream().anyMatch(entry -> entry.dataService().isPresent());
     }
 
     private static void deleteDataServiceSources(Path generatedSourceDirPath) throws IOException {

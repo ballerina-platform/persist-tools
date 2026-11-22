@@ -56,6 +56,11 @@ public final class DataServiceMessages {
             "generates for the entity '%s'. Rename one of them, or remove the @dataservice:Expose annotation of '%s'.";
     public static final String GENERATED_TYPE_CLASH = "the data service generates the type '%s' for both the " +
             "entity '%s' and the entity '%s'. Rename one of them, or remove its @dataservice:Expose annotation.";
+    public static final String MODEL_ENTRIES_WITH_DATASERVICE = "the persist model persist/model.bal has more " +
+            "than one [[tool.persist]] entry, and a data service needs one. Remove the other entries, or remove " +
+            "'options.dataservice'.";
+    public static final String ENTRY_WITH_DATASERVICE = "a data service needs the only [[tool.persist]] entry of " +
+            "persist/model.bal, and Ballerina.toml already has one. Change that entry instead of adding another.";
     public static final String UNSUPPORTED_ENTITY = "the entity '%s' has an unsupported data type and cannot be " +
             "exposed. Remove its @dataservice:Expose annotation.";
     public static final String SCOPES_WITHOUT_AUTH = "the @dataservice:Expose annotation of the entity '%s' sets " +

@@ -560,7 +560,7 @@ type Department record {|
 
 Persist does not generate a client API for an entity with an unsupported data type, so such an entity cannot be exposed.
 
-A data service is generated only for the SQL datastores `mysql`, `mssql`, `postgresql` and `h2`, and only into the package's default module, so `targetModule` must be the package name. It cannot be combined with `options.withInitParams = true`, because the service creates the client with `new ()`, or with a named model, because a package has at most one data service.
+A data service is generated only for the SQL datastores `mysql`, `mssql`, `postgresql` and `h2`, and only into the package's default module, so `targetModule` must be the package name. It cannot be combined with `options.withInitParams = true`, because the service creates the client with `new ()`, or with a named model, because a package has at most one data service. The entry that enables it must be the only `[[tool.persist]]` entry of `persist/model.bal`, because another entry of the same model would delete the service.
 
 ### 9.3. Compile-time validation
 
@@ -581,6 +581,8 @@ Errors are printed with the `ERROR:` prefix, or as the build tool's diagnostic i
 | `withInitParams = true` | error | `'options.withInitParams' cannot be used with a data service. Remove it or set it to false.` |
 | A datastore that is not a SQL datastore | error | `the datastore '<datastore>' does not support a data service. Use mysql, mssql, postgresql or h2.` |
 | A named model | error | `a data service is not supported for a named persist model. Use 'persist/model.bal' or remove 'options.dataservice'.` |
+| `persist/model.bal` has more than one `[[tool.persist]]` entry and one enables a data service | error | `the persist model persist/model.bal has more than one [[tool.persist]] entry, and a data service needs one. Remove the other entries, or remove 'options.dataservice'.` |
+| `add` of a second entry of `persist/model.bal`, when it or an existing entry enables a data service | error | `a data service needs the only [[tool.persist]] entry of persist/model.bal, and Ballerina.toml already has one. Change that entry instead of adding another.` |
 | No annotated entity | error | `the data service exposes no entity. Add the @dataservice:Expose annotation to the entities to expose: <Entity>, <Entity>.` |
 | An annotated entity with an unsupported data type | error | `the entity '<Entity>' has an unsupported data type and cannot be exposed. Remove its @dataservice:Expose annotation.` |
 | A key field named as a parameter or variable of the generated resources | error | `the key field '<field>' of the entity '<Entity>' uses a name reserved by the data service. Rename the field, or remove the entity's @dataservice:Expose annotation.` |

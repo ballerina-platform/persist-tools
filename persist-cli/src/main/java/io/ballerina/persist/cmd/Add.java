@@ -23,6 +23,7 @@ import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.dataservice.DataServiceMessages;
 import io.ballerina.persist.dataservice.DataServiceOptions;
+import io.ballerina.persist.dataservice.DataServiceToml;
 import io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils;
 import io.ballerina.persist.utils.BalProjectUtils;
 import io.ballerina.persist.utils.FileUtils;
@@ -44,6 +45,7 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -179,6 +181,13 @@ public class Add implements BLauncherCmd {
         if (declaration.persistClientIds().contains(id)) {
             throw new BalException(String.format("a build option with the provided ID '%s' already exists in " +
                     "the Ballerina.toml. Please provide a unique ID using the --id option.", id));
+        }
+        if (modelPath.endsWith(DataServiceToml.DEFAULT_MODEL_PATH)) {
+            List<DataServiceToml.Entry> entries = DataServiceToml.defaultModelEntries(Files.readString(tomlPath));
+            if (!entries.isEmpty() && (dataservice != null
+                    || entries.stream().anyMatch(entry -> entry.dataService().isPresent()))) {
+                throw new BalException(DataServiceMessages.ENTRY_WITH_DATASERVICE);
+            }
         }
 
         NodeList<DocumentMemberDeclarationNode> moduleMembers = declaration.moduleMembers();
