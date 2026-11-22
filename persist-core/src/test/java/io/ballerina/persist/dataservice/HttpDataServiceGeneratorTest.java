@@ -197,6 +197,17 @@ public class HttpDataServiceGeneratorTest {
     }
 
     // The actual output is also written under build/ so that a changed expectation can be reviewed with a diff.
+    @Test(description = "An eagerly loading client returns arrays, which every read takes in place of a stream")
+    public void testEagerLoading() throws BalException, IOException {
+        Path modelPath = RESOURCES.resolve("employees").resolve("model.bal");
+        Module module = BalProjectUtils.getEntities(modelPath);
+        HttpDataServiceGenerator generator = new HttpDataServiceGenerator(
+                DataServiceModel.resolve(modelPath, module, false).entities(),
+                new DataServiceOptions("http", DataServiceOptions.validateBasePath("/api"), false, true),
+                "hr", module.getModuleName(), "h2", false, true);
+        assertSource(generator.generateService(), RESOURCES.resolve("employees").resolve("dataservice_eager.bal"));
+    }
+
     private static void assertSource(String actual, Path expected) throws IOException {
         writeActual(actual, expected);
         Assert.assertTrue(Files.exists(expected), "missing expected output " + expected);

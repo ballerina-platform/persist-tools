@@ -87,6 +87,7 @@ public final class HttpDataServiceGenerator {
     private final String modelName;
     private final String datastore;
     private final boolean userOwned;
+    private final boolean eagerLoading;
 
     /**
      * Creates a generator for a data service.
@@ -100,6 +101,22 @@ public final class HttpDataServiceGenerator {
      */
     public HttpDataServiceGenerator(List<ExposedEntity> entities, DataServiceOptions options, String packageName,
                                     String modelName, String datastore, boolean userOwned) {
+        this(entities, options, packageName, modelName, datastore, userOwned, false);
+    }
+
+    /**
+     * Creates a generator for a data service over a persist client that may load collections eagerly.
+     *
+     * @param entities     the exposed entities, in model order
+     * @param options      the data service options
+     * @param packageName  the name of the package, the title of the OpenAPI definition
+     * @param modelName    the name of the persist model, as persist writes it in its file headers
+     * @param datastore    the datastore of the persist client, such as `mysql`
+     * @param userOwned    whether the files are written for the user to own, by `bal persist generate`
+     * @param eagerLoading whether the client's collection resources return arrays, as `options.eagerLoading` makes them
+     */
+    public HttpDataServiceGenerator(List<ExposedEntity> entities, DataServiceOptions options, String packageName,
+                                    String modelName, String datastore, boolean userOwned, boolean eagerLoading) {
         this.entities = entities;
         entities.forEach(entity -> entitiesByName.put(entity.name(), entity));
         this.packageName = packageName;
@@ -109,6 +126,7 @@ public final class HttpDataServiceGenerator {
         this.modelName = modelName;
         this.datastore = datastore;
         this.userOwned = userOwned;
+        this.eagerLoading = eagerLoading;
     }
 
     /**
@@ -224,6 +242,21 @@ public final class HttpDataServiceGenerator {
                 NEWLINE +
                 (auth ? "configurable dsHttp:AuthConfig dataserviceConfig = ?;" :
                         "configurable dsHttp:Config dataserviceConfig = {};") + NEWLINE);
+    }
+
+    // An eagerly loading client returns an array, or the error, in place of a stream of records.
+    private String readType(String entity) {
+        return eagerLoading ? entity + "[]|persist:Error" : "stream<" + entity + ", persist:Error?>";
+    }
+
+    // The start of a query that collects a read into a list or its error: an eagerly read error is passed on as is.
+    private String collected(String read) {
+        return eagerLoading ? read + " is persist:Error ? " + read + " : " : "";
+    }
+
+    // A read used where an error fails the enclosing block.
+    private String checked(String read) {
+        return eagerLoading ? "check " + read : read;
     }
 
     // The service holds the client and the settings checked at startup, so a failure stops the service from starting.
@@ -493,12 +526,13 @@ public final class HttpDataServiceGenerator {
         out.append("        }").append(NEWLINE);
         appendForbiddenCheck(out, entity, n);
         appendFieldsCheck(out, n);
-        out.append("        stream<").append(n.entity).append(", persist:Error?> rows = self.persistClient->/")
+        out.append("        ").append(readType(n.entity)).append(" rows = self.persistClient->/")
                 .append(n.resource).append("(").append(n.entity).append(",").append(NEWLINE);
         out.append("            whereClause = query.whereClause, orderByClause = query.orderByClause,").append(NEWLINE);
         out.append("            limitClause = query.limitClause, offsetClause = query.offsetClause);").append(NEWLINE);
-        out.append("        ").append(n.wire).append("[]|persist:Error items = from ").append(n.entity)
-                .append(" item in rows select ").append(n.toWire("item")).append(";").append(NEWLINE);
+        out.append("        ").append(n.wire).append("[]|persist:Error items = ").append(collected("rows"))
+                .append("from ").append(n.entity).append(" item in rows select ").append(n.toWire("item")).append(";")
+                .append(NEWLINE);
         out.append("        if items is persist:Error {").append(NEWLINE);
         out.append("            return dsHttp:toListError(items, \"").append(n.displayName).append("\");")
                 .append(NEWLINE);
@@ -544,14 +578,15 @@ public final class HttpDataServiceGenerator {
                     .append(indent).append("        ").append(n.description).append(", ").append(name).append(", ")
                     .append(linked)
                     .append(", self.pageConfig);").append(NEWLINE);
-            out.append(indent).append("stream<").append(t.entity)
-                    .append(", persist:Error?> includedRows = self.persistClient->/").append(t.resource).append("(")
+            out.append(indent).append(readType(t.entity))
+                    .append(" includedRows = self.persistClient->/").append(t.resource).append("(")
                     .append(t.entity).append(",").append(NEWLINE);
             out.append(indent).append("    whereClause = include.whereClause, orderByClause = include.orderByClause")
                     .append(relation.many() ? "," + NEWLINE + indent + "    limitClause = include.limitClause" : "")
                     .append(");").append(NEWLINE);
             out.append(indent).append(t.wire).append("[] included = check from ").append(t.entity)
-                    .append(" row in includedRows select ").append(t.toWire("row")).append(";").append(NEWLINE);
+                    .append(" row in ").append(checked("includedRows")).append(" select ").append(t.toWire("row"))
+                    .append(";").append(NEWLINE);
             if (relation.many()) {
                 out.append(indent).append("boolean includedMore = dataservice:trimToPage(included, include);")
                         .append(NEWLINE);
@@ -643,12 +678,13 @@ public final class HttpDataServiceGenerator {
         out.append("        if query !is dataservice:Query {").append(NEWLINE);
         out.append("            return dsHttp:toQueryError(query, ").append(targetName).append(");").append(NEWLINE);
         out.append("        }").append(NEWLINE);
-        out.append("        stream<").append(t.entity).append(", persist:Error?> rows = self.persistClient->/")
+        out.append("        ").append(readType(t.entity)).append(" rows = self.persistClient->/")
                 .append(t.resource).append("(").append(t.entity).append(",").append(NEWLINE);
         out.append("            whereClause = query.whereClause, orderByClause = query.orderByClause,").append(NEWLINE);
         out.append("            limitClause = query.limitClause, offsetClause = query.offsetClause);").append(NEWLINE);
-        out.append("        ").append(t.wire).append("[]|persist:Error items = from ").append(t.entity)
-                .append(" related in rows select ").append(t.toWire("related")).append(";").append(NEWLINE);
+        out.append("        ").append(t.wire).append("[]|persist:Error items = ").append(collected("rows"))
+                .append("from ").append(t.entity).append(" related in rows select ").append(t.toWire("related"))
+                .append(";").append(NEWLINE);
         out.append("        if items is persist:Error {").append(NEWLINE);
         out.append("            return dsHttp:toListError(items, \"").append(n.displayName).append("\", \"")
                 .append(RELATED_OPERATION).append("\");").append(NEWLINE);
@@ -869,13 +905,13 @@ public final class HttpDataServiceGenerator {
                 .append(NEWLINE);
         out.append("                    dataservice:Query query = dataservice:toKeysQuery(").append(n.description)
                 .append(", keyValues);").append(NEWLINE);
-        out.append("                    stream<").append(n.entity)
-                .append(", persist:Error?> stored = self.persistClient->/").append(n.resource).append("(")
+        out.append("                    ").append(readType(n.entity))
+                .append(" stored = self.persistClient->/").append(n.resource).append("(")
                 .append(n.entity).append(",").append(NEWLINE);
         out.append("                        whereClause = query.whereClause, orderByClause = query.orderByClause);")
                 .append(NEWLINE);
         out.append("                    ").append(n.entity).append("[] rows = check from ").append(n.entity)
-                .append(" item in stored select item;").append(NEWLINE);
+                .append(" item in ").append(checked("stored")).append(" select item;").append(NEWLINE);
         out.append("                    check dataservice:orderByKeys(rows, ").append(n.description)
                 .append(", keyValues);").append(NEWLINE);
         if (entity.hasWireTypes()) {

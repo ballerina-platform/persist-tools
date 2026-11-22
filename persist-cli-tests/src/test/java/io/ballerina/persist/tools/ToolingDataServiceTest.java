@@ -379,6 +379,14 @@ public class ToolingDataServiceTest {
                 "the client was not regenerated for mysql");
     }
 
+    @Test(description = "A data service over an eagerly loading client compiles")
+    public void testEagerLoadingCompiles() throws IOException, InterruptedException {
+        Path project = project("ds_eager_loading", entry("h2", "options.eagerLoading = true\n" +
+                "options.dataservice.protocol = \"http\""), MODEL);
+        assertSucceeded(build(project));
+        Assert.assertTrue(read(project.resolve("generated").resolve(SERVICE)).contains("[]|persist:Error rows = "));
+    }
+
     @Test(description = "A data service needs the only entry of the default model")
     public void testSharedModelEntries() throws IOException, InterruptedException {
         String batch = "\n[[tool.persist]]\nid = \"batch\"\nfilePath = \"persist/model.bal\"\n" +

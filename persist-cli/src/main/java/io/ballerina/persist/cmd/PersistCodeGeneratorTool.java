@@ -190,7 +190,7 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
                 }
             } else {
                 new HttpDataServiceGenerator(exposedEntities, dataServiceOptions, packageName,
-                        entityModule.getModuleName(), datastore, false).write(generatedSourceDirPath);
+                        entityModule.getModuleName(), datastore, false, eagerLoading).write(generatedSourceDirPath);
             }
 
             // A model changed while this build generated is not cached, so the next build generates again.
