@@ -21,11 +21,11 @@ package io.ballerina.persist.dataservice;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.models.Entity;
+import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.Module;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -61,19 +61,18 @@ public record PullExposure(Set<String> exposed, List<String> warnings) {
                             entity.getEntityName()));
                     continue;
                 }
-                ExposedEntity candidate = ExposedEntity.of(entity, EnumSet.allOf(Operation.class), List.of(),
-                        Map.of());
-                List<String> reserved = DataServiceModel.reservedKeys(candidate);
-                Entity other = collections.get(candidate.collection());
+                String collection = ExposedEntity.collectionOf(entity.getEntityName());
+                List<String> reserved = reservedKeys(entity);
+                Entity other = collections.get(collection);
                 if (!reserved.isEmpty()) {
                     warnings.add(String.format(DataServiceMessages.PULL_SKIPS_RESERVED_KEY, reserved.get(0),
                             entity.getTableName(), entity.getEntityName()));
                 } else if (other != null) {
                     warnings.add(String.format(DataServiceMessages.PULL_SKIPS_COLLECTION_CLASH,
-                            entity.getEntityName(), entity.getTableName(), candidate.collection(),
+                            entity.getEntityName(), entity.getTableName(), collection,
                             other.getEntityName()));
                 } else {
-                    collections.put(candidate.collection(), entity);
+                    collections.put(collection, entity);
                     exposed.add(entity.getEntityName());
                 }
             }
@@ -98,17 +97,17 @@ public record PullExposure(Set<String> exposed, List<String> warnings) {
                         entity.getEntityName()));
                 continue;
             }
-            ExposedEntity candidate = ExposedEntity.of(entity, EnumSet.allOf(Operation.class), List.of(), Map.of());
-            List<String> reserved = DataServiceModel.reservedKeys(candidate);
-            Entity other = collections.get(candidate.collection());
+            String collection = ExposedEntity.collectionOf(entity.getEntityName());
+            List<String> reserved = reservedKeys(entity);
+            Entity other = collections.get(collection);
             if (!reserved.isEmpty()) {
                 errors.add(String.format(DataServiceMessages.EXPOSE_TABLE_RESERVED_KEY, table, reserved.get(0),
                         entity.getEntityName()));
             } else if (other != null && other != entity) {
                 errors.add(String.format(DataServiceMessages.EXPOSE_TABLE_COLLECTION_CLASH, table,
-                        candidate.collection(), other.getTableName()));
+                        collection, other.getTableName()));
             } else {
-                collections.put(candidate.collection(), entity);
+                collections.put(collection, entity);
                 exposed.add(entity.getEntityName());
             }
         }
@@ -123,5 +122,10 @@ public record PullExposure(Set<String> exposed, List<String> warnings) {
         // as `Unsupported`.
         return entity.containsUnsupportedTypes() || entity.getFields().stream()
                 .anyMatch(field -> PersistToolsConstants.UNSUPPORTED_TYPE.equals(field.getFieldType()));
+    }
+
+    // The introspected model has not resolved its relations yet, so only the entity's own key fields are read.
+    private static List<String> reservedKeys(Entity entity) {
+        return DataServiceModel.reservedKeys(entity.getKeys().stream().map(EntityField::getFieldName).toList());
     }
 }

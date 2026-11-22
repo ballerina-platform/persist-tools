@@ -198,8 +198,11 @@ public final class DataServiceModel {
 
     // The key fields whose names the generated resources use for their own parameters and variables.
     static List<String> reservedKeys(ExposedEntity entity) {
-        return entity.keys().stream().map(key -> DataServiceUtils.unescape(key.name()))
-                .filter(RESERVED_KEY_NAMES::contains).toList();
+        return reservedKeys(entity.keys().stream().map(ServiceField::name).toList());
+    }
+
+    static List<String> reservedKeys(List<String> keyNames) {
+        return keyNames.stream().map(DataServiceUtils::unescape).filter(RESERVED_KEY_NAMES::contains).toList();
     }
 
 }

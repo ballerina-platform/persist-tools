@@ -23,6 +23,7 @@ import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.models.Entity;
 import io.ballerina.persist.models.EntityField;
 import io.ballerina.persist.models.Module;
+import io.ballerina.persist.models.SqlType;
 import io.ballerina.persist.utils.BalProjectUtils;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
@@ -152,4 +153,52 @@ public class PullExposureTest {
                 "model.bal").toAbsolutePath());
     }
 
+
+    @Test
+    public void testIntrospectedRelationFields() throws BalException {
+        Module introspected = introspectedModule();
+        Assert.assertEquals(PullExposure.select(introspected, null).exposed(), Set.of("Department", "Employee"));
+        Assert.assertEquals(PullExposure.select(introspected, "employees").exposed(), Set.of("Employee"));
+    }
+
+    // As the introspector builds them: a column has its column name, and a relation field has only its type and,
+    // on the owner, the fields of its foreign key.
+    private static Module introspectedModule() {
+        EntityField departmentId = column("id", "id", "int");
+        Entity.Builder department = Entity.newBuilder("Department");
+        department.setTableName("departments");
+        department.addField(departmentId);
+        department.addField(column("name", "name", "string"));
+        department.setKeys(List.of(departmentId));
+        EntityField.Builder employees = EntityField.newBuilder("employees");
+        employees.setType("Employee");
+        employees.setArrayType(true);
+        department.addField(employees.build());
+
+        EntityField employeeId = column("id", "id", "int");
+        Entity.Builder employee = Entity.newBuilder("Employee");
+        employee.setTableName("employees");
+        employee.addField(employeeId);
+        employee.addField(column("departmentId", "department_id", "int"));
+        employee.setKeys(List.of(employeeId));
+        EntityField.Builder relation = EntityField.newBuilder("department");
+        relation.setType("Department");
+        relation.setRelationRefs(List.of("departmentId"));
+        employee.addField(relation.build());
+
+        Module.Builder module = Module.newBuilder("db");
+        module.addEntity("Department", department.build());
+        module.addEntity("Employee", employee.build());
+        return module.build();
+    }
+
+    private static EntityField column(String name, String columnName, String type) {
+        EntityField.Builder field = EntityField.newBuilder(name);
+        field.setFieldColumnName(columnName);
+        field.setType(type);
+        String sqlType = type.equals("int") ? "INT" : "VARCHAR";
+        field.setSqlType(new SqlType(sqlType, sqlType, null, 0, 0, 0,
+                PersistToolsConstants.SupportedDataSources.MYSQL_DB));
+        return field.build();
+    }
 }

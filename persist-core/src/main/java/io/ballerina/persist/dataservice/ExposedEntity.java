@@ -273,7 +273,11 @@ public final class ExposedEntity {
      * @return the collection name, such as `projectAssignments` for `ProjectAssignment` or `httpLogs` for `HTTPLog`
      */
     public String collection() {
-        String[] words = WORD_BOUNDARY.split(unescape(name));
+        return collectionOf(name);
+    }
+
+    static String collectionOf(String entityName) {
+        String[] words = WORD_BOUNDARY.split(unescape(entityName));
         int last = words.length - 1;
         String plural = Pluralizer.pluralize(words[last].toLowerCase(Locale.ENGLISH));
         words[last] = last == 0 ? plural : Character.toUpperCase(plural.charAt(0)) + plural.substring(1);
