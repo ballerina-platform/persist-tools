@@ -155,6 +155,30 @@ public class PullExposureTest {
 
 
     @Test
+    public void testEntitiesNamedAsGeneratedTypes() throws BalException {
+        Module.Builder module = Module.newBuilder("db");
+        for (String[] entity : new String[][]{{"Employee", "employee"}, {"EmployeeList", "employee_list"}}) {
+            EntityField id = column("id", "id", "int");
+            Entity.Builder builder = Entity.newBuilder(entity[0]);
+            builder.setTableName(entity[1]);
+            builder.addField(id);
+            builder.setKeys(List.of(id));
+            module.addEntity(entity[0], builder.build());
+        }
+        Module pulledTables = module.build();
+        PullExposure exposure = PullExposure.select(pulledTables, null);
+        Assert.assertEquals(exposure.exposed(), Set.of("EmployeeList"));
+        Assert.assertEquals(exposure.warnings(), List.of("the entity 'Employee' of the table 'employee' would " +
+                "generate the type 'EmployeeList', which is the entity of the table 'employee_list', so it is not " +
+                "exposed."));
+        BalException error = Assert.expectThrows(BalException.class,
+                () -> PullExposure.select(pulledTables, "employee"));
+        Assert.assertEquals(error.getMessage(), "the table 'employee' in '--expose-tables' would generate the type " +
+                "'EmployeeList' for its entity 'Employee', which is the entity of the table 'employee_list'. Remove " +
+                "the table from '--expose-tables'.");
+    }
+
+    @Test
     public void testIntrospectedRelationFields() throws BalException {
         Module introspected = introspectedModule();
         Assert.assertEquals(PullExposure.select(introspected, null).exposed(), Set.of("Department", "Employee"));

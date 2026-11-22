@@ -226,6 +226,35 @@ public class DataServiceModelTest {
                 "annotation of 'Order'.");
     }
 
+    @Test
+    public void testTwoEntitiesGenerateOneType() throws IOException {
+        // The relation target Order gives OrderRelatedPartial, and so does the partial of OrderRelated.
+        String source = "import ballerina/dataservice;\nimport ballerina/persist as _;\n" +
+                "import ballerinax/persist.sql;\n\n" +
+                "@dataservice:Expose\ntype Order record {|\n    readonly int id;\n    OrderRelated[] notes;\n|};\n\n" +
+                "@dataservice:Expose\ntype OrderRelated record {|\n    readonly int id;\n    int orderId;\n" +
+                "    @sql:Relation {keys: [\"orderId\"]}\n    Order 'order;\n|};\n";
+        Path model = Files.createTempDirectory("generated").resolve("model.bal");
+        Files.writeString(model, source);
+        BalException error = Assert.expectThrows(BalException.class, () -> DataServiceModel.resolve(
+                BalProjectUtils.getEntities(model), annotations(model), Map.of(), NO_RULES));
+        Assert.assertEquals(error.getMessage(), "the data service generates the type 'OrderRelatedPartial' for " +
+                "both the entity 'Order' and the entity 'OrderRelated'. Rename one of them, or remove its " +
+                "@dataservice:Expose annotation.");
+    }
+
+    @Test
+    public void testOnlyEmittedTypesAreReserved() throws IOException, BalException {
+        // An Order that only allows create declares no filter, partial or list of partials.
+        String source = "import ballerina/dataservice;\nimport ballerina/persist as _;\n\n" +
+                "@dataservice:Expose {operations: [dataservice:CREATE]}\ntype Order record {|\n" +
+                "    readonly int id;\n|};\n\ntype OrderFilter record {|\n    readonly int id;\n|};\n";
+        Path model = Files.createTempDirectory("emitted").resolve("model.bal");
+        Files.writeString(model, source);
+        Assert.assertEquals(DataServiceModel.resolve(BalProjectUtils.getEntities(model), annotations(model),
+                Map.of(), NO_RULES).stream().map(ExposedEntity::name).toList(), List.of("Order"));
+    }
+
     private static Map<String, EnumSet<Operation>> annotations(Path model) throws BalException {
         return ExposeAnnotations.read(ExposeAnnotations.parse(model));
     }

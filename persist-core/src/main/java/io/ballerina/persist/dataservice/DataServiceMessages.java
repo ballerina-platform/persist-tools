@@ -54,6 +54,8 @@ public final class DataServiceMessages {
             "the data service. Rename one of them, or remove its @dataservice:Expose annotation.";
     public static final String TYPE_NAME_CLASH = "the entity '%s' has the name of a type that the data service " +
             "generates for the entity '%s'. Rename one of them, or remove the @dataservice:Expose annotation of '%s'.";
+    public static final String GENERATED_TYPE_CLASH = "the data service generates the type '%s' for both the " +
+            "entity '%s' and the entity '%s'. Rename one of them, or remove its @dataservice:Expose annotation.";
     public static final String UNSUPPORTED_ENTITY = "the entity '%s' has an unsupported data type and cannot be " +
             "exposed. Remove its @dataservice:Expose annotation.";
     public static final String SCOPES_WITHOUT_AUTH = "the @dataservice:Expose annotation of the entity '%s' sets " +
@@ -75,6 +77,11 @@ public final class DataServiceMessages {
             "'--expose-tables' names no table. Give the tables to expose, separated by commas.";
     public static final String EXPOSE_TABLE_RESERVED_KEY = "the table '%s' in '--expose-tables' has the key " +
             "field '%s', whose name the data service reserves, so its entity '%s' cannot be exposed.";
+    public static final String PULL_SKIPS_TYPE_NAME = "the entity '%s' of the table '%s' would generate the " +
+            "type '%s', which is the entity of the table '%s', so it is not exposed.";
+    public static final String EXPOSE_TABLE_TYPE_NAME = "the table '%s' in '--expose-tables' would generate the " +
+            "type '%s' for its entity '%s', which is the entity of the table '%s'. Remove the table from " +
+            "'--expose-tables'.";
     public static final String EXPOSE_TABLE_COLLECTION_CLASH = "the table '%s' in '--expose-tables' maps to the " +
             "collection '%s' of the table '%s'. Expose only one of them.";
     public static final String EXPOSE_TABLES_WITHOUT_DATASERVICE =

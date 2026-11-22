@@ -121,10 +121,16 @@ public final class DataServiceModel {
                         entity.collection()));
             }
         }
+        // The entity that each generated type is declared for, by type name.
+        Map<String, String> generated = new LinkedHashMap<>();
         for (ExposedEntity entity : exposed) {
-            for (String typeName : generatedTypeNames(entity)) {
+            for (String typeName : generatedTypeNames(entity, exposed)) {
+                String owner = generated.putIfAbsent(typeName, entity.name());
                 if (entityModule.getEntityMap().containsKey(typeName)) {
                     errors.add(String.format(DataServiceMessages.TYPE_NAME_CLASH, typeName, entity.name(),
+                            entity.name()));
+                } else if (owner != null && !owner.equals(entity.name())) {
+                    errors.add(String.format(DataServiceMessages.GENERATED_TYPE_CLASH, typeName, owner,
                             entity.name()));
                 }
             }
@@ -186,14 +192,48 @@ public final class DataServiceModel {
                 .map(entity -> String.format(DataServiceMessages.SCOPES_WITHOUT_AUTH, entity.name())).toList();
     }
 
-    // The types that `HttpDataServiceGenerator` declares for an entity, next to the persist types of the model.
-    private static List<String> generatedTypeNames(ExposedEntity entity) {
-        List<String> suffixes = new ArrayList<>(List.of("List", "Filter", "Partial", "PartialList", "RelatedPartial",
-                "RelatedPartialList", "Created", "ListCreated"));
+    // The types that `HttpDataServiceGenerator` declares for an entity, under the same conditions.
+    private static List<String> generatedTypeNames(ExposedEntity entity, List<ExposedEntity> exposed) {
+        List<String> suffixes = new ArrayList<>();
         if (entity.hasWireTypes()) {
-            suffixes.addAll(List.of("Payload", "InsertPayload", "UpdatePayload"));
+            suffixes.add("Payload");
+            if (entity.allows(Operation.CREATE)) {
+                suffixes.add("InsertPayload");
+            }
+            if (entity.allows(Operation.UPDATE)) {
+                suffixes.add("UpdatePayload");
+            }
+        }
+        if (entity.allows(Operation.READ) || entity.allows(Operation.CREATE)) {
+            suffixes.add("List");
+        }
+        if (entity.allows(Operation.READ)) {
+            suffixes.addAll(List.of("Filter", "Partial", "PartialList"));
+            List<ExposedRelation> reaching = exposed.stream().flatMap(other -> other.relations().stream())
+                    .filter(relation -> relation.target().equals(entity.name())).toList();
+            if (!reaching.isEmpty()) {
+                suffixes.add("RelatedPartial");
+            }
+            if (reaching.stream().anyMatch(ExposedRelation::many)) {
+                suffixes.add("RelatedPartialList");
+            }
+        }
+        if (entity.allows(Operation.CREATE)) {
+            suffixes.addAll(List.of("Created", "ListCreated"));
         }
         return suffixes.stream().map(suffix -> entity.name() + suffix).toList();
+    }
+
+    /**
+     * Returns the types the data service declares for an entity that every operation exposes, as `pull` exposes it.
+     *
+     * @param entityName the entity name
+     * @return the type names
+     */
+    static List<String> pulledTypeNames(String entityName) {
+        return List.of("List", "Filter", "Partial", "PartialList", "RelatedPartial", "RelatedPartialList",
+                "Created", "ListCreated", "Payload", "InsertPayload", "UpdatePayload").stream()
+                .map(suffix -> entityName + suffix).toList();
     }
 
     // The key fields whose names the generated resources use for their own parameters and variables.

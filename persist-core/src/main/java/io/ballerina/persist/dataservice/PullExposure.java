@@ -64,9 +64,13 @@ public record PullExposure(Set<String> exposed, List<String> warnings) {
                 String collection = ExposedEntity.collectionOf(entity.getEntityName());
                 List<String> reserved = reservedKeys(entity);
                 Entity other = collections.get(collection);
+                Entity named = namedByGeneratedType(entity, entityModule);
                 if (!reserved.isEmpty()) {
                     warnings.add(String.format(DataServiceMessages.PULL_SKIPS_RESERVED_KEY, reserved.get(0),
                             entity.getTableName(), entity.getEntityName()));
+                } else if (named != null) {
+                    warnings.add(String.format(DataServiceMessages.PULL_SKIPS_TYPE_NAME, entity.getEntityName(),
+                            entity.getTableName(), named.getEntityName(), named.getTableName()));
                 } else if (other != null) {
                     warnings.add(String.format(DataServiceMessages.PULL_SKIPS_COLLECTION_CLASH,
                             entity.getEntityName(), entity.getTableName(), collection,
@@ -100,9 +104,13 @@ public record PullExposure(Set<String> exposed, List<String> warnings) {
             String collection = ExposedEntity.collectionOf(entity.getEntityName());
             List<String> reserved = reservedKeys(entity);
             Entity other = collections.get(collection);
+            Entity named = namedByGeneratedType(entity, entityModule);
             if (!reserved.isEmpty()) {
                 errors.add(String.format(DataServiceMessages.EXPOSE_TABLE_RESERVED_KEY, table, reserved.get(0),
                         entity.getEntityName()));
+            } else if (named != null) {
+                errors.add(String.format(DataServiceMessages.EXPOSE_TABLE_TYPE_NAME, table, named.getEntityName(),
+                        entity.getEntityName(), named.getTableName()));
             } else if (other != null && other != entity) {
                 errors.add(String.format(DataServiceMessages.EXPOSE_TABLE_COLLECTION_CLASH, table,
                         collection, other.getTableName()));
@@ -127,5 +135,16 @@ public record PullExposure(Set<String> exposed, List<String> warnings) {
     // The introspected model has not resolved its relations yet, so only the entity's own key fields are read.
     private static List<String> reservedKeys(Entity entity) {
         return DataServiceModel.reservedKeys(entity.getKeys().stream().map(EntityField::getFieldName).toList());
+    }
+
+    // The pulled entity whose name the data service would declare as a type of this entity, if any.
+    private static Entity namedByGeneratedType(Entity entity, Module entityModule) {
+        for (String typeName : DataServiceModel.pulledTypeNames(entity.getEntityName())) {
+            Entity named = entityModule.getEntityMap().get(typeName);
+            if (named != null) {
+                return named;
+            }
+        }
+        return null;
     }
 }
