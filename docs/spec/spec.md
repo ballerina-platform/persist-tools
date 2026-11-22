@@ -637,7 +637,7 @@ Every invalid `--expose-tables` name is reported, one line each.
 | `dataservice_types.bal` | The types the service uses: the wire types and their conversion functions, the `<Entity>List` envelopes and the status code records. It is not written when no exposed entity needs a type, and one left from an earlier run is deleted |
 | `dataservice_config.bal` | The configurable `dataserviceConfig` record; see [Configuration](#979-configuration) |
 
-From `bal build`, the files are written into `generated/` with the header of persist's generated files and must not be edited. They are rewritten whenever the client is, and the check that skips generation for an unchanged model also covers `options.dataservice`.
+From `bal build`, the files are written into `generated/` with the header of persist's generated files and must not be edited. They are rewritten whenever the client is. The check that skips generation covers the model, every option of the entry, `options.dataservice` included, and the build of the tool, so changing any of them, or installing another build of the tool, regenerates the sources. A model that changes while the build generates is not recorded, so the next build generates again. When `options.dataservice` is removed, the three files are deleted from `generated/`.
 
 From `bal persist generate --dataservice`, the files are written into the package root with the same header without the instruction not to edit them. They are the user's code and are replaced if `generate` runs again. The tool deletes none of them, except a `dataservice_types.bal` that a later `generate` no longer writes, as `bal build` does.
 

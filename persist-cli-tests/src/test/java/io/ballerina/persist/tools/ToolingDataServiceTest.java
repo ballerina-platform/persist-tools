@@ -368,6 +368,17 @@ public class ToolingDataServiceTest {
         Assert.assertFalse(Files.exists(project.resolve("generated").resolve(SERVICE)), result.output());
     }
 
+    @Test(description = "Changing the datastore regenerates the sources of an unchanged model")
+    public void testDatastoreChangeRegenerates() throws IOException, InterruptedException {
+        Path project = project("ds_datastore_change", entry("h2", "options.dataservice.protocol = \"http\""), MODEL);
+        assertSucceeded(build(project));
+        Path toml = project.resolve("Ballerina.toml");
+        Files.writeString(toml, read(toml).replace("options.datastore = \"h2\"", "options.datastore = \"mysql\""));
+        assertSucceeded(build(project));
+        Assert.assertTrue(read(project.resolve("generated").resolve("persist_client.bal")).contains("mysql"),
+                "the client was not regenerated for mysql");
+    }
+
     @Test(description = "A data service needs the only entry of the default model")
     public void testSharedModelEntries() throws IOException, InterruptedException {
         String batch = "\n[[tool.persist]]\nid = \"batch\"\nfilePath = \"persist/model.bal\"\n" +

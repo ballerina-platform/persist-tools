@@ -43,16 +43,20 @@ import io.ballerina.tools.diagnostics.DiagnosticInfo;
 import io.ballerina.tools.diagnostics.Location;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.security.CodeSource;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import static io.ballerina.persist.PersistToolsConstants.CACHE_FILE;
 import static io.ballerina.persist.PersistToolsConstants.MODEL_FILE;
@@ -137,9 +141,13 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
             validatePersistDirectory(datastore, projectPath, modelName);
             printExperimentalFeatureInfo(datastore);
 
+            String settings = String.join(System.lineSeparator(), "datastore=" + datastore,
+                    "testDatastore=" + testDatastore, "targetModule=" + targetModule, "eagerLoading=" + eagerLoading,
+                    "initParams=" + initParams, "dataservice=" + dataServiceOptions, "tool=" + toolBuild());
+            String cacheKey = null;
             try {
-                if (validateCache(toolContext, schemaFilePath, dataServiceOptions)
-                        && Files.exists(generatedSourceDirPath)) {
+                cacheKey = getHashValue(schemaFilePath, settings);
+                if (validateCache(toolContext, cacheKey) && Files.exists(generatedSourceDirPath)) {
                     return;
                 }
             } catch (NoSuchAlgorithmException e) {
@@ -185,9 +193,10 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
                         entityModule.getModuleName(), datastore, false).write(generatedSourceDirPath);
             }
 
-            String modelHashVal = getHashValue(schemaFilePath, dataServiceOptions);
-            Path cachePath = toolContext.cachePath();
-            updateCacheFile(cachePath, modelHashVal);
+            // A model changed while this build generated is not cached, so the next build generates again.
+            if (cacheKey != null && cacheKey.equals(getHashValue(schemaFilePath, settings))) {
+                updateCacheFile(toolContext.cachePath(), cacheKey);
+            }
 
             errStream.println("Persist client and entity types generated successfully in the " + targetModule +
                     " directory.");
@@ -286,11 +295,8 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
     /**
      * This method is used to validate the cache.
      */
-    private static boolean validateCache(ToolContext toolContext, Path schemaFilePath,
-                                         DataServiceOptions dataServiceOptions)
-            throws IOException, NoSuchAlgorithmException {
+    private static boolean validateCache(ToolContext toolContext, String modelHashVal) throws IOException {
         Path cachePath = toolContext.cachePath();
-        String modelHashVal = getHashValue(schemaFilePath, dataServiceOptions);
         if (!Files.isDirectory(cachePath)) {
             return false;
         }
@@ -313,16 +319,39 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
         }
     }
 
-    // Without a data service the hash is the model's alone, as before data services existed.
-    private static String getHashValue(Path schemaFilePath, DataServiceOptions dataServiceOptions)
+    // The hash covers the model and everything else that changes the generated sources: the entry's options and the
+    // build of the tool.
+    private static String getHashValue(Path schemaFilePath, String settings)
             throws IOException, NoSuchAlgorithmException {
-        String schema = readFileToString(schemaFilePath);
-        if (dataServiceOptions != null) {
-            schema += System.lineSeparator() + dataServiceOptions;
-        }
+        String schema = readFileToString(schemaFilePath) + System.lineSeparator() + settings;
         MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
         byte[] hashBytes = messageDigest.digest(schema.getBytes(StandardCharsets.UTF_8));
         return new String(hashBytes, StandardCharsets.UTF_8);
+    }
+
+    // The version of the tool and the time its jar was written, so that installing another build of the same version
+    // also regenerates.
+    private static String toolBuild() {
+        String version = "";
+        try (InputStream properties = PersistCodeGeneratorTool.class.getClassLoader()
+                .getResourceAsStream(PersistToolsConstants.TomlFileConstants.VERSION_PROPERTIES_FILE)) {
+            if (properties != null) {
+                Properties loaded = new Properties();
+                loaded.load(properties);
+                version = loaded.getProperty("version", "");
+            }
+        } catch (IOException e) {
+            version = "";
+        }
+        CodeSource source = PersistCodeGeneratorTool.class.getProtectionDomain().getCodeSource();
+        if (source == null) {
+            return version;
+        }
+        try {
+            return version + " " + Files.getLastModifiedTime(Paths.get(source.getLocation().toURI())).toMillis();
+        } catch (URISyntaxException | IOException e) {
+            return version;
+        }
     }
 
     public static String readFileToString(Path filePath) throws IOException {
