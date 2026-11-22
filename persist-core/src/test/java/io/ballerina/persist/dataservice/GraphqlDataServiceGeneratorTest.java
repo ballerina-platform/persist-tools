@@ -70,6 +70,19 @@ public class GraphqlDataServiceGeneratorTest {
         };
     }
 
+    @Test(description = "An eagerly loading client returns arrays, which every read takes in place of a stream")
+    public void testEagerLoading() throws BalException, IOException {
+        Path modelPath = RESOURCES.resolve("demo").resolve("model.bal");
+        Module module = BalProjectUtils.getEntities(modelPath);
+        GraphqlDataServiceGenerator generator = new GraphqlDataServiceGenerator(
+                DataServiceModel.resolve(modelPath, module, false).entities(),
+                new DataServiceOptions("graphql", DataServiceOptions.validateBasePath("/graphql"), false, true),
+                module.getModuleName(), "h2", false, true);
+        assertSource(generator.generateService(), RESOURCES.resolve("demo").resolve("dataservice_eager.bal"));
+        assertSource(generator.generateTypes().orElseThrow(),
+                RESOURCES.resolve("demo").resolve("dataservice_types_eager.bal"));
+    }
+
     // Each variant is `demo/dataservice.bal` with only the lines its option changes.
     @Test(dataProvider = "variants")
     public void testServiceVariant(String basePath, boolean introspection, boolean userOwned, List<String[]> service)

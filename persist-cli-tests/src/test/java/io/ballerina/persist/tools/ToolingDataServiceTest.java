@@ -529,6 +529,14 @@ public class ToolingDataServiceTest {
                 "the client was not regenerated for mysql");
     }
 
+    @Test(description = "A GraphQL data service over an eagerly loading client compiles")
+    public void testGraphqlEagerLoadingCompiles() throws IOException, InterruptedException {
+        Path project = project("ds_graphql_eager_loading", entry("h2", "options.eagerLoading = true\n" +
+                "options.dataservice.protocol = \"graphql\""), MODEL);
+        assertSucceeded(build(project));
+        Assert.assertTrue(read(project.resolve("generated").resolve(SERVICE)).contains("[]|persist:Error items = "));
+    }
+
     @Test(description = "A data service over an eagerly loading client compiles")
     public void testEagerLoadingCompiles() throws IOException, InterruptedException {
         Path project = project("ds_eager_loading", entry("h2", "options.eagerLoading = true\n" +

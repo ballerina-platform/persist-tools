@@ -59,6 +59,11 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
      */
     public static final Set<String> LIBRARY_TYPES = libraryTypes();
 
+    private static final List<String> PAGE_CLAUSES = List.of(
+            "whereClause = query.whereClause, orderByClause = query.orderByClause,",
+            "limitClause = query.limitClause, offsetClause = query.offsetClause");
+    private static final List<String> KEY_CLAUSES = List.of(
+            "whereClause = query.whereClause, orderByClause = query.orderByClause");
     private static final Set<String> GRAPHQL_RESERVED_KEY_NAMES = Set.of("input", "field");
     private static final Pattern ESCAPE = Pattern.compile("\\\\(.)");
     private static final Pattern GRAPHQL_NAME = Pattern.compile("[_A-Za-z][_0-9A-Za-z]*");
@@ -77,6 +82,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
     private final String modelName;
     private final String datastore;
     private final boolean userOwned;
+    private final boolean eagerLoading;
 
     /**
      * Creates a generator for a data service.
@@ -89,6 +95,22 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
      */
     public GraphqlDataServiceGenerator(List<ExposedEntity> entities, DataServiceOptions options, String modelName,
                                        String datastore, boolean userOwned) {
+        this(entities, options, modelName, datastore, userOwned, false);
+    }
+
+    /**
+     * Creates a generator for a data service over a persist client that may load collections eagerly.
+     *
+     * @param entities     the exposed entities, in model order
+     * @param options      the data service options
+     * @param modelName    the name of the persist model, as persist writes it in its file headers
+     * @param datastore    the datastore of the persist client, such as `mysql`
+     * @param userOwned    whether the files are written for the user to own, by `bal persist generate`
+     * @param eagerLoading whether the client's collection resources return arrays, as `options.eagerLoading` makes them
+     */
+    public GraphqlDataServiceGenerator(List<ExposedEntity> entities, DataServiceOptions options, String modelName,
+                                       String datastore, boolean userOwned, boolean eagerLoading) {
+        this.eagerLoading = eagerLoading;
         this.entities = entities;
         entities.forEach(entity -> entitiesByName.put(entity.name(), entity));
         this.basePath = options.basePath();
@@ -375,14 +397,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         out.append("        dataservice:Query query = check dsGraphql:toQuery(").append(n.description)
                 .append(", dataservicePageConfig,").append(NEWLINE)
                 .append("                filter, sort, size, offset);").append(NEWLINE);
-        out.append("        stream<").append(n.entity).append(", persist:Error?> rows = dataserviceClient->/")
-                .append(n.resource).append("(").append(n.entity).append(",").append(NEWLINE);
-        out.append("            whereClause = query.whereClause, orderByClause = query.orderByClause,").append(NEWLINE);
-        out.append("            limitClause = query.limitClause, offsetClause = query.offsetClause").append(NEWLINE);
-        out.append("        );").append(NEWLINE);
-        out.append("        ").append(n.entity).append("[]|persist:Error items = from ").append(n.entity)
-                .append(" item in rows").append(NEWLINE);
-        out.append("            select item;").append(NEWLINE);
+        appendRead(out, "        ", n.entity, n.resource, PAGE_CLAUSES, "rows", "items", "item", false);
         out.append("        if items is persist:Error {").append(NEWLINE);
         out.append("            return dsGraphql:toListError(items, \"").append(n.displayName).append("\");")
                 .append(NEWLINE);
@@ -411,6 +426,28 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         out.append("        }").append(NEWLINE);
         out.append("        return new (item);").append(NEWLINE);
         out.append("    }").append(NEWLINE);
+    }
+
+    // Reads the records of a query into `variable`: from a stream named `stream`, collected into an array, or, from an
+    // eagerly loading client, the array itself. With `checked`, an error fails the enclosing block; otherwise the
+    // variable holds it.
+    private void appendRead(StringBuilder out, String indent, String entity, String resource, List<String> clauses,
+                            String stream, String variable, String item, boolean checked) {
+        StringBuilder call = new StringBuilder("dataserviceClient->/").append(resource).append("(").append(entity)
+                .append(",").append(NEWLINE);
+        clauses.forEach(clause -> call.append(indent).append("    ").append(clause).append(NEWLINE));
+        call.append(indent).append(");").append(NEWLINE);
+        String declared = indent + entity + (checked ? "[] " : "[]|persist:Error ") + variable + " = " +
+                (checked ? "check " : "");
+        if (eagerLoading) {
+            out.append(declared).append(call);
+            return;
+        }
+        out.append(indent).append("stream<").append(entity).append(", persist:Error?> ").append(stream).append(" = ")
+                .append(call);
+        out.append(declared).append("from ").append(entity).append(" ").append(item).append(" in ").append(stream)
+                .append(NEWLINE);
+        out.append(indent).append("    select ").append(item).append(";").append(NEWLINE);
     }
 
     // With auth and `read`, create returns the records only to a caller who may read them; it still creates them.
@@ -517,14 +554,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
                 .append(NEWLINE);
         out.append("            dataservice:Query query = dataservice:toKeysQuery(").append(n.description)
                 .append(", keyValues);").append(NEWLINE);
-        out.append("            stream<").append(n.entity).append(", persist:Error?> stored = dataserviceClient->/")
-                .append(n.resource).append("(").append(n.entity).append(",").append(NEWLINE);
-        out.append("                whereClause = query.whereClause, orderByClause = query.orderByClause")
-                .append(NEWLINE);
-        out.append("            );").append(NEWLINE);
-        out.append("            ").append(n.entity).append("[] rows = check from ").append(n.entity)
-                .append(" item in stored").append(NEWLINE);
-        out.append("                select item;").append(NEWLINE);
+        appendRead(out, "            ", n.entity, n.resource, KEY_CLAUSES, "stored", "rows", "item", true);
         out.append("            check dataservice:orderByKeys(rows, ").append(n.description).append(", keyValues);")
                 .append(NEWLINE);
         out.append("            check commit;").append(NEWLINE);
@@ -1073,14 +1103,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         out.append("        dataservice:Query query = check dsGraphql:toRelatedQuery(").append(n.description)
                 .append(", \"").append(unescape(relation.field())).append("\", self.row,").append(NEWLINE)
                 .append("                dataservicePageConfig, filter, sort, size, offset);").append(NEWLINE);
-        out.append("        stream<").append(t.entity).append(", persist:Error?> rows = dataserviceClient->/")
-                .append(t.resource).append("(").append(t.entity).append(",").append(NEWLINE);
-        out.append("            whereClause = query.whereClause, orderByClause = query.orderByClause,").append(NEWLINE);
-        out.append("            limitClause = query.limitClause, offsetClause = query.offsetClause").append(NEWLINE);
-        out.append("        );").append(NEWLINE);
-        out.append("        ").append(t.entity).append("[]|persist:Error items = from ").append(t.entity)
-                .append(" item in rows").append(NEWLINE);
-        out.append("            select item;").append(NEWLINE);
+        appendRead(out, "        ", t.entity, t.resource, PAGE_CLAUSES, "rows", "items", "item", false);
         out.append("        if items is persist:Error {").append(NEWLINE);
         out.append("            return dsGraphql:toListError(items, \"").append(n.displayName).append("\", \"")
                 .append(RELATED_OPERATION).append("\");").append(NEWLINE);
@@ -1193,13 +1216,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         out.append("    dataservice:Query query = dataservice:toIncludeQuery(").append(n.description).append(", ")
                 .append(name).append(", links,").append(NEWLINE).append("            dataservicePageConfig);")
                 .append(NEWLINE);
-        out.append("    stream<").append(t.entity).append(", persist:Error?> rows = dataserviceClient->/")
-                .append(t.resource).append("(").append(t.entity).append(",").append(NEWLINE);
-        out.append("        whereClause = query.whereClause, orderByClause = query.orderByClause").append(NEWLINE);
-        out.append("    );").append(NEWLINE);
-        out.append("    ").append(t.entity).append("[]|persist:Error found = from ").append(t.entity)
-                .append(" row in rows").append(NEWLINE);
-        out.append("        select row;").append(NEWLINE);
+        appendRead(out, "    ", t.entity, t.resource, KEY_CLAUSES, "rows", "found", "row", false);
         out.append("    if found is persist:Error {").append(NEWLINE);
         out.append("        return dsGraphql:toListError(found, \"").append(n.displayName).append("\", \"")
                 .append(RELATED_OPERATION).append("\");").append(NEWLINE);

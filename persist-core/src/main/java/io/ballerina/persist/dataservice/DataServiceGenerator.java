@@ -102,7 +102,8 @@ public interface DataServiceGenerator {
     static DataServiceGenerator of(List<ExposedEntity> entities, DataServiceOptions options, String packageName,
                                    String modelName, String datastore, boolean userOwned, boolean eagerLoading) {
         if (DataServiceOptions.GRAPHQL.equals(options.protocol())) {
-            return new GraphqlDataServiceGenerator(entities, options, modelName, datastore, userOwned);
+            return new GraphqlDataServiceGenerator(entities, options, modelName, datastore, userOwned,
+                    eagerLoading);
         }
         return new HttpDataServiceGenerator(entities, options, packageName, modelName, datastore, userOwned,
                 eagerLoading);
