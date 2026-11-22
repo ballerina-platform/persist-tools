@@ -119,6 +119,8 @@ public class Pull implements BLauncherCmd {
     private String protocol;
 
     private String tomlUpdate;
+    // The Ballerina.toml text that tomlUpdate was built from.
+    private String tomlSnapshot;
 
     @Override
     public void execute() {
@@ -286,7 +288,9 @@ public class Pull implements BLauncherCmd {
         // A protocol taken from the entry leaves the entry as it is.
         if (dataservice != null) {
             try {
-                recordDataService();
+                if (!recordDataService()) {
+                    return;
+                }
             } catch (BalException | IOException e) {
                 Utils.printErrors(errStream, e.getMessage());
                 return;
@@ -302,8 +306,8 @@ public class Pull implements BLauncherCmd {
         if (dataservice != null || model == null || model.isBlank()) {
             try {
                 validateBallerinaProject(Paths.get(this.sourcePath));
-                entry = DataServiceToml.defaultModelEntry(Files.readString(Paths.get(this.sourcePath,
-                        BALLERINA_TOML)));
+                tomlSnapshot = Files.readString(Paths.get(this.sourcePath, BALLERINA_TOML));
+                entry = DataServiceToml.defaultModelEntry(tomlSnapshot);
             } catch (BalException e) {
                 if (dataservice != null) {
                     errStream.println(e.getMessage().stripTrailing());
@@ -364,7 +368,7 @@ public class Pull implements BLauncherCmd {
         Path tomlPath = Paths.get(this.sourcePath, BALLERINA_TOML);
         try {
             if (entry.isPresent()) {
-                return DataServiceToml.addDataService(Files.readString(tomlPath), entry.get(), dataservice);
+                return DataServiceToml.addDataService(tomlSnapshot, entry.get(), dataservice);
             }
             return new Add(this.sourcePath).updateBallerinaToml(tomlPath, packageName, datastore, null,
                     false, false, "generate-db-client", DataServiceToml.DEFAULT_MODEL_PATH, dataservice);
@@ -373,9 +377,15 @@ public class Pull implements BLauncherCmd {
         }
     }
 
-    private void recordDataService() throws BalException, IOException {
-        FileUtils.writeToTargetFile(tomlUpdate,
-                Paths.get(this.sourcePath, BALLERINA_TOML).toAbsolutePath().toString());
+    // Ballerina.toml may have been saved while the database was read, so a changed file is checked again and the
+    // group is added to its current text.
+    private boolean recordDataService() throws BalException, IOException {
+        Path tomlPath = Paths.get(this.sourcePath, BALLERINA_TOML);
+        if (!Files.readString(tomlPath).equals(tomlSnapshot) && !validateDataServiceOptions()) {
+            return false;
+        }
+        FileUtils.writeToTargetFile(tomlUpdate, tomlPath.toAbsolutePath().toString());
+        return true;
     }
 
     /**
