@@ -27,6 +27,7 @@ import io.ballerina.toml.syntax.tree.TableArrayNode;
 import io.ballerina.toml.syntax.tree.TableNode;
 import io.ballerina.tools.text.TextDocuments;
 
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -139,8 +140,19 @@ public final class DataServiceToml {
                 }
             }
         }
-        return entries.stream().filter(entry -> entry.values().getOrDefault(FILE_PATH, DEFAULT_MODEL_PATH)
-                .endsWith(DEFAULT_MODEL_PATH)).toList();
+        return entries.stream().filter(entry -> isDefaultModel(entry.values().getOrDefault(FILE_PATH,
+                DEFAULT_MODEL_PATH))).toList();
+    }
+
+    /**
+     * Tells whether a model path names the default model, `persist/model.bal`, written as `Ballerina.toml` allows,
+     * such as `./persist/model.bal`. A named model, such as `persist/persist/model.bal`, is not the default model.
+     *
+     * @param filePath the model path, relative to the package
+     * @return whether it is the default model
+     */
+    public static boolean isDefaultModel(String filePath) {
+        return Paths.get(filePath).normalize().toString().replace('\\', '/').equals(DEFAULT_MODEL_PATH);
     }
 
     /**

@@ -182,7 +182,7 @@ public class Add implements BLauncherCmd {
             throw new BalException(String.format("a build option with the provided ID '%s' already exists in " +
                     "the Ballerina.toml. Please provide a unique ID using the --id option.", id));
         }
-        if (modelPath.endsWith(DataServiceToml.DEFAULT_MODEL_PATH)) {
+        if (DataServiceToml.isDefaultModel(modelPath)) {
             List<DataServiceToml.Entry> entries = DataServiceToml.defaultModelEntries(Files.readString(tomlPath));
             if (!entries.isEmpty() && (dataservice != null
                     || entries.stream().anyMatch(entry -> entry.dataService().isPresent()))) {

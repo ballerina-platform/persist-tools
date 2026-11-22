@@ -321,8 +321,10 @@ public class Pull implements BLauncherCmd {
             }
         }
         try {
-            if (tomlSnapshot != null && (dataservice != null || entry.flatMap(DataServiceToml.Entry::dataService)
-                    .isPresent()) && DataServiceToml.defaultModelEntries(tomlSnapshot).size() > 1) {
+            List<DataServiceToml.Entry> entries = tomlSnapshot == null ? List.of() :
+                    DataServiceToml.defaultModelEntries(tomlSnapshot);
+            if (entries.size() > 1 && (dataservice != null
+                    || entries.stream().anyMatch(found -> found.dataService().isPresent()))) {
                 throw new BalException(DataServiceMessages.MODEL_ENTRIES_WITH_DATASERVICE);
             }
             if (dataservice != null) {

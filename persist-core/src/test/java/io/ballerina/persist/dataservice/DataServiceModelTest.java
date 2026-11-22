@@ -244,6 +244,20 @@ public class DataServiceModelTest {
     }
 
     @Test
+    public void testEnumNamedAsAGeneratedType() throws IOException {
+        String source = "import ballerina/dataservice;\nimport ballerina/persist as _;\n\n" +
+                "enum OrderFilter {\n    OPEN,\n    CLOSED\n}\n\n@dataservice:Expose\ntype Order record {|\n" +
+                "    readonly int id;\n    OrderFilter state;\n|};\n";
+        Path model = Files.createTempDirectory("enums").resolve("model.bal");
+        Files.writeString(model, source);
+        BalException error = Assert.expectThrows(BalException.class, () -> DataServiceModel.resolve(
+                BalProjectUtils.getEntities(model), annotations(model), Map.of(), NO_RULES));
+        Assert.assertEquals(error.getMessage(), "the enum 'OrderFilter' has the name of a type that the data " +
+                "service generates for the entity 'Order'. Rename one of them, or remove the @dataservice:Expose " +
+                "annotation of 'Order'.");
+    }
+
+    @Test
     public void testOnlyEmittedTypesAreReserved() throws IOException, BalException {
         // An Order that only allows create declares no filter, partial or list of partials.
         String source = "import ballerina/dataservice;\nimport ballerina/persist as _;\n\n" +

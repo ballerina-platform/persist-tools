@@ -641,6 +641,14 @@ public class ToolingDataServiceTest {
         assertPullFails(name, entry, List.of("--dataservice", "http"), message);
     }
 
+    @Test(description = "pull without --dataservice checks every entry of the default model for a data service")
+    public void testPullSharedModelEntries() throws IOException, InterruptedException {
+        String entries = entry("mysql", "") + "\n[[tool.persist]]\nid = \"api\"\nfilePath = \"persist/model.bal\"\n" +
+                "options.datastore = \"mysql\"\noptions.dataservice.protocol = \"http\"\n";
+        assertPullFails("shared_entries", entries, List.of(), "the persist model persist/model.bal has more than one " +
+                "[[tool.persist]] entry, and a data service needs one.");
+    }
+
     @DataProvider
     public Object[][] pullEntryErrors() {
         return new Object[][]{

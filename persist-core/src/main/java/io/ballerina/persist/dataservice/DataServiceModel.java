@@ -143,6 +143,9 @@ public final class DataServiceModel {
                 if (entityModule.getEntityMap().containsKey(typeName)) {
                     errors.add(String.format(DataServiceMessages.TYPE_NAME_CLASH, typeName, entity.name(),
                             entity.name()));
+                } else if (entityModule.getEnumMap().containsKey(typeName)) {
+                    errors.add(String.format(DataServiceMessages.ENUM_NAME_CLASH, typeName, entity.name(),
+                            entity.name()));
                 } else if (owner != null && !owner.equals(entity.name())) {
                     errors.add(String.format(DataServiceMessages.GENERATED_TYPE_CLASH, typeName, owner,
                             entity.name()));

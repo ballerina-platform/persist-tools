@@ -54,6 +54,8 @@ public record PullExposure(Set<String> exposed, List<String> warnings) {
         List<String> warnings = new ArrayList<>();
         // The entity that has taken each collection, by collection.
         Map<String, Entity> collections = new LinkedHashMap<>();
+        // The selected entity that each generated type is declared for, by type name.
+        Map<String, Entity> generated = new LinkedHashMap<>();
         if (exposeTables == null) {
             for (Entity entity : entityModule.getEntityMap().values()) {
                 if (hasUnsupportedTypes(entity)) {
@@ -71,12 +73,17 @@ public record PullExposure(Set<String> exposed, List<String> warnings) {
                 } else if (named != null) {
                     warnings.add(String.format(DataServiceMessages.PULL_SKIPS_TYPE_NAME, entity.getEntityName(),
                             entity.getTableName(), named.getEntityName(), named.getTableName()));
+                } else if (sharedType(entity, generated) != null) {
+                    String typeName = sharedType(entity, generated);
+                    warnings.add(String.format(DataServiceMessages.PULL_SKIPS_GENERATED_TYPE, entity.getEntityName(),
+                            entity.getTableName(), typeName, generated.get(typeName).getEntityName()));
                 } else if (other != null) {
                     warnings.add(String.format(DataServiceMessages.PULL_SKIPS_COLLECTION_CLASH,
                             entity.getEntityName(), entity.getTableName(), collection,
                             other.getEntityName()));
                 } else {
                     collections.put(collection, entity);
+                    select(entity, generated);
                     exposed.add(entity.getEntityName());
                 }
             }
@@ -111,11 +118,16 @@ public record PullExposure(Set<String> exposed, List<String> warnings) {
             } else if (named != null) {
                 errors.add(String.format(DataServiceMessages.EXPOSE_TABLE_TYPE_NAME, table, named.getEntityName(),
                         entity.getEntityName(), named.getTableName()));
+            } else if (sharedType(entity, generated) != null) {
+                String typeName = sharedType(entity, generated);
+                errors.add(String.format(DataServiceMessages.EXPOSE_TABLE_GENERATED_TYPE, table, typeName,
+                        generated.get(typeName).getTableName()));
             } else if (other != null && other != entity) {
                 errors.add(String.format(DataServiceMessages.EXPOSE_TABLE_COLLECTION_CLASH, table,
                         collection, other.getTableName()));
             } else {
                 collections.put(collection, entity);
+                select(entity, generated);
                 exposed.add(entity.getEntityName());
             }
         }
@@ -146,5 +158,17 @@ public record PullExposure(Set<String> exposed, List<String> warnings) {
             }
         }
         return null;
+    }
+
+    // A type that another selected entity also generates, if any. The relations are not resolved yet, so every type
+    // an entity can generate is compared.
+    private static String sharedType(Entity entity, Map<String, Entity> generated) {
+        return DataServiceModel.pulledTypeNames(entity.getEntityName()).stream()
+                .filter(typeName -> generated.containsKey(typeName) && generated.get(typeName) != entity)
+                .findFirst().orElse(null);
+    }
+
+    private static void select(Entity entity, Map<String, Entity> generated) {
+        DataServiceModel.pulledTypeNames(entity.getEntityName()).forEach(typeName -> generated.put(typeName, entity));
     }
 }

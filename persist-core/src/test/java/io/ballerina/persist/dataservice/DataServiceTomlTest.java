@@ -58,7 +58,8 @@ public class DataServiceTomlTest {
         String toml = PACKAGE + "[[tool.persist]]\nid = \"api\"\nfilePath = \"persist/model.bal\"\n\n" +
                 "[tool.persist.options.dataservice]\nprotocol = \"http\"\n\n[[tool.persist]]\nid = \"users\"\n" +
                 "filePath = \"persist/users/model.bal\"\n\n[[tool.persist]]\nid = \"batch\"\n" +
-                "filePath = \"./persist/model.bal\"\ntargetModule = \"hr.db\"\n";
+                "filePath = \"./persist/model.bal\"\ntargetModule = \"hr.db\"\n\n[[tool.persist]]\nid = \"named\"\n" +
+                "filePath = \"persist/persist/model.bal\"\n";
         List<DataServiceToml.Entry> entries = DataServiceToml.defaultModelEntries(toml);
         Assert.assertEquals(entries.stream().map(entry -> entry.values().get("id")).toList(), List.of("api", "batch"));
         Assert.assertTrue(entries.get(0).dataService().isPresent());

@@ -179,6 +179,30 @@ public class PullExposureTest {
     }
 
     @Test
+    public void testEntitiesThatGenerateOneType() throws BalException {
+        Module.Builder module = Module.newBuilder("db");
+        for (String[] entity : new String[][]{{"Order", "orders"}, {"OrderRelated", "order_related"}}) {
+            EntityField id = column("id", "id", "int");
+            Entity.Builder builder = Entity.newBuilder(entity[0]);
+            builder.setTableName(entity[1]);
+            builder.addField(id);
+            builder.setKeys(List.of(id));
+            module.addEntity(entity[0], builder.build());
+        }
+        Module pulledTables = module.build();
+        PullExposure exposure = PullExposure.select(pulledTables, null);
+        Assert.assertEquals(exposure.exposed(), Set.of("Order"));
+        Assert.assertEquals(exposure.warnings(), List.of("the entity 'OrderRelated' of the table 'order_related' " +
+                "would generate the type 'OrderRelatedPartial', which the data service also generates for the entity " +
+                "'Order', so it is not exposed."));
+        BalException error = Assert.expectThrows(BalException.class,
+                () -> PullExposure.select(pulledTables, "orders,order_related"));
+        Assert.assertEquals(error.getMessage(), "the table 'order_related' in '--expose-tables' would generate the " +
+                "type 'OrderRelatedPartial', which the data service also generates for the table 'orders'. Expose " +
+                "only one of them.");
+    }
+
+    @Test
     public void testIntrospectedRelationFields() throws BalException {
         Module introspected = introspectedModule();
         Assert.assertEquals(PullExposure.select(introspected, null).exposed(), Set.of("Department", "Employee"));
