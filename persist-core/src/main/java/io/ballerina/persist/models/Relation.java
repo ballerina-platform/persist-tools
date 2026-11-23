@@ -144,13 +144,29 @@ public class Relation {
         private final String reference;
         private final String referenceColumnName;
         private final String type;
+        private final String documentation;
 
         public Key(String field, String columnName, String reference, String referenceColumnName, String type) {
+            this(field, columnName, reference, referenceColumnName, type, null);
+        }
+
+        public Key(String field, String columnName, String reference, String referenceColumnName, String type,
+                   String documentation) {
             this.field = field;
             this.columnName = columnName;
             this.reference = reference;
             this.referenceColumnName = referenceColumnName;
             this.type = type;
+            this.documentation = documentation;
+        }
+
+        /**
+         * Returns the doc comment of the foreign key field, when the model declares the field and documents it.
+         *
+         * @return the documentation, or null
+         */
+        public String getDocumentation() {
+            return documentation;
         }
 
         public String getField() {

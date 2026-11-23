@@ -231,10 +231,15 @@ public type BooleanIdRecordUpdate record {|
 public type CompositeAssociationRecord record {|
     readonly string id;
     string randomField;
+    # The key of the related 'AllTypesIdRecord'.
     boolean alltypesidrecordBooleanType;
+    # The key of the related 'AllTypesIdRecord'.
     int alltypesidrecordIntType;
+    # The key of the related 'AllTypesIdRecord'.
     float alltypesidrecordFloatType;
+    # The key of the related 'AllTypesIdRecord'.
     decimal alltypesidrecordDecimalType;
+    # The key of the related 'AllTypesIdRecord'.
     string alltypesidrecordStringType;
 |};
 
@@ -242,10 +247,15 @@ public type CompositeAssociationRecord record {|
 public type CompositeAssociationRecordOptionalized record {|
     string id?;
     string randomField?;
+    # The key of the related 'AllTypesIdRecord'.
     boolean alltypesidrecordBooleanType?;
+    # The key of the related 'AllTypesIdRecord'.
     int alltypesidrecordIntType?;
+    # The key of the related 'AllTypesIdRecord'.
     float alltypesidrecordFloatType?;
+    # The key of the related 'AllTypesIdRecord'.
     decimal alltypesidrecordDecimalType?;
+    # The key of the related 'AllTypesIdRecord'.
     string alltypesidrecordStringType?;
 |};
 
@@ -264,10 +274,15 @@ public type CompositeAssociationRecordInsert CompositeAssociationRecord;
 # The fields to update on an existing `CompositeAssociationRecord`.
 public type CompositeAssociationRecordUpdate record {|
     string randomField?;
+    # The key of the related 'AllTypesIdRecord'.
     boolean alltypesidrecordBooleanType?;
+    # The key of the related 'AllTypesIdRecord'.
     int alltypesidrecordIntType?;
+    # The key of the related 'AllTypesIdRecord'.
     float alltypesidrecordFloatType?;
+    # The key of the related 'AllTypesIdRecord'.
     decimal alltypesidrecordDecimalType?;
+    # The key of the related 'AllTypesIdRecord'.
     string alltypesidrecordStringType?;
 |};
 
@@ -353,6 +368,7 @@ public type Post record {|
     string tags;
     Category category;
     time:Civil timestamp;
+    # The key of the related 'User'.
     int userId;
 |};
 
@@ -363,6 +379,7 @@ public type PostOptionalized record {|
     string tags?;
     Category category?;
     time:Civil timestamp?;
+    # The key of the related 'User'.
     int userId?;
 |};
 
@@ -385,13 +402,16 @@ public type PostUpdate record {|
     string tags?;
     Category category?;
     time:Civil timestamp?;
+    # The key of the related 'User'.
     int userId?;
 |};
 
 # Represents the `Follow` entity.
 public type Follow record {|
     readonly int id;
+    # The key of the related 'User'.
     int leaderId;
+    # The key of the related 'User'.
     int followerId;
     time:Civil timestamp;
 |};
@@ -399,7 +419,9 @@ public type Follow record {|
 # Represents `Follow` with every field optional, for projected reads.
 public type FollowOptionalized record {|
     int id?;
+    # The key of the related 'User'.
     int leaderId?;
+    # The key of the related 'User'.
     int followerId?;
     time:Civil timestamp?;
 |};
@@ -419,7 +441,9 @@ public type FollowInsert Follow;
 
 # The fields to update on an existing `Follow`.
 public type FollowUpdate record {|
+    # The key of the related 'User'.
     int leaderId?;
+    # The key of the related 'User'.
     int followerId?;
     time:Civil timestamp?;
 |};
@@ -429,7 +453,9 @@ public type Comment record {|
     readonly int id;
     string comment;
     time:Civil timesteamp;
+    # The key of the related 'User'.
     int userId;
+    # The key of the related 'Post'.
     int postId;
 |};
 
@@ -438,7 +464,9 @@ public type CommentOptionalized record {|
     int id?;
     string comment?;
     time:Civil timesteamp?;
+    # The key of the related 'User'.
     int userId?;
+    # The key of the related 'Post'.
     int postId?;
 |};
 
@@ -459,7 +487,9 @@ public type CommentInsert Comment;
 public type CommentUpdate record {|
     string comment?;
     time:Civil timesteamp?;
+    # The key of the related 'User'.
     int userId?;
+    # The key of the related 'Post'.
     int postId?;
 |};
 
@@ -471,7 +501,9 @@ public type Employee record {|
     time:Date birthDate;
     Gender gender;
     time:Date hireDate;
+    # The key of the related 'Department'.
     string departmentDeptNo;
+    # The key of the related 'Workspace'.
     string workspaceWorkspaceId;
 |};
 
@@ -483,7 +515,9 @@ public type EmployeeOptionalized record {|
     time:Date birthDate?;
     Gender gender?;
     time:Date hireDate?;
+    # The key of the related 'Department'.
     string departmentDeptNo?;
+    # The key of the related 'Workspace'.
     string workspaceWorkspaceId?;
 |};
 
@@ -507,7 +541,9 @@ public type EmployeeUpdate record {|
     time:Date birthDate?;
     Gender gender?;
     time:Date hireDate?;
+    # The key of the related 'Department'.
     string departmentDeptNo?;
+    # The key of the related 'Workspace'.
     string workspaceWorkspaceId?;
 |};
 
@@ -515,6 +551,7 @@ public type EmployeeUpdate record {|
 public type Workspace record {|
     readonly string workspaceId;
     string workspaceType;
+    # The key of the related 'Building'.
     string locationBuildingCode;
 
 |};
@@ -523,6 +560,7 @@ public type Workspace record {|
 public type WorkspaceOptionalized record {|
     string workspaceId?;
     string workspaceType?;
+    # The key of the related 'Building'.
     string locationBuildingCode?;
 |};
 
@@ -542,6 +580,7 @@ public type WorkspaceInsert Workspace;
 # The fields to update on an existing `Workspace`.
 public type WorkspaceUpdate record {|
     string workspaceType?;
+    # The key of the related 'Building'.
     string locationBuildingCode?;
 |};
 

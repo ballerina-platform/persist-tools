@@ -44,6 +44,7 @@ public type Post record {|
     string tags;
     string category;
     time:Date created_date;
+    # The key of the related 'User'.
     int userId;
 |};
 
@@ -54,6 +55,7 @@ public type PostOptionalized record {|
     string tags?;
     string category?;
     time:Date created_date?;
+    # The key of the related 'User'.
     int userId?;
 |};
 
@@ -75,6 +77,7 @@ public type PostUpdate record {|
     string tags?;
     string category?;
     time:Date created_date?;
+    # The key of the related 'User'.
     int userId?;
 |};
 
@@ -82,7 +85,9 @@ public type PostUpdate record {|
 public type Follower record {|
     readonly int id;
     time:Civil created_date;
+    # The key of the related 'User'.
     int leaderId;
+    # The key of the related 'User'.
     int followerId;
 |};
 
@@ -90,7 +95,9 @@ public type Follower record {|
 public type FollowerOptionalized record {|
     int id?;
     time:Civil created_date?;
+    # The key of the related 'User'.
     int leaderId?;
+    # The key of the related 'User'.
     int followerId?;
 |};
 
@@ -110,7 +117,9 @@ public type FollowerInsert Follower;
 # The fields to update on an existing `Follower`.
 public type FollowerUpdate record {|
     time:Civil created_date?;
+    # The key of the related 'User'.
     int leaderId?;
+    # The key of the related 'User'.
     int followerId?;
 |};
 

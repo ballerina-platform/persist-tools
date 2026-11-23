@@ -22,7 +22,8 @@ type Employee record {|
     @sql:Generated
     readonly int id;
     # The employee's full name
-    @constraint:String {maxLength: 50}
+    // Kept short for the badge printer
+    @constraint:String {maxLength: 50} // limit
     string name;
     int age;
     # The department the employee works in

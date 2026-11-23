@@ -112,6 +112,7 @@ public class BalProjectUtils {
     }
 
     private static final PrintStream errStream = System.err;
+    private static final String DATASERVICE_DIAGNOSTIC_PREFIX = "DATASERVICE_";
 
     public static Module getEntities(Path schemaFile) throws BalException {
         Path schemaFilename = schemaFile.getFileName();
@@ -135,7 +136,9 @@ public class BalProjectUtils {
             populateEnums(moduleBuilder, balSyntaxTree);
             populateEntities(moduleBuilder, balSyntaxTree);
             Module entityModule = moduleBuilder.build();
-            if (entityModule.getEntityMap().values().stream().allMatch(Entity::containsUnsupportedTypes)) {
+            // An empty model is reported by the caller as a model without entities.
+            if (!entityModule.getEntityMap().isEmpty()
+                    && entityModule.getEntityMap().values().stream().allMatch(Entity::containsUnsupportedTypes)) {
                 throw new BalException("all entities contain at least one unsupported data type.");
             }
             inferEnumDetails(entityModule);
@@ -164,7 +167,15 @@ public class BalProjectUtils {
         validateSchemaFile(schemaPath, fileName);
     }
 
-    public static void validateSchemaFile(Path schemaPath, String modelFileName) throws BalException {
+    /**
+     * Compiles a model file, which runs the compiler plugins of the packages it imports.
+     *
+     * @param schemaPath    the model file
+     * @param modelFileName the name of the model file in error messages
+     * @return the warnings of the `ballerina/dataservice` compiler plugin
+     * @throws BalException if the model has compilation errors
+     */
+    public static List<String> validateSchemaFile(Path schemaPath, String modelFileName) throws BalException {
         BuildOptions.BuildOptionsBuilder buildOptionsBuilder = BuildOptions.builder();
         // Setting offline to `false` to allow fetching dependencies for the model
         // file.
@@ -187,6 +198,10 @@ public class BalProjectUtils {
                 throw new BalException(errorMessage.toString());
             }
         }
+        return diagnosticResult.warnings().stream()
+                .filter(warning -> warning.diagnosticInfo().code() != null
+                        && warning.diagnosticInfo().code().startsWith(DATASERVICE_DIAGNOSTIC_PREFIX))
+                .map(Diagnostic::toString).toList();
     }
 
     public static Project buildDriverFile(Path driverPath) throws BalException {
@@ -630,7 +645,7 @@ public class BalProjectUtils {
                             EntityField fkEntityField = entity.getFieldByName(fkField);
                             return new Relation.Key(fkField,
                                     fkEntityField.getFieldColumnName(), key.getFieldName(), key.getFieldColumnName(),
-                                    key.getFieldType());
+                                    key.getFieldType(), fkEntityField.getDocumentation());
                         }
                         String fkField = stripEscapeCharacter(fieldName.toLowerCase(Locale.ENGLISH))
                                 + stripEscapeCharacter(key.getFieldName()).substring(0, 1).toUpperCase(Locale.ENGLISH)

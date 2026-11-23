@@ -36,6 +36,7 @@ public type CompanyUpdate record {|
 public type Employee record {|
     readonly int id;
     string name;
+    # The key of the related 'Company'.
     int companyId;
 |};
 
@@ -43,6 +44,7 @@ public type Employee record {|
 public type EmployeeOptionalized record {|
     int id?;
     string name?;
+    # The key of the related 'Company'.
     int companyId?;
 |};
 
@@ -61,6 +63,7 @@ public type EmployeeInsert Employee;
 # The fields to update on an existing `Employee`.
 public type EmployeeUpdate record {|
     string name?;
+    # The key of the related 'Company'.
     int companyId?;
 |};
 

@@ -48,6 +48,7 @@ public type Post record {|
     string tags;
     string category;
     time:Civil timestamp;
+    # The key of the related 'User'.
     int userId;
 |};
 
@@ -58,6 +59,7 @@ public type PostOptionalized record {|
     string tags?;
     string category?;
     time:Civil timestamp?;
+    # The key of the related 'User'.
     int userId?;
 |};
 
@@ -80,13 +82,16 @@ public type PostUpdate record {|
     string tags?;
     string category?;
     time:Civil timestamp?;
+    # The key of the related 'User'.
     int userId?;
 |};
 
 # Represents the `Follow` entity.
 public type Follow record {|
     readonly int id;
+    # The key of the related 'User'.
     int leaderId;
+    # The key of the related 'User'.
     int followerId;
     time:Civil timestamp;
 |};
@@ -94,7 +99,9 @@ public type Follow record {|
 # Represents `Follow` with every field optional, for projected reads.
 public type FollowOptionalized record {|
     int id?;
+    # The key of the related 'User'.
     int leaderId?;
+    # The key of the related 'User'.
     int followerId?;
     time:Civil timestamp?;
 |};
@@ -114,7 +121,9 @@ public type FollowInsert Follow;
 
 # The fields to update on an existing `Follow`.
 public type FollowUpdate record {|
+    # The key of the related 'User'.
     int leaderId?;
+    # The key of the related 'User'.
     int followerId?;
     time:Civil timestamp?;
 |};
@@ -124,7 +133,9 @@ public type Comment record {|
     readonly int id;
     string comment;
     time:Civil timesteamp;
+    # The key of the related 'User'.
     int userId;
+    # The key of the related 'Post'.
     int postId;
 |};
 
@@ -133,7 +144,9 @@ public type CommentOptionalized record {|
     int id?;
     string comment?;
     time:Civil timesteamp?;
+    # The key of the related 'User'.
     int userId?;
+    # The key of the related 'Post'.
     int postId?;
 |};
 
@@ -154,7 +167,9 @@ public type CommentInsert Comment;
 public type CommentUpdate record {|
     string comment?;
     time:Civil timesteamp?;
+    # The key of the related 'User'.
     int userId?;
+    # The key of the related 'Post'.
     int postId?;
 |};
 

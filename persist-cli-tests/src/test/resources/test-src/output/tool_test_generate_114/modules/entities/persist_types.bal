@@ -73,6 +73,7 @@ public type Concept record {|
     string code;
     byte[] concept;
     int? parentConceptId;
+    # The key of the related 'CodeSystem'.
     int codesystemCodeSystemId;
 
 |};
@@ -83,6 +84,7 @@ public type ConceptOptionalized record {|
     string code?;
     byte[] concept?;
     int? parentConceptId?;
+    # The key of the related 'CodeSystem'.
     int codesystemCodeSystemId?;
 |};
 
@@ -101,6 +103,7 @@ public type ConceptInsert record {|
     string code;
     byte[] concept;
     int? parentConceptId;
+    # The key of the related 'CodeSystem'.
     int codesystemCodeSystemId;
 |};
 
@@ -109,6 +112,7 @@ public type ConceptUpdate record {|
     string code?;
     byte[] concept?;
     int? parentConceptId?;
+    # The key of the related 'CodeSystem'.
     int codesystemCodeSystemId?;
 |};
 
@@ -183,6 +187,7 @@ public type ValueSetComposeInclude record {|
     boolean systemFlag;
     boolean valueSetFlag;
     boolean conceptFlag;
+    # The key of the related 'ValueSet'.
     int valuesetValueSetId;
 
     int? codeSystemId;
@@ -194,6 +199,7 @@ public type ValueSetComposeIncludeOptionalized record {|
     boolean systemFlag?;
     boolean valueSetFlag?;
     boolean conceptFlag?;
+    # The key of the related 'ValueSet'.
     int valuesetValueSetId?;
     int? codeSystemId?;
 |};
@@ -214,6 +220,7 @@ public type ValueSetComposeIncludeInsert record {|
     boolean systemFlag;
     boolean valueSetFlag;
     boolean conceptFlag;
+    # The key of the related 'ValueSet'.
     int valuesetValueSetId;
     int? codeSystemId;
 |};
@@ -223,6 +230,7 @@ public type ValueSetComposeIncludeUpdate record {|
     boolean systemFlag?;
     boolean valueSetFlag?;
     boolean conceptFlag?;
+    # The key of the related 'ValueSet'.
     int valuesetValueSetId?;
     int? codeSystemId?;
 |};
@@ -230,14 +238,18 @@ public type ValueSetComposeIncludeUpdate record {|
 # Represents the `ValueSetComposeIncludeValueSet` entity.
 public type ValueSetComposeIncludeValueSet record {|
     readonly int valueSetComposeIncludeValueSetId;
+    # The key of the related 'ValueSetComposeInclude'.
     int valuesetcomposeValueSetComposeIncludeId;
+    # The key of the related 'ValueSet'.
     int valuesetValueSetId;
 |};
 
 # Represents `ValueSetComposeIncludeValueSet` with every field optional, for projected reads.
 public type ValueSetComposeIncludeValueSetOptionalized record {|
     int valueSetComposeIncludeValueSetId?;
+    # The key of the related 'ValueSetComposeInclude'.
     int valuesetcomposeValueSetComposeIncludeId?;
+    # The key of the related 'ValueSet'.
     int valuesetValueSetId?;
 |};
 
@@ -253,27 +265,35 @@ public type ValueSetComposeIncludeValueSetTargetType typedesc<ValueSetComposeInc
 
 # The fields to insert a new `ValueSetComposeIncludeValueSet`.
 public type ValueSetComposeIncludeValueSetInsert record {|
+    # The key of the related 'ValueSetComposeInclude'.
     int valuesetcomposeValueSetComposeIncludeId;
+    # The key of the related 'ValueSet'.
     int valuesetValueSetId;
 |};
 
 # The fields to update on an existing `ValueSetComposeIncludeValueSet`.
 public type ValueSetComposeIncludeValueSetUpdate record {|
+    # The key of the related 'ValueSetComposeInclude'.
     int valuesetcomposeValueSetComposeIncludeId?;
+    # The key of the related 'ValueSet'.
     int valuesetValueSetId?;
 |};
 
 # Represents the `ValueSetComposeIncludeConcept` entity.
 public type ValueSetComposeIncludeConcept record {|
     readonly int valueSetComposeIncludeConceptId;
+    # The key of the related 'ValueSetComposeInclude'.
     int valuesetcomposeValueSetComposeIncludeId;
+    # The key of the related 'Concept'.
     int conceptConceptId;
 |};
 
 # Represents `ValueSetComposeIncludeConcept` with every field optional, for projected reads.
 public type ValueSetComposeIncludeConceptOptionalized record {|
     int valueSetComposeIncludeConceptId?;
+    # The key of the related 'ValueSetComposeInclude'.
     int valuesetcomposeValueSetComposeIncludeId?;
+    # The key of the related 'Concept'.
     int conceptConceptId?;
 |};
 
@@ -289,13 +309,17 @@ public type ValueSetComposeIncludeConceptTargetType typedesc<ValueSetComposeIncl
 
 # The fields to insert a new `ValueSetComposeIncludeConcept`.
 public type ValueSetComposeIncludeConceptInsert record {|
+    # The key of the related 'ValueSetComposeInclude'.
     int valuesetcomposeValueSetComposeIncludeId;
+    # The key of the related 'Concept'.
     int conceptConceptId;
 |};
 
 # The fields to update on an existing `ValueSetComposeIncludeConcept`.
 public type ValueSetComposeIncludeConceptUpdate record {|
+    # The key of the related 'ValueSetComposeInclude'.
     int valuesetcomposeValueSetComposeIncludeId?;
+    # The key of the related 'Concept'.
     int conceptConceptId?;
 |};
 

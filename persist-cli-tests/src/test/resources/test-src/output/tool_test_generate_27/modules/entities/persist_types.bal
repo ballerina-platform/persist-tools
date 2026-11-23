@@ -7,7 +7,9 @@
 public type Profile record {|
     readonly int id;
     string name;
+    # The key of the related 'User'.
     int ownerId;
+    # The key of the related 'MultipleAssociations'.
     int multipleassociationsId;
 |};
 
@@ -15,7 +17,9 @@ public type Profile record {|
 public type ProfileOptionalized record {|
     int id?;
     string name?;
+    # The key of the related 'User'.
     int ownerId?;
+    # The key of the related 'MultipleAssociations'.
     int multipleassociationsId?;
 |};
 
@@ -35,7 +39,9 @@ public type ProfileInsert Profile;
 # The fields to update on an existing `Profile`.
 public type ProfileUpdate record {|
     string name?;
+    # The key of the related 'User'.
     int ownerId?;
+    # The key of the related 'MultipleAssociations'.
     int multipleassociationsId?;
 |};
 
@@ -43,6 +49,7 @@ public type ProfileUpdate record {|
 public type User record {|
     readonly int id;
     string name;
+    # The key of the related 'MultipleAssociations'.
     int multipleassociationsId;
 |};
 
@@ -50,6 +57,7 @@ public type User record {|
 public type UserOptionalized record {|
     int id?;
     string name?;
+    # The key of the related 'MultipleAssociations'.
     int multipleassociationsId?;
 |};
 
@@ -69,6 +77,7 @@ public type UserInsert User;
 # The fields to update on an existing `User`.
 public type UserUpdate record {|
     string name?;
+    # The key of the related 'MultipleAssociations'.
     int multipleassociationsId?;
 |};
 

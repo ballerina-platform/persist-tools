@@ -6,9 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- [Add HTTP data service generation from a persist model](https://github.com/ballerina-platform/ballerina-spec/issues/1503)
+
 ### Changed
 
 - [Build with Ballerina Swan Lake Update 14 and Java 25, and add the native dependency as `platform.java25.dependency`](https://github.com/ballerina-platform/ballerina-library/issues/9153)
+
+### Fixed
+
+- [Keep every `ballerina/constraint` annotation of the model in the generated types](https://github.com/ballerina-platform/ballerina-library/issues/9376)
 
 ## [1.10.0] - 2026-11-05
 

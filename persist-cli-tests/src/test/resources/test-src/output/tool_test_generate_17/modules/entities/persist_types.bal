@@ -36,6 +36,7 @@ public type CompanyUpdate record {|
 public type Employee record {|
     readonly int id;
     string name;
+    # The key of the related 'Company'.
     int companyId;
 |};
 
@@ -43,6 +44,7 @@ public type Employee record {|
 public type EmployeeOptionalized record {|
     int id?;
     string name?;
+    # The key of the related 'Company'.
     int companyId?;
 |};
 
@@ -62,6 +64,7 @@ public type EmployeeInsert Employee;
 # The fields to update on an existing `Employee`.
 public type EmployeeUpdate record {|
     string name?;
+    # The key of the related 'Company'.
     int companyId?;
 |};
 
@@ -69,6 +72,7 @@ public type EmployeeUpdate record {|
 public type Vehicle record {|
     readonly int model;
     string name;
+    # The key of the related 'Employee'.
     int employeeId;
 |};
 
@@ -76,6 +80,7 @@ public type Vehicle record {|
 public type VehicleOptionalized record {|
     int model?;
     string name?;
+    # The key of the related 'Employee'.
     int employeeId?;
 |};
 
@@ -94,6 +99,7 @@ public type VehicleInsert Vehicle;
 # The fields to update on an existing `Vehicle`.
 public type VehicleUpdate record {|
     string name?;
+    # The key of the related 'Employee'.
     int employeeId?;
 |};
 

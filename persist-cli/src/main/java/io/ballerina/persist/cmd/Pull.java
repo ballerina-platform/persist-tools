@@ -21,10 +21,16 @@ import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
 import io.ballerina.persist.configuration.PersistConfiguration;
+import io.ballerina.persist.dataservice.DataServiceMessages;
+import io.ballerina.persist.dataservice.DataServiceOptions;
+import io.ballerina.persist.dataservice.DataServiceToml;
+import io.ballerina.persist.dataservice.PullExposure;
 import io.ballerina.persist.introspect.Introspector;
 import io.ballerina.persist.introspect.IntrospectorBuilder;
 import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.SourceGenerator;
+import io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils;
+import io.ballerina.persist.utils.FileUtils;
 import picocli.CommandLine;
 
 import java.io.IOException;
@@ -37,7 +43,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Scanner;
+import java.util.Set;
 
 import static io.ballerina.persist.PersistToolsConstants.COMPONENT_IDENTIFIER;
 import static io.ballerina.persist.PersistToolsConstants.MODEL_FILE;
@@ -45,6 +53,7 @@ import static io.ballerina.persist.PersistToolsConstants.PERSIST_DIRECTORY;
 import static io.ballerina.persist.utils.BalProjectUtils.validateBallerinaProject;
 import static io.ballerina.persist.utils.BalProjectUtils.validatePullCommandOptions;
 import static io.ballerina.persist.utils.DatabaseConnector.readDatabasePassword;
+import static io.ballerina.projects.util.ProjectConstants.BALLERINA_TOML;
 
 @CommandLine.Command(name = "pull", description = "Create model.bal file according to given database schema")
 public class Pull implements BLauncherCmd {
@@ -56,6 +65,7 @@ public class Pull implements BLauncherCmd {
     private final String sourcePath;
 
     private static final String COMMAND_IDENTIFIER = "persist-pull";
+    private static final String OPTIONS_DATASTORE = "options.datastore";
 
     // Table selection prompt message
     private static final String TABLE_SELECTION_PROMPT =
@@ -99,6 +109,19 @@ public class Pull implements BLauncherCmd {
     @CommandLine.Option(names = { "--model" })
     private String model;
 
+    @CommandLine.Option(names = { "--dataservice" }, description = "Protocol of the generated data service")
+    private String dataservice;
+
+    @CommandLine.Option(names = { "--expose-tables" }, description = "Tables whose entities the data service " +
+            "exposes")
+    private String exposeTables;
+
+    private String protocol;
+
+    private String tomlUpdate;
+    // The Ballerina.toml text that tomlUpdate was built from.
+    private String tomlSnapshot;
+
     @Override
     public void execute() {
         Scanner scanner = new Scanner(System.in, StandardCharsets.UTF_8);
@@ -112,6 +135,10 @@ public class Pull implements BLauncherCmd {
             validatePullCommandOptions(datastore, host, port, user, database);
         } catch (BalException e) {
             errStream.println("ERROR: invalid option(s): " + System.lineSeparator() + e.getMessage());
+            return;
+        }
+
+        if (!validateDataServiceOptions()) {
             return;
         }
 
@@ -236,17 +263,135 @@ public class Pull implements BLauncherCmd {
             return;
         }
 
+        PullExposure exposure = new PullExposure(Set.of(), List.of());
+        if (protocol != null) {
+            try {
+                exposure = PullExposure.select(entityModule, exposeTables);
+            } catch (BalException e) {
+                Utils.printErrors(errStream, e.getMessage());
+                return;
+            }
+            exposure.warnings().forEach(warning -> errStream.println("WARNING: " + warning));
+        }
+
         SourceGenerator sourceGenerator = new SourceGenerator(sourcePath, targetModelDir,
                 "Introspect.db", entityModule);
 
         try {
-            sourceGenerator.createDbModel();
+            sourceGenerator.createDbModel(exposure.exposed());
         } catch (BalException e) {
             errStream.printf(String.format("ERROR: failed to generate model for introspected database: %s%n",
                     e.getMessage()));
             return;
         }
         errStream.println("Introspection complete! The " + modelDisplayPath + " file created successfully.");
+        // A protocol taken from the entry leaves the entry as it is.
+        if (dataservice != null) {
+            try {
+                if (!recordDataService()) {
+                    return;
+                }
+            } catch (BalException | IOException e) {
+                Utils.printErrors(errStream, e.getMessage());
+                return;
+            }
+            errStream.printf(DataServiceMessages.PULL_ENABLED + "%n", dataservice.toUpperCase(Locale.ROOT));
+        }
+    }
+
+    // Checks every data service error that does not need the database, before anything is asked or written.
+    // Without --dataservice, an entry of the default model that already enables a data service gives the protocol.
+    private boolean validateDataServiceOptions() {
+        Optional<DataServiceToml.Entry> entry = Optional.empty();
+        if (dataservice != null || model == null || model.isBlank()) {
+            try {
+                validateBallerinaProject(Paths.get(this.sourcePath));
+                tomlSnapshot = Files.readString(Paths.get(this.sourcePath, BALLERINA_TOML));
+                entry = DataServiceToml.defaultModelEntry(tomlSnapshot);
+            } catch (BalException e) {
+                if (dataservice != null) {
+                    errStream.println(e.getMessage().stripTrailing());
+                    return false;
+                }
+            } catch (IOException e) {
+                if (dataservice != null) {
+                    Utils.printErrors(errStream, e.getMessage());
+                    return false;
+                }
+            }
+        }
+        try {
+            List<DataServiceToml.Entry> entries = tomlSnapshot == null ? List.of() :
+                    DataServiceToml.defaultModelEntries(tomlSnapshot);
+            if (entries.size() > 1 && (dataservice != null
+                    || entries.stream().anyMatch(found -> found.dataService().isPresent()))) {
+                throw new BalException(DataServiceMessages.MODEL_ENTRIES_WITH_DATASERVICE);
+            }
+            if (dataservice != null) {
+                protocol = DataServiceOptions.validateProtocolFlag(dataservice);
+            } else if (entry.isPresent() && entry.get().dataService().isPresent()
+                    && (model == null || model.isBlank())) {
+                protocol = DataServiceOptions.from(entry.get().dataService().get()).protocol();
+            } else {
+                if (exposeTables != null) {
+                    throw new BalException(DataServiceMessages.EXPOSE_TABLES_WITHOUT_DATASERVICE);
+                }
+                return true;
+            }
+            if (model != null && !model.isBlank()) {
+                throw new BalException(String.format(DataServiceMessages.FLAG_WITH_DATASERVICE, "--model",
+                        "--model"));
+            }
+            // --dataservice only adds a group; it does not change one the user has written.
+            if (dataservice != null && entry.isPresent() && entry.get().dataService().isPresent()) {
+                throw new BalException(DataServiceMessages.PULL_DATASERVICE_EXISTS);
+            }
+            String packageName = TomlSyntaxUtils.readPackageName(this.sourcePath);
+            if (entry.isPresent() && !entry.get().targetModule(packageName).equals(packageName)) {
+                throw new BalException(String.format(DataServiceMessages.TARGET_MODULE, packageName, packageName));
+            }
+            if (entry.isPresent() && entry.get().withInitParams()) {
+                throw new BalException(DataServiceMessages.WITH_INIT_PARAMS);
+            }
+            String entryDatastore = entry.map(found -> found.values().get(OPTIONS_DATASTORE)).orElse(null);
+            if (entryDatastore != null) {
+                DataServiceOptions.validateDatastore(entryDatastore);
+            }
+            if (dataservice != null) {
+                tomlUpdate = withDataService(entry, packageName);
+            }
+            return true;
+        } catch (BalException e) {
+            Utils.printErrors(errStream, e.getMessage());
+            return false;
+        }
+    }
+
+    // Adds the data service group to the default model's entry, creating the entry as `bal persist add` would.
+    // The update is built before the database is read, so that a failure writes nothing.
+    private String withDataService(Optional<DataServiceToml.Entry> entry, String packageName)
+            throws BalException {
+        Path tomlPath = Paths.get(this.sourcePath, BALLERINA_TOML);
+        try {
+            if (entry.isPresent()) {
+                return DataServiceToml.addDataService(tomlSnapshot, entry.get(), dataservice);
+            }
+            return new Add(this.sourcePath).updateBallerinaToml(tomlPath, packageName, datastore, null,
+                    false, false, "generate-db-client", DataServiceToml.DEFAULT_MODEL_PATH, dataservice);
+        } catch (IOException e) {
+            throw new BalException(e.getMessage());
+        }
+    }
+
+    // Ballerina.toml may have been saved while the database was read, so a changed file is checked again and the
+    // group is added to its current text.
+    private boolean recordDataService() throws BalException, IOException {
+        Path tomlPath = Paths.get(this.sourcePath, BALLERINA_TOML);
+        if (!Files.readString(tomlPath).equals(tomlSnapshot) && !validateDataServiceOptions()) {
+            return false;
+        }
+        FileUtils.writeToTargetFile(tomlUpdate, tomlPath.toAbsolutePath().toString());
+        return true;
     }
 
     /**

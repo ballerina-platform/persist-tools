@@ -46,11 +46,10 @@ public type Employee record {|
     # The employee's id
     readonly int id;
     # The employee's full name
-    @constraint:String {
-        maxLength: 50
-    }
+    @constraint:String {maxLength: 50}
     string name;
     int age;
+    # The key of the related 'Department'.
     string departmentId;
 |};
 
@@ -59,11 +58,10 @@ public type EmployeeOptionalized record {|
     # The employee's id
     int id?;
     # The employee's full name
-    @constraint:String {
-        maxLength: 50
-    }
+    @constraint:String {maxLength: 50}
     string name?;
     int age?;
+    # The key of the related 'Department'.
     string departmentId?;
 |};
 
@@ -80,19 +78,20 @@ public type EmployeeTargetType typedesc<EmployeeWithRelations>;
 # The fields to insert a new `Employee`.
 public type EmployeeInsert record {|
     # The employee's full name
+    @constraint:String {maxLength: 50}
     string name;
     int age;
+    # The key of the related 'Department'.
     string departmentId;
 |};
 
 # The fields to update on an existing `Employee`.
 public type EmployeeUpdate record {|
     # The employee's full name
-    @constraint:String {
-        maxLength: 50
-    }
+    @constraint:String {maxLength: 50}
     string name?;
     int age?;
+    # The key of the related 'Department'.
     string departmentId?;
 |};
 

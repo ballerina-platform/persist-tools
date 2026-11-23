@@ -149,6 +149,8 @@ task pullGSheetsDependency() {
 task copyStdlibs() {
     dependsOn(unpackStdLibs)
 
+    // Copy only the bala, as ballerina-distribution does: a stdlib zip can carry a cache built for another
+    // platform (java21), which a java25 distribution cannot load, so bal compiles the balas instead.
     /* Standard Libraries */
     doLast {
         configurations.ballerinaStdLibs.resolvedConfiguration.resolvedArtifacts.each { artifact ->
@@ -158,18 +160,12 @@ task copyStdlibs() {
                 into("repo/bala") {
                     from "${artifactExtractedPath}/bala"
                 }
-                into("repo/cache") {
-                    from "${artifactExtractedPath}/cache"
-                }
             }
             copy {
                 def runtimePath = "${project.rootDir}/target/ballerina-distribution"
                 into runtimePath
                 into("repo/bala") {
                     from "${artifactExtractedPath}/bala"
-                }
-                into("repo/cache") {
-                    from "${artifactExtractedPath}/cache"
                 }
             }
         }

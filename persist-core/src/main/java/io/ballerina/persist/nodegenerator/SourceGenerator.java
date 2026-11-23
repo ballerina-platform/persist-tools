@@ -46,6 +46,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
+import java.util.Set;
 
 import static io.ballerina.persist.PersistToolsConstants.GOOGLE_SHEETS_SCHEMA_FILE;
 import static io.ballerina.persist.PersistToolsConstants.SQL_SCHEMA_FILE;
@@ -85,8 +86,12 @@ public class SourceGenerator {
     }
 
     public void createDbModel() throws BalException {
+        createDbModel(Set.of());
+    }
+
+    public void createDbModel(Set<String> exposedEntities) throws BalException {
         DbModelGenSyntaxTree dbModelGenSyntaxTree = new DbModelGenSyntaxTree();
-        addModelFile(dbModelGenSyntaxTree.getDataModels(entityModule),
+        addModelFile(dbModelGenSyntaxTree.getDataModels(entityModule, exposedEntities),
                 this.generatedSourceDirPath.resolve(persistModelBal).toAbsolutePath(),
                 this.moduleNameWithPackageName);
     }
@@ -205,14 +210,14 @@ public class SourceGenerator {
     
     private void addDataSourceConfigBalFile(Path generatedSourceDirPath, String fileName, SyntaxTree syntaxTree)
             throws BalException {
+        // The file declares only the configurable values of the datastore, so it is rewritten with the client, and a
+        // changed datastore gets its own values.
         Path configFilePath = generatedSourceDirPath.resolve(fileName);
-        if (!Files.exists(configFilePath)) {
-            try {
-                writeOutputFile(Formatter.format(syntaxTree.toSourceCode()), configFilePath.toAbsolutePath());
-            } catch (Exception e) {
-                throw new BalException("failed to generate the persist_db_config.bal file. "
-                        + e.getMessage());
-            }
+        try {
+            writeOutputFile(Formatter.format(syntaxTree.toSourceCode()), configFilePath.toAbsolutePath());
+        } catch (Exception e) {
+            throw new BalException("failed to generate the persist_db_config.bal file. "
+                    + e.getMessage());
         }
     }
 

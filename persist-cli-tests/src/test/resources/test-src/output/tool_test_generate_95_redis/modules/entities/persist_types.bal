@@ -209,10 +209,15 @@ public type BooleanIdRecordUpdate record {|
 public type CompositeAssociationRecord record {|
     readonly string id;
     string randomField;
+    # The key of the related 'AllTypesIdRecord'.
     boolean alltypesidrecordBooleanType;
+    # The key of the related 'AllTypesIdRecord'.
     int alltypesidrecordIntType;
+    # The key of the related 'AllTypesIdRecord'.
     float alltypesidrecordFloatType;
+    # The key of the related 'AllTypesIdRecord'.
     decimal alltypesidrecordDecimalType;
+    # The key of the related 'AllTypesIdRecord'.
     string alltypesidrecordStringType;
 |};
 
@@ -220,10 +225,15 @@ public type CompositeAssociationRecord record {|
 public type CompositeAssociationRecordOptionalized record {|
     string id?;
     string randomField?;
+    # The key of the related 'AllTypesIdRecord'.
     boolean alltypesidrecordBooleanType?;
+    # The key of the related 'AllTypesIdRecord'.
     int alltypesidrecordIntType?;
+    # The key of the related 'AllTypesIdRecord'.
     float alltypesidrecordFloatType?;
+    # The key of the related 'AllTypesIdRecord'.
     decimal alltypesidrecordDecimalType?;
+    # The key of the related 'AllTypesIdRecord'.
     string alltypesidrecordStringType?;
 |};
 
@@ -242,10 +252,15 @@ public type CompositeAssociationRecordInsert CompositeAssociationRecord;
 # The fields to update on an existing `CompositeAssociationRecord`.
 public type CompositeAssociationRecordUpdate record {|
     string randomField?;
+    # The key of the related 'AllTypesIdRecord'.
     boolean alltypesidrecordBooleanType?;
+    # The key of the related 'AllTypesIdRecord'.
     int alltypesidrecordIntType?;
+    # The key of the related 'AllTypesIdRecord'.
     float alltypesidrecordFloatType?;
+    # The key of the related 'AllTypesIdRecord'.
     decimal alltypesidrecordDecimalType?;
+    # The key of the related 'AllTypesIdRecord'.
     string alltypesidrecordStringType?;
 |};
 

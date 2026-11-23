@@ -21,6 +21,9 @@ package io.ballerina.persist.cmd;
 import io.ballerina.cli.BLauncherCmd;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.PersistToolsConstants;
+import io.ballerina.persist.dataservice.DataServiceMessages;
+import io.ballerina.persist.dataservice.DataServiceOptions;
+import io.ballerina.persist.dataservice.DataServiceToml;
 import io.ballerina.persist.nodegenerator.syntax.utils.TomlSyntaxUtils;
 import io.ballerina.persist.utils.BalProjectUtils;
 import io.ballerina.persist.utils.FileUtils;
@@ -42,6 +45,7 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -90,6 +94,9 @@ public class Add implements BLauncherCmd {
     @CommandLine.Option(names = { "--model" })
     private String model;
 
+    @CommandLine.Option(names = { "--dataservice" }, description = "Protocol of the generated data service")
+    private String dataservice;
+
     public Add() {
         this("");
     }
@@ -119,10 +126,14 @@ public class Add implements BLauncherCmd {
             eagerLoading = Utils.validateEagerLoading(datastore, eagerLoading, errStream);
 
             try {
+                BalProjectUtils.validateBallerinaProject(Paths.get(this.sourcePath));
                 packageName = TomlSyntaxUtils.readPackageName(this.sourcePath);
             } catch (BalException e) {
-                errStream.println(e.getMessage());
+                errStream.println(e.getMessage().stripTrailing());
                 return;
+            }
+            if (dataservice != null) {
+                validateDataServiceFlags(dataservice, datastore, module, model, initParams);
             }
             String moduleNameWithPackage = validateAndProcessModule(packageName, module);
             createDefaultClientId();
@@ -130,7 +141,8 @@ public class Add implements BLauncherCmd {
                     ? String.format("%s/%s/%s", PERSIST_DIRECTORY, model, MODEL_FILE)
                     : String.format("%s/%s", PERSIST_DIRECTORY, MODEL_FILE);
             String syntaxTree = updateBallerinaToml(Paths.get(this.sourcePath, BALLERINA_TOML),
-                    moduleNameWithPackage, datastore, testDatastore, eagerLoading, initParams, id, modelPath);
+                    moduleNameWithPackage, datastore, testDatastore, eagerLoading, initParams, id, modelPath,
+                    dataservice);
             FileUtils.writeToTargetFile(syntaxTree,
                     Paths.get(sourcePath, BALLERINA_TOML).toAbsolutePath().toString());
             createPersistDirectoryIfNotExists();
@@ -139,7 +151,12 @@ public class Add implements BLauncherCmd {
                     "build process." + System.lineSeparator());
             errStream.println(System.lineSeparator() + "Next steps:");
             errStream.println("1. Define your data model in \"" + modelPath + "\".");
-            errStream.println("2. Execute `bal build` to generate the persist client during package build.");
+            if (dataservice != null) {
+                errStream.println(DataServiceMessages.ADD_ANNOTATE_STEP);
+                errStream.printf(DataServiceMessages.ADD_BUILD_STEP + "%n", dataservice.toUpperCase(Locale.ROOT));
+            } else {
+                errStream.println("2. Execute `bal build` to generate the persist client during package build.");
+            }
 
             if (Objects.nonNull(testDatastore)) {
                 errStream.printf(System.lineSeparator() +
@@ -156,7 +173,7 @@ public class Add implements BLauncherCmd {
      * Method to update the Ballerina.toml with persist tool configurations.
      */
     String updateBallerinaToml(Path tomlPath, String module, String datastore, String testDatastore,
-            boolean eagerLoading, boolean initParams, String id, String modelPath)
+            boolean eagerLoading, boolean initParams, String id, String modelPath, String dataservice)
             throws BalException, IOException {
         TomlSyntaxUtils.NativeDependency dependency = getDependencyConfig(datastore, testDatastore);
         TomlSyntaxUtils.ConfigDeclaration declaration = getConfigDeclaration(tomlPath, dependency);
@@ -165,6 +182,13 @@ public class Add implements BLauncherCmd {
             throw new BalException(String.format("a build option with the provided ID '%s' already exists in " +
                     "the Ballerina.toml. Please provide a unique ID using the --id option.", id));
         }
+        if (DataServiceToml.isDefaultModel(modelPath)) {
+            List<DataServiceToml.Entry> entries = DataServiceToml.defaultModelEntries(Files.readString(tomlPath));
+            if (!entries.isEmpty() && (dataservice != null
+                    || entries.stream().anyMatch(entry -> entry.dataService().isPresent()))) {
+                throw new BalException(DataServiceMessages.ENTRY_WITH_DATASERVICE);
+            }
+        }
 
         NodeList<DocumentMemberDeclarationNode> moduleMembers = declaration.moduleMembers();
         if (!moduleMembers.isEmpty()) {
@@ -172,7 +196,7 @@ public class Add implements BLauncherCmd {
             moduleMembers = moduleMembers.add(SampleNodeGenerator.createTableArray(
                     PersistToolsConstants.PERSIST_TOOL_CONFIG, null));
             moduleMembers = populateBallerinaNodeList(moduleMembers, module, datastore, testDatastore,
-                    eagerLoading, initParams, id, modelPath);
+                    eagerLoading, initParams, id, modelPath, dataservice);
             moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
         }
         Token eofToken = AbstractNodeFactory.createIdentifierToken("");
@@ -183,7 +207,8 @@ public class Add implements BLauncherCmd {
 
     private static NodeList<DocumentMemberDeclarationNode> populateBallerinaNodeList(
             NodeList<DocumentMemberDeclarationNode> moduleMembers, String module, String dataStore,
-            String testDatastore, boolean eagerLoading, boolean initParams, String id, String modelPath) {
+            String testDatastore, boolean eagerLoading, boolean initParams, String id, String modelPath,
+            String dataservice) {
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("id", id, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("targetModule", module, null));
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("options.datastore", dataStore, null));
@@ -200,6 +225,12 @@ public class Add implements BLauncherCmd {
                     true, null));
         }
         moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("filePath", modelPath, null));
+        if (dataservice != null) {
+            moduleMembers = BalProjectUtils.addNewLine(moduleMembers, 1);
+            moduleMembers = moduleMembers.add(SampleNodeGenerator.createTable(
+                    PersistToolsConstants.PERSIST_TOOL_CONFIG + ".options.dataservice", null));
+            moduleMembers = moduleMembers.add(SampleNodeGenerator.createStringKV("protocol", dataservice, null));
+        }
         return moduleMembers;
     }
 
@@ -218,6 +249,35 @@ public class Add implements BLauncherCmd {
 
     @Override
     public void setParentCmdParser(CommandLine commandLine) {
+    }
+
+    /**
+     * Validates `--dataservice` and the options that cannot be combined with it, for `add` and `generate`.
+     *
+     * @param protocol   the value of `--dataservice`
+     * @param datastore  the value of `--datastore`
+     * @param module     the value of `--module`, or null
+     * @param model      the value of `--model`, or null
+     * @param initParams whether `--with-init-params` is given
+     * @throws BalException naming the option that cannot be used with `--dataservice`
+     */
+    static void validateDataServiceFlags(String protocol, String datastore, String module, String model,
+                                         boolean initParams) throws BalException {
+        DataServiceOptions.validateProtocolFlag(protocol);
+        DataServiceOptions.validateDatastore(datastore);
+        if (module != null) {
+            throw flagError("--module");
+        }
+        if (model != null && !model.isBlank()) {
+            throw flagError("--model");
+        }
+        if (initParams) {
+            throw flagError("--with-init-params");
+        }
+    }
+
+    private static BalException flagError(String option) {
+        return new BalException(String.format(DataServiceMessages.FLAG_WITH_DATASERVICE, option, option));
     }
 
     private String validateAndProcessModule(String packageName, String module) throws BalException {
