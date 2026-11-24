@@ -92,3 +92,42 @@ function testRelationInAFragment() returns error? {
         data: {assignments: {items: [{seq: 1, employee: {name: "Ann"}}, {seq: 2, employee: {name: "Cid"}}]}}
     });
 }
+
+@test:Config
+function testToOneAliasedTwice() returns error? {
+    json response = check query("{ assignments { items { seq a: employee { name } b: employee { id } } } }");
+    test:assertEquals(response, {
+        data: {
+            assignments: {
+                items: [
+                    {seq: 1, a: {name: "Ann"}, b: {id: 1}},
+                    {seq: 2, a: {name: "Cid"}, b: {id: 3}}
+                ]
+            }
+        }
+    });
+}
+
+@test:Config
+function testToManyAliasedWithDifferentArguments() returns error? {
+    json response = check query("{ department(id: 1) { " +
+            "first: employees(sort: [{name: ASC}], size: 1) { items { name } hasMore } " +
+            "last: employees(sort: [{name: DESC}], size: 1) { items { name } hasMore } } }");
+    test:assertEquals(response, {
+        data: {
+            department: {
+                first: {items: [{name: "Ann"}], hasMore: true},
+                last: {items: [{name: "Cid"}], hasMore: true}
+            }
+        }
+    });
+}
+
+@test:Config
+function testRootListsAliased() returns error? {
+    json response = check query("{ a: employees(size: 1) { items { id } hasMore } " +
+            "b: employees(size: 1, offset: 1) { items { id } hasMore } }");
+    test:assertEquals(response, {
+        data: {a: {items: [{id: 1}], hasMore: true}, b: {items: [{id: 2}], hasMore: true}}
+    });
+}

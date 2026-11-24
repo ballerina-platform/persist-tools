@@ -89,6 +89,21 @@ function testRelationScopesThroughAFragment() returns error? {
 }
 
 @test:Config
+function testRelationScopesThroughAnAlias() returns error? {
+    json response = check query("{ staff: employees { items { name work: assignments { items { seq } } } } }",
+            "reader");
+    test:assertEquals(check response.data, {staff: ()});
+    test:assertEquals(check errorsOf(response), [
+        {
+            message: "The relation 'assignments' of the entity 'Employee' needs a 'read' scope of the entity " +
+                "'Assignment'.",
+            path: ["staff"],
+            extensions: {code: "FORBIDDEN"}
+        }
+    ]);
+}
+
+@test:Config
 function testRelationUnderAMutationNeedsTheEntityReadScope() returns error? {
     json response = check query("mutation { createEmployee(input: {id: 10, name: \"Dee\", hiredOn: \"2024-01-01\", " +
             "departmentId: 1}) { id department { name } } }", "writer");

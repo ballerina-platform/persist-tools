@@ -208,7 +208,7 @@ public class ToolingDataServiceTest {
                 password = ""
                 """, init.toString().replace('\\', '/')));
         // H2 reads a time:Utc back from a TIMESTAMP column as local time, so the service runs in UTC.
-        assertTestsPassed(bal(project, Map.of("TZ", "UTC"), "test", "--offline"), 64);
+        assertTestsPassed(bal(project, Map.of("TZ", "UTC"), "test", "--offline"), 67);
     }
 
     @Test(description = "Authentication, scopes and relation checks of the GraphQL data service, against H2")
@@ -273,7 +273,7 @@ public class ToolingDataServiceTest {
                 username = "guest"
                 password = "guest"
                 """, init.toString().replace('\\', '/')));
-        assertTestsPassed(bal(project, Map.of(), "test", "--offline"), 18);
+        assertTestsPassed(bal(project, Map.of(), "test", "--offline"), 19);
     }
 
     // Generation from bal build
