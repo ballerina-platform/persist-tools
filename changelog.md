@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - [Keep every `ballerina/constraint` annotation of the model in the generated types](https://github.com/ballerina-platform/ballerina-library/issues/9376)
+- [Fix `bal build` regenerating the persist client on every build when the model and the tool entry have not changed](https://github.com/ballerina-platform/ballerina-library/issues/9817)
 
 ## [1.10.0] - 2026-11-05
 

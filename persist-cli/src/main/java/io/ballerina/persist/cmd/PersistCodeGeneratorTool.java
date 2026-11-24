@@ -50,10 +50,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.security.CodeSource;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -141,13 +141,12 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
             validatePersistDirectory(datastore, projectPath, modelName);
             printExperimentalFeatureInfo(datastore);
 
-            String settings = String.join(System.lineSeparator(), "datastore=" + datastore,
-                    "testDatastore=" + testDatastore, "targetModule=" + targetModule, "eagerLoading=" + eagerLoading,
-                    "initParams=" + initParams, "dataservice=" + dataServiceOptions, "tool=" + toolBuild());
+            String settings = settings(datastore, testDatastore, targetModule, eagerLoading, initParams,
+                    dataServiceOptions);
             String cacheKey = null;
             try {
                 cacheKey = getHashValue(schemaFilePath, settings);
-                if (validateCache(toolContext, cacheKey) && Files.exists(generatedSourceDirPath)) {
+                if (validateCache(toolContext.cachePath(), cacheKey) && Files.exists(generatedSourceDirPath)) {
                     return;
                 }
             } catch (NoSuchAlgorithmException e) {
@@ -292,41 +291,37 @@ public class PersistCodeGeneratorTool implements CodeGeneratorTool {
         }
     }
 
-    /**
-     * This method is used to validate the cache.
-     */
-    private static boolean validateCache(ToolContext toolContext, String modelHashVal) throws IOException {
-        Path cachePath = toolContext.cachePath();
-        if (!Files.isDirectory(cachePath)) {
+    static boolean validateCache(Path cachePath, String modelHashVal) throws IOException {
+        Path cacheFilePath = cachePath.resolve(CACHE_FILE);
+        if (!Files.isRegularFile(cacheFilePath)) {
             return false;
         }
-        // read the cache file
-        Path cacheFilePath = Paths.get(cachePath.toString(), CACHE_FILE);
-        String cacheContent = Files.readString(Paths.get(cacheFilePath.toString()));
-        return cacheContent.equals(modelHashVal);
+        return Files.readString(cacheFilePath).equals(modelHashVal);
     }
 
-    private static void updateCacheFile(Path cachePath, String modelHashVal) {
+    static void updateCacheFile(Path cachePath, String modelHashVal) {
         try {
-            Path cacheFilePath = Paths.get(cachePath.toString(), CACHE_FILE);
-            if (!Files.exists(cacheFilePath)) {
-                Files.createDirectories(cachePath);
-                Files.createFile(cacheFilePath);
-            }
-            Files.writeString(cacheFilePath, modelHashVal, StandardCharsets.UTF_8, StandardOpenOption.WRITE);
+            Files.createDirectories(cachePath);
+            // The default open options truncate the file, so no bytes of a longer earlier key remain.
+            Files.writeString(cachePath.resolve(CACHE_FILE), modelHashVal, StandardCharsets.UTF_8);
         } catch (IOException e) {
             errStream.println("ERROR: failed to update the cache file: " + e.getMessage());
         }
     }
 
-    // The hash covers the model and everything else that changes the generated sources: the entry's options and the
-    // build of the tool.
-    private static String getHashValue(Path schemaFilePath, String settings)
-            throws IOException, NoSuchAlgorithmException {
+    static String settings(String datastore, String testDatastore, String targetModule, boolean eagerLoading,
+                           boolean initParams, DataServiceOptions dataServiceOptions) {
+        // Every entry option that changes the generated sources, and the tool build, so that changing any of them
+        // regenerates even when the model is unchanged.
+        return String.join(System.lineSeparator(), "datastore=" + datastore, "testDatastore=" + testDatastore,
+                "targetModule=" + targetModule, "eagerLoading=" + eagerLoading, "initParams=" + initParams,
+                "dataservice=" + dataServiceOptions, "tool=" + toolBuild());
+    }
+
+    static String getHashValue(Path schemaFilePath, String settings) throws IOException, NoSuchAlgorithmException {
         String schema = readFileToString(schemaFilePath) + System.lineSeparator() + settings;
         MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
-        byte[] hashBytes = messageDigest.digest(schema.getBytes(StandardCharsets.UTF_8));
-        return new String(hashBytes, StandardCharsets.UTF_8);
+        return HexFormat.of().formatHex(messageDigest.digest(schema.getBytes(StandardCharsets.UTF_8)));
     }
 
     // The version of the tool and the time its jar was written, so that installing another build of the same version
