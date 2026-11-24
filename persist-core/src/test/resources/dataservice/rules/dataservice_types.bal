@@ -9,68 +9,58 @@ import ballerina/http;
 import ballerina/time;
 
 # The JSON form of `Order`.
-#
-# + id - The `id` field of `Order`
-# + number - The `number` field of `Order`
-# + status - The `status` field of `Order`
-# + placedOn - The `placedOn` field of `Order`, as an ISO 8601 date
-# + customerId - The key of the related 'Customer'.
-# + warehouseId - The key of the related 'Warehouse'.
 public type OrderPayload record {|
+    # The `id` field of `Order`
     readonly int id;
+    # The `number` field of `Order`
     string number;
+    # The `status` field of `Order`
     string status;
+    # The `placedOn` field of `Order`, as an ISO 8601 date
     string placedOn;
+    # The key of the related 'Customer'.
     int customerId;
+    # The key of the related 'Warehouse'.
     int warehouseId;
 |};
 
 # The JSON form of `OrderInsert`.
-#
-# + id - The `id` field of `OrderInsert`
-# + number - The `number` field of `OrderInsert`
-# + status - The `status` field of `OrderInsert`
-# + placedOn - The `placedOn` field of `OrderInsert`, as an ISO 8601 date
-# + customerId - The key of the related 'Customer'.
-# + warehouseId - The key of the related 'Warehouse'.
 public type OrderInsertPayload record {|
+    # The `id` field of `OrderInsert`
     readonly int id;
+    # The `number` field of `OrderInsert`
     string number;
+    # The `status` field of `OrderInsert`
     string status?;
+    # The `placedOn` field of `OrderInsert`, as an ISO 8601 date
     string placedOn;
+    # The key of the related 'Customer'.
     int customerId;
+    # The key of the related 'Warehouse'.
     int warehouseId?;
 |};
 
 # The JSON form of `OrderUpdate`.
-#
-# + status - The `status` field of `OrderUpdate`
-# + placedOn - The `placedOn` field of `OrderUpdate`, as an ISO 8601 date
-# + warehouseId - The key of the related 'Warehouse'.
 public type OrderUpdatePayload record {|
+    # The `status` field of `OrderUpdate`
     string status?;
+    # The `placedOn` field of `OrderUpdate`, as an ISO 8601 date
     string placedOn?;
+    # The key of the related 'Warehouse'.
     int warehouseId?;
 |};
 
 # A list of orders.
-#
-# + items - The orders
-# + hasMore - Whether records exist after this page
 public type OrderList record {
+    # The orders
     OrderPayload[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
 # The conditions that orders match, as the `filter` query parameter holds them.
-#
-# + id - The conditions on the `id` field
-# + number - The conditions on the `number` field
-# + status - The conditions on the `status` field
-# + placedOn - The conditions on the `placedOn` field
-# + customerId - The conditions on the `customerId` field
-# + warehouseId - The conditions on the `warehouseId` field
 public type OrderFilter record {|
+    # The conditions on the `id` field
     record {|
         int eq?;
         int ne?;
@@ -80,6 +70,7 @@ public type OrderFilter record {|
         int gte?;
         int[] anyOf?;
     |} id?;
+    # The conditions on the `number` field
     record {|
         string eq?;
         string ne?;
@@ -91,6 +82,7 @@ public type OrderFilter record {|
         string contains?;
         string startsWith?;
     |} number?;
+    # The conditions on the `status` field
     record {|
         string eq?;
         string ne?;
@@ -102,6 +94,7 @@ public type OrderFilter record {|
         string contains?;
         string startsWith?;
     |} status?;
+    # The conditions on the `placedOn` field
     record {|
         string eq?;
         string ne?;
@@ -111,6 +104,7 @@ public type OrderFilter record {|
         string gte?;
         string[] anyOf?;
     |} placedOn?;
+    # The conditions on the `customerId` field
     record {|
         int eq?;
         int ne?;
@@ -120,6 +114,7 @@ public type OrderFilter record {|
         int gte?;
         int[] anyOf?;
     |} customerId?;
+    # The conditions on the `warehouseId` field
     record {|
         int eq?;
         int ne?;
@@ -132,56 +127,52 @@ public type OrderFilter record {|
 |};
 
 # An order with the fields named in the `fields` query parameter.
-#
-# + id - The `id` field of `Order`
-# + number - The `number` field of `Order`
-# + status - The `status` field of `Order`
-# + placedOn - The `placedOn` field of `Order`, as an ISO 8601 date
-# + customerId - The key of the related 'Customer'.
-# + warehouseId - The key of the related 'Warehouse'.
-# + customer - The related customer, when `fields` names it
 public type OrderPartial record {|
+    # The `id` field of `Order`
     int id;
+    # The `number` field of `Order`
     string number?;
+    # The `status` field of `Order`
     string status?;
+    # The `placedOn` field of `Order`, as an ISO 8601 date
     string placedOn?;
+    # The key of the related 'Customer'.
     int customerId?;
+    # The key of the related 'Warehouse'.
     int warehouseId?;
+    # The related customer, when `fields` names it
     CustomerRelatedPartial? customer?;
 |};
 
 # A list of orders with the fields named in the `fields` query parameter.
-#
-# + items - The orders
-# + hasMore - Whether records exist after this page
 public type OrderPartialList record {
+    # The orders
     OrderPartial[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
 # An order read through a relation, with the fields named in the `fields` query parameter.
-#
-# + id - The `id` field of `Order`
-# + number - The `number` field of `Order`
-# + status - The `status` field of `Order`
-# + placedOn - The `placedOn` field of `Order`, as an ISO 8601 date
-# + customerId - The key of the related 'Customer'.
-# + warehouseId - The key of the related 'Warehouse'.
 public type OrderRelatedPartial record {|
+    # The `id` field of `Order`
     int id;
+    # The `number` field of `Order`
     string number?;
+    # The `status` field of `Order`
     string status?;
+    # The `placedOn` field of `Order`, as an ISO 8601 date
     string placedOn?;
+    # The key of the related 'Customer'.
     int customerId?;
+    # The key of the related 'Warehouse'.
     int warehouseId?;
 |};
 
 # The orders read through a relation, with the fields named in the `fields` query parameter.
-#
-# + items - The orders, at most `dataserviceConfig.pageSize`
-# + hasMore - Whether more orders exist
 public type OrderRelatedPartialList record {
+    # The orders, at most `dataserviceConfig.pageSize`
     OrderRelatedPartial[] items;
+    # Whether more orders exist
     boolean hasMore;
 };
 
@@ -220,18 +211,16 @@ final dataservice:Entity dataserviceOrderEntity = {
 };
 
 # The response to creating one order.
-#
-# + body - The created order
 public type OrderCreated record {|
     *http:Created;
+    # The created order
     OrderPayload body;
 |};
 
 # The response to creating several orders.
-#
-# + body - The created orders
 public type OrderListCreated record {|
     *http:Created;
+    # The created orders
     OrderList body;
 |};
 
@@ -280,19 +269,16 @@ isolated function transformPayloadToOrderUpdate(OrderUpdatePayload payload)
 }
 
 # A list of customers.
-#
-# + items - The customers
-# + hasMore - Whether records exist after this page
 public type CustomerList record {
+    # The customers
     Customer[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
 # The conditions that customers match, as the `filter` query parameter holds them.
-#
-# + id - The conditions on the `id` field
-# + name - The conditions on the `name` field
 public type CustomerFilter record {|
+    # The conditions on the `id` field
     record {|
         int eq?;
         int ne?;
@@ -302,6 +288,7 @@ public type CustomerFilter record {|
         int gte?;
         int[] anyOf?;
     |} id?;
+    # The conditions on the `name` field
     record {|
         string eq?;
         string ne?;
@@ -316,29 +303,26 @@ public type CustomerFilter record {|
 |};
 
 # A customer with the fields named in the `fields` query parameter.
-#
-# + id - The `id` field of `Customer`
-# + name - The `name` field of `Customer`
 public type CustomerPartial record {|
+    # The `id` field of `Customer`
     int id;
+    # The `name` field of `Customer`
     string name?;
 |};
 
 # A list of customers with the fields named in the `fields` query parameter.
-#
-# + items - The customers
-# + hasMore - Whether records exist after this page
 public type CustomerPartialList record {
+    # The customers
     CustomerPartial[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
 # A customer read through a relation, with the fields named in the `fields` query parameter.
-#
-# + id - The `id` field of `Customer`
-# + name - The `name` field of `Customer`
 public type CustomerRelatedPartial record {|
+    # The `id` field of `Customer`
     int id;
+    # The `name` field of `Customer`
     string name?;
 |};
 
@@ -358,19 +342,16 @@ final dataservice:Entity dataserviceCustomerEntity = {
 };
 
 # A list of warehouses.
-#
-# + items - The warehouses
-# + hasMore - Whether records exist after this page
 public type WarehouseList record {
+    # The warehouses
     Warehouse[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
 # The conditions that warehouses match, as the `filter` query parameter holds them.
-#
-# + id - The conditions on the `id` field
-# + city - The conditions on the `city` field
 public type WarehouseFilter record {|
+    # The conditions on the `id` field
     record {|
         int eq?;
         int ne?;
@@ -380,6 +361,7 @@ public type WarehouseFilter record {|
         int gte?;
         int[] anyOf?;
     |} id?;
+    # The conditions on the `city` field
     record {|
         string eq?;
         string ne?;
@@ -394,22 +376,20 @@ public type WarehouseFilter record {|
 |};
 
 # A warehouse with the fields named in the `fields` query parameter.
-#
-# + id - The `id` field of `Warehouse`
-# + city - The `city` field of `Warehouse`
-# + orders - The related orders, when `fields` names them
 public type WarehousePartial record {|
+    # The `id` field of `Warehouse`
     int id;
+    # The `city` field of `Warehouse`
     string city?;
+    # The related orders, when `fields` names them
     OrderRelatedPartialList orders?;
 |};
 
 # A list of warehouses with the fields named in the `fields` query parameter.
-#
-# + items - The warehouses
-# + hasMore - Whether records exist after this page
 public type WarehousePartialList record {
+    # The warehouses
     WarehousePartial[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 

@@ -176,6 +176,31 @@ public class HttpDataServiceGeneratorTest {
         Assert.assertFalse(Files.exists(dir.resolve(HttpDataServiceGenerator.TYPES_FILE)));
     }
 
+    // The OpenAPI tool reads a field's description only from the doc comment above the field.
+    @Test(dataProvider = "models")
+    public void testFieldDocsAboveFields(String model, boolean auth) throws BalException {
+        Path modelPath = RESOURCES.resolve(model).resolve("model.bal");
+        Module module = BalProjectUtils.getEntities(modelPath);
+        String types = lf(new HttpDataServiceGenerator(DataServiceModel.resolve(modelPath, module, false).entities(),
+                new DataServiceOptions("http", "/api", auth, true), "hr", module.getModuleName(), "h2", false)
+                .generateTypes().orElseThrow());
+        Matcher record = Pattern.compile("((?:^#.*\\n)+)public type (\\w+) record", Pattern.MULTILINE)
+                .matcher(types);
+        int records = 0;
+        while (record.find()) {
+            records++;
+            Assert.assertFalse(record.group(1).contains("# + "), "record " + record.group(2)
+                    + " documents its fields in its own doc comment");
+        }
+        Assert.assertTrue(records > 0, "no record in the types of " + model);
+    }
+
+    @DataProvider
+    public Object[][] models() {
+        return new Object[][]{{"employees", false}, {"composite", false}, {"wire", false}, {"combinations", false},
+                {"generated_key", false}, {"rules", false}, {"key_relations", false}, {"auth", true}};
+    }
+
     @Test
     public void testGeneratedConfig() throws BalException, IOException {
         HttpDataServiceGenerator generator = new HttpDataServiceGenerator(List.of(),

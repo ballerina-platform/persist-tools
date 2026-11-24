@@ -7,21 +7,16 @@ import ballerina/dataservice;
 import ballerina/http;
 
 # A list of employees.
-#
-# + items - The employees
-# + hasMore - Whether records exist after this page
 public type EmployeeList record {
+    # The employees
     Employee[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
 # The conditions that employees match, as the `filter` query parameter holds them.
-#
-# + id - The conditions on the `id` field
-# + name - The conditions on the `name` field
-# + email - The conditions on the `email` field
-# + departmentId - The conditions on the `departmentId` field
 public type EmployeeFilter record {|
+    # The conditions on the `id` field
     record {|
         int eq?;
         int ne?;
@@ -31,6 +26,7 @@ public type EmployeeFilter record {|
         int gte?;
         int[] anyOf?;
     |} id?;
+    # The conditions on the `name` field
     record {|
         string eq?;
         string ne?;
@@ -42,6 +38,7 @@ public type EmployeeFilter record {|
         string contains?;
         string startsWith?;
     |} name?;
+    # The conditions on the `email` field
     record {|
         string eq?;
         string ne?;
@@ -54,6 +51,7 @@ public type EmployeeFilter record {|
         string startsWith?;
         boolean isNull?;
     |} email?;
+    # The conditions on the `departmentId` field
     record {|
         int eq?;
         int ne?;
@@ -66,48 +64,44 @@ public type EmployeeFilter record {|
 |};
 
 # An employee with the fields named in the `fields` query parameter.
-#
-# + id - The `id` field of `Employee`
-# + name - The full name
-# + email - The work email, if the employee has one
-# + departmentId - The key of the related 'Department'.
-# + department - The related department, when `fields` names it
 public type EmployeePartial record {|
+    # The `id` field of `Employee`
     int id;
+    # The full name
     string name?;
+    # The work email, if the employee has one
     string? email?;
+    # The key of the related 'Department'.
     int departmentId?;
+    # The related department, when `fields` names it
     DepartmentRelatedPartial? department?;
 |};
 
 # A list of employees with the fields named in the `fields` query parameter.
-#
-# + items - The employees
-# + hasMore - Whether records exist after this page
 public type EmployeePartialList record {
+    # The employees
     EmployeePartial[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
 # An employee read through a relation, with the fields named in the `fields` query parameter.
-#
-# + id - The `id` field of `Employee`
-# + name - The full name
-# + email - The work email, if the employee has one
-# + departmentId - The key of the related 'Department'.
 public type EmployeeRelatedPartial record {|
+    # The `id` field of `Employee`
     int id;
+    # The full name
     string name?;
+    # The work email, if the employee has one
     string? email?;
+    # The key of the related 'Department'.
     int departmentId?;
 |};
 
 # The employees read through a relation, with the fields named in the `fields` query parameter.
-#
-# + items - The employees, at most `dataserviceConfig.pageSize`
-# + hasMore - Whether more employees exist
 public type EmployeeRelatedPartialList record {
+    # The employees, at most `dataserviceConfig.pageSize`
     EmployeeRelatedPartial[] items;
+    # Whether more employees exist
     boolean hasMore;
 };
 
@@ -144,35 +138,30 @@ final dataservice:Entity dataserviceEmployeeEntity = {
 };
 
 # The response to creating one employee.
-#
-# + body - The created employee
 public type EmployeeCreated record {|
     *http:Created;
+    # The created employee
     Employee body;
 |};
 
 # The response to creating several employees.
-#
-# + body - The created employees
 public type EmployeeListCreated record {|
     *http:Created;
+    # The created employees
     EmployeeList body;
 |};
 
 # A list of departments.
-#
-# + items - The departments
-# + hasMore - Whether records exist after this page
 public type DepartmentList record {
+    # The departments
     Department[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
 # The conditions that departments match, as the `filter` query parameter holds them.
-#
-# + id - The conditions on the `id` field
-# + name - The conditions on the `name` field
 public type DepartmentFilter record {|
+    # The conditions on the `id` field
     record {|
         int eq?;
         int ne?;
@@ -182,6 +171,7 @@ public type DepartmentFilter record {|
         int gte?;
         int[] anyOf?;
     |} id?;
+    # The conditions on the `name` field
     record {|
         string eq?;
         string ne?;
@@ -196,31 +186,28 @@ public type DepartmentFilter record {|
 |};
 
 # A department with the fields named in the `fields` query parameter.
-#
-# + id - The `id` field of `Department`
-# + name - The `name` field of `Department`
-# + employees - The related employees, when `fields` names them
 public type DepartmentPartial record {|
+    # The `id` field of `Department`
     int id;
+    # The `name` field of `Department`
     string name?;
+    # The related employees, when `fields` names them
     EmployeeRelatedPartialList employees?;
 |};
 
 # A list of departments with the fields named in the `fields` query parameter.
-#
-# + items - The departments
-# + hasMore - Whether records exist after this page
 public type DepartmentPartialList record {
+    # The departments
     DepartmentPartial[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
 # A department read through a relation, with the fields named in the `fields` query parameter.
-#
-# + id - The `id` field of `Department`
-# + name - The `name` field of `Department`
 public type DepartmentRelatedPartial record {|
+    # The `id` field of `Department`
     int id;
+    # The `name` field of `Department`
     string name?;
 |};
 

@@ -7,21 +7,16 @@ import ballerina/dataservice;
 import ballerina/http;
 
 # A list of assignments.
-#
-# + items - The assignments
-# + hasMore - Whether records exist after this page
 public type AssignmentList record {
+    # The assignments
     Assignment[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
 # The conditions that assignments match, as the `filter` query parameter holds them.
-#
-# + projectCode - The conditions on the `projectCode` field
-# + seq - The conditions on the `seq` field
-# + hours - The conditions on the `hours` field
-# + billable - The conditions on the `billable` field
 public type AssignmentFilter record {|
+    # The conditions on the `projectCode` field
     record {|
         string eq?;
         string ne?;
@@ -33,6 +28,7 @@ public type AssignmentFilter record {|
         string contains?;
         string startsWith?;
     |} projectCode?;
+    # The conditions on the `seq` field
     record {|
         int eq?;
         int ne?;
@@ -42,6 +38,7 @@ public type AssignmentFilter record {|
         int gte?;
         int[] anyOf?;
     |} seq?;
+    # The conditions on the `hours` field
     record {|
         decimal eq?;
         decimal ne?;
@@ -51,6 +48,7 @@ public type AssignmentFilter record {|
         decimal gte?;
         decimal[] anyOf?;
     |} hours?;
+    # The conditions on the `billable` field
     record {|
         boolean eq?;
         boolean ne?;
@@ -59,24 +57,22 @@ public type AssignmentFilter record {|
 |};
 
 # An assignment with the fields named in the `fields` query parameter.
-#
-# + projectCode - The `projectCode` field of `Assignment`
-# + seq - The `seq` field of `Assignment`
-# + hours - The `hours` field of `Assignment`
-# + billable - The `billable` field of `Assignment`
 public type AssignmentPartial record {|
+    # The `projectCode` field of `Assignment`
     string projectCode;
+    # The `seq` field of `Assignment`
     int seq;
+    # The `hours` field of `Assignment`
     decimal hours?;
+    # The `billable` field of `Assignment`
     boolean billable?;
 |};
 
 # A list of assignments with the fields named in the `fields` query parameter.
-#
-# + items - The assignments
-# + hasMore - Whether records exist after this page
 public type AssignmentPartialList record {
+    # The assignments
     AssignmentPartial[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
@@ -98,37 +94,30 @@ final dataservice:Entity dataserviceAssignmentEntity = {
 };
 
 # The response to creating one assignment.
-#
-# + body - The created assignment
 public type AssignmentCreated record {|
     *http:Created;
+    # The created assignment
     Assignment body;
 |};
 
 # The response to creating several assignments.
-#
-# + body - The created assignments
 public type AssignmentListCreated record {|
     *http:Created;
+    # The created assignments
     AssignmentList body;
 |};
 
 # A list of rates.
-#
-# + items - The rates
-# + hasMore - Whether records exist after this page
 public type RateList record {
+    # The rates
     Rate[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
 # The conditions that rates match, as the `filter` query parameter holds them.
-#
-# + amount - The conditions on the `amount` field
-# + factor - The conditions on the `factor` field
-# + active - The conditions on the `active` field
-# + label - The conditions on the `label` field
 public type RateFilter record {|
+    # The conditions on the `amount` field
     record {|
         decimal eq?;
         decimal ne?;
@@ -138,6 +127,7 @@ public type RateFilter record {|
         decimal gte?;
         decimal[] anyOf?;
     |} amount?;
+    # The conditions on the `factor` field
     record {|
         float eq?;
         float ne?;
@@ -147,11 +137,13 @@ public type RateFilter record {|
         float gte?;
         float[] anyOf?;
     |} factor?;
+    # The conditions on the `active` field
     record {|
         boolean eq?;
         boolean ne?;
         boolean[] anyOf?;
     |} active?;
+    # The conditions on the `label` field
     record {|
         string eq?;
         string ne?;
@@ -166,24 +158,22 @@ public type RateFilter record {|
 |};
 
 # A rate with the fields named in the `fields` query parameter.
-#
-# + amount - The `amount` field of `Rate`
-# + factor - The `factor` field of `Rate`
-# + active - The `active` field of `Rate`
-# + label - The `label` field of `Rate`
 public type RatePartial record {|
+    # The `amount` field of `Rate`
     decimal amount;
+    # The `factor` field of `Rate`
     float factor;
+    # The `active` field of `Rate`
     boolean active;
+    # The `label` field of `Rate`
     string label?;
 |};
 
 # A list of rates with the fields named in the `fields` query parameter.
-#
-# + items - The rates
-# + hasMore - Whether records exist after this page
 public type RatePartialList record {
+    # The rates
     RatePartial[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 

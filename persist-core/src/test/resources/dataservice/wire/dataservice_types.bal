@@ -10,28 +10,27 @@ import ballerina/http;
 import ballerina/time;
 
 # The JSON form of `Document`.
-#
-# + id - The `id` field of `Document`
-# + title - The `title` field of `Document`
-# + issuedOn - The `issuedOn` field of `Document`, as an ISO 8601 date
-# + expiresOn - The `expiresOn` field of `Document`, as an ISO 8601 date
-# + opensAt - The `opensAt` field of `Document`, as an ISO 8601 time
-# + createdAt - The `createdAt` field of `Document`, as an ISO 8601 date-time without an offset
-# + signedAt - The `signedAt` field of `Document`, as an ISO 8601 date-time in UTC
-# + content - The `content` field of `Document`, as a base64 string
-# + thumbnail - The `thumbnail` field of `Document`, as a base64 string
-# + status - The `status` field of `Document`
 public type DocumentPayload record {|
+    # The `id` field of `Document`
     readonly int id;
+    # The `title` field of `Document`
     @constraint:String {maxLength: 40, pattern: re `[A-Z].*`}
     string title;
+    # The `issuedOn` field of `Document`, as an ISO 8601 date
     string issuedOn;
+    # The `expiresOn` field of `Document`, as an ISO 8601 date
     string? expiresOn;
+    # The `opensAt` field of `Document`, as an ISO 8601 time
     string opensAt;
+    # The `createdAt` field of `Document`, as an ISO 8601 date-time without an offset
     string createdAt;
+    # The `signedAt` field of `Document`, as an ISO 8601 date-time in UTC
     string? signedAt;
+    # The `content` field of `Document`, as a base64 string
     string content;
+    # The `thumbnail` field of `Document`, as a base64 string
     string? thumbnail;
+    # The `status` field of `Document`
     Status status;
 |};
 
@@ -39,49 +38,39 @@ public type DocumentPayload record {|
 public type DocumentInsertPayload DocumentPayload;
 
 # The JSON form of `DocumentUpdate`.
-#
-# + title - The `title` field of `DocumentUpdate`
-# + issuedOn - The `issuedOn` field of `DocumentUpdate`, as an ISO 8601 date
-# + expiresOn - The `expiresOn` field of `DocumentUpdate`, as an ISO 8601 date
-# + opensAt - The `opensAt` field of `DocumentUpdate`, as an ISO 8601 time
-# + createdAt - The `createdAt` field of `DocumentUpdate`, as an ISO 8601 date-time without an offset
-# + signedAt - The `signedAt` field of `DocumentUpdate`, as an ISO 8601 date-time in UTC
-# + content - The `content` field of `DocumentUpdate`, as a base64 string
-# + thumbnail - The `thumbnail` field of `DocumentUpdate`, as a base64 string
-# + status - The `status` field of `DocumentUpdate`
 public type DocumentUpdatePayload record {|
+    # The `title` field of `DocumentUpdate`
     @constraint:String {maxLength: 40, pattern: re `[A-Z].*`}
     string title?;
+    # The `issuedOn` field of `DocumentUpdate`, as an ISO 8601 date
     string issuedOn?;
+    # The `expiresOn` field of `DocumentUpdate`, as an ISO 8601 date
     string? expiresOn?;
+    # The `opensAt` field of `DocumentUpdate`, as an ISO 8601 time
     string opensAt?;
+    # The `createdAt` field of `DocumentUpdate`, as an ISO 8601 date-time without an offset
     string createdAt?;
+    # The `signedAt` field of `DocumentUpdate`, as an ISO 8601 date-time in UTC
     string? signedAt?;
+    # The `content` field of `DocumentUpdate`, as a base64 string
     string content?;
+    # The `thumbnail` field of `DocumentUpdate`, as a base64 string
     string? thumbnail?;
+    # The `status` field of `DocumentUpdate`
     Status status?;
 |};
 
 # A list of documents.
-#
-# + items - The documents
-# + hasMore - Whether records exist after this page
 public type DocumentList record {
+    # The documents
     DocumentPayload[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
 # The conditions that documents match, as the `filter` query parameter holds them.
-#
-# + id - The conditions on the `id` field
-# + title - The conditions on the `title` field
-# + issuedOn - The conditions on the `issuedOn` field
-# + expiresOn - The conditions on the `expiresOn` field
-# + opensAt - The conditions on the `opensAt` field
-# + createdAt - The conditions on the `createdAt` field
-# + signedAt - The conditions on the `signedAt` field
-# + status - The conditions on the `status` field
 public type DocumentFilter record {|
+    # The conditions on the `id` field
     record {|
         int eq?;
         int ne?;
@@ -91,6 +80,7 @@ public type DocumentFilter record {|
         int gte?;
         int[] anyOf?;
     |} id?;
+    # The conditions on the `title` field
     record {|
         string eq?;
         string ne?;
@@ -102,6 +92,7 @@ public type DocumentFilter record {|
         string contains?;
         string startsWith?;
     |} title?;
+    # The conditions on the `issuedOn` field
     record {|
         string eq?;
         string ne?;
@@ -111,6 +102,7 @@ public type DocumentFilter record {|
         string gte?;
         string[] anyOf?;
     |} issuedOn?;
+    # The conditions on the `expiresOn` field
     record {|
         string eq?;
         string ne?;
@@ -121,6 +113,7 @@ public type DocumentFilter record {|
         string[] anyOf?;
         boolean isNull?;
     |} expiresOn?;
+    # The conditions on the `opensAt` field
     record {|
         string eq?;
         string ne?;
@@ -130,6 +123,7 @@ public type DocumentFilter record {|
         string gte?;
         string[] anyOf?;
     |} opensAt?;
+    # The conditions on the `createdAt` field
     record {|
         string eq?;
         string ne?;
@@ -139,6 +133,7 @@ public type DocumentFilter record {|
         string gte?;
         string[] anyOf?;
     |} createdAt?;
+    # The conditions on the `signedAt` field
     record {|
         string eq?;
         string ne?;
@@ -149,6 +144,7 @@ public type DocumentFilter record {|
         string[] anyOf?;
         boolean isNull?;
     |} signedAt?;
+    # The conditions on the `status` field
     record {|
         Status eq?;
         Status ne?;
@@ -157,36 +153,34 @@ public type DocumentFilter record {|
 |};
 
 # A document with the fields named in the `fields` query parameter.
-#
-# + id - The `id` field of `Document`
-# + title - The `title` field of `Document`
-# + issuedOn - The `issuedOn` field of `Document`, as an ISO 8601 date
-# + expiresOn - The `expiresOn` field of `Document`, as an ISO 8601 date
-# + opensAt - The `opensAt` field of `Document`, as an ISO 8601 time
-# + createdAt - The `createdAt` field of `Document`, as an ISO 8601 date-time without an offset
-# + signedAt - The `signedAt` field of `Document`, as an ISO 8601 date-time in UTC
-# + content - The `content` field of `Document`, as a base64 string
-# + thumbnail - The `thumbnail` field of `Document`, as a base64 string
-# + status - The `status` field of `Document`
 public type DocumentPartial record {|
+    # The `id` field of `Document`
     int id;
+    # The `title` field of `Document`
     string title?;
+    # The `issuedOn` field of `Document`, as an ISO 8601 date
     string issuedOn?;
+    # The `expiresOn` field of `Document`, as an ISO 8601 date
     string? expiresOn?;
+    # The `opensAt` field of `Document`, as an ISO 8601 time
     string opensAt?;
+    # The `createdAt` field of `Document`, as an ISO 8601 date-time without an offset
     string createdAt?;
+    # The `signedAt` field of `Document`, as an ISO 8601 date-time in UTC
     string? signedAt?;
+    # The `content` field of `Document`, as a base64 string
     string content?;
+    # The `thumbnail` field of `Document`, as a base64 string
     string? thumbnail?;
+    # The `status` field of `Document`
     Status status?;
 |};
 
 # A list of documents with the fields named in the `fields` query parameter.
-#
-# + items - The documents
-# + hasMore - Whether records exist after this page
 public type DocumentPartialList record {
+    # The documents
     DocumentPartial[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
@@ -214,18 +208,16 @@ final dataservice:Entity dataserviceDocumentEntity = {
 };
 
 # The response to creating one document.
-#
-# + body - The created document
 public type DocumentCreated record {|
     *http:Created;
+    # The created document
     DocumentPayload body;
 |};
 
 # The response to creating several documents.
-#
-# + body - The created documents
 public type DocumentListCreated record {|
     *http:Created;
+    # The created documents
     DocumentList body;
 |};
 
@@ -399,28 +391,24 @@ isolated function transformPayloadToDocumentUpdate(DocumentUpdatePayload payload
 }
 
 # The JSON form of `Holiday`.
-#
-# + id - The `id` field of `Holiday`
-# + day - The `day` field of `Holiday`, as an ISO 8601 date
 public type HolidayPayload record {|
+    # The `id` field of `Holiday`
     readonly int id;
+    # The `day` field of `Holiday`, as an ISO 8601 date
     string day;
 |};
 
 # A list of holidays.
-#
-# + items - The holidays
-# + hasMore - Whether records exist after this page
 public type HolidayList record {
+    # The holidays
     HolidayPayload[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
 # The conditions that holidays match, as the `filter` query parameter holds them.
-#
-# + id - The conditions on the `id` field
-# + day - The conditions on the `day` field
 public type HolidayFilter record {|
+    # The conditions on the `id` field
     record {|
         int eq?;
         int ne?;
@@ -430,6 +418,7 @@ public type HolidayFilter record {|
         int gte?;
         int[] anyOf?;
     |} id?;
+    # The conditions on the `day` field
     record {|
         string eq?;
         string ne?;
@@ -442,20 +431,18 @@ public type HolidayFilter record {|
 |};
 
 # A holiday with the fields named in the `fields` query parameter.
-#
-# + id - The `id` field of `Holiday`
-# + day - The `day` field of `Holiday`, as an ISO 8601 date
 public type HolidayPartial record {|
+    # The `id` field of `Holiday`
     int id;
+    # The `day` field of `Holiday`, as an ISO 8601 date
     string day?;
 |};
 
 # A list of holidays with the fields named in the `fields` query parameter.
-#
-# + items - The holidays
-# + hasMore - Whether records exist after this page
 public type HolidayPartialList record {
+    # The holidays
     HolidayPartial[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 

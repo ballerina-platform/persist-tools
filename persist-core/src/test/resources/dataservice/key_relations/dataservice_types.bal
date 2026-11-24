@@ -7,19 +7,16 @@ import ballerina/dataservice;
 import ballerina/http;
 
 # A list of employees.
-#
-# + items - The employees
-# + hasMore - Whether records exist after this page
 public type EmployeeList record {
+    # The employees
     Employee[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
 # The conditions that employees match, as the `filter` query parameter holds them.
-#
-# + id - The conditions on the `id` field
-# + name - The conditions on the `name` field
 public type EmployeeFilter record {|
+    # The conditions on the `id` field
     record {|
         int eq?;
         int ne?;
@@ -29,6 +26,7 @@ public type EmployeeFilter record {|
         int gte?;
         int[] anyOf?;
     |} id?;
+    # The conditions on the `name` field
     record {|
         string eq?;
         string ne?;
@@ -43,33 +41,30 @@ public type EmployeeFilter record {|
 |};
 
 # An employee with the fields named in the `fields` query parameter.
-#
-# + id - The `id` field of `Employee`
-# + name - The `name` field of `Employee`
-# + memberships - The related project members, when `fields` names them
-# + badge - The related badge, when `fields` names it
 public type EmployeePartial record {|
+    # The `id` field of `Employee`
     int id;
+    # The `name` field of `Employee`
     string name?;
+    # The related project members, when `fields` names them
     ProjectMemberRelatedPartialList memberships?;
+    # The related badge, when `fields` names it
     BadgeRelatedPartial? badge?;
 |};
 
 # A list of employees with the fields named in the `fields` query parameter.
-#
-# + items - The employees
-# + hasMore - Whether records exist after this page
 public type EmployeePartialList record {
+    # The employees
     EmployeePartial[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
 # An employee read through a relation, with the fields named in the `fields` query parameter.
-#
-# + id - The `id` field of `Employee`
-# + name - The `name` field of `Employee`
 public type EmployeeRelatedPartial record {|
+    # The `id` field of `Employee`
     int id;
+    # The `name` field of `Employee`
     string name?;
 |};
 
@@ -117,35 +112,30 @@ final dataservice:Entity dataserviceEmployeeEntity = {
 };
 
 # The response to creating one employee.
-#
-# + body - The created employee
 public type EmployeeCreated record {|
     *http:Created;
+    # The created employee
     Employee body;
 |};
 
 # The response to creating several employees.
-#
-# + body - The created employees
 public type EmployeeListCreated record {|
     *http:Created;
+    # The created employees
     EmployeeList body;
 |};
 
 # A list of projects.
-#
-# + items - The projects
-# + hasMore - Whether records exist after this page
 public type ProjectList record {
+    # The projects
     Project[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
 # The conditions that projects match, as the `filter` query parameter holds them.
-#
-# + code - The conditions on the `code` field
-# + title - The conditions on the `title` field
 public type ProjectFilter record {|
+    # The conditions on the `code` field
     record {|
         string eq?;
         string ne?;
@@ -157,6 +147,7 @@ public type ProjectFilter record {|
         string contains?;
         string startsWith?;
     |} code?;
+    # The conditions on the `title` field
     record {|
         string eq?;
         string ne?;
@@ -171,31 +162,28 @@ public type ProjectFilter record {|
 |};
 
 # A project with the fields named in the `fields` query parameter.
-#
-# + code - The `code` field of `Project`
-# + title - The `title` field of `Project`
-# + members - The related project members, when `fields` names them
 public type ProjectPartial record {|
+    # The `code` field of `Project`
     string code;
+    # The `title` field of `Project`
     string title?;
+    # The related project members, when `fields` names them
     ProjectMemberRelatedPartialList members?;
 |};
 
 # A list of projects with the fields named in the `fields` query parameter.
-#
-# + items - The projects
-# + hasMore - Whether records exist after this page
 public type ProjectPartialList record {
+    # The projects
     ProjectPartial[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
 # A project read through a relation, with the fields named in the `fields` query parameter.
-#
-# + code - The `code` field of `Project`
-# + title - The `title` field of `Project`
 public type ProjectRelatedPartial record {|
+    # The `code` field of `Project`
     string code;
+    # The `title` field of `Project`
     string title?;
 |};
 
@@ -230,36 +218,30 @@ final dataservice:Entity dataserviceProjectEntity = {
 };
 
 # The response to creating one project.
-#
-# + body - The created project
 public type ProjectCreated record {|
     *http:Created;
+    # The created project
     Project body;
 |};
 
 # The response to creating several projects.
-#
-# + body - The created projects
 public type ProjectListCreated record {|
     *http:Created;
+    # The created projects
     ProjectList body;
 |};
 
 # A list of project members.
-#
-# + items - The project members
-# + hasMore - Whether records exist after this page
 public type ProjectMemberList record {
+    # The project members
     ProjectMember[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
 # The conditions that project members match, as the `filter` query parameter holds them.
-#
-# + role - The conditions on the `role` field
-# + employeeId - The conditions on the `employeeId` field
-# + projectCode - The conditions on the `projectCode` field
 public type ProjectMemberFilter record {|
+    # The conditions on the `role` field
     record {|
         string eq?;
         string ne?;
@@ -271,6 +253,7 @@ public type ProjectMemberFilter record {|
         string contains?;
         string startsWith?;
     |} role?;
+    # The conditions on the `employeeId` field
     record {|
         int eq?;
         int ne?;
@@ -280,6 +263,7 @@ public type ProjectMemberFilter record {|
         int gte?;
         int[] anyOf?;
     |} employeeId?;
+    # The conditions on the `projectCode` field
     record {|
         string eq?;
         string ne?;
@@ -294,46 +278,42 @@ public type ProjectMemberFilter record {|
 |};
 
 # A project member with the fields named in the `fields` query parameter.
-#
-# + role - The `role` field of `ProjectMember`
-# + employeeId - The key of the related 'Employee'.
-# + projectCode - The key of the related 'Project'.
-# + employee - The related employee, when `fields` names it
-# + project - The related project, when `fields` names it
 public type ProjectMemberPartial record {|
+    # The `role` field of `ProjectMember`
     string role?;
+    # The key of the related 'Employee'.
     int employeeId;
+    # The key of the related 'Project'.
     string projectCode;
+    # The related employee, when `fields` names it
     EmployeeRelatedPartial? employee?;
+    # The related project, when `fields` names it
     ProjectRelatedPartial? project?;
 |};
 
 # A list of project members with the fields named in the `fields` query parameter.
-#
-# + items - The project members
-# + hasMore - Whether records exist after this page
 public type ProjectMemberPartialList record {
+    # The project members
     ProjectMemberPartial[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
 # A project member read through a relation, with the fields named in the `fields` query parameter.
-#
-# + role - The `role` field of `ProjectMember`
-# + employeeId - The key of the related 'Employee'.
-# + projectCode - The key of the related 'Project'.
 public type ProjectMemberRelatedPartial record {|
+    # The `role` field of `ProjectMember`
     string role?;
+    # The key of the related 'Employee'.
     int employeeId;
+    # The key of the related 'Project'.
     string projectCode;
 |};
 
 # The project members read through a relation, with the fields named in the `fields` query parameter.
-#
-# + items - The project members, at most `dataserviceConfig.pageSize`
-# + hasMore - Whether more project members exist
 public type ProjectMemberRelatedPartialList record {
+    # The project members, at most `dataserviceConfig.pageSize`
     ProjectMemberRelatedPartial[] items;
+    # Whether more project members exist
     boolean hasMore;
 };
 
@@ -382,35 +362,30 @@ final dataservice:Entity dataserviceProjectMemberEntity = {
 };
 
 # The response to creating one project member.
-#
-# + body - The created project member
 public type ProjectMemberCreated record {|
     *http:Created;
+    # The created project member
     ProjectMember body;
 |};
 
 # The response to creating several project members.
-#
-# + body - The created project members
 public type ProjectMemberListCreated record {|
     *http:Created;
+    # The created project members
     ProjectMemberList body;
 |};
 
 # A list of badges.
-#
-# + items - The badges
-# + hasMore - Whether records exist after this page
 public type BadgeList record {
+    # The badges
     Badge[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
 # The conditions that badges match, as the `filter` query parameter holds them.
-#
-# + label - The conditions on the `label` field
-# + employeeId - The conditions on the `employeeId` field
 public type BadgeFilter record {|
+    # The conditions on the `label` field
     record {|
         string eq?;
         string ne?;
@@ -422,6 +397,7 @@ public type BadgeFilter record {|
         string contains?;
         string startsWith?;
     |} label?;
+    # The conditions on the `employeeId` field
     record {|
         int eq?;
         int ne?;
@@ -434,31 +410,28 @@ public type BadgeFilter record {|
 |};
 
 # A badge with the fields named in the `fields` query parameter.
-#
-# + label - The `label` field of `Badge`
-# + employeeId - The key of the related 'Employee'.
-# + employee - The related employee, when `fields` names it
 public type BadgePartial record {|
+    # The `label` field of `Badge`
     string label?;
+    # The key of the related 'Employee'.
     int employeeId;
+    # The related employee, when `fields` names it
     EmployeeRelatedPartial? employee?;
 |};
 
 # A list of badges with the fields named in the `fields` query parameter.
-#
-# + items - The badges
-# + hasMore - Whether records exist after this page
 public type BadgePartialList record {
+    # The badges
     BadgePartial[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
 # A badge read through a relation, with the fields named in the `fields` query parameter.
-#
-# + label - The `label` field of `Badge`
-# + employeeId - The key of the related 'Employee'.
 public type BadgeRelatedPartial record {|
+    # The `label` field of `Badge`
     string label?;
+    # The key of the related 'Employee'.
     int employeeId;
 |};
 
@@ -493,17 +466,15 @@ final dataservice:Entity dataserviceBadgeEntity = {
 };
 
 # The response to creating one badge.
-#
-# + body - The created badge
 public type BadgeCreated record {|
     *http:Created;
+    # The created badge
     Badge body;
 |};
 
 # The response to creating several badges.
-#
-# + body - The created badges
 public type BadgeListCreated record {|
     *http:Created;
+    # The created badges
     BadgeList body;
 |};
