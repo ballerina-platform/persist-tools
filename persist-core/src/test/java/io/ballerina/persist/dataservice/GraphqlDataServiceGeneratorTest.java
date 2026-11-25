@@ -198,7 +198,82 @@ public class GraphqlDataServiceGeneratorTest {
                 {header + "@dataservice:Expose\ntype Item record {|\n    readonly int id;\n    Status status;\n" +
                         "|};\n\nenum Status {\n    A\n}\n\ntype StatusFilter record {|\n    readonly int id;\n|};\n",
                         "the type 'StatusFilter' clashes with a type of the GraphQL data service. Rename it."},
+                {header + "@dataservice:Expose\ntype Owner record {|\n    readonly int id;\n    Item[] items;\n" +
+                        "|};\n\n" +
+                        "@dataservice:Expose\ntype Item record {|\n    readonly int id;\n    Owner __owner;\n|};\n",
+                        "the field '__ownerId' of the entity 'Item' starts with '_', which the GraphQL data " +
+                                "service reserves. Rename the field, or mark it @dataservice:Internal." +
+                                System.lineSeparator() + "the field '__owner' of the entity 'Item' starts with '_', " +
+                                "which the GraphQL data service reserves. Rename the field, or mark it " +
+                                "@dataservice:Internal."},
+                {header + "@dataservice:Expose\ntype Item record {|\n    readonly int id;\n    Status? status;\n" +
+                        "|};\n\n@dataservice:Expose\ntype StatusNullable record {|\n    readonly int id;\n|};\n\n" +
+                        "enum Status {\n    A\n}\n",
+                        "the filter 'StatusNullableFilter' of the enum 'Status' has the name of a type that the data " +
+                                "service generates for the entity 'StatusNullable'. Rename one of them."},
+                {header + "@dataservice:Expose\ntype Item record {|\n    readonly int id;\n    State? a;\n" +
+                        "    StateNullable b;\n|};\n\nenum State {\n    A\n}\n\nenum StateNullable {\n    B\n}\n",
+                        "the filter 'StateNullableFilter' is generated for both the enum 'State' and the enum " +
+                                "'StateNullable'. Rename one of them."},
+                {header + "@dataservice:Expose\ntype Int record {|\n    readonly int id;\n|};\n",
+                        "the data service generates the type 'IntFilter' for the entity 'Int', and " +
+                                "ballerina/dataservice.graphql has a type of that name. Rename the entity, or remove " +
+                                "the @dataservice:Expose annotation of 'Int'."},
+                {header + "@dataservice:Expose\ntype Item record {|\n    readonly int id;\n    string? note;\n" +
+                        "    string unset;\n|};\n",
+                        "the field 'unset' of the entity 'Item' clashes with the field of its update input that " +
+                                "names the fields to set to null. Rename the field."},
         };
+    }
+
+    @Test(description = "Two to-one relations whose names concatenate to one loader get different loaders")
+    public void testLoaderNamesAreUnique() throws BalException, IOException {
+        String service = fromModel("@dataservice:Expose\ntype Owner record {|\n    readonly int id;\n" +
+                "    Sales[] sales;\n    SalesLead[] leads;\n|};\n\n@dataservice:Expose\ntype Sales record {|\n" +
+                "    readonly int id;\n    Owner leadOwner;\n|};\n\n@dataservice:Expose\ntype SalesLead record {|\n" +
+                "    readonly int id;\n    Owner owner;\n|};\n", false).generateService();
+        Assert.assertTrue(service.contains("ctx.registerDataLoader(\"Sales.leadOwner\",\n" +
+                "            new dataloader:DefaultDataLoader(dataserviceLoadSalesLeadOwner));"), service);
+        Assert.assertTrue(service.contains("ctx.registerDataLoader(\"SalesLead.owner\",\n" +
+                "            new dataloader:DefaultDataLoader(dataserviceLoadSalesLeadOwner2));"), service);
+        Assert.assertTrue(service.contains("isolated function dataserviceLoadSalesLeadOwner2("), service);
+    }
+
+    @Test(description = "The local holding a converted field's string does not take the name of another field")
+    public void testConversionLocalsAreUnique() throws BalException, IOException {
+        String types = fromModel("import ballerina/time;\n\n@dataservice:Expose\ntype Item record {|\n" +
+                "    readonly int id;\n    time:Date? startedOn;\n    time:Date startedOnText;\n|};\n", false)
+                .generateTypes().orElseThrow();
+        // Once in the insert converter and once in the update converter.
+        Assert.assertEquals(types.split("string\\? _startedOnText = value\\.startedOn;", -1).length, 3, types);
+    }
+
+    @Test(description = "A scope reaches the generated code as declared")
+    public void testScopesAreNotUnescaped() throws BalException, IOException {
+        String service = fromModel("@dataservice:Expose {scopes: {read: [\"'admin\", \"a\\\"b\\\\c\"]}}\n" +
+                "type Item record {|\n    readonly int id;\n|};\n", true).generateService();
+        Assert.assertTrue(service.contains("[\"'admin\", \"a\\\"b\\\\c\"]"), service);
+    }
+
+    @Test(description = "An entity without a field that a patch can change has no patch")
+    public void testKeyOnlyEntityHasNoPatch() throws BalException, IOException {
+        GraphqlDataServiceGenerator generator = fromModel("@dataservice:Expose\ntype Item record {|\n" +
+                "    readonly int id;\n|};\n", false);
+        Assert.assertFalse(generator.generateService().contains("updateItem"));
+        Assert.assertFalse(generator.generateTypes().orElseThrow().contains("ItemUpdate"));
+    }
+
+    private static GraphqlDataServiceGenerator fromModel(String model, boolean auth)
+            throws IOException, BalException {
+        Path modelPath = Files.createTempDirectory("graphql-model").resolve("model.bal");
+        String imports = model.startsWith("import ") ? "" : "\n";
+        Files.writeString(modelPath, "import ballerina/dataservice;\nimport ballerina/persist as _;\n" + imports +
+                model, StandardCharsets.UTF_8);
+        Module module = BalProjectUtils.getEntities(modelPath);
+        List<ExposedEntity> entities = DataServiceModel.resolve(modelPath, module, auth).entities();
+        DataServiceGenerator.validate("graphql", entities, module);
+        return new GraphqlDataServiceGenerator(entities, new DataServiceOptions("graphql",
+                DataServiceOptions.validateBasePath("/graphql"), auth, true), module.getModuleName(), "h2", false);
     }
 
     @Test

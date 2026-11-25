@@ -219,6 +219,30 @@ public class PullExposureTest {
                 "only one of them.");
     }
 
+    @Test(description = "An entity that would generate a type of ballerina/dataservice.graphql is not exposed")
+    public void testEntityThatGeneratesALibraryType() throws BalException {
+        Module.Builder module = Module.newBuilder("db");
+        for (String[] entity : new String[][]{{"Int", "int"}, {"Item", "items"}}) {
+            EntityField id = column("id", "id", "int");
+            Entity.Builder builder = Entity.newBuilder(entity[0]);
+            builder.setTableName(entity[1]);
+            builder.addField(id);
+            builder.setKeys(List.of(id));
+            module.addEntity(entity[0], builder.build());
+        }
+        Module pulledTables = module.build();
+        PullExposure exposure = PullExposure.select(pulledTables, DataServiceOptions.GRAPHQL, null);
+        Assert.assertEquals(exposure.exposed(), Set.of("Item"));
+        Assert.assertEquals(exposure.warnings(), List.of("the entity 'Int' of the table 'int' would generate the " +
+                "type 'IntFilter', which ballerina/dataservice.graphql has, so it is not exposed."));
+        Assert.assertEquals(PullExposure.select(pulledTables, DataServiceOptions.HTTP, null).exposed(),
+                Set.of("Int", "Item"));
+        BalException error = Assert.expectThrows(BalException.class,
+                () -> PullExposure.select(pulledTables, DataServiceOptions.GRAPHQL, "int"));
+        Assert.assertEquals(error.getMessage(), "the table 'int' in '--expose-tables' would generate the type " +
+                "'IntFilter', which ballerina/dataservice.graphql has. Remove the table from '--expose-tables'.");
+    }
+
     @Test
     public void testIntrospectedRelationFields() throws BalException {
         Module introspected = introspectedModule();

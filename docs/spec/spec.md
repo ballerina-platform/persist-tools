@@ -605,9 +605,13 @@ Errors are printed with the `ERROR:` prefix, or as the build tool's diagnostic i
 | Two annotated entities for which one type is generated, such as `OrderRelatedPartial` for `Order` as a relation target and for `OrderRelated` | error | `the data service generates the type '<Type>' for both the entity '<Entity>' and the entity '<Entity>'. Rename one of them, or remove its @dataservice:Expose annotation.` |
 | `graphql`: no exposed entity allows `read` | error | `a GraphQL data service needs at least one entity that allows 'read'. Add dataservice:READ to the 'operations' of an entity.` |
 | `graphql`: two entities give the same root field, such as `Equipment` and `EquipmentList` | error | `the entities '<Entity>' and '<Entity>' map to the same GraphQL field '<field>'. Rename one of them, or remove its @dataservice:Expose annotation.` |
-| `graphql`: an exposed field whose name starts with `_` | error | `the field '<field>' of the entity '<Entity>' starts with '_', which the GraphQL data service reserves. Rename the field, or mark it @dataservice:Internal.` |
+| `graphql`: an exposed field or relation whose name starts with `_` | error | `the field '<field>' of the entity '<Entity>' starts with '_', which the GraphQL data service reserves. Rename the field, or mark it @dataservice:Internal.` |
 | `graphql`: an exposed entity or field name that is not a GraphQL name | error | `the name '<name>' of the entity '<Entity>' is not a valid GraphQL name. Rename it, or mark the field @dataservice:Internal.` |
 | `graphql`: an entity or enum named as a type of `ballerina/dataservice.graphql`, such as `IntFilter`, or as the filter of an enum, such as `StatusFilter` | error | `the type '<name>' clashes with a type of the GraphQL data service. Rename it.` |
+| `graphql`: an annotated entity for which a type of `ballerina/dataservice.graphql` would be generated, such as `IntFilter` for `Int` | error | `the data service generates the type '<Type>' for the entity '<Entity>', and ballerina/dataservice.graphql has a type of that name. Rename the entity, or remove the @dataservice:Expose annotation of '<Entity>'.` |
+| `graphql`: the filter of an enum named as a type generated for an annotated entity, such as `StatusNullableFilter` for a nullable `Status` and for `StatusNullable` | error | `the filter '<Type>' of the enum '<Enum>' has the name of a type that the data service generates for the entity '<Entity>'. Rename one of them.` |
+| `graphql`: two enums with one filter, such as a nullable `State` and a non-null `StateNullable` | error | `the filter '<Type>' is generated for both the enum '<Enum>' and the enum '<Enum>'. Rename one of them.` |
+| `graphql`: a field named `unset` that a patch can change, in an entity with a nullable field that a patch can change | error | `the field 'unset' of the entity '<Entity>' clashes with the field of its update input that names the fields to set to null. Rename the field.` |
 | `scopes` set while `auth` is not `true` | warning | `the @dataservice:Expose annotation of the entity '<Entity>' sets scopes, but 'options.dataservice.auth' is not true. Set it to true, or remove the scopes.` |
 | Annotations without `options.dataservice` | warning | `the model has @dataservice:Expose annotations, but no data service is generated. Set 'options.dataservice.protocol' in the [[tool.persist]] entry to generate one.` |
 | `pull` skips an entity with an unsupported data type | warning | `the table '<table>' has an unsupported data type, so its entity '<Entity>' is not exposed.` |
@@ -615,6 +619,7 @@ Errors are printed with the `ERROR:` prefix, or as the build tool's diagnostic i
 | `pull` skips an entity whose collection an earlier entity has | warning | `the entity '<Entity>' of the table '<table>' maps to the collection '<collection>' of the entity '<Entity>', so it is not exposed.` |
 | `pull` skips an entity that would generate the type of another pulled entity | warning | `the entity '<Entity>' of the table '<table>' would generate the type '<Type>', which is the entity of the table '<table>', so it is not exposed.` |
 | `pull` skips an entity that would generate a type that another selected entity also generates | warning | `the entity '<Entity>' of the table '<table>' would generate the type '<Type>', which the data service also generates for the entity '<Entity>', so it is not exposed.` |
+| `pull` with `graphql` skips an entity that would generate a type of `ballerina/dataservice.graphql` | warning | `the entity '<Entity>' of the table '<table>' would generate the type '<Type>', which ballerina/dataservice.graphql has, so it is not exposed.` |
 | `generate` without `--dataservice` on an annotated model | info | `the model has @dataservice:Expose annotations. Use the '--dataservice' option to also generate a data service.` |
 | `--expose-tables` without `--dataservice`, when the entry does not enable a data service | error | `the '--expose-tables' option requires the '--dataservice' option.` |
 | `--expose-tables` names a table that was not pulled | error | `the table '<table>' in '--expose-tables' is not a pulled table.` |
@@ -623,6 +628,7 @@ Errors are printed with the `ERROR:` prefix, or as the build tool's diagnostic i
 | `--expose-tables` names two tables with the same collection | error | `the table '<table>' in '--expose-tables' maps to the collection '<collection>' of the table '<table>'. Expose only one of them.` |
 | `--expose-tables` names a table that would generate the type of another pulled entity | error | `the table '<table>' in '--expose-tables' would generate the type '<Type>' for its entity '<Entity>', which is the entity of the table '<table>'. Remove the table from '--expose-tables'.` |
 | `--expose-tables` names two tables that would generate one type | error | `the table '<table>' in '--expose-tables' would generate the type '<Type>', which the data service also generates for the table '<table>'. Expose only one of them.` |
+| `--expose-tables` with `graphql` names a table that would generate a type of `ballerina/dataservice.graphql` | error | `the table '<table>' in '--expose-tables' would generate the type '<Type>', which ballerina/dataservice.graphql has. Remove the table from '--expose-tables'.` |
 | `--expose-tables` names no table, such as `--expose-tables ,` | error | `'--expose-tables' names no table. Give the tables to expose, separated by commas.` |
 | `--dataservice` with an unknown protocol, on `add`, `generate` or `pull` | error | `invalid '--dataservice' value '<value>'. Supported values: http.` |
 | `--dataservice` with `--module` or `--with-init-params` on `add` or `generate`, or with `--model` on `add`, `generate` or `pull` | error | `'<option>' cannot be used with '--dataservice'. Remove '<option>'.` |
@@ -678,9 +684,9 @@ A GraphQL service has these names instead of the HTTP-only ones above:
 |---|---|
 | `dataserviceListener`, `dataserviceClient`, `dataserviceConfig`, `dataservicePageConfig` | The listener, the persist client, the runtime settings and the checked page sizes |
 | `dataserviceAuthenticator`, `dataservice<Entity>Relations` | The authenticator and the `read` scopes of each entity's relations, with `auth = true` |
-| `dataserviceInitContext`, `dataserviceLoad<Entity><Relation>`, `dataserviceCreate<Entity>` | The context function, the dataloader batch function of each to-one relation, and the create function of each entity |
+| `dataserviceInitContext`, `dataserviceLoad<Entity><Relation>`, `dataserviceCreate<Entity>` | The context function, the dataloader batch function of each to-one relation, with a number appended when two relations give one name, such as `dataserviceLoadSalesLeadOwner2` for `SalesLead.owner` after `Sales.leadOwner`, and the create function of each entity |
 | `<Entity>Object`, `<Entity>RelatedObject`, `<Entity>List`, `<Entity>RelatedList` | The output types |
-| `<Entity>InsertInput`, `<Entity>UpdateInput`, `<Entity>Filter`, `<Entity>Sort`, `<Enum>Filter`, `<Enum>NullableFilter` | The input types |
+| `<Entity>InsertInput`, `<Entity>UpdateInput`, `<Entity>Unset`, `<Entity>Filter`, `<Entity>Sort`, `<Enum>Filter`, `<Enum>NullableFilter` | The input types |
 | `transformInputTo<Entity>Insert`, `transformInputTo<Entity>Update` | The conversion functions |
 
 ### 9.6. Service shape
@@ -1015,14 +1021,14 @@ For an entity `Employee` with the collection name `employees` and key `id`:
 | Get related | `read` | A field of the object type, such as `EmployeeObject.assignments`; see [Relations](#984-relations) | The related records |
 | Create one | `create` | `createEmployee(input: EmployeeInsertInput!): EmployeeObject` | The created record |
 | Create many | `create` | `createEmployees(input: [EmployeeInsertInput!]!): EmployeeList` | The created records, with `hasMore: false` |
-| Patch one | `update` | `updateEmployee(id: Int!, input: EmployeeUpdateInput!): EmployeeObject` | The updated record; `Boolean` without `read` |
+| Patch one | `update`, and a field that a patch can change | `updateEmployee(id: Int!, input: EmployeeUpdateInput!): EmployeeObject` | The updated record; `Boolean` without `read` |
 | Delete one | `delete` | `deleteEmployee(id: Int!): EmployeeObject` | The deleted record; `Boolean` without `read` |
 
 - **Names:** get many is the collection name, and get one the entity name with its first word in lowercase. An entity whose collection name is its singular name, such as `Equipment`, gets `List` on its list fields: `equipmentList` and `createEquipmentList`. Mutations are `create`, `update` or `delete` followed by the entity name, and create many `create` followed by the capitalized get many name. Root fields are in model order, and within an entity get many and get one, then create one, create many, update and delete.
 - **Nullable root fields:** every root field returns `T?|error`, so a root field that fails is `null` with an entry in `errors` and the other root fields keep their data.
 - **Disabled operations** are not generated, so `ballerina/graphql` answers a document that selects one with a request error. A schema without `create`, `update` or `delete` has no mutation type, and one without `read` cannot be generated; see [Compile-time validation](#93-compile-time-validation).
 - **Creates are atomic:** create one and create many call one generated function, `dataserviceCreate<Entity>`, which checks the count with `dataservice:checkCreateSize`, converts each input, and in one `transaction` posts the records and reads them back with `dataservice:toKeysQuery`, in the order of the input. An empty list returns `{items: [], hasMore: false}` without calling the persist client.
-- **Patch is partial:** a field left out of `input` is not changed, a nullable field set to `null` is set to `null`, and `null` on a field that cannot hold it is `INVALID_INPUT`. An empty patch, `input: {}`, reads the record as get one does, and returns `true` without reading when the entity does not allow `read`. A patch saved but not read back returns `null`, through `dsGraphql:toUpdateError`.
+- **Patch is partial:** a field left out of `input` or set to `null` is not changed, because `ballerina/graphql` binds a field left out of a variable as `null`. `unset`, an `<Entity>Unset`, names the nullable fields to set to `null`, such as `unset: {email: true}`; a field both set and named in `unset` is `INVALID_INPUT`, through `dsGraphql:toSetAndUnsetError`. An entity without a nullable field that a patch can change has no `unset`, and one without any field that a patch can change has no patch, because GraphQL has no empty input type. An empty patch, `input: {}`, reads the record as get one does, and returns `true` without reading when the entity does not allow `read`. A patch saved but not read back returns `null`, through `dsGraphql:toUpdateError`.
 - **Without `read`,** patch and delete return `Boolean`, `true` when the record was changed or deleted, since GraphQL has no empty result.
 - **Several mutations** in one document run in order, each in its own transaction, so one that fails does not undo the others.
 
@@ -1040,7 +1046,8 @@ Get one, patch and delete take one non-null argument per key field, named as the
 | `<Entity>RelatedObject` | service class | The returned fields, without relation fields, for an entity a relation reaches |
 | `<Entity>List`, `<Entity>RelatedList` | open record | A page, `items` and `hasMore` |
 | `<Entity>InsertInput` | closed record | The fields that create accepts |
-| `<Entity>UpdateInput` | closed record | The fields that patch accepts, all optional |
+| `<Entity>UpdateInput` | closed record | The fields that patch accepts, all optional, and `unset` |
+| `<Entity>Unset` | closed record | A `boolean? x;` per nullable field that patch accepts |
 | `<Entity>Filter`, `<Entity>Sort` | closed record | One field per filterable or sortable field |
 
 The object types are service classes, because `ballerina/graphql` compares records by structure, so an output record with the fields of an input record would be one type. Each holds the persist record, and each field's resolver returns it in its GraphQL form:
@@ -1053,7 +1060,7 @@ The object types are service classes, because `ballerina/graphql` compares recor
 | `byte[]`, `time:Date`, `time:TimeOfDay`, `time:Civil`, `time:Utc` | `String` | As in [JSON](#972-json), with the `ballerina/dataservice` conversion functions; a value that does not parse is `INVALID_INPUT` |
 | `T?` | the nullable type | The value or `null` |
 
-A field of type `T` is `T!` in the object and insert types and `T` in the update type. Filter and sort fields are `T? x;`, where `null` sets no condition, and update fields `T? x?;`, so a patch tells a field left out from one set to `null`. An optional non-nullable field, `T x?`, is never generated, because `ballerina/graphql` publishes it as nullable and cannot bind a `null` for it. A `decimal` is returned at its column's scale.
+A field of type `T` is `T!` in the object and insert types and `T` in the update type. Filter, sort and update fields are `T? x;`, where a field left out and one set to `null` both bind as `()`: no condition, or no change. An optional non-nullable field, `T x?`, is never generated, because `ballerina/graphql` publishes it as nullable and cannot bind a `null` for it. A `decimal` is returned at its column's scale.
 
 #### 9.8.3. Query arguments
 
@@ -1174,7 +1181,7 @@ The schema nests data at most five fields deep; GraphiQL's introspection query h
 
 #### 9.8.12. Generated source
 
-`dataservice.bal` holds, in order: the client and the listener, with auth the relation scope maps, then the service with its `init` and the root fields of each exposed entity in model order, then the create functions, `dataserviceInitContext` and the dataloader batch functions. `dataservice_types.bal` holds, per entity in model order, `<Entity>Object`, `<Entity>List`, `<Entity>RelatedObject` and `<Entity>RelatedList`, `<Entity>Filter`, `<Entity>Sort`, `<Entity>InsertInput`, `<Entity>UpdateInput`, the entity description and the conversion functions, followed by the enum filters. Each root field and generated public type has a short doc comment, from which the schema's descriptions come:
+`dataservice.bal` holds, in order: the client and the listener, with auth the relation scope maps, then the service with its `init` and the root fields of each exposed entity in model order, then the create functions, `dataserviceInitContext` and the dataloader batch functions. `dataservice_types.bal` holds, per entity in model order, `<Entity>Object`, `<Entity>List`, `<Entity>RelatedObject` and `<Entity>RelatedList`, `<Entity>Filter`, `<Entity>Sort`, `<Entity>InsertInput`, `<Entity>UpdateInput` and `<Entity>Unset`, the entity description and the conversion functions, followed by the enum filters. Each root field and generated public type has a short doc comment, from which the schema's descriptions come:
 
 | Operation | Summary |
 |---|---|

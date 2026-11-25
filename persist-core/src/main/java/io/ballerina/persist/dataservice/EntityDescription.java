@@ -97,6 +97,11 @@ final class EntityDescription {
         return out.append(NEWLINE).append(indent).append("}").toString();
     }
 
+    // A scope is kept as the body of its string literal in the annotation, so it is quoted as written.
+    static String scopeList(List<String> scopes) {
+        return "[" + scopes.stream().map(scope -> "\"" + scope + "\"").collect(Collectors.joining(", ")) + "]";
+    }
+
     static String stringList(List<String> names) {
         return "[" + names.stream().map(name -> "\"" + unescape(name) + "\"").collect(Collectors.joining(", "))
                 + "]";

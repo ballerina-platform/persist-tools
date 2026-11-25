@@ -208,7 +208,7 @@ public class ToolingDataServiceTest {
                 password = ""
                 """, init.toString().replace('\\', '/')));
         // H2 reads a time:Utc back from a TIMESTAMP column as local time, so the service runs in UTC.
-        assertTestsPassed(bal(project, Map.of("TZ", "UTC"), "test", "--offline"), 67);
+        assertTestsPassed(bal(project, Map.of("TZ", "UTC"), "test", "--offline"), 69);
     }
 
     @Test(description = "Authentication, scopes and relation checks of the GraphQL data service, against H2")
@@ -306,7 +306,7 @@ public class ToolingDataServiceTest {
         Path project = project("ds_build_graphql", entry("h2",
                 "options.dataservice.protocol = \"graphql\"\noptions.dataservice.introspection = false"), MODEL);
         assertSucceeded(build(project));
-        String service = Files.readString(project.resolve("generated").resolve(SERVICE));
+        String service = read(project.resolve("generated").resolve(SERVICE));
         Assert.assertTrue(service.contains("@graphql:ServiceConfig {\n    introspection: false,\n" +
                 "    cors: dataserviceConfig.serviceConfig.cors,\n" +
                 "    maxQueryDepth: dataserviceConfig.serviceConfig.maxQueryDepth,\n" +

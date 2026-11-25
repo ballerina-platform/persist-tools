@@ -188,36 +188,50 @@ public type ReadingInsertInput record {|
     Status? previous;
 |};
 
-# The fields to change in a reading; a field left out is not changed.
+# The fields to change in a reading; a field left out or set to `null` is not changed.
 public type ReadingUpdateInput record {|
     # The `count` field of `Reading`
-    int? count?;
+    int? count;
     # The `ratio` field of `Reading`
-    float? ratio?;
+    float? ratio;
     # The `spare` field of `Reading`
-    float? spare?;
+    float? spare;
     # The `amount` field of `Reading`
-    decimal? amount?;
+    decimal? amount;
     # The `active` field of `Reading`
-    boolean? active?;
+    boolean? active;
     # The `day` field of `Reading`, as an ISO 8601 date
-    string? day?;
+    string? day;
     # The `at` field of `Reading`, as an ISO 8601 time
-    string? at?;
+    string? at;
     # The `localTime` field of `Reading`, as an ISO 8601 date-time without an offset
-    string? localTime?;
+    string? localTime;
     # The `instant` field of `Reading`, as an ISO 8601 date-time in UTC
-    string? instant?;
+    string? instant;
     # The `endDay` field of `Reading`, as an ISO 8601 date
-    string? endDay?;
+    string? endDay;
     # The `payload` field of `Reading`, as a base64 string
-    string? payload?;
+    string? payload;
     # The `extra` field of `Reading`, as a base64 string
-    string? extra?;
+    string? extra;
     # The `status` field of `Reading`
-    Status? status?;
+    Status? status;
     # The `previous` field of `Reading`
-    Status? previous?;
+    Status? previous;
+    # The fields to set to `null`
+    ReadingUnset? unset;
+|};
+
+# The nullable fields to set to `null` in a reading.
+public type ReadingUnset record {|
+    # `true` to set `spare` to `null`
+    boolean? spare;
+    # `true` to set `endDay` to `null`
+    boolean? endDay;
+    # `true` to set `extra` to `null`
+    boolean? extra;
+    # `true` to set `previous` to `null`
+    boolean? previous;
 |};
 
 # The fields of `Reading` that callers can see.
@@ -292,128 +306,118 @@ isolated function transformInputToReadingInsert(ReadingInsertInput value) return
 
 isolated function transformInputToReadingUpdate(ReadingUpdateInput value) returns ReadingUpdate|dsGraphql:Error {
     ReadingUpdate update = {};
-    if value.hasKey("count") {
-        int? count = value?.count;
-        if count is () {
-            return dsGraphql:toNullError("Reading", "count");
-        }
+    int? count = value.count;
+    if count !is () {
         update.count = count;
     }
-    if value.hasKey("ratio") {
-        float? ratio = value?.ratio;
-        if ratio is () {
-            return dsGraphql:toNullError("Reading", "ratio");
-        }
+    float? ratio = value.ratio;
+    if ratio !is () {
         check dsGraphql:checkFinite(ratio, "Reading", "ratio");
         update.ratio = ratio;
     }
-    if value.hasKey("spare") {
-        float? spare = value?.spare;
-        check dsGraphql:checkFinite(spare ?: 0.0, "Reading", "spare");
+    float? spare = value.spare;
+    if spare !is () {
+        check dsGraphql:checkFinite(spare, "Reading", "spare");
         update.spare = spare;
     }
-    if value.hasKey("amount") {
-        decimal? amount = value?.amount;
-        if amount is () {
-            return dsGraphql:toNullError("Reading", "amount");
-        }
+    decimal? amount = value.amount;
+    if amount !is () {
         update.amount = amount;
     }
-    if value.hasKey("active") {
-        boolean? active = value?.active;
-        if active is () {
-            return dsGraphql:toNullError("Reading", "active");
-        }
+    boolean? active = value.active;
+    if active !is () {
         update.active = active;
     }
-    if value.hasKey("day") {
-        string? dayText = value?.day;
-        if dayText is () {
-            return dsGraphql:toNullError("Reading", "day");
-        }
+    string? dayText = value.day;
+    if dayText !is () {
         time:Date|dataservice:ConversionError day = dataservice:dateFromString(dayText);
         if day is dataservice:ConversionError {
             return dsGraphql:toInvalidInput(day, "Reading", "day");
         }
         update.day = day;
     }
-    if value.hasKey("at") {
-        string? atText = value?.at;
-        if atText is () {
-            return dsGraphql:toNullError("Reading", "at");
-        }
+    string? atText = value.at;
+    if atText !is () {
         time:TimeOfDay|dataservice:ConversionError at = dataservice:timeOfDayFromString(atText);
         if at is dataservice:ConversionError {
             return dsGraphql:toInvalidInput(at, "Reading", "at");
         }
         update.at = at;
     }
-    if value.hasKey("localTime") {
-        string? localTimeText = value?.localTime;
-        if localTimeText is () {
-            return dsGraphql:toNullError("Reading", "localTime");
-        }
+    string? localTimeText = value.localTime;
+    if localTimeText !is () {
         time:Civil|dataservice:ConversionError localTime = dataservice:civilFromString(localTimeText);
         if localTime is dataservice:ConversionError {
             return dsGraphql:toInvalidInput(localTime, "Reading", "localTime");
         }
         update.localTime = localTime;
     }
-    if value.hasKey("instant") {
-        string? instantText = value?.instant;
-        if instantText is () {
-            return dsGraphql:toNullError("Reading", "instant");
-        }
+    string? instantText = value.instant;
+    if instantText !is () {
         time:Utc|dataservice:ConversionError instant = dataservice:utcFromString(instantText);
         if instant is dataservice:ConversionError {
             return dsGraphql:toInvalidInput(instant, "Reading", "instant");
         }
         update.instant = instant;
     }
-    if value.hasKey("endDay") {
-        string? endDayText = value?.endDay;
-        if endDayText is () {
-            update.endDay = ();
-        } else {
-            time:Date|dataservice:ConversionError endDay = dataservice:dateFromString(endDayText);
-            if endDay is dataservice:ConversionError {
-                return dsGraphql:toInvalidInput(endDay, "Reading", "endDay");
-            }
-            update.endDay = endDay;
+    string? endDayText = value.endDay;
+    if endDayText !is () {
+        time:Date|dataservice:ConversionError endDay = dataservice:dateFromString(endDayText);
+        if endDay is dataservice:ConversionError {
+            return dsGraphql:toInvalidInput(endDay, "Reading", "endDay");
         }
+        update.endDay = endDay;
     }
-    if value.hasKey("payload") {
-        string? payloadText = value?.payload;
-        if payloadText is () {
-            return dsGraphql:toNullError("Reading", "payload");
-        }
+    string? payloadText = value.payload;
+    if payloadText !is () {
         byte[]|dataservice:ConversionError payload = dataservice:bytesFromString(payloadText);
         if payload is dataservice:ConversionError {
             return dsGraphql:toInvalidInput(payload, "Reading", "payload");
         }
         update.payload = payload;
     }
-    if value.hasKey("extra") {
-        string? extraText = value?.extra;
-        if extraText is () {
-            update.extra = ();
-        } else {
-            byte[]|dataservice:ConversionError extra = dataservice:bytesFromString(extraText);
-            if extra is dataservice:ConversionError {
-                return dsGraphql:toInvalidInput(extra, "Reading", "extra");
-            }
-            update.extra = extra;
+    string? extraText = value.extra;
+    if extraText !is () {
+        byte[]|dataservice:ConversionError extra = dataservice:bytesFromString(extraText);
+        if extra is dataservice:ConversionError {
+            return dsGraphql:toInvalidInput(extra, "Reading", "extra");
         }
+        update.extra = extra;
     }
-    if value.hasKey("status") {
-        Status? status = value?.status;
-        if status is () {
-            return dsGraphql:toNullError("Reading", "status");
-        }
+    Status? status = value.status;
+    if status !is () {
         update.status = status;
     }
-    if value.hasKey("previous") {
-        update.previous = value?.previous;
+    Status? previous = value.previous;
+    if previous !is () {
+        update.previous = previous;
+    }
+    ReadingUnset? unset = value.unset;
+    if unset !is () {
+        if unset.spare == true {
+            if update.hasKey("spare") {
+                return dsGraphql:toSetAndUnsetError("Reading", "spare");
+            }
+            update.spare = ();
+        }
+        if unset.endDay == true {
+            if update.hasKey("endDay") {
+                return dsGraphql:toSetAndUnsetError("Reading", "endDay");
+            }
+            update.endDay = ();
+        }
+        if unset.extra == true {
+            if update.hasKey("extra") {
+                return dsGraphql:toSetAndUnsetError("Reading", "extra");
+            }
+            update.extra = ();
+        }
+        if unset.previous == true {
+            if update.hasKey("previous") {
+                return dsGraphql:toSetAndUnsetError("Reading", "previous");
+            }
+            update.previous = ();
+        }
     }
     return update;
 }
@@ -460,10 +464,10 @@ public type MeasureSort record {|
     dsGraphql:SortDirection? label;
 |};
 
-# The fields to change in a measure; a field left out is not changed.
+# The fields to change in a measure; a field left out or set to `null` is not changed.
 public type MeasureUpdateInput record {|
     # The `label` field of `Measure`
-    string? label?;
+    string? label;
 |};
 
 # The fields of `Measure` that callers can see.
@@ -483,11 +487,8 @@ final dataservice:Entity dataserviceMeasureEntity = {
 
 isolated function transformInputToMeasureUpdate(MeasureUpdateInput value) returns MeasureUpdate|dsGraphql:Error {
     MeasureUpdate update = {};
-    if value.hasKey("label") {
-        string? label = value?.label;
-        if label is () {
-            return dsGraphql:toNullError("Measure", "label");
-        }
+    string? label = value.label;
+    if label !is () {
         update.label = label;
     }
     return update;

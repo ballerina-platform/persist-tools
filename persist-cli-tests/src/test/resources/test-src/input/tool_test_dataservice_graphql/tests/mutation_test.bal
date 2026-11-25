@@ -122,17 +122,35 @@ function testUpdateIsPartial() returns error? {
 }
 
 @test:Config {dependsOn: [testUpdateIsPartial]}
-function testUpdateSetsNull() returns error? {
-    json response = check query("mutation { updateTicket(id: 3, input: {note: null, dueAt: null}) { note dueAt } }");
+function testUpdateUnsetsFields() returns error? {
+    json response = check query("mutation { updateTicket(id: 3, input: {unset: {note: true, dueAt: true}}) " +
+            "{ note dueAt } }");
     test:assertEquals(response, {data: {updateTicket: {note: (), dueAt: ()}}});
 }
 
 @test:Config {dependsOn: [testCreateMany]}
-function testUpdateNullOnAFieldThatNeedsAValue() returns error? {
-    json response = check query("mutation { updateTicket(id: 2, input: {openedOn: null}) { id } }");
+function testUpdateNullLeavesAFieldUnchanged() returns error? {
+    json response = check query("mutation { updateTicket(id: 2, input: {openedOn: null, note: null, " +
+            "unset: {note: false}}) { openedOn } }");
+    test:assertEquals(response, {data: {updateTicket: {openedOn: "2024-02-01"}}});
+}
+
+// ballerina/graphql binds a field left out of a variable as `null`, so a patch in a variable leaves it unchanged too.
+@test:Config {dependsOn: [testCreateMany]}
+function testUpdateInlineAndThroughAVariable() returns error? {
+    json inline = check query("mutation { updateTicket(id: 2, input: {note: \"x\"}) { openedOn note } }");
+    json variable = check query("mutation ($input: TicketUpdateInput!) { updateTicket(id: 2, input: $input) " +
+            "{ openedOn note } }", {input: {note: "x"}});
+    test:assertEquals(inline, {data: {updateTicket: {openedOn: "2024-02-01", note: "x"}}});
+    test:assertEquals(variable, inline);
+}
+
+@test:Config {dependsOn: [testCreateMany]}
+function testUpdateSetAndUnsetOneField() returns error? {
+    json response = check query("mutation { updateTicket(id: 2, input: {note: \"y\", unset: {note: true}}) { id } }");
     test:assertEquals(check errorsOf(response), [
         {
-            message: "The field 'openedOn' of the entity 'Ticket' cannot be null.",
+            message: "The field 'note' of the entity 'Ticket' cannot be both set and unset.",
             path: ["updateTicket"],
             extensions: {code: "INVALID_INPUT"}
         }
@@ -165,7 +183,10 @@ function testUpdateMissing() returns error? {
     ]);
 }
 
-@test:Config {dependsOn: [testCreateMany, testUpdateNullOnAFieldThatNeedsAValue, testEmptyPatchReads]}
+@test:Config {
+    dependsOn: [testCreateMany, testUpdateNullLeavesAFieldUnchanged, testUpdateInlineAndThroughAVariable,
+        testUpdateSetAndUnsetOneField, testEmptyPatchReads]
+}
 function testDelete() returns error? {
     json response = check query("mutation { deleteTicket(id: 2) { id title } }");
     test:assertEquals(response, {data: {deleteTicket: {id: 2, title: "Laptop"}}});

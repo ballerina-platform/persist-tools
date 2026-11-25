@@ -75,6 +75,9 @@ public record PullExposure(Set<String> exposed, List<String> warnings) {
                 } else if (named != null) {
                     warnings.add(String.format(DataServiceMessages.PULL_SKIPS_TYPE_NAME, entity.getEntityName(),
                             entity.getTableName(), named.getEntityName(), named.getTableName()));
+                } else if (libraryType(protocol, entity) != null) {
+                    warnings.add(String.format(DataServiceMessages.PULL_SKIPS_LIBRARY_TYPE, entity.getEntityName(),
+                            entity.getTableName(), libraryType(protocol, entity)));
                 } else if (sharedType(protocol, entity, generated) != null) {
                     String typeName = sharedType(protocol, entity, generated);
                     warnings.add(String.format(DataServiceMessages.PULL_SKIPS_GENERATED_TYPE, entity.getEntityName(),
@@ -120,6 +123,9 @@ public record PullExposure(Set<String> exposed, List<String> warnings) {
             } else if (named != null) {
                 errors.add(String.format(DataServiceMessages.EXPOSE_TABLE_TYPE_NAME, table, named.getEntityName(),
                         entity.getEntityName(), named.getTableName()));
+            } else if (libraryType(protocol, entity) != null) {
+                errors.add(String.format(DataServiceMessages.EXPOSE_TABLE_LIBRARY_TYPE, table,
+                        libraryType(protocol, entity)));
             } else if (sharedType(protocol, entity, generated) != null) {
                 String typeName = sharedType(protocol, entity, generated);
                 errors.add(String.format(DataServiceMessages.EXPOSE_TABLE_GENERATED_TYPE, table, typeName,
@@ -161,6 +167,15 @@ public record PullExposure(Set<String> exposed, List<String> warnings) {
             }
         }
         return null;
+    }
+
+    // A type the entity would generate that `ballerina/dataservice.graphql` has, such as `IntFilter` for `Int`.
+    private static String libraryType(String protocol, Entity entity) {
+        if (!DataServiceOptions.GRAPHQL.equals(protocol)) {
+            return null;
+        }
+        return DataServiceGenerator.pulledTypeNames(protocol, entity.getEntityName()).stream()
+                .filter(GraphqlDataServiceGenerator.LIBRARY_TYPES::contains).findFirst().orElse(null);
     }
 
     // A type that another selected entity also generates, if any. The relations are not resolved yet, so every type

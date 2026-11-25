@@ -115,10 +115,10 @@ public type CustomerInsertInput record {|
     string name;
 |};
 
-# The fields to change in a customer; a field left out is not changed.
+# The fields to change in a customer; a field left out or set to `null` is not changed.
 public type CustomerUpdateInput record {|
     # The `name` field of `Customer`
-    string? name?;
+    string? name;
 |};
 
 # The fields of `Customer` that callers can see.
@@ -170,11 +170,8 @@ isolated function transformInputToCustomerInsert(CustomerInsertInput value) retu
 
 isolated function transformInputToCustomerUpdate(CustomerUpdateInput value) returns CustomerUpdate|dsGraphql:Error {
     CustomerUpdate update = {};
-    if value.hasKey("name") {
-        string? name = value?.name;
-        if name is () {
-            return dsGraphql:toNullError("Customer", "name");
-        }
+    string? name = value.name;
+    if name !is () {
         update.name = name;
     }
     return update;
@@ -275,12 +272,12 @@ public type ProfileInsertInput record {|
     int customerId;
 |};
 
-# The fields to change in a profile; a field left out is not changed.
+# The fields to change in a profile; a field left out or set to `null` is not changed.
 public type ProfileUpdateInput record {|
     # The `bio` field of `Profile`
-    string? bio?;
+    string? bio;
     # The key of the related 'Customer'.
-    int? customerId?;
+    int? customerId;
 |};
 
 # The fields of `Profile` that callers can see.
@@ -320,18 +317,12 @@ isolated function transformInputToProfileInsert(ProfileInsertInput value) return
 
 isolated function transformInputToProfileUpdate(ProfileUpdateInput value) returns ProfileUpdate|dsGraphql:Error {
     ProfileUpdate update = {};
-    if value.hasKey("bio") {
-        string? bio = value?.bio;
-        if bio is () {
-            return dsGraphql:toNullError("Profile", "bio");
-        }
+    string? bio = value.bio;
+    if bio !is () {
         update.bio = bio;
     }
-    if value.hasKey("customerId") {
-        int? customerId = value?.customerId;
-        if customerId is () {
-            return dsGraphql:toNullError("Profile", "customerId");
-        }
+    int? customerId = value.customerId;
+    if customerId !is () {
         update.customerId = customerId;
     }
     return update;

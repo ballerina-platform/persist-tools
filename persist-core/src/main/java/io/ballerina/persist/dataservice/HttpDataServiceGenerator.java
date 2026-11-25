@@ -375,7 +375,7 @@ public final class HttpDataServiceGenerator implements DataServiceGenerator {
             for (Operation action : List.of(READ, CREATE, UPDATE, DELETE)) {
                 List<String> scopes = entity.scopes(action);
                 if (entity.allows(action) && !scopes.isEmpty()) {
-                    methods.add("\"" + HTTP_METHODS.get(action) + "\": " + stringList(scopes));
+                    methods.add("\"" + HTTP_METHODS.get(action) + "\": " + scopeList(scopes));
                 }
             }
             if (!methods.isEmpty()) {
@@ -832,7 +832,7 @@ public final class HttpDataServiceGenerator implements DataServiceGenerator {
         out.append(indent).append("dsHttp:Forbidden? forbidden =").append(NEWLINE).append(indent)
                 .append("    dsHttp:checkRelationScopes(ctx, \"")
                 .append(n.displayName).append("\", \"").append(unescape(relation.field())).append("\", \"")
-                .append(new Names(target).displayName).append("\", ").append(stringList(target.scopes(READ)))
+                .append(new Names(target).displayName).append("\", ").append(scopeList(target.scopes(READ)))
                 .append(");").append(NEWLINE);
         out.append(indent).append("if forbidden is dsHttp:Forbidden {").append(NEWLINE);
         out.append(indent).append("    return forbidden;").append(NEWLINE);
@@ -850,7 +850,7 @@ public final class HttpDataServiceGenerator implements DataServiceGenerator {
     }
 
     private void appendHoldsRead(StringBuilder out, ExposedEntity entity) {
-        out.append("        boolean readable = dsHttp:hasScope(ctx, ").append(stringList(entity.scopes(READ)))
+        out.append("        boolean readable = dsHttp:hasScope(ctx, ").append(scopeList(entity.scopes(READ)))
                 .append(");").append(NEWLINE);
     }
 
@@ -1188,8 +1188,8 @@ public final class HttpDataServiceGenerator implements DataServiceGenerator {
         }
     }
 
-    private static String stringList(List<String> names) {
-        return EntityDescription.stringList(names);
+    private static String scopeList(List<String> scopes) {
+        return EntityDescription.scopeList(scopes);
     }
 
     // Filter keys starting with `$` are reserved for joining conditions.

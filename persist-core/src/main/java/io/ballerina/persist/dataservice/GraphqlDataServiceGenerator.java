@@ -72,10 +72,12 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
     private static final String DATASERVICE_IMPORT = "import ballerina/dataservice;";
     private static final String PERSIST_IMPORT = "import ballerina/persist;";
     private static final String RELATED_OPERATION = "get related";
+    private static final String UNSET = "unset";
     private static final int TO_MANY_COMPLEXITY = 20;
 
     private final List<ExposedEntity> entities;
     private final Map<String, ExposedEntity> entitiesByName = new LinkedHashMap<>();
+    private final Map<String, String> loaderFunctions = new LinkedHashMap<>();
     private final String basePath;
     private final boolean introspection;
     private final boolean auth;
@@ -119,6 +121,17 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         this.modelName = modelName;
         this.datastore = datastore;
         this.userOwned = userOwned;
+        // Two relations can concatenate to one name, such as `Sales.leadOwner` and `SalesLead.owner`.
+        Set<String> names = new LinkedHashSet<>();
+        for (Map.Entry<ExposedEntity, ExposedRelation> entry : toOneRelations()) {
+            String base = "dataserviceLoad" + unescape(entry.getKey().name())
+                    + capitalize(unescape(entry.getValue().field()));
+            String name = base;
+            for (int suffix = 2; !names.add(name); suffix++) {
+                name = base + suffix;
+            }
+            loaderFunctions.put(loaderId(entry.getKey(), entry.getValue()), name);
+        }
     }
 
     /**
@@ -144,15 +157,24 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
             }
             reservedKeys(entity.keys().stream().map(ServiceField::name).toList()).forEach(key -> errors.add(
                     String.format(DataServiceMessages.KEY_NAME_RESERVED, key, name)));
-            for (ServiceField field : entity.fields()) {
-                if (field.has(FieldRule.INTERNAL)) {
-                    continue;
-                }
-                String fieldName = graphqlName(field.name());
+            List<String> fieldNames = new ArrayList<>(entity.fields().stream()
+                    .filter(field -> !field.has(FieldRule.INTERNAL)).map(ServiceField::name).toList());
+            entity.relations().forEach(relation -> fieldNames.add(relation.field()));
+            for (String exposedName : fieldNames) {
+                String fieldName = graphqlName(exposedName);
                 if (fieldName.startsWith("_")) {
                     errors.add(String.format(DataServiceMessages.GRAPHQL_RESERVED_FIELD, fieldName, name));
                 } else if (!GRAPHQL_NAME.matcher(fieldName).matches()) {
                     errors.add(String.format(DataServiceMessages.GRAPHQL_INVALID_NAME, fieldName, name));
+                }
+            }
+            if (updatable(entity) && !clearableFields(entity).isEmpty() && updateInputFields(entity).stream()
+                    .anyMatch(field -> UNSET.equals(unescape(field.name())))) {
+                errors.add(String.format(DataServiceMessages.GRAPHQL_UNSET_FIELD, name));
+            }
+            for (String typeName : generatedTypeNames(entity, entities)) {
+                if (LIBRARY_TYPES.contains(typeName)) {
+                    errors.add(String.format(DataServiceMessages.GRAPHQL_LIBRARY_TYPE_CLASH, typeName, name, name));
                 }
             }
             for (String rootField : n.rootFields(entity)) {
@@ -179,9 +201,45 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
                 errors.add(String.format(DataServiceMessages.GRAPHQL_TYPE_CLASH, modelType));
             }
         }
+        errors.addAll(enumFilterClashes(entities));
         if (!errors.isEmpty()) {
             throw new BalException(String.join(NEWLINE, errors));
         }
+    }
+
+    // The enum filters that the service generates, as `appendEnumFilters` writes them, compared with each other and
+    // with the types generated for the entities.
+    private static List<String> enumFilterClashes(List<ExposedEntity> entities) {
+        List<String> errors = new ArrayList<>();
+        Map<String, String> entityTypes = new LinkedHashMap<>();
+        for (ExposedEntity entity : entities) {
+            String name = unescape(entity.name());
+            generatedTypeNames(entity, entities).forEach(type -> entityTypes.putIfAbsent(type, name));
+        }
+        Map<String, String> filters = new LinkedHashMap<>();
+        for (ExposedEntity entity : entities) {
+            if (!entity.allows(READ)) {
+                continue;
+            }
+            for (ServiceField field : filterable(entity)) {
+                ExposedEntity.Column column = column(entity, field);
+                if (!"ENUM".equals(column.type())) {
+                    continue;
+                }
+                String enumName = unescape(field.type());
+                String filter = enumFilter(field.type(), column.nullable());
+                String owner = enumName + (column.nullable() ? "?" : "");
+                String other = filters.putIfAbsent(filter, owner);
+                if (other == null && entityTypes.containsKey(filter)) {
+                    errors.add(String.format(DataServiceMessages.GRAPHQL_ENUM_FILTER_CLASH, filter, enumName,
+                            entityTypes.get(filter)));
+                } else if (other != null && !other.equals(owner)) {
+                    errors.add(String.format(DataServiceMessages.GRAPHQL_ENUM_FILTERS_CLASH, filter,
+                            other.replace("?", ""), enumName));
+                }
+            }
+        }
+        return errors;
     }
 
     // Patch takes the key fields and `input`, and a root field with relations takes `field`, which the core reserved
@@ -211,28 +269,34 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         if (entity.allows(CREATE)) {
             types.add(n.insertInput);
         }
-        if (entity.allows(UPDATE)) {
+        if (updatable(entity)) {
             types.add(n.updateInput);
+            if (!clearableFields(entity).isEmpty()) {
+                types.add(n.unset);
+            }
         }
         return types;
     }
 
     static List<String> pulledTypeNames(String entityName) {
-        return List.of("Object", "RelatedObject", "List", "RelatedList", "InsertInput", "UpdateInput", "Filter",
-                "Sort").stream().map(suffix -> entityName + suffix).toList();
+        return List.of("Object", "RelatedObject", "List", "RelatedList", "InsertInput", "UpdateInput", "Unset",
+                "Filter", "Sort").stream().map(suffix -> entityName + suffix).toList();
     }
 
     @Override
     public void write(Path dir) throws BalException, IOException {
-        FileUtils.writeToTargetFile(generateService(), dir.resolve(SERVICE_FILE).toAbsolutePath().toString());
-        Path typesFile = dir.resolve(TYPES_FILE);
+        // Every file is rendered before any is written, so a file that fails to render leaves the others as they were.
+        String service = generateService();
         Optional<String> types = generateTypes();
+        String config = generateConfig();
+        FileUtils.writeToTargetFile(service, dir.resolve(SERVICE_FILE).toAbsolutePath().toString());
+        Path typesFile = dir.resolve(TYPES_FILE);
         if (types.isPresent()) {
             FileUtils.writeToTargetFile(types.get(), typesFile.toAbsolutePath().toString());
         } else {
             Files.deleteIfExists(typesFile);
         }
-        FileUtils.writeToTargetFile(generateConfig(), dir.resolve(CONFIG_FILE).toAbsolutePath().toString());
+        FileUtils.writeToTargetFile(config, dir.resolve(CONFIG_FILE).toAbsolutePath().toString());
     }
 
     /**
@@ -286,7 +350,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
             if (entity.allows(CREATE)) {
                 appendCreate(body, entity, imports);
             }
-            if (entity.allows(UPDATE)) {
+            if (updatable(entity)) {
                 appendUpdate(body, entity, imports);
             }
             if (entity.allows(DELETE)) {
@@ -328,7 +392,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
             if (entity.allows(CREATE)) {
                 appendInsertInput(body, entity);
             }
-            if (entity.allows(UPDATE)) {
+            if (updatable(entity)) {
                 appendUpdateInput(body, entity);
             }
             if (returned) {
@@ -338,7 +402,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
             if (entity.allows(CREATE)) {
                 appendInsertConverter(body, entity, imports);
             }
-            if (entity.allows(UPDATE)) {
+            if (updatable(entity)) {
                 appendUpdateConverter(body, entity, imports);
             }
         }
@@ -503,7 +567,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
     }
 
     private static void appendReadable(StringBuilder out, ExposedEntity entity) {
-        out.append("        boolean readable = dsGraphql:hasScope(ctx, ").append(stringList(entity.scopes(READ)))
+        out.append("        boolean readable = dsGraphql:hasScope(ctx, ").append(scopeList(entity.scopes(READ)))
                 .append(");").append(NEWLINE);
     }
 
@@ -651,7 +715,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
                 .append(keyList(entity)).append(");").append(NEWLINE);
         out.append("        }").append(NEWLINE);
         out.append("        return ").append(!read ? "true" : auth ? "dsGraphql:hasScope(ctx, " +
-                stringList(entity.scopes(READ)) + ") ? new (item) : ()" : "new (item)").append(";").append(NEWLINE);
+                scopeList(entity.scopes(READ)) + ") ? new (item) : ()" : "new (item)").append(";").append(NEWLINE);
         out.append("    }").append(NEWLINE);
     }
 
@@ -671,22 +735,22 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         if (!auth) {
             return;
         }
-        out.append("        check dsGraphql:checkScopes(ctx, ").append(stringList(entity.scopes(action))).append(");")
+        out.append("        check dsGraphql:checkScopes(ctx, ").append(scopeList(entity.scopes(action))).append(");")
                 .append(NEWLINE);
         if (!returnsRecords || entity.relations().isEmpty()) {
             return;
         }
         out.append("        check dsGraphql:checkRelationScopes(ctx, 'field, \"").append(unescape(entity.name()))
                 .append("\", ").append(relationsName(entity))
-                .append(action == READ ? "" : ", " + stringList(entity.scopes(READ))).append(");").append(NEWLINE);
+                .append(action == READ ? "" : ", " + scopeList(entity.scopes(READ))).append(");").append(NEWLINE);
     }
 
     private static String relationsName(ExposedEntity entity) {
         return "dataservice" + unescape(entity.name()) + "Relations";
     }
 
-    private static String stringList(List<String> names) {
-        return EntityDescription.stringList(names);
+    private static String scopeList(List<String> scopes) {
+        return EntityDescription.scopeList(scopes);
     }
 
     // The related entity and its `read` scopes, by relation field, which a caller needs to read each relation.
@@ -703,7 +767,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
             for (ExposedRelation relation : entity.relations()) {
                 ExposedEntity target = target(relation);
                 members.add("    \"" + unescape(relation.field()) + "\": {target: \"" + unescape(target.name()) +
-                        "\", scopes: " + stringList(target.scopes(READ)) + "}");
+                        "\", scopes: " + scopeList(target.scopes(READ)) + "}");
             }
             out.append(String.join("," + NEWLINE, members)).append(NEWLINE).append("};").append(NEWLINE)
                     .append(NEWLINE);
@@ -720,6 +784,15 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
     // The fields a patch can change: no key, `ReadOnly`, `Immutable` or `Internal` field.
     private static List<ServiceField> updateInputFields(ExposedEntity entity) {
         return entity.updateFields().stream().filter(field -> field.rule().isEmpty()).toList();
+    }
+
+    // GraphQL has no empty input type, so an entity without a field that a patch can change has no patch.
+    private static boolean updatable(ExposedEntity entity) {
+        return entity.allows(UPDATE) && !updateInputFields(entity).isEmpty();
+    }
+
+    private static List<ServiceField> clearableFields(ExposedEntity entity) {
+        return updateInputFields(entity).stream().filter(ServiceField::nilable).toList();
     }
 
     // An insert input fails to convert when a value does not parse or a float is not finite.
@@ -757,15 +830,33 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         out.append("|};").append(NEWLINE);
     }
 
+    // A field left out and one set to `null` both bind as `()`, since ballerina/graphql binds a field left out of a
+    // variable as `null`, so `unset` names the fields to set to `null`.
     private static void appendUpdateInput(StringBuilder out, ExposedEntity entity) {
         Names n = new Names(entity);
+        List<ServiceField> clearable = clearableFields(entity);
         out.append(NEWLINE).append("# The fields to change in ").append(n.article).append(" ").append(n.words)
-                .append("; a field left out is not changed.").append(NEWLINE);
+                .append("; a field left out or set to `null` is not changed.").append(NEWLINE);
         out.append("public type ").append(n.updateInput).append(" record {|").append(NEWLINE);
         for (ServiceField field : updateInputFields(entity)) {
             out.append("    # ").append(fieldDoc(field, entity, n)).append(NEWLINE);
             String type = field.conversion().isPresent() ? "string" : field.type();
-            out.append("    ").append(type).append("? ").append(field.name()).append("?;").append(NEWLINE);
+            out.append("    ").append(type).append("? ").append(field.name()).append(";").append(NEWLINE);
+        }
+        if (!clearable.isEmpty()) {
+            out.append("    # The fields to set to `null`").append(NEWLINE);
+            out.append("    ").append(n.unset).append("? ").append(UNSET).append(";").append(NEWLINE);
+        }
+        out.append("|};").append(NEWLINE);
+        if (clearable.isEmpty()) {
+            return;
+        }
+        out.append(NEWLINE).append("# The nullable fields to set to `null` in ").append(n.article).append(" ")
+                .append(n.words).append(".").append(NEWLINE);
+        out.append("public type ").append(n.unset).append(" record {|").append(NEWLINE);
+        for (ServiceField field : clearable) {
+            out.append("    # `true` to set `").append(unescape(field.name())).append("` to `null`").append(NEWLINE);
+            out.append("    boolean? ").append(field.name()).append(";").append(NEWLINE);
         }
         out.append("|};").append(NEWLINE);
     }
@@ -795,7 +886,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
                 continue;
             }
             members.add(field.name());
-            appendFromString(out, n, field, access, "    ", imports);
+            appendFromString(out, n, field, access, textLocal(field, fields, param), "    ", imports);
         }
         out.append("    return {").append(String.join(", ", members)).append("};").append(NEWLINE);
         out.append("}").append(NEWLINE);
@@ -803,8 +894,8 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
 
     // Declares `field` as the persist value of the string at `access`, returning the INVALID_INPUT error when it does
     // not parse; a nil string stays nil.
-    private static void appendFromString(StringBuilder out, Names n, ServiceField field, String access, String indent,
-                                         Set<String> imports) {
+    private static void appendFromString(StringBuilder out, Names n, ServiceField field, String access, String text,
+                                         String indent, Set<String> imports) {
         imports.add(DATASERVICE_IMPORT);
         imports.add(DATASERVICE_GRAPHQL_IMPORT);
         if (field.type().startsWith("time:")) {
@@ -814,7 +905,6 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         out.append(indent).append(field.persistType()).append("|dataservice:ConversionError ").append(field.name())
                 .append(" = ");
         if (field.nilable()) {
-            String text = unescape(field.name()) + "Text";
             out.append("();").append(NEWLINE);
             out.append(indent).append("string? ").append(text).append(" = ").append(access).append(";").append(NEWLINE);
             out.append(indent).append("if ").append(text).append(" !is () {").append(NEWLINE);
@@ -831,8 +921,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         out.append(indent).append("}").append(NEWLINE);
     }
 
-    // A field left out is absent from the persist update, so it is not changed; `null` clears a nullable field and is
-    // rejected on one that cannot hold it.
+    // A field that is `()` is absent from the persist update, so it is not changed; a field in `unset` is set to `()`.
     private void appendUpdateConverter(StringBuilder out, ExposedEntity entity, Set<String> imports) {
         imports.add(DATASERVICE_GRAPHQL_IMPORT);
         Names n = new Names(entity);
@@ -846,44 +935,41 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         out.append("    ").append(update).append(" ").append(result).append(" = {};").append(NEWLINE);
         for (ServiceField field : fields) {
             String name = field.name();
-            String key = "\"" + unescape(name) + "\"";
-            out.append("    if ").append(param).append(".hasKey(").append(key).append(") {").append(NEWLINE);
-            if (field.conversion().isEmpty() && field.nilable() && !isFloat(field)) {
-                out.append("        ").append(result).append(".").append(name).append(" = ").append(param).append("?.")
-                        .append(name).append(";").append(NEWLINE);
-            } else if (field.conversion().isEmpty() && field.nilable()) {
-                out.append("        float? ").append(name).append(" = ").append(param).append("?.").append(name)
-                        .append(";").append(NEWLINE);
-                appendFiniteCheck(out, n, field, name + " ?: 0.0", "        ");
-                out.append("        ").append(result).append(".").append(name).append(" = ").append(name).append(";")
-                        .append(NEWLINE);
-            } else if (field.conversion().isEmpty()) {
-                out.append("        ").append(field.type()).append("? ").append(name).append(" = ").append(param)
-                        .append("?.").append(name).append(";").append(NEWLINE);
-                appendNullCheck(out, n, field, name, "        ");
+            if (field.conversion().isEmpty()) {
+                out.append("    ").append(field.type()).append("? ").append(name).append(" = ").append(param)
+                        .append(".").append(name).append(";").append(NEWLINE);
+                out.append("    if ").append(name).append(" !is () {").append(NEWLINE);
                 if (isFloat(field)) {
                     appendFiniteCheck(out, n, field, name, "        ");
                 }
-                out.append("        ").append(result).append(".").append(name).append(" = ").append(name).append(";")
-                        .append(NEWLINE);
             } else {
-                String text = unescape(name) + "Text";
-                out.append("        string? ").append(text).append(" = ").append(param).append("?.").append(name)
+                String text = textLocal(field, fields, param, result);
+                out.append("    string? ").append(text).append(" = ").append(param).append(".").append(name)
                         .append(";").append(NEWLINE);
-                if (field.nilable()) {
-                    out.append("        if ").append(text).append(" is () {").append(NEWLINE);
-                    out.append("            ").append(result).append(".").append(name).append(" = ();").append(NEWLINE);
-                    out.append("        } else {").append(NEWLINE);
-                    appendParse(out, n, field, text, "            ", imports);
-                    out.append("            ").append(result).append(".").append(name).append(" = ").append(name)
-                            .append(";").append(NEWLINE);
-                    out.append("        }").append(NEWLINE);
-                } else {
-                    appendNullCheck(out, n, field, text, "        ");
-                    appendParse(out, n, field, text, "        ", imports);
-                    out.append("        ").append(result).append(".").append(name).append(" = ").append(name)
-                            .append(";").append(NEWLINE);
-                }
+                out.append("    if ").append(text).append(" !is () {").append(NEWLINE);
+                appendParse(out, n, field, text, "        ", imports);
+            }
+            out.append("        ").append(result).append(".").append(name).append(" = ").append(name).append(";")
+                    .append(NEWLINE);
+            out.append("    }").append(NEWLINE);
+        }
+        List<ServiceField> clearable = clearableFields(entity);
+        if (!clearable.isEmpty()) {
+            out.append("    ").append(n.unset).append("? ").append(UNSET).append(" = ").append(param).append(".")
+                    .append(UNSET).append(";").append(NEWLINE);
+            out.append("    if ").append(UNSET).append(" !is () {").append(NEWLINE);
+            for (ServiceField field : clearable) {
+                String key = "\"" + unescape(field.name()) + "\"";
+                out.append("        if ").append(UNSET).append(".").append(field.name()).append(" == true {")
+                        .append(NEWLINE);
+                out.append("            if ").append(result).append(".hasKey(").append(key).append(") {")
+                        .append(NEWLINE);
+                out.append("                return dsGraphql:toSetAndUnsetError(\"").append(n.displayName)
+                        .append("\", ").append(key).append(");").append(NEWLINE);
+                out.append("            }").append(NEWLINE);
+                out.append("            ").append(result).append(".").append(field.name()).append(" = ();")
+                        .append(NEWLINE);
+                out.append("        }").append(NEWLINE);
             }
             out.append("    }").append(NEWLINE);
         }
@@ -911,14 +997,6 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         out.append("        }").append(NEWLINE);
     }
 
-    private static void appendNullCheck(StringBuilder out, Names n, ServiceField field, String variable,
-                                        String indent) {
-        out.append(indent).append("if ").append(variable).append(" is () {").append(NEWLINE);
-        out.append(indent).append("    return dsGraphql:toNullError(\"").append(n.displayName).append("\", \"")
-                .append(unescape(field.name())).append("\");").append(NEWLINE);
-        out.append(indent).append("}").append(NEWLINE);
-    }
-
     private static void appendParse(StringBuilder out, Names n, ServiceField field, String text, String indent,
                                     Set<String> imports) {
         imports.add(DATASERVICE_IMPORT);
@@ -933,6 +1011,19 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         out.append(indent).append("    return dsGraphql:toInvalidInput(").append(field.name()).append(", \"")
                 .append(n.displayName).append("\", \"").append(unescape(field.name())).append("\");").append(NEWLINE);
         out.append(indent).append("}").append(NEWLINE);
+    }
+
+    // The local that holds the string of a converted field, named apart from the locals named after the fields.
+    private static String textLocal(ServiceField field, List<ServiceField> fields, String... taken) {
+        String name = unescape(field.name()) + "Text";
+        while (true) {
+            String candidate = name;
+            if (fields.stream().noneMatch(other -> unescape(other.name()).equals(candidate))
+                    && !List.of(taken).contains(candidate)) {
+                return name;
+            }
+            name = "_" + name;
+        }
     }
 
     // A field with the same name as the parameter would shadow it in the generated record constructor.
@@ -1150,8 +1241,8 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         return unescape(entity.name()) + "." + unescape(relation.field());
     }
 
-    private static String loaderFunction(ExposedEntity entity, ExposedRelation relation) {
-        return "dataserviceLoad" + unescape(entity.name()) + capitalize(unescape(relation.field()));
+    private String loaderFunction(ExposedEntity entity, ExposedRelation relation) {
+        return loaderFunctions.get(loaderId(entity, relation));
     }
 
     private List<Map.Entry<ExposedEntity, ExposedRelation>> toOneRelations() {
@@ -1422,6 +1513,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         private final String relatedList;
         private final String insertInput;
         private final String updateInput;
+        private final String unset;
         private final String filter;
         private final String sort;
         private final String description;
@@ -1449,6 +1541,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
             this.relatedList = displayName + "RelatedList";
             this.insertInput = displayName + "InsertInput";
             this.updateInput = displayName + "UpdateInput";
+            this.unset = displayName + "Unset";
             this.filter = displayName + "Filter";
             this.sort = displayName + "Sort";
             this.description = EntityDescription.descriptionName(entity);
@@ -1472,7 +1565,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
                 fields.add(createOne);
                 fields.add(createMany);
             }
-            if (entity.allows(UPDATE)) {
+            if (updatable(entity)) {
                 fields.add(update);
             }
             if (entity.allows(DELETE)) {

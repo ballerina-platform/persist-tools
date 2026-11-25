@@ -187,16 +187,26 @@ public type PurchaseInsertInput record {|
     int customerId;
 |};
 
-# The fields to change in a purchase; a field left out is not changed.
+# The fields to change in a purchase; a field left out or set to `null` is not changed.
 public type PurchaseUpdateInput record {|
     # The `placedOn` field of `Purchase`, as an ISO 8601 date
-    string? placedOn?;
+    string? placedOn;
     # The `shippedAt` field of `Purchase`, as an ISO 8601 date-time without an offset
-    string? shippedAt?;
+    string? shippedAt;
     # The `note` field of `Purchase`
-    string? note?;
+    string? note;
     # The `total` field of `Purchase`
-    decimal? total?;
+    decimal? total;
+    # The fields to set to `null`
+    PurchaseUnset? unset;
+|};
+
+# The nullable fields to set to `null` in a purchase.
+public type PurchaseUnset record {|
+    # `true` to set `shippedAt` to `null`
+    boolean? shippedAt;
+    # `true` to set `note` to `null`
+    boolean? note;
 |};
 
 # The fields of `Purchase` that callers can see.
@@ -253,38 +263,44 @@ isolated function transformInputToPurchaseInsert(PurchaseInsertInput value) retu
 
 isolated function transformInputToPurchaseUpdate(PurchaseUpdateInput value) returns PurchaseUpdate|dsGraphql:Error {
     PurchaseUpdate update = {};
-    if value.hasKey("placedOn") {
-        string? placedOnText = value?.placedOn;
-        if placedOnText is () {
-            return dsGraphql:toNullError("Purchase", "placedOn");
-        }
+    string? placedOnText = value.placedOn;
+    if placedOnText !is () {
         time:Date|dataservice:ConversionError placedOn = dataservice:dateFromString(placedOnText);
         if placedOn is dataservice:ConversionError {
             return dsGraphql:toInvalidInput(placedOn, "Purchase", "placedOn");
         }
         update.placedOn = placedOn;
     }
-    if value.hasKey("shippedAt") {
-        string? shippedAtText = value?.shippedAt;
-        if shippedAtText is () {
-            update.shippedAt = ();
-        } else {
-            time:Civil|dataservice:ConversionError shippedAt = dataservice:civilFromString(shippedAtText);
-            if shippedAt is dataservice:ConversionError {
-                return dsGraphql:toInvalidInput(shippedAt, "Purchase", "shippedAt");
-            }
-            update.shippedAt = shippedAt;
+    string? shippedAtText = value.shippedAt;
+    if shippedAtText !is () {
+        time:Civil|dataservice:ConversionError shippedAt = dataservice:civilFromString(shippedAtText);
+        if shippedAt is dataservice:ConversionError {
+            return dsGraphql:toInvalidInput(shippedAt, "Purchase", "shippedAt");
         }
+        update.shippedAt = shippedAt;
     }
-    if value.hasKey("note") {
-        update.note = value?.note;
+    string? note = value.note;
+    if note !is () {
+        update.note = note;
     }
-    if value.hasKey("total") {
-        decimal? total = value?.total;
-        if total is () {
-            return dsGraphql:toNullError("Purchase", "total");
-        }
+    decimal? total = value.total;
+    if total !is () {
         update.total = total;
+    }
+    PurchaseUnset? unset = value.unset;
+    if unset !is () {
+        if unset.shippedAt == true {
+            if update.hasKey("shippedAt") {
+                return dsGraphql:toSetAndUnsetError("Purchase", "shippedAt");
+            }
+            update.shippedAt = ();
+        }
+        if unset.note == true {
+            if update.hasKey("note") {
+                return dsGraphql:toSetAndUnsetError("Purchase", "note");
+            }
+            update.note = ();
+        }
     }
     return update;
 }
@@ -454,10 +470,10 @@ public type AuditEntryInsertInput record {|
     string message;
 |};
 
-# The fields to change in an audit entry; a field left out is not changed.
+# The fields to change in an audit entry; a field left out or set to `null` is not changed.
 public type AuditEntryUpdateInput record {|
     # The `message` field of `AuditEntry`
-    string? message?;
+    string? message;
 |};
 
 # The fields of `AuditEntry` that callers can see.
@@ -482,11 +498,8 @@ isolated function transformInputToAuditEntryInsert(AuditEntryInsertInput value) 
 
 isolated function transformInputToAuditEntryUpdate(AuditEntryUpdateInput value) returns AuditEntryUpdate|dsGraphql:Error {
     AuditEntryUpdate update = {};
-    if value.hasKey("message") {
-        string? message = value?.message;
-        if message is () {
-            return dsGraphql:toNullError("AuditEntry", "message");
-        }
+    string? message = value.message;
+    if message !is () {
         update.message = message;
     }
     return update;

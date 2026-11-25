@@ -292,16 +292,24 @@ public type EmployeeInsertInput record {|
     int departmentId;
 |};
 
-# The fields to change in an employee; a field left out is not changed.
+# The fields to change in an employee; a field left out or set to `null` is not changed.
 public type EmployeeUpdateInput record {|
     # The `name` field of `Employee`
-    string? name?;
+    string? name;
     # The `email` field of `Employee`
-    string? email?;
+    string? email;
     # The `hiredOn` field of `Employee`, as an ISO 8601 date
-    string? hiredOn?;
+    string? hiredOn;
     # The key of the related 'Department'.
-    int? departmentId?;
+    int? departmentId;
+    # The fields to set to `null`
+    EmployeeUnset? unset;
+|};
+
+# The nullable fields to set to `null` in an employee.
+public type EmployeeUnset record {|
+    # `true` to set `email` to `null`
+    boolean? email;
 |};
 
 # The fields of `Employee` that callers can see.
@@ -360,33 +368,34 @@ isolated function transformInputToEmployeeInsert(EmployeeInsertInput value) retu
 
 isolated function transformInputToEmployeeUpdate(EmployeeUpdateInput value) returns EmployeeUpdate|dsGraphql:Error {
     EmployeeUpdate update = {};
-    if value.hasKey("name") {
-        string? name = value?.name;
-        if name is () {
-            return dsGraphql:toNullError("Employee", "name");
-        }
+    string? name = value.name;
+    if name !is () {
         update.name = name;
     }
-    if value.hasKey("email") {
-        update.email = value?.email;
+    string? email = value.email;
+    if email !is () {
+        update.email = email;
     }
-    if value.hasKey("hiredOn") {
-        string? hiredOnText = value?.hiredOn;
-        if hiredOnText is () {
-            return dsGraphql:toNullError("Employee", "hiredOn");
-        }
+    string? hiredOnText = value.hiredOn;
+    if hiredOnText !is () {
         time:Date|dataservice:ConversionError hiredOn = dataservice:dateFromString(hiredOnText);
         if hiredOn is dataservice:ConversionError {
             return dsGraphql:toInvalidInput(hiredOn, "Employee", "hiredOn");
         }
         update.hiredOn = hiredOn;
     }
-    if value.hasKey("departmentId") {
-        int? departmentId = value?.departmentId;
-        if departmentId is () {
-            return dsGraphql:toNullError("Employee", "departmentId");
-        }
+    int? departmentId = value.departmentId;
+    if departmentId !is () {
         update.departmentId = departmentId;
+    }
+    EmployeeUnset? unset = value.unset;
+    if unset !is () {
+        if unset.email == true {
+            if update.hasKey("email") {
+                return dsGraphql:toSetAndUnsetError("Employee", "email");
+            }
+            update.email = ();
+        }
     }
     return update;
 }
@@ -509,12 +518,12 @@ public type AssignmentInsertInput record {|
     int employeeId;
 |};
 
-# The fields to change in an assignment; a field left out is not changed.
+# The fields to change in an assignment; a field left out or set to `null` is not changed.
 public type AssignmentUpdateInput record {|
     # The `hours` field of `Assignment`
-    decimal? hours?;
+    decimal? hours;
     # The key of the related 'Employee'.
-    int? employeeId?;
+    int? employeeId;
 |};
 
 # The fields of `Assignment` that callers can see.
@@ -555,18 +564,12 @@ isolated function transformInputToAssignmentInsert(AssignmentInsertInput value) 
 
 isolated function transformInputToAssignmentUpdate(AssignmentUpdateInput value) returns AssignmentUpdate|dsGraphql:Error {
     AssignmentUpdate update = {};
-    if value.hasKey("hours") {
-        decimal? hours = value?.hours;
-        if hours is () {
-            return dsGraphql:toNullError("Assignment", "hours");
-        }
+    decimal? hours = value.hours;
+    if hours !is () {
         update.hours = hours;
     }
-    if value.hasKey("employeeId") {
-        int? employeeId = value?.employeeId;
-        if employeeId is () {
-            return dsGraphql:toNullError("Assignment", "employeeId");
-        }
+    int? employeeId = value.employeeId;
+    if employeeId !is () {
         update.employeeId = employeeId;
     }
     return update;
@@ -606,10 +609,10 @@ public type LogEntryInsertInput record {|
     string message;
 |};
 
-# The fields to change in a log entry; a field left out is not changed.
+# The fields to change in a log entry; a field left out or set to `null` is not changed.
 public type LogEntryUpdateInput record {|
     # The `message` field of `LogEntry`
-    string? message?;
+    string? message;
 |};
 
 # The fields of `LogEntry` that callers can see.
@@ -633,11 +636,8 @@ isolated function transformInputToLogEntryInsert(LogEntryInsertInput value) retu
 
 isolated function transformInputToLogEntryUpdate(LogEntryUpdateInput value) returns LogEntryUpdate|dsGraphql:Error {
     LogEntryUpdate update = {};
-    if value.hasKey("message") {
-        string? message = value?.message;
-        if message is () {
-            return dsGraphql:toNullError("LogEntry", "message");
-        }
+    string? message = value.message;
+    if message !is () {
         update.message = message;
     }
     return update;

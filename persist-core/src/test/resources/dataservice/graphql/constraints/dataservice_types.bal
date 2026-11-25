@@ -77,14 +77,14 @@ public type DocumentInsertInput record {|
     int pages;
 |};
 
-# The fields to change in a document; a field left out is not changed.
+# The fields to change in a document; a field left out or set to `null` is not changed.
 public type DocumentUpdateInput record {|
     # The `title` field of `Document`
-    string? title?;
+    string? title;
     # The `issuedOn` field of `Document`, as an ISO 8601 date
-    string? issuedOn?;
+    string? issuedOn;
     # The `pages` field of `Document`
-    int? pages?;
+    int? pages;
 |};
 
 # The fields of `Document` that callers can see.
@@ -114,29 +114,20 @@ isolated function transformInputToDocumentInsert(DocumentInsertInput value) retu
 
 isolated function transformInputToDocumentUpdate(DocumentUpdateInput value) returns DocumentUpdate|dsGraphql:Error {
     DocumentUpdate update = {};
-    if value.hasKey("title") {
-        string? title = value?.title;
-        if title is () {
-            return dsGraphql:toNullError("Document", "title");
-        }
+    string? title = value.title;
+    if title !is () {
         update.title = title;
     }
-    if value.hasKey("issuedOn") {
-        string? issuedOnText = value?.issuedOn;
-        if issuedOnText is () {
-            return dsGraphql:toNullError("Document", "issuedOn");
-        }
+    string? issuedOnText = value.issuedOn;
+    if issuedOnText !is () {
         time:Date|dataservice:ConversionError issuedOn = dataservice:dateFromString(issuedOnText);
         if issuedOn is dataservice:ConversionError {
             return dsGraphql:toInvalidInput(issuedOn, "Document", "issuedOn");
         }
         update.issuedOn = issuedOn;
     }
-    if value.hasKey("pages") {
-        int? pages = value?.pages;
-        if pages is () {
-            return dsGraphql:toNullError("Document", "pages");
-        }
+    int? pages = value.pages;
+    if pages !is () {
         update.pages = pages;
     }
     return update;
@@ -192,10 +183,10 @@ public type NoteInsertInput record {|
     string text;
 |};
 
-# The fields to change in a note; a field left out is not changed.
+# The fields to change in a note; a field left out or set to `null` is not changed.
 public type NoteUpdateInput record {|
     # The `text` field of `Note`
-    string? text?;
+    string? text;
 |};
 
 # The fields of `Note` that callers can see.
@@ -219,11 +210,8 @@ isolated function transformInputToNoteInsert(NoteInsertInput value) returns Note
 
 isolated function transformInputToNoteUpdate(NoteUpdateInput value) returns NoteUpdate|dsGraphql:Error {
     NoteUpdate update = {};
-    if value.hasKey("text") {
-        string? text = value?.text;
-        if text is () {
-            return dsGraphql:toNullError("Note", "text");
-        }
+    string? text = value.text;
+    if text !is () {
         update.text = text;
     }
     return update;
