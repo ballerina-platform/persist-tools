@@ -67,6 +67,8 @@ public final class DataServiceMessages {
             "exposed. Remove its @dataservice:Expose annotation.";
     public static final String SCOPES_WITHOUT_AUTH = "the @dataservice:Expose annotation of the entity '%s' sets " +
             "scopes, but 'options.dataservice.auth' is not true. Set it to true, or remove the scopes.";
+    public static final String SCOPE_NOT_LITERAL = "the scope '%s' in the @dataservice:Expose annotation of the " +
+            "entity '%s' is not a string literal. Write the scope as a string literal.";
     public static final String GRAPHQL_NO_READ = "a GraphQL data service needs at least one entity that allows " +
             "'read'. Add dataservice:READ to the 'operations' of an entity.";
     public static final String GRAPHQL_FIELD_CLASH = "the entities '%s' and '%s' map to the same GraphQL field " +
@@ -82,6 +84,8 @@ public final class DataServiceMessages {
             "the @dataservice:Expose annotation of '%s'.";
     public static final String GRAPHQL_ENUM_FILTER_CLASH = "the filter '%s' of the enum '%s' has the name of a type " +
             "that the data service generates for the entity '%s'. Rename one of them.";
+    public static final String GRAPHQL_ENUM_FILTER_LIBRARY_CLASH = "the filter '%s' of the enum '%s' has the name " +
+            "of a type of ballerina/dataservice.graphql. Rename the enum.";
     public static final String GRAPHQL_ENUM_FILTERS_CLASH = "the filter '%s' is generated for both the enum '%s' " +
             "and the enum '%s'. Rename one of them.";
     public static final String GRAPHQL_UNSET_FIELD = "the field 'unset' of the entity '%s' clashes with the field " +

@@ -78,6 +78,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
     private final List<ExposedEntity> entities;
     private final Map<String, ExposedEntity> entitiesByName = new LinkedHashMap<>();
     private final Map<String, String> loaderFunctions = new LinkedHashMap<>();
+    private final Map<String, String> prefetchMethods = new LinkedHashMap<>();
     private final String basePath;
     private final boolean introspection;
     private final boolean auth;
@@ -131,6 +132,21 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
                 name = base + suffix;
             }
             loaderFunctions.put(loaderId(entry.getKey(), entry.getValue()), name);
+        }
+        // Two relations of one entity can differ only in case, such as `owner` and `Owner`.
+        for (ExposedEntity entity : entities) {
+            Set<String> methods = new LinkedHashSet<>();
+            for (ExposedRelation relation : entity.relations()) {
+                if (relation.many()) {
+                    continue;
+                }
+                String base = "prefetch" + capitalize(unescape(relation.field()));
+                String name = base;
+                for (int suffix = 2; !methods.add(name); suffix++) {
+                    name = base + suffix;
+                }
+                prefetchMethods.put(loaderId(entity, relation), name);
+            }
         }
     }
 
@@ -207,8 +223,8 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         }
     }
 
-    // The enum filters that the service generates, as `appendEnumFilters` writes them, compared with each other and
-    // with the types generated for the entities.
+    // The enum filters that the service generates, as `appendEnumFilters` writes them, compared with each other, with
+    // the library's types and with the types generated for the entities.
     private static List<String> enumFilterClashes(List<ExposedEntity> entities) {
         List<String> errors = new ArrayList<>();
         Map<String, String> entityTypes = new LinkedHashMap<>();
@@ -230,7 +246,10 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
                 String filter = enumFilter(field.type(), column.nullable());
                 String owner = enumName + (column.nullable() ? "?" : "");
                 String other = filters.putIfAbsent(filter, owner);
-                if (other == null && entityTypes.containsKey(filter)) {
+                if (other == null && LIBRARY_TYPES.contains(filter)) {
+                    errors.add(String.format(DataServiceMessages.GRAPHQL_ENUM_FILTER_LIBRARY_CLASH, filter,
+                            enumName));
+                } else if (other == null && entityTypes.containsKey(filter)) {
                     errors.add(String.format(DataServiceMessages.GRAPHQL_ENUM_FILTER_CLASH, filter, enumName,
                             entityTypes.get(filter)));
                 } else if (other != null && !other.equals(owner)) {
@@ -252,7 +271,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
     private static List<String> generatedTypeNames(ExposedEntity entity, List<ExposedEntity> exposed) {
         Names n = new Names(entity);
         List<String> types = new ArrayList<>();
-        if (entity.allows(READ) || entity.allows(CREATE)) {
+        if (entity.allows(READ) || creatable(entity)) {
             types.addAll(List.of(n.object, n.list));
         }
         if (entity.allows(READ)) {
@@ -266,7 +285,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
                 types.add(n.relatedList);
             }
         }
-        if (entity.allows(CREATE)) {
+        if (creatable(entity)) {
             types.add(n.insertInput);
         }
         if (updatable(entity)) {
@@ -347,7 +366,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
                 appendGetMany(body, entity, imports);
                 appendGetOne(body, entity, imports);
             }
-            if (entity.allows(CREATE)) {
+            if (creatable(entity)) {
                 appendCreate(body, entity, imports);
             }
             if (updatable(entity)) {
@@ -359,7 +378,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         }
         body.append("}").append(NEWLINE);
         for (ExposedEntity entity : entities) {
-            if (entity.allows(CREATE)) {
+            if (creatable(entity)) {
                 appendCreateFunction(body, entity, imports);
             }
         }
@@ -378,7 +397,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         Set<String> imports = new TreeSet<>();
         StringBuilder body = new StringBuilder();
         for (ExposedEntity entity : entities) {
-            boolean returned = entity.allows(READ) || entity.allows(CREATE);
+            boolean returned = entity.allows(READ) || creatable(entity);
             if (returned) {
                 appendObject(body, entity, imports);
                 appendList(body, entity);
@@ -389,7 +408,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
                 appendSort(body, entity);
                 imports.add(DATASERVICE_GRAPHQL_IMPORT);
             }
-            if (entity.allows(CREATE)) {
+            if (creatable(entity)) {
                 appendInsertInput(body, entity);
             }
             if (updatable(entity)) {
@@ -399,7 +418,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
                 imports.add(DATASERVICE_IMPORT);
                 EntityDescription.append(body, entity, entitiesByName, datastore);
             }
-            if (entity.allows(CREATE)) {
+            if (creatable(entity)) {
                 appendInsertConverter(body, entity, imports);
             }
             if (updatable(entity)) {
@@ -784,6 +803,11 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
     // The fields a patch can change: no key, `ReadOnly`, `Immutable` or `Internal` field.
     private static List<ServiceField> updateInputFields(ExposedEntity entity) {
         return entity.updateFields().stream().filter(field -> field.rule().isEmpty()).toList();
+    }
+
+    // GraphQL has no empty input type, so an entity without a field that a client can give has no create.
+    private static boolean creatable(ExposedEntity entity) {
+        return entity.allows(CREATE) && !insertInputFields(entity).isEmpty();
     }
 
     // GraphQL has no empty input type, so an entity without a field that a patch can change has no patch.
@@ -1212,7 +1236,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
         imports.add(GRAPHQL_IMPORT);
         Names n = new Names(entity);
         Names t = new Names(target(relation));
-        String prefetch = "prefetch" + capitalize(unescape(relation.field()));
+        String prefetch = prefetchMethods.get(loaderId(entity, relation));
         String link = link(relation);
         out.append(NEWLINE).append("    isolated function ").append(prefetch).append("(graphql:Context ctx) {")
                 .append(NEWLINE);
@@ -1561,7 +1585,7 @@ public final class GraphqlDataServiceGenerator implements DataServiceGenerator {
                 fields.add(getMany);
                 fields.add(getOne);
             }
-            if (entity.allows(CREATE)) {
+            if (creatable(entity)) {
                 fields.add(createOne);
                 fields.add(createMany);
             }

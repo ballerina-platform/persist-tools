@@ -215,6 +215,10 @@ public class GraphqlDataServiceGeneratorTest {
                         "    StateNullable b;\n|};\n\nenum State {\n    A\n}\n\nenum StateNullable {\n    B\n}\n",
                         "the filter 'StateNullableFilter' is generated for both the enum 'State' and the enum " +
                                 "'StateNullable'. Rename one of them."},
+                {header + "@dataservice:Expose\ntype Item record {|\n    readonly int id;\n" +
+                        "    StringNullable a;\n|};\n\nenum StringNullable {\n    A\n}\n",
+                        "the filter 'StringNullableFilter' of the enum 'StringNullable' has the name of a type of " +
+                                "ballerina/dataservice.graphql. Rename the enum."},
                 {header + "@dataservice:Expose\ntype Int record {|\n    readonly int id;\n|};\n",
                         "the data service generates the type 'IntFilter' for the entity 'Int', and " +
                                 "ballerina/dataservice.graphql has a type of that name. Rename the entity, or remove " +
@@ -261,6 +265,24 @@ public class GraphqlDataServiceGeneratorTest {
                 "    readonly int id;\n|};\n", false);
         Assert.assertFalse(generator.generateService().contains("updateItem"));
         Assert.assertFalse(generator.generateTypes().orElseThrow().contains("ItemUpdate"));
+    }
+
+    @Test(description = "An entity without a field that a client gives has no create")
+    public void testGeneratedKeyOnlyEntityHasNoCreate() throws BalException, IOException {
+        GraphqlDataServiceGenerator generator = fromModel("import ballerinax/persist.sql;\n\n" +
+                "@dataservice:Expose\ntype Item record {|\n    @sql:Generated\n    readonly int id;\n|};\n", false);
+        Assert.assertFalse(generator.generateService().contains("createItem"));
+        Assert.assertFalse(generator.generateTypes().orElseThrow().contains("ItemInsertInput"));
+    }
+
+    @Test(description = "Two to-one relations whose names differ only in case get different prefetch methods")
+    public void testPrefetchNamesAreUnique() throws BalException, IOException {
+        String types = fromModel("@dataservice:Expose\ntype Owner record {|\n    readonly int id;\n" +
+                "    Item[] items;\n|};\n\n@dataservice:Expose\ntype Boss record {|\n    readonly int id;\n" +
+                "    Item[] items;\n|};\n\n@dataservice:Expose\ntype Item record {|\n    readonly int id;\n" +
+                "    Owner owner;\n    Boss Owner;\n|};\n", false).generateTypes().orElseThrow();
+        Assert.assertTrue(types.contains("@graphql:ResourceConfig {prefetchMethodName: \"prefetchOwner\"}"), types);
+        Assert.assertTrue(types.contains("@graphql:ResourceConfig {prefetchMethodName: \"prefetchOwner2\"}"), types);
     }
 
     private static GraphqlDataServiceGenerator fromModel(String model, boolean auth)

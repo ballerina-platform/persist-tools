@@ -19,6 +19,7 @@
 package io.ballerina.persist.dataservice;
 
 import io.ballerina.compiler.syntax.tree.SyntaxTree;
+import io.ballerina.persist.BalException;
 import io.ballerina.tools.text.TextDocuments;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -87,7 +88,7 @@ public class ExposeAnnotationsTest {
 
 
     @Test
-    public void testScopes() {
+    public void testScopes() throws BalException {
         String model = IMPORTS + "@dataservice:Expose {operations: [dataservice:READ, dataservice:DELETE], " +
                 "scopes: {read: [], delete: [\"hr:admin\", \"hr:owner\"]}}\n" +
                 "type Employee record {| readonly int id; |};\n" +
@@ -99,7 +100,7 @@ public class ExposeAnnotationsTest {
     }
 
     @Test
-    public void testQuotedScopeKeys() {
+    public void testQuotedScopeKeys() throws BalException {
         String model = IMPORTS + "@dataservice:Expose {\"scopes\": {\"read\": [\"hr:read\"], " +
                 "'delete: [\"hr:admin\"]}}\ntype Employee record {| readonly int id; |};";
         Assert.assertEquals(read(model.substring(IMPORTS.length())).keySet(), Set.of("Employee"));
@@ -108,7 +109,16 @@ public class ExposeAnnotationsTest {
     }
 
     @Test
-    public void testEscapedNames() {
+    public void testScopeThatIsNotALiteral() {
+        String model = IMPORTS + "const READ_SCOPE = \"hr:read\";\n@dataservice:Expose {scopes: {read: [READ_SCOPE, " +
+                "\"hr:admin\"]}}\ntype Employee record {| readonly int id; |};";
+        BalException error = Assert.expectThrows(BalException.class, () -> ExposeAnnotations.scopes(tree(model)));
+        Assert.assertEquals(error.getMessage(), "the scope 'READ_SCOPE' in the @dataservice:Expose annotation of the " +
+                "entity 'Employee' is not a string literal. Write the scope as a string literal.");
+    }
+
+    @Test
+    public void testEscapedNames() throws BalException {
         String model = IMPORTS + "@dataservice:Expose {\"oper\\u{61}tions\": [\"\\u{72}ead\"], " +
                 "'scopes: {\"r\\u{65}ad\": [\"hr:read\"]}}\ntype Employee record {| readonly int id; |};";
         Assert.assertEquals(read(model.substring(IMPORTS.length())), Map.of("Employee", EnumSet.of(READ)));
