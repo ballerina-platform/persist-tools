@@ -184,13 +184,27 @@ public class HttpDataServiceGeneratorTest {
         String types = lf(new HttpDataServiceGenerator(DataServiceModel.resolve(modelPath, module, false).entities(),
                 new DataServiceOptions("http", "/api", auth, true), "hr", module.getModuleName(), "h2", false)
                 .generateTypes().orElseThrow());
-        Matcher record = Pattern.compile("((?:^#.*\\n)+)public type (\\w+) record", Pattern.MULTILINE)
-                .matcher(types);
+        Matcher record = Pattern.compile("((?:^#.*\\n)+)public type (\\w+) record \\{\\|?\\n([\\s\\S]*?)^\\|?};",
+                Pattern.MULTILINE).matcher(types);
         int records = 0;
         while (record.find()) {
             records++;
-            Assert.assertFalse(record.group(1).contains("# + "), "record " + record.group(2)
+            String name = record.group(2);
+            Assert.assertFalse(record.group(1).contains("# + "), "record " + name
                     + " documents its fields in its own doc comment");
+            // A top-level field starts at four spaces, below its doc and annotations; type inclusions such as
+            // `*http:Created` carry no doc.
+            String[] lines = record.group(3).split("\n");
+            for (int i = 0; i < lines.length; i++) {
+                if (lines[i].matches(" {4}[^ #*|@].*")) {
+                    int doc = i - 1;
+                    while (doc >= 0 && lines[doc].startsWith("    @")) {
+                        doc--;
+                    }
+                    Assert.assertTrue(doc >= 0 && lines[doc].startsWith("    # "), "field `" + lines[i].strip()
+                            + "` of record " + name + " has no doc comment above it");
+                }
+            }
         }
         Assert.assertTrue(records > 0, "no record in the types of " + model);
     }
