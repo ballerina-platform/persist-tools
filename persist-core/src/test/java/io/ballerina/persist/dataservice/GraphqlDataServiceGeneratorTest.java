@@ -88,7 +88,7 @@ public class GraphqlDataServiceGeneratorTest {
     public void testServiceVariant(String basePath, boolean introspection, boolean userOwned, List<String[]> service)
             throws BalException, IOException {
         GraphqlDataServiceGenerator generator = generator("demo", basePath, false, introspection, userOwned);
-        Assert.assertEquals(generator.generateService(), edit("dataservice.bal", service));
+        Assert.assertEquals(lf(generator.generateService()), edit("dataservice.bal", service));
     }
 
     @DataProvider
@@ -232,10 +232,10 @@ public class GraphqlDataServiceGeneratorTest {
 
     @Test(description = "Two to-one relations whose names concatenate to one loader get different loaders")
     public void testLoaderNamesAreUnique() throws BalException, IOException {
-        String service = fromModel("@dataservice:Expose\ntype Owner record {|\n    readonly int id;\n" +
+        String service = lf(fromModel("@dataservice:Expose\ntype Owner record {|\n    readonly int id;\n" +
                 "    Sales[] sales;\n    SalesLead[] leads;\n|};\n\n@dataservice:Expose\ntype Sales record {|\n" +
                 "    readonly int id;\n    Owner leadOwner;\n|};\n\n@dataservice:Expose\ntype SalesLead record {|\n" +
-                "    readonly int id;\n    Owner owner;\n|};\n", false).generateService();
+                "    readonly int id;\n    Owner owner;\n|};\n", false).generateService());
         Assert.assertTrue(service.contains("ctx.registerDataLoader(\"Sales.leadOwner\",\n" +
                 "            new dataloader:DefaultDataLoader(dataserviceLoadSalesLeadOwner));"), service);
         Assert.assertTrue(service.contains("ctx.registerDataLoader(\"SalesLead.owner\",\n" +
@@ -320,8 +320,13 @@ public class GraphqlDataServiceGeneratorTest {
                 userOwned);
     }
 
+    private static String lf(String source) {
+        // The generator writes the platform's line separator, and Git may check the golden files out with CRLF.
+        return source.replace("\r\n", "\n");
+    }
+
     private static String edit(String golden, List<String[]> edits) throws IOException {
-        String expected = Files.readString(RESOURCES.resolve("demo").resolve(golden), StandardCharsets.UTF_8);
+        String expected = lf(Files.readString(RESOURCES.resolve("demo").resolve(golden), StandardCharsets.UTF_8));
         for (String[] edit : edits) {
             Assert.assertTrue(expected.contains(edit[0]), "missing '" + edit[0] + "' in " + golden);
             expected = expected.replace(edit[0], edit[1]);

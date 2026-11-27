@@ -189,24 +189,24 @@ public class ToolingDataServiceTest {
     public void testGraphqlBehaviourH2() throws IOException, InterruptedException {
         Path project = SOURCES.resolve("tool_test_dataservice_graphql");
         assertSucceeded(bal(project, Map.of(), "build", "--offline"));
-        Path init = project.resolve("db").resolve("init.sql");
-        Files.createDirectories(init.getParent());
+        Path db = Files.createDirectories(project.resolve("db"));
+        Path init = db.resolve("init.sql");
         String schema = Files.readAllLines(project.resolve("generated").resolve("script.sql")).stream()
                 .filter(line -> !line.startsWith("DROP"))
                 .map(line -> line.replace("CREATE TABLE ", "CREATE TABLE IF NOT EXISTS "))
                 .collect(Collectors.joining(System.lineSeparator()));
         Files.writeString(init, schema);
-        Files.writeString(project.resolve("tests").resolve("Config.toml"), String.format("""
+        Files.writeString(project.resolve("tests").resolve("Config.toml"), """
                 [dataserviceConfig]
                 port = 9593
                 pageSize = 2
                 maxPageSize = 3
 
                 [dataservice_test.dataservice_graphql]
-                url = "jdbc:h2:mem:dsgraphql;DB_CLOSE_DELAY=-1;INIT=RUNSCRIPT FROM '%s'"
+                url = "jdbc:h2:mem:dsgraphql;DB_CLOSE_DELAY=-1;INIT=RUNSCRIPT FROM '{init}'"
                 user = "sa"
                 password = ""
-                """, init.toString().replace('\\', '/')));
+                """.replace("{init}", init.toString().replace('\\', '/')));
         // H2 reads a time:Utc back from a TIMESTAMP column as local time, so the service runs in UTC.
         assertTestsPassed(bal(project, Map.of("TZ", "UTC"), "test", "--offline"), 69);
     }
@@ -215,14 +215,14 @@ public class ToolingDataServiceTest {
     public void testGraphqlAuthBehaviourH2() throws IOException, InterruptedException {
         Path project = SOURCES.resolve("tool_test_dataservice_graphql_auth");
         assertSucceeded(bal(project, Map.of(), "build", "--offline"));
-        Path init = project.resolve("db").resolve("init.sql");
-        Files.createDirectories(init.getParent());
+        Path db = Files.createDirectories(project.resolve("db"));
+        Path init = db.resolve("init.sql");
         String schema = Files.readAllLines(project.resolve("generated").resolve("script.sql")).stream()
                 .filter(line -> !line.startsWith("DROP"))
                 .map(line -> line.replace("CREATE TABLE ", "CREATE TABLE IF NOT EXISTS "))
                 .collect(Collectors.joining(System.lineSeparator()));
         Files.writeString(init, schema);
-        Files.writeString(project.resolve("tests").resolve("Config.toml"), String.format("""
+        Files.writeString(project.resolve("tests").resolve("Config.toml"), """
                 [dataserviceConfig]
                 port = 9594
 
@@ -240,7 +240,7 @@ public class ToolingDataServiceTest {
                 secret = "dataservice-test-secret"
 
                 [dataservice_test.dataservice_graphql_auth]
-                url = "jdbc:h2:mem:dsgraphqlauth;DB_CLOSE_DELAY=-1;INIT=RUNSCRIPT FROM '%s'"
+                url = "jdbc:h2:mem:dsgraphqlauth;DB_CLOSE_DELAY=-1;INIT=RUNSCRIPT FROM '{init}'"
                 user = "sa"
                 password = ""
 
@@ -272,7 +272,7 @@ public class ToolingDataServiceTest {
                 [[ballerina.auth.users]]
                 username = "guest"
                 password = "guest"
-                """, init.toString().replace('\\', '/')));
+                """.replace("{init}", init.toString().replace('\\', '/')));
         assertTestsPassed(bal(project, Map.of(), "test", "--offline"), 19);
     }
 
