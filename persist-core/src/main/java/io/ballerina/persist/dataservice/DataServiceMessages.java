@@ -23,7 +23,7 @@ package io.ballerina.persist.dataservice;
  */
 public final class DataServiceMessages {
 
-    public static final String SUPPORTED_PROTOCOLS = "http";
+    public static final String SUPPORTED_PROTOCOLS = "http, graphql";
 
     public static final String PROTOCOL_REQUIRED =
             "'options.dataservice.protocol' is required. Supported values: " + SUPPORTED_PROTOCOLS + ".";
@@ -67,6 +67,33 @@ public final class DataServiceMessages {
             "exposed. Remove its @dataservice:Expose annotation.";
     public static final String SCOPES_WITHOUT_AUTH = "the @dataservice:Expose annotation of the entity '%s' sets " +
             "scopes, but 'options.dataservice.auth' is not true. Set it to true, or remove the scopes.";
+    public static final String SCOPE_NOT_LITERAL = "the scope '%s' in the @dataservice:Expose annotation of the " +
+            "entity '%s' is not a string literal. Write the scope as a string literal.";
+    public static final String GRAPHQL_NO_READ = "a GraphQL data service needs at least one entity that allows " +
+            "'read'. Add dataservice:READ to the 'operations' of an entity.";
+    public static final String GRAPHQL_FIELD_CLASH = "the entities '%s' and '%s' map to the same GraphQL field " +
+            "'%s'. Rename one of them, or remove its @dataservice:Expose annotation.";
+    public static final String GRAPHQL_RESERVED_FIELD = "the field '%s' of the entity '%s' starts with '_', which " +
+            "the GraphQL data service reserves. Rename the field, or mark it @dataservice:Internal.";
+    public static final String GRAPHQL_INVALID_NAME = "the name '%s' of the entity '%s' is not a valid GraphQL " +
+            "name. Rename it, or mark the field @dataservice:Internal.";
+    public static final String GRAPHQL_TYPE_CLASH = "the type '%s' clashes with a type of the GraphQL data " +
+            "service. Rename it.";
+    public static final String GRAPHQL_LIBRARY_TYPE_CLASH = "the data service generates the type '%s' for the " +
+            "entity '%s', and ballerina/dataservice.graphql has a type of that name. Rename the entity, or remove " +
+            "the @dataservice:Expose annotation of '%s'.";
+    public static final String GRAPHQL_ENUM_FILTER_CLASH = "the filter '%s' of the enum '%s' has the name of a type " +
+            "that the data service generates for the entity '%s'. Rename one of them.";
+    public static final String GRAPHQL_ENUM_FILTER_LIBRARY_CLASH = "the filter '%s' of the enum '%s' has the name " +
+            "of a type of ballerina/dataservice.graphql. Rename the enum.";
+    public static final String GRAPHQL_ENUM_FILTERS_CLASH = "the filter '%s' is generated for both the enum '%s' " +
+            "and the enum '%s'. Rename one of them.";
+    public static final String GRAPHQL_UNSET_FIELD = "the field 'unset' of the entity '%s' clashes with the field " +
+            "of its update input that names the fields to set to null. Rename the field.";
+    public static final String PULL_SKIPS_LIBRARY_TYPE = "the entity '%s' of the table '%s' would generate the type " +
+            "'%s', which ballerina/dataservice.graphql has, so it is not exposed.";
+    public static final String EXPOSE_TABLE_LIBRARY_TYPE = "the table '%s' in '--expose-tables' would generate the " +
+            "type '%s', which ballerina/dataservice.graphql has. Remove the table from '--expose-tables'.";
     public static final String ANNOTATIONS_WITHOUT_OPTIONS = "the model has @dataservice:Expose annotations, but no " +
             "data service is generated. Set 'options.dataservice.protocol' in the [[tool.persist]] entry to " +
             "generate one.";

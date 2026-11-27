@@ -18,3 +18,9 @@ type People record {|
     readonly int id;
     string name;
 |};
+
+@sql:Name {value: "inputs"}
+type Input record {|
+    readonly int input;
+    string name;
+|};

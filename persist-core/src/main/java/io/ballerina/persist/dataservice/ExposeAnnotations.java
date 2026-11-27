@@ -93,9 +93,11 @@ public final class ExposeAnnotations {
      *
      * @param model the syntax tree of the model
      * @return per annotated entity, the scopes of each action its annotation lists
+     * @throws BalException if a scope is not a string literal
      */
-    public static Map<String, Map<Operation, List<String>>> scopes(SyntaxTree model) {
+    public static Map<String, Map<Operation, List<String>>> scopes(SyntaxTree model) throws BalException {
         Map<String, Map<Operation, List<String>>> scopes = new LinkedHashMap<>();
+        List<String> errors = new ArrayList<>();
         ModulePartNode root = model.rootNode();
         Optional<String> prefix = prefix(root);
         if (prefix.isEmpty()) {
@@ -106,13 +108,25 @@ public final class ExposeAnnotations {
                 continue;
             }
             for (AnnotationNode annotation : exposeAnnotations(member, prefix.get())) {
+                String entity = type.typeName().text().trim();
                 Map<Operation, List<String>> entityScopes = new LinkedHashMap<>();
                 for (SpecificFieldNode action : scopeActions(annotation)) {
-                    actionOf(action).ifPresent(operation -> entityScopes.put(operation,
-                            scopeValues(action).stream().map(ExposeAnnotations::scopeText).toList()));
+                    List<String> values = new ArrayList<>();
+                    for (Node value : scopeValues(action)) {
+                        if (value instanceof BasicLiteralNode literal && literal.kind() == SyntaxKind.STRING_LITERAL) {
+                            values.add(scopeText(literal));
+                        } else {
+                            errors.add(String.format(DataServiceMessages.SCOPE_NOT_LITERAL,
+                                    value.toSourceCode().trim(), entity));
+                        }
+                    }
+                    actionOf(action).ifPresent(operation -> entityScopes.put(operation, values));
                 }
-                scopes.put(type.typeName().text().trim(), entityScopes);
+                scopes.put(entity, entityScopes);
             }
+        }
+        if (!errors.isEmpty()) {
+            throw new BalException(String.join(System.lineSeparator(), errors));
         }
         return scopes;
     }
@@ -305,13 +319,10 @@ public final class ExposeAnnotations {
         return List.of();
     }
 
-    // A string literal is read as its value; any other expression is kept as written.
-    private static String scopeText(Node value) {
-        if (value instanceof BasicLiteralNode literal && literal.kind() == SyntaxKind.STRING_LITERAL) {
-            String text = literal.literalToken().text();
-            return text.substring(1, text.length() - 1);
-        }
-        return value.toSourceCode().trim();
+    // The literal's body as written, so that the generated source quotes it unchanged.
+    private static String scopeText(BasicLiteralNode literal) {
+        String text = literal.literalToken().text();
+        return text.substring(1, text.length() - 1);
     }
 
     private static Optional<Operation> operation(Node member, String prefix) {

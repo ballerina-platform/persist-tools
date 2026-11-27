@@ -32,6 +32,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static io.ballerina.persist.dataservice.DataServiceUtils.isInternal;
 
@@ -132,30 +134,8 @@ public final class DataServiceModel {
         }
         Map<String, ExposedEntity> byName = new LinkedHashMap<>();
         exposed.forEach(entity -> byName.put(entity.name(), entity));
-        List<ExposedEntity> resolved = exposed.stream().map(entity -> entity.withRelations(
+        return exposed.stream().map(entity -> entity.withRelations(
                 readableRelations(entityModule.getEntityMap().get(entity.name()), byName, rules))).toList();
-        // The entity that each generated type is declared for, by type name. The generated types depend on the
-        // relations, so they are checked once the relations are resolved.
-        Map<String, String> generated = new LinkedHashMap<>();
-        for (ExposedEntity entity : resolved) {
-            for (String typeName : generatedTypeNames(entity, resolved)) {
-                String owner = generated.putIfAbsent(typeName, entity.name());
-                if (entityModule.getEntityMap().containsKey(typeName)) {
-                    errors.add(String.format(DataServiceMessages.TYPE_NAME_CLASH, typeName, entity.name(),
-                            entity.name()));
-                } else if (entityModule.getEnumMap().containsKey(typeName)) {
-                    errors.add(String.format(DataServiceMessages.ENUM_NAME_CLASH, typeName, entity.name(),
-                            entity.name()));
-                } else if (owner != null && !owner.equals(entity.name())) {
-                    errors.add(String.format(DataServiceMessages.GENERATED_TYPE_CLASH, typeName, owner,
-                            entity.name()));
-                }
-            }
-        }
-        if (!errors.isEmpty()) {
-            throw new BalException(String.join(System.lineSeparator(), errors));
-        }
-        return resolved;
     }
 
     // A relation is readable when both entities allow read and neither its relation field nor its foreign key is
@@ -200,48 +180,40 @@ public final class DataServiceModel {
                 .map(entity -> String.format(DataServiceMessages.SCOPES_WITHOUT_AUTH, entity.name())).toList();
     }
 
-    // The types that `HttpDataServiceGenerator` declares for an entity, under the same conditions.
-    private static List<String> generatedTypeNames(ExposedEntity entity, List<ExposedEntity> exposed) {
-        List<String> suffixes = new ArrayList<>();
-        if (entity.hasWireTypes()) {
-            suffixes.add("Payload");
-            if (entity.allows(Operation.CREATE)) {
-                suffixes.add("InsertPayload");
-            }
-            if (entity.allows(Operation.UPDATE)) {
-                suffixes.add("UpdatePayload");
+    /**
+     * Checks the types a protocol generates for the exposed entities against the model and against each other. A
+     * protocol's types share the module with the persist types of the model.
+     *
+     * @param entities       the exposed entities, with their relations resolved
+     * @param entityModule   the persist model
+     * @param generatedTypes the types the protocol declares for an entity, under the conditions it declares them
+     * @return one error per clash
+     */
+    static List<String> typeNameClashes(List<ExposedEntity> entities, Module entityModule,
+                                        Function<ExposedEntity, List<String>> generatedTypes) {
+        List<String> errors = new ArrayList<>();
+        Set<String> entityNames = unescaped(entityModule.getEntityMap().keySet());
+        Set<String> enumNames = unescaped(entityModule.getEnumMap().keySet());
+        // The entity that each generated type is declared for, by type name.
+        Map<String, String> generated = new LinkedHashMap<>();
+        for (ExposedEntity entity : entities) {
+            String name = DataServiceUtils.unescape(entity.name());
+            for (String typeName : generatedTypes.apply(entity)) {
+                String owner = generated.putIfAbsent(typeName, name);
+                if (entityNames.contains(typeName)) {
+                    errors.add(String.format(DataServiceMessages.TYPE_NAME_CLASH, typeName, name, name));
+                } else if (enumNames.contains(typeName)) {
+                    errors.add(String.format(DataServiceMessages.ENUM_NAME_CLASH, typeName, name, name));
+                } else if (owner != null && !owner.equals(name)) {
+                    errors.add(String.format(DataServiceMessages.GENERATED_TYPE_CLASH, typeName, owner, name));
+                }
             }
         }
-        if (entity.allows(Operation.READ) || entity.allows(Operation.CREATE)) {
-            suffixes.add("List");
-        }
-        if (entity.allows(Operation.READ)) {
-            suffixes.addAll(List.of("Filter", "Partial", "PartialList"));
-            List<ExposedRelation> reaching = exposed.stream().flatMap(other -> other.relations().stream())
-                    .filter(relation -> relation.target().equals(entity.name())).toList();
-            if (!reaching.isEmpty()) {
-                suffixes.add("RelatedPartial");
-            }
-            if (reaching.stream().anyMatch(ExposedRelation::many)) {
-                suffixes.add("RelatedPartialList");
-            }
-        }
-        if (entity.allows(Operation.CREATE)) {
-            suffixes.addAll(List.of("Created", "ListCreated"));
-        }
-        return suffixes.stream().map(suffix -> entity.name() + suffix).toList();
+        return errors;
     }
 
-    /**
-     * Returns the types the data service declares for an entity that every operation exposes, as `pull` exposes it.
-     *
-     * @param entityName the entity name
-     * @return the type names
-     */
-    static List<String> pulledTypeNames(String entityName) {
-        return List.of("List", "Filter", "Partial", "PartialList", "RelatedPartial", "RelatedPartialList",
-                "Created", "ListCreated", "Payload", "InsertPayload", "UpdatePayload").stream()
-                .map(suffix -> entityName + suffix).toList();
+    private static Set<String> unescaped(Set<String> names) {
+        return names.stream().map(DataServiceUtils::unescape).collect(Collectors.toSet());
     }
 
     // The key fields whose names the generated resources use for their own parameters and variables.

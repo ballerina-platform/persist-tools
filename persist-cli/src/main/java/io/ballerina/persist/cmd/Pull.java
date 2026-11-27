@@ -266,7 +266,7 @@ public class Pull implements BLauncherCmd {
         PullExposure exposure = new PullExposure(Set.of(), List.of());
         if (protocol != null) {
             try {
-                exposure = PullExposure.select(entityModule, exposeTables);
+                exposure = PullExposure.select(entityModule, protocol, exposeTables);
             } catch (BalException e) {
                 Utils.printErrors(errStream, e.getMessage());
                 return;

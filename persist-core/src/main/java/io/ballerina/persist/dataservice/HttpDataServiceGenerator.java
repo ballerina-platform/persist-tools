@@ -18,17 +18,11 @@
 
 package io.ballerina.persist.dataservice;
 
-import io.ballerina.compiler.syntax.tree.SyntaxInfo;
-import io.ballerina.compiler.syntax.tree.SyntaxTree;
 import io.ballerina.persist.BalException;
 import io.ballerina.persist.inflector.Pluralizer;
+import io.ballerina.persist.models.Module;
 import io.ballerina.persist.nodegenerator.syntax.constants.BalSyntaxConstants;
 import io.ballerina.persist.utils.FileUtils;
-import io.ballerina.tools.diagnostics.Diagnostic;
-import io.ballerina.tools.diagnostics.DiagnosticSeverity;
-import io.ballerina.tools.text.TextDocuments;
-import org.ballerinalang.formatter.core.Formatter;
-import org.ballerinalang.formatter.core.FormatterException;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -41,9 +35,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static io.ballerina.persist.dataservice.DataServiceUtils.NEWLINE;
 import static io.ballerina.persist.dataservice.DataServiceUtils.WORD_BOUNDARY;
 import static io.ballerina.persist.dataservice.DataServiceUtils.unescape;
 import static io.ballerina.persist.dataservice.Operation.CREATE;
@@ -54,13 +48,8 @@ import static io.ballerina.persist.dataservice.Operation.UPDATE;
 /**
  * Generates the sources of an HTTP data service, as the HTTP data service proposal defines them.
  */
-public final class HttpDataServiceGenerator {
+public final class HttpDataServiceGenerator implements DataServiceGenerator {
 
-    public static final String SERVICE_FILE = "dataservice.bal";
-    public static final String TYPES_FILE = "dataservice_types.bal";
-    public static final String CONFIG_FILE = "dataservice_config.bal";
-
-    private static final String NEWLINE = System.lineSeparator();
     private static final String RELATED_OPERATION = "get related";
     private static final Map<Operation, String> HTTP_METHODS = Map.of(READ, "GET", CREATE, "POST", UPDATE, "PATCH",
             DELETE, "DELETE");
@@ -73,7 +62,6 @@ public final class HttpDataServiceGenerator {
     private static final List<String> DELETE_ERRORS = List.of("dsHttp:NotFound", "dsHttp:InvalidInput",
             "dsHttp:ConstraintViolation");
     private static final String NO_CONTENT = "http:NoContent";
-    private static final Pattern IDENTIFIER = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*");
     private static final String DATASERVICE_IMPORT = "import ballerina/dataservice;";
     private static final String DATASERVICE_HTTP_IMPORT = "import ballerina/dataservice.http as dsHttp;";
     private static final String HTTP_IMPORT = "import ballerina/http;";
@@ -88,6 +76,59 @@ public final class HttpDataServiceGenerator {
     private final String datastore;
     private final boolean userOwned;
     private final boolean eagerLoading;
+
+    /**
+     * Checks the exposed entities against the rules of the HTTP data service.
+     *
+     * @param entities     the exposed entities, in model order
+     * @param entityModule the persist model, whose entity names become Ballerina types
+     * @throws BalException with every problem found, one per line
+     */
+    public static void validate(List<ExposedEntity> entities, Module entityModule) throws BalException {
+        List<String> errors = DataServiceModel.typeNameClashes(entities, entityModule,
+                entity -> generatedTypeNames(entity, entities));
+        if (!errors.isEmpty()) {
+            throw new BalException(String.join(NEWLINE, errors));
+        }
+    }
+
+    // The types this generator declares for an entity, under the same conditions.
+    private static List<String> generatedTypeNames(ExposedEntity entity, List<ExposedEntity> exposed) {
+        List<String> suffixes = new ArrayList<>();
+        if (entity.hasWireTypes()) {
+            suffixes.add("Payload");
+            if (entity.allows(CREATE)) {
+                suffixes.add("InsertPayload");
+            }
+            if (entity.allows(UPDATE)) {
+                suffixes.add("UpdatePayload");
+            }
+        }
+        if (entity.allows(READ) || entity.allows(CREATE)) {
+            suffixes.add("List");
+        }
+        if (entity.allows(READ)) {
+            suffixes.addAll(List.of("Filter", "Partial", "PartialList"));
+            List<ExposedRelation> reaching = exposed.stream().flatMap(other -> other.relations().stream())
+                    .filter(relation -> relation.target().equals(entity.name())).toList();
+            if (!reaching.isEmpty()) {
+                suffixes.add("RelatedPartial");
+            }
+            if (reaching.stream().anyMatch(ExposedRelation::many)) {
+                suffixes.add("RelatedPartialList");
+            }
+        }
+        if (entity.allows(CREATE)) {
+            suffixes.addAll(List.of("Created", "ListCreated"));
+        }
+        return suffixes.stream().map(suffix -> unescape(entity.name()) + suffix).toList();
+    }
+
+    static List<String> pulledTypeNames(String entityName) {
+        return List.of("List", "Filter", "Partial", "PartialList", "RelatedPartial", "RelatedPartialList",
+                "Created", "ListCreated", "Payload", "InsertPayload", "UpdatePayload").stream()
+                .map(suffix -> entityName + suffix).toList();
+    }
 
     /**
      * Creates a generator for a data service.
@@ -137,6 +178,7 @@ public final class HttpDataServiceGenerator {
      * @throws BalException if a source cannot be formatted or its directory cannot be created
      * @throws IOException  if a file cannot be written or deleted
      */
+    @Override
     public void write(Path dir) throws BalException, IOException {
         FileUtils.writeToTargetFile(generateService(), dir.resolve(SERVICE_FILE).toAbsolutePath().toString());
         Path typesFile = dir.resolve(TYPES_FILE);
@@ -333,7 +375,7 @@ public final class HttpDataServiceGenerator {
             for (Operation action : List.of(READ, CREATE, UPDATE, DELETE)) {
                 List<String> scopes = entity.scopes(action);
                 if (entity.allows(action) && !scopes.isEmpty()) {
-                    methods.add("\"" + HTTP_METHODS.get(action) + "\": " + stringList(scopes));
+                    methods.add("\"" + HTTP_METHODS.get(action) + "\": " + scopeList(scopes));
                 }
             }
             if (!methods.isEmpty()) {
@@ -346,24 +388,11 @@ public final class HttpDataServiceGenerator {
     }
 
     private String header(String reason) {
-        if (userOwned) {
-            return "// AUTO-GENERATED FILE." + NEWLINE + NEWLINE + reason + NEWLINE + NEWLINE;
-        }
-        return BalSyntaxConstants.AUTOGENERATED_FILE_COMMENT + NEWLINE + NEWLINE + reason + NEWLINE +
-                BalSyntaxConstants.COMMENT_SHOULD_NOT_BE_MODIFIED + NEWLINE + NEWLINE;
+        return DataServiceUtils.header(reason, userOwned);
     }
 
     private String servicePath() {
-        if ("/".equals(basePath)) {
-            return "/";
-        }
-        String[] segments = basePath.substring(1).split("/");
-        for (String segment : segments) {
-            if (!IDENTIFIER.matcher(segment).matches() || SyntaxInfo.isKeyword(segment)) {
-                return "\"" + basePath + "\"";
-            }
-        }
-        return basePath;
+        return DataServiceUtils.servicePath(basePath);
     }
 
     private void appendResources(StringBuilder out, ExposedEntity entity, Set<String> imports) {
@@ -803,7 +832,7 @@ public final class HttpDataServiceGenerator {
         out.append(indent).append("dsHttp:Forbidden? forbidden =").append(NEWLINE).append(indent)
                 .append("    dsHttp:checkRelationScopes(ctx, \"")
                 .append(n.displayName).append("\", \"").append(unescape(relation.field())).append("\", \"")
-                .append(new Names(target).displayName).append("\", ").append(stringList(target.scopes(READ)))
+                .append(new Names(target).displayName).append("\", ").append(scopeList(target.scopes(READ)))
                 .append(");").append(NEWLINE);
         out.append(indent).append("if forbidden is dsHttp:Forbidden {").append(NEWLINE);
         out.append(indent).append("    return forbidden;").append(NEWLINE);
@@ -821,7 +850,7 @@ public final class HttpDataServiceGenerator {
     }
 
     private void appendHoldsRead(StringBuilder out, ExposedEntity entity) {
-        out.append("        boolean readable = dsHttp:hasScope(ctx, ").append(stringList(entity.scopes(READ)))
+        out.append("        boolean readable = dsHttp:hasScope(ctx, ").append(scopeList(entity.scopes(READ)))
                 .append(");").append(NEWLINE);
     }
 
@@ -1057,7 +1086,7 @@ public final class HttpDataServiceGenerator {
         }
         if (entity.allows(READ) || entity.allows(CREATE)) {
             imports.add(DATASERVICE_IMPORT);
-            appendDescription(out, entity, n);
+            EntityDescription.append(out, entity, entitiesByName, datastore);
         }
         if (entity.allows(CREATE)) {
             imports.add(HTTP_IMPORT);
@@ -1159,62 +1188,8 @@ public final class HttpDataServiceGenerator {
         }
     }
 
-    private void appendDescription(StringBuilder out, ExposedEntity entity, Names n) {
-        out.append(NEWLINE).append("# The fields of `").append(n.entity).append("` that callers can see.")
-                .append(NEWLINE);
-        out.append("final readonly & dataservice:Field[] ").append(n.fields).append(" = [").append(NEWLINE);
-        List<String> members = new ArrayList<>();
-        for (ExposedEntity.Column column : entity.columns()) {
-            StringBuilder member = new StringBuilder("    {name: \"").append(column.name())
-                    .append("\", column: \"").append(column.column()).append("\", 'type: dataservice:")
-                    .append(column.type());
-            if (column.nullable()) {
-                member.append(", nullable: true");
-            }
-            if (column.key()) {
-                member.append(", key: true");
-            }
-            if (column.generated()) {
-                member.append(", generated: true");
-            }
-            members.add(member.append("}").toString());
-        }
-        out.append(String.join("," + NEWLINE, members)).append(NEWLINE).append("];").append(NEWLINE);
-        out.append(NEWLINE).append("# The description of `").append(n.entity)
-                .append("` that `ballerina/dataservice` builds queries from.").append(NEWLINE);
-        out.append("final dataservice:Entity ").append(n.description).append(" = ")
-                .append(entityLiteral(entity, "", true)).append(";").append(NEWLINE);
-    }
-
-    private String entityLiteral(ExposedEntity entity, String indent, boolean withRelations) {
-        Names n = new Names(entity);
-        StringBuilder out = new StringBuilder("{").append(NEWLINE);
-        out.append(indent).append("    name: \"").append(n.displayName).append("\",").append(NEWLINE);
-        out.append(indent).append("    collection: \"").append(n.collection).append("\",").append(NEWLINE);
-        out.append(indent).append("    'resource: \"").append(n.resource).append("\",").append(NEWLINE);
-        out.append(indent).append("    datastore: dataservice:").append(datastore.toUpperCase(Locale.ENGLISH))
-                .append(",").append(NEWLINE);
-        out.append(indent).append("    fields: ").append(n.fields);
-        if (withRelations && !entity.relations().isEmpty()) {
-            out.append(",").append(NEWLINE).append(indent).append("    relations: [").append(NEWLINE);
-            List<String> relations = new ArrayList<>();
-            for (ExposedRelation relation : entity.relations()) {
-                relations.add(indent + "        {" + NEWLINE
-                        + indent + "            'field: \"" + unescape(relation.field()) + "\"," + NEWLINE
-                        + indent + "            many: " + relation.many() + "," + NEWLINE
-                        + indent + "            fields: " + stringList(relation.fields()) + "," + NEWLINE
-                        + indent + "            targetFields: " + stringList(relation.targetFields()) + "," + NEWLINE
-                        + indent + "            target: " + entityLiteral(target(relation), indent + "            ",
-                        false) + NEWLINE + indent + "        }");
-            }
-            out.append(String.join("," + NEWLINE, relations)).append(NEWLINE).append(indent).append("    ]");
-        }
-        return out.append(NEWLINE).append(indent).append("}").toString();
-    }
-
-    private static String stringList(List<String> names) {
-        return "[" + names.stream().map(name -> "\"" + unescape(name) + "\"").collect(Collectors.joining(", "))
-                + "]";
+    private static String scopeList(List<String> scopes) {
+        return EntityDescription.scopeList(scopes);
     }
 
     // Filter keys starting with `$` are reserved for joining conditions.
@@ -1530,23 +1505,9 @@ public final class HttpDataServiceGenerator {
         return "aeiouAEIOU".indexOf(unescape(name).charAt(0)) >= 0 ? "an" : "a";
     }
 
-    // A syntax error is reported with its line, so that a broken template is found from the message.
     static String format(String source) throws BalException {
-        SyntaxTree tree = SyntaxTree.from(TextDocuments.from(source));
-        for (Diagnostic diagnostic : tree.diagnostics()) {
-            if (diagnostic.diagnosticInfo().severity() == DiagnosticSeverity.ERROR) {
-                int line = diagnostic.location().lineRange().startLine().line();
-                throw new BalException(String.format("failed to format the data service source: %s at line %d: %s",
-                        diagnostic.message(), line + 1, tree.textDocument().line(line).text().strip()));
-            }
-        }
-        try {
-            return Formatter.format(tree).toSourceCode();
-        } catch (FormatterException e) {
-            throw new BalException("failed to format the data service source. " + e.getMessage());
-        }
+        return DataServiceUtils.format(source);
     }
-
 
     private static final class Names {
         private final String entity;
@@ -1561,7 +1522,6 @@ public final class HttpDataServiceGenerator {
         private final String partial;
         private final String partialList;
         private final String description;
-        private final String fields;
         private final String relatedPartial;
         private final String relatedPartialList;
         private final String created;
@@ -1584,8 +1544,7 @@ public final class HttpDataServiceGenerator {
             this.filter = this.entity + "Filter";
             this.partial = this.entity + "Partial";
             this.partialList = this.entity + "PartialList";
-            this.description = "dataservice" + displayName + "Entity";
-            this.fields = "dataservice" + displayName + "Fields";
+            this.description = EntityDescription.descriptionName(entity);
             this.relatedPartial = this.entity + "RelatedPartial";
             this.relatedPartialList = this.entity + "RelatedPartialList";
             this.created = this.entity + "Created";

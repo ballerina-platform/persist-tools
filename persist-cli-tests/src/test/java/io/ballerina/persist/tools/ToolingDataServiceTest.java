@@ -185,6 +185,97 @@ public class ToolingDataServiceTest {
         assertTestsPassed(bal(project, Map.of(), "test", "--offline"), 15);
     }
 
+    @Test(description = "The GraphQL data service against the H2 datastore")
+    public void testGraphqlBehaviourH2() throws IOException, InterruptedException {
+        Path project = SOURCES.resolve("tool_test_dataservice_graphql");
+        assertSucceeded(bal(project, Map.of(), "build", "--offline"));
+        Path db = Files.createDirectories(project.resolve("db"));
+        Path init = db.resolve("init.sql");
+        String schema = Files.readAllLines(project.resolve("generated").resolve("script.sql")).stream()
+                .filter(line -> !line.startsWith("DROP"))
+                .map(line -> line.replace("CREATE TABLE ", "CREATE TABLE IF NOT EXISTS "))
+                .collect(Collectors.joining(System.lineSeparator()));
+        Files.writeString(init, schema);
+        Files.writeString(project.resolve("tests").resolve("Config.toml"), """
+                [dataserviceConfig]
+                port = 9593
+                pageSize = 2
+                maxPageSize = 3
+
+                [dataservice_test.dataservice_graphql]
+                url = "jdbc:h2:mem:dsgraphql;DB_CLOSE_DELAY=-1;INIT=RUNSCRIPT FROM '{init}'"
+                user = "sa"
+                password = ""
+                """.replace("{init}", init.toString().replace('\\', '/')));
+        // H2 reads a time:Utc back from a TIMESTAMP column as local time, so the service runs in UTC.
+        assertTestsPassed(bal(project, Map.of("TZ", "UTC"), "test", "--offline"), 69);
+    }
+
+    @Test(description = "Authentication, scopes and relation checks of the GraphQL data service, against H2")
+    public void testGraphqlAuthBehaviourH2() throws IOException, InterruptedException {
+        Path project = SOURCES.resolve("tool_test_dataservice_graphql_auth");
+        assertSucceeded(bal(project, Map.of(), "build", "--offline"));
+        Path db = Files.createDirectories(project.resolve("db"));
+        Path init = db.resolve("init.sql");
+        String schema = Files.readAllLines(project.resolve("generated").resolve("script.sql")).stream()
+                .filter(line -> !line.startsWith("DROP"))
+                .map(line -> line.replace("CREATE TABLE ", "CREATE TABLE IF NOT EXISTS "))
+                .collect(Collectors.joining(System.lineSeparator()));
+        Files.writeString(init, schema);
+        Files.writeString(project.resolve("tests").resolve("Config.toml"), """
+                [dataserviceConfig]
+                port = 9594
+
+                [dataserviceConfig.serviceConfig.cors]
+                allowOrigins = ["https://app.example.com"]
+
+                [[dataserviceConfig.serviceConfig.auth]]
+                [dataserviceConfig.serviceConfig.auth.fileUserStoreConfig]
+
+                [[dataserviceConfig.serviceConfig.auth]]
+                scopes = ["jwt:default"]
+                [dataserviceConfig.serviceConfig.auth.jwtValidatorConfig]
+                issuer = "dataservice"
+                [dataserviceConfig.serviceConfig.auth.jwtValidatorConfig.signatureConfig]
+                secret = "dataservice-test-secret"
+
+                [dataservice_test.dataservice_graphql_auth]
+                url = "jdbc:h2:mem:dsgraphqlauth;DB_CLOSE_DELAY=-1;INIT=RUNSCRIPT FROM '{init}'"
+                user = "sa"
+                password = ""
+
+                [[ballerina.auth.users]]
+                username = "admin"
+                password = "admin"
+                scopes = ["hr:read", "hr:admin", "employees:create", "employees:update", "assignments:read"]
+
+                [[ballerina.auth.users]]
+                username = "reader"
+                password = "reader"
+                scopes = ["hr:read"]
+
+                [[ballerina.auth.users]]
+                username = "writer"
+                password = "writer"
+                scopes = ["employees:create", "employees:update"]
+
+                [[ballerina.auth.users]]
+                username = "remover"
+                password = "remover"
+                scopes = ["hr:admin"]
+
+                [[ballerina.auth.users]]
+                username = "logger"
+                password = "logger"
+                scopes = ["log:write"]
+
+                [[ballerina.auth.users]]
+                username = "guest"
+                password = "guest"
+                """.replace("{init}", init.toString().replace('\\', '/')));
+        assertTestsPassed(bal(project, Map.of(), "test", "--offline"), 19);
+    }
+
     // Generation from bal build
 
     @Test(description = "The service is generated next to the client, with the default base path")
@@ -207,6 +298,28 @@ public class ToolingDataServiceTest {
         Assert.assertTrue(types.contains("public type EmployeePayload record {|"), types);
         Assert.assertTrue(types.contains("public type AssignmentList record {\n"), types);
         Assert.assertFalse(service.contains("public type "), service);
+    }
+
+    @Test(description = "The GraphQL service is generated with the GraphQL base path, and without GraphiQL when " +
+            "introspection is off")
+    public void testBuildGeneratesTheGraphqlService() throws IOException, InterruptedException {
+        Path project = project("ds_build_graphql", entry("h2",
+                "options.dataservice.protocol = \"graphql\"\noptions.dataservice.introspection = false"), MODEL);
+        assertSucceeded(build(project));
+        String service = read(project.resolve("generated").resolve(SERVICE));
+        Assert.assertTrue(service.contains("@graphql:ServiceConfig {\n    introspection: false,\n" +
+                "    cors: dataserviceConfig.serviceConfig.cors,\n" +
+                "    maxQueryDepth: dataserviceConfig.serviceConfig.maxQueryDepth,\n" +
+                "    queryComplexityConfig: {maxComplexity: dataserviceConfig.serviceConfig.maxQueryComplexity},\n" +
+                "    validation: false\n}\nservice graphql:Service /graphql on dataserviceListener {"), service);
+        Assert.assertTrue(service.contains("resource function get assignment(string projectCode, int seq) " +
+                "returns AssignmentObject?|error {"), service);
+        Assert.assertFalse(service.toLowerCase(Locale.ROOT).contains("auditlog"), service);
+        Assert.assertTrue(Files.readString(project.resolve("generated").resolve(CONFIG))
+                .contains("configurable dsGraphql:Config dataserviceConfig = {};"));
+        String types = Files.readString(project.resolve("generated").resolve(TYPES));
+        Assert.assertTrue(types.contains("public isolated service class EmployeeObject {"), types);
+        Assert.assertTrue(types.contains("returns string => dataservice:dateToString(self.row.hiredOn);"), types);
     }
 
     @Test(description = "An invalid field rule fails the build, and a rule without effect is a warning")
@@ -241,6 +354,27 @@ public class ToolingDataServiceTest {
                 "'dataserviceConfig'");
         assertStartupFails(auth, database + "[dataserviceConfig.serviceConfig]\nauth = []\n",
                 "'dataserviceConfig.serviceConfig.auth' must hold at least one");
+    }
+
+    @Test(description = "An invalid configuration stops the GraphQL data service at startup")
+    public void testGraphqlStartupFailures() throws IOException, InterruptedException {
+        String database = "url = \"jdbc:h2:mem:dsstartupgraphql\"\nuser = \"sa\"\npassword = \"\"\n";
+        Path auth = project("ds_startup_graphql_auth", entry("h2",
+                "options.dataservice.protocol = \"graphql\"\noptions.dataservice.auth = true"), MODEL);
+        assertSucceeded(build(auth));
+        assertStartupFails(auth, database, "value not provided for required configurable variable " +
+                "'dataserviceConfig'");
+        assertStartupFails(auth, database + "[dataserviceConfig.serviceConfig]\nauth = []\n",
+                "'dataserviceConfig.serviceConfig.auth' must hold at least one");
+        assertStartupFails(auth, database + "[dataserviceConfig]\npageSize = 0\n" +
+                "[[dataserviceConfig.serviceConfig.auth]]\n" +
+                "[dataserviceConfig.serviceConfig.auth.fileUserStoreConfig]\n",
+                "'dataserviceConfig.pageSize' must be between 1 and");
+        assertStartupFails(auth, database + "[dataserviceConfig.serviceConfig]\nmaxQueryComplexity = 0\n" +
+                "[[dataserviceConfig.serviceConfig.auth]]\n" +
+                "[dataserviceConfig.serviceConfig.auth.fileUserStoreConfig]\n",
+                "The configurable value 'dataserviceConfig.serviceConfig.maxQueryComplexity' must be at least 1, " +
+                        "found 0.");
     }
 
     @Test(description = "With introspection = false, the service does not publish its OpenAPI definition")
@@ -332,6 +466,22 @@ public class ToolingDataServiceTest {
                 {"generated_key", false}, {"key_relations", false}, {"rules", false}, {"wire", false}};
     }
 
+    @Test(dataProvider = "graphqlGoldenModels", description = "Each model of the GraphQL generator's expected " +
+            "outputs compiles")
+    public void testGraphqlGoldenModelCompiles(String model, boolean auth) throws IOException, InterruptedException {
+        Path project = project("ds_golden_graphql_" + model, entry("h2", "options.dataservice.protocol = \"graphql\"" +
+                (auth ? "\noptions.dataservice.auth = true" : "")),
+                Files.readString(GOLDEN_MODELS.resolve("graphql").resolve(model).resolve("model.bal")));
+        assertSucceeded(build(project));
+        Assert.assertTrue(Files.exists(project.resolve("generated").resolve(SERVICE)));
+    }
+
+    @DataProvider
+    public Object[][] graphqlGoldenModels() {
+        return new Object[][]{{"demo", false}, {"relations", false}, {"writes", false}, {"types", false},
+                {"auth", true}, {"constraints", false}};
+    }
+
     @Test(dataProvider = "otherDatastores", description = "Every datastore other than a SQL datastore fails the build")
     public void testBuildRejectsOtherDatastore(String datastore) throws IOException, InterruptedException {
         Path project = project("ds_datastore_" + datastore,
@@ -379,6 +529,14 @@ public class ToolingDataServiceTest {
                 "the client was not regenerated for mysql");
     }
 
+    @Test(description = "A GraphQL data service over an eagerly loading client compiles")
+    public void testGraphqlEagerLoadingCompiles() throws IOException, InterruptedException {
+        Path project = project("ds_graphql_eager_loading", entry("h2", "options.eagerLoading = true\n" +
+                "options.dataservice.protocol = \"graphql\""), MODEL);
+        assertSucceeded(build(project));
+        Assert.assertTrue(read(project.resolve("generated").resolve(SERVICE)).contains("[]|persist:Error items = "));
+    }
+
     @Test(description = "A data service over an eagerly loading client compiles")
     public void testEagerLoadingCompiles() throws IOException, InterruptedException {
         Path project = project("ds_eager_loading", entry("h2", "options.eagerLoading = true\n" +
@@ -424,17 +582,20 @@ public class ToolingDataServiceTest {
         String http = "options.dataservice.protocol = \"http\"";
         return new Object[][]{
                 {"protocol_missing", "options.dataservice.basePath = \"/api\"", null, MODEL,
-                        "'options.dataservice.protocol' is required. Supported values: http."},
-                {"graphql", "options.dataservice.protocol = \"graphql\"", null, MODEL,
-                        "the protocol 'graphql' is not supported yet. Supported values: http."},
+                        "'options.dataservice.protocol' is required. Supported values: http, graphql."},
                 {"mcp", "options.dataservice.protocol = \"mcp\"", null, MODEL,
-                        "the protocol 'mcp' is not supported yet. Supported values: http."},
+                        "the protocol 'mcp' is not supported yet. Supported values: http, graphql."},
                 {"odata", "options.dataservice.protocol = \"odata\"", null, MODEL,
-                        "the protocol 'odata' is not supported yet. Supported values: http."},
+                        "the protocol 'odata' is not supported yet. Supported values: http, graphql."},
                 {"soap", "options.dataservice.protocol = \"soap\"", null, MODEL,
-                        "the protocol 'soap' is not supported yet. Supported values: http."},
+                        "the protocol 'soap' is not supported yet. Supported values: http, graphql."},
                 {"rest", "options.dataservice.protocol = \"rest\"", null, MODEL,
-                        "invalid 'options.dataservice.protocol' 'rest'. Supported values: http."},
+                        "invalid 'options.dataservice.protocol' 'rest'. Supported values: http, graphql."},
+                {"graphql_no_read", "options.dataservice.protocol = \"graphql\"", null,
+                        MODEL.replace("@dataservice:Expose\n",
+                                        "@dataservice:Expose {operations: [dataservice:CREATE]}\n")
+                                .replace("[dataservice:READ]", "[dataservice:CREATE]"),
+                        "a GraphQL data service needs at least one entity that allows 'read'."},
                 {"base_path_slash", http + "\noptions.dataservice.basePath = \"api\"", null, MODEL,
                         "invalid 'options.dataservice.basePath' 'api': the base path must start with '/'."},
                 {"base_path_segment", http + "\noptions.dataservice.basePath = \"/api//v1\"", null, MODEL,
@@ -564,10 +725,10 @@ public class ToolingDataServiceTest {
                         "'--model' cannot be used with '--dataservice'. Remove '--model'."},
                 {"init_params", List.of("--datastore", "h2", "--dataservice", "http", "--with-init-params"),
                         "'--with-init-params' cannot be used with '--dataservice'. Remove '--with-init-params'."},
-                {"graphql", List.of("--dataservice", "graphql"),
-                        "the protocol 'graphql' is not supported yet. Supported values: http."},
+                {"mcp", List.of("--dataservice", "mcp"),
+                        "the protocol 'mcp' is not supported yet. Supported values: http, graphql."},
                 {"rest", List.of("--dataservice", "rest"),
-                        "invalid '--dataservice' value 'rest'. Supported values: http."},
+                        "invalid '--dataservice' value 'rest'. Supported values: http, graphql."},
                 {"default_datastore", List.of("--dataservice", "http"), sqlOnly("inmemory")},
                 {"redis", List.of("--datastore", "redis", "--dataservice", "http"), sqlOnly("redis")},
         };
@@ -635,7 +796,7 @@ public class ToolingDataServiceTest {
                 {"init_params", MODEL, List.of("--dataservice", "http", "--with-init-params"),
                         "'--with-init-params' cannot be used with '--dataservice'. Remove '--with-init-params'."},
                 {"mcp", MODEL, List.of("--dataservice", "mcp"),
-                        "the protocol 'mcp' is not supported yet. Supported values: http."},
+                        "the protocol 'mcp' is not supported yet. Supported values: http, graphql."},
                 {"inmemory", MODEL, List.of("--dataservice", "http", "--datastore", "inmemory"),
                         sqlOnly("inmemory")},
                 {"no_entity", PLAIN_MODEL.replace("import ballerina/persist as _;",
@@ -702,7 +863,7 @@ public class ToolingDataServiceTest {
                 {"expose_without_dataservice", null, List.of("--expose-tables", "employees"),
                         "the '--expose-tables' option requires the '--dataservice' option."},
                 {"soap", null, List.of("--dataservice", "soap"),
-                        "the protocol 'soap' is not supported yet. Supported values: http."},
+                        "the protocol 'soap' is not supported yet. Supported values: http, graphql."},
                 {"named_model", null, List.of("--dataservice", "http", "--model", "hr"),
                         "'--model' cannot be used with '--dataservice'. Remove '--model'."},
                 {"target_module", "targetModule = \"ds_pull_target_module.db\"", List.of("--dataservice", "http"),
@@ -711,8 +872,8 @@ public class ToolingDataServiceTest {
                         "'options.withInitParams' cannot be used with a data service."},
                 {"expose_entry_without_dataservice", "", List.of("--expose-tables", "employees"),
                         "the '--expose-tables' option requires the '--dataservice' option."},
-                {"entry_protocol", "options.dataservice.protocol = \"graphql\"", List.of(),
-                        "the protocol 'graphql' is not supported yet. Supported values: http."},
+                {"entry_protocol", "options.dataservice.protocol = \"odata\"", List.of(),
+                        "the protocol 'odata' is not supported yet. Supported values: http, graphql."},
                 {"entry_base_path", "options.dataservice.protocol = \"http\"\noptions.dataservice.basePath = \"api\"",
                         List.of(), "invalid 'options.dataservice.basePath' 'api': the base path must start with '/'."},
                 {"existing_group", "options.dataservice.protocol = \"http\"", List.of("--dataservice", "http"),
