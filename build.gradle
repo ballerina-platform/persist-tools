@@ -92,6 +92,8 @@ subprojects {
         ballerinaStdLibs "io.ballerina.stdlib:mssql.driver-ballerina:${stdlibMssqlDriverVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:postgresql-ballerina:${stdlibPostgresqlVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:postgresql.driver-ballerina:${stdlibPostgresqlDriverVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:random-ballerina:${stdlibRandomVersion}"
+        ballerinaStdLibs "io.ballerina.lib:cdc-ballerina:${stdlibCdcVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:persist.sql-ballerina:${stdlibPersistSqlVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:persist.inmemory-ballerina:${stdlibPersistInmemoryVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:persist.googlesheets-ballerina:${stdlibPersistGoogleSheetVersion}"

@@ -1043,11 +1043,10 @@ public final class HttpDataServiceGenerator {
         }
         if (entity.allows(READ) || entity.allows(CREATE)) {
             out.append(NEWLINE).append("# A list of ").append(n.plural).append(".").append(NEWLINE);
-            out.append("#").append(NEWLINE);
-            out.append("# + items - The ").append(n.plural).append(NEWLINE);
-            out.append("# + hasMore - Whether records exist after this page").append(NEWLINE);
             out.append("public type ").append(n.list).append(" record {").append(NEWLINE);
+            appendFieldDoc(out, "The " + n.plural);
             out.append("    ").append(n.wire).append("[] items;").append(NEWLINE);
+            appendFieldDoc(out, "Whether records exist after this page");
             out.append("    boolean hasMore;").append(NEWLINE);
             out.append("};").append(NEWLINE);
         }
@@ -1073,11 +1072,6 @@ public final class HttpDataServiceGenerator {
         List<ServiceField> fields = filterable(entity);
         out.append(NEWLINE).append("# The conditions that ").append(n.plural)
                 .append(" match, as the `filter` query parameter holds them.").append(NEWLINE);
-        out.append("#").append(NEWLINE);
-        for (ServiceField field : fields) {
-            out.append("# + ").append(field.name()).append(" - The conditions on the `").append(unescape(field.name()))
-                    .append("` field").append(NEWLINE);
-        }
         out.append("public type ").append(n.filter).append(" record {|").append(NEWLINE);
         for (ServiceField field : fields) {
             ExposedEntity.Column column = column(entity, field);
@@ -1095,6 +1089,7 @@ public final class HttpDataServiceGenerator {
             if (column.nullable()) {
                 operators.add("boolean isNull?;");
             }
+            appendFieldDoc(out, "The conditions on the `" + unescape(field.name()) + "` field");
             out.append("    record {|").append(NEWLINE);
             for (String operator : operators) {
                 out.append("        ").append(operator).append(NEWLINE);
@@ -1108,34 +1103,26 @@ public final class HttpDataServiceGenerator {
         List<ServiceField> fields = returned(entity.fields());
         out.append(NEWLINE).append("# ").append(capitalize(n.article)).append(" ").append(n.words)
                 .append(" with the fields named in the `fields` query parameter.").append(NEWLINE);
-        out.append("#").append(NEWLINE);
-        for (ServiceField field : fields) {
-            out.append("# + ").append(field.name()).append(" - ").append(fieldDoc(field, n.entity, entity))
-                    .append(NEWLINE);
-        }
-        for (ExposedRelation relation : entity.relations()) {
-            out.append("# + ").append(relation.field()).append(" - The related ")
-                    .append(relation.many() ? new Names(target(relation)).plural + ", when `fields` names them"
-                            : new Names(target(relation)).words + ", when `fields` names it").append(NEWLINE);
-        }
         out.append("public type ").append(n.partial).append(" record {|").append(NEWLINE);
         for (ServiceField field : fields) {
+            appendFieldDoc(out, fieldDoc(field, n.entity, entity));
             out.append("    ").append(field.wireType()).append(" ").append(field.name())
                     .append(field.key() ? "" : "?").append(";").append(NEWLINE);
         }
         for (ExposedRelation relation : entity.relations()) {
             Names t = new Names(target(relation));
+            appendFieldDoc(out, "The related " + (relation.many() ? t.plural + ", when `fields` names them"
+                    : t.words + ", when `fields` names it"));
             out.append("    ").append(relation.many() ? t.relatedPartialList : t.relatedPartial + "?").append(" ")
                     .append(relation.field()).append("?;").append(NEWLINE);
         }
         out.append("|};").append(NEWLINE);
         out.append(NEWLINE).append("# A list of ").append(n.plural)
                 .append(" with the fields named in the `fields` query parameter.").append(NEWLINE);
-        out.append("#").append(NEWLINE);
-        out.append("# + items - The ").append(n.plural).append(NEWLINE);
-        out.append("# + hasMore - Whether records exist after this page").append(NEWLINE);
         out.append("public type ").append(n.partialList).append(" record {").append(NEWLINE);
+        appendFieldDoc(out, "The " + n.plural);
         out.append("    ").append(n.partial).append("[] items;").append(NEWLINE);
+        appendFieldDoc(out, "Whether records exist after this page");
         out.append("    boolean hasMore;").append(NEWLINE);
         out.append("};").append(NEWLINE);
     }
@@ -1151,14 +1138,10 @@ public final class HttpDataServiceGenerator {
         out.append(NEWLINE).append("# ").append(capitalize(n.article)).append(" ").append(n.words)
                 .append(" read through a relation, with the fields named in the `fields` query parameter.")
                 .append(NEWLINE);
-        out.append("#").append(NEWLINE);
         List<ServiceField> fields = returned(entity.fields());
-        for (ServiceField field : fields) {
-            out.append("# + ").append(field.name()).append(" - ").append(fieldDoc(field, n.entity, entity))
-                    .append(NEWLINE);
-        }
         out.append("public type ").append(n.relatedPartial).append(" record {|").append(NEWLINE);
         for (ServiceField field : fields) {
+            appendFieldDoc(out, fieldDoc(field, n.entity, entity));
             out.append("    ").append(field.wireType()).append(" ").append(field.name())
                     .append(field.key() ? "" : "?").append(";").append(NEWLINE);
         }
@@ -1167,12 +1150,10 @@ public final class HttpDataServiceGenerator {
             out.append(NEWLINE).append("# The ").append(n.plural)
                     .append(" read through a relation, with the fields named in the `fields` query parameter.")
                     .append(NEWLINE);
-            out.append("#").append(NEWLINE);
-            out.append("# + items - The ").append(n.plural).append(", at most `dataserviceConfig.pageSize`")
-                    .append(NEWLINE);
-            out.append("# + hasMore - Whether more ").append(n.plural).append(" exist").append(NEWLINE);
             out.append("public type ").append(n.relatedPartialList).append(" record {").append(NEWLINE);
+            appendFieldDoc(out, "The " + n.plural + ", at most `dataserviceConfig.pageSize`");
             out.append("    ").append(n.relatedPartial).append("[] items;").append(NEWLINE);
+            appendFieldDoc(out, "Whether more " + n.plural + " exist");
             out.append("    boolean hasMore;").append(NEWLINE);
             out.append("};").append(NEWLINE);
         }
@@ -1254,13 +1235,9 @@ public final class HttpDataServiceGenerator {
     private void appendRecord(StringBuilder out, ExposedEntity entity, String doc, String name,
                               String persistType, List<ServiceField> fields, Set<String> imports) {
         out.append(NEWLINE).append("# ").append(doc).append(NEWLINE);
-        out.append("#").append(NEWLINE);
-        for (ServiceField field : fields) {
-            out.append("# + ").append(field.name()).append(" - ").append(fieldDoc(field, persistType, entity))
-                    .append(NEWLINE);
-        }
         out.append("public type ").append(name).append(" record {|").append(NEWLINE);
         for (ServiceField field : fields) {
+            appendFieldDoc(out, fieldDoc(field, persistType, entity));
             // A date, time or byte[] field is a string here, so its constraints are checked after conversion.
             if (field.conversion().isEmpty()) {
                 for (String annotation : entity.constraints(field.name())) {
@@ -1277,12 +1254,16 @@ public final class HttpDataServiceGenerator {
     private static void appendStatusRecord(StringBuilder out, String doc, String name, String bodyType,
                                            String bodyDoc) {
         out.append(NEWLINE).append("# ").append(doc).append(NEWLINE);
-        out.append("#").append(NEWLINE);
-        out.append("# + body - ").append(bodyDoc).append(NEWLINE);
         out.append("public type ").append(name).append(" record {|").append(NEWLINE);
         out.append("    *http:Created;").append(NEWLINE);
+        appendFieldDoc(out, bodyDoc);
         out.append("    ").append(bodyType).append(" body;").append(NEWLINE);
         out.append("|};").append(NEWLINE);
+    }
+
+    // A field doc sits above the field, as the OpenAPI tool reads field descriptions only from there.
+    private static void appendFieldDoc(StringBuilder out, String doc) {
+        out.append("    # ").append(doc).append(NEWLINE);
     }
 
     private static String fieldDoc(ServiceField field, String persistType, ExposedEntity entity) {

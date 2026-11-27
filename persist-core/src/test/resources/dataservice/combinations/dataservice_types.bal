@@ -7,19 +7,16 @@ import ballerina/dataservice;
 import ballerina/http;
 
 # A list of read items.
-#
-# + items - The read items
-# + hasMore - Whether records exist after this page
 public type ReadItemList record {
+    # The read items
     ReadItem[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
 # The conditions that read items match, as the `filter` query parameter holds them.
-#
-# + id - The conditions on the `id` field
-# + name - The conditions on the `name` field
 public type ReadItemFilter record {|
+    # The conditions on the `id` field
     record {|
         int eq?;
         int ne?;
@@ -29,6 +26,7 @@ public type ReadItemFilter record {|
         int gte?;
         int[] anyOf?;
     |} id?;
+    # The conditions on the `name` field
     record {|
         string eq?;
         string ne?;
@@ -43,20 +41,18 @@ public type ReadItemFilter record {|
 |};
 
 # A read item with the fields named in the `fields` query parameter.
-#
-# + id - The `id` field of `ReadItem`
-# + name - The `name` field of `ReadItem`
 public type ReadItemPartial record {|
+    # The `id` field of `ReadItem`
     int id;
+    # The `name` field of `ReadItem`
     string name?;
 |};
 
 # A list of read items with the fields named in the `fields` query parameter.
-#
-# + items - The read items
-# + hasMore - Whether records exist after this page
 public type ReadItemPartialList record {
+    # The read items
     ReadItemPartial[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
@@ -76,11 +72,10 @@ final dataservice:Entity dataserviceReadItemEntity = {
 };
 
 # A list of create items.
-#
-# + items - The create items
-# + hasMore - Whether records exist after this page
 public type CreateItemList record {
+    # The create items
     CreateItem[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
@@ -100,35 +95,30 @@ final dataservice:Entity dataserviceCreateItemEntity = {
 };
 
 # The response to creating one create item.
-#
-# + body - The created create item
 public type CreateItemCreated record {|
     *http:Created;
+    # The created create item
     CreateItem body;
 |};
 
 # The response to creating several create items.
-#
-# + body - The created create items
 public type CreateItemListCreated record {|
     *http:Created;
+    # The created create items
     CreateItemList body;
 |};
 
 # A list of read create items.
-#
-# + items - The read create items
-# + hasMore - Whether records exist after this page
 public type ReadCreateItemList record {
+    # The read create items
     ReadCreateItem[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
 # The conditions that read create items match, as the `filter` query parameter holds them.
-#
-# + id - The conditions on the `id` field
-# + name - The conditions on the `name` field
 public type ReadCreateItemFilter record {|
+    # The conditions on the `id` field
     record {|
         int eq?;
         int ne?;
@@ -138,6 +128,7 @@ public type ReadCreateItemFilter record {|
         int gte?;
         int[] anyOf?;
     |} id?;
+    # The conditions on the `name` field
     record {|
         string eq?;
         string ne?;
@@ -152,20 +143,18 @@ public type ReadCreateItemFilter record {|
 |};
 
 # A read create item with the fields named in the `fields` query parameter.
-#
-# + id - The `id` field of `ReadCreateItem`
-# + name - The `name` field of `ReadCreateItem`
 public type ReadCreateItemPartial record {|
+    # The `id` field of `ReadCreateItem`
     int id;
+    # The `name` field of `ReadCreateItem`
     string name?;
 |};
 
 # A list of read create items with the fields named in the `fields` query parameter.
-#
-# + items - The read create items
-# + hasMore - Whether records exist after this page
 public type ReadCreateItemPartialList record {
+    # The read create items
     ReadCreateItemPartial[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
@@ -185,35 +174,30 @@ final dataservice:Entity dataserviceReadCreateItemEntity = {
 };
 
 # The response to creating one read create item.
-#
-# + body - The created read create item
 public type ReadCreateItemCreated record {|
     *http:Created;
+    # The created read create item
     ReadCreateItem body;
 |};
 
 # The response to creating several read create items.
-#
-# + body - The created read create items
 public type ReadCreateItemListCreated record {|
     *http:Created;
+    # The created read create items
     ReadCreateItemList body;
 |};
 
 # A list of read update items.
-#
-# + items - The read update items
-# + hasMore - Whether records exist after this page
 public type ReadUpdateItemList record {
+    # The read update items
     ReadUpdateItem[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
 # The conditions that read update items match, as the `filter` query parameter holds them.
-#
-# + id - The conditions on the `id` field
-# + name - The conditions on the `name` field
 public type ReadUpdateItemFilter record {|
+    # The conditions on the `id` field
     record {|
         int eq?;
         int ne?;
@@ -223,6 +207,7 @@ public type ReadUpdateItemFilter record {|
         int gte?;
         int[] anyOf?;
     |} id?;
+    # The conditions on the `name` field
     record {|
         string eq?;
         string ne?;
@@ -237,20 +222,18 @@ public type ReadUpdateItemFilter record {|
 |};
 
 # A read update item with the fields named in the `fields` query parameter.
-#
-# + id - The `id` field of `ReadUpdateItem`
-# + name - The `name` field of `ReadUpdateItem`
 public type ReadUpdateItemPartial record {|
+    # The `id` field of `ReadUpdateItem`
     int id;
+    # The `name` field of `ReadUpdateItem`
     string name?;
 |};
 
 # A list of read update items with the fields named in the `fields` query parameter.
-#
-# + items - The read update items
-# + hasMore - Whether records exist after this page
 public type ReadUpdateItemPartialList record {
+    # The read update items
     ReadUpdateItemPartial[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
@@ -270,19 +253,16 @@ final dataservice:Entity dataserviceReadUpdateItemEntity = {
 };
 
 # A list of read delete items.
-#
-# + items - The read delete items
-# + hasMore - Whether records exist after this page
 public type ReadDeleteItemList record {
+    # The read delete items
     ReadDeleteItem[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
 # The conditions that read delete items match, as the `filter` query parameter holds them.
-#
-# + id - The conditions on the `id` field
-# + name - The conditions on the `name` field
 public type ReadDeleteItemFilter record {|
+    # The conditions on the `id` field
     record {|
         int eq?;
         int ne?;
@@ -292,6 +272,7 @@ public type ReadDeleteItemFilter record {|
         int gte?;
         int[] anyOf?;
     |} id?;
+    # The conditions on the `name` field
     record {|
         string eq?;
         string ne?;
@@ -306,20 +287,18 @@ public type ReadDeleteItemFilter record {|
 |};
 
 # A read delete item with the fields named in the `fields` query parameter.
-#
-# + id - The `id` field of `ReadDeleteItem`
-# + name - The `name` field of `ReadDeleteItem`
 public type ReadDeleteItemPartial record {|
+    # The `id` field of `ReadDeleteItem`
     int id;
+    # The `name` field of `ReadDeleteItem`
     string name?;
 |};
 
 # A list of read delete items with the fields named in the `fields` query parameter.
-#
-# + items - The read delete items
-# + hasMore - Whether records exist after this page
 public type ReadDeleteItemPartialList record {
+    # The read delete items
     ReadDeleteItemPartial[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
@@ -339,11 +318,10 @@ final dataservice:Entity dataserviceReadDeleteItemEntity = {
 };
 
 # A list of create update items.
-#
-# + items - The create update items
-# + hasMore - Whether records exist after this page
 public type CreateUpdateItemList record {
+    # The create update items
     CreateUpdateItem[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
@@ -363,27 +341,24 @@ final dataservice:Entity dataserviceCreateUpdateItemEntity = {
 };
 
 # The response to creating one create update item.
-#
-# + body - The created create update item
 public type CreateUpdateItemCreated record {|
     *http:Created;
+    # The created create update item
     CreateUpdateItem body;
 |};
 
 # The response to creating several create update items.
-#
-# + body - The created create update items
 public type CreateUpdateItemListCreated record {|
     *http:Created;
+    # The created create update items
     CreateUpdateItemList body;
 |};
 
 # A list of create delete items.
-#
-# + items - The create delete items
-# + hasMore - Whether records exist after this page
 public type CreateDeleteItemList record {
+    # The create delete items
     CreateDeleteItem[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
@@ -403,35 +378,30 @@ final dataservice:Entity dataserviceCreateDeleteItemEntity = {
 };
 
 # The response to creating one create delete item.
-#
-# + body - The created create delete item
 public type CreateDeleteItemCreated record {|
     *http:Created;
+    # The created create delete item
     CreateDeleteItem body;
 |};
 
 # The response to creating several create delete items.
-#
-# + body - The created create delete items
 public type CreateDeleteItemListCreated record {|
     *http:Created;
+    # The created create delete items
     CreateDeleteItemList body;
 |};
 
 # A list of read create update items.
-#
-# + items - The read create update items
-# + hasMore - Whether records exist after this page
 public type ReadCreateUpdateItemList record {
+    # The read create update items
     ReadCreateUpdateItem[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
 # The conditions that read create update items match, as the `filter` query parameter holds them.
-#
-# + id - The conditions on the `id` field
-# + name - The conditions on the `name` field
 public type ReadCreateUpdateItemFilter record {|
+    # The conditions on the `id` field
     record {|
         int eq?;
         int ne?;
@@ -441,6 +411,7 @@ public type ReadCreateUpdateItemFilter record {|
         int gte?;
         int[] anyOf?;
     |} id?;
+    # The conditions on the `name` field
     record {|
         string eq?;
         string ne?;
@@ -455,20 +426,18 @@ public type ReadCreateUpdateItemFilter record {|
 |};
 
 # A read create update item with the fields named in the `fields` query parameter.
-#
-# + id - The `id` field of `ReadCreateUpdateItem`
-# + name - The `name` field of `ReadCreateUpdateItem`
 public type ReadCreateUpdateItemPartial record {|
+    # The `id` field of `ReadCreateUpdateItem`
     int id;
+    # The `name` field of `ReadCreateUpdateItem`
     string name?;
 |};
 
 # A list of read create update items with the fields named in the `fields` query parameter.
-#
-# + items - The read create update items
-# + hasMore - Whether records exist after this page
 public type ReadCreateUpdateItemPartialList record {
+    # The read create update items
     ReadCreateUpdateItemPartial[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
@@ -488,35 +457,30 @@ final dataservice:Entity dataserviceReadCreateUpdateItemEntity = {
 };
 
 # The response to creating one read create update item.
-#
-# + body - The created read create update item
 public type ReadCreateUpdateItemCreated record {|
     *http:Created;
+    # The created read create update item
     ReadCreateUpdateItem body;
 |};
 
 # The response to creating several read create update items.
-#
-# + body - The created read create update items
 public type ReadCreateUpdateItemListCreated record {|
     *http:Created;
+    # The created read create update items
     ReadCreateUpdateItemList body;
 |};
 
 # A list of read create delete items.
-#
-# + items - The read create delete items
-# + hasMore - Whether records exist after this page
 public type ReadCreateDeleteItemList record {
+    # The read create delete items
     ReadCreateDeleteItem[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
 # The conditions that read create delete items match, as the `filter` query parameter holds them.
-#
-# + id - The conditions on the `id` field
-# + name - The conditions on the `name` field
 public type ReadCreateDeleteItemFilter record {|
+    # The conditions on the `id` field
     record {|
         int eq?;
         int ne?;
@@ -526,6 +490,7 @@ public type ReadCreateDeleteItemFilter record {|
         int gte?;
         int[] anyOf?;
     |} id?;
+    # The conditions on the `name` field
     record {|
         string eq?;
         string ne?;
@@ -540,20 +505,18 @@ public type ReadCreateDeleteItemFilter record {|
 |};
 
 # A read create delete item with the fields named in the `fields` query parameter.
-#
-# + id - The `id` field of `ReadCreateDeleteItem`
-# + name - The `name` field of `ReadCreateDeleteItem`
 public type ReadCreateDeleteItemPartial record {|
+    # The `id` field of `ReadCreateDeleteItem`
     int id;
+    # The `name` field of `ReadCreateDeleteItem`
     string name?;
 |};
 
 # A list of read create delete items with the fields named in the `fields` query parameter.
-#
-# + items - The read create delete items
-# + hasMore - Whether records exist after this page
 public type ReadCreateDeleteItemPartialList record {
+    # The read create delete items
     ReadCreateDeleteItemPartial[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
@@ -573,35 +536,30 @@ final dataservice:Entity dataserviceReadCreateDeleteItemEntity = {
 };
 
 # The response to creating one read create delete item.
-#
-# + body - The created read create delete item
 public type ReadCreateDeleteItemCreated record {|
     *http:Created;
+    # The created read create delete item
     ReadCreateDeleteItem body;
 |};
 
 # The response to creating several read create delete items.
-#
-# + body - The created read create delete items
 public type ReadCreateDeleteItemListCreated record {|
     *http:Created;
+    # The created read create delete items
     ReadCreateDeleteItemList body;
 |};
 
 # A list of read update delete items.
-#
-# + items - The read update delete items
-# + hasMore - Whether records exist after this page
 public type ReadUpdateDeleteItemList record {
+    # The read update delete items
     ReadUpdateDeleteItem[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
 # The conditions that read update delete items match, as the `filter` query parameter holds them.
-#
-# + id - The conditions on the `id` field
-# + name - The conditions on the `name` field
 public type ReadUpdateDeleteItemFilter record {|
+    # The conditions on the `id` field
     record {|
         int eq?;
         int ne?;
@@ -611,6 +569,7 @@ public type ReadUpdateDeleteItemFilter record {|
         int gte?;
         int[] anyOf?;
     |} id?;
+    # The conditions on the `name` field
     record {|
         string eq?;
         string ne?;
@@ -625,20 +584,18 @@ public type ReadUpdateDeleteItemFilter record {|
 |};
 
 # A read update delete item with the fields named in the `fields` query parameter.
-#
-# + id - The `id` field of `ReadUpdateDeleteItem`
-# + name - The `name` field of `ReadUpdateDeleteItem`
 public type ReadUpdateDeleteItemPartial record {|
+    # The `id` field of `ReadUpdateDeleteItem`
     int id;
+    # The `name` field of `ReadUpdateDeleteItem`
     string name?;
 |};
 
 # A list of read update delete items with the fields named in the `fields` query parameter.
-#
-# + items - The read update delete items
-# + hasMore - Whether records exist after this page
 public type ReadUpdateDeleteItemPartialList record {
+    # The read update delete items
     ReadUpdateDeleteItemPartial[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
@@ -658,11 +615,10 @@ final dataservice:Entity dataserviceReadUpdateDeleteItemEntity = {
 };
 
 # A list of create update delete items.
-#
-# + items - The create update delete items
-# + hasMore - Whether records exist after this page
 public type CreateUpdateDeleteItemList record {
+    # The create update delete items
     CreateUpdateDeleteItem[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
@@ -682,35 +638,30 @@ final dataservice:Entity dataserviceCreateUpdateDeleteItemEntity = {
 };
 
 # The response to creating one create update delete item.
-#
-# + body - The created create update delete item
 public type CreateUpdateDeleteItemCreated record {|
     *http:Created;
+    # The created create update delete item
     CreateUpdateDeleteItem body;
 |};
 
 # The response to creating several create update delete items.
-#
-# + body - The created create update delete items
 public type CreateUpdateDeleteItemListCreated record {|
     *http:Created;
+    # The created create update delete items
     CreateUpdateDeleteItemList body;
 |};
 
 # A list of read create update delete items.
-#
-# + items - The read create update delete items
-# + hasMore - Whether records exist after this page
 public type ReadCreateUpdateDeleteItemList record {
+    # The read create update delete items
     ReadCreateUpdateDeleteItem[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
 # The conditions that read create update delete items match, as the `filter` query parameter holds them.
-#
-# + id - The conditions on the `id` field
-# + name - The conditions on the `name` field
 public type ReadCreateUpdateDeleteItemFilter record {|
+    # The conditions on the `id` field
     record {|
         int eq?;
         int ne?;
@@ -720,6 +671,7 @@ public type ReadCreateUpdateDeleteItemFilter record {|
         int gte?;
         int[] anyOf?;
     |} id?;
+    # The conditions on the `name` field
     record {|
         string eq?;
         string ne?;
@@ -734,20 +686,18 @@ public type ReadCreateUpdateDeleteItemFilter record {|
 |};
 
 # A read create update delete item with the fields named in the `fields` query parameter.
-#
-# + id - The `id` field of `ReadCreateUpdateDeleteItem`
-# + name - The `name` field of `ReadCreateUpdateDeleteItem`
 public type ReadCreateUpdateDeleteItemPartial record {|
+    # The `id` field of `ReadCreateUpdateDeleteItem`
     int id;
+    # The `name` field of `ReadCreateUpdateDeleteItem`
     string name?;
 |};
 
 # A list of read create update delete items with the fields named in the `fields` query parameter.
-#
-# + items - The read create update delete items
-# + hasMore - Whether records exist after this page
 public type ReadCreateUpdateDeleteItemPartialList record {
+    # The read create update delete items
     ReadCreateUpdateDeleteItemPartial[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
@@ -767,17 +717,15 @@ final dataservice:Entity dataserviceReadCreateUpdateDeleteItemEntity = {
 };
 
 # The response to creating one read create update delete item.
-#
-# + body - The created read create update delete item
 public type ReadCreateUpdateDeleteItemCreated record {|
     *http:Created;
+    # The created read create update delete item
     ReadCreateUpdateDeleteItem body;
 |};
 
 # The response to creating several read create update delete items.
-#
-# + body - The created read create update delete items
 public type ReadCreateUpdateDeleteItemListCreated record {|
     *http:Created;
+    # The created read create update delete items
     ReadCreateUpdateDeleteItemList body;
 |};

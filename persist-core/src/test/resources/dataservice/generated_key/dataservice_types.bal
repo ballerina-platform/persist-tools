@@ -9,40 +9,34 @@ import ballerina/http;
 import ballerina/time;
 
 # The JSON form of `Ticket`.
-#
-# + id - The `id` field of `Ticket`
-# + subject - The `subject` field of `Ticket`
-# + openedOn - The `openedOn` field of `Ticket`, as an ISO 8601 date
 public type TicketPayload record {|
+    # The `id` field of `Ticket`
     readonly int id;
+    # The `subject` field of `Ticket`
     string subject;
+    # The `openedOn` field of `Ticket`, as an ISO 8601 date
     string openedOn;
 |};
 
 # The JSON form of `TicketInsert`.
-#
-# + subject - The `subject` field of `TicketInsert`
-# + openedOn - The `openedOn` field of `TicketInsert`, as an ISO 8601 date
 public type TicketInsertPayload record {|
+    # The `subject` field of `TicketInsert`
     string subject;
+    # The `openedOn` field of `TicketInsert`, as an ISO 8601 date
     string openedOn;
 |};
 
 # A list of tickets.
-#
-# + items - The tickets
-# + hasMore - Whether records exist after this page
 public type TicketList record {
+    # The tickets
     TicketPayload[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
 # The conditions that tickets match, as the `filter` query parameter holds them.
-#
-# + id - The conditions on the `id` field
-# + subject - The conditions on the `subject` field
-# + openedOn - The conditions on the `openedOn` field
 public type TicketFilter record {|
+    # The conditions on the `id` field
     record {|
         int eq?;
         int ne?;
@@ -52,6 +46,7 @@ public type TicketFilter record {|
         int gte?;
         int[] anyOf?;
     |} id?;
+    # The conditions on the `subject` field
     record {|
         string eq?;
         string ne?;
@@ -63,6 +58,7 @@ public type TicketFilter record {|
         string contains?;
         string startsWith?;
     |} subject?;
+    # The conditions on the `openedOn` field
     record {|
         string eq?;
         string ne?;
@@ -75,22 +71,20 @@ public type TicketFilter record {|
 |};
 
 # A ticket with the fields named in the `fields` query parameter.
-#
-# + id - The `id` field of `Ticket`
-# + subject - The `subject` field of `Ticket`
-# + openedOn - The `openedOn` field of `Ticket`, as an ISO 8601 date
 public type TicketPartial record {|
+    # The `id` field of `Ticket`
     int id;
+    # The `subject` field of `Ticket`
     string subject?;
+    # The `openedOn` field of `Ticket`, as an ISO 8601 date
     string openedOn?;
 |};
 
 # A list of tickets with the fields named in the `fields` query parameter.
-#
-# + items - The tickets
-# + hasMore - Whether records exist after this page
 public type TicketPartialList record {
+    # The tickets
     TicketPartial[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
@@ -111,18 +105,16 @@ final dataservice:Entity dataserviceTicketEntity = {
 };
 
 # The response to creating one ticket.
-#
-# + body - The created ticket
 public type TicketCreated record {|
     *http:Created;
+    # The created ticket
     TicketPayload body;
 |};
 
 # The response to creating several tickets.
-#
-# + body - The created tickets
 public type TicketListCreated record {|
     *http:Created;
+    # The created tickets
     TicketList body;
 |};
 
@@ -150,11 +142,10 @@ isolated function transformPayloadToTicketInsert(TicketInsertPayload payload)
 }
 
 # A list of order items.
-#
-# + items - The order items
-# + hasMore - Whether records exist after this page
 public type OrderItemList record {
+    # The order items
     OrderItem[] items;
+    # Whether records exist after this page
     boolean hasMore;
 };
 
@@ -174,17 +165,15 @@ final dataservice:Entity dataserviceOrderItemEntity = {
 };
 
 # The response to creating one order item.
-#
-# + body - The created order item
 public type OrderItemCreated record {|
     *http:Created;
+    # The created order item
     OrderItem body;
 |};
 
 # The response to creating several order items.
-#
-# + body - The created order items
 public type OrderItemListCreated record {|
     *http:Created;
+    # The created order items
     OrderItemList body;
 |};
